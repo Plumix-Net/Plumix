@@ -1,5 +1,25 @@
 # Changelog
 
+- Breaking: closed the sliver persistent-header divergence end-to-end
+  (`rendering/sliver_persistent_header.dart`, `widgets/sliver_persistent_header.dart`,
+  `material_ui/lib/src/app_bar.dart`). `RenderSliverPersistentHeader` is now Flutter's abstract base with
+  `RenderSliverScrollingPersistentHeader`, `RenderSliverPinnedPersistentHeader`,
+  `RenderSliverFloatingPersistentHeader` and `RenderSliverFloatingPinnedPersistentHeader`; new
+  `OverScrollHeaderStretchConfiguration` and `FloatingHeaderSnapConfiguration` bring overscroll stretch
+  (with the edge-triggered `onStretchTrigger`) and snap animations, and a floating header expands itself
+  for a `ShowOnScreen` request through `PersistentHeaderShowOnScreenConfiguration`.
+  `SliverPersistentHeaderDelegate` gained `Vsync`/`SnapConfiguration`/`StretchConfiguration`/
+  `ShowOnScreenConfiguration`, `SliverPersistentHeader` is stateless and picks one of the four render
+  objects, and its element builds the child during layout (`_FloatingHeader` drives snapping from the
+  scroll position). `SliverAppBar` builds all three configurations, supplies `vsync`, and composes
+  `FlexibleSpaceBar.CreateSettings(child: AppBar(...))` the way Flutter does instead of hand-painting its
+  own surface; `AppBar` now reads `FlexibleSpaceBarSettings.IsScrolledUnder`. **Breaking:**
+  `SliverPersistentHeader` is a `StatelessWidget`, the old single `RenderSliverPersistentHeader(minExtent,
+  maxExtent, pinned, floating, onLayout)` constructor is gone, `LastShrinkOffset` is now clamped to
+  `MaxExtent` (not `MaxExtent - MinExtent`), a pinned header's `LastOverlapsContent` comes from
+  `constraints.Overlap > 0` instead of the shrink offset, and the app-bar surface/elevation/shape are
+  resolved by `AppBar`'s `Material` rather than by the header delegate.
+
 - Breaking: closed the show-on-screen / reveal protocol end-to-end (`rendering/viewport.dart`,
   `widgets/single_child_scroll_view.dart`, `widgets/scrollable.dart`, `widgets/scroll_position.dart`).
   New core primitives: `RevealedOffset` (+ `ClampOffset`), the `IRenderAbstractViewport` contract with the

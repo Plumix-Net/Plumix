@@ -117,7 +117,8 @@ public sealed class SliverAppBar : StatefulWidget
             throw new ArgumentOutOfRangeException(nameof(collapsedHeight));
         if (expandedHeight.HasValue && (!double.IsFinite(expandedHeight.Value) || expandedHeight.Value < 0))
             throw new ArgumentOutOfRangeException(nameof(expandedHeight));
-        if (snap && !floating) throw new ArgumentException("snap requires floating=true.", nameof(snap));
+        if (snap && !floating)
+            throw new ArgumentException("The \"snap\" argument only makes sense for floating app bars.", nameof(snap));
         if (!double.IsFinite(stretchTriggerOffset) || stretchTriggerOffset <= 0)
             throw new ArgumentOutOfRangeException(nameof(stretchTriggerOffset));
         ValidateElevation(elevation, nameof(elevation));
@@ -311,47 +312,96 @@ public sealed class SliverAppBar : StatefulWidget
     }
 }
 
+/// <summary>
+/// This class is only stateful because it owns the ticker provider used by the floating app bar's
+/// snap animation (through <see cref="FloatingHeaderSnapConfiguration"/>).
+/// </summary>
 internal sealed class SliverAppBarState : State
 {
+    private FloatingHeaderSnapConfiguration? _snapConfiguration;
+    private OverScrollHeaderStretchConfiguration? _stretchConfiguration;
+    private PersistentHeaderShowOnScreenConfiguration? _showOnScreenConfiguration;
+
     private SliverAppBar CurrentWidget => (SliverAppBar)StateWidget;
+
+    public override void InitState()
+    {
+        base.InitState();
+        UpdateSnapConfiguration();
+        UpdateStretchConfiguration();
+    }
+
+    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        var old = (SliverAppBar)oldWidget;
+        if (CurrentWidget.Snap != old.Snap || CurrentWidget.Floating != old.Floating) UpdateSnapConfiguration();
+        if (CurrentWidget.Stretch != old.Stretch) UpdateStretchConfiguration();
+    }
 
     public override Widget Build(BuildContext context)
     {
         var widget = CurrentWidget;
         double bottomHeight = widget.Bottom is IPreferredSizeWidget preferred ? preferred.PreferredSize.Height : 0;
         double topPadding = widget.Primary ? MediaQuery.MaybePaddingOf(context)?.Top ?? 0 : 0;
-        double collapsedHeight = widget.Variant switch
+        double collapsedHeight = widget.Pinned && widget.Floating && widget.Bottom is not null
+            ? (widget.CollapsedHeight ?? 0) + bottomHeight + topPadding
+            : (widget.CollapsedHeight ?? widget.ToolbarHeight) + bottomHeight + topPadding;
+        double? expandedHeight = widget.ExpandedHeight;
+        var flexibleSpace = widget.FlexibleSpace;
+        switch (widget.Variant)
         {
-            SliverAppBarVariant.Medium or SliverAppBarVariant.Large =>
-                widget.CollapsedHeight ?? topPadding + 64 + bottomHeight,
-            _ when widget.Pinned && widget.Floating && widget.Bottom is not null =>
-                (widget.CollapsedHeight ?? 0) + bottomHeight + topPadding,
-            _ => (widget.CollapsedHeight ?? widget.ToolbarHeight) + bottomHeight + topPadding,
-        };
-        double expandedBodyHeight = widget.Variant switch
-        {
-            SliverAppBarVariant.Medium => widget.ExpandedHeight ?? 112 + bottomHeight,
-            SliverAppBarVariant.Large => widget.ExpandedHeight ?? 152 + bottomHeight,
-            _ => widget.ExpandedHeight ?? widget.ToolbarHeight + bottomHeight,
-        };
-        double expandedHeight = topPadding + expandedBodyHeight;
-        if (expandedHeight < collapsedHeight)
-            throw new InvalidOperationException("SliverAppBar expandedHeight must be >= collapsed height.");
+            case SliverAppBarVariant.Medium:
+                expandedHeight = widget.ExpandedHeight ?? 112 + bottomHeight;
+                collapsedHeight = widget.CollapsedHeight ?? topPadding + 64 + bottomHeight;
+                flexibleSpace ??= BuildVariantFlexibleSpace(context, widget);
+                break;
+            case SliverAppBarVariant.Large:
+                expandedHeight = widget.ExpandedHeight ?? 152 + bottomHeight;
+                collapsedHeight = widget.CollapsedHeight ?? topPadding + 64 + bottomHeight;
+                flexibleSpace ??= BuildVariantFlexibleSpace(context, widget);
+                break;
+        }
 
-        var flexibleSpace = widget.FlexibleSpace ?? BuildVariantFlexibleSpace(context, widget);
-        return MediaQuery.MaybeOf(context) is null
-            ? BuildHeader(widget, flexibleSpace, collapsedHeight, expandedHeight)
-            : MediaQuery.RemovePadding(
-                context,
-                BuildHeader(widget, flexibleSpace, collapsedHeight, expandedHeight),
-                removeBottom: true);
-    }
-
-    private Widget BuildHeader(SliverAppBar widget, Widget? flexibleSpace, double minExtent, double maxExtent) =>
-        new SliverPersistentHeader(
+        Widget header = new SliverPersistentHeader(
             pinned: widget.Pinned,
             floating: widget.Floating,
-            @delegate: new SliverAppBarDelegate(widget, flexibleSpace, minExtent, maxExtent));
+            @delegate: new SliverAppBarDelegate(
+                widget,
+                flexibleSpace,
+                collapsedHeight,
+                expandedHeight,
+                topPadding,
+                bottomHeight,
+                this,
+                _snapConfiguration,
+                _stretchConfiguration,
+                _showOnScreenConfiguration));
+        return MediaQuery.MaybeOf(context) is null
+            ? header
+            : MediaQuery.RemovePadding(context, header, removeBottom: true);
+    }
+
+    private void UpdateSnapConfiguration()
+    {
+        _snapConfiguration = CurrentWidget.Snap && CurrentWidget.Floating
+            ? new FloatingHeaderSnapConfiguration(
+                curve: Curves.EaseOut,
+                duration: TimeSpan.FromMilliseconds(200))
+            : null;
+        _showOnScreenConfiguration = CurrentWidget.Floating && CurrentWidget.Snap
+            ? new PersistentHeaderShowOnScreenConfiguration(minShowOnScreenExtent: double.PositiveInfinity)
+            : null;
+    }
+
+    private void UpdateStretchConfiguration()
+    {
+        _stretchConfiguration = CurrentWidget.Stretch
+            ? new OverScrollHeaderStretchConfiguration(
+                stretchTriggerOffset: CurrentWidget.StretchTriggerOffset,
+                onStretchTrigger: CurrentWidget.OnStretchTrigger)
+            : null;
+    }
 
     private static Widget? BuildVariantFlexibleSpace(BuildContext context, SliverAppBar widget)
     {
@@ -374,123 +424,129 @@ internal sealed class SliverAppBarDelegate : SliverPersistentHeaderDelegate
 {
     private readonly SliverAppBar _widget;
     private readonly Widget? _flexibleSpace;
+    private readonly double? _expandedHeight;
+    private readonly double _topPadding;
+    private readonly double _bottomHeight;
+    private readonly ITickerProvider _vsync;
+    private readonly FloatingHeaderSnapConfiguration? _snapConfiguration;
+    private readonly OverScrollHeaderStretchConfiguration? _stretchConfiguration;
+    private readonly PersistentHeaderShowOnScreenConfiguration? _showOnScreenConfiguration;
 
-    public SliverAppBarDelegate(SliverAppBar widget, Widget? flexibleSpace, double minExtent, double maxExtent)
+    public SliverAppBarDelegate(
+        SliverAppBar widget,
+        Widget? flexibleSpace,
+        double collapsedHeight,
+        double? expandedHeight,
+        double topPadding,
+        double bottomHeight,
+        ITickerProvider vsync,
+        FloatingHeaderSnapConfiguration? snapConfiguration,
+        OverScrollHeaderStretchConfiguration? stretchConfiguration,
+        PersistentHeaderShowOnScreenConfiguration? showOnScreenConfiguration)
     {
+        if (!widget.Primary && topPadding != 0.0)
+            throw new ArgumentOutOfRangeException(nameof(topPadding), "A non-primary app bar has no top padding.");
+
         _widget = widget;
         _flexibleSpace = flexibleSpace;
-        MinExtent = minExtent;
-        MaxExtent = maxExtent;
+        _expandedHeight = expandedHeight;
+        _topPadding = topPadding;
+        _bottomHeight = bottomHeight;
+        _vsync = vsync;
+        _snapConfiguration = snapConfiguration;
+        _stretchConfiguration = stretchConfiguration;
+        _showOnScreenConfiguration = showOnScreenConfiguration;
+        MinExtent = collapsedHeight;
+        MaxExtent = Math.Max(topPadding + (expandedHeight ?? widget.ToolbarHeight + bottomHeight), collapsedHeight);
     }
 
     public override double MinExtent { get; }
     public override double MaxExtent { get; }
+    public override ITickerProvider? Vsync => _vsync;
+    public override FloatingHeaderSnapConfiguration? SnapConfiguration => _snapConfiguration;
+    public override OverScrollHeaderStretchConfiguration? StretchConfiguration => _stretchConfiguration;
+    public override PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration => _showOnScreenConfiguration;
 
     public override Widget Build(BuildContext context, double shrinkOffset, bool overlapsContent)
     {
-        var theme = Theme.Of(context);
-        var appBarTheme = AppBarTheme.Of(context);
-        double delta = Math.Max(0.0001, MaxExtent - MinExtent);
-        double t = Math.Clamp(shrinkOffset / delta, 0, 1);
-        double currentExtent = Math.Max(MinExtent, MaxExtent - shrinkOffset);
-        var variant = _widget.Variant;
-        double toolbarOpacity = variant == SliverAppBarVariant.Small ? 1 : t;
-        double flexibleTitleOpacity = variant == SliverAppBarVariant.Small ? 1 : 1 - t;
-        bool elevated = _widget.ForceElevated || overlapsContent;
-        double baseElevation = _widget.Elevation ?? appBarTheme.Elevation ?? (theme.UseMaterial3 ? 0 : 4);
-        double elevation = elevated
-            ? _widget.ScrolledUnderElevation
-              ?? appBarTheme.ScrolledUnderElevation
-              ?? (theme.UseMaterial3 ? 3 : baseElevation)
-            : baseElevation;
-        var background = _widget.BackgroundColor
-                         ?? appBarTheme.BackgroundColor
-                         ?? (theme.UseMaterial3 || theme.Brightness == Brightness.Dark ? theme.CanvasColor : theme.PrimaryColor);
-        var foreground = _widget.ForegroundColor
-                         ?? appBarTheme.ForegroundColor
-                         ?? (theme.UseMaterial3 || theme.Brightness == Brightness.Dark ? theme.OnSurfaceColor : theme.OnPrimaryColor);
-        var surfaceTint = _widget.SurfaceTintColor ?? appBarTheme.SurfaceTintColor ?? Colors.Transparent;
-        if (surfaceTint.A > 0 && elevation > 0)
-            background = NavigationSurfaceUtilities.ApplySurfaceTint(background, surfaceTint, elevation);
-        var shadow = _widget.ShadowColor
-                     ?? appBarTheme.ShadowColor
-                     ?? (theme.UseMaterial3 ? Colors.Transparent : theme.ShadowColor);
-        var shape = _widget.Shape ?? appBarTheme.Shape ?? new RoundedRectangleBorder(borderRadius:
-            Plumix.Rendering.BorderRadius.Circular(0));
-
-        var children = new List<Widget>();
-        if (_flexibleSpace is not null)
-        {
-            children.Add(new Positioned(
-                left: 0,
-                top: 0,
-                right: 0,
-                bottom: 0,
-                child: new FlexibleSpaceBarSettings(
-                    flexibleTitleOpacity,
-                    MinExtent,
-                    MaxExtent,
-                    currentExtent,
-                    overlapsContent,
-                    _widget.Leading is not null || _widget.AutomaticallyImplyLeading,
-                    _flexibleSpace)));
-        }
+        double visibleMainHeight = MaxExtent - shrinkOffset - _topPadding;
+        double extraToolbarHeight = Math.Max(MinExtent - _bottomHeight - _topPadding - _widget.ToolbarHeight, 0.0);
+        double visibleToolbarHeight = visibleMainHeight - _bottomHeight - extraToolbarHeight;
+        bool isScrolledUnder = overlapsContent
+                               || _widget.ForceElevated
+                               || (_widget.Pinned && shrinkOffset > MaxExtent - MinExtent);
+        bool isPinnedWithOpacityFade =
+            _widget.Pinned && _widget.Floating && _widget.Bottom is not null && extraToolbarHeight == 0.0;
+        bool accessibleNavigation = MediaQuery.MaybeOf(context)?.AccessibleNavigation ?? false;
+        double toolbarOpacity = !accessibleNavigation && (!_widget.Pinned || isPinnedWithOpacityFade)
+            ? Math.Clamp(visibleToolbarHeight / _widget.ToolbarHeight, 0.0, 1.0)
+            : 1.0;
 
         Widget? toolbarTitle = _widget.Title ?? (_widget.TitleText is null ? null : new Text(_widget.TitleText));
-        Widget toolbar = new AppBar(
-            title: toolbarTitle,
-            leading: _widget.Leading,
-            automaticallyImplyLeading: _widget.AutomaticallyImplyLeading,
-            automaticallyImplyActions: _widget.AutomaticallyImplyActions,
-            actions: _widget.Actions,
-            centerTitle: _widget.CenterTitle,
-            primary: _widget.Primary,
-            titleSpacing: _widget.TitleSpacing,
-            iconTheme: _widget.IconTheme,
-            actionsIconTheme: _widget.ActionsIconTheme,
-            toolbarTextStyle: _widget.ToolbarTextStyle,
-            titleTextStyle: _widget.TitleTextStyle,
-            actionsPadding: _widget.ActionsPadding,
-            toolbarHeight: _widget.ToolbarHeight,
-            backgroundColor: Colors.Transparent,
-            foregroundColor: foreground,
-            systemOverlayStyle: _widget.SystemOverlayStyle,
-            bottom: _widget.Bottom);
-        children.Add(new Positioned(
-            left: 0,
-            top: 0,
-            right: 0,
-            child: new Opacity(toolbarOpacity, toolbar)));
+        Widget? effectiveTitle = _widget.Variant == SliverAppBarVariant.Small || toolbarTitle is null
+            ? toolbarTitle
+            : new AnimatedOpacity(
+                opacity: isScrolledUnder ? 1.0 : 0.0,
+                duration: TimeSpan.FromMilliseconds(500),
+                curve: Curves.Cubic(0.2, 0.0, 0.0, 1.0),
+                child: toolbarTitle);
 
-        Widget content = new DecoratedBox(
-            new BoxDecoration(
-                Color: _widget.ForceMaterialTransparency ? Colors.Transparent : background,
-                Border: ShapeBorderGeometry.SideOrNull(
-                    shape) is { } shapeSide ? Plumix.Rendering.Border.FromBorderSide(shapeSide) : null,
-                BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
-                BoxShadows: BuildShadows(shadow, elevation)),
-            new Stack(fit: StackFit.Expand, children: children));
-        if ((_widget.ClipBehavior ?? Clip.None) != Clip.None)
-            content = new ClipRRect(ShapeBorderGeometry.ResolveRadius(shape), content);
-        return content;
+        Widget? flexibleSpace = _flexibleSpace;
+        if (toolbarTitle is null && flexibleSpace is not null && !_widget.ExcludeHeaderSemantics)
+            flexibleSpace = new Semantics(flags: SemanticsFlags.IsHeader, child: flexibleSpace);
+
+        return new FlexibleSpaceBarSettings(
+            toolbarOpacity: toolbarOpacity,
+            minExtent: MinExtent,
+            maxExtent: MaxExtent,
+            currentExtent: Math.Max(MinExtent, MaxExtent - shrinkOffset),
+            isScrolledUnder: isScrolledUnder,
+            hasLeading: _widget.Leading is not null || _widget.AutomaticallyImplyLeading,
+            child: new AppBar(
+                clipBehavior: _widget.ClipBehavior,
+                leading: _widget.Leading,
+                automaticallyImplyLeading: _widget.AutomaticallyImplyLeading,
+                title: effectiveTitle,
+                actions: _widget.Actions,
+                automaticallyImplyActions: _widget.AutomaticallyImplyActions,
+                flexibleSpace: flexibleSpace,
+                bottom: _widget.Bottom,
+                elevation: isScrolledUnder ? _widget.Elevation : 0.0,
+                scrolledUnderElevation: _widget.ScrolledUnderElevation,
+                shadowColor: _widget.ShadowColor,
+                surfaceTintColor: _widget.SurfaceTintColor,
+                backgroundColor: _widget.BackgroundColor,
+                foregroundColor: _widget.ForegroundColor,
+                iconTheme: _widget.IconTheme,
+                actionsIconTheme: _widget.ActionsIconTheme,
+                primary: _widget.Primary,
+                centerTitle: _widget.CenterTitle,
+                excludeHeaderSemantics: _widget.ExcludeHeaderSemantics,
+                titleSpacing: _widget.TitleSpacing,
+                shape: _widget.Shape,
+                toolbarOpacity: toolbarOpacity,
+                bottomOpacity: _widget.Pinned ? 1.0 : Math.Clamp(visibleMainHeight / _bottomHeight, 0.0, 1.0),
+                toolbarHeight: _widget.ToolbarHeight,
+                leadingWidth: _widget.LeadingWidth,
+                toolbarTextStyle: _widget.ToolbarTextStyle,
+                titleTextStyle: _widget.TitleTextStyle,
+                systemOverlayStyle: _widget.SystemOverlayStyle,
+                forceMaterialTransparency: _widget.ForceMaterialTransparency,
+                useDefaultSemanticsOrder: _widget.UseDefaultSemanticsOrder,
+                actionsPadding: _widget.ActionsPadding));
     }
 
     public override bool ShouldRebuild(SliverPersistentHeaderDelegate oldDelegate) =>
         oldDelegate is not SliverAppBarDelegate old
         || !ReferenceEquals(_widget, old._widget)
         || !ReferenceEquals(_flexibleSpace, old._flexibleSpace)
+        || _bottomHeight != old._bottomHeight
+        || _expandedHeight != old._expandedHeight
+        || _topPadding != old._topPadding
+        || !ReferenceEquals(_vsync, old._vsync)
+        || !ReferenceEquals(_snapConfiguration, old._snapConfiguration)
+        || !ReferenceEquals(_stretchConfiguration, old._stretchConfiguration)
+        || !ReferenceEquals(_showOnScreenConfiguration, old._showOnScreenConfiguration)
         || MinExtent != old.MinExtent
         || MaxExtent != old.MaxExtent;
-
-    private static BoxShadows? BuildShadows(Color color, double elevation)
-    {
-        if (elevation <= 0 || color.A == 0) return null;
-        var shadow = Color.FromArgb((byte)Math.Round(color.A * 0.20), color.R, color.G, color.B);
-        return new BoxShadows(new BoxShadow
-        {
-            OffsetY = Math.Max(1, elevation * 0.5),
-            Blur = Math.Max(2, elevation * 2.4),
-            Color = shadow,
-        });
-    }
 }

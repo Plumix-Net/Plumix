@@ -288,10 +288,10 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/proxy_sliver.dart` | `src/Plumix/Rendering/SliverGroup.cs` | `src/Plumix.Tests/SliverGroupTests.cs` | — |
 | `rendering/selection.dart` | `src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `rendering/shifted_box.dart` | `src/Plumix/Rendering/Baseline.cs`<br>`src/Plumix/Rendering/CustomSingleChildLayout.cs` | `src/Plumix.Tests/BaselineTests.cs` | `dart_sample/lib/demos/general/baseline_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/BaselineDemoPage.cs` |
-| `rendering/sliver.dart` | `src/Plumix/Rendering/Sliver.cs` | `src/Plumix.Tests/DecoratedPinnedSliverTests.cs`<br>`src/Plumix.Tests/MaterialSliverAppBarTests.cs`<br>`src/Plumix.Tests/SliverFillTests.cs`<br>`src/Plumix.Tests/SliverGroupTests.cs`<br>`src/Plumix.Tests/SliverHeaderTests.cs`<br>`src/Plumix.Tests/SliverOpacityTests.cs` | `dart_sample/lib/demos/general/custom_slivers_demo_page.dart`<br>`dart_sample/lib/demos/material/sliver_app_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CustomSliversDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SliverAppBarDemoPage.cs` |
+| `rendering/sliver.dart` | `src/Plumix/Rendering/Sliver.cs` | `src/Plumix.Tests/DecoratedPinnedSliverTests.cs`<br>`src/Plumix.Tests/MaterialSliverAppBarTests.cs`<br>`src/Plumix.Tests/SliverFillTests.cs`<br>`src/Plumix.Tests/SliverGroupTests.cs`<br>`src/Plumix.Tests/SliverHeaderTests.cs`<br>`src/Plumix.Tests/SliverOpacityTests.cs`<br>`src/Plumix.Tests/SliverPersistentHeaderTests.cs` | `dart_sample/lib/demos/general/custom_slivers_demo_page.dart`<br>`dart_sample/lib/demos/material/sliver_app_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CustomSliversDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SliverAppBarDemoPage.cs` |
 | `rendering/sliver_fill.dart` | `src/Plumix/Rendering/SliverFill.cs` | `src/Plumix.Tests/SliverFillTests.cs` | — |
 | `rendering/sliver_group.dart` | `src/Plumix/Rendering/SliverGroup.cs` | `src/Plumix.Tests/SliverGroupTests.cs` | — |
-| `rendering/sliver_persistent_header.dart` | `src/Plumix/Rendering/SliverPersistentHeaderReveal.cs` | — | — |
+| `rendering/sliver_persistent_header.dart` | `src/Plumix/Rendering/SliverPersistentHeader.cs`<br>`src/Plumix/Rendering/SliverPersistentHeaderReveal.cs` | `src/Plumix.Tests/SliverPersistentHeaderTests.cs` | — |
 | `rendering/stack.dart` | `src/Plumix/Rendering/RelativeRect.cs`<br>`src/Plumix/Rendering/Stack.RenderIndexedStack.cs`<br>`src/Plumix/Rendering/Stack.RenderStack.cs` | — | — |
 | `rendering/table.dart` | `src/Plumix/Rendering/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs`<br>`src/Plumix.Tests/TableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
 | `rendering/table_border.dart` | `src/Plumix/Rendering/TableBorder.cs` | — | — |
@@ -421,6 +421,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/sliver_fill.dart` | `src/Plumix/Widgets/SliverFill.cs` | `src/Plumix.Tests/SliverFillTests.cs` | — |
 | `widgets/sliver_floating_header.dart` | `src/Plumix/Rendering/SliverHeaders.cs`<br>`src/Plumix/Widgets/SliverHeaders.cs` | — | — |
 | `widgets/sliver_layout_builder.dart` | `src/Plumix/Widgets/SliverLayoutBuilder.cs` | — | — |
+| `widgets/sliver_persistent_header.dart` | `src/Plumix/Widgets/SliverPersistentHeader.cs` | `src/Plumix.Tests/SliverPersistentHeaderTests.cs` | — |
 | `widgets/sliver_resizing_header.dart` | `src/Plumix/Rendering/SliverHeaders.cs`<br>`src/Plumix/Widgets/SliverHeaders.cs` | — | — |
 | `widgets/snapshot_widget.dart` | `src/Plumix/Rendering/SnapshotWidget.cs`<br>`src/Plumix/Widgets/SnapshotWidget.cs` | — | — |
 | `widgets/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
@@ -467,8 +468,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 424
-- C# files carrying a marker: 539
+- Flutter files mapped: 425
+- C# files carrying a marker: 541
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 0
 

@@ -18,7 +18,7 @@ public sealed class MaterialSliverAppBarTests
         Assert.Throws<ArgumentOutOfRangeException>(() => new SliverPersistentHeader(new TestHeaderDelegate(100, 40)));
 
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 100)));
-        var header = new RenderSliverPersistentHeader(56, 180, pinned: true, floating: false, child: child);
+        var header = new RenderSliverPinnedPersistentHeader(56, 180, child: child);
         header.LayoutWithSliverConstraints(new SliverConstraints(
             Axis.Vertical, 90, 300, 300, 300, RemainingCacheExtent: 300));
 
@@ -26,33 +26,48 @@ public sealed class MaterialSliverAppBarTests
         Assert.Equal(90, child.Size.Height, precision: 3);
         Assert.Equal(180, header.Geometry.ScrollExtent, precision: 3);
         Assert.Equal(90, header.Geometry.PaintExtent, precision: 3);
+        Assert.Equal(56, header.Geometry.MaxScrollObstructionExtent, precision: 3);
         Assert.False(header.LastOverlapsContent);
 
         header.LayoutWithSliverConstraints(new SliverConstraints(
             Axis.Vertical, 160, 300, 300, 300, RemainingCacheExtent: 300));
         Assert.Equal(56, child.Size.Height, precision: 3);
         Assert.Equal(56, header.Geometry.PaintExtent, precision: 3);
+        // Flutter's pinned header reads overlapsContent from the incoming overlap, not the shrink.
+        Assert.False(header.LastOverlapsContent);
+
+        header.LayoutWithSliverConstraints(new SliverConstraints(
+            Axis.Vertical, 160, 300, 300, 300, RemainingCacheExtent: 300, Overlap: 24));
         Assert.True(header.LastOverlapsContent);
+        Assert.Equal(24, header.Geometry.PaintOrigin, precision: 3);
+        Assert.Equal(56, header.Geometry.PaintExtent, precision: 3);
     }
 
     [Fact]
     public void SliverPersistentHeader_FloatingRevealsImmediatelyOnReverseScroll()
     {
-        var header = new RenderSliverPersistentHeader(
-            56, 180, pinned: false, floating: true,
+        var header = new RenderSliverFloatingPersistentHeader(
+            56, 180,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(300, 180))));
         var constraints = new SliverConstraints(Axis.Vertical, 160, 300, 300, 300, RemainingCacheExtent: 300);
         header.LayoutWithSliverConstraints(constraints);
-        Assert.Equal(124, header.LastShrinkOffset, precision: 3);
+        Assert.Equal(160, header.LastShrinkOffset, precision: 3);
         Assert.Equal(20, header.Geometry.PaintExtent, precision: 3);
+        Assert.Equal(0, header.Geometry.MaxScrollObstructionExtent, precision: 3);
 
+        // Without a forward user scroll the header may shrink back but never expand.
         header.LayoutWithSliverConstraints(constraints with { ScrollOffset = 130 });
-        Assert.Equal(124, header.LastShrinkOffset, precision: 3);
+        Assert.Equal(130, header.EffectiveScrollOffset);
         Assert.Equal(50, header.Geometry.PaintExtent, precision: 3);
 
-        header.LayoutWithSliverConstraints(constraints with { ScrollOffset = 100 });
+        header.LayoutWithSliverConstraints(constraints with
+        {
+            ScrollOffset = 100,
+            UserScrollDirection = ScrollDirection.Forward,
+        });
         Assert.Equal(100, header.LastShrinkOffset, precision: 3);
         Assert.Equal(80, header.Geometry.PaintExtent, precision: 3);
+        Assert.True(header.Geometry.LayoutExtent < header.Geometry.PaintExtent + 0.001);
     }
 
     [Fact]
@@ -351,9 +366,10 @@ public sealed class MaterialSliverAppBarTests
         harness.Pump(new Size(360, 320));
         harness.Pump(new Size(360, 320));
         header = Assert.Single(FindDescendants<RenderSliverPersistentHeader>(harness.RenderView));
-        Assert.Equal(144, header.LastShrinkOffset, precision: 3);
+        // Flutter's layoutChild clamps the shrink offset to maxExtent, not to maxExtent - minExtent.
+        Assert.Equal(180, header.LastShrinkOffset, precision: 3);
         Assert.Equal(56, header.Child!.Size.Height, precision: 3);
-        Assert.True(header.LastOverlapsContent);
+        Assert.Equal(56, header.Geometry.MaxScrollObstructionExtent, precision: 3);
         Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.PlainText == "Toolbar");
     }
 
@@ -386,10 +402,16 @@ public sealed class MaterialSliverAppBarTests
         harness.Pump(new Size(360, 320));
         harness.Pump(new Size(360, 320));
 
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), value =>
-            value.Decoration.Color == Colors.Orange
-            && value.Decoration.EffectiveBorderRadius == BorderRadius.Circular(8)
-            && value.Decoration.BoxShadows is not null);
+        // The header now composes a real AppBar, so its Material owns the surface: the widget's
+        // background and shape win over the theme's, tinted at the theme's scrolled-under elevation.
+        var surface = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView));
+        Assert.Equal(BorderRadius.Circular(8), surface.Decoration.EffectiveBorderRadius);
+        Assert.Equal(
+            ElevationOverlay.ApplySurfaceTint(Colors.Orange, theme.ColorScheme.SurfaceTint, 5),
+            surface.Decoration.Color);
+        Assert.NotEqual(
+            ElevationOverlay.ApplySurfaceTint(Colors.Orange, theme.ColorScheme.SurfaceTint, 0),
+            surface.Decoration.Color);
     }
 
     [Fact]
