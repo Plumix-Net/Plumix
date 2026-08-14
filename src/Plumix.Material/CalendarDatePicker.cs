@@ -91,7 +91,8 @@ public sealed class CalendarDatePicker : StatefulWidget
             };
             _modeController.SetValue(_mode == DatePickerMode.Year ? 1 : 0);
             _modeController.Changed += HandleModeAnimationChanged;
-            _pageController = new PageController(initialPage: 1);
+            _pageController = new PageController(
+                initialPage: widget.CalendarDelegate.MonthDelta(widget.FirstDate, _displayedMonth));
             _gridFocus = new FocusNode();
             _gridFocus.AddListener(HandleGridFocusChanged);
         }
@@ -194,19 +195,13 @@ public sealed class CalendarDatePicker : StatefulWidget
         private Widget BuildMonthPicker(BuildContext context, double rowHeight)
         {
             var widget = CurrentWidget;
-            var previous = widget.CalendarDelegate.AddMonthsToMonthDate(_displayedMonth, -1);
-            var next = widget.CalendarDelegate.AddMonthsToMonthDate(_displayedMonth, 1);
-            var children = new Widget[]
-            {
-                BuildDayPicker(previous, rowHeight),
-                BuildDayPicker(_displayedMonth, rowHeight),
-                BuildDayPicker(next, rowHeight),
-            };
-
-            Widget pages = new PageView(
+            Widget pages = PageView.Builder(
+                itemBuilder: (_, index) => BuildDayPicker(
+                    widget.CalendarDelegate.AddMonthsToMonthDate(widget.FirstDate, index),
+                    rowHeight),
+                itemCount: widget.CalendarDelegate.MonthDelta(widget.FirstDate, widget.LastDate) + 1,
                 controller: _pageController,
-                onPageChanged: HandleMonthPageChanged,
-                children: children);
+                onPageChanged: HandleMonthPageChanged);
             return new Padding(
                 new Thickness(0, SubHeaderHeight, 0, 0),
                 new Focus(
@@ -305,39 +300,52 @@ public sealed class CalendarDatePicker : StatefulWidget
             else _modeController?.Reverse();
         }
 
+        private static readonly TimeSpan MonthScrollDuration = TimeSpan.FromMilliseconds(200);
+
         private void PreviousMonth()
         {
-            if (!IsFirstMonth) _pageController?.AnimateToPage(0, TimeSpan.FromMilliseconds(200), Curves.Ease);
+            if (!IsFirstMonth) _ = _pageController?.PreviousPage(MonthScrollDuration, Curves.Ease);
         }
 
         private void NextMonth()
         {
-            if (!IsLastMonth) _pageController?.AnimateToPage(2, TimeSpan.FromMilliseconds(200), Curves.Ease);
+            if (!IsLastMonth) _ = _pageController?.NextPage(MonthScrollDuration, Curves.Ease);
         }
 
-        private void HandleMonthPageChanged(int page)
+        /// <summary>Dart parity: <c>_MonthPickerState._showMonth</c>.</summary>
+        private void ShowMonth(DateTime month, bool jump = false)
         {
-            if (page == 1) return;
-            var candidate = CurrentWidget.CalendarDelegate.AddMonthsToMonthDate(_displayedMonth, page - 1);
-            var first = CurrentWidget.CalendarDelegate.GetMonth(CurrentWidget.FirstDate.Year, CurrentWidget.FirstDate.Month);
-            var last = CurrentWidget.CalendarDelegate.GetMonth(CurrentWidget.LastDate.Year, CurrentWidget.LastDate.Month);
-            if (candidate < first) candidate = first;
-            if (candidate > last) candidate = last;
-            if (!CurrentWidget.CalendarDelegate.IsSameMonth(candidate, _displayedMonth))
+            int monthPage = CurrentWidget.CalendarDelegate.MonthDelta(CurrentWidget.FirstDate, month);
+            if (_pageController is not { HasClients: true } controller)
             {
-                SetState(() =>
-                {
-                    _displayedMonth = candidate;
-                    if (_focusedDate.HasValue && !CurrentWidget.CalendarDelegate.IsSameMonth(_focusedDate, candidate))
-                    {
-                        _focusedDate = FocusableDayForMonth(candidate, _focusedDate.Value.Day);
-                    }
-                    _announcementText = CurrentWidget.CalendarDelegate.FormatMonthYear(
-                        candidate, MaterialLocalizations.Of(Context));
-                });
-                CurrentWidget.OnDisplayedMonthChanged?.Invoke(candidate);
+                // The month picker is not mounted (year mode). Flutter rebuilds `_MonthPicker` with
+                // the new `initialMonth`, giving it a controller that starts on the requested page;
+                // this state owns one controller, so it is replaced instead.
+                _pageController?.Dispose();
+                _pageController = new PageController(initialPage: monthPage);
+                return;
             }
-            Scheduler.AddPostFrameCallback(_ => _pageController?.JumpToPage(1));
+
+            if (jump) controller.JumpToPage(monthPage);
+            else _ = controller.AnimateToPage(monthPage, MonthScrollDuration, Curves.Ease);
+        }
+
+        private void HandleMonthPageChanged(int monthPage)
+        {
+            var monthDate = CurrentWidget.CalendarDelegate.AddMonthsToMonthDate(CurrentWidget.FirstDate, monthPage);
+            if (CurrentWidget.CalendarDelegate.IsSameMonth(_displayedMonth, monthDate)) return;
+            SetState(() =>
+            {
+                _displayedMonth = CurrentWidget.CalendarDelegate.GetMonth(monthDate.Year, monthDate.Month);
+                if (_focusedDate.HasValue
+                    && !CurrentWidget.CalendarDelegate.IsSameMonth(_focusedDate, _displayedMonth))
+                {
+                    _focusedDate = FocusableDayForMonth(_displayedMonth, _focusedDate.Value.Day);
+                }
+                _announcementText = CurrentWidget.CalendarDelegate.FormatMonthYear(
+                    _displayedMonth, MaterialLocalizations.Of(Context));
+            });
+            CurrentWidget.OnDisplayedMonthChanged?.Invoke(_displayedMonth);
         }
 
         private void HandleDayChanged(DateTime date)
@@ -375,7 +383,7 @@ public sealed class CalendarDatePicker : StatefulWidget
                 _announcementText = widget.CalendarDelegate.FormatMonthYear(
                     value, MaterialLocalizations.Of(Context));
             });
-            _pageController?.JumpToPage(1);
+            ShowMonth(_displayedMonth, jump: true);
             if (!widget.CalendarDelegate.IsSameMonth(previousMonth, _displayedMonth))
             {
                 widget.OnDisplayedMonthChanged?.Invoke(_displayedMonth);
@@ -409,7 +417,7 @@ public sealed class CalendarDatePicker : StatefulWidget
                         _announcementText = CurrentWidget.CalendarDelegate.FormatFullDate(
                             next.Value, MaterialLocalizations.Of(Context));
                     });
-                    _pageController?.JumpToPage(1);
+                    ShowMonth(_displayedMonth, jump: true);
                     if (!CurrentWidget.CalendarDelegate.IsSameMonth(previousMonth, _displayedMonth))
                     {
                         CurrentWidget.OnDisplayedMonthChanged?.Invoke(_displayedMonth);

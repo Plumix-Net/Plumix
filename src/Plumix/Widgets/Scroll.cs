@@ -13,13 +13,28 @@ public delegate Widget IndexedWidgetBuilder(BuildContext context, int index);
 
 public delegate int? ChildIndexGetter(Key key);
 
+/// <summary>
+/// An immutable snapshot of a scroll position, delivered with every <see cref="ScrollNotification"/>.
+/// </summary>
+/// <remarks>
+/// Flutter models page metrics as a <c>PageMetrics</c> subclass of <c>FixedScrollMetrics</c> that a
+/// <c>PageView</c> casts its notification metrics to. Notifications here carry a value type, which
+/// cannot be subclassed, so <see cref="ViewportFraction"/> and <see cref="Page"/> live on the shared
+/// snapshot and read as the identity fraction for every non-paged scrollable.
+/// </remarks>
 public readonly record struct ScrollMetricsSnapshot(
     double Pixels,
     double MinScrollExtent,
     double MaxScrollExtent,
     double ViewportDimension,
-    AxisDirection AxisDirection = AxisDirection.Down)
+    AxisDirection AxisDirection = AxisDirection.Down,
+    double ViewportFraction = 1.0)
 {
+    /// <summary>Dart parity: <c>PageMetrics.page</c>.</summary>
+    public double Page =>
+        Math.Max(0.0, Math.Clamp(Pixels, MinScrollExtent, Math.Max(MinScrollExtent, MaxScrollExtent)))
+        / Math.Max(1.0, ViewportDimension * ViewportFraction);
+
     public double ExtentBefore => Math.Max(Pixels - MinScrollExtent, 0.0);
 
     public double ExtentAfter => Math.Max(MaxScrollExtent - Pixels, 0.0);
@@ -507,7 +522,10 @@ public class ScrollController : ChangeNotifier
 
     public virtual ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
     {
-        return new ScrollPosition(initialPixels: InitialScrollOffset, physics: physics ?? Physics);
+        return new ScrollPosition(
+            initialPixels: InitialScrollOffset,
+            physics: physics ?? Physics,
+            keepScrollOffset: KeepScrollOffset);
     }
 
     internal virtual void Attach(ScrollPosition position)
@@ -742,6 +760,7 @@ public sealed class Scrollable : StatefulWidget
         private ScrollController? _attachedController;
         private ScrollPosition _position = null!;
         private bool _isApplyingDrag;
+        private bool _isApplyingViewportMetrics;
         private ScrollBehavior _configuration = null!;
         private ScrollPhysics _effectivePhysics = null!;
         private bool _hasPosition;
@@ -779,12 +798,34 @@ public sealed class Scrollable : StatefulWidget
                 return;
             }
 
-            bool physicsChanged = !ReferenceEquals(_effectivePhysics, effectivePhysics);
+            bool physicsChanged = !PhysicsChainsMatch(_effectivePhysics, effectivePhysics);
             _configuration = configuration;
+            _effectivePhysics = effectivePhysics;
             if (physicsChanged)
             {
                 ReplacePosition(CurrentWidget.Controller, effectivePhysics);
             }
+        }
+
+        /// <summary>
+        /// Whether two physics chains are interchangeable. Flutter's <c>_shouldUpdatePosition</c>
+        /// walks both chains comparing <c>runtimeType</c>, because a widget that rebuilds its physics
+        /// every build (<see cref="PageView"/> does) must not replace its position every frame.
+        /// </summary>
+        private static bool PhysicsChainsMatch(ScrollPhysics? left, ScrollPhysics? right)
+        {
+            while (left != null || right != null)
+            {
+                if (left?.GetType() != right?.GetType())
+                {
+                    return false;
+                }
+
+                left = left?.Parent;
+                right = right?.Parent;
+            }
+
+            return true;
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -800,8 +841,10 @@ public sealed class Scrollable : StatefulWidget
             bool controllerChanged = !ReferenceEquals(oldScrollable.Controller, current.Controller);
             ScrollBehavior configuration = current.ScrollBehavior ?? ScrollConfiguration.Of(Context);
             ScrollPhysics effectivePhysics = current.Physics ?? configuration.GetScrollPhysics(Context);
-            bool physicsChanged = !ReferenceEquals(_effectivePhysics, effectivePhysics);
+            bool physicsChanged = !PhysicsChainsMatch(_effectivePhysics, effectivePhysics);
             _configuration = configuration;
+            _effectivePhysics = effectivePhysics;
+            _position.RestorationId = current.RestorationId;
 
             if (!controllerChanged && !physicsChanged)
             {
@@ -912,6 +955,7 @@ public sealed class Scrollable : StatefulWidget
             var position = _attachedController.CreateScrollPosition(physics);
             position.TickerProvider = this;
             position.NotificationContext = Context;
+            position.RestorationId = CurrentWidget.RestorationId;
             position.CanDragChanged = SetCanDrag;
             position.AxisDirection = ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
 
@@ -945,18 +989,8 @@ public sealed class Scrollable : StatefulWidget
 
         private void RestoreScrollOffset()
         {
-            if (_attachedController?.KeepScrollOffset != true)
-            {
-                return;
-            }
-
-            object? value = PageStorage.MaybeOf(Context)?.ReadState(
-                Context,
-                CurrentWidget.RestorationId);
-            if (value is double offset && double.IsFinite(offset))
-            {
-                _position.RestoreOffset(offset, initialRestore: true);
-            }
+            _position.RestorationId = CurrentWidget.RestorationId;
+            _position.RestoreScrollOffset();
         }
 
         private void SaveScrollOffset()
@@ -966,15 +1000,10 @@ public sealed class Scrollable : StatefulWidget
 
         private void SaveScrollOffset(string? restorationId)
         {
-            if (_attachedController?.KeepScrollOffset != true)
-            {
-                return;
-            }
-
-            PageStorage.MaybeOf(Context)?.WriteState(
-                Context,
-                _position.Pixels,
-                restorationId);
+            string? current = _position.RestorationId;
+            _position.RestorationId = restorationId;
+            _position.SaveScrollOffset();
+            _position.RestorationId = current;
         }
 
         private void HandlePositionChanged()
@@ -985,7 +1014,14 @@ public sealed class Scrollable : StatefulWidget
                 return;
             }
 
-            new ScrollUpdateNotification(CurrentMetrics()).Dispatch(Context);
+            // An offset the position corrected while the fresh dimensions were handed to it is not
+            // a scroll: Flutter's `correctPixels` deliberately notifies nobody, and reporting it
+            // would announce a page/offset measured against extents that are still being replaced.
+            if (!_isApplyingViewportMetrics)
+            {
+                new ScrollUpdateNotification(CurrentMetrics()).Dispatch(Context);
+            }
+
             SetState(static () => { });
         }
 
@@ -1187,10 +1223,29 @@ public sealed class Scrollable : StatefulWidget
             return keys.Any(pressed.Contains);
         }
 
-        private void HandleViewportMetricsChanged(double viewportExtent, double minScrollExtent, double maxScrollExtent)
+        /// <summary>
+        /// Hands the freshly measured viewport to the position and reports the offset the viewport
+        /// must lay out at. A position that corrects its offset while applying the dimensions (a
+        /// <see cref="PageController"/> resolving its initial page, for instance) reports the
+        /// corrected value here, and the viewport re-runs its layout in the same frame, the way
+        /// Flutter's <c>RenderViewport._attemptLayout</c> correction loop does.
+        /// </summary>
+        private double? HandleViewportMetricsChanged(
+            double viewportExtent,
+            double minScrollExtent,
+            double maxScrollExtent)
         {
-            _position.ApplyViewportDimension(viewportExtent);
-            _position.ApplyContentDimensions(minScrollExtent, maxScrollExtent);
+            _isApplyingViewportMetrics = true;
+            try
+            {
+                _position.ApplyViewportDimension(viewportExtent);
+                _position.ApplyContentDimensions(minScrollExtent, maxScrollExtent);
+            }
+            finally
+            {
+                _isApplyingViewportMetrics = false;
+            }
+
             ScrollMetricsSnapshot currentMetrics = CurrentMetrics();
             if (!_hasDispatchedScrollMetrics
                 || !MetricsEqual(_lastDispatchedScrollMetrics, currentMetrics))
@@ -1199,6 +1254,8 @@ public sealed class Scrollable : StatefulWidget
                 _hasDispatchedScrollMetrics = true;
                 new ScrollMetricsNotification(currentMetrics, Context).Dispatch(Context);
             }
+
+            return _position.Pixels;
         }
 
         private ScrollMetricsSnapshot CurrentMetrics()
@@ -1208,7 +1265,8 @@ public sealed class Scrollable : StatefulWidget
                 MinScrollExtent: _position.MinScrollExtent,
                 MaxScrollExtent: _position.MaxScrollExtent,
                 ViewportDimension: _position.ViewportDimension,
-                AxisDirection: ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse));
+                AxisDirection: ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse),
+                ViewportFraction: (_position as PagePosition)?.ViewportFraction ?? 1.0);
         }
 
         private static bool MetricsEqual(ScrollMetricsSnapshot left, ScrollMetricsSnapshot right)
@@ -1258,7 +1316,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         bool shrinkWrap,
         double anchor,
         IReadOnlyList<Widget> slivers,
-        Action<double, double, double>? onViewportMetricsChanged = null,
+        ViewportMetricsChangedCallback? onViewportMetricsChanged = null,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge,
         ScrollDirection userScrollDirection = ScrollDirection.Idle) : base(slivers, key)
@@ -1296,7 +1354,7 @@ public sealed class Viewport : MultiChildRenderObjectWidget
 
     public Clip ClipBehavior { get; }
 
-    public Action<double, double, double>? OnViewportMetricsChanged { get; }
+    public ViewportMetricsChangedCallback? OnViewportMetricsChanged { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -1337,7 +1395,7 @@ internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
         Widget child,
         AxisDirection axisDirection,
         double offsetPixels,
-        Action<double, double, double>? onViewportMetricsChanged = null) : base(child)
+        ViewportMetricsChangedCallback? onViewportMetricsChanged = null) : base(child)
     {
         AxisDirection = axisDirection;
         OffsetPixels = offsetPixels;
@@ -1346,7 +1404,7 @@ internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
 
     public AxisDirection AxisDirection { get; }
     public double OffsetPixels { get; }
-    public Action<double, double, double>? OnViewportMetricsChanged { get; }
+    public ViewportMetricsChangedCallback? OnViewportMetricsChanged { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSingleChildViewport(
         axisDirection: AxisDirection,

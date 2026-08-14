@@ -7,12 +7,12 @@ public sealed class RenderSingleChildViewport : RenderProxyBox
 {
     private AxisDirection _axisDirection;
     private double _offsetPixels;
-    private Action<double, double, double>? _onViewportMetricsChanged;
+    private ViewportMetricsChangedCallback? _onViewportMetricsChanged;
 
     public RenderSingleChildViewport(
         AxisDirection axisDirection,
         double offsetPixels = 0,
-        Action<double, double, double>? onViewportMetricsChanged = null,
+        ViewportMetricsChangedCallback? onViewportMetricsChanged = null,
         RenderBox? child = null)
     {
         _axisDirection = axisDirection;
@@ -43,7 +43,7 @@ public sealed class RenderSingleChildViewport : RenderProxyBox
         }
     }
 
-    public Action<double, double, double>? OnViewportMetricsChanged
+    public ViewportMetricsChangedCallback? OnViewportMetricsChanged
     {
         get => _onViewportMetricsChanged;
         set => _onViewportMetricsChanged = value;

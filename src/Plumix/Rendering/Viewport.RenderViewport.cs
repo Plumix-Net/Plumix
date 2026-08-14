@@ -6,6 +6,18 @@ using Plumix.UI;
 
 namespace Plumix.Rendering;
 
+/// <summary>
+/// Reports the measured viewport extent and content extents to the owning scrollable.
+/// </summary>
+/// <returns>
+/// The offset the viewport must lay out at, when applying the dimensions moved the scroll position
+/// (Flutter's <c>applyViewportDimension</c> returning false); null when nothing was corrected.
+/// </returns>
+public delegate double? ViewportMetricsChangedCallback(
+    double viewportExtent,
+    double minScrollExtent,
+    double maxScrollExtent);
+
 public sealed class RenderViewport : RenderBox, IRenderObjectContainer
 {
     private readonly RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData> _container;
@@ -20,6 +32,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
     private double _anchor;
     private Clip _clipBehavior;
     private double _maxScrollExtent;
+    private double? _reportedPixels;
     private RenderSliverToBoxAdapter? _legacyChildSliver;
 
     public RenderViewport(
@@ -31,7 +44,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
         double anchor = 0.0,
-        Action<double, double, double>? onViewportMetricsChanged = null,
+        ViewportMetricsChangedCallback? onViewportMetricsChanged = null,
         RenderBox? child = null,
         Clip clipBehavior = Clip.HardEdge,
         ScrollDirection userScrollDirection = ScrollDirection.Idle)
@@ -136,7 +149,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         }
     }
 
-    public Action<double, double, double>? OnViewportMetricsChanged { get; set; }
+    public ViewportMetricsChangedCallback? OnViewportMetricsChanged { get; set; }
 
     public bool ShrinkWrap
     {
@@ -300,6 +313,39 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
 
     protected override void PerformLayout()
     {
+        // A position that resolves its offset from the viewport extent (a page view's, say) only
+        // learns its pixels once the dimensions reach it, so the reported correction is laid out
+        // again in this same frame rather than surfacing as a one-frame flash.
+        for (int attempt = 0; attempt < 5; attempt++)
+        {
+            if (!LayoutOnce())
+            {
+                return;
+            }
+        }
+
+        LayoutOnce();
+    }
+
+    /// <summary>Runs one layout pass; returns true when the scroll position corrected the offset.</summary>
+    private bool LayoutOnce()
+    {
+        double laidOutOffset = _offsetPixels;
+        PerformLayoutPass();
+        if (_reportedPixels is not { } corrected
+            || Math.Abs(corrected - laidOutOffset) <= 0.0001
+            || Math.Abs(corrected - _offsetPixels) <= 0.0001)
+        {
+            return false;
+        }
+
+        _offsetPixels = corrected;
+        return true;
+    }
+
+    private void PerformLayoutPass()
+    {
+        _reportedPixels = null;
         Size = Constraints.Constrain(Constraints.Biggest);
 
         double viewportMainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
@@ -363,7 +409,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
                     _offsetPixels = currentOffset;
                 }
 
-                OnViewportMetricsChanged?.Invoke(viewportMainAxisExtent, 0, _maxScrollExtent);
+                _reportedPixels = OnViewportMetricsChanged?.Invoke(viewportMainAxisExtent, 0, _maxScrollExtent);
                 return;
             }
 
@@ -379,7 +425,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         double finalAnchoredViewportExtent = viewportMainAxisExtent * (1.0 - Anchor);
         _maxScrollExtent = Math.Max(0, finalLayout.totalScrollExtent - finalAnchoredViewportExtent);
         _offsetPixels = UserOffsetFromEffective(finalLayout.scrollOffset, _maxScrollExtent);
-        OnViewportMetricsChanged?.Invoke(viewportMainAxisExtent, 0, _maxScrollExtent);
+        _reportedPixels = OnViewportMetricsChanged?.Invoke(viewportMainAxisExtent, 0, _maxScrollExtent);
     }
 
     public override void Paint(PaintingContext ctx, Point offset)

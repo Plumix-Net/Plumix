@@ -449,6 +449,8 @@ public sealed class DrivenScrollActivity : ScrollActivity
     private readonly double _from;
     private readonly Ticker _ticker;
     private readonly double _to;
+    private readonly TaskCompletionSource _completer =
+        new(TaskCreationOptions.RunContinuationsAsynchronously);
     private TimeSpan _elapsed;
     private bool _disposed;
 
@@ -475,6 +477,12 @@ public sealed class DrivenScrollActivity : ScrollActivity
         _ticker.Start();
     }
 
+    /// <summary>
+    /// Completes when the animation finishes or is superseded, so <see cref="ScrollPosition.AnimateTo"/>
+    /// can hand back Flutter's <c>Future&lt;void&gt;</c>.
+    /// </summary>
+    public Task Done => _completer.Task;
+
     public override void Dispose()
     {
         if (_disposed)
@@ -484,6 +492,7 @@ public sealed class DrivenScrollActivity : ScrollActivity
 
         _disposed = true;
         _ticker.Dispose();
+        _completer.TrySetResult();
     }
 
     private void OnTick(TimeSpan elapsed)
@@ -568,6 +577,10 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     private double _minScrollExtent;
     private double _maxScrollExtent;
     private double _viewportDimension;
+    private bool _hasPixels;
+    private bool _hasViewportDimension;
+    private bool _hasContentDimensions;
+    private bool _haveDimensions;
     private ScrollActivity _activity;
     private ScrollDirection _userScrollDirection = ScrollDirection.Idle;
     private FixedScrollMetrics? _lastMetrics;
@@ -576,21 +589,60 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     private double _heldPreviousVelocity;
     private double _impliedVelocity;
 
-    public ScrollPosition(double initialPixels = 0.0, ScrollPhysics? physics = null)
+    public ScrollPosition(
+        double initialPixels = 0.0,
+        ScrollPhysics? physics = null,
+        bool keepScrollOffset = true)
+        : this((double?)initialPixels, physics, keepScrollOffset)
     {
-        _pixels = initialPixels;
+    }
+
+    /// <summary>
+    /// Creates a position whose offset is not known yet. A null <paramref name="initialPixels"/>
+    /// leaves <see cref="HasPixels"/> false until the first layout supplies a viewport dimension,
+    /// which is what lets a subclass derive its offset from the viewport (Flutter's
+    /// <c>ScrollPosition(initialPixels: null)</c>).
+    /// </summary>
+    protected ScrollPosition(
+        double? initialPixels,
+        ScrollPhysics? physics = null,
+        bool keepScrollOffset = true)
+    {
+        _pixels = initialPixels ?? 0.0;
+        _hasPixels = initialPixels.HasValue;
+        KeepScrollOffset = keepScrollOffset;
         _physics = physics ?? new ClampingScrollPhysics();
         _activity = new IdleScrollActivity(this);
         IsScrollingNotifier = new ValueNotifier<bool>(false);
     }
 
+    /// <summary>
+    /// The current offset. Flutter asserts when the offset has not been established yet; Plumix
+    /// reports zero and exposes <see cref="HasPixels"/> instead, because the offset is pushed into
+    /// the viewport widget at build time rather than pulled during layout.
+    /// </summary>
     public double Pixels => _pixels;
+
+    /// <summary>Whether <see cref="Pixels"/> has been established by a layout or a correction.</summary>
+    public bool HasPixels => _hasPixels;
 
     public double MinScrollExtent => _minScrollExtent;
 
     public double MaxScrollExtent => _maxScrollExtent;
 
     public double ViewportDimension => _viewportDimension;
+
+    /// <summary>Whether <see cref="ViewportDimension"/> has been supplied by a layout.</summary>
+    public bool HasViewportDimension => _hasViewportDimension;
+
+    /// <summary>Whether the min/max scroll extents have been supplied by a layout.</summary>
+    public bool HasContentDimensions => _hasContentDimensions;
+
+    /// <summary>Whether <see cref="ApplyContentDimensions"/> has completed at least once.</summary>
+    public bool HaveDimensions => _haveDimensions;
+
+    /// <summary>Whether this position persists its offset through <see cref="PageStorage"/>.</summary>
+    public bool KeepScrollOffset { get; }
 
     /// <summary>Whether the <see cref="Pixels"/> value is outside the min/max scroll extents.</summary>
     public bool OutOfRange => _pixels < _minScrollExtent || _pixels > _maxScrollExtent;
@@ -615,6 +667,12 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     public BuildContext? NotificationContext { get; internal set; }
 
     /// <summary>
+    /// The key a <see cref="PageStorage"/> round-trip is filed under. Flutter reaches it through
+    /// <c>ScrollPosition.context.storageContext</c> plus the scrollable's restoration id.
+    /// </summary>
+    internal string? RestorationId { get; set; }
+
+    /// <summary>
     /// Invoked with <see cref="ScrollPhysics.ShouldAcceptUserOffset"/> whenever the dimensions
     /// change, so the owning scrollable can add or remove its drag gesture recognizers.
     /// </summary>
@@ -634,7 +692,11 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         GoBallistic(0.0);
     }
 
-    public void AnimateTo(double value, TimeSpan duration, Curve? curve = null)
+    /// <summary>
+    /// Animates the position to <paramref name="value"/>, returning a task that completes when the
+    /// animation ends or is superseded by another activity (Flutter's <c>Future&lt;void&gt;</c>).
+    /// </summary>
+    public Task AnimateTo(double value, TimeSpan duration, Curve? curve = null)
     {
         if (!double.IsFinite(value))
         {
@@ -647,13 +709,15 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         if (duration == TimeSpan.Zero)
         {
             JumpTo(value);
-            return;
+            return Task.CompletedTask;
         }
 
-        BeginActivity(new DrivenScrollActivity(this, value, duration, curve ?? Curves.Linear));
+        var activity = new DrivenScrollActivity(this, value, duration, curve ?? Curves.Linear);
+        BeginActivity(activity);
+        return activity.Done;
     }
 
-    public void RestoreOffset(double offset, bool initialRestore = false)
+    public virtual void RestoreOffset(double offset, bool initialRestore = false)
     {
         if (!double.IsFinite(offset))
         {
@@ -663,10 +727,55 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         if (initialRestore)
         {
             _pixels = offset;
+            _hasPixels = true;
             return;
         }
 
         JumpTo(offset);
+    }
+
+    /// <summary>
+    /// Writes the offset this position should be restored to into the enclosing
+    /// <see cref="PageStorage"/>. Subclasses that track something other than pixels (a page index,
+    /// for instance) override this together with <see cref="RestoreScrollOffset"/>.
+    /// </summary>
+    public virtual void SaveScrollOffset()
+    {
+        WriteStorageOffset(Pixels);
+    }
+
+    /// <summary>Reads back what <see cref="SaveScrollOffset"/> stored, if anything.</summary>
+    public virtual void RestoreScrollOffset()
+    {
+        if (ReadStorageOffset() is { } offset)
+        {
+            RestoreOffset(offset, initialRestore: true);
+        }
+    }
+
+    /// <summary>Stores <paramref name="value"/> under this position's restoration id.</summary>
+    protected void WriteStorageOffset(double value)
+    {
+        if (!KeepScrollOffset || NotificationContext is not { } context)
+        {
+            return;
+        }
+
+        PageStorage.MaybeOf(context)?.WriteState(context, value, RestorationId);
+    }
+
+    /// <summary>Reads the value stored under this position's restoration id.</summary>
+    protected double? ReadStorageOffset()
+    {
+        if (!KeepScrollOffset || NotificationContext is not { } context)
+        {
+            return null;
+        }
+
+        return PageStorage.MaybeOf(context)?.ReadState(context, RestorationId) is double offset
+               && double.IsFinite(offset)
+            ? offset
+            : null;
     }
 
     public void BeginDrag()
@@ -779,12 +888,13 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
     public virtual bool ApplyViewportDimension(double viewportDimension)
     {
-        if (Math.Abs(_viewportDimension - viewportDimension) < 0.0001)
+        if (_hasViewportDimension && Math.Abs(_viewportDimension - viewportDimension) < 0.0001)
         {
             return false;
         }
 
         _viewportDimension = viewportDimension;
+        _hasViewportDimension = true;
         _didChangeViewportDimensionOrReceiveCorrection = true;
         return true;
     }
@@ -793,13 +903,17 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     {
         bool minChanged = Math.Abs(_minScrollExtent - minScrollExtent) > 0.0001;
         bool maxChanged = Math.Abs(_maxScrollExtent - maxScrollExtent) > 0.0001;
-        if (!minChanged && !maxChanged && !_didChangeViewportDimensionOrReceiveCorrection)
+        if (_hasContentDimensions
+            && !minChanged
+            && !maxChanged
+            && !_didChangeViewportDimensionOrReceiveCorrection)
         {
             return false;
         }
 
         _minScrollExtent = minScrollExtent;
         _maxScrollExtent = maxScrollExtent;
+        _hasContentDimensions = true;
         _didChangeViewportDimensionOrReceiveCorrection = false;
 
         var currentMetrics = FixedScrollMetrics.From(this);
@@ -821,6 +935,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         // Lets the current activity settle a position the new dimensions put out of range.
         ApplyNewDimensions();
         _lastMetrics = FixedScrollMetrics.From(this);
+        _haveDimensions = true;
         return true;
     }
 
@@ -848,6 +963,10 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         _maxScrollExtent = other._maxScrollExtent;
         _viewportDimension = other._viewportDimension;
         _pixels = other._pixels;
+        _hasPixels = other._hasPixels;
+        _hasViewportDimension = other._hasViewportDimension;
+        _hasContentDimensions = other._hasContentDimensions;
+        _haveDimensions = other._haveDimensions;
         _lastMetrics = other._lastMetrics;
         _userScrollDirection = other._userScrollDirection;
         _heldPreviousVelocity = other._heldPreviousVelocity;
@@ -908,12 +1027,13 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
     protected bool CorrectPixels(double value)
     {
-        if (Math.Abs(value - _pixels) < 0.0001)
+        if (_hasPixels && Math.Abs(value - _pixels) < 0.0001)
         {
             return false;
         }
 
         _pixels = value;
+        _hasPixels = true;
         NotifyListeners();
         return true;
     }
@@ -926,6 +1046,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     {
         _impliedVelocity = value - _pixels;
         _pixels = value;
+        _hasPixels = true;
         NotifyListeners();
         Scheduler.AddPostFrameCallback(_ => _impliedVelocity = 0.0);
     }
@@ -949,6 +1070,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         double overscroll = Physics.ApplyBoundaryConditions(this, value);
         double oldPixels = _pixels;
         _pixels = value - overscroll;
+        _hasPixels = true;
         if (Math.Abs(_pixels - oldPixels) > Constants.PrecisionErrorTolerance)
         {
             NotifyListeners();

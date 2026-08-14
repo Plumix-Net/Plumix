@@ -1,5 +1,29 @@
 # Changelog
 
+- Breaking: closed the `PageView` divergence end-to-end (`widgets/page_view.dart`). `PageView` is no longer a
+  gesture-driven widget over a bespoke `RenderPageViewport`: it now builds Flutter's composition
+  (`NotificationListener<ScrollNotification>` > `Scrollable` > `Viewport` > `SliverFillViewport`), so pages are
+  lazy, `pageSnapping`/physics/overscroll/mouse-wheel come from the shared scroll pipeline, and page state is
+  measured in scroll pixels. `PageController` is now a `ScrollController` (`Page`, `JumpToPage`, `AnimateToPage`,
+  `NextPage`, `PreviousPage`, `OnAttach`/`OnDetach`, Flutter's four attach asserts) backed by the ported
+  `_PagePosition` (`getPageFromPixels`/`getPixelsFromPage`, `_initialPageOffset` centering for
+  `viewportFraction > 1`, the zero-viewport `_cachedPage` state machine, page-valued `PageStorage` round-trip),
+  and `PageScrollPhysics` gained its real `createBallisticSimulation`. New `PageView` options: `PadEnds`,
+  `RestorationId`, `ScrollCacheExtent`, `HitTestBehavior`, `ScrollBehavior`, plus `PageView.Builder` and the
+  `SliverChildDelegate` (`PageView.custom`) constructor. Supporting core work: `ScrollPosition` gained
+  `HasPixels`/`HasViewportDimension`/`HasContentDimensions`/`HaveDimensions`, a null-initial-offset constructor,
+  `KeepScrollOffset` and overridable `SaveScrollOffset`/`RestoreScrollOffset`/`RestoreOffset`; `AnimateTo` returns
+  Flutter's completion future as a `Task`; `RenderViewport` re-runs its layout in the same frame when the position
+  corrects the offset (`ViewportMetricsChangedCallback`); `Scrollable` compares physics chains by runtime type
+  (Flutter's `_shouldUpdatePosition`) instead of by identity, and no longer reports a `ScrollUpdateNotification`
+  for an offset corrected while applying fresh viewport dimensions. **Breaking:** `PageController.EffectivePage`,
+  `PageViewport` and `RenderPageViewport` are gone, `PageController.Page` throws Flutter's messages instead of
+  returning null when unattached, `PageView` children are built lazily (offscreen pages no longer keep state
+  alive unless `allowImplicitScrolling`/`scrollCacheExtent` says so), and `ScrollMetricsSnapshot` carries
+  `ViewportFraction`/`Page`. `TabBarView` and `CalendarDatePicker` route through the new page view;
+  the calendar now uses `PageView.Builder` over the whole `firstDate`..`lastDate` month range instead of
+  rotating a three-page window.
+
 - Breaking: closed the live-`ScaffoldGeometry`/FAB-motion divergence (`material_ui/scaffold.dart`,
   `floating_action_button_location.dart`). `Scaffold` now lays its slots out through the ported
   `_ScaffoldLayout` (`CustomMultiChildLayout` + `ScaffoldSlot`) instead of a Column/Stack, so

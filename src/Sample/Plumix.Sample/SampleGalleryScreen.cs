@@ -28,6 +28,7 @@ internal static class SampleRoutes
     public const string ListViewFixedExtent = "/list-fixed-extent";
     public const string ScrollPhysics = "/scroll-physics";
     public const string ListViewReverse = "/list-reverse";
+    public const string PageView = "/page-view";
     public const string GridView = "/grid-view";
     public const string CustomSlivers = "/custom-slivers";
     public const string Scrollbar = "/scrollbar";
@@ -235,6 +236,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.ListViewSeparated, "ListView.Separated", "item + separator builder", () => new ListViewSeparatedDemoPage()),
         new(SampleRoutes.ListViewFixedExtent, "ListView fixed extent", "itemExtent + padding", () => new ListViewFixedExtentDemoPage()),
         new(SampleRoutes.ListViewReverse, "ListView reverse", "reverse=true behavior", () => new ListViewReverseDemoPage()),
+        new(SampleRoutes.PageView, "PageView.Builder", "lazy pages + viewportFraction", () => new PageViewDemoPage()),
         new(
             SampleRoutes.ScrollPhysics,
             "Scroll physics",

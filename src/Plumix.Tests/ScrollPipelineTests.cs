@@ -138,6 +138,7 @@ public sealed class ScrollPipelineTests
                 viewportExtent = viewport;
                 minExtent = min;
                 maxExtent = max;
+                return null;
             },
             child: child);
 
@@ -167,7 +168,11 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(
             axis: Axis.Vertical,
             offsetPixels: 80,
-            onViewportMetricsChanged: (_, _, max) => maxExtent = max);
+            onViewportMetricsChanged: (_, _, max) =>
+            {
+                maxExtent = max;
+                return null;
+            });
         viewport.Insert(first);
         viewport.Insert(second, after: first);
 
@@ -215,7 +220,11 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(
             axis: Axis.Vertical,
             offsetPixels: 100,
-            onViewportMetricsChanged: (_, _, max) => maxExtent = max);
+            onViewportMetricsChanged: (_, _, max) =>
+            {
+                maxExtent = max;
+                return null;
+            });
         viewport.Insert(correcting);
 
         var root = new RenderView { Child = viewport };
@@ -235,7 +244,11 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(
             axis: Axis.Vertical,
             offsetPixels: 0,
-            onViewportMetricsChanged: (_, _, max) => maxExtent = max);
+            onViewportMetricsChanged: (_, _, max) =>
+            {
+                maxExtent = max;
+                return null;
+            });
         viewport.Insert(innerSliver);
 
         var root = new RenderView { Child = viewport };
@@ -284,7 +297,11 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(
             axis: Axis.Vertical,
             offsetPixels: 0,
-            onViewportMetricsChanged: (_, _, max) => maxExtent = max);
+            onViewportMetricsChanged: (_, _, max) =>
+            {
+                maxExtent = max;
+                return null;
+            });
         viewport.Insert(sliverPadding);
 
         var root = new RenderView { Child = viewport };
@@ -557,7 +574,11 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(
             axis: Axis.Vertical,
             offsetPixels: 0,
-            onViewportMetricsChanged: (_, _, max) => maxExtent = max);
+            onViewportMetricsChanged: (_, _, max) =>
+            {
+                maxExtent = max;
+                return null;
+            });
         viewport.Insert(sliverList);
 
         var root = new RenderView { Child = viewport };
@@ -790,7 +811,11 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(
             axis: Axis.Vertical,
             offsetPixels: 0,
-            onViewportMetricsChanged: (_, _, max) => maxExtent = max);
+            onViewportMetricsChanged: (_, _, max) =>
+            {
+                maxExtent = max;
+                return null;
+            });
         viewport.Insert(sliverGrid);
 
         var root = new RenderView { Child = viewport };

@@ -2154,6 +2154,12 @@ public sealed class TabBarView : StatefulWidget
 
         private bool ControllerIsValid => _controller?.Animation is not null;
 
+        /// <summary>
+        /// The page view's current page, or null while no page view is attached to the controller.
+        /// Flutter reads <c>_pageController.page</c> directly and relies on its debug assert.
+        /// </summary>
+        private double? CurrentPage => _pageController?.HasClients == true ? _pageController.Page : null;
+
         public override void InitState() => UpdateChildren();
 
         public override void DidChangeDependencies()
@@ -2166,7 +2172,7 @@ public sealed class TabBarView : StatefulWidget
                     initialPage: _currentIndex,
                     viewportFraction: Current.ViewportFraction);
             }
-            else
+            else if (_pageController.HasClients)
             {
                 _pageController.JumpToPage(_currentIndex);
             }
@@ -2288,7 +2294,7 @@ public sealed class TabBarView : StatefulWidget
 
         private void WarpToCurrentIndex()
         {
-            if (!Mounted || _pageController!.EffectivePage == _currentIndex)
+            if (!Mounted || CurrentPage == _currentIndex)
             {
                 return;
             }
@@ -2355,7 +2361,7 @@ public sealed class TabBarView : StatefulWidget
         private void SyncControllerOffset()
         {
             _controller!.Offset = Math.Clamp(
-                (_pageController!.Page ?? _currentIndex) - _controller.Index,
+                (CurrentPage ?? _currentIndex) - _controller.Index,
                 -1.0,
                 1.0);
         }
@@ -2373,7 +2379,7 @@ public sealed class TabBarView : StatefulWidget
             }
 
             _scrollUnderwayCount += 1;
-            double page = _pageController!.Page ?? _currentIndex;
+            double page = CurrentPage ?? _currentIndex;
             if (notification is ScrollUpdateNotification && !_controller!.IndexIsChanging)
             {
                 bool pageChanged = Math.Abs(page - _controller.Index) > 1.0;

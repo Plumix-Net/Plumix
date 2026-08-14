@@ -1021,11 +1021,12 @@ public sealed class MaterialTabsTests
             ])));
         harness.Pump(new Size(300, 180));
 
-        var viewport = RequirePageViewport(harness.RenderView);
-        Assert.Equal(new Size(240, 180), viewport.FirstChild!.Size);
-        Assert.Equal(-210, ((PageViewportParentData)viewport.FirstChild.parentData!).offset.X, precision: 3);
-        var selected = viewport.ChildAfter(viewport.FirstChild)!;
-        Assert.Equal(30, ((PageViewportParentData)selected.parentData!).offset.X, precision: 3);
+        // viewportFraction 0.8 of a 300 px viewport is a 240 px page, padEnds leaves 30 px on each
+        // end, and page 1 is selected, so page 0 sits one page extent to the left of that padding.
+        List<RenderBox> pages = PageBoxes(harness.RenderView);
+        Assert.All(pages, page => Assert.Equal(new Size(240, 180), page.Size));
+        Assert.Equal(-210, PageLeft(pages[0]), precision: 3);
+        Assert.Equal(30, PageLeft(pages[1]), precision: 3);
     }
 
     [Fact]
@@ -1042,8 +1043,11 @@ public sealed class MaterialTabsTests
             controller: controller,
             children: [new SizedBox(), new SizedBox()])));
         harness.Pump(new Size(300, 180));
+
+        // The page view is lazy: with the default zero cache extent only the visible tab panel is
+        // built, matching Flutter's `SliverFillViewport` child window.
         Assert.Equal(
-            2,
+            1,
             FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
                 .Count(node => node.Role == SemanticsRole.TabPanel));
     }
@@ -1068,9 +1072,8 @@ public sealed class MaterialTabsTests
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
         harness.Pump(new Size(300, 180));
         Assert.Equal(2, controller.Index);
-        var programmaticViewport = RequirePageViewport(harness.RenderView);
-        Assert.Equal(2, programmaticViewport.Controller.EffectivePage, precision: 3);
-        Assert.Equal(0, ((PageViewportParentData)programmaticViewport.LastChild!.parentData!).offset.X, precision: 3);
+        Assert.Equal(2, RequirePagePosition(harness).Page!.Value, precision: 3);
+        Assert.Equal(0, PageLeft(PageBoxes(harness.RenderView)[^1]), precision: 3);
 
         controller.AnimateTo(0);
         clock = Scheduler.CurrentSeconds;
@@ -1087,12 +1090,12 @@ public sealed class MaterialTabsTests
         clock = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.0));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 2.0));
         harness.Pump(new Size(300, 180));
 
         Assert.Equal(1, controller.Index);
-        var second = RequirePageViewport(harness.RenderView).ChildAfter(
-            RequirePageViewport(harness.RenderView).FirstChild!)!;
-        Assert.Equal(0, ((PageViewportParentData)second.parentData!).offset.X, precision: 3);
+        Assert.Equal(1, RequirePagePosition(harness).Page!.Value, precision: 3);
     }
 
     [Fact]
@@ -1117,7 +1120,7 @@ public sealed class MaterialTabsTests
         harness.Pump(new Size(300, 180));
 
         Assert.Equal(3, controller.Index);
-        Assert.Equal(3, RequirePageViewport(harness.RenderView).Controller.EffectivePage, precision: 3);
+        Assert.Equal(3, RequirePagePosition(harness).Page!.Value, precision: 3);
     }
 
     [Fact]
@@ -1139,7 +1142,7 @@ public sealed class MaterialTabsTests
 
         Assert.Equal(2, controller.Index);
         Assert.False(controller.IndexIsChanging);
-        Assert.Equal(2, RequirePageViewport(harness.RenderView).Controller.EffectivePage, precision: 3);
+        Assert.Equal(2, RequirePagePosition(harness).Page!.Value, precision: 3);
     }
 
     [Fact]
@@ -1173,10 +1176,13 @@ public sealed class MaterialTabsTests
         double clock = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.0));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 2.0));
         harness.Pump(new Size(300, 180));
 
-        ScrollEndNotification end = Assert.IsType<ScrollEndNotification>(notifications[^1]);
-        Assert.Equal(300, end.Metrics.Pixels, precision: 3);
+        Assert.Contains(notifications, notification => notification is ScrollEndNotification);
+        Assert.Equal(300, notifications[^1].Metrics.Pixels, precision: 3);
+        Assert.Equal(1, notifications[^1].Metrics.Page, precision: 3);
         controller.Dispose();
     }
 
@@ -1338,7 +1344,7 @@ public sealed class MaterialTabsTests
         using var harness = new WidgetRenderHarness(Wrap(new TabsDemoPage()));
         harness.Pump(new Size(1000, 700));
 
-        Assert.NotNull(FindDescendant<RenderPageViewport>(harness.RenderView));
+        Assert.NotNull(FindDescendant<RenderSliverFillViewport>(harness.RenderView));
         Assert.NotNull(FindIndicatorPainter(harness.RenderView));
         Assert.Equal(4, FindDescendants<RenderDecoratedBox>(harness.RenderView)
             .Count(box => box.Decoration.Shape == BoxShape.Circle));
@@ -1413,8 +1419,31 @@ public sealed class MaterialTabsTests
         element.VisitChildren(child => CollectElements<T>(child, sink));
     }
 
-    private static RenderPageViewport RequirePageViewport(RenderObject root) =>
-        Assert.IsType<RenderPageViewport>(FindDescendant<RenderPageViewport>(root));
+    /// <summary>The page position driving the page view under the harness.</summary>
+    private static PagePosition RequirePagePosition(WidgetRenderHarness harness)
+    {
+        var scrollables = new List<Element>();
+        CollectElements<Scrollable>(WidgetRenderHarness.RootElementFor(harness.RenderView), scrollables);
+        var state = (Scrollable.ScrollableState)((StatefulElement)Assert.Single(scrollables)).State;
+        return Assert.IsType<PagePosition>(state.Position);
+    }
+
+    /// <summary>The page boxes a <see cref="PageView"/> currently has laid out, in sliver order.</summary>
+    private static List<RenderBox> PageBoxes(RenderObject root)
+    {
+        var fill = FindDescendant<RenderSliverFillViewport>(root);
+        Assert.NotNull(fill);
+        var boxes = new List<RenderBox>();
+        for (RenderBox? child = fill.FirstChild; child != null; child = fill.ChildAfter(child))
+        {
+            boxes.Add(child);
+        }
+
+        return boxes;
+    }
+
+    /// <summary>The x offset of a laid-out page relative to the render view.</summary>
+    private static double PageLeft(RenderBox page) => page.GetPaintOffsetToRoot().X;
 
     private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
     {
