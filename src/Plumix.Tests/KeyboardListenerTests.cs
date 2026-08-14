@@ -16,7 +16,8 @@ public sealed class KeyboardListenerTests : IDisposable
     {
         FocusManager.Instance.ResetForTests();
 #pragma warning disable CS0618
-        RawKeyboard.Instance.ResetForTests();
+        RawKeyboard.Instance.ClearKeysPressed();
+        RawKeyboard.Instance.ClearListeners();
 #pragma warning restore CS0618
     }
 
@@ -24,7 +25,8 @@ public sealed class KeyboardListenerTests : IDisposable
     {
         FocusManager.Instance.ResetForTests();
 #pragma warning disable CS0618
-        RawKeyboard.Instance.ResetForTests();
+        RawKeyboard.Instance.ClearKeysPressed();
+        RawKeyboard.Instance.ClearListeners();
 #pragma warning restore CS0618
     }
 
@@ -68,8 +70,8 @@ public sealed class KeyboardListenerTests : IDisposable
                 child: new SizedBox(width: 20, height: 12)));
 
         Assert.True(focusNode.HasFocus);
-        var down = new KeyEvent(key: "KeyA", isDown: true);
-        var up = new KeyEvent(key: "KeyA", isDown: false);
+        var down = KeySim.Down(LogicalKeyboardKey.KeyA);
+        var up = KeySim.Up(LogicalKeyboardKey.KeyA);
 
         Assert.False(FocusManager.Instance.HandleKeyEvent(down));
         Assert.False(FocusManager.Instance.HandleKeyEvent(up));
@@ -144,17 +146,17 @@ public sealed class KeyboardListenerTests : IDisposable
                 onKey: rawEvents.Add,
                 child: new SizedBox(width: 20, height: 12)));
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Enter", isDown: true));
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Enter", isDown: false));
+        KeySim.DispatchRaw(LogicalKeyboardKey.Enter, down: true);
+        KeySim.DispatchRaw(LogicalKeyboardKey.Enter, down: false);
 
         Assert.Collection(
             rawEvents,
             first => Assert.IsType<RawKeyDownEvent>(first),
             second => Assert.IsType<RawKeyUpEvent>(second));
-        Assert.All(rawEvents, @event => Assert.Equal("Enter", @event.Key));
+        Assert.All(rawEvents, @event => Assert.Equal(LogicalKeyboardKey.Enter, @event.LogicalKey));
 
         focusNode.Unfocus();
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Escape", isDown: true));
+        KeySim.DispatchRaw(LogicalKeyboardKey.Escape, down: true);
         Assert.Equal(2, rawEvents.Count);
 #pragma warning restore CS0618
     }
@@ -181,11 +183,11 @@ public sealed class KeyboardListenerTests : IDisposable
         Assert.False(firstNode.HasFocus);
         Assert.True(secondNode.HasFocus);
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+        KeySim.DispatchRaw(LogicalKeyboardKey.Space, down: true);
         Assert.Equal(1, eventCount);
 
         harness.Dispose();
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: false));
+        KeySim.DispatchRaw(LogicalKeyboardKey.Space, down: false);
         Assert.Equal(1, eventCount);
 #pragma warning restore CS0618
     }

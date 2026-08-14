@@ -46,11 +46,14 @@ public sealed class RadioGroup<T> : StatefulWidget
             _registry = new RegistryImpl(this);
             _shortcuts = new Dictionary<ShortcutActivator, Intent>
             {
-                [new SingleActivator("ArrowLeft")] = new VoidCallbackIntent(_registry.SelectPreviousRadio),
-                [new SingleActivator("ArrowRight")] = new VoidCallbackIntent(_registry.SelectNextRadio),
-                [new SingleActivator("ArrowDown")] = new VoidCallbackIntent(_registry.SelectNextRadio),
-                [new SingleActivator("ArrowUp")] = new VoidCallbackIntent(_registry.SelectPreviousRadio),
-                [new SingleActivator("Space")] = new VoidCallbackIntent(_registry.ToggleFocusedRadio),
+                [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] =
+                    new VoidCallbackIntent(_registry.SelectPreviousRadio),
+                [new SingleActivator(LogicalKeyboardKey.ArrowRight)] =
+                    new VoidCallbackIntent(_registry.SelectNextRadio),
+                [new SingleActivator(LogicalKeyboardKey.ArrowDown)] = new VoidCallbackIntent(_registry.SelectNextRadio),
+                [new SingleActivator(LogicalKeyboardKey.ArrowUp)] =
+                    new VoidCallbackIntent(_registry.SelectPreviousRadio),
+                [new SingleActivator(LogicalKeyboardKey.Space)] = new VoidCallbackIntent(_registry.ToggleFocusedRadio),
             };
             _shortcutManager = new RadioGroupShortcutManager(_shortcuts, _registry);
         }

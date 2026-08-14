@@ -14,7 +14,11 @@ public enum LockState
 
 public interface ShortcutActivator
 {
-    IReadOnlySet<string>? Triggers { get; }
+    /// <summary>
+    /// All the keys that might be the final event to trigger this shortcut, or null if every key
+    /// should be considered (for example <see cref="CharacterActivator"/>).
+    /// </summary>
+    IReadOnlySet<LogicalKeyboardKey>? Triggers { get; }
 
     bool Accepts(KeyEvent @event, HardwareKeyboard state);
 
@@ -87,9 +91,18 @@ public class KeySet<T> : IEquatable<KeySet<T>> where T : notnull
     }
 }
 
-public sealed class LogicalKeySet : KeySet<string>, ShortcutActivator, IEquatable<LogicalKeySet>
+/// <summary>
+/// A set of <see cref="LogicalKeyboardKey"/>s that can be used as a <see cref="ShortcutActivator"/>.
+/// </summary>
+public sealed class LogicalKeySet : KeySet<LogicalKeyboardKey>, ShortcutActivator, IEquatable<LogicalKeySet>
 {
-    public LogicalKeySet(string key1, string? key2 = null, string? key3 = null, string? key4 = null)
+    private IReadOnlySet<LogicalKeyboardKey>? _triggers;
+
+    public LogicalKeySet(
+        LogicalKeyboardKey key1,
+        LogicalKeyboardKey? key2 = null,
+        LogicalKeyboardKey? key3 = null,
+        LogicalKeyboardKey? key4 = null)
         : base(
             key1 ?? throw new ArgumentNullException(nameof(key1)),
             key2,
@@ -98,117 +111,100 @@ public sealed class LogicalKeySet : KeySet<string>, ShortcutActivator, IEquatabl
     {
     }
 
-    public LogicalKeySet(IReadOnlySet<string> keys) : base(keys)
+    public LogicalKeySet(IReadOnlySet<LogicalKeyboardKey> keys) : base(keys)
     {
     }
 
+    public IReadOnlySet<LogicalKeyboardKey> Triggers => _triggers ??= BuildTriggers();
+
     public bool Accepts(KeyEvent @event, HardwareKeyboard state)
     {
-        if (!@event.IsDown)
+        ArgumentNullException.ThrowIfNull(@event);
+        ArgumentNullException.ThrowIfNull(state);
+        if (@event is not (KeyDownEvent or KeyRepeatEvent))
         {
             return false;
         }
 
-        HashSet<string> pressed = BuildPressedKeys(@event, state);
-        return NormalizeKeys(InternalKeys).SetEquals(NormalizeKeys(pressed));
+        return Triggers.Contains(@event.LogicalKey) && CheckKeyRequirements(state.LogicalKeysPressed);
     }
 
-    public string DebugDescribeKeys() => string.Join(" + ", InternalKeys.Order(StringComparer.Ordinal));
+    public string DebugDescribeKeys()
+    {
+        List<LogicalKeyboardKey> sortedKeys = [.. InternalKeys];
+        sortedKeys.Sort((a, b) =>
+        {
+            // Put the modifiers first. If it has a synonym, then it is something like shiftLeft.
+            bool aIsModifier = a.Synonyms.Count > 0 || Modifiers.Contains(a);
+            bool bIsModifier = b.Synonyms.Count > 0 || Modifiers.Contains(b);
+            if (aIsModifier && !bIsModifier)
+            {
+                return -1;
+            }
 
-    public IReadOnlySet<string> Triggers => new HashSet<string>(InternalKeys, StringComparer.Ordinal);
+            if (bIsModifier && !aIsModifier)
+            {
+                return 1;
+            }
+
+            return string.CompareOrdinal(a.DebugName, b.DebugName);
+        });
+
+        return string.Join(" + ", sortedKeys.Select(key => key.DebugName));
+    }
 
     bool IEquatable<LogicalKeySet>.Equals(LogicalKeySet? other) => Equals(other);
 
-    internal static HashSet<string> BuildPressedKeys(KeyEvent @event, HardwareKeyboard state)
+    private bool CheckKeyRequirements(IReadOnlySet<LogicalKeyboardKey> pressed)
     {
-        var pressed = new HashSet<string>(state.LogicalKeysPressed, StringComparer.Ordinal)
-        {
-            @event.Key
-        };
-
-        AddModifierFromEvent(pressed, @event.IsControlPressed, "Control");
-        AddModifierFromEvent(pressed, @event.IsShiftPressed, "Shift");
-        AddModifierFromEvent(pressed, @event.IsAltPressed, "Alt");
-        AddModifierFromEvent(pressed, @event.IsMetaPressed, "Meta");
-        return pressed;
+        IReadOnlySet<LogicalKeyboardKey> collapsedRequired = LogicalKeyboardKey.CollapseSynonyms(InternalKeys);
+        IReadOnlySet<LogicalKeyboardKey> collapsedPressed = LogicalKeyboardKey.CollapseSynonyms(pressed);
+        return collapsedRequired.Count == collapsedPressed.Count
+               && !collapsedRequired.Except(collapsedPressed).Any();
     }
 
-    internal static HashSet<string> NormalizeKeys(IEnumerable<string> keys)
+    private IReadOnlySet<LogicalKeyboardKey> BuildTriggers()
     {
-        var result = new HashSet<string>(StringComparer.Ordinal);
-        foreach (string key in keys)
+        var result = new HashSet<LogicalKeyboardKey>();
+        foreach (LogicalKeyboardKey key in InternalKeys)
         {
-            result.Add(NormalizeKey(key));
+            if (UnmapSynonyms.TryGetValue(key, out IReadOnlyList<LogicalKeyboardKey>? unmapped))
+            {
+                result.UnionWith(unmapped);
+            }
+            else
+            {
+                result.Add(key);
+            }
         }
 
         return result;
     }
 
-    internal static string NormalizeKey(string key)
+    private static readonly HashSet<LogicalKeyboardKey> Modifiers =
+    [
+        LogicalKeyboardKey.Alt,
+        LogicalKeyboardKey.Control,
+        LogicalKeyboardKey.Meta,
+        LogicalKeyboardKey.Shift,
+    ];
+
+    private static readonly Dictionary<LogicalKeyboardKey, IReadOnlyList<LogicalKeyboardKey>> UnmapSynonyms = new()
     {
-        string normalized = key switch
-        {
-            "LeftControl" or "RightControl" or "ControlLeft" or "ControlRight" or "Ctrl" => "Control",
-            "LeftShift" or "RightShift" or "ShiftLeft" or "ShiftRight" => "Shift",
-            "LeftAlt" or "RightAlt" or "AltLeft" or "AltRight" => "Alt",
-            "LeftMeta" or "RightMeta" or "MetaLeft" or "MetaRight"
-                or "Command" or "Windows" => "Meta",
-            "ArrowLeft" => "Left",
-            "ArrowRight" => "Right",
-            "ArrowUp" => "Up",
-            "ArrowDown" => "Down",
-            // Flutter spells these `backspace`/`enter`/`numpadDecimal`; the host reports Avalonia's
-            // `Key` names. Both spellings must resolve to one trigger.
-            "Backspace" => "Back",
-            "Return" => "Enter",
-            "NumpadDecimal" or "NumPadDecimal" => "Decimal",
-            _ => key
-        };
-
-        if (normalized.Length == 7
-            && normalized.StartsWith("Numpad", StringComparison.Ordinal)
-            && char.IsDigit(normalized[6]))
-        {
-            return string.Concat("NumPad", normalized[6].ToString());
-        }
-
-        if (normalized.Length == 4
-            && normalized.StartsWith("Key", StringComparison.Ordinal)
-            && char.IsLetter(normalized[3]))
-        {
-            return char.ToUpperInvariant(normalized[3]).ToString();
-        }
-
-        if (normalized.Length == 2
-            && normalized[0] == 'D'
-            && char.IsDigit(normalized[1]))
-        {
-            return normalized[1].ToString();
-        }
-
-        if (normalized.Length == 6
-            && normalized.StartsWith("Digit", StringComparison.Ordinal)
-            && char.IsDigit(normalized[5]))
-        {
-            return normalized[5].ToString();
-        }
-
-        return normalized;
-    }
-
-    private static void AddModifierFromEvent(HashSet<string> pressed, bool isPressed, string key)
-    {
-        if (isPressed)
-        {
-            pressed.Add(key);
-        }
-    }
+        [LogicalKeyboardKey.Control] = [LogicalKeyboardKey.ControlLeft, LogicalKeyboardKey.ControlRight],
+        [LogicalKeyboardKey.Shift] = [LogicalKeyboardKey.ShiftLeft, LogicalKeyboardKey.ShiftRight],
+        [LogicalKeyboardKey.Alt] = [LogicalKeyboardKey.AltLeft, LogicalKeyboardKey.AltRight],
+        [LogicalKeyboardKey.Meta] = [LogicalKeyboardKey.MetaLeft, LogicalKeyboardKey.MetaRight],
+    };
 }
 
+/// <summary>
+/// A shortcut key combination of a single key and modifiers.
+/// </summary>
 public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<SingleActivator>
 {
     public SingleActivator(
-        string trigger,
+        LogicalKeyboardKey trigger,
         bool control = false,
         bool shift = false,
         bool alt = false,
@@ -230,7 +226,7 @@ public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<Sing
         NumLock = numLock;
     }
 
-    public string Trigger { get; }
+    public LogicalKeyboardKey Trigger { get; }
 
     public bool Control { get; }
 
@@ -244,26 +240,16 @@ public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<Sing
 
     public LockState NumLock { get; }
 
-    public IReadOnlySet<string> Triggers => new HashSet<string>(StringComparer.Ordinal) { Trigger };
+    public IReadOnlySet<LogicalKeyboardKey> Triggers => new HashSet<LogicalKeyboardKey> { Trigger };
 
     public bool Accepts(KeyEvent @event, HardwareKeyboard state)
     {
-        return @event.IsDown
-               && (IncludeRepeats || !@event.IsRepeat)
-               && string.Equals(
-                   LogicalKeySet.NormalizeKey(@event.Key),
-                   LogicalKeySet.NormalizeKey(Trigger),
-                   StringComparison.Ordinal)
-               && @event.IsControlPressed == Control
-               && @event.IsShiftPressed == Shift
-               && @event.IsAltPressed == Alt
-               && @event.IsMetaPressed == Meta
-               && NumLock switch
-               {
-                   LockState.Locked => @event.IsNumLockOn,
-                   LockState.Unlocked => !@event.IsNumLockOn,
-                   _ => true
-               };
+        ArgumentNullException.ThrowIfNull(@event);
+        ArgumentNullException.ThrowIfNull(state);
+        return (@event is KeyDownEvent || (IncludeRepeats && @event is KeyRepeatEvent))
+               && Trigger.Equals(@event.LogicalKey)
+               && ShouldAcceptModifiers(state.LogicalKeysPressed)
+               && ShouldAcceptNumLock(state);
     }
 
     public string DebugDescribeKeys()
@@ -289,7 +275,7 @@ public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<Sing
             keys.Add("Shift");
         }
 
-        keys.Add(Trigger);
+        keys.Add(Trigger.DebugName);
         return string.Join(" + ", keys);
     }
 
@@ -307,7 +293,7 @@ public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<Sing
     public bool Equals(SingleActivator? other)
     {
         return other != null
-               && string.Equals(Trigger, other.Trigger, StringComparison.Ordinal)
+               && Trigger.Equals(other.Trigger)
                && Control == other.Control
                && Shift == other.Shift
                && Alt == other.Alt
@@ -323,13 +309,65 @@ public sealed class SingleActivator : IMenuSerializableShortcut, IEquatable<Sing
         return HashCode.Combine(Trigger, Control, Shift, Alt, Meta, IncludeRepeats, NumLock);
     }
 
-    private static bool IsModifierKey(string key)
+    internal static bool IsModifierKey(LogicalKeyboardKey key)
     {
-        string normalized = LogicalKeySet.NormalizeKey(key);
-        return normalized is "Control" or "Shift" or "Alt" or "Meta";
+        return ModifierTriggers.Contains(key);
     }
+
+    private bool ShouldAcceptModifiers(IReadOnlySet<LogicalKeyboardKey> pressed)
+    {
+        return Control == pressed.Overlaps(ActivatorModifiers.ControlSynonyms)
+               && Shift == pressed.Overlaps(ActivatorModifiers.ShiftSynonyms)
+               && Alt == pressed.Overlaps(ActivatorModifiers.AltSynonyms)
+               && Meta == pressed.Overlaps(ActivatorModifiers.MetaSynonyms);
+    }
+
+    private bool ShouldAcceptNumLock(HardwareKeyboard state)
+    {
+        return NumLock switch
+        {
+            LockState.Locked => state.LockModesEnabled.Contains(KeyboardLockMode.NumLock),
+            LockState.Unlocked => !state.LockModesEnabled.Contains(KeyboardLockMode.NumLock),
+            _ => true,
+        };
+    }
+
+    private static readonly HashSet<LogicalKeyboardKey> ModifierTriggers =
+    [
+        LogicalKeyboardKey.Control,
+        LogicalKeyboardKey.ControlLeft,
+        LogicalKeyboardKey.ControlRight,
+        LogicalKeyboardKey.Shift,
+        LogicalKeyboardKey.ShiftLeft,
+        LogicalKeyboardKey.ShiftRight,
+        LogicalKeyboardKey.Alt,
+        LogicalKeyboardKey.AltLeft,
+        LogicalKeyboardKey.AltRight,
+        LogicalKeyboardKey.Meta,
+        LogicalKeyboardKey.MetaLeft,
+        LogicalKeyboardKey.MetaRight,
+    ];
 }
 
+/// <summary>Dart's `_controlSynonyms` and friends from `shortcuts.dart`.</summary>
+internal static class ActivatorModifiers
+{
+    public static readonly HashSet<LogicalKeyboardKey> ControlSynonyms =
+        [.. LogicalKeyboardKey.ExpandSynonyms(new HashSet<LogicalKeyboardKey> { LogicalKeyboardKey.Control })];
+
+    public static readonly HashSet<LogicalKeyboardKey> ShiftSynonyms =
+        [.. LogicalKeyboardKey.ExpandSynonyms(new HashSet<LogicalKeyboardKey> { LogicalKeyboardKey.Shift })];
+
+    public static readonly HashSet<LogicalKeyboardKey> AltSynonyms =
+        [.. LogicalKeyboardKey.ExpandSynonyms(new HashSet<LogicalKeyboardKey> { LogicalKeyboardKey.Alt })];
+
+    public static readonly HashSet<LogicalKeyboardKey> MetaSynonyms =
+        [.. LogicalKeyboardKey.ExpandSynonyms(new HashSet<LogicalKeyboardKey> { LogicalKeyboardKey.Meta })];
+}
+
+/// <summary>
+/// A shortcut combination that is triggered by a key event producing a specific character.
+/// </summary>
 public sealed class CharacterActivator : IMenuSerializableShortcut, IEquatable<CharacterActivator>
 {
     public CharacterActivator(
@@ -356,29 +394,32 @@ public sealed class CharacterActivator : IMenuSerializableShortcut, IEquatable<C
 
     public bool IncludeRepeats { get; }
 
-    public IReadOnlySet<string>? Triggers => null;
+    public IReadOnlySet<LogicalKeyboardKey>? Triggers => null;
 
     public bool Accepts(KeyEvent @event, HardwareKeyboard state)
     {
-        return @event.IsDown
-               && (IncludeRepeats || !@event.IsRepeat)
-               && string.Equals(@event.Character, Character, StringComparison.Ordinal)
-               && @event.IsControlPressed == Control
-               && @event.IsAltPressed == Alt
-               && @event.IsMetaPressed == Meta;
+        ArgumentNullException.ThrowIfNull(@event);
+        ArgumentNullException.ThrowIfNull(state);
+
+        // Does not look for shift, since the character will encode that.
+        return string.Equals(@event.Character, Character, StringComparison.Ordinal)
+               && (@event is KeyDownEvent || (IncludeRepeats && @event is KeyRepeatEvent))
+               && Control == state.LogicalKeysPressed.Overlaps(ActivatorModifiers.ControlSynonyms)
+               && Alt == state.LogicalKeysPressed.Overlaps(ActivatorModifiers.AltSynonyms)
+               && Meta == state.LogicalKeysPressed.Overlaps(ActivatorModifiers.MetaSynonyms);
     }
 
     public string DebugDescribeKeys()
     {
         var keys = new List<string>();
-        if (Control)
-        {
-            keys.Add("Control");
-        }
-
         if (Alt)
         {
             keys.Add("Alt");
+        }
+
+        if (Control)
+        {
+            keys.Add("Control");
         }
 
         if (Meta)
@@ -439,6 +480,7 @@ public class ShortcutManager : ChangeNotifier
             }
 
             _shortcuts = value;
+            _indexedShortcutsCache = null;
             NotifyListeners();
         }
     }
@@ -483,21 +525,57 @@ public class ShortcutManager : ChangeNotifier
         return true;
     }
 
-    private Intent? Find(KeyEvent @event, HardwareKeyboard state)
+    private IndexedShortcutMap? _indexedShortcutsCache;
+
+    private IndexedShortcutMap IndexedShortcuts => _indexedShortcutsCache ??= IndexShortcuts(_shortcuts);
+
+    /// <summary>
+    /// Dart keys `_indexedShortcuts` by a nullable `LogicalKeyboardKey`; .NET dictionaries reject a
+    /// null key, so the untriggered activators live in their own list.
+    /// </summary>
+    private sealed record IndexedShortcutMap(
+        Dictionary<LogicalKeyboardKey, List<(ShortcutActivator Activator, Intent Intent)>> ByTrigger,
+        List<(ShortcutActivator Activator, Intent Intent)> WithoutTrigger);
+
+    private static IndexedShortcutMap IndexShortcuts(IReadOnlyDictionary<ShortcutActivator, Intent> source)
     {
-        foreach ((ShortcutActivator activator, Intent intent) in _shortcuts)
+        var byTrigger = new Dictionary<LogicalKeyboardKey, List<(ShortcutActivator, Intent)>>();
+        var withoutTrigger = new List<(ShortcutActivator, Intent)>();
+        foreach ((ShortcutActivator activator, Intent intent) in source)
         {
-            IReadOnlySet<string>? triggers = activator.Triggers;
-            if (triggers != null
-                && !triggers.Any(
-                    trigger => string.Equals(
-                        LogicalKeySet.NormalizeKey(trigger),
-                        LogicalKeySet.NormalizeKey(@event.Key),
-                        StringComparison.Ordinal)))
+            IReadOnlySet<LogicalKeyboardKey>? triggers = activator.Triggers;
+            if (triggers == null)
             {
+                withoutTrigger.Add((activator, intent));
                 continue;
             }
 
+            foreach (LogicalKeyboardKey trigger in triggers)
+            {
+                if (!byTrigger.TryGetValue(trigger, out List<(ShortcutActivator, Intent)>? pairs))
+                {
+                    pairs = [];
+                    byTrigger[trigger] = pairs;
+                }
+
+                pairs.Add((activator, intent));
+            }
+        }
+
+        return new IndexedShortcutMap(byTrigger, withoutTrigger);
+    }
+
+    private Intent? Find(KeyEvent @event, HardwareKeyboard state)
+    {
+        IndexedShortcutMap indexed = IndexedShortcuts;
+        List<(ShortcutActivator Activator, Intent Intent)> candidates =
+        [
+            .. indexed.ByTrigger.GetValueOrDefault(@event.LogicalKey) ?? [],
+            .. indexed.WithoutTrigger,
+        ];
+
+        foreach ((ShortcutActivator activator, Intent intent) in candidates)
+        {
             if (activator.Accepts(@event, state))
             {
                 return intent;

@@ -268,7 +268,7 @@ public sealed class MaterialCheckboxTests
 
             Assert.True(focusNode.RequestFocus());
             Assert.True(FocusManager.Instance.HandleKeyEvent(
-                new KeyEvent(key: "Space", isDown: true)));
+                KeySim.Down(LogicalKeyboardKey.Space)));
 
             TapSemanticEvent tapEvent = Assert.IsType<TapSemanticEvent>(received);
             Assert.Equal("tap", tapEvent.Type);
@@ -305,7 +305,7 @@ public sealed class MaterialCheckboxTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -342,7 +342,7 @@ public sealed class MaterialCheckboxTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -379,7 +379,7 @@ public sealed class MaterialCheckboxTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
             owner.FlushBuild();
 

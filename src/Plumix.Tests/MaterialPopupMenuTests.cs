@@ -375,8 +375,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
             FindSemantics(expandedSemantics, node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)) is null,
             DumpSemantics(expandedSemantics));
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowDown", true)));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
         await selectedCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));

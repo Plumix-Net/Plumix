@@ -27,100 +27,81 @@ public sealed class ActionsShortcutsTests : IDisposable
     [Fact]
     public void Activators_ExposeSourceDefaultsAndExactModifierRepeatLockBehavior()
     {
-        var plain = new SingleActivator("KeyA");
+        var plain = new SingleActivator(LogicalKeyboardKey.KeyA);
         Assert.False(plain.Control);
         Assert.False(plain.Shift);
         Assert.False(plain.Alt);
         Assert.False(plain.Meta);
         Assert.True(plain.IncludeRepeats);
         Assert.Equal(LockState.Ignored, plain.NumLock);
-        Assert.Equal("KeyA", plain.DebugDescribeKeys());
-        Assert.True(plain.Accepts(new KeyEvent("KeyA", isDown: true), HardwareKeyboard.Instance));
+        Assert.Equal("Key A", plain.DebugDescribeKeys());
+        Assert.True(plain.Accepts(KeySim.Down(LogicalKeyboardKey.KeyA), HardwareKeyboard.Instance));
         Assert.False(plain.Accepts(
-            new KeyEvent("KeyA", isDown: true, isControlPressed: true),
+            KeySim.Down(LogicalKeyboardKey.KeyA, control: true),
             HardwareKeyboard.Instance));
-        Assert.False(plain.Accepts(new KeyEvent("KeyA", isDown: false), HardwareKeyboard.Instance));
+        Assert.False(plain.Accepts(KeySim.Up(LogicalKeyboardKey.KeyA), HardwareKeyboard.Instance));
 
         var modified = new SingleActivator(
-            "KeyK",
+            LogicalKeyboardKey.KeyK,
             control: true,
             shift: true,
             includeRepeats: false,
             numLock: LockState.Locked);
-        Assert.Equal("Control + Shift + KeyK", modified.DebugDescribeKeys());
+        Assert.Equal("Control + Shift + Key K", modified.DebugDescribeKeys());
         Assert.True(modified.Accepts(
-            new KeyEvent(
-                "KeyK",
-                isDown: true,
-                isShiftPressed: true,
-                isControlPressed: true,
-                isNumLockOn: true),
+            KeySim.Down(LogicalKeyboardKey.KeyK, control: true, shift: true, numLock: true),
             HardwareKeyboard.Instance));
         Assert.False(modified.Accepts(
-            new KeyEvent(
-                "KeyK",
-                isDown: true,
-                isShiftPressed: true,
-                isControlPressed: true,
-                isRepeat: true,
-                isNumLockOn: true),
+            KeySim.Repeat(LogicalKeyboardKey.KeyK, control: true, shift: true),
             HardwareKeyboard.Instance));
         Assert.False(modified.Accepts(
-            new KeyEvent(
-                "KeyK",
-                isDown: true,
-                isShiftPressed: true,
-                isControlPressed: true,
-                isNumLockOn: false),
+            KeySim.Down(LogicalKeyboardKey.KeyK, control: true, shift: true),
             HardwareKeyboard.Instance));
 
         Assert.Equal(
-            new SingleActivator("KeyK", control: true),
-            new SingleActivator("KeyK", control: true));
+            new SingleActivator(LogicalKeyboardKey.KeyK, control: true),
+            new SingleActivator(LogicalKeyboardKey.KeyK, control: true));
         Assert.NotEqual(
-            new SingleActivator("KeyK", control: true),
-            new SingleActivator("KeyK", meta: true));
+            new SingleActivator(LogicalKeyboardKey.KeyK, control: true),
+            new SingleActivator(LogicalKeyboardKey.KeyK, meta: true));
     }
 
     [Fact]
     public void LogicalAndCharacterActivators_MatchSourceKeySetAndCharacterContracts()
     {
-        var logical = new LogicalKeySet("Control", "KeyC");
-        var equivalent = new LogicalKeySet(new HashSet<string> { "KeyC", "Control" });
+        var logical = new LogicalKeySet(LogicalKeyboardKey.Control, LogicalKeyboardKey.KeyC);
+        var equivalent = new LogicalKeySet(
+            new HashSet<LogicalKeyboardKey> { LogicalKeyboardKey.KeyC, LogicalKeyboardKey.Control });
         Assert.Equal(logical, equivalent);
         Assert.Equal(logical.GetHashCode(), equivalent.GetHashCode());
-        Assert.True(logical.Accepts(
-            new KeyEvent("KeyC", isDown: true, isControlPressed: true),
-            HardwareKeyboard.Instance));
-        Assert.False(logical.Accepts(
-            new KeyEvent(
-                "KeyC",
-                isDown: true,
-                isControlPressed: true,
-                isShiftPressed: true),
-            HardwareKeyboard.Instance));
+        // A `LogicalKeySet` matches against the whole pressed set, so the trigger has to be
+        // recorded first — which is what Flutter's `simulateKeyDownEvent` does before dispatch.
+        KeyEvent controlC = KeySim.Down(LogicalKeyboardKey.KeyC, control: true);
+        HardwareKeyboard.Instance.HandleKeyEvent(controlC);
+        Assert.True(logical.Accepts(controlC, HardwareKeyboard.Instance));
+        HardwareKeyboard.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.KeyC, control: true));
+
+        KeyEvent controlShiftC = KeySim.Down(LogicalKeyboardKey.KeyC, control: true, shift: true);
+        HardwareKeyboard.Instance.HandleKeyEvent(controlShiftC);
+        Assert.False(logical.Accepts(controlShiftC, HardwareKeyboard.Instance));
+        HardwareKeyboard.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.KeyC));
 
         var character = new CharacterActivator("?", alt: true, includeRepeats: false);
         Assert.True(character.Accepts(
-            new KeyEvent("Slash", isDown: true, isAltPressed: true, character: "?"),
+            KeySim.Down(LogicalKeyboardKey.Slash, alt: true, character: "?"),
             HardwareKeyboard.Instance));
         Assert.False(character.Accepts(
-            new KeyEvent(
-                "Slash",
-                isDown: true,
-                isAltPressed: true,
-                isRepeat: true,
-                character: "?"),
+            KeySim.Repeat(LogicalKeyboardKey.Slash, alt: true, character: "?"),
             HardwareKeyboard.Instance));
         Assert.False(character.Accepts(
-            new KeyEvent("Slash", isDown: true, character: "?"),
+            KeySim.Down(LogicalKeyboardKey.Slash, character: "?"),
             HardwareKeyboard.Instance));
 
-        Assert.Throws<ArgumentException>(() => new LogicalKeySet("KeyA", "KeyA"));
-        Assert.Throws<ArgumentException>(() => new LogicalKeySet(new HashSet<string>()));
+        Assert.Throws<ArgumentException>(() => new LogicalKeySet(LogicalKeyboardKey.KeyA, LogicalKeyboardKey.KeyA));
+        Assert.Throws<ArgumentException>(() => new LogicalKeySet(new HashSet<LogicalKeyboardKey>()));
         Assert.Equal(string.Empty, new CharacterActivator(string.Empty).Character);
         Assert.Throws<ArgumentNullException>(() => new CharacterActivator(null!));
-        Assert.Throws<ArgumentException>(() => new SingleActivator("Control"));
+        Assert.Throws<ArgumentException>(() => new SingleActivator(LogicalKeyboardKey.Control));
     }
 
     [Fact]
@@ -304,8 +285,8 @@ public sealed class ActionsShortcutsTests : IDisposable
             new Shortcuts(
                 shortcuts: new Dictionary<ShortcutActivator, Intent>
                 {
-                    [new SingleActivator("KeyA", control: true)] = new IncrementIntent(2),
-                    [new SingleActivator("KeyB")] = new PropagatingIntent()
+                    [new SingleActivator(LogicalKeyboardKey.KeyA, control: true)] = new IncrementIntent(2),
+                    [new SingleActivator(LogicalKeyboardKey.KeyB)] = new PropagatingIntent()
                 },
                 child: new Actions(
                     actions: new Dictionary<Type, FlutterAction>
@@ -327,12 +308,12 @@ public sealed class ActionsShortcutsTests : IDisposable
 
         Assert.True(focusNode.HasFocus);
         Assert.True(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("KeyA", isDown: true, isControlPressed: true)));
+            KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.Equal(2, consumedInvocations);
 
-        Assert.False(FocusManager.Instance.HandleKeyEvent(new KeyEvent("KeyB", isDown: true)));
+        Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyB)));
         Assert.Equal(1, propagatedInvocations);
-        Assert.False(FocusManager.Instance.HandleKeyEvent(new KeyEvent("KeyA", isDown: false)));
+        Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.KeyA)));
 
         root.Unmount();
     }
@@ -351,7 +332,7 @@ public sealed class ActionsShortcutsTests : IDisposable
                 child: new Shortcuts(
                     shortcuts: new Dictionary<ShortcutActivator, Intent>
                     {
-                        [new SingleActivator("Enter")] = new OuterIntent()
+                        [new SingleActivator(LogicalKeyboardKey.Enter)] = new OuterIntent()
                     },
                     child: new Actions(
                         actions: new Dictionary<Type, FlutterAction>
@@ -372,7 +353,7 @@ public sealed class ActionsShortcutsTests : IDisposable
                         child: new Shortcuts(
                             shortcuts: new Dictionary<ShortcutActivator, Intent>
                             {
-                                [new SingleActivator("Enter")] = new InnerIntent()
+                                [new SingleActivator(LogicalKeyboardKey.Enter)] = new InnerIntent()
                             },
                             child: new Focus(
                                 focusNode: focusNode,
@@ -380,11 +361,11 @@ public sealed class ActionsShortcutsTests : IDisposable
                                 child: new SizedBox(width: 20, height: 20)))))));
         Mount(root, owner);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         Assert.Equal(0, outerInvocations);
         Assert.Equal(1, innerInvocations);
 
-        Assert.False(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Tab", isDown: true)));
+        Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab)));
         Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
 
         root.Unmount();
@@ -409,7 +390,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         Mount(root, owner);
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("Equal", isDown: true, character: "+")));
+            KeySim.Down(LogicalKeyboardKey.Equal, character: "+")));
         Assert.Equal(1, invocationCount);
 
         root.Unmount();
@@ -429,7 +410,7 @@ public sealed class ActionsShortcutsTests : IDisposable
                     entry ??= ShortcutRegistry.Of(context).AddAll(
                         new Dictionary<ShortcutActivator, Intent>
                         {
-                            [new SingleActivator("F2")] = new InnerIntent()
+                            [new SingleActivator(LogicalKeyboardKey.F2)] = new InnerIntent()
                         });
                     return new Actions(
                         actions: new Dictionary<Type, FlutterAction>
@@ -449,22 +430,22 @@ public sealed class ActionsShortcutsTests : IDisposable
         Mount(root, owner);
         Scheduler.PumpFrameForTests();
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("F2", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.F2)));
         Assert.Equal(1, invocationCount);
 
         entry!.ReplaceAll(
             new Dictionary<ShortcutActivator, Intent>
             {
-                [new SingleActivator("F3")] = new InnerIntent()
+                [new SingleActivator(LogicalKeyboardKey.F3)] = new InnerIntent()
             });
         Scheduler.PumpFrameForTests();
-        Assert.False(FocusManager.Instance.HandleKeyEvent(new KeyEvent("F2", isDown: true)));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("F3", isDown: true)));
+        Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.F2)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.F3)));
         Assert.Equal(2, invocationCount);
 
         entry.Dispose();
         Scheduler.PumpFrameForTests();
-        Assert.False(FocusManager.Instance.HandleKeyEvent(new KeyEvent("F3", isDown: true)));
+        Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.F3)));
         root.Unmount();
     }
 

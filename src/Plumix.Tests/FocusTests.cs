@@ -52,7 +52,7 @@ public sealed class FocusTests : IDisposable
         {
             OnKeyEvent = (_, @event) =>
             {
-                if (@event.Key == "Enter")
+                if (@event.LogicalKey.Equals(LogicalKeyboardKey.Enter))
                 {
                     callbackInvocationCount += 1;
                     return KeyEventResult.Handled;
@@ -65,7 +65,7 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(node);
         manager.RequestFocus(node);
 
-        bool handled = manager.HandleKeyEvent(new KeyEvent(key: "Enter", isDown: true));
+        bool handled = manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter));
 
         Assert.True(handled);
         Assert.Equal(1, callbackInvocationCount);
@@ -87,16 +87,16 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(third);
         manager.RequestFocus(first);
 
-        bool movedForward = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool movedForward = manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
         Assert.True(movedForward);
         Assert.Same(second, manager.PrimaryFocus);
 
-        bool movedBackward = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true, isShiftPressed: true));
+        bool movedBackward = manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab, shift: true));
         Assert.True(movedBackward);
         Assert.Same(first, manager.PrimaryFocus);
 
         manager.RequestFocus(second);
-        bool movedPastLast = manager.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool movedPastLast = manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
         Assert.True(movedPastLast);
         Assert.Same(first, manager.PrimaryFocus);
     }
@@ -151,19 +151,19 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(third);
         manager.RequestFocus(first);
 
-        Assert.True(manager.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true)));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Same(second, manager.PrimaryFocus);
 
-        Assert.True(manager.HandleKeyEvent(new KeyEvent(key: "Down", isDown: true)));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         Assert.Same(third, manager.PrimaryFocus);
 
-        Assert.True(manager.HandleKeyEvent(new KeyEvent(key: "Left", isDown: true)));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Same(second, manager.PrimaryFocus);
 
-        Assert.True(manager.HandleKeyEvent(new KeyEvent(key: "ArrowUp", isDown: true)));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp)));
         Assert.Same(first, manager.PrimaryFocus);
 
-        Assert.False(manager.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true)));
+        Assert.False(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Same(first, manager.PrimaryFocus);
     }
 
@@ -194,16 +194,16 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(diagonal);
         manager.RequestFocus(source);
 
-        Assert.True(manager.HandleKeyEvent(new KeyEvent(key: "ArrowDown", isDown: true)));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         Assert.Same(down, manager.PrimaryFocus);
 
-        Assert.True(manager.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true)));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Same(diagonal, manager.PrimaryFocus);
 
-        Assert.True(manager.HandleKeyEvent(new KeyEvent(key: "ArrowUp", isDown: true)));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp)));
         Assert.Same(right, manager.PrimaryFocus);
 
-        Assert.True(manager.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true)));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Same(source, manager.PrimaryFocus);
     }
 
@@ -239,13 +239,13 @@ public sealed class FocusTests : IDisposable
 
         Assert.Same(source, FocusManager.Instance.PrimaryFocus);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Same(right, FocusManager.Instance.PrimaryFocus);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowDown", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         Assert.Same(transformedDown, FocusManager.Instance.PrimaryFocus);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowUp", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp)));
         Assert.Same(right, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -278,7 +278,7 @@ public sealed class FocusTests : IDisposable
                 autofocus: true,
                 onKeyEvent: (_, @event) =>
                 {
-                    if (@event.Key == "Space")
+                    if (@event.LogicalKey.Equals(LogicalKeyboardKey.Space))
                     {
                         keyEventCount += 1;
                         return KeyEventResult.Handled;
@@ -292,7 +292,7 @@ public sealed class FocusTests : IDisposable
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+        bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
 
         Assert.True(handled);
         Assert.Equal(1, keyEventCount);
@@ -320,7 +320,7 @@ public sealed class FocusTests : IDisposable
         Assert.True(first.HasFocus);
         Assert.False(second.HasFocus);
 
-        bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
 
         Assert.True(handled);
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
@@ -357,16 +357,17 @@ public sealed class FocusTests : IDisposable
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
         // The default closed loop wraps within the scope instead of escaping into the siblings.
-        bool movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true, isShiftPressed: true));
+        bool movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(
+            KeySim.Down(LogicalKeyboardKey.Tab, shift: true));
         Assert.True(movedBeforeScopeStart);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(leadingSibling.HasFocus);
 
-        bool movedInsideScope = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool movedInsideScope = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
         Assert.True(movedInsideScope);
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
-        bool movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Tab", isDown: true));
+        bool movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
         Assert.True(movedAfterScopeEnd);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(trailingSibling.HasFocus);
@@ -400,16 +401,16 @@ public sealed class FocusTests : IDisposable
 
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
-        bool movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true));
+        bool movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft));
         Assert.False(movedBeforeScopeStart);
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(leadingSibling.HasFocus);
 
-        bool movedInsideScope = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
+        bool movedInsideScope = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
         Assert.True(movedInsideScope);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
 
-        bool movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
+        bool movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
         Assert.False(movedAfterScopeEnd);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(trailingSibling.HasFocus);

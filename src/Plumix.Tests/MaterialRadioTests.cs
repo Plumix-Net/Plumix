@@ -182,7 +182,7 @@ public sealed class MaterialRadioTests
 
             Assert.True(focusNode.RequestFocus());
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -220,7 +220,7 @@ public sealed class MaterialRadioTests
 
             Assert.True(focusNode.RequestFocus());
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
             owner.FlushBuild();
 

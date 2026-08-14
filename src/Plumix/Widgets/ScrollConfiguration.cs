@@ -20,19 +20,6 @@ public enum MultitouchDragStrategy
     SumAllPointers,
 }
 
-public enum LogicalKeyboardKey
-{
-    ShiftLeft,
-    ShiftRight,
-    AltLeft,
-    AltRight,
-    ControlLeft,
-    ControlRight,
-    MetaLeft,
-    MetaRight,
-    Space,
-}
-
 public enum ScrollViewKeyboardDismissBehavior
 {
     Manual,

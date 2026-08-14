@@ -41,20 +41,20 @@ public sealed class RawMenuAnchorTests : IDisposable
         IReadOnlyDictionary<ShortcutActivator, Intent> shortcuts = RawMenuAnchor.MenuTraversalShortcuts;
 
         Assert.Equal(6, shortcuts.Count);
-        Assert.IsType<ActivateIntent>(shortcuts[new SingleActivator("GameButtonA")]);
-        Assert.IsType<DismissIntent>(shortcuts[new SingleActivator("Escape")]);
+        Assert.IsType<ActivateIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.GameButtonA)]);
+        Assert.IsType<DismissIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Escape)]);
         Assert.Equal(
             TraversalDirection.Down,
-            ((DirectionalFocusIntent)shortcuts[new SingleActivator("ArrowDown")]).Direction);
+            ((DirectionalFocusIntent)shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowDown)]).Direction);
         Assert.Equal(
             TraversalDirection.Up,
-            ((DirectionalFocusIntent)shortcuts[new SingleActivator("ArrowUp")]).Direction);
+            ((DirectionalFocusIntent)shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowUp)]).Direction);
         Assert.Equal(
             TraversalDirection.Left,
-            ((DirectionalFocusIntent)shortcuts[new SingleActivator("ArrowLeft")]).Direction);
+            ((DirectionalFocusIntent)shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowLeft)]).Direction);
         Assert.Equal(
             TraversalDirection.Right,
-            ((DirectionalFocusIntent)shortcuts[new SingleActivator("ArrowRight")]).Direction);
+            ((DirectionalFocusIntent)shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowRight)]).Direction);
     }
 
     [Fact]

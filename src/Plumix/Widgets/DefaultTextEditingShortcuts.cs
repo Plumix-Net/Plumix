@@ -1,5 +1,6 @@
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/default_text_editing_shortcuts.dart
 
@@ -8,11 +9,6 @@ namespace Plumix.Widgets;
 /// <summary>
 /// A widget with the shortcuts used for the default text editing behavior.
 /// </summary>
-/// <remarks>
-/// Flutter identifies triggers by `LogicalKeyboardKey`; Plumix models logical keys as normalized key
-/// strings, so every activator below spells the source key name and
-/// <see cref="LogicalKeySet.NormalizeKey"/> folds it onto the host's spelling.
-/// </remarks>
 public sealed class DefaultTextEditingShortcuts : StatelessWidget
 {
     private static readonly DoNothingAndStopPropagationTextIntent DoNothing = new();
@@ -126,7 +122,7 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
         _webLinuxDisablingCache ??= BuildWebLinuxDisablingTextShortcuts();
 
     private static SingleActivator Act(
-        string trigger,
+        LogicalKeyboardKey trigger,
         bool control = false,
         bool shift = false,
         bool alt = false,
@@ -141,64 +137,69 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
         var map = new Dictionary<ShortcutActivator, Intent>();
         foreach (bool pressShift in (bool[])[true, false])
         {
-            map[Act("Backspace", shift: pressShift)] = new DeleteCharacterIntent(forward: false);
-            map[Act("Backspace", control: true, shift: pressShift)] =
+            map[Act(LogicalKeyboardKey.Backspace, shift: pressShift)] = new DeleteCharacterIntent(forward: false);
+            map[Act(LogicalKeyboardKey.Backspace, control: true, shift: pressShift)] =
                 new DeleteToNextWordBoundaryIntent(forward: false);
-            map[Act("Backspace", alt: true, shift: pressShift)] = new DeleteToLineBreakIntent(forward: false);
-            map[Act("Delete", control: true, shift: pressShift)] = new DeleteToNextWordBoundaryIntent(forward: true);
-            map[Act("Delete", alt: true, shift: pressShift)] = new DeleteToLineBreakIntent(forward: true);
+            map[Act(LogicalKeyboardKey.Backspace, alt: true, shift: pressShift)] =
+                new DeleteToLineBreakIntent(forward: false);
+            map[Act(LogicalKeyboardKey.Delete, control: true, shift: pressShift)] =
+                new DeleteToNextWordBoundaryIntent(forward: true);
+            map[Act(LogicalKeyboardKey.Delete, alt: true, shift: pressShift)] =
+                new DeleteToLineBreakIntent(forward: true);
         }
 
-        map[Act("Delete")] = new DeleteCharacterIntent(forward: true);
-        map[Act("ArrowLeft")] = new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowRight")] = new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowUp")] =
+        map[Act(LogicalKeyboardKey.Delete)] = new DeleteCharacterIntent(forward: true);
+        map[Act(LogicalKeyboardKey.ArrowLeft)] =
+            new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowRight)] =
+            new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowUp)] =
             new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowDown")] =
+        map[Act(LogicalKeyboardKey.ArrowDown)] =
             new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowLeft", shift: true)] =
+        map[Act(LogicalKeyboardKey.ArrowLeft, shift: true)] =
             new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: false);
-        map[Act("ArrowRight", shift: true)] =
+        map[Act(LogicalKeyboardKey.ArrowRight, shift: true)] =
             new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: false);
-        map[Act("ArrowUp", shift: true)] =
+        map[Act(LogicalKeyboardKey.ArrowUp, shift: true)] =
             new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: false);
-        map[Act("ArrowDown", shift: true)] =
+        map[Act(LogicalKeyboardKey.ArrowDown, shift: true)] =
             new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: false);
-        map[Act("ArrowLeft", alt: true)] =
+        map[Act(LogicalKeyboardKey.ArrowLeft, alt: true)] =
             new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowRight", alt: true)] =
+        map[Act(LogicalKeyboardKey.ArrowRight, alt: true)] =
             new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowUp", alt: true)] =
+        map[Act(LogicalKeyboardKey.ArrowUp, alt: true)] =
             new ExtendSelectionToDocumentBoundaryIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowDown", alt: true)] =
+        map[Act(LogicalKeyboardKey.ArrowDown, alt: true)] =
             new ExtendSelectionToDocumentBoundaryIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowLeft", shift: true, alt: true)] =
+        map[Act(LogicalKeyboardKey.ArrowLeft, shift: true, alt: true)] =
             new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: false);
-        map[Act("ArrowRight", shift: true, alt: true)] =
+        map[Act(LogicalKeyboardKey.ArrowRight, shift: true, alt: true)] =
             new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: false);
-        map[Act("ArrowUp", shift: true, alt: true)] =
+        map[Act(LogicalKeyboardKey.ArrowUp, shift: true, alt: true)] =
             new ExtendSelectionToDocumentBoundaryIntent(forward: false, collapseSelection: false);
-        map[Act("ArrowDown", shift: true, alt: true)] =
+        map[Act(LogicalKeyboardKey.ArrowDown, shift: true, alt: true)] =
             new ExtendSelectionToDocumentBoundaryIntent(forward: true, collapseSelection: false);
-        map[Act("ArrowLeft", control: true)] =
+        map[Act(LogicalKeyboardKey.ArrowLeft, control: true)] =
             new ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowRight", control: true)] =
+        map[Act(LogicalKeyboardKey.ArrowRight, control: true)] =
             new ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowLeft", control: true, shift: true)] =
+        map[Act(LogicalKeyboardKey.ArrowLeft, control: true, shift: true)] =
             new ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: false);
-        map[Act("ArrowRight", control: true, shift: true)] =
+        map[Act(LogicalKeyboardKey.ArrowRight, control: true, shift: true)] =
             new ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: false);
-        map[Act("ArrowUp", control: true, shift: true)] =
+        map[Act(LogicalKeyboardKey.ArrowUp, control: true, shift: true)] =
             new ExtendSelectionToNextParagraphBoundaryIntent(forward: false, collapseSelection: false);
-        map[Act("ArrowDown", control: true, shift: true)] =
+        map[Act(LogicalKeyboardKey.ArrowDown, control: true, shift: true)] =
             new ExtendSelectionToNextParagraphBoundaryIntent(forward: true, collapseSelection: false);
-        map[Act("PageUp")] =
+        map[Act(LogicalKeyboardKey.PageUp)] =
             new ExtendSelectionVerticallyToAdjacentPageIntent(forward: false, collapseSelection: true);
-        map[Act("PageDown")] =
+        map[Act(LogicalKeyboardKey.PageDown)] =
             new ExtendSelectionVerticallyToAdjacentPageIntent(forward: true, collapseSelection: true);
-        map[Act("PageUp", shift: true)] =
+        map[Act(LogicalKeyboardKey.PageUp, shift: true)] =
             new ExtendSelectionVerticallyToAdjacentPageIntent(forward: false, collapseSelection: false);
-        map[Act("PageDown", shift: true)] =
+        map[Act(LogicalKeyboardKey.PageDown, shift: true)] =
             new ExtendSelectionVerticallyToAdjacentPageIntent(forward: true, collapseSelection: false);
         return map;
     }
@@ -208,19 +209,20 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
         return new Dictionary<ShortcutActivator, Intent>
         {
             // Cut, Copy, Paste as introduced by Xerox and popularized by Apple.
-            [Act("X", control: true)] = CopySelectionTextIntent.Cut(SelectionChangedCause.Keyboard),
-            [Act("C", control: true)] = CopySelectionTextIntent.Copy,
-            [Act("V", control: true)] = new PasteTextIntent(SelectionChangedCause.Keyboard),
+            [Act(LogicalKeyboardKey.KeyX, control: true)] = CopySelectionTextIntent.Cut(SelectionChangedCause.Keyboard),
+            [Act(LogicalKeyboardKey.KeyC, control: true)] = CopySelectionTextIntent.Copy,
+            [Act(LogicalKeyboardKey.KeyV, control: true)] = new PasteTextIntent(SelectionChangedCause.Keyboard),
             // Cut, Copy, Paste as defined by IBM's Common User Access.
-            [Act("Delete", shift: true)] = CopySelectionTextIntent.Cut(SelectionChangedCause.Keyboard),
-            [Act("Insert", control: true)] = CopySelectionTextIntent.Copy,
-            [Act("Insert", shift: true)] = new PasteTextIntent(SelectionChangedCause.Keyboard),
-            [Act("A", control: true)] = new SelectAllTextIntent(SelectionChangedCause.Keyboard),
-            [Act("Z", control: true)] = new UndoTextIntent(SelectionChangedCause.Keyboard),
-            [Act("Z", control: true, shift: true)] = new RedoTextIntent(SelectionChangedCause.Keyboard),
+            [Act(LogicalKeyboardKey.Delete, shift: true)] = CopySelectionTextIntent.Cut(SelectionChangedCause.Keyboard),
+            [Act(LogicalKeyboardKey.Insert, control: true)] = CopySelectionTextIntent.Copy,
+            [Act(LogicalKeyboardKey.Insert, shift: true)] = new PasteTextIntent(SelectionChangedCause.Keyboard),
+            [Act(LogicalKeyboardKey.KeyA, control: true)] = new SelectAllTextIntent(SelectionChangedCause.Keyboard),
+            [Act(LogicalKeyboardKey.KeyZ, control: true)] = new UndoTextIntent(SelectionChangedCause.Keyboard),
+            [Act(LogicalKeyboardKey.KeyZ, control: true, shift: true)] =
+                new RedoTextIntent(SelectionChangedCause.Keyboard),
             // Give the IME the space and enter keys while a field is focused.
-            [Act("Space")] = DoNothing,
-            [Act("Enter")] = DoNothing,
+            [Act(LogicalKeyboardKey.Space)] = DoNothing,
+            [Act(LogicalKeyboardKey.Enter)] = DoNothing,
         };
     }
 
@@ -232,13 +234,13 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
             map[activator] = intent;
         }
 
-        map[Act("Home")] = new ExtendSelectionToLineBreakIntent(
+        map[Act(LogicalKeyboardKey.Home)] = new ExtendSelectionToLineBreakIntent(
             forward: false, collapseSelection: true, continuesAtWrap: true);
-        map[Act("End")] = new ExtendSelectionToLineBreakIntent(
+        map[Act(LogicalKeyboardKey.End)] = new ExtendSelectionToLineBreakIntent(
             forward: true, collapseSelection: true, continuesAtWrap: true);
-        map[Act("Home", shift: true)] = new ExtendSelectionToLineBreakIntent(
+        map[Act(LogicalKeyboardKey.Home, shift: true)] = new ExtendSelectionToLineBreakIntent(
             forward: false, collapseSelection: false, continuesAtWrap: true);
-        map[Act("End", shift: true)] = new ExtendSelectionToLineBreakIntent(
+        map[Act(LogicalKeyboardKey.End, shift: true)] = new ExtendSelectionToLineBreakIntent(
             forward: true, collapseSelection: false, continuesAtWrap: true);
         AddDocumentBoundaryHomeEnd(map);
         return map;
@@ -249,61 +251,62 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
         return new Dictionary<ShortcutActivator, Intent>
         {
             // When numLock is on, the numpad shortcuts require shift to be pressed too.
-            [Act("Numpad6", shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad6, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: false),
-            [Act("Numpad4", shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad4, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: false),
-            [Act("Numpad8", shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad8, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: false),
-            [Act("Numpad2", shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad2, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: false),
-            [Act("Numpad6", control: true, shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad6, control: true, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: false),
-            [Act("Numpad4", control: true, shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad4, control: true, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: false),
-            [Act("Numpad8", control: true, shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad8, control: true, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionToNextParagraphBoundaryIntent(forward: false, collapseSelection: false),
-            [Act("Numpad2", control: true, shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad2, control: true, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionToNextParagraphBoundaryIntent(forward: true, collapseSelection: false),
-            [Act("Numpad9", shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad9, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionVerticallyToAdjacentPageIntent(forward: false, collapseSelection: false),
-            [Act("Numpad3", shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad3, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionVerticallyToAdjacentPageIntent(forward: true, collapseSelection: false),
-            [Act("Numpad7", shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad7, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: false),
-            [Act("Numpad1", shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.Numpad1, shift: true, numLock: LockState.Locked)] =
                 new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: false),
-            [Act("NumpadDecimal", shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.NumpadDecimal, shift: true, numLock: LockState.Locked)] =
                 new DeleteCharacterIntent(forward: true),
-            [Act("NumpadDecimal", control: true, shift: true, numLock: LockState.Locked)] =
+            [Act(LogicalKeyboardKey.NumpadDecimal, control: true, shift: true, numLock: LockState.Locked)] =
                 new DeleteToNextWordBoundaryIntent(forward: true),
             // When numLock is off, the numpad shortcuts require shift not to be pressed.
-            [Act("Numpad6", numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad6, numLock: LockState.Unlocked)] =
                 new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: true),
-            [Act("Numpad4", numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad4, numLock: LockState.Unlocked)] =
                 new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: true),
-            [Act("Numpad8", numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad8, numLock: LockState.Unlocked)] =
                 new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: true),
-            [Act("Numpad2", numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad2, numLock: LockState.Unlocked)] =
                 new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: true),
-            [Act("Numpad6", control: true, numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad6, control: true, numLock: LockState.Unlocked)] =
                 new ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true),
-            [Act("Numpad4", control: true, numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad4, control: true, numLock: LockState.Unlocked)] =
                 new ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true),
-            [Act("Numpad8", control: true, numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad8, control: true, numLock: LockState.Unlocked)] =
                 new ExtendSelectionToNextParagraphBoundaryIntent(forward: false, collapseSelection: true),
-            [Act("Numpad2", control: true, numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad2, control: true, numLock: LockState.Unlocked)] =
                 new ExtendSelectionToNextParagraphBoundaryIntent(forward: true, collapseSelection: true),
-            [Act("Numpad9", numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad9, numLock: LockState.Unlocked)] =
                 new ExtendSelectionVerticallyToAdjacentPageIntent(forward: false, collapseSelection: true),
-            [Act("Numpad3", numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad3, numLock: LockState.Unlocked)] =
                 new ExtendSelectionVerticallyToAdjacentPageIntent(forward: true, collapseSelection: true),
-            [Act("Numpad7", numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad7, numLock: LockState.Unlocked)] =
                 new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: true),
-            [Act("Numpad1", numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.Numpad1, numLock: LockState.Unlocked)] =
                 new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: true),
-            [Act("NumpadDecimal", numLock: LockState.Unlocked)] = new DeleteCharacterIntent(forward: true),
-            [Act("NumpadDecimal", control: true, numLock: LockState.Unlocked)] =
+            [Act(LogicalKeyboardKey.NumpadDecimal, numLock: LockState.Unlocked)] =
+                new DeleteCharacterIntent(forward: true),
+            [Act(LogicalKeyboardKey.NumpadDecimal, control: true, numLock: LockState.Unlocked)] =
                 new DeleteToNextWordBoundaryIntent(forward: true),
         };
     }
@@ -321,11 +324,12 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
             map[activator] = intent;
         }
 
-        map[Act("Home")] = new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true);
-        map[Act("End")] = new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true);
-        map[Act("Home", shift: true)] =
+        map[Act(LogicalKeyboardKey.Home)] =
+            new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.End)] = new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.Home, shift: true)] =
             new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: false);
-        map[Act("End", shift: true)] =
+        map[Act(LogicalKeyboardKey.End, shift: true)] =
             new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: false);
         AddDocumentBoundaryHomeEnd(map);
         return map;
@@ -339,17 +343,17 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
             map[activator] = intent;
         }
 
-        map[Act("PageUp")] =
+        map[Act(LogicalKeyboardKey.PageUp)] =
             new ExtendSelectionVerticallyToAdjacentPageIntent(forward: false, collapseSelection: true);
-        map[Act("PageDown")] =
+        map[Act(LogicalKeyboardKey.PageDown)] =
             new ExtendSelectionVerticallyToAdjacentPageIntent(forward: true, collapseSelection: true);
-        map[Act("Home")] = new ExtendSelectionToLineBreakIntent(
+        map[Act(LogicalKeyboardKey.Home)] = new ExtendSelectionToLineBreakIntent(
             forward: false, collapseSelection: true, continuesAtWrap: true);
-        map[Act("End")] = new ExtendSelectionToLineBreakIntent(
+        map[Act(LogicalKeyboardKey.End)] = new ExtendSelectionToLineBreakIntent(
             forward: true, collapseSelection: true, continuesAtWrap: true);
-        map[Act("Home", shift: true)] = new ExtendSelectionToLineBreakIntent(
+        map[Act(LogicalKeyboardKey.Home, shift: true)] = new ExtendSelectionToLineBreakIntent(
             forward: false, collapseSelection: false, continuesAtWrap: true);
-        map[Act("End", shift: true)] = new ExtendSelectionToLineBreakIntent(
+        map[Act(LogicalKeyboardKey.End, shift: true)] = new ExtendSelectionToLineBreakIntent(
             forward: true, collapseSelection: false, continuesAtWrap: true);
         AddDocumentBoundaryHomeEnd(map);
         return map;
@@ -357,13 +361,13 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
 
     private static void AddDocumentBoundaryHomeEnd(Dictionary<ShortcutActivator, Intent> map)
     {
-        map[Act("Home", control: true)] =
+        map[Act(LogicalKeyboardKey.Home, control: true)] =
             new ExtendSelectionToDocumentBoundaryIntent(forward: false, collapseSelection: true);
-        map[Act("End", control: true)] =
+        map[Act(LogicalKeyboardKey.End, control: true)] =
             new ExtendSelectionToDocumentBoundaryIntent(forward: true, collapseSelection: true);
-        map[Act("Home", control: true, shift: true)] =
+        map[Act(LogicalKeyboardKey.Home, control: true, shift: true)] =
             new ExtendSelectionToDocumentBoundaryIntent(forward: false, collapseSelection: false);
-        map[Act("End", control: true, shift: true)] =
+        map[Act(LogicalKeyboardKey.End, control: true, shift: true)] =
             new ExtendSelectionToDocumentBoundaryIntent(forward: true, collapseSelection: false);
     }
 
@@ -372,90 +376,99 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
         var map = new Dictionary<ShortcutActivator, Intent>();
         foreach (bool pressShift in (bool[])[true, false])
         {
-            map[Act("Backspace", shift: pressShift)] = new DeleteCharacterIntent(forward: false);
-            map[Act("Backspace", alt: true, shift: pressShift)] =
+            map[Act(LogicalKeyboardKey.Backspace, shift: pressShift)] = new DeleteCharacterIntent(forward: false);
+            map[Act(LogicalKeyboardKey.Backspace, alt: true, shift: pressShift)] =
                 new DeleteToNextWordBoundaryIntent(forward: false);
-            map[Act("Backspace", meta: true, shift: pressShift)] = new DeleteToLineBreakIntent(forward: false);
-            map[Act("Delete", shift: pressShift)] = new DeleteCharacterIntent(forward: true);
-            map[Act("Delete", alt: true, shift: pressShift)] = new DeleteToNextWordBoundaryIntent(forward: true);
-            map[Act("Delete", meta: true, shift: pressShift)] = new DeleteToLineBreakIntent(forward: true);
+            map[Act(LogicalKeyboardKey.Backspace, meta: true, shift: pressShift)] =
+                new DeleteToLineBreakIntent(forward: false);
+            map[Act(LogicalKeyboardKey.Delete, shift: pressShift)] = new DeleteCharacterIntent(forward: true);
+            map[Act(LogicalKeyboardKey.Delete, alt: true, shift: pressShift)] =
+                new DeleteToNextWordBoundaryIntent(forward: true);
+            map[Act(LogicalKeyboardKey.Delete, meta: true, shift: pressShift)] =
+                new DeleteToLineBreakIntent(forward: true);
         }
 
-        map[Act("ArrowLeft")] = new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowRight")] = new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowUp")] =
-            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowDown")] =
-            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowLeft", shift: true)] =
-            new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: false);
-        map[Act("ArrowRight", shift: true)] =
-            new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: false);
-        map[Act("ArrowUp", shift: true)] =
-            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: false);
-        map[Act("ArrowDown", shift: true)] =
-            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: false);
-        map[Act("ArrowLeft", alt: true)] =
-            new ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowRight", alt: true)] =
-            new ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowUp", alt: true)] =
-            new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowDown", alt: true)] =
-            new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowLeft", shift: true, alt: true)] =
-            new ExtendSelectionToNextWordBoundaryOrCaretLocationIntent(forward: false);
-        map[Act("ArrowRight", shift: true, alt: true)] =
-            new ExtendSelectionToNextWordBoundaryOrCaretLocationIntent(forward: true);
-        map[Act("ArrowUp", shift: true, alt: true)] =
-            new ExtendSelectionToNextParagraphBoundaryOrCaretLocationIntent(forward: false);
-        map[Act("ArrowDown", shift: true, alt: true)] =
-            new ExtendSelectionToNextParagraphBoundaryOrCaretLocationIntent(forward: true);
-        map[Act("ArrowLeft", meta: true)] =
-            new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowRight", meta: true)] =
-            new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowUp", meta: true)] =
-            new ExtendSelectionToDocumentBoundaryIntent(forward: false, collapseSelection: true);
-        map[Act("ArrowDown", meta: true)] =
-            new ExtendSelectionToDocumentBoundaryIntent(forward: true, collapseSelection: true);
-        map[Act("ArrowLeft", shift: true, meta: true)] = new ExpandSelectionToLineBreakIntent(forward: false);
-        map[Act("ArrowRight", shift: true, meta: true)] = new ExpandSelectionToLineBreakIntent(forward: true);
-        map[Act("ArrowUp", shift: true, meta: true)] =
-            new ExpandSelectionToDocumentBoundaryIntent(forward: false);
-        map[Act("ArrowDown", shift: true, meta: true)] =
-            new ExpandSelectionToDocumentBoundaryIntent(forward: true);
-        map[Act("T", control: true)] = new TransposeCharactersIntent();
-        map[Act("Home")] = new ScrollToDocumentBoundaryIntent(forward: false);
-        map[Act("End")] = new ScrollToDocumentBoundaryIntent(forward: true);
-        map[Act("Home", shift: true)] = new ExpandSelectionToDocumentBoundaryIntent(forward: false);
-        map[Act("End", shift: true)] = new ExpandSelectionToDocumentBoundaryIntent(forward: true);
-        map[Act("PageUp")] = new ScrollIntent(direction: AxisDirection.Up, type: ScrollIncrementType.Page);
-        map[Act("PageDown")] = new ScrollIntent(direction: AxisDirection.Down, type: ScrollIncrementType.Page);
-        map[Act("PageUp", shift: true)] =
-            new ExtendSelectionVerticallyToAdjacentPageIntent(forward: false, collapseSelection: false);
-        map[Act("PageDown", shift: true)] =
-            new ExtendSelectionVerticallyToAdjacentPageIntent(forward: true, collapseSelection: false);
-        map[Act("X", meta: true)] = CopySelectionTextIntent.Cut(SelectionChangedCause.Keyboard);
-        map[Act("C", meta: true)] = CopySelectionTextIntent.Copy;
-        map[Act("V", meta: true)] = new PasteTextIntent(SelectionChangedCause.Keyboard);
-        map[Act("A", meta: true)] = new SelectAllTextIntent(SelectionChangedCause.Keyboard);
-        map[Act("Z", meta: true)] = new UndoTextIntent(SelectionChangedCause.Keyboard);
-        map[Act("Z", shift: true, meta: true)] = new RedoTextIntent(SelectionChangedCause.Keyboard);
-        map[Act("E", control: true)] =
-            new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true);
-        map[Act("A", control: true)] =
-            new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true);
-        map[Act("F", control: true)] =
-            new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: true);
-        map[Act("B", control: true)] =
+        map[Act(LogicalKeyboardKey.ArrowLeft)] =
             new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: true);
-        map[Act("N", control: true)] =
-            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: true);
-        map[Act("P", control: true)] =
+        map[Act(LogicalKeyboardKey.ArrowRight)] =
+            new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowUp)] =
             new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: true);
-        map[Act("Space")] = DoNothing;
-        map[Act("Enter")] = DoNothing;
+        map[Act(LogicalKeyboardKey.ArrowDown)] =
+            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowLeft, shift: true)] =
+            new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: false);
+        map[Act(LogicalKeyboardKey.ArrowRight, shift: true)] =
+            new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: false);
+        map[Act(LogicalKeyboardKey.ArrowUp, shift: true)] =
+            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: false);
+        map[Act(LogicalKeyboardKey.ArrowDown, shift: true)] =
+            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: false);
+        map[Act(LogicalKeyboardKey.ArrowLeft, alt: true)] =
+            new ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowRight, alt: true)] =
+            new ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowUp, alt: true)] =
+            new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowDown, alt: true)] =
+            new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowLeft, shift: true, alt: true)] =
+            new ExtendSelectionToNextWordBoundaryOrCaretLocationIntent(forward: false);
+        map[Act(LogicalKeyboardKey.ArrowRight, shift: true, alt: true)] =
+            new ExtendSelectionToNextWordBoundaryOrCaretLocationIntent(forward: true);
+        map[Act(LogicalKeyboardKey.ArrowUp, shift: true, alt: true)] =
+            new ExtendSelectionToNextParagraphBoundaryOrCaretLocationIntent(forward: false);
+        map[Act(LogicalKeyboardKey.ArrowDown, shift: true, alt: true)] =
+            new ExtendSelectionToNextParagraphBoundaryOrCaretLocationIntent(forward: true);
+        map[Act(LogicalKeyboardKey.ArrowLeft, meta: true)] =
+            new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowRight, meta: true)] =
+            new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowUp, meta: true)] =
+            new ExtendSelectionToDocumentBoundaryIntent(forward: false, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowDown, meta: true)] =
+            new ExtendSelectionToDocumentBoundaryIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.ArrowLeft, shift: true, meta: true)] =
+            new ExpandSelectionToLineBreakIntent(forward: false);
+        map[Act(LogicalKeyboardKey.ArrowRight, shift: true, meta: true)] =
+            new ExpandSelectionToLineBreakIntent(forward: true);
+        map[Act(LogicalKeyboardKey.ArrowUp, shift: true, meta: true)] =
+            new ExpandSelectionToDocumentBoundaryIntent(forward: false);
+        map[Act(LogicalKeyboardKey.ArrowDown, shift: true, meta: true)] =
+            new ExpandSelectionToDocumentBoundaryIntent(forward: true);
+        map[Act(LogicalKeyboardKey.KeyT, control: true)] = new TransposeCharactersIntent();
+        map[Act(LogicalKeyboardKey.Home)] = new ScrollToDocumentBoundaryIntent(forward: false);
+        map[Act(LogicalKeyboardKey.End)] = new ScrollToDocumentBoundaryIntent(forward: true);
+        map[Act(LogicalKeyboardKey.Home, shift: true)] = new ExpandSelectionToDocumentBoundaryIntent(forward: false);
+        map[Act(LogicalKeyboardKey.End, shift: true)] = new ExpandSelectionToDocumentBoundaryIntent(forward: true);
+        map[Act(LogicalKeyboardKey.PageUp)] =
+            new ScrollIntent(direction: AxisDirection.Up, type: ScrollIncrementType.Page);
+        map[Act(LogicalKeyboardKey.PageDown)] =
+            new ScrollIntent(direction: AxisDirection.Down, type: ScrollIncrementType.Page);
+        map[Act(LogicalKeyboardKey.PageUp, shift: true)] =
+            new ExtendSelectionVerticallyToAdjacentPageIntent(forward: false, collapseSelection: false);
+        map[Act(LogicalKeyboardKey.PageDown, shift: true)] =
+            new ExtendSelectionVerticallyToAdjacentPageIntent(forward: true, collapseSelection: false);
+        map[Act(LogicalKeyboardKey.KeyX, meta: true)] = CopySelectionTextIntent.Cut(SelectionChangedCause.Keyboard);
+        map[Act(LogicalKeyboardKey.KeyC, meta: true)] = CopySelectionTextIntent.Copy;
+        map[Act(LogicalKeyboardKey.KeyV, meta: true)] = new PasteTextIntent(SelectionChangedCause.Keyboard);
+        map[Act(LogicalKeyboardKey.KeyA, meta: true)] = new SelectAllTextIntent(SelectionChangedCause.Keyboard);
+        map[Act(LogicalKeyboardKey.KeyZ, meta: true)] = new UndoTextIntent(SelectionChangedCause.Keyboard);
+        map[Act(LogicalKeyboardKey.KeyZ, shift: true, meta: true)] = new RedoTextIntent(SelectionChangedCause.Keyboard);
+        map[Act(LogicalKeyboardKey.KeyE, control: true)] =
+            new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.KeyA, control: true)] =
+            new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.KeyF, control: true)] =
+            new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.KeyB, control: true)] =
+            new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.KeyN, control: true)] =
+            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.KeyP, control: true)] =
+            new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: true);
+        map[Act(LogicalKeyboardKey.Space)] = DoNothing;
+        map[Act(LogicalKeyboardKey.Enter)] = DoNothing;
         return map;
     }
 
@@ -463,24 +476,24 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
     {
         return new Dictionary<ShortcutActivator, Intent>
         {
-            [Act("ArrowDown", alt: true)] = DoNothing,
-            [Act("ArrowLeft", alt: true)] = DoNothing,
-            [Act("ArrowRight", alt: true)] = DoNothing,
-            [Act("ArrowUp", alt: true)] = DoNothing,
-            [Act("ArrowDown", meta: true)] = DoNothing,
-            [Act("ArrowLeft", meta: true)] = DoNothing,
-            [Act("ArrowRight", meta: true)] = DoNothing,
-            [Act("ArrowUp", meta: true)] = DoNothing,
-            [Act("ArrowDown")] = DoNothing,
-            [Act("ArrowLeft")] = DoNothing,
-            [Act("ArrowRight")] = DoNothing,
-            [Act("ArrowUp")] = DoNothing,
-            [Act("ArrowLeft", control: true)] = DoNothing,
-            [Act("ArrowRight", control: true)] = DoNothing,
-            [Act("ArrowLeft", control: true, shift: true)] = DoNothing,
-            [Act("ArrowRight", control: true, shift: true)] = DoNothing,
-            [Act("Space")] = DoNothing,
-            [Act("Enter")] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowDown, alt: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowLeft, alt: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowRight, alt: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowUp, alt: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowDown, meta: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowLeft, meta: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowRight, meta: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowUp, meta: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowDown)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowLeft)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowRight)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowUp)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowLeft, control: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowRight, control: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowLeft, control: true, shift: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.ArrowRight, control: true, shift: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.Space)] = DoNothing,
+            [Act(LogicalKeyboardKey.Enter)] = DoNothing,
         };
     }
 
@@ -490,14 +503,14 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
         // update composing text properly.
         return new Dictionary<ShortcutActivator, Intent>
         {
-            [Act("Backspace")] = DoNothing,
-            [Act("Backspace", shift: true)] = DoNothing,
-            [Act("Delete")] = DoNothing,
-            [Act("Delete", shift: true)] = DoNothing,
-            [Act("Backspace", shift: true, alt: true)] = DoNothing,
-            [Act("Backspace", alt: true)] = DoNothing,
-            [Act("Delete", shift: true, alt: true)] = DoNothing,
-            [Act("Delete", alt: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.Backspace)] = DoNothing,
+            [Act(LogicalKeyboardKey.Backspace, shift: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.Delete)] = DoNothing,
+            [Act(LogicalKeyboardKey.Delete, shift: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.Backspace, shift: true, alt: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.Backspace, alt: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.Delete, shift: true, alt: true)] = DoNothing,
+            [Act(LogicalKeyboardKey.Delete, alt: true)] = DoNothing,
         };
     }
 
@@ -509,27 +522,27 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
             map[activator] = intent;
         }
 
-        map[Act("Escape")] = DoNothing;
-        map[Act("Tab")] = DoNothing;
-        map[Act("Tab", shift: true)] = DoNothing;
-        map[Act("ArrowDown", shift: true, alt: true)] = DoNothing;
-        map[Act("ArrowUp", shift: true, alt: true)] = DoNothing;
-        map[Act("ArrowLeft", shift: true)] = DoNothing;
-        map[Act("ArrowRight", shift: true)] = DoNothing;
-        map[Act("ArrowLeft", shift: true, alt: true)] = DoNothing;
-        map[Act("ArrowRight", shift: true, alt: true)] = DoNothing;
-        map[Act("ArrowLeft", shift: true, meta: true)] = DoNothing;
-        map[Act("ArrowRight", shift: true, meta: true)] = DoNothing;
-        map[Act("PageUp")] = DoNothing;
-        map[Act("PageDown")] = DoNothing;
-        map[Act("End")] = DoNothing;
-        map[Act("Home")] = DoNothing;
-        map[Act("PageUp", shift: true)] = DoNothing;
-        map[Act("PageDown", shift: true)] = DoNothing;
-        map[Act("End", shift: true)] = DoNothing;
-        map[Act("Home", shift: true)] = DoNothing;
-        map[Act("End", control: true)] = DoNothing;
-        map[Act("Home", control: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.Escape)] = DoNothing;
+        map[Act(LogicalKeyboardKey.Tab)] = DoNothing;
+        map[Act(LogicalKeyboardKey.Tab, shift: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.ArrowDown, shift: true, alt: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.ArrowUp, shift: true, alt: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.ArrowLeft, shift: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.ArrowRight, shift: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.ArrowLeft, shift: true, alt: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.ArrowRight, shift: true, alt: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.ArrowLeft, shift: true, meta: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.ArrowRight, shift: true, meta: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.PageUp)] = DoNothing;
+        map[Act(LogicalKeyboardKey.PageDown)] = DoNothing;
+        map[Act(LogicalKeyboardKey.End)] = DoNothing;
+        map[Act(LogicalKeyboardKey.Home)] = DoNothing;
+        map[Act(LogicalKeyboardKey.PageUp, shift: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.PageDown, shift: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.End, shift: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.Home, shift: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.End, control: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.Home, control: true)] = DoNothing;
         return map;
     }
 
@@ -539,14 +552,14 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
         var map = new Dictionary<ShortcutActivator, Intent>();
         foreach (bool pressShift in (bool[])[true, false])
         {
-            map[Act("Backspace", shift: pressShift)] = DoNothing;
-            map[Act("Delete", shift: pressShift)] = DoNothing;
-            map[Act("Backspace", alt: true, shift: pressShift)] = DoNothing;
-            map[Act("Delete", alt: true, shift: pressShift)] = DoNothing;
-            map[Act("Backspace", control: true, shift: pressShift)] = DoNothing;
-            map[Act("Delete", control: true, shift: pressShift)] = DoNothing;
-            map[Act("Backspace", meta: true, shift: pressShift)] = DoNothing;
-            map[Act("Delete", meta: true, shift: pressShift)] = DoNothing;
+            map[Act(LogicalKeyboardKey.Backspace, shift: pressShift)] = DoNothing;
+            map[Act(LogicalKeyboardKey.Delete, shift: pressShift)] = DoNothing;
+            map[Act(LogicalKeyboardKey.Backspace, alt: true, shift: pressShift)] = DoNothing;
+            map[Act(LogicalKeyboardKey.Delete, alt: true, shift: pressShift)] = DoNothing;
+            map[Act(LogicalKeyboardKey.Backspace, control: true, shift: pressShift)] = DoNothing;
+            map[Act(LogicalKeyboardKey.Delete, control: true, shift: pressShift)] = DoNothing;
+            map[Act(LogicalKeyboardKey.Backspace, meta: true, shift: pressShift)] = DoNothing;
+            map[Act(LogicalKeyboardKey.Delete, meta: true, shift: pressShift)] = DoNothing;
         }
 
         foreach ((ShortcutActivator activator, Intent _) in CommonDisablingTextShortcuts)
@@ -559,11 +572,11 @@ public sealed class DefaultTextEditingShortcuts : StatelessWidget
             map[activator] = DoNothing;
         }
 
-        map[Act("X", meta: true)] = DoNothing;
-        map[Act("C", meta: true)] = DoNothing;
-        map[Act("V", meta: true)] = DoNothing;
-        map[Act("A", control: true)] = DoNothing;
-        map[Act("A", meta: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.KeyX, meta: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.KeyC, meta: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.KeyV, meta: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.KeyA, control: true)] = DoNothing;
+        map[Act(LogicalKeyboardKey.KeyA, meta: true)] = DoNothing;
         return map;
     }
 

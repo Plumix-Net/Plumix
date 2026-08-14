@@ -139,14 +139,14 @@ public sealed class MaterialSelectionTests
 
         harness.Pump(new Size(320, 120));
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         RenderEditable editable = FindEditables(harness.RenderView).Single();
         Assert.Equal(0, editable.Selection.BaseOffset);
         Assert.Equal(10, editable.Selection.ExtentOffset);
         Assert.Equal(new TextSelection(0, 10), changedSelection);
         Assert.Equal(SelectionChangedCause.Keyboard, changedCause);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("C", true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyC, control: true)));
         Assert.Equal("alpha beta", TextClipboard.GetText());
     }
 

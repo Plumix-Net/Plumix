@@ -2855,7 +2855,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
                 return KeyEventResult.Handled;
             }
 
-            if (@event.IsDown)
+            if (@event is KeyDownEvent)
             {
                 SetFocusOverlaySuppressed(false);
                 StartKeyboardPress();
@@ -3551,27 +3551,27 @@ internal sealed class MaterialButtonCore : StatefulWidget
             _statesController?.Update(MaterialState.Pressed, _isPressed);
         }
 
-        private static bool IsActivateKey(string key)
+        private static bool IsActivateKey(LogicalKeyboardKey key)
         {
-            return string.Equals(key, "Enter", StringComparison.Ordinal)
-                   || string.Equals(key, "Return", StringComparison.Ordinal)
-                   || string.Equals(key, "NumPadEnter", StringComparison.Ordinal)
-                   || string.Equals(key, "NumpadEnter", StringComparison.Ordinal)
-                   || string.Equals(key, "Space", StringComparison.Ordinal)
-                   || string.Equals(key, "Spacebar", StringComparison.Ordinal);
+            return key.Equals(LogicalKeyboardKey.Enter)
+                   || key.Equals(LogicalKeyboardKey.Enter)
+                   || key.Equals(LogicalKeyboardKey.NumpadEnter)
+                   || key.Equals(LogicalKeyboardKey.NumpadEnter)
+                   || key.Equals(LogicalKeyboardKey.Space)
+                   || key.Equals(LogicalKeyboardKey.Space);
         }
 
         private static bool IsActivateKey(KeyEvent @event)
         {
-            if (@event.IsShiftPressed
-                || @event.IsControlPressed
-                || @event.IsAltPressed
-                || @event.IsMetaPressed)
+            if (HardwareKeyboard.Instance.IsShiftPressed
+                || HardwareKeyboard.Instance.IsControlPressed
+                || HardwareKeyboard.Instance.IsAltPressed
+                || HardwareKeyboard.Instance.IsMetaPressed)
             {
                 return false;
             }
 
-            return IsActivateKey(@event.Key);
+            return IsActivateKey(@event.LogicalKey);
         }
     }
 

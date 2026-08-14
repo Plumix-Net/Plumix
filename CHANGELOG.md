@@ -1,5 +1,22 @@
 # Changelog
 
+- Breaking: ported the keyboard identity stack. `keyboard_key.g.dart` is now generated into
+  `src/Plumix/UI/KeyboardKey.g.cs` by `scripts/generate_keyboard_keys.py` (444 `LogicalKeyboardKey` and
+  269 `PhysicalKeyboardKey` constants with Flutter's key ids, USB HID usages, labels, debug names,
+  planes and synonyms), and `hardware_keyboard.dart`/`raw_keyboard.dart` land as `KeyEvent` +
+  `KeyDownEvent`/`KeyUpEvent`/`KeyRepeatEvent`, `KeyEventDeviceType`, `KeyboardLockMode`, the full
+  `HardwareKeyboard` state machine (pressed keys, lock toggling, `LookUpLayout`, `SyncKeyboardState`,
+  handler copy-on-write and OR-accumulated dispatch), `RawKeyEventData`/`RawKeyEvent`/`RawKeyboard`
+  with modifier synchronization, and `KeyEventManager`, which regularizes host events and synthesizes
+  the sync events. The Avalonia host maps `PhysicalKey`/`Key`/`KeyDeviceType` through the new
+  `HostKeyboardMap`.
+  **Breaking:** `KeyEvent` is abstract and carries `PhysicalKey`/`LogicalKey`/`TimeStamp`/`DeviceType`/
+  `Synthesized` instead of `Key`/`IsDown`/`IsRepeat`/`IsNumLockOn`/`IsXPressed` — test for the subclass
+  and read modifiers from `HardwareKeyboard.Instance`; `LogicalKeySet`, `SingleActivator.Trigger`,
+  `ShortcutActivator.Triggers` and `ShortcutSerialization.Modifier` take `LogicalKeyboardKey` instead of
+  key-name strings (the channel entry now carries `keyId`), `LogicalKeySet.NormalizeKey` is gone, and
+  the `LogicalKeyboardKey` placeholder enum in `ScrollConfiguration.cs` is replaced by the real class.
+
 - Breaking: replaced the semantics compiler with Flutter's fragment model. `RenderObjectSemantics` is
   now a 1:1 port of `_RenderObjectSemantics` (four-phase `UpdateChildren`/`EnsureGeometry`/
   `EnsureSemanticsNode`, `ISemanticsFragment`/`IncompleteSemanticsFragment`, `SemanticsParentData`,

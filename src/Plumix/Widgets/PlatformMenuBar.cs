@@ -1,3 +1,5 @@
+using Plumix.UI;
+
 namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/platform_menu_bar.dart
@@ -15,11 +17,6 @@ public interface IMenuSerializableShortcut : ShortcutActivator
 /// <summary>
 /// Flutter's `ShortcutSerialization`: a platform-channel description of an activator.
 /// </summary>
-/// <remarks>
-/// Plumix models logical keys as normalized key strings rather than Flutter's numeric
-/// `LogicalKeyboardKey.keyId`, so <see cref="Trigger"/> and the `shortcutTrigger` channel entry
-/// carry that string. See the keyboard-events row in `docs/ai/DIVERGENCES.md`.
-/// </remarks>
 public sealed class ShortcutSerialization
 {
     private const string ShortcutCharacterKey = "shortcutCharacter";
@@ -34,7 +31,7 @@ public sealed class ShortcutSerialization
     private readonly Dictionary<string, object?> _internal;
 
     private ShortcutSerialization(
-        string? trigger,
+        LogicalKeyboardKey? trigger,
         string? character,
         bool? alt,
         bool? control,
@@ -51,8 +48,8 @@ public sealed class ShortcutSerialization
         _internal = serialized;
     }
 
-    /// <summary>The normalized trigger key, set only by <see cref="Modifier"/>.</summary>
-    public string? Trigger { get; }
+    /// <summary>The trigger key, set only by <see cref="Modifier"/>.</summary>
+    public LogicalKeyboardKey? Trigger { get; }
 
     /// <summary>The literal character, set only by <see cref="Character"/>.</summary>
     public string? Character { get; }
@@ -99,15 +96,14 @@ public sealed class ShortcutSerialization
 
     /// <summary>Flutter's `ShortcutSerialization.modifier`.</summary>
     public static ShortcutSerialization Modifier(
-        string trigger,
+        LogicalKeyboardKey trigger,
         bool alt = false,
         bool control = false,
         bool meta = false,
         bool shift = false)
     {
         ArgumentNullException.ThrowIfNull(trigger);
-        string normalized = LogicalKeySet.NormalizeKey(trigger);
-        if (normalized is "Alt" or "Control" or "Meta" or "Shift")
+        if (SingleActivator.IsModifierKey(trigger))
         {
             throw new ArgumentException(
                 "Specifying a modifier key as a trigger is not allowed. "
@@ -116,7 +112,7 @@ public sealed class ShortcutSerialization
         }
 
         return new ShortcutSerialization(
-            trigger: normalized,
+            trigger: trigger,
             character: null,
             alt: alt,
             control: control,
@@ -124,7 +120,7 @@ public sealed class ShortcutSerialization
             shift: shift,
             serialized: new Dictionary<string, object?>(StringComparer.Ordinal)
             {
-                [ShortcutTriggerKey] = normalized,
+                [ShortcutTriggerKey] = trigger.KeyId,
                 [ShortcutModifiersKey] = (alt ? ShortcutModifierAlt : 0)
                                          | (control ? ShortcutModifierControl : 0)
                                          | (meta ? ShortcutModifierMeta : 0)

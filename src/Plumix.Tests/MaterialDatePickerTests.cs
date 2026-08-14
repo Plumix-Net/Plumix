@@ -195,11 +195,11 @@ public sealed class MaterialDatePickerTests : IDisposable
             Assert.True(FocusManager.Instance.FocusNext());
         }
         Assert.Equal("HandleGridKey", FocusManager.Instance.PrimaryFocus?.OnKeyEvent?.Method.Name);
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(420, 500));
         Assert.Equal(new DateTime(2026, 4, 1), displayed);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         Assert.Equal(new DateTime(2026, 4, 1), selected);
     }
 
@@ -473,7 +473,7 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.True(formKey.CurrentState.Validate());
         formKey.CurrentState.Save();
         Assert.Equal(new DateTime(2026, 3, 16), saved);
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         Assert.Equal(new DateTime(2026, 3, 16), submitted);
     }
 
@@ -655,7 +655,7 @@ public sealed class MaterialDatePickerTests : IDisposable
             FindDescendants<RenderParagraph>(harness.RenderView),
             paragraph => paragraph.PlainText == "Bad date");
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(FocusManager.Instance.HandleTextInput("03/16/2026"));
         semantics = harness.PumpAndGetSemantics(new Size(500, 700));
         ok = FindSemantics(semantics, node =>

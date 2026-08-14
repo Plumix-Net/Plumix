@@ -29,12 +29,12 @@ public sealed class PlumixHostInputTests : IDisposable
         {
             OnKeyEvent = (_, @event) =>
             {
-                if (!string.Equals(@event.Key, "Space", StringComparison.Ordinal))
+                if (!@event.LogicalKey.Equals(Plumix.UI.LogicalKeyboardKey.Space))
                 {
                     return KeyEventResult.Ignored;
                 }
 
-                if (@event.IsDown)
+                if (@event is Plumix.UI.KeyDownEvent)
                 {
                     keyDownCount += 1;
                 }
@@ -80,14 +80,16 @@ public sealed class PlumixHostInputTests : IDisposable
         FrameworkFocusManager.Instance.RequestFocus(focusNode);
 
         var host = new TestPlumixHost();
-        Assert.True(host.DispatchKeyDown(Key.OemQuestion, keySymbol: "?"));
-        Assert.True(host.DispatchKeyDown(Key.OemQuestion, keySymbol: "?"));
-        Assert.True(host.DispatchKeyUp(Key.OemQuestion, keySymbol: "?"));
+        Assert.True(host.DispatchKeyDown(Key.OemQuestion, keySymbol: "?", physicalKey: PhysicalKey.Slash));
+        Assert.True(host.DispatchKeyDown(Key.OemQuestion, keySymbol: "?", physicalKey: PhysicalKey.Slash));
+        Assert.True(host.DispatchKeyUp(Key.OemQuestion, keySymbol: "?", physicalKey: PhysicalKey.Slash));
 
         Assert.Equal("?", events[0].Character);
-        Assert.False(events[0].IsRepeat);
-        Assert.True(events[1].IsRepeat);
-        Assert.False(events[2].IsRepeat);
+        Assert.IsType<Plumix.UI.KeyDownEvent>(events[0]);
+        Assert.IsType<Plumix.UI.KeyRepeatEvent>(events[1]);
+        Assert.IsType<Plumix.UI.KeyUpEvent>(events[2]);
+        Assert.Equal(Plumix.UI.LogicalKeyboardKey.Slash, events[0].LogicalKey);
+        Assert.Equal(Plumix.UI.PhysicalKeyboardKey.Slash, events[0].PhysicalKey);
     }
 
     private sealed class TestPlumixHost : PlumixHost
@@ -95,11 +97,13 @@ public sealed class PlumixHostInputTests : IDisposable
         public bool DispatchKeyDown(
             Key key,
             KeyModifiers modifiers = KeyModifiers.None,
-            string? keySymbol = null)
+            string? keySymbol = null,
+            PhysicalKey physicalKey = PhysicalKey.None)
         {
             var args = new KeyEventArgs
             {
                 Key = key,
+                PhysicalKey = physicalKey,
                 KeyModifiers = modifiers,
                 KeySymbol = keySymbol
             };
@@ -111,11 +115,13 @@ public sealed class PlumixHostInputTests : IDisposable
         public bool DispatchKeyUp(
             Key key,
             KeyModifiers modifiers = KeyModifiers.None,
-            string? keySymbol = null)
+            string? keySymbol = null,
+            PhysicalKey physicalKey = PhysicalKey.None)
         {
             var args = new KeyEventArgs
             {
                 Key = key,
+                PhysicalKey = physicalKey,
                 KeyModifiers = modifiers,
                 KeySymbol = keySymbol
             };

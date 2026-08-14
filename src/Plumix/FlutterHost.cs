@@ -143,17 +143,7 @@ public class PlumixHost : Control
             return;
         }
 
-        var keyEvent = new KeyEvent(
-            key: e.Key.ToString(),
-            isDown: true,
-            isShiftPressed: e.KeyModifiers.HasFlag(KeyModifiers.Shift),
-            isControlPressed: e.KeyModifiers.HasFlag(KeyModifiers.Control),
-            isAltPressed: e.KeyModifiers.HasFlag(KeyModifiers.Alt),
-            isMetaPressed: e.KeyModifiers.HasFlag(KeyModifiers.Meta),
-            isRepeat: HardwareKeyboard.Instance.LogicalKeysPressed.Contains(e.Key.ToString()),
-            character: e.KeySymbol);
-
-        if (FrameworkFocusManager.Instance.HandleKeyEvent(keyEvent))
+        if (DispatchHostKeyEvent(e, isDown: true))
         {
             e.Handled = true;
             if (IsCopyOrCutShortcut(e))
@@ -164,10 +154,7 @@ public class PlumixHost : Control
             return;
         }
 
-        string keyName = e.Key.ToString();
-        bool isBackKey = e.Key == Key.Escape
-                         || string.Equals(keyName, "Back", StringComparison.Ordinal)
-                         || string.Equals(keyName, "BrowserBack", StringComparison.Ordinal);
+        bool isBackKey = e.Key is Key.Escape or Key.Back or Key.BrowserBack;
         if (!isBackKey)
         {
             return;
@@ -188,19 +175,41 @@ public class PlumixHost : Control
             return;
         }
 
-        var keyEvent = new KeyEvent(
-            key: e.Key.ToString(),
-            isDown: false,
-            isShiftPressed: e.KeyModifiers.HasFlag(KeyModifiers.Shift),
-            isControlPressed: e.KeyModifiers.HasFlag(KeyModifiers.Control),
-            isAltPressed: e.KeyModifiers.HasFlag(KeyModifiers.Alt),
-            isMetaPressed: e.KeyModifiers.HasFlag(KeyModifiers.Meta),
-            character: e.KeySymbol);
-
-        if (FrameworkFocusManager.Instance.HandleKeyEvent(keyEvent))
+        if (DispatchHostKeyEvent(e, isDown: false))
         {
             e.Handled = true;
         }
+    }
+
+    /// <summary>
+    /// Builds the raw host event and runs it through <see cref="KeyEventManager"/>, which records
+    /// the raw state, regularizes it into the <see cref="KeyEvent"/> stream (synthesizing the
+    /// modifier events needed to keep <see cref="HardwareKeyboard"/> in sync) and dispatches both.
+    /// </summary>
+    private static bool DispatchHostKeyEvent(KeyEventArgs e, bool isDown)
+    {
+        PhysicalKeyboardKey physicalKey = HostKeyboardMap.PhysicalKeyFor(e.PhysicalKey);
+        LogicalKeyboardKey logicalKey = HostKeyboardMap.LogicalKeyFor(e.Key, e.KeySymbol);
+#pragma warning disable CS0618
+        var data = new HostRawKeyEventData(
+            physicalKey,
+            logicalKey,
+            keyLabel: logicalKey.KeyLabel,
+            isControlPressed: e.KeyModifiers.HasFlag(KeyModifiers.Control),
+            isShiftPressed: e.KeyModifiers.HasFlag(KeyModifiers.Shift),
+            isAltPressed: e.KeyModifiers.HasFlag(KeyModifiers.Alt),
+            isMetaPressed: e.KeyModifiers.HasFlag(KeyModifiers.Meta),
+            deviceType: HostKeyboardMap.DeviceTypeFor(e.KeyDeviceType));
+
+        RawKeyEvent rawEvent = isDown
+            ? new RawKeyDownEvent(
+                data,
+                character: e.KeySymbol,
+                repeat: RawKeyboard.Instance.PhysicalKeysPressed.Contains(physicalKey))
+            : new RawKeyUpEvent(data);
+#pragma warning restore CS0618
+
+        return KeyEventManager.Instance.HandleRawKeyEvent(rawEvent);
     }
 
     protected override void OnTextInput(TextInputEventArgs e)

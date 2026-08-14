@@ -101,7 +101,7 @@ public sealed class ScrollBehaviorParityTests
         using var harness = BuildHorizontalHarness(controller, new ScrollBehavior().CopyWith(scrollbars: false));
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
-        HardwareKeyboard.Instance.ResetForTests();
+        HardwareKeyboard.Instance.ClearState();
         harness.Pump(new Size(200, 100));
 
         bool? allowPlatformDefault = null;
@@ -109,7 +109,7 @@ public sealed class ScrollBehaviorParityTests
         Assert.Equal(0, controller.Offset, precision: 6);
         Assert.True(allowPlatformDefault);
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftShift", isDown: true, isShiftPressed: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ShiftLeft, shift: true));
         DispatchScroll(binding, harness.RenderView, PointerDeviceKind.Mouse, allow => allowPlatformDefault = allow);
         Assert.Equal(20, controller.Offset, precision: 6);
         Assert.False(allowPlatformDefault);
@@ -117,11 +117,11 @@ public sealed class ScrollBehaviorParityTests
         DispatchScroll(binding, harness.RenderView, PointerDeviceKind.Trackpad);
         Assert.Equal(20, controller.Offset, precision: 6);
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftShift", isDown: false));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.ShiftLeft));
         DispatchScroll(binding, harness.RenderView, PointerDeviceKind.Mouse);
         Assert.Equal(20, controller.Offset, precision: 6);
         binding.ResetForTests();
-        HardwareKeyboard.Instance.ResetForTests();
+        HardwareKeyboard.Instance.ClearState();
     }
 
     [Fact]
@@ -135,11 +135,11 @@ public sealed class ScrollBehaviorParityTests
         using var harness = BuildHorizontalHarness(controller, behavior);
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
-        HardwareKeyboard.Instance.ResetForTests();
+        HardwareKeyboard.Instance.ClearState();
         harness.Pump(new Size(200, 100));
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", isDown: true, isAltPressed: true));
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("Space", isDown: true, isAltPressed: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.AltLeft, alt: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space, alt: true));
         DispatchScroll(binding, harness.RenderView, PointerDeviceKind.Mouse);
         Assert.Equal(20, controller.Offset, precision: 6);
 
@@ -150,10 +150,10 @@ public sealed class ScrollBehaviorParityTests
         binding.HandlePointerEvent(harness.RenderView, new PointerCancelEvent(
             2, PointerDeviceKind.Touch, new Point(50, 50), PointerButtons.None, now.AddMilliseconds(1)));
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", isDown: false));
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("Space", isDown: false));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.AltLeft));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.Space));
         binding.ResetForTests();
-        HardwareKeyboard.Instance.ResetForTests();
+        HardwareKeyboard.Instance.ClearState();
     }
 
     private static WidgetRenderHarness BuildHorizontalHarness(

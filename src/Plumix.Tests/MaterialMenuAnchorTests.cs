@@ -279,22 +279,22 @@ public sealed class MaterialMenuAnchorTests
         IReadOnlyDictionary<ShortcutActivator, Intent> shortcuts = MenuConstants.TraversalShortcuts;
 
         Assert.Equal(8, shortcuts.Count);
-        Assert.IsType<ActivateIntent>(shortcuts[new SingleActivator("GameButtonA")]);
-        Assert.IsType<DismissIntent>(shortcuts[new SingleActivator("Escape")]);
-        Assert.IsType<NextFocusIntent>(shortcuts[new SingleActivator("Tab")]);
-        Assert.IsType<PreviousFocusIntent>(shortcuts[new SingleActivator("Tab", shift: true)]);
+        Assert.IsType<ActivateIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.GameButtonA)]);
+        Assert.IsType<DismissIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Escape)]);
+        Assert.IsType<NextFocusIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Tab)]);
+        Assert.IsType<PreviousFocusIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Tab, shift: true)]);
         Assert.Equal(
             TraversalDirection.Down,
-            ((DirectionalFocusIntent)shortcuts[new SingleActivator("ArrowDown")]).Direction);
+            ((DirectionalFocusIntent)shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowDown)]).Direction);
         Assert.Equal(
             TraversalDirection.Up,
-            ((DirectionalFocusIntent)shortcuts[new SingleActivator("ArrowUp")]).Direction);
+            ((DirectionalFocusIntent)shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowUp)]).Direction);
         Assert.Equal(
             TraversalDirection.Left,
-            ((DirectionalFocusIntent)shortcuts[new SingleActivator("ArrowLeft")]).Direction);
+            ((DirectionalFocusIntent)shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowLeft)]).Direction);
         Assert.Equal(
             TraversalDirection.Right,
-            ((DirectionalFocusIntent)shortcuts[new SingleActivator("ArrowRight")]).Direction);
+            ((DirectionalFocusIntent)shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowRight)]).Direction);
     }
 
     [Fact]
@@ -464,9 +464,9 @@ public sealed class MaterialMenuAnchorTests
     public void ShortcutSerialization_ModifierMatchesTheSourceChannelShape()
     {
         ShortcutSerialization serialized =
-            new SingleActivator("KeyA", control: true, shift: true).SerializeForMenu();
+            new SingleActivator(LogicalKeyboardKey.KeyA, control: true, shift: true).SerializeForMenu();
 
-        Assert.Equal("A", serialized.Trigger);
+        Assert.Equal(LogicalKeyboardKey.KeyA, serialized.Trigger);
         Assert.Null(serialized.Character);
         Assert.True(serialized.Control);
         Assert.True(serialized.Shift);
@@ -474,7 +474,7 @@ public sealed class MaterialMenuAnchorTests
         Assert.False(serialized.Meta);
 
         IReadOnlyDictionary<string, object?> channel = serialized.ToChannelRepresentation();
-        Assert.Equal("A", channel["shortcutTrigger"]);
+        Assert.Equal(LogicalKeyboardKey.KeyA.KeyId, channel["shortcutTrigger"]);
         // control (1 << 3) | shift (1 << 1)
         Assert.Equal(10, channel["shortcutModifiers"]);
         Assert.False(channel.ContainsKey("shortcutCharacter"));
@@ -503,8 +503,10 @@ public sealed class MaterialMenuAnchorTests
     [Fact]
     public void ShortcutSerialization_RejectsModifierTriggersAndNonSingleCharacters()
     {
-        Assert.Throws<ArgumentException>(() => ShortcutSerialization.Modifier("ShiftLeft"));
-        Assert.Throws<ArgumentException>(() => ShortcutSerialization.Modifier("Control"));
+        Assert.Throws<ArgumentException>(
+            () => ShortcutSerialization.Modifier(LogicalKeyboardKey.ShiftLeft));
+        Assert.Throws<ArgumentException>(
+            () => ShortcutSerialization.Modifier(LogicalKeyboardKey.Control));
         Assert.Throws<ArgumentException>(() => ShortcutSerialization.ForCharacter("ab"));
         Assert.Throws<ArgumentException>(() => ShortcutSerialization.ForCharacter(string.Empty));
     }
@@ -534,7 +536,7 @@ public sealed class MaterialMenuAnchorTests
         bool meta,
         string expected)
     {
-        Assert.Equal(expected, Label(new SingleActivator(trigger, control, shift, alt, meta), platform));
+        Assert.Equal(expected, Label(new SingleActivator(Trigger(trigger), control, shift, alt, meta), platform));
     }
 
     [Theory]
@@ -560,7 +562,7 @@ public sealed class MaterialMenuAnchorTests
     {
         foreach (TargetPlatform platform in Enum.GetValues<TargetPlatform>())
         {
-            Assert.Equal(expected, Label(new SingleActivator(trigger), platform));
+            Assert.Equal(expected, Label(new SingleActivator(Trigger(trigger)), platform));
         }
     }
 
@@ -599,7 +601,7 @@ public sealed class MaterialMenuAnchorTests
         TargetPlatform platform,
         string expected)
     {
-        var activator = new SingleActivator("KeyA", control: true, shift: true, alt: true, meta: true);
+        var activator = new SingleActivator(LogicalKeyboardKey.KeyA, control: true, shift: true, alt: true, meta: true);
 
         Assert.Equal(expected, Label(activator, platform));
     }
@@ -620,11 +622,11 @@ public sealed class MaterialMenuAnchorTests
         // lookup must return the same string without rebuilding the table.
         var overridden = new KeyLabelOverrideLocalizations();
 
-        Assert.Equal("Ctrl+Escape!", Label(new SingleActivator("Escape", control: true), overridden));
-        Assert.Equal("Ctrl+Escape!", Label(new SingleActivator("Escape", control: true), overridden));
+        Assert.Equal("Ctrl+Escape!", Label(new SingleActivator(LogicalKeyboardKey.Escape, control: true), overridden));
+        Assert.Equal("Ctrl+Escape!", Label(new SingleActivator(LogicalKeyboardKey.Escape, control: true), overridden));
         Assert.Equal(
             "Ctrl+Esc",
-            Label(new SingleActivator("Escape", control: true), TargetPlatform.Linux));
+            Label(new SingleActivator(LogicalKeyboardKey.Escape, control: true), TargetPlatform.Linux));
     }
 
     private static string Label(IMenuSerializableShortcut shortcut, TargetPlatform platform) =>
@@ -639,17 +641,21 @@ public sealed class MaterialMenuAnchorTests
             localizations,
             TargetPlatform.Linux);
 
+    /// <summary>Resolves a generated key member name for the theory data above.</summary>
+    private static LogicalKeyboardKey Trigger(string name) =>
+        LogicalKeyboardKey.FindKeyByGeneratedName(name)!;
+
     /// <summary>A third-party activator, standing in for a Dart class mixing in the shortcut.</summary>
     private sealed class CustomActivator : IMenuSerializableShortcut
     {
-        public IReadOnlySet<string>? Triggers => null;
+        public IReadOnlySet<LogicalKeyboardKey>? Triggers => null;
 
         public bool Accepts(KeyEvent @event, HardwareKeyboard state) => false;
 
         public string DebugDescribeKeys() => "Control + Home";
 
         public ShortcutSerialization SerializeForMenu() =>
-            ShortcutSerialization.Modifier("Home", control: true);
+            ShortcutSerialization.Modifier(LogicalKeyboardKey.Home, control: true);
     }
 
     private sealed class KeyLabelOverrideLocalizations : MaterialLocalizations

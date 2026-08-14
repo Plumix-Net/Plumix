@@ -1322,20 +1322,22 @@ public sealed class EditableText : StatefulWidget
                 return KeyEventResult.Handled;
             }
 
-            if (!Widget.Enabled || !@event.IsDown)
+            if (!Widget.Enabled || @event is not KeyDownEvent)
             {
                 return KeyEventResult.Ignored;
             }
 
             var controller = _controller!;
-            string key = @event.Key;
+            LogicalKeyboardKey key = @event.LogicalKey;
             bool textChanged = false;
             bool keepVerticalNavigationX = false;
-            bool isEditingShortcut = @event.IsControlPressed || @event.IsMetaPressed;
-            bool isWordShortcut = @event.IsControlPressed || @event.IsAltPressed;
+            bool isEditingShortcut = HardwareKeyboard.Instance.IsControlPressed
+                                     || HardwareKeyboard.Instance.IsMetaPressed;
+            bool isWordShortcut = HardwareKeyboard.Instance.IsControlPressed
+                                  || HardwareKeyboard.Instance.IsAltPressed;
             bool isParagraphShortcut = Widget.Multiline && isWordShortcut;
 
-            if (isEditingShortcut && string.Equals(key, "A", StringComparison.Ordinal))
+            if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyA))
             {
                 _pendingSelectionCause = SelectionChangedCause.Keyboard;
                 _ = controller.SelectAll();
@@ -1345,7 +1347,7 @@ public sealed class EditableText : StatefulWidget
                 return KeyEventResult.Handled;
             }
 
-            if (isEditingShortcut && string.Equals(key, "C", StringComparison.Ordinal))
+            if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyC))
             {
                 if (!controller.Selection.IsCollapsed)
                 {
@@ -1357,7 +1359,7 @@ public sealed class EditableText : StatefulWidget
                 return KeyEventResult.Handled;
             }
 
-            if (isEditingShortcut && string.Equals(key, "X", StringComparison.Ordinal))
+            if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyX))
             {
                 if (!controller.Selection.IsCollapsed)
                 {
@@ -1374,7 +1376,7 @@ public sealed class EditableText : StatefulWidget
                 return KeyEventResult.Handled;
             }
 
-            if (isEditingShortcut && string.Equals(key, "V", StringComparison.Ordinal))
+            if (isEditingShortcut && key.Equals(LogicalKeyboardKey.KeyV))
             {
                 string pasteText = TextClipboard.GetText() ?? string.Empty;
                 if (!Widget.ReadOnly && !string.IsNullOrEmpty(pasteText))
@@ -1394,71 +1396,65 @@ public sealed class EditableText : StatefulWidget
                 return KeyEventResult.Handled;
             }
 
-            if (string.Equals(key, "Back", StringComparison.Ordinal)
-                || string.Equals(key, "Backspace", StringComparison.Ordinal))
+            if (key.Equals(LogicalKeyboardKey.Backspace))
             {
                 textChanged = !Widget.ReadOnly && (isWordShortcut
                     ? controller.DeleteBackwardByWord()
                     : controller.DeleteBackward());
             }
-            else if (string.Equals(key, "Delete", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.Delete))
             {
                 textChanged = !Widget.ReadOnly && (isWordShortcut
                     ? controller.DeleteForwardByWord()
                     : controller.DeleteForward());
             }
-            else if (string.Equals(key, "ArrowLeft", StringComparison.Ordinal)
-                     || string.Equals(key, "Left", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.ArrowLeft))
             {
                 _ = isWordShortcut
-                    ? controller.MoveCaretToPreviousWord(extendSelection: @event.IsShiftPressed)
-                    : controller.MoveCaretLeft(extendSelection: @event.IsShiftPressed);
+                    ? controller.MoveCaretToPreviousWord(extendSelection: HardwareKeyboard.Instance.IsShiftPressed)
+                    : controller.MoveCaretLeft(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
             }
-            else if (string.Equals(key, "ArrowRight", StringComparison.Ordinal)
-                     || string.Equals(key, "Right", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.ArrowRight))
             {
                 _ = isWordShortcut
-                    ? controller.MoveCaretToNextWord(extendSelection: @event.IsShiftPressed)
-                    : controller.MoveCaretRight(extendSelection: @event.IsShiftPressed);
+                    ? controller.MoveCaretToNextWord(extendSelection: HardwareKeyboard.Instance.IsShiftPressed)
+                    : controller.MoveCaretRight(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
             }
             else if (Widget.Multiline
-                     && (string.Equals(key, "ArrowUp", StringComparison.Ordinal)
-                         || string.Equals(key, "Up", StringComparison.Ordinal)))
+                     && key.Equals(LogicalKeyboardKey.ArrowUp))
             {
                 if (isParagraphShortcut)
                 {
-                    _ = controller.MoveCaretToParagraphStart(extendSelection: @event.IsShiftPressed);
+                    _ = controller.MoveCaretToParagraphStart(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
                 }
                 else
                 {
-                    _ = MoveCaretVertical(moveDown: false, extendSelection: @event.IsShiftPressed);
+                    _ = MoveCaretVertical(moveDown: false, extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
                     keepVerticalNavigationX = true;
                 }
             }
             else if (Widget.Multiline
-                     && (string.Equals(key, "ArrowDown", StringComparison.Ordinal)
-                         || string.Equals(key, "Down", StringComparison.Ordinal)))
+                     && key.Equals(LogicalKeyboardKey.ArrowDown))
             {
                 if (isParagraphShortcut)
                 {
-                    _ = controller.MoveCaretToParagraphEnd(extendSelection: @event.IsShiftPressed);
+                    _ = controller.MoveCaretToParagraphEnd(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
                 }
                 else
                 {
-                    _ = MoveCaretVertical(moveDown: true, extendSelection: @event.IsShiftPressed);
+                    _ = MoveCaretVertical(moveDown: true, extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
                     keepVerticalNavigationX = true;
                 }
             }
-            else if (string.Equals(key, "Home", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.Home))
             {
-                _ = controller.MoveCaretToStart(extendSelection: @event.IsShiftPressed);
+                _ = controller.MoveCaretToStart(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
             }
-            else if (string.Equals(key, "End", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.End))
             {
-                _ = controller.MoveCaretToEnd(extendSelection: @event.IsShiftPressed);
+                _ = controller.MoveCaretToEnd(extendSelection: HardwareKeyboard.Instance.IsShiftPressed);
             }
-            else if (string.Equals(key, "Enter", StringComparison.Ordinal)
-                     || string.Equals(key, "Return", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.Enter))
             {
                 if (Widget.Multiline && !Widget.ReadOnly)
                 {
@@ -1470,7 +1466,7 @@ public sealed class EditableText : StatefulWidget
                     Widget.OnSubmitted?.Invoke(controller.Text);
                 }
             }
-            else if (string.Equals(key, "Escape", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.Escape))
             {
                 _ = controller.ClearComposing();
             }

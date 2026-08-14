@@ -5349,7 +5349,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(focusedDecorated);
         Assert.Equal(focusedOverlay, focusedDecorated!.Decoration.Color);
 
-        bool handledDown = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+        bool handledDown = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
         Assert.True(handledDown);
         owner.FlushBuild();
 
@@ -5358,7 +5358,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(pressedOverlay, pressedDecorated!.Decoration.Color);
         Assert.Equal(1, pressedCount);
 
-        bool handledUp = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: false));
+        bool handledUp = FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.Space));
         Assert.True(handledUp);
         owner.FlushBuild();
         Assert.Equal(1, pressedCount);
@@ -5393,7 +5393,7 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "NumPadEnter", isDown: true));
+        bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.NumpadEnter));
         Assert.True(handled);
         owner.FlushBuild();
 
@@ -5450,10 +5450,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(focusedDecorated);
         Assert.Equal(focusedOverlay, focusedDecorated!.Decoration.Color);
 
-        bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "Space",
-            isDown: true,
-            isControlPressed: true));
+        bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space, control: true));
         Assert.False(handled);
         owner.FlushBuild();
 

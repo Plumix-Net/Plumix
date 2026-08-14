@@ -916,10 +916,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
 
     private void OnTapTrackStart()
     {
-        IReadOnlySet<string> pressed = HardwareKeyboard.Instance.LogicalKeysPressed;
-        _isShiftPressed = pressed.Contains("Shift")
-                          || pressed.Contains("LeftShift")
-                          || pressed.Contains("RightShift");
+        _isShiftPressed = HardwareKeyboard.Instance.IsShiftPressed;
     }
 
     private void OnTapTrackReset()

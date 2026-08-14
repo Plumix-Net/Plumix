@@ -40,7 +40,7 @@ public sealed class MaterialTextFieldTests : IDisposable
         Assert.Equal("a😀c", changed);
         Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView), value => value.PlainText == "3/3");
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         Assert.Equal("a😀c", submitted);
     }
 

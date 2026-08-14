@@ -463,6 +463,7 @@ public sealed class FocusManager
         if (registerGlobalHandlers)
         {
             GestureBinding.PointerEventReceived += HandlePointerEvent;
+            RegisterKeyMessageHandler();
         }
     }
 
@@ -722,19 +723,26 @@ public sealed class FocusManager
         }
     }
 
+    /// <summary>
+    /// Records the event in <see cref="HardwareKeyboard"/> and then routes it through the focus
+    /// tree. The host goes through <see cref="KeyEventManager"/> instead, which records the event
+    /// itself and then calls <see cref="RouteKeyEvent"/>.
+    /// </summary>
     public bool HandleKeyEvent(KeyEvent @event)
     {
-        UpdateHighlightModeForKeyEvent();
-        bool handledByHardwareKeyboard = HardwareKeyboard.Instance.HandleKeyEvent(@event);
-
-#pragma warning disable CS0618
-        RawKeyboard.Instance.HandleKeyEvent(@event);
-#pragma warning restore CS0618
-
-        if (handledByHardwareKeyboard)
+        if (HardwareKeyboard.Instance.HandleKeyEvent(@event))
         {
+            UpdateHighlightModeForKeyEvent();
             return true;
         }
+
+        return RouteKeyEvent(@event);
+    }
+
+    /// <summary>Dart's `FocusManager._handleKeyMessage`: focus-tree routing only.</summary>
+    internal bool RouteKeyEvent(KeyEvent @event)
+    {
+        UpdateHighlightModeForKeyEvent();
 
         if (PrimaryFocus != null)
         {
@@ -764,23 +772,23 @@ public sealed class FocusManager
             }
         }
 
-        if (!@event.IsDown)
+        if (@event is not KeyDownEvent)
         {
             return false;
         }
 
-        if (!string.Equals(@event.Key, "Tab", StringComparison.Ordinal))
+        if (!@event.LogicalKey.Equals(LogicalKeyboardKey.Tab))
         {
-            if (IsDirectionalNextKey(@event.Key))
+            if (IsDirectionalNextKey(@event.LogicalKey))
             {
-                return FocusInDirection(direction: @event.Key is "ArrowDown" or "Down"
+                return FocusInDirection(direction: @event.LogicalKey.Equals(LogicalKeyboardKey.ArrowDown)
                     ? TraversalDirection.Down
                     : TraversalDirection.Right);
             }
 
-            if (IsDirectionalPreviousKey(@event.Key))
+            if (IsDirectionalPreviousKey(@event.LogicalKey))
             {
-                return FocusInDirection(direction: @event.Key is "ArrowUp" or "Up"
+                return FocusInDirection(direction: @event.LogicalKey.Equals(LogicalKeyboardKey.ArrowUp)
                     ? TraversalDirection.Up
                     : TraversalDirection.Left);
             }
@@ -788,7 +796,7 @@ public sealed class FocusManager
             return false;
         }
 
-        return @event.IsShiftPressed ? FocusPrevious() : FocusNext();
+        return HardwareKeyboard.Instance.IsShiftPressed ? FocusPrevious() : FocusNext();
     }
 
     public bool HandleTextInput(string text)
@@ -861,9 +869,32 @@ public sealed class FocusManager
         _highlightMode = ResolveDefaultHighlightMode();
         _highlightStrategy = FocusHighlightStrategy.Automatic;
         _lastInteractionRequiresTraditionalHighlights = null;
-        HardwareKeyboard.Instance.ResetForTests();
+        HardwareKeyboard.Instance.ClearState();
 #pragma warning disable CS0618
-        RawKeyboard.Instance.ResetForTests();
+        RawKeyboard.Instance.ClearKeysPressed();
+        RawKeyboard.Instance.ClearListeners();
+#pragma warning restore CS0618
+        KeyEventManager.Instance.ClearState();
+        RegisterKeyMessageHandler();
+    }
+
+    /// <summary>
+    /// Dart wires `ServicesBinding` to route assembled key messages into the focus tree; Plumix's
+    /// focus manager registers itself with <see cref="KeyEventManager"/> for the same effect.
+    /// </summary>
+    private void RegisterKeyMessageHandler()
+    {
+#pragma warning disable CS0618
+        KeyEventManager.Instance.KeyMessageHandler = message =>
+        {
+            bool handled = false;
+            foreach (KeyEvent keyEvent in message.Events)
+            {
+                handled |= RouteKeyEvent(keyEvent);
+            }
+
+            return handled;
+        };
 #pragma warning restore CS0618
     }
 
@@ -1166,20 +1197,14 @@ public sealed class FocusManager
         return best;
     }
 
-    private static bool IsDirectionalNextKey(string key)
+    private static bool IsDirectionalNextKey(LogicalKeyboardKey key)
     {
-        return string.Equals(key, "ArrowRight", StringComparison.Ordinal)
-               || string.Equals(key, "ArrowDown", StringComparison.Ordinal)
-               || string.Equals(key, "Right", StringComparison.Ordinal)
-               || string.Equals(key, "Down", StringComparison.Ordinal);
+        return key.Equals(LogicalKeyboardKey.ArrowRight) || key.Equals(LogicalKeyboardKey.ArrowDown);
     }
 
-    private static bool IsDirectionalPreviousKey(string key)
+    private static bool IsDirectionalPreviousKey(LogicalKeyboardKey key)
     {
-        return string.Equals(key, "ArrowLeft", StringComparison.Ordinal)
-               || string.Equals(key, "ArrowUp", StringComparison.Ordinal)
-               || string.Equals(key, "Left", StringComparison.Ordinal)
-               || string.Equals(key, "Up", StringComparison.Ordinal);
+        return key.Equals(LogicalKeyboardKey.ArrowLeft) || key.Equals(LogicalKeyboardKey.ArrowUp);
     }
 
     private static bool TryComputeDirectionalDistance(

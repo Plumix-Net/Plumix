@@ -484,18 +484,18 @@ public sealed class Slider : StatefulWidget
 
         private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
         {
-            if (!IsSupportedKeyboardKey(@event.Key))
+            if (!IsSupportedKeyboardKey(@event.LogicalKey))
             {
                 return KeyEventResult.Ignored;
             }
 
-            if (!IsInteractive || !@event.IsDown || HasModifier(@event))
+            if (!IsInteractive || @event is not KeyDownEvent || HasModifier(@event))
             {
                 return KeyEventResult.Handled;
             }
 
             double normalized = Normalize(CurrentWidget.Value);
-            double next = ResolveKeyboardTargetNormalized(normalized, @event.Key);
+            double next = ResolveKeyboardTargetNormalized(normalized, @event.LogicalKey);
             if (Math.Abs(next - normalized) <= 0.0001)
             {
                 return KeyEventResult.Handled;
@@ -507,14 +507,14 @@ public sealed class Slider : StatefulWidget
             return KeyEventResult.Handled;
         }
 
-        private double ResolveKeyboardTargetNormalized(double currentNormalized, string key)
+        private double ResolveKeyboardTargetNormalized(double currentNormalized, LogicalKeyboardKey key)
         {
-            if (string.Equals(key, "Home", StringComparison.Ordinal))
+            if (key.Equals(LogicalKeyboardKey.Home))
             {
                 return 0.0;
             }
 
-            if (string.Equals(key, "End", StringComparison.Ordinal))
+            if (key.Equals(LogicalKeyboardKey.End))
             {
                 return 1.0;
             }
@@ -522,21 +522,21 @@ public sealed class Slider : StatefulWidget
             double step = ResolveAdjustmentUnit(Theme.Of(Context));
             var direction = Directionality.Of(Context);
             double delta = 0.0;
-            if (string.Equals(key, "ArrowRight", StringComparison.Ordinal))
+            if (key.Equals(LogicalKeyboardKey.ArrowRight))
             {
                 delta = direction == TextDirection.Rtl ? -step : step;
             }
-            else if (string.Equals(key, "ArrowLeft", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.ArrowLeft))
             {
                 delta = direction == TextDirection.Rtl ? step : -step;
             }
-            else if (string.Equals(key, "ArrowUp", StringComparison.Ordinal)
-                     || string.Equals(key, "PageUp", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.ArrowUp)
+                     || key.Equals(LogicalKeyboardKey.PageUp))
             {
                 delta = step;
             }
-            else if (string.Equals(key, "ArrowDown", StringComparison.Ordinal)
-                     || string.Equals(key, "PageDown", StringComparison.Ordinal))
+            else if (key.Equals(LogicalKeyboardKey.ArrowDown)
+                     || key.Equals(LogicalKeyboardKey.PageDown))
             {
                 delta = -step;
             }
@@ -554,22 +554,22 @@ public sealed class Slider : StatefulWidget
 
         private static bool HasModifier(KeyEvent @event)
         {
-            return @event.IsShiftPressed
-                   || @event.IsControlPressed
-                   || @event.IsAltPressed
-                   || @event.IsMetaPressed;
+            return HardwareKeyboard.Instance.IsShiftPressed
+                   || HardwareKeyboard.Instance.IsControlPressed
+                   || HardwareKeyboard.Instance.IsAltPressed
+                   || HardwareKeyboard.Instance.IsMetaPressed;
         }
 
-        private static bool IsSupportedKeyboardKey(string key)
+        private static bool IsSupportedKeyboardKey(LogicalKeyboardKey key)
         {
-            return string.Equals(key, "ArrowLeft", StringComparison.Ordinal)
-                   || string.Equals(key, "ArrowRight", StringComparison.Ordinal)
-                   || string.Equals(key, "ArrowUp", StringComparison.Ordinal)
-                   || string.Equals(key, "ArrowDown", StringComparison.Ordinal)
-                   || string.Equals(key, "PageUp", StringComparison.Ordinal)
-                   || string.Equals(key, "PageDown", StringComparison.Ordinal)
-                   || string.Equals(key, "Home", StringComparison.Ordinal)
-                   || string.Equals(key, "End", StringComparison.Ordinal);
+            return key.Equals(LogicalKeyboardKey.ArrowLeft)
+                   || key.Equals(LogicalKeyboardKey.ArrowRight)
+                   || key.Equals(LogicalKeyboardKey.ArrowUp)
+                   || key.Equals(LogicalKeyboardKey.ArrowDown)
+                   || key.Equals(LogicalKeyboardKey.PageUp)
+                   || key.Equals(LogicalKeyboardKey.PageDown)
+                   || key.Equals(LogicalKeyboardKey.Home)
+                   || key.Equals(LogicalKeyboardKey.End);
         }
 
         private void HandleChangeStartNormalized(double normalized)

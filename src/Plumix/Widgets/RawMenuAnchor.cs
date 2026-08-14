@@ -370,12 +370,12 @@ public sealed class RawMenuAnchor : StatefulWidget
     public static IReadOnlyDictionary<ShortcutActivator, Intent> MenuTraversalShortcuts { get; } =
         new Dictionary<ShortcutActivator, Intent>
         {
-            [new SingleActivator("GameButtonA")] = new ActivateIntent(),
-            [new SingleActivator("Escape")] = new DismissIntent(),
-            [new SingleActivator("ArrowDown")] = new DirectionalFocusIntent(TraversalDirection.Down),
-            [new SingleActivator("ArrowUp")] = new DirectionalFocusIntent(TraversalDirection.Up),
-            [new SingleActivator("ArrowLeft")] = new DirectionalFocusIntent(TraversalDirection.Left),
-            [new SingleActivator("ArrowRight")] = new DirectionalFocusIntent(TraversalDirection.Right),
+            [new SingleActivator(LogicalKeyboardKey.GameButtonA)] = new ActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Escape)] = new DismissIntent(),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown)] = new DirectionalFocusIntent(TraversalDirection.Down),
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp)] = new DirectionalFocusIntent(TraversalDirection.Up),
+            [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] = new DirectionalFocusIntent(TraversalDirection.Left),
+            [new SingleActivator(LogicalKeyboardKey.ArrowRight)] = new DirectionalFocusIntent(TraversalDirection.Right),
         };
 
     public override State CreateState() => new RawMenuAnchorState();

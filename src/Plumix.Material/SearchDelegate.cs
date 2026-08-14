@@ -473,7 +473,7 @@ internal sealed class SearchPageState<T> : State
     private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
     {
         _ = node;
-        if (@event.IsDown && string.Equals(@event.Key, "Escape", StringComparison.OrdinalIgnoreCase))
+        if (@event is KeyDownEvent && @event.LogicalKey.Equals(LogicalKeyboardKey.Escape))
         {
             Navigator.MaybePop(Context);
             return KeyEventResult.Handled;

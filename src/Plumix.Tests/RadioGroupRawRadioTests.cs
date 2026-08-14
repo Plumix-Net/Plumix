@@ -97,13 +97,13 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
         Assert.True(state.FirstFocus.RequestFocus());
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
 
         Assert.Equal("third", state.GroupValue);
         Assert.True(state.ThirdFocus.HasFocus);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
 
         Assert.Equal("first", state.GroupValue);
@@ -123,7 +123,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
         Assert.True(state.FirstFocus.RequestFocus());
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
 
         Assert.Equal("third", state.GroupValue);
@@ -143,7 +143,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
         Assert.True(state.FirstFocus.RequestFocus());
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
 
         Assert.Equal("third", state.GroupValue);
@@ -163,7 +163,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
         state.FirstFocus.RequestFocus();
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Space", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space)));
         harness.Pump(new Size(240, 120));
 
         Assert.Null(state.GroupValue);
@@ -184,7 +184,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
                     child: new Shortcuts(
                         shortcuts: new Dictionary<ShortcutActivator, Intent>
                         {
-                            [new SingleActivator("ArrowLeft")] = new VoidCallbackIntent(
+                            [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] = new VoidCallbackIntent(
                                 () => outerShortcutCount += 1),
                         },
                         child: new RadioGroup<string>(
@@ -201,11 +201,11 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         harness.Pump(new Size(240, 120));
 
         Assert.True(otherFocus.RequestFocus());
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowLeft", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal(1, outerShortcutCount);
 
         Assert.True(radioFocus.RequestFocus());
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowLeft", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal(1, outerShortcutCount);
         Assert.Equal("first", groupValue);
     }

@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix;
@@ -165,14 +166,14 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 [
                                     new MenuItemButton(
                                         child: new Text("Run action"),
-                                        shortcut: new SingleActivator("KeyR", control: true),
+                                        shortcut: new SingleActivator(LogicalKeyboardKey.KeyR, control: true),
                                         onPressed: () => SetState(() => _anchorStatus = "activated")),
                                     new MenuItemButton(
                                         child: new Text("Disabled item"),
-                                        shortcut: new SingleActivator("Escape")),
+                                        shortcut: new SingleActivator(LogicalKeyboardKey.Escape)),
                                     new MenuItemButton(
                                         child: new Text("Keep open"),
-                                        shortcut: new SingleActivator("ArrowRight", shift: true),
+                                        shortcut: new SingleActivator(LogicalKeyboardKey.ArrowRight, shift: true),
                                         closeOnActivate: false,
                                         onPressed: () => SetState(() => _anchorStatus = "kept open")),
                                     new CheckboxMenuButton(

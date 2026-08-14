@@ -127,7 +127,7 @@ public sealed class TextInputTests : IDisposable
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
 
         var host = new PlumixHost();
         var requestArgs = new TextInputMethodClientRequestedEventArgs
@@ -168,18 +168,18 @@ public sealed class TextInputTests : IDisposable
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("ab"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Enter", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         Assert.True(FocusManager.Instance.HandleTextInput("cd"));
         Assert.Equal("ab\ncd", controller.Text);
         Assert.Equal(TextSelection.Collapsed(5), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowUp", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp)));
         Assert.Equal(TextSelection.Collapsed(2), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowDown", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         Assert.Equal(TextSelection.Collapsed(5), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowUp", isDown: true, isShiftPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp, shift: true)));
         Assert.Equal(2, controller.Selection.Start);
         Assert.Equal(5, controller.Selection.End);
     }
@@ -327,7 +327,7 @@ public sealed class TextInputTests : IDisposable
         Assert.True(textHandled);
         Assert.Equal("Hi", controller.Text);
 
-        bool backspaceHandled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Back", isDown: true));
+        bool backspaceHandled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace));
         Assert.True(backspaceHandled);
         Assert.Equal("H", controller.Text);
     }
@@ -360,7 +360,7 @@ public sealed class TextInputTests : IDisposable
         Assert.Equal("Nyz", controller.Text);
         Assert.Equal(new TextRange(1, 3), controller.Composing);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Escape", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Escape)));
         Assert.Equal("Nyz", controller.Text);
         Assert.Null(controller.Composing);
 
@@ -388,15 +388,15 @@ public sealed class TextInputTests : IDisposable
         Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
         Assert.Equal(TextSelection.Collapsed(4), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal(TextSelection.Collapsed(3), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true, isShiftPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft, shift: true)));
         Assert.Equal(2, controller.Selection.Start);
         Assert.Equal(3, controller.Selection.End);
         Assert.False(controller.Selection.IsCollapsed);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "A", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.Equal(0, controller.Selection.Start);
         Assert.Equal(4, controller.Selection.End);
 
@@ -422,50 +422,29 @@ public sealed class TextInputTests : IDisposable
         Assert.True(FocusManager.Instance.HandleTextInput("alpha beta gamma"));
         Assert.Equal(TextSelection.Collapsed(16), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "ArrowLeft",
-            isDown: true,
-            isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft, control: true)));
         Assert.Equal(TextSelection.Collapsed(11), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "ArrowLeft",
-            isDown: true,
-            isShiftPressed: true,
-            isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(
+            KeySim.Down(LogicalKeyboardKey.ArrowLeft, control: true, shift: true)));
         Assert.Equal(6, controller.Selection.Start);
         Assert.Equal(11, controller.Selection.End);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "ArrowRight",
-            isDown: true,
-            isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight, control: true)));
         Assert.Equal(TextSelection.Collapsed(11), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "Backspace",
-            isDown: true,
-            isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace, control: true)));
         Assert.Equal("alpha gamma", controller.Text);
         Assert.Equal(TextSelection.Collapsed(6), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "Delete",
-            isDown: true,
-            isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Delete, control: true)));
         Assert.Equal("alpha ", controller.Text);
         Assert.Equal(TextSelection.Collapsed(6), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "ArrowLeft",
-            isDown: true,
-            isAltPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft, alt: true)));
         Assert.Equal(TextSelection.Collapsed(0), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "ArrowRight",
-            isDown: true,
-            isAltPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight, alt: true)));
         Assert.Equal(TextSelection.Collapsed(5), controller.Selection);
     }
 
@@ -487,30 +466,18 @@ public sealed class TextInputTests : IDisposable
         Assert.True(FocusManager.Instance.HandleTextInput("one\ntwo\nthree"));
         Assert.Equal(TextSelection.Collapsed(13), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "ArrowUp",
-            isDown: true,
-            isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp, control: true)));
         Assert.Equal(TextSelection.Collapsed(8), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "ArrowUp",
-            isDown: true,
-            isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp, control: true)));
         Assert.Equal(TextSelection.Collapsed(4), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "ArrowDown",
-            isDown: true,
-            isControlPressed: true,
-            isShiftPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(
+            KeySim.Down(LogicalKeyboardKey.ArrowDown, control: true, shift: true)));
         Assert.Equal(4, controller.Selection.Start);
         Assert.Equal(7, controller.Selection.End);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            key: "ArrowDown",
-            isDown: true,
-            isAltPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown, alt: true)));
         Assert.Equal(TextSelection.Collapsed(7), controller.Selection);
     }
 
@@ -529,16 +496,16 @@ public sealed class TextInputTests : IDisposable
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("alpha"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "A", isDown: true, isControlPressed: true)));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "C", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyC, control: true)));
         Assert.Equal("alpha", TextClipboard.GetText());
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "X", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyX, control: true)));
         Assert.Equal(string.Empty, controller.Text);
         Assert.Equal("alpha", TextClipboard.GetText());
 
         TextClipboard.SetText("beta");
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "V", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyV, control: true)));
         Assert.Equal("beta", controller.Text);
         Assert.Equal(TextSelection.Collapsed(4), controller.Selection);
     }
@@ -589,19 +556,19 @@ public sealed class TextInputTests : IDisposable
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true)));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal(TextSelection.Collapsed(2), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Delete", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Delete)));
         Assert.Equal("abd", controller.Text);
         Assert.Equal(TextSelection.Collapsed(2), controller.Selection);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true, isShiftPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft, shift: true)));
         Assert.Equal(1, controller.Selection.Start);
         Assert.Equal(2, controller.Selection.End);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Backspace", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace)));
         Assert.Equal("ad", controller.Text);
         Assert.Equal(TextSelection.Collapsed(1), controller.Selection);
     }
@@ -624,7 +591,7 @@ public sealed class TextInputTests : IDisposable
         bool textHandled = FocusManager.Instance.HandleTextInput("x");
         bool compositionUpdateHandled = FocusManager.Instance.HandleTextCompositionUpdate("y");
         bool compositionCommitHandled = FocusManager.Instance.HandleTextCompositionCommit("z");
-        bool keyHandled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Back", isDown: true));
+        bool keyHandled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace));
 
         Assert.False(textHandled);
         Assert.False(compositionUpdateHandled);
@@ -652,8 +619,8 @@ public sealed class TextInputTests : IDisposable
 
         Assert.True(FocusManager.Instance.HandleTextInput("a"));
         Assert.True(FocusManager.Instance.HandleTextInput("b"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowLeft", isDown: true)));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Backspace", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Backspace)));
 
         Assert.Equal(new[] { "a", "ab", "b" }, changes);
     }

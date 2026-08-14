@@ -76,7 +76,7 @@ normative may live only there.
 
 - .NET SDK 10 preview (projects target `net10.0` and platform-specific TFMs).
 - Avalonia tooling/workloads for browser/mobile targets where applicable.
-- Python 3 for `scripts/generate_port_map.py`.
+- Python 3 for `scripts/generate_port_map.py` and `scripts/generate_keyboard_keys.py`.
 
 ## Agent Tooling
 
@@ -119,7 +119,9 @@ sources are code-identical to the SDK's frozen `src/material`/`src/cupertino` co
 comments and constructor-style modernization). Parity is defined against these pins. Material
 defaults change between releases, so a port validated against a different checkout is not validated.
 When a pin moves, update this line, re-point the symlink(s), and re-run
-`python3 scripts/generate_port_map.py` — it flags markers whose Dart file no longer exists.
+`python3 scripts/generate_port_map.py` (it flags markers whose Dart file no longer exists) and
+`python3 scripts/generate_keyboard_keys.py` (it regenerates the logical/physical key tables from
+Flutter's own generated `keyboard_key.g.dart`).
 
 ## Common Commands
 
@@ -131,6 +133,7 @@ dotnet build src/Plumix.Ci.slnf -c Debug          # what CI builds; includes the
 dotnet test src/Plumix.Tests/Plumix.Tests.csproj  # ~15 s for 1771 tests — always run it
 scripts/check_line_length.sh                      # 120-char rule on new/edited lines
 python3 scripts/generate_port_map.py              # regenerate docs/ai/PORT_MAP.md
+python3 scripts/generate_keyboard_keys.py         # regenerate src/Plumix/UI/KeyboardKey.g.cs
 dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
 dotnet run --project src/Sample/Plumix.Browser/Plumix.Browser.csproj
 ```

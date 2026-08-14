@@ -667,23 +667,25 @@ internal sealed class DropdownRoute<T> : PageRoute
 
     private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
     {
-        if (!@event.IsDown) return KeyEventResult.Ignored;
-        if (@event.Key is "Escape" or "Esc")
+        if (@event is not KeyDownEvent) return KeyEventResult.Ignored;
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.Escape))
         {
             Navigator?.MaybePop();
             return KeyEventResult.Handled;
         }
-        if (@event.Key is "ArrowDown" or "Down")
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowDown))
         {
             MoveFocus(1);
             return KeyEventResult.Handled;
         }
-        if (@event.Key is "ArrowUp" or "Up")
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowUp))
         {
             MoveFocus(-1);
             return KeyEventResult.Handled;
         }
-        if (@event.Key is "Enter" or "Return" or "NumPadEnter" or "NumpadEnter" or "Space" or "Spacebar")
+        if ((@event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
+    || @event.LogicalKey.Equals(LogicalKeyboardKey.NumpadEnter)
+    || @event.LogicalKey.Equals(LogicalKeyboardKey.Space)))
         {
             ActivateFocused();
             return KeyEventResult.Handled;

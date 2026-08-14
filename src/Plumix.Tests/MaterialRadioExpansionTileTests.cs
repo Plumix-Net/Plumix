@@ -84,7 +84,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         harness.Pump(new Size(360, 180));
         Assert.True(firstFocus.RequestFocus());
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
 
         Assert.Equal("b", changed);
         Assert.True(secondFocus.HasFocus);
@@ -252,7 +252,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         harness.Pump(new Size(360, 180));
         Assert.True(firstFocus.RequestFocus());
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowRight", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
 
         Assert.Equal("b", changed);
         Assert.True(secondFocus.HasFocus);

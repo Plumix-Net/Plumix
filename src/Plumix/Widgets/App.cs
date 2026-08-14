@@ -672,8 +672,8 @@ public sealed class WidgetsApp : StatefulWidget
 
         private static KeyEventResult HandleRootKeyEvent(FocusNode node, UI.KeyEvent @event)
         {
-            if (!@event.IsDown
-                || !string.Equals(@event.Key, "Escape", StringComparison.OrdinalIgnoreCase))
+            if (@event is not UI.KeyDownEvent
+                || !@event.LogicalKey.Equals(UI.LogicalKeyboardKey.Escape))
             {
                 return KeyEventResult.Ignored;
             }

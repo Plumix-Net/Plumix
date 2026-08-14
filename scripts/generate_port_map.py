@@ -39,8 +39,8 @@ DART_DEMOS = REPO / "dart_sample" / "lib"
 # extracted pub packages (`material_ui/lib/src/...`, `cupertino_ui/lib/src/...`) instead of the
 # framework checkout.
 MARKER = re.compile(
-    r"(?:^|\s)((?:flutter/)?packages/flutter/lib/src/[\w/]+\.dart"
-    r"|(?:material_ui|cupertino_ui)/lib/src/[\w/]+\.dart)"
+    r"(?:^|\s)((?:flutter/)?packages/flutter/lib/src/[\w/]+(?:\.\w+)*\.dart"
+    r"|(?:material_ui|cupertino_ui)/lib/src/[\w/]+(?:\.\w+)*\.dart)"
 )
 
 

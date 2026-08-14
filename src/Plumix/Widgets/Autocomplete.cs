@@ -430,27 +430,27 @@ internal sealed class RawAutocompleteState<T> : State
         bool apple = PlatformDefaults.TargetPlatform is TargetPlatform.IOS or TargetPlatform.MacOS;
         return new Dictionary<ShortcutActivator, Intent>
         {
-            [new SingleActivator("ArrowUp")] = new AutocompletePreviousOptionIntent(),
-            [new SingleActivator("ArrowDown")] = new AutocompleteNextOptionIntent(),
-            [new SingleActivator("PageUp")] = new AutocompletePreviousPageOptionIntent(),
-            [new SingleActivator("PageDown")] = new AutocompleteNextPageOptionIntent(),
-            [new SingleActivator("ArrowUp", control: !apple, meta: apple)] =
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp)] = new AutocompletePreviousOptionIntent(),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown)] = new AutocompleteNextOptionIntent(),
+            [new SingleActivator(LogicalKeyboardKey.PageUp)] = new AutocompletePreviousPageOptionIntent(),
+            [new SingleActivator(LogicalKeyboardKey.PageDown)] = new AutocompleteNextPageOptionIntent(),
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp, control: !apple, meta: apple)] =
                 new AutocompleteFirstOptionIntent(),
-            [new SingleActivator("ArrowDown", control: !apple, meta: apple)] =
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown, control: !apple, meta: apple)] =
                 new AutocompleteLastOptionIntent(),
-            [new SingleActivator("Escape")] = new DismissIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Escape)] = new DismissIntent(),
         };
     }
 
     private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
     {
-        if (!@event.IsDown)
+        if (@event is not KeyDownEvent)
         {
             return KeyEventResult.Ignored;
         }
 
-        string key = @event.Key;
-        if (key is "Escape" or "Esc")
+        LogicalKeyboardKey key = @event.LogicalKey;
+        if (key.Equals(LogicalKeyboardKey.Escape))
         {
             if (!_optionsViewController.IsShowing)
             {
@@ -473,29 +473,29 @@ internal sealed class RawAutocompleteState<T> : State
             return KeyEventResult.Ignored;
         }
 
-        if (key is "ArrowUp" or "Up")
+        if (key.Equals(LogicalKeyboardKey.ArrowUp))
         {
-            HighlightOption(@event.IsMetaPressed || @event.IsControlPressed
+            HighlightOption(HardwareKeyboard.Instance.IsMetaPressed || HardwareKeyboard.Instance.IsControlPressed
                 ? 0
                 : _highlightedOptionIndex.Value - 1);
             return KeyEventResult.Handled;
         }
 
-        if (key is "ArrowDown" or "Down")
+        if (key.Equals(LogicalKeyboardKey.ArrowDown))
         {
-            HighlightOption(@event.IsMetaPressed || @event.IsControlPressed
+            HighlightOption(HardwareKeyboard.Instance.IsMetaPressed || HardwareKeyboard.Instance.IsControlPressed
                 ? _options.Count - 1
                 : _highlightedOptionIndex.Value + 1);
             return KeyEventResult.Handled;
         }
 
-        if (key is "PageUp" or "Prior")
+        if (key.Equals(LogicalKeyboardKey.PageUp))
         {
             HighlightOption(_highlightedOptionIndex.Value - PageSize);
             return KeyEventResult.Handled;
         }
 
-        if (key is "PageDown" or "Next")
+        if (key.Equals(LogicalKeyboardKey.PageDown))
         {
             HighlightOption(_highlightedOptionIndex.Value + PageSize);
             return KeyEventResult.Handled;

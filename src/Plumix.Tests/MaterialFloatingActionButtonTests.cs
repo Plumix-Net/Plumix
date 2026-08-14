@@ -382,7 +382,7 @@ public sealed class MaterialFloatingActionButtonTests
                 new BoxHitTestEntry(focusListener, new Point(10, 8)));
             owner.FlushBuild();
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -433,7 +433,7 @@ public sealed class MaterialFloatingActionButtonTests
                 new BoxHitTestEntry(focusListener, new Point(10, 8)));
             owner.FlushBuild();
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
             owner.FlushBuild();
 
@@ -486,7 +486,7 @@ public sealed class MaterialFloatingActionButtonTests
                 new BoxHitTestEntry(focusListener, new Point(10, 8)));
             owner.FlushBuild();
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "Space", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
             owner.FlushBuild();
 

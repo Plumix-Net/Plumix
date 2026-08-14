@@ -1301,25 +1301,7 @@ public sealed class Scrollable : StatefulWidget
 
         private static bool IsLogicalKeyPressed(LogicalKeyboardKey key)
         {
-            IReadOnlySet<string> pressed = HardwareKeyboard.Instance.LogicalKeysPressed;
-            return key switch
-            {
-                LogicalKeyboardKey.ShiftLeft => ContainsAny(pressed, "LeftShift", "ShiftLeft", "Shift"),
-                LogicalKeyboardKey.ShiftRight => ContainsAny(pressed, "RightShift", "ShiftRight", "Shift"),
-                LogicalKeyboardKey.AltLeft => ContainsAny(pressed, "LeftAlt", "AltLeft", "Alt"),
-                LogicalKeyboardKey.AltRight => ContainsAny(pressed, "RightAlt", "AltRight", "Alt"),
-                LogicalKeyboardKey.ControlLeft => ContainsAny(pressed, "LeftCtrl", "ControlLeft", "Control"),
-                LogicalKeyboardKey.ControlRight => ContainsAny(pressed, "RightCtrl", "ControlRight", "Control"),
-                LogicalKeyboardKey.MetaLeft => ContainsAny(pressed, "LeftMeta", "MetaLeft", "Meta"),
-                LogicalKeyboardKey.MetaRight => ContainsAny(pressed, "RightMeta", "MetaRight", "Meta"),
-                LogicalKeyboardKey.Space => pressed.Contains("Space"),
-                _ => false,
-            };
-        }
-
-        private static bool ContainsAny(IReadOnlySet<string> pressed, params string[] keys)
-        {
-            return keys.Any(pressed.Contains);
+            return HardwareKeyboard.Instance.IsLogicalKeyPressed(key);
         }
 
         /// <summary>

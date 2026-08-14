@@ -198,10 +198,10 @@ public sealed class MaterialAutocompleteTests : IDisposable
         harness.Pump(new Size(480, 320));
         Assert.NotNull(FindParagraph(harness.RenderView, "True:chameleon"));
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowDown", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         harness.Pump(new Size(480, 320));
         Assert.NotNull(FindParagraph(harness.RenderView, "True:elephant"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         harness.Pump(new Size(480, 320));
 
         Assert.Equal("elephant", selected);
@@ -300,7 +300,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
         Assert.True(VerticalCenter(firstHighlight) < VerticalCenter(
             Assert.IsType<RenderParagraph>(FindParagraph(harness.RenderView, "bobcat"))));
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowDown", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         harness.Pump(new Size(480, 320));
         RenderColoredBox secondHighlight = Assert.Single(
             FindDescendants<RenderColoredBox>(harness.RenderView),
@@ -499,12 +499,12 @@ public sealed class MaterialAutocompleteTests : IDisposable
         harness.Pump(new Size(480, 320));
         Assert.NotNull(FindParagraph(harness.RenderView, "aardvark"));
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Escape", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Escape)));
         harness.Pump(new Size(480, 320));
         Assert.Null(FindParagraph(harness.RenderView, "aardvark"));
         Assert.Equal(0, dismissals);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Escape", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Escape)));
         Assert.Equal(1, dismissals);
     }
 
@@ -524,10 +524,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
         focusNode.RequestFocus();
         harness.Pump(new Size(480, 320));
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent(
-            "ArrowDown",
-            isDown: true,
-            isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown, control: true)));
         for (int frame = 0; frame < 4; frame++)
         {
             Scheduler.PumpFrameForTests();

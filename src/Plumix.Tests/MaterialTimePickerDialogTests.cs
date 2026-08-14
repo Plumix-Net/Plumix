@@ -570,7 +570,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         harness.Pump(ViewSize);
 
         Assert.True(FocusManager.Instance.FocusNext());
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(FocusManager.Instance.HandleTextInput("99"));
         var semantics = harness.PumpAndGetSemantics(ViewSize);
         var ok = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "OK"));
@@ -580,10 +580,10 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         Assert.False(result.IsCompleted);
         Assert.Contains(ParagraphTexts(harness), text => text == "Bad time");
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         // A complete, valid hour advances focus to the minute field on its own.
         Assert.True(FocusManager.Instance.HandleTextInput("11"));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("A", isDown: true, isControlPressed: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(FocusManager.Instance.HandleTextInput("45"));
         semantics = harness.PumpAndGetSemantics(ViewSize);
         ok = FindSemantics(semantics, node => node.Actions.HasFlag(SemanticsActions.Tap) && ContainsLabel(node, "OK"));

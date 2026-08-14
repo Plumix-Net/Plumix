@@ -108,7 +108,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "Open"));
 
         Assert.False(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("LeftAlt", true, isAltPressed: true)));
+            KeySim.Down(LogicalKeyboardKey.AltLeft, alt: true)));
         harness.Pump(new Size(300, 100));
 
         // The default builder composes one RichText paragraph whose accelerator run
@@ -128,11 +128,11 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
         });
         Assert.Equal("O", Assert.Single(underlined).Text);
         Assert.True(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("KeyO", true, isAltPressed: true, character: "o")));
+            KeySim.Down(LogicalKeyboardKey.KeyO, alt: true, character: "o")));
         Scheduler.PumpFrameForTests();
         Assert.Equal(1, invoked);
 
-        Assert.False(FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", false)));
+        Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.AltLeft)));
         harness.Pump(new Size(300, 100));
         Assert.NotNull(FindParagraph(harness.RenderView, "Open"));
     }
@@ -154,11 +154,11 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
         harness.Pump(new Size(300, 100));
         Assert.Equal(("Exit", -1), builds[^1]);
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("RightAlt", true, isAltPressed: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.AltRight, alt: true));
         harness.Pump(new Size(300, 100));
         Assert.Equal(("Exit", 1), builds[^1]);
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("RightAlt", false));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.AltRight));
         harness.Pump(new Size(300, 100));
         Assert.Equal(("Exit", -1), builds[^1]);
     }
@@ -175,7 +175,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
                     onInvoke: () => { }))));
         harness.Pump(new Size(300, 100));
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.AltLeft, alt: true));
         harness.Pump(new Size(300, 100));
 
         RenderParagraph paragraph = Assert.Single(
@@ -203,7 +203,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
     public void LabelMountedWhileAltIsHeld_ShowsItsAcceleratorImmediately()
     {
         int lastIndex = int.MinValue;
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.AltLeft, alt: true));
 
         using var harness = new WidgetRenderHarness(Wrap(
             new MenuAcceleratorCallbackBinding(
@@ -239,10 +239,10 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
             autofocus: false));
         harness.Pump(new Size(300, 100));
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.AltLeft, alt: true));
         harness.Pump(new Size(300, 100));
         Assert.True(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("KeyO", true, isAltPressed: true, character: "o")));
+            KeySim.Down(LogicalKeyboardKey.KeyO, alt: true, character: "o")));
 
         Assert.Equal(1, localInvocations);
         Assert.Equal(0, menuInvocations);
@@ -280,12 +280,12 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
                 ])));
         harness.Pump(new Size(500, 240));
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.AltLeft, alt: true));
         harness.Pump(new Size(500, 240));
         Assert.True(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("KeyF", true, isAltPressed: true, character: "f")));
+            KeySim.Down(LogicalKeyboardKey.KeyF, alt: true, character: "f")));
         Assert.False(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("KeyF", false, isAltPressed: true, character: "f")));
+            KeySim.Up(LogicalKeyboardKey.KeyF, alt: true)));
         harness.Pump(new Size(500, 240));
         Assert.True(controller.IsOpen);
         harness.Pump(new Size(500, 240));
@@ -323,10 +323,10 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
             platform));
         harness.Pump(new Size(300, 100));
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.AltLeft, alt: true));
         harness.Pump(new Size(300, 100));
         Assert.False(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("KeyO", true, isAltPressed: true, character: "o")));
+            KeySim.Down(LogicalKeyboardKey.KeyO, alt: true, character: "o")));
 
         Assert.Equal(-1, lastIndex);
         Assert.Equal(0, invoked);
@@ -343,7 +343,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
                 onInvoke: () => invoked++)));
         harness.Pump(new Size(300, 100));
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("LeftAlt", true, isAltPressed: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.AltLeft, alt: true));
         harness.Pump(new Size(300, 100));
 
         RenderParagraph paragraph = Assert.Single(
@@ -358,7 +358,7 @@ public sealed class MaterialMenuAcceleratorTests : IDisposable
         });
         Assert.True(hasUnderline);
         Assert.False(FocusManager.Instance.HandleKeyEvent(
-            new KeyEvent("KeyO", true, isAltPressed: true, character: "o")));
+            KeySim.Down(LogicalKeyboardKey.KeyO, alt: true, character: "o")));
         Assert.Equal(0, invoked);
     }
 

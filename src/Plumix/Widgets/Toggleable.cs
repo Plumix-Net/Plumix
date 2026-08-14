@@ -196,11 +196,11 @@ public abstract class ToggleableState : State
 
         var shortcuts = new Dictionary<ShortcutActivator, Intent>
         {
-            [new SingleActivator("Space")] = new ActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Space)] = new ActivateIntent(),
         };
         if (!OperatingSystem.IsBrowser())
         {
-            shortcuts[new SingleActivator("Enter")] = new ActivateIntent();
+            shortcuts[new SingleActivator(LogicalKeyboardKey.Enter)] = new ActivateIntent();
         }
         var actions = new Dictionary<Type, FlutterAction>
         {

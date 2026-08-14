@@ -220,8 +220,8 @@ public sealed class MaterialDropdownTests : IDisposable
             node.Role == SemanticsRole.Menu
             && node.Label == "Popup menu"));
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowDown", true)));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
         Assert.Equal("three", selected);
@@ -256,8 +256,8 @@ public sealed class MaterialDropdownTests : IDisposable
         var openSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
         Assert.Null(FindSemantics(openSemantics, node => node.Label == "Dismiss"));
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowUp", true)));
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
         Assert.True(changed);
@@ -320,7 +320,7 @@ public sealed class MaterialDropdownTests : IDisposable
             harness.Pump(new Size(500, 360));
             Assert.True(focusNode.HasFocus);
             Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
-            Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
+            Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
             PumpAnimation();
             var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
             Assert.NotNull(FindSemantics(semantics, node => node.Role == SemanticsRole.Menu));
@@ -553,9 +553,9 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(2, Assert.Single(
             FindDescendants<RenderDropdownMenuPositionLayout<string>>(harness.RenderView)).Route.ItemHeights.Length);
 
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("ArrowDown", true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         Assert.Equal("Three", controller.Text);
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("Enter", true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
         await WaitForConditionAsync(() => selected is not null);
@@ -1010,7 +1010,7 @@ public sealed class MaterialDropdownTests : IDisposable
                 new MenuItemButton(
                     child: new Text("Save"),
                     onPressed: () => { },
-                    shortcut: new SingleActivator("KeyS", control: true),
+                    shortcut: new SingleActivator(LogicalKeyboardKey.KeyS, control: true),
                     trailingIcon: new Text("trailing")),
             ],
             controller: controller,
@@ -1099,7 +1099,7 @@ public sealed class MaterialDropdownTests : IDisposable
                 new MenuItemButton(
                     child: new Text("Save"),
                     onPressed: () => { },
-                    shortcut: new SingleActivator("KeyS", control: true)),
+                    shortcut: new SingleActivator(LogicalKeyboardKey.KeyS, control: true)),
             ],
             controller: controller,
             child: new SizedBox(width: 80, height: 40));
@@ -1123,7 +1123,7 @@ public sealed class MaterialDropdownTests : IDisposable
                 new MenuItemButton(
                     child: new Text("Save"),
                     onPressed: () => { },
-                    shortcut: new SingleActivator("KeyS", control: true),
+                    shortcut: new SingleActivator(LogicalKeyboardKey.KeyS, control: true),
                     semanticsLabel: "TestWidget"),
             ],
             controller: controller,
@@ -1151,13 +1151,13 @@ public sealed class MaterialDropdownTests : IDisposable
                     true,
                     _ => { },
                     new Text("Pin"),
-                    shortcut: new SingleActivator("KeyP", control: true)),
+                    shortcut: new SingleActivator(LogicalKeyboardKey.KeyP, control: true)),
                 new RadioMenuButton<string>(
                     "one",
                     "one",
                     _ => { },
                     new Text("Layout"),
-                    shortcut: new SingleActivator("KeyL", alt: true)),
+                    shortcut: new SingleActivator(LogicalKeyboardKey.KeyL, alt: true)),
             ],
             controller: controller,
             child: new SizedBox(width: 80, height: 40));

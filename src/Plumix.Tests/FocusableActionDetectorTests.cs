@@ -66,7 +66,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
             BuildDetector(enabled: true, focusNode, () => invocationCount++));
 
         Assert.True(focusNode.HasFocus);
-        Assert.True(FocusManager.Instance.HandleKeyEvent(new KeyEvent("KeyX", isDown: true)));
+        Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyX)));
         Assert.Equal(1, invocationCount);
         Assert.Equal(1, StatefulProbe.InitCount);
         Assert.Equal(0, StatefulProbe.DisposeCount);
@@ -75,7 +75,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
 
         Assert.False(focusNode.CanRequestFocus);
         Assert.False(focusNode.HasFocus);
-        Assert.False(FocusManager.Instance.HandleKeyEvent(new KeyEvent("KeyX", isDown: true)));
+        Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyX)));
         Assert.Equal(1, invocationCount);
         Assert.Equal(1, StatefulProbe.InitCount);
         Assert.Equal(0, StatefulProbe.DisposeCount);
@@ -123,7 +123,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
         Assert.Equal([true, false], focusHighlights);
         Assert.Equal([true, false], hoverHighlights);
 
-        FocusManager.Instance.HandleKeyEvent(new KeyEvent("Tab", isDown: true));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
         Assert.Equal(FocusHighlightMode.Traditional, FocusManager.Instance.HighlightMode);
         Assert.Equal([true, false, true], focusHighlights);
         Assert.Equal([true, false, true], hoverHighlights);
@@ -245,7 +245,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
             autofocus: true,
             shortcuts: new Dictionary<ShortcutActivator, Intent>
             {
-                [new SingleActivator("KeyX")] = new ProbeIntent(),
+                [new SingleActivator(LogicalKeyboardKey.KeyX)] = new ProbeIntent(),
             },
             actions: new Dictionary<Type, FlutterAction>
             {

@@ -339,7 +339,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
                 return KeyEventResult.Handled;
             }
 
-            if (@event.IsDown)
+            if (@event is KeyDownEvent)
             {
                 HandleTap();
             }
@@ -349,20 +349,15 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
         private static bool IsActivateKey(KeyEvent @event)
         {
-            if (@event.IsShiftPressed
-                || @event.IsControlPressed
-                || @event.IsAltPressed
-                || @event.IsMetaPressed)
+            HardwareKeyboard state = HardwareKeyboard.Instance;
+            if (state.IsShiftPressed || state.IsControlPressed || state.IsAltPressed || state.IsMetaPressed)
             {
                 return false;
             }
 
-            return string.Equals(@event.Key, "Enter", StringComparison.Ordinal)
-                   || string.Equals(@event.Key, "Return", StringComparison.Ordinal)
-                   || string.Equals(@event.Key, "NumPadEnter", StringComparison.Ordinal)
-                   || string.Equals(@event.Key, "NumpadEnter", StringComparison.Ordinal)
-                   || string.Equals(@event.Key, "Space", StringComparison.Ordinal)
-                   || string.Equals(@event.Key, "Spacebar", StringComparison.Ordinal);
+            return @event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
+                   || @event.LogicalKey.Equals(LogicalKeyboardKey.NumpadEnter)
+                   || @event.LogicalKey.Equals(LogicalKeyboardKey.Space);
         }
 
         private bool IsSelected()

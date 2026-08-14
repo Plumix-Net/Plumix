@@ -393,16 +393,27 @@ public sealed class CalendarDatePicker : StatefulWidget
 
         private KeyEventResult HandleGridKey(FocusNode node, KeyEvent @event)
         {
-            if (!@event.IsDown) return KeyEventResult.Ignored;
+            if (@event is not KeyDownEvent) return KeyEventResult.Ignored;
             var direction = Directionality.Of(Context);
-            int delta = @event.Key switch
+            LogicalKeyboardKey key = @event.LogicalKey;
+            int delta = 0;
+            if (key.Equals(LogicalKeyboardKey.ArrowLeft))
             {
-                "ArrowLeft" => direction == TextDirection.Ltr ? -1 : 1,
-                "ArrowRight" => direction == TextDirection.Ltr ? 1 : -1,
-                "ArrowUp" => -7,
-                "ArrowDown" => 7,
-                _ => 0,
-            };
+                delta = direction == TextDirection.Ltr ? -1 : 1;
+            }
+            else if (key.Equals(LogicalKeyboardKey.ArrowRight))
+            {
+                delta = direction == TextDirection.Ltr ? 1 : -1;
+            }
+            else if (key.Equals(LogicalKeyboardKey.ArrowUp))
+            {
+                delta = -7;
+            }
+            else if (key.Equals(LogicalKeyboardKey.ArrowDown))
+            {
+                delta = 7;
+            }
+
             if (delta != 0)
             {
                 var start = _focusedDate ?? _selectedDate ?? CurrentWidget.CurrentDate;
@@ -426,7 +437,8 @@ public sealed class CalendarDatePicker : StatefulWidget
                 return KeyEventResult.Handled;
             }
 
-            if (@event.Key is "Enter" or "Return" or "Space" or "Spacebar")
+            if ((@event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
+    || @event.LogicalKey.Equals(LogicalKeyboardKey.Space)))
             {
                 if (_focusedDate.HasValue && IsSelectable(_focusedDate.Value)) HandleDayChanged(_focusedDate.Value);
                 return KeyEventResult.Handled;

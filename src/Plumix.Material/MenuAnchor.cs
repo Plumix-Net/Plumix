@@ -62,14 +62,14 @@ internal static class MenuConstants
     public static IReadOnlyDictionary<ShortcutActivator, Intent> TraversalShortcuts { get; } =
         new Dictionary<ShortcutActivator, Intent>
         {
-            [new SingleActivator("GameButtonA")] = new ActivateIntent(),
-            [new SingleActivator("Escape")] = new DismissIntent(),
-            [new SingleActivator("Tab")] = new NextFocusIntent(),
-            [new SingleActivator("Tab", shift: true)] = new PreviousFocusIntent(),
-            [new SingleActivator("ArrowDown")] = new DirectionalFocusIntent(TraversalDirection.Down),
-            [new SingleActivator("ArrowUp")] = new DirectionalFocusIntent(TraversalDirection.Up),
-            [new SingleActivator("ArrowLeft")] = new DirectionalFocusIntent(TraversalDirection.Left),
-            [new SingleActivator("ArrowRight")] = new DirectionalFocusIntent(TraversalDirection.Right),
+            [new SingleActivator(LogicalKeyboardKey.GameButtonA)] = new ActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Escape)] = new DismissIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Tab)] = new NextFocusIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Tab, shift: true)] = new PreviousFocusIntent(),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown)] = new DirectionalFocusIntent(TraversalDirection.Down),
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp)] = new DirectionalFocusIntent(TraversalDirection.Up),
+            [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] = new DirectionalFocusIntent(TraversalDirection.Left),
+            [new SingleActivator(LogicalKeyboardKey.ArrowRight)] = new DirectionalFocusIntent(TraversalDirection.Right),
         };
 }
 
@@ -809,20 +809,21 @@ internal static class MenuStyleDefaults
 /// <summary>Flutter's `_LocalizedShortcutLabeler`: renders a menu item's shortcut as label text.</summary>
 internal sealed class LocalizedShortcutLabeler
 {
-    /// <summary>Flutter's `_shortcutGraphicEquivalents`, keyed by normalized Plumix key names.</summary>
-    private static readonly IReadOnlyDictionary<string, string> GraphicEquivalents =
-        new Dictionary<string, string>(StringComparer.Ordinal)
+    /// <summary>Flutter's `_shortcutGraphicEquivalents`.</summary>
+    private static readonly IReadOnlyDictionary<LogicalKeyboardKey, string> GraphicEquivalents =
+        new Dictionary<LogicalKeyboardKey, string>
         {
-            ["Left"] = "←",
-            ["Right"] = "→",
-            ["Up"] = "↑",
-            ["Down"] = "↓",
-            ["Enter"] = "↵",
+            [LogicalKeyboardKey.ArrowLeft] = "←",
+            [LogicalKeyboardKey.ArrowRight] = "→",
+            [LogicalKeyboardKey.ArrowUp] = "↑",
+            [LogicalKeyboardKey.ArrowDown] = "↓",
+            [LogicalKeyboardKey.Enter] = "↵",
         };
 
     private static LocalizedShortcutLabeler? _instance;
 
-    private readonly Dictionary<MaterialLocalizations, Dictionary<string, string>> _cachedShortcutKeys = [];
+    private readonly Dictionary<MaterialLocalizations, Dictionary<LogicalKeyboardKey, string>>
+        _cachedShortcutKeys = [];
 
     private LocalizedShortcutLabeler()
     {
@@ -848,11 +849,21 @@ internal sealed class LocalizedShortcutLabeler
         if (serialized.Trigger is not null)
         {
             AddModifiers(parts, serialized, localizations, platform, symbolic, includeShift: true);
-            string trigger = serialized.Trigger;
-            string? shortcutTrigger = GraphicEquivalents.GetValueOrDefault(trigger)
-                                      ?? GetLocalizedName(trigger, localizations)
-                                      ?? (trigger.Length == 1 ? trigger.ToUpperInvariant() : null)
-                                      ?? trigger;
+            LogicalKeyboardKey trigger = serialized.Trigger;
+            string? shortcutTrigger = GraphicEquivalents.GetValueOrDefault(trigger);
+            if (shortcutTrigger == null)
+            {
+                shortcutTrigger = GetLocalizedName(trigger, localizations);
+                if (shortcutTrigger == null && (trigger.KeyId & LogicalKeyboardKey.PlaneMask) == 0x0)
+                {
+                    // A Unicode-character-producing key is labelled with the character itself.
+                    shortcutTrigger = char
+                        .ConvertFromUtf32((int)(trigger.KeyId & LogicalKeyboardKey.ValueMask))
+                        .ToUpperInvariant();
+                }
+
+                shortcutTrigger ??= trigger.KeyLabel;
+            }
             if (shortcutTrigger.Length > 0)
             {
                 parts.Add(shortcutTrigger);
@@ -941,53 +952,53 @@ internal sealed class LocalizedShortcutLabeler
     }
 
     /// <summary>Flutter's `_getLocalizedName`; returns null for keys without a localized name.</summary>
-    private string? GetLocalizedName(string key, MaterialLocalizations localizations)
+    private string? GetLocalizedName(LogicalKeyboardKey key, MaterialLocalizations localizations)
     {
-        if (!_cachedShortcutKeys.TryGetValue(localizations, out Dictionary<string, string>? names))
+        if (!_cachedShortcutKeys.TryGetValue(localizations, out Dictionary<LogicalKeyboardKey, string>? names))
         {
-            names = new Dictionary<string, string>(StringComparer.Ordinal)
+            names = new Dictionary<LogicalKeyboardKey, string>
             {
-                ["AltGraph"] = localizations.KeyboardKeyAltGraph,
-                ["Backspace"] = localizations.KeyboardKeyBackspace,
-                ["CapsLock"] = localizations.KeyboardKeyCapsLock,
-                ["ChannelDown"] = localizations.KeyboardKeyChannelDown,
-                ["ChannelUp"] = localizations.KeyboardKeyChannelUp,
-                ["Delete"] = localizations.KeyboardKeyDelete,
-                ["Eject"] = localizations.KeyboardKeyEject,
-                ["End"] = localizations.KeyboardKeyEnd,
-                ["Escape"] = localizations.KeyboardKeyEscape,
-                ["Fn"] = localizations.KeyboardKeyFn,
-                ["Home"] = localizations.KeyboardKeyHome,
-                ["Insert"] = localizations.KeyboardKeyInsert,
-                ["NumLock"] = localizations.KeyboardKeyNumLock,
-                ["Numpad1"] = localizations.KeyboardKeyNumpad1,
-                ["Numpad2"] = localizations.KeyboardKeyNumpad2,
-                ["Numpad3"] = localizations.KeyboardKeyNumpad3,
-                ["Numpad4"] = localizations.KeyboardKeyNumpad4,
-                ["Numpad5"] = localizations.KeyboardKeyNumpad5,
-                ["Numpad6"] = localizations.KeyboardKeyNumpad6,
-                ["Numpad7"] = localizations.KeyboardKeyNumpad7,
-                ["Numpad8"] = localizations.KeyboardKeyNumpad8,
-                ["Numpad9"] = localizations.KeyboardKeyNumpad9,
-                ["Numpad0"] = localizations.KeyboardKeyNumpad0,
-                ["NumpadAdd"] = localizations.KeyboardKeyNumpadAdd,
-                ["NumpadComma"] = localizations.KeyboardKeyNumpadComma,
-                ["NumpadDecimal"] = localizations.KeyboardKeyNumpadDecimal,
-                ["NumpadDivide"] = localizations.KeyboardKeyNumpadDivide,
-                ["NumpadEnter"] = localizations.KeyboardKeyNumpadEnter,
-                ["NumpadEqual"] = localizations.KeyboardKeyNumpadEqual,
-                ["NumpadMultiply"] = localizations.KeyboardKeyNumpadMultiply,
-                ["NumpadParenLeft"] = localizations.KeyboardKeyNumpadParenLeft,
-                ["NumpadParenRight"] = localizations.KeyboardKeyNumpadParenRight,
-                ["NumpadSubtract"] = localizations.KeyboardKeyNumpadSubtract,
-                ["PageDown"] = localizations.KeyboardKeyPageDown,
-                ["PageUp"] = localizations.KeyboardKeyPageUp,
-                ["Power"] = localizations.KeyboardKeyPower,
-                ["PowerOff"] = localizations.KeyboardKeyPowerOff,
-                ["PrintScreen"] = localizations.KeyboardKeyPrintScreen,
-                ["ScrollLock"] = localizations.KeyboardKeyScrollLock,
-                ["Select"] = localizations.KeyboardKeySelect,
-                ["Space"] = localizations.KeyboardKeySpace,
+                [LogicalKeyboardKey.AltGraph] = localizations.KeyboardKeyAltGraph,
+                [LogicalKeyboardKey.Backspace] = localizations.KeyboardKeyBackspace,
+                [LogicalKeyboardKey.CapsLock] = localizations.KeyboardKeyCapsLock,
+                [LogicalKeyboardKey.ChannelDown] = localizations.KeyboardKeyChannelDown,
+                [LogicalKeyboardKey.ChannelUp] = localizations.KeyboardKeyChannelUp,
+                [LogicalKeyboardKey.Delete] = localizations.KeyboardKeyDelete,
+                [LogicalKeyboardKey.Eject] = localizations.KeyboardKeyEject,
+                [LogicalKeyboardKey.End] = localizations.KeyboardKeyEnd,
+                [LogicalKeyboardKey.Escape] = localizations.KeyboardKeyEscape,
+                [LogicalKeyboardKey.Fn] = localizations.KeyboardKeyFn,
+                [LogicalKeyboardKey.Home] = localizations.KeyboardKeyHome,
+                [LogicalKeyboardKey.Insert] = localizations.KeyboardKeyInsert,
+                [LogicalKeyboardKey.NumLock] = localizations.KeyboardKeyNumLock,
+                [LogicalKeyboardKey.Numpad1] = localizations.KeyboardKeyNumpad1,
+                [LogicalKeyboardKey.Numpad2] = localizations.KeyboardKeyNumpad2,
+                [LogicalKeyboardKey.Numpad3] = localizations.KeyboardKeyNumpad3,
+                [LogicalKeyboardKey.Numpad4] = localizations.KeyboardKeyNumpad4,
+                [LogicalKeyboardKey.Numpad5] = localizations.KeyboardKeyNumpad5,
+                [LogicalKeyboardKey.Numpad6] = localizations.KeyboardKeyNumpad6,
+                [LogicalKeyboardKey.Numpad7] = localizations.KeyboardKeyNumpad7,
+                [LogicalKeyboardKey.Numpad8] = localizations.KeyboardKeyNumpad8,
+                [LogicalKeyboardKey.Numpad9] = localizations.KeyboardKeyNumpad9,
+                [LogicalKeyboardKey.Numpad0] = localizations.KeyboardKeyNumpad0,
+                [LogicalKeyboardKey.NumpadAdd] = localizations.KeyboardKeyNumpadAdd,
+                [LogicalKeyboardKey.NumpadComma] = localizations.KeyboardKeyNumpadComma,
+                [LogicalKeyboardKey.NumpadDecimal] = localizations.KeyboardKeyNumpadDecimal,
+                [LogicalKeyboardKey.NumpadDivide] = localizations.KeyboardKeyNumpadDivide,
+                [LogicalKeyboardKey.NumpadEnter] = localizations.KeyboardKeyNumpadEnter,
+                [LogicalKeyboardKey.NumpadEqual] = localizations.KeyboardKeyNumpadEqual,
+                [LogicalKeyboardKey.NumpadMultiply] = localizations.KeyboardKeyNumpadMultiply,
+                [LogicalKeyboardKey.NumpadParenLeft] = localizations.KeyboardKeyNumpadParenLeft,
+                [LogicalKeyboardKey.NumpadParenRight] = localizations.KeyboardKeyNumpadParenRight,
+                [LogicalKeyboardKey.NumpadSubtract] = localizations.KeyboardKeyNumpadSubtract,
+                [LogicalKeyboardKey.PageDown] = localizations.KeyboardKeyPageDown,
+                [LogicalKeyboardKey.PageUp] = localizations.KeyboardKeyPageUp,
+                [LogicalKeyboardKey.Power] = localizations.KeyboardKeyPower,
+                [LogicalKeyboardKey.PowerOff] = localizations.KeyboardKeyPowerOff,
+                [LogicalKeyboardKey.PrintScreen] = localizations.KeyboardKeyPrintScreen,
+                [LogicalKeyboardKey.ScrollLock] = localizations.KeyboardKeyScrollLock,
+                [LogicalKeyboardKey.Select] = localizations.KeyboardKeySelect,
+                [LogicalKeyboardKey.Space] = localizations.KeyboardKeySpace,
             };
             _cachedShortcutKeys[localizations] = names;
         }

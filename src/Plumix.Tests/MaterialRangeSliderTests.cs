@@ -355,7 +355,7 @@ public sealed class MaterialRangeSliderTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(new KeyEvent(key: "ArrowRight", isDown: true));
+            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
             Assert.True(handled);
             owner.FlushBuild();
 

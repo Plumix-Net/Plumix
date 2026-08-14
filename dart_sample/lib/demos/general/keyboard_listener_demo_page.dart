@@ -124,7 +124,7 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
           onKey: (RawKeyEvent event) {
             setState(() {
               final String phase = event is RawKeyDownEvent ? 'down' : 'up';
-              _rawEvent = '${event.logicalKey.keyLabel} — $phase';
+              _rawEvent = '${event.logicalKey.debugName} — $phase';
             });
           },
           child: _buildPanel(
@@ -222,8 +222,13 @@ class _KeyboardListenerDemoPageState extends State<KeyboardListenerDemoPage> {
   }
 
   static String _describeKeyEvent(KeyEvent event) {
-    final String phase = event is KeyDownEvent ? 'down' : 'up';
-    return '${event.logicalKey.keyLabel} — $phase';
+    final String phase = switch (event) {
+      KeyDownEvent() => 'down',
+      KeyRepeatEvent() => 'repeat',
+      _ => 'up',
+    };
+    return '${event.logicalKey.debugName} — $phase — '
+        'physical ${event.physicalKey.debugName}';
   }
 
   static String _onOff(bool value) => value ? 'on' : 'off';

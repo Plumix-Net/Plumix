@@ -42,8 +42,8 @@ internal sealed class KeyboardListenerDemoPageState : State
         _excludedFocusNode.AddListener(HandleFocusChanged);
         _shortcuts = new Dictionary<ShortcutActivator, Intent>
         {
-            [new SingleActivator("K", control: true)] = new CounterShortcutIntent(1),
-            [new SingleActivator("J", control: true)] = new CounterShortcutIntent(-1),
+            [new SingleActivator(LogicalKeyboardKey.KeyK, control: true)] = new CounterShortcutIntent(1),
+            [new SingleActivator(LogicalKeyboardKey.KeyJ, control: true)] = new CounterShortcutIntent(-1),
         };
         _actions = new Dictionary<Type, FlutterAction>
         {
@@ -125,7 +125,7 @@ internal sealed class KeyboardListenerDemoPageState : State
                     onKey: keyEvent => SetState(() =>
                     {
                         string phase = keyEvent is RawKeyDownEvent ? "down" : "up";
-                        _rawEvent = $"{keyEvent.Key} — {phase}";
+                        _rawEvent = $"{keyEvent.LogicalKey.DebugName} — {phase}";
                     }),
                     child: BuildPanel(
                         title: "RawKeyboardListener (deprecated compatibility)",
@@ -190,7 +190,14 @@ internal sealed class KeyboardListenerDemoPageState : State
 
     private static string DescribeKeyEvent(KeyEvent keyEvent)
     {
-        return $"{keyEvent.Key} — {(keyEvent.IsDown ? "down" : "up")}";
+        string phase = keyEvent switch
+        {
+            KeyDownEvent => "down",
+            KeyRepeatEvent => "repeat",
+            _ => "up",
+        };
+
+        return $"{keyEvent.LogicalKey.DebugName} — {phase} — physical {keyEvent.PhysicalKey.DebugName}";
     }
 
     private static string OnOff(bool value) => value ? "on" : "off";

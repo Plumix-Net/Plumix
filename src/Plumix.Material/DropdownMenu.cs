@@ -473,26 +473,27 @@ internal sealed class DropdownMenuState<T> : RawMenuAnchorBaseState
 
     private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
     {
-        if (!@event.IsDown || !Current.Enabled) return KeyEventResult.Ignored;
-        if (@event.Key is "Escape" or "Esc")
+        if (@event is not KeyDownEvent || !Current.Enabled) return KeyEventResult.Ignored;
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.Escape))
         {
             if (_route is null) return KeyEventResult.Ignored;
             CloseMenu();
             return KeyEventResult.Handled;
         }
-        if (@event.Key is "ArrowDown" or "Down")
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowDown))
         {
             if (_route is null) return KeyEventResult.Ignored;
             MoveHighlight(1);
             return KeyEventResult.Handled;
         }
-        if (@event.Key is "ArrowUp" or "Up")
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowUp))
         {
             if (_route is null) return KeyEventResult.Ignored;
             MoveHighlight(-1);
             return KeyEventResult.Handled;
         }
-        if (@event.Key is "Enter" or "Return" or "NumPadEnter" or "NumpadEnter")
+        if ((@event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
+    || @event.LogicalKey.Equals(LogicalKeyboardKey.NumpadEnter)))
         {
             if (Current.SelectOnly && _route is null) OpenMenu();
             else HandleSubmitted();

@@ -216,7 +216,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` | — | — |
 | `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` | — | — |
 | `foundation/diagnostics.dart` | `src/Plumix/Foundation/DiagnosticProperties.cs`<br>`src/Plumix/Foundation/Diagnostics.cs` | — | — |
-| `foundation/key.dart` | `src/Plumix/Foundation/Key.cs` | `src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
+| `foundation/key.dart` | `src/Plumix/Foundation/Key.cs` | `src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `foundation/licenses.dart` | `src/Plumix/Foundation/Licenses.cs` | — | — |
 | `foundation/platform.dart` | `src/Plumix/UI/TargetPlatform.cs` | — | — |
 | `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` | — | — |
@@ -308,10 +308,12 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `services/binding.dart` | `src/Plumix/Widgets/AppLifecycleListener.cs` | `src/Plumix.Tests/AppLifecycleListenerTests.cs` | — |
 | `services/clipboard.dart` | `src/Plumix/Widgets/TextClipboard.cs` | — | — |
 | `services/haptic_feedback.dart` | `src/Plumix/UI/HapticFeedback.cs` | — | — |
-| `services/hardware_keyboard.dart` | `src/Plumix/UI/KeyboardEvents.cs` | — | — |
+| `services/hardware_keyboard.dart` | `src/Plumix/UI/HardwareKeyboard.cs`<br>`src/Plumix/UI/KeyEventManager.cs` | `src/Plumix.Tests/HardwareKeyboardTests.cs` | — |
+| `services/keyboard_key.g.dart` | `src/Plumix/UI/KeyboardKey.cs` | — | — |
 | `services/mouse_cursor.dart` | `src/Plumix/Widgets/MouseCursor.cs` | — | — |
 | `services/mouse_tracking.dart` | `src/Plumix/UI/MouseTracking.cs` | — | — |
 | `services/predictive_back_event.dart` | `src/Plumix/UI/PredictiveBackEvent.cs` | — | — |
+| `services/raw_keyboard.dart` | `src/Plumix/UI/RawKeyboard.cs` | — | — |
 | `services/restoration.dart` | `src/Plumix/UI/Restoration.cs` | `src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | — |
 | `services/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
 | `services/system_chrome.dart` | `src/Plumix/UI/SystemChrome.cs` | — | — |
@@ -353,7 +355,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/expansible.dart` | `src/Plumix/Widgets/Expansible.cs` | — | — |
 | `widgets/fade_in_image.dart` | `src/Plumix/Widgets/FadeInImage.cs` | — | — |
 | `widgets/feedback.dart` | `src/Plumix/UI/Feedback.cs` | — | — |
-| `widgets/focus_manager.dart` | `src/Plumix/UI/KeyboardEvents.cs`<br>`src/Plumix/Widgets/Focus.cs` | `src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | — |
+| `widgets/focus_manager.dart` | `src/Plumix/Widgets/Focus.cs` | `src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | — |
 | `widgets/focus_scope.dart` | `src/Plumix/Widgets/Focus.cs` | `src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | — |
 | `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | — |
 | `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart` |
@@ -459,6 +461,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/AndroidLifecycleChannel.cs`
 - `src/Plumix/AssemblyInfo.cs`
 - `src/Plumix/Gestures/GestureTimer.cs`
+- `src/Plumix/HostKeyboardMap.cs`
 - `src/Plumix/PlumixApplication.cs`
 - `src/Plumix/PlumixOptions.cs`
 - `src/Plumix/Rendering/FilterLayerRasterizer.cs`
@@ -475,8 +478,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 431
-- C# files carrying a marker: 556
-- C# files without a marker: 16
+- Flutter files mapped: 433
+- C# files carrying a marker: 558
+- C# files without a marker: 17
 - Markers not resolvable in the pinned checkout: 0
 
