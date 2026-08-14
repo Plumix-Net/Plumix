@@ -231,6 +231,12 @@ public sealed class SliverFloatingHeader : StatefulWidget
 
     public FloatingHeaderSnapMode? SnapMode { get; }
 
+    /// <summary>
+    /// How far a show-on-screen request may expand this header. Null lets the enclosing viewport
+    /// scroll the request into view instead of expanding the header.
+    /// </summary>
+    public PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration { get; init; }
+
     public Widget Child { get; }
 
     public override State CreateState() => new SliverFloatingHeaderState();
@@ -245,7 +251,10 @@ internal sealed class SliverFloatingHeaderState : State
         return new SliverFloatingHeaderRenderObjectWidget(
             animationStyle: CurrentWidget.AnimationStyle,
             snapMode: CurrentWidget.SnapMode,
-            child: new SliverFloatingHeaderSnapTrigger(CurrentWidget.Child));
+            child: new SliverFloatingHeaderSnapTrigger(CurrentWidget.Child))
+        {
+            ShowOnScreenConfiguration = CurrentWidget.ShowOnScreenConfiguration,
+        };
     }
 }
 
@@ -337,11 +346,16 @@ internal sealed class SliverFloatingHeaderRenderObjectWidget : SingleChildRender
 
     public FloatingHeaderSnapMode? SnapMode { get; }
 
+    public PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration { get; init; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFloatingHeader(
             animationStyle: AnimationStyle,
-            snapMode: SnapMode);
+            snapMode: SnapMode)
+        {
+            ShowOnScreenConfiguration = ShowOnScreenConfiguration,
+        };
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -349,5 +363,6 @@ internal sealed class SliverFloatingHeaderRenderObjectWidget : SingleChildRender
         var floatingHeader = (RenderSliverFloatingHeader)renderObject;
         floatingHeader.AnimationStyle = AnimationStyle;
         floatingHeader.SnapMode = SnapMode;
+        floatingHeader.ShowOnScreenConfiguration = ShowOnScreenConfiguration;
     }
 }

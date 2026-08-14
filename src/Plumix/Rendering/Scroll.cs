@@ -1,3 +1,4 @@
+using Avalonia;
 using Plumix;
 using Plumix.Foundation;
 using Plumix.Gestures;
@@ -570,6 +571,28 @@ public sealed class BallisticScrollActivity : ScrollActivity
     }
 }
 
+/// <summary>
+/// How <see cref="ScrollPosition.EnsureVisible"/> should treat the requested alignment.
+/// </summary>
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/scroll_position.dart
+public enum ScrollPositionAlignmentPolicy
+{
+    /// <summary>Use the supplied alignment value as given.</summary>
+    Explicit,
+
+    /// <summary>
+    /// Align to the trailing edge, but only when the target's trailing edge is past it; never scroll
+    /// backwards.
+    /// </summary>
+    KeepVisibleAtEnd,
+
+    /// <summary>
+    /// Align to the leading edge, but only when the target's leading edge is before it; never scroll
+    /// forwards.
+    /// </summary>
+    KeepVisibleAtStart,
+}
+
 public class ScrollPosition : ChangeNotifier, IScrollMetrics
 {
     private readonly ScrollPhysics _physics;
@@ -715,6 +738,129 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         var activity = new DrivenScrollActivity(this, value, duration, curve ?? Curves.Linear);
         BeginActivity(activity);
         return activity.Done;
+    }
+
+    /// <summary>
+    /// Jumps or animates to <paramref name="to"/> depending on whether a duration was supplied.
+    /// </summary>
+    public Task MoveTo(double to, TimeSpan? duration = null, Curve? curve = null)
+    {
+        if (duration is not { } animationDuration || animationDuration == TimeSpan.Zero)
+        {
+            JumpTo(to);
+            return Task.CompletedTask;
+        }
+
+        return AnimateTo(to, animationDuration, curve ?? Curves.Ease);
+    }
+
+    /// <summary>
+    /// Whether this position may be scrolled implicitly, for instance because an assistive
+    /// technology asked a descendant to show itself on screen.
+    /// </summary>
+    public bool AllowImplicitScrolling => Physics.AllowImplicitScrolling;
+
+    /// <summary>
+    /// Scrolls this position so that <paramref name="target"/> becomes visible in the enclosing
+    /// viewport.
+    /// </summary>
+    /// <param name="alignment">0.0 aligns the leading edge, 1.0 the trailing edge, 0.5 centers.</param>
+    /// <param name="alignmentPolicy">
+    /// Whether <paramref name="alignment"/> is used as given, or only far enough to keep the target
+    /// visible at one edge without scrolling the other way.
+    /// </param>
+    /// <param name="targetRenderObject">
+    /// The innermost object the caller actually wants revealed, when <paramref name="target"/> is an
+    /// enclosing scrollable's render object rather than the original target.
+    /// </param>
+    public Task EnsureVisible(
+        RenderObject target,
+        double alignment = 0.0,
+        TimeSpan duration = default,
+        Curve? curve = null,
+        ScrollPositionAlignmentPolicy alignmentPolicy = ScrollPositionAlignmentPolicy.Explicit,
+        RenderObject? targetRenderObject = null)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+        IRenderAbstractViewport? viewport = RenderAbstractViewport.MaybeOf(target);
+        if (viewport is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        Rect? targetRect = null;
+        if (targetRenderObject != null && !ReferenceEquals(targetRenderObject, target))
+        {
+            targetRect = RenderObject.TransformRect(
+                targetRenderObject.GetTransformTo(target),
+                target.PaintBounds.Intersect(targetRenderObject.PaintBounds));
+        }
+
+        double resolved;
+        switch (ApplyAxisDirectionToAlignmentPolicy(alignmentPolicy))
+        {
+            case ScrollPositionAlignmentPolicy.KeepVisibleAtEnd:
+                resolved = Math.Clamp(
+                    viewport.GetOffsetToReveal(target, 1.0, targetRect).Offset,
+                    MinScrollExtent,
+                    MaxScrollExtent);
+                if (resolved < Pixels)
+                {
+                    resolved = Pixels;
+                }
+
+                break;
+            case ScrollPositionAlignmentPolicy.KeepVisibleAtStart:
+                resolved = Math.Clamp(
+                    viewport.GetOffsetToReveal(target, 0.0, targetRect).Offset,
+                    MinScrollExtent,
+                    MaxScrollExtent);
+                if (resolved > Pixels)
+                {
+                    resolved = Pixels;
+                }
+
+                break;
+            default:
+                resolved = Math.Clamp(
+                    viewport.GetOffsetToReveal(target, alignment, targetRect).Offset,
+                    MinScrollExtent,
+                    MaxScrollExtent);
+                break;
+        }
+
+        if (resolved == Pixels)
+        {
+            return Task.CompletedTask;
+        }
+
+        if (duration == TimeSpan.Zero)
+        {
+            JumpTo(resolved);
+            return Task.CompletedTask;
+        }
+
+        return AnimateTo(resolved, duration, curve ?? Curves.Ease);
+    }
+
+    /// <summary>
+    /// A reversed axis swaps which edge "start" and "end" mean; an explicit alignment is never
+    /// flipped.
+    /// </summary>
+    private ScrollPositionAlignmentPolicy ApplyAxisDirectionToAlignmentPolicy(
+        ScrollPositionAlignmentPolicy policy)
+    {
+        if (AxisDirection is not (AxisDirection.Up or AxisDirection.Left))
+        {
+            return policy;
+        }
+
+        return policy switch
+        {
+            ScrollPositionAlignmentPolicy.KeepVisibleAtEnd => ScrollPositionAlignmentPolicy.KeepVisibleAtStart,
+            ScrollPositionAlignmentPolicy.KeepVisibleAtStart => ScrollPositionAlignmentPolicy.KeepVisibleAtEnd,
+            _ => policy,
+        };
     }
 
     public virtual void RestoreOffset(double offset, bool initialRestore = false)

@@ -18,7 +18,7 @@ public delegate double? ViewportMetricsChangedCallback(
     double minScrollExtent,
     double maxScrollExtent);
 
-public sealed class RenderViewport : RenderBox, IRenderObjectContainer
+public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderAbstractViewport
 {
     private readonly RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData> _container;
     private Axis _axis;
@@ -150,6 +150,14 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
     }
 
     public ViewportMetricsChangedCallback? OnViewportMetricsChanged { get; set; }
+
+    /// <inheritdoc />
+    public ViewportMoveToCallback? OnMoveTo { get; set; }
+
+    /// <inheritdoc />
+    public bool AllowImplicitScrolling { get; set; } = true;
+
+    double IRenderAbstractViewport.RevealOffsetPixels => _offsetPixels;
 
     public bool ShrinkWrap
     {
@@ -428,6 +436,167 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         _reportedPixels = OnViewportMetricsChanged?.Invoke(viewportMainAxisExtent, 0, _maxScrollExtent);
     }
 
+    /// <summary>
+    /// The scroll offset of the leading edge of <paramref name="child"/>, plus
+    /// <paramref name="scrollOffsetWithinChild"/>.
+    /// </summary>
+    /// <remarks>
+    /// Plumix's viewport has no <c>center</c> sliver, so every child grows forward from the first
+    /// one; this is Flutter's <c>RenderShrinkWrappingViewport.scrollOffsetOf</c>.
+    /// </remarks>
+    public double ScrollOffsetOf(RenderSliver child, double scrollOffsetWithinChild)
+    {
+        double scrollOffsetToChild = 0.0;
+        for (RenderSliver? current = FirstChild;
+             current != null && !ReferenceEquals(current, child);
+             current = _container.ChildAfter(current))
+        {
+            scrollOffsetToChild += current.Geometry.ScrollExtent;
+        }
+
+        return scrollOffsetToChild + scrollOffsetWithinChild;
+    }
+
+    /// <summary>The total extent pinned by the slivers laid out before <paramref name="child"/>.</summary>
+    public double MaxScrollObstructionExtentBefore(RenderSliver child)
+    {
+        double pinnedExtent = 0.0;
+        for (RenderSliver? current = FirstChild;
+             current != null && !ReferenceEquals(current, child);
+             current = _container.ChildAfter(current))
+        {
+            pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+        }
+
+        return pinnedExtent;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Plumix lays every sliver out in the physically forward direction and expresses a reversed
+    /// axis purely through the offset mapping, so the leading edge is taken in layout space and the
+    /// resulting scroll offset is mapped back to the position's pixels at the end. Flutter selects
+    /// the edge from the effective axis direction instead and needs no final mapping.
+    /// </remarks>
+    public RevealedOffset GetOffsetToReveal(
+        RenderObject target,
+        double alignment,
+        Rect? rect = null,
+        Axis? axis = null)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+
+        // A one-dimensional viewport uses its own axis; a mismatched request is not an error.
+        Axis effectiveAxis = Axis;
+
+        double leadingScrollOffset = 0.0;
+        RenderObject current = target;
+        RenderBox? pivot = null;
+        bool onlySlivers = target is RenderSliver;
+        while (!ReferenceEquals(current.Parent, this))
+        {
+            if (current.Parent is not { } parent)
+            {
+                // Not a descendant of this viewport: nothing to reveal.
+                return new RevealedOffset(_offsetPixels, rect ?? target.PaintBounds);
+            }
+
+            if (current is RenderBox box)
+            {
+                pivot = box;
+            }
+
+            if (parent is RenderSliver parentSliver)
+            {
+                leadingScrollOffset += parentSliver.ChildScrollOffset(current) ?? 0.0;
+            }
+            else
+            {
+                // A non-sliver ancestor moves its child non-linearly with the scroll offset, so
+                // everything accumulated so far is meaningless.
+                onlySlivers = false;
+                leadingScrollOffset = 0.0;
+            }
+
+            current = parent;
+        }
+
+        double pivotExtent;
+        Rect rectLocal;
+        if (pivot != null)
+        {
+            pivotExtent = effectiveAxis == Axis.Horizontal ? pivot.Size.Width : pivot.Size.Height;
+            rect ??= target.PaintBounds;
+            rectLocal = RenderObject.TransformRect(target.GetTransformTo(pivot), rect.Value);
+        }
+        else if (onlySlivers)
+        {
+            var targetSliver = (RenderSliver)target;
+            pivotExtent = targetSliver.Geometry.ScrollExtent;
+            double crossAxisExtent = targetSliver.ConstraintsForSliver.CrossAxisExtent;
+            rect ??= effectiveAxis == Axis.Horizontal
+                ? new Rect(0.0, 0.0, targetSliver.Geometry.ScrollExtent, crossAxisExtent)
+                : new Rect(0.0, 0.0, crossAxisExtent, targetSliver.Geometry.ScrollExtent);
+            rectLocal = rect.Value;
+        }
+        else
+        {
+            return new RevealedOffset(_offsetPixels, rect ?? target.PaintBounds);
+        }
+
+        var sliver = (RenderSliver)current;
+        leadingScrollOffset += effectiveAxis == Axis.Horizontal ? rectLocal.Left : rectLocal.Top;
+        bool isPinned = sliver.Geometry.MaxScrollObstructionExtent > 0.0 && leadingScrollOffset >= 0.0;
+        leadingScrollOffset = ScrollOffsetOf(sliver, leadingScrollOffset);
+
+        Rect targetRect = RenderObject.TransformRect(target.GetTransformTo(this), rect.Value);
+        double extentOfPinnedSlivers = MaxScrollObstructionExtentBefore(sliver);
+        if (isPinned && alignment <= 0.0)
+        {
+            // Aligning a pinned sliver's leading edge is already satisfied at every offset; the
+            // caller clamps this to the maximum scroll extent.
+            return new RevealedOffset(double.PositiveInfinity, targetRect);
+        }
+
+        leadingScrollOffset -= extentOfPinnedSlivers;
+        double mainAxisExtentDifference = effectiveAxis == Axis.Horizontal
+            ? Size.Width - extentOfPinnedSlivers - rectLocal.Width
+            : Size.Height - extentOfPinnedSlivers - rectLocal.Height;
+        double targetLayoutOffset = leadingScrollOffset - mainAxisExtentDifference * alignment;
+        double targetOffset = UserOffsetFromEffectiveUnclamped(targetLayoutOffset);
+        double offsetDifference = _offsetPixels - targetOffset;
+        targetRect = _axisDirection switch
+        {
+            AxisDirection.Up => TranslateRect(targetRect, 0.0, -offsetDifference),
+            AxisDirection.Down => TranslateRect(targetRect, 0.0, offsetDifference),
+            AxisDirection.Left => TranslateRect(targetRect, -offsetDifference, 0.0),
+            _ => TranslateRect(targetRect, offsetDifference, 0.0),
+        };
+
+        return new RevealedOffset(targetOffset, targetRect);
+    }
+
+    public override void ShowOnScreen(
+        RenderObject? descendant = null,
+        Rect? rect = null,
+        TimeSpan duration = default,
+        Curve? curve = null)
+    {
+        if (!AllowImplicitScrolling)
+        {
+            base.ShowOnScreen(descendant, rect, duration, curve);
+            return;
+        }
+
+        Rect? revealed = RenderAbstractViewport.ShowInViewport(this, descendant, rect, duration, curve);
+        base.ShowOnScreen(rect: revealed, duration: duration, curve: curve);
+    }
+
+    private static Rect TranslateRect(Rect rect, double dx, double dy)
+    {
+        return new Rect(rect.X + dx, rect.Y + dy, rect.Width, rect.Height);
+    }
+
     public override void Paint(PaintingContext ctx, Point offset)
     {
         if (Size.Width <= 0 || Size.Height <= 0)
@@ -617,6 +786,20 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer
         }
 
         return Math.Max(0, maxScrollExtent) - userOffset;
+    }
+
+    /// <summary>
+    /// Maps a layout-space scroll offset back to the position's pixels without clamping, so a reveal
+    /// target outside the current extents survives for the caller to clamp.
+    /// </summary>
+    private double UserOffsetFromEffectiveUnclamped(double effectiveOffset)
+    {
+        if (!ScrollDirectionUtils.AxisDirectionIsReversed(_axisDirection))
+        {
+            return effectiveOffset;
+        }
+
+        return Math.Max(0, _maxScrollExtent) - effectiveOffset;
     }
 
     private double UserOffsetFromEffective(double effectiveOffset, double maxScrollExtent)

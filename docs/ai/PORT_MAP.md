@@ -291,11 +291,12 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/sliver.dart` | `src/Plumix/Rendering/Sliver.cs` | `src/Plumix.Tests/DecoratedPinnedSliverTests.cs`<br>`src/Plumix.Tests/MaterialSliverAppBarTests.cs`<br>`src/Plumix.Tests/SliverFillTests.cs`<br>`src/Plumix.Tests/SliverGroupTests.cs`<br>`src/Plumix.Tests/SliverHeaderTests.cs`<br>`src/Plumix.Tests/SliverOpacityTests.cs` | `dart_sample/lib/demos/general/custom_slivers_demo_page.dart`<br>`dart_sample/lib/demos/material/sliver_app_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CustomSliversDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SliverAppBarDemoPage.cs` |
 | `rendering/sliver_fill.dart` | `src/Plumix/Rendering/SliverFill.cs` | `src/Plumix.Tests/SliverFillTests.cs` | — |
 | `rendering/sliver_group.dart` | `src/Plumix/Rendering/SliverGroup.cs` | `src/Plumix.Tests/SliverGroupTests.cs` | — |
+| `rendering/sliver_persistent_header.dart` | `src/Plumix/Rendering/SliverPersistentHeaderReveal.cs` | — | — |
 | `rendering/stack.dart` | `src/Plumix/Rendering/RelativeRect.cs`<br>`src/Plumix/Rendering/Stack.RenderIndexedStack.cs`<br>`src/Plumix/Rendering/Stack.RenderStack.cs` | — | — |
 | `rendering/table.dart` | `src/Plumix/Rendering/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs`<br>`src/Plumix.Tests/TableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
 | `rendering/table_border.dart` | `src/Plumix/Rendering/TableBorder.cs` | — | — |
 | `rendering/view.dart` | `src/Plumix/RenderView.cs` | — | — |
-| `rendering/viewport.dart` | `src/Plumix/Rendering/Scroll.cs`<br>`src/Plumix/Rendering/Viewport.RenderViewport.cs` | `src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
+| `rendering/viewport.dart` | `src/Plumix/Rendering/Scroll.cs`<br>`src/Plumix/Rendering/Viewport.RenderViewport.cs`<br>`src/Plumix/Rendering/Viewport.Reveal.cs` | `src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `rendering/wrap.dart` | `src/Plumix/Rendering/Wrap.cs` | `src/Plumix.Tests/WrapTests.cs` | — |
 | `scheduler/binding.dart` | `src/Plumix/Scheduler.cs` | — | — |
 | `scheduler/priority.dart` | `src/Plumix/SchedulerPriority.cs` | — | — |
@@ -438,7 +439,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/transitions.dart` | `src/Plumix/Widgets/Transitions.cs` | `src/Plumix.Tests/MaterialPageTransitionsTests.cs`<br>`src/Plumix.Tests/TransitionsTests.cs` | — |
 | `widgets/tween_animation_builder.dart` | `src/Plumix/Widgets/TweenAnimationBuilder.cs` | — | — |
 | `widgets/value_listenable_builder.dart` | `src/Plumix/Widgets/ValueListenableBuilder.cs` | — | — |
-| `widgets/view.dart` | `src/Plumix/Widgets/View.cs` | `src/Plumix.Tests/PageViewTests.cs` | `dart_sample/lib/demos/general/grid_view_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_fixed_extent_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_reverse_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_separated_demo_page.dart`<br>`dart_sample/lib/demos/general/page_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/GridViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewFixedExtentDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewReverseDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewSeparatedDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/PageViewDemoPage.cs` |
+| `widgets/view.dart` | `src/Plumix/Widgets/View.cs` | `src/Plumix.Tests/PageViewTests.cs`<br>`src/Plumix.Tests/ViewportRevealTests.cs` | `dart_sample/lib/demos/general/grid_view_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_fixed_extent_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_reverse_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_separated_demo_page.dart`<br>`dart_sample/lib/demos/general/page_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/GridViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewFixedExtentDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewReverseDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewSeparatedDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/PageViewDemoPage.cs` |
 | `widgets/widget_span.dart` | `src/Plumix/Widgets/WidgetSpan.cs` | — | — |
 | `widgets/widget_state.dart` | `src/Plumix/Widgets/RawRadio.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
 
@@ -466,8 +467,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 423
-- C# files carrying a marker: 537
+- Flutter files mapped: 424
+- C# files carrying a marker: 539
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 0
 

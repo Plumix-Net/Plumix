@@ -368,7 +368,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/SharedAppData.cs`
   - `src/Plumix/Rendering/Scroll.cs`
   - `src/Plumix/Rendering/Viewport.RenderViewport.cs`
+  - `src/Plumix/Rendering/Viewport.Reveal.cs`
   - `src/Plumix/Rendering/Sliver.cs`
+  - `src/Plumix/Rendering/SliverPersistentHeaderReveal.cs`
   - `src/Plumix/Widgets/SliverHeaders.cs`
   - `src/Plumix/Rendering/SliverHeaders.cs`
   - `src/Plumix/Widgets/SliverDecoratedPinned.cs`
@@ -378,6 +380,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/DraggableScrollableSheet.cs`
 - Primary Tests:
   - `src/Plumix.Tests/ScrollPipelineTests.cs`
+  - `src/Plumix.Tests/ViewportRevealTests.cs`
   - `src/Plumix.Tests/ScrollInfrastructureTests.cs`
   - `src/Plumix.Tests/ScrollBehaviorParityTests.cs`
   - `src/Plumix.Tests/ScrollNotificationObserverTests.cs`

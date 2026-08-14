@@ -3,7 +3,7 @@ using Avalonia;
 namespace Plumix.Rendering;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/single_child_scroll_view.dart (_RenderSingleChildViewport)
-public sealed class RenderSingleChildViewport : RenderProxyBox
+public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractViewport
 {
     private AxisDirection _axisDirection;
     private double _offsetPixels;
@@ -51,6 +51,81 @@ public sealed class RenderSingleChildViewport : RenderProxyBox
 
     public Axis Axis => ScrollDirectionUtils.AxisDirectionToAxis(AxisDirection);
     public double MaxScrollExtent { get; private set; }
+
+    /// <inheritdoc />
+    public ViewportMoveToCallback? OnMoveTo { get; set; }
+
+    /// <inheritdoc />
+    public bool AllowImplicitScrolling { get; set; } = true;
+
+    double IRenderAbstractViewport.RevealOffsetPixels => _offsetPixels;
+
+    /// <inheritdoc />
+    public RevealedOffset GetOffsetToReveal(
+        RenderObject target,
+        double alignment,
+        Rect? rect = null,
+        Axis? axis = null)
+    {
+        ArgumentNullException.ThrowIfNull(target);
+
+        // A one-dimensional viewport uses its own axis; a mismatched request is not an error.
+        rect ??= target.PaintBounds;
+        if (Child is not { } content || target is not RenderBox)
+        {
+            return new RevealedOffset(OffsetPixels, rect.Value);
+        }
+
+        Rect bounds = RenderObject.TransformRect(target.GetTransformTo(content), rect.Value);
+        Size contentSize = content.Size;
+        double mainAxisExtent;
+        double leadingScrollOffset;
+        double targetMainAxisExtent;
+        switch (AxisDirection)
+        {
+            case AxisDirection.Up:
+                mainAxisExtent = Size.Height;
+                leadingScrollOffset = contentSize.Height - bounds.Bottom;
+                targetMainAxisExtent = bounds.Height;
+                break;
+            case AxisDirection.Left:
+                mainAxisExtent = Size.Width;
+                leadingScrollOffset = contentSize.Width - bounds.Right;
+                targetMainAxisExtent = bounds.Width;
+                break;
+            case AxisDirection.Right:
+                mainAxisExtent = Size.Width;
+                leadingScrollOffset = bounds.Left;
+                targetMainAxisExtent = bounds.Width;
+                break;
+            default:
+                mainAxisExtent = Size.Height;
+                leadingScrollOffset = bounds.Top;
+                targetMainAxisExtent = bounds.Height;
+                break;
+        }
+
+        double targetOffset = leadingScrollOffset - (mainAxisExtent - targetMainAxisExtent) * alignment;
+        Point shift = ResolvePaintOffset(targetOffset);
+        var targetRect = new Rect(bounds.X + shift.X, bounds.Y + shift.Y, bounds.Width, bounds.Height);
+        return new RevealedOffset(targetOffset, targetRect);
+    }
+
+    public override void ShowOnScreen(
+        RenderObject? descendant = null,
+        Rect? rect = null,
+        TimeSpan duration = default,
+        Curve? curve = null)
+    {
+        if (!AllowImplicitScrolling)
+        {
+            base.ShowOnScreen(descendant, rect, duration, curve);
+            return;
+        }
+
+        Rect? revealed = RenderAbstractViewport.ShowInViewport(this, descendant, rect, duration, curve);
+        base.ShowOnScreen(rect: revealed, duration: duration, curve: curve);
+    }
 
     protected override void PerformLayout()
     {

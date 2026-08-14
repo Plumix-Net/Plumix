@@ -20,6 +20,7 @@ class SampleRoutes {
   static const String listViewSeparated = '/list-separated';
   static const String listViewFixedExtent = '/list-fixed-extent';
   static const String scrollPhysics = '/scroll-physics';
+  static const String ensureVisible = '/ensure-visible';
   static const String listViewReverse = '/list-reverse';
   static const String pageView = '/page-view';
   static const String gridView = '/grid-view';

@@ -43,6 +43,9 @@ public abstract class RenderBox : RenderObject
 
     public bool HasSize => _size != null;
 
+    /// <summary>An estimate of the bounds within which this render object will paint.</summary>
+    public override Rect PaintBounds => new(default, Size);
+
     public new virtual BoxConstraints Constraints => (BoxConstraints)base.Constraints;
 
     public double GetMinIntrinsicWidth(double height)

@@ -28,6 +28,7 @@ internal static class SampleRoutes
     public const string ListViewSeparated = "/list-separated";
     public const string ListViewFixedExtent = "/list-fixed-extent";
     public const string ScrollPhysics = "/scroll-physics";
+    public const string EnsureVisible = "/ensure-visible";
     public const string ListViewReverse = "/list-reverse";
     public const string PageView = "/page-view";
     public const string GridView = "/grid-view";
@@ -254,6 +255,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Scroll physics",
             "bouncing overscroll + spring back vs clamping",
             () => new ScrollPhysicsDemoPage()),
+        new(
+            SampleRoutes.EnsureVisible,
+            "Ensure visible",
+            "nested reveal + alignment policies",
+            () => new EnsureVisibleDemoPage()),
         new(
             SampleRoutes.AnimatedList,
             "AnimatedList + SliverAnimatedList",

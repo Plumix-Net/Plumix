@@ -98,6 +98,17 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectCont
         parentData.CrossAxisFlex ??= 1;
     }
 
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return 0.0;
+    }
+
+    public override double ChildCrossAxisPosition(RenderObject child)
+    {
+        Point paintOffset = ((SliverPhysicalParentData)child.parentData!).offset;
+        return ConstraintsForSliver.Axis == Axis.Vertical ? paintOffset.X : paintOffset.Y;
+    }
+
     public override void VisitChildren(Action<RenderObject> visitor)
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
@@ -435,11 +446,34 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
         }
     }
 
-    public double ChildScrollOffset(RenderSliver child)
+    public override double ChildMainAxisPosition(RenderObject child)
     {
+        var sliver = (RenderSliver)child;
+        Point paintOffset = ((SliverPhysicalParentData)child.parentData!).offset;
+        AxisDirection effectiveDirection = ApplyGrowthDirectionToAxisDirection(
+            sliver.ConstraintsForSliver.AxisDirection,
+            sliver.ConstraintsForSliver.GrowthDirection);
+        return effectiveDirection switch
+        {
+            AxisDirection.Down => paintOffset.Y,
+            AxisDirection.Right => paintOffset.X,
+            AxisDirection.Up => Geometry.PaintExtent - sliver.Geometry.PaintExtent - paintOffset.Y,
+            AxisDirection.Left => Geometry.PaintExtent - sliver.Geometry.PaintExtent - paintOffset.X,
+            _ => paintOffset.Y,
+        };
+    }
+
+    public override double ChildCrossAxisPosition(RenderObject child)
+    {
+        return 0.0;
+    }
+
+    public override double? ChildScrollOffset(RenderObject renderChild)
+    {
+        var child = (RenderSliver)renderChild;
         if (!ReferenceEquals(child.Parent, this))
         {
-            throw new ArgumentException("The child does not belong to this group.", nameof(child));
+            throw new ArgumentException("The child does not belong to this group.", nameof(renderChild));
         }
 
         double obstructionExtent = MaxScrollObstructionExtentBefore(child);

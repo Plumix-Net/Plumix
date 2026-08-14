@@ -1007,12 +1007,23 @@ internal sealed class PopupMenuEnsureVisible : StatefulWidget
         private void EnsureVisible(TimeSpan timestamp)
         {
             _attempts++;
-            if (!Mounted || Scrollable.EnsureVisible(Context) || _attempts >= 3)
+            if (!Mounted)
             {
                 return;
             }
 
-            Scheduler.AddPostFrameCallback(EnsureVisible);
+            // The menu's scrollable only exists once the route's list has been laid out, so retry a
+            // couple of frames before giving up.
+            if (Scrollable.MaybeOf(Context) != null)
+            {
+                _ = Scrollable.EnsureVisible(Context);
+                return;
+            }
+
+            if (_attempts < 3)
+            {
+                Scheduler.AddPostFrameCallback(EnsureVisible);
+            }
         }
     }
 }

@@ -548,6 +548,41 @@ public abstract class RenderSliver : RenderBox
             constraints.RemainingCacheExtent);
     }
 
+    /// <summary>
+    /// Returns the distance from the leading visible edge of this sliver to the leading edge of the
+    /// given child, in the sliver's main axis.
+    /// </summary>
+    /// <remarks>
+    /// Slivers that have children must override this; the base implementation throws the way
+    /// Flutter's debug assert does.
+    /// </remarks>
+    public virtual double ChildMainAxisPosition(RenderObject child)
+    {
+        throw new InvalidOperationException(
+            $"{GetType().Name} does not implement {nameof(ChildMainAxisPosition)}.");
+    }
+
+    /// <summary>
+    /// Returns the distance from the leading edge of this sliver's cross axis to the leading edge of
+    /// the given child.
+    /// </summary>
+    public virtual double ChildCrossAxisPosition(RenderObject child)
+    {
+        return 0.0;
+    }
+
+    /// <summary>Returns the scroll offset of the leading edge of the given child.</summary>
+    /// <remarks>Null when the child's position cannot be determined (it has not been laid out yet).</remarks>
+    public virtual double? ChildScrollOffset(RenderObject child)
+    {
+        if (!ReferenceEquals(child.Parent, this))
+        {
+            throw new ArgumentException("The child does not belong to this sliver.", nameof(child));
+        }
+
+        return 0.0;
+    }
+
     protected Rect GetMaxPaintRect()
     {
         SliverGeometry geometry = Geometry;
@@ -659,6 +694,11 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
         {
             visitor(_child);
         }
+    }
+
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return 0.0;
     }
 
     public override void Paint(PaintingContext ctx, Point offset)
@@ -1181,6 +1221,11 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
         return axis == Axis.Vertical ? size.Height : size.Width;
     }
 
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return -ConstraintsForSliver.ScrollOffset;
+    }
+
     protected static void SetChildParentData(
         RenderBox child,
         SliverConstraints constraints)
@@ -1291,6 +1336,7 @@ public sealed class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapter
     private double _lastActualScrollOffset;
     private double _effectiveScrollOffset;
     private bool _hasLayout;
+    private double _childPosition;
 
     public RenderSliverPersistentHeader(
         double minExtent,
@@ -1369,6 +1415,7 @@ public sealed class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapter
                     MaxHeight: constraints.CrossAxisExtent);
             Child.Layout(childConstraints, parentUsesSize: true);
             double extraScroll = Pinned ? 0 : Math.Max(0, currentExtent - paintExtent);
+            _childPosition = -extraScroll;
             ((BoxParentData)Child.parentData!).offset = constraints.Axis == Axis.Vertical
                 ? new Point(0, -extraScroll)
                 : new Point(-extraScroll, 0);
@@ -1383,11 +1430,52 @@ public sealed class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapter
             LayoutExtent: layoutExtent,
             MaxPaintExtent: MaxExtent,
             CacheExtent: Math.Min(MaxExtent, Math.Max(0, constraints.RemainingCacheExtent)),
+            // A pinned header holds its minimum extent at the leading edge, which a reveal has to
+            // discount from the space available to the sliver it is revealing.
+            MaxScrollObstructionExtent: Pinned ? MinExtent : 0.0,
             HasVisualOverflow: currentExtent > paintExtent || overlapsContent);
 
         LastShrinkOffset = shrinkOffset;
         LastOverlapsContent = overlapsContent;
         OnLayout?.Invoke(shrinkOffset, overlapsContent);
+    }
+
+    /// <summary>
+    /// A pinned header keeps its child at the leading edge; a scrolling or floating one shifts it by
+    /// the part of the child that has scrolled past that edge.
+    /// </summary>
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return Pinned ? 0.0 : _childPosition;
+    }
+
+    /// <summary>
+    /// A pinned header stays put, so a reveal request only has to ask the viewport for the part of
+    /// the rectangle that is not already held at the leading edge.
+    /// </summary>
+    public override void ShowOnScreen(
+        RenderObject? descendant = null,
+        Rect? rect = null,
+        TimeSpan duration = default,
+        Curve? curve = null)
+    {
+        if (!Pinned || Child is null)
+        {
+            base.ShowOnScreen(descendant, rect, duration, curve);
+            return;
+        }
+
+        Rect? localBounds = descendant != null
+            ? RenderObject.TransformRect(descendant.GetTransformTo(this), rect ?? descendant.PaintBounds)
+            : rect;
+        AxisDirection effectiveDirection =
+            PersistentHeaderReveal.EffectiveAxisDirection(ConstraintsForSliver);
+        double childExtent = ChildExtentForAxis(Child.Size, ConstraintsForSliver.Axis);
+        Rect? trimmed = PersistentHeaderReveal.TrimForPinnedHeader(
+            localBounds,
+            effectiveDirection,
+            childExtent);
+        base.ShowOnScreen(descendant: this, rect: trimmed, duration: duration, curve: curve);
     }
 
     private static void ValidateExtents(double minExtent, double maxExtent)
@@ -1403,6 +1491,8 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
 {
     private RenderSliver? _child;
     private Thickness _padding;
+    private double _beforePadding;
+    private double _crossStartPadding;
 
     public RenderSliverPadding(Thickness padding, RenderSliver? child = null)
     {
@@ -1512,6 +1602,8 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
             ResolvePadding(resolvedPadding, constraints);
         double mainAxisPadding = mainStartPadding + mainEndPadding;
         double crossAxisPadding = crossStartPadding + crossEndPadding;
+        _beforePadding = mainStartPadding;
+        _crossStartPadding = crossStartPadding;
         double remainingCacheExtent = constraints.RemainingCacheExtent > 0
             ? constraints.RemainingCacheExtent
             : constraints.RemainingPaintExtent;
@@ -1606,6 +1698,29 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
             _child.Geometry.HasVisualOverflow
             || totalScrollExtent > targetEndScrollOffsetForPaint
             || constraints.ScrollOffset > 0);
+    }
+
+    /// <summary>The main-axis padding before the child, in scroll-offset units.</summary>
+    protected double BeforePadding => _beforePadding;
+
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return CalculatePaintOffset(ConstraintsForSliver, from: 0.0, to: _beforePadding);
+    }
+
+    public override double ChildCrossAxisPosition(RenderObject child)
+    {
+        return _crossStartPadding;
+    }
+
+    public override double? ChildScrollOffset(RenderObject child)
+    {
+        if (!ReferenceEquals(child.Parent, this))
+        {
+            throw new ArgumentException("The child does not belong to this sliver.", nameof(child));
+        }
+
+        return _beforePadding;
     }
 
     protected virtual Thickness ResolvePaddingForConstraints(SliverConstraints constraints)
@@ -1838,9 +1953,28 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         return ((SliverMultiBoxAdaptorParentData)child.parentData!).Index;
     }
 
+    /// <summary>
+    /// The typed sibling of <see cref="ChildScrollOffset(RenderObject)"/>. Every child of an adaptor
+    /// sliver is laid out, so this never has to report a null offset.
+    /// </summary>
     protected double ChildScrollOffset(RenderBox child)
     {
         return ((SliverMultiBoxAdaptorParentData)child.parentData!).LayoutOffset;
+    }
+
+    public override double? ChildScrollOffset(RenderObject child)
+    {
+        if (!ReferenceEquals(child.Parent, this))
+        {
+            throw new ArgumentException("The child does not belong to this sliver.", nameof(child));
+        }
+
+        return ((SliverMultiBoxAdaptorParentData)child.parentData!).LayoutOffset;
+    }
+
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return ChildScrollOffset(child)!.Value - ConstraintsForSliver.ScrollOffset;
     }
 
     protected bool AddInitialChild(int index = 0, double layoutOffset = 0)
@@ -2453,6 +2587,11 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
         {
             childManager.SetDidUnderflow(true);
         }
+    }
+
+    public override double ChildCrossAxisPosition(RenderObject child)
+    {
+        return ((SliverGridParentData)child.parentData!).CrossAxisOffset;
     }
 
     private static void ApplyChildGeometry(

@@ -1,3 +1,4 @@
+using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
@@ -86,6 +87,27 @@ internal sealed class RenderPinnedHeaderSliver : RenderSliverSingleBoxAdapter
                 ? Child.Size.Height
                 : Child.Size.Width;
         }
+    }
+
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return 0.0;
+    }
+
+    public override void ShowOnScreen(
+        RenderObject? descendant = null,
+        Rect? rect = null,
+        TimeSpan duration = default,
+        Curve? curve = null)
+    {
+        Rect? localBounds = descendant != null
+            ? RenderObject.TransformRect(descendant.GetTransformTo(this), rect ?? descendant.PaintBounds)
+            : rect;
+        Rect? trimmed = PersistentHeaderReveal.TrimForPinnedHeader(
+            localBounds,
+            PersistentHeaderReveal.EffectiveAxisDirection(ConstraintsForSliver),
+            ChildExtent);
+        base.ShowOnScreen(descendant: this, rect: trimmed, duration: duration, curve: curve);
     }
 
     protected override void PerformSliverLayout(SliverConstraints constraints)

@@ -58,6 +58,11 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
         }
     }
 
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return 0.0;
+    }
+
     protected override void PerformSliverLayout(SliverConstraints constraints)
     {
         BoxConstraints prototypeConstraints = constraints.AsBoxConstraints();
@@ -259,6 +264,81 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
         }
     }
 
+    public override double ChildMainAxisPosition(RenderObject child)
+    {
+        return Math.Min(0.0, Geometry.PaintExtent - ChildExtent);
+    }
+
+    /// <summary>
+    /// How far a reveal request may expand this header, or null to let the enclosing viewport scroll
+    /// the request into view instead.
+    /// </summary>
+    internal PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration { get; set; }
+
+    public override void ShowOnScreen(
+        RenderObject? descendant = null,
+        Rect? rect = null,
+        TimeSpan duration = default,
+        Curve? curve = null)
+    {
+        if (ShowOnScreenConfiguration is not { } configuration || Child is null)
+        {
+            base.ShowOnScreen(descendant, rect, duration, curve);
+            return;
+        }
+
+        SliverConstraints constraints = ConstraintsForSliver;
+        double childExtent = ChildExtent;
+        Rect? childBounds = descendant != null
+            ? RenderObject.TransformRect(
+                descendant.GetTransformTo(Child),
+                rect ?? descendant.PaintBounds)
+            : rect;
+
+        AxisDirection effectiveDirection = PersistentHeaderReveal.EffectiveAxisDirection(constraints);
+        double targetExtent;
+        Rect? targetRect;
+        switch (effectiveDirection)
+        {
+            case AxisDirection.Up:
+                targetExtent = childExtent - (childBounds?.Top ?? 0.0);
+                targetRect = PersistentHeaderReveal.Trim(childBounds, bottom: childExtent);
+                break;
+            case AxisDirection.Right:
+                targetExtent = childBounds?.Right ?? childExtent;
+                targetRect = PersistentHeaderReveal.Trim(childBounds, left: 0.0);
+                break;
+            case AxisDirection.Left:
+                targetExtent = childExtent - (childBounds?.Left ?? 0.0);
+                targetRect = PersistentHeaderReveal.Trim(childBounds, right: childExtent);
+                break;
+            default:
+                targetExtent = childBounds?.Bottom ?? childExtent;
+                targetRect = PersistentHeaderReveal.Trim(childBounds, top: 0.0);
+                break;
+        }
+
+        // The header only ever grows to satisfy a reveal; it never contracts.
+        targetExtent = Math.Clamp(
+            Math.Clamp(
+                targetExtent,
+                configuration.MinShowOnScreenExtent,
+                configuration.MaxShowOnScreenExtent),
+            Geometry.PaintExtent,
+            childExtent);
+
+        if (targetExtent > Geometry.PaintExtent && !IsSnapping)
+        {
+            StartSnap(childExtent - targetExtent, ResolveSnapDuration(duration), ResolveSnapCurve(curve));
+        }
+
+        base.ShowOnScreen(
+            descendant: descendant is null ? this : Child,
+            rect: targetRect,
+            duration: duration,
+            curve: curve);
+    }
+
     internal void IsScrollingUpdate(ScrollPosition position)
     {
         if (position.IsScrollingNotifier.Value)
@@ -352,6 +432,24 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
         }
 
         _lastScrollOffset = constraints.ScrollOffset;
+    }
+
+    /// <summary>Whether a snap animation is already running towards a larger extent.</summary>
+    private bool IsSnapping => _snapController is { IsAnimating: true } && _snapEnd < _snapBegin;
+
+    private TimeSpan ResolveSnapDuration(TimeSpan requested)
+    {
+        if (requested > TimeSpan.Zero)
+        {
+            return requested;
+        }
+
+        return AnimationStyle?.Duration ?? TimeSpan.Zero;
+    }
+
+    private Curve ResolveSnapCurve(Curve? requested)
+    {
+        return requested ?? AnimationStyle?.Curve ?? Curves.Ease;
     }
 
     private void StartSnap(double target, TimeSpan duration, Curve curve)

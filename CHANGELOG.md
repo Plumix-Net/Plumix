@@ -1,5 +1,22 @@
 # Changelog
 
+- Breaking: closed the show-on-screen / reveal protocol end-to-end (`rendering/viewport.dart`,
+  `widgets/single_child_scroll_view.dart`, `widgets/scrollable.dart`, `widgets/scroll_position.dart`).
+  New core primitives: `RevealedOffset` (+ `ClampOffset`), the `IRenderAbstractViewport` contract with the
+  `RenderAbstractViewport.MaybeOf`/`Of`/`DefaultCacheExtent`/`ShowInViewport` statics,
+  `RenderObject.ShowOnScreen`/`PaintBounds`, `RenderSliver.ChildMainAxisPosition`/`ChildCrossAxisPosition`/
+  `ChildScrollOffset` with the padding/adaptor/grid/group/header overrides, `ScrollPositionAlignmentPolicy`,
+  `ScrollPosition.MoveTo`/`EnsureVisible`/`AllowImplicitScrolling`, and
+  `PersistentHeaderShowOnScreenConfiguration` (wired through `SliverFloatingHeader`). Both viewports now
+  implement `GetOffsetToReveal` and `ShowOnScreen`, pinned headers trim a reveal against their leading edge,
+  and a `SemanticsNode` with no explicit handler falls back to its render object's reveal request.
+  **Breaking:** `Scrollable.EnsureVisible` returns `Task` instead of `bool`, walks every enclosing
+  scrollable innermost-first (it used to move only the nearest one from a flat root-transform delta), takes
+  an `alignmentPolicy`, and no longer rejects an alignment outside `[0, 1]`;
+  `SemanticsOwner.PerformAction(id, ShowOnScreen)` now returns true for any node backed by a render object;
+  a pinned `RenderSliverPersistentHeader` reports `MaxScrollObstructionExtent = MinExtent`. New
+  `Ensure visible` demo page in both samples.
+
 - Breaking: closed the `Router` divergence end-to-end (`widgets/router.dart`). `RouteInformation`,
   `RouterConfig`, `Router`/`Router.WithConfig` with the `_RouterScope`/`_RouterState` transaction and
   post-frame reporting machinery, `RouteInformationParser`, `RouterDelegate`,

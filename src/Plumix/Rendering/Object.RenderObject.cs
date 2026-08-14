@@ -795,6 +795,31 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
     {
     }
 
+    /// <summary>An estimate of the bounds within which this render object will paint.</summary>
+    public virtual Rect PaintBounds => default;
+
+    /// <summary>
+    /// Attempts to make this render object (or <paramref name="descendant"/>, or
+    /// <paramref name="rect"/> in this render object's coordinate system) visible on screen.
+    /// </summary>
+    /// <remarks>
+    /// The default implementation forwards the request to the parent, substituting itself as the
+    /// descendant when none was supplied, so a leaf can simply call
+    /// <c>ShowOnScreen()</c> and every enclosing viewport gets a chance to scroll it into view.
+    /// </remarks>
+    public virtual void ShowOnScreen(
+        RenderObject? descendant = null,
+        Rect? rect = null,
+        TimeSpan duration = default,
+        Curve? curve = null)
+    {
+        Parent?.ShowOnScreen(
+            descendant: descendant ?? this,
+            rect: rect,
+            duration: duration,
+            curve: curve ?? Curves.Ease);
+    }
+
     internal bool TryGetTransformFromRoot(out Matrix transform)
     {
         RenderObject? root = Owner?.Root;

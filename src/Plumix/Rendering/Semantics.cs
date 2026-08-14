@@ -250,6 +250,29 @@ public sealed class SemanticsConfiguration
         Actions |= action;
     }
 
+    /// <summary>
+    /// An explicit handler for <see cref="SemanticsActions.ShowOnScreen"/>, which replaces the
+    /// node's default "ask my render object to reveal itself" behavior.
+    /// </summary>
+    public Action? OnShowOnScreen
+    {
+        get => _actionHandlers is not null
+               && _actionHandlers.TryGetValue(SemanticsActions.ShowOnScreen, out var handler)
+            ? handler
+            : null;
+        set
+        {
+            if (value is null)
+            {
+                _actionHandlers?.Remove(SemanticsActions.ShowOnScreen);
+                Actions &= ~SemanticsActions.ShowOnScreen;
+                return;
+            }
+
+            AddActionHandler(SemanticsActions.ShowOnScreen, value);
+        }
+    }
+
     public void AddCustomActionHandler(CustomSemanticsAction action, Action handler)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -483,6 +506,14 @@ public sealed class SemanticsNode
     }
 
     public int Id { get; }
+
+    /// <summary>
+    /// Scrolls this node into view when nothing registered an explicit
+    /// <see cref="SemanticsActions.ShowOnScreen"/> handler.
+    /// </summary>
+    /// <remarks>Flutter's private <c>SemanticsNode._showOnScreen</c>.</remarks>
+    internal Action? ShowOnScreenRequest { get; set; }
+
     public Rect Rect { get; set; }
     public string? Label { get; internal set; }
     public string? Hint { get; internal set; }
@@ -643,6 +674,14 @@ public sealed class SemanticsNode
             return true;
         }
 
+        // Flutter falls back to the node's own show-on-screen closure, so a plain list item needs no
+        // explicit handler to be scrolled into view.
+        if (action == SemanticsActions.ShowOnScreen && ShowOnScreenRequest is { } showOnScreen)
+        {
+            showOnScreen();
+            return true;
+        }
+
         return false;
     }
 
@@ -681,7 +720,12 @@ public sealed class SemanticsOwner
             return existing;
         }
 
-        var node = new SemanticsNode(++_nextNodeId);
+        var node = new SemanticsNode(++_nextNodeId)
+        {
+            // Every node backed by a render object can be asked to scroll itself into view, even
+            // when nothing registered an explicit handler.
+            ShowOnScreenRequest = () => renderObject.ShowOnScreen(),
+        };
         renderObject._semanticsNode = node;
         _nodesByRenderObject[renderObject] = node;
         return node;

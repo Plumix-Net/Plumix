@@ -697,61 +697,62 @@ public sealed class Scrollable : StatefulWidget
         return false;
     }
 
-    public static bool EnsureVisible(
+    /// <summary>
+    /// Scrolls every enclosing scrollable, innermost first, so that the render object of
+    /// <paramref name="context"/> becomes visible.
+    /// </summary>
+    /// <remarks>
+    /// Each outer scrollable reveals the render object of the scrollable inside it, while the
+    /// original target is carried along so the outer scroll keeps that target as visible as it can
+    /// (Flutter's `targetRenderObject`).
+    /// </remarks>
+    public static Task EnsureVisible(
         BuildContext context,
         double alignment = 0.0,
         TimeSpan? duration = null,
-        Curve? curve = null)
+        Curve? curve = null,
+        ScrollPositionAlignmentPolicy alignmentPolicy = ScrollPositionAlignmentPolicy.Explicit)
     {
-        if (!double.IsFinite(alignment) || alignment < 0.0 || alignment > 1.0)
+        ArgumentNullException.ThrowIfNull(context);
+        if (!double.IsFinite(alignment))
         {
-            throw new ArgumentOutOfRangeException(nameof(alignment), "Alignment must be between zero and one.");
+            throw new ArgumentOutOfRangeException(nameof(alignment), "Alignment must be finite.");
         }
         if (duration < TimeSpan.Zero)
         {
             throw new ArgumentOutOfRangeException(nameof(duration));
         }
 
+        TimeSpan effectiveDuration = duration ?? TimeSpan.Zero;
+        var futures = new List<Task>();
+        RenderObject? targetRenderObject = null;
         ScrollableState? scrollable = MaybeOf(context);
-        if (scrollable is null
-            || context.FindRenderObject() is not RenderBox target
-            || !target.HasSize
-            || scrollable.Context.FindRenderObject() is not RenderBox viewport
-            || !viewport.HasSize
-            || !target.TryGetTransformFromRoot(out Matrix targetTransform)
-            || !viewport.TryGetTransformFromRoot(out Matrix viewportTransform))
+        while (scrollable != null)
         {
-            return false;
+            if (context.FindRenderObject() is not { } renderObject)
+            {
+                break;
+            }
+
+            futures.Add(scrollable.PerformEnsureVisible(
+                renderObject,
+                alignment,
+                effectiveDuration,
+                curve,
+                alignmentPolicy,
+                targetRenderObject));
+            targetRenderObject ??= renderObject;
+
+            context = scrollable.Context;
+            scrollable = MaybeOf(context);
         }
 
-        Rect targetRect = RenderObject.TransformRect(
-            targetTransform,
-            new Rect(target.Size));
-        Rect viewportRect = RenderObject.TransformRect(
-            viewportTransform,
-            new Rect(viewport.Size));
-        bool vertical = scrollable.AxisDirection is AxisDirection.Up or AxisDirection.Down;
-        double targetStart = vertical ? targetRect.Top : targetRect.Left;
-        double targetExtent = vertical ? targetRect.Height : targetRect.Width;
-        double viewportStart = vertical ? viewportRect.Top : viewportRect.Left;
-        double viewportExtent = vertical ? viewportRect.Height : viewportRect.Width;
-        double delta = targetStart + targetExtent * alignment
-                       - (viewportStart + viewportExtent * alignment);
-        if (ScrollDirectionUtils.AxisDirectionIsReversed(scrollable.AxisDirection))
+        if (futures.Count == 0 || effectiveDuration == TimeSpan.Zero)
         {
-            delta = -delta;
+            return Task.CompletedTask;
         }
 
-        double targetPixels = scrollable.Position.Pixels + delta;
-        if (duration is { } animationDuration && animationDuration > TimeSpan.Zero)
-        {
-            scrollable.Position.AnimateTo(targetPixels, animationDuration, curve ?? Curves.Ease);
-        }
-        else
-        {
-            scrollable.Position.JumpTo(targetPixels);
-        }
-        return true;
+        return futures.Count == 1 ? futures[0] : Task.WhenAll(futures);
     }
 
     public sealed class ScrollableState : State
@@ -880,7 +881,9 @@ public sealed class Scrollable : StatefulWidget
                     child: widget.Child ?? new SizedBox(),
                     axisDirection: axisDirection,
                     offsetPixels: _position.Pixels,
-                    onViewportMetricsChanged: HandleViewportMetricsChanged)
+                    onViewportMetricsChanged: HandleViewportMetricsChanged,
+                    onMoveTo: HandleViewportMoveTo,
+                    allowImplicitScrolling: _position.AllowImplicitScrolling)
                 : new Viewport(
                     axis: widget.Axis,
                     axisDirection: axisDirection,
@@ -893,7 +896,9 @@ public sealed class Scrollable : StatefulWidget
                     anchor: widget.ShrinkWrap ? 0.0 : widget.Anchor,
                     clipBehavior: widget.ClipBehavior,
                     slivers: ResolveSlivers(widget),
-                    onViewportMetricsChanged: HandleViewportMetricsChanged);
+                    onViewportMetricsChanged: HandleViewportMetricsChanged,
+                    onMoveTo: HandleViewportMoveTo,
+                    allowImplicitScrolling: _position.AllowImplicitScrolling);
 
             bool horizontal = widget.Axis == Axis.Horizontal;
             bool vertical = widget.Axis == Axis.Vertical;
@@ -933,6 +938,36 @@ public sealed class Scrollable : StatefulWidget
                 context,
                 _configuration.BuildOverscrollIndicator(context, scrollable, details),
                 details);
+        }
+
+        /// <summary>
+        /// The viewport's hook for a reveal that has to move the offset (Flutter's
+        /// <c>ViewportOffset.moveTo</c>).
+        /// </summary>
+        private void HandleViewportMoveTo(double pixels, TimeSpan duration, Curve curve)
+        {
+            _position.MoveTo(pixels, duration == TimeSpan.Zero ? null : duration, curve);
+        }
+
+        /// <summary>
+        /// Reveals <paramref name="renderObject"/> in this scrollable. Flutter's two-dimensional
+        /// scrollables override this to drive both of their positions.
+        /// </summary>
+        internal Task PerformEnsureVisible(
+            RenderObject renderObject,
+            double alignment,
+            TimeSpan duration,
+            Curve? curve,
+            ScrollPositionAlignmentPolicy alignmentPolicy,
+            RenderObject? targetRenderObject)
+        {
+            return _position.EnsureVisible(
+                renderObject,
+                alignment,
+                duration,
+                curve,
+                alignmentPolicy,
+                targetRenderObject);
         }
 
         private IReadOnlyList<Widget> ResolveSlivers(Scrollable widget)
@@ -1319,8 +1354,12 @@ public sealed class Viewport : MultiChildRenderObjectWidget
         ViewportMetricsChangedCallback? onViewportMetricsChanged = null,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge,
-        ScrollDirection userScrollDirection = ScrollDirection.Idle) : base(slivers, key)
+        ScrollDirection userScrollDirection = ScrollDirection.Idle,
+        ViewportMoveToCallback? onMoveTo = null,
+        bool allowImplicitScrolling = true) : base(slivers, key)
     {
+        OnMoveTo = onMoveTo;
+        AllowImplicitScrolling = allowImplicitScrolling;
         Axis = axis;
         AxisDirection = axisDirection;
         GrowthDirection = growthDirection;
@@ -1356,6 +1395,12 @@ public sealed class Viewport : MultiChildRenderObjectWidget
 
     public ViewportMetricsChangedCallback? OnViewportMetricsChanged { get; }
 
+    /// <summary>The hook a reveal uses to move the owning scroll position.</summary>
+    public ViewportMoveToCallback? OnMoveTo { get; }
+
+    /// <summary>Whether a show-on-screen request may scroll this viewport.</summary>
+    public bool AllowImplicitScrolling { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderViewport(
@@ -1369,12 +1414,18 @@ public sealed class Viewport : MultiChildRenderObjectWidget
             shrinkWrap: ShrinkWrap,
             anchor: Anchor,
             clipBehavior: ClipBehavior,
-            onViewportMetricsChanged: OnViewportMetricsChanged);
+            onViewportMetricsChanged: OnViewportMetricsChanged)
+        {
+            OnMoveTo = OnMoveTo,
+            AllowImplicitScrolling = AllowImplicitScrolling,
+        };
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderViewport)renderObject;
+        viewport.OnMoveTo = OnMoveTo;
+        viewport.AllowImplicitScrolling = AllowImplicitScrolling;
         viewport.Axis = Axis;
         viewport.AxisDirection = AxisDirection;
         viewport.GrowthDirection = GrowthDirection;
@@ -1395,21 +1446,31 @@ internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
         Widget child,
         AxisDirection axisDirection,
         double offsetPixels,
-        ViewportMetricsChangedCallback? onViewportMetricsChanged = null) : base(child)
+        ViewportMetricsChangedCallback? onViewportMetricsChanged = null,
+        ViewportMoveToCallback? onMoveTo = null,
+        bool allowImplicitScrolling = true) : base(child)
     {
         AxisDirection = axisDirection;
         OffsetPixels = offsetPixels;
         OnViewportMetricsChanged = onViewportMetricsChanged;
+        OnMoveTo = onMoveTo;
+        AllowImplicitScrolling = allowImplicitScrolling;
     }
 
     public AxisDirection AxisDirection { get; }
     public double OffsetPixels { get; }
     public ViewportMetricsChangedCallback? OnViewportMetricsChanged { get; }
+    public ViewportMoveToCallback? OnMoveTo { get; }
+    public bool AllowImplicitScrolling { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSingleChildViewport(
         axisDirection: AxisDirection,
         offsetPixels: OffsetPixels,
-        onViewportMetricsChanged: OnViewportMetricsChanged);
+        onViewportMetricsChanged: OnViewportMetricsChanged)
+    {
+        OnMoveTo = OnMoveTo,
+        AllowImplicitScrolling = AllowImplicitScrolling,
+    };
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
@@ -1417,6 +1478,8 @@ internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
         viewport.AxisDirection = AxisDirection;
         viewport.OffsetPixels = OffsetPixels;
         viewport.OnViewportMetricsChanged = OnViewportMetricsChanged;
+        viewport.OnMoveTo = OnMoveTo;
+        viewport.AllowImplicitScrolling = AllowImplicitScrolling;
     }
 }
 

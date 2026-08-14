@@ -226,7 +226,10 @@ public sealed class SemanticsTreeTests
         Assert.True(node.Actions.HasFlag(SemanticsActions.LongPress));
         Assert.True(pipeline.SemanticsOwner.PerformAction(node.Id, SemanticsActions.LongPress));
         Assert.Equal(1, longPressCount);
-        Assert.False(pipeline.SemanticsOwner.PerformAction(node.Id, SemanticsActions.ShowOnScreen));
+        // Every node backed by a render object accepts ShowOnScreen: with no explicit handler it
+        // falls back to the render object's own reveal request, which bubbles to the nearest
+        // viewport (there is none here, so nothing moves).
+        Assert.True(pipeline.SemanticsOwner.PerformAction(node.Id, SemanticsActions.ShowOnScreen));
     }
 
     [Fact]
