@@ -175,10 +175,11 @@ public sealed class ContextMenuController
                     children: [_builder(context)]));
         }
 
-        public override void DidPop(Route? previousRoute)
+        public override bool DidPop(object? result)
         {
-            base.DidPop(previousRoute);
+            bool returnValue = base.DidPop(result);
             NotifyRemoved();
+            return returnValue;
         }
 
         public override void Dispose()

@@ -612,7 +612,7 @@ public class SearchAnchor : StatefulWidget
             base.DidPush();
         }
 
-        public override void DidPop(Route? previousRoute)
+        public override bool DidPop(object? result)
         {
             BuildContext? anchorContext = _anchorKey.CurrentContext;
             if (anchorContext.HasValue)
@@ -630,7 +630,7 @@ public class SearchAnchor : StatefulWidget
                     FocusScope.MaybeOf(context.Value)?.Unfocus();
                 }
             });
-            base.DidPop(previousRoute);
+            return base.DidPop(result);
         }
 
         internal void Dismiss(bool disposeController)

@@ -76,6 +76,7 @@ import 'demos/material/navigation_drawer_demo_page.dart';
 import 'demos/material/segmented_buttons_demo_page.dart';
 import 'demos/material/chips_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
+import 'demos/general/navigator_pages_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
 import 'demos/general/baseline_demo_page.dart';
 import 'demos/general/rich_text_demo_page.dart';
@@ -456,6 +457,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Navigator',
           subtitle: 'named routes + RouteData + stack APIs',
           builder: () => const NavigatorDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.navigatorPages,
+          title: 'Navigator.pages',
+          subtitle: 'declarative pages + transition delegate',
+          builder: () => const NavigatorPagesDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.listViewSeparated,

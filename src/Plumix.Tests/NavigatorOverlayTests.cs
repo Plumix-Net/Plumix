@@ -142,7 +142,8 @@ public sealed class NavigatorOverlayTests : IDisposable
         var root = new ProbeRoute("root", transitionDuration: TimeSpan.FromMilliseconds(200));
         using var harness = new Harness(new Navigator(initialRoute: root));
 
-        Assert.Equal(AnimationStatus.Forward, root.Animation.Status);
+        // Initial routes are added, not pushed, so their transition starts at its end value.
+        Assert.Equal(AnimationStatus.Completed, root.Animation.Status);
 
         root.Offstage = true;
         harness.Pump();
@@ -155,7 +156,7 @@ public sealed class NavigatorOverlayTests : IDisposable
         root.Offstage = false;
         harness.Pump();
 
-        Assert.Equal(AnimationStatus.Forward, root.Animation.Status);
+        Assert.Equal(AnimationStatus.Completed, root.Animation.Status);
         Assert.False(harness.FindOffstage()!.Offstage);
     }
 

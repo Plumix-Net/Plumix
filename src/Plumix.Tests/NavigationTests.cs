@@ -944,7 +944,8 @@ public sealed class NavigationTests
                 "push:/a:/",
                 "push:/b:/a",
                 "push:/target:/b",
-                "remove:/b:/a",
+                // `previousRoute` skips routes that are themselves leaving, so both removals report `/`.
+                "remove:/b:/",
                 "remove:/a:/"
             ],
             observer.Events);

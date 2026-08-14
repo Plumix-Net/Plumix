@@ -15,6 +15,7 @@ class SampleRoutes {
   static const String blocCounter = '/bloc-counter';
   static const String navigator = '/navigator';
   static const String navigatorDetails = '/navigator/details';
+  static const String navigatorPages = '/navigator-pages';
   static const String listViewSeparated = '/list-separated';
   static const String listViewFixedExtent = '/list-fixed-extent';
   static const String scrollPhysics = '/scroll-physics';

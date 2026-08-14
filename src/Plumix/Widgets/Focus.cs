@@ -374,6 +374,68 @@ public sealed class FocusScopeNode : FocusNode
         FocusedChild = node;
     }
 
+    /// <summary>
+    /// Flutter's <c>FocusScopeNode.setFirstFocus</c>: makes <paramref name="scope"/> the scope that receives
+    /// focus when this scope is focused. If this scope already has focus, focus moves into
+    /// <paramref name="scope"/> immediately; otherwise the scope is only recorded as the focused child, so it
+    /// receives focus the next time this scope does.
+    /// </summary>
+    public void SetFirstFocus(FocusScopeNode scope)
+    {
+        ArgumentNullException.ThrowIfNull(scope);
+        if (ReferenceEquals(scope, this))
+        {
+            throw new ArgumentException("Unexpected self-reference in SetFirstFocus.", nameof(scope));
+        }
+
+        if (scope.Scope is null)
+        {
+            (Manager ?? FocusManager.Instance).RegisterNode(scope, this);
+        }
+
+        if (HasFocusInScope)
+        {
+            scope.RequestFirstFocus();
+            return;
+        }
+
+        scope.SetAsFocusedChildForScope();
+    }
+
+    /// <summary>
+    /// Flutter's <c>_doRequestFocus(findFirstFocus: true)</c>: descends the focused-child chain and focuses the
+    /// deepest node that can take focus, falling back to this scope.
+    /// </summary>
+    internal bool RequestFirstFocus()
+    {
+        FocusNode target = this;
+        while (target is FocusScopeNode scope && scope.FocusedChild is { } child)
+        {
+            if (ReferenceEquals(child, target))
+            {
+                break;
+            }
+
+            target = child;
+        }
+
+        return target.CanRequestFocus ? target.RequestFocus() : RequestFocus();
+    }
+
+    /// <summary>
+    /// Flutter's <c>FocusNode._setAsFocusedChildForScope</c>: records this node as the focused child of every
+    /// enclosing scope, so focusing an ancestor scope walks back down to this node.
+    /// </summary>
+    internal void SetAsFocusedChildForScope()
+    {
+        FocusNode node = this;
+        for (FocusScopeNode? ancestor = Scope; ancestor is not null; ancestor = ancestor.Scope)
+        {
+            ancestor.SetFocusedChild(node);
+            node = ancestor;
+        }
+    }
+
     internal void ResetForTests()
     {
         _members.Clear();
@@ -910,8 +972,11 @@ public sealed class FocusManager
     /// </summary>
     private static List<FocusNode> CollectScopeCandidates(FocusScopeNode scope, FocusNode currentNode)
     {
+        // A member whose traversal group was declared above this scope (for example the group the navigator
+        // installs around every route) is collected here: the group itself is expanded in the scope that owns
+        // it, so leaving those members out would drop the whole nested scope from traversal.
         var directMembers = scope.Members
-            .Where(candidate => candidate.TraversalGroup == null)
+            .Where(candidate => candidate.TraversalGroup is null || !scope.Members.Contains(candidate.TraversalGroup))
             .Where(candidate => candidate is FocusScopeNode nested
                 ? nested.CanRequestFocus && !nested.SkipTraversal
                 : IsTraversalCandidate(candidate, currentNode))
@@ -1234,7 +1299,28 @@ public sealed class FocusScope : StatefulWidget
         SkipTraversal = skipTraversal;
     }
 
+    private FocusScope(FocusScopeNode focusScopeNode, Widget child, Key? key) : base(key)
+    {
+        Child = child;
+        FocusScopeNode = focusScopeNode;
+        NodeIsAuthoritative = true;
+    }
+
+    /// <summary>
+    /// Flutter's <c>FocusScope.withExternalFocusNode</c>: the supplied node is the source of truth for
+    /// <see cref="Focus.CanRequestFocus"/> and <see cref="Focus.SkipTraversal"/>, so the widget never writes
+    /// them back and imperative changes on the node survive a rebuild.
+    /// </summary>
+    public static FocusScope WithExternalFocusNode(FocusScopeNode focusScopeNode, Widget child, Key? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(focusScopeNode);
+        return new FocusScope(focusScopeNode, child, key);
+    }
+
     public Widget Child { get; }
+
+    /// <summary>Whether the node carries the configuration instead of this widget.</summary>
+    internal bool NodeIsAuthoritative { get; }
 
     public FocusScopeNode? FocusScopeNode { get; }
 
@@ -1346,6 +1432,11 @@ public sealed class FocusScope : StatefulWidget
 
         private void ApplyWidgetConfiguration()
         {
+            if (Widget.NodeIsAuthoritative)
+            {
+                return;
+            }
+
             var node = _scopeNode!;
             node.CanRequestFocus = Widget.CanRequestFocus;
             node.SkipTraversal = Widget.SkipTraversal;
@@ -1625,6 +1716,10 @@ public sealed class Focus : StatefulWidget
             node.OnTextSelectionChanged = Widget.OnTextSelectionChanged;
         }
 
+        /// <summary>
+        /// Flutter's <c>FocusScopeNode.autofocus</c>: an autofocus request only takes effect while nothing else
+        /// in the enclosing scope holds focus, so a node deeper in the tree keeps the focus it already claimed.
+        /// </summary>
         private void ApplyAutofocusIfNeeded()
         {
             if (!Widget.Autofocus || _autofocusApplied)
@@ -1633,7 +1728,12 @@ public sealed class Focus : StatefulWidget
             }
 
             _autofocusApplied = true;
-            _focusNode!.RequestFocus();
+            if (_focusNode!.Scope?.FocusedChild is not null)
+            {
+                return;
+            }
+
+            _focusNode.RequestFocus();
         }
 
         private void HandleFocusChanged()

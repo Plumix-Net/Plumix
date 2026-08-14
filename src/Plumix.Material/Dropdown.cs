@@ -504,7 +504,7 @@ internal sealed class DropdownRoute<T> : PageRoute
         bool menuBelowAnchor = false,
         Color? shadowColor = null,
         BorderSide? side = null,
-        Thickness? menuPadding = null) : base()
+        Thickness? menuPadding = null) : base(requestFocus: requestFocus)
     {
         _items = items;
         _theme = Theme.Of(context);
@@ -527,7 +527,6 @@ internal sealed class DropdownRoute<T> : PageRoute
         BorderRadius = borderRadius;
         BarrierDismissible = barrierDismissible;
         MouseCursor = mouseCursor;
-        RequestFocus = requestFocus;
         CloseOnSelect = closeOnSelect;
         MenuBelowAnchor = menuBelowAnchor;
         ShadowColor = shadowColor;
@@ -596,7 +595,7 @@ internal sealed class DropdownRoute<T> : PageRoute
             [
                 new Positioned(left: 0, top: 0, right: 0, bottom: 0, child: menu),
             ]);
-        if (RequestFocus ?? true) page = new Focus(autofocus: true, onKeyEvent: HandleKeyEvent, child: page);
+        if (RequestFocus) page = new Focus(autofocus: true, onKeyEvent: HandleKeyEvent, child: page);
         page = new MediaQuery(_mediaQuery, page);
         return new Directionality(_direction, page);
     }

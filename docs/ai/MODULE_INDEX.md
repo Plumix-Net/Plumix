@@ -337,14 +337,19 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 
 ### Navigation
 
-- Goal: route stack operations, named routes, observers, back handling, hero flights.
+- Goal: route stack operations, named routes, declarative pages, observers, back handling, hero flights.
 - Read First:
-  - `src/Plumix/Widgets/Navigation.cs`
+  - `src/Plumix/Widgets/Navigation.cs` (routes, `Navigator` widget, modal scope)
+  - `src/Plumix/Widgets/Navigation.NavigatorState.cs` (history flush, imperative API, `_updatePages`)
+  - `src/Plumix/Widgets/Navigation.RouteEntry.cs` (`RouteLifecycle`, `RouteEntry`, `Page`, `TransitionDelegate`)
+  - `src/Plumix/Widgets/Navigation.Restoration.cs` (route restoration information and history property)
   - `src/Plumix/Widgets/Hero.cs`
   - `src/Sample/Plumix.Sample/Demos/General/NavigatorDemoPage.cs`
   - `src/Sample/Plumix.Sample/SampleGalleryScreen.cs`
 - Primary Tests:
   - `src/Plumix.Tests/NavigationTests.cs`
+  - `src/Plumix.Tests/NavigatorPagesTests.cs`
+  - `src/Plumix.Tests/ModalRouteAspectTests.cs`
   - `src/Plumix.Tests/HeroNavigatorTests.cs`
 
 ### Scroll and Slivers

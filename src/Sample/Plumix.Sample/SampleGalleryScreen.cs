@@ -22,6 +22,7 @@ internal static class SampleRoutes
     public const string Counter = "/counter";
     public const string BlocCounter = "/bloc-counter";
     public const string Navigator = "/navigator";
+    public const string NavigatorPages = "/navigator-pages";
     public const string NavigatorDetails = "/navigator/details";
     public const string ListViewSeparated = "/list-separated";
     public const string ListViewFixedExtent = "/list-fixed-extent";
@@ -226,6 +227,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Counter, "Counter", "existing sample", () => new CounterScreen()),
         new(SampleRoutes.BlocCounter, "Bloc counter", "BlocProvider + BlocBuilder + BlocListener + BlocSelector", () => new BlocCounterDemoPage()),
         new(SampleRoutes.Navigator, "Navigator", "named routes + RouteData + stack APIs", () => new NavigatorDemoPage()),
+        new(
+            SampleRoutes.NavigatorPages,
+            "Navigator.Pages",
+            "declarative pages + transition delegate",
+            () => new NavigatorPagesDemoPage()),
         new(SampleRoutes.ListViewSeparated, "ListView.Separated", "item + separator builder", () => new ListViewSeparatedDemoPage()),
         new(SampleRoutes.ListViewFixedExtent, "ListView fixed extent", "itemExtent + padding", () => new ListViewFixedExtentDemoPage()),
         new(SampleRoutes.ListViewReverse, "ListView reverse", "reverse=true behavior", () => new ListViewReverseDemoPage()),

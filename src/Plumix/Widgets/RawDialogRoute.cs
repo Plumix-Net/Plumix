@@ -36,7 +36,7 @@ public class RawDialogRoute<T> : PopupRoute
         Point? anchorPoint = null,
         TraversalEdgeBehavior? traversalEdgeBehavior = null,
         TraversalEdgeBehavior? directionalTraversalEdgeBehavior = null,
-        bool fullscreenDialog = false) : base(settings)
+        bool fullscreenDialog = false) : base(settings, requestFocus: requestFocus)
     {
         _pageBuilder = pageBuilder ?? throw new ArgumentNullException(nameof(pageBuilder));
         _barrierDismissible = barrierDismissible;
@@ -46,7 +46,6 @@ public class RawDialogRoute<T> : PopupRoute
         _barrierColor = barrierColor ?? DefaultBarrierColor;
         _transitionDuration = transitionDuration ?? TimeSpan.FromMilliseconds(200);
         _transitionBuilder = transitionBuilder;
-        RequestFocus = requestFocus;
         AnchorPoint = anchorPoint;
         TraversalEdgeBehavior = traversalEdgeBehavior;
         DirectionalTraversalEdgeBehavior = directionalTraversalEdgeBehavior;

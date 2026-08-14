@@ -352,7 +352,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/framework.dart` | `src/Plumix/Widgets/Framework.BuildOwner.cs`<br>`src/Plumix/Widgets/Framework.Element.cs`<br>`src/Plumix/Widgets/Framework.RenderObject.cs`<br>`src/Plumix/Widgets/Framework.Widget.cs`<br>`src/Plumix/Widgets/Framework.cs` | — | — |
 | `widgets/gesture_detector.dart` | `src/Plumix/Widgets/Gestures.cs` | — | — |
 | `widgets/grid_paper.dart` | `src/Plumix/Widgets/GridPaper.cs` | — | — |
-| `widgets/heroes.dart` | `src/Plumix/Widgets/Hero.cs` | `src/Plumix.Tests/HeroNavigatorTests.cs` | — |
+| `widgets/heroes.dart` | `src/Plumix/Widgets/Hero.cs`<br>`src/Plumix/Widgets/Navigation.NavigatorState.Hero.cs` | `src/Plumix.Tests/HeroNavigatorTests.cs` | — |
 | `widgets/icon.dart` | `src/Plumix/Widgets/Icon.cs` | `src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs` | `dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs` |
 | `widgets/icon_data.dart` | `src/Plumix/Widgets/Icon.cs` | `src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs` | `dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs` |
 | `widgets/icon_theme.dart` | `src/Plumix/Widgets/IconTheme.cs` | — | — |
@@ -371,7 +371,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/media_query.dart` | `src/Plumix/Widgets/MediaQuery.cs` | — | — |
 | `widgets/modal_barrier.dart` | `src/Plumix/Widgets/ModalBarrier.cs` | `src/Plumix.Tests/ModalBarrierTests.cs` | — |
 | `widgets/navigation_toolbar.dart` | `src/Plumix/Widgets/NavigationToolbar.cs` | — | — |
-| `widgets/navigator.dart` | `src/Plumix/Widgets/Navigation.cs` | `src/Plumix.Tests/MaterialBottomNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialNavigationSurfacesTests.cs`<br>`src/Plumix.Tests/NavigationTests.cs` | `dart_sample/lib/demos/general/navigation_pop_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_surfaces_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/NavigationPopDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationSurfacesDemoPage.cs` |
+| `widgets/navigator.dart` | `src/Plumix/Widgets/Navigation.NavigatorState.cs`<br>`src/Plumix/Widgets/Navigation.Restoration.cs`<br>`src/Plumix/Widgets/Navigation.RouteEntry.cs`<br>`src/Plumix/Widgets/Navigation.cs` | `src/Plumix.Tests/MaterialBottomNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialNavigationSurfacesTests.cs`<br>`src/Plumix.Tests/NavigationTests.cs` | `dart_sample/lib/demos/general/navigation_pop_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_surfaces_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/NavigationPopDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationSurfacesDemoPage.cs` |
 | `widgets/navigator_pop_handler.dart` | `src/Plumix/Widgets/PopScope.cs` | `src/Plumix.Tests/PopScopeTests.cs` | — |
 | `widgets/notification_listener.dart` | `src/Plumix/Widgets/Notifications.cs` | — | — |
 | `widgets/orientation_builder.dart` | `src/Plumix/Widgets/OrientationBuilder.cs` | — | — |
@@ -464,7 +464,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 ## Summary
 
 - Flutter files mapped: 420
-- C# files carrying a marker: 528
+- C# files carrying a marker: 532
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 0
 
