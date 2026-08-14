@@ -57,7 +57,14 @@ public readonly record struct SliverGeometry(
     bool HasVisualOverflow = false,
     double PaintOrigin = 0,
     double MaxScrollObstructionExtent = 0,
-    double? CrossAxisExtent = null);
+    double? CrossAxisExtent = null)
+{
+    /// <summary>
+    /// Whether this sliver should be painted. Flutter lets a sliver override the value; Plumix derives
+    /// it from <see cref="PaintExtent"/>, which is Flutter's default (<c>visible: paintExtent &gt; 0</c>).
+    /// </summary>
+    public bool Visible => PaintExtent > 0.0;
+}
 
 /// <summary>
 /// Maps a variable-extent sliver's child indexes to the current viewport geometry.
@@ -462,7 +469,20 @@ public abstract class RenderSliver : RenderBox
     public SliverConstraints ConstraintsForSliver =>
         _sliverConstraints ?? throw new InvalidOperationException("RenderSliver is not laid out.");
 
+    /// <summary>
+    /// Whether this sliver has been laid out at least once, so <see cref="ConstraintsForSliver"/> and
+    /// <see cref="Geometry"/> are meaningful. Stands in for Flutter's <c>geometry != null</c> check.
+    /// </summary>
+    public bool HasSliverConstraints => _sliverConstraints.HasValue;
+
     public SliverGeometry Geometry { get; protected set; }
+
+    /// <summary>
+    /// Whether this sliver keeps contributing semantics even when it is scrolled entirely outside the
+    /// viewport's paint and cache extents.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderSliver.ensureSemantics</c>. Defaults to <c>false</c>.</remarks>
+    public virtual bool EnsureSemantics => false;
 
     public void LayoutWithSliverConstraints(SliverConstraints constraints)
     {

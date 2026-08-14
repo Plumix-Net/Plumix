@@ -86,6 +86,12 @@ public enum SemanticsFlags
     IsCheckStateMixed = 1 << 22,
     HasEnabledState = 1 << 23,
     HasSelectedState = 1 << 24,
+
+    /// <summary>
+    /// Whether the platform may scroll this node implicitly (for example when accessibility focus
+    /// moves onto an offscreen descendant) instead of only through the explicit scroll actions.
+    /// </summary>
+    HasImplicitScrolling = 1 << 25,
 }
 
 [Flags]
@@ -103,7 +109,25 @@ public enum SemanticsActions
     Focus = 1 << 8,
     Dismiss = 1 << 9,
     ShowOnScreen = 1 << 10,
+
+    /// <summary>
+    /// Move a scrollable to an absolute offset. The action argument carries the target offset.
+    /// </summary>
+    ScrollToOffset = 1 << 11,
 }
+
+/// <summary>
+/// Signature for a semantics action handler. <paramref name="args"/> is <c>null</c> for the
+/// argument-less actions and carries the action's payload otherwise.
+/// </summary>
+/// <remarks>Flutter's <c>SemanticsActionHandler</c>.</remarks>
+public delegate void SemanticsActionHandler(object? args);
+
+/// <summary>
+/// Signature for <see cref="SemanticsConfiguration.OnScrollToOffset"/>.
+/// </summary>
+/// <remarks>Flutter's <c>ScrollToOffsetHandler</c>.</remarks>
+public delegate void ScrollToOffsetHandler(Point targetOffset);
 
 public sealed record CustomSemanticsAction
 {
@@ -225,29 +249,148 @@ public sealed class SemanticsConfiguration
         _tagsForChildren.Add(tag);
     }
 
-    private Dictionary<SemanticsActions, Action>? _actionHandlers;
+    private Dictionary<SemanticsActions, SemanticsActionHandler>? _actionHandlers;
     private Dictionary<CustomSemanticsAction, Action>? _customActionHandlers;
     internal bool HasActionHandlers => _actionHandlers is { Count: > 0 };
     internal bool HasCustomActionHandlers => _customActionHandlers is { Count: > 0 };
-    internal IReadOnlyDictionary<SemanticsActions, Action> ActionHandlers => _actionHandlers ?? EmptyHandlers;
+    internal IReadOnlyDictionary<SemanticsActions, SemanticsActionHandler> ActionHandlers =>
+        _actionHandlers ?? EmptyHandlers;
     internal IReadOnlyDictionary<CustomSemanticsAction, Action> CustomActionHandlers =>
         _customActionHandlers ?? EmptyCustomHandlers;
 
-    private static readonly IReadOnlyDictionary<SemanticsActions, Action> EmptyHandlers =
-        new Dictionary<SemanticsActions, Action>();
+    private static readonly IReadOnlyDictionary<SemanticsActions, SemanticsActionHandler> EmptyHandlers =
+        new Dictionary<SemanticsActions, SemanticsActionHandler>();
     private static readonly IReadOnlyDictionary<CustomSemanticsAction, Action> EmptyCustomHandlers =
         new Dictionary<CustomSemanticsAction, Action>();
 
+    /// <remarks>Flutter's <c>SemanticsConfiguration._addArgumentlessAction</c>.</remarks>
     public void AddActionHandler(SemanticsActions action, Action handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        AddActionHandler(action, _ => handler());
+    }
+
+    /// <remarks>Flutter's <c>SemanticsConfiguration._addAction</c>.</remarks>
+    public void AddActionHandler(SemanticsActions action, SemanticsActionHandler handler)
     {
         if (action == SemanticsActions.None)
         {
             throw new ArgumentException("Action handler cannot be registered for SemanticsActions.None.");
         }
 
+        ArgumentNullException.ThrowIfNull(handler);
         _actionHandlers ??= [];
         _actionHandlers[action] = handler;
         Actions |= action;
+    }
+
+    /// <summary>
+    /// The current scroll position in logical pixels, or <c>null</c> when this configuration does not
+    /// describe a scrollable. <see cref="ScrollExtentMin"/> and <see cref="ScrollExtentMax"/> bound it.
+    /// </summary>
+    public double? ScrollPosition { get; set; }
+
+    /// <summary>The maximum in-range value for <see cref="ScrollPosition"/>.</summary>
+    public double? ScrollExtentMax { get; set; }
+
+    /// <summary>The minimum in-range value for <see cref="ScrollPosition"/>.</summary>
+    public double? ScrollExtentMin { get; set; }
+
+    /// <summary>
+    /// The total number of scrollable children, or <c>null</c> when the count is unknown or unbounded.
+    /// </summary>
+    public int? ScrollChildCount { get; set; }
+
+    /// <summary>The index of the first visible scrollable child.</summary>
+    public int? ScrollIndex { get; set; }
+
+    /// <summary>
+    /// Whether the platform may scroll this node without an explicit scroll action, for example to
+    /// follow accessibility focus onto an offscreen child.
+    /// </summary>
+    public bool HasImplicitScrolling
+    {
+        get => Flags.HasFlag(SemanticsFlags.HasImplicitScrolling);
+        set => Flags = value
+            ? Flags | SemanticsFlags.HasImplicitScrolling
+            : Flags & ~SemanticsFlags.HasImplicitScrolling;
+    }
+
+    public Action? OnScrollLeft
+    {
+        get => _onScrollLeft;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.ScrollLeft, value);
+            _onScrollLeft = value;
+        }
+    }
+
+    public Action? OnScrollRight
+    {
+        get => _onScrollRight;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.ScrollRight, value);
+            _onScrollRight = value;
+        }
+    }
+
+    public Action? OnScrollUp
+    {
+        get => _onScrollUp;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.ScrollUp, value);
+            _onScrollUp = value;
+        }
+    }
+
+    public Action? OnScrollDown
+    {
+        get => _onScrollDown;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.ScrollDown, value);
+            _onScrollDown = value;
+        }
+    }
+
+    /// <summary>
+    /// Moves the scrollable to an absolute offset. The action argument is the target
+    /// <see cref="Point"/> (a host bridge may also pass a two-element <c>double</c> list).
+    /// </summary>
+    public ScrollToOffsetHandler? OnScrollToOffset
+    {
+        get => _onScrollToOffset;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.ScrollToOffset, args => value(ResolveOffsetArgument(args)));
+            _onScrollToOffset = value;
+        }
+    }
+
+    private Action? _onScrollLeft;
+    private Action? _onScrollRight;
+    private Action? _onScrollUp;
+    private Action? _onScrollDown;
+    private ScrollToOffsetHandler? _onScrollToOffset;
+
+    private static Point ResolveOffsetArgument(object? args)
+    {
+        return args switch
+        {
+            Point point => point,
+            IReadOnlyList<double> { Count: >= 2 } list => new Point(list[0], list[1]),
+            _ => throw new ArgumentException(
+                "SemanticsActions.ScrollToOffset requires a Point or a two-element double list.",
+                nameof(args))
+        };
     }
 
     /// <summary>
@@ -256,12 +399,10 @@ public sealed class SemanticsConfiguration
     /// </summary>
     public Action? OnShowOnScreen
     {
-        get => _actionHandlers is not null
-               && _actionHandlers.TryGetValue(SemanticsActions.ShowOnScreen, out var handler)
-            ? handler
-            : null;
+        get => _onShowOnScreen;
         set
         {
+            _onShowOnScreen = value;
             if (value is null)
             {
                 _actionHandlers?.Remove(SemanticsActions.ShowOnScreen);
@@ -273,6 +414,8 @@ public sealed class SemanticsConfiguration
         }
     }
 
+    private Action? _onShowOnScreen;
+
     public void AddCustomActionHandler(CustomSemanticsAction action, Action handler)
     {
         ArgumentNullException.ThrowIfNull(action);
@@ -281,7 +424,7 @@ public sealed class SemanticsConfiguration
         _customActionHandlers[action] = handler;
     }
 
-    internal void ReplaceActionHandlers(Dictionary<SemanticsActions, Action> handlers)
+    internal void ReplaceActionHandlers(Dictionary<SemanticsActions, SemanticsActionHandler> handlers)
     {
         _actionHandlers = handlers.Count == 0 ? null : handlers;
     }
@@ -318,7 +461,18 @@ public sealed class SemanticsConfiguration
             Actions = Actions,
             ExplicitRect = ExplicitRect,
             IndexInParent = IndexInParent,
-            SortKey = SortKey
+            SortKey = SortKey,
+            ScrollPosition = ScrollPosition,
+            ScrollExtentMax = ScrollExtentMax,
+            ScrollExtentMin = ScrollExtentMin,
+            ScrollChildCount = ScrollChildCount,
+            ScrollIndex = ScrollIndex,
+            _onScrollLeft = _onScrollLeft,
+            _onScrollRight = _onScrollRight,
+            _onScrollUp = _onScrollUp,
+            _onScrollDown = _onScrollDown,
+            _onScrollToOffset = _onScrollToOffset,
+            _onShowOnScreen = _onShowOnScreen
         };
 
         if (_tagsForChildren is { Count: > 0 })
@@ -328,7 +482,7 @@ public sealed class SemanticsConfiguration
 
         if (_actionHandlers is { Count: > 0 })
         {
-            clone._actionHandlers = new Dictionary<SemanticsActions, Action>(_actionHandlers);
+            clone._actionHandlers = new Dictionary<SemanticsActions, SemanticsActionHandler>(_actionHandlers);
         }
 
         if (_customActionHandlers is { Count: > 0 })
@@ -344,7 +498,16 @@ public sealed class SemanticsConfiguration
         Actions = SemanticsActions.None;
         _actionHandlers = null;
         _customActionHandlers = null;
+        _onScrollLeft = null;
+        _onScrollRight = null;
+        _onScrollUp = null;
+        _onScrollDown = null;
+        _onScrollToOffset = null;
+        _onShowOnScreen = null;
     }
+
+    /// <summary>The shared empty configuration Flutter calls <c>_kEmptyConfig</c>.</summary>
+    internal static SemanticsConfiguration Empty { get; } = new();
 
     internal bool HasBeenAnnotated =>
         !string.IsNullOrWhiteSpace(Label)
@@ -362,6 +525,11 @@ public sealed class SemanticsConfiguration
         || Flags != SemanticsFlags.None
         || Actions != SemanticsActions.None
         || IndexInParent.HasValue
+        || ScrollPosition.HasValue
+        || ScrollExtentMax.HasValue
+        || ScrollExtentMin.HasValue
+        || ScrollChildCount.HasValue
+        || ScrollIndex.HasValue
         || HasActionHandlers
         || HasCustomActionHandlers;
 
@@ -426,6 +594,17 @@ public sealed class SemanticsConfiguration
         Actions |= child.Actions;
         IndexInParent ??= child.IndexInParent;
         SortKey ??= child.SortKey;
+        ScrollPosition ??= child.ScrollPosition;
+        ScrollExtentMax ??= child.ScrollExtentMax;
+        ScrollExtentMin ??= child.ScrollExtentMin;
+        ScrollChildCount ??= child.ScrollChildCount;
+        ScrollIndex ??= child.ScrollIndex;
+        _onScrollLeft ??= child._onScrollLeft;
+        _onScrollRight ??= child._onScrollRight;
+        _onScrollUp ??= child._onScrollUp;
+        _onScrollDown ??= child._onScrollDown;
+        _onScrollToOffset ??= child._onScrollToOffset;
+        _onShowOnScreen ??= child._onShowOnScreen;
         if (Role == SemanticsRole.None)
         {
             Role = child.Role;
@@ -497,7 +676,7 @@ public sealed class SemanticsConfiguration
 public sealed class SemanticsNode
 {
     private readonly List<SemanticsNode> _children = [];
-    private readonly Dictionary<SemanticsActions, Action> _actionHandlers = [];
+    private readonly Dictionary<SemanticsActions, SemanticsActionHandler> _actionHandlers = [];
     private readonly Dictionary<CustomSemanticsAction, Action> _customActionHandlers = [];
 
     internal SemanticsNode(int id)
@@ -532,9 +711,27 @@ public sealed class SemanticsNode
     public int? IndexInParent { get; set; }
     public SemanticsSortKey? SortKey { get; internal set; }
 
+    /// <summary>The current scroll position in logical pixels, or <c>null</c> when not scrollable.</summary>
+    public double? ScrollPosition { get; internal set; }
+
+    /// <summary>The maximum in-range value for <see cref="ScrollPosition"/>.</summary>
+    public double? ScrollExtentMax { get; internal set; }
+
+    /// <summary>The minimum in-range value for <see cref="ScrollPosition"/>.</summary>
+    public double? ScrollExtentMin { get; internal set; }
+
+    /// <summary>The total number of scrollable children, <c>null</c> when unknown or unbounded.</summary>
+    public int? ScrollChildCount { get; internal set; }
+
+    /// <summary>The index of the first visible scrollable child.</summary>
+    public int? ScrollIndex { get; internal set; }
+
     /// The tags the render objects between this node and its parent node attached to it, through
     /// their configurations' `AddTagForChildren`.
     public IReadOnlyCollection<SemanticsTag>? Tags => _tags;
+
+    /// Whether this node carries `tag`.
+    public bool IsTagged(SemanticsTag tag) => _tags is not null && _tags.Contains(tag);
 
     private HashSet<SemanticsTag>? _tags;
 
@@ -562,10 +759,12 @@ public sealed class SemanticsNode
     /// <c>RenderObject.AssembleSemanticsNode</c> assigns it explicitly.
     /// </remarks>
     public void UpdateWith(
-        SemanticsConfiguration config,
+        SemanticsConfiguration? config,
         IReadOnlyList<SemanticsNode>? childrenInInversePaintOrder = null)
     {
-        ArgumentNullException.ThrowIfNull(config);
+        // A null configuration resets the node to Flutter's shared `_kEmptyConfig`, which is how the
+        // two-pane scroll split strips the outer node of everything it handed to the inner one.
+        config ??= SemanticsConfiguration.Empty;
         Label = config.Label;
         Hint = config.Hint;
         OnTapHint = config.OnTapHint;
@@ -582,6 +781,11 @@ public sealed class SemanticsNode
         Actions = config.Actions;
         IndexInParent = config.IndexInParent;
         SortKey = config.SortKey;
+        ScrollPosition = config.ScrollPosition;
+        ScrollExtentMax = config.ScrollExtentMax;
+        ScrollExtentMin = config.ScrollExtentMin;
+        ScrollChildCount = config.ScrollChildCount;
+        ScrollIndex = config.ScrollIndex;
         // Tags are attached by the ancestors this node passes through, after this update runs.
         _tags = null;
         IsSemanticBoundary = config.IsSemanticBoundary;
@@ -632,7 +836,7 @@ public sealed class SemanticsNode
         }
     }
 
-    internal void SetActionHandlers(IReadOnlyDictionary<SemanticsActions, Action> handlers)
+    internal void SetActionHandlers(IReadOnlyDictionary<SemanticsActions, SemanticsActionHandler> handlers)
     {
         _actionHandlers.Clear();
         foreach (var pair in handlers)
@@ -641,7 +845,7 @@ public sealed class SemanticsNode
         }
     }
 
-    internal void CopyActionHandlersTo(Dictionary<SemanticsActions, Action> target)
+    internal void CopyActionHandlersTo(Dictionary<SemanticsActions, SemanticsActionHandler> target)
     {
         foreach (var pair in _actionHandlers)
         {
@@ -666,11 +870,11 @@ public sealed class SemanticsNode
         }
     }
 
-    internal bool PerformAction(SemanticsActions action)
+    internal bool PerformAction(SemanticsActions action, object? args = null)
     {
         if (_actionHandlers.TryGetValue(action, out var handler))
         {
-            handler();
+            handler(args);
             return true;
         }
 
@@ -777,8 +981,13 @@ public sealed class SemanticsOwner
         _syntheticRoot.Flags = SemanticsFlags.None;
         _syntheticRoot.Actions = SemanticsActions.None;
         _syntheticRoot.IndexInParent = null;
+        _syntheticRoot.ScrollPosition = null;
+        _syntheticRoot.ScrollExtentMax = null;
+        _syntheticRoot.ScrollExtentMin = null;
+        _syntheticRoot.ScrollChildCount = null;
+        _syntheticRoot.ScrollIndex = null;
         _syntheticRoot.IsHidden = false;
-        _syntheticRoot.SetActionHandlers(new Dictionary<SemanticsActions, Action>());
+        _syntheticRoot.SetActionHandlers(new Dictionary<SemanticsActions, SemanticsActionHandler>());
         _syntheticRoot.SetCustomActionHandlers(new Dictionary<CustomSemanticsAction, Action>());
         RootNode = _syntheticRoot;
         RebuildIndex();
@@ -786,14 +995,14 @@ public sealed class SemanticsOwner
         return;
     }
 
-    public bool PerformAction(int nodeId, SemanticsActions action)
+    public bool PerformAction(int nodeId, SemanticsActions action, object? args = null)
     {
         if (action == SemanticsActions.None)
         {
             return false;
         }
 
-        return _index.TryGetValue(nodeId, out var node) && node.PerformAction(action);
+        return _index.TryGetValue(nodeId, out var node) && node.PerformAction(action, args);
     }
 
     public bool PerformCustomAction(int nodeId, CustomSemanticsAction action)
@@ -878,6 +1087,21 @@ public sealed class SemanticsOwner
         if (node.IndexInParent.HasValue)
         {
             builder.Append(" indexInParent=").Append(node.IndexInParent.Value);
+        }
+
+        if (node.ScrollChildCount.HasValue)
+        {
+            builder.Append(" scrollChildren=").Append(node.ScrollChildCount.Value);
+        }
+
+        if (node.ScrollIndex.HasValue)
+        {
+            builder.Append(" scrollIndex=").Append(node.ScrollIndex.Value);
+        }
+
+        if (node.ScrollPosition.HasValue)
+        {
+            builder.Append(" scrollPosition=").Append(node.ScrollPosition.Value);
         }
 
         if (node.IsHidden)

@@ -596,6 +596,8 @@ public sealed class Scrollable : StatefulWidget
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         string? restorationId = null,
         ScrollIncrementCalculator? incrementCalculator = null,
+        bool excludeFromSemantics = false,
+        int? semanticChildCount = null,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge) : base(key)
     {
@@ -603,6 +605,14 @@ public sealed class Scrollable : StatefulWidget
         {
             throw new ArgumentOutOfRangeException(nameof(anchor));
         }
+
+        if (semanticChildCount is < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(semanticChildCount));
+        }
+
+        ExcludeFromSemantics = excludeFromSemantics;
+        SemanticChildCount = semanticChildCount;
 
         Child = child;
         Slivers = slivers;
@@ -657,6 +667,18 @@ public sealed class Scrollable : StatefulWidget
 
     /// <summary>Computes the distance a keyboard-driven line or page scroll moves.</summary>
     public ScrollIncrementCalculator? IncrementCalculator { get; }
+
+    /// <summary>
+    /// Whether the scrollable contributes no semantics of its own. When true no scroll actions, scroll
+    /// metrics or two-pane split are produced and the viewport's nodes are reported as-is.
+    /// </summary>
+    public bool ExcludeFromSemantics { get; }
+
+    /// <summary>
+    /// The total number of children the scrollable can show, or <c>null</c> when the count is unknown
+    /// or unbounded. Reported to assistive technologies as the scroll child count.
+    /// </summary>
+    public int? SemanticChildCount { get; }
 
     internal bool UseSingleChildViewport { get; init; }
 
@@ -941,7 +963,20 @@ public sealed class Scrollable : StatefulWidget
                     minFlingVelocity: _effectivePhysics.MinFlingVelocity,
                     maxFlingVelocity: _effectivePhysics.MaxFlingVelocity,
                     dragStartBehavior: widget.DragStartBehavior,
-                    child: viewport));
+                    child: new Semantics(
+                        explicitChildNodes: !widget.ExcludeFromSemantics,
+                        child: viewport)));
+
+            if (!widget.ExcludeFromSemantics)
+            {
+                scrollable = new ScrollSemantics(
+                    position: _position,
+                    allowImplicitScrolling: _effectivePhysics.AllowImplicitScrolling,
+                    axisDirection: axisDirection,
+                    semanticChildCount: widget.SemanticChildCount,
+                    onSemanticDrag: HandleSemanticDrag,
+                    child: scrollable);
+            }
 
             var details = new ScrollableDetails(
                 Direction: axisDirection,
@@ -1099,6 +1134,23 @@ public sealed class Scrollable : StatefulWidget
         private void HandleDragDown(DragDownDetails details)
         {
             _hold = _position.Hold(DisposeHold);
+        }
+
+        /// <summary>
+        /// Replays a semantic scroll request as a complete drag, so it runs through the scroll physics
+        /// exactly like a pointer drag would.
+        /// </summary>
+        /// <remarks>Flutter's <c>_DefaultSemanticsGestureDelegate</c> drag replay.</remarks>
+        private void HandleSemanticDrag(DragUpdateDetails details)
+        {
+            HandleDragDown(new DragDownDetails(
+                GlobalPosition: details.GlobalPosition,
+                LocalPosition: details.LocalPosition));
+            HandleDragStart(new DragStartDetails(
+                GlobalPosition: details.GlobalPosition,
+                LocalPosition: details.LocalPosition));
+            HandleDragUpdate(details);
+            HandleDragEnd(new DragEndDetails(primaryVelocity: 0.0));
         }
 
         private void DisposeHold()
@@ -1497,13 +1549,45 @@ internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
     }
 }
 
+/// <summary>
+/// Maps a child and its position in the delegate onto the index assistive technologies see, or
+/// <c>null</c> to give that child no semantic index at all.
+/// </summary>
+/// <remarks>Flutter's <c>SemanticIndexCallback</c>.</remarks>
+public delegate int? SemanticIndexCallback(Widget widget, int localIndex);
+
 public abstract class SliverChildDelegate
 {
+    /// <remarks>Flutter's <c>_kDefaultSemanticIndexCallback</c>.</remarks>
+    public static int? DefaultSemanticIndexCallback(Widget widget, int localIndex) => localIndex;
+
     public abstract Widget? Build(BuildContext context, int index);
 
     public virtual int? EstimatedChildCount => null;
 
     public virtual int? FindIndexByKey(Key key) => null;
+
+    /// <summary>
+    /// Wraps <paramref name="child"/> in an <see cref="IndexedSemantics"/> so the enclosing scrollable
+    /// can report which child is the first visible one.
+    /// </summary>
+    private protected static Widget AddSemanticIndex(
+        Widget child,
+        int index,
+        bool addSemanticIndexes,
+        SemanticIndexCallback semanticIndexCallback,
+        int semanticIndexOffset)
+    {
+        if (!addSemanticIndexes)
+        {
+            return child;
+        }
+
+        int? semanticIndex = semanticIndexCallback(child, index);
+        return semanticIndex is null
+            ? child
+            : new IndexedSemantics(index: semanticIndex.Value + semanticIndexOffset, child: child);
+    }
 }
 
 internal sealed record SliverChildKey(Key Value) : LocalKey;
@@ -1513,16 +1597,25 @@ public sealed class SliverChildBuilderDelegate : SliverChildDelegate
     private readonly IndexedWidgetBuilder _builder;
     private readonly int? _childCount;
     private readonly bool _addAutomaticKeepAlives;
+    private readonly bool _addSemanticIndexes;
+    private readonly SemanticIndexCallback _semanticIndexCallback;
+    private readonly int _semanticIndexOffset;
 
     public SliverChildBuilderDelegate(
         IndexedWidgetBuilder builder,
         int? childCount = null,
         bool addAutomaticKeepAlives = true,
+        bool addSemanticIndexes = true,
+        SemanticIndexCallback? semanticIndexCallback = null,
+        int semanticIndexOffset = 0,
         ChildIndexGetter? findChildIndexCallback = null)
     {
         _builder = builder ?? throw new ArgumentNullException(nameof(builder));
         _childCount = childCount;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
+        _addSemanticIndexes = addSemanticIndexes;
+        _semanticIndexCallback = semanticIndexCallback ?? DefaultSemanticIndexCallback;
+        _semanticIndexOffset = semanticIndexOffset;
         FindChildIndexCallback = findChildIndexCallback;
     }
 
@@ -1549,9 +1642,13 @@ public sealed class SliverChildBuilderDelegate : SliverChildDelegate
 
         var child = _builder(context, index);
         Key? key = child.Key is null ? null : new SliverChildKey(child.Key);
-        Widget result = _addAutomaticKeepAlives
-            ? new AutomaticKeepAlive(child)
-            : child;
+        Widget result = AddSemanticIndex(
+            child,
+            index,
+            _addSemanticIndexes,
+            _semanticIndexCallback,
+            _semanticIndexOffset);
+        result = _addAutomaticKeepAlives ? new AutomaticKeepAlive(result) : result;
         return key is null ? result : new KeyedSubtree(result, key);
     }
 }
@@ -1560,13 +1657,22 @@ public sealed class SliverChildListDelegate : SliverChildDelegate
 {
     private readonly IReadOnlyList<Widget> _children;
     private readonly bool _addAutomaticKeepAlives;
+    private readonly bool _addSemanticIndexes;
+    private readonly SemanticIndexCallback _semanticIndexCallback;
+    private readonly int _semanticIndexOffset;
 
     public SliverChildListDelegate(
         IReadOnlyList<Widget> children,
-        bool addAutomaticKeepAlives = true)
+        bool addAutomaticKeepAlives = true,
+        bool addSemanticIndexes = true,
+        SemanticIndexCallback? semanticIndexCallback = null,
+        int semanticIndexOffset = 0)
     {
         _children = children;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
+        _addSemanticIndexes = addSemanticIndexes;
+        _semanticIndexCallback = semanticIndexCallback ?? DefaultSemanticIndexCallback;
+        _semanticIndexOffset = semanticIndexOffset;
     }
 
     public override int? EstimatedChildCount => _children.Count;
@@ -1593,9 +1699,13 @@ public sealed class SliverChildListDelegate : SliverChildDelegate
         }
 
         var child = _children[index];
-        Widget result = _addAutomaticKeepAlives
-            ? new AutomaticKeepAlive(child)
-            : child;
+        Widget result = AddSemanticIndex(
+            child,
+            index,
+            _addSemanticIndexes,
+            _semanticIndexCallback,
+            _semanticIndexOffset);
+        result = _addAutomaticKeepAlives ? new AutomaticKeepAlive(result) : result;
         return child.Key is null
             ? result
             : new KeyedSubtree(result, new SliverChildKey(child.Key));
@@ -2128,13 +2238,19 @@ public sealed class SliverList : SliverMultiBoxAdaptorWidget
         int childCount,
         IndexedWidgetBuilder itemBuilder,
         bool addAutomaticKeepAlives = true,
+        bool addSemanticIndexes = true,
+        SemanticIndexCallback? semanticIndexCallback = null,
+        int semanticIndexOffset = 0,
         Key? key = null)
     {
         return new SliverList(
             new SliverChildBuilderDelegate(
                 itemBuilder,
                 childCount,
-                addAutomaticKeepAlives: addAutomaticKeepAlives),
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addSemanticIndexes: addSemanticIndexes,
+                semanticIndexCallback: semanticIndexCallback,
+                semanticIndexOffset: semanticIndexOffset),
             key);
     }
 
@@ -2180,13 +2296,19 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
         IndexedWidgetBuilder itemBuilder,
         double itemExtent,
         bool addAutomaticKeepAlives = true,
+        bool addSemanticIndexes = true,
+        SemanticIndexCallback? semanticIndexCallback = null,
+        int semanticIndexOffset = 0,
         Key? key = null)
     {
         return new SliverFixedExtentList(
             new SliverChildBuilderDelegate(
                 itemBuilder,
                 childCount,
-                addAutomaticKeepAlives: addAutomaticKeepAlives),
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addSemanticIndexes: addSemanticIndexes,
+                semanticIndexCallback: semanticIndexCallback,
+                semanticIndexOffset: semanticIndexOffset),
             itemExtent,
             key);
     }
@@ -2254,7 +2376,7 @@ public sealed class SliverVariedExtentList : SliverMultiBoxAdaptorWidget
                 itemBuilder,
                 childCount,
                 addAutomaticKeepAlives,
-                findChildIndexCallback),
+                findChildIndexCallback:                 findChildIndexCallback),
             itemExtentBuilder,
             key);
     }
@@ -2318,7 +2440,7 @@ public sealed class SliverPrototypeExtentList : SliverMultiBoxAdaptorWidget
                 itemBuilder,
                 childCount,
                 addAutomaticKeepAlives,
-                findChildIndexCallback),
+                findChildIndexCallback:                 findChildIndexCallback),
             prototypeItem,
             key);
     }
@@ -2549,6 +2671,7 @@ public sealed class CustomScrollView : StatelessWidget
         double anchor = 0.0,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         string? restorationId = null,
+        int? semanticChildCount = null,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge) : base(key)
     {
@@ -2562,6 +2685,12 @@ public sealed class CustomScrollView : StatelessWidget
             throw new ArgumentOutOfRangeException(nameof(anchor));
         }
 
+        if (semanticChildCount is < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(semanticChildCount));
+        }
+
+        SemanticChildCount = semanticChildCount;
         Slivers = slivers;
         ScrollDirection = scrollDirection;
         Reverse = reverse;
@@ -2607,6 +2736,12 @@ public sealed class CustomScrollView : StatelessWidget
 
     public string? RestorationId { get; }
 
+    /// <summary>
+    /// The number of children an assistive technology should be told this view can show, or
+    /// <c>null</c> when the count is unknown or unbounded.
+    /// </summary>
+    public int? SemanticChildCount { get; }
+
     public Clip ClipBehavior { get; }
 
     public override Widget Build(BuildContext context)
@@ -2634,6 +2769,7 @@ public sealed class CustomScrollView : StatelessWidget
             anchor: Anchor,
             dragStartBehavior: DragStartBehavior,
             restorationId: RestorationId,
+            semanticChildCount: SemanticChildCount,
             clipBehavior: ClipBehavior);
         // Further descendant scroll views must not inherit the same PrimaryScrollController.
         return usePrimary && effectiveController != null
@@ -2760,6 +2896,7 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
+        int? semanticChildCount = null,
         Key? key = null,
         bool shrinkWrap = false) : base(key)
     {
@@ -2774,6 +2911,7 @@ public sealed class ListView : StatelessWidget
         }
 
         _children = children ?? [];
+        SemanticChildCount = semanticChildCount ?? _children.Count;
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
@@ -2806,6 +2944,7 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives,
         double cacheExtent,
         CacheExtentStyle cacheExtentStyle,
+        int? semanticChildCount,
         Key? key) : base(key)
     {
         if (primary == true && controller != null)
@@ -2817,6 +2956,15 @@ public sealed class ListView : StatelessWidget
         {
             throw new ArgumentOutOfRangeException(nameof(itemCount), "itemCount cannot be negative.");
         }
+
+        if (semanticChildCount is < 0 || semanticChildCount > itemCount)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(semanticChildCount),
+                "semanticChildCount must be between 0 and itemCount.");
+        }
+
+        SemanticChildCount = separatorBuilder is null ? semanticChildCount ?? itemCount : itemCount;
 
         if (itemExtent.HasValue && itemExtent.Value <= 0)
         {
@@ -2870,6 +3018,7 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
+        int? semanticChildCount = null,
         Key? key = null,
         bool shrinkWrap = false)
     {
@@ -2890,6 +3039,7 @@ public sealed class ListView : StatelessWidget
             addAutomaticKeepAlives: addAutomaticKeepAlives,
             cacheExtent: cacheExtent,
             cacheExtentStyle: cacheExtentStyle,
+            semanticChildCount: semanticChildCount,
             key: key);
     }
 
@@ -2916,6 +3066,7 @@ public sealed class ListView : StatelessWidget
             itemCount: itemCount,
             itemBuilder: itemBuilder,
             separatorBuilder: separatorBuilder,
+            semanticChildCount: null,
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
@@ -2954,16 +3105,22 @@ public sealed class ListView : StatelessWidget
                 };
             }
 
+            // A separated list gives its separators no semantic index at all, so item n keeps index n.
+            SemanticIndexCallback? semanticIndexCallback = _separatorBuilder is null
+                ? null
+                : static (_, localIndex) => localIndex % 2 == 0 ? localIndex / 2 : null;
             sliver = _itemExtent.HasValue
                 ? SliverFixedExtentList.Builder(
                     childCount,
                     effectiveItemBuilder,
                     _itemExtent.Value,
-                    addAutomaticKeepAlives: _addAutomaticKeepAlives)
+                    addAutomaticKeepAlives: _addAutomaticKeepAlives,
+                    semanticIndexCallback: semanticIndexCallback)
                 : SliverList.Builder(
                     childCount,
                     effectiveItemBuilder,
-                    addAutomaticKeepAlives: _addAutomaticKeepAlives);
+                    addAutomaticKeepAlives: _addAutomaticKeepAlives,
+                    semanticIndexCallback: semanticIndexCallback);
         }
         else
         {
@@ -2993,8 +3150,15 @@ public sealed class ListView : StatelessWidget
             keyboardDismissBehavior: KeyboardDismissBehavior,
             cacheExtent: _cacheExtent,
             cacheExtentStyle: _cacheExtentStyle,
+            semanticChildCount: SemanticChildCount,
             shrinkWrap: _shrinkWrap);
     }
+
+    /// <summary>
+    /// The number of children reported to assistive technologies. Defaults to the child count for a
+    /// list built from an explicit child list, and to <c>itemCount</c> for the builder constructors.
+    /// </summary>
+    public int? SemanticChildCount { get; }
 
     private static int SeparatedChildCount(int itemCount)
     {

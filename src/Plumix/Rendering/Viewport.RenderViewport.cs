@@ -32,6 +32,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
     private double _anchor;
     private Clip _clipBehavior;
     private double _maxScrollExtent;
+    private double? _calculatedCacheExtent;
     private double? _reportedPixels;
     private RenderSliverToBoxAdapter? _legacyChildSliver;
 
@@ -650,15 +651,122 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
         }
     }
 
+    /// <summary>
+    /// Tags every semantics node below a viewport, so the enclosing scroll semantics boundary can tell
+    /// that it is looking at viewport children and split them into a scrolling and a non-scrolling pane.
+    /// </summary>
+    public static readonly SemanticsTag UseTwoPaneSemantics = new("RenderViewport.twoPane");
+
+    /// <summary>
+    /// Tags the semantics nodes of viewport children that must not scroll with the viewport's content,
+    /// such as a pinned header. They become siblings of the scrolling node instead of its children.
+    /// </summary>
+    public static readonly SemanticsTag ExcludeFromScrolling = new("RenderViewport.excludeFromScrolling");
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.AddTagForChildren(UseTwoPaneSemantics);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="child"/> still occupies paint or cache extent. A sliver that does not,
+    /// and does not opt into <see cref="RenderSliver.EnsureSemantics"/>, contributes no semantics.
+    /// </summary>
+    private static bool IsSemanticallyRelevant(RenderSliver child)
+    {
+        return child.Geometry.Visible || child.Geometry.CacheExtent > 0.0 || child.EnsureSemantics;
+    }
+
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        return ClipBehavior == Clip.None ? null : new Rect(new Point(0, 0), Size);
+        if (child is RenderSliver sliver && sliver.EnsureSemantics && !IsSemanticallyRelevant(sliver))
+        {
+            return null;
+        }
+
+        if (ClipBehavior == Clip.None)
+        {
+            return null;
+        }
+
+        var viewportClip = new Rect(new Point(0, 0), Size);
+        if (child is not RenderSliver clippedSliver)
+        {
+            return viewportClip;
+        }
+
+        SliverConstraints constraints = clippedSliver.ConstraintsForSliver;
+        if (constraints.Overlap == 0 || double.IsInfinity(constraints.ViewportMainAxisExtent))
+        {
+            return viewportClip;
+        }
+
+        double left = viewportClip.Left;
+        double right = viewportClip.Right;
+        double top = viewportClip.Top;
+        double bottom = viewportClip.Bottom;
+        double startOfOverlap = constraints.ViewportMainAxisExtent - constraints.RemainingPaintExtent;
+        double overlapCorrection = startOfOverlap + constraints.Overlap;
+        switch (ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+                    _axisDirection,
+                    constraints.GrowthDirection))
+        {
+            case AxisDirection.Down:
+                top += overlapCorrection;
+                break;
+            case AxisDirection.Up:
+                bottom -= overlapCorrection;
+                break;
+            case AxisDirection.Right:
+                left += overlapCorrection;
+                break;
+            case AxisDirection.Left:
+                right -= overlapCorrection;
+                break;
+        }
+
+        return new Rect(new Point(left, top), new Point(right, bottom));
+    }
+
+    /// <summary>
+    /// The viewport's semantics clip is its paint clip grown by the cache extent, so children that are
+    /// laid out but scrolled off screen stay in the tree and are reported as hidden instead of dropped.
+    /// </summary>
+    protected override Rect? DescribeSemanticsClip(RenderObject? child)
+    {
+        if (child is RenderSliver sliver && sliver.EnsureSemantics && !IsSemanticallyRelevant(sliver))
+        {
+            return null;
+        }
+
+        var semanticBounds = new Rect(new Point(0, 0), Size);
+        double cacheExtent = _calculatedCacheExtent ?? 0.0;
+        if (_calculatedCacheExtent is null)
+        {
+            return semanticBounds;
+        }
+
+        return Axis == Axis.Vertical
+            ? new Rect(
+                new Point(semanticBounds.Left, semanticBounds.Top - cacheExtent),
+                new Point(semanticBounds.Right, semanticBounds.Bottom + cacheExtent))
+            : new Rect(
+                new Point(semanticBounds.Left - cacheExtent, semanticBounds.Top),
+                new Point(semanticBounds.Right + cacheExtent, semanticBounds.Bottom));
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
     {
+        // Flutter walks `childrenInPaintOrder` here; Plumix has no geometry-driven traversal sort, so it
+        // keeps first-to-last order and applies only the visible-or-cached filter.
         for (var child = FirstChild; child != null; child = _container.ChildAfter(child))
         {
+            if (!IsSemanticallyRelevant(child))
+            {
+                continue;
+            }
+
             var parentData = (SliverPhysicalParentData)child.parentData!;
             visitor(child, parentData.offset, Matrix.Identity);
         }
@@ -712,6 +820,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
         double cacheExtent = Math.Max(0, _cacheExtentStyle == CacheExtentStyle.Viewport
             ? _cacheExtent * viewportMainAxisExtent
             : _cacheExtent);
+        _calculatedCacheExtent = cacheExtent;
         double cacheStart = Math.Max(0, scrollOffset - cacheExtent);
         double cacheEnd = scrollOffset + viewportMainAxisExtent + cacheExtent;
 

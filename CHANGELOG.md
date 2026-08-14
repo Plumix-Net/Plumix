@@ -1,5 +1,25 @@
 # Changelog
 
+- Breaking: ported the scrollable semantics layer, so screen readers can now scroll Plumix views.
+  `RenderViewport` gained the `UseTwoPaneSemantics`/`ExcludeFromScrolling` tags, a semantics clip that
+  spans the cache extent (offscreen-but-cached children are now reported hidden instead of dropped),
+  the overlap-corrected paint clip, and the `visible || cacheExtent > 0 || ensureSemantics` child
+  filter; `RenderSliver` gained `EnsureSemantics` and `HasSliverConstraints`, `SliverGeometry` gained
+  `Visible`. New `ScrollSemantics`/`RenderScrollSemantics` (Flutter's `_ScrollSemantics`) sit above the
+  viewport and split its nodes into a scrolling node and the non-scrolling siblings a pinned header
+  contributes. `SemanticsConfiguration`/`SemanticsNode` gained `ScrollPosition`, `ScrollExtentMin`,
+  `ScrollExtentMax`, `ScrollChildCount`, `ScrollIndex`, `HasImplicitScrolling`, `OnScrollUp`/`Down`/
+  `Left`/`Right`, `OnScrollToOffset` and `IsTagged`; `RenderSliverPersistentHeader` and
+  `PinnedHeaderSliver` now tag themselves out of the scrolling pane, closing both divergences.
+  `Scrollable`/`CustomScrollView`/`ListView` gained `excludeFromSemantics`/`semanticChildCount`, the
+  child delegates gained `addSemanticIndexes`/`semanticIndexCallback`/`semanticIndexOffset`
+  (`ListView.Separated` gives separators no index), `RenderTable` rows carry a row-scoped
+  `showOnScreen`, and `RenderSingleChildViewport` describes a content-spanning semantics clip.
+  **Breaking:** semantics action handlers are now `SemanticsActionHandler` (`void(object? args)`);
+  `SemanticsOwner.PerformAction`/`SemanticsNode.PerformAction` take an optional argument;
+  `SemanticsNode.UpdateWith` accepts a null configuration; and list/grid child delegates wrap children
+  in `IndexedSemantics` by default.
+
 - Breaking: closed the `SelectableRegion` gesture/shortcut/overlay divergence by porting the three
   primitives it needed. `gestures/tap_and_drag.dart` lands as `BaseTapAndDragGestureRecognizer` +
   `TapAndPanGestureRecognizer`/`TapAndHorizontalDragGestureRecognizer` (and the deprecated

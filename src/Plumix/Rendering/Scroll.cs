@@ -122,6 +122,26 @@ public static class ScrollDirectionUtils
     {
         return axis == Axis.Vertical ? AxisDirection.Down : AxisDirection.Right;
     }
+
+    /// <remarks>Flutter's <c>applyGrowthDirectionToAxisDirection</c>.</remarks>
+    public static AxisDirection ApplyGrowthDirectionToAxisDirection(
+        AxisDirection axisDirection,
+        GrowthDirection growthDirection)
+    {
+        if (growthDirection == GrowthDirection.Forward)
+        {
+            return axisDirection;
+        }
+
+        return axisDirection switch
+        {
+            AxisDirection.Up => AxisDirection.Down,
+            AxisDirection.Right => AxisDirection.Left,
+            AxisDirection.Down => AxisDirection.Up,
+            AxisDirection.Left => AxisDirection.Right,
+            _ => axisDirection,
+        };
+    }
 }
 
 public abstract class ScrollActivity : IDisposable

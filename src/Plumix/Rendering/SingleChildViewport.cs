@@ -60,6 +60,31 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
 
     double IRenderAbstractViewport.RevealOffsetPixels => _offsetPixels;
 
+    /// <summary>
+    /// The semantics clip covers the whole scrollable content, so a child scrolled off screen stays in
+    /// the semantics tree and is reported as hidden rather than dropped.
+    /// </summary>
+    protected override Rect? DescribeSemanticsClip(RenderObject? child)
+    {
+        var semanticBounds = new Rect(new Point(0, 0), Size);
+        double remainingOffset = MaxScrollExtent - OffsetPixels;
+        return AxisDirection switch
+        {
+            AxisDirection.Up => new Rect(
+                new Point(semanticBounds.Left, semanticBounds.Top - remainingOffset),
+                new Point(semanticBounds.Right, semanticBounds.Bottom + OffsetPixels)),
+            AxisDirection.Right => new Rect(
+                new Point(semanticBounds.Left - OffsetPixels, semanticBounds.Top),
+                new Point(semanticBounds.Right + remainingOffset, semanticBounds.Bottom)),
+            AxisDirection.Down => new Rect(
+                new Point(semanticBounds.Left, semanticBounds.Top - OffsetPixels),
+                new Point(semanticBounds.Right, semanticBounds.Bottom + remainingOffset)),
+            _ => new Rect(
+                new Point(semanticBounds.Left - remainingOffset, semanticBounds.Top),
+                new Point(semanticBounds.Right + OffsetPixels, semanticBounds.Bottom))
+        };
+    }
+
     /// <inheritdoc />
     public RevealedOffset GetOffsetToReveal(
         RenderObject target,

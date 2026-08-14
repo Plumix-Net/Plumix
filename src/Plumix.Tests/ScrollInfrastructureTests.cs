@@ -329,12 +329,18 @@ public sealed class ScrollInfrastructureTests
         owner.FlushBuild();
 
         Assert.NotNull(built);
-        var item0 = Assert.IsType<ItemMarker>(sampledChildren[0]);
-        var separator0 = Assert.IsType<SeparatorMarker>(sampledChildren[1]);
-        var item1 = Assert.IsType<ItemMarker>(sampledChildren[2]);
-        var separator1 = Assert.IsType<SeparatorMarker>(sampledChildren[3]);
-        var item2 = Assert.IsType<ItemMarker>(sampledChildren[4]);
+        var item0 = Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[0]));
+        var separator0 = Assert.IsType<SeparatorMarker>(UnwrapSemanticIndex(sampledChildren[1]));
+        var item1 = Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[2]));
+        var separator1 = Assert.IsType<SeparatorMarker>(UnwrapSemanticIndex(sampledChildren[3]));
+        var item2 = Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[4]));
         Assert.Null(sampledChildren[5]);
+
+        // The delegate gives items a semantic index and separators none, exactly as Flutter's
+        // `ListView.separated` does through its `semanticIndexCallback`.
+        Assert.Equal(0, Assert.IsType<IndexedSemantics>(sampledChildren[0]).Index);
+        Assert.IsNotType<IndexedSemantics>(sampledChildren[1]);
+        Assert.Equal(1, Assert.IsType<IndexedSemantics>(sampledChildren[2]).Index);
         Assert.Equal(0, item0.Index);
         Assert.Equal(0, separator0.Index);
         Assert.Equal(1, item1.Index);
@@ -373,9 +379,9 @@ public sealed class ScrollInfrastructureTests
         owner.FlushBuild();
 
         Assert.Equal(36, builtItemExtent);
-        Assert.IsType<ItemMarker>(sampledChildren[0]);
-        Assert.IsType<SeparatorMarker>(sampledChildren[1]);
-        Assert.IsType<ItemMarker>(sampledChildren[2]);
+        Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[0]));
+        Assert.IsType<SeparatorMarker>(UnwrapSemanticIndex(sampledChildren[1]));
+        Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[2]));
         Assert.Null(sampledChildren[3]);
     }
 
@@ -443,9 +449,9 @@ public sealed class ScrollInfrastructureTests
 
         Assert.NotNull(sampledDelegate);
         Assert.IsType<SliverGridDelegateWithFixedCrossAxisCount>(sampledDelegate);
-        Assert.IsType<ItemMarker>(sampledChildren[0]);
-        Assert.IsType<ItemMarker>(sampledChildren[1]);
-        Assert.IsType<ItemMarker>(sampledChildren[2]);
+        Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[0]));
+        Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[1]));
+        Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[2]));
         Assert.Null(sampledChildren[3]);
     }
 
@@ -722,6 +728,15 @@ public sealed class ScrollInfrastructureTests
             _onBuilt(built, context);
             return new SizedBox(width: 1, height: 1);
         }
+    }
+
+    /// <summary>
+    /// Strips the <see cref="IndexedSemantics"/> wrapper the child delegates add by default, so a test
+    /// can assert on the widget the caller actually supplied.
+    /// </summary>
+    private static Widget? UnwrapSemanticIndex(Widget? widget)
+    {
+        return widget is IndexedSemantics indexed ? indexed.Child : widget;
     }
 
     private sealed class ItemMarker : StatelessWidget

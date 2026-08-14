@@ -138,6 +138,16 @@ public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapte
         }
     }
 
+    /// <summary>
+    /// A persistent header never scrolls with the viewport's content, so its semantics nodes are tagged
+    /// out of the scrolling pane and become siblings of the scrolling node.
+    /// </summary>
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.AddTagForChildren(RenderViewport.ExcludeFromScrolling);
+    }
+
     public override void MarkNeedsLayout()
     {
         // This is automatically called whenever the child's intrinsic dimensions change, at which

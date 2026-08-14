@@ -811,6 +811,10 @@ public sealed class RenderTable : RenderBox
             if (!_cachedRows.TryGetValue(y, out SemanticsNode? newRow))
             {
                 newRow = CreateSynthesizedSemanticsNode();
+                // A synthesized row is backed by no render object, so it carries its own reveal request
+                // scoped to the row's box, exactly like Flutter's `SemanticsNode(showOnScreen:)`.
+                Rect rowRevealBox = rowBox;
+                newRow.ShowOnScreenRequest = () => ShowOnScreen(descendant: this, rect: rowRevealBox);
                 _cachedRows[y] = newRow;
             }
 

@@ -110,6 +110,20 @@ internal sealed class RenderPinnedHeaderSliver : RenderSliverSingleBoxAdapter
         base.ShowOnScreen(descendant: this, rect: trimmed, duration: duration, curve: curve);
     }
 
+    /// <summary>
+    /// While the header is scrolled far enough that it no longer occupies its full extent it is pinned
+    /// against the leading edge, so its semantics leave the scrolling pane. At rest it is an ordinary
+    /// scrolling child and carries no tag.
+    /// </summary>
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        if (HasSliverConstraints && Geometry.LayoutExtent < ChildExtent)
+        {
+            configuration.AddTagForChildren(RenderViewport.ExcludeFromScrolling);
+        }
+    }
+
     protected override void PerformSliverLayout(SliverConstraints constraints)
     {
         Child?.Layout(constraints.AsBoxConstraints(), parentUsesSize: true);

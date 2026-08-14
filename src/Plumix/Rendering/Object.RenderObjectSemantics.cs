@@ -849,7 +849,12 @@ internal sealed class RenderObjectSemantics
             Flags = node.Flags,
             Actions = node.Actions,
             IndexInParent = node.IndexInParent,
-            SortKey = node.SortKey
+            SortKey = node.SortKey,
+            ScrollPosition = node.ScrollPosition,
+            ScrollExtentMax = node.ScrollExtentMax,
+            ScrollExtentMin = node.ScrollExtentMin,
+            ScrollChildCount = node.ScrollChildCount,
+            ScrollIndex = node.ScrollIndex
         };
 
         if (node.Tags is { Count: > 0 } tags)
@@ -860,7 +865,7 @@ internal sealed class RenderObjectSemantics
             }
         }
 
-        var handlers = new Dictionary<SemanticsActions, Action>();
+        var handlers = new Dictionary<SemanticsActions, SemanticsActionHandler>();
         node.CopyActionHandlersTo(handlers);
         configuration.ReplaceActionHandlers(handlers);
         var customHandlers = new Dictionary<CustomSemanticsAction, Action>();
