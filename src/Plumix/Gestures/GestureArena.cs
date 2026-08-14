@@ -142,16 +142,17 @@ public sealed class GestureArenaManager
         var snapshot = arena.Members.ToArray();
         _arenas.Remove(pointer);
 
+        // Every loser is rejected before the winner is accepted, so a recognizer that reacts to
+        // winning always observes its competitors already cancelled.
         foreach (var member in snapshot)
         {
-            if (ReferenceEquals(member, winner))
+            if (!ReferenceEquals(member, winner))
             {
-                member.AcceptGesture(pointer);
-                continue;
+                member.RejectGesture(pointer);
             }
-
-            member.RejectGesture(pointer);
         }
+
+        winner.AcceptGesture(pointer);
     }
 
     internal void Reset()

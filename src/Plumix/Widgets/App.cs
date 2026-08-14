@@ -26,6 +26,7 @@ public sealed class WidgetsApp : StatefulWidget
             [typeof(DoNothingIntent)] = new DoNothingAction(),
             [typeof(DoNothingAndStopPropagationIntent)] = new DoNothingAction(consumesKey: false),
             [typeof(VoidCallbackIntent)] = new VoidCallbackAction(),
+            [typeof(ScrollIntent)] = new ScrollAction(),
         };
 
     public WidgetsApp(
@@ -521,6 +522,8 @@ public sealed class WidgetsApp : StatefulWidget
             child = new Actions(
                 actions: CurrentWidget.Actions ?? DefaultActions,
                 child: child);
+            // Nested inside the app shortcuts so an unmatched key falls through to them.
+            child = new DefaultTextEditingShortcuts(child);
             child = new Shortcuts(
                 shortcuts: CurrentWidget.Shortcuts ?? DefaultShortcuts,
                 debugLabel: "<Default WidgetsApp Shortcuts>",

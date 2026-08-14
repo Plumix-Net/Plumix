@@ -5,9 +5,13 @@ using Plumix.UI;
 
 namespace Plumix.Gestures;
 
+/// <summary>Dart's `AllowedButtonsFilter`: decides whether a button combination competes.</summary>
+public delegate bool AllowedButtonsFilter(PointerButtons buttons);
+
 public abstract class GestureRecognizer : IDisposable
 {
     private readonly HashSet<int> _trackedPointers = [];
+    private readonly Dictionary<int, (PointerDeviceKind Kind, PointerButtons Buttons)> _pointerToEventData = [];
     private readonly PointerRoute _route;
 
     protected GestureRecognizer(GestureBinding? binding = null)
@@ -22,17 +26,84 @@ public abstract class GestureRecognizer : IDisposable
 
     protected GestureArenaManager GestureArena => Binding.GestureArena;
 
+    /// <summary>The recognizer's owner, used only for diagnostics.</summary>
+    public object? DebugOwner { get; set; }
+
     /// <summary>Device kinds this recognizer accepts; null accepts every kind.</summary>
     public IReadOnlySet<PointerDeviceKind>? SupportedDevices { get; set; }
 
     /// <summary>Host-supplied gesture tuning that overrides framework defaults such as touch slop.</summary>
     public DeviceGestureSettings? GestureSettings { get; set; }
 
-    public abstract void AddPointer(PointerDownEvent @event);
+    /// <summary>Dart's `allowedButtonsFilter`; the default accepts every button combination.</summary>
+    public AllowedButtonsFilter AllowedButtonsFilter { get; set; } = DefaultButtonAcceptBehavior;
+
+    /// <summary>A short description used by diagnostics.</summary>
+    public virtual string DebugDescription => GetType().Name;
+
+    public virtual void AddPointer(PointerDownEvent @event)
+    {
+        _pointerToEventData[@event.Pointer] = (@event.Kind, @event.Buttons);
+        if (IsPointerAllowed(@event))
+        {
+            AddAllowedPointer(@event);
+            return;
+        }
+
+        HandleNonAllowedPointer(@event);
+    }
+
+    /// <summary>Registers a pointer that passed <see cref="IsPointerAllowed"/>.</summary>
+    protected virtual void AddAllowedPointer(PointerDownEvent @event)
+    {
+    }
+
+    /// <summary>Called for a pointer this recognizer refuses to compete for.</summary>
+    protected virtual void HandleNonAllowedPointer(PointerDownEvent @event)
+    {
+    }
 
     protected virtual bool IsPointerAllowed(PointerDownEvent @event)
     {
-        return SupportedDevices is null || SupportedDevices.Contains(@event.Kind);
+        return (SupportedDevices is null || SupportedDevices.Contains(@event.Kind))
+               && AllowedButtonsFilter(@event.Buttons);
+    }
+
+    /// <summary>The device kind recorded when the given pointer went down.</summary>
+    protected PointerDeviceKind GetKindForPointer(int pointer)
+    {
+        return _pointerToEventData.TryGetValue(pointer, out var data) ? data.Kind : PointerDeviceKind.Unknown;
+    }
+
+    /// <summary>The buttons recorded when the given pointer went down.</summary>
+    protected PointerButtons GetButtonsForPointer(int pointer)
+    {
+        return _pointerToEventData.TryGetValue(pointer, out var data) ? data.Buttons : PointerButtons.None;
+    }
+
+    /// <summary>Dart's `invokeCallback`: runs a user callback, naming it if it throws.</summary>
+    protected T? InvokeCallback<T>(string name, Func<T> callback)
+    {
+        try
+        {
+            return callback();
+        }
+        catch (Exception error)
+        {
+            throw new InvalidOperationException(
+                $"Error while routing a pointer event to '{name}' of {DebugDescription}.",
+                error);
+        }
+    }
+
+    /// <summary>Dart's `invokeCallback` for callbacks with no return value.</summary>
+    protected void InvokeCallback(string name, Action callback)
+    {
+        InvokeCallback<object?>(name, () =>
+        {
+            callback();
+            return null;
+        });
     }
 
     public virtual void Dispose()
@@ -43,9 +114,10 @@ public abstract class GestureRecognizer : IDisposable
         }
 
         _trackedPointers.Clear();
+        _pointerToEventData.Clear();
     }
 
-    protected void StartTrackingPointer(int pointer)
+    protected virtual void StartTrackingPointer(int pointer)
     {
         if (_trackedPointers.Add(pointer))
         {
@@ -53,7 +125,7 @@ public abstract class GestureRecognizer : IDisposable
         }
     }
 
-    protected void StopTrackingPointer(int pointer)
+    protected virtual void StopTrackingPointer(int pointer)
     {
         if (_trackedPointers.Remove(pointer))
         {
@@ -66,7 +138,12 @@ public abstract class GestureRecognizer : IDisposable
         return _trackedPointers.Contains(pointer);
     }
 
+    /// <summary>Whether any pointer is currently routed to this recognizer.</summary>
+    protected bool HasTrackedPointers => _trackedPointers.Count > 0;
+
     protected abstract void HandleEvent(PointerEvent @event);
+
+    private static bool DefaultButtonAcceptBehavior(PointerButtons buttons) => true;
 
     private void HandleRoutedEvent(PointerEvent @event)
     {
@@ -76,6 +153,120 @@ public abstract class GestureRecognizer : IDisposable
         }
 
         HandleEvent(@event);
+    }
+}
+
+/// <summary>
+/// A pair of positions for the same point: one in the global (root) coordinate space and one in the
+/// receiving render object's local space.
+/// </summary>
+public readonly record struct OffsetPair(Point Local, Point Global)
+{
+    public static OffsetPair Zero { get; } = new(default, default);
+
+    /// <summary>The event's position pair.</summary>
+    public static OffsetPair FromEventPosition(PointerEvent @event)
+    {
+        return new OffsetPair(Local: @event.LocalPosition, Global: @event.Position);
+    }
+
+    /// <summary>The event's delta pair.</summary>
+    public static OffsetPair FromEventDelta(PointerEvent @event)
+    {
+        return new OffsetPair(Local: @event.LocalDelta, Global: @event.Delta);
+    }
+
+    public static OffsetPair operator +(OffsetPair left, OffsetPair right)
+    {
+        return new OffsetPair(Local: left.Local + right.Local, Global: left.Global + right.Global);
+    }
+
+    public static OffsetPair operator -(OffsetPair left, OffsetPair right)
+    {
+        return new OffsetPair(Local: left.Local - right.Local, Global: left.Global - right.Global);
+    }
+}
+
+/// <summary>
+/// A recognizer that tracks a single sequence of pointer events: it owns one arena entry per pointer
+/// and learns when the last of them stops being tracked.
+/// </summary>
+public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGestureArenaMember
+{
+    private readonly Dictionary<int, GestureArenaEntry> _entries = [];
+
+    protected OneSequenceGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    {
+    }
+
+    public abstract void AcceptGesture(int pointer);
+
+    public abstract void RejectGesture(int pointer);
+
+    protected override void AddAllowedPointer(PointerDownEvent @event)
+    {
+        StartTrackingPointer(@event.Pointer);
+    }
+
+    protected override void HandleNonAllowedPointer(PointerDownEvent @event)
+    {
+        Resolve(GestureDisposition.Rejected);
+    }
+
+    /// <summary>Called when the recognizer stops tracking its last pointer.</summary>
+    protected abstract void DidStopTrackingLastPointer(int pointer);
+
+    /// <summary>Resolves every pointer this recognizer is competing for.</summary>
+    protected void Resolve(GestureDisposition disposition)
+    {
+        var localEntries = _entries.Values.ToList();
+        _entries.Clear();
+        foreach (GestureArenaEntry entry in localEntries)
+        {
+            entry.Resolve(disposition);
+        }
+    }
+
+    /// <summary>Resolves a single pointer this recognizer is competing for.</summary>
+    protected void ResolvePointer(int pointer, GestureDisposition disposition)
+    {
+        if (_entries.Remove(pointer, out GestureArenaEntry entry))
+        {
+            entry.Resolve(disposition);
+        }
+    }
+
+    protected override void StartTrackingPointer(int pointer)
+    {
+        base.StartTrackingPointer(pointer);
+        // A reused pointer id starts a fresh arena, so the entry is always replaced.
+        _entries[pointer] = GestureArena.Add(pointer, this);
+    }
+
+    protected override void StopTrackingPointer(int pointer)
+    {
+        bool wasTracking = IsTrackingPointer(pointer);
+        base.StopTrackingPointer(pointer);
+        if (wasTracking && !HasTrackedPointers)
+        {
+            DidStopTrackingLastPointer(pointer);
+        }
+    }
+
+    /// <summary>Stops tracking the pointer once its sequence has ended.</summary>
+    protected void StopTrackingIfPointerNoLongerDown(PointerEvent @event)
+    {
+        if (@event is PointerUpEvent or PointerCancelEvent)
+        {
+            StopTrackingPointer(@event.Pointer);
+        }
+    }
+
+    public override void Dispose()
+    {
+        Resolve(GestureDisposition.Rejected);
+        base.Dispose();
+        _entries.Clear();
     }
 }
 

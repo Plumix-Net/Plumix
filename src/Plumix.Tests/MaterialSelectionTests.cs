@@ -353,6 +353,137 @@ public sealed class MaterialSelectionTests
         Assert.False(state.ContextMenuIsVisible);
     }
 
+    [Fact]
+    public void SelectionArea_DoubleTapSelectsTheWordUnderThePointer()
+    {
+        using var timers = new FakeGestureTimers();
+        SelectedContent? selected = null;
+        using var harness = new WidgetRenderHarness(Root(
+            new SelectionArea(
+                onSelectionChanged: content => selected = content,
+                child: new Text("alpha beta gamma")),
+            ThemeData.Light));
+        harness.Pump(new Size(320, 160));
+
+        var position = new Point(2, 8);
+        TapAt(harness, 71, position);
+        TapAt(harness, 71, position);
+
+        Assert.Equal("alpha", selected?.PlainText);
+    }
+
+    [Fact]
+    public void SelectionArea_TripleTapSelectsTheParagraphOnDesktop()
+    {
+        using var timers = new FakeGestureTimers();
+        var previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Linux;
+        try
+        {
+            SelectedContent? selected = null;
+            using var harness = new WidgetRenderHarness(Root(
+                new SelectionArea(
+                    onSelectionChanged: content => selected = content,
+                    child: new Text("alpha beta gamma")),
+                ThemeData.Light));
+            harness.Pump(new Size(320, 160));
+
+            var position = new Point(2, 8);
+            TapAt(harness, 72, position);
+            TapAt(harness, 72, position);
+            TapAt(harness, 72, position);
+
+            Assert.Equal("alpha beta gamma", selected?.PlainText);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
+    }
+
+    [Fact]
+    public void SelectionArea_SingleTapAfterTheDoubleTapTimeoutStartsANewSeries()
+    {
+        using var timers = new FakeGestureTimers();
+        SelectedContent? selected = null;
+        using var harness = new WidgetRenderHarness(Root(
+            new SelectionArea(
+                onSelectionChanged: content => selected = content,
+                child: new Text("alpha beta gamma")),
+            ThemeData.Light));
+        harness.Pump(new Size(320, 160));
+
+        var position = new Point(2, 8);
+        TapAt(harness, 73, position);
+        TapAt(harness, 73, position);
+        Assert.Equal("alpha", selected?.PlainText);
+
+        // Past kDoubleTapTimeout the counter restarts, so the next tap collapses the selection
+        // instead of selecting a word again.
+        timers.Elapse(TimeSpan.FromMilliseconds(400));
+        TapAt(harness, 73, position);
+        Assert.True(string.IsNullOrEmpty(selected?.PlainText));
+    }
+
+    [Fact]
+    public void SelectionArea_RightClickShowsTheContextMenuAndKeepsTheSelectionOnLinux()
+    {
+        using var timers = new FakeGestureTimers();
+        var previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Linux;
+        try
+        {
+            var key = new LabeledGlobalKey<SelectionAreaState>("linux-area");
+            using var harness = new WidgetRenderHarness(Root(
+                new Navigator(new BuilderPageRoute(_ => new SelectionArea(
+                    key: key,
+                    child: new Text("alpha beta gamma")))),
+                ThemeData.Light));
+            harness.Pump(new Size(320, 160));
+
+            SelectableRegionState state = key.CurrentState!.SelectableRegion;
+            state.SelectAll();
+            harness.Pump(new Size(320, 160));
+
+            SecondaryTapAt(harness, 74, new Point(2, 8));
+            harness.Pump(new Size(320, 160));
+
+            // A right click inside the active selection shows the menu without collapsing it.
+            Assert.True(state.ContextMenuIsVisible);
+            Assert.Equal("alpha beta gamma", state.SelectedContent?.PlainText);
+
+            // Flutter toggles the menu off on the next right click; Plumix's menu is a route whose
+            // modal barrier consumes that press instead (see `DIVERGENCES.md`), so the toggle is
+            // asserted through the API the barrier ultimately calls.
+            state.HideToolbar();
+            Assert.False(state.ContextMenuIsVisible);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
+    }
+
+    private static void TapAt(WidgetRenderHarness harness, int pointer, Point position)
+    {
+        var binding = GestureBinding.Instance;
+        DateTime now = DateTime.UtcNow;
+        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+            pointer, PointerDeviceKind.Mouse, position, PointerButtons.Primary, now));
+        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+            pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, now.AddMilliseconds(16)));
+    }
+
+    private static void SecondaryTapAt(WidgetRenderHarness harness, int pointer, Point position)
+    {
+        var binding = GestureBinding.Instance;
+        DateTime now = DateTime.UtcNow;
+        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
+            pointer, PointerDeviceKind.Mouse, position, PointerButtons.Secondary, now));
+        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
+            pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, now.AddMilliseconds(16)));
+    }
+
     private static Widget Root(Widget child, ThemeData theme)
     {
         return new MediaQuery(

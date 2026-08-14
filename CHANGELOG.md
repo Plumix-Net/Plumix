@@ -1,5 +1,30 @@
 # Changelog
 
+- Breaking: closed the `SelectableRegion` gesture/shortcut/overlay divergence by porting the three
+  primitives it needed. `gestures/tap_and_drag.dart` lands as `BaseTapAndDragGestureRecognizer` +
+  `TapAndPanGestureRecognizer`/`TapAndHorizontalDragGestureRecognizer` (and the deprecated
+  `TapAndDragGestureRecognizer`) with the five `TapDrag*Details` types, the consecutive-tap tracker,
+  `eagerVictoryOnDrag`, `dragUpdateThrottleFrequency` and the `kPressTimeout` deadline; supporting
+  `gestures/constants.dart`, `OffsetPair`, `OneSequenceGestureRecognizer`, `computeHitSlop`/
+  `computePanSlop`, `DeviceGestureSettings.PanSlop` and `GestureRecognizer`'s
+  `debugOwner`/`allowedButtonsFilter`/`getKindForPointer`/`invokeCallback` surface landed with it.
+  `widgets/default_text_editing_shortcuts.dart` lands complete (all seven platform maps, the numpad
+  numLock maps, the iOS/macOS/web disabling maps and `intentForMacOSSelector`) and `WidgetsApp` now
+  nests it inside the app shortcuts exactly as Flutter does; `text_editing_intents.dart` gained the
+  eleven missing intents. `RawGestureDetector` accepts Flutter's `gestures` recognizer map through
+  `GestureRecognizerFactory`/`GestureRecognizerFactoryWithHandlers`, `LongPressGestureRecognizer`
+  reports `onLongPressStart`/`MoveUpdate`/`End`, and `ScrollIntent`/`ScrollIncrementType`/
+  `ScrollIncrementDetails`/`ScrollAction` plus `Scrollable.incrementCalculator` are ported.
+  `SelectableRegion` now drives the real recognizers, builds a `SelectionOverlay` (handles, toolbar,
+  magnifier, handle-drag math and `SelectionResult.Pending` retries), exposes the source `_*Action`
+  classes, and composes `TapRegion` > `CompositedTransformTarget` > `RawGestureDetector` > `Actions` >
+  `Focus` in source order. **Breaking:** the gesture arena now rejects every loser before accepting the
+  winner (Flutter's order), `TapGestureRecognizer` no longer competes for a button with no callbacks,
+  `ScrollToDocumentBoundaryIntent` derives from `DirectionalTextEditingIntent` and drops
+  `collapseSelection`, and `ExtendSelectionToNextWordBoundaryOrCaretLocationIntent`/
+  `ExpandSelectionToDocumentBoundaryIntent`/`ExpandSelectionToLineBreakIntent` derive from
+  `DirectionalCaretMovementIntent`. Added `PlatformDefaults.IsWeb` (Flutter's `kIsWeb`) and a
+  test-swappable `GestureTimer`.
 - Breaking: replaced the bespoke text-selection stack with Flutter's selection protocol
   (`rendering/selection.dart`, `widgets/selection_container.dart`, `widgets/selectable_region.dart`,
   the `_SelectableFragment` half of `rendering/paragraph.dart`, `services/text_boundary.dart`,

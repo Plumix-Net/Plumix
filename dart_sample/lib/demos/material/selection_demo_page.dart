@@ -26,7 +26,8 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
           ),
           const Text(
             'Drag across text, then right-click or long-press for the adaptive context menu. '
-            'Ctrl/Cmd+A and Ctrl/Cmd+C also work. '
+            'Double-tap selects a word and triple-tap a paragraph; long press raises the '
+            'drag handles and the magnifier. Ctrl/Cmd+A and Ctrl/Cmd+C also work. '
             'The second probe spans several Text widgets.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),

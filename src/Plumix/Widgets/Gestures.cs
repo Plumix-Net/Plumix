@@ -84,6 +84,7 @@ public sealed class RawGestureDetector : StatefulWidget
 {
     public RawGestureDetector(
         Widget? child = null,
+        IReadOnlyDictionary<Type, IGestureRecognizerFactory>? gestures = null,
         HitTestBehavior behavior = HitTestBehavior.DeferToChild,
         Action<PointerDownEvent>? onPointerDown = null,
         Action<PointerMoveEvent>? onPointerMove = null,
@@ -126,6 +127,7 @@ public sealed class RawGestureDetector : StatefulWidget
         Key? key = null) : base(key)
     {
         Child = child;
+        Gestures = gestures;
         Behavior = behavior;
         OnPointerDown = onPointerDown;
         OnPointerMove = onPointerMove;
@@ -168,6 +170,12 @@ public sealed class RawGestureDetector : StatefulWidget
     }
 
     public Widget? Child { get; }
+
+    /// <summary>
+    /// The recognizers this detector owns, keyed by recognizer type. When supplied it replaces the
+    /// fixed callback set entirely, matching Flutter's `RawGestureDetector.gestures`.
+    /// </summary>
+    public IReadOnlyDictionary<Type, IGestureRecognizerFactory>? Gestures { get; }
 
     public HitTestBehavior Behavior { get; }
 
@@ -257,6 +265,7 @@ public sealed class RawGestureDetector : StatefulWidget
         private HorizontalDragGestureRecognizer? _horizontalDrag;
         private VerticalDragGestureRecognizer? _verticalDrag;
         private PanGestureRecognizer? _pan;
+        private readonly Dictionary<Type, GestureRecognizer> _customRecognizers = [];
         private bool _dragEnabled = true;
 
         private RawGestureDetector CurrentWidget => (RawGestureDetector)Element.Widget;
@@ -296,6 +305,12 @@ public sealed class RawGestureDetector : StatefulWidget
             DisposeRecognizer(ref _horizontalDrag);
             DisposeRecognizer(ref _verticalDrag);
             DisposeRecognizer(ref _pan);
+            foreach (GestureRecognizer recognizer in _customRecognizers.Values)
+            {
+                recognizer.Dispose();
+            }
+
+            _customRecognizers.Clear();
         }
 
         public override Widget Build(BuildContext context)
@@ -319,6 +334,16 @@ public sealed class RawGestureDetector : StatefulWidget
                 return;
             }
 
+            if (widget.Gestures is not null)
+            {
+                foreach (GestureRecognizer recognizer in _customRecognizers.Values.ToArray())
+                {
+                    recognizer.AddPointer(@event);
+                }
+
+                return;
+            }
+
             _tap?.AddPointer(@event);
             _longPress?.AddPointer(@event);
             _horizontalDrag?.AddPointer(@event);
@@ -329,6 +354,28 @@ public sealed class RawGestureDetector : StatefulWidget
         private void SyncRecognizers()
         {
             var widget = CurrentWidget;
+
+            if (widget.Gestures is { } gestures)
+            {
+                // The explicit recognizer map replaces the fixed callback set entirely.
+                DisposeRecognizer(ref _tap);
+                DisposeRecognizer(ref _longPress);
+                DisposeRecognizer(ref _horizontalDrag);
+                DisposeRecognizer(ref _verticalDrag);
+                DisposeRecognizer(ref _pan);
+                SyncCustomRecognizers(gestures);
+                return;
+            }
+
+            if (_customRecognizers.Count > 0)
+            {
+                foreach (GestureRecognizer recognizer in _customRecognizers.Values)
+                {
+                    recognizer.Dispose();
+                }
+
+                _customRecognizers.Clear();
+            }
 
             if (widget.OnTap != null || widget.OnDoubleTap != null || widget.OnTapDown != null
                 || widget.OnTapUp != null || widget.OnSecondaryTap != null
@@ -440,6 +487,37 @@ public sealed class RawGestureDetector : StatefulWidget
             else
             {
                 DisposeRecognizer(ref _pan);
+            }
+        }
+
+        private void SyncCustomRecognizers(IReadOnlyDictionary<Type, IGestureRecognizerFactory> gestures)
+        {
+            foreach (Type type in _customRecognizers.Keys.ToArray())
+            {
+                if (gestures.ContainsKey(type))
+                {
+                    continue;
+                }
+
+                _customRecognizers[type].Dispose();
+                _customRecognizers.Remove(type);
+            }
+
+            foreach ((Type type, IGestureRecognizerFactory factory) in gestures)
+            {
+                if (!factory.HandlesType(type))
+                {
+                    throw new InvalidOperationException(
+                        $"The gesture recognizer registered for {type.Name} does not build that type.");
+                }
+
+                if (!_customRecognizers.TryGetValue(type, out GestureRecognizer? recognizer))
+                {
+                    recognizer = factory.ConstructorRaw();
+                    _customRecognizers[type] = recognizer;
+                }
+
+                factory.InitializerRaw(recognizer);
             }
         }
 

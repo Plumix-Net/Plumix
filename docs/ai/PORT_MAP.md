@@ -221,8 +221,9 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/platform.dart` | `src/Plumix/UI/TargetPlatform.cs` | — | — |
 | `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` | — | — |
 | `gestures/binding.dart` | `src/Plumix/Gestures/GestureBinding.cs` | — | — |
-| `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragTargetTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs` |
-| `gestures/events.dart` | `src/Plumix/UI/PointerEvents.cs` | — | — |
+| `gestures/constants.dart` | `src/Plumix/Gestures/Constants.cs` | — | — |
+| `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragTargetTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/TapAndDragGestureTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs` |
+| `gestures/events.dart` | `src/Plumix/Gestures/Events.cs`<br>`src/Plumix/UI/PointerEvents.cs` | — | — |
 | `gestures/gesture_settings.dart` | `src/Plumix/Gestures/DeviceGestureSettings.cs` | — | — |
 | `gestures/hit_test.dart` | `src/Plumix/Rendering/HitTestTarget.cs` | — | — |
 | `gestures/long_press.dart` | `src/Plumix/Gestures/LongPressGestureRecognizer.cs` | — | — |
@@ -231,6 +232,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `gestures/pointer_router.dart` | `src/Plumix/Gestures/PointerRouter.cs` | — | — |
 | `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs`<br>`src/Plumix/UI/DragStartBehavior.cs` | — | — |
 | `gestures/tap.dart` | `src/Plumix/Gestures/TapGestureRecognizer.cs` | — | — |
+| `gestures/tap_and_drag.dart` | `src/Plumix/Gestures/TapAndDrag.cs` | `src/Plumix.Tests/TapAndDragGestureTests.cs` | — |
 | `gestures/velocity_tracker.dart` | `src/Plumix/Gestures/VelocityTracker.cs` | — | — |
 | `painting/alignment.dart` | `src/Plumix/Rendering/Alignment.cs`<br>`src/Plumix/Rendering/AlignmentGeometry.cs` | — | — |
 | `painting/basic_types.dart` | `src/Plumix/Painting/BasicTypes.cs` | — | — |
@@ -338,6 +340,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/context_menu_controller.dart` | `src/Plumix/Widgets/ContextMenu.cs` | — | — |
 | `widgets/decorated_sliver.dart` | `src/Plumix/Widgets/SliverDecoratedPinned.cs` | — | — |
 | `widgets/default_selection_style.dart` | `src/Plumix/Widgets/DefaultSelectionStyle.cs` | `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | — |
+| `widgets/default_text_editing_shortcuts.dart` | `src/Plumix/Widgets/DefaultTextEditingShortcuts.cs` | `src/Plumix.Tests/DefaultTextEditingShortcutsTests.cs` | — |
 | `widgets/desktop_text_selection_toolbar_layout_delegate.dart` | `src/Plumix.Material/DesktopTextSelectionToolbar.cs`<br>`src/Plumix/Widgets/DesktopTextSelectionToolbarLayoutDelegate.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `widgets/dismissible.dart` | `src/Plumix/Widgets/Dismissible.cs` | `src/Plumix.Tests/DismissibleSizeChangedLayoutTests.cs` | `dart_sample/lib/demos/general/dismissible_size_changed_layout_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DismissibleSizeChangedLayoutDemoPage.cs` |
 | `widgets/display_feature_sub_screen.dart` | `src/Plumix/Widgets/DisplayFeatureSubScreen.cs` | `src/Plumix.Tests/DisplayFeatureSubScreenTests.cs` | — |
@@ -355,7 +358,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | — |
 | `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart` |
 | `widgets/framework.dart` | `src/Plumix/Widgets/Framework.BuildOwner.cs`<br>`src/Plumix/Widgets/Framework.Element.cs`<br>`src/Plumix/Widgets/Framework.RenderObject.cs`<br>`src/Plumix/Widgets/Framework.Widget.cs`<br>`src/Plumix/Widgets/Framework.cs` | — | — |
-| `widgets/gesture_detector.dart` | `src/Plumix/Widgets/Gestures.cs` | — | — |
+| `widgets/gesture_detector.dart` | `src/Plumix/Widgets/GestureRecognizerFactory.cs`<br>`src/Plumix/Widgets/Gestures.cs` | — | — |
 | `widgets/grid_paper.dart` | `src/Plumix/Widgets/GridPaper.cs` | — | — |
 | `widgets/heroes.dart` | `src/Plumix/Widgets/Hero.cs`<br>`src/Plumix/Widgets/Navigation.NavigatorState.Hero.cs` | `src/Plumix.Tests/HeroNavigatorTests.cs` | — |
 | `widgets/icon.dart` | `src/Plumix/Widgets/Icon.cs` | `src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs` | `dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs` |
@@ -416,7 +419,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/selectable_region.dart` | `src/Plumix/Widgets/Selection.cs`<br>`src/Plumix/Widgets/SelectionContainerDelegates.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialSelectionTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/SelectionOverlayTests.cs`<br>`src/Plumix.Tests/SelectionSubsystemTests.cs`<br>`src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_handles_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionHandlesDemoPage.cs` |
 | `widgets/selection_container.dart` | `src/Plumix/Widgets/SelectionContainer.cs` | — | — |
 | `widgets/shared_app_data.dart` | `src/Plumix/Widgets/SharedAppData.cs` | — | — |
-| `widgets/shortcuts.dart` | `src/Plumix/Widgets/Shortcuts.cs` | `src/Plumix.Tests/ActionsShortcutsTests.cs` | — |
+| `widgets/shortcuts.dart` | `src/Plumix/Widgets/Shortcuts.cs` | `src/Plumix.Tests/ActionsShortcutsTests.cs`<br>`src/Plumix.Tests/DefaultTextEditingShortcutsTests.cs` | — |
 | `widgets/single_child_scroll_view.dart` | `src/Plumix/Rendering/SingleChildViewport.cs` | — | — |
 | `widgets/size_changed_layout_notifier.dart` | `src/Plumix/Rendering/SizeChangedLayoutNotifier.cs`<br>`src/Plumix/Widgets/SizeChangedLayoutNotifier.cs` | — | — |
 | `widgets/sliver.dart` | `src/Plumix/Widgets/Scroll.cs`<br>`src/Plumix/Widgets/SliverGroup.cs` | `src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs`<br>`src/Plumix.Tests/SliverGroupTests.cs` | `dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
@@ -432,7 +435,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/stretch_effect.dart` | `src/Plumix/Widgets/OverscrollIndicator.cs` | `src/Plumix.Tests/OverscrollIndicatorTests.cs` | — |
 | `widgets/table.dart` | `src/Plumix/Widgets/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs`<br>`src/Plumix.Tests/TableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
 | `widgets/tap_region.dart` | `src/Plumix/Rendering/TapRegion.cs`<br>`src/Plumix/Widgets/TapRegion.cs` | `src/Plumix.Tests/TapRegionTests.cs` | — |
-| `widgets/text.dart` | `src/Plumix/Widgets/DefaultTextStyle.cs`<br>`src/Plumix/Widgets/Text.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextFieldTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/TextInputTests.cs`<br>`src/Plumix.Tests/TextWidgetTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/general/rich_text_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_text_styles_demo_page.dart`<br>`dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/text_field_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RichTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarTextStylesDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/TextFieldDemoPage.cs` |
+| `widgets/text.dart` | `src/Plumix/Widgets/DefaultTextStyle.cs`<br>`src/Plumix/Widgets/Text.cs` | `src/Plumix.Tests/DefaultTextEditingShortcutsTests.cs`<br>`src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextFieldTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/TextInputTests.cs`<br>`src/Plumix.Tests/TextWidgetTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/general/rich_text_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_text_styles_demo_page.dart`<br>`dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/text_field_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RichTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarTextStylesDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/TextFieldDemoPage.cs` |
 | `widgets/text_editing_intents.dart` | `src/Plumix/Widgets/TextEditingIntents.cs` | — | — |
 | `widgets/text_selection.dart` | `src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `widgets/text_selection_toolbar_anchors.dart` | `src/Plumix/Widgets/ContextMenu.cs` | — | — |
@@ -455,6 +458,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 - `src/Plumix/AndroidLifecycleChannel.cs`
 - `src/Plumix/AssemblyInfo.cs`
+- `src/Plumix/Gestures/GestureTimer.cs`
 - `src/Plumix/PlumixApplication.cs`
 - `src/Plumix/PlumixOptions.cs`
 - `src/Plumix/Rendering/FilterLayerRasterizer.cs`
@@ -471,8 +475,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 428
-- C# files carrying a marker: 549
-- C# files without a marker: 15
+- Flutter files mapped: 431
+- C# files carrying a marker: 554
+- C# files without a marker: 16
 - Markers not resolvable in the pinned checkout: 0
 

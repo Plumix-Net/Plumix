@@ -166,31 +166,46 @@ public sealed class SelectableRegion : StatefulWidget
 
 public sealed class SelectableRegionState : State, ISelectionRegistrar
 {
-    private static readonly TimeSpan ConsecutiveTapTimeout = TimeSpan.FromMilliseconds(300);
-    private const double ConsecutiveTapSlop = 100.0;
+    /// Dart's `_kLongPressSelectionDevices`.
+    private static readonly IReadOnlySet<PointerDeviceKind> LongPressSelectionDevices =
+        new HashSet<PointerDeviceKind>
+        {
+            PointerDeviceKind.Touch,
+            PointerDeviceKind.Stylus,
+            PointerDeviceKind.InvertedStylus,
+        };
 
+    private readonly Dictionary<Type, IGestureRecognizerFactory> _gestureRecognizers = [];
     private readonly LayerLink _startHandleLayerLink = new();
     private readonly LayerLink _endHandleLayerLink = new();
     private readonly LayerLink _toolbarLayerLink = new();
     private readonly StaticSelectionContainerDelegate _selectionDelegate = new();
     private readonly SelectableRegionSelectionStatusNotifier _selectionStatusNotifier = new();
-    private readonly ContextMenuController _contextMenuController = new();
 
+    private SelectionOverlay? _selectionOverlay;
     private ISelectable? _selectable;
     private SelectedContent? _lastSelectedContent;
     private FocusNode? _localFocusNode;
     private FocusNode? _attachedFocusNode;
     private Point? _lastSecondaryTapDownPosition;
     private PointerDeviceKind? _lastPointerDeviceKind;
+    private Point? _doubleTapOffset;
+    private Point? _selectionStartPosition;
+    private Point? _selectionEndPosition;
+    private bool _scheduledSelectionStartEdgeUpdate;
+    private bool _scheduledSelectionEndEdgeUpdate;
+    private Point _selectionStartHandleDragPosition;
+    private Point _selectionEndHandleDragPosition;
+    private Orientation? _lastOrientation;
+    private bool _isShiftPressed;
     private bool? _adjustingSelectionEnd;
     private double? _directionalHorizontalBaseline;
     private bool _showingToolbar;
-    private int _consecutiveTapCount;
-    private DateTime _lastTapTime;
-    private Point _lastTapPosition;
-    private bool _dragging;
 
     private SelectableRegion Current => (SelectableRegion)StateWidget;
+
+    /// The selection overlay that owns the handles, toolbar and magnifier.
+    internal SelectionOverlay? SelectionOverlay => _selectionOverlay;
 
     private FocusNode FocusNode => Current.FocusNode ?? (_localFocusNode ??= new FocusNode());
 
@@ -208,7 +223,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     public double EndGlyphHeight => _selectionDelegate.Value.EndSelectionPoint!.LineHeight;
 
     /// Whether the context menu is currently shown.
-    public bool ContextMenuIsVisible => _contextMenuController.IsShown;
+    public bool ContextMenuIsVisible => _selectionOverlay?.ToolbarIsVisible ?? false;
 
     /// The endpoints of the current selection, ordered top to bottom.
     public IReadOnlyList<TextSelectionPoint> SelectionEndpoints
@@ -307,6 +322,25 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     {
         base.InitState();
         AttachFocusNode();
+        InitMouseGestureRecognizer();
+        InitTouchGestureRecognizer();
+        // Right clicks are recognized on every device kind.
+        _gestureRecognizers[typeof(TapGestureRecognizer)] =
+            new GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+                () => new TapGestureRecognizer { DebugOwner = this },
+                instance => instance.OnSecondaryTapDown = HandleRightClickDown);
+    }
+
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        Orientation orientation = MediaQuery.OrientationOf(Context);
+        if (_lastOrientation is { } lastOrientation && lastOrientation != orientation)
+        {
+            HideToolbar(hideHandles: PlatformDefaults.TargetPlatform == TargetPlatform.Android);
+        }
+
+        _lastOrientation = orientation;
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -331,7 +365,10 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
         _selectable?.PushHandleLayers(null, null);
         _selectionDelegate.Dispose();
         _selectionStatusNotifier.Dispose();
-        _contextMenuController.Hide();
+        // The magnifier is hidden explicitly so it cannot outlive the overlay entry.
+        _selectionOverlay?.HideMagnifier();
+        _selectionOverlay?.Dispose();
+        _selectionOverlay = null;
         DetachFocusNode();
         _localFocusNode?.Dispose();
         _localFocusNode = null;
@@ -368,6 +405,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
         _selectable?.DispatchSelectionEvent(new SelectAllSelectionEvent());
         if (cause == SelectionChangedCause.Toolbar)
         {
+            ShowHandles();
             ShowToolbar();
         }
 
@@ -378,6 +416,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     /// Clears the ongoing selection.
     public void ClearSelection()
     {
+        FinalizeSelection();
         _directionalHorizontalBaseline = null;
         _adjustingSelectionEnd = null;
         _selectable?.DispatchSelectionEvent(new ClearSelectionEvent());
@@ -395,9 +434,33 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
         TextClipboard.SetText(data.PlainText);
     }
 
+    /// Shows the selection handles, creating the overlay when the geometry allows it.
+    public bool ShowHandles()
+    {
+        if (_selectionOverlay is { } existing)
+        {
+            existing.ShowHandles();
+            return true;
+        }
+
+        if (!HasSelectionOverlayGeometry)
+        {
+            return false;
+        }
+
+        CreateSelectionOverlay();
+        _selectionOverlay!.ShowHandles();
+        return true;
+    }
+
     /// Shows the context menu for the current selection.
     public bool ShowToolbar(Point? location = null)
     {
+        if (!HasSelectionOverlayGeometry && _selectionOverlay is null)
+        {
+            return false;
+        }
+
         if (Current.ContextMenuBuilder is null || ContextMenuButtonItems.Count == 0)
         {
             return false;
@@ -408,13 +471,30 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
             _lastSecondaryTapDownPosition = anchor;
         }
 
+        if (_selectionOverlay is null)
+        {
+            CreateSelectionOverlay();
+        }
+
+        _selectionOverlay!.ToolbarLocation = location;
+
         // The menu is route-backed here (see `DIVERGENCES.md`), so pushing it hands
         // focus to the modal scope. That focus loss must not tear down the route
         // that is still being pushed, so re-entrant hides are ignored while showing.
         _showingToolbar = true;
         try
         {
-            return _contextMenuController.Show(Context, context => Current.ContextMenuBuilder!(context, this));
+            if (Current.SelectionControls is not ITextSelectionHandleControls)
+            {
+                _selectionOverlay.ShowToolbar();
+                return true;
+            }
+
+            _selectionOverlay.HideToolbar();
+            _selectionOverlay.ShowToolbar(
+                context: Context,
+                contextMenuBuilder: context => Current.ContextMenuBuilder!(context, this));
+            return true;
         }
         finally
         {
@@ -430,34 +510,121 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
             return;
         }
 
-        _contextMenuController.Hide();
+        _selectionOverlay?.HideToolbar();
+        if (hideHandles)
+        {
+            _selectionOverlay?.HideHandles();
+        }
     }
 
     // -- Selection primitives ---------------------------------------------------
 
-    private void SelectStartTo(Point offset, TextGranularity? granularity = null)
+    private void SelectStartTo(Point offset, bool continuous = false, TextGranularity? granularity = null)
     {
-        _selectable?.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForStart(offset, granularity));
+        if (!continuous)
+        {
+            _selectable?.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForStart(offset, granularity));
+            return;
+        }
+
+        if (_selectionStartPosition != offset)
+        {
+            _selectionStartPosition = offset;
+            TriggerSelectionStartEdgeUpdate(granularity);
+        }
     }
 
-    private void SelectEndTo(Point offset, TextGranularity? granularity = null)
+    private void SelectEndTo(Point offset, bool continuous = false, TextGranularity? granularity = null)
     {
-        _selectable?.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForEnd(offset, granularity));
+        if (!continuous)
+        {
+            _selectable?.DispatchSelectionEvent(SelectionEdgeUpdateEvent.ForEnd(offset, granularity));
+            return;
+        }
+
+        if (_selectionEndPosition != offset)
+        {
+            _selectionEndPosition = offset;
+            TriggerSelectionEndEdgeUpdate(granularity);
+        }
+    }
+
+    /// <summary>
+    /// Re-dispatches the pending start-edge update until the selectables stop reporting
+    /// <see cref="SelectionResult.Pending"/>, matching Dart's post-frame retry loop.
+    /// </summary>
+    private void TriggerSelectionStartEdgeUpdate(TextGranularity? granularity = null)
+    {
+        if (_scheduledSelectionStartEdgeUpdate || _selectionStartPosition is not { } position)
+        {
+            return;
+        }
+
+        if (_selectable?.DispatchSelectionEvent(
+                SelectionEdgeUpdateEvent.ForStart(position, granularity)) == SelectionResult.Pending)
+        {
+            _scheduledSelectionStartEdgeUpdate = true;
+            Scheduler.AddPostFrameCallback(_ =>
+            {
+                if (!_scheduledSelectionStartEdgeUpdate)
+                {
+                    return;
+                }
+
+                _scheduledSelectionStartEdgeUpdate = false;
+                TriggerSelectionStartEdgeUpdate(granularity);
+            });
+        }
+    }
+
+    private void TriggerSelectionEndEdgeUpdate(TextGranularity? granularity = null)
+    {
+        if (_scheduledSelectionEndEdgeUpdate || _selectionEndPosition is not { } position)
+        {
+            return;
+        }
+
+        if (_selectable?.DispatchSelectionEvent(
+                SelectionEdgeUpdateEvent.ForEnd(position, granularity)) == SelectionResult.Pending)
+        {
+            _scheduledSelectionEndEdgeUpdate = true;
+            Scheduler.AddPostFrameCallback(_ =>
+            {
+                if (!_scheduledSelectionEndEdgeUpdate)
+                {
+                    return;
+                }
+
+                _scheduledSelectionEndEdgeUpdate = false;
+                TriggerSelectionEndEdgeUpdate(granularity);
+            });
+        }
+    }
+
+    private void FinalizeSelection()
+    {
+        _scheduledSelectionEndEdgeUpdate = false;
+        _selectionEndPosition = null;
+        _scheduledSelectionStartEdgeUpdate = false;
+        _selectionStartPosition = null;
     }
 
     private void CollapseSelectionAt(Point offset)
     {
+        FinalizeSelection();
         SelectStartTo(offset);
         SelectEndTo(offset);
     }
 
     private void SelectWordAt(Point offset)
     {
+        FinalizeSelection();
         _selectable?.DispatchSelectionEvent(new SelectWordSelectionEvent(offset));
     }
 
     private void SelectParagraphAt(Point offset)
     {
+        FinalizeSelection();
         _selectable?.DispatchSelectionEvent(new SelectParagraphSelectionEvent(offset));
     }
 
@@ -483,10 +650,18 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     private void SetChangingThenFinalize()
     {
         _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
-        if (_selectionStatusNotifier.Value == SelectableRegionSelectionStatus.Changing)
+        FinalizeSelectableRegionStatus();
+    }
+
+    /// Dart's `_finalizeSelectableRegionStatus`: only a changing selection can be finalized.
+    private void FinalizeSelectableRegionStatus()
+    {
+        if (_selectionStatusNotifier.Value != SelectableRegionSelectionStatus.Changing)
         {
-            _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Finalized;
+            return;
         }
+
+        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Finalized;
     }
 
     private void UpdateSelectedContentIfNeeded()
@@ -506,12 +681,141 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
 
     private void UpdateSelectionStatus()
     {
-        if (!HasSelectionOverlayGeometry)
+        if (HasSelectionOverlayGeometry)
         {
-            HideToolbar();
+            UpdateSelectionOverlay();
+        }
+        else
+        {
+            _selectionOverlay?.Dispose();
+            _selectionOverlay = null;
         }
 
         SetState(() => { });
+    }
+
+    // -- Selection overlay --------------------------------------------------------
+
+    private void CreateSelectionOverlay()
+    {
+        if (_selectionOverlay is not null || !HasSelectionOverlayGeometry)
+        {
+            return;
+        }
+
+        SelectionPoint? start = _selectionDelegate.Value.StartSelectionPoint;
+        SelectionPoint? end = _selectionDelegate.Value.EndSelectionPoint;
+        _selectionOverlay = new SelectionOverlay(
+            context: Context,
+            debugRequiredFor: Current,
+            startHandleType: start?.HandleType ?? TextSelectionHandleType.Collapsed,
+            lineHeightAtStart: start?.LineHeight ?? end!.LineHeight,
+            onStartHandleDragStart: HandleSelectionStartHandleDragStart,
+            onStartHandleDragUpdate: HandleSelectionStartHandleDragUpdate,
+            onStartHandleDragEnd: OnAnyDragEnd,
+            endHandleType: end?.HandleType ?? TextSelectionHandleType.Collapsed,
+            lineHeightAtEnd: end?.LineHeight ?? start!.LineHeight,
+            onEndHandleDragStart: HandleSelectionEndHandleDragStart,
+            onEndHandleDragUpdate: HandleSelectionEndHandleDragUpdate,
+            onEndHandleDragEnd: OnAnyDragEnd,
+            selectionEndpoints: SelectionEndpoints,
+            selectionControls: Current.SelectionControls,
+            selectionDelegate: null,
+            clipboardStatus: null,
+            startHandleLayerLink: _startHandleLayerLink,
+            endHandleLayerLink: _endHandleLayerLink,
+            toolbarLayerLink: _toolbarLayerLink,
+            magnifierConfiguration: Current.MagnifierConfiguration);
+    }
+
+    private void UpdateSelectionOverlay()
+    {
+        if (_selectionOverlay is not { } overlay)
+        {
+            return;
+        }
+
+        SelectionPoint? start = _selectionDelegate.Value.StartSelectionPoint;
+        SelectionPoint? end = _selectionDelegate.Value.EndSelectionPoint;
+        overlay.StartHandleType = start?.HandleType ?? TextSelectionHandleType.Left;
+        overlay.LineHeightAtStart = start?.LineHeight ?? end!.LineHeight;
+        overlay.EndHandleType = end?.HandleType ?? TextSelectionHandleType.Right;
+        overlay.LineHeightAtEnd = end?.LineHeight ?? start!.LineHeight;
+        overlay.SelectionEndpoints = SelectionEndpoints;
+    }
+
+    private MagnifierInfo BuildInfoForMagnifier(Point globalGesturePosition, SelectionPoint selectionPoint)
+    {
+        Matrix transform = _selectable!.GetTransformTo(null);
+        var globalTransformAsOffset = new Point(transform.M31, transform.M32);
+        Point position = selectionPoint.LocalPosition + globalTransformAsOffset;
+        var caretRect = new Rect(
+            position.X,
+            position.Y - selectionPoint.LineHeight,
+            0.0,
+            selectionPoint.LineHeight);
+        var fieldBounds = new Rect(globalTransformAsOffset, _selectable.Size);
+        return new MagnifierInfo(
+            GlobalGesturePosition: globalGesturePosition,
+            CaretRect: caretRect,
+            FieldBounds: fieldBounds,
+            CurrentLineBoundaries: fieldBounds);
+    }
+
+    private void HandleSelectionStartHandleDragStart(DragStartDetails details)
+    {
+        SelectionPoint startPoint = _selectionDelegate.Value.StartSelectionPoint!;
+        Matrix globalTransform = _selectable!.GetTransformTo(null);
+        _selectionStartHandleDragPosition = globalTransform.Transform(startPoint.LocalPosition);
+        _selectionOverlay!.ShowMagnifier(BuildInfoForMagnifier(details.GlobalPosition, startPoint));
+        UpdateSelectedContentIfNeeded();
+    }
+
+    private void HandleSelectionStartHandleDragUpdate(DragUpdateDetails details)
+    {
+        SelectionPoint startPoint = _selectionDelegate.Value.StartSelectionPoint!;
+        _selectionStartHandleDragPosition += details.Delta;
+        // The handle anchors at the paint origin; the selection edge sits at the line's centre.
+        _selectionStartPosition = _selectionStartHandleDragPosition - new Point(0, startPoint.LineHeight / 2);
+        TriggerSelectionStartEdgeUpdate();
+        _selectionOverlay!.UpdateMagnifier(BuildInfoForMagnifier(details.GlobalPosition, startPoint));
+        UpdateSelectedContentIfNeeded();
+        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+    }
+
+    private void HandleSelectionEndHandleDragStart(DragStartDetails details)
+    {
+        SelectionPoint endPoint = _selectionDelegate.Value.EndSelectionPoint!;
+        Matrix globalTransform = _selectable!.GetTransformTo(null);
+        _selectionEndHandleDragPosition = globalTransform.Transform(endPoint.LocalPosition);
+        _selectionOverlay!.ShowMagnifier(BuildInfoForMagnifier(details.GlobalPosition, endPoint));
+        UpdateSelectedContentIfNeeded();
+    }
+
+    private void HandleSelectionEndHandleDragUpdate(DragUpdateDetails details)
+    {
+        SelectionPoint endPoint = _selectionDelegate.Value.EndSelectionPoint!;
+        _selectionEndHandleDragPosition += details.Delta;
+        _selectionEndPosition = _selectionEndHandleDragPosition - new Point(0, endPoint.LineHeight / 2);
+        TriggerSelectionEndEdgeUpdate();
+        _selectionOverlay!.UpdateMagnifier(BuildInfoForMagnifier(details.GlobalPosition, endPoint));
+        UpdateSelectedContentIfNeeded();
+        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+    }
+
+    private void OnAnyDragEnd(DragEndDetails details)
+    {
+        bool draggingHandles = _selectionOverlay is { } overlay
+                               && (overlay.IsDraggingStartHandle || overlay.IsDraggingEndHandle);
+        if (!draggingHandles)
+        {
+            _selectionOverlay!.HideMagnifier();
+            ShowToolbar();
+        }
+
+        FinalizeSelection();
+        UpdateSelectedContentIfNeeded();
+        FinalizeSelectableRegionStatus();
     }
 
     // -- Gestures ----------------------------------------------------------------
@@ -543,45 +847,139 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
 
     private static bool IsPrecisePointerDevice(PointerDeviceKind kind) => kind == PointerDeviceKind.Mouse;
 
-    private void HandleTapDown(PointerDownEvent @event)
-    {
-        _lastPointerDeviceKind = @event.Kind;
-        DateTime now = @event.TimestampUtc;
-        bool consecutive = now - _lastTapTime <= ConsecutiveTapTimeout
-                           && Math.Abs(_lastTapPosition.X - @event.Position.X)
-                           + Math.Abs(_lastTapPosition.Y - @event.Position.Y) <= ConsecutiveTapSlop;
-        _consecutiveTapCount = consecutive ? _consecutiveTapCount + 1 : 1;
-        _lastTapTime = now;
-        _lastTapPosition = @event.Position;
+    private static bool IsApplePlatform => PlatformDefaults.TargetPlatform
+        is TargetPlatform.IOS or TargetPlatform.MacOS;
 
-        FocusNode.RequestFocus();
-        switch (GetEffectiveConsecutiveTapCount(_consecutiveTapCount))
+    private void InitMouseGestureRecognizer()
+    {
+        _gestureRecognizers[typeof(TapAndPanGestureRecognizer)] =
+            new GestureRecognizerFactoryWithHandlers<TapAndPanGestureRecognizer>(
+                () => new TapAndPanGestureRecognizer
+                {
+                    DebugOwner = this,
+                    SupportedDevices = new HashSet<PointerDeviceKind> { PointerDeviceKind.Mouse },
+                },
+                instance =>
+                {
+                    instance.OnTapTrackStart = OnTapTrackStart;
+                    instance.OnTapTrackReset = OnTapTrackReset;
+                    instance.OnTapDown = StartNewMouseSelectionGesture;
+                    instance.OnTapUp = HandleMouseTapUp;
+                    instance.OnDragStart = HandleMouseDragStart;
+                    instance.OnDragUpdate = HandleMouseDragUpdate;
+                    instance.OnDragEnd = HandleMouseDragEnd;
+                    instance.OnCancel = ClearSelection;
+                    instance.DragStartBehavior = DragStartBehavior.Down;
+                });
+    }
+
+    private void InitTouchGestureRecognizer()
+    {
+        // Only a horizontal drag is recognized on touch, so an ancestor vertical `Scrollable` still
+        // wins a vertical drag. On iOS the scrollable's slop equals this recognizer's, so victory is
+        // deferred until every other recognizer has lost.
+        var nonMouseDevices = new HashSet<PointerDeviceKind>(
+            Enum.GetValues<PointerDeviceKind>().Where(kind => kind != PointerDeviceKind.Mouse));
+        _gestureRecognizers[typeof(TapAndHorizontalDragGestureRecognizer)] =
+            new GestureRecognizerFactoryWithHandlers<TapAndHorizontalDragGestureRecognizer>(
+                () => new TapAndHorizontalDragGestureRecognizer
+                {
+                    DebugOwner = this,
+                    SupportedDevices = nonMouseDevices,
+                },
+                instance =>
+                {
+                    instance.EagerVictoryOnDrag = PlatformDefaults.TargetPlatform != TargetPlatform.IOS;
+                    instance.OnTapDown = StartNewMouseSelectionGesture;
+                    instance.OnTapUp = HandleMouseTapUp;
+                    instance.OnDragStart = HandleMouseDragStart;
+                    instance.OnDragUpdate = HandleMouseDragUpdate;
+                    instance.OnDragEnd = HandleMouseDragEnd;
+                    instance.OnCancel = ClearSelection;
+                    instance.DragStartBehavior = DragStartBehavior.Down;
+                });
+
+        _gestureRecognizers[typeof(LongPressGestureRecognizer)] =
+            new GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+                () => new LongPressGestureRecognizer
+                {
+                    DebugOwner = this,
+                    SupportedDevices = LongPressSelectionDevices,
+                },
+                instance =>
+                {
+                    instance.OnLongPressStart = HandleTouchLongPressStart;
+                    instance.OnLongPressMoveUpdate = HandleTouchLongPressMoveUpdate;
+                    instance.OnLongPressEnd = HandleTouchLongPressEnd;
+                });
+    }
+
+    private void OnTapTrackStart()
+    {
+        IReadOnlySet<string> pressed = HardwareKeyboard.Instance.LogicalKeysPressed;
+        _isShiftPressed = pressed.Contains("Shift")
+                          || pressed.Contains("LeftShift")
+                          || pressed.Contains("RightShift");
+    }
+
+    private void OnTapTrackReset()
+    {
+        _isShiftPressed = false;
+    }
+
+    private void StartNewMouseSelectionGesture(TapDragDownDetails details)
+    {
+        _lastPointerDeviceKind = details.Kind;
+        switch (GetEffectiveConsecutiveTapCount(details.ConsecutiveTapCount))
         {
             case 1:
+                FocusNode.RequestFocus();
                 switch (PlatformDefaults.TargetPlatform)
                 {
                     case TargetPlatform.Android:
                     case TargetPlatform.Fuchsia:
                     case TargetPlatform.IOS:
+                        // On mobile the selection is set on tap up.
                         break;
                     default:
                         HideToolbar();
-                        if (IsShiftPressed() && _selectionDelegate.Value.StartSelectionPoint is not null)
+                        if (_isShiftPressed && _selectionDelegate.Value.StartSelectionPoint is not null)
                         {
-                            SelectEndTo(@event.Position);
+                            SelectEndTo(details.GlobalPosition);
                             _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
                             break;
                         }
 
                         ClearSelection();
-                        CollapseSelectionAt(@event.Position);
+                        CollapseSelectionAt(details.GlobalPosition);
                         _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
                         break;
                 }
 
                 break;
             case 2:
-                SelectWordAt(@event.Position);
+                if (PlatformDefaults.TargetPlatform == TargetPlatform.IOS)
+                {
+                    if (PlatformDefaults.IsWeb
+                        && details.Kind is { } webKind
+                        && !IsPrecisePointerDevice(webKind))
+                    {
+                        // iOS web defers the word selection to the drag that follows.
+                        _doubleTapOffset = details.GlobalPosition;
+                        break;
+                    }
+
+                    SelectWordAt(details.GlobalPosition);
+                    _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+                    if (details.Kind is { } iosKind && !IsPrecisePointerDevice(iosKind))
+                    {
+                        ShowHandles();
+                    }
+
+                    break;
+                }
+
+                SelectWordAt(details.GlobalPosition);
                 _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
                 break;
             case 3:
@@ -590,15 +988,16 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
                     case TargetPlatform.Android:
                     case TargetPlatform.Fuchsia:
                     case TargetPlatform.IOS:
-                        if (IsPrecisePointerDevice(@event.Kind))
+                        // A triple tap on mobile requires a precise pointer.
+                        if (details.Kind is { } kind && IsPrecisePointerDevice(kind))
                         {
-                            SelectParagraphAt(@event.Position);
+                            SelectParagraphAt(details.GlobalPosition);
                             _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
                         }
 
                         break;
                     default:
-                        SelectParagraphAt(@event.Position);
+                        SelectParagraphAt(details.GlobalPosition);
                         _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
                         break;
                 }
@@ -609,9 +1008,10 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
         UpdateSelectedContentIfNeeded();
     }
 
-    private void HandleTapUp(PointerUpEvent @event)
+    private void HandleMouseTapUp(TapDragUpDetails details)
     {
-        if (PlatformDefaults.TargetPlatform == TargetPlatform.IOS && PositionIsOnActiveSelection(@event.Position))
+        if (PlatformDefaults.TargetPlatform == TargetPlatform.IOS
+            && PositionIsOnActiveSelection(details.GlobalPosition))
         {
             if (ContextMenuIsVisible)
             {
@@ -625,94 +1025,170 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
             return;
         }
 
-        if (GetEffectiveConsecutiveTapCount(_consecutiveTapCount) != 1)
+        switch (GetEffectiveConsecutiveTapCount(details.ConsecutiveTapCount))
         {
-            SetChangingThenFinalize();
-            UpdateSelectedContentIfNeeded();
-            return;
-        }
+            case 1:
+                switch (PlatformDefaults.TargetPlatform)
+                {
+                    case TargetPlatform.Android:
+                    case TargetPlatform.Fuchsia:
+                    case TargetPlatform.IOS:
+                        HideToolbar();
+                        CollapseSelectionAt(details.GlobalPosition);
+                        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+                        break;
+                }
 
-        switch (PlatformDefaults.TargetPlatform)
-        {
-            case TargetPlatform.Android:
-            case TargetPlatform.Fuchsia:
-            case TargetPlatform.IOS:
-                HideToolbar();
-                CollapseSelectionAt(@event.Position);
-                _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+                break;
+            case 2:
+                bool isPointerPrecise = IsPrecisePointerDevice(details.Kind);
+                switch (PlatformDefaults.TargetPlatform)
+                {
+                    case TargetPlatform.Android:
+                    case TargetPlatform.Fuchsia:
+                        if (!isPointerPrecise)
+                        {
+                            ShowHandles();
+                            ShowToolbar();
+                        }
+
+                        break;
+                    case TargetPlatform.IOS:
+                        if (!isPointerPrecise && !PlatformDefaults.IsWeb)
+                        {
+                            ShowToolbar();
+                        }
+
+                        break;
+                }
+
                 break;
         }
 
-        SetChangingThenFinalize();
+        FinalizeSelectableRegionStatus();
         UpdateSelectedContentIfNeeded();
         Current.OnTap?.Invoke();
     }
 
-    private void HandleDragStart(DragStartDetails details)
+    private void HandleMouseDragStart(TapDragStartDetails details)
     {
-        _dragging = true;
-        int tapCount = GetEffectiveConsecutiveTapCount(_consecutiveTapCount);
-        if (tapCount != 1)
+        if (GetEffectiveConsecutiveTapCount(details.ConsecutiveTapCount) != 1)
         {
             return;
         }
 
-        if (_lastPointerDeviceKind is { } kind && !IsPrecisePointerDevice(kind))
+        // Drag-to-select is only supported by precise pointers.
+        if (details.Kind is { } kind && !IsPrecisePointerDevice(kind))
         {
             return;
         }
 
-        // `DragStartBehavior.Down`: the selection starts where the pointer went
-        // down, not where the drag was recognized.
-        SelectStartTo(_lastTapPosition);
+        SelectStartTo(details.GlobalPosition);
         _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
         UpdateSelectedContentIfNeeded();
     }
 
-    private void HandleDragUpdate(DragUpdateDetails details)
+    private void HandleMouseDragUpdate(TapDragUpdateDetails details)
     {
-        if (!_dragging)
+        switch (GetEffectiveConsecutiveTapCount(details.ConsecutiveTapCount))
         {
-            return;
+            case 1:
+                if (details.Kind is { } dragKind && !IsPrecisePointerDevice(dragKind))
+                {
+                    return;
+                }
+
+                SelectEndTo(details.GlobalPosition, continuous: true);
+                _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+                break;
+            case 2:
+                switch (PlatformDefaults.TargetPlatform)
+                {
+                    case TargetPlatform.Android:
+                    case TargetPlatform.Fuchsia:
+                        if (!PlatformDefaults.IsWeb
+                            || (details.Kind is { } androidKind && IsPrecisePointerDevice(androidKind)))
+                        {
+                            SelectEndTo(
+                                details.GlobalPosition,
+                                continuous: true,
+                                granularity: TextGranularity.Word);
+                            _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+                        }
+
+                        break;
+                    case TargetPlatform.IOS:
+                        if (PlatformDefaults.IsWeb
+                            && details.Kind is { } iosKind
+                            && !IsPrecisePointerDevice(iosKind)
+                            && _doubleTapOffset is { } doubleTapOffset)
+                        {
+                            SelectWordAt(doubleTapOffset);
+                            _doubleTapOffset = null;
+                        }
+
+                        SelectEndTo(details.GlobalPosition, continuous: true, granularity: TextGranularity.Word);
+                        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+                        if (details.Kind is { } handleKind && !IsPrecisePointerDevice(handleKind))
+                        {
+                            ShowHandles();
+                        }
+
+                        break;
+                    default:
+                        SelectEndTo(details.GlobalPosition, continuous: true, granularity: TextGranularity.Word);
+                        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+                        break;
+                }
+
+                break;
+            case 3:
+                switch (PlatformDefaults.TargetPlatform)
+                {
+                    case TargetPlatform.Android:
+                    case TargetPlatform.Fuchsia:
+                    case TargetPlatform.IOS:
+                        if (details.Kind is { } paragraphKind && IsPrecisePointerDevice(paragraphKind))
+                        {
+                            SelectEndTo(
+                                details.GlobalPosition,
+                                continuous: true,
+                                granularity: TextGranularity.Paragraph);
+                            _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+                        }
+
+                        break;
+                    default:
+                        SelectEndTo(
+                            details.GlobalPosition,
+                            continuous: true,
+                            granularity: TextGranularity.Paragraph);
+                        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+                        break;
+                }
+
+                break;
         }
 
-        int tapCount = GetEffectiveConsecutiveTapCount(_consecutiveTapCount);
-        bool precise = _lastPointerDeviceKind is not { } kind || IsPrecisePointerDevice(kind);
-        TextGranularity? granularity = tapCount switch
-        {
-            2 => TextGranularity.Word,
-            3 => TextGranularity.Paragraph,
-            _ => null,
-        };
-        if (tapCount == 1 && !precise)
-        {
-            return;
-        }
-
-        if (tapCount == 3 && !precise)
-        {
-            return;
-        }
-
-        SelectEndTo(details.GlobalPosition, granularity);
-        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
         UpdateSelectedContentIfNeeded();
     }
 
-    private void HandleDragEnd(DragEndDetails details)
+    private void HandleMouseDragEnd(TapDragEndDetails details)
     {
-        if (!_dragging)
-        {
-            return;
-        }
-
-        _dragging = false;
+        // `TapDragEndDetails` carries no device kind, so the last tap-down kind decides.
         bool shouldShowSelectionOverlayOnMobile =
-            _lastPointerDeviceKind is { } kind && !IsPrecisePointerDevice(kind);
+            _lastPointerDeviceKind is not { } kind || !IsPrecisePointerDevice(kind);
         switch (PlatformDefaults.TargetPlatform)
         {
             case TargetPlatform.Android:
             case TargetPlatform.Fuchsia:
+                if (shouldShowSelectionOverlayOnMobile)
+                {
+                    ShowHandles();
+                    ShowToolbar();
+                }
+
+                break;
             case TargetPlatform.IOS:
                 if (shouldShowSelectionOverlayOnMobile)
                 {
@@ -722,18 +1198,43 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
                 break;
         }
 
+        FinalizeSelection();
         UpdateSelectedContentIfNeeded();
-        SetChangingThenFinalize();
+        FinalizeSelectableRegionStatus();
     }
 
-    private void HandleLongPress()
+    private void HandleTouchLongPressStart(LongPressStartDetails details)
     {
         HapticFeedback.SelectionClick();
         FocusNode.RequestFocus();
-        SelectWordAt(_lastTapPosition);
+        SelectWordAt(details.GlobalPosition);
+        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+        // Android shows the handles when the long press ends instead.
+        if (PlatformDefaults.TargetPlatform != TargetPlatform.Android)
+        {
+            ShowHandles();
+        }
+
+        UpdateSelectedContentIfNeeded();
+    }
+
+    private void HandleTouchLongPressMoveUpdate(LongPressMoveUpdateDetails details)
+    {
+        SelectEndTo(details.GlobalPosition, granularity: TextGranularity.Word);
         _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
         UpdateSelectedContentIfNeeded();
-        SetChangingThenFinalize();
+    }
+
+    private void HandleTouchLongPressEnd(LongPressEndDetails details)
+    {
+        FinalizeSelection();
+        UpdateSelectedContentIfNeeded();
+        FinalizeSelectableRegionStatus();
+        if (PlatformDefaults.TargetPlatform == TargetPlatform.Android)
+        {
+            ShowHandles();
+        }
+
         ShowToolbar();
     }
 
@@ -750,7 +1251,10 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
             case TargetPlatform.Windows:
                 if (PositionIsOnActiveSelection(@event.Position))
                 {
-                    ShowToolbar(@event.Position);
+                    // `ContextMenuAnchors` consumes the recorded position, so it is set again here.
+                    _lastSecondaryTapDownPosition = @event.Position;
+                    ShowHandles();
+                    ShowToolbar(_lastSecondaryTapDownPosition);
                     UpdateSelectedContentIfNeeded();
                     return;
                 }
@@ -784,15 +1288,12 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
                 break;
         }
 
-        SetChangingThenFinalize();
-        ShowToolbar(@event.Position);
+        _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
+        FinalizeSelectableRegionStatus();
+        _lastSecondaryTapDownPosition = @event.Position;
+        ShowHandles();
+        ShowToolbar(_lastSecondaryTapDownPosition);
         UpdateSelectedContentIfNeeded();
-    }
-
-    private static bool IsShiftPressed()
-    {
-        IReadOnlySet<string> pressed = HardwareKeyboard.Instance.LogicalKeysPressed;
-        return pressed.Contains("Shift") || pressed.Contains("LeftShift") || pressed.Contains("RightShift");
     }
 
     // -- Keyboard -----------------------------------------------------------------
@@ -867,129 +1368,112 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     {
         return new Dictionary<Type, FlutterAction>
         {
-            [typeof(SelectAllTextIntent)] = new CallbackAction<SelectAllTextIntent>(_ =>
-            {
-                SelectAll(SelectionChangedCause.Keyboard);
-                return null;
-            }),
-            [typeof(CopySelectionTextIntent)] = new CallbackAction<CopySelectionTextIntent>(_ =>
-            {
-                CopySelection();
-                return null;
-            }),
+            [typeof(SelectAllTextIntent)] = new SelectAllAction(this),
+            [typeof(CopySelectionTextIntent)] = new CopySelectionAction(this),
             [typeof(ExtendSelectionToNextWordBoundaryOrCaretLocationIntent)] =
-                new CallbackAction<ExtendSelectionToNextWordBoundaryOrCaretLocationIntent>(intent =>
-                {
-                    GranularlyExtendSelection(TextGranularity.Word, intent.Forward);
-                    return null;
-                }),
+                new GranularlyExtendSelectionAction<ExtendSelectionToNextWordBoundaryOrCaretLocationIntent>(
+                    this, TextGranularity.Word),
             [typeof(ExpandSelectionToDocumentBoundaryIntent)] =
-                new CallbackAction<ExpandSelectionToDocumentBoundaryIntent>(intent =>
-                {
-                    GranularlyExtendSelection(TextGranularity.Document, intent.Forward);
-                    return null;
-                }),
+                new GranularlyExtendSelectionAction<ExpandSelectionToDocumentBoundaryIntent>(
+                    this, TextGranularity.Document),
             [typeof(ExpandSelectionToLineBreakIntent)] =
-                new CallbackAction<ExpandSelectionToLineBreakIntent>(intent =>
-                {
-                    GranularlyExtendSelection(TextGranularity.Line, intent.Forward);
-                    return null;
-                }),
+                new GranularlyExtendSelectionAction<ExpandSelectionToLineBreakIntent>(this, TextGranularity.Line),
             [typeof(ExtendSelectionByCharacterIntent)] =
-                new CallbackAction<ExtendSelectionByCharacterIntent>(intent =>
-                {
-                    if (!intent.CollapseSelection)
-                    {
-                        GranularlyExtendSelection(TextGranularity.Character, intent.Forward);
-                    }
-
-                    return null;
-                }),
+                new GranularlyExtendCaretSelectionAction<ExtendSelectionByCharacterIntent>(
+                    this, TextGranularity.Character),
             [typeof(ExtendSelectionToNextWordBoundaryIntent)] =
-                new CallbackAction<ExtendSelectionToNextWordBoundaryIntent>(intent =>
-                {
-                    if (!intent.CollapseSelection)
-                    {
-                        GranularlyExtendSelection(TextGranularity.Word, intent.Forward);
-                    }
-
-                    return null;
-                }),
+                new GranularlyExtendCaretSelectionAction<ExtendSelectionToNextWordBoundaryIntent>(
+                    this, TextGranularity.Word),
             [typeof(ExtendSelectionToLineBreakIntent)] =
-                new CallbackAction<ExtendSelectionToLineBreakIntent>(intent =>
-                {
-                    if (!intent.CollapseSelection)
-                    {
-                        GranularlyExtendSelection(TextGranularity.Line, intent.Forward);
-                    }
-
-                    return null;
-                }),
-            [typeof(ExtendSelectionToDocumentBoundaryIntent)] =
-                new CallbackAction<ExtendSelectionToDocumentBoundaryIntent>(intent =>
-                {
-                    if (!intent.CollapseSelection)
-                    {
-                        GranularlyExtendSelection(TextGranularity.Document, intent.Forward);
-                    }
-
-                    return null;
-                }),
+                new GranularlyExtendCaretSelectionAction<ExtendSelectionToLineBreakIntent>(
+                    this, TextGranularity.Line),
             [typeof(ExtendSelectionVerticallyToAdjacentLineIntent)] =
-                new CallbackAction<ExtendSelectionVerticallyToAdjacentLineIntent>(intent =>
-                {
-                    if (!intent.CollapseSelection)
-                    {
-                        DirectionallyExtendSelection(intent.Forward);
-                    }
-
-                    return null;
-                }),
-            [typeof(DismissIntent)] = new CallbackAction<DismissIntent>(_ =>
-            {
-                if (ContextMenuIsVisible)
-                {
-                    HideToolbar(hideHandles: false);
-                }
-
-                return null;
-            }),
+                new DirectionallyExtendCaretSelectionAction<ExtendSelectionVerticallyToAdjacentLineIntent>(this),
+            [typeof(ExtendSelectionToDocumentBoundaryIntent)] =
+                new GranularlyExtendCaretSelectionAction<ExtendSelectionToDocumentBoundaryIntent>(
+                    this, TextGranularity.Document),
+            [typeof(DismissIntent)] = new CallbackAction<DismissIntent>(HideToolbarIfVisible),
         };
     }
 
-    /// The selection-relevant half of Dart's `DefaultTextEditingShortcuts`,
-    /// scoped to this region until the full platform map is ported.
-    private static IReadOnlyDictionary<ShortcutActivator, Intent> BuildShortcuts()
+    private object? HideToolbarIfVisible(DismissIntent intent)
     {
-        bool apple = PlatformDefaults.TargetPlatform is TargetPlatform.MacOS or TargetPlatform.IOS;
-        var shortcuts = new Dictionary<ShortcutActivator, Intent>
+        if (ContextMenuIsVisible)
         {
-            [new SingleActivator("A", control: !apple, meta: apple)] =
-                new SelectAllTextIntent(SelectionChangedCause.Keyboard),
-            [new SingleActivator("C", control: !apple, meta: apple)] = CopySelectionTextIntent.Copy,
-            [new SingleActivator("Left", shift: true)] =
-                new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: false),
-            [new SingleActivator("Right", shift: true)] =
-                new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: false),
-            [new SingleActivator("Left", shift: true, control: !apple, alt: apple)] =
-                new ExtendSelectionToNextWordBoundaryIntent(forward: false, collapseSelection: false),
-            [new SingleActivator("Right", shift: true, control: !apple, alt: apple)] =
-                new ExtendSelectionToNextWordBoundaryIntent(forward: true, collapseSelection: false),
-            [new SingleActivator("Left", shift: true, alt: !apple, meta: apple)] =
-                new ExtendSelectionToLineBreakIntent(forward: false, collapseSelection: false),
-            [new SingleActivator("Right", shift: true, alt: !apple, meta: apple)] =
-                new ExtendSelectionToLineBreakIntent(forward: true, collapseSelection: false),
-            [new SingleActivator("Up", shift: true)] =
-                new ExtendSelectionVerticallyToAdjacentLineIntent(forward: false, collapseSelection: false),
-            [new SingleActivator("Down", shift: true)] =
-                new ExtendSelectionVerticallyToAdjacentLineIntent(forward: true, collapseSelection: false),
-            [new SingleActivator("Up", shift: true, alt: !apple, meta: apple)] =
-                new ExtendSelectionToDocumentBoundaryIntent(forward: false, collapseSelection: false),
-            [new SingleActivator("Down", shift: true, alt: !apple, meta: apple)] =
-                new ExtendSelectionToDocumentBoundaryIntent(forward: true, collapseSelection: false),
-            [new SingleActivator("Escape")] = new DismissIntent(),
-        };
-        return shortcuts;
+            HideToolbar(hideHandles: false);
+            return null;
+        }
+
+        return Actions.Invoke(Context, intent);
+    }
+
+    /// Selects every selectable in the region.
+    private sealed class SelectAllAction(SelectableRegionState state) : ContextAction<SelectAllTextIntent>
+    {
+        public override object? Invoke(SelectAllTextIntent intent, BuildContext? context)
+        {
+            state.SelectAll(SelectionChangedCause.Keyboard);
+            return null;
+        }
+    }
+
+    /// Copies the selection without clearing it, unlike the toolbar's copy button.
+    private sealed class CopySelectionAction(SelectableRegionState state)
+        : ContextAction<CopySelectionTextIntent>
+    {
+        public override object? Invoke(CopySelectionTextIntent intent, BuildContext? context)
+        {
+            state.CopySelection();
+            return null;
+        }
+    }
+
+    /// Extends the selection by one unit of the given granularity.
+    private sealed class GranularlyExtendSelectionAction<TIntent>(
+        SelectableRegionState state,
+        TextGranularity granularity) : ContextAction<TIntent>
+        where TIntent : DirectionalTextEditingIntent
+    {
+        public override object? Invoke(TIntent intent, BuildContext? context)
+        {
+            state.GranularlyExtendSelection(granularity, intent.Forward);
+            return null;
+        }
+    }
+
+    /// The caret-movement variant: a selectable region never collapses the selection.
+    private sealed class GranularlyExtendCaretSelectionAction<TIntent>(
+        SelectableRegionState state,
+        TextGranularity granularity) : ContextAction<TIntent>
+        where TIntent : DirectionalCaretMovementIntent
+    {
+        public override object? Invoke(TIntent intent, BuildContext? context)
+        {
+            if (intent.CollapseSelection)
+            {
+                return null;
+            }
+
+            state.GranularlyExtendSelection(granularity, intent.Forward);
+            return null;
+        }
+    }
+
+    /// Extends the selection to the adjacent line, keeping the horizontal baseline.
+    private sealed class DirectionallyExtendCaretSelectionAction<TIntent>(SelectableRegionState state)
+        : ContextAction<TIntent>
+        where TIntent : DirectionalCaretMovementIntent
+    {
+        public override object? Invoke(TIntent intent, BuildContext? context)
+        {
+            if (intent.CollapseSelection)
+            {
+                return null;
+            }
+
+            state.DirectionallyExtendSelection(intent.Forward);
+            return null;
+        }
     }
 
     // -- Focus ---------------------------------------------------------------------
@@ -1028,27 +1512,33 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
             _selectionStatusNotifier,
             new SelectionContainer(_selectionDelegate, Current.Child, registrar: this));
 
+        // `Actions` sits outside `Focus` so a focused region resolves the text-editing intents that
+        // the ambient `DefaultTextEditingShortcuts` produces.
         result = new Focus(
             focusNode: FocusNode,
             includeSemantics: false,
             child: result);
 
         result = new Actions(actions: BuildActions(), child: result);
-        result = new Shortcuts(shortcuts: BuildShortcuts(), child: result);
 
         result = new RawGestureDetector(
+            gestures: _gestureRecognizers,
             behavior: HitTestBehavior.Translucent,
-            onTapDown: HandleTapDown,
-            onTapUp: HandleTapUp,
-            onLongPress: HandleLongPress,
-            onSecondaryTapDown: HandleRightClickDown,
-            onPanStart: HandleDragStart,
-            onPanUpdate: HandleDragUpdate,
-            onPanEnd: HandleDragEnd,
-            dragStartBehavior: DragStartBehavior.Down,
             child: result);
 
         result = new CompositedTransformTarget(link: _toolbarLayerLink, child: result);
+
+        // The handles share this group id, so dragging one is not a tap outside the region.
+        result = new TapRegion(
+            groupId: typeof(SelectableRegion),
+            onTapOutside: _ =>
+            {
+                if (PlatformDefaults.IsWeb)
+                {
+                    FocusNode.Unfocus();
+                }
+            },
+            child: result);
 
         return new MouseRegion(
             cursor: Current.MouseCursor ?? SystemMouseCursors.Text,

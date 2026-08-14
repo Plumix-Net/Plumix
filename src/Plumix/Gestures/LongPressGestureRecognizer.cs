@@ -21,15 +21,24 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
 
     public Action? OnLongPressUp { get; set; }
 
+    /// <summary>Called when a long press is recognized, with the position it started at.</summary>
+    public Action<LongPressStartDetails>? OnLongPressStart { get; set; }
+
+    /// <summary>Called when the pointer moves after a long press was recognized.</summary>
+    public Action<LongPressMoveUpdateDetails>? OnLongPressMoveUpdate { get; set; }
+
+    /// <summary>Called when the pointer stops contacting the screen after a long press.</summary>
+    public Action<LongPressEndDetails>? OnLongPressEnd { get; set; }
+
     public override void AddPointer(PointerDownEvent @event)
     {
-        if (_trackers.ContainsKey(@event.Pointer))
+        if (_trackers.ContainsKey(@event.Pointer) || !IsPointerAllowed(@event))
         {
             return;
         }
 
         var arenaEntry = GestureArena.Add(@event.Pointer, this);
-        var tracker = new LongPressTracker(@event.Position, arenaEntry);
+        var tracker = new LongPressTracker(@event.Position, @event.LocalPosition, arenaEntry);
         _trackers[@event.Pointer] = tracker;
         StartTrackingPointer(@event.Pointer);
         StartDeadlineTimer(@event.Pointer, tracker);
@@ -62,6 +71,18 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
         {
             case PointerMoveEvent:
             {
+                if (tracker.Fired)
+                {
+                    // Once the press has been recognized, movement extends it instead of
+                    // rejecting it, matching Flutter's `onLongPressMoveUpdate`.
+                    OnLongPressMoveUpdate?.Invoke(new LongPressMoveUpdateDetails(
+                        GlobalPosition: @event.Position,
+                        LocalPosition: @event.LocalPosition,
+                        OffsetFromOrigin: @event.Position - tracker.InitialPosition,
+                        LocalOffsetFromOrigin: @event.LocalPosition - tracker.InitialLocalPosition));
+                    break;
+                }
+
                 if (Distance(tracker.InitialPosition, @event.Position) > TouchSlop)
                 {
                     tracker.Entry.Resolve(GestureDisposition.Rejected);
@@ -81,6 +102,9 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
                 {
                     if (tracker.Fired)
                     {
+                        OnLongPressEnd?.Invoke(new LongPressEndDetails(
+                            GlobalPosition: @event.Position,
+                            LocalPosition: @event.LocalPosition));
                         OnLongPressUp?.Invoke();
                     }
                     Cleanup(@event.Pointer);
@@ -142,6 +166,9 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
         }
 
         tracker.Fired = true;
+        OnLongPressStart?.Invoke(new LongPressStartDetails(
+            GlobalPosition: tracker.InitialPosition,
+            LocalPosition: tracker.InitialLocalPosition));
         OnLongPress?.Invoke();
     }
 
@@ -166,14 +193,17 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
 
     private sealed class LongPressTracker
     {
-        public LongPressTracker(Point initialPosition, GestureArenaEntry entry)
+        public LongPressTracker(Point initialPosition, Point initialLocalPosition, GestureArenaEntry entry)
         {
             InitialPosition = initialPosition;
+            InitialLocalPosition = initialLocalPosition;
             Entry = entry;
             Cancellation = new CancellationTokenSource();
         }
 
         public Point InitialPosition { get; }
+
+        public Point InitialLocalPosition { get; }
 
         public GestureArenaEntry Entry { get; }
 
@@ -186,3 +216,19 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
         public bool Fired { get; set; }
     }
 }
+
+/// <summary>Details for [GestureLongPressStartCallback].</summary>
+public readonly record struct LongPressStartDetails(Point GlobalPosition, Point LocalPosition = default);
+
+/// <summary>Details for [GestureLongPressMoveUpdateCallback].</summary>
+public readonly record struct LongPressMoveUpdateDetails(
+    Point GlobalPosition,
+    Point LocalPosition = default,
+    Point OffsetFromOrigin = default,
+    Point LocalOffsetFromOrigin = default);
+
+/// <summary>Details for [GestureLongPressEndCallback].</summary>
+public readonly record struct LongPressEndDetails(
+    Point GlobalPosition,
+    Point LocalPosition = default,
+    Velocity Velocity = default);

@@ -5,6 +5,158 @@ namespace Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/scrollable_helpers.dart
 
+/// <summary>
+/// Describes the type of scroll increment being requested of a <see cref="ScrollIncrementCalculator"/>.
+/// </summary>
+public enum ScrollIncrementType
+{
+    /// The distance to move when the user requests to scroll by a "line".
+    Line,
+
+    /// The distance to move when the user requests to scroll by a "page".
+    Page,
+}
+
+/// <summary>
+/// A details object that describes the type of scroll increment being requested, plus the current
+/// metrics of the scrollable being scrolled.
+/// </summary>
+public sealed class ScrollIncrementDetails
+{
+    public ScrollIncrementDetails(ScrollIncrementType type, ScrollMetricsSnapshot metrics)
+    {
+        Type = type;
+        Metrics = metrics;
+    }
+
+    /// The type of scroll this is (e.g. line, page).
+    public ScrollIncrementType Type { get; }
+
+    /// The current metrics of the scrollable that is being scrolled.
+    public ScrollMetricsSnapshot Metrics { get; }
+}
+
+/// <summary>Computes the scroll distance for one keyboard-driven scroll request.</summary>
+public delegate double ScrollIncrementCalculator(ScrollIncrementDetails details);
+
+/// <summary>
+/// An [Intent] that represents scrolling the nearest scrollable by an amount appropriate for the
+/// [Type] specified.
+/// </summary>
+public sealed class ScrollIntent : Intent
+{
+    public ScrollIntent(AxisDirection direction, ScrollIncrementType type = ScrollIncrementType.Line)
+    {
+        Direction = direction;
+        Type = type;
+    }
+
+    /// The direction in which to scroll the scrollable containing the focused widget.
+    public AxisDirection Direction { get; }
+
+    /// The type of scrolling that is intended.
+    public ScrollIncrementType Type { get; }
+}
+
+/// <summary>
+/// An action that scrolls the relevant [Scrollable] by the amount configured in the
+/// <see cref="ScrollIntent"/> given to it.
+/// </summary>
+public sealed class ScrollAction : ContextAction<ScrollIntent>
+{
+    /// The duration of the animation a keyboard-driven scroll runs.
+    private static readonly TimeSpan ScrollDuration = TimeSpan.FromMilliseconds(100);
+
+    public override bool IsEnabled(ScrollIntent intent, BuildContext? context)
+    {
+        if (context is not { } buildContext)
+        {
+            return false;
+        }
+
+        if (Scrollable.MaybeOf(buildContext) is not null)
+        {
+            return true;
+        }
+
+        ScrollController? primaryScrollController = PrimaryScrollController.MaybeOf(buildContext);
+        return primaryScrollController is not null && primaryScrollController.HasClients;
+    }
+
+    /// <summary>
+    /// The scroll increment for a single scroll request, taking the scrollable's own calculator into
+    /// account. Defaults are 80% of the viewport for a page and 50 logical pixels for a line.
+    /// </summary>
+    public static double CalculateScrollIncrement(
+        Scrollable.ScrollableState state,
+        ScrollIncrementType type = ScrollIncrementType.Line)
+    {
+        if (state.IncrementCalculator is { } calculator)
+        {
+            return calculator(new ScrollIncrementDetails(type, state.Metrics));
+        }
+
+        return type switch
+        {
+            ScrollIncrementType.Line => 50.0,
+            _ => 0.8 * state.Position.ViewportDimension,
+        };
+    }
+
+    /// <summary>The signed increment for the intent, accounting for the scrollable's axis.</summary>
+    public static double GetDirectionalIncrement(Scrollable.ScrollableState state, ScrollIntent intent)
+    {
+        if (ScrollDirectionUtils.AxisDirectionToAxis(intent.Direction)
+            != ScrollDirectionUtils.AxisDirectionToAxis(state.AxisDirection))
+        {
+            return 0.0;
+        }
+
+        double increment = CalculateScrollIncrement(state, intent.Type);
+        return intent.Direction == state.AxisDirection ? increment : -increment;
+    }
+
+    public override object? Invoke(ScrollIntent intent, BuildContext? context)
+    {
+        if (context is not { } buildContext)
+        {
+            return null;
+        }
+
+        Scrollable.ScrollableState? state = Scrollable.MaybeOf(buildContext);
+        if (state is null)
+        {
+            ScrollController? primary = PrimaryScrollController.MaybeOf(buildContext);
+            if (primary is null || !primary.HasClients)
+            {
+                return null;
+            }
+
+            state = primary.Position.NotificationContext is { } notificationContext
+                ? Scrollable.MaybeOf(notificationContext)
+                : null;
+            if (state is null)
+            {
+                return null;
+            }
+        }
+
+        if (!state.EffectivePhysics.ShouldAcceptUserOffset(state.Position))
+        {
+            return null;
+        }
+
+        double increment = GetDirectionalIncrement(state, intent);
+        if (increment == 0.0)
+        {
+            return null;
+        }
+
+        state.Position.MoveTo(state.Position.Pixels + increment, ScrollDuration, Curves.EaseInOut);
+        return null;
+    }
+}
+
 /// <summary>Continuously scrolls a viewport while a dragged rectangle extends beyond an edge.</summary>
 public sealed class EdgeDraggingAutoScroller : IDisposable
 {

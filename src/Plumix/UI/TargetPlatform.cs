@@ -58,4 +58,20 @@ public static class PlatformDefaults
             return TargetPlatform.Fuchsia;
         }
     }
+
+    /// <summary>
+    /// Flutter's `kIsWeb` (`foundation/constants.dart`): whether the application is running in a
+    /// browser. <see cref="DebugIsWebOverride"/> is the test seam Dart gets from compiling a
+    /// separate web build.
+    /// </summary>
+    public static bool IsWeb => DebugIsWebOverride ?? OperatingSystem.IsBrowser();
+
+    /// <summary>Overrides <see cref="IsWeb"/> for tests; null restores the runtime answer.</summary>
+    public static bool? DebugIsWebOverride
+    {
+        get => DebugWebOverride.Value;
+        set => DebugWebOverride.Value = value;
+    }
+
+    private static readonly AsyncLocal<bool?> DebugWebOverride = new();
 }

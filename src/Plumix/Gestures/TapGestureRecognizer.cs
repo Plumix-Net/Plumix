@@ -32,7 +32,7 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
 
     public override void AddPointer(PointerDownEvent @event)
     {
-        if (_trackers.ContainsKey(@event.Pointer))
+        if (_trackers.ContainsKey(@event.Pointer) || !IsPointerAllowed(@event))
         {
             return;
         }
@@ -49,6 +49,32 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
             OnTapDown?.Invoke(@event);
         }
         StartTrackingPointer(@event.Pointer);
+    }
+
+    /// <summary>
+    /// Only competes for a button that has at least one callback, so a recognizer configured for
+    /// secondary taps alone never claims a primary-button gesture.
+    /// </summary>
+    protected override bool IsPointerAllowed(PointerDownEvent @event)
+    {
+        if (!base.IsPointerAllowed(@event))
+        {
+            return false;
+        }
+
+        if ((@event.Buttons & PointerButtons.Secondary) != 0)
+        {
+            return OnSecondaryTap is not null
+                   || OnSecondaryTapDown is not null
+                   || OnSecondaryTapUp is not null
+                   || OnSecondaryTapCancel is not null;
+        }
+
+        return OnTap is not null
+               || OnDoubleTap is not null
+               || OnTapDown is not null
+               || OnTapUp is not null
+               || OnTapCancel is not null;
     }
 
     public void AcceptGesture(int pointer)

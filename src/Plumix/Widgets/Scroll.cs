@@ -595,6 +595,7 @@ public sealed class Scrollable : StatefulWidget
         ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         string? restorationId = null,
+        ScrollIncrementCalculator? incrementCalculator = null,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge) : base(key)
     {
@@ -619,6 +620,7 @@ public sealed class Scrollable : StatefulWidget
         KeyboardDismissBehavior = keyboardDismissBehavior;
         DragStartBehavior = dragStartBehavior;
         RestorationId = restorationId;
+        IncrementCalculator = incrementCalculator;
     }
 
     public Widget? Child { get; }
@@ -652,6 +654,9 @@ public sealed class Scrollable : StatefulWidget
     public DragStartBehavior DragStartBehavior { get; }
 
     public string? RestorationId { get; }
+
+    /// <summary>Computes the distance a keyboard-driven line or page scroll moves.</summary>
+    public ScrollIncrementCalculator? IncrementCalculator { get; }
 
     internal bool UseSingleChildViewport { get; init; }
 
@@ -780,7 +785,16 @@ public sealed class Scrollable : StatefulWidget
 
         public ScrollPosition Position => _position;
 
-        internal AxisDirection AxisDirection => ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
+        public AxisDirection AxisDirection => ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
+
+        /// <summary>The physics this scrollable resolved from its widget and ambient behavior.</summary>
+        public ScrollPhysics EffectivePhysics => _effectivePhysics;
+
+        /// <summary>The scrollable's keyboard scroll-distance calculator, if it was given one.</summary>
+        public ScrollIncrementCalculator? IncrementCalculator => CurrentWidget.IncrementCalculator;
+
+        /// <summary>The scrollable's current metrics.</summary>
+        public ScrollMetricsSnapshot Metrics => CurrentMetrics();
 
         public override void DidChangeDependencies()
         {

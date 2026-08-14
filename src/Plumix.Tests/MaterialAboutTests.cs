@@ -539,8 +539,18 @@ public sealed class MaterialAboutTests : IDisposable
     [Fact]
     public void LicensePage_LoadingAndLoadedStatesShareTheCardColor()
     {
-        RegisterSampleLicenses();
+        // The collector is gated so the first pump is guaranteed to observe the loading branch; a
+        // plain synchronous collector can finish on the thread pool before the harness pumps.
+        var released = new TaskCompletionSource();
+        LicenseRegistry.AddLicense(GatedLicenses);
         using var harness = LicensePageHarness();
+
+        async IAsyncEnumerable<LicenseEntry> GatedLicenses()
+        {
+            await released.Task.ConfigureAwait(false);
+            yield return new LicenseEntryWithLineBreaks(["app", "zeta"], "App license");
+            yield return new LicenseEntryWithLineBreaks(["alpha"], "Alpha license");
+        }
 
         harness.Pump(new Size(NestedWidth, 560));
         var loadingSurfaces = FindWidgets<Plumix.Material.Material>(harness.RootElement)
@@ -550,6 +560,7 @@ public sealed class MaterialAboutTests : IDisposable
         // The loading branch has no elevation; the done branch raises the same colored surface.
         Assert.All(loadingSurfaces, material => Assert.Equal(0.0, material.Elevation));
 
+        released.SetResult();
         PumpUntilLoaded(harness, NestedWidth, () => FindParagraph(harness.RenderView, "app") is not null);
         var loadedSurfaces = FindWidgets<Plumix.Material.Material>(harness.RootElement)
             .Where(material => material.Color == ThemeData.Light.CardColor)

@@ -157,8 +157,20 @@ public sealed class LogicalKeySet : KeySet<string>, ShortcutActivator, IEquatabl
             "ArrowRight" => "Right",
             "ArrowUp" => "Up",
             "ArrowDown" => "Down",
+            // Flutter spells these `backspace`/`enter`/`numpadDecimal`; the host reports Avalonia's
+            // `Key` names. Both spellings must resolve to one trigger.
+            "Backspace" => "Back",
+            "Return" => "Enter",
+            "NumpadDecimal" or "NumPadDecimal" => "Decimal",
             _ => key
         };
+
+        if (normalized.Length == 7
+            && normalized.StartsWith("Numpad", StringComparison.Ordinal)
+            && char.IsDigit(normalized[6]))
+        {
+            return string.Concat("NumPad", normalized[6].ToString());
+        }
 
         if (normalized.Length == 4
             && normalized.StartsWith("Key", StringComparison.Ordinal)
