@@ -33,6 +33,7 @@ class SampleRoutes {
   static const String datePicker = '/date-picker';
   static const String actionButtons = '/action-buttons';
   static const String drawer = '/drawer';
+  static const String scaffoldSlots = '/scaffold-slots';
   static const String drawerHeaders = '/drawer-headers';
   static const String divider = '/divider';
   static const String badgeTooltip = '/badge-tooltip';

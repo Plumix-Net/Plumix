@@ -17,8 +17,127 @@ internal enum ScaffoldSlot
     BottomSheet,
     SnackBar,
     MaterialBanner,
+    PersistentFooter,
     BottomNavigationBar,
     FloatingActionButton,
+    Drawer,
+    EndDrawer,
+    StatusBar,
+}
+
+/// <summary>
+/// Ports Flutter's private <c>_BodyBoxConstraints</c>: communicates the height of the scaffold's bottom
+/// widgets, app bar and material banner to the <see cref="BodyBuilder"/>'s <see cref="LayoutBuilder"/>.
+/// </summary>
+/// <remarks>
+/// Dart carries these as a <c>BoxConstraints</c> subclass; <see cref="BoxConstraints"/> is a value type
+/// here, so they ride along as its <see cref="BoxConstraints.Metadata"/> instead. Like Dart's subclass they
+/// take part in constraint equality — a changed bottom-widget height must re-run layout even when the
+/// minimum and maximum values did not move — and every derived constraint drops them, which is why
+/// <see cref="BodyBuilder"/> only ever sees the object <c>_ScaffoldLayout</c> passed in.
+/// </remarks>
+internal sealed record BodyBoxMetrics(
+    double BottomWidgetsHeight,
+    double AppBarHeight,
+    double MaterialBannerHeight) : IBoxConstraintsMetadata
+{
+    public double BottomWidgetsHeight { get; } = BottomWidgetsHeight >= 0.0
+        ? BottomWidgetsHeight
+        : throw new ArgumentOutOfRangeException(nameof(BottomWidgetsHeight));
+
+    public double AppBarHeight { get; } = AppBarHeight >= 0.0
+        ? AppBarHeight
+        : throw new ArgumentOutOfRangeException(nameof(AppBarHeight));
+
+    public double MaterialBannerHeight { get; } = MaterialBannerHeight >= 0.0
+        ? MaterialBannerHeight
+        : throw new ArgumentOutOfRangeException(nameof(MaterialBannerHeight));
+}
+
+/// <summary>
+/// Ports Flutter's private <c>_BodyBuilder</c>: restores the padding the scaffold body extends behind when
+/// <see cref="Scaffold.ExtendBody"/> or <see cref="Scaffold.ExtendBodyBehindAppBar"/> is set.
+/// </summary>
+internal sealed class BodyBuilder : StatelessWidget
+{
+    public BodyBuilder(Widget body, bool extendBody, bool extendBodyBehindAppBar, Key? key = null) : base(key)
+    {
+        Body = body ?? throw new ArgumentNullException(nameof(body));
+        ExtendBody = extendBody;
+        ExtendBodyBehindAppBar = extendBodyBehindAppBar;
+    }
+
+    public Widget Body { get; }
+
+    public bool ExtendBody { get; }
+
+    public bool ExtendBodyBehindAppBar { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        if (!ExtendBody && !ExtendBodyBehindAppBar)
+        {
+            return Body;
+        }
+
+        return new LayoutBuilder(builder: (builderContext, constraints) =>
+        {
+            var bodyConstraints = (BodyBoxMetrics)constraints.Metadata!;
+            MediaQueryData metrics = MediaQuery.Of(builderContext);
+
+            double bottom = ExtendBody
+                ? Math.Max(metrics.Padding.Bottom, bodyConstraints.BottomWidgetsHeight)
+                : metrics.Padding.Bottom;
+
+            double top = ExtendBodyBehindAppBar
+                ? Math.Max(
+                    metrics.Padding.Top,
+                    bodyConstraints.AppBarHeight + bodyConstraints.MaterialBannerHeight)
+                : metrics.Padding.Top;
+
+            return new MediaQuery(
+                data: metrics.CopyWith(
+                    padding: new Thickness(metrics.Padding.Left, top, metrics.Padding.Right, bottom)),
+                child: Body);
+        });
+    }
+}
+
+/// <summary>
+/// Ports Flutter's private <c>_HitTestableAtOrigin</c>: an invisible, translucent hit-test target the
+/// scaffold puts in its status-bar slot so a status-bar tap only reaches the foreground scaffold.
+/// </summary>
+internal sealed class HitTestableAtOrigin : StatelessWidget
+{
+    public HitTestableAtOrigin(GlobalKey globalKey, Key? key = null) : base(key)
+    {
+        GlobalKey = globalKey ?? throw new ArgumentNullException(nameof(globalKey));
+    }
+
+    public GlobalKey GlobalKey { get; }
+
+    /// <summary>Whether the widget carrying <paramref name="key"/> is hit at the view's origin.</summary>
+    public static bool IsHitTestableAtOrigin(GlobalKey key)
+    {
+        if (key.CurrentContext is not { } context
+            || context.FindRenderObject() is not RenderMetaData renderObject
+            || renderObject.Owner?.Root is not { } view)
+        {
+            return false;
+        }
+
+        var result = new BoxHitTestResult();
+        view.HitTest(result, default);
+        return result.Path.Any(entry => ReferenceEquals(entry.Target, renderObject));
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new MetaData(
+            key: GlobalKey,
+            behavior: HitTestBehavior.Translucent,
+            child: new SizedBox(width: double.PositiveInfinity, height: double.PositiveInfinity));
+    }
 }
 
 /// <summary>
@@ -106,6 +225,18 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
             PositionChild(ScaffoldSlot.BottomNavigationBar, new Point(0.0, bottomNavigationBarTop.Value));
         }
 
+        if (HasChild(ScaffoldSlot.PersistentFooter))
+        {
+            var footerConstraints = new BoxConstraints(
+                MaxWidth: fullWidthConstraints.MaxWidth,
+                MaxHeight: Math.Max(0.0, bottom - bottomWidgetsHeight - contentTop));
+            double persistentFooterHeight = LayoutChild(ScaffoldSlot.PersistentFooter, footerConstraints).Height;
+            bottomWidgetsHeight += persistentFooterHeight;
+            PositionChild(
+                ScaffoldSlot.PersistentFooter,
+                new Point(0.0, Math.Max(0.0, bottom - bottomWidgetsHeight)));
+        }
+
         var materialBannerSize = default(Size);
         if (HasChild(ScaffoldSlot.MaterialBanner))
         {
@@ -132,10 +263,19 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
                 bodyMaxHeight += bottomWidgetsHeight;
                 bodyMaxHeight = Math.Clamp(bodyMaxHeight, 0.0, looseConstraints.MaxHeight - contentTop);
             }
+            else
+            {
+                bottomWidgetsHeight = 0.0;
+            }
 
-            LayoutChild(
-                ScaffoldSlot.Body,
-                new BoxConstraints(MaxWidth: fullWidthConstraints.MaxWidth, MaxHeight: bodyMaxHeight));
+            var bodyConstraints = new BoxConstraints(
+                MaxWidth: fullWidthConstraints.MaxWidth,
+                MaxHeight: bodyMaxHeight,
+                Metadata: new BodyBoxMetrics(
+                    BottomWidgetsHeight: bottomWidgetsHeight,
+                    AppBarHeight: appBarHeight,
+                    MaterialBannerHeight: materialBannerSize.Height));
+            LayoutChild(ScaffoldSlot.Body, bodyConstraints);
             PositionChild(ScaffoldSlot.Body, new Point(0.0, contentTop));
         }
 
@@ -238,6 +378,24 @@ internal sealed class ScaffoldLayout : MultiChildLayoutDelegate
 
             double xOffset = hasCustomWidth ? (size.Width - SnackBarWidth!.Value) / 2 : 0.0;
             PositionChild(ScaffoldSlot.SnackBar, new Point(xOffset, snackBarYOffsetBase - snackBarSize.Height));
+        }
+
+        if (HasChild(ScaffoldSlot.StatusBar))
+        {
+            LayoutChild(ScaffoldSlot.StatusBar, fullWidthConstraints.Tighten(height: MinInsets.Top));
+            PositionChild(ScaffoldSlot.StatusBar, default);
+        }
+
+        if (HasChild(ScaffoldSlot.Drawer))
+        {
+            LayoutChild(ScaffoldSlot.Drawer, BoxConstraints.Tight(size));
+            PositionChild(ScaffoldSlot.Drawer, default);
+        }
+
+        if (HasChild(ScaffoldSlot.EndDrawer))
+        {
+            LayoutChild(ScaffoldSlot.EndDrawer, BoxConstraints.Tight(size));
+            PositionChild(ScaffoldSlot.EndDrawer, default);
         }
 
         GeometryNotifier.UpdateWith(

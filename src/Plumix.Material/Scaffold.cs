@@ -12,22 +12,16 @@ namespace Plumix.Material;
 // Dart parity sources (reference): material_ui/lib/src/scaffold.dart;
 // material_ui/lib/src/app_bar.dart
 
-internal enum DrawerSide
-{
-    Start,
-    End
-}
-
 public sealed class Scaffold : StatefulWidget
 {
-    private const double DefaultDrawerEdgeDragWidth = 20.0;
-    private static readonly Color DefaultDrawerScrimColor = Color.FromArgb(0x8A, 0x00, 0x00, 0x00);
-
     public Scaffold(
         Widget body,
         AppBar? appBar = null,
         Widget? drawer = null,
         Widget? endDrawer = null,
+        Action<bool>? onDrawerChanged = null,
+        Action<bool>? onEndDrawerChanged = null,
+        DragStartBehavior drawerDragStartBehavior = DragStartBehavior.Start,
         bool drawerBarrierDismissible = true,
         Color? drawerScrimColor = null,
         double? drawerEdgeDragWidth = null,
@@ -36,6 +30,9 @@ public sealed class Scaffold : StatefulWidget
         Widget? floatingActionButton = null,
         FloatingActionButtonLocation? floatingActionButtonLocation = null,
         FloatingActionButtonAnimator? floatingActionButtonAnimator = null,
+        IReadOnlyList<Widget>? persistentFooterButtons = null,
+        AlignmentDirectional? persistentFooterAlignment = null,
+        BoxDecoration? persistentFooterDecoration = null,
         Widget? bottomNavigationBar = null,
         Color? backgroundColor = null,
         Key? key = null,
@@ -43,6 +40,7 @@ public sealed class Scaffold : StatefulWidget
         BottomSheetScrimBuilder? bottomSheetScrimBuilder = null,
         bool extendBody = false,
         bool extendBodyBehindAppBar = false,
+        bool primary = true,
         bool? resizeToAvoidBottomInset = null) : base(key)
     {
         if (drawerEdgeDragWidth.HasValue
@@ -57,6 +55,9 @@ public sealed class Scaffold : StatefulWidget
         AppBar = appBar;
         Drawer = drawer;
         EndDrawer = endDrawer;
+        OnDrawerChanged = onDrawerChanged;
+        OnEndDrawerChanged = onEndDrawerChanged;
+        DrawerDragStartBehavior = drawerDragStartBehavior;
         DrawerBarrierDismissible = drawerBarrierDismissible;
         DrawerScrimColor = drawerScrimColor;
         DrawerEdgeDragWidth = drawerEdgeDragWidth;
@@ -67,12 +68,16 @@ public sealed class Scaffold : StatefulWidget
                                       ?? Plumix.Material.FloatingActionButtonLocation.EndFloat;
         FloatingActionButtonAnimator = floatingActionButtonAnimator
                                       ?? Plumix.Material.FloatingActionButtonAnimator.Scaling;
+        PersistentFooterButtons = persistentFooterButtons;
+        PersistentFooterAlignment = persistentFooterAlignment ?? AlignmentDirectional.CenterEnd;
+        PersistentFooterDecoration = persistentFooterDecoration;
         BottomNavigationBar = bottomNavigationBar;
         BottomSheet = bottomSheet;
         BottomSheetScrimBuilder = bottomSheetScrimBuilder ?? DefaultBottomSheetScrimBuilder;
         BackgroundColor = backgroundColor;
         ExtendBody = extendBody;
         ExtendBodyBehindAppBar = extendBodyBehindAppBar;
+        Primary = primary;
         ResizeToAvoidBottomInset = resizeToAvoidBottomInset;
     }
 
@@ -83,6 +88,15 @@ public sealed class Scaffold : StatefulWidget
     public Widget? Drawer { get; }
 
     public Widget? EndDrawer { get; }
+
+    /// <summary>Called when <see cref="Drawer"/> changes between opened and closed.</summary>
+    public Action<bool>? OnDrawerChanged { get; }
+
+    /// <summary>Called when <see cref="EndDrawer"/> changes between opened and closed.</summary>
+    public Action<bool>? OnEndDrawerChanged { get; }
+
+    /// <summary>How the drawers' drag gestures determine their start offset.</summary>
+    public DragStartBehavior DrawerDragStartBehavior { get; }
 
     public bool DrawerBarrierDismissible { get; }
 
@@ -99,6 +113,24 @@ public sealed class Scaffold : StatefulWidget
     public FloatingActionButtonLocation FloatingActionButtonLocation { get; }
 
     public FloatingActionButtonAnimator FloatingActionButtonAnimator { get; }
+
+    /// <summary>
+    /// A set of buttons displayed at the bottom of the scaffold, above <see cref="BottomNavigationBar"/> and
+    /// below <see cref="Body"/>. They stay visible while the body scrolls.
+    /// </summary>
+    public IReadOnlyList<Widget>? PersistentFooterButtons { get; }
+
+    /// <summary>
+    /// How <see cref="PersistentFooterButtons"/> are aligned in their row. Defaults to
+    /// <see cref="AlignmentDirectional.CenterEnd"/>.
+    /// </summary>
+    public AlignmentDirectional PersistentFooterAlignment { get; }
+
+    /// <summary>
+    /// The decoration painted behind <see cref="PersistentFooterButtons"/>. Defaults to a single top divider
+    /// border resolved from the ambient <see cref="DividerTheme"/>.
+    /// </summary>
+    public BoxDecoration? PersistentFooterDecoration { get; }
 
     public Widget? BottomNavigationBar { get; }
 
@@ -122,6 +154,12 @@ public sealed class Scaffold : StatefulWidget
     public bool ExtendBodyBehindAppBar { get; }
 
     /// <summary>
+    /// Whether this scaffold is being displayed at the top of the screen. On iOS and macOS this installs the
+    /// status-bar tap target that scrolls the primary scrollable back to the top.
+    /// </summary>
+    public bool Primary { get; }
+
+    /// <summary>
     /// Whether the scaffold's layout should keep its body above the on-screen keyboard. Defaults to
     /// <see langword="true"/>.
     /// </summary>
@@ -141,16 +179,6 @@ public sealed class Scaffold : StatefulWidget
     public static ScaffoldState? MaybeOf(BuildContext context)
     {
         return context.DependOnInherited<ScaffoldScope>()?.Scaffold;
-    }
-
-    internal static Color ResolveDrawerScrimColor(Color? drawerScrimColor)
-    {
-        return drawerScrimColor ?? DefaultDrawerScrimColor;
-    }
-
-    internal static double ResolveDrawerEdgeDragWidth(double? drawerEdgeDragWidth)
-    {
-        return drawerEdgeDragWidth ?? DefaultDrawerEdgeDragWidth;
     }
 
     /// <summary>
@@ -201,6 +229,33 @@ public sealed class Scaffold : StatefulWidget
 /// <summary>Builds the scrim painted over the scaffold body while a bottom sheet dominates the screen.</summary>
 public delegate Widget? BottomSheetScrimBuilder(BuildContext context, Animation<double> animation);
 
+/// <summary>
+/// Ports Flutter's private <c>_DismissDrawerAction</c>: closes an open drawer when the dismiss intent
+/// (Escape) reaches the scaffold.
+/// </summary>
+internal sealed class DismissDrawerAction : DismissAction
+{
+    private readonly BuildContext _context;
+
+    public DismissDrawerAction(BuildContext context)
+    {
+        _context = context;
+    }
+
+    public override bool IsEnabled(DismissIntent intent)
+    {
+        ScaffoldState scaffold = Scaffold.Of(_context);
+        return (scaffold.IsDrawerOpen || scaffold.IsEndDrawerOpen) && scaffold.IsDrawerBarrierDismissible;
+    }
+
+    public override object? Invoke(DismissIntent intent)
+    {
+        Scaffold.Of(_context).CloseDrawer();
+        Scaffold.Of(_context).CloseEndDrawer();
+        return null;
+    }
+}
+
 internal sealed class ScaffoldScope : InheritedWidget
 {
     public ScaffoldScope(
@@ -250,27 +305,15 @@ internal sealed class ScaffoldScope : InheritedWidget
     }
 }
 
-public sealed class ScaffoldState : State
+public sealed class ScaffoldState : State, WidgetsBindingObserver
 {
-    private const double DefaultDrawerWidth = 304.0;
-    private const double DefaultOpenThreshold = 0.5;
-    private const double MinFlingVelocityPixelsPerSecond = 365.0;
-    private static readonly TimeSpan BaseSettleDuration = TimeSpan.FromMilliseconds(246);
-    private bool _isDrawerOpen;
-    private bool _isEndDrawerOpen;
-    private double _drawerProgress;
-    private double _endDrawerProgress;
-    private DrawerSide? _activeDragSide;
-    private double _activeDragProgress;
-    private AnimationController? _drawerAnimationController;
-    private AnimationController? _endDrawerAnimationController;
-    private double _drawerAnimationFrom;
-    private double _drawerAnimationTo;
-    private double _endDrawerAnimationFrom;
-    private double _endDrawerAnimationTo;
-    private LocalHistoryEntry? _drawerHistoryEntry;
-    private ModalRoute? _drawerHistoryRoute;
-    private bool _isRemovingDrawerHistoryEntry;
+    private static readonly TimeSpan StatusBarTapScrollDuration = TimeSpan.FromMilliseconds(1000);
+    private readonly LabeledGlobalKey<DrawerControllerState> _drawerKey = new("Scaffold drawer");
+    private readonly LabeledGlobalKey<DrawerControllerState> _endDrawerKey = new("Scaffold end drawer");
+    private readonly LabeledGlobalKey<State> _statusBarKey = new("Scaffold status bar");
+    private readonly LabeledGlobalKey<State> _bodyKey = new("Scaffold body");
+    private bool _drawerOpened;
+    private bool _endDrawerOpened;
     private bool _isDisposed;
     private PersistentBottomSheetPresentation? _persistentBottomSheet;
     private AnimationController? _staticBottomSheetAnimation;
@@ -293,15 +336,16 @@ public sealed class ScaffoldState : State
 
     public bool HasFloatingActionButton => CurrentWidget.FloatingActionButton != null;
 
-    public bool IsDrawerOpen => _isDrawerOpen;
+    public bool IsDrawerOpen => _drawerOpened;
 
-    public bool IsEndDrawerOpen => _isEndDrawerOpen;
+    public bool IsEndDrawerOpen => _endDrawerOpened;
+
+    /// <summary>Whether tapping the drawer scrim closes the open drawer.</summary>
+    public bool IsDrawerBarrierDismissible => CurrentWidget.DrawerBarrierDismissible;
 
     public override void InitState()
     {
         _isDisposed = false;
-        _drawerProgress = 0;
-        _endDrawerProgress = 0;
         _geometryNotifier = new ScaffoldGeometryNotifier(new ScaffoldGeometry(), Context);
         _bottomSheetScrimAnimationController = new AnimationController(TimeSpan.Zero, this);
         _floatingActionButtonLocation = CurrentWidget.FloatingActionButtonLocation;
@@ -314,17 +358,37 @@ public sealed class ScaffoldState : State
         _floatingActionButtonVisibilityController =
             new AnimationController(FloatingActionButtonConstants.Segue, this);
         SyncStaticBottomSheetAnimation();
+        if (CurrentWidget.Primary)
+        {
+            WidgetsBinding.Instance.AddObserver(this);
+        }
+    }
+
+    public override void Activate()
+    {
+        base.Activate();
+
+        // A scaffold moved through a global key is deactivated and reactivated without being disposed, so
+        // the status-bar observer removed by Deactivate has to be registered again here.
+        if (CurrentWidget.Primary)
+        {
+            WidgetsBinding.Instance.AddObserver(this);
+        }
+    }
+
+    public override void Deactivate()
+    {
+        WidgetsBinding.Instance.RemoveObserver(this);
+        base.Deactivate();
     }
 
     public override void Dispose()
     {
         _isDisposed = true;
+        WidgetsBinding.Instance.RemoveObserver(this);
         _scaffoldMessenger?.Unregister(this);
         _scaffoldMessenger = null;
-        RemoveDrawerHistoryEntry();
         RemovePersistentSheetHistoryEntry();
-        StopSettleAnimation(DrawerSide.Start);
-        StopSettleAnimation(DrawerSide.End);
         DisposeStaticBottomSheetAnimation();
         DisposePersistentBottomSheet(complete: true);
         _geometryNotifier.Dispose();
@@ -408,92 +472,85 @@ public sealed class ScaffoldState : State
         _scaffoldMessenger?.Register(this);
     }
 
+    private void DrawerOpenedCallback(bool isOpened)
+    {
+        if (_drawerOpened != isOpened && _drawerKey.CurrentState is not null)
+        {
+            SetState(() => _drawerOpened = isOpened);
+            CurrentWidget.OnDrawerChanged?.Invoke(isOpened);
+        }
+    }
+
+    private void EndDrawerOpenedCallback(bool isOpened)
+    {
+        if (_endDrawerOpened != isOpened && _endDrawerKey.CurrentState is not null)
+        {
+            SetState(() => _endDrawerOpened = isOpened);
+            CurrentWidget.OnEndDrawerChanged?.Invoke(isOpened);
+        }
+    }
+
+    /// <summary>
+    /// Opens the <see cref="Scaffold.Drawer"/>, closing <see cref="Scaffold.EndDrawer"/> first when it is
+    /// open. Has no effect if the scaffold has no drawer.
+    /// </summary>
     public void OpenDrawer()
     {
-        if (!HasDrawer)
+        if (_endDrawerKey.CurrentState is not null && _endDrawerOpened)
         {
-            return;
+            _endDrawerKey.CurrentState.Close();
         }
 
-        SetState(() =>
-        {
-            StopSettleAnimation(DrawerSide.Start);
-            StopSettleAnimation(DrawerSide.End);
-            CancelDrag();
-            _isDrawerOpen = true;
-            _isEndDrawerOpen = false;
-            StartSettleAnimation(DrawerSide.Start, targetProgress: 1.0, normalizedVelocityHint: null);
-            StartSettleAnimation(DrawerSide.End, targetProgress: 0.0, normalizedVelocityHint: null);
-        });
+        _drawerKey.CurrentState?.Open();
     }
 
+    /// <summary>
+    /// Opens the <see cref="Scaffold.EndDrawer"/>, closing <see cref="Scaffold.Drawer"/> first when it is
+    /// open. Has no effect if the scaffold has no end drawer.
+    /// </summary>
     public void OpenEndDrawer()
     {
-        if (!HasEndDrawer)
+        if (_drawerKey.CurrentState is not null && _drawerOpened)
         {
-            return;
+            _drawerKey.CurrentState.Close();
         }
 
-        SetState(() =>
-        {
-            StopSettleAnimation(DrawerSide.Start);
-            StopSettleAnimation(DrawerSide.End);
-            CancelDrag();
-            _isEndDrawerOpen = true;
-            _isDrawerOpen = false;
-            StartSettleAnimation(DrawerSide.End, targetProgress: 1.0, normalizedVelocityHint: null);
-            StartSettleAnimation(DrawerSide.Start, targetProgress: 0.0, normalizedVelocityHint: null);
-        });
+        _endDrawerKey.CurrentState?.Open();
     }
 
+    /// <summary>Closes the <see cref="Scaffold.Drawer"/> if it is currently open.</summary>
     public void CloseDrawer()
     {
-        if (!HasDrawer && ResolveDrawerProgress(DrawerSide.Start) <= 0)
+        if (HasDrawer && IsDrawerOpen)
         {
-            return;
+            _drawerKey.CurrentState!.Close();
         }
-
-        if (!_isDrawerOpen && ResolveDrawerProgress(DrawerSide.Start) <= 0)
-        {
-            return;
-        }
-
-        SetState(() =>
-        {
-            StopSettleAnimation(DrawerSide.Start);
-            _isDrawerOpen = false;
-            if (_activeDragSide == DrawerSide.Start)
-            {
-                CancelDrag();
-            }
-
-            StartSettleAnimation(DrawerSide.Start, targetProgress: 0.0, normalizedVelocityHint: null);
-        });
     }
 
+    /// <summary>Closes the <see cref="Scaffold.EndDrawer"/> if it is currently open.</summary>
     public void CloseEndDrawer()
     {
-        if (!HasEndDrawer && ResolveDrawerProgress(DrawerSide.End) <= 0)
+        if (HasEndDrawer && IsEndDrawerOpen)
         {
-            return;
+            _endDrawerKey.CurrentState!.Close();
         }
+    }
 
-        if (!_isEndDrawerOpen && ResolveDrawerProgress(DrawerSide.End) <= 0)
+    /// <summary>
+    /// Ports the iOS/macOS status-bar tap: scrolls the primary scrollable of the foreground scaffold back to
+    /// the top. Dispatched by <see cref="WidgetsBinding.HandleStatusBarTap"/>, never by a gesture recognizer.
+    /// </summary>
+    public void HandleStatusBarTap()
+    {
+        ScrollController? primaryScrollController = PrimaryScrollController.MaybeOf(Context);
+        if (primaryScrollController is { HasClients: true }
+            && HitTestableAtOrigin.IsHitTestableAtOrigin(_statusBarKey))
         {
-            return;
+            primaryScrollController.AnimateTo(
+                0.0,
+                duration: StatusBarTapScrollDuration,
+                curve: Curves.EaseOutCirc);
         }
-
-        SetState(() =>
-        {
-            StopSettleAnimation(DrawerSide.End);
-            _isEndDrawerOpen = false;
-            if (_activeDragSide == DrawerSide.End)
-            {
-                CancelDrag();
-            }
-
-            StartSettleAnimation(DrawerSide.End, targetProgress: 0.0, normalizedVelocityHint: null);
-        });
     }
 
     public PersistentBottomSheetController ShowBottomSheet(
@@ -581,33 +638,23 @@ public sealed class ScaffoldState : State
         {
             SyncStaticBottomSheetAnimation();
         }
-        if (!HasDrawer)
-        {
-            _isDrawerOpen = false;
-            _drawerProgress = 0;
-            StopSettleAnimation(DrawerSide.Start);
-            if (_activeDragSide == DrawerSide.Start)
-            {
-                CancelDrag();
-            }
-        }
 
-        if (!HasEndDrawer)
+        switch (oldScaffold.Primary, CurrentWidget.Primary)
         {
-            _isEndDrawerOpen = false;
-            _endDrawerProgress = 0;
-            StopSettleAnimation(DrawerSide.End);
-            if (_activeDragSide == DrawerSide.End)
-            {
-                CancelDrag();
-            }
+            case (true, false):
+                WidgetsBinding.Instance.RemoveObserver(this);
+                break;
+            case (false, true):
+                WidgetsBinding.Instance.AddObserver(this);
+                break;
+            case (true, true):
+            case (false, false):
+                break;
         }
     }
 
     public override Widget Build(BuildContext context)
     {
-        SyncDrawerHistoryEntry(context);
-
         var theme = Theme.Of(context);
         var effectiveBackground = CurrentWidget.BackgroundColor ?? theme.ScaffoldBackgroundColor;
         var textDirection = Directionality.Of(context);
@@ -621,10 +668,14 @@ public sealed class ScaffoldState : State
         AddIfNonNull(
             children,
             mediaQuery,
-            CurrentWidget.Body,
+            new BodyBuilder(
+                extendBody: CurrentWidget.ExtendBody,
+                extendBodyBehindAppBar: CurrentWidget.ExtendBodyBehindAppBar,
+                body: new KeyedSubtree(key: _bodyKey, child: CurrentWidget.Body)),
             ScaffoldSlot.Body,
             removeTopPadding: CurrentWidget.AppBar is not null,
-            removeBottomPadding: CurrentWidget.BottomNavigationBar is not null,
+            removeBottomPadding: CurrentWidget.BottomNavigationBar is not null
+                                 || CurrentWidget.PersistentFooterButtons is not null,
             removeBottomInset: resizeToAvoidBottomInset);
 
         if (_showBodyScrim
@@ -682,7 +733,8 @@ public sealed class ScaffoldState : State
                 presentedSnackBar,
                 ScaffoldSlot.SnackBar,
                 removeTopPadding: true,
-                removeBottomPadding: CurrentWidget.BottomNavigationBar is not null,
+                removeBottomPadding: CurrentWidget.BottomNavigationBar is not null
+                                     || CurrentWidget.PersistentFooterButtons is not null,
                 maintainBottomViewPadding: !resizeToAvoidBottomInset);
         }
 
@@ -700,6 +752,32 @@ public sealed class ScaffoldState : State
                 ScaffoldSlot.MaterialBanner,
                 removeTopPadding: CurrentWidget.AppBar is not null,
                 removeBottomPadding: true,
+                maintainBottomViewPadding: !resizeToAvoidBottomInset);
+        }
+
+        if (CurrentWidget.PersistentFooterButtons is { } persistentFooterButtons)
+        {
+            AddIfNonNull(
+                children,
+                mediaQuery,
+                new Container(
+                    decoration: CurrentWidget.PersistentFooterDecoration
+                                ?? new BoxDecoration(
+                                    Border: new Border(top: Divider.CreateBorderSide(context, width: 1.0))),
+                    child: new SafeArea(
+                        top: false,
+                        child: new IntrinsicHeight(
+                            child: new Padding(
+                                insets: EdgeInsets.All(8),
+                                child: new Align(
+                                    alignment: CurrentWidget.PersistentFooterAlignment,
+                                    child: new OverflowBar(
+                                        spacing: 8,
+                                        overflowAlignment: OverflowBarAlignment.End,
+                                        children: persistentFooterButtons)))))),
+                ScaffoldSlot.PersistentFooter,
+                removeTopPadding: true,
+                removeBottomPadding: CurrentWidget.BottomNavigationBar is not null,
                 maintainBottomViewPadding: !resizeToAvoidBottomInset);
         }
 
@@ -729,6 +807,32 @@ public sealed class ScaffoldState : State
             removeRightPadding: true,
             removeBottomPadding: true);
 
+        Widget? statusBar = theme.Platform switch
+        {
+            TargetPlatform.IOS or TargetPlatform.MacOS => CurrentWidget.Primary
+                ? new HitTestableAtOrigin(_statusBarKey)
+                : null,
+            _ => null,
+        };
+        AddIfNonNull(
+            children,
+            mediaQuery,
+            statusBar,
+            ScaffoldSlot.StatusBar,
+            removeTopPadding: true,
+            removeBottomPadding: true);
+
+        if (_endDrawerOpened)
+        {
+            BuildDrawer(children, mediaQuery, textDirection);
+            BuildEndDrawer(children, mediaQuery, textDirection);
+        }
+        else
+        {
+            BuildEndDrawer(children, mediaQuery, textDirection);
+            BuildDrawer(children, mediaQuery, textDirection);
+        }
+
         // The minimum insets for contents of the Scaffold to keep visible.
         Thickness minInsets = CopyBottomInset(
             mediaQuery.Padding,
@@ -757,67 +861,80 @@ public sealed class ScaffoldState : State
                 textDirection: textDirection),
             children: children);
 
-        double drawerProgress = ResolveDrawerProgress(DrawerSide.Start);
-        double endDrawerProgress = ResolveDrawerProgress(DrawerSide.End);
-        bool isStartDrawerVisible = IsDrawerVisible(DrawerSide.Start, drawerProgress);
-        bool isEndDrawerVisible = IsDrawerVisible(DrawerSide.End, endDrawerProgress);
-        bool isAnyDrawerVisible = isStartDrawerVisible || isEndDrawerVisible;
-        var overlayChildren = new List<Widget> { content };
-        if (!isAnyDrawerVisible)
-        {
-            if (ShouldEnableOpenDragGesture(DrawerSide.Start, theme))
-            {
-                overlayChildren.Add(BuildEdgeDragArea(context, DrawerSide.Start, textDirection));
-            }
-
-            if (ShouldEnableOpenDragGesture(DrawerSide.End, theme))
-            {
-                overlayChildren.Add(BuildEdgeDragArea(context, DrawerSide.End, textDirection));
-            }
-        }
-
-        if (isAnyDrawerVisible)
-        {
-            overlayChildren.Add(BuildScrim(context, Math.Max(drawerProgress, endDrawerProgress)));
-        }
-
-        if (isStartDrawerVisible && CurrentWidget.Drawer != null)
-        {
-            overlayChildren.Add(BuildDrawerPanel(
-                context: context,
-                side: DrawerSide.Start,
-                textDirection: textDirection,
-                progress: drawerProgress,
-                child: CurrentWidget.Drawer));
-        }
-
-        if (isEndDrawerVisible && CurrentWidget.EndDrawer != null)
-        {
-            overlayChildren.Add(BuildDrawerPanel(
-                context: context,
-                side: DrawerSide.End,
-                textDirection: textDirection,
-                progress: endDrawerProgress,
-                child: CurrentWidget.EndDrawer));
-        }
-
-        // The overlay stack is unconditional: adding the first sheet/drawer/scrim child must not restructure
-        // the body's subtree, which would rebuild its elements (and re-register its heroes) from scratch.
-        content = new Stack(
-            fit: StackFit.Expand,
-            children: overlayChildren);
-
         return new ScaffoldScope(
             scaffold: this,
             hasDrawer: HasDrawer,
             hasEndDrawer: HasEndDrawer,
-            isDrawerOpen: _isDrawerOpen,
-            isEndDrawerOpen: _isEndDrawerOpen,
+            isDrawerOpen: _drawerOpened,
+            isEndDrawerOpen: _endDrawerOpened,
             geometryNotifier: _geometryNotifier,
             child: new ScrollNotificationObserver(
                 child: new Container(
                     color: effectiveBackground,
-                    child: content)));
+                    child: new Builder(builder: actionsContext => new Actions(
+                        actions: new Dictionary<Type, FlutterAction>
+                        {
+                            [typeof(DismissIntent)] = new DismissDrawerAction(actionsContext),
+                        },
+                        child: content)))));
+    }
+
+    /// <summary>Ports Flutter's private <c>_buildEndDrawer</c>.</summary>
+    private void BuildEndDrawer(List<Widget> children, MediaQueryData mediaQuery, TextDirection textDirection)
+    {
+        if (CurrentWidget.EndDrawer is not { } endDrawer)
+        {
+            return;
+        }
+
+        AddIfNonNull(
+            children,
+            mediaQuery,
+            new DrawerController(
+                key: _endDrawerKey,
+                alignment: DrawerAlignment.End,
+                drawerCallback: EndDrawerOpenedCallback,
+                dragStartBehavior: CurrentWidget.DrawerDragStartBehavior,
+                scrimColor: CurrentWidget.DrawerScrimColor,
+                edgeDragWidth: CurrentWidget.DrawerEdgeDragWidth,
+                enableOpenDragGesture: CurrentWidget.EndDrawerEnableOpenDragGesture,
+                isDrawerOpen: _endDrawerOpened,
+                drawerBarrierDismissible: CurrentWidget.DrawerBarrierDismissible,
+                child: endDrawer),
+            ScaffoldSlot.EndDrawer,
+
+            // Remove the side padding from the side we're not touching.
+            removeLeftPadding: textDirection == TextDirection.Ltr,
+            removeRightPadding: textDirection == TextDirection.Rtl);
+    }
+
+    /// <summary>Ports Flutter's private <c>_buildDrawer</c>.</summary>
+    private void BuildDrawer(List<Widget> children, MediaQueryData mediaQuery, TextDirection textDirection)
+    {
+        if (CurrentWidget.Drawer is not { } drawer)
+        {
+            return;
+        }
+
+        AddIfNonNull(
+            children,
+            mediaQuery,
+            new DrawerController(
+                key: _drawerKey,
+                alignment: DrawerAlignment.Start,
+                drawerCallback: DrawerOpenedCallback,
+                dragStartBehavior: CurrentWidget.DrawerDragStartBehavior,
+                scrimColor: CurrentWidget.DrawerScrimColor,
+                edgeDragWidth: CurrentWidget.DrawerEdgeDragWidth,
+                enableOpenDragGesture: CurrentWidget.DrawerEnableOpenDragGesture,
+                isDrawerOpen: _drawerOpened,
+                drawerBarrierDismissible: CurrentWidget.DrawerBarrierDismissible,
+                child: drawer),
+            ScaffoldSlot.Drawer,
+
+            // Remove the side padding from the side we're not touching.
+            removeLeftPadding: textDirection == TextDirection.Rtl,
+            removeRightPadding: textDirection == TextDirection.Ltr);
     }
 
     /// <summary>
@@ -993,605 +1110,6 @@ public sealed class ScaffoldState : State
         _staticBottomSheetAnimation.Changed -= HandleStaticBottomSheetAnimationChanged;
         _staticBottomSheetAnimation.Dispose();
         _staticBottomSheetAnimation = null;
-    }
-
-    private Widget BuildEdgeDragArea(BuildContext context, DrawerSide side, TextDirection textDirection)
-    {
-        double edgeWidth = ResolveEdgeDragWidth(context, side, textDirection);
-        bool isOnLeft = IsDrawerOnLeft(side, textDirection);
-        return new Positioned(
-            left: isOnLeft ? 0 : null,
-            top: 0,
-            right: isOnLeft ? null : 0,
-            bottom: 0,
-            width: edgeWidth,
-            child: new GestureDetector(
-                behavior: HitTestBehavior.Opaque,
-                onHorizontalDragStart: _ => BeginDrag(side),
-                onHorizontalDragUpdate: details => UpdateDrag(side, details.PrimaryDelta, textDirection),
-                onHorizontalDragEnd: details => EndDrag(side, details, textDirection),
-                onHorizontalDragCancel: () => CancelDragGesture(side)));
-    }
-
-    private Widget BuildScrim(BuildContext context, double progress)
-    {
-        var drawerTheme = DrawerTheme.Of(context);
-        var baseColor = CurrentWidget.DrawerScrimColor
-                        ?? drawerTheme.ScrimColor
-                        ?? Scaffold.ResolveDrawerScrimColor(null);
-        var scrimColor = ApplyOpacity(baseColor, progress);
-        return new Positioned(
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-            child: new GestureDetector(
-                behavior: HitTestBehavior.Opaque,
-                onTap: CurrentWidget.DrawerBarrierDismissible ? CloseOpenDrawers : null,
-                child: new Container(color: scrimColor)));
-    }
-
-    private Widget BuildDrawerPanel(BuildContext context, DrawerSide side, TextDirection textDirection, double progress, Widget child)
-    {
-        double drawerWidth = ResolveDrawerWidth(context, child);
-        bool isOnLeft = IsDrawerOnLeft(side, textDirection);
-        double offset = -(1 - progress) * drawerWidth;
-        var alignment = side == DrawerSide.Start
-            ? DrawerAlignment.Start
-            : DrawerAlignment.End;
-        var controller = new DrawerController(
-            child: child,
-            alignment: alignment,
-            isDrawerOpen: progress >= DefaultOpenThreshold,
-            drawerCallback: isOpen => CommitDrawerVisibility(side, isOpen),
-            scrimColor: CurrentWidget.DrawerScrimColor,
-            edgeDragWidth: CurrentWidget.DrawerEdgeDragWidth,
-            enableOpenDragGesture: side == DrawerSide.Start
-                ? CurrentWidget.DrawerEnableOpenDragGesture
-                : CurrentWidget.EndDrawerEnableOpenDragGesture,
-            drawerBarrierDismissible: CurrentWidget.DrawerBarrierDismissible);
-
-        return new Positioned(
-            left: isOnLeft ? offset : null,
-            top: 0,
-            right: isOnLeft ? null : offset,
-            bottom: 0,
-            child: new GestureDetector(
-                behavior: HitTestBehavior.Opaque,
-                onHorizontalDragStart: _ => BeginDrag(side),
-                onHorizontalDragUpdate: details => UpdateDrag(side, details.PrimaryDelta, textDirection),
-                onHorizontalDragEnd: details => EndDrag(side, details, textDirection),
-                onHorizontalDragCancel: () => CancelDragGesture(side),
-                child: new DrawerControllerScope(
-                    controller: controller,
-                    child: child)));
-    }
-
-    private bool ShouldEnableOpenDragGesture(DrawerSide side, ThemeData theme)
-    {
-        if (!HasDrawerForSide(side) || IsDesktopPlatform(theme.Platform))
-        {
-            return false;
-        }
-
-        return side == DrawerSide.Start
-            ? CurrentWidget.DrawerEnableOpenDragGesture
-            : CurrentWidget.EndDrawerEnableOpenDragGesture;
-    }
-
-    private void BeginDrag(DrawerSide side)
-    {
-        if (!HasDrawerForSide(side))
-        {
-            return;
-        }
-
-        SetState(() =>
-        {
-            StopSettleAnimation(side);
-            _activeDragSide = side;
-            _activeDragProgress = ResolveDrawerProgress(side);
-
-            if (side == DrawerSide.Start)
-            {
-                _isEndDrawerOpen = false;
-                _endDrawerProgress = 0;
-                StopSettleAnimation(DrawerSide.End);
-            }
-            else
-            {
-                _isDrawerOpen = false;
-                _drawerProgress = 0;
-                StopSettleAnimation(DrawerSide.Start);
-            }
-        });
-    }
-
-    private void UpdateDrag(DrawerSide side, double primaryDelta, TextDirection textDirection)
-    {
-        if (_activeDragSide != side)
-        {
-            return;
-        }
-
-        var drawer = ResolveDrawerWidget(side);
-        if (drawer == null)
-        {
-            return;
-        }
-
-        double drawerWidth = ResolveDrawerWidth(Context, drawer);
-        if (drawerWidth <= 0)
-        {
-            return;
-        }
-
-        double deltaProgress = primaryDelta * ResolveOpenDirectionMultiplier(side, textDirection) / drawerWidth;
-        double nextProgress = Math.Clamp(_activeDragProgress + deltaProgress, 0, 1);
-        if (Math.Abs(nextProgress - _activeDragProgress) <= 0.0001)
-        {
-            return;
-        }
-
-        SetState(() =>
-        {
-            _activeDragProgress = nextProgress;
-            UpdateOpenFlagsFromProgress(side, nextProgress);
-        });
-    }
-
-    private void EndDrag(DrawerSide side, DragEndDetails details, TextDirection textDirection)
-    {
-        if (_activeDragSide != side)
-        {
-            return;
-        }
-
-        var drawer = ResolveDrawerWidget(side);
-        if (drawer == null)
-        {
-            return;
-        }
-
-        double drawerWidth = ResolveDrawerWidth(Context, drawer);
-        if (drawerWidth <= 0)
-        {
-            return;
-        }
-
-        double releaseVelocity = details.PrimaryVelocity * ResolveOpenDirectionMultiplier(side, textDirection);
-
-        bool shouldOpen;
-        if (releaseVelocity >= MinFlingVelocityPixelsPerSecond)
-        {
-            shouldOpen = true;
-        }
-        else if (releaseVelocity <= -MinFlingVelocityPixelsPerSecond)
-        {
-            shouldOpen = false;
-        }
-        else
-        {
-            shouldOpen = _activeDragProgress >= DefaultOpenThreshold;
-        }
-
-        SetState(() =>
-        {
-            CommitProgress(side, _activeDragProgress);
-            CommitDrawerVisibility(side, shouldOpen);
-            CancelDrag();
-            double normalizedVelocity = Math.Abs(releaseVelocity) / drawerWidth;
-            StartSettleAnimation(side, shouldOpen ? 1.0 : 0.0, normalizedVelocity);
-            if (shouldOpen)
-            {
-                StartSettleAnimation(OppositeOf(side), targetProgress: 0.0, normalizedVelocityHint: null);
-            }
-        });
-    }
-
-    private void CancelDragGesture(DrawerSide side)
-    {
-        if (_activeDragSide != side)
-        {
-            return;
-        }
-
-        bool shouldOpen = _activeDragProgress >= DefaultOpenThreshold;
-
-        SetState(() =>
-        {
-            CommitProgress(side, _activeDragProgress);
-            CommitDrawerVisibility(side, shouldOpen);
-            CancelDrag();
-            StartSettleAnimation(side, shouldOpen ? 1.0 : 0.0, normalizedVelocityHint: null);
-            if (shouldOpen)
-            {
-                StartSettleAnimation(OppositeOf(side), targetProgress: 0.0, normalizedVelocityHint: null);
-            }
-        });
-    }
-
-    private void CommitDrawerVisibility(DrawerSide side, bool isOpen)
-    {
-        if (side == DrawerSide.Start)
-        {
-            _isDrawerOpen = isOpen && HasDrawer;
-            if (isOpen)
-            {
-                _isEndDrawerOpen = false;
-            }
-
-            return;
-        }
-
-        _isEndDrawerOpen = isOpen && HasEndDrawer;
-        if (isOpen)
-        {
-            _isDrawerOpen = false;
-        }
-    }
-
-    private void CloseOpenDrawers()
-    {
-        if (!_isDrawerOpen && !_isEndDrawerOpen && _activeDragSide is null
-            && ResolveDrawerProgress(DrawerSide.Start) <= 0
-            && ResolveDrawerProgress(DrawerSide.End) <= 0)
-        {
-            return;
-        }
-
-        SetState(() =>
-        {
-            StopSettleAnimation(DrawerSide.Start);
-            StopSettleAnimation(DrawerSide.End);
-            _isDrawerOpen = false;
-            _isEndDrawerOpen = false;
-            CancelDrag();
-            StartSettleAnimation(DrawerSide.Start, targetProgress: 0.0, normalizedVelocityHint: null);
-            StartSettleAnimation(DrawerSide.End, targetProgress: 0.0, normalizedVelocityHint: null);
-        });
-    }
-
-    private void CancelDrag()
-    {
-        if (_activeDragSide.HasValue)
-        {
-            CommitProgress(_activeDragSide.Value, _activeDragProgress);
-        }
-
-        _activeDragSide = null;
-        _activeDragProgress = 0;
-    }
-
-    private bool HasDrawerForSide(DrawerSide side)
-    {
-        return side == DrawerSide.Start ? HasDrawer : HasEndDrawer;
-    }
-
-    private Widget? ResolveDrawerWidget(DrawerSide side)
-    {
-        return side == DrawerSide.Start ? CurrentWidget.Drawer : CurrentWidget.EndDrawer;
-    }
-
-    private double ResolveDrawerProgress(DrawerSide side)
-    {
-        if (_activeDragSide == side)
-        {
-            return _activeDragProgress;
-        }
-
-        return side == DrawerSide.Start
-            ? _drawerProgress
-            : _endDrawerProgress;
-    }
-
-    private bool IsDrawerVisible(DrawerSide side, double progress)
-    {
-        if (progress > 0)
-        {
-            return true;
-        }
-
-        if (_activeDragSide == side)
-        {
-            return true;
-        }
-
-        return side == DrawerSide.Start
-            ? _isDrawerOpen
-            : _isEndDrawerOpen;
-    }
-
-    private static bool IsDrawerOnLeft(DrawerSide side, TextDirection textDirection)
-    {
-        return side switch
-        {
-            DrawerSide.Start => textDirection == TextDirection.Ltr,
-            DrawerSide.End => textDirection == TextDirection.Rtl,
-            _ => true,
-        };
-    }
-
-    private static double ResolveOpenDirectionMultiplier(DrawerSide side, TextDirection textDirection)
-    {
-        return IsDrawerOnLeft(side, textDirection) ? 1.0 : -1.0;
-    }
-
-    private static bool IsDesktopPlatform(TargetPlatform platform)
-    {
-        return platform is TargetPlatform.Windows or TargetPlatform.Linux or TargetPlatform.MacOS;
-    }
-
-    private double ResolveEdgeDragWidth(BuildContext context, DrawerSide side, TextDirection textDirection)
-    {
-        if (CurrentWidget.DrawerEdgeDragWidth.HasValue)
-        {
-            return CurrentWidget.DrawerEdgeDragWidth.Value;
-        }
-
-        var padding = MediaQuery.MaybePaddingOf(context) ?? default;
-        double safePadding = IsDrawerOnLeft(side, textDirection) ? padding.Left : padding.Right;
-        return Scaffold.ResolveDrawerEdgeDragWidth(null) + safePadding;
-    }
-
-    private void StartSettleAnimation(DrawerSide side, double targetProgress, double? normalizedVelocityHint)
-    {
-        targetProgress = Math.Clamp(targetProgress, 0, 1);
-        if (targetProgress > 0 && !HasDrawerForSide(side))
-        {
-            return;
-        }
-
-        double currentProgress = ResolveDrawerProgress(side);
-        currentProgress = Math.Clamp(currentProgress, 0, 1);
-
-        if (Math.Abs(currentProgress - targetProgress) <= 0.0001)
-        {
-            CommitProgress(side, targetProgress);
-            return;
-        }
-
-        StopSettleAnimation(side);
-        var duration = ResolveSettleDuration(currentProgress, targetProgress, normalizedVelocityHint);
-        var controller = new AnimationController(duration, this)
-        {
-            Curve = Curves.Linear
-        };
-
-        if (side == DrawerSide.Start)
-        {
-            _drawerAnimationController = controller;
-            _drawerAnimationFrom = currentProgress;
-            _drawerAnimationTo = targetProgress;
-            controller.Changed += HandleDrawerAnimationTick;
-            controller.Completed += HandleDrawerAnimationCompleted;
-            controller.Dismissed += HandleDrawerAnimationCompleted;
-        }
-        else
-        {
-            _endDrawerAnimationController = controller;
-            _endDrawerAnimationFrom = currentProgress;
-            _endDrawerAnimationTo = targetProgress;
-            controller.Changed += HandleEndDrawerAnimationTick;
-            controller.Completed += HandleEndDrawerAnimationCompleted;
-            controller.Dismissed += HandleEndDrawerAnimationCompleted;
-        }
-
-        controller.Forward(0);
-    }
-
-    private static TimeSpan ResolveSettleDuration(double currentProgress, double targetProgress, double? normalizedVelocityHint)
-    {
-        double distance = Math.Abs(targetProgress - currentProgress);
-        if (distance <= 0)
-        {
-            return TimeSpan.FromMilliseconds(1);
-        }
-
-        double durationMs = BaseSettleDuration.TotalMilliseconds * distance;
-        double velocity = Math.Abs(normalizedVelocityHint ?? 0);
-        if (velocity > double.Epsilon)
-        {
-            durationMs /= velocity;
-        }
-
-        durationMs = Math.Clamp(durationMs, 1.0, BaseSettleDuration.TotalMilliseconds);
-        return TimeSpan.FromMilliseconds(durationMs);
-    }
-
-    private void StopSettleAnimation(DrawerSide side)
-    {
-        if (side == DrawerSide.Start)
-        {
-            if (_drawerAnimationController == null)
-            {
-                return;
-            }
-
-            _drawerAnimationController.Changed -= HandleDrawerAnimationTick;
-            _drawerAnimationController.Completed -= HandleDrawerAnimationCompleted;
-            _drawerAnimationController.Dismissed -= HandleDrawerAnimationCompleted;
-            _drawerAnimationController.Dispose();
-            _drawerAnimationController = null;
-            return;
-        }
-
-        if (_endDrawerAnimationController == null)
-        {
-            return;
-        }
-
-        _endDrawerAnimationController.Changed -= HandleEndDrawerAnimationTick;
-        _endDrawerAnimationController.Completed -= HandleEndDrawerAnimationCompleted;
-        _endDrawerAnimationController.Dismissed -= HandleEndDrawerAnimationCompleted;
-        _endDrawerAnimationController.Dispose();
-        _endDrawerAnimationController = null;
-    }
-
-    private void HandleDrawerAnimationTick()
-    {
-        if (_drawerAnimationController == null)
-        {
-            return;
-        }
-
-        double value = _drawerAnimationController.Evaluate();
-        double progress = Math.Clamp(_drawerAnimationFrom + (_drawerAnimationTo - _drawerAnimationFrom) * value, 0, 1);
-        SetState(() => _drawerProgress = progress);
-    }
-
-    private void HandleEndDrawerAnimationTick()
-    {
-        if (_endDrawerAnimationController == null)
-        {
-            return;
-        }
-
-        double value = _endDrawerAnimationController.Evaluate();
-        double progress = Math.Clamp(_endDrawerAnimationFrom + (_endDrawerAnimationTo - _endDrawerAnimationFrom) * value, 0, 1);
-        SetState(() => _endDrawerProgress = progress);
-    }
-
-    private void HandleDrawerAnimationCompleted()
-    {
-        SetState(() =>
-        {
-            CommitProgress(DrawerSide.Start, _drawerAnimationTo);
-            StopSettleAnimation(DrawerSide.Start);
-        });
-    }
-
-    private void HandleEndDrawerAnimationCompleted()
-    {
-        SetState(() =>
-        {
-            CommitProgress(DrawerSide.End, _endDrawerAnimationTo);
-            StopSettleAnimation(DrawerSide.End);
-        });
-    }
-
-    private void CommitProgress(DrawerSide side, double progress)
-    {
-        progress = Math.Clamp(progress, 0, 1);
-        if (side == DrawerSide.Start)
-        {
-            _drawerProgress = progress;
-            return;
-        }
-
-        _endDrawerProgress = progress;
-    }
-
-    private void UpdateOpenFlagsFromProgress(DrawerSide side, double progress)
-    {
-        bool isOpen = progress >= DefaultOpenThreshold;
-        if (side == DrawerSide.Start)
-        {
-            _isDrawerOpen = isOpen && HasDrawer;
-            _isEndDrawerOpen = false;
-            return;
-        }
-
-        _isEndDrawerOpen = isOpen && HasEndDrawer;
-        _isDrawerOpen = false;
-    }
-
-    private void SyncDrawerHistoryEntry(BuildContext context)
-    {
-        if (_isDisposed)
-        {
-            return;
-        }
-
-        if (!ShouldMaintainDrawerHistoryEntry())
-        {
-            RemoveDrawerHistoryEntry();
-            return;
-        }
-
-        var route = ModalRoute.MaybeOf(context);
-        if (route == null)
-        {
-            RemoveDrawerHistoryEntry();
-            return;
-        }
-
-        if (_drawerHistoryEntry != null && ReferenceEquals(_drawerHistoryRoute, route))
-        {
-            return;
-        }
-
-        RemoveDrawerHistoryEntry();
-
-        var entry = new LocalHistoryEntry(onRemove: HandleDrawerHistoryEntryRemoved);
-        route.AddLocalHistoryEntry(entry);
-        _drawerHistoryEntry = entry;
-        _drawerHistoryRoute = route;
-    }
-
-    private bool ShouldMaintainDrawerHistoryEntry()
-    {
-        return _activeDragSide != null
-               || _isDrawerOpen
-               || _isEndDrawerOpen;
-    }
-
-    private void RemoveDrawerHistoryEntry()
-    {
-        var entry = _drawerHistoryEntry;
-        if (entry == null)
-        {
-            _drawerHistoryRoute = null;
-            return;
-        }
-
-        _drawerHistoryEntry = null;
-        _drawerHistoryRoute = null;
-        _isRemovingDrawerHistoryEntry = true;
-
-        try
-        {
-            entry.Remove();
-        }
-        finally
-        {
-            _isRemovingDrawerHistoryEntry = false;
-        }
-    }
-
-    private void HandleDrawerHistoryEntryRemoved()
-    {
-        _drawerHistoryEntry = null;
-        _drawerHistoryRoute = null;
-
-        if (_isRemovingDrawerHistoryEntry || _isDisposed)
-        {
-            return;
-        }
-
-        CloseOpenDrawers();
-    }
-
-    private static DrawerSide OppositeOf(DrawerSide side)
-    {
-        return side == DrawerSide.Start ? DrawerSide.End : DrawerSide.Start;
-    }
-
-    private static double ResolveDrawerWidth(BuildContext context, Widget drawer)
-    {
-        if (drawer is Drawer typedDrawer)
-        {
-            return typedDrawer.ResolveEffectiveWidthForScaffold(context);
-        }
-
-        return DefaultDrawerWidth;
-    }
-
-    private static Color ApplyOpacity(Color color, double opacity)
-    {
-        double effectiveOpacity = Math.Clamp(opacity, 0, 1);
-        byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * effectiveOpacity), 0, 255);
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }
 

@@ -96,6 +96,9 @@ public static class Curves
     // Flutter Curves.easeOutCubic: Cubic(0.33, 1.0, 0.68, 1.0).
     public static Curve EaseOutCubic { get; } = Cubic(0.33, 1.0, 0.68, 1.0);
 
+    // Flutter Curves.easeOutCirc: Cubic(0.075, 0.82, 0.165, 1.0).
+    public static Curve EaseOutCirc { get; } = Cubic(0.075, 0.82, 0.165, 1.0);
+
     // Flutter Material Easing.legacyDecelerate: Cubic(0.0, 0.0, 0.2, 1.0).
     public static Curve LegacyDecelerate { get; } = Cubic(0.0, 0.0, 0.2, 1.0);
 

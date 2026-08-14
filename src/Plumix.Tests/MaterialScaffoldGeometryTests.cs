@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -382,6 +383,449 @@ public sealed class MaterialScaffoldGeometryTests
             RequireGeometry(context).FloatingActionButtonArea!.Value);
     }
 
+    [Fact]
+    public void PersistentFooter_SitsBelowTheBodyAndShrinksIt()
+    {
+        using var harness = new Harness(Wrap(new Scaffold(
+            body: Filling(),
+            persistentFooterButtons: [new SizedBox(width: 100, height: 90)])));
+        harness.Pump(Viewport);
+
+        RenderBox footer = harness.RequireSlot(ScaffoldSlot.PersistentFooter);
+        RenderBox body = harness.RequireSlot(ScaffoldSlot.Body);
+
+        // 90 plus the 8 top and bottom padding of the footer's EdgeInsets.all(8).
+        Assert.Equal(106.0, footer.Size.Height);
+        Assert.Equal(new Point(0, 494), SlotOffset(footer));
+        Assert.Equal(494.0, body.Size.Height);
+    }
+
+    [Theory]
+    [InlineData("CenterEnd", 692.0)]
+    [InlineData("Center", 350.0)]
+    [InlineData("CenterStart", 8.0)]
+    public void PersistentFooter_AlignmentPlacesTheButtonRow(string alignment, double expectedLeft)
+    {
+        AlignmentDirectional resolved = alignment switch
+        {
+            "CenterEnd" => AlignmentDirectional.CenterEnd,
+            "Center" => AlignmentDirectional.Center,
+            _ => AlignmentDirectional.CenterStart,
+        };
+        using var harness = new Harness(Wrap(new Scaffold(
+            body: new SizedBox(),
+            persistentFooterAlignment: resolved,
+            persistentFooterButtons: [new SizedBox(width: 100, height: 90)])));
+        harness.Pump(Viewport);
+
+        RenderBox button = harness.RequireRender<RenderConstrainedBox>(
+            box => box.AdditionalConstraints.MaxWidth == 100.0);
+        Assert.Equal(expectedLeft, button.GetPaintOffsetToRoot().X);
+    }
+
+    [Fact]
+    public void PersistentFooter_AppliesMediaPadding()
+    {
+        using var harness = new Harness(Wrap(
+            new Scaffold(
+                body: new SizedBox(),
+                persistentFooterButtons: [new SizedBox(width: 100, height: 90)]),
+            mediaQuery: new MediaQueryData(
+                Size: Viewport,
+                Padding: new Thickness(10, 20, 30, 40))));
+        harness.Pump(Viewport);
+
+        RenderBox footer = harness.RequireSlot(ScaffoldSlot.PersistentFooter);
+        RenderBox overflowBar = harness.RequireRender<RenderOverflowBar>();
+        Point topLeft = overflowBar.GetPaintOffsetToRoot();
+
+        // The footer's SafeArea keeps the left, right and bottom padding; only the top one is removed, so
+        // the 106pt button row grows by the 40pt bottom inset and the buttons stay inside the safe area.
+        Assert.Equal(146.0, footer.Size.Height);
+        Assert.Equal(800.0 - 30.0 - 8.0, topLeft.X + overflowBar.Size.Width);
+        Assert.Equal(600.0 - 40.0 - 8.0, topLeft.Y + overflowBar.Size.Height);
+    }
+
+    [Fact]
+    public void PersistentFooter_WithBottomNavigationBar_DropsItsBottomSafeArea()
+    {
+        using var harness = new Harness(Wrap(
+            new Scaffold(
+                body: new SizedBox(),
+                persistentFooterButtons: [new SizedBox(width: 100, height: 90)],
+                bottomNavigationBar: new SizedBox(height: 60)),
+            mediaQuery: new MediaQueryData(
+                Size: Viewport,
+                Padding: new Thickness(0, 0, 0, 40),
+                ViewPadding: new Thickness(0, 0, 0, 40))));
+        harness.Pump(Viewport);
+
+        RenderBox footer = harness.RequireSlot(ScaffoldSlot.PersistentFooter);
+
+        // removeBottomPadding: the bottom navigation bar already covers the safe area.
+        Assert.Equal(106.0, footer.Size.Height);
+        Assert.Equal(new Point(0, 600 - 60 - 106), SlotOffset(footer));
+    }
+
+    [Fact]
+    public void PersistentFooter_KeepsItsBottomPaddingWhenViewInsetsAreIgnored()
+    {
+        var withoutKeyboard = new MediaQueryData(
+            Size: Viewport,
+            Padding: new Thickness(0, 0, 0, 20),
+            ViewPadding: new Thickness(0, 0, 0, 20));
+        using var harness = new Harness(Wrap(
+            new Scaffold(
+                body: new SizedBox(),
+                resizeToAvoidBottomInset: false,
+                persistentFooterButtons: [new SizedBox(width: 100, height: 90)]),
+            mediaQuery: withoutKeyboard));
+        harness.Pump(Viewport);
+        double heightWithoutKeyboard = harness.RequireSlot(ScaffoldSlot.PersistentFooter).Size.Height;
+
+        harness.Update(Wrap(
+            new Scaffold(
+                body: new SizedBox(),
+                resizeToAvoidBottomInset: false,
+                persistentFooterButtons: [new SizedBox(width: 100, height: 90)]),
+            mediaQuery: withoutKeyboard with
+            {
+                Padding = default,
+                ViewInsets = new Thickness(0, 0, 0, 300),
+            }));
+        harness.Pump(Viewport);
+
+        Assert.Equal(heightWithoutKeyboard, harness.RequireSlot(ScaffoldSlot.PersistentFooter).Size.Height);
+    }
+
+    [Fact]
+    public void PersistentFooter_DecorationReplacesTheDefaultDividerBorder()
+    {
+        using var defaultHarness = new Harness(Wrap(new Scaffold(
+            body: new SizedBox(),
+            persistentFooterButtons: [new SizedBox(width: 100, height: 90)])));
+        defaultHarness.Pump(Viewport);
+
+        var defaultDecoration = (BoxDecoration)defaultHarness
+            .RequireWidget<Container>(container => container.Decoration is BoxDecoration { Border: not null })
+            .Decoration!;
+        Assert.Equal(
+            ThemeData.Light.ColorScheme.OutlineVariant,
+            ((Border)defaultDecoration.Border!).Top.Color);
+        Assert.Equal(1.0, ((Border)defaultDecoration.Border!).Top.Width);
+
+        var custom = new BoxDecoration(Color: Colors.Red);
+        using var customHarness = new Harness(Wrap(new Scaffold(
+            body: new SizedBox(),
+            persistentFooterDecoration: custom,
+            persistentFooterButtons: [new SizedBox(width: 100, height: 90)])));
+        customHarness.Pump(Viewport);
+
+        Assert.Same(
+            custom,
+            customHarness.RequireWidget<Container>(container => container.Decoration is BoxDecoration
+            {
+                Color: not null,
+            }).Decoration);
+    }
+
+    [Fact]
+    public void Body_WithExtendBody_RestoresTheBottomPaddingOfTheBottomWidgets()
+    {
+        MediaQueryData? bodyMetrics = null;
+        using var harness = new Harness(Wrap(new Scaffold(
+            extendBody: true,
+            body: new Builder(context =>
+            {
+                bodyMetrics = MediaQuery.Of(context);
+                return Filling();
+            }),
+            bottomNavigationBar: new SizedBox(height: 48))));
+        harness.Pump(Viewport);
+
+        Assert.Equal(new Size(800, 600), harness.RequireSlot(ScaffoldSlot.Body).Size);
+        Assert.Equal(48.0, bodyMetrics!.Padding.Bottom);
+
+        harness.Update(Wrap(new Scaffold(
+            body: new Builder(context =>
+            {
+                bodyMetrics = MediaQuery.Of(context);
+                return Filling();
+            }),
+            bottomNavigationBar: new SizedBox(height: 48))));
+        harness.Pump(Viewport);
+
+        Assert.Equal(new Size(800, 552), harness.RequireSlot(ScaffoldSlot.Body).Size);
+        Assert.Equal(0.0, bodyMetrics!.Padding.Bottom);
+    }
+
+    [Theory]
+    [InlineData(true, true, 600.0, 124.0)]
+    [InlineData(true, false, 600.0, 24.0)]
+    [InlineData(false, true, 476.0, 0.0)]
+    [InlineData(false, false, 600.0, 24.0)]
+    public void Body_WithExtendBodyBehindAppBar_RestoresTheAppBarTopPadding(
+        bool extendBodyBehindAppBar,
+        bool hasAppBar,
+        double expectedBodyHeight,
+        double expectedTopPadding)
+    {
+        MediaQueryData? bodyMetrics = null;
+        using var harness = new Harness(Wrap(
+            new Scaffold(
+                extendBodyBehindAppBar: extendBodyBehindAppBar,
+                appBar: hasAppBar
+                    ? new AppBar(titleText: "Title", toolbarHeight: 100)
+                    : null,
+                body: new Builder(context =>
+                {
+                    bodyMetrics = MediaQuery.Of(context);
+                    return Filling();
+                })),
+            mediaQuery: new MediaQueryData(Size: Viewport, Padding: new Thickness(0, 24, 0, 0))));
+        harness.Pump(Viewport);
+
+        Assert.Equal(expectedBodyHeight, harness.RequireSlot(ScaffoldSlot.Body).Size.Height);
+        Assert.Equal(expectedTopPadding, bodyMetrics!.Padding.Top);
+    }
+
+    [Fact]
+    public void Body_KeepsItsStateWhenExtendBodyBehindAppBarChanges()
+    {
+        var scaffoldKey = new LabeledGlobalKey<ScaffoldState>("scaffold");
+        var controller = new ScrollController();
+        Widget Build(bool extendBodyBehindAppBar) => Wrap(new Scaffold(
+            key: scaffoldKey,
+            extendBodyBehindAppBar: extendBodyBehindAppBar,
+            appBar: new AppBar(titleText: "Title"),
+            body: new ListView(
+                controller: controller,
+                children: [new SizedBox(height: 1200)])));
+
+        using var harness = new Harness(Build(true));
+        harness.Pump(Viewport);
+        controller.JumpTo(100.0);
+        harness.Pump(Viewport);
+
+        harness.Update(Build(false));
+        harness.Pump(Viewport);
+
+        Assert.Equal(100.0, controller.Position.Pixels);
+    }
+
+    [Fact]
+    public void Drawers_AreLaidOutTightAtTheOrigin()
+    {
+        using var harness = new Harness(Wrap(new Scaffold(
+            body: new SizedBox(),
+            drawer: new Drawer(),
+            endDrawer: new Drawer())));
+        harness.Pump(Viewport);
+
+        foreach (ScaffoldSlot slot in new[] { ScaffoldSlot.Drawer, ScaffoldSlot.EndDrawer })
+        {
+            RenderBox drawer = harness.RequireSlot(slot);
+            Assert.Equal(Viewport, drawer.Size);
+            Assert.Equal(new Point(0, 0), SlotOffset(drawer));
+        }
+    }
+
+    [Fact]
+    public void Drawers_PaintTheOpenedEndDrawerAboveTheStartDrawer()
+    {
+        BuildContext? context = null;
+        using var harness = new Harness(Wrap(new Scaffold(
+            body: Capture(c => context = c),
+            drawer: new Drawer(),
+            endDrawer: new Drawer())));
+        harness.Pump(Viewport);
+
+        // Closed: the start drawer is appended last and therefore paints on top.
+        Assert.True(harness.SlotIndex(ScaffoldSlot.Drawer) > harness.SlotIndex(ScaffoldSlot.EndDrawer));
+
+        Scaffold.Of(context!.Value).OpenEndDrawer();
+        harness.Pump(Viewport);
+
+        Assert.True(harness.SlotIndex(ScaffoldSlot.EndDrawer) > harness.SlotIndex(ScaffoldSlot.Drawer));
+    }
+
+    [Fact]
+    public void Drawer_DismissIntent_ClosesAnOpenDrawerUnlessTheBarrierIsLocked()
+    {
+        BuildContext? context = null;
+        using var harness = new Harness(Wrap(new Scaffold(
+            body: Capture(c => context = c),
+            drawer: new Drawer())));
+        harness.Pump(Viewport);
+
+        ScaffoldState scaffold = Scaffold.Of(context!.Value);
+        Assert.Null(Actions.Handler(context!.Value, new DismissIntent()));
+
+        scaffold.OpenDrawer();
+        harness.Pump(Viewport);
+
+        Action? handler = Actions.Handler(context!.Value, new DismissIntent());
+        Assert.NotNull(handler);
+        handler!();
+        harness.Pump(Viewport);
+
+        Assert.False(scaffold.IsDrawerOpen);
+    }
+
+    [Fact]
+    public void Drawer_DismissIntent_IsDisabledWhenTheBarrierIsNotDismissible()
+    {
+        BuildContext? context = null;
+        using var harness = new Harness(Wrap(new Scaffold(
+            body: Capture(c => context = c),
+            drawerBarrierDismissible: false,
+            drawer: new Drawer())));
+        harness.Pump(Viewport);
+
+        Scaffold.Of(context!.Value).OpenDrawer();
+        harness.Pump(Viewport);
+
+        Assert.Null(Actions.Handler(context!.Value, new DismissIntent()));
+    }
+
+    [Fact]
+    public void Scaffold_OnDrawerChanged_FiresOnlyOnAChange()
+    {
+        var changes = new List<bool>();
+        BuildContext? context = null;
+        using var harness = new Harness(Wrap(new Scaffold(
+            body: Capture(c => context = c),
+            onDrawerChanged: changes.Add,
+            drawer: new Drawer())));
+        harness.Pump(Viewport);
+
+        ScaffoldState scaffold = Scaffold.Of(context!.Value);
+        scaffold.OpenDrawer();
+        harness.Pump(Viewport);
+        scaffold.OpenDrawer();
+        harness.Pump(Viewport);
+        scaffold.CloseDrawer();
+        harness.Pump(Viewport);
+
+        Assert.Equal([true, false], changes);
+    }
+
+    [Theory]
+    [InlineData(TargetPlatform.IOS, true)]
+    [InlineData(TargetPlatform.MacOS, true)]
+    [InlineData(TargetPlatform.Android, false)]
+    [InlineData(TargetPlatform.Windows, false)]
+    public void StatusBar_SlotIsInstalledOnAppleHostsOnly(TargetPlatform platform, bool hasStatusBar)
+    {
+        using var harness = new Harness(Wrap(
+            new Scaffold(body: new SizedBox()),
+            theme: ThemeData.Light with { Platform = platform }));
+        harness.Pump(Viewport);
+
+        Assert.Equal(hasStatusBar, harness.HasSlot(ScaffoldSlot.StatusBar));
+    }
+
+    [Fact]
+    public void StatusBar_SlotIsNotInstalledWhenPrimaryIsFalse()
+    {
+        using var harness = new Harness(Wrap(
+            new Scaffold(body: new SizedBox(), primary: false),
+            theme: ThemeData.Light with { Platform = TargetPlatform.IOS }));
+        harness.Pump(Viewport);
+
+        Assert.False(harness.HasSlot(ScaffoldSlot.StatusBar));
+    }
+
+    [Fact]
+    public void StatusBar_SlotCoversTheTopPaddingAtTheOrigin()
+    {
+        using var harness = new Harness(Wrap(
+            new Scaffold(body: new SizedBox()),
+            mediaQuery: new MediaQueryData(Size: Viewport, Padding: new Thickness(0, 25, 0, 0)),
+            theme: ThemeData.Light with { Platform = TargetPlatform.IOS }));
+        harness.Pump(Viewport);
+
+        RenderBox statusBar = harness.RequireSlot(ScaffoldSlot.StatusBar);
+        Assert.Equal(new Size(800, 25), statusBar.Size);
+        Assert.Equal(new Point(0, 0), SlotOffset(statusBar));
+    }
+
+    [Fact]
+    public void StatusBarTap_AnimatesThePrimaryScrollableBackToTheTop()
+    {
+        var controller = new ScrollController();
+        using var harness = new Harness(Wrap(
+            new PrimaryScrollController(
+                controller: controller,
+                child: new Scaffold(
+                    body: new ListView(controller: controller, children: [new SizedBox(height: 2400)]))),
+            mediaQuery: new MediaQueryData(Size: Viewport, Padding: new Thickness(0, 25, 0, 0)),
+            theme: ThemeData.Light with { Platform = TargetPlatform.IOS }));
+        harness.Pump(Viewport);
+        Assert.True(controller.HasClients);
+        controller.JumpTo(1000.0);
+        harness.Pump(Viewport);
+
+        WidgetsBinding.Instance.HandleStatusBarTap();
+        double start = Scheduler.CurrentSeconds;
+
+        // The source animation runs for 1000ms on Curves.easeOutCirc; these are the offsets Flutter's own
+        // status-bar test samples.
+        Assert.InRange(PixelsAt(0.25), 156.0, 160.0);
+        Assert.InRange(PixelsAt(0.5), 39.0, 43.0);
+        Assert.InRange(PixelsAt(0.75), 5.0, 9.0);
+        Assert.Equal(0.0, PixelsAt(1.0));
+
+        double PixelsAt(double offset)
+        {
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + offset));
+            harness.Pump(Viewport);
+            return controller.Position.Pixels;
+        }
+    }
+
+    [Fact]
+    public void StatusBarTap_OnlyScrollsTheForegroundScaffold()
+    {
+        var background = new ScrollController();
+        var foreground = new ScrollController();
+        using var harness = new Harness(Wrap(
+            new Stack(
+                children:
+                [
+                    new PrimaryScrollController(
+                        controller: background,
+                        child: new Scaffold(body: new ListView(
+                            controller: background,
+                            children: [new SizedBox(height: 2400)]))),
+                    new PrimaryScrollController(
+                        controller: foreground,
+                        child: new Scaffold(body: new ListView(
+                            controller: foreground,
+                            children: [new SizedBox(height: 2400)]))),
+                ]),
+            mediaQuery: new MediaQueryData(Size: Viewport, Padding: new Thickness(0, 25, 0, 0)),
+            theme: ThemeData.Light with { Platform = TargetPlatform.IOS }));
+        harness.Pump(Viewport);
+        background.JumpTo(1000.0);
+        foreground.JumpTo(1000.0);
+        harness.Pump(Viewport);
+
+        WidgetsBinding.Instance.HandleStatusBarTap();
+        harness.Tick(1.1);
+        harness.Pump(Viewport);
+
+        Assert.Equal(1000.0, background.Position.Pixels);
+        Assert.Equal(0.0, foreground.Position.Pixels);
+    }
+
+    /// <summary>A body that expands to whatever the scaffold's body slot offers it.</summary>
+    private static Widget Filling() =>
+        new SizedBox(width: double.PositiveInfinity, height: double.PositiveInfinity);
+
+    private static Point SlotOffset(RenderBox slot) =>
+        ((MultiChildLayoutParentData)slot.parentData!).offset;
+
     private static ScaffoldGeometry RequireGeometry(BuildContext? context)
     {
         Assert.True(context.HasValue);
@@ -396,12 +840,22 @@ public sealed class MaterialScaffoldGeometryTests
         return new SizedBox();
     });
 
-    private static Widget Wrap(Widget child, MediaQueryData? mediaQuery = null) =>
+    private static Widget Wrap(
+        Widget child,
+        MediaQueryData? mediaQuery = null,
+        ThemeData? theme = null,
+        TextDirection textDirection = TextDirection.Ltr) =>
         new Directionality(
-            TextDirection.Ltr,
+            textDirection,
             new MediaQuery(
                 mediaQuery ?? new MediaQueryData(Size: Viewport),
-                new Theme(ThemeData.Light, child)));
+                new Theme(theme ?? AndroidLight, child)));
+
+    /// <summary>
+    /// The default theme for these tests. The platform is pinned because iOS and macOS scaffolds install an
+    /// extra status-bar slot, which would otherwise make slot assertions depend on the test host.
+    /// </summary>
+    private static ThemeData AndroidLight => ThemeData.Light with { Platform = TargetPlatform.Android };
 
     private sealed class Harness : IDisposable
     {
@@ -472,6 +926,40 @@ public sealed class MaterialScaffoldGeometryTests
             throw new InvalidOperationException($"Scaffold slot '{slot}' was not found.");
         }
 
+        public bool HasSlot(ScaffoldSlot slot) => SlotIndex(slot) >= 0;
+
+        /// <summary>The slot's position in the layout's child list, which is also its paint order.</summary>
+        public int SlotIndex(ScaffoldSlot slot)
+        {
+            RenderCustomMultiChildLayoutBox layout = RequireLayout();
+            int index = 0;
+            for (RenderBox? child = layout.FirstChild; child is not null; child = layout.ChildAfter(child))
+            {
+                if (Equals(((MultiChildLayoutParentData)child.parentData!).Id, slot))
+                {
+                    return index;
+                }
+
+                index++;
+            }
+
+            return -1;
+        }
+
+        public T RequireRender<T>(Func<T, bool>? predicate = null) where T : RenderObject
+        {
+            var found = new List<T>();
+            Collect(RenderView, found);
+            return found.First(render => predicate is null || predicate(render));
+        }
+
+        public T RequireWidget<T>(Func<T, bool>? predicate = null) where T : Widget
+        {
+            var found = new List<T>();
+            CollectWidgets(_rootElement, found);
+            return found.First(widget => predicate is null || predicate(widget));
+        }
+
         public T FindState<T>() where T : State
         {
             var states = new List<T>();
@@ -494,6 +982,16 @@ public sealed class MaterialScaffoldGeometryTests
             }
 
             root.VisitChildren(child => Collect(child, found));
+        }
+
+        private static void CollectWidgets<T>(Element element, List<T> widgets) where T : Widget
+        {
+            if (element.Widget is T typed)
+            {
+                widgets.Add(typed);
+            }
+
+            element.VisitChildren(child => CollectWidgets(child, widgets));
         }
 
         private static void CollectStates<T>(Element element, List<T> states) where T : State

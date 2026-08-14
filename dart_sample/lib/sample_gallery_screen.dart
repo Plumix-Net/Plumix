@@ -24,6 +24,7 @@ import 'demos/material/text_field_demo_page.dart';
 import 'demos/material/dialog_demo_page.dart';
 import 'demos/material/popup_menu_demo_page.dart';
 import 'demos/material/dropdown_demo_page.dart';
+import 'demos/material/scaffold_slots_demo_page.dart';
 import 'demos/material/search_demo_page.dart';
 import 'demos/material/autocomplete_demo_page.dart';
 import 'demos/material/selection_demo_page.dart';
@@ -148,6 +149,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Drawer',
       subtitle: 'scaffold drawer/endDrawer + theme/widget precedence probes',
       builder: () => const DrawerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.scaffoldSlots,
+      title: 'Scaffold slots',
+      subtitle: 'persistent footer + extendBody padding + drawer paint order',
+      builder: () => const ScaffoldSlotsDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.drawerHeaders,

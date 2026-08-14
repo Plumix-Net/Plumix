@@ -41,6 +41,7 @@ internal static class SampleRoutes
     public const string DatePicker = "/date-picker";
     public const string ActionButtons = "/action-buttons";
     public const string Drawer = "/drawer";
+    public const string ScaffoldSlots = "/scaffold-slots";
     public const string DrawerHeaders = "/drawer-headers";
     public const string Divider = "/divider";
     public const string BadgeTooltip = "/badge-tooltip";
@@ -150,6 +151,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.DatePicker, "Date/time picker family", "day/year/time/range selection + input modes + M2/M3 themes", () => new DatePickerDemoPage()),
         new(SampleRoutes.ActionButtons, "Material action buttons", "back/close/drawer/end-drawer + ActionIconTheme", () => new ActionButtonsDemoPage()),
         new(SampleRoutes.Drawer, "Drawer", "scaffold drawer/endDrawer + theme/widget precedence probes", () => new DrawerDemoPage()),
+        new(
+            SampleRoutes.ScaffoldSlots,
+            "Scaffold slots",
+            "persistent footer + extendBody padding + drawer paint order",
+            () => new ScaffoldSlotsDemoPage()),
         new(SampleRoutes.DrawerHeaders, "Drawer headers", "DrawerHeader + UserAccountsDrawerHeader", () => new DrawerHeadersDemoPage()),
         new(SampleRoutes.Divider, "Divider", "horizontal/vertical divider + theme/widget precedence probes", () => new DividerDemoPage()),
         new(SampleRoutes.BadgeTooltip, "Badge + Tooltip", "count/small badges + hover/long-press tooltip theming", () => new BadgeTooltipDemoPage()),

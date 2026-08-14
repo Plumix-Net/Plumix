@@ -225,6 +225,17 @@ public abstract class Element
 
         Parent = parent;
         Slot = newSlot;
+
+        // Dart's `Element.attachRenderObject` hands the new slot down to every element between this one and
+        // the render object it attaches, so a subtree reparented through a global key re-inserts that render
+        // object at its new position instead of at the slot it held under the old parent.
+        for (Element? descendant = RenderObjectAttachingChild;
+             descendant is not null;
+             descendant = descendant.RenderObjectAttachingChild)
+        {
+            descendant.Slot = newSlot;
+        }
+
         Depth = parent.Depth + 1;
         _lifecycleState = ElementLifecycleState.Active;
         _dependencies?.Clear();

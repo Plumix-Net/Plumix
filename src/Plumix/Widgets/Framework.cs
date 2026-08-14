@@ -141,7 +141,16 @@ public abstract record GlobalKey<T> : GlobalKey where T : State
 /// </summary>
 /// <param name="DebugLabel"></param>
 /// <typeparam name="T"></typeparam>
-public record LabeledGlobalKey<T>(string? DebugLabel) : GlobalKey<T> where T : State;
+public record LabeledGlobalKey<T>(string? DebugLabel) : GlobalKey<T> where T : State
+{
+    // Dart's LabeledGlobalKey is a class and inherits identity equality, so two keys built with the same
+    // label stay distinct. The generated record equality would instead make them interchangeable, which
+    // collides as soon as two instances of the same widget (two Scaffolds, two Drawers, ...) are mounted
+    // in one tree.
+    public virtual bool Equals(LabeledGlobalKey<T>? other) => ReferenceEquals(this, other);
+
+    public override int GetHashCode() => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this);
+}
 
 /// <summary>
 /// A global key that takes its identity from the object used as its value.

@@ -56,17 +56,36 @@ public abstract class ContainerBoxParentData<TChild> : BoxParentData, IContainer
 }
 
 /// <summary>
+/// Marks a value a parent can attach to the <see cref="BoxConstraints"/> it lays a child out with, so the
+/// child can read layout-time information its own constraints cannot express.
+/// </summary>
+/// <remarks>
+/// Dart subclasses <c>BoxConstraints</c> for this (for example <c>_BodyBoxConstraints</c> in
+/// <c>scaffold.dart</c>, which carries the scaffold's app-bar and bottom-widget heights to
+/// <c>_BodyBuilder</c>). <see cref="BoxConstraints"/> is a value type here and cannot be subclassed, so the
+/// metadata rides along as a field instead. Like the Dart subclasses, it takes part in equality — a child
+/// laid out with different metadata is relaid out — and every derived constraint
+/// (<see cref="BoxConstraints.Loosen"/>, <see cref="BoxConstraints.Tighten"/>, ...) drops it, exactly as
+/// Dart's base-class methods return a plain <c>BoxConstraints</c>.
+/// </remarks>
+public interface IBoxConstraintsMetadata;
+
+/// <summary>
 /// Immutable layout constraints for [RenderBox] layout.
 /// </summary>
 /// <param name="MinWidth">The minimum width that satisfies the constraints.</param>
 /// <param name="MaxWidth">The maximum width that satisfies the constraints. Might be [double.PositiveInfinity].</param>
 /// <param name="MinHeight">The minimum height that satisfies the constraints.</param>
 /// <param name="MaxHeight">The maximum height that satisfies the constraints. Might be [double.PositiveInfinity].</param>
+/// <param name="Metadata">
+/// Layout-time information attached by the parent; see <see cref="IBoxConstraintsMetadata"/>.
+/// </param>
 public readonly record struct BoxConstraints(
     double MinWidth = 0.0,
     double MaxWidth = double.PositiveInfinity,
     double MinHeight = 0.0,
-    double MaxHeight = double.PositiveInfinity)
+    double MaxHeight = double.PositiveInfinity,
+    IBoxConstraintsMetadata? Metadata = null)
     : IConstraints
 {
     public override string ToString()

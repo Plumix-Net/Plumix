@@ -1,5 +1,24 @@
 # Changelog
 
+- Breaking: closed the remaining `Scaffold` slot divergence end-to-end (`material_ui/scaffold.dart`).
+  `_ScaffoldSlot` now carries Flutter's full member list, and `_ScaffoldLayout` lays out the four missing
+  slots: `persistentFooter`, `statusBar`, `drawer` and `endDrawer`. New `Scaffold` options
+  `PersistentFooterButtons`, `PersistentFooterAlignment`, `PersistentFooterDecoration`, `Primary`,
+  `OnDrawerChanged`, `OnEndDrawerChanged` and `DrawerDragStartBehavior`. The ported `_BodyBuilder` restores the
+  `MediaQuery` padding the body extends behind for `extendBody`/`extendBodyBehindAppBar`, and a `_bodyKey`
+  `KeyedSubtree` keeps the body's state when either flag changes. On iOS/macOS a `primary` scaffold installs
+  the ported `_HitTestableAtOrigin` status-bar target, so `WidgetsBinding.HandleStatusBarTap` scrolls only the
+  foreground scaffold's primary scrollable to the top (1000 ms, `Curves.EaseOutCirc`). **Breaking:** the
+  hand-rolled drawer machinery in `ScaffoldState` is gone — both drawers are now `DrawerController`s in their
+  layout slots, so the opened end drawer paints above the start drawer, an open drawer no longer sets
+  `ImpliesAppBarDismissal`, `OpenDrawer`/`CloseDrawer` animate through the controller's fling instead of
+  settling a scaffold-local animation, and `DismissIntent` (Escape) closes an open dismissible drawer.
+  Supporting core work: `BoxConstraints` gained an `IBoxConstraintsMetadata` carrier (the value-type stand-in
+  for subclassing, used by `_BodyBoxConstraints`), `WidgetsBindingObserver`/`WidgetsBinding` gained
+  `HandleStatusBarTap`, `RenderOverflowBar` gained its four intrinsic-size methods, `Curves.EaseOutCirc` was
+  added, `LabeledGlobalKey<T>` compares by identity like Dart's class instead of by its debug label, and an
+  element reparented through a global key now hands its new slot to the render objects it attaches.
+
 - Breaking: closed the `PageView` divergence end-to-end (`widgets/page_view.dart`). `PageView` is no longer a
   gesture-driven widget over a bespoke `RenderPageViewport`: it now builds Flutter's composition
   (`NotificationListener<ScrollNotification>` > `Scrollable` > `Viewport` > `SliverFillViewport`), so pages are

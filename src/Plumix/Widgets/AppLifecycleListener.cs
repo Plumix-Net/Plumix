@@ -17,6 +17,14 @@ public interface WidgetsBindingObserver
     {
     }
 
+    /// <summary>
+    /// Called when the host reports that the user tapped the status bar. Only iOS and macOS report it;
+    /// scaffolds use it to scroll their primary scrollable back to the top.
+    /// </summary>
+    void HandleStatusBarTap()
+    {
+    }
+
     Task<AppExitResponse> DidRequestAppExit()
     {
         return Task.FromResult(AppExitResponse.Exit);
@@ -81,6 +89,27 @@ public class WidgetsBinding
                         $"Exception while dispatching {nameof(WidgetsBindingObserver.DidChangeAppLifecycleState)}: "
                         + exception);
                 }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Dispatches a host status-bar tap to every registered observer. Hosts whose platform reports the
+    /// gesture (iOS, macOS) call this; the default adapters never do.
+    /// </summary>
+    public void HandleStatusBarTap()
+    {
+        foreach (WidgetsBindingObserver observer in _observers.ToArray())
+        {
+            try
+            {
+                observer.HandleStatusBarTap();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Exception while dispatching {nameof(WidgetsBindingObserver.HandleStatusBarTap)}: "
+                    + exception);
             }
         }
     }

@@ -21,6 +21,18 @@ public sealed class MaterialScaffoldTests
         SystemChrome.ResetSystemUiOverlayStyleForTests();
     }
 
+    /// <summary>
+    /// Runs the drawer's 246ms settle animation to completion. Source <c>DrawerController.open</c>/
+    /// <c>close</c> fling their controller, so the panel only enters or leaves the tree as the animation
+    /// advances.
+    /// </summary>
+    private static void SettleDrawerAnimation(BuildOwner owner)
+    {
+        owner.FlushBuild();
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.5));
+        owner.FlushBuild();
+    }
+
     [Fact]
     public void Scaffold_UsesThemeScaffoldBackgroundColor()
     {
@@ -379,13 +391,13 @@ public sealed class MaterialScaffoldTests
         Assert.Null(FindParagraphByText(root.ChildElement?.RenderObject, "Drawer panel"));
 
         state.OpenDrawer();
-        owner.FlushBuild();
+        SettleDrawerAnimation(owner);
 
         Assert.True(state.IsDrawerOpen);
         Assert.NotNull(FindParagraphByText(root.ChildElement?.RenderObject, "Drawer panel"));
 
         state.CloseDrawer();
-        owner.FlushBuild();
+        SettleDrawerAnimation(owner);
 
         Assert.False(state.IsDrawerOpen);
         Assert.Null(FindParagraphByText(root.ChildElement?.RenderObject, "Drawer panel"));
@@ -443,13 +455,13 @@ public sealed class MaterialScaffoldTests
         Assert.Null(FindParagraphByText(root.ChildElement?.RenderObject, "End drawer panel"));
 
         state.OpenEndDrawer();
-        owner.FlushBuild();
+        SettleDrawerAnimation(owner);
 
         Assert.True(state.IsEndDrawerOpen);
         Assert.NotNull(FindParagraphByText(root.ChildElement?.RenderObject, "End drawer panel"));
 
         state.CloseEndDrawer();
-        owner.FlushBuild();
+        SettleDrawerAnimation(owner);
 
         Assert.False(state.IsEndDrawerOpen);
         Assert.Null(FindParagraphByText(root.ChildElement?.RenderObject, "End drawer panel"));
@@ -954,27 +966,32 @@ public sealed class MaterialScaffoldTests
             state.OpenDrawer();
             harness.Pump(size);
 
-            var scrimAtStart = FindColoredBox(
-                harness.RenderView,
-                color => color.R == 0 && color.G == 0 && color.B == 0 && color.A < 0x8A);
-            Assert.NotNull(scrimAtStart);
+            // The controller is still dismissed on the frame `open()` was called, so the closed drawer -
+            // and no scrim - is what the scaffold builds first.
+            Assert.Null(FindColoredBox(harness.RenderView, IsBlackScrim));
 
             double now = Scheduler.CurrentSeconds;
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.05));
+            harness.Pump(size);
+
+            RenderColoredBox? scrimAtStart = FindColoredBox(harness.RenderView, IsBlackScrim);
+            Assert.NotNull(scrimAtStart);
+            byte alphaAtStart = scrimAtStart!.Color.A;
+            Assert.True(alphaAtStart < 0x8A);
+
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.15));
             harness.Pump(size);
 
-            var scrimMid = FindColoredBox(
-                harness.RenderView,
-                color => color.R == 0 && color.G == 0 && color.B == 0 && color.A > 0 && color.A < 0x8A);
+            RenderColoredBox? scrimMid = FindColoredBox(harness.RenderView, IsBlackScrim);
             Assert.NotNull(scrimMid);
+            Assert.True(scrimMid!.Color.A > alphaAtStart);
 
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
-            var scrimFull = FindColoredBox(
-                harness.RenderView,
-                color => color.R == 0 && color.G == 0 && color.B == 0 && color.A == 0x8A);
+            RenderColoredBox? scrimFull = FindColoredBox(harness.RenderView, IsBlackScrim);
             Assert.NotNull(scrimFull);
+            Assert.Equal(0x8A, scrimFull!.Color.A);
             Assert.True(state.IsDrawerOpen);
         }
         finally
@@ -1863,7 +1880,10 @@ public sealed class MaterialScaffoldTests
         owner.FlushBuild();
 
         Assert.True(scaffoldState.IsDrawerOpen);
-        Assert.True(rootRoute!.ImpliesAppBarDismissal);
+
+        // Source `DrawerController` adds its local history entry with `impliesAppBarDismissal: false`, so an
+        // open drawer keeps the app bar's drawer button instead of turning it into a back button.
+        Assert.False(rootRoute!.ImpliesAppBarDismissal);
         Assert.Same(rootRoute, navigatorState.CurrentRoute);
 
         Assert.True(Navigator.MaybePop(scaffoldContext.Value));
@@ -1892,6 +1912,8 @@ public sealed class MaterialScaffoldTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
+            // Pinned: on iOS/macOS the scaffold also installs a status-bar slot.
+            Platform = TargetPlatform.Android,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surface: Colors.DarkSlateBlue),
         };
 
@@ -1924,6 +1946,8 @@ public sealed class MaterialScaffoldTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
+            // Pinned: on iOS/macOS the scaffold also installs a status-bar slot.
+            Platform = TargetPlatform.Android,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DarkSlateBlue),
         };
 
@@ -1957,6 +1981,8 @@ public sealed class MaterialScaffoldTests
         {
             UseMaterial3 = false,
             Brightness = Brightness.Dark,
+            // Pinned: on iOS/macOS the scaffold also installs a status-bar slot.
+            Platform = TargetPlatform.Android,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 brightness: Brightness.Dark,
                 surface: Colors.DarkSlateBlue),
@@ -4082,7 +4108,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
         Scaffold.Of(scaffoldContext!.Value).OpenEndDrawer();
-        owner.FlushBuild();
+        SettleDrawerAnimation(owner);
 
         Assert.NotNull(captured);
         Assert.Equal(DrawerAlignment.End, captured!.Alignment);
@@ -4320,6 +4346,10 @@ public sealed class MaterialScaffoldTests
 
         return result;
     }
+
+    /// <summary>Matches the drawer scrim, whose default color is black at 54% opacity.</summary>
+    private static bool IsBlackScrim(Color color) =>
+        color.R == 0 && color.G == 0 && color.B == 0 && color.A > 0;
 
     private static RenderColoredBox? FindColoredBox(RenderObject? root, Predicate<Color> predicate)
     {

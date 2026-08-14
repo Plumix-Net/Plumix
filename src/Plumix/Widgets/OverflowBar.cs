@@ -118,6 +118,86 @@ public sealed class RenderOverflowBar : RenderBox,
         if (child.parentData is not OverflowBarParentData) child.parentData = new OverflowBarParentData();
     }
 
+    protected override double ComputeMinIntrinsicHeight(double width) =>
+        ComputeIntrinsicHeight(width, minimum: true);
+
+    protected override double ComputeMaxIntrinsicHeight(double width) =>
+        ComputeIntrinsicHeight(width, minimum: false);
+
+    protected override double ComputeMinIntrinsicWidth(double height)
+    {
+        if (FirstChild is null)
+        {
+            return 0.0;
+        }
+
+        double width = 0.0;
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            width += child.GetMinIntrinsicWidth(double.PositiveInfinity);
+        }
+
+        return width + (Spacing * (ChildCount - 1));
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        if (FirstChild is null)
+        {
+            return 0.0;
+        }
+
+        double width = 0.0;
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            width += child.GetMaxIntrinsicWidth(double.PositiveInfinity);
+        }
+
+        return width + (Spacing * (ChildCount - 1));
+    }
+
+    /// <summary>
+    /// The children stack vertically once their minimum widths no longer fit, so the intrinsic height is the
+    /// sum of the child heights in that case and the tallest child otherwise.
+    /// </summary>
+    private double ComputeIntrinsicHeight(double width, bool minimum)
+    {
+        if (FirstChild is null)
+        {
+            return 0.0;
+        }
+
+        double barWidth = 0.0;
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            barWidth += child.GetMinIntrinsicWidth(double.PositiveInfinity);
+        }
+
+        barWidth += Spacing * (ChildCount - 1);
+
+        double height = 0.0;
+        if (barWidth > width)
+        {
+            for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+            {
+                height += minimum
+                    ? child.GetMinIntrinsicHeight(width)
+                    : child.GetMaxIntrinsicHeight(width);
+            }
+
+            return height + (OverflowSpacing * (ChildCount - 1));
+        }
+
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            height = Math.Max(
+                height,
+                minimum ? child.GetMinIntrinsicHeight(width) : child.GetMaxIntrinsicHeight(width));
+        }
+
+        return height;
+    }
+
     protected override void PerformLayout()
     {
         if (ChildCount == 0)
