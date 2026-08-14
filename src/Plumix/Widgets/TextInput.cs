@@ -33,7 +33,33 @@ public readonly record struct TextSelection(int BaseOffset, int ExtentOffset)
 
 public readonly record struct TextRange(int Start, int End)
 {
+    /// A text range that starts and ends at `offset`.
+    public static TextRange Collapsed(int offset) => new(offset, offset);
+
+    /// A text range that contains nothing and is not in the text.
+    public static TextRange Empty => new(-1, -1);
+
     public bool IsCollapsed => Start == End;
+
+    /// Whether this range represents a valid position in the text.
+    public bool IsValid => Start >= 0 && End >= 0;
+
+    /// Whether the start of this range precedes the end.
+    public bool IsNormalized => End >= Start;
+
+    /// The text before this range.
+    public string TextBefore(string text) => text[..Math.Max(0, Start)];
+
+    /// The text after this range.
+    public string TextAfter(string text) => text[Math.Min(text.Length, End)..];
+
+    /// The text inside this range.
+    public string TextInside(string text)
+    {
+        int start = Math.Clamp(Start, 0, text.Length);
+        int end = Math.Clamp(End, start, text.Length);
+        return text[start..end];
+    }
 
     internal TextRange Clamp(int textLength)
     {

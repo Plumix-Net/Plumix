@@ -43,7 +43,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         string? locale = null,
         TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
         TextHeightBehavior? textHeightBehavior = null,
-        ITextSelectionRegistrar? selectionRegistrar = null,
+        ISelectionRegistrar? selectionRegistrar = null,
         Avalonia.Media.Color? selectionColor = null,
         Key? key = null)
         : base(WidgetSpan.ExtractFromInlineSpan(text, ResolveTextScaler(textScaler, textScaleFactor)), key)
@@ -77,7 +77,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
 
     internal RichText(
         InlineSpan text,
-        SelectionContainer? selectionConfiguration,
+        ISelectionRegistrar? selectionConfiguration,
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
         bool softWrap = true,
@@ -102,11 +102,10 @@ public sealed class RichText : MultiChildRenderObjectWidget
             locale,
             textWidthBasis,
             textHeightBehavior,
-            selectionConfiguration?.Registrar,
+            selectionConfiguration,
             selectionColor,
             key)
     {
-        SelectionConfiguration = selectionConfiguration;
     }
 
     /// The text to display in this widget.
@@ -146,18 +145,11 @@ public sealed class RichText : MultiChildRenderObjectWidget
     /// Defines how to apply [TextStyle.Height] over and under text.
     public TextHeightBehavior? TextHeightBehavior { get; }
 
-    /// The [ITextSelectionRegistrar] this rich text subscribes to.
-    public ITextSelectionRegistrar? SelectionRegistrar { get; }
+    /// The [ISelectionRegistrar] this rich text subscribes to.
+    public ISelectionRegistrar? SelectionRegistrar { get; }
 
     /// The color to use when painting the selection.
     public Avalonia.Media.Color? SelectionColor { get; }
-
-    /// The ambient selection configuration this paragraph participates in.
-    ///
-    /// Flutter carries selection state entirely through `SelectionRegistrar`;
-    /// Plumix's selection stack additionally owns the caret configuration, so the
-    /// container is passed through here (see `docs/ai/DIVERGENCES.md`).
-    internal SelectionContainer? SelectionConfiguration { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -172,10 +164,10 @@ public sealed class RichText : MultiChildRenderObjectWidget
             Locale = Locale,
             TextWidthBasis = TextWidthBasis,
             TextHeightBehavior = TextHeightBehavior,
-            SelectionRegistrar = SelectionRegistrar,
+            SelectionColor = SelectionColor,
+            Registrar = SelectionRegistrar,
         };
 
-        ApplySelectionConfiguration(paragraph);
         return paragraph;
     }
 
@@ -192,30 +184,10 @@ public sealed class RichText : MultiChildRenderObjectWidget
         paragraph.Locale = Locale;
         paragraph.TextWidthBasis = TextWidthBasis;
         paragraph.TextHeightBehavior = TextHeightBehavior;
-        paragraph.SelectionRegistrar = SelectionRegistrar;
-        ApplySelectionConfiguration(paragraph);
+        paragraph.SelectionColor = SelectionColor;
+        paragraph.Registrar = SelectionRegistrar;
     }
 
-    private void ApplySelectionConfiguration(RenderParagraph paragraph)
-    {
-        if (SelectionColor is { } color)
-        {
-            paragraph.SelectionColor = color;
-        }
-
-        SelectionContainer? selection = SelectionConfiguration;
-        paragraph.SelectionEnabled = selection?.Enabled ?? false;
-        if (selection is null)
-        {
-            paragraph.ShowCursor = false;
-            return;
-        }
-
-        paragraph.CursorColor = selection.CursorColor;
-        paragraph.ShowCursor = selection.ShowCursor;
-        paragraph.CursorWidth = selection.CursorWidth;
-        paragraph.CursorHeight = selection.CursorHeight;
-    }
 
     private static TextScaler ResolveTextScaler(TextScaler? textScaler, double textScaleFactor)
     {

@@ -50,8 +50,10 @@ public sealed class MaterialSelectionTests
         Assert.Equal(ContextMenuButtonType.SelectAll, state.ContextMenuButtonItems[0].Type);
 
         state.SelectAll();
-        ContextMenuButtonItem copy = Assert.Single(state.ContextMenuButtonItems);
+        Assert.Equal(2, state.ContextMenuButtonItems.Count);
+        ContextMenuButtonItem copy = state.ContextMenuButtonItems[0];
         Assert.Equal(ContextMenuButtonType.Copy, copy.Type);
+        Assert.Equal(ContextMenuButtonType.SelectAll, state.ContextMenuButtonItems[1].Type);
         Assert.True(double.IsFinite(state.ContextMenuAnchors.PrimaryAnchor.X));
         copy.OnPressed!.Invoke();
 
@@ -212,8 +214,8 @@ public sealed class MaterialSelectionTests
         Assert.Equal("first second", selected?.PlainText);
         Assert.Equal("first second", key.CurrentState.SelectableRegion.SelectedContent?.PlainText);
         List<RenderParagraph> paragraphs = FindParagraphs(harness.RenderView);
-        Assert.Equal(paragraphs[0].PlainText.Length, paragraphs[0].SelectionExtentOffset);
-        Assert.Equal(paragraphs[1].PlainText.Length, paragraphs[1].SelectionExtentOffset);
+        Assert.Equal(paragraphs[0].PlainText.Length, paragraphs[0].Selections.Single().ExtentOffset);
+        Assert.Equal(paragraphs[1].PlainText.Length, paragraphs[1].Selections.Single().ExtentOffset);
 
         key.CurrentState.SelectableRegion.CopySelection();
         Assert.Equal("first second", TextClipboard.GetText());
@@ -262,8 +264,8 @@ public sealed class MaterialSelectionTests
 
         Assert.Equal("first second", selected?.PlainText);
         List<RenderParagraph> paragraphs = FindParagraphs(harness.RenderView);
-        Assert.Equal(paragraphs[0].PlainText.Length, paragraphs[0].SelectionExtentOffset);
-        Assert.Equal(paragraphs[1].PlainText.Length, paragraphs[1].SelectionExtentOffset);
+        Assert.Equal(paragraphs[0].PlainText.Length, paragraphs[0].Selections.Single().ExtentOffset);
+        Assert.Equal(paragraphs[1].PlainText.Length, paragraphs[1].Selections.Single().ExtentOffset);
     }
 
     [Fact]
@@ -318,7 +320,37 @@ public sealed class MaterialSelectionTests
         Assert.Equal(local, editable.SelectionColor);
         Assert.Equal(cursor, editable.CursorColor);
         Assert.Equal(local, paragraphs[0].SelectionColor);
-        Assert.Equal(cursor, paragraphs[0].CursorColor);
+    }
+
+    [Fact]
+    public void SelectionArea_ShowToolbarSurvivesTheFocusHandoverToTheMenuRoute()
+    {
+        var key = new LabeledGlobalKey<SelectionAreaState>("toolbar-area");
+        var focusNode = new FocusNode();
+        using var harness = new WidgetRenderHarness(Root(
+            new Navigator(new BuilderPageRoute(_ => new SelectionArea(
+                key: key,
+                focusNode: focusNode,
+                child: new Text("long pressed")))),
+            ThemeData.Light));
+        harness.Pump(new Size(320, 160));
+
+        Assert.True(focusNode.RequestFocus());
+        harness.Pump(new Size(320, 160));
+
+        SelectableRegionState state = key.CurrentState!.SelectableRegion;
+        state.SelectAll();
+
+        // Pushing the route-backed menu hands focus to the modal scope, which used to
+        // re-enter HideToolbar and tear the route down mid-push.
+        Assert.True(state.ShowToolbar());
+        harness.Pump(new Size(320, 160));
+
+        Assert.True(state.ContextMenuIsVisible);
+        Assert.Equal("long pressed", state.SelectedContent?.PlainText);
+
+        state.HideToolbar();
+        Assert.False(state.ContextMenuIsVisible);
     }
 
     private static Widget Root(Widget child, ThemeData theme)
@@ -377,6 +409,11 @@ public sealed class MaterialSelectionTests
             _pipeline.RequestLayout();
             _pipeline.FlushLayout(size);
             _pipeline.FlushCompositingBits();
+            _pipeline.FlushPaint();
+            Scheduler.PumpFrameForTests();
+            _owner.FlushBuild();
+            _pipeline.RequestLayout();
+            _pipeline.FlushLayout(size);
             _pipeline.FlushPaint();
         }
 

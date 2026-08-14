@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Painting;
+using Plumix.Rendering;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/text.dart
@@ -252,7 +253,8 @@ public sealed class Text : StatelessWidget
             text: Data,
             locale: Locale,
             children: TextSpan is null ? null : [TextSpan]);
-        SelectionContainer? selection = SelectionContainer.MaybeOf(context);
+        ISelectionRegistrar? registrar = SelectionContainer.MaybeOf(context);
+        DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
         TextScaler effectiveTextScaler = TextScaler
                                          ?? (TextScaleFactor is { } textScaleFactor
                                              ? Painting.TextScaler.Linear(textScaleFactor)
@@ -260,7 +262,7 @@ public sealed class Text : StatelessWidget
 
         Widget result = new RichText(
             text: effectiveTextSpan,
-            selectionConfiguration: selection,
+            selectionConfiguration: registrar,
             textAlign: TextAlign ?? ambient?.TextAlign ?? UI.TextAlign.Start,
             textDirection: TextDirection,
             softWrap: SoftWrap ?? ambient?.SoftWrap ?? true,
@@ -270,7 +272,16 @@ public sealed class Text : StatelessWidget
             locale: Locale,
             textWidthBasis: TextWidthBasis ?? ambient?.TextWidthBasis ?? UI.TextWidthBasis.Parent,
             textHeightBehavior: TextHeightBehavior ?? ambient?.TextHeightBehavior,
-            selectionColor: selection?.SelectionColor);
+            selectionColor: registrar is null
+                ? null
+                : selectionStyle.SelectionColor ?? DefaultSelectionStyle.DefaultColor);
+
+        if (registrar is not null)
+        {
+            result = new MouseRegion(
+                cursor: selectionStyle.MouseCursor ?? SystemMouseCursors.Text,
+                child: result);
+        }
 
         if (SemanticsLabel is not null)
         {

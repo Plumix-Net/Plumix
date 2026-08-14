@@ -519,18 +519,9 @@ public sealed class RawTooltipState : State
                     layoutInfo.ChildSize,
                     CurrentWidget.PositionDelegate),
                 child: tooltip));
-        SelectionContainer? selectionContainer = SelectionContainer.MaybeOf(context);
-        if (selectionContainer is not null)
+        if (SelectionContainer.MaybeOf(context) is not null)
         {
-            overlayChild = new SelectionContainer(
-                registrar: selectionContainer.Registrar,
-                selectionColor: selectionContainer.SelectionColor,
-                cursorColor: selectionContainer.CursorColor,
-                showCursor: selectionContainer.ShowCursor,
-                cursorWidth: selectionContainer.CursorWidth,
-                cursorHeight: selectionContainer.CursorHeight,
-                enabled: false,
-                child: overlayChild);
+            overlayChild = SelectionContainer.Disabled(overlayChild);
         }
 
         return overlayChild;

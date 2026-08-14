@@ -1,5 +1,35 @@
 # Changelog
 
+- Breaking: replaced the bespoke text-selection stack with Flutter's selection protocol
+  (`rendering/selection.dart`, `widgets/selection_container.dart`, `widgets/selectable_region.dart`,
+  the `_SelectableFragment` half of `rendering/paragraph.dart`, `services/text_boundary.dart`,
+  `services/text_layout_metrics.dart`, `widgets/text_editing_intents.dart`). New core contract:
+  `ISelectionRegistrar`/`ISelectionHandler`/`ISelectable`, `SelectionRegistrant`, `SelectionGeometry`,
+  `SelectionPoint`, `SelectionStatus`, `SelectionResult`, `SelectedContent`/`SelectedContentRange`,
+  `SelectionUtils`, and the full `SelectionEvent` family (edge updates with `TextGranularity`, select
+  all/word/paragraph, clear, granular and directional extension). `SelectionContainer`
+  (+ `SelectionContainer.Disabled`), `SelectionRegistrarScope` and `SelectionContainerDelegate` are
+  ported, with `MultiSelectableSelectionContainerDelegate` and `StaticSelectionContainerDelegate`
+  supplying screen-order registration, edge-init/adjust sweeps, inactive-selection flushing, handle-layer
+  ownership and replayed edge updates for late children. `RenderParagraph` splits its text into
+  `SelectableFragment`s at placeholder boundaries, paints highlights before the text and handle
+  `LeaderLayer`s after it, and gained the text metrics the fragments need (`GetBoxesForSelection` with
+  `BoxHeightStyle`/`BoxWidthStyle`, `GetOffsetForCaret`, `GetFullHeightForCaret`, `PreferredLineHeight`,
+  `GetPositionForOffset`, `GetWordBoundary`, `GetLineBoundary`, `ComputeLineMetrics`). New
+  `TextBoundary`/`CharacterBoundary`/`LineBoundary`/`WordBoundary`/`ParagraphBoundary`/`DocumentBoundary`
+  and `ITextLayoutMetrics` primitives back granular movement. `SelectableRegion` is now a
+  `SelectionRegistrar` over one `StaticSelectionContainerDelegate` with Flutter's platform tap-count,
+  right-click, long-press and drag tables, `SelectableRegionSelectionStatus`(+`Scope`), the
+  `GetSelectableButtonItems` menu, and an `Actions`/`Shortcuts` layer over the ported text-editing
+  intents. **Breaking:** `ITextSelectionRegistrar`/`TextSelectionRegistrar` are gone,
+  `RenderParagraph.SelectionColor` is nullable and its cursor/`SetSelection`/pointer-selection members
+  are removed (a paragraph no longer owns a caret), `SelectableRegion` requires `selectionControls` and
+  no longer takes cursor/`enabled`/`showCursor` parameters, `SelectionArea` resolves the selection color
+  through `DefaultSelectionStyle`, and a selection menu now shows Flutter's `[Copy, SelectAll]` pair
+  instead of a single item. Because Plumix's context menu is route-backed, showing it hands focus to the
+  menu's modal scope; the region no longer clears its selection (or tears the half-pushed route down) on
+  that focus loss.
+
 - Breaking: closed the sliver persistent-header divergence end-to-end
   (`rendering/sliver_persistent_header.dart`, `widgets/sliver_persistent_header.dart`,
   `material_ui/lib/src/app_bar.dart`). `RenderSliverPersistentHeader` is now Flutter's abstract base with

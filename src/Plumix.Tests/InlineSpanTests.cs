@@ -224,7 +224,7 @@ public sealed class InlineSpanTests
             new RichText(new TextSpan(text: "a"), maxLines: 0));
         Assert.Throws<ArgumentException>(() => new RichText(
             new TextSpan(text: "a"),
-            selectionRegistrar: new TextSelectionRegistrar((_, _, _) => { })));
+            selectionRegistrar: new RecordingSelectionRegistrar()));
     }
 
     [Fact]
@@ -457,5 +457,14 @@ public sealed class InlineSpanTests
 
             public void RemoveRenderObjectChild(RenderObject child, object? slot) => _view.Child = null;
         }
+    }
+
+    private sealed class RecordingSelectionRegistrar : ISelectionRegistrar
+    {
+        public List<ISelectable> Selectables { get; } = [];
+
+        public void Add(ISelectable selectable) => Selectables.Add(selectable);
+
+        public void Remove(ISelectable selectable) => Selectables.Remove(selectable);
     }
 }
