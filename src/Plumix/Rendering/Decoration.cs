@@ -239,6 +239,22 @@ public readonly record struct BorderRadius
         return new BorderRadius(topLeft, topRight, bottomRight, bottomLeft);
     }
 
+    /// <summary>Dart's `BorderRadius.vertical`: one radius for both top corners, another for both bottom.</summary>
+    public static BorderRadius Vertical(Radius? top = null, Radius? bottom = null)
+    {
+        Radius topRadius = top ?? default;
+        Radius bottomRadius = bottom ?? default;
+        return new BorderRadius(topRadius, topRadius, bottomRadius, bottomRadius);
+    }
+
+    /// <summary>Dart's `BorderRadius.horizontal`: one radius for both left corners, another for both right.</summary>
+    public static BorderRadius Horizontal(Radius? left = null, Radius? right = null)
+    {
+        Radius leftRadius = left ?? default;
+        Radius rightRadius = right ?? default;
+        return new BorderRadius(leftRadius, rightRadius, rightRadius, leftRadius);
+    }
+
     public static BorderRadius Only(
         Radius topLeft,
         Radius topRight,

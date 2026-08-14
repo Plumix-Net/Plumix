@@ -8,7 +8,7 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-08-13
+last_updated: 2026-08-14
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
 current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
 flutter_pin: "3.47.0 (4cf24164269); 3.44->3.47 re-port backlog: docs/ai/notes/migration-2026-08-13-flutter-3.47-pin.md"

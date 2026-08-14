@@ -247,8 +247,16 @@ public abstract class MaterialLocalizations
 
     public virtual string AboutListTileTitle(string applicationName) => $"About {applicationName}";
 
-    public virtual string LicensesPackageDetailText(int licenseCount) =>
-        licenseCount == 1 ? "1 license" : $"{licenseCount} licenses";
+    public virtual string LicensesPackageDetailText(int licenseCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(licenseCount);
+        return licenseCount switch
+        {
+            0 => "No licenses.",
+            1 => "1 license.",
+            _ => $"{licenseCount} licenses.",
+        };
+    }
 
     // Flutter's `keyboardKey*` getters, used by the menu shortcut labeler. Declared here with the
     // `DefaultMaterialLocalizations` English strings, matching how the rest of this class carries

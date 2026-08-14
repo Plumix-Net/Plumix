@@ -298,6 +298,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/viewport.dart` | `src/Plumix/Rendering/Scroll.cs`<br>`src/Plumix/Rendering/Viewport.RenderViewport.cs` | `src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs` | `dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `rendering/wrap.dart` | `src/Plumix/Rendering/Wrap.cs` | `src/Plumix.Tests/WrapTests.cs` | — |
 | `scheduler/binding.dart` | `src/Plumix/Scheduler.cs` | — | — |
+| `scheduler/priority.dart` | `src/Plumix/SchedulerPriority.cs` | — | — |
 | `scheduler/ticker.dart` | `src/Plumix/Ticker.cs` | `src/Plumix.Tests/TickerProviderTickerModeTests.cs` | — |
 | `semantics/semantics.dart` | `src/Plumix/Rendering/Object.RenderObjectSemantics.cs`<br>`src/Plumix/Rendering/Semantics.cs`<br>`src/Plumix/Rendering/SemanticsConfigurationProvider.cs` | `src/Plumix.Tests/FlutterHostSemanticsTests.cs`<br>`src/Plumix.Tests/MetaDataIndexedSemanticsTests.cs`<br>`src/Plumix.Tests/SemanticsTreeTests.cs` | — |
 | `semantics/semantics_service.dart` | `src/Plumix/UI/SemanticsService.cs` | — | — |
@@ -463,8 +464,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 420
-- C# files carrying a marker: 534
+- Flutter files mapped: 421
+- C# files carrying a marker: 535
 - C# files without a marker: 15
 - Markers not resolvable in the pinned checkout: 0
 

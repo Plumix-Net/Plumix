@@ -158,6 +158,69 @@ public sealed class FadeForwardsPageTransitionsBuilder : PageTransitionsBuilder
     }
 }
 
+/// <summary>
+/// Dart's private `_FadeUpwardsPageTransition`: slides the page up from 1/4 screen below the top while
+/// fading it in.
+/// </summary>
+internal sealed class FadeUpwardsPageTransition : StatelessWidget
+{
+    private static readonly VectorTween BottomUpTween = new(begin: new Vector(0.0, 0.25), end: default(Vector));
+    private static readonly CurveTween FastOutSlowInTween = new(Curves.FastOutSlowIn);
+    private static readonly CurveTween EaseInTween = new(Curves.EaseIn);
+
+    public FadeUpwardsPageTransition(
+        Animation<double> routeAnimation,
+        Widget child,
+        Foundation.Key? key = null) : base(key)
+    {
+        PositionAnimation = routeAnimation.Drive(BottomUpTween.Chain(FastOutSlowInTween));
+        OpacityAnimation = routeAnimation.Drive(EaseInTween);
+        Child = child;
+    }
+
+    public Animation<Vector> PositionAnimation { get; }
+
+    public Animation<double> OpacityAnimation { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new SlideTransition(
+            position: PositionAnimation,
+            child: new FadeTransition(opacity: OpacityAnimation, child: Child));
+    }
+}
+
+/// <summary>
+/// A page transition that fades the incoming page in while sliding it upwards, matching the default on
+/// Android O.
+/// </summary>
+public sealed class FadeUpwardsPageTransitionsBuilder : PageTransitionsBuilder
+{
+    public override Widget BuildTransitions(
+        PageRoute route,
+        BuildContext context,
+        Animation<double> animation,
+        Animation<double> secondaryAnimation,
+        Widget child)
+    {
+        _ = route;
+        _ = context;
+        _ = secondaryAnimation;
+        return BuildTransitions(animation, child);
+    }
+
+    /// <summary>
+    /// Dart widens this override's `route`, `context` and `secondaryAnimation` to nullable and ignores all
+    /// three. C# forbids widening an override's parameter list, so the null-argument form is this overload.
+    /// </summary>
+    public Widget BuildTransitions(Animation<double> animation, Widget child)
+    {
+        return new FadeUpwardsPageTransition(animation, child);
+    }
+}
+
 public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
 {
     public ZoomPageTransitionsBuilder(

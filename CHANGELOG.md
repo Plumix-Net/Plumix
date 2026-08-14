@@ -1,5 +1,20 @@
 # Changelog
 
+- Breaking: closed the `About`/`LicensePage` divergence end-to-end (`material_ui/about.dart`). The whole
+  private master-detail shell is now ported — `_MasterDetailFlow`, `_MasterDetailScaffold`, `_MasterPage`,
+  `_DetailView`, `_PackagesView`, `_PackageListTile`, `_PackageLicensePage(Title)`, `_LicenseData`,
+  `_DetailArguments`, `_AboutProgram` — so `LicensePage` runs Flutter's nested navigator below 840 logical
+  pixels and the side-by-side layout at or above it, with the detail page in a `DraggableScrollableSheet`
+  and a 500 ms fade-upwards swap. `AboutDialog.Adaptive` now really adapts: `CupertinoDialogAction`s on
+  iOS/macOS, `TextButton`s elsewhere. **Breaking:** `ShowAboutDialog`/`ShowAdaptiveAboutDialog`/`ShowLicensePage`
+  return `void` like Dart instead of a `Task`; `ShowLicensePage` captures the ambient `InheritedTheme`s and
+  pushes a `MaterialPageRoute`; `AboutDialog` is no longer `sealed`; `MaterialLocalizations.LicensesPackageDetailText`
+  now returns Flutter's `"No licenses."`/`"1 license."`/`"N licenses."` (the trailing period was missing) and
+  rejects a negative count. Supporting core work: `Scheduler` gained Flutter's task queue
+  (`ScheduleTask`/`HandleEventLoopCallback`/`SchedulingStrategy`/`DefaultSchedulingStrategy`) plus the
+  `Priority` value type, `BorderRadius` gained `Vertical`/`Horizontal`, and
+  `FadeUpwardsPageTransitionsBuilder` was added.
+
 - Breaking: closed the remaining `Scaffold` slot divergence end-to-end (`material_ui/scaffold.dart`).
   `_ScaffoldSlot` now carries Flutter's full member list, and `_ScaffoldLayout` lays out the four missing
   slots: `persistentFooter`, `statusBar`, `drawer` and `endDrawer`. New `Scaffold` options

@@ -23,7 +23,8 @@ class AboutDemoPage extends StatelessWidget {
       children: <Widget>[
         const Text('AboutDialog + LicensePage', style: TextStyle(fontSize: 20)),
         const Text(
-          'Dialog metadata, AboutListTile entry, lazy license registry, package grouping, and license detail routes.',
+          'Dialog metadata, adaptive actions, AboutListTile entry, lazy license registry, and the '
+          'master-detail license page: nested routes below 840px, side-by-side above it.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Row(
@@ -41,6 +42,19 @@ class AboutDemoPage extends StatelessWidget {
                 ],
               ),
               child: const Text('SHOW ABOUT'),
+            ),
+            TextButton(
+              onPressed: () => showAdaptiveAboutDialog(
+                context: context,
+                applicationName: name,
+                applicationVersion: version,
+                applicationIcon: appIcon,
+                applicationLegalese: legalese,
+                children: const <Widget>[
+                  Text('Cupertino actions on iOS and macOS.'),
+                ],
+              ),
+              child: const Text('SHOW ADAPTIVE ABOUT'),
             ),
             OutlinedButton(
               onPressed: () => showLicensePage(

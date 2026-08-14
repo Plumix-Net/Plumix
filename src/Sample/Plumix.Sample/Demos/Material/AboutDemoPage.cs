@@ -26,7 +26,8 @@ public sealed class AboutDemoPage : StatelessWidget
             [
                 new Text("AboutDialog + LicensePage", fontSize: 20),
                 new Text(
-                    "Dialog metadata, AboutListTile entry, lazy license registry, package grouping, and license detail routes.",
+                    "Dialog metadata, adaptive actions, AboutListTile entry, lazy license registry, and the "
+                    + "master-detail license page: nested routes below 840px, side-by-side above it.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -35,13 +36,22 @@ public sealed class AboutDemoPage : StatelessWidget
                     [
                         new ElevatedButton(
                             new Text("SHOW ABOUT"),
-                            () => _ = AboutDialogs.ShowAboutDialog(
+                            () => AboutDialogs.ShowAboutDialog(
                                 context,
                                 applicationName: name,
                                 applicationVersion: version,
                                 applicationIcon: appIcon,
                                 applicationLegalese: legalese,
                                 children: [new Text("Flutter-like controls rendered by Plumix.")])),
+                        new TextButton(
+                            new Text("SHOW ADAPTIVE ABOUT"),
+                            () => AboutDialogs.ShowAdaptiveAboutDialog(
+                                context,
+                                applicationName: name,
+                                applicationVersion: version,
+                                applicationIcon: appIcon,
+                                applicationLegalese: legalese,
+                                children: [new Text("Cupertino actions on iOS and macOS.")])),
                         new OutlinedButton(
                             new Text("SHOW LICENSES"),
                             () => AboutDialogs.ShowLicensePage(
