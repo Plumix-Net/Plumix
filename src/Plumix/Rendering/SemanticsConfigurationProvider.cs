@@ -1,13 +1,20 @@
-// Dart parity source (reference): flutter/packages/flutter/lib/src/semantics/semantics.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart
 
 namespace Plumix.Rendering;
 
+/// <summary>
+/// Caches the <see cref="SemanticsConfiguration"/> a render object describes, and hands out a
+/// writable copy the moment the compiler needs to absorb something into it.
+/// </summary>
+/// <remarks>Flutter's private <c>_SemanticsConfigurationProvider</c>.</remarks>
 internal sealed class SemanticsConfigurationProvider
 {
     private readonly Action<SemanticsConfiguration> _describe;
     private readonly Action<SemanticsConfiguration> _validate;
-    private SemanticsConfiguration? _original;
-    private SemanticsConfiguration? _effective;
+    private SemanticsConfiguration? _originalConfiguration;
+    private SemanticsConfiguration? _effectiveConfiguration;
+    private bool _isEffectiveConfigWritable;
+    private bool _wasSemanticsBoundary;
 
     public SemanticsConfigurationProvider(
         Action<SemanticsConfiguration> describe,
@@ -17,72 +24,86 @@ internal sealed class SemanticsConfigurationProvider
         _validate = validate;
     }
 
-    public bool HasEffective => _effective != null;
+    /// <summary>Whether a configuration has already been described since the last <see cref="Clear"/>.</summary>
+    public bool HasConfiguration => _originalConfiguration != null;
 
-    public SemanticsConfiguration? TryGetCachedEffective()
-    {
-        return _effective;
-    }
+    /// <summary>
+    /// Whether the configuration that was last cached declared itself a semantics boundary.
+    /// </summary>
+    /// <remarks>Flutter's <c>_SemanticsConfigurationProvider.wasSemanticsBoundary</c>.</remarks>
+    public bool WasSemanticsBoundary => _wasSemanticsBoundary;
 
+    /// <summary>The configuration exactly as the render object described it.</summary>
     public SemanticsConfiguration Original
     {
         get
         {
-            EnsureInitialized();
-            return _original!;
+            if (_originalConfiguration == null)
+            {
+                var configuration = new SemanticsConfiguration();
+                _describe(configuration);
+                _validate(configuration);
+                _originalConfiguration = configuration;
+                _wasSemanticsBoundary = configuration.IsSemanticBoundary;
+            }
+
+            return _originalConfiguration;
         }
     }
 
-    public SemanticsConfiguration Effective
-    {
-        get
-        {
-            EnsureInitialized();
-            return _effective!;
-        }
-    }
+    /// <summary>
+    /// The configuration after the compiler absorbed the merge-up fragments below this render object.
+    /// </summary>
+    public SemanticsConfiguration Effective => _effectiveConfiguration ??= Original;
 
-    public SemanticsConfiguration Snapshot()
-    {
-        var configuration = new SemanticsConfiguration();
-        _describe(configuration);
-        _validate(configuration);
-        return configuration;
-    }
-
-    public void Reset()
-    {
-        _original = null;
-        _effective = null;
-    }
-
+    /// <summary>
+    /// Runs <paramref name="callback"/> against a writable copy of <see cref="Effective"/>, cloning
+    /// <see cref="Original"/> on the first write so the described configuration stays pristine.
+    /// </summary>
     public void UpdateConfig(Action<SemanticsConfiguration> callback)
     {
-        callback(Effective);
+        if (!_isEffectiveConfigWritable)
+        {
+            _effectiveConfiguration = Original.Clone();
+            _isEffectiveConfigWritable = true;
+        }
+
+        callback(_effectiveConfiguration!);
     }
 
+    /// <summary>Absorbs every configuration in <paramref name="configurations"/> into the effective one.</summary>
     public void AbsorbAll(IEnumerable<SemanticsConfiguration> configurations)
     {
-        UpdateConfig(configuration =>
-        {
-            foreach (var fragment in configurations)
-            {
-                configuration.Absorb(fragment);
-            }
-        });
-    }
-
-    private void EnsureInitialized()
-    {
-        if (_effective != null && _original != null)
+        using IEnumerator<SemanticsConfiguration> enumerator = configurations.GetEnumerator();
+        if (!enumerator.MoveNext())
         {
             return;
         }
 
-        var original = new SemanticsConfiguration();
-        _describe(original);
-        _validate(original);
-        _original = original;
-        _effective = original.Clone();
+        UpdateConfig(configuration =>
+        {
+            do
+            {
+                configuration.Absorb(enumerator.Current);
+            }
+            while (enumerator.MoveNext());
+        });
+    }
+
+    /// <summary>Drops the absorbed data, keeping the described configuration.</summary>
+    public void Reset()
+    {
+        _effectiveConfiguration = Original;
+        _isEffectiveConfigWritable = false;
+    }
+
+    /// <summary>
+    /// Drops every cache, so the render object is asked to describe its configuration again.
+    /// </summary>
+    public void Clear()
+    {
+        _isEffectiveConfigWritable = false;
+        _effectiveConfiguration = null;
+        _originalConfiguration = null;
     }
 }

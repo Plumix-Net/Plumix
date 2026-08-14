@@ -61,20 +61,10 @@ public sealed class FlowRepaintBoundaryTests
         Assert.True(flow.HitTest(hitResult, new Point(20, 15)));
         Assert.Same(second, hitResult.Path[0].Target);
 
-        Matrix? firstSemanticsTransform = null;
-        Matrix? secondSemanticsTransform = null;
-        int semanticsIndex = 0;
-        flow.VisitChildrenForSemantics((_, _, transform) =>
-        {
-            if (semanticsIndex++ == 0)
-            {
-                firstSemanticsTransform = transform;
-            }
-            else
-            {
-                secondSemanticsTransform = transform;
-            }
-        });
+        Matrix firstSemanticsTransform = Matrix.Identity;
+        Matrix secondSemanticsTransform = Matrix.Identity;
+        flow.ApplyPaintTransform(first, ref firstSemanticsTransform);
+        flow.ApplyPaintTransform(second, ref secondSemanticsTransform);
         Assert.Equal(translation, firstSemanticsTransform);
         Assert.Equal(translation, secondSemanticsTransform);
 

@@ -1,5 +1,27 @@
 # Changelog
 
+- Breaking: replaced the semantics compiler with Flutter's fragment model. `RenderObjectSemantics` is
+  now a 1:1 port of `_RenderObjectSemantics` (four-phase `UpdateChildren`/`EnsureGeometry`/
+  `EnsureSemanticsNode`, `ISemanticsFragment`/`IncompleteSemanticsFragment`, `SemanticsParentData`,
+  `SemanticsGeometry`, sibling merge groups), so a render object merges its configuration into the
+  nearest contributing ancestor unless it is a boundary, the parent imposed `explicitChildNodes`, or it
+  conflicts with a sibling. `SemanticsNode.Rect` is now **local** with a `Transform` into the parent
+  node (plus `ParentSemanticsClipRect`/`ParentPaintClipRect`/`IsMergedIntoParent`/`IsInvisible`/
+  `GlobalRect`), and `RenderTable` positions synthesized rows/cells by shifting transforms.
+  `SemanticsTraversal` ports the geometry-driven default sort behind the new
+  `SemanticsNode.ChildrenInTraversalOrder`, fed by a new `TextDirection` on `SemanticsConfiguration`,
+  `SemanticsNode`, `Semantics` and `RenderSemanticsAnnotations`. `RenderSemanticsGestureHandler` and
+  `_GestureSemantics` land, so `RawGestureDetector`/`GestureDetector` gained `excludeFromSemantics` and
+  the scroll actions now merge up from the gesture detector into the scroll node the way Flutter does
+  (`ScrollPosition` filters them through the new `SemanticActionsChanged`).
+  **Breaking:** `VisitChildrenForSemantics` takes `Action<RenderObject>` (positions come from
+  `ApplyPaintTransform`); `RenderObject.PerformSemantics` and `SemanticsConfiguration.IsExcluded`/
+  `ExplicitRect` are gone; merged labels/hints/tooltips join with `\n` instead of a space; a
+  configuration that blocks user actions now clears them on the node (`AreUserActionsBlocked`);
+  `SemanticsNode.Children` is paint order and sort keys apply to `ChildrenInTraversalOrder`;
+  `SortKey` now counts as an annotation. Closes the per-node-transform divergence and the action half
+  of the scroll-semantics one; narrows the `InputDecorator`/`DataTable` delegate divergence.
+
 - Breaking: ported the scrollable semantics layer, so screen readers can now scroll Plumix views.
   `RenderViewport` gained the `UseTwoPaneSemantics`/`ExcludeFromScrolling` tags, a semantics clip that
   spans the cache extent (offscreen-but-cached children are now reported hidden instead of dropped),

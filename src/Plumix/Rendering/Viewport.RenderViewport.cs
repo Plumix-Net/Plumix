@@ -756,7 +756,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
                 new Point(semanticBounds.Right + cacheExtent, semanticBounds.Bottom));
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         // Flutter walks `childrenInPaintOrder` here; Plumix has no geometry-driven traversal sort, so it
         // keeps first-to-last order and applies only the visible-or-cached filter.
@@ -768,7 +768,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
             }
 
             var parentData = (SliverPhysicalParentData)child.parentData!;
-            visitor(child, parentData.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

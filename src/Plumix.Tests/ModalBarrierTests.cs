@@ -166,7 +166,7 @@ public sealed class ModalBarrierTests
         var root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
         var clipperNode = Assert.Single(root!.Children);
-        Assert.Equal(new Rect(10, 5, 70, 60), clipperNode.Rect);
+        Assert.Equal(new Rect(10, 5, 70, 60), clipperNode.GlobalRect);
         Assert.Equal("Barrier", clipperNode.Label);
         Assert.Empty(clipperNode.Children);
 
@@ -176,7 +176,7 @@ public sealed class ModalBarrierTests
         root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
         clipperNode = Assert.Single(root!.Children);
-        Assert.Equal(new Rect(4, 3, 90, 70), clipperNode.Rect);
+        Assert.Equal(new Rect(4, 3, 90, 70), clipperNode.GlobalRect);
         notifier.Dispose();
     }
 

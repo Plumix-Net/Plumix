@@ -211,12 +211,12 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectCont
         return false;
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
             var parentData = (SliverPhysicalParentData)child.parentData!;
-            visitor(child, parentData.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 
@@ -432,7 +432,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
         return false;
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
@@ -442,7 +442,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
             }
 
             var parentData = (SliverPhysicalParentData)child.parentData!;
-            visitor(child, parentData.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

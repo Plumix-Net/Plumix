@@ -550,6 +550,7 @@ public sealed class Switch : StatefulWidget
             if (isCupertinoAdaptive)
             {
                 Widget adaptiveResult = new GestureDetector(
+                    excludeFromSemantics: true,
                     behavior: HitTestBehavior.Opaque,
                     onTap: enabled ? HandleTap : null,
                     onHorizontalDragStart: enabled ? HandleAdaptiveDragStart : null,
@@ -632,6 +633,7 @@ public sealed class Switch : StatefulWidget
                 child: button);
 
             Widget result = new GestureDetector(
+                excludeFromSemantics: true,
                 behavior: HitTestBehavior.Opaque,
                 onHorizontalDragStart: HandleMaterialDragStart,
                 onHorizontalDragUpdate: HandleMaterialDragUpdate,

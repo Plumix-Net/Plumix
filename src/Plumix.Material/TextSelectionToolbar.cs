@@ -719,14 +719,14 @@ internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             var parentData = (ToolbarItemsParentData)child.parentData!;
             if (parentData.ShouldPaint)
             {
-                visitor(child, parentData.offset, Matrix.Identity);
+                visitor(child);
             }
         }
     }

@@ -368,13 +368,13 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         void Visit(RenderBox? child)
         {
             if (child is not null)
             {
-                visitor(child, ParentDataOf(child).offset, Matrix.Identity);
+                visitor(child);
             }
         }
 

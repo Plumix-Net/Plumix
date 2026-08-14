@@ -236,7 +236,7 @@ public sealed class RenderFollowerLayer : RenderProxyBox
         return Child.HitTest(result, transformedPosition);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (Child == null || (_link.Leader == null && !_showWhenUnlinked))
         {
@@ -244,7 +244,7 @@ public sealed class RenderFollowerLayer : RenderProxyBox
         }
 
         var childParentData = (BoxParentData)Child.parentData!;
-        visitor(Child, childParentData.offset, GetCurrentTransform());
+        visitor(Child);
     }
 
     public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)

@@ -123,6 +123,7 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
             }
 
             return new GestureDetector(
+                excludeFromSemantics: true,
                 behavior: HitTestBehavior.Opaque,
                 onTapDown: _ => SetPressed(true),
                 onTapUp: _ =>

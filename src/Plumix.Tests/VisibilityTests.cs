@@ -179,7 +179,7 @@ public sealed class VisibilityTests
         Assert.False(visibility.HitTest(new BoxHitTestResult(), new Point(10, 10)));
 
         int semanticsVisits = 0;
-        visibility.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        visibility.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(0, semanticsVisits);
 
         root.Update(Visibility.Maintain(
@@ -191,7 +191,7 @@ public sealed class VisibilityTests
         visibility.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
         Assert.True(visibility.MaintainSemantics);
         Assert.True(visibility.HitTest(new BoxHitTestResult(), new Point(10, 10)));
-        visibility.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        visibility.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
         root.Unmount();
     }
@@ -288,7 +288,7 @@ public sealed class VisibilityTests
         Assert.Equal(0, box.PaintCount);
         Assert.False(offstage.HitTest(new BoxHitTestResult(), new Point(10, 10)));
         int semanticsVisits = 0;
-        offstage.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        offstage.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(0, semanticsVisits);
 
         offstage.Offstage = false;
@@ -297,7 +297,7 @@ public sealed class VisibilityTests
         offstage.Paint(new PaintingContext(new OffsetLayer()), new Point(0, 0));
         Assert.Equal(1, box.PaintCount);
         Assert.True(offstage.HitTest(new BoxHitTestResult(), new Point(10, 10)));
-        offstage.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        offstage.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
     }
 
@@ -311,11 +311,11 @@ public sealed class VisibilityTests
         Assert.Equal(child.Geometry, ignore.Geometry);
         Assert.False(ignore.HitTest(new BoxHitTestResult(), new Point(10, 10)));
         int semanticsVisits = 0;
-        ignore.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        ignore.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
 
         ignore.IgnoringSemantics = true;
-        ignore.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        ignore.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
 
         ignore.Ignoring = false;
@@ -347,7 +347,7 @@ public sealed class VisibilityTests
         Assert.Equal(0, box.PaintCount);
         Assert.False(visibility.HitTest(new BoxHitTestResult(), new Point(10, 10)));
         int semanticsVisits = 0;
-        visibility.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        visibility.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(0, semanticsVisits);
 
         visibility.Visible = true;
@@ -356,7 +356,7 @@ public sealed class VisibilityTests
         pipeline.FlushPaint();
         Assert.Equal(1, box.PaintCount);
         Assert.True(visibility.HitTest(new BoxHitTestResult(), new Point(10, 10)));
-        visibility.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        visibility.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
     }
 

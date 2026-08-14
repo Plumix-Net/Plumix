@@ -148,8 +148,11 @@ public sealed class MetaDataIndexedSemanticsTests
         pipeline.FlushSemantics();
 
         var root = Assert.IsType<SemanticsNode>(pipeline.SemanticsOwner.RootNode);
-        Assert.Empty(root.Children);
-        Assert.Null(root.IndexInParent);
+        // An index annotates the configuration, so the render object contributes to the tree and forms
+        // its own node under the root's explicit child nodes, even with nothing else to say.
+        var indexNode = Assert.Single(root.Children);
+        Assert.Equal(5, indexNode.IndexInParent);
+        Assert.Null(indexNode.Label);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
@@ -208,7 +211,6 @@ public sealed class MetaDataIndexedSemanticsTests
 
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
-            configuration.IsSemanticBoundary = true;
             configuration.Label = _label;
         }
     }

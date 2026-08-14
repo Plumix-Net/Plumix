@@ -1,4 +1,4 @@
-﻿using Avalonia;
+using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Rendering;
@@ -22,6 +22,7 @@ public sealed class PipelineOwner
     private readonly HashSet<RenderObject> _nodesNeedingCompositingBitsUpdate = [];
     private readonly HashSet<RenderObject> _nodesNeedingPaint = [];
     private readonly HashSet<RenderObject> _nodesNeedingSemantics = [];
+    private readonly HashSet<RenderObject> _nodesNeedingSemanticsGeometryUpdate = [];
     private readonly SemanticsOwner _semanticsOwner = new();
     private OffsetLayer _rootLayer = new();
 
@@ -91,6 +92,22 @@ public sealed class PipelineOwner
     public void RequestSemanticsUpdate()
     {
         RequestSemanticsUpdateFor(Root);
+        RequestSemanticsGeometryUpdateFor(Root);
+    }
+
+    /// <summary>Whether a semantics tree is being produced at all.</summary>
+    /// <remarks>Flutter's <c>PipelineOwner.semanticsOwner != null</c>.</remarks>
+    internal bool HasSemanticsOwner => true;
+
+    internal void RequestSemanticsGeometryUpdateFor(RenderObject node)
+    {
+        if (!_nodesNeedingSemanticsGeometryUpdate.Add(node))
+        {
+            return;
+        }
+
+        _needsSemantics = true;
+        OnNeedVisualUpdate?.Invoke();
     }
 
     internal void RequestSemanticsUpdateFor(RenderObject node)
@@ -399,78 +416,148 @@ public sealed class PipelineOwner
             return;
         }
 
-        while (_nodesNeedingSemantics.Count > 0)
+        // Phase 1 and 2: rebuild the fragment tree top-down, so that one parent change invalidates
+        // the subtree once instead of once per descendant.
+        RenderObject[] nodesToProcess = _nodesNeedingSemantics
+            .Where(node => node.Attached && ReferenceEquals(node.Owner, this) && !node.NeedsLayout)
+            .OrderBy(static node => node.Depth)
+            .ToArray();
+        _nodesNeedingSemantics.RemoveWhere(node =>
+            node.Attached && ReferenceEquals(node.Owner, this) && !node.NeedsLayout);
+
+        foreach (RenderObject node in nodesToProcess)
         {
-            var nodesToProcess = _nodesNeedingSemantics
-                .Where(node =>
-                    node.Attached
-                    && ReferenceEquals(node.Owner, this)
-                    && !node.NeedsLayout)
-                .OrderBy(static node => node.Depth)
-                .ToArray();
-
-            var deferredNodes = _nodesNeedingSemantics
-                .Where(node =>
-                    node.Attached
-                    && ReferenceEquals(node.Owner, this)
-                    && node.NeedsLayout)
-                .ToArray();
-
-            _nodesNeedingSemantics.Clear();
-            foreach (var deferred in deferredNodes)
+            // A render object whose parent data is dirty is either blocked by a sibling or hidden by
+            // its parent's `VisitChildrenForSemantics`. Updating it now would leave a gap of dirty
+            // parent data behind when the branch rejoins the tree.
+            if (node.Semantics.ParentDataDirty)
             {
-                _nodesNeedingSemantics.Add(deferred);
+                continue;
             }
 
-            _needsSemantics = _nodesNeedingSemantics.Count > 0;
-
-            if (nodesToProcess.Length == 0)
-            {
-                break;
-            }
-
-            // Phase 1/2: rebuild semantics fragments and propagate parent-data context.
-            foreach (var node in nodesToProcess)
-            {
-                if (node.Parent != null && node.SemanticsParentDataDirty)
-                {
-                    continue;
-                }
-
-                node.UpdateSemanticsChildrenFromCachedParentData();
-            }
-
-            // Phase 3: compute semantics geometry with final transforms/clips.
-            foreach (var node in nodesToProcess)
-            {
-                if (node.Parent != null && node.SemanticsParentDataDirty)
-                {
-                    continue;
-                }
-
-                node.EnsureSemanticsGeometry();
-            }
-
-            // Phase 4: compile dirty semantics boundaries in reverse depth order first.
-            var scratchOutput = new List<SemanticsNode>();
-            foreach (var node in nodesToProcess.Reverse())
-            {
-                if (node.Parent != null && node.SemanticsParentDataDirty)
-                {
-                    continue;
-                }
-
-                scratchOutput.Clear();
-                node.EnsureSemanticsNode(_semanticsOwner, scratchOutput);
-            }
-
-            // Compile the final semantics root from staged data.
-            var compiledRoots = new List<SemanticsNode>();
-            Root.EnsureSemanticsNode(_semanticsOwner, compiledRoots);
-            _semanticsOwner.UpdateRoot(compiledRoots);
+            node.Semantics.UpdateChildren();
         }
 
-        _needsSemantics = _nodesNeedingSemantics.Count > 0;
+        // Phase 3: recompute the geometry of everything whose transform, clip or size may have moved.
+        RenderObject[] nodesToProcessGeometry = _nodesNeedingSemanticsGeometryUpdate
+            .Where(node => node.Attached
+                           && ReferenceEquals(node.Owner, this)
+                           && !node.NeedsLayout
+                           && !node.Semantics.ParentDataDirty)
+            .ToArray();
+        _nodesNeedingSemanticsGeometryUpdate.Clear();
+
+        foreach (RenderObject node in nodesToProcessGeometry)
+        {
+            RenderObjectSemantics semantics = node.Semantics;
+            if (semantics.ShouldFormSemanticsNode && semantics.GeometryDirty)
+            {
+                continue;
+            }
+
+            if (semantics.ShouldFormSemanticsNode
+                && (node.IsRelayoutBoundaryForSemantics
+                    || semantics.Geometry?.Rect.Size != node.SemanticBoundsForSemantics.Size))
+            {
+                // A relayout boundary can change size without its parent relaying out, so its own
+                // geometry has to be dropped too. Plumix also drops it whenever the render object's
+                // semantic bounds no longer match the cached rect, because a render object can
+                // override `SemanticBounds` and change it without any layout at all.
+                semantics.Geometry = null;
+                continue;
+            }
+
+            if (!semantics.ContributesToSemanticsTree)
+            {
+                // This render object only presents its subtree in the merge-up, so every node the
+                // merge-up carries needs fresh geometry.
+                foreach (RenderObjectSemantics child in semantics.MergeUpRenderObjectSemantics)
+                {
+                    if (child.ShouldFormSemanticsNode)
+                    {
+                        child.Geometry = null;
+                    }
+                    else
+                    {
+                        foreach (RenderObjectSemantics nodeInSubtree in child.NodeFormingChildren)
+                        {
+                            nodeInSubtree.Geometry = null;
+                        }
+                    }
+                }
+
+                continue;
+            }
+
+            foreach (RenderObjectSemantics child in semantics.NodeFormingChildren)
+            {
+                child.Geometry = null;
+            }
+        }
+
+        object treeShapeToken = new();
+        var nodeToEnsureGeometry = new HashSet<RenderObjectSemantics>();
+        foreach (RenderObject node in nodesToProcessGeometry)
+        {
+            node.Semantics.ComputeAncestorInfo(treeShapeToken);
+            if (node.Semantics.FirstAncestorNodeWithCleanGeometry is { } ancestor)
+            {
+                nodeToEnsureGeometry.Add(ancestor);
+            }
+        }
+
+        foreach (RenderObjectSemantics semantics in nodeToEnsureGeometry
+                     .OrderBy(static semantics => semantics.RenderObject.Depth))
+        {
+            semantics.EnsureGeometry();
+        }
+
+        // Phase 4: produce the semantics nodes, bottom-up.
+        foreach (RenderObject node in nodesToProcess.Reverse())
+        {
+            node.Semantics.ComputeAncestorInfo(treeShapeToken);
+            var targets = new List<RenderObjectSemantics>();
+            if (node.Semantics.GeometryDirty)
+            {
+                if (node.Semantics.FirstAncestorNodeWithCleanGeometry is { } ancestor)
+                {
+                    targets.Add(ancestor);
+                }
+            }
+            else
+            {
+                // A boundary that became invisible has to be removed from its parent's children, so
+                // the parent is rebuilt as well.
+                if (node.Semantics.Geometry?.IsVisible == false && !node.Semantics.IsRoot)
+                {
+                    if (node.Semantics.ParentInSemanticsTree is { } parentInSemanticsTree)
+                    {
+                        if (!parentInSemanticsTree.GeometryDirty)
+                        {
+                            targets.Add(parentInSemanticsTree);
+                        }
+                        else if (parentInSemanticsTree.FirstAncestorNodeWithCleanGeometry is { } cleanAncestor)
+                        {
+                            targets.Add(cleanAncestor);
+                        }
+                    }
+                }
+
+                targets.Add(node.Semantics);
+            }
+
+            foreach (RenderObjectSemantics target in targets)
+            {
+                if (!target.ParentDataDirty)
+                {
+                    target.EnsureSemanticsNode(_semanticsOwner);
+                }
+            }
+        }
+
+        _semanticsOwner.UpdateRoot(Root.Semantics.CachedSemanticsNode);
+        _needsSemantics = _nodesNeedingSemantics.Count > 0
+                          || _nodesNeedingSemanticsGeometryUpdate.Count > 0;
     }
 
     internal void ForgetPaintFor(RenderObject node)

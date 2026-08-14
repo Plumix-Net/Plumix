@@ -258,7 +258,8 @@ public sealed class ModalRouteBarrierTests : IDisposable
         var result = new List<SemanticsNode>();
         if (node is null) return result;
         result.Add(node);
-        foreach (var child in node.Children)
+        // Sort keys reorder the traversal order, which is what assistive technologies read.
+        foreach (var child in node.ChildrenInTraversalOrder)
         {
             result.AddRange(CollectSemantics(child));
         }

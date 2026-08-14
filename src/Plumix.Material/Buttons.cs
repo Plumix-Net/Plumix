@@ -2739,6 +2739,7 @@ internal sealed class MaterialButtonCore : StatefulWidget
             if (Interactive)
             {
                 result = new GestureDetector(
+                   excludeFromSemantics: true,
                     behavior: HitTestBehavior.Opaque,
                     onTap: tapCallback,
                     onLongPress: longPressCallback,

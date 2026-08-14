@@ -20,7 +20,6 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
         bool allowImplicitScrolling,
         AxisDirection axisDirection,
         int? semanticChildCount,
-        Action<DragUpdateDetails>? onSemanticDrag = null,
         Widget? child = null,
         Key? key = null) : base(child, key)
     {
@@ -33,7 +32,6 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
         AllowImplicitScrolling = allowImplicitScrolling;
         AxisDirection = axisDirection;
         SemanticChildCount = semanticChildCount;
-        OnSemanticDrag = onSemanticDrag;
     }
 
     public ScrollPosition Position { get; }
@@ -44,18 +42,13 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
 
     public int? SemanticChildCount { get; }
 
-    public Action<DragUpdateDetails>? OnSemanticDrag { get; }
-
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderScrollSemantics(
             position: Position,
             allowImplicitScrolling: AllowImplicitScrolling,
             axisDirection: AxisDirection,
-            semanticChildCount: SemanticChildCount)
-        {
-            OnSemanticDrag = OnSemanticDrag
-        };
+            semanticChildCount: SemanticChildCount);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -65,7 +58,6 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
         scrollSemantics.AxisDirection = AxisDirection;
         scrollSemantics.Position = Position;
         scrollSemantics.SemanticChildCount = SemanticChildCount;
-        scrollSemantics.OnSemanticDrag = OnSemanticDrag;
     }
 }
 
@@ -73,17 +65,12 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
 /// The render object behind <see cref="ScrollSemantics"/>.
 /// </summary>
 /// <remarks>
-/// Flutter's private <c>_RenderScrollSemantics</c>, plus the four directional scroll actions. Flutter
-/// puts those on the <c>RenderSemanticsGestureHandler</c> below this boundary and lets them merge up;
-/// Plumix's compiler forms a node for every configuration that carries actions, so they are registered
-/// here instead. The resulting node contents are the same.
+/// Flutter's private <c>_RenderScrollSemantics</c>. The four directional scroll actions live on the
+/// <see cref="RenderSemanticsGestureHandler"/> the scrollable's <c>RawGestureDetector</c> creates
+/// below this boundary, and merge up into the node formed here.
 /// </remarks>
 internal sealed class RenderScrollSemantics : RenderProxyBox
 {
-    /// <summary>The fraction of the viewport a single semantic scroll action moves.</summary>
-    /// <remarks>Flutter's <c>RenderSemanticsGestureHandler.scrollFactor</c>.</remarks>
-    private const double ScrollFactor = 0.8;
-
     private ScrollPosition _position;
     private bool _allowImplicitScrolling;
     private int? _semanticChildCount;
@@ -155,87 +142,11 @@ internal sealed class RenderScrollSemantics : RenderProxyBox
         }
     }
 
-    /// <summary>
-    /// Runs one synthetic drag through the scrollable's own drag pipeline, so a semantic scroll obeys
-    /// the scroll physics exactly like a real drag.
-    /// </summary>
-    /// <remarks>Flutter's <c>_DefaultSemanticsGestureDelegate</c> drag replay.</remarks>
-    public Action<DragUpdateDetails>? OnSemanticDrag { get; set; }
-
-    /// <summary>
-    /// The scroll actions the position currently accepts: the backward one while there is content
-    /// before the current offset, the forward one while there is content after it.
-    /// </summary>
-    /// <remarks>Flutter's <c>ScrollPosition._updateSemanticActions</c>.</remarks>
-    private SemanticsActions ValidActions
-    {
-        get
-        {
-            (SemanticsActions forward, SemanticsActions backward) = AxisDirection switch
-            {
-                AxisDirection.Up => (SemanticsActions.ScrollDown, SemanticsActions.ScrollUp),
-                AxisDirection.Down => (SemanticsActions.ScrollUp, SemanticsActions.ScrollDown),
-                AxisDirection.Left => (SemanticsActions.ScrollRight, SemanticsActions.ScrollLeft),
-                _ => (SemanticsActions.ScrollLeft, SemanticsActions.ScrollRight)
-            };
-
-            SemanticsActions actions = SemanticsActions.None;
-            if (_position.Pixels > _position.MinScrollExtent)
-            {
-                actions |= backward;
-            }
-
-            if (_position.Pixels < _position.MaxScrollExtent)
-            {
-                actions |= forward;
-            }
-
-            return actions;
-        }
-    }
-
-    private bool IsValidAction(SemanticsActions action)
-    {
-        return _position.HaveDimensions && (ValidActions & action) != SemanticsActions.None;
-    }
-
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         base.DescribeSemanticsConfiguration(configuration);
         configuration.IsSemanticBoundary = true;
-        // Flutter keeps the viewport's nodes explicit through a `Semantics(explicitChildNodes: true)`
-        // below this boundary. Plumix resolves explicit-child-node-ness at the boundary itself, so the
-        // flag is declared here; the outcome — every viewport child stays its own node — is identical.
-        configuration.ExplicitChildNodes = true;
         configuration.HasImplicitScrolling = _allowImplicitScrolling;
-
-        if (OnSemanticDrag is not null)
-        {
-            if (Axis == Axis.Vertical)
-            {
-                if (IsValidAction(SemanticsActions.ScrollUp))
-                {
-                    configuration.OnScrollUp = PerformSemanticScrollUp;
-                }
-
-                if (IsValidAction(SemanticsActions.ScrollDown))
-                {
-                    configuration.OnScrollDown = PerformSemanticScrollDown;
-                }
-            }
-            else
-            {
-                if (IsValidAction(SemanticsActions.ScrollLeft))
-                {
-                    configuration.OnScrollLeft = PerformSemanticScrollLeft;
-                }
-
-                if (IsValidAction(SemanticsActions.ScrollRight))
-                {
-                    configuration.OnScrollRight = PerformSemanticScrollRight;
-                }
-            }
-        }
 
         if (!_position.HaveDimensions)
         {
@@ -255,30 +166,6 @@ internal sealed class RenderScrollSemantics : RenderProxyBox
     private void HandleScrollToOffset(Point targetOffset)
     {
         _position.JumpTo(Axis == Axis.Horizontal ? targetOffset.X : targetOffset.Y);
-    }
-
-    private void PerformSemanticScrollLeft() => PerformSemanticScroll(Size.Width * -ScrollFactor, horizontal: true);
-
-    private void PerformSemanticScrollRight() => PerformSemanticScroll(Size.Width * ScrollFactor, horizontal: true);
-
-    private void PerformSemanticScrollUp() => PerformSemanticScroll(Size.Height * -ScrollFactor, horizontal: false);
-
-    private void PerformSemanticScrollDown() => PerformSemanticScroll(Size.Height * ScrollFactor, horizontal: false);
-
-    private void PerformSemanticScroll(double primaryDelta, bool horizontal)
-    {
-        if (OnSemanticDrag is not { } drag)
-        {
-            return;
-        }
-
-        var localCenter = new Point(Size.Width / 2.0, Size.Height / 2.0);
-        var delta = horizontal ? new Point(primaryDelta, 0.0) : new Point(0.0, primaryDelta);
-        drag(new DragUpdateDetails(
-            GlobalPosition: LocalToGlobal(localCenter),
-            LocalPosition: localCenter,
-            Delta: delta,
-            PrimaryDelta: primaryDelta));
     }
 
     protected override void ClearOwnSemantics()

@@ -846,9 +846,9 @@ internal sealed class RenderDropdownMenuBody : RenderBox,
         for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        if (FirstChild is not null) visitor(FirstChild, default, Matrix.Identity);
+        if (FirstChild is not null) visitor(FirstChild);
     }
 
     public void DefaultPaint(PaintingContext ctx, Point offset) => _children.DefaultPaint(ctx, offset);

@@ -1289,6 +1289,7 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
                         child: new Align(
                             alignment: Alignment.TopLeft,
                             child: new RawGestureDetector(
+                                excludeFromSemantics: true,
                                 behavior: HitTestBehavior.Translucent,
                                 supportedDevices: DragDevices,
                                 dragStartBehavior: widget.DragStartBehavior,

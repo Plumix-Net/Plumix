@@ -395,6 +395,7 @@ public class SearchAnchor : StatefulWidget
                 child: new IgnorePointer(
                     ignoring: !CurrentWidget.Enabled,
                     child: new GestureDetector(
+                        excludeFromSemantics: true,
                         onTap: OpenView,
                         child: CurrentWidget.Builder(context, ControllerInstance))));
         }

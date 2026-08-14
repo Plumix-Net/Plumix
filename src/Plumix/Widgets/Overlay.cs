@@ -1321,26 +1321,35 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
         }
     }
 
-    internal override void VisitChildrenForSemantics(
-        Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         base.VisitChildrenForSemantics(visitor);
-        if (_portalChild is null)
+        if (_portalChild is not null)
         {
+            visitor(_portalChild);
+        }
+    }
+
+    /// <summary>
+    /// The portal child is laid out under the theater but painted here, so its semantics transform
+    /// is the one that maps its own paint position back into this surrogate's coordinates.
+    /// </summary>
+    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    {
+        if (!ReferenceEquals(child, _portalChild))
+        {
+            base.ApplyPaintTransform(child, ref transform);
             return;
         }
 
-        Matrix portalChildToRoot = _portalChild.ComputePaintTransformToRoot();
+        Matrix portalChildToRoot = _portalChild!.ComputePaintTransformToRoot();
         Matrix surrogateToRoot = ComputePaintTransformToRoot();
         if (!surrogateToRoot.TryInvert(out Matrix rootToSurrogate))
         {
             return;
         }
 
-        visitor(
-            _portalChild,
-            new Point(),
-            portalChildToRoot * rootToSurrogate);
+        transform = portalChildToRoot * rootToSurrogate * transform;
     }
 }
 

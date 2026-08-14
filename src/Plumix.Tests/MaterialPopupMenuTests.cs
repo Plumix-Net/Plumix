@@ -222,13 +222,13 @@ public sealed class MaterialPopupMenuTests : IDisposable
         var viewport = Assert.Single(FindDescendants<RenderSingleChildViewport>(harness.RenderView));
         Assert.True(viewport.Size.Height < 360);
         Assert.NotNull(FindSemantics(semantics, node =>
-            node.Label == "Popup menu"
+            HasLabelPart(node, "Popup menu")
             && node.Flags.HasFlag(SemanticsFlags.ScopesRoute)
             && node.Flags.HasFlag(SemanticsFlags.NamesRoute)));
 
         var itemAction = FindSemantics(semantics, node =>
             node.Actions.HasFlag(SemanticsActions.Tap)
-            && node.Label != "Dismiss menu");
+            && HasLabelPart(node, "First"));
         Assert.True(itemAction is not null, DumpSemantics(semantics));
         Assert.True(itemAction!.PerformAction(SemanticsActions.Tap));
         Assert.Equal(1, itemTapCount);
@@ -367,9 +367,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
         var expandedSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
         // The route-owned modal barrier blocks the semantics painted before it, so the anchor leaves the tree
         // while the menu is open; the menu route and its dismiss barrier are what assistive technology sees.
-        Assert.True(FindSemantics(expandedSemantics, node => node.Label == "Popup menu") is not null,
+        Assert.True(FindSemantics(expandedSemantics, node => HasLabelPart(node, "Popup menu")) is not null,
             DumpSemantics(expandedSemantics));
-        Assert.True(FindSemantics(expandedSemantics, node => node.Label == "Dismiss menu") is not null,
+        Assert.True(FindSemantics(expandedSemantics, node => HasLabelPart(node, "Dismiss menu")) is not null,
             DumpSemantics(expandedSemantics));
         Assert.True(
             FindSemantics(expandedSemantics, node => node.Flags.HasFlag(SemanticsFlags.HasExpandedState)) is null,
@@ -393,7 +393,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.True(reopen!.PerformAction(SemanticsActions.Tap));
         PumpAnimation();
         var menuSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
-        var barrier = FindSemantics(menuSemantics, node => node.Label == "Dismiss menu");
+        var barrier = FindSemantics(menuSemantics, node => HasLabelPart(node, "Dismiss menu"));
         Assert.NotNull(barrier);
         Assert.True(barrier!.PerformAction(SemanticsActions.Tap));
         PumpAnimation();
@@ -475,7 +475,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         SemanticsNode? initialSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
         Assert.Null(FindSemantics(initialSemantics, node =>
             node.Actions.HasFlag(SemanticsActions.Tap)
-            && node.Label == "Disabled programmatic"));
+            && HasLabelPart(node, "Disabled programmatic")));
         Assert.Equal(0, disabledBuilds);
 
         disabledKey.CurrentState!.ShowButtonMenu();
@@ -483,7 +483,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Equal(1, disabledOpened);
         PumpAnimation();
         SemanticsNode? openSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
-        SemanticsNode? barrier = FindSemantics(openSemantics, node => node.Label == "Dismiss menu");
+        SemanticsNode? barrier = FindSemantics(openSemantics, node => HasLabelPart(node, "Dismiss menu"));
         Assert.NotNull(barrier);
         Assert.True(barrier!.PerformAction(SemanticsActions.Dismiss));
         PumpAnimation();
@@ -578,7 +578,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         PumpAnimation();
         SemanticsNode? androidSemantics = androidHarness.PumpAndGetSemantics(new Size(500, 360));
         Assert.NotNull(FindSemantics(androidSemantics, node =>
-            node.Role == SemanticsRole.Menu && node.Label == "Popup menu"));
+            node.Role == SemanticsRole.Menu && HasLabelPart(node, "Popup menu")));
     }
 
     [Fact]
@@ -607,7 +607,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         SemanticsNode? semantics = harness.PumpAndGetSemantics(new Size(500, 360));
         SemanticsNode? action = FindSemantics(semantics, node =>
             node.Actions.HasFlag(SemanticsActions.Tap)
-            && node.Label != "Dismiss menu");
+            && HasLabelPart(node, "Push next"));
         Assert.NotNull(action);
         Assert.True(action!.PerformAction(SemanticsActions.Tap));
         Assert.Equal("next", await result);
@@ -951,4 +951,12 @@ public sealed class MaterialPopupMenuTests : IDisposable
             internal override void Unmount() { if (_child is not null) { UnmountChild(_child); _child = null; } base.Unmount(); }
         }
     }
+
+    /// <summary>
+    /// Whether one of the node's merged label parts is <paramref name="part"/>. A merged node joins
+    /// the labels it absorbed with a newline, exactly like Flutter's <c>_concatAttributedString</c>.
+    /// </summary>
+    private static bool HasLabelPart(SemanticsNode node, string part) =>
+        node.Label?.Split('\n').Contains(part) == true;
 }
+

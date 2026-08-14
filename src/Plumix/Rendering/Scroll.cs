@@ -1114,6 +1114,54 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     {
         Activity.ApplyNewDimensions();
         CanDragChanged?.Invoke(Physics.ShouldAcceptUserOffset(this));
+        UpdateSemanticActions();
+    }
+
+    /// <summary>
+    /// Raised whenever the set of scroll directions the position still accepts changes, so that the
+    /// scrollable can filter the semantics actions its gesture handler exposes.
+    /// </summary>
+    /// <remarks>
+    /// Flutter routes this through <c>ScrollContext.setSemanticsActions</c>; Plumix has no
+    /// <c>ScrollContext</c>, so the scrollable subscribes to this event instead.
+    /// </remarks>
+    public event Action<SemanticsActions>? SemanticActionsChanged;
+
+    private SemanticsActions? _semanticActions;
+
+    /// <summary>
+    /// Recomputes which directional scroll actions are still available. Scrolled to the top, the
+    /// action that scrolls further up has to disappear.
+    /// </summary>
+    /// <remarks>Flutter's <c>ScrollPosition._updateSemanticActions</c>.</remarks>
+    protected void UpdateSemanticActions()
+    {
+        (SemanticsActions forward, SemanticsActions backward) = AxisDirection switch
+        {
+            AxisDirection.Up => (SemanticsActions.ScrollDown, SemanticsActions.ScrollUp),
+            AxisDirection.Down => (SemanticsActions.ScrollUp, SemanticsActions.ScrollDown),
+            AxisDirection.Left => (SemanticsActions.ScrollRight, SemanticsActions.ScrollLeft),
+            _ => (SemanticsActions.ScrollLeft, SemanticsActions.ScrollRight)
+        };
+
+        SemanticsActions actions = SemanticsActions.None;
+        if (_hasPixels && _pixels > MinScrollExtent)
+        {
+            actions |= backward;
+        }
+
+        if (_hasPixels && _pixels < MaxScrollExtent)
+        {
+            actions |= forward;
+        }
+
+        if (_semanticActions == actions)
+        {
+            return;
+        }
+
+        _semanticActions = actions;
+        SemanticActionsChanged?.Invoke(actions);
     }
 
     /// <summary>
@@ -1214,6 +1262,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         _pixels = value;
         _hasPixels = true;
         NotifyListeners();
+        UpdateSemanticActions();
         Scheduler.AddPostFrameCallback(_ => _impliedVelocity = 0.0);
     }
 
@@ -1240,6 +1289,7 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         if (Math.Abs(_pixels - oldPixels) > Constants.PrecisionErrorTolerance)
         {
             NotifyListeners();
+            UpdateSemanticActions();
         }
 
         return Math.Abs(overscroll) > Constants.PrecisionErrorTolerance ? overscroll : 0.0;

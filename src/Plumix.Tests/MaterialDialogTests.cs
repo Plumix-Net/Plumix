@@ -148,7 +148,7 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(24, 16, 24, 24));
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(24, 0, 24, 24));
         Assert.NotNull(FindSemantics(semantics, node =>
-            node.Label == "Alert"
+            HasLabelPart(node, "Alert")
             && node.Flags.HasFlag(SemanticsFlags.ScopesRoute)
             && node.Flags.HasFlag(SemanticsFlags.NamesRoute)));
         Assert.NotNull(FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsAlertDialog)));
@@ -263,7 +263,7 @@ public sealed class MaterialDialogTests : IDisposable
             localizedTheme.TextTheme.BodyMedium.FontSize,
             FindParagraph(harness.RenderView, "Personal")!.FontSize);
         Assert.NotNull(FindSemantics(semantics, node =>
-            node.Label == "Dialog"
+            HasLabelPart(node, "Dialog")
             && node.Flags.HasFlag(SemanticsFlags.ScopesRoute)
             && node.Flags.HasFlag(SemanticsFlags.NamesRoute)));
         Assert.NotNull(FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsDialog)));
@@ -343,7 +343,7 @@ public sealed class MaterialDialogTests : IDisposable
         var semantics = harness.PumpAndGetSemantics(new Size(500, 320));
         var option = FindSemantics(semantics, node =>
             node.Actions.HasFlag(SemanticsActions.Tap)
-            && node.Label != "Dismiss");
+            && HasLabelPart(node, "Team workspace"));
         Assert.NotNull(option);
         Assert.True(option!.PerformAction(SemanticsActions.Tap));
 
@@ -413,7 +413,7 @@ public sealed class MaterialDialogTests : IDisposable
                 barrierLabel: "Close modal");
             PumpAnimation();
             var semantics = harness.PumpAndGetSemantics(new Size(500, 320));
-            var barrier = FindSemantics(semantics, node => node.Label == "Close modal");
+            var barrier = FindSemantics(semantics, node => HasLabelPart(node, "Close modal"));
             if (platformSupportsDismissingBarrier)
             {
                 Assert.NotNull(barrier);
@@ -734,4 +734,12 @@ public sealed class MaterialDialogTests : IDisposable
             internal override void Unmount() { if (_child is not null) { UnmountChild(_child); _child = null; } base.Unmount(); }
         }
     }
+
+    /// <summary>
+    /// Whether one of the node's merged label parts is <paramref name="part"/>. A merged node joins
+    /// the labels it absorbed with a newline, exactly like Flutter's <c>_concatAttributedString</c>.
+    /// </summary>
+    private static bool HasLabelPart(SemanticsNode node, string part) =>
+        node.Label?.Split('\n').Contains(part) == true;
 }
+

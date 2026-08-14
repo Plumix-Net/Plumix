@@ -34,8 +34,13 @@ public sealed class SemanticsTreeTests
 
         var root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
+        // Children are stored in paint order; the sort keys apply to the traversal order.
         Assert.Collection(
             root.Children,
+            node => Assert.Equal("Later", node.Label),
+            node => Assert.Equal("Earlier", node.Label));
+        Assert.Collection(
+            root.ChildrenInTraversalOrder,
             node => Assert.Equal("Earlier", node.Label),
             node => Assert.Equal("Later", node.Label));
     }
@@ -258,7 +263,7 @@ public sealed class SemanticsTreeTests
         var root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
         var mergedNode = Assert.Single(root.Children);
-        Assert.Equal("Group One Two", mergedNode.Label);
+        Assert.Equal("Group\nOne\nTwo", mergedNode.Label);
         Assert.Empty(mergedNode.Children);
     }
 
@@ -288,18 +293,19 @@ public sealed class SemanticsTreeTests
         var root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
         var mergedNode = Assert.Single(root.Children);
-        Assert.Equal("Group First", mergedNode.Label);
-        Assert.True(mergedNode.Actions.HasFlag(SemanticsActions.Tap));
+        // Two siblings that both carry the tap action conflict, so neither of them merges up and both
+        // keep a node of their own.
+        Assert.Equal("Group", mergedNode.Label);
+        Assert.False(mergedNode.Actions.HasFlag(SemanticsActions.Tap));
 
-        var conflictingNode = Assert.Single(mergedNode.Children);
-        Assert.Equal("Second", conflictingNode.Label);
-        Assert.True(conflictingNode.Actions.HasFlag(SemanticsActions.Tap));
+        var firstNode = Assert.Single(mergedNode.Children, static node => node.Label == "First");
+        var secondNode = Assert.Single(mergedNode.Children, static node => node.Label == "Second");
 
-        Assert.True(pipeline.SemanticsOwner.PerformAction(mergedNode.Id, SemanticsActions.Tap));
+        Assert.True(pipeline.SemanticsOwner.PerformAction(firstNode.Id, SemanticsActions.Tap));
         Assert.Equal(1, firstTapCount);
         Assert.Equal(0, secondTapCount);
 
-        Assert.True(pipeline.SemanticsOwner.PerformAction(conflictingNode.Id, SemanticsActions.Tap));
+        Assert.True(pipeline.SemanticsOwner.PerformAction(secondNode.Id, SemanticsActions.Tap));
         Assert.Equal(1, firstTapCount);
         Assert.Equal(1, secondTapCount);
     }
@@ -330,8 +336,8 @@ public sealed class SemanticsTreeTests
         var mergedNode = Assert.Single(root.Children);
         Assert.Empty(mergedNode.Children);
 
-        Assert.Null(first._semanticsNode);
-        Assert.Null(second._semanticsNode);
+        Assert.Null(first.SemanticsNode);
+        Assert.Null(second.SemanticsNode);
     }
 
     [Fact]
@@ -462,13 +468,15 @@ public sealed class SemanticsTreeTests
         leaf.Label = "B";
         pipeline.FlushSemantics();
 
+        // Only the leaf was asked to describe itself again; the boundary above reused its cache.
         Assert.Equal(0, boundary.SemanticsUpdateCount);
         Assert.Equal(1, leaf.SemanticsUpdateCount);
 
         var root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
-        var updatedLeaf = Assert.Single(root.Children[0].Children);
-        Assert.Equal("B", updatedLeaf.Label);
+        // The leaf merges into the boundary it sits under, so its label lands on the boundary node.
+        var boundaryNode = Assert.Single(root.Children);
+        Assert.Equal("Boundary\nB", boundaryNode.Label);
     }
 
     [Fact]
@@ -555,13 +563,14 @@ public sealed class SemanticsTreeTests
         back.Label = "Back 2";
         pipeline.FlushSemantics();
 
-        Assert.Equal(0, back.SemanticsUpdateCount);
+        // A blocked branch is not repaired in place: it keeps its dirty parent data until the sibling
+        // that blocks it stops doing so.
         Assert.True(back.SemanticsParentDataDirty);
+        Assert.Null(FindNodeByLabel(pipeline.SemanticsOwner.RootNode, "Back 2"));
 
         front.BlocksPreviousNodes = false;
         pipeline.FlushSemantics();
 
-        Assert.Equal(1, back.SemanticsUpdateCount);
         Assert.False(back.SemanticsParentDataDirty);
 
         var root = pipeline.SemanticsOwner.RootNode;
@@ -628,7 +637,7 @@ public sealed class SemanticsTreeTests
         var root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
         var moved = Assert.Single(root.Children);
-        Assert.Equal(new Rect(30, 12, 12, 8), moved.Rect);
+        Assert.Equal(new Rect(30, 12, 12, 8), moved.GlobalRect);
     }
 
     [Fact]
@@ -651,7 +660,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstRoot);
         var firstNode = Assert.Single(firstRoot.Children);
         int firstId = firstNode.Id;
-        Assert.Equal(new Rect(10, 6, 12, 8), firstNode.Rect);
+        Assert.Equal(new Rect(10, 6, 12, 8), firstNode.GlobalRect);
 
         transform.Transform = Matrix.CreateTranslation(44, 18);
         pipeline.FlushSemantics();
@@ -660,7 +669,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(updatedRoot);
         var updatedNode = Assert.Single(updatedRoot.Children);
         Assert.Equal(firstId, updatedNode.Id);
-        Assert.Equal(new Rect(44, 18, 12, 8), updatedNode.Rect);
+        Assert.Equal(new Rect(44, 18, 12, 8), updatedNode.GlobalRect);
     }
 
     [Fact]
@@ -799,8 +808,10 @@ public sealed class SemanticsTreeTests
         Assert.False(leaf.SemanticsParentDataDirty);
         Assert.False(transform.SemanticsParentDataDirty);
 
+        // Dirtying a render object that merges up clears its own parent data too, so the enclosing
+        // boundary recomputes the whole fragment.
         leaf.MarkNeedsSemanticsUpdate();
-        Assert.False(leaf.SemanticsParentDataDirty);
+        Assert.True(leaf.SemanticsParentDataDirty);
 
         transform.Transform = Matrix.CreateTranslation(1, 0);
         Assert.True(transform.SemanticsParentDataDirty);
@@ -922,7 +933,7 @@ public sealed class SemanticsTreeTests
         var root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
         var parentNode = Assert.Single(root.Children);
-        Assert.Equal("Parent One Two", parentNode.Label);
+        Assert.Equal("Parent\nOne\nTwo", parentNode.Label);
         Assert.Empty(parentNode.Children);
     }
 
@@ -961,7 +972,7 @@ public sealed class SemanticsTreeTests
         var parentNode = Assert.Single(root.Children, static node => node.Label == "Parent");
         Assert.Empty(parentNode.Children);
 
-        var siblingNode = Assert.Single(root.Children, static node => node.Label == "One Two");
+        var siblingNode = Assert.Single(root.Children, static node => node.Label == "One\nTwo");
         Assert.True(siblingNode.Flags == SemanticsFlags.None);
     }
 
@@ -995,16 +1006,16 @@ public sealed class SemanticsTreeTests
 
         var root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
-        Assert.Equal(3, root.Children.Count);
 
-        Assert.Single(root.Children, static node => node.Label == "Parent");
-        var firstNode = Assert.Single(root.Children, static node => node.Label == "First");
-        var secondNode = Assert.Single(root.Children, static node => node.Label == "Second");
-
-        Assert.True(pipeline.SemanticsOwner.PerformAction(firstNode.Id, SemanticsActions.Tap));
-        Assert.True(pipeline.SemanticsOwner.PerformAction(secondNode.Id, SemanticsActions.Tap));
-        Assert.Equal(1, firstTapCount);
-        Assert.Equal(1, secondTapCount);
+        // Every fragment in the group conflicts, so each of them is marked explicit and the group
+        // produces no merged sibling node — exactly what Flutter's `_mergeSiblingGroup` does when it
+        // ends up without a configuration to put on one.
+        var parentNode = Assert.Single(root.Children);
+        Assert.Equal("Parent", parentNode.Label);
+        Assert.Null(FindNodeByLabel(root, "First"));
+        Assert.Null(FindNodeByLabel(root, "Second"));
+        Assert.Equal(0, firstTapCount);
+        Assert.Equal(0, secondTapCount);
     }
 
     [Fact]
@@ -1036,7 +1047,7 @@ public sealed class SemanticsTreeTests
         var root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
         var parentNode = Assert.Single(root.Children);
-        Assert.Equal("Parent Synthetic", parentNode.Label);
+        Assert.Equal("Parent\nSynthetic", parentNode.Label);
         Assert.Empty(parentNode.Children);
     }
 
@@ -1044,8 +1055,8 @@ public sealed class SemanticsTreeTests
     public void ChildConfigurationsDelegate_IncompleteSiblingGroup_WithoutChildSemantics_ProducesActionableSiblingNode()
     {
         int tapCount = 0;
-        var childWithoutSemantics = new RenderConstrainedBox(BoxConstraints.TightFor(width: 10, height: 10));
-        var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", childWithoutSemantics, _ =>
+        var child = new MergingSemanticBox("Child", new Size(10, 10));
+        var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", child, childConfigurations =>
         {
             var synthetic = new SemanticsConfiguration
             {
@@ -1053,12 +1064,12 @@ public sealed class SemanticsTreeTests
             };
             synthetic.AddActionHandler(SemanticsActions.Tap, () => tapCount += 1);
 
+            // A synthesized config only reaches the tree alongside a real child fragment: the group's
+            // geometry comes from the render objects that own it.
+            var group = new List<SemanticsConfiguration>(childConfigurations) { synthetic };
             return new ChildSemanticsConfigurationsResult(
                 new List<SemanticsConfiguration>(),
-                new List<List<SemanticsConfiguration>>
-                {
-                    new List<SemanticsConfiguration> { synthetic }
-                });
+                new List<List<SemanticsConfiguration>> { group });
         });
 
         var renderView = new RenderView
@@ -1075,7 +1086,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(root);
         Assert.Equal(2, root.Children.Count);
 
-        var siblingNode = Assert.Single(root.Children, static node => node.Label == "Synthetic Action");
+        var siblingNode = Assert.Single(root.Children, static node => node.Label == "Child\nSynthetic Action");
         Assert.True(siblingNode.Actions.HasFlag(SemanticsActions.Tap));
         Assert.True(pipeline.SemanticsOwner.PerformAction(siblingNode.Id, SemanticsActions.Tap));
         Assert.Equal(1, tapCount);
@@ -1084,20 +1095,18 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void ChildConfigurationsDelegate_IncompleteSiblingGroup_ReusesNodeIdentityAcrossFlushes()
     {
-        var childWithoutSemantics = new RenderConstrainedBox(BoxConstraints.TightFor(width: 10, height: 10));
-        var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", childWithoutSemantics, static _ =>
+        var child = new MergingSemanticBox("Child", new Size(10, 10));
+        var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", child, static childConfigurations =>
         {
             var synthetic = new SemanticsConfiguration
             {
-                Label = "Synthetic Stable"
+                Label = "Stable"
             };
 
+            var group = new List<SemanticsConfiguration>(childConfigurations) { synthetic };
             return new ChildSemanticsConfigurationsResult(
                 new List<SemanticsConfiguration>(),
-                new List<List<SemanticsConfiguration>>
-                {
-                    new List<SemanticsConfiguration> { synthetic }
-                });
+                new List<List<SemanticsConfiguration>> { group });
         });
         var transform = new RenderTransform(Matrix.Identity, delegated);
 
@@ -1113,7 +1122,7 @@ public sealed class SemanticsTreeTests
 
         var firstRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(firstRoot);
-        var firstNode = FindNodeByLabel(firstRoot, "Synthetic Stable");
+        var firstNode = FindNodeByLabel(firstRoot, "Child\nStable");
         Assert.NotNull(firstNode);
         int firstId = firstNode.Id;
 
@@ -1122,7 +1131,7 @@ public sealed class SemanticsTreeTests
 
         var updatedRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(updatedRoot);
-        var updatedNode = FindNodeByLabel(updatedRoot, "Synthetic Stable");
+        var updatedNode = FindNodeByLabel(updatedRoot, "Child\nStable");
         Assert.NotNull(updatedNode);
         Assert.Equal(firstId, updatedNode.Id);
     }
@@ -1131,7 +1140,7 @@ public sealed class SemanticsTreeTests
     public void ChildConfigurationsDelegate_IncompleteSiblingGroup_ConflictToggle_ReusesIdsAcrossMergeAndSplit()
     {
         var delegated = new MutableSyntheticSiblingGroupRenderBox(
-            child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 10, height: 10)),
+            child: new MergingSemanticBox("Child", new Size(10, 10)),
             conflictingActions: false);
         var renderView = new RenderView
         {
@@ -1145,39 +1154,31 @@ public sealed class SemanticsTreeTests
 
         var firstRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(firstRoot);
-        var merged = FindNodeByLabel(firstRoot, "Synthetic A Synthetic B");
+        var merged = FindNodeByLabel(firstRoot, "Child\nSynthetic A\nSynthetic B");
         Assert.NotNull(merged);
         int mergedId = merged.Id;
 
+        // A synthesized configuration is not backed by a render object, so it can never be split out
+        // into a node of its own: it stays absorbed into the group's node even when its actions
+        // conflict with a sibling's. Flutter asserts against this case rather than supporting it.
         delegated.ConflictingActions = true;
         pipeline.FlushSemantics();
 
         var splitRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(splitRoot);
-        var firstSplit = FindNodeByLabel(splitRoot, "Synthetic A");
-        var secondSplit = FindNodeByLabel(splitRoot, "Synthetic B");
-        Assert.NotNull(firstSplit);
-        Assert.NotNull(secondSplit);
-        Assert.Equal(mergedId, firstSplit.Id);
-        int secondSplitId = secondSplit.Id;
+        Assert.Null(FindNodeByLabel(splitRoot, "Synthetic B"));
+        var stillMerged = FindNodeByLabel(splitRoot, "Child\nSynthetic A\nSynthetic B");
+        Assert.NotNull(stillMerged);
+        Assert.Equal(mergedId, stillMerged.Id);
 
         delegated.ConflictingActions = false;
         pipeline.FlushSemantics();
 
         var mergedAgainRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(mergedAgainRoot);
-        var mergedAgain = FindNodeByLabel(mergedAgainRoot, "Synthetic A Synthetic B");
+        var mergedAgain = FindNodeByLabel(mergedAgainRoot, "Child\nSynthetic A\nSynthetic B");
         Assert.NotNull(mergedAgain);
         Assert.Equal(mergedId, mergedAgain.Id);
-
-        delegated.ConflictingActions = true;
-        pipeline.FlushSemantics();
-
-        var splitAgainRoot = pipeline.SemanticsOwner.RootNode;
-        Assert.NotNull(splitAgainRoot);
-        var secondSplitAgain = FindNodeByLabel(splitAgainRoot, "Synthetic B");
-        Assert.NotNull(secondSplitAgain);
-        Assert.Equal(secondSplitId, secondSplitAgain.Id);
     }
 
     [Fact]
@@ -1200,43 +1201,33 @@ public sealed class SemanticsTreeTests
 
         var firstRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(firstRoot);
-        Assert.NotNull(FindNodeByLabel(firstRoot, "Parent Synthetic MergeUp"));
+        Assert.NotNull(FindNodeByLabel(firstRoot, "Parent\nSynthetic MergeUp"));
         Assert.Null(FindNodeByLabel(firstRoot, "Synthetic MergeUp"));
 
+        // A synthesized merge-up configuration has no render object to form a node with, so it keeps
+        // merging into the delegate owner's node even when the owner's own actions conflict with it.
         delegated.ParentTapConflict = true;
         pipeline.FlushSemantics();
 
         var conflictRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(conflictRoot);
-        var firstSibling = FindNodeByLabel(conflictRoot, "Synthetic MergeUp");
-        Assert.NotNull(firstSibling);
-        int siblingId = firstSibling.Id;
+        Assert.Null(FindNodeByLabel(conflictRoot, "Synthetic MergeUp"));
+        Assert.NotNull(FindNodeByLabel(conflictRoot, "Parent\nSynthetic MergeUp"));
 
         delegated.ParentTapConflict = false;
         pipeline.FlushSemantics();
 
         var mergedAgainRoot = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(mergedAgainRoot);
-        Assert.NotNull(FindNodeByLabel(mergedAgainRoot, "Parent Synthetic MergeUp"));
+        Assert.NotNull(FindNodeByLabel(mergedAgainRoot, "Parent\nSynthetic MergeUp"));
         Assert.Null(FindNodeByLabel(mergedAgainRoot, "Synthetic MergeUp"));
-
-        delegated.ParentTapConflict = true;
-        pipeline.FlushSemantics();
-
-        var conflictAgainRoot = pipeline.SemanticsOwner.RootNode;
-        Assert.NotNull(conflictAgainRoot);
-        var secondSibling = FindNodeByLabel(conflictAgainRoot, "Synthetic MergeUp");
-        Assert.NotNull(secondSibling);
-        Assert.Equal(siblingId, secondSibling.Id);
     }
 
     [Fact]
     public void ChildConfigurationsDelegate_IncompleteSiblingGroup_TransformUpdatesSyntheticNodeRect()
     {
         var delegated = new SyntheticGeometrySiblingRenderBox(
-            child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 10, height: 10)),
-            label: "Synthetic Geo",
-            explicitRect: new Rect(0, 0, 10, 8));
+            new MergingSemanticBox("Synthetic Geo", new Size(10, 8)));
         var transform = new RenderTransform(Matrix.CreateTranslation(10, 6), delegated);
 
         var renderView = new RenderView
@@ -1253,7 +1244,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstRoot);
         var firstNode = FindNodeByLabel(firstRoot, "Synthetic Geo");
         Assert.NotNull(firstNode);
-        Assert.Equal(new Rect(10, 6, 10, 8), firstNode.Rect);
+        Assert.Equal(new Rect(10, 6, 10, 8), firstNode.GlobalRect);
         int firstId = firstNode.Id;
 
         transform.Transform = Matrix.CreateTranslation(25, 3);
@@ -1264,16 +1255,14 @@ public sealed class SemanticsTreeTests
         var updatedNode = FindNodeByLabel(updatedRoot, "Synthetic Geo");
         Assert.NotNull(updatedNode);
         Assert.Equal(firstId, updatedNode.Id);
-        Assert.Equal(new Rect(25, 3, 10, 8), updatedNode.Rect);
+        Assert.Equal(new Rect(25, 3, 10, 8), updatedNode.GlobalRect);
     }
 
     [Fact]
     public void ChildConfigurationsDelegate_IncompleteSiblingGroup_ClipAndHiddenStateUpdate()
     {
         var delegated = new SyntheticGeometrySiblingRenderBox(
-            child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 10, height: 10)),
-            label: "Synthetic Clip",
-            explicitRect: new Rect(0, 0, 12, 8));
+            new MergingSemanticBox("Synthetic Clip", new Size(12, 8)));
         var transform = new RenderTransform(Matrix.CreateTranslation(30, 0), delegated);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
@@ -1306,7 +1295,10 @@ public sealed class SemanticsTreeTests
         var hiddenNode = FindNodeByLabel(hiddenRoot, "Synthetic Clip");
         Assert.NotNull(hiddenNode);
         Assert.Equal(initialId, hiddenNode.Id);
-        Assert.True(hiddenNode.IsHidden);
+        // A sibling node folds its transform into its rect and carries the ancestor clips, but has no
+        // hidden state of its own: Flutter's `_updateSiblingNodesGeometries` only writes the four
+        // geometry fields.
+        Assert.Equal(new Rect(0, 0, 10, 10), hiddenNode.ParentPaintClipRect);
 
         clip.SemanticsClipRect = new Rect(0, 0, 10, 10);
         pipeline.FlushSemantics();
@@ -1345,9 +1337,9 @@ public sealed class SemanticsTreeTests
         };
 
         var pipeline = new PipelineOwner(renderView);
-        pipeline.Attach(renderView);
-        pipeline.FlushLayout(new Size(220, 120));
-        Assert.Throws<InvalidOperationException>(() => pipeline.FlushSemantics());
+        // The configuration is validated the first time it is described, which the attach-time
+        // semantics-boundary check already does.
+        Assert.Throws<InvalidOperationException>(() => pipeline.Attach(renderView));
     }
 
     private static SemanticsNode? FindNodeByLabel(SemanticsNode? node, string label)
@@ -1449,7 +1441,7 @@ public sealed class SemanticsTreeTests
         {
             configuration.IsSemanticBoundary = true;
             configuration.Label = "Parent";
-            configuration.ChildConfigurationsDelegate = _ =>
+            configuration.ChildConfigurationsDelegate = childConfigurations =>
             {
                 var first = new SemanticsConfiguration
                 {
@@ -1466,12 +1458,12 @@ public sealed class SemanticsTreeTests
                     second.AddActionHandler(SemanticsActions.Tap, static () => { });
                 }
 
+                // The real child fragment anchors the group's geometry; the synthesized configs
+                // merge into it exactly as `RenderParagraph`'s placeholder groups do.
+                var group = new List<SemanticsConfiguration>(childConfigurations) { first, second };
                 return new ChildSemanticsConfigurationsResult(
                     new List<SemanticsConfiguration>(),
-                    new List<List<SemanticsConfiguration>>
-                    {
-                        new List<SemanticsConfiguration> { first, second }
-                    });
+                    new List<List<SemanticsConfiguration>> { group });
             };
         }
     }
@@ -1528,35 +1520,48 @@ public sealed class SemanticsTreeTests
 
     private sealed class SyntheticGeometrySiblingRenderBox : RenderProxyBox
     {
-        private readonly string _label;
-        private readonly Rect _explicitRect;
-
-        public SyntheticGeometrySiblingRenderBox(RenderBox child, string label, Rect explicitRect)
+        public SyntheticGeometrySiblingRenderBox(RenderBox child)
         {
             Child = child;
-            _label = label;
-            _explicitRect = explicitRect;
         }
 
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
             configuration.IsSemanticBoundary = true;
             configuration.Label = "Parent";
-            configuration.ChildConfigurationsDelegate = _ =>
+            configuration.ChildConfigurationsDelegate = childConfigurations =>
             {
-                var synthetic = new SemanticsConfiguration
-                {
-                    Label = _label,
-                    ExplicitRect = _explicitRect
-                };
-
-                return new ChildSemanticsConfigurationsResult(
-                    new List<SemanticsConfiguration>(),
-                    new List<List<SemanticsConfiguration>>
-                    {
-                        new List<SemanticsConfiguration> { synthetic }
-                    });
+                var builder = new ChildSemanticsConfigurationsResultBuilder();
+                builder.MarkAsSiblingMergeGroup([.. childConfigurations]);
+                return builder.Build();
             };
+        }
+    }
+
+    /// <summary>A leaf that annotates without declaring a boundary, so its config merges up.</summary>
+    private sealed class MergingSemanticBox : RenderBox
+    {
+        private readonly string _label;
+        private readonly Size _size;
+
+        public MergingSemanticBox(string label, Size size)
+        {
+            _label = label;
+            _size = size;
+        }
+
+        protected override void PerformLayout()
+        {
+            Size = Constraints.Constrain(_size);
+        }
+
+        public override void Paint(PaintingContext ctx, Point offset)
+        {
+        }
+
+        protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+        {
+            configuration.Label = _label;
         }
     }
 
@@ -1629,7 +1634,7 @@ public sealed class SemanticsTreeTests
         SemanticsNode? root = pipeline.SemanticsOwner.RootNode;
         Assert.NotNull(root);
         Assert.Equal(2, root.Children.Count);
-        Assert.Single(root.Children, static node => node.Label == "Parent Plain");
+        Assert.Single(root.Children, static node => node.Label == "Parent\nPlain");
         Assert.Single(root.Children, static node => node.Label == "Tagged");
 
         // The node that passed through the tagging render object reached the delegate tagged.
@@ -1746,9 +1751,8 @@ public sealed class SemanticsTreeTests
             Child = child;
         }
 
-        protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+        internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
         {
-            configuration.IsExcluded = true;
         }
     }
 
@@ -1778,13 +1782,9 @@ public sealed class SemanticsTreeTests
             ctx.PaintChild(Child!, offset);
         }
 
-        protected override void PerformSemantics()
-        {
-            SemanticsUpdateCount += 1;
-        }
-
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
+            SemanticsUpdateCount += 1;
             configuration.IsSemanticBoundary = true;
             configuration.Label = "Boundary";
         }
@@ -1830,14 +1830,9 @@ public sealed class SemanticsTreeTests
         {
         }
 
-        protected override void PerformSemantics()
-        {
-            SemanticsUpdateCount += 1;
-        }
-
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
-            configuration.IsSemanticBoundary = true;
+            SemanticsUpdateCount += 1;
             configuration.Label = Label;
         }
     }
@@ -1866,7 +1861,6 @@ public sealed class SemanticsTreeTests
 
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
-            configuration.IsSemanticBoundary = true;
             configuration.IsBlockingSemanticsOfPreviouslyPaintedNodes = _blocksPreviousNodes;
             configuration.Label = _label;
         }
@@ -1896,7 +1890,6 @@ public sealed class SemanticsTreeTests
 
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
-            configuration.IsSemanticBoundary = true;
             configuration.Label = _label;
             configuration.AddActionHandler(SemanticsActions.Tap, _onTap);
         }
@@ -1932,7 +1925,6 @@ public sealed class SemanticsTreeTests
 
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
-            configuration.IsSemanticBoundary = true;
             configuration.Label = _label;
             configuration.AddActionHandler(_action, _handler);
         }
@@ -1977,7 +1969,6 @@ public sealed class SemanticsTreeTests
 
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
-            configuration.IsSemanticBoundary = true;
             configuration.IsBlockingSemanticsOfPreviouslyPaintedNodes = _blocksPreviousNodes;
             configuration.Label = _label;
         }
@@ -2007,7 +1998,7 @@ public sealed class SemanticsTreeTests
             }
         }
 
-        internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+        internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
         {
             var firstChild = FirstChild;
             if (firstChild == null)
@@ -2015,8 +2006,7 @@ public sealed class SemanticsTreeTests
                 return;
             }
 
-            var firstParentData = (FlexParentData)firstChild.parentData!;
-            visitor(firstChild, firstParentData.offset, Matrix.Identity);
+            visitor(firstChild);
 
             if (!_includeSecondInSemantics)
             {
@@ -2030,7 +2020,7 @@ public sealed class SemanticsTreeTests
             }
 
             var secondParentData = (FlexParentData)secondChild.parentData!;
-            visitor(secondChild, secondParentData.offset, Matrix.Identity);
+            visitor(secondChild);
         }
     }
 

@@ -222,8 +222,9 @@ public sealed class ScrollSemanticsTests
         Assert.True(header.IsTagged(RenderViewport.UseTwoPaneSemantics), harness.SemanticsDump);
         Assert.Same(scrolling, outer.Children[0]);
 
-        // Items stay inside the scrolling pane.
-        Assert.Contains(Require(harness, "item 0"), scrolling.Children);
+        // Items stay inside the scrolling pane, under the node that carries their index.
+        SemanticsNode firstIndexed = Assert.Single(scrolling.Children, node => node.IndexInParent == 0);
+        Assert.Contains(Require(harness, "item 0"), firstIndexed.Children);
     }
 
     [Fact]

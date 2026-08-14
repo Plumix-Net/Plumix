@@ -756,7 +756,7 @@ public sealed class ScrollPipelineTests
         Assert.Contains(prototype, lifecycleChildren);
 
         var semanticChildren = new List<RenderObject>();
-        sliver.VisitChildrenForSemantics((child, _, _) => semanticChildren.Add(child));
+        sliver.VisitChildrenForSemantics(child => semanticChildren.Add(child));
         Assert.DoesNotContain(prototype, semanticChildren);
         Assert.Equal(2, semanticChildren.Count);
 

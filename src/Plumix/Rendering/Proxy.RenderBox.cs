@@ -60,12 +60,12 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child != null)
         {
             var childParentData = (BoxParentData)_child.parentData!;
-            visitor(_child, childParentData.offset, Matrix.Identity);
+            visitor(_child);
         }
     }
 
@@ -282,7 +282,7 @@ internal sealed class RenderVisibility : RenderProxyBox
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_maintainSemantics || _visible)
         {
@@ -324,7 +324,7 @@ public sealed class RenderExcludeSemantics : RenderProxyBox
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (!_excluding)
         {
@@ -1118,7 +1118,7 @@ public sealed class RenderOffstage : RenderProxyBox
         base.Paint(ctx, offset);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_offstage)
         {
@@ -1182,7 +1182,7 @@ public sealed class RenderIgnorePointer : RenderProxyBox
         return !_ignoring && base.HitTest(result, position);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_ignoringSemantics == true)
         {
@@ -1267,7 +1267,7 @@ public sealed class RenderAbsorbPointer : RenderProxyBox
         return true;
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_ignoringSemantics == true)
         {
@@ -1820,7 +1820,7 @@ public sealed class RenderFittedBox : RenderProxyBox
         return Child.HitTest(result, transformedPosition);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (Child == null)
         {
@@ -1828,7 +1828,7 @@ public sealed class RenderFittedBox : RenderProxyBox
         }
 
         UpdatePaintData();
-        visitor(Child, new Point(0, 0), _transform);
+        visitor(Child);
     }
 
     public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
@@ -2129,7 +2129,7 @@ public class RenderOpacity : RenderProxyBox
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (Opacity > 0.0 || AlwaysIncludeSemantics)
         {
@@ -2224,12 +2224,12 @@ public sealed class RenderTransform : RenderProxyBox
     public override bool IsRepaintBoundary => Child != null;
     protected override bool AlwaysNeedsCompositing => Child != null;
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (Child != null)
         {
             var childParentData = (BoxParentData)Child.parentData!;
-            visitor(Child, childParentData.offset, EffectiveTransform);
+            visitor(Child);
         }
     }
 
@@ -2328,12 +2328,12 @@ public sealed class RenderFractionalTranslation : RenderProxyBox
         return Child.HitTest(result, position - data.offset - offset);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (Child is null) return;
         var data = (BoxParentData)Child.parentData!;
         var offset = PaintOffset;
-        visitor(Child, data.offset, Matrix.CreateTranslation(offset.X, offset.Y));
+        visitor(Child);
     }
 
     public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
@@ -2464,11 +2464,11 @@ public sealed class RenderRotatedBox : RenderProxyBox
         return Child.HitTest(result, inverse.Transform(position));
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (Child != null)
         {
-            visitor(Child, default, _paintTransform);
+            visitor(Child);
         }
     }
 
@@ -2931,6 +2931,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private bool _explicitChildNodes;
     private bool _mergeDescendants;
     private SemanticsSortKey? _sortKey;
+    private TextDirection? _textDirection;
     private SemanticsTag? _tagForChildren;
 
     public RenderSemanticsAnnotations(
@@ -2957,6 +2958,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         bool container = false,
         bool explicitChildNodes = false,
         SemanticsSortKey? sortKey = null,
+        TextDirection? textDirection = null,
         bool mergeDescendants = false,
         SemanticsTag? tagForChildren = null,
         RenderBox? child = null)
@@ -2984,6 +2986,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _container = container;
         _explicitChildNodes = explicitChildNodes;
         _sortKey = sortKey;
+        _textDirection = textDirection;
         _mergeDescendants = mergeDescendants;
         _tagForChildren = tagForChildren;
         Child = child;
@@ -3284,6 +3287,26 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    /// <summary>
+    /// The reading direction for this subtree's semantics, and the direction the default traversal
+    /// sort walks siblings in.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsAnnotationsMixin.textDirection</c>.</remarks>
+    public TextDirection? TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value)
+            {
+                return;
+            }
+
+            _textDirection = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public SemanticsSortKey? SortKey
     {
         get => _sortKey;
@@ -3355,6 +3378,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && !_container
             && !_explicitChildNodes
             && _sortKey is null
+            && _textDirection is null
             && _tagForChildren is null
             && !_mergeDescendants)
         {
@@ -3372,6 +3396,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         configuration.HitTestBehavior = _hitTestBehavior;
         configuration.ExplicitChildNodes = _explicitChildNodes;
         configuration.SortKey = _sortKey;
+        configuration.TextDirection = _textDirection;
         if (_mergeDescendants)
         {
             configuration.IsMergingSemanticsOfDescendants = true;

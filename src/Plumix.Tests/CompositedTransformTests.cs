@@ -105,8 +105,8 @@ public sealed class CompositedTransformTests
         Assert.True(stack.HitTest(result, new Point(75, 67)));
         Assert.Contains(result.Path, entry => ReferenceEquals(entry.Target, followerChild));
 
-        Matrix? semanticsTransform = null;
-        follower.VisitChildrenForSemantics((_, _, transform) => semanticsTransform = transform);
+        Matrix semanticsTransform = Matrix.Identity;
+        follower.ApplyPaintTransform(followerChild, ref semanticsTransform);
         Assert.Equal(follower.GetCurrentTransform(), semanticsTransform);
 
         Assert.Single(FindLayers<LeaderLayer>(pipeline.RootLayer));
@@ -132,7 +132,7 @@ public sealed class CompositedTransformTests
         Assert.False(follower.HitTest(new BoxHitTestResult(), new Point(5, 5)));
 
         int semanticsVisits = 0;
-        follower.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        follower.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(0, semanticsVisits);
 
         FollowerLayer followerLayer = Assert.Single(FindLayers<FollowerLayer>(pipeline.RootLayer));

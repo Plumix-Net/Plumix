@@ -82,11 +82,11 @@ public sealed class SliverOpacityTests : IDisposable
         Assert.True(opacity.HitTest(new BoxHitTestResult(), new Point(10, 10)));
 
         int semanticsVisits = 0;
-        opacity.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        opacity.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(0, semanticsVisits);
 
         opacity.AlwaysIncludeSemantics = true;
-        opacity.VisitChildrenForSemantics((_, _, _) => semanticsVisits++);
+        opacity.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
     }
 

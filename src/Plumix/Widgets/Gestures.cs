@@ -1,3 +1,4 @@
+using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -124,9 +125,11 @@ public sealed class RawGestureDetector : StatefulWidget
         double? minFlingVelocity = null,
         double? maxFlingVelocity = null,
         bool dragEnabled = true,
+        bool excludeFromSemantics = false,
         Key? key = null) : base(key)
     {
         Child = child;
+        ExcludeFromSemantics = excludeFromSemantics;
         Gestures = gestures;
         Behavior = behavior;
         OnPointerDown = onPointerDown;
@@ -258,8 +261,13 @@ public sealed class RawGestureDetector : StatefulWidget
         return new RawGestureDetectorState();
     }
 
+    /// <summary>Whether the detector's gestures are hidden from the semantics tree.</summary>
+    public bool ExcludeFromSemantics { get; }
+
     public sealed class RawGestureDetectorState : State
     {
+        private RenderSemanticsGestureHandler? _semanticsGestureHandler;
+
         private TapGestureRecognizer? _tap;
         private LongPressGestureRecognizer? _longPress;
         private HorizontalDragGestureRecognizer? _horizontalDrag;
@@ -296,6 +304,12 @@ public sealed class RawGestureDetector : StatefulWidget
 
             _dragEnabled = value;
             SyncRecognizers();
+            // The recognizer set changed outside a rebuild, so the semantics handler has to be
+            // re-assigned (Flutter's `replaceGestureRecognizers` does the same).
+            if (_semanticsGestureHandler is { } handler)
+            {
+                AssignSemantics(handler);
+            }
         }
 
         public override void Dispose()
@@ -316,13 +330,139 @@ public sealed class RawGestureDetector : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var widget = CurrentWidget;
-            return new Listener(
+            Widget result = new Listener(
                 child: widget.Child,
                 behavior: widget.Behavior,
                 onPointerDown: HandlePointerDown,
                 onPointerMove: widget.OnPointerMove,
                 onPointerUp: widget.OnPointerUp,
                 onPointerCancel: widget.OnPointerCancel);
+
+            if (!widget.ExcludeFromSemantics)
+            {
+                result = new GestureSemantics(child: result, assignSemantics: AssignSemantics);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Mirrors the recognizers this detector currently holds onto the semantics handler, so the
+        /// gestures show up as semantics actions on the nearest semantics node.
+        /// </summary>
+        /// <remarks>Flutter's <c>_DefaultSemanticsGestureDelegate.assignSemantics</c>.</remarks>
+        private void AssignSemantics(RenderSemanticsGestureHandler renderObject)
+        {
+            _semanticsGestureHandler = renderObject;
+            renderObject.OnTap = GetTapHandler();
+            renderObject.OnLongPress = GetLongPressHandler();
+            renderObject.OnHorizontalDragUpdate = GetDragUpdateHandler(renderObject, horizontal: true);
+            renderObject.OnVerticalDragUpdate = GetDragUpdateHandler(renderObject, horizontal: false);
+            renderObject.ValidActions = _validActions;
+        }
+
+        private static Point LocalCenterOf(RenderObject renderObject)
+        {
+            return renderObject is RenderBox box
+                ? new Point(box.Size.Width / 2.0, box.Size.Height / 2.0)
+                : default;
+        }
+
+        /// <summary>
+        /// Replays the tap sequence. Plumix's <c>TapGestureRecognizer.OnTapDown</c>/<c>OnTapUp</c>
+        /// take real pointer events, which a semantic tap has none of, so only the callbacks that
+        /// carry no pointer payload are invoked.
+        /// </summary>
+        private Action? GetTapHandler()
+        {
+            return _tap is { } tap ? () => tap.OnTap?.Invoke() : null;
+        }
+
+        private Action? GetLongPressHandler()
+        {
+            if (_longPress is not { } longPress)
+            {
+                return null;
+            }
+
+            return () =>
+            {
+                longPress.OnLongPress?.Invoke();
+                longPress.OnLongPressUp?.Invoke();
+            };
+        }
+
+        /// <summary>
+        /// Replays the whole down/start/update/end sequence, so a semantic scroll runs through the
+        /// same drag pipeline a real drag would.
+        /// </summary>
+        /// <remarks>Flutter's <c>_DefaultSemanticsGestureDelegate._get*DragUpdateHandler</c>.</remarks>
+        private Action<DragUpdateDetails>? GetDragUpdateHandler(RenderObject renderObject, bool horizontal)
+        {
+            var widget = CurrentWidget;
+            bool hasDirectionalDrag = horizontal ? _horizontalDrag is not null : _verticalDrag is not null;
+            Action<DragDownDetails>? onDown;
+            Action<DragStartDetails>? onStart;
+            Action<DragUpdateDetails>? onUpdate;
+            Action<DragEndDetails>? onEnd;
+            if (hasDirectionalDrag)
+            {
+                onDown = horizontal ? widget.OnHorizontalDragDown : widget.OnVerticalDragDown;
+                onStart = horizontal ? widget.OnHorizontalDragStart : widget.OnVerticalDragStart;
+                onUpdate = horizontal ? widget.OnHorizontalDragUpdate : widget.OnVerticalDragUpdate;
+                onEnd = horizontal ? widget.OnHorizontalDragEnd : widget.OnVerticalDragEnd;
+            }
+            else if (_pan is not null)
+            {
+                onDown = widget.OnPanDown;
+                onStart = widget.OnPanStart;
+                onUpdate = widget.OnPanUpdate;
+                onEnd = widget.OnPanEnd;
+            }
+            else
+            {
+                return null;
+            }
+
+            if (onUpdate is null)
+            {
+                return null;
+            }
+
+            return details =>
+            {
+                Point localCenter = LocalCenterOf(renderObject);
+                Point globalCenter = renderObject.LocalToGlobal(localCenter);
+                onDown?.Invoke(new DragDownDetails(
+                    GlobalPosition: globalCenter,
+                    LocalPosition: localCenter));
+                onStart?.Invoke(new DragStartDetails(
+                    GlobalPosition: globalCenter,
+                    LocalPosition: localCenter));
+                onUpdate(details);
+                onEnd?.Invoke(new DragEndDetails(primaryVelocity: 0.0));
+            };
+        }
+
+        private SemanticsActions? _validActions;
+
+        /// <summary>
+        /// Filters the semantics actions this detector exposes. <c>Scrollable</c> calls it so that
+        /// assistive tools only see the directions the list can still be scrolled in.
+        /// </summary>
+        /// <remarks>Flutter's <c>RawGestureDetectorState.replaceSemanticsActions</c>.</remarks>
+        public void ReplaceSemanticsActions(SemanticsActions actions)
+        {
+            if (CurrentWidget.ExcludeFromSemantics)
+            {
+                return;
+            }
+
+            _validActions = actions;
+            if (_semanticsGestureHandler is { } handler)
+            {
+                handler.ValidActions = actions;
+            }
         }
 
         private void HandlePointerDown(PointerDownEvent @event)
@@ -554,9 +694,11 @@ public sealed class GestureDetector : StatelessWidget
         Action<DragEndDetails>? onVerticalDragEnd = null,
         Action? onVerticalDragCancel = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
+        bool excludeFromSemantics = false,
         Key? key = null) : base(key)
     {
         Child = child;
+        ExcludeFromSemantics = excludeFromSemantics;
         Behavior = behavior;
         OnTap = onTap;
         OnDoubleTap = onDoubleTap;
@@ -581,6 +723,9 @@ public sealed class GestureDetector : StatelessWidget
     }
 
     public Widget? Child { get; }
+
+    /// <summary>Whether the detector's gestures are hidden from the semantics tree.</summary>
+    public bool ExcludeFromSemantics { get; }
 
     public HitTestBehavior Behavior { get; }
 
@@ -619,6 +764,7 @@ public sealed class GestureDetector : StatelessWidget
     {
         return new RawGestureDetector(
             child: Child,
+            excludeFromSemantics: ExcludeFromSemantics,
             behavior: Behavior,
             onTap: OnTap,
             onDoubleTap: OnDoubleTap,
@@ -640,5 +786,35 @@ public sealed class GestureDetector : StatelessWidget
             onVerticalDragEnd: OnVerticalDragEnd,
             onVerticalDragCancel: OnVerticalDragCancel,
             dragStartBehavior: DragStartBehavior);
+    }
+}
+
+/// <summary>
+/// Hosts the <see cref="RenderSemanticsGestureHandler"/> a <see cref="RawGestureDetector"/> puts
+/// between its listener and the semantics tree.
+/// </summary>
+/// <remarks>Flutter's private <c>_GestureSemantics</c>.</remarks>
+internal sealed class GestureSemantics : SingleChildRenderObjectWidget
+{
+    public GestureSemantics(
+        Action<RenderSemanticsGestureHandler> assignSemantics,
+        Widget? child = null,
+        Key? key = null) : base(child, key)
+    {
+        AssignSemantics = assignSemantics;
+    }
+
+    public Action<RenderSemanticsGestureHandler> AssignSemantics { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        var renderObject = new RenderSemanticsGestureHandler();
+        AssignSemantics(renderObject);
+        return renderObject;
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        AssignSemantics((RenderSemanticsGestureHandler)renderObject);
     }
 }

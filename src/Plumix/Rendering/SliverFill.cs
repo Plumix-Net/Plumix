@@ -59,7 +59,7 @@ public sealed class RenderSliverFillViewport : RenderSliverFixedExtentList
         return itemExtent;
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_allowImplicitScrolling)
         {
@@ -83,7 +83,7 @@ public sealed class RenderSliverFillViewport : RenderSliverFixedExtentList
 
             if (childStart + itemExtent > visibleStart)
             {
-                visitor(child, childParentData.offset, Matrix.Identity);
+                visitor(child);
             }
         }
     }

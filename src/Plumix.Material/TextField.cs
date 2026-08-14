@@ -324,6 +324,7 @@ public sealed class TextField : StatefulWidget
                 behavior: HitTestBehavior.Translucent,
                 child: result);
             result = new GestureDetector(
+                excludeFromSemantics: true,
                 onTap: Current.OnTap,
                 onDoubleTap: () => _editableTextKey.CurrentState?.HandleDoubleTap(),
                 onLongPress: () => _editableTextKey.CurrentState?.HandleLongPress(),

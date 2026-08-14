@@ -117,6 +117,7 @@ public sealed class CupertinoButton : StatefulWidget
                 flags: SemanticsFlags.IsButton | SemanticsFlags.IsEnabled,
                 onTap: Current.OnPressed,
                 child: new GestureDetector(
+                    excludeFromSemantics: true,
                     behavior: HitTestBehavior.Opaque,
                     onTapDown: _ => SetPressed(true),
                     onTapUp: _ =>

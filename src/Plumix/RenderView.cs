@@ -54,11 +54,11 @@ public sealed class RenderView : RenderBox
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child != null)
         {
-            visitor(_child, new Point(0, 0), Matrix.Identity);
+            visitor(_child);
         }
     }
 

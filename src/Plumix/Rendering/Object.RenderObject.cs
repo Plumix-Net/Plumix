@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.UI;
@@ -18,13 +18,16 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
 {
     internal bool _wasRepaintBoundary;
     internal Layer? _layer;
-    internal SemanticsNode? _semanticsNode;
     private readonly RenderObjectSemantics _semantics;
     private bool _needsCompositingBitsUpdate = true;
     private bool _needsCompositedLayerUpdate;
     internal RenderObjectSemantics Semantics => _semantics;
 
-    public int? SemanticsNodeId => _semanticsNode?.Id;
+    /// <summary>The semantics node this render object produced, or <c>null</c> when it merged up.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugSemantics</c>.</remarks>
+    public SemanticsNode? SemanticsNode => _semantics.Built ? _semantics.CachedSemanticsNode : null;
+
+    public int? SemanticsNodeId => SemanticsNode?.Id;
 
     protected RenderObject()
     {
@@ -218,9 +221,10 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
             Owner.RequestPaint();
         }
 
-        if (_semantics.NeedsSemanticsUpdate)
+        if (_semantics.ConfigProvider.Effective.IsSemanticBoundary
+            && (_semantics.ParentDataDirty || !_semantics.Built))
         {
-            Owner.RequestSemanticsUpdateFor(this);
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -436,7 +440,12 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
 
     public void MarkNeedsSemanticsUpdate()
     {
-        _semantics.MarkNeedsSemanticsUpdate();
+        if (!Attached || Owner?.HasSemanticsOwner != true)
+        {
+            return;
+        }
+
+        _semantics.MarkNeedsUpdate();
     }
 
     internal void UpdateCompositingBits()
@@ -469,30 +478,6 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
         }
     }
 
-    internal void UpdateSemanticsChildren(Matrix transform, Rect? semanticsClipRect, Rect? paintClipRect)
-    {
-        _semantics.UpdateSemanticsChildren(transform, semanticsClipRect, paintClipRect);
-    }
-
-    internal void UpdateSemanticsChildrenFromCachedParentData()
-    {
-        _semantics.UpdateSemanticsChildrenFromCachedParentData();
-    }
-
-    internal void EnsureSemanticsGeometry()
-    {
-        _semantics.EnsureSemanticsGeometry();
-    }
-
-    internal void EnsureSemanticsNode(SemanticsOwner owner, List<SemanticsNode> output)
-    {
-        _semantics.EnsureSemanticsNode(
-            owner,
-            output,
-            inheritedExplicitChildNodes: true,
-            inheritedUserActionsBlocked: false);
-    }
-
     protected virtual void PerformUpdateCompositingBits()
     {
         bool needsCompositing = IsRepaintBoundary || AlwaysNeedsCompositing;
@@ -509,15 +494,6 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
         }
 
         NeedsCompositing = needsCompositing;
-    }
-
-    protected virtual void PerformSemantics()
-    {
-    }
-
-    internal void InvokePerformSemantics()
-    {
-        PerformSemantics();
     }
 
     protected virtual void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
@@ -565,6 +541,14 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
         VisitChildren(static child => child.ClearSemantics());
     }
 
+    /// <summary>Schedules the initial semantics pass for the root render object.</summary>
+    /// <remarks>Flutter's <c>RenderObject.scheduleInitialSemantics</c>.</remarks>
+    public void ScheduleInitialSemantics()
+    {
+        Owner?.RequestSemanticsUpdateFor(this);
+        Owner?.RequestSemanticsGeometryUpdateFor(this);
+    }
+
     /// <summary>
     /// Removes the semantics of this render object only, without walking the descendants.
     /// </summary>
@@ -576,8 +560,7 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
     /// </remarks>
     protected virtual void ClearOwnSemantics()
     {
-        _semanticsNode = null;
-        _semantics.ResetForDetach();
+        _semantics.Clear();
     }
 
     protected virtual bool AlwaysNeedsCompositing => false;
@@ -586,9 +569,18 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
 
     internal Rect SemanticBoundsForSemantics => SemanticBounds;
 
-    internal virtual void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    /// <summary>
+    /// Visits the children that should be considered when compiling this render object's semantics,
+    /// in paint order.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.visitChildrenForSemantics</c>. The children's positions are read
+    /// through <see cref="ApplyPaintTransform"/>, exactly as Flutter does, so an override only has to
+    /// decide which children participate.
+    /// </remarks>
+    internal virtual void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        VisitChildren(child => visitor(child, new Point(0, 0), Matrix.Identity));
+        VisitChildren(visitor);
     }
 
     protected virtual Rect? DescribeSemanticsClip(RenderObject? child)
@@ -617,6 +609,10 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
     internal bool NeedsLayout => _needsLayout;
     internal bool NeedsCompositingBitsUpdate => _needsCompositingBitsUpdate;
     internal bool SemanticsParentDataDirty => _semantics.ParentDataDirty;
+
+    /// <summary>Whether this render object may resize without its parent relaying out.</summary>
+    /// <remarks>Flutter's <c>RenderObject._isRelayoutBoundary</c>.</remarks>
+    internal bool IsRelayoutBoundaryForSemantics => _isRelayoutBoundary ?? false;
 
     /// <summary>
     /// Whether this render object repaints separately from its parent.
@@ -715,10 +711,7 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
         _needsCompositedLayerUpdate = false;
     }
 
-    internal void UpdateSemanticsSubtree()
-    {
-        _semantics.UpdateSemanticsSubtree();
-    }
+
 
     internal void HandleSkippedPaintingOnDetachedLayer()
     {

@@ -317,7 +317,10 @@ public sealed class RenderOverflowBar : RenderBox,
     public void DefaultPaint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
     public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) => _container.DefaultHitTestChildren(result, position);
     public override void VisitChildren(Action<RenderObject> visitor) { for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child); }
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor) { for (var child = FirstChild; child is not null; child = ChildAfter(child)) { var data = (OverflowBarParentData)child.parentData!; visitor(child, data.offset, Matrix.Identity); } }
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    {
+        for (var child = FirstChild; child is not null; child = ChildAfter(child)) { visitor(child); }
+    }
     public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);
     public void Move(RenderBox child, RenderBox? after = null) => _container.Move(child, after);
     public void Remove(RenderBox child) => _container.Remove(child);

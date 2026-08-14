@@ -746,7 +746,7 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Null(selected);
 
         var root = harness.PumpAndGetSemantics(new Size(420, 320));
-        var first = FindSemantics(root, node => node.Label == "Tab 1 of 2");
+        var first = FindSemantics(root, node => HasLabelPart(node, "Tab 1 of 2"));
         Assert.NotNull(first);
         Assert.True(first!.Flags.HasFlag(SemanticsFlags.IsSelected));
         Assert.True(first.Flags.HasFlag(SemanticsFlags.IsEnabled));
@@ -894,4 +894,12 @@ public sealed class MaterialNavigationSurfacesTests
             internal override void Unmount() { if (_child is not null) { UnmountChild(_child); _child = null; } base.Unmount(); }
         }
     }
+
+    /// <summary>
+    /// Whether one of the node's merged label parts is <paramref name="part"/>. A merged node joins
+    /// the labels it absorbed with a newline, exactly like Flutter's <c>_concatAttributedString</c>.
+    /// </summary>
+    private static bool HasLabelPart(SemanticsNode node, string part) =>
+        node.Label?.Split('\n').Contains(part) == true;
 }
+

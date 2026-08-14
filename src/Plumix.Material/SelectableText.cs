@@ -187,7 +187,7 @@ internal sealed class SelectableTextState : State
 
         if (Current.OnTap is not null)
         {
-            result = new GestureDetector(onTap: Current.OnTap, child: result);
+            result = new GestureDetector(excludeFromSemantics: true, onTap: Current.OnTap, child: result);
         }
 
         if (Current.SemanticsLabel is not null)

@@ -99,11 +99,11 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         var child = SelectedChild;
         if (child is null) return;
-        visitor(child, ((IndexedStackParentData)child.parentData!).offset, Matrix.Identity);
+        visitor(child);
     }
 
     public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);

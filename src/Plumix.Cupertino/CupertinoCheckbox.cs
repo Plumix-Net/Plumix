@@ -216,6 +216,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
             if (Enabled)
             {
                 result = new GestureDetector(
+                    excludeFromSemantics: true,
                     behavior: HitTestBehavior.Opaque,
                     onTap: HandleTap,
                     child: result);

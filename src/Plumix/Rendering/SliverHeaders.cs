@@ -142,11 +142,11 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
         return _child.HitTest(result, position - childOffset);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child != null && Geometry.PaintExtent > 0.0)
         {
-            visitor(_child, ((BoxParentData)_child.parentData!).offset, Matrix.Identity);
+            visitor(_child);
         }
     }
 

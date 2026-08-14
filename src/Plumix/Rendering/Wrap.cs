@@ -197,12 +197,12 @@ public sealed class RenderWrap : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             WrapParentData parentData = (WrapParentData)child.parentData!;
-            visitor(child, parentData.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

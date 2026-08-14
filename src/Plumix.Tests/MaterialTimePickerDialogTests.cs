@@ -280,9 +280,9 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
     {
         using var harness = CreateHarness(DialogRoute(new TimePickerDialog(new TimeOfDay(7, 0))));
         var semantics = harness.PumpAndGetSemantics(ViewSize);
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "7:00 AM"));
+        Assert.NotNull(FindSemantics(semantics, node => HasLabelPart(node, "7:00 AM")));
         Assert.NotNull(FindSemantics(semantics, node => ContainsLabel(node, "Select time")));
-        Assert.Null(FindSemantics(semantics, node => node.Label == ":"));
+        Assert.Null(FindSemantics(semantics, node => HasLabelPart(node, ":")));
     }
 
     [Fact]
@@ -375,7 +375,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         Assert.NotNull(pm);
         Assert.True(pm!.PerformAction(SemanticsActions.Tap));
         semantics = harness.PumpAndGetSemantics(ViewSize);
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "7:00 PM"));
+        Assert.NotNull(FindSemantics(semantics, node => HasLabelPart(node, "7:00 PM")));
     }
 
     // ---- Entry modes --------------------------------------------------------------------
@@ -549,8 +549,8 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
             new TimeOfDay(7, 0),
             initialEntryMode: TimePickerEntryMode.Input)));
         var semantics = harness.PumpAndGetSemantics(ViewSize);
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Hour"));
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Minute"));
+        Assert.NotNull(FindSemantics(semantics, node => HasLabelPart(node, "Hour")));
+        Assert.NotNull(FindSemantics(semantics, node => HasLabelPart(node, "Minute")));
     }
 
     [Fact]
@@ -876,7 +876,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
 
     private static bool ContainsLabel(SemanticsNode node, string label)
     {
-        if (node.Label == label) return true;
+        if (HasLabelPart(node, label)) return true;
         return node.Children.Any(child => ContainsLabel(child, label));
     }
 
@@ -956,4 +956,12 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
             internal override void Unmount() { if (_child is not null) { UnmountChild(_child); _child = null; } base.Unmount(); }
         }
     }
+
+    /// <summary>
+    /// Whether one of the node's merged label parts is <paramref name="part"/>. A merged node joins
+    /// the labels it absorbed with a newline, exactly like Flutter's <c>_concatAttributedString</c>.
+    /// </summary>
+    private static bool HasLabelPart(SemanticsNode node, string part) =>
+        node.Label?.Split('\n').Contains(part) == true;
 }
+

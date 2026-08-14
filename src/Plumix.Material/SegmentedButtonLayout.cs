@@ -372,12 +372,12 @@ internal sealed class RenderSegmentedButton : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         foreach (RenderBox child in Children())
         {
             var data = (SegmentedButtonParentData)child.parentData!;
-            visitor(child, data.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

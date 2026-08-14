@@ -370,6 +370,7 @@ public sealed class BottomNavigationBar : StatefulWidget
                     child: new Stack(children: semanticsChildren));
 
                 tileContent = new GestureDetector(
+                    excludeFromSemantics: true,
                     behavior: HitTestBehavior.Opaque,
                     onTap: onTileTap,
                     child: tileContent);

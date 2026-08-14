@@ -103,12 +103,12 @@ public sealed class SliverFillTests
             remainingCacheExtent: 400));
 
         var visited = new List<RenderObject>();
-        sliver.VisitChildrenForSemantics((child, _, _) => visited.Add(child));
+        sliver.VisitChildrenForSemantics(child => visited.Add(child));
         Assert.Equal(2, visited.Count);
 
         sliver.AllowImplicitScrolling = true;
         visited.Clear();
-        sliver.VisitChildrenForSemantics((child, _, _) => visited.Add(child));
+        sliver.VisitChildrenForSemantics(child => visited.Add(child));
         Assert.Equal(4, visited.Count);
     }
 

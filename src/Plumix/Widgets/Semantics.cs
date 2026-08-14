@@ -1,5 +1,6 @@
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (Semantics subset)
 
@@ -61,6 +62,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool? enabled = null,
         bool? focusable = null,
         SemanticsSortKey? sortKey = null,
+        TextDirection? textDirection = null,
         SemanticsTag? tagForChildren = null,
         Key? key = null,
         bool mergeDescendants = false) : base(child, key)
@@ -110,6 +112,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Enabled = enabled;
         Focusable = focusable;
         SortKey = sortKey;
+        TextDirection = textDirection;
         MergeDescendants = mergeDescendants;
     }
 
@@ -177,6 +180,12 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public SemanticsSortKey? SortKey { get; }
 
+    /// <summary>
+    /// The reading direction for this subtree's semantics, and the direction the default traversal
+    /// sort walks siblings in.
+    /// </summary>
+    public TextDirection? TextDirection { get; }
+
     /// The tag attached to every semantics node created below this widget.
     public SemanticsTag? TagForChildren { get; }
 
@@ -208,6 +217,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             container: Container,
             explicitChildNodes: ExplicitChildNodes,
             sortKey: SortKey,
+            textDirection: TextDirection,
             mergeDescendants: MergeDescendants,
             tagForChildren: TagForChildren);
         semantics.OnFocus = OnFocus;

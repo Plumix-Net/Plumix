@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
@@ -577,12 +577,12 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
         {
             var childParentData = (FlexParentData)child.parentData!;
-            visitor(child, childParentData.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

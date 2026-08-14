@@ -72,7 +72,7 @@ public sealed class SliverHeaderTests
         Assert.Equal(default, ((BoxParentData)child.parentData!).offset);
 
         var semanticChildren = new List<RenderObject>();
-        header.VisitChildrenForSemantics((renderObject, _, _) => semanticChildren.Add(renderObject));
+        header.VisitChildrenForSemantics(renderObject => semanticChildren.Add(renderObject));
         Assert.Equal([child], semanticChildren);
     }
 

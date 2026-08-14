@@ -261,12 +261,12 @@ public sealed class RenderCustomMultiChildLayoutBox : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             var parentData = (MultiChildLayoutParentData)child.parentData!;
-            visitor(child, parentData.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

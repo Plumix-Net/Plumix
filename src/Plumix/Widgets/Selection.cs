@@ -1522,6 +1522,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
         result = new Actions(actions: BuildActions(), child: result);
 
         result = new RawGestureDetector(
+            excludeFromSemantics: true,
             gestures: _gestureRecognizers,
             behavior: HitTestBehavior.Translucent,
             child: result);

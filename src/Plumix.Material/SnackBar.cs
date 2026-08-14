@@ -380,6 +380,7 @@ public sealed class SnackBar : StatefulWidget
             if (direction is Plumix.Material.DismissDirection.Up or Plumix.Material.DismissDirection.Down or Plumix.Material.DismissDirection.Vertical)
             {
                 return new GestureDetector(
+                    excludeFromSemantics: true,
                     behavior: behavior,
                     onVerticalDragStart: _ => _dragExtent = 0,
                     onVerticalDragUpdate: details => _dragExtent += details.PrimaryDelta,
@@ -401,6 +402,7 @@ public sealed class SnackBar : StatefulWidget
             }
 
             return new GestureDetector(
+                excludeFromSemantics: true,
                 behavior: behavior,
                 onHorizontalDragStart: _ => _dragExtent = 0,
                 onHorizontalDragUpdate: details => _dragExtent += details.PrimaryDelta,
@@ -701,7 +703,10 @@ internal sealed class RenderSnackBarContentLayout : RenderBox,
     public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
     public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) => _container.DefaultHitTestChildren(result, position);
     public override void VisitChildren(Action<RenderObject> visitor) { for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child); }
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor) { for (var child = FirstChild; child is not null; child = ChildAfter(child)) { var data = (SnackBarContentParentData)child.parentData!; visitor(child, data.offset, Matrix.Identity); } }
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    {
+        for (var child = FirstChild; child is not null; child = ChildAfter(child)) { visitor(child); }
+    }
     public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);
     public void Move(RenderBox child, RenderBox? after = null) => _container.Move(child, after);
     public void Remove(RenderBox child) => _container.Remove(child);

@@ -974,7 +974,6 @@ public sealed class Scrollable : StatefulWidget
                     allowImplicitScrolling: _effectivePhysics.AllowImplicitScrolling,
                     axisDirection: axisDirection,
                     semanticChildCount: widget.SemanticChildCount,
-                    onSemanticDrag: HandleSemanticDrag,
                     child: scrollable);
             }
 
@@ -1029,6 +1028,16 @@ public sealed class Scrollable : StatefulWidget
             return [new SliverToBoxAdapter(widget.Child ?? new SizedBox())];
         }
 
+        /// <summary>
+        /// Filters the semantics actions the gesture handler exposes to the directions the position
+        /// can still be scrolled in.
+        /// </summary>
+        /// <remarks>Flutter's <c>ScrollableState.setSemanticsActions</c>.</remarks>
+        private void SetSemanticsActions(SemanticsActions actions)
+        {
+            _gestureDetectorKey.CurrentState?.ReplaceSemanticsActions(actions);
+        }
+
         private ScrollPosition AttachToController(
             ScrollController? providedController,
             ScrollPhysics? physics,
@@ -1041,6 +1050,7 @@ public sealed class Scrollable : StatefulWidget
             position.NotificationContext = Context;
             position.RestorationId = CurrentWidget.RestorationId;
             position.CanDragChanged = SetCanDrag;
+            position.SemanticActionsChanged += SetSemanticsActions;
             position.AxisDirection = ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
 
             // Ballistic tolerances are expressed in device pixels, so the physics need the view's ratio.
@@ -1141,18 +1151,6 @@ public sealed class Scrollable : StatefulWidget
         /// exactly like a pointer drag would.
         /// </summary>
         /// <remarks>Flutter's <c>_DefaultSemanticsGestureDelegate</c> drag replay.</remarks>
-        private void HandleSemanticDrag(DragUpdateDetails details)
-        {
-            HandleDragDown(new DragDownDetails(
-                GlobalPosition: details.GlobalPosition,
-                LocalPosition: details.LocalPosition));
-            HandleDragStart(new DragStartDetails(
-                GlobalPosition: details.GlobalPosition,
-                LocalPosition: details.LocalPosition));
-            HandleDragUpdate(details);
-            HandleDragEnd(new DragEndDetails(primaryVelocity: 0.0));
-        }
-
         private void DisposeHold()
         {
             _hold = null;

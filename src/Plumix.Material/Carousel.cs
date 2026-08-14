@@ -760,7 +760,10 @@ public sealed class CarouselViewState : State
         }
         else if (Current.OnTap is not null)
         {
-            contents = new GestureDetector(onTap: () => Current.OnTap(itemIndex), child: contents);
+            contents = new GestureDetector(
+                excludeFromSemantics: true,
+                onTap: () => Current.OnTap(itemIndex),
+                child: contents);
         }
 
         Widget material = new DecoratedBox(

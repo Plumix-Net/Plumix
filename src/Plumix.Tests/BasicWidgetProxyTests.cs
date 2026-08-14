@@ -42,11 +42,11 @@ public sealed class BasicWidgetProxyTests
         var opacity = new RenderOpacity(opacity: 0.0, child: child);
         int visits = 0;
 
-        opacity.VisitChildrenForSemantics((_, _, _) => visits++);
+        opacity.VisitChildrenForSemantics(_ => visits++);
         Assert.Equal(0, visits);
 
         opacity.AlwaysIncludeSemantics = true;
-        opacity.VisitChildrenForSemantics((_, _, _) => visits++);
+        opacity.VisitChildrenForSemantics(_ => visits++);
         Assert.Equal(1, visits);
     }
 
@@ -132,8 +132,8 @@ public sealed class BasicWidgetProxyTests
         Assert.True(translation.HitTest(new BoxHitTestResult(), new Point(5, 5)));
         Assert.False(translation.HitTest(new BoxHitTestResult(), new Point(25, 5)));
 
-        Matrix? semanticsTransform = null;
-        translation.VisitChildrenForSemantics((_, _, transform) => semanticsTransform = transform);
+        Matrix semanticsTransform = Matrix.Identity;
+        translation.ApplyPaintTransform(translation.Child!, ref semanticsTransform);
         Assert.Equal(Matrix.CreateTranslation(20, 0), semanticsTransform);
     }
 
@@ -183,8 +183,8 @@ public sealed class BasicWidgetProxyTests
         Matrix expectedTransform = Matrix.CreateTranslation(-40, -15)
                                    * new Matrix(0, 1, -1, 0, 0, 0)
                                    * Matrix.CreateTranslation(15, 40);
-        Matrix? semanticsTransform = null;
-        rotated.VisitChildrenForSemantics((_, _, transform) => semanticsTransform = transform);
+        Matrix semanticsTransform = Matrix.Identity;
+        rotated.ApplyPaintTransform(rotated.Child!, ref semanticsTransform);
         Assert.Equal(expectedTransform, semanticsTransform);
 
         var renderView = new RenderView { Child = rotated };

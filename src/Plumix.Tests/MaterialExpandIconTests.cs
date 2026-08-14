@@ -329,6 +329,8 @@ public sealed class MaterialExpandIconTests : IDisposable
 
         public RenderView RenderView { get; }
 
+        public string Dump() => _pipeline.SemanticsOwner.DebugDumpTree();
+
         public void Update(Widget widget)
         {
             _rootElement.UpdateRoot(widget);

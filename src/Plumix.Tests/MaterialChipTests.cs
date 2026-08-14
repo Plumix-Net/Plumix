@@ -495,10 +495,10 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(Colors.Purple, ForegroundColor(clear));
         Assert.Equal(deleteConstraints, FindChipRender(harness.RenderView).DeleteIconBoxConstraints);
 
-        var body = FindSemantics(semantics, node => node.Label == "Information"
+        var body = FindSemantics(semantics, node => HasLabelPart(node, "Information")
                                                  && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.Null(body);
-        var delete = FindSemantics(semantics, node => node.Label == "Remove information");
+        var delete = FindSemantics(semantics, node => HasLabelPart(node, "Remove information"));
         Assert.NotNull(delete);
         Assert.True(delete!.Flags.HasFlag(SemanticsFlags.IsEnabled));
         Assert.True(delete.PerformAction(SemanticsActions.Tap));
@@ -554,7 +554,9 @@ public sealed class MaterialChipTests : IDisposable
                 onDeleted: () => { })));
         var semantics = disabled.PumpAndGetSemantics(new Size(320, 120));
         Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(disabled.RenderView).Decoration.Color);
-        var delete = FindSemantics(semantics, node => node.Label == "Delete" && node.Flags.HasFlag(SemanticsFlags.IsButton));
+        var delete = FindSemantics(
+            semantics,
+            node => HasLabelPart(node, "Delete") && node.Flags.HasFlag(SemanticsFlags.IsButton));
         Assert.NotNull(delete);
         Assert.False(delete!.Flags.HasFlag(SemanticsFlags.IsEnabled));
         Assert.False(delete.Actions.HasFlag(SemanticsActions.Tap));
@@ -612,13 +614,14 @@ public sealed class MaterialChipTests : IDisposable
             node => node.Label != "Remove filter"
                     && node.Flags.HasFlag(SemanticsFlags.IsButton)
                     && node.Actions.HasFlag(SemanticsActions.Tap));
-        var delete = FindSemantics(semantics, node => node.Label == "Remove filter");
+        var delete = FindSemantics(semantics, node => HasLabelPart(node, "Remove filter"));
         Assert.NotNull(body);
         Assert.NotNull(delete);
 
+        Rect deleteRect = delete!.GlobalRect;
         var deleteCenter = new Point(
-            delete!.Rect.X + (delete.Rect.Width / 2),
-            delete.Rect.Y + (delete.Rect.Height / 2));
+            deleteRect.X + (deleteRect.Width / 2),
+            deleteRect.Y + (deleteRect.Height / 2));
         Tap(harness.RenderView, deleteCenter, 31);
         Assert.Equal(1, deleted);
         Assert.Null(selected);
@@ -651,7 +654,9 @@ public sealed class MaterialChipTests : IDisposable
         Assert.Equal(Colors.Transparent, decoration.Decoration.Color);
         var body = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
         Assert.Null(body);
-        var delete = FindSemantics(semantics, node => node.Label == "Delete" && node.Actions.HasFlag(SemanticsActions.Tap));
+        var delete = FindSemantics(
+            semantics,
+            node => HasLabelPart(node, "Delete") && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(delete);
         Assert.True(delete!.Flags.HasFlag(SemanticsFlags.IsEnabled));
         Assert.True(delete.PerformAction(SemanticsActions.Tap));
@@ -678,7 +683,9 @@ public sealed class MaterialChipTests : IDisposable
         Assert.NotNull(selected);
         Assert.False(selected!.Flags.HasFlag(SemanticsFlags.IsEnabled));
         Assert.False(selected.Actions.HasFlag(SemanticsActions.Tap));
-        var delete = FindSemantics(semantics, node => node.Label == "Delete" && node.Flags.HasFlag(SemanticsFlags.IsButton));
+        var delete = FindSemantics(
+            semantics,
+            node => HasLabelPart(node, "Delete") && node.Flags.HasFlag(SemanticsFlags.IsButton));
         Assert.NotNull(delete);
         Assert.False(delete!.Flags.HasFlag(SemanticsFlags.IsEnabled));
         Assert.False(delete.Actions.HasFlag(SemanticsActions.Tap));
@@ -752,7 +759,7 @@ public sealed class MaterialChipTests : IDisposable
             .Single(paragraph => paragraph.PlainText == IconText(Icons.Clear));
         Assert.Equal(Colors.Purple, ForegroundColor(clear));
         Assert.Equal(constraints, FindChipRender(harness.RenderView).DeleteIconBoxConstraints);
-        var delete = FindSemantics(semantics, node => node.Label == "Effacer");
+        var delete = FindSemantics(semantics, node => HasLabelPart(node, "Effacer"));
         Assert.NotNull(delete);
         Assert.True(delete!.Actions.HasFlag(SemanticsActions.Tap));
         Assert.True(delete.Rect.Width >= 48);
@@ -1064,4 +1071,12 @@ public sealed class MaterialChipTests : IDisposable
 
         public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex + 1}/{tabCount}";
     }
+
+    /// <summary>
+    /// Whether one of the node's merged label parts is <paramref name="part"/>. A merged node joins
+    /// the labels it absorbed with a newline, exactly like Flutter's <c>_concatAttributedString</c>.
+    /// </summary>
+    private static bool HasLabelPart(SemanticsNode node, string part) =>
+        node.Label?.Split('\n').Contains(part) == true;
 }
+

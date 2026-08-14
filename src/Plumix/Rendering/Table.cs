@@ -751,13 +751,23 @@ public sealed class RenderTable : RenderBox
             }
         }
 
-        // Semantics rects are already resolved into the root coordinate space, so a child's position inside
-        // this table is its rect relative to the table node's own origin. That is the same information
-        // Flutter recovers from the child node's translation-only transform.
-        Point origin = node.Rect.TopLeft;
+        // A child node's rect is in its own coordinates, so its position inside this table is that
+        // rect shifted by the translation its transform carries.
+        static Rect RectWithOffset(SemanticsNode child)
+        {
+            Point translation = GetAsTranslation(child.Transform);
+            return new Rect(
+                child.Rect.X + translation.X,
+                child.Rect.Y + translation.Y,
+                child.Rect.Width,
+                child.Rect.Height);
+        }
 
-        Rect LocalRect(SemanticsNode child) =>
-            new(child.Rect.X - origin.X, child.Rect.Y - origin.Y, child.Rect.Width, child.Rect.Height);
+        static void ShiftTransform(SemanticsNode child, double dx, double dy)
+        {
+            Point translation = GetAsTranslation(child.Transform);
+            child.Transform = Matrix.CreateTranslation(translation.X + dx, translation.Y + dy);
+        }
 
         int FindRowIndex(double top)
         {
@@ -791,7 +801,7 @@ public sealed class RenderTable : RenderBox
             }
             else
             {
-                Rect rect = LocalRect(child);
+                Rect rect = RectWithOffset(child);
                 int y = FindRowIndex(rect.Y);
                 int x = FindColumnIndex(rect.X);
                 if (y >= 0 && y < _rows && x >= 0 && x < _columns)
@@ -862,12 +872,22 @@ public sealed class RenderTable : RenderBox
                 // Add wrapper geometry
                 if (addCellWrapper)
                 {
-                    cell.Rect = new Rect(origin.X + _columnLefts[x], origin.Y + rowBox.Y, cellWidth, rowBox.Height);
+                    cell.Transform = Matrix.CreateTranslation(_columnLefts[x], 0);
+                    cell.Rect = new Rect(0, 0, cellWidth, rowBox.Height);
                 }
 
                 foreach (SemanticsNode child in rawChildren)
                 {
                     _idToIndexMap[child.Id] = new CellIndex(y, x);
+                    Rect localRect = RectWithOffset(child);
+                    double dy = localRect.Bottom > rowBox.Height + PrecisionErrorTolerance ? -_rowTops[y] : 0.0;
+                    double dx = addCellWrapper
+                        ? (localRect.X >= cellWidth ? -_columnLefts[x] : 0.0)
+                        : (localRect.Right <= _columnLefts[x] ? _columnLefts[x] : 0.0);
+                    if (dx != 0.0 || dy != 0.0)
+                    {
+                        ShiftTransform(child, dx, dy);
+                    }
                 }
 
                 cell.IndexInParent = x;
@@ -877,12 +897,28 @@ public sealed class RenderTable : RenderBox
             newRow.UpdateWith(
                 new SemanticsConfiguration { IndexInParent = y, Role = SemanticsRole.Row },
                 cells);
-            newRow.Rect = new Rect(origin.X + rowBox.X, origin.Y + rowBox.Y, rowBox.Width, rowBox.Height);
+            newRow.Transform = Matrix.CreateTranslation(rowBox.X, rowBox.Y);
+            newRow.Rect = new Rect(0, 0, rowBox.Width, rowBox.Height);
 
             rows.Add(newRow);
         }
 
         node.UpdateWith(config, rows);
+    }
+
+    private const double PrecisionErrorTolerance = 1e-10;
+
+    /// <summary>The translation a translation-only transform carries, or zero for anything else.</summary>
+    /// <remarks>Flutter's <c>MatrixUtils.getAsTranslation</c>.</remarks>
+    private static Point GetAsTranslation(Matrix? transform)
+    {
+        if (transform is not { } value)
+        {
+            return default;
+        }
+
+        bool isTranslationOnly = value.M11 == 1 && value.M12 == 0 && value.M21 == 0 && value.M22 == 1;
+        return isTranslationOnly ? new Point(value.M31, value.M32) : default;
     }
 
     private SemanticsNode CreateSynthesizedSemanticsNode()
@@ -892,12 +928,12 @@ public sealed class RenderTable : RenderBox
 
     private readonly record struct CellIndex(int Y, int X);
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         foreach (RenderBox? child in _children)
         {
             if (child is null) continue;
-            visitor(child, ((TableCellParentData)child.parentData!).offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

@@ -155,6 +155,7 @@ internal sealed class CupertinoTextSelectionToolbarContent : StatefulWidget
                     nextButton,
                 ]);
             contents = new GestureDetector(
+                excludeFromSemantics: true,
                 onHorizontalDragEnd: details =>
                 {
                     if (details.PrimaryVelocity is > 0.0)
@@ -666,14 +667,14 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             var parentData = (CupertinoToolbarItemParentData)child.parentData!;
             if (parentData.ShouldPaint)
             {
-                visitor(child, parentData.offset, Matrix.Identity);
+                visitor(child);
             }
         }
     }

@@ -208,7 +208,7 @@ public sealed class FramePipelineTests
             CompositingUpdateCount += 1;
         }
 
-        protected override void PerformSemantics()
+        protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
             SemanticsUpdateCount += 1;
         }

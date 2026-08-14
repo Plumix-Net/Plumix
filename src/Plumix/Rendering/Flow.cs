@@ -299,12 +299,12 @@ public sealed class RenderFlow : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             Matrix transform = ((FlowParentData)child.parentData!).Transform ?? Matrix.Identity;
-            visitor(child, default, transform);
+            visitor(child);
         }
     }
 

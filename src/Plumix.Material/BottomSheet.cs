@@ -383,6 +383,7 @@ internal sealed class BottomSheetGestureDetector : StatelessWidget
     public Action<DragEndDetails> OnVerticalDragEnd { get; }
 
     public override Widget Build(BuildContext context) => new GestureDetector(
+        excludeFromSemantics: true,
         onVerticalDragStart: OnVerticalDragStart,
         onVerticalDragUpdate: OnVerticalDragUpdate,
         onVerticalDragEnd: OnVerticalDragEnd,

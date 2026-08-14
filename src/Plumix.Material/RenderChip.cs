@@ -441,7 +441,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         Visit(_deleteIcon, visitor);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         VisitForSemantics(_avatar, visitor);
         VisitForSemantics(_label, visitor);
@@ -913,11 +913,11 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
 
     private static void VisitForSemantics(
         RenderBox? child,
-        Action<RenderObject, Point, Matrix> visitor)
+        Action<RenderObject> visitor)
     {
         if (child is not null)
         {
-            visitor(child, ParentDataOf(child).offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

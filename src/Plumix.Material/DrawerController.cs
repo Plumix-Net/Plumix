@@ -192,6 +192,7 @@ public sealed class DrawerControllerState : State
                     bottom: 0,
                     width: dragAreaWidth,
                     child: new GestureDetector(
+                        excludeFromSemantics: true,
                         behavior: HitTestBehavior.Translucent,
                         onHorizontalDragStart: _ => HandleDragStart(),
                         onHorizontalDragUpdate: HandleDragUpdate,
@@ -227,6 +228,7 @@ public sealed class DrawerControllerState : State
                             child: new ExcludeSemantics(
                                 excluding: platformHasBackButton,
                                 child: new GestureDetector(
+                                    excludeFromSemantics: true,
                                     behavior: HitTestBehavior.Opaque,
                                     onTap: CurrentWidget.DrawerBarrierDismissible ? Close : null,
                                     child: new Semantics(
@@ -252,6 +254,7 @@ public sealed class DrawerControllerState : State
         }
 
         return new GestureDetector(
+            excludeFromSemantics: true,
             behavior: HitTestBehavior.Opaque,
             onHorizontalDragStart: _ => HandleDragStart(),
             onHorizontalDragUpdate: HandleDragUpdate,

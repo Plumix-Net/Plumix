@@ -322,12 +322,12 @@ public sealed class MaterialBottomNavigationBarTests
 
         var firstIndexNode = FindFirstSemanticsNode(
             semanticsRoot!,
-            static node => string.Equals(node.Label, "Tab 1 of 3", StringComparison.Ordinal));
+            static node => HasLabelPart(node, "Tab 1 of 3"));
         Assert.NotNull(firstIndexNode);
 
         var secondIndexNode = FindFirstSemanticsNode(
             semanticsRoot,
-            static node => string.Equals(node.Label, "Tab 2 of 3", StringComparison.Ordinal));
+            static node => HasLabelPart(node, "Tab 2 of 3"));
         Assert.NotNull(secondIndexNode);
 
         var firstNode = FindFirstSemanticsNode(
@@ -374,12 +374,12 @@ public sealed class MaterialBottomNavigationBarTests
 
         var firstIndexNode = FindFirstSemanticsNode(
             semanticsRoot!,
-            static node => string.Equals(node.Label, "Section 1 / 3", StringComparison.Ordinal));
+            static node => HasLabelPart(node, "Section 1 / 3"));
         Assert.NotNull(firstIndexNode);
 
         var secondIndexNode = FindFirstSemanticsNode(
             semanticsRoot,
-            static node => string.Equals(node.Label, "Section 2 / 3", StringComparison.Ordinal));
+            static node => HasLabelPart(node, "Section 2 / 3"));
         Assert.NotNull(secondIndexNode);
     }
 
@@ -1185,4 +1185,12 @@ public sealed class MaterialBottomNavigationBarTests
             }
         }
     }
+
+    /// <summary>
+    /// Whether one of the node's merged label parts is <paramref name="part"/>. A merged node joins
+    /// the labels it absorbed with a newline, exactly like Flutter's <c>_concatAttributedString</c>.
+    /// </summary>
+    private static bool HasLabelPart(SemanticsNode node, string part) =>
+        node.Label?.Split('\n').Contains(part) == true;
 }
+

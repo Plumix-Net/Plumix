@@ -235,6 +235,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
             if (Enabled)
             {
                 result = new GestureDetector(
+                    excludeFromSemantics: true,
                     behavior: HitTestBehavior.Opaque,
                     onTap: HandleTap,
                     child: result);

@@ -270,6 +270,7 @@ public sealed class RawTooltipState : State
             tooltip: CurrentWidget.SemanticsTooltip,
             child: CurrentWidget.Child);
         result = new RawGestureDetector(
+            excludeFromSemantics: true,
             behavior: HitTestBehavior.Opaque,
             supportedDevices: TriggerDeviceKinds,
             onPointerDown: @event =>

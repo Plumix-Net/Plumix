@@ -133,13 +133,13 @@ public sealed class MaterialDatePickerTests : IDisposable
             onDateChanged: value => selected = value));
         var semantics = harness.PumpAndGetSemantics(new Size(420, 500));
         var toggle = FindSemantics(semantics, node =>
-            node.Label == "Select year" && node.Actions.HasFlag(SemanticsActions.Tap));
+            HasLabelPart(node, "Select year") && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(toggle);
         Assert.True(toggle!.PerformAction(SemanticsActions.Tap));
 
         semantics = harness.PumpAndGetSemantics(new Size(420, 500));
         var year = FindSemantics(semantics, node =>
-            node.Label == "2028" && node.Actions.HasFlag(SemanticsActions.Tap));
+            HasLabelPart(node, "2028") && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(year);
         Assert.True(year!.PerformAction(SemanticsActions.Tap));
         harness.Pump(new Size(420, 500));
@@ -215,12 +215,16 @@ public sealed class MaterialDatePickerTests : IDisposable
             onChanged: value => selected = value));
         var semantics = harness.PumpAndGetSemantics(new Size(420, 320));
 
-        var first = FindSemantics(semantics, node => node.Label == "2024" && node.Actions.HasFlag(SemanticsActions.Tap));
+        var first = FindSemantics(
+            semantics,
+            node => HasLabelPart(node, "2024") && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(first);
         Assert.True(first!.PerformAction(SemanticsActions.Tap));
         Assert.Equal(new DateTime(2024, 11, 1), selected);
 
-        var last = FindSemantics(semantics, node => node.Label == "2026" && node.Actions.HasFlag(SemanticsActions.Tap));
+        var last = FindSemantics(
+            semantics,
+            node => HasLabelPart(node, "2026") && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(last);
         Assert.True(last!.PerformAction(SemanticsActions.Tap));
         Assert.Equal(new DateTime(2026, 3, 1), selected);
@@ -544,13 +548,13 @@ public sealed class MaterialDatePickerTests : IDisposable
             onDatePickerModeChange: modes.Add))));
         var semantics = harness.PumpAndGetSemantics(new Size(500, 700));
         var inputToggle = FindSemantics(semantics, node =>
-            node.Label == "Switch to input" && node.Actions.HasFlag(SemanticsActions.Tap));
+            HasLabelPart(node, "Switch to input") && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.True(inputToggle is not null, DumpSemantics(semantics));
         Assert.True(inputToggle!.PerformAction(SemanticsActions.Tap));
 
         semantics = harness.PumpAndGetSemantics(new Size(500, 700));
         Assert.Equal(DatePickerEntryMode.Input, Assert.Single(modes));
-        Assert.NotNull(FindSemantics(semantics, node => node.Label == "Switch to calendar"));
+        Assert.NotNull(FindSemantics(semantics, node => HasLabelPart(node, "Switch to calendar")));
         Assert.Contains(
             FindDescendants<RenderParagraph>(harness.RenderView),
             paragraph => paragraph.PlainText == "Enter date");
@@ -983,4 +987,12 @@ public sealed class MaterialDatePickerTests : IDisposable
             internal override void Unmount() { if (_child is not null) { UnmountChild(_child); _child = null; } base.Unmount(); }
         }
     }
+
+    /// <summary>
+    /// Whether one of the node's merged label parts is <paramref name="part"/>. A merged node joins
+    /// the labels it absorbed with a newline, exactly like Flutter's <c>_concatAttributedString</c>.
+    /// </summary>
+    private static bool HasLabelPart(SemanticsNode node, string part) =>
+        node.Label?.Split('\n').Contains(part) == true;
 }
+

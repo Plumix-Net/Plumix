@@ -46,6 +46,7 @@ public class MaterialTextSelectionControls : TextSelectionControls
             child: new CustomPaint(
                 painter: new TextSelectionHandlePainter(handleColor),
                 child: new GestureDetector(
+                    excludeFromSemantics: true,
                     onTap: onTap,
                     behavior: HitTestBehavior.Translucent)));
 

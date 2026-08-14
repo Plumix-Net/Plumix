@@ -1759,6 +1759,7 @@ internal sealed class DialState : State
         }
 
         return new RawGestureDetector(
+            excludeFromSemantics: true,
             onPanStart: HandlePanStart,
             onPanUpdate: HandlePanUpdate,
             onPanEnd: _ => HandlePanEnd(),

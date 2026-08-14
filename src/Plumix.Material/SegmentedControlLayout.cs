@@ -234,12 +234,12 @@ internal sealed class RenderSegmentedControlLayout : RenderBox,
         for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (var child = FirstChild; child is not null; child = ChildAfter(child))
         {
             var data = (SegmentedControlParentData)child.parentData!;
-            visitor(child, data.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

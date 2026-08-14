@@ -249,12 +249,12 @@ public sealed class RenderStack : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
         {
             var childParentData = (StackParentData)child.parentData!;
-            visitor(child, childParentData.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

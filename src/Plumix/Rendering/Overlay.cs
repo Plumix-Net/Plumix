@@ -221,14 +221,14 @@ internal sealed class RenderOverlayTheater : RenderBox,
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         foreach (RenderBox child in ChildrenInPaintOrder())
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
             if (!parentData.IsPortal)
             {
-                visitor(child, parentData.offset, Matrix.Identity);
+                visitor(child);
             }
         }
     }

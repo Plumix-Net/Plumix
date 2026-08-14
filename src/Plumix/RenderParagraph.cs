@@ -720,16 +720,16 @@ public sealed partial class RenderParagraph : RenderBox,
                 continue;
             }
 
-            SemanticsNode childNode = Owner!.SemanticsOwner.CreateDetachedNode();
+            SemanticsNode childNode = Owner!.SemanticsOwner.CreateDetachedNode(this);
             var configuration = new SemanticsConfiguration
             {
                 SortKey = new OrdinalSortKey(ordinal),
                 Label = info.SemanticsLabel ?? info.Text,
-                ExplicitRect = bounds,
             };
             ordinal += 1;
             ApplyRecognizerSemantics(configuration, info.Recognizer);
             childNode.UpdateWith(configuration, []);
+            // Flutter positions the per-run children by rect alone, in the paragraph's own coordinates.
             childNode.Rect = bounds.Value;
             newChildren.Add(childNode);
         }

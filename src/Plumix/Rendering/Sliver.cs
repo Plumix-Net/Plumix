@@ -743,7 +743,7 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
         return _child.HitTest(result, position - childParentData.offset);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child == null)
         {
@@ -751,7 +751,7 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
         }
 
         var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        visitor(_child, childParentData.offset, Matrix.Identity);
+        visitor(_child);
     }
 
     protected override void PerformSliverLayout(SliverConstraints constraints)
@@ -820,7 +820,7 @@ public sealed class RenderSliverIgnorePointer : RenderProxySliver
         return !_ignoring && base.HitTest(result, position);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_ignoringSemantics != true)
         {
@@ -872,7 +872,7 @@ public sealed class RenderSliverOffstage : RenderProxySliver
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (!_offstage)
         {
@@ -931,7 +931,7 @@ internal sealed class RenderSliverVisibility : RenderProxySliver
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_maintainSemantics || _visible)
         {
@@ -1031,7 +1031,7 @@ public sealed class RenderSliverOpacity : RenderProxySliver
         }
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_opacity > 0.0 || _alwaysIncludeSemantics)
         {
@@ -1143,7 +1143,7 @@ public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
         base.OnDetach();
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_currentOpacity > 0.0 || _alwaysIncludeSemantics)
         {
@@ -1278,7 +1278,7 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
         return Child.HitTest(result, position - childParentData.offset);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (Child == null)
         {
@@ -1286,7 +1286,7 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
         }
 
         var childParentData = (BoxParentData)Child.parentData!;
-        visitor(Child, childParentData.offset, Matrix.Identity);
+        visitor(Child);
     }
 }
 
@@ -1443,7 +1443,7 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
         return _child.HitTest(result, position - childParentData.offset);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_child == null)
         {
@@ -1451,7 +1451,7 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
         }
 
         var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        visitor(_child, childParentData.offset, Matrix.Identity);
+        visitor(_child);
     }
 
     protected override void PerformSliverLayout(SliverConstraints constraints)
@@ -1775,12 +1775,12 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         return _container.DefaultHitTestChildren(result, position);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject, Point, Matrix> visitor)
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         for (var child = FirstChild; child != null; child = ChildAfter(child))
         {
             var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
-            visitor(child, childParentData.offset, Matrix.Identity);
+            visitor(child);
         }
     }
 

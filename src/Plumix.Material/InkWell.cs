@@ -324,6 +324,7 @@ public class InkResponse : StatefulWidget
             if (Enabled)
             {
                 result = new GestureDetector(
+                   excludeFromSemantics: true,
                     behavior: HitTestBehavior.Opaque,
                     onTapDown: PrimaryEnabled ? HandleTapDown : null,
                     onTapUp: PrimaryEnabled ? HandleTapUp : null,
