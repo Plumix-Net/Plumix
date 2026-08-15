@@ -279,7 +279,7 @@ public sealed class MaterialSearchTests : IDisposable
                    && box.Constraints.MinWidth == 360
                    && box.Constraints.MinHeight == 240);
         Assert.Contains(harness.FindWidgets<Widgets.Transform>(),
-            transform => transform.Matrix == Matrix.CreateTranslation(0, 0));
+            transform => transform.Matrix == Matrix4.TranslationValues(0, 0, 0.0));
         Assert.Contains(harness.FindWidgets<OverflowBox>(),
             box => box.Fit == OverflowBoxFit.DeferToChild && box.MaxWidth == 700);
     }
@@ -314,7 +314,7 @@ public sealed class MaterialSearchTests : IDisposable
 
             double expectedY = 500 - 500 * 2.0 / 3.0;
             Assert.Contains(harness.FindWidgets<Widgets.Transform>(),
-                transform => transform.Matrix == Matrix.CreateTranslation(expectedX, expectedY));
+                transform => transform.Matrix == Matrix4.TranslationValues(expectedX, expectedY, 0.0));
             Assert.Contains(harness.FindWidgets<ConstrainedBox>(),
                 box => box.Constraints.MaxWidth == 360 && box.Constraints.MaxHeight == 500 * 2.0 / 3.0);
         }

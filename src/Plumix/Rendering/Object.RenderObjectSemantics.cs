@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart
 
@@ -56,17 +57,16 @@ internal sealed record SemanticsParentData(
 internal sealed record SemanticsGeometry(
     Rect? PaintClipRect,
     Rect? SemanticsClipRect,
-    Matrix Transform,
+    Matrix4 Transform,
     Rect Rect,
     bool Hidden)
 {
     public static SemanticsGeometry Root(Rect rect) =>
-        new(PaintClipRect: null, SemanticsClipRect: null, Transform: Matrix.Identity, Rect: rect, Hidden: false);
+        new(PaintClipRect: null, SemanticsClipRect: null, Transform: Matrix4.Identity(), Rect: rect, Hidden: false);
 
     public bool IsVisible => Rect.Width > 0 && Rect.Height > 0 && !IsZero(Transform);
 
-    private static bool IsZero(Matrix transform) =>
-        transform.M11 == 0 && transform.M12 == 0 && transform.M21 == 0 && transform.M22 == 0;
+    private static bool IsZero(Matrix4 transform) => transform.IsZero();
 
     /// <summary>
     /// Accumulates the transform and clips from <paramref name="parent"/>'s render object down to
@@ -74,7 +74,7 @@ internal sealed record SemanticsGeometry(
     /// </summary>
     /// <remarks>Flutter's <c>_SemanticsGeometry.computeChildGeometry</c>.</remarks>
     public static SemanticsGeometry ComputeChildGeometry(
-        Matrix? parentTransform,
+        Matrix4? parentTransform,
         Rect? parentPaintClipRect,
         Rect? parentSemanticsClipRect,
         RenderObjectSemantics parent,
@@ -92,7 +92,7 @@ internal sealed record SemanticsGeometry(
 
         Rect? paintClipRect = null;
         Rect? semanticsClipRect = null;
-        var transform = Matrix.Identity;
+        Matrix4 transform = Matrix4.Identity();
         // Walk from `parent`'s render object down to `child`'s, accumulating the paint transform and
         // both clips in the coordinate space of the render object the walk started from.
         for (int index = childToCommonAncestor.Count - 1; index > 0; index--)
@@ -107,7 +107,7 @@ internal sealed record SemanticsGeometry(
             paintClipRect = IntersectRects(paintClipRect, localPaintClipInParent);
             semanticsClipRect = localSemanticsClipInParent
                                 ?? IntersectRects(semanticsClipRect, localPaintClipInParent ?? semanticsClipRect);
-            nodeParent.ApplyPaintTransform(node, ref transform);
+            nodeParent.ApplyPaintTransform(node, transform);
         }
 
         semanticsClipRect ??= IntersectRects(paintClipRect, parentSemanticsClipRect);
@@ -115,14 +115,15 @@ internal sealed record SemanticsGeometry(
 
         if (paintClipRect is not null || semanticsClipRect is not null)
         {
-            bool hasInverse = transform.TryInvert(out Matrix inverted);
+            Matrix4 inverted = Matrix4.Copy(transform);
+            bool hasInverse = inverted.Invert() != 0.0;
             semanticsClipRect = hasInverse ? TransformClip(semanticsClipRect, inverted) : null;
             paintClipRect = hasInverse ? TransformClip(paintClipRect, inverted) : null;
         }
 
         if (parentTransform is { } ancestorTransform)
         {
-            transform *= ancestorTransform;
+            MatrixUtils.MultiplyInPlace(ancestorTransform, transform);
         }
 
         Rect semanticBounds = child.RenderObject.SemanticBoundsForSemantics;
@@ -146,7 +147,7 @@ internal sealed record SemanticsGeometry(
             Hidden: isRectHidden);
     }
 
-    internal static Rect? TransformClip(Rect? rect, Matrix transform) =>
+    internal static Rect? TransformClip(Rect? rect, Matrix4 transform) =>
         rect is { } value ? SemanticsNode.TransformRect(transform, value) : null;
 
     internal static Rect? IntersectRects(Rect? a, Rect? b)

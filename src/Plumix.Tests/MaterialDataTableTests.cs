@@ -250,7 +250,7 @@ public sealed class MaterialDataTableTests : IDisposable
 
         SortTableHostState state = Assert.IsType<SortTableHostState>(harness.FindState<SortTableHostState>());
         RenderTransform initial = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.Equal(1.0, initial.Transform.M11, precision: 6);
+        Assert.Equal(1.0, initial.Transform[0], precision: 6);
 
         double now = Scheduler.CurrentSeconds;
         state.SetAscending(false);
@@ -258,19 +258,19 @@ public sealed class MaterialDataTableTests : IDisposable
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.075));
         harness.Pump(new Size(360.0, 180.0));
         RenderTransform halfway = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.InRange(halfway.Transform.M11, -0.999, 0.999);
+        Assert.InRange(halfway.Transform[0], -0.999, 0.999);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.200));
         harness.Pump(new Size(360.0, 180.0));
         RenderTransform reversed = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.Equal(-1.0, reversed.Transform.M11, precision: 6);
+        Assert.Equal(-1.0, reversed.Transform[0], precision: 6);
 
         state.RebuildWithoutSortChange();
         harness.Pump(new Size(360.0, 180.0));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.400));
         harness.Pump(new Size(360.0, 180.0));
         RenderTransform unchanged = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.Equal(-1.0, unchanged.Transform.M11, precision: 6);
+        Assert.Equal(-1.0, unchanged.Transform[0], precision: 6);
     }
 
     [Fact]

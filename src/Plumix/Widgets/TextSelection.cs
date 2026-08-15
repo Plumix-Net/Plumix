@@ -437,7 +437,8 @@ public sealed class TextSelectionOverlay : IDisposable
         TextSelection line = _renderObject.GetLineAtOffset(position);
         Rect lineStart = _renderObject.GetLocalRectForCaret(new TextPosition(line.Start));
         Rect lineEnd = _renderObject.GetLocalRectForCaret(new TextPosition(line.End, TextAffinity.Upstream));
-        Matrix transform = _renderObject.TryGetTransformFromRoot(out Matrix value) ? value : Matrix.Identity;
+        Matrix4 transform =
+            _renderObject.TryGetTransformFromRoot(out Matrix4 value) ? value : Matrix4.Identity();
         return new MagnifierInfo(
             globalPosition,
             RenderObject.TransformRect(transform, caret),
@@ -951,7 +952,7 @@ public sealed class SelectionOverlay : IDisposable
     private Rect ResolveEditingRegion()
     {
         if (Context.FindRenderObject() is not RenderBox renderBox
-            || !renderBox.TryGetTransformFromRoot(out Matrix transform))
+            || !renderBox.TryGetTransformFromRoot(out Matrix4 transform))
         {
             return default;
         }

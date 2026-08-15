@@ -80,7 +80,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                     child: new ClipRect(
                         clipRect: clip,
                         child: new Plumix.Widgets.Transform(
-                            transform: Matrix.CreateTranslation(_shiftX, 10),
+                            transform: Matrix4.TranslationValues(_shiftX, 10.0, 0.0),
                             child: new Opacity(
                                 opacity: _opacity,
                                 child: new Container(

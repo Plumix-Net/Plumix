@@ -577,13 +577,13 @@ public sealed class PopupMenuButtonState<T> : State
 
     private static Rect ResolveBounds(RenderBox renderBox, RenderBox? ancestor)
     {
-        Matrix transform = renderBox.GetTransformTo(ancestor);
+        Matrix4 transform = renderBox.GetTransformTo(ancestor);
         Point[] points =
         {
-            transform.Transform(new Point(0, 0)),
-            transform.Transform(new Point(renderBox.Size.Width, 0)),
-            transform.Transform(new Point(0, renderBox.Size.Height)),
-            transform.Transform(new Point(renderBox.Size.Width, renderBox.Size.Height)),
+            MatrixUtils.TransformPoint(transform, new Point(0, 0)),
+            MatrixUtils.TransformPoint(transform, new Point(renderBox.Size.Width, 0)),
+            MatrixUtils.TransformPoint(transform, new Point(0, renderBox.Size.Height)),
+            MatrixUtils.TransformPoint(transform, new Point(renderBox.Size.Width, renderBox.Size.Height)),
         };
         double left = points.Min(p => p.X);
         double top = points.Min(p => p.Y);

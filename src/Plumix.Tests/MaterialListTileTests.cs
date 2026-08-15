@@ -772,9 +772,9 @@ public sealed class MaterialListTileTests
         var transform = FindDescendant<RenderTransform>(harness.RenderView);
         Assert.NotNull(transform);
         double center = Checkbox.Width / 2.0;
-        var expected = Matrix.CreateTranslation(center, center)
-                       * new Matrix(scaleFactor, 0, 0, scaleFactor, 0, 0)
-                       * Matrix.CreateTranslation(-center, -center);
+        Matrix4 expected = Matrix4.TranslationValues(center, center, 0.0);
+        expected.ScaleByDouble(scaleFactor, scaleFactor, 1.0, 1);
+        expected.TranslateByDouble(-center, -center, 0, 1);
         Assert.Equal(expected, transform!.Transform);
     }
 

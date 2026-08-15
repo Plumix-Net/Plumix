@@ -373,7 +373,7 @@ public sealed class RadioListTile<T> : StatefulWidget
 
         if (RadioScaleFactor != 1.0)
         {
-            var scale = new Matrix(RadioScaleFactor, 0, 0, RadioScaleFactor, 0, 0);
+            Matrix4 scale = Matrix4.Diagonal3Values(RadioScaleFactor, RadioScaleFactor, 1.0);
             control = new Plumix.Widgets.Transform(
                 transform: scale,
                 alignment: Alignment.Center,

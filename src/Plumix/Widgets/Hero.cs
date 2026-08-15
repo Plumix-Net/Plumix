@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/heroes.dart (baseline subset)
 
@@ -349,29 +350,9 @@ internal sealed class HeroState : State
         return RenderObject.TransformRect(transformToRoot, localRect);
     }
 
-    private static Matrix ResolveRenderObjectTransformToRoot(RenderObject renderObject)
+    private static Matrix4 ResolveRenderObjectTransformToRoot(RenderObject renderObject)
     {
-        var transformToRoot = Matrix.Identity;
-        RenderObject? child = renderObject;
-
-        while (child?.Parent != null)
-        {
-            var parent = child.Parent;
-            var childOffset = child.parentData is BoxParentData boxParentData
-                ? boxParentData.offset
-                : default;
-            var childToParentTransform = Matrix.CreateTranslation(childOffset.X, childOffset.Y);
-
-            if (parent is RenderTransform renderTransform)
-            {
-                childToParentTransform *= renderTransform.EffectiveTransform;
-            }
-
-            transformToRoot = childToParentTransform * transformToRoot;
-            child = parent;
-        }
-
-        return transformToRoot;
+        return renderObject.ComputePaintTransformToRoot();
     }
 
     private readonly record struct HeroRegistration(HeroTransitionController Controller, Route Route);

@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
+using Plumix.UI;
 
 namespace Plumix.Cupertino;
 
@@ -377,7 +378,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
         }
 
         context.PushTransform(
-            Matrix.CreateTranslation(offset.X, offset.Y),
+            Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
             childContext => childContext.DrawPath(path, new SolidColorBrush(BackgroundColor), null));
         context.PushClipPath(
             path,

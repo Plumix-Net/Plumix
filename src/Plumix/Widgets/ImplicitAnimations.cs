@@ -417,7 +417,7 @@ public sealed class AnimatedScale : StatefulWidget
         {
             double scale = Evaluate(_controller!.Evaluate());
             return new Transform(
-                transform: Matrix.CreateScale(scale, scale),
+                transform: Matrix4.Diagonal3Values(scale, scale, 1.0),
                 alignment: CurrentWidget.Alignment,
                 filterQuality: CurrentWidget.FilterQuality,
                 child: CurrentWidget.Child);
@@ -532,8 +532,8 @@ public sealed class AnimatedRotation : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             double radians = Evaluate(_controller!.Evaluate()) * Math.PI * 2.0;
-            return new Transform(
-                transform: CreateRotationMatrix(radians),
+            return Transform.Rotate(
+                angle: radians,
                 alignment: CurrentWidget.Alignment,
                 filterQuality: CurrentWidget.FilterQuality,
                 child: CurrentWidget.Child);
@@ -562,19 +562,6 @@ public sealed class AnimatedRotation : StatefulWidget
 
         private double Evaluate(double t) => _begin + ((_end - _begin) * t);
 
-        private static Matrix CreateRotationMatrix(double radians)
-        {
-            if (radians == 0.0) return Matrix.Identity;
-
-            double sine = Math.Sin(radians);
-            if (sine == 1.0) return new Matrix(0, 1, -1, 0, 0, 0);
-            if (sine == -1.0) return new Matrix(0, -1, 1, 0, 0, 0);
-
-            double cosine = Math.Cos(radians);
-            if (cosine == -1.0) return new Matrix(-1, 0, 0, -1, 0, 0);
-            return new Matrix(cosine, sine, -sine, cosine, 0, 0);
-        }
-
         private void HandleChanged() => SetState(() => { });
 
         private void HandleCompleted()
@@ -599,7 +586,7 @@ public sealed class AnimatedContainer : StatefulWidget
         double? height = null,
         BoxConstraints? constraints = null,
         Thickness? margin = null,
-        Matrix? transform = null,
+        Matrix4? transform = null,
         Curve? curve = null,
         Action? onEnd = null,
         Key? key = null) : base(key)
@@ -635,7 +622,7 @@ public sealed class AnimatedContainer : StatefulWidget
     public Decoration? ForegroundDecoration { get; }
     public BoxConstraints? Constraints { get; }
     public Thickness? Margin { get; }
-    public Matrix? Transform { get; }
+    public Matrix4? Transform { get; }
     public TimeSpan Duration { get; }
     public Curve Curve { get; }
     public Action? OnEnd { get; }
@@ -795,18 +782,10 @@ public sealed class AnimatedContainer : StatefulWidget
                 MaxHeight: LerpConstraint(from.MaxHeight, to.MaxHeight, t));
         }
 
-        private static Matrix? LerpMatrix(Matrix? a, Matrix? b, double t)
+        private static Matrix4? LerpMatrix(Matrix4? a, Matrix4? b, double t)
         {
-            if (!a.HasValue || !b.HasValue) return t < 1 ? a : b;
-            var from = a.Value;
-            var to = b.Value;
-            return new Matrix(
-                LerpDouble(from.M11, to.M11, t),
-                LerpDouble(from.M12, to.M12, t),
-                LerpDouble(from.M21, to.M21, t),
-                LerpDouble(from.M22, to.M22, t),
-                LerpDouble(from.M31, to.M31, t),
-                LerpDouble(from.M32, to.M32, t));
+            if (a is null || b is null) return t < 1 ? a : b;
+            return new Matrix4Tween(a, b).Lerp(a, b, t);
         }
 
         private static double LerpConstraint(double a, double b, double t)
@@ -826,7 +805,7 @@ public sealed class AnimatedContainer : StatefulWidget
         Decoration? ForegroundDecoration,
         BoxConstraints? Constraints,
         Thickness? Margin,
-        Matrix? Transform)
+        Matrix4? Transform)
     {
         public static AnimatedContainerValues From(AnimatedContainer widget)
         {
@@ -2070,5 +2049,38 @@ internal sealed record AnimatedPositionedValues(
         if (!end.HasValue) return null;
         if (!begin.HasValue) return end;
         return begin.Value + ((end.Value - begin.Value) * t);
+    }
+}
+
+/// <summary>Interpolates between two <see cref="Matrix4"/> values.</summary>
+/// <remarks>
+/// Flutter's <c>Matrix4Tween</c>: each end is decomposed into translation, rotation and scale, the
+/// three parts are interpolated separately, and the result is recomposed. Rotation uses a normalized
+/// linear quaternion blend, so a constant-speed rotation is approximated rather than exact.
+/// </remarks>
+public sealed class Matrix4Tween : Tween<Matrix4>
+{
+    public Matrix4Tween(Matrix4? begin = null, Matrix4? end = null)
+    {
+        Begin = begin;
+        End = end;
+    }
+
+    public override Matrix4 Lerp(Matrix4 a, Matrix4 b, double t)
+    {
+        ArgumentNullException.ThrowIfNull(a);
+        ArgumentNullException.ThrowIfNull(b);
+        Vector3 beginTranslation = Vector3.Zero();
+        Vector3 endTranslation = Vector3.Zero();
+        Quaternion beginRotation = Quaternion.Identity();
+        Quaternion endRotation = Quaternion.Identity();
+        Vector3 beginScale = Vector3.Zero();
+        Vector3 endScale = Vector3.Zero();
+        a.Decompose(beginTranslation, beginRotation, beginScale);
+        b.Decompose(endTranslation, endRotation, endScale);
+        Vector3 lerpTranslation = (beginTranslation * (1.0 - t)) + (endTranslation * t);
+        Quaternion lerpRotation = (beginRotation.Scaled(1.0 - t) + endRotation.Scaled(t)).Normalized();
+        Vector3 lerpScale = (beginScale * (1.0 - t)) + (endScale * t);
+        return Matrix4.Compose(lerpTranslation, lerpRotation, lerpScale);
     }
 }

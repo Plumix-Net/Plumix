@@ -144,12 +144,12 @@ public abstract class RenderBox : RenderObject
         base.MarkNeedsLayout();
     }
 
-    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
         if (child.parentData is BoxParentData childParentData)
         {
             Point offset = childParentData.offset;
-            transform = Matrix.CreateTranslation(offset.X, offset.Y) * transform;
+            transform.TranslateByDouble(offset.X, offset.Y, 0, 1);
         }
     }
 

@@ -1712,8 +1712,8 @@ public sealed class RenderFittedBox : RenderProxyBox
 {
     private BoxFit _fit;
     private Alignment _alignment;
-    private Matrix _transform = Matrix.Identity;
-    private bool _paintDataDirty = true;
+    private Matrix4? _transform;
+    private bool _hasVisualOverflow;
 
     public RenderFittedBox(
         BoxFit fit = BoxFit.Contain,
@@ -1736,7 +1736,7 @@ public sealed class RenderFittedBox : RenderProxyBox
             }
 
             _fit = value;
-            _paintDataDirty = true;
+            ClearPaintData();
             MarkNeedsLayout();
             MarkNeedsSemanticsUpdate();
         }
@@ -1753,7 +1753,7 @@ public sealed class RenderFittedBox : RenderProxyBox
             }
 
             _alignment = value;
-            _paintDataDirty = true;
+            ClearPaintData();
             MarkNeedsPaint();
             MarkNeedsSemanticsUpdate();
         }
@@ -1783,20 +1783,25 @@ public sealed class RenderFittedBox : RenderProxyBox
             Size = Constraints.Smallest;
         }
 
-        _paintDataDirty = true;
+        ClearPaintData();
     }
+
+    /// <inheritdoc />
+    public override bool PaintsChild(RenderObject child) =>
+        Size.Width > 0 && Size.Height > 0 && Child is { } fitted
+        && fitted.Size.Width > 0 && fitted.Size.Height > 0;
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (Child == null || Size.Width <= 0 || Size.Height <= 0 || Child.Size.Width <= 0 || Child.Size.Height <= 0)
+        if (Child == null || !PaintsChild(Child))
         {
             return;
         }
 
         UpdatePaintData();
-        ctx.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y), translatedContext =>
+        ctx.PushTransform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0), translatedContext =>
         {
-            translatedContext.PushTransform(_transform, transformedContext =>
+            translatedContext.PushTransform(_transform!, transformedContext =>
             {
                 transformedContext.PaintChild(Child, new Point(0, 0));
             });
@@ -1805,19 +1810,16 @@ public sealed class RenderFittedBox : RenderProxyBox
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        if (Child == null || Size.Width <= 0 || Size.Height <= 0 || Child.Size.Width <= 0 || Child.Size.Height <= 0)
+        if (Child == null || !PaintsChild(Child))
         {
             return false;
         }
 
         UpdatePaintData();
-        if (!_transform.TryInvert(out var inverse))
-        {
-            return false;
-        }
-
-        var transformedPosition = inverse.Transform(position);
-        return Child.HitTest(result, transformedPosition);
+        return result.AddWithPaintTransform(
+            _transform,
+            position,
+            (hitResult, hitPosition) => Child.HitTest(hitResult, hitPosition));
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -1831,30 +1833,36 @@ public sealed class RenderFittedBox : RenderProxyBox
         visitor(Child);
     }
 
-    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        if (Size.Width == 0 || Size.Height == 0 || Child is null
-            || Child.Size.Width == 0 || Child.Size.Height == 0)
+        if (!PaintsChild(child))
         {
-            transform = default;
+            transform.SetZero();
             return;
         }
 
         UpdatePaintData();
-        transform = _transform * transform;
+        transform.Multiply(_transform!);
     }
 
+    private void ClearPaintData()
+    {
+        _hasVisualOverflow = false;
+        _transform = null;
+    }
+
+    /// <remarks>Flutter's <c>RenderFittedBox._updatePaintData</c>.</remarks>
     private void UpdatePaintData()
     {
-        if (!_paintDataDirty)
+        if (_transform != null)
         {
             return;
         }
 
-        _paintDataDirty = false;
         if (Child == null)
         {
-            _transform = Matrix.Identity;
+            _hasVisualOverflow = false;
+            _transform = Matrix4.Identity();
             return;
         }
 
@@ -1866,7 +1874,8 @@ public sealed class RenderFittedBox : RenderProxyBox
         if (sourceSize.Width <= 0.0 || sourceSize.Height <= 0.0 ||
             destinationSize.Width <= 0.0 || destinationSize.Height <= 0.0)
         {
-            _transform = Matrix.Identity;
+            _hasVisualOverflow = false;
+            _transform = Matrix4.Identity();
             return;
         }
 
@@ -1874,11 +1883,23 @@ public sealed class RenderFittedBox : RenderProxyBox
         var destinationOffset = _alignment.AlongOffset(Size, destinationSize);
         double scaleX = destinationSize.Width / sourceSize.Width;
         double scaleY = destinationSize.Height / sourceSize.Height;
+        _hasVisualOverflow = sourceSize.Width < childSize.Width || sourceSize.Height < childSize.Height;
 
-        _transform =
-            Matrix.CreateTranslation(destinationOffset.X, destinationOffset.Y)
-            * new Matrix(scaleX, 0, 0, scaleY, 0, 0)
-            * Matrix.CreateTranslation(-sourceOffset.X, -sourceOffset.Y);
+        Matrix4 transform = Matrix4.TranslationValues(destinationOffset.X, destinationOffset.Y, 0.0);
+        transform.ScaleByDouble(scaleX, scaleY, 1.0, 1);
+        transform.TranslateByDouble(-sourceOffset.X, -sourceOffset.Y, 0, 1);
+        _transform = transform;
+    }
+
+    /// <summary>Whether the fitted child is larger than the source rectangle it was inscribed into.</summary>
+    /// <remarks>Flutter's <c>RenderFittedBox._hasVisualOverflow</c>.</remarks>
+    public bool HasVisualOverflow
+    {
+        get
+        {
+            UpdatePaintData();
+            return _hasVisualOverflow;
+        }
     }
 }
 
@@ -2140,24 +2161,42 @@ public class RenderOpacity : RenderProxyBox
 
 public sealed class RenderTransform : RenderProxyBox
 {
-    private Matrix _transform;
+    private Matrix4 _transform;
+    private Point? _origin;
     private Alignment? _alignment;
     private FilterQuality? _filterQuality;
 
     public RenderTransform(
-        Matrix transform,
+        Matrix4 transform,
         Alignment? alignment,
         RenderBox? child,
-        FilterQuality? filterQuality = null)
+        FilterQuality? filterQuality = null,
+        Point? origin = null,
+        bool transformHitTests = true)
     {
-        _transform = transform;
+        _transform = Matrix4.Copy(transform);
         _alignment = alignment;
         _filterQuality = filterQuality;
+        _origin = origin;
+        TransformHitTests = transformHitTests;
         Child = child;
     }
 
-    public RenderTransform(Matrix transform, RenderBox? child = null) : this(transform, null, child)
+    public RenderTransform(Matrix4 transform, RenderBox? child = null) : this(transform, null, child)
     {
+    }
+
+    /// <summary>The origin of the coordinate system in which to apply the transform.</summary>
+    public Point? Origin
+    {
+        get => _origin;
+        set
+        {
+            if (_origin == value) return;
+            _origin = value;
+            MarkNeedsCompositedLayerUpdate();
+            MarkNeedsSemanticsUpdate();
+        }
     }
 
     public Alignment? Alignment
@@ -2171,6 +2210,9 @@ public sealed class RenderTransform : RenderProxyBox
             MarkNeedsSemanticsUpdate();
         }
     }
+
+    /// <summary>Whether hit tests are transformed along with the paint.</summary>
+    public bool TransformHitTests { get; set; }
 
     public FilterQuality? FilterQuality
     {
@@ -2186,23 +2228,49 @@ public sealed class RenderTransform : RenderProxyBox
         }
     }
 
-    public Matrix EffectiveTransform
+    /// <remarks>
+    /// Flutter's <c>RenderTransform._effectiveTransform</c>: `T(origin) * T(a) * M * T(-a) * T(-origin)`
+    /// with `a = alignment.alongSize(size)`. Returns the live transform when neither is set.
+    /// </remarks>
+    public Matrix4 EffectiveTransform
     {
         get
         {
-            if (!Alignment.HasValue) return Transform;
-            var anchor = new Point(
-                Size.Width * (Alignment.Value.X + 1) / 2.0,
-                Size.Height * (Alignment.Value.Y + 1) / 2.0);
-            // Avalonia matrices are row-vector based (`a * b` applies `a` first), so the anchor
-            // shift is composed in the opposite order from Flutter's column-vector `Matrix4`.
-            return Matrix.CreateTranslation(-anchor.X, -anchor.Y)
-                   * Transform
-                   * Matrix.CreateTranslation(anchor.X, anchor.Y);
+            if (_origin is null && _alignment is null)
+            {
+                return _transform;
+            }
+
+            Matrix4 result = Matrix4.Identity();
+            if (_origin is { } origin)
+            {
+                result.TranslateByDouble(origin.X, origin.Y, 0, 1);
+            }
+
+            Point translation = default;
+            if (_alignment is { } alignment)
+            {
+                translation = alignment.AlongSize(Size);
+                result.TranslateByDouble(translation.X, translation.Y, 0, 1);
+            }
+
+            result.Multiply(_transform);
+
+            if (_alignment is not null)
+            {
+                result.TranslateByDouble(-translation.X, -translation.Y, 0, 1);
+            }
+
+            if (_origin is { } originValue)
+            {
+                result.TranslateByDouble(-originValue.X, -originValue.Y, 0, 1);
+            }
+
+            return result;
         }
     }
 
-    public Matrix Transform
+    public Matrix4 Transform
     {
         get => _transform;
         set
@@ -2212,7 +2280,7 @@ public sealed class RenderTransform : RenderProxyBox
                 return;
             }
 
-            _transform = value;
+            _transform = Matrix4.Copy(value);
             if (Child != null)
             {
                 MarkNeedsCompositedLayerUpdate();
@@ -2221,21 +2289,89 @@ public sealed class RenderTransform : RenderProxyBox
         }
     }
 
+    /// <summary>Resets the transform to the identity.</summary>
+    public void SetIdentity()
+    {
+        _transform.SetIdentity();
+        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsSemanticsUpdate();
+    }
+
+    /// <summary>Post-multiplies the transform by a rotation about the x axis.</summary>
+    public void RotateX(double radians)
+    {
+        _transform.RotateX(radians);
+        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsSemanticsUpdate();
+    }
+
+    /// <summary>Post-multiplies the transform by a rotation about the y axis.</summary>
+    public void RotateY(double radians)
+    {
+        _transform.RotateY(radians);
+        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsSemanticsUpdate();
+    }
+
+    /// <summary>Post-multiplies the transform by a rotation about the z axis.</summary>
+    public void RotateZ(double radians)
+    {
+        _transform.RotateZ(radians);
+        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsSemanticsUpdate();
+    }
+
+    /// <summary>Post-multiplies the transform by a translation.</summary>
+    public void Translate(double x, double y = 0.0, double z = 0.0)
+    {
+        _transform.TranslateByDouble(x, y, z, 1);
+        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsSemanticsUpdate();
+    }
+
+    /// <summary>Post-multiplies the transform by a scale.</summary>
+    public void Scale(double x, double? y = null, double? z = null)
+    {
+        _transform.ScaleByDouble(x, y ?? x, z ?? x, 1);
+        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsSemanticsUpdate();
+    }
+
     public override bool IsRepaintBoundary => Child != null;
     protected override bool AlwaysNeedsCompositing => Child != null;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter drops the layer and paints nothing when the effective transform is singular or carries
+    /// a non-finite entry; Plumix expresses the same rule by skipping the child paint.
+    /// </remarks>
+    public override bool PaintsChild(RenderObject child)
+    {
+        double determinant = EffectiveTransform.Determinant();
+        return determinant != 0 && double.IsFinite(determinant);
+    }
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (Child is null || !PaintsChild(Child))
+        {
+            return;
+        }
+
+        base.Paint(ctx, offset);
+    }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (Child != null)
         {
-            var childParentData = (BoxParentData)Child.parentData!;
             visitor(Child);
         }
     }
 
-    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        transform = EffectiveTransform * transform;
+        transform.Multiply(EffectiveTransform);
     }
 
     protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
@@ -2252,6 +2388,9 @@ public sealed class RenderTransform : RenderProxyBox
         }
     }
 
+    public override bool HitTest(BoxHitTestResult result, Point position) =>
+        HitTestChildren(result, position);
+
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
         if (Child == null)
@@ -2259,14 +2398,11 @@ public sealed class RenderTransform : RenderProxyBox
             return false;
         }
 
-        if (!EffectiveTransform.TryInvert(out var inverse))
-        {
-            return false;
-        }
-
         var childParentData = (BoxParentData)Child.parentData!;
-        var transformedPosition = inverse.Transform(position - childParentData.offset);
-        return Child.HitTest(result, transformedPosition);
+        return result.AddWithPaintTransform(
+            TransformHitTests ? EffectiveTransform : null,
+            position - childParentData.offset,
+            (hitResult, hitPosition) => Child.HitTest(hitResult, hitPosition));
     }
 }
 
@@ -2324,8 +2460,11 @@ public sealed class RenderFractionalTranslation : RenderProxyBox
     {
         if (Child is null) return false;
         var data = (BoxParentData)Child.parentData!;
-        var offset = TransformHitTests ? PaintOffset : default;
-        return Child.HitTest(result, position - data.offset - offset);
+        Vector offset = PaintOffset;
+        return result.AddWithPaintOffset(
+            TransformHitTests ? new Point(offset.X, offset.Y) : null,
+            position - data.offset,
+            (hitResult, hitPosition) => Child.HitTest(hitResult, hitPosition));
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -2336,11 +2475,9 @@ public sealed class RenderFractionalTranslation : RenderProxyBox
         visitor(Child);
     }
 
-    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        base.ApplyPaintTransform(child, ref transform);
-        Vector offset = PaintOffset;
-        transform = Matrix.CreateTranslation(offset.X, offset.Y) * transform;
+        transform.TranslateByDouble(Translation.X * Size.Width, Translation.Y * Size.Height, 0, 1);
     }
 }
 
@@ -2349,7 +2486,7 @@ public sealed class RenderRotatedBox : RenderProxyBox
     private const double QuarterTurnRadians = Math.PI / 2.0;
 
     private int _quarterTurns;
-    private Matrix _paintTransform = Matrix.Identity;
+    private Matrix4 _paintTransform = Matrix4.Identity();
 
     public RenderRotatedBox(int quarterTurns, RenderBox? child = null)
     {
@@ -2435,7 +2572,7 @@ public sealed class RenderRotatedBox : RenderProxyBox
 
     protected override void PerformLayout()
     {
-        _paintTransform = Matrix.Identity;
+        _paintTransform = Matrix4.Identity();
         if (Child is null)
         {
             Size = Constraints.Smallest;
@@ -2448,20 +2585,23 @@ public sealed class RenderRotatedBox : RenderProxyBox
             : Child.Size;
         ((BoxParentData)Child.parentData!).offset = default;
 
-        double radians = QuarterTurnRadians * (QuarterTurns % 4);
-        _paintTransform = Matrix.CreateTranslation(-Child.Size.Width / 2.0, -Child.Size.Height / 2.0)
-                          * CreateRotationMatrix(radians)
-                          * Matrix.CreateTranslation(Size.Width / 2.0, Size.Height / 2.0);
+        _paintTransform = Matrix4.Identity();
+        _paintTransform.TranslateByDouble(Size.Width / 2.0, Size.Height / 2.0, 0, 1);
+        _paintTransform.RotateZ(QuarterTurnRadians * (QuarterTurns % 4));
+        _paintTransform.TranslateByDouble(-Child.Size.Width / 2.0, -Child.Size.Height / 2.0, 0, 1);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        if (Child is null || !_paintTransform.TryInvert(out Matrix inverse))
+        if (Child is null)
         {
             return false;
         }
 
-        return Child.HitTest(result, inverse.Transform(position));
+        return result.AddWithPaintTransform(
+            _paintTransform,
+            position,
+            (hitResult, hitPosition) => Child.HitTest(hitResult, hitPosition));
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -2472,11 +2612,11 @@ public sealed class RenderRotatedBox : RenderProxyBox
         }
     }
 
-    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
         if (Child is not null)
         {
-            transform = _paintTransform * transform;
+            transform.Multiply(_paintTransform);
         }
     }
 
@@ -2492,7 +2632,7 @@ public sealed class RenderRotatedBox : RenderProxyBox
             return;
         }
 
-        ctx.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y), translatedContext =>
+        ctx.PushTransform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0), translatedContext =>
         {
             translatedContext.PushTransform(_paintTransform, transformedContext =>
             {

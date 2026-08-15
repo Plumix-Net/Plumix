@@ -255,16 +255,16 @@ public sealed class MaterialInputDecoratorTests
         floating.Pump();
         RenderDecoration decorator = floating.Decorator;
         Assert.NotNull(decorator.LabelTransform);
-        Matrix transform = decorator.LabelTransform!.Value;
+        Matrix4 transform = decorator.LabelTransform!;
 
         // scaleX/scaleY are the first and fourth matrix components.
-        Assert.Equal(FinalLabelScale, transform.M11, precision: 6);
-        Assert.Equal(FinalLabelScale, transform.M22, precision: 6);
+        Assert.Equal(FinalLabelScale, transform[0], precision: 6);
+        Assert.Equal(FinalLabelScale, transform[5], precision: 6);
 
         double labelHeight = decorator.LabelBox!.Size.Height;
         BorderSide side = Painter(floating).Border.BorderSide;
         double expectedFloatingY = (-labelHeight * FinalLabelScale / 2.0) - (side.StrokeOffset / 2.0);
-        Assert.Equal(expectedFloatingY, transform.M32, precision: 6);
+        Assert.Equal(expectedFloatingY, transform[13], precision: 6);
         Assert.True(expectedFloatingY < inlineLabelTop);
     }
 

@@ -463,7 +463,7 @@ public sealed class PaintingContext
         PushClipGeometry(path.ToGeometry(), painter, clipBehavior, geometryOffset);
     }
 
-    public void PushTransform(Matrix transform, Action<PaintingContext> painter)
+    public void PushTransform(Matrix4 transform, Action<PaintingContext> painter)
     {
         StopRecordingIfNeeded();
 

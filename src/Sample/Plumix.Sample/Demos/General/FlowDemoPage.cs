@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
+using Plumix.UI;
 
 namespace Plumix;
 
@@ -110,7 +111,7 @@ internal sealed class DemoFlowDelegate(bool expanded) : FlowDelegate
             double x = Expanded ? 24 + (index * 92) : 90 + (index * 18);
             double y = Expanded ? 60 : 38 + (index * 24);
             double opacity = Expanded && index == 2 ? 0.55 : 1.0;
-            context.PaintChild(index, Matrix.CreateTranslation(x, y), opacity);
+            context.PaintChild(index, Matrix4.TranslationValues(x, y, 0.0), opacity);
         }
     }
 

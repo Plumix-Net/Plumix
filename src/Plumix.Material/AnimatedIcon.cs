@@ -139,9 +139,13 @@ internal sealed class AnimatedIconPainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        Matrix transform = ShouldMirror
-            ? new Matrix(-Scale, 0.0, 0.0, -Scale, size.Width, size.Height)
-            : Matrix.CreateScale(Scale, Scale);
+        Matrix4 transform = ShouldMirror
+            ? new Matrix4(
+                -Scale, 0.0, 0.0, 0.0,
+                0.0, -Scale, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                size.Width, size.Height, 0.0, 1.0)
+            : Matrix4.Diagonal3Values(Scale, Scale, 1.0);
         double clampedProgress = Math.Clamp(Progress.Value, 0.0, 1.0);
 
         context.PushTransform(transform, transformedContext =>

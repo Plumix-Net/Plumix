@@ -56,7 +56,7 @@ public sealed class BasicWidgetProxyTests
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Transform(
-                transform: Matrix.CreateTranslation(12, 6),
+                transform: Matrix4.TranslationValues(12, 6, 0.0),
                 alignment: Alignment.TopLeft,
                 filterQuality: FilterQuality.Low,
                 child: new SizedBox(width: 20, height: 12)));
@@ -66,12 +66,12 @@ public sealed class BasicWidgetProxyTests
         owner.FlushBuild();
 
         var renderTransform = RequireRenderObject<RenderTransform>(root.ChildElement);
-        Assert.Equal(Matrix.CreateTranslation(12, 6), renderTransform.Transform);
+        Assert.Equal(Matrix4.TranslationValues(12, 6, 0.0), renderTransform.Transform);
         Assert.Equal(Alignment.TopLeft, renderTransform.Alignment);
         Assert.Equal(FilterQuality.Low, renderTransform.FilterQuality);
 
         root.Update(new Transform(
-            transform: Matrix.CreateTranslation(30, 18),
+            transform: Matrix4.TranslationValues(30, 18, 0.0),
             alignment: Alignment.BottomRight,
             filterQuality: FilterQuality.High,
             child: new SizedBox(width: 20, height: 12)));
@@ -79,7 +79,7 @@ public sealed class BasicWidgetProxyTests
 
         var updatedRenderTransform = RequireRenderObject<RenderTransform>(root.ChildElement);
         Assert.Same(renderTransform, updatedRenderTransform);
-        Assert.Equal(Matrix.CreateTranslation(30, 18), updatedRenderTransform.Transform);
+        Assert.Equal(Matrix4.TranslationValues(30, 18, 0.0), updatedRenderTransform.Transform);
         Assert.Equal(Alignment.BottomRight, updatedRenderTransform.Alignment);
         Assert.Equal(FilterQuality.High, updatedRenderTransform.FilterQuality);
     }
@@ -132,9 +132,9 @@ public sealed class BasicWidgetProxyTests
         Assert.True(translation.HitTest(new BoxHitTestResult(), new Point(5, 5)));
         Assert.False(translation.HitTest(new BoxHitTestResult(), new Point(25, 5)));
 
-        Matrix semanticsTransform = Matrix.Identity;
-        translation.ApplyPaintTransform(translation.Child!, ref semanticsTransform);
-        Assert.Equal(Matrix.CreateTranslation(20, 0), semanticsTransform);
+        Matrix4 semanticsTransform = Matrix4.Identity();
+        translation.ApplyPaintTransform(translation.Child!, semanticsTransform);
+        Assert.Equal(Matrix4.TranslationValues(20, 0, 0.0), semanticsTransform);
     }
 
     [Fact]
@@ -180,11 +180,11 @@ public sealed class BasicWidgetProxyTests
         Assert.True(rotated.HitTest(new BoxHitTestResult(), new Point(25, 10)));
         Assert.False(rotated.HitTest(new BoxHitTestResult(), new Point(10, 60)));
 
-        Matrix expectedTransform = Matrix.CreateTranslation(-40, -15)
-                                   * new Matrix(0, 1, -1, 0, 0, 0)
-                                   * Matrix.CreateTranslation(15, 40);
-        Matrix semanticsTransform = Matrix.Identity;
-        rotated.ApplyPaintTransform(rotated.Child!, ref semanticsTransform);
+        Matrix4 expectedTransform = Matrix4.TranslationValues(15, 40, 0.0);
+        expectedTransform.RotateZ(Math.PI / 2.0);
+        expectedTransform.TranslateByDouble(-40, -15, 0, 1);
+        Matrix4 semanticsTransform = Matrix4.Identity();
+        rotated.ApplyPaintTransform(rotated.Child!, semanticsTransform);
         Assert.Equal(expectedTransform, semanticsTransform);
 
         var renderView = new RenderView { Child = rotated };
@@ -195,7 +195,7 @@ public sealed class BasicWidgetProxyTests
         pipeline.FlushPaint();
 
         var offsetLayer = Assert.IsType<TransformLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(Matrix.Identity, offsetLayer.Transform);
+        Assert.Equal(Matrix4.Identity(), offsetLayer.Transform);
         var rotationLayer = Assert.IsType<TransformLayer>(Assert.Single(offsetLayer.Children));
         Assert.Equal(expectedTransform, rotationLayer.Transform);
 

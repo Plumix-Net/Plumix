@@ -270,11 +270,11 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
                 return new TextSelectionToolbarAnchors(default, default);
             }
 
-            Matrix transform = renderBox.GetTransformTo(null);
-            Point primary = transform.Transform(new Point(
-                endpoints[0].Point.X,
-                endpoints[0].Point.Y - StartGlyphHeight));
-            Point secondaryAnchor = transform.Transform(endpoints[^1].Point);
+            Matrix4 transform = renderBox.GetTransformTo(null);
+            Point primary = MatrixUtils.TransformPoint(
+                transform,
+                new Point(endpoints[0].Point.X, endpoints[0].Point.Y - StartGlyphHeight));
+            Point secondaryAnchor = MatrixUtils.TransformPoint(transform, endpoints[^1].Point);
             return new TextSelectionToolbarAnchors(primary, secondaryAnchor);
         }
     }
@@ -635,7 +635,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
             return false;
         }
 
-        Matrix transform = _selectable.GetTransformTo(null);
+        Matrix4 transform = _selectable.GetTransformTo(null);
         foreach (Rect selectionRect in _selectionDelegate.Value.SelectionRects)
         {
             if (SelectionUtils.RectContains(RenderObject.TransformRect(transform, selectionRect), globalPosition))
@@ -746,8 +746,8 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
 
     private MagnifierInfo BuildInfoForMagnifier(Point globalGesturePosition, SelectionPoint selectionPoint)
     {
-        Matrix transform = _selectable!.GetTransformTo(null);
-        var globalTransformAsOffset = new Point(transform.M31, transform.M32);
+        Matrix4 transform = _selectable!.GetTransformTo(null);
+        var globalTransformAsOffset = new Point(transform[12], transform[13]);
         Point position = selectionPoint.LocalPosition + globalTransformAsOffset;
         var caretRect = new Rect(
             position.X,
@@ -765,8 +765,9 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     private void HandleSelectionStartHandleDragStart(DragStartDetails details)
     {
         SelectionPoint startPoint = _selectionDelegate.Value.StartSelectionPoint!;
-        Matrix globalTransform = _selectable!.GetTransformTo(null);
-        _selectionStartHandleDragPosition = globalTransform.Transform(startPoint.LocalPosition);
+        Matrix4 globalTransform = _selectable!.GetTransformTo(null);
+        _selectionStartHandleDragPosition =
+            MatrixUtils.TransformPoint(globalTransform, startPoint.LocalPosition);
         _selectionOverlay!.ShowMagnifier(BuildInfoForMagnifier(details.GlobalPosition, startPoint));
         UpdateSelectedContentIfNeeded();
     }
@@ -786,8 +787,9 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     private void HandleSelectionEndHandleDragStart(DragStartDetails details)
     {
         SelectionPoint endPoint = _selectionDelegate.Value.EndSelectionPoint!;
-        Matrix globalTransform = _selectable!.GetTransformTo(null);
-        _selectionEndHandleDragPosition = globalTransform.Transform(endPoint.LocalPosition);
+        Matrix4 globalTransform = _selectable!.GetTransformTo(null);
+        _selectionEndHandleDragPosition =
+            MatrixUtils.TransformPoint(globalTransform, endPoint.LocalPosition);
         _selectionOverlay!.ShowMagnifier(BuildInfoForMagnifier(details.GlobalPosition, endPoint));
         UpdateSelectedContentIfNeeded();
     }
@@ -1351,7 +1353,9 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
             : _selectionDelegate.Value.StartSelectionPoint!;
         _directionalHorizontalBaseline ??= baseLinePoint.LocalPosition.X;
         Point globalSelectionPointOffset = Context.FindRenderObject() is { } renderObject
-            ? renderObject.GetTransformTo(null).Transform(new Point(_directionalHorizontalBaseline.Value, 0))
+            ? MatrixUtils.TransformPoint(
+                renderObject.GetTransformTo(null),
+                new Point(_directionalHorizontalBaseline.Value, 0))
             : new Point(_directionalHorizontalBaseline.Value, 0);
         _selectable?.DispatchSelectionEvent(new DirectionallyExtendSelectionEvent(
             globalSelectionPointOffset.X,

@@ -1037,7 +1037,9 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
                 width: labelLayout.Width,
                 height: labelLayout.Height);
 
-            context.PushTransform(Matrix.CreateTranslation(labelOffset.X, labelOffset.Y), translatedContext =>
+            context.PushTransform(
+                Matrix4.TranslationValues(labelOffset.X, labelOffset.Y, 0.0),
+                translatedContext =>
             {
                 if (Math.Abs(rotation) > Constants.PrecisionErrorTolerance)
                 {
@@ -1059,12 +1061,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
-    private static Matrix CreateRotationMatrix(double angle)
-    {
-        double cos = Math.Cos(angle);
-        double sin = Math.Sin(angle);
-        return new Matrix(cos, sin, -sin, cos, 0, 0);
-    }
+    private static Matrix4 CreateRotationMatrix(double angle) => Matrix4.RotationZ(angle);
 
     private static string FormatOverflowPixels(double value)
     {

@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.UI;
 
 namespace Plumix.Rendering;
 
@@ -84,13 +85,13 @@ public sealed class RenderCustomPaint : RenderProxyBox
     {
         if (Painter is not null)
         {
-            context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y),
+            context.PushTransform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
                 childContext => Painter.Paint(childContext, Size));
         }
         base.Paint(context, offset);
         if (ForegroundPainter is not null)
         {
-            context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y),
+            context.PushTransform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
                 childContext => ForegroundPainter.Paint(childContext, Size));
         }
     }

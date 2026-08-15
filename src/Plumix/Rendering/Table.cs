@@ -766,7 +766,7 @@ public sealed class RenderTable : RenderBox
         static void ShiftTransform(SemanticsNode child, double dx, double dy)
         {
             Point translation = GetAsTranslation(child.Transform);
-            child.Transform = Matrix.CreateTranslation(translation.X + dx, translation.Y + dy);
+            child.Transform = Matrix4.TranslationValues(translation.X + dx, translation.Y + dy, 0.0);
         }
 
         int FindRowIndex(double top)
@@ -872,7 +872,7 @@ public sealed class RenderTable : RenderBox
                 // Add wrapper geometry
                 if (addCellWrapper)
                 {
-                    cell.Transform = Matrix.CreateTranslation(_columnLefts[x], 0);
+                    cell.Transform = Matrix4.TranslationValues(_columnLefts[x], 0.0, 0.0);
                     cell.Rect = new Rect(0, 0, cellWidth, rowBox.Height);
                 }
 
@@ -897,7 +897,7 @@ public sealed class RenderTable : RenderBox
             newRow.UpdateWith(
                 new SemanticsConfiguration { IndexInParent = y, Role = SemanticsRole.Row },
                 cells);
-            newRow.Transform = Matrix.CreateTranslation(rowBox.X, rowBox.Y);
+            newRow.Transform = Matrix4.TranslationValues(rowBox.X, rowBox.Y, 0.0);
             newRow.Rect = new Rect(0, 0, rowBox.Width, rowBox.Height);
 
             rows.Add(newRow);
@@ -909,17 +909,8 @@ public sealed class RenderTable : RenderBox
     private const double PrecisionErrorTolerance = 1e-10;
 
     /// <summary>The translation a translation-only transform carries, or zero for anything else.</summary>
-    /// <remarks>Flutter's <c>MatrixUtils.getAsTranslation</c>.</remarks>
-    private static Point GetAsTranslation(Matrix? transform)
-    {
-        if (transform is not { } value)
-        {
-            return default;
-        }
-
-        bool isTranslationOnly = value.M11 == 1 && value.M12 == 0 && value.M21 == 0 && value.M22 == 1;
-        return isTranslationOnly ? new Point(value.M31, value.M32) : default;
-    }
+    private static Point GetAsTranslation(Matrix4? transform) =>
+        transform is { } value ? MatrixUtils.GetAsTranslation(value) ?? default : default;
 
     private SemanticsNode CreateSynthesizedSemanticsNode()
     {

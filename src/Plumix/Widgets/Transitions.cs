@@ -191,7 +191,7 @@ public sealed class DecoratedBoxTransition : AnimatedWidget
     }
 }
 
-public delegate Matrix TransformCallback(double animationValue);
+public delegate Matrix4 TransformCallback(double animationValue);
 
 public class MatrixTransition : AnimatedWidget
 {
@@ -248,7 +248,7 @@ public sealed class ScaleTransition : MatrixTransition
 
     public Animation<double> Scale => Animation;
 
-    private static Matrix HandleScaleMatrix(double value) => Matrix.CreateScale(value, value);
+    private static Matrix4 HandleScaleMatrix(double value) => Matrix4.Diagonal3Values(value, value, 1.0);
 }
 
 public sealed class RotationTransition : MatrixTransition
@@ -270,32 +270,7 @@ public sealed class RotationTransition : MatrixTransition
 
     public Animation<double> Turns => Animation;
 
-    private static Matrix HandleTurnsMatrix(double value)
-    {
-        double radians = value * Math.PI * 2.0;
-        if (radians == 0.0)
-        {
-            return Matrix.Identity;
-        }
-
-        double sine = Math.Sin(radians);
-        if (sine == 1.0)
-        {
-            return new Matrix(0, 1, -1, 0, 0, 0);
-        }
-        if (sine == -1.0)
-        {
-            return new Matrix(0, -1, 1, 0, 0, 0);
-        }
-
-        double cosine = Math.Cos(radians);
-        if (cosine == -1.0)
-        {
-            return new Matrix(-1, 0, 0, -1, 0, 0);
-        }
-
-        return new Matrix(cosine, sine, -sine, cosine, 0, 0);
-    }
+    private static Matrix4 HandleTurnsMatrix(double value) => Matrix4.RotationZ(value * Math.PI * 2.0);
 }
 
 public sealed class SizeTransition : AnimatedWidget

@@ -1,5 +1,26 @@
 # Changelog
 
+- Breaking: replaced the 2D affine transform pipeline with Flutter's 4x4 `Matrix4`.
+  New `Plumix.UI.Matrix4` (a column-major port of `vector_math` 2.4.2, with `Vector3`/`Vector4`/
+  `Quaternion`/`Matrix3`) and `Plumix.Rendering.MatrixUtils` (`painting/matrix_utils.dart` in full).
+  `RenderObject.ApplyPaintTransform` now takes a `Matrix4` mutated in place and post-multiplies its own
+  step, exactly as in Dart, so the previously reversed row-vector composition is gone; `GetTransformTo`,
+  `LocalToGlobal`/`GlobalToLocal` (now Flutter's unprojection), `SemanticsNode.Transform`, `TransformLayer`,
+  `FollowerLayer`, `PaintingContext.PushTransform`, `FlowPaintingContext.PaintChild` and
+  `OverlayChildLayoutInfo.ChildPaintTransform` all carry `Matrix4`. `Transform` gained Flutter's
+  `Rotate`/`Scale`/`Translate`/`Flip` factories plus `origin` and `transformHitTests`; `RenderTransform`
+  gained `Origin`, `TransformHitTests`, `SetIdentity`/`RotateX`/`RotateY`/`RotateZ`/`Translate`/`Scale`,
+  Flutter's `T(origin)*T(a)*M*T(-a)*T(-origin)` conjugation and its singular/non-finite paint short circuit
+  through the new `RenderObject.PaintsChild`. Hit testing goes through the new
+  `BoxHitTestResult.AddWithPaintTransform`/`AddWithRawTransform`/`AddWithPaintOffset` and
+  `PointerEventUtils.RemovePerspectiveTransform`. `RotationTransition` now uses `Matrix4.RotationZ`
+  verbatim instead of snapping quarter turns, `RenderFittedBox` zeroes the matrix for a child it does not
+  paint and composes `T(dest)*S*T(-source)` in Dart's order, and `AnimatedContainer` interpolates its
+  transform through the new `Matrix4Tween` decomposition. Avalonia's `Matrix` is a full 3x3 projective
+  matrix that the Skia backend feeds to `SKMatrix44`, so perspective and X/Y-axis rotations now render;
+  the corresponding `DIVERGENCES.md` row is closed and replaced by a narrower one covering
+  `RenderTransform`'s retained-layer composition.
+
 - Breaking: ported `painting/gradient.dart` and `painting/box_shadow.dart` in full.
   `Gradient` now carries `Colors`/`Stops`/`Transform` with `ImpliedStops`, `CreateShader(rect, textDirection)`,
   `Scale`, `WithOpacity`, `FromColor` and the `LerpFrom`/`LerpTo` dispatch, alongside `LinearGradient`

@@ -1099,13 +1099,12 @@ public sealed class TableRowInkWell : InkResponse
 
     private static Rect ResolveTableRowRect(RenderBox referenceBox)
     {
-        var transform = Matrix.Identity;
+        Matrix4 transform = Matrix4.Identity();
         RenderObject cell = referenceBox;
         RenderObject? table = cell.Parent;
         while (table is not null && table is not RenderTable)
         {
-            Matrix childTransform = ResolveChildTransform(cell, table);
-            transform = childTransform * transform;
+            MatrixUtils.MultiplyInPlace(ResolveChildTransform(cell, table), transform);
             cell = table;
             table = table.Parent;
         }
@@ -1116,10 +1115,10 @@ public sealed class TableRowInkWell : InkResponse
             return new Rect();
         }
 
-        transform = ResolveChildTransform(cell, renderTable) * transform;
-        Point origin = transform.Transform(default);
-        Point horizontal = transform.Transform(new Point(1.0, 0.0));
-        Point vertical = transform.Transform(new Point(0.0, 1.0));
+        MatrixUtils.MultiplyInPlace(ResolveChildTransform(cell, renderTable), transform);
+        Point origin = MatrixUtils.TransformPoint(transform, default);
+        Point horizontal = MatrixUtils.TransformPoint(transform, new Point(1.0, 0.0));
+        Point vertical = MatrixUtils.TransformPoint(transform, new Point(0.0, 1.0));
         const double epsilon = 0.000001;
         bool isTranslation = Math.Abs(horizontal.X - origin.X - 1.0) < epsilon
                              && Math.Abs(horizontal.Y - origin.Y) < epsilon
@@ -1134,13 +1133,13 @@ public sealed class TableRowInkWell : InkResponse
         return row.Translate(new Vector(-origin.X, -origin.Y));
     }
 
-    private static Matrix ResolveChildTransform(RenderObject child, RenderObject parent)
+    private static Matrix4 ResolveChildTransform(RenderObject child, RenderObject parent)
     {
         Point childOffset = child.parentData is BoxParentData data ? data.offset : default;
-        Matrix transform = Matrix.CreateTranslation(childOffset.X, childOffset.Y);
+        Matrix4 transform = Matrix4.TranslationValues(childOffset.X, childOffset.Y, 0.0);
         if (parent is RenderTransform renderTransform)
         {
-            transform *= renderTransform.Transform;
+            transform.Multiply(renderTransform.Transform);
         }
 
         return transform;

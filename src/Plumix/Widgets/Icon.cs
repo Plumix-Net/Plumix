@@ -87,9 +87,9 @@ public sealed class Icon : StatelessWidget
 
         if (IconData.MatchTextDirection && textDirection == Plumix.UI.TextDirection.Rtl)
         {
-            iconWidget = new Transform(
-                transform: Matrix.CreateTranslation(iconSize, 0) * new Matrix(-1, 0, 0, 1, 0, 0),
-                child: iconWidget);
+            Matrix4 mirror = Matrix4.TranslationValues(iconSize, 0.0, 0.0);
+            mirror.ScaleByDouble(-1.0, 1.0, 1.0, 1);
+            iconWidget = new Transform(transform: mirror, child: iconWidget);
         }
 
         return new Semantics(

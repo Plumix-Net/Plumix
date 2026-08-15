@@ -518,13 +518,13 @@ internal sealed class RenderMaterialInkFeatures : RenderProxyBoxWithHitTestBehav
             {
                 foreach (IMaterialInkFeature feature in _inkFeatures.ToArray())
                 {
-                    if (!InkFeatureTransform.TryResolve(feature.ReferenceBox, this, out Matrix transform))
+                    if (!InkFeatureTransform.TryResolve(feature.ReferenceBox, this, out Matrix4 transform))
                     {
                         continue;
                     }
 
                     clippedContext.PushTransform(
-                        Matrix.CreateTranslation(offset.X, offset.Y),
+                        Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
                         translatedContext => translatedContext.PushTransform(transform, feature.PaintFeature));
                 }
             });
@@ -596,30 +596,34 @@ internal sealed class RenderMaterialInkFeatures : RenderProxyBoxWithHitTestBehav
 
 internal static class InkFeatureTransform
 {
-    public static bool TryResolve(RenderBox referenceBox, RenderObject controller, out Matrix transform)
+    public static bool TryResolve(RenderBox referenceBox, RenderObject controller, out Matrix4 transform)
     {
-        transform = Matrix.Identity;
+        transform = Matrix4.Identity();
         RenderObject current = referenceBox;
         while (!ReferenceEquals(current, controller))
         {
             RenderObject? parent = current.Parent;
             if (parent is null)
             {
-                transform = Matrix.Identity;
+                transform = Matrix4.Identity();
                 return false;
             }
 
             Point childOffset = current.parentData is BoxParentData data ? data.offset : default;
-            transform = Matrix.CreateTranslation(childOffset.X, childOffset.Y) * transform;
+            // The level's own step maps `current` into `parent`: the render transform runs first and
+            // the parent data offset places the result, and the walk is leaf-first so each new level
+            // left-multiplies what has been accumulated so far.
+            Matrix4 step = Matrix4.TranslationValues(childOffset.X, childOffset.Y, 0.0);
             if (parent is RenderTransform renderTransform)
             {
-                transform = renderTransform.Transform * transform;
+                step.Multiply(renderTransform.Transform);
             }
 
+            MatrixUtils.MultiplyInPlace(step, transform);
             current = parent;
         }
 
-        return transform.TryInvert(out _);
+        return Matrix4.TryInvert(transform) is not null;
     }
 }
 

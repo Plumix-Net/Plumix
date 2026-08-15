@@ -386,7 +386,9 @@ public sealed class TextWidgetTests
 
         var transform = FindDescendant<RenderTransform>(root.ChildElement!.RenderObject);
         Assert.NotNull(transform);
-        Assert.Equal(Matrix.CreateTranslation(24, 0) * new Matrix(-1, 0, 0, 1, 0, 0), transform!.Transform);
+        Matrix4 expected = Matrix4.TranslationValues(24, 0, 0.0);
+        expected.ScaleByDouble(-1.0, 1.0, 1.0, 1);
+        Assert.Equal(expected, transform!.Transform);
     }
 
     [Fact]

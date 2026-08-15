@@ -176,7 +176,7 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
                 arrowheadScale: arrowheadScale);
 
             child = new Plumix.Widgets.Transform(
-                Matrix.CreateRotation(rotation),
+                Matrix4.RotationZ(rotation),
                 alignment: Alignment.Center,
                 child: child);
             child = new Opacity(opacity, child);

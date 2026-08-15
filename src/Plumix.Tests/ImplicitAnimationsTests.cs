@@ -290,11 +290,11 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
         var halfway = RequireRenderObject<RenderTransform>(root.ChildElement);
-        Assert.InRange(halfway.Transform.M11, 1.01, 1.99);
-        Assert.Equal(halfway.Transform.M11, halfway.Transform.M22, precision: 6);
+        Assert.InRange(halfway.Transform[0], 1.01, 1.99);
+        Assert.Equal(halfway.Transform[0], halfway.Transform[5], precision: 6);
         Assert.Equal(Alignment.TopLeft, halfway.Alignment);
         Assert.Equal(FilterQuality.Low, halfway.FilterQuality);
-        double halfwayScale = halfway.Transform.M11;
+        double halfwayScale = halfway.Transform[0];
 
         root.Update(new AnimatedScale(
             scale: 0.5,
@@ -306,15 +306,15 @@ public sealed class ImplicitAnimationsTests : IDisposable
             onEnd: () => completed++));
         owner.FlushBuild();
         var interrupted = RequireRenderObject<RenderTransform>(root.ChildElement);
-        Assert.Equal(halfwayScale, interrupted.Transform.M11, precision: 6);
+        Assert.Equal(halfwayScale, interrupted.Transform[0], precision: 6);
         Assert.Equal(Alignment.BottomRight, interrupted.Alignment);
         Assert.Equal(FilterQuality.High, interrupted.FilterQuality);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
         var finished = RequireRenderObject<RenderTransform>(root.ChildElement);
-        Assert.Equal(0.5, finished.Transform.M11, precision: 6);
-        Assert.Equal(0.5, finished.Transform.M22, precision: 6);
+        Assert.Equal(0.5, finished.Transform[0], precision: 6);
+        Assert.Equal(0.5, finished.Transform[5], precision: 6);
         Assert.Equal(1, completed);
 
         root.Unmount();
@@ -343,19 +343,19 @@ public sealed class ImplicitAnimationsTests : IDisposable
         double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
-        Matrix halfway = RequireRenderObject<RenderTransform>(root.ChildElement).Transform;
-        Assert.InRange(halfway.M11, 0.01, 0.99);
-        Assert.InRange(halfway.M12, 0.01, 0.99);
-        Assert.Equal(-halfway.M12, halfway.M21, precision: 6);
+        Matrix4 halfway = RequireRenderObject<RenderTransform>(root.ChildElement).Transform;
+        Assert.InRange(halfway[0], 0.01, 0.99);
+        Assert.InRange(halfway[1], 0.01, 0.99);
+        Assert.Equal(-halfway[1], halfway[4], precision: 6);
         Assert.Equal(0, completed);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
-        Matrix finished = RequireRenderObject<RenderTransform>(root.ChildElement).Transform;
-        Assert.Equal(0, finished.M11, precision: 6);
-        Assert.Equal(1, finished.M12, precision: 6);
-        Assert.Equal(-1, finished.M21, precision: 6);
-        Assert.Equal(0, finished.M22, precision: 6);
+        Matrix4 finished = RequireRenderObject<RenderTransform>(root.ChildElement).Transform;
+        Assert.Equal(0, finished[0], precision: 6);
+        Assert.Equal(1, finished[1], precision: 6);
+        Assert.Equal(-1, finished[4], precision: 6);
+        Assert.Equal(0, finished[5], precision: 6);
         Assert.Equal(1, completed);
 
         root.Unmount();
@@ -366,7 +366,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
     {
         var child = new RenderConstrainedBox(BoxConstraints.TightFor(width: 0, height: 0));
         var scale = new RenderTransform(
-            Matrix.CreateScale(2, 2),
+            Matrix4.Diagonal3Values(2, 2, 1.0),
             Alignment.Center,
             child);
 
@@ -374,7 +374,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(default, scale.Size);
 
         var rotation = new RenderTransform(
-            new Matrix(0, 1, -1, 0, 0, 0),
+            Matrix4.RotationZ(Math.PI / 2.0),
             Alignment.Center,
             scale);
         rotation.Layout(BoxConstraints.TightFor(width: 0, height: 0));

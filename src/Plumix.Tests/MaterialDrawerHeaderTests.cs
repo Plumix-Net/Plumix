@@ -200,7 +200,7 @@ public sealed class MaterialDrawerHeaderTests
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(304, 260));
         RenderTransform transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.InRange(transform.Transform.M11, -1.000001, -0.999999);
+        Assert.InRange(transform.Transform[0], -1.000001, -0.999999);
 
         semantics = harness.PumpAndGetSemantics(new Size(304, 260));
         button = FindSemantics(
@@ -214,7 +214,7 @@ public sealed class MaterialDrawerHeaderTests
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(304, 260));
         transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.InRange(transform.Transform.M11, 0.999999, 1.000001);
+        Assert.InRange(transform.Transform[0], 0.999999, 1.000001);
         Assert.Equal(2, detailsPressed);
     }
 
@@ -302,7 +302,7 @@ public sealed class MaterialDrawerHeaderTests
         harness.Pump(new Size(304, 260));
 
         RenderTransform transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.Equal(Matrix.Identity, transform.Transform);
+        Assert.Equal(Matrix4.Identity(), transform.Transform);
     }
 
     [Fact]
@@ -321,7 +321,7 @@ public sealed class MaterialDrawerHeaderTests
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.06));
         harness.Pump(new Size(304, 260));
-        double openingM11 = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView)).Transform.M11;
+        double openingM11 = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView)).Transform[0];
         Assert.InRange(openingM11, -0.999, 0.999);
 
         TapDetails(harness);
@@ -334,7 +334,7 @@ public sealed class MaterialDrawerHeaderTests
 
         Assert.Equal(4, detailsPressed);
         RenderTransform transform = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));
-        Assert.InRange(transform.Transform.M11, 0.999999, 1.000001);
+        Assert.InRange(transform.Transform[0], 0.999999, 1.000001);
     }
 
     [Theory]

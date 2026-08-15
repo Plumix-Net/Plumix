@@ -59,8 +59,8 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
     public void MaterialControls_BuildHandleRotatesPerTypeAndSizesTheHandle()
     {
         Assert.Null(RotationFor(TextSelectionHandleType.Right));
-        Assert.Equal(Matrix.CreateRotation(Math.PI / 2.0), RotationFor(TextSelectionHandleType.Left));
-        Assert.Equal(Matrix.CreateRotation(Math.PI / 4.0), RotationFor(TextSelectionHandleType.Collapsed));
+        Assert.Equal(Matrix4.RotationZ(Math.PI / 2.0), RotationFor(TextSelectionHandleType.Left));
+        Assert.Equal(Matrix4.RotationZ(Math.PI / 4.0), RotationFor(TextSelectionHandleType.Collapsed));
     }
 
     [Fact]
@@ -258,9 +258,9 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
             .ToArray();
     }
 
-    private static Matrix? RotationFor(TextSelectionHandleType type)
+    private static Matrix4? RotationFor(TextSelectionHandleType type)
     {
-        Matrix? rotation = null;
+        Matrix4? rotation = null;
         using var harness = new WidgetRenderHarness(new Theme(
             ThemeData.Light,
             new Directionality(

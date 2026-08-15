@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -51,13 +52,15 @@ public sealed class DragBoundary : InheritedWidget
         Rect boundary;
         if (useGlobalPosition)
         {
-            if (!renderBox.TryGetTransformFromRoot(out Matrix transform))
+            if (!renderBox.TryGetTransformFromRoot(out Matrix4 transform))
             {
                 throw new InvalidOperationException("DragBoundary is not attached to the render tree.");
             }
 
-            Point topLeft = transform.Transform(default);
-            Point bottomRight = transform.Transform(new Point(renderBox.Size.Width, renderBox.Size.Height));
+            Point topLeft = MatrixUtils.TransformPoint(transform, default);
+            Point bottomRight = MatrixUtils.TransformPoint(
+                transform,
+                new Point(renderBox.Size.Width, renderBox.Size.Height));
             boundary = new Rect(topLeft, bottomRight);
         }
         else

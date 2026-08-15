@@ -263,7 +263,7 @@ public sealed class CupertinoMagnifier : StatelessWidget
             + AdditionalFocalPointOffset;
         double translationY = (0 - MagnifierAboveFocalPoint) * (1.0 - animationValue);
         return new Plumix.Widgets.Transform(
-            transform: Matrix.CreateTranslation(0, translationY),
+            transform: Matrix4.TranslationValues(0.0, translationY, 0.0),
             child: new RawMagnifier(
                 size: Size,
                 focalPointOffset: focalPointOffset,

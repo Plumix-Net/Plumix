@@ -55,12 +55,12 @@ public class MaterialTextSelectionControls : TextSelectionControls
         return type switch
         {
             TextSelectionHandleType.Left => new Widgets.Transform(
-                transform: Matrix.CreateRotation(Math.PI / 2.0),
+                transform: Matrix4.RotationZ(Math.PI / 2.0),
                 alignment: Alignment.Center,
                 child: handle),
             TextSelectionHandleType.Right => handle,
             _ => new Widgets.Transform(
-                transform: Matrix.CreateRotation(Math.PI / 4.0),
+                transform: Matrix4.RotationZ(Math.PI / 4.0),
                 alignment: Alignment.Center,
                 child: handle),
         };

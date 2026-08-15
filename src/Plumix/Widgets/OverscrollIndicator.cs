@@ -86,7 +86,7 @@ public sealed class StretchEffect : StatelessWidget
         double x = Axis == Axis.Horizontal ? 1.0 + Math.Abs(StretchStrength) : 1.0;
         double y = Axis == Axis.Vertical ? 1.0 + Math.Abs(StretchStrength) : 1.0;
         return new Transform(
-            transform: Matrix.CreateScale(x, y),
+            transform: Matrix4.Diagonal3Values(x, y, 1.0),
             alignment: alignment,
             filterQuality: StretchStrength == 0.0 ? null : FilterQuality.Medium,
             child: Child);
@@ -723,9 +723,9 @@ internal sealed class GlowController : ChangeNotifier
         byte alpha = (byte)Math.Round(Math.Clamp(_glowOpacity, 0.0, 1.0) * byte.MaxValue);
         var brush = new SolidColorBrush(
             Avalonia.Media.Color.FromArgb(alpha, Color.R, Color.G, Color.B));
-        Matrix transform =
-            Matrix.CreateTranslation(0.0, PaintOffset + PaintOffsetScrollPixels)
-            * Matrix.CreateScale(1.0, scaleY);
+        Matrix4 transform = Matrix4.Identity();
+        transform.ScaleByDouble(1.0, scaleY, 1.0, 1);
+        transform.TranslateByDouble(0.0, PaintOffset + PaintOffsetScrollPixels, 0, 1);
         context.PushTransform(transform, transformed =>
         {
             transformed.PushClipRect(
@@ -875,19 +875,31 @@ internal sealed class GlowingOverscrollIndicatorPainter : CustomPainter
                 break;
             case AxisDirection.Down:
                 context.PushTransform(
-                    new Matrix(1.0, 0.0, 0.0, -1.0, 0.0, size.Height),
+                    new Matrix4(
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, -1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, size.Height, 0.0, 1.0),
                     transformed => controller.Paint(transformed, size));
                 break;
             case AxisDirection.Left:
                 context.PushTransform(
-                    new Matrix(0.0, 1.0, 1.0, 0.0, 0.0, 0.0),
+                    new Matrix4(
+                        0.0, 1.0, 0.0, 0.0,
+                        1.0, 0.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0),
                     transformed => controller.Paint(
                         transformed,
                         new Size(size.Height, size.Width)));
                 break;
             case AxisDirection.Right:
                 context.PushTransform(
-                    new Matrix(0.0, 1.0, -1.0, 0.0, size.Width, 0.0),
+                    new Matrix4(
+                        0.0, 1.0, 0.0, 0.0,
+                        -1.0, 0.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        size.Width, 0.0, 0.0, 1.0),
                     transformed => controller.Paint(
                         transformed,
                         new Size(size.Height, size.Width)));

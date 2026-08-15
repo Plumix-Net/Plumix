@@ -188,7 +188,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
     private bool _isFocused;
     private bool _expands;
     private readonly bool _material3;
-    private Matrix? _labelTransform;
+    private Matrix4? _labelTransform;
 
     public RenderDecoration(
         DecorationSpec decoration,
@@ -294,7 +294,7 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
 
     internal RenderBox? CounterBox => _counter;
 
-    internal Matrix? LabelTransform => _labelTransform;
+    internal Matrix4? LabelTransform => _labelTransform;
 
     private TextAlignVertical DefaultTextAlignVertical =>
         IsOutlineAligned ? Plumix.Rendering.TextAlignVertical.Center : Plumix.Rendering.TextAlignVertical.Top;
@@ -1098,10 +1098,13 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
 
             // Records where the label was painted, in this render object's own coordinate space so
             // that ApplyPaintTransform can hand the same matrix to the geometry protocol.
-            _labelTransform = Matrix.CreateScale(scale, scale)
-                              * Matrix.CreateTranslation(dx, labelOffset.Y + dy);
+            Matrix4 labelPaintTransform = Matrix4.TranslationValues(dx, labelOffset.Y + dy, 0.0);
+            labelPaintTransform.ScaleByDouble(scale, scale, 1.0, 1);
+            _labelTransform = labelPaintTransform;
+            Matrix4 offsetTransform = Matrix4.TranslationValues(offset.X, offset.Y, 0.0);
+            offsetTransform.Multiply(labelPaintTransform);
             context.PushTransform(
-                _labelTransform.Value * Matrix.CreateTranslation(offset.X, offset.Y),
+                offsetTransform,
                 childContext => childContext.PaintChild(_label, default));
         }
         else
@@ -1132,17 +1135,18 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
         }
     }
 
-    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        if (ReferenceEquals(child, _label) && _labelTransform is Matrix labelTransform)
+        base.ApplyPaintTransform(child, transform);
+
+        if (ReferenceEquals(child, _label) && _labelTransform is { } labelTransform)
         {
             // The label is painted through _labelTransform, which already carries its absolute
-            // position, so the offset the base implementation appends is cancelled out first.
+            // position, so the offset the base implementation appended is cancelled out first.
             Point labelOffset = ParentDataOf(_label!).offset;
-            transform = Matrix.CreateTranslation(-labelOffset.X, -labelOffset.Y) * labelTransform * transform;
+            transform.TranslateByDouble(-labelOffset.X, -labelOffset.Y, 0, 1);
+            transform.Multiply(labelTransform);
         }
-
-        base.ApplyPaintTransform(child, ref transform);
     }
 
     protected override bool HitTestSelf(Point position) => true;

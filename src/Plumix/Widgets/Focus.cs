@@ -272,29 +272,9 @@ public class FocusNode : ChangeNotifier
         return RenderObject.TransformRect(transformToRoot, localRect);
     }
 
-    private static Matrix ResolveRenderObjectTransformToRoot(RenderObject renderObject)
+    private static Matrix4 ResolveRenderObjectTransformToRoot(RenderObject renderObject)
     {
-        var transformToRoot = Matrix.Identity;
-        RenderObject? child = renderObject;
-
-        while (child?.Parent != null)
-        {
-            var parent = child.Parent;
-            var childOffset = child.parentData is BoxParentData boxParentData
-                ? boxParentData.offset
-                : default;
-            var childToParentTransform = Matrix.CreateTranslation(childOffset.X, childOffset.Y);
-
-            if (parent is RenderTransform renderTransform)
-            {
-                childToParentTransform *= renderTransform.EffectiveTransform;
-            }
-
-            transformToRoot = childToParentTransform * transformToRoot;
-            child = parent;
-        }
-
-        return transformToRoot;
+        return renderObject.ComputePaintTransformToRoot();
     }
 
     public override void Dispose()

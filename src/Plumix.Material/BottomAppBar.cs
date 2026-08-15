@@ -417,7 +417,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
                 geometryOffset: offset);
         }
         context.PushTransform(
-            Matrix.CreateTranslation(offset.X, offset.Y),
+            Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
             local => local.DrawGeometry(new SolidColorBrush(Color), null, geometry));
 
         if (Child is null) return;
@@ -429,7 +429,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         }
 
         context.PushTransform(
-            Matrix.CreateTranslation(offset.X, offset.Y),
+            Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
             local => local.PushClipGeometry(
                 geometry,
                 clipped => clipped.PaintChild(Child, ((BoxParentData)Child.parentData!).offset)));

@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Rendering;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/events.dart
@@ -49,7 +50,7 @@ public static class PointerEventUtils
     public static Point TransformDeltaViaPositions(
         Point untransformedEndPosition,
         Point untransformedDelta,
-        Matrix? transform,
+        Matrix4? transform,
         Point? transformedEndPosition = null)
     {
         if (transform is not { } matrix)
@@ -57,9 +58,23 @@ public static class PointerEventUtils
             return untransformedDelta;
         }
 
-        Point end = transformedEndPosition ?? matrix.Transform(untransformedEndPosition);
-        Point start = matrix.Transform(untransformedEndPosition - untransformedDelta);
+        Point end = transformedEndPosition ?? MatrixUtils.TransformPoint(matrix, untransformedEndPosition);
+        Point start = MatrixUtils.TransformPoint(matrix, untransformedEndPosition - untransformedDelta);
         return end - start;
+    }
+
+    /// <summary>
+    /// A copy of <paramref name="transform"/> with the z row and column reset to <c>(0, 0, 1, 0)</c>,
+    /// so it can be inverted for hit testing without the perspective divide flattening the plane.
+    /// </summary>
+    /// <remarks>Flutter's <c>PointerEvent.removePerspectiveTransform</c>.</remarks>
+    public static Matrix4 RemovePerspectiveTransform(Matrix4 transform)
+    {
+        var vector = new Vector4(0.0, 0.0, 1.0, 0.0);
+        Matrix4 result = transform.Clone();
+        result.SetColumn(2, vector);
+        result.SetRow(2, vector);
+        return result;
     }
 
     /// <summary>The straight-line length of the offset, Dart's `Offset.distance`.</summary>

@@ -738,21 +738,10 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
         }
     }
 
-    internal static Rect TransformRect(Matrix transform, Rect rect)
-    {
-        var p1 = transform.Transform(rect.TopLeft);
-        var p2 = transform.Transform(rect.TopRight);
-        var p3 = transform.Transform(rect.BottomLeft);
-        var p4 = transform.Transform(rect.BottomRight);
+    internal static Rect TransformRect(Matrix4 transform, Rect rect) =>
+        MatrixUtils.TransformRect(transform, rect);
 
-        double minX = Math.Min(Math.Min(p1.X, p2.X), Math.Min(p3.X, p4.X));
-        double minY = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
-        double maxX = Math.Max(Math.Max(p1.X, p2.X), Math.Max(p3.X, p4.X));
-        double maxY = Math.Max(Math.Max(p1.Y, p2.Y), Math.Max(p3.Y, p4.Y));
-        return new Rect(minX, minY, maxX - minX, maxY - minY);
-    }
-
-    internal static Rect? IntersectClip(Rect? inheritedClip, Rect? localClip, Matrix transform)
+    internal static Rect? IntersectClip(Rect? inheritedClip, Rect? localClip, Matrix4 transform)
     {
         Rect? transformedLocalClip = null;
         if (localClip.HasValue)
@@ -778,15 +767,20 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
     /// Applies the transform that would be applied when painting the given child to the given matrix.
     /// </summary>
     /// <remarks>
-    /// Flutter mutates a `Matrix4` in place and post-multiplies its own step, because its matrices map
-    /// points as `M * p`. Avalonia's <see cref="Matrix"/> is an immutable struct that maps points as
-    /// `p * M`, so implementations pre-multiply instead: `transform = step * transform`. The composed
-    /// order — this render object's own step applied to the child's coordinates first, ancestors after —
-    /// is the same in both conventions.
+    /// The matrix is mutated in place and each render object post-multiplies its own step, exactly as
+    /// in Flutter: <see cref="Matrix4"/> maps points as <c>M * p</c>, so the child's own step ends up
+    /// rightmost and is therefore applied first.
     /// </remarks>
-    public virtual void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public virtual void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
     }
+
+    /// <summary>Whether this render object paints <paramref name="child"/> at all.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.paintsChild</c>. A parent that zeroes the matrix in
+    /// <see cref="ApplyPaintTransform"/> to signal "not painted" must return <c>false</c> here.
+    /// </remarks>
+    public virtual bool PaintsChild(RenderObject child) => true;
 
     /// <summary>An estimate of the bounds within which this render object will paint.</summary>
     public virtual Rect PaintBounds => default;
@@ -813,12 +807,12 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
             curve: curve ?? Curves.Ease);
     }
 
-    internal bool TryGetTransformFromRoot(out Matrix transform)
+    internal bool TryGetTransformFromRoot(out Matrix4 transform)
     {
         RenderObject? root = Owner?.Root;
         if (root is null)
         {
-            transform = Matrix.Identity;
+            transform = Matrix4.Identity();
             return false;
         }
 
@@ -828,31 +822,37 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
     /// The paint offset of this render object's origin in the coordinate space of the render tree root.
     public Point GetPaintOffsetToRoot()
     {
-        return ComputePaintTransformToRoot().Transform(default);
+        return MatrixUtils.TransformPoint(ComputePaintTransformToRoot(), default);
     }
 
     /// The paint transform from this render object to the topmost render object of its parent chain.
     ///
     /// Unlike <see cref="GetTransformTo"/> this walks the parent chain directly, so it also resolves for
     /// render objects that are not attached to a <see cref="PipelineOwner"/>.
-    internal Matrix ComputePaintTransformToRoot()
+    internal Matrix4 ComputePaintTransformToRoot()
     {
-        Matrix transform = Matrix.Identity;
+        Matrix4 transform = Matrix4.Identity();
+        var renderers = new List<RenderObject>();
         for (RenderObject node = this; node.Parent is not null; node = node.Parent)
         {
-            node.Parent.ApplyPaintTransform(node, ref transform);
+            renderers.Add(node);
+        }
+
+        for (int index = renderers.Count - 1; index >= 0; index--)
+        {
+            renderers[index].Parent!.ApplyPaintTransform(renderers[index], transform);
         }
 
         return transform;
     }
 
-    public Matrix GetTransformTo(RenderObject? ancestor = null)
+    public Matrix4 GetTransformTo(RenderObject? ancestor = null)
     {
         bool ancestorSpecified = ancestor is not null;
         ancestor ??= Owner?.Root
                      ?? throw new InvalidOperationException("The render object is not attached to a render tree.");
 
-        if (!TryComputeTransformTo(ancestor, ancestorSpecified, out Matrix transform))
+        if (!TryComputeTransformTo(ancestor, ancestorSpecified, out Matrix4 transform))
         {
             throw new InvalidOperationException(
                 "The requested render object is not an ancestor of this render object.");
@@ -861,9 +861,9 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
         return transform;
     }
 
-    private bool TryComputeTransformTo(RenderObject ancestor, bool ancestorSpecified, out Matrix transform)
+    private bool TryComputeTransformTo(RenderObject ancestor, bool ancestorSpecified, out Matrix4 transform)
     {
-        transform = Matrix.Identity;
+        transform = Matrix4.Identity();
         var renderers = new List<RenderObject>();
         for (RenderObject renderer = this; !ReferenceEquals(renderer, ancestor); renderer = renderer.Parent!)
         {
@@ -881,7 +881,7 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
 
         for (int index = renderers.Count - 1; index > 0; index--)
         {
-            renderers[index].ApplyPaintTransform(renderers[index - 1], ref transform);
+            renderers[index].ApplyPaintTransform(renderers[index - 1], transform);
         }
 
         return true;
@@ -889,20 +889,35 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
 
     public Point LocalToGlobal(Point point, RenderObject? ancestor = null)
     {
-        Matrix transform = GetTransformTo(ancestor);
-        return transform.Transform(point);
+        return MatrixUtils.TransformPoint(GetTransformTo(ancestor), point);
     }
 
+    /// <remarks>
+    /// Flutter's <c>RenderBox.globalToLocal</c>: an unprojection rather than a plain inverse point
+    /// transform, so a perspective transform maps back onto the z = 0 plane the way it was drawn from.
+    /// </remarks>
     public Point GlobalToLocal(Point point, RenderObject? ancestor = null)
     {
-        Matrix transform = GetTransformTo(ancestor);
-        if (!transform.TryInvert(out Matrix inverse))
+        Matrix4 transform = GetTransformTo(ancestor);
+        double determinant = transform.Invert();
+        if (determinant == 0.0)
         {
             // The determinant is zero, so the transform maps the whole plane onto a line or a point.
             return default;
         }
 
-        return inverse.Transform(point);
+        Vector3 localScreenOrigin = transform.PerspectiveTransform(new Vector3(0.0, 0.0, 0.0));
+        Vector3 localViewDirection =
+            transform.PerspectiveTransform(new Vector3(0.0, 0.0, 1.0)) - localScreenOrigin;
+        if (localViewDirection.Z == 0.0)
+        {
+            return default;
+        }
+
+        Vector3 localScreenPoint = transform.PerspectiveTransform(new Vector3(point.X, point.Y, 0.0));
+        Vector3 localPoint =
+            localScreenPoint - (localViewDirection * (localScreenPoint.Z / localViewDirection.Z));
+        return new Point(localPoint.X, localPoint.Y);
     }
 
     /// <summary>

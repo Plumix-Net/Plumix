@@ -111,7 +111,7 @@ public sealed class ContainerTests
         var root = new TestRootElement(
             new Container(
                 margin: new Thickness(5),
-                transform: Matrix.CreateTranslation(12, 0),
+                transform: Matrix4.TranslationValues(12, 0, 0.0),
                 child: new SizedBox(width: 8, height: 6)));
 
         root.Attach(owner);
@@ -119,7 +119,7 @@ public sealed class ContainerTests
         owner.FlushBuild();
 
         var transform = RequireRenderObject<RenderTransform>(root.ChildElement);
-        Assert.Equal(Matrix.CreateTranslation(12, 0), transform.Transform);
+        Assert.Equal(Matrix4.TranslationValues(12, 0, 0.0), transform.Transform);
         var marginPadding = Assert.IsType<RenderPadding>(transform.Child);
         Assert.Equal(new Thickness(5), marginPadding.Padding);
     }

@@ -104,7 +104,7 @@ internal sealed class DragTargetDemoContentState : State
             controller: _portalController,
             overlayChildBuilder: (_, info) =>
             {
-                Point origin = info.ChildPaintTransform.Transform(new Point());
+                Point origin = MatrixUtils.TransformPoint(info.ChildPaintTransform, new Point());
                 return new Positioned(
                     left: origin.X,
                     top: origin.Y + info.ChildSize.Height + 8,

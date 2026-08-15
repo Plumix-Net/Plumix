@@ -227,7 +227,7 @@ public sealed class FocusTests : IDisposable
                     child: new SizedBox(width: 20, height: 20)),
                 new SizedBox(width: 100),
                 new TestTransform(
-                    transform: Matrix.CreateTranslation(-120, 120),
+                    transform: Matrix4.TranslationValues(-120, 120, 0.0),
                     child: new Focus(
                         focusNode: transformedDown,
                         child: new SizedBox(width: 20, height: 20))),
@@ -496,12 +496,12 @@ public sealed class FocusTests : IDisposable
 
     private sealed class TestTransform : SingleChildRenderObjectWidget
     {
-        public TestTransform(Matrix transform, Widget child) : base(child)
+        public TestTransform(Matrix4 transform, Widget child) : base(child)
         {
             Transform = transform;
         }
 
-        public Matrix Transform { get; }
+        public Matrix4 Transform { get; }
 
         internal override RenderObject CreateRenderObject(BuildContext context)
         {

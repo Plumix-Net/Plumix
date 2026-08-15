@@ -105,7 +105,7 @@ public sealed class SelectedContent
 public interface ISelectable : ISelectionHandler
 {
     /// Gets the transform from this object's local coordinates to `ancestor`.
-    Matrix GetTransformTo(RenderObject? ancestor);
+    Matrix4 GetTransformTo(RenderObject? ancestor);
 
     /// The size of this [ISelectable].
     Size Size { get; }

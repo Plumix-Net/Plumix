@@ -263,7 +263,7 @@ internal sealed class RawAutocompleteState<T> : State
         BuildContext context,
         OverlayChildLayoutInfo layoutInfo)
     {
-        if (!layoutInfo.ChildPaintTransform.TryInvert(out Matrix overlayToField))
+        if (Matrix4.TryInvert(layoutInfo.ChildPaintTransform) is not { } overlayToField)
         {
             return new SizedBox();
         }
@@ -314,7 +314,7 @@ internal sealed class RawAutocompleteState<T> : State
             widthFactor: 1.0,
             heightFactor: 1.0);
         options = new Transform(
-            Matrix.CreateTranslation(0.0, originY),
+            Matrix4.TranslationValues(0.0, originY, 0.0),
             options);
         return new Transform(layoutInfo.ChildPaintTransform, options);
     }
@@ -637,20 +637,14 @@ internal sealed class RawAutocompleteState<T> : State
         return new Rect(left, top, right - left, bottom - top);
     }
 
-    private static Rect TransformRect(Matrix transform, Rect rect)
+    private static Rect TransformRect(Matrix4 transform, Rect rect)
     {
-        Point[] points =
-        [
-            transform.Transform(rect.TopLeft),
-            transform.Transform(rect.TopRight),
-            transform.Transform(rect.BottomLeft),
-            transform.Transform(rect.BottomRight),
-        ];
-        double left = points.Min(point => point.X);
-        double top = points.Min(point => point.Y);
-        double right = points.Max(point => point.X);
-        double bottom = points.Max(point => point.Y);
-        return new Rect(left, top, Math.Max(0, right - left), Math.Max(0, bottom - top));
+        Rect transformed = MatrixUtils.TransformRect(transform, rect);
+        return new Rect(
+            transformed.X,
+            transformed.Y,
+            Math.Max(0, transformed.Width),
+            Math.Max(0, transformed.Height));
     }
 
     private sealed class AutocompleteNavigationAction<TIntent> : FlutterAction<TIntent> where TIntent : Intent

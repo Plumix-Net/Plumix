@@ -133,7 +133,9 @@ internal static class DebugOverflowIndicator
             var labelOrigin = new Point(-layout.Width / 2.0, 0);
             var background = new Rect(labelOrigin, new Size(layout.Width, layout.Height));
 
-            context.PushTransform(Matrix.CreateTranslation(labelOffset.X, labelOffset.Y), translated =>
+            context.PushTransform(
+                Matrix4.TranslationValues(labelOffset.X, labelOffset.Y, 0.0),
+                translated =>
             {
                 if (Math.Abs(rotation) <= Constants.PrecisionErrorTolerance)
                 {
@@ -162,10 +164,5 @@ internal static class DebugOverflowIndicator
             : value.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture);
     }
 
-    private static Matrix CreateRotationMatrix(double radians)
-    {
-        double sine = Math.Sin(radians);
-        double cosine = Math.Cos(radians);
-        return new Matrix(cosine, sine, -sine, cosine, 0, 0);
-    }
+    private static Matrix4 CreateRotationMatrix(double radians) => Matrix4.RotationZ(radians);
 }

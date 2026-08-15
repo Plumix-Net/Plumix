@@ -23,10 +23,10 @@ public sealed class PaintTransformTests
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Matrix transform = Matrix.Identity;
-        padded.ApplyPaintTransform(child, ref transform);
+        Matrix4 transform = Matrix4.Identity();
+        padded.ApplyPaintTransform(child, transform);
 
-        Assert.Equal(new Point(12, 7), transform.Transform(default));
+        Assert.Equal(new Point(12, 7), MatrixUtils.TransformPoint(transform, default));
         Assert.Equal(new Point(12, 7), child.LocalToGlobal(default));
         Assert.Equal(new Point(12, 7), child.GetPaintOffsetToRoot());
     }
@@ -35,7 +35,7 @@ public sealed class PaintTransformTests
     public void LocalToGlobal_ComposesAncestorTransformsAndOffsets()
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
-        var scaled = new RenderTransform(Matrix.CreateScale(2.0, 3.0)) { Child = child };
+        var scaled = new RenderTransform(Matrix4.Diagonal3Values(2.0, 3.0, 1.0)) { Child = child };
         var padded = new RenderPadding(new Thickness(5, 9, 0, 0), scaled);
         var renderView = new RenderView { Child = padded };
         var pipeline = new PipelineOwner(renderView);
@@ -90,10 +90,12 @@ public sealed class PaintTransformTests
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Matrix transform = Matrix.Identity;
-        fitted.ApplyPaintTransform(child, ref transform);
+        Matrix4 transform = Matrix4.Identity();
+        fitted.ApplyPaintTransform(child, transform);
 
-        Assert.Equal(default, transform);
+        // Flutter zeroes the matrix for a child it does not paint, and `paintsChild` reports it.
+        Assert.Equal(Matrix4.Zero(), transform);
+        Assert.False(fitted.PaintsChild(child));
     }
 
     [Fact]

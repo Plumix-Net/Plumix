@@ -99,9 +99,10 @@ public sealed class BannerPainter : CustomPainter
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        var translation = Matrix.CreateTranslation(
+        Matrix4 translation = Matrix4.TranslationValues(
             TranslationX(size.Width),
-            TranslationY(size.Height));
+            TranslationY(size.Height),
+            0.0);
         context.PushTransform(translation, translatedContext =>
         {
             translatedContext.PushTransform(CreateRotationMatrix(Rotation), rotatedContext =>
@@ -169,12 +170,7 @@ public sealed class BannerPainter : CustomPainter
         }
     }
 
-    private static Matrix CreateRotationMatrix(double angle)
-    {
-        double cosine = Math.Cos(angle);
-        double sine = Math.Sin(angle);
-        return new Matrix(cosine, sine, -sine, cosine, 0, 0);
-    }
+    private static Matrix4 CreateRotationMatrix(double angle) => Matrix4.RotationZ(angle);
 }
 
 public sealed class Banner : StatefulWidget

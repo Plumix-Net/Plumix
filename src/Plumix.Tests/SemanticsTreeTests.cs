@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/semantics/semantics.dart (parity regression tests)
 
@@ -622,7 +623,7 @@ public sealed class SemanticsTreeTests
     public void RenderTransform_AppliesTranslationToSemanticsRect()
     {
         var leaf = new FixedSemanticBox("Moved", new Size(12, 8));
-        var transform = new RenderTransform(Matrix.CreateTranslation(30, 12), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(30, 12, 0.0), leaf);
         var renderView = new RenderView
         {
             Child = transform
@@ -644,7 +645,7 @@ public sealed class SemanticsTreeTests
     public void RenderTransform_ChangingTransform_UpdatesSemanticsWithoutLayout()
     {
         var leaf = new FixedSemanticBox("Moved", new Size(12, 8));
-        var transform = new RenderTransform(Matrix.CreateTranslation(10, 6), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(10, 6, 0.0), leaf);
         var renderView = new RenderView
         {
             Child = transform
@@ -662,7 +663,7 @@ public sealed class SemanticsTreeTests
         int firstId = firstNode.Id;
         Assert.Equal(new Rect(10, 6, 12, 8), firstNode.GlobalRect);
 
-        transform.Transform = Matrix.CreateTranslation(44, 18);
+        transform.Transform = Matrix4.TranslationValues(44, 18, 0.0);
         pipeline.FlushSemantics();
 
         var updatedRoot = pipeline.SemanticsOwner.RootNode;
@@ -676,7 +677,7 @@ public sealed class SemanticsTreeTests
     public void RenderClipRect_ExcludesSemanticsOutsideClip()
     {
         var leaf = new FixedSemanticBox("Hidden", new Size(12, 8));
-        var transform = new RenderTransform(Matrix.CreateTranslation(40, 0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(40, 0, 0.0), leaf);
         var clip = new RenderClipRect(transform)
         {
             ClipRect = new Rect(0, 0, 20, 20)
@@ -702,7 +703,7 @@ public sealed class SemanticsTreeTests
     public void RenderClipRect_ChangingClip_UpdatesSemanticsWithoutLayout()
     {
         var leaf = new FixedSemanticBox("Clipped", new Size(12, 8));
-        var transform = new RenderTransform(Matrix.CreateTranslation(20, 0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(20, 0, 0.0), leaf);
         var clip = new RenderClipRect(transform)
         {
             ClipRect = new Rect(0, 0, 64, 32)
@@ -735,7 +736,7 @@ public sealed class SemanticsTreeTests
     public void DistinctSemanticsClip_OutsidePaintClip_NodeStaysAsHidden()
     {
         var leaf = new FixedSemanticBox("HiddenByPaint", new Size(12, 8));
-        var transform = new RenderTransform(Matrix.CreateTranslation(30, 0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(30, 0, 0.0), leaf);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
             PaintClipRect = new Rect(0, 0, 20, 20),
@@ -764,7 +765,7 @@ public sealed class SemanticsTreeTests
     public void DistinctSemanticsClip_OutsideSemanticsClip_DropsNode()
     {
         var leaf = new FixedSemanticBox("DroppedBySemanticsClip", new Size(12, 8));
-        var transform = new RenderTransform(Matrix.CreateTranslation(80, 0), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(80, 0, 0.0), leaf);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
             PaintClipRect = new Rect(0, 0, 20, 20),
@@ -791,7 +792,7 @@ public sealed class SemanticsTreeTests
     public void SemanticsParentDataDirty_BoundaryStaysClean_NonBoundaryCanBecomeDirty()
     {
         var leaf = new FixedSemanticBox("State", new Size(12, 8));
-        var transform = new RenderTransform(Matrix.Identity, leaf);
+        var transform = new RenderTransform(Matrix4.Identity(), leaf);
         var renderView = new RenderView
         {
             Child = transform
@@ -813,7 +814,7 @@ public sealed class SemanticsTreeTests
         leaf.MarkNeedsSemanticsUpdate();
         Assert.True(leaf.SemanticsParentDataDirty);
 
-        transform.Transform = Matrix.CreateTranslation(1, 0);
+        transform.Transform = Matrix4.TranslationValues(1, 0, 0.0);
         Assert.True(transform.SemanticsParentDataDirty);
 
         pipeline.FlushSemantics();
@@ -824,7 +825,7 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void MarkNeedsSemanticsUpdate_WhenAncestorAlreadyQueued_DoesNotGrowPendingQueue()
     {
-        var descendant = new RenderTransform(Matrix.Identity, new FixedSemanticBox("Leaf", new Size(12, 8)));
+        var descendant = new RenderTransform(Matrix4.Identity(), new FixedSemanticBox("Leaf", new Size(12, 8)));
         var ancestor = new MutableSemanticBoundaryRenderBox("Ancestor", descendant);
         var renderView = new RenderView
         {
@@ -840,7 +841,7 @@ public sealed class SemanticsTreeTests
         ancestor.Label = "Ancestor 2";
         Assert.Equal(1, pipeline.PendingSemanticsNodeCount);
 
-        descendant.Transform = Matrix.CreateTranslation(4, 0);
+        descendant.Transform = Matrix4.TranslationValues(4, 0, 0.0);
         Assert.Equal(1, pipeline.PendingSemanticsNodeCount);
 
         pipeline.FlushSemantics();
@@ -1108,7 +1109,7 @@ public sealed class SemanticsTreeTests
                 new List<SemanticsConfiguration>(),
                 new List<List<SemanticsConfiguration>> { group });
         });
-        var transform = new RenderTransform(Matrix.Identity, delegated);
+        var transform = new RenderTransform(Matrix4.Identity(), delegated);
 
         var renderView = new RenderView
         {
@@ -1126,7 +1127,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstNode);
         int firstId = firstNode.Id;
 
-        transform.Transform = Matrix.CreateTranslation(6, 0);
+        transform.Transform = Matrix4.TranslationValues(6, 0, 0.0);
         pipeline.FlushSemantics();
 
         var updatedRoot = pipeline.SemanticsOwner.RootNode;
@@ -1187,7 +1188,7 @@ public sealed class SemanticsTreeTests
         var delegated = new MutableSyntheticMergeUpConflictRenderBox(
             child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 10, height: 10)),
             parentTapConflict: false);
-        var transform = new RenderTransform(Matrix.Identity, delegated);
+        var transform = new RenderTransform(Matrix4.Identity(), delegated);
 
         var renderView = new RenderView
         {
@@ -1228,7 +1229,7 @@ public sealed class SemanticsTreeTests
     {
         var delegated = new SyntheticGeometrySiblingRenderBox(
             new MergingSemanticBox("Synthetic Geo", new Size(10, 8)));
-        var transform = new RenderTransform(Matrix.CreateTranslation(10, 6), delegated);
+        var transform = new RenderTransform(Matrix4.TranslationValues(10, 6, 0.0), delegated);
 
         var renderView = new RenderView
         {
@@ -1247,7 +1248,7 @@ public sealed class SemanticsTreeTests
         Assert.Equal(new Rect(10, 6, 10, 8), firstNode.GlobalRect);
         int firstId = firstNode.Id;
 
-        transform.Transform = Matrix.CreateTranslation(25, 3);
+        transform.Transform = Matrix4.TranslationValues(25, 3, 0.0);
         pipeline.FlushSemantics();
 
         var updatedRoot = pipeline.SemanticsOwner.RootNode;
@@ -1263,7 +1264,7 @@ public sealed class SemanticsTreeTests
     {
         var delegated = new SyntheticGeometrySiblingRenderBox(
             new MergingSemanticBox("Synthetic Clip", new Size(12, 8)));
-        var transform = new RenderTransform(Matrix.CreateTranslation(30, 0), delegated);
+        var transform = new RenderTransform(Matrix4.TranslationValues(30, 0, 0.0), delegated);
         var clip = new DistinctSemanticsClipRenderBox(transform)
         {
             PaintClipRect = new Rect(0, 0, 120, 40),

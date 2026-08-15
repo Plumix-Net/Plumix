@@ -495,12 +495,13 @@ public sealed class RawTooltipState : State
         BuildContext context,
         OverlayChildLayoutInfo layoutInfo)
     {
-        if (!layoutInfo.ChildPaintTransform.TryInvert(out _))
+        if (layoutInfo.ChildPaintTransform.Determinant() == 0.0)
         {
             return new SizedBox();
         }
 
-        Point target = layoutInfo.ChildPaintTransform.Transform(
+        Point target = MatrixUtils.TransformPoint(
+            layoutInfo.ChildPaintTransform,
             new Point(
                 layoutInfo.ChildSize.Width / 2.0,
                 layoutInfo.ChildSize.Height / 2.0));

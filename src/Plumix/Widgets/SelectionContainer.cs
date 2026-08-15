@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -166,7 +167,7 @@ public sealed class SelectionContainerState : State, ISelectable
 
     public SelectionGeometry Value => Current.IsDisabled ? DisabledGeometry : Current.Delegate!.Value;
 
-    public Matrix GetTransformTo(RenderObject? ancestor)
+    public Matrix4 GetTransformTo(RenderObject? ancestor)
     {
         return Context.FindRenderObject()!.GetTransformTo(ancestor);
     }
@@ -253,13 +254,13 @@ public abstract class SelectionContainerDelegate : ChangeNotifier, ISelectionHan
     public abstract void Remove(ISelectable selectable);
 
     /// Gets the transform from the `child` to the [SelectionContainer] of this delegate.
-    public Matrix GetTransformFrom(ISelectable child)
+    public Matrix4 GetTransformFrom(ISelectable child)
     {
         return child.GetTransformTo(RequireContainerRenderBox());
     }
 
     /// Gets the transform from the [SelectionContainer] of this delegate to the `ancestor`.
-    public Matrix GetTransformTo(RenderObject? ancestor)
+    public Matrix4 GetTransformTo(RenderObject? ancestor)
     {
         return RequireContainerRenderBox().GetTransformTo(ancestor);
     }

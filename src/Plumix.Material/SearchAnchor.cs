@@ -1092,7 +1092,7 @@ internal sealed class SearchViewContent : StatefulWidget
             return new Align(
                 alignment: Alignment.TopLeft,
                 child: new Widgets.Transform(
-                    Matrix.CreateTranslation(_viewRect.X, _viewRect.Y),
+                    Matrix4.TranslationValues(_viewRect.X, _viewRect.Y, 0.0),
                     child: new ConstrainedBox(
                         new BoxConstraints(
                             MinWidth: Math.Min(effectiveConstraints.MinWidth, _viewRect.Width),

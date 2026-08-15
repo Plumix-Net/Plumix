@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Widgets;
+using Plumix.UI;
 
 // Dart parity source (reference): dart_sample/lib/container_demo_page.dart (exact sample parity)
 
@@ -30,8 +31,8 @@ internal sealed class ContainerDemoPageState : State
             ? new BoxConstraints(MinWidth: 80, MaxWidth: 120, MinHeight: 50, MaxHeight: 76)
             : (BoxConstraints?)null;
         var transform = Math.Abs(_shiftX) < 0.001
-            ? (Matrix?)null
-            : Matrix.CreateTranslation(_shiftX, 0);
+            ? null
+            : Matrix4.TranslationValues(_shiftX, 0.0, 0.0);
 
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,

@@ -15,7 +15,7 @@ public sealed class GesturePipelineTests
     public void RenderTransform_HitTest_UsesInverseTransform()
     {
         var child = new FixedHitTestBox(new Size(20, 20), hitSelf: true);
-        var transform = new RenderTransform(Matrix.CreateTranslation(-10, 0), child);
+        var transform = new RenderTransform(Matrix4.TranslationValues(-10, 0, 0.0), child);
         var pipeline = BuildPipeline(transform);
 
         var insideResult = new BoxHitTestResult();

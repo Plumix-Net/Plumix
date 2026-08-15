@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/layer.dart (parity regression tests)
 
@@ -117,7 +118,7 @@ public sealed class LayerV2Tests
         Assert.Equal(0.42, opacityLayer.Opacity, 3);
 
         var transformLayer = Assert.IsType<TransformLayer>(Assert.Single(opacityLayer.Children));
-        Assert.Equal(Matrix.CreateTranslation(12, 8), transformLayer.Transform);
+        Assert.Equal(Matrix4.TranslationValues(12, 8, 0.0), transformLayer.Transform);
         Assert.IsType<PictureLayer>(Assert.Single(transformLayer.Children));
     }
 
@@ -148,7 +149,7 @@ public sealed class LayerV2Tests
             ctx.PushOpacity(
                 0.42,
                 opacityContext => opacityContext.PushTransform(
-                    Matrix.CreateTranslation(12, 8),
+                    Matrix4.TranslationValues(12, 8, 0.0),
                     transformContext => transformContext.DrawRectangle(
                         Brushes.MediumSeaGreen,
                         null,

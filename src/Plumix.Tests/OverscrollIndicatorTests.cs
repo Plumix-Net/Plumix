@@ -68,8 +68,8 @@ public sealed class OverscrollIndicatorTests : IDisposable
         horizontal.Pump(Viewport);
         RenderTransform transform = horizontal.FindRenderObject<RenderTransform>();
 
-        Assert.Equal(1.25, transform.Transform.M11, precision: 6);
-        Assert.Equal(1.0, transform.Transform.M22, precision: 6);
+        Assert.Equal(1.25, transform.Transform[0], precision: 6);
+        Assert.Equal(1.0, transform.Transform[5], precision: 6);
         Assert.Equal(Alignment.CenterRight, transform.Alignment);
         Assert.Equal(FilterQuality.Medium, transform.FilterQuality);
     }
@@ -176,10 +176,10 @@ public sealed class OverscrollIndicatorTests : IDisposable
         painter.Paint(new PaintingContext(rootLayer), new Size(240, 300));
 
         var orientation = Assert.IsType<TransformLayer>(Assert.Single(rootLayer.Children));
-        Assert.Equal(0.0, orientation.Transform.M11);
-        Assert.Equal(1.0, orientation.Transform.M12);
-        Assert.Equal(1.0, orientation.Transform.M21);
-        Assert.Equal(0.0, orientation.Transform.M22);
+        Assert.Equal(0.0, orientation.Transform[0]);
+        Assert.Equal(1.0, orientation.Transform[1]);
+        Assert.Equal(1.0, orientation.Transform[4]);
+        Assert.Equal(0.0, orientation.Transform[5]);
         controller.Dispose();
     }
 
@@ -207,7 +207,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
         RenderTransform transform = harness.FindRenderObject<RenderTransform>();
         RenderClipRect clip = harness.FindRenderObject<RenderClipRect>();
         Assert.True(state.StretchController.Overscroll < 0.0);
-        Assert.True(transform.Transform.M22 > 1.0);
+        Assert.True(transform.Transform[5] > 1.0);
         Assert.Equal(Alignment.TopCenter, transform.Alignment);
         Assert.Equal(FilterQuality.Medium, transform.FilterQuality);
         Assert.Equal(Clip.AntiAlias, clip.ClipBehavior);
@@ -219,7 +219,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
 
         transform = harness.FindRenderObject<RenderTransform>();
         clip = harness.FindRenderObject<RenderClipRect>();
-        Assert.Equal(1.0, transform.Transform.M22, precision: 6);
+        Assert.Equal(1.0, transform.Transform[5], precision: 6);
         Assert.Equal(Clip.None, clip.ClipBehavior);
     }
 
@@ -255,7 +255,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
             harness.FindState<StretchingOverscrollIndicatorState>();
         Assert.Equal(1, confirmations);
         Assert.Equal(0.0, state.StretchController.Overscroll);
-        Assert.Equal(1.0, harness.FindRenderObject<RenderTransform>().Transform.M22);
+        Assert.Equal(1.0, harness.FindRenderObject<RenderTransform>().Transform[5]);
     }
 
     [Fact]

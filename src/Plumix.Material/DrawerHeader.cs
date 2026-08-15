@@ -328,7 +328,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
                             height: 56.0,
                             child: new Center(
                                 child: new Plumix.Widgets.Transform(
-                                    transform: Matrix.CreateRotation(_animation!.Value * Math.PI),
+                                    transform: Matrix4.RotationZ(_animation!.Value * Math.PI),
                                     alignment: Alignment.Center,
                                     child: new Icon(
                                         Icons.ArrowDropDown,

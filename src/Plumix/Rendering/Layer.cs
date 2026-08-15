@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Plumix.Gestures;
 using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/layer.dart (approximate)
@@ -459,7 +460,7 @@ public sealed class FollowerLayer : ContainerLayer
         LayerLink link,
         bool showWhenUnlinked = true,
         Point unlinkedOffset = default,
-        Matrix? linkedTransform = null)
+        Matrix4? linkedTransform = null)
     {
         Link = link ?? throw new ArgumentNullException(nameof(link));
         ShowWhenUnlinked = showWhenUnlinked;
@@ -473,17 +474,17 @@ public sealed class FollowerLayer : ContainerLayer
 
     public Point UnlinkedOffset { get; set; }
 
-    public Matrix? LinkedTransform { get; set; }
+    public Matrix4? LinkedTransform { get; set; }
 
-    public Matrix? GetLastTransform()
+    public Matrix4? GetLastTransform()
     {
         return Link.Leader != null ? LinkedTransform : null;
     }
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
-        Matrix? linkedTransform = GetLastTransform();
-        if (!linkedTransform.HasValue)
+        Matrix4? linkedTransform = GetLastTransform();
+        if (linkedTransform is null)
         {
             if (ShowWhenUnlinked)
             {
@@ -495,7 +496,7 @@ public sealed class FollowerLayer : ContainerLayer
 
         Point sceneOffset = offset + UnlinkedOffset;
         using (context.PushTransform(Matrix.CreateTranslation(sceneOffset.X, sceneOffset.Y)))
-        using (context.PushTransform(linkedTransform.Value))
+        using (context.PushTransform(linkedTransform.ToAvaloniaMatrix()))
         {
             AddChildrenToScene(context, default);
         }
@@ -506,19 +507,20 @@ public sealed class FollowerLayer : ContainerLayer
         Point localPosition,
         bool onlyFirst)
     {
-        Matrix? transform = GetLastTransform();
-        if (!transform.HasValue)
+        Matrix4? transform = GetLastTransform();
+        if (transform is null)
         {
             return ShowWhenUnlinked
                 && base.FindAnnotations(result, localPosition - UnlinkedOffset, onlyFirst);
         }
 
-        if (!transform.Value.TryInvert(out Matrix inverse))
+        Matrix4? inverse = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(transform));
+        if (inverse is null)
         {
             return false;
         }
 
-        Point transformedPosition = inverse.Transform(localPosition - UnlinkedOffset);
+        Point transformedPosition = MatrixUtils.TransformPoint(inverse, localPosition - UnlinkedOffset);
         return base.FindAnnotations(result, transformedPosition, onlyFirst);
     }
 }
@@ -948,7 +950,7 @@ public sealed class ShaderMaskLayer : ContainerLayer
 
 public sealed class TransformOffsetLayer : OffsetLayer
 {
-    public Matrix Transform { get; set; } = Matrix.Identity;
+    public Matrix4 Transform { get; set; } = Matrix4.Identity();
     public FilterQuality? FilterQuality { get; set; }
 
     internal override void AddToScene(DrawingContext context, Point offset)
@@ -967,7 +969,7 @@ public sealed class TransformOffsetLayer : OffsetLayer
             })
             : null;
         using (context.PushTransform(Matrix.CreateTranslation(sceneOffset.X, sceneOffset.Y)))
-        using (context.PushTransform(Transform))
+        using (context.PushTransform(Transform.ToAvaloniaMatrix()))
         {
             AddChildrenToScene(context, new Point(0, 0));
         }
@@ -978,12 +980,13 @@ public sealed class TransformOffsetLayer : OffsetLayer
         Point localPosition,
         bool onlyFirst)
     {
-        if (!Transform.TryInvert(out Matrix inverse))
+        Matrix4? inverse = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(Transform));
+        if (inverse is null)
         {
             return false;
         }
 
-        Point transformedPosition = inverse.Transform(localPosition - Offset);
+        Point transformedPosition = MatrixUtils.TransformPoint(inverse, localPosition - Offset);
         return FindAnnotationsInChildren(result, transformedPosition, onlyFirst);
     }
 }
@@ -1130,12 +1133,12 @@ public sealed class ClipGeometryLayer : ContainerLayer
 
 public sealed class TransformLayer : ContainerLayer
 {
-    public Matrix Transform { get; set; } = Matrix.Identity;
+    public Matrix4 Transform { get; set; } = Matrix4.Identity();
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
         using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
-        using (context.PushTransform(Transform))
+        using (context.PushTransform(Transform.ToAvaloniaMatrix()))
         {
             base.AddToScene(context, new Point(0, 0));
         }
@@ -1146,12 +1149,13 @@ public sealed class TransformLayer : ContainerLayer
         Point localPosition,
         bool onlyFirst)
     {
-        if (!Transform.TryInvert(out Matrix inverse))
+        Matrix4? inverse = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(Transform));
+        if (inverse is null)
         {
             return false;
         }
 
-        return base.FindAnnotations(result, inverse.Transform(localPosition), onlyFirst);
+        return base.FindAnnotations(result, MatrixUtils.TransformPoint(inverse, localPosition), onlyFirst);
     }
 }
 

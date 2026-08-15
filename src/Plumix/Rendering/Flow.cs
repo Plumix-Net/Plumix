@@ -16,7 +16,7 @@ public abstract class FlowPaintingContext
 
     public abstract Size? GetChildSize(int index);
 
-    public abstract void PaintChild(int index, Matrix? transform = null, double opacity = 1.0);
+    public abstract void PaintChild(int index, Matrix4? transform = null, double opacity = 1.0);
 }
 
 /// <summary>Controls the size, child constraints, and paint transforms of a <see cref="RenderFlow"/>.</summary>
@@ -42,7 +42,7 @@ public abstract class FlowDelegate
 
 public sealed class FlowParentData : ContainerBoxParentData<RenderBox>
 {
-    internal Matrix? Transform { get; set; }
+    internal Matrix4? Transform { get; set; }
 }
 
 /// <summary>Delegate-driven multi-child layout whose children are positioned during paint.</summary>
@@ -209,7 +209,7 @@ public sealed class RenderFlow : RenderBox,
             : _randomAccessChildren[index].Size;
     }
 
-    public void PaintChild(int index, Matrix? transform = null, double opacity = 1.0)
+    public void PaintChild(int index, Matrix4? transform = null, double opacity = 1.0)
     {
         if (index < 0 || index >= _randomAccessChildren.Count)
         {
@@ -228,12 +228,12 @@ public sealed class RenderFlow : RenderBox,
 
         RenderBox child = _randomAccessChildren[index];
         var parentData = (FlowParentData)child.parentData!;
-        if (parentData.Transform.HasValue)
+        if (parentData.Transform is not null)
         {
             throw new InvalidOperationException("A FlowDelegate cannot paint the same child more than once.");
         }
 
-        Matrix childTransform = transform ?? Matrix.Identity;
+        Matrix4 childTransform = transform ?? Matrix4.Identity();
         parentData.Transform = childTransform;
         _lastPaintOrder.Add(index);
         if (opacity == 0.0)
@@ -247,7 +247,9 @@ public sealed class RenderFlow : RenderBox,
         }
 
         Point paintOffset = _paintingOffset.Value;
-        _paintingContext.PushTransform(Matrix.CreateTranslation(paintOffset.X, paintOffset.Y), translated =>
+        _paintingContext.PushTransform(
+            Matrix4.TranslationValues(paintOffset.X, paintOffset.Y, 0.0),
+            translated =>
         {
             if (opacity == 1.0)
             {
@@ -303,17 +305,18 @@ public sealed class RenderFlow : RenderBox,
     {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
-            Matrix transform = ((FlowParentData)child.parentData!).Transform ?? Matrix.Identity;
             visitor(child);
         }
     }
 
-    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        if (((FlowParentData)child.parentData!).Transform is Matrix childTransform)
+        if (((FlowParentData)child.parentData!).Transform is { } childTransform)
         {
-            transform = childTransform * transform;
+            transform.Multiply(childTransform);
         }
+
+        base.ApplyPaintTransform(child, transform);
     }
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
@@ -332,13 +335,17 @@ public sealed class RenderFlow : RenderBox,
             }
 
             RenderBox child = _randomAccessChildren[childIndex];
-            Matrix? transform = ((FlowParentData)child.parentData!).Transform;
-            if (!transform.HasValue || !transform.Value.TryInvert(out Matrix inverse))
+            Matrix4? transform = ((FlowParentData)child.parentData!).Transform;
+            if (transform is null)
             {
                 continue;
             }
 
-            if (child.HitTest(result, inverse.Transform(position)))
+            bool absorbed = result.AddWithPaintTransform(
+                transform,
+                position,
+                (hitResult, hitPosition) => child.HitTest(hitResult, hitPosition));
+            if (absorbed)
             {
                 return true;
             }
@@ -377,7 +384,7 @@ public sealed class RenderFlow : RenderBox,
 
         public override Size? GetChildSize(int index) => owner.GetChildSize(index);
 
-        public override void PaintChild(int index, Matrix? transform = null, double opacity = 1.0)
+        public override void PaintChild(int index, Matrix4? transform = null, double opacity = 1.0)
         {
             owner.PaintChild(index, transform, opacity);
         }

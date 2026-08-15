@@ -355,9 +355,9 @@ internal sealed class RenderScaledInlineWidget : RenderProxyBox
             return;
         }
 
-        context.PushTransform(
-            Matrix.CreateScale(_scale, _scale) * Matrix.CreateTranslation(offset.X, offset.Y),
-            inner => inner.PaintChild(child, default));
+        Matrix4 transform = Matrix4.TranslationValues(offset.X, offset.Y, 0.0);
+        transform.ScaleByDouble(_scale, _scale, 1.0, 1);
+        context.PushTransform(transform, inner => inner.PaintChild(child, default));
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)

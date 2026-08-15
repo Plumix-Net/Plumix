@@ -264,7 +264,7 @@ internal static class SemanticsTraversal
     /// <summary>Converts <paramref name="point"/> into the node's parent's coordinate system.</summary>
     private static Point PointInParentCoordinates(SemanticsNode node, Point point)
     {
-        return node.Transform is { } transform ? transform.Transform(point) : point;
+        return node.Transform is { } transform ? MatrixUtils.TransformPoint(transform, point) : point;
     }
 
     private static Point Center(Rect rect) => new(rect.X + rect.Width / 2.0, rect.Y + rect.Height / 2.0);

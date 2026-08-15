@@ -371,12 +371,10 @@ public sealed class CheckboxListTile : StatelessWidget
         if (CheckboxScaleFactor != 1.0)
         {
             double center = Checkbox.Width / 2.0;
-            var scale = new Matrix(CheckboxScaleFactor, 0, 0, CheckboxScaleFactor, 0, 0);
-            control = new Plumix.Widgets.Transform(
-                transform: Matrix.CreateTranslation(center, center)
-                           * scale
-                           * Matrix.CreateTranslation(-center, -center),
-                child: control);
+            Matrix4 scale = Matrix4.TranslationValues(center, center, 0.0);
+            scale.ScaleByDouble(CheckboxScaleFactor, CheckboxScaleFactor, 1.0, 1);
+            scale.TranslateByDouble(-center, -center, 0, 1);
+            control = new Plumix.Widgets.Transform(transform: scale, child: control);
         }
 
         var affinity = ControlAffinity

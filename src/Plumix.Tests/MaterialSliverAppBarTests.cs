@@ -105,7 +105,7 @@ public sealed class MaterialSliverAppBarTests
 
         var transform = Assert.Single(FindDescendants<RenderTransform>(expanded.RenderView));
         Assert.Equal(Alignment.BottomLeft, transform.Alignment);
-        Assert.Equal(1.5, transform.Transform.M11, precision: 3);
+        Assert.Equal(1.5, transform.Transform[0], precision: 3);
         Assert.Contains(FindDescendants<RenderOpacity>(expanded.RenderView), value => Math.Abs(value.Opacity - 1) < 0.001);
 
         using var collapsed = new WidgetRenderHarness(Wrap(new FlexibleSpaceBarSettings(
@@ -447,7 +447,7 @@ public sealed class MaterialSliverAppBarTests
     public void AlignedTransform_ScalesAroundRequestedAnchorAndFeedsSemanticsTransform()
     {
         using var harness = new WidgetRenderHarness(new Plumix.Widgets.Transform(
-            Matrix.CreateScale(1.5, 1.5),
+            Matrix4.Diagonal3Values(1.5, 1.5, 1.0),
             alignment: Alignment.BottomRight,
             child: new SizedBox(width: 100, height: 40)));
         harness.Pump(new Size(100, 40));

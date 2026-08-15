@@ -99,14 +99,14 @@ public sealed class CompositedTransformTests
 
         Assert.Equal(new Size(40, 20), link.LeaderSize);
         Assert.NotNull(link.Leader);
-        Assert.Equal(Matrix.CreateTranslation(-85, -38), follower.GetCurrentTransform());
+        Assert.Equal(Matrix4.TranslationValues(-85, -38, 0.0), follower.GetCurrentTransform());
 
         var result = new BoxHitTestResult();
         Assert.True(stack.HitTest(result, new Point(75, 67)));
         Assert.Contains(result.Path, entry => ReferenceEquals(entry.Target, followerChild));
 
-        Matrix semanticsTransform = Matrix.Identity;
-        follower.ApplyPaintTransform(followerChild, ref semanticsTransform);
+        Matrix4 semanticsTransform = Matrix4.Identity();
+        follower.ApplyPaintTransform(followerChild, semanticsTransform);
         Assert.Equal(follower.GetCurrentTransform(), semanticsTransform);
 
         Assert.Single(FindLayers<LeaderLayer>(pipeline.RootLayer));
@@ -128,7 +128,7 @@ public sealed class CompositedTransformTests
         pipeline.FlushPaint();
 
         Assert.Null(link.Leader);
-        Assert.Equal(Matrix.Identity, follower.GetCurrentTransform());
+        Assert.Equal(Matrix4.Identity(), follower.GetCurrentTransform());
         Assert.False(follower.HitTest(new BoxHitTestResult(), new Point(5, 5)));
 
         int semanticsVisits = 0;
@@ -146,7 +146,7 @@ public sealed class CompositedTransformTests
         var link = new LayerLink();
         var target = new RenderLeaderLayer(link, new HitTestRenderBox(new Size(40, 20)));
         var transformedTarget = new RenderTransform(
-            Matrix.CreateScale(1.5, 2),
+            Matrix4.Diagonal3Values(1.5, 2, 1.0),
             Alignment.TopLeft,
             target);
         var follower = new RenderFollowerLayer(
@@ -156,7 +156,7 @@ public sealed class CompositedTransformTests
             followerAnchor: Alignment.Center,
             child: new HitTestRenderBox(new Size(20, 10)));
         var transformedFollower = new RenderTransform(
-            Matrix.CreateScale(0.5, 0.75),
+            Matrix4.Diagonal3Values(0.5, 0.75, 1.0),
             Alignment.TopLeft,
             follower);
         var stack = new RenderStack([transformedTarget, transformedFollower], clipBehavior: Clip.None);
@@ -170,11 +170,12 @@ public sealed class CompositedTransformTests
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
-        Assert.True(target.TryGetTransformFromRoot(out Matrix leaderToRoot));
-        Assert.True(follower.TryGetTransformFromRoot(out Matrix followerToRoot));
-        Matrix followerChildToRoot = follower.GetCurrentTransform() * followerToRoot;
-        Point expectedAnchor = leaderToRoot.Transform(new Point(45, 27));
-        Point actualAnchor = followerChildToRoot.Transform(new Point(10, 5));
+        Assert.True(target.TryGetTransformFromRoot(out Matrix4 leaderToRoot));
+        Assert.True(follower.TryGetTransformFromRoot(out Matrix4 followerToRoot));
+        Matrix4 followerChildToRoot = Matrix4.Copy(followerToRoot);
+        followerChildToRoot.Multiply(follower.GetCurrentTransform());
+        Point expectedAnchor = MatrixUtils.TransformPoint(leaderToRoot, new Point(45, 27));
+        Point actualAnchor = MatrixUtils.TransformPoint(followerChildToRoot, new Point(10, 5));
         Assert.Equal(expectedAnchor.X, actualAnchor.X, precision: 8);
         Assert.Equal(expectedAnchor.Y, actualAnchor.Y, precision: 8);
     }

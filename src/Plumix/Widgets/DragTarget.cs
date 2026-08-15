@@ -129,13 +129,13 @@ public class Draggable<T> : StatefulWidget
     {
         _ = draggable;
         if (context.FindRenderObject() is not RenderBox renderBox
-            || !renderBox.TryGetTransformFromRoot(out Matrix localToRoot)
-            || !localToRoot.TryInvert(out Matrix rootToLocal))
+            || !renderBox.TryGetTransformFromRoot(out Matrix4 localToRoot)
+            || Matrix4.TryInvert(localToRoot) is not { } rootToLocal)
         {
             throw new InvalidOperationException("The Draggable child must have an attached RenderBox.");
         }
 
-        return rootToLocal.Transform(position);
+        return MatrixUtils.TransformPoint(rootToLocal, position);
     }
 
     public static Point PointerDragAnchorStrategy(
@@ -605,10 +605,10 @@ internal sealed class DragAvatar<T> : IDragAvatar
     {
         LastOffset = globalPosition - new Vector(_dragStartPoint.X, _dragStartPoint.Y);
         if (_overlayState.Context.FindRenderObject() is RenderBox overlayBox
-            && overlayBox.TryGetTransformFromRoot(out Matrix overlayToRoot)
-            && overlayToRoot.TryInvert(out Matrix rootToOverlay))
+            && overlayBox.TryGetTransformFromRoot(out Matrix4 overlayToRoot)
+            && Matrix4.TryInvert(overlayToRoot) is { } rootToOverlay)
         {
-            Point overlayPosition = rootToOverlay.Transform(globalPosition);
+            Point overlayPosition = MatrixUtils.TransformPoint(rootToOverlay, globalPosition);
             _overlayOffset = overlayPosition - new Vector(_dragStartPoint.X, _dragStartPoint.Y);
             _entry.MarkNeedsBuild();
         }

@@ -532,32 +532,178 @@ public sealed class Opacity : SingleChildRenderObjectWidget
 public sealed class Transform : SingleChildRenderObjectWidget
 {
     public Transform(
-        Matrix transform,
+        Matrix4 transform,
         Widget? child = null,
+        Point? origin = null,
         Alignment? alignment = null,
+        bool transformHitTests = true,
         FilterQuality? filterQuality = null,
         Key? key = null) : base(child, key)
     {
         Matrix = transform;
+        Origin = origin;
         Alignment = alignment;
+        TransformHitTests = transformHitTests;
         FilterQuality = filterQuality;
     }
 
-    public Matrix Matrix { get; }
+    /// <summary>Creates a widget that rotates its child by <paramref name="angle"/> clockwise radians.</summary>
+    public static Transform Rotate(
+        double angle,
+        Widget? child = null,
+        Point? origin = null,
+        Alignment? alignment = null,
+        bool transformHitTests = true,
+        FilterQuality? filterQuality = null,
+        Key? key = null) =>
+        new(
+            ComputeRotation(angle),
+            child,
+            origin,
+            alignment ?? Rendering.Alignment.Center,
+            transformHitTests,
+            filterQuality,
+            key);
+
+    /// <summary>Creates a widget that translates its child by <paramref name="offset"/>.</summary>
+    public static Transform Translate(
+        Point offset,
+        Widget? child = null,
+        bool transformHitTests = true,
+        FilterQuality? filterQuality = null,
+        Key? key = null) =>
+        new(
+            Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
+            child,
+            origin: null,
+            alignment: null,
+            transformHitTests,
+            filterQuality,
+            key);
+
+    /// <summary>Creates a widget that scales its child uniformly or per axis.</summary>
+    public static Transform Scale(
+        double? scale = null,
+        double? scaleX = null,
+        double? scaleY = null,
+        Widget? child = null,
+        Point? origin = null,
+        Alignment? alignment = null,
+        bool transformHitTests = true,
+        FilterQuality? filterQuality = null,
+        Key? key = null)
+    {
+        if (scale is null && scaleX is null && scaleY is null)
+        {
+            throw new ArgumentException(
+                "At least one of 'scale', 'scaleX' and 'scaleY' is required to be non-null",
+                nameof(scale));
+        }
+
+        if (scale is not null && (scaleX is not null || scaleY is not null))
+        {
+            throw new ArgumentException(
+                "If 'scale' is non-null then 'scaleX' and 'scaleY' must be left null",
+                nameof(scale));
+        }
+
+        return new Transform(
+            Matrix4.Diagonal3Values(scale ?? scaleX ?? 1.0, scale ?? scaleY ?? 1.0, 1.0),
+            child,
+            origin,
+            alignment ?? Rendering.Alignment.Center,
+            transformHitTests,
+            filterQuality,
+            key);
+    }
+
+    /// <summary>Creates a widget that mirrors its child about its center.</summary>
+    public static Transform Flip(
+        bool flipX = false,
+        bool flipY = false,
+        Widget? child = null,
+        Point? origin = null,
+        bool transformHitTests = true,
+        FilterQuality? filterQuality = null,
+        Key? key = null) =>
+        new(
+            Matrix4.Diagonal3Values(flipX ? -1.0 : 1.0, flipY ? -1.0 : 1.0, 1.0),
+            child,
+            origin,
+            Rendering.Alignment.Center,
+            transformHitTests,
+            filterQuality,
+            key);
+
+    public Matrix4 Matrix { get; }
+    public Point? Origin { get; }
     public Alignment? Alignment { get; }
+    public bool TransformHitTests { get; }
     public FilterQuality? FilterQuality { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderTransform(Matrix, Alignment, child: null, FilterQuality);
+        return new RenderTransform(Matrix, Alignment, child: null, FilterQuality, Origin, TransformHitTests);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var transform = (RenderTransform)renderObject;
         transform.Transform = Matrix;
+        transform.Origin = Origin;
         transform.Alignment = Alignment;
+        transform.TransformHitTests = TransformHitTests;
         transform.FilterQuality = FilterQuality;
+    }
+
+    /// <remarks>
+    /// Flutter's <c>Transform._computeRotation</c>: quarter turns snap to exact matrices so a 90 degree
+    /// rotation does not leave a 6e-17 skew behind.
+    /// </remarks>
+    private static Matrix4 ComputeRotation(double radians)
+    {
+        if (!double.IsFinite(radians))
+        {
+            throw new ArgumentException(
+                $"Cannot compute the rotation matrix for a non-finite angle: {radians}",
+                nameof(radians));
+        }
+
+        if (radians == 0.0)
+        {
+            return Matrix4.Identity();
+        }
+
+        double sine = Math.Sin(radians);
+        if (sine == 1.0)
+        {
+            return CreateZRotation(1.0, 0.0);
+        }
+
+        if (sine == -1.0)
+        {
+            return CreateZRotation(-1.0, 0.0);
+        }
+
+        double cosine = Math.Cos(radians);
+        if (cosine == -1.0)
+        {
+            return CreateZRotation(0.0, -1.0);
+        }
+
+        return CreateZRotation(sine, cosine);
+    }
+
+    private static Matrix4 CreateZRotation(double sine, double cosine)
+    {
+        Matrix4 result = Matrix4.Zero();
+        result.Storage[0] = cosine;
+        result.Storage[1] = sine;
+        result.Storage[4] = -sine;
+        result.Storage[5] = cosine;
+        result.Storage[10] = 1.0;
+        result.Storage[15] = 1.0;
+        return result;
     }
 }
 
@@ -808,7 +954,7 @@ public sealed class Container : StatelessWidget
         Alignment? alignment = null,
         EdgeInsetsGeometry? margin = null,
         BoxConstraints? constraints = null,
-        Matrix? transform = null,
+        Matrix4? transform = null,
         EdgeInsetsGeometry? padding = null,
         double? width = null,
         double? height = null,
@@ -841,7 +987,7 @@ public sealed class Container : StatelessWidget
 
     public BoxConstraints? Constraints { get; }
 
-    public Matrix? Transform { get; }
+    public Matrix4? Transform { get; }
 
     public EdgeInsetsGeometry? Padding { get; }
 
@@ -913,9 +1059,9 @@ public sealed class Container : StatelessWidget
             current = new Padding(Margin.Value, current);
         }
 
-        if (Transform.HasValue)
+        if (Transform is { } containerTransform)
         {
-            current = new Transform(Transform.Value, current);
+            current = new Transform(containerTransform, current);
         }
 
         return current;

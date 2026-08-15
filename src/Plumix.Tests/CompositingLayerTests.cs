@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/layer.dart (parity regression tests)
 
@@ -260,7 +261,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var transform = new RenderTransform(
-            Matrix.CreateTranslation(8, 4),
+            Matrix4.TranslationValues(8, 4, 0.0),
             alignment: null,
             child: leaf,
             filterQuality: FilterQuality.Low);
@@ -278,16 +279,16 @@ public sealed class CompositingLayerTests
 
         Assert.Equal(1, leaf.PaintCount);
         var transformLayer = Assert.IsType<TransformOffsetLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(Matrix.CreateTranslation(8, 4), transformLayer.Transform);
+        Assert.Equal(Matrix4.TranslationValues(8, 4, 0.0), transformLayer.Transform);
         Assert.Equal(FilterQuality.Low, transformLayer.FilterQuality);
 
-        transform.Transform = Matrix.CreateTranslation(21, 13);
+        transform.Transform = Matrix4.TranslationValues(21, 13, 0.0);
         transform.FilterQuality = FilterQuality.High;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
         Assert.Equal(1, leaf.PaintCount);
-        Assert.Equal(Matrix.CreateTranslation(21, 13), transformLayer.Transform);
+        Assert.Equal(Matrix4.TranslationValues(21, 13, 0.0), transformLayer.Transform);
         Assert.Equal(FilterQuality.High, transformLayer.FilterQuality);
     }
 
@@ -296,7 +297,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var transform = new RenderTransform(
-            Matrix.CreateRotation(Math.PI / 2.0),
+            Matrix4.RotationZ(Math.PI / 2.0),
             alignment: Alignment.Center,
             child: leaf);
         var root = new RenderView
@@ -310,11 +311,11 @@ public sealed class CompositingLayerTests
 
         Assert.Equal(new Size(32, 32), transform.Size);
         var center = new Point(16, 16);
-        Point mappedCenter = transform.EffectiveTransform.Transform(center);
+        Point mappedCenter = MatrixUtils.TransformPoint(transform.EffectiveTransform, center);
         Assert.Equal(center.X, mappedCenter.X, 6);
         Assert.Equal(center.Y, mappedCenter.Y, 6);
 
-        Point mappedTopLeft = transform.EffectiveTransform.Transform(new Point(0, 0));
+        Point mappedTopLeft = MatrixUtils.TransformPoint(transform.EffectiveTransform, new Point(0, 0));
         Assert.Equal(32.0, mappedTopLeft.X, 6);
         Assert.Equal(0.0, mappedTopLeft.Y, 6);
     }

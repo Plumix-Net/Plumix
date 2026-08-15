@@ -787,13 +787,13 @@ public sealed class SliverReorderableListState : State
         }
 
         if (renderObject is not RenderBox viewport || !viewport.HasSize
-            || !viewport.TryGetTransformFromRoot(out Matrix transform))
+            || !viewport.TryGetTransformFromRoot(out Matrix4 transform))
         {
             bounds = default;
             return false;
         }
 
-        Point topLeft = transform.Transform(new Point());
+        Point topLeft = MatrixUtils.TransformPoint(transform, new Point());
         bounds = new Rect(topLeft, viewport.Size);
         return true;
     }
@@ -964,9 +964,9 @@ public sealed class SliverReorderableListState : State
     private Point OverlayOrigin()
     {
         if (_overlay?.Context.FindRenderObject() is RenderBox renderBox
-            && renderBox.TryGetTransformFromRoot(out Matrix transform))
+            && renderBox.TryGetTransformFromRoot(out Matrix4 transform))
         {
-            return transform.Transform(new Point());
+            return MatrixUtils.TransformPoint(transform, new Point());
         }
 
         return default;
@@ -1122,7 +1122,7 @@ internal sealed class ReorderableItemState : State
             Vector offset = EvaluateOffset();
             if (offset != default)
             {
-                child = new Transform(Matrix.CreateTranslation(offset.X, offset.Y), child);
+                child = new Transform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0), child);
             }
         }
 
@@ -1186,13 +1186,13 @@ internal sealed class ReorderableItemState : State
     internal bool TryGetGeometry(out Rect geometry)
     {
         if (Context.FindRenderObject() is not RenderBox renderBox || !renderBox.HasSize
-            || !renderBox.TryGetTransformFromRoot(out Matrix transform))
+            || !renderBox.TryGetTransformFromRoot(out Matrix4 transform))
         {
             geometry = default;
             return false;
         }
 
-        Point topLeft = transform.Transform(new Point());
+        Point topLeft = MatrixUtils.TransformPoint(transform, new Point());
         geometry = new Rect(topLeft, renderBox.Size);
         return true;
     }

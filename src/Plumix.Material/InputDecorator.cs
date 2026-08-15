@@ -757,12 +757,12 @@ public sealed class InputDecorator : StatefulWidget
                         curve: Curves.FastOutSlowIn)));
         }
 
-        private static Matrix ShakeTransform(double value)
+        private static Matrix4 ShakeTransform(double value)
         {
             double shakeOffset = value <= 0.25
                 ? -value
                 : value < 0.75 ? value - 0.5 : (1.0 - value) * 4.0;
-            return Matrix.CreateTranslation(shakeOffset * 4.0, 0.0);
+            return Matrix4.TranslationValues(shakeOffset * 4.0, 0.0, 0.0);
         }
 
         private Widget? BuildHint(InputDecoration decoration, TextStyle hintStyle)

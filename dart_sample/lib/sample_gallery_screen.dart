@@ -53,6 +53,7 @@ import 'demos/material/divider_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/general/flow_demo_page.dart';
+import 'demos/general/transform_demo_page.dart';
 import 'demos/general/composited_transform_demo_page.dart';
 import 'demos/general/image_demo_page.dart';
 import 'demos/material/floating_action_button_demo_page.dart';
@@ -687,6 +688,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Flow + RepaintBoundary',
           subtitle: 'paint-time transforms + isolated child display lists',
           builder: () => const FlowDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.transform,
+          title: 'Transform + Matrix4',
+          subtitle: 'rotate/scale/flip/translate + perspective 3D rotation',
+          builder: () => const TransformDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.compositedTransform,

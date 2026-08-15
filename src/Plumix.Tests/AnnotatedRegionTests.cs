@@ -3,6 +3,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
+using Plumix.UI;
 
 // Dart parity sources:
 // - flutter/packages/flutter/lib/src/widgets/annotated_region.dart
@@ -140,7 +141,7 @@ public sealed class AnnotatedRegionTests
         var offset = new OffsetLayer { Offset = new Point(10, 20) };
         var transform = new TransformLayer
         {
-            Transform = Matrix.CreateScale(2, 2),
+            Transform = Matrix4.Diagonal3Values(2, 2, 1.0),
         };
         var clip = new ClipRectLayer
         {

@@ -254,7 +254,7 @@ internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLay
 
     public Size Size => Rect.Size;
 
-    public Matrix GetTransformTo(RenderObject? ancestor) => _paragraph.GetTransformTo(ancestor);
+    public Matrix4 GetTransformTo(RenderObject? ancestor) => _paragraph.GetTransformTo(ancestor);
 
     public IReadOnlyList<Rect> BoundingBoxes
     {
@@ -1190,15 +1190,17 @@ internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLay
         bool isExtent,
         SelectionExtendDirection movement)
     {
-        Matrix transform = _paragraph.GetTransformTo(null);
-        if (!transform.TryInvert(out Matrix inverse))
+        Matrix4 transform = _paragraph.GetTransformTo(null);
+        Matrix4? inverse = Matrix4.TryInvert(transform);
+        if (inverse is null)
         {
             return movement is SelectionExtendDirection.PreviousLine or SelectionExtendDirection.Backward
                 ? SelectionResult.Previous
                 : SelectionResult.Next;
         }
 
-        double baselineInParagraphCoordinates = inverse.Transform(new Point(horizontalBaseline, 0)).X;
+        double baselineInParagraphCoordinates =
+            MatrixUtils.TransformPoint(inverse, new Point(horizontalBaseline, 0)).X;
         TextPosition newPosition;
         SelectionResult result;
         switch (movement)
@@ -1405,14 +1407,15 @@ internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLay
 
     private bool TryGlobalToLocal(Point globalPosition, out Point localPosition)
     {
-        Matrix transform = _paragraph.GetTransformTo(null);
-        if (!transform.TryInvert(out Matrix inverse))
+        Matrix4 transform = _paragraph.GetTransformTo(null);
+        Matrix4? inverse = Matrix4.TryInvert(transform);
+        if (inverse is null)
         {
             localPosition = default;
             return false;
         }
 
-        localPosition = inverse.Transform(globalPosition);
+        localPosition = MatrixUtils.TransformPoint(inverse, globalPosition);
         return true;
     }
 

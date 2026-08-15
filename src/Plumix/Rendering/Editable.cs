@@ -363,8 +363,18 @@ public sealed class RenderEditable : RenderBox
     private bool TryGlobalToLocal(Point globalPosition, out Point localPosition)
     {
         localPosition = globalPosition;
-        if (!TryGetTransformFromRoot(out Matrix transform) || !transform.TryInvert(out Matrix inverse)) return false;
-        localPosition = inverse.Transform(globalPosition);
+        if (!TryGetTransformFromRoot(out Matrix4 transform))
+        {
+            return false;
+        }
+
+        Matrix4? inverse = Matrix4.TryInvert(transform);
+        if (inverse is null)
+        {
+            return false;
+        }
+
+        localPosition = MatrixUtils.TransformPoint(inverse, globalPosition);
         return true;
     }
 

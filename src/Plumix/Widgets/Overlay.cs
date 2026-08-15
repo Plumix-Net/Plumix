@@ -15,7 +15,7 @@ public delegate Widget OverlayChildLayoutBuilder(
 
 public sealed record OverlayChildLayoutInfo(
     Size ChildSize,
-    Matrix ChildPaintTransform,
+    Matrix4 ChildPaintTransform,
     Size OverlaySize);
 
 public enum OverlayChildLocation
@@ -302,7 +302,7 @@ internal sealed class OverlayPortalState : State
                 "OverlayPortal layout information is only available after its regular child is laid out.");
         }
 
-        Matrix transform = ResolveTransformToAncestor(portalRenderBox, theater);
+        Matrix4 transform = ResolveTransformToAncestor(portalRenderBox, theater);
         Size overlaySize = theater.HasSize
             ? theater.Size
             : constraints.Biggest;
@@ -312,34 +312,28 @@ internal sealed class OverlayPortalState : State
             overlaySize);
     }
 
-    private static Matrix ResolveTransformToAncestor(
+    private static Matrix4 ResolveTransformToAncestor(
         RenderObject source,
         RenderObject ancestor)
     {
-        Matrix transform = Matrix.Identity;
+        Matrix4 transform = Matrix4.Identity();
+        var chain = new List<RenderObject>();
         RenderObject? child = source;
         while (child?.Parent is not null && !ReferenceEquals(child, ancestor))
         {
-            RenderObject parent = child.Parent;
-            Point childOffset = child.parentData is BoxParentData boxParentData
-                ? boxParentData.offset
-                : default;
-            Matrix childToParent = Matrix.CreateTranslation(
-                childOffset.X,
-                childOffset.Y);
-            if (parent is RenderTransform renderTransform)
-            {
-                childToParent *= renderTransform.EffectiveTransform;
-            }
-
-            transform = childToParent * transform;
-            child = parent;
+            chain.Add(child);
+            child = child.Parent;
         }
 
         if (!ReferenceEquals(child, ancestor))
         {
             throw new InvalidOperationException(
                 "OverlayPortal layout information requires an ancestor target Overlay.");
+        }
+
+        for (int index = chain.Count - 1; index >= 0; index--)
+        {
+            chain[index].Parent!.ApplyPaintTransform(chain[index], transform);
         }
 
         return transform;
@@ -1334,22 +1328,23 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
     /// The portal child is laid out under the theater but painted here, so its semantics transform
     /// is the one that maps its own paint position back into this surrogate's coordinates.
     /// </summary>
-    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
         if (!ReferenceEquals(child, _portalChild))
         {
-            base.ApplyPaintTransform(child, ref transform);
+            base.ApplyPaintTransform(child, transform);
             return;
         }
 
-        Matrix portalChildToRoot = _portalChild!.ComputePaintTransformToRoot();
-        Matrix surrogateToRoot = ComputePaintTransformToRoot();
-        if (!surrogateToRoot.TryInvert(out Matrix rootToSurrogate))
+        Matrix4 portalChildToRoot = _portalChild!.ComputePaintTransformToRoot();
+        Matrix4 rootToSurrogate = ComputePaintTransformToRoot();
+        if (rootToSurrogate.Invert() == 0.0)
         {
             return;
         }
 
-        transform = portalChildToRoot * rootToSurrogate * transform;
+        transform.Multiply(rootToSurrogate);
+        transform.Multiply(portalChildToRoot);
     }
 }
 

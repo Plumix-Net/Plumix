@@ -270,11 +270,11 @@ public sealed class CalendarDatePicker : StatefulWidget
             const double size = 24;
             double center = size / 2;
             double angle = Math.PI * (_modeController?.Value ?? 0);
-            var rotation = new Matrix(Math.Cos(angle), Math.Sin(angle), -Math.Sin(angle), Math.Cos(angle), 0, 0);
+            Matrix4 rotation = Matrix4.TranslationValues(center, center, 0.0);
+            rotation.RotateZ(angle);
+            rotation.TranslateByDouble(-center, -center, 0, 1);
             return new Plumix.Widgets.Transform(
-                transform: Matrix.CreateTranslation(center, center)
-                           * rotation
-                           * Matrix.CreateTranslation(-center, -center),
+                transform: rotation,
                 child: new Icon(Icons.ArrowDropDown, size: size, color: color));
         }
 

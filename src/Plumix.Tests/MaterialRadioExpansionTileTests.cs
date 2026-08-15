@@ -201,7 +201,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         var transform = FindDescendant<RenderTransform>(harness.RenderView);
         Assert.NotNull(transform);
-        var expected = new Matrix(scaleFactor, 0, 0, scaleFactor, 0, 0);
+        Matrix4 expected = Matrix4.Diagonal3Values(scaleFactor, scaleFactor, 1.0);
         Assert.Equal(expected, transform!.Transform);
         Assert.Equal(Alignment.Center, transform.Alignment);
     }
@@ -320,7 +320,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Controller body"));
         var arrowTransform = FindDescendants<RenderTransform>(harness.RenderView).FirstOrDefault();
         Assert.NotNull(arrowTransform);
-        Assert.InRange(arrowTransform!.Transform.M11, -1.01, -0.99);
+        Assert.InRange(arrowTransform!.Transform[0], -1.01, -0.99);
     }
 
     [Fact]

@@ -16,12 +16,12 @@ public sealed class SemanticsTraversalTests
     public void SemanticsNode_RectIsLocalAndTransformMapsIntoTheParentNode()
     {
         var leaf = new LabelBox("Moved", new Size(12, 8));
-        var transform = new RenderTransform(Matrix.CreateTranslation(30, 12), leaf);
+        var transform = new RenderTransform(Matrix4.TranslationValues(30, 12, 0.0), leaf);
         SemanticsNode root = Compile(transform, new Size(220, 120));
 
         SemanticsNode moved = Assert.Single(root.Children);
         Assert.Equal(new Rect(0, 0, 12, 8), moved.Rect);
-        Assert.Equal(Matrix.CreateTranslation(30, 12), moved.Transform);
+        Assert.Equal(Matrix4.TranslationValues(30, 12, 0.0), moved.Transform);
         Assert.Equal(new Rect(30, 12, 12, 8), moved.GlobalRect);
     }
 

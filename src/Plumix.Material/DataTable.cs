@@ -691,7 +691,11 @@ public sealed class DataTable : StatelessWidget
                                + (Math.PI * Curves.EaseIn(_orientationController!.Value));
                 double cosine = Math.Cos(angle);
                 double sine = Math.Sin(angle);
-                var transform = new Matrix(cosine, sine, -sine, cosine, 0.0, -1.5);
+                var transform = new Matrix4(
+                    cosine, sine, 0.0, 0.0,
+                    -sine, cosine, 0.0, 0.0,
+                    0.0, 0.0, 1.0, 0.0,
+                    0.0, -1.5, 0.0, 1.0);
                 return new Opacity(
                     opacity,
                     new Plumix.Widgets.Transform(

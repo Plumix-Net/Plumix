@@ -436,7 +436,7 @@ public sealed class DragTargetTests
         Assert.NotNull(layoutInfo);
         Assert.Equal(new Size(40, 30), layoutInfo.ChildSize);
         Assert.Equal(new Size(240, 120), layoutInfo.OverlaySize);
-        Assert.Equal(new Point(20, 10), layoutInfo.ChildPaintTransform.Transform(new Point()));
+        Assert.Equal(new Point(20, 10), MatrixUtils.TransformPoint(layoutInfo.ChildPaintTransform, new Point()));
         Assert.Equal(new Size(25, 15), harness.FindRenderObject<RenderColoredBox>().Size);
     }
 

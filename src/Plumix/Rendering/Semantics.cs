@@ -723,13 +723,13 @@ public sealed class SemanticsNode
     /// identity transform.
     /// </summary>
     /// <remarks>Flutter's <c>SemanticsNode.transform</c>.</remarks>
-    public Matrix? Transform
+    public Matrix4? Transform
     {
         get => _transform;
-        set => _transform = value is { IsIdentity: true } ? null : value;
+        set => _transform = value is null || MatrixUtils.IsIdentity(value) ? null : value;
     }
 
-    private Matrix? _transform;
+    private Matrix4? _transform;
 
     /// <summary>The semantic clip an ancestor applied, in this node's coordinate system.</summary>
     public Rect? ParentSemanticsClipRect { get; internal set; }
@@ -762,12 +762,13 @@ public sealed class SemanticsNode
     {
         get
         {
-            Matrix transform = Matrix.Identity;
+            Matrix4 transform = Matrix4.Identity();
             for (SemanticsNode? node = this; node != null; node = node.Parent)
             {
                 if (node._transform is { } nodeTransform)
                 {
-                    transform *= nodeTransform;
+                    // Ancestors sit to the left of descendants in Flutter's column-vector convention.
+                    MatrixUtils.MultiplyInPlace(nodeTransform, transform);
                 }
             }
 
@@ -775,30 +776,17 @@ public sealed class SemanticsNode
         }
     }
 
-    internal static Rect TransformRect(Matrix transform, Rect rect)
+    internal static Rect TransformRect(Matrix4 transform, Rect rect)
     {
-        if (transform.IsIdentity)
+        if (MatrixUtils.IsIdentity(transform))
         {
             return rect;
         }
 
-        var p1 = transform.Transform(rect.TopLeft);
-        var p2 = transform.Transform(rect.TopRight);
-        var p3 = transform.Transform(rect.BottomLeft);
-        var p4 = transform.Transform(rect.BottomRight);
-        double minX = Math.Min(Math.Min(p1.X, p2.X), Math.Min(p3.X, p4.X));
-        double minY = Math.Min(Math.Min(p1.Y, p2.Y), Math.Min(p3.Y, p4.Y));
-        double maxX = Math.Max(Math.Max(p1.X, p2.X), Math.Max(p3.X, p4.X));
-        double maxY = Math.Max(Math.Max(p1.Y, p2.Y), Math.Max(p3.Y, p4.Y));
-        return new Rect(minX, minY, maxX - minX, maxY - minY);
+        return MatrixUtils.TransformRect(transform, rect);
     }
 
-    private static bool IsZeroTransform(Matrix? transform)
-    {
-        return transform is { } value
-               && value.M11 == 0 && value.M12 == 0
-               && value.M21 == 0 && value.M22 == 0;
-    }
+    private static bool IsZeroTransform(Matrix4? transform) => transform is { } value && value.IsZero();
 
     public string? Label { get; internal set; }
     public string? Hint { get; internal set; }

@@ -1,4 +1,6 @@
 using Avalonia;
+using Plumix.Gestures;
+using Plumix.UI;
 
 namespace Plumix.Rendering;
 
@@ -190,9 +192,9 @@ public sealed class RenderFollowerLayer : RenderProxyBox
         }
     }
 
-    public Matrix GetCurrentTransform()
+    public Matrix4 GetCurrentTransform()
     {
-        return _followerLayer?.GetLastTransform() ?? Matrix.Identity;
+        return _followerLayer?.GetLastTransform() ?? Matrix4.Identity();
     }
 
     protected override bool AlwaysNeedsCompositing => true;
@@ -225,14 +227,15 @@ public sealed class RenderFollowerLayer : RenderProxyBox
             return false;
         }
 
-        Matrix transform = GetCurrentTransform();
-        if (!transform.TryInvert(out Matrix inverse))
+        Matrix4? inverse =
+            Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(GetCurrentTransform()));
+        if (inverse is null)
         {
             return false;
         }
 
         var childParentData = (BoxParentData)Child.parentData!;
-        Point transformedPosition = inverse.Transform(position) - childParentData.offset;
+        Point transformedPosition = MatrixUtils.TransformPoint(inverse, position) - childParentData.offset;
         return Child.HitTest(result, transformedPosition);
     }
 
@@ -247,15 +250,14 @@ public sealed class RenderFollowerLayer : RenderProxyBox
         visitor(Child);
     }
 
-    public override void ApplyPaintTransform(RenderObject child, ref Matrix transform)
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        base.ApplyPaintTransform(child, ref transform);
-        transform = GetCurrentTransform() * transform;
+        transform.Multiply(GetCurrentTransform());
     }
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        Matrix? linkedTransform = ComputeLinkedTransform();
+        Matrix4? linkedTransform = ComputeLinkedTransform();
         if (_followerLayer == null)
         {
             _followerLayer = new FollowerLayer(
@@ -275,24 +277,29 @@ public sealed class RenderFollowerLayer : RenderProxyBox
         ctx.PushLayer(_followerLayer, childContext => base.Paint(childContext, default));
     }
 
-    private Matrix? ComputeLinkedTransform()
+    private Matrix4? ComputeLinkedTransform()
     {
         RenderLeaderLayer? leader = _link.RenderLeader;
         if (leader == null
             || !_link.LeaderSize.HasValue
-            || !leader.TryGetTransformFromRoot(out Matrix leaderToRoot)
-            || !TryGetTransformFromRoot(out Matrix followerToRoot)
-            || !followerToRoot.TryInvert(out Matrix rootToFollower))
+            || !leader.TryGetTransformFromRoot(out Matrix4 leaderToRoot)
+            || !TryGetTransformFromRoot(out Matrix4 followerToRoot))
+        {
+            return null;
+        }
+
+        Matrix4 result = Matrix4.Copy(followerToRoot);
+        if (result.Invert() == 0.0)
         {
             return null;
         }
 
         Point leaderPoint = AlongSize(_leaderAnchor, _link.LeaderSize.Value) + _offset;
         Point followerPoint = AlongSize(_followerAnchor, Size);
-        Matrix desiredToRoot = Matrix.CreateTranslation(-followerPoint.X, -followerPoint.Y)
-                               * Matrix.CreateTranslation(leaderPoint.X, leaderPoint.Y)
-                               * leaderToRoot;
-        return desiredToRoot * rootToFollower;
+        result.Multiply(leaderToRoot);
+        result.TranslateByDouble(leaderPoint.X, leaderPoint.Y, 0, 1);
+        result.TranslateByDouble(-followerPoint.X, -followerPoint.Y, 0, 1);
+        return result;
     }
 
     private static Point AlongSize(Alignment alignment, Size size)

@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -571,7 +572,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         for (int index = 0; index < Selectables.Count; index += 1)
         {
             bool globalRectsContainPosition = false;
-            Matrix transform = Selectables[index].GetTransformTo(null);
+            Matrix4 transform = Selectables[index].GetTransformTo(null);
             foreach (Rect rect in Selectables[index].BoundingBoxes)
             {
                 Rect globalRect = RenderObject.TransformRect(transform, rect);
@@ -788,8 +789,8 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         SelectionPoint? startPoint = null;
         if (startGeometry.StartSelectionPoint is { } geometryStart)
         {
-            Matrix startTransform = GetTransformFrom(Selectables[startIndexWalker]);
-            Point start = startTransform.Transform(geometryStart.LocalPosition);
+            Matrix4 startTransform = GetTransformFrom(Selectables[startIndexWalker]);
+            Point start = MatrixUtils.TransformPoint(startTransform, geometryStart.LocalPosition);
             if (IsFinite(start))
             {
                 startPoint = new SelectionPoint(start, geometryStart.LineHeight, geometryStart.HandleType);
@@ -807,8 +808,8 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         SelectionPoint? endPoint = null;
         if (endGeometry.EndSelectionPoint is { } geometryEnd)
         {
-            Matrix endTransform = GetTransformFrom(Selectables[endIndexWalker]);
-            Point end = endTransform.Transform(geometryEnd.LocalPosition);
+            Matrix4 endTransform = GetTransformFrom(Selectables[endIndexWalker]);
+            Point end = MatrixUtils.TransformPoint(endTransform, geometryEnd.LocalPosition);
             if (IsFinite(end))
             {
                 endPoint = new SelectionPoint(end, geometryEnd.LineHeight, geometryEnd.HandleType);
@@ -819,7 +820,7 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
         Rect? drawableArea = HasSize ? new Rect(default, ContainerSize) : null;
         for (int index = CurrentSelectionStartIndex; index <= CurrentSelectionEndIndex; index += 1)
         {
-            Matrix transform = GetTransformFrom(Selectables[index]);
+            Matrix4 transform = GetTransformFrom(Selectables[index]);
             foreach (Rect rect in Selectables[index].Value.SelectionRects)
             {
                 Rect localRect = RenderObject.TransformRect(transform, rect);
@@ -1109,7 +1110,7 @@ public class StaticSelectionContainerDelegate : MultiSelectableSelectionContaine
                 startPoint.LocalPosition.X,
                 startPoint.LocalPosition.Y - (startPoint.LineHeight / 2));
             UpdateLastSelectionEdgeLocation(
-                start.GetTransformTo(null).Transform(localStartEdge),
+                MatrixUtils.TransformPoint(start.GetTransformTo(null), localStartEdge),
                 forEnd: false);
         }
 
@@ -1121,7 +1122,7 @@ public class StaticSelectionContainerDelegate : MultiSelectableSelectionContaine
                 endPoint.LocalPosition.X,
                 endPoint.LocalPosition.Y - (endPoint.LineHeight / 2));
             UpdateLastSelectionEdgeLocation(
-                end.GetTransformTo(null).Transform(localEndEdge),
+                MatrixUtils.TransformPoint(end.GetTransformTo(null), localEndEdge),
                 forEnd: true);
         }
     }

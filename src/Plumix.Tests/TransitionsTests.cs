@@ -278,7 +278,7 @@ public sealed class TransitionsTests : IDisposable
             onTransform: value =>
             {
                 callbackCount++;
-                return Matrix.CreateTranslation(value * 10.0, value * 20.0);
+                return Matrix4.TranslationValues(value * 10.0, value * 20.0, 0.0);
             },
             alignment: Alignment.BottomRight,
             filterQuality: FilterQuality.High,
@@ -288,7 +288,7 @@ public sealed class TransitionsTests : IDisposable
         Mount(root, owner);
 
         var renderTransform = Assert.IsType<RenderTransform>(root.ChildElement!.RenderObject);
-        Assert.Equal(Matrix.CreateTranslation(4.0, 8.0), renderTransform.Transform);
+        Assert.Equal(Matrix4.TranslationValues(4.0, 8.0, 0.0), renderTransform.Transform);
         Assert.Equal(Alignment.BottomRight, renderTransform.Alignment);
         Assert.Null(renderTransform.FilterQuality);
         Assert.Equal(1, callbackCount);
@@ -297,7 +297,7 @@ public sealed class TransitionsTests : IDisposable
         owner.FlushBuild();
 
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
-        Assert.Equal(Matrix.CreateTranslation(6.0, 12.0), renderTransform.Transform);
+        Assert.Equal(Matrix4.TranslationValues(6.0, 12.0, 0.0), renderTransform.Transform);
         Assert.Equal(FilterQuality.High, renderTransform.FilterQuality);
         Assert.Equal(2, callbackCount);
 
@@ -305,7 +305,7 @@ public sealed class TransitionsTests : IDisposable
         owner.FlushBuild();
 
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
-        Assert.Equal(Matrix.CreateTranslation(10.0, 20.0), renderTransform.Transform);
+        Assert.Equal(Matrix4.TranslationValues(10.0, 20.0, 0.0), renderTransform.Transform);
         Assert.Null(renderTransform.FilterQuality);
         Assert.Equal(3, callbackCount);
 
@@ -326,7 +326,7 @@ public sealed class TransitionsTests : IDisposable
         Mount(root, owner);
 
         var renderTransform = Assert.IsType<RenderTransform>(root.ChildElement!.RenderObject);
-        Assert.Equal(Matrix.CreateScale(0.5, 0.5), renderTransform.Transform);
+        Assert.Equal(Matrix4.Diagonal3Values(0.5, 0.5, 1.0), renderTransform.Transform);
         Assert.Equal(Alignment.TopLeft, renderTransform.Alignment);
         Assert.Equal(FilterQuality.Low, renderTransform.FilterQuality);
         Assert.Equal(1, firstAnimation.ListenerCount);
@@ -334,7 +334,7 @@ public sealed class TransitionsTests : IDisposable
         firstAnimation.Set(0.75, AnimationStatus.Forward);
         owner.FlushBuild();
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
-        Assert.Equal(Matrix.CreateScale(0.75, 0.75), renderTransform.Transform);
+        Assert.Equal(Matrix4.Diagonal3Values(0.75, 0.75, 1.0), renderTransform.Transform);
 
         root.Update(new ScaleTransition(
             scale: secondAnimation,
@@ -344,14 +344,14 @@ public sealed class TransitionsTests : IDisposable
         owner.FlushBuild();
 
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
-        Assert.Equal(Matrix.CreateScale(1.25, 1.25), renderTransform.Transform);
+        Assert.Equal(Matrix4.Diagonal3Values(1.25, 1.25, 1.0), renderTransform.Transform);
         Assert.Equal(0, firstAnimation.ListenerCount);
         Assert.Equal(1, secondAnimation.ListenerCount);
 
         firstAnimation.Set(2.0, AnimationStatus.Completed);
         owner.FlushBuild();
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
-        Assert.Equal(Matrix.CreateScale(1.25, 1.25), renderTransform.Transform);
+        Assert.Equal(Matrix4.Diagonal3Values(1.25, 1.25, 1.0), renderTransform.Transform);
 
         root.Unmount();
         Assert.Equal(0, secondAnimation.ListenerCount);
@@ -375,24 +375,21 @@ public sealed class TransitionsTests : IDisposable
 
         var renderTransform = Assert.IsType<RenderTransform>(root.ChildElement!.RenderObject);
         Assert.Equal(AnimationStatus.Completed, animation.Status);
-        Assert.Equal(Matrix.Identity, renderTransform.Transform);
+        Assert.Equal(Matrix4.Identity(), renderTransform.Transform);
         Assert.Null(renderTransform.FilterQuality);
 
         root.Unmount();
     }
 
     [Theory]
-    [InlineData(0.0, 1.0, 0.0, 0.0, 1.0)]
-    [InlineData(0.25, 0.0, 1.0, -1.0, 0.0)]
-    [InlineData(0.5, -1.0, 0.0, 0.0, -1.0)]
-    [InlineData(0.75, 0.0, -1.0, 1.0, 0.0)]
-    public void RotationTransition_ConvertsTurnsToExactCardinalMatrices(
-        double turns,
-        double m11,
-        double m12,
-        double m21,
-        double m22)
+    [InlineData(0.0)]
+    [InlineData(0.25)]
+    [InlineData(0.5)]
+    [InlineData(0.75)]
+    public void RotationTransition_ConvertsTurnsToAZRotation(double turns)
     {
+        // Flutter's `RotationTransition` uses `Matrix4.rotationZ(turns * 2pi)` verbatim; unlike
+        // `Transform.rotate` it does not snap quarter turns, so the near-zero entries stay.
         var animation = new TestAnimation(turns, AnimationStatus.Completed);
         var transition = new RotationTransition(animation);
         var owner = new BuildOwner();
@@ -400,7 +397,7 @@ public sealed class TransitionsTests : IDisposable
         Mount(root, owner);
 
         var renderTransform = Assert.IsType<RenderTransform>(root.ChildElement!.RenderObject);
-        Assert.Equal(new Matrix(m11, m12, m21, m22, 0, 0), renderTransform.Transform);
+        Assert.Equal(Matrix4.RotationZ(turns * Math.PI * 2.0), renderTransform.Transform);
 
         root.Unmount();
     }

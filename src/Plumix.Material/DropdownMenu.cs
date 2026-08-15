@@ -734,23 +734,23 @@ internal sealed class DropdownMenuState<T> : RawMenuAnchorBaseState
 
     private static Rect ResolveGlobalBounds(RenderBox renderBox)
     {
-        var transform = Matrix.Identity;
+        Matrix4 transform = Matrix4.Identity();
         RenderObject? child = renderBox;
         while (child?.Parent is not null)
         {
             var parent = child.Parent;
             var childOffset = child.parentData is BoxParentData data ? data.offset : default;
-            var childTransform = Matrix.CreateTranslation(childOffset.X, childOffset.Y);
-            if (parent is RenderTransform renderTransform) childTransform *= renderTransform.Transform;
-            transform = childTransform * transform;
+            Matrix4 childTransform = Matrix4.TranslationValues(childOffset.X, childOffset.Y, 0.0);
+            if (parent is RenderTransform renderTransform) childTransform.Multiply(renderTransform.Transform);
+            MatrixUtils.MultiplyInPlace(childTransform, transform);
             child = parent;
         }
         var points = new[]
         {
-            transform.Transform(new Point(0, 0)),
-            transform.Transform(new Point(renderBox.Size.Width, 0)),
-            transform.Transform(new Point(0, renderBox.Size.Height)),
-            transform.Transform(new Point(renderBox.Size.Width, renderBox.Size.Height)),
+            MatrixUtils.TransformPoint(transform, new Point(0, 0)),
+            MatrixUtils.TransformPoint(transform, new Point(renderBox.Size.Width, 0)),
+            MatrixUtils.TransformPoint(transform, new Point(0, renderBox.Size.Height)),
+            MatrixUtils.TransformPoint(transform, new Point(renderBox.Size.Width, renderBox.Size.Height)),
         };
         double left = points.Min(point => point.X);
         double top = points.Min(point => point.Y);

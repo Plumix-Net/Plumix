@@ -811,7 +811,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
 
     private static Rect GlobalRect(RenderBox renderBox)
     {
-        Assert.True(renderBox.TryGetTransformFromRoot(out Matrix transform));
+        Assert.True(renderBox.TryGetTransformFromRoot(out Matrix4 transform));
         return RenderObject.TransformRect(transform, new Rect(renderBox.Size));
     }
 

@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
+using Plumix.UI;
 
 namespace Plumix.Cupertino;
 
@@ -334,7 +335,7 @@ internal sealed class RenderCupertinoActivityIndicator : RenderBox
             height: _radius - (_radius / 3.0));
         int activeTick = PositiveModulo((int)Math.Floor(TickCount * Math.Clamp(_position, 0.0, 1.0)), TickCount);
 
-        ctx.PushTransform(Matrix.CreateTranslation(center.X, center.Y), centeredContext =>
+        ctx.PushTransform(Matrix4.TranslationValues(center.X, center.Y, 0.0), centeredContext =>
         {
             for (int i = 0; i < TickCount * progress; i++)
             {
@@ -355,12 +356,7 @@ internal sealed class RenderCupertinoActivityIndicator : RenderBox
         });
     }
 
-    private static Matrix CreateRotationMatrix(double angle)
-    {
-        double cos = Math.Cos(angle);
-        double sin = Math.Sin(angle);
-        return new Matrix(cos, sin, -sin, cos, 0, 0);
-    }
+    private static Matrix4 CreateRotationMatrix(double angle) => Matrix4.RotationZ(angle);
 
     private static int PositiveModulo(int value, int modulo)
     {

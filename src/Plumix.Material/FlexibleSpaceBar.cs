@@ -201,7 +201,7 @@ internal sealed class FlexibleSpaceBarState : State
                 children.Add(new Padding(
                     insets: padding,
                     child: new Plumix.Widgets.Transform(
-                        transform: Matrix.CreateScale(scaleValue, scaleValue),
+                        transform: Matrix4.Diagonal3Values(scaleValue, scaleValue, 1.0),
                         alignment: titleAlignment,
                         child: new Align(
                             alignment: titleAlignment,

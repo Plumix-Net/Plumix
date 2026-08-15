@@ -37,7 +37,7 @@ public sealed class FlowRepaintBoundaryTests
     {
         var first = new TestRenderBox(new Size(20, 20), hitTestSelf: true);
         var second = new TestRenderBox(new Size(20, 20), hitTestSelf: true);
-        Matrix translation = Matrix.CreateTranslation(15, 10);
+        Matrix4 translation = Matrix4.TranslationValues(15, 10, 0.0);
         var flowDelegate = new TestFlowDelegate(
             size: new Size(80, 60),
             childConstraints: BoxConstraints.Loose(new Size(20, 20)),
@@ -61,10 +61,10 @@ public sealed class FlowRepaintBoundaryTests
         Assert.True(flow.HitTest(hitResult, new Point(20, 15)));
         Assert.Same(second, hitResult.Path[0].Target);
 
-        Matrix firstSemanticsTransform = Matrix.Identity;
-        Matrix secondSemanticsTransform = Matrix.Identity;
-        flow.ApplyPaintTransform(first, ref firstSemanticsTransform);
-        flow.ApplyPaintTransform(second, ref secondSemanticsTransform);
+        Matrix4 firstSemanticsTransform = Matrix4.Identity();
+        Matrix4 secondSemanticsTransform = Matrix4.Identity();
+        flow.ApplyPaintTransform(first, firstSemanticsTransform);
+        flow.ApplyPaintTransform(second, secondSemanticsTransform);
         Assert.Equal(translation, firstSemanticsTransform);
         Assert.Equal(translation, secondSemanticsTransform);
 

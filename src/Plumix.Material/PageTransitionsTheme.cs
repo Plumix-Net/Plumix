@@ -1366,7 +1366,7 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
                     Widget clipped = new ClipRRect(effectiveRadius, child: child);
                     Widget faded = new Opacity(opacity, clipped);
                     Widget translated = new Plumix.Widgets.Transform(
-                        Matrix.CreateTranslation(offset.X, offset.Y),
+                        Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
                         child: faded);
                     return new ScaleTransition(
                         new ConstantAnimation<double>(scale),
@@ -1418,7 +1418,7 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
                     result = new Opacity(opacity, result);
                     result = new ScaleTransition(new ConstantAnimation<double>(scale), child: result);
                     return new Plumix.Widgets.Transform(
-                        Matrix.CreateTranslation(positionX, 0.0),
+                        Matrix4.TranslationValues(positionX, 0.0, 0.0),
                         child: result);
                 },
                 CurrentWidget.Child);
