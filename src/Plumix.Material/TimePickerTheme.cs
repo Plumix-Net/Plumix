@@ -290,16 +290,16 @@ internal sealed class TimePickerDefaultsM2 : TimePickerDefaults
             : WithOpacity(_colors.OnSurface, 0.12));
 
     public override InputDecorationThemeData InputDecorationTheme => new(
-        ContentPadding: EdgeInsetsGeometry.Zero,
-        Filled: true,
-        FillColor: HourMinuteInputColor.DefaultValue,
-        FocusColor: Colors.Transparent,
-        EnabledBorder: new OutlineInputBorder(borderSide: new BorderSide(Colors.Transparent)),
-        ErrorBorder: new OutlineInputBorder(borderSide: new BorderSide(_colors.Error, 2)),
-        FocusedBorder: new OutlineInputBorder(borderSide: new BorderSide(_colors.Primary, 2)),
-        FocusedErrorBorder: new OutlineInputBorder(borderSide: new BorderSide(_colors.Error, 2)),
-        HintStyle: HourMinuteTextStyle.CopyWith(color: WithOpacity(_colors.OnSurface, 0.36)),
-        ErrorStyle: new TextStyle(FontSize: 0, Height: 1));
+        contentPadding: EdgeInsetsGeometry.Zero,
+        filled: true,
+        fillColor: HourMinuteInputColor.DefaultValue,
+        focusColor: Colors.Transparent,
+        enabledBorder: new OutlineInputBorder(borderSide: new BorderSide(Colors.Transparent)),
+        errorBorder: new OutlineInputBorder(borderSide: new BorderSide(_colors.Error, 2)),
+        focusedBorder: new OutlineInputBorder(borderSide: new BorderSide(_colors.Primary, 2)),
+        focusedErrorBorder: new OutlineInputBorder(borderSide: new BorderSide(_colors.Error, 2)),
+        hintStyle: HourMinuteTextStyle.CopyWith(color: WithOpacity(_colors.OnSurface, 0.36)),
+        errorStyle: new TextStyle(FontSize: 0, Height: 1));
 
     public override EdgeInsetsGeometry Padding => EdgeInsetsGeometry.FromLTRB(8, 18, 8, 8);
 
@@ -442,24 +442,24 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
     // This is NOT correct, but there's no token for 'time-input.container.shape', so this reuses the
     // radius from the hour/minute selector shape, exactly as Dart does.
     public override InputDecorationThemeData InputDecorationTheme => new(
-        ContentPadding: EdgeInsetsGeometry.Zero,
-        Filled: true,
-        FillColor: HourMinuteColor.DefaultValue,
-        FocusColor: _colors.PrimaryContainer,
-        EnabledBorder: new OutlineInputBorder(
+        contentPadding: EdgeInsetsGeometry.Zero,
+        filled: true,
+        fillColor: HourMinuteColor.DefaultValue,
+        focusColor: _colors.PrimaryContainer,
+        enabledBorder: new OutlineInputBorder(
             borderRadius: Plumix.Rendering.BorderRadius.Circular(8),
             borderSide: new BorderSide(Colors.Transparent)),
-        ErrorBorder: new OutlineInputBorder(
+        errorBorder: new OutlineInputBorder(
             borderRadius: Plumix.Rendering.BorderRadius.Circular(8),
             borderSide: new BorderSide(_colors.Error, 2)),
-        FocusedBorder: new OutlineInputBorder(
+        focusedBorder: new OutlineInputBorder(
             borderRadius: Plumix.Rendering.BorderRadius.Circular(8),
             borderSide: new BorderSide(_colors.Primary, 2)),
-        FocusedErrorBorder: new OutlineInputBorder(
+        focusedErrorBorder: new OutlineInputBorder(
             borderRadius: Plumix.Rendering.BorderRadius.Circular(8),
             borderSide: new BorderSide(_colors.Error, 2)),
-        HintStyle: HourMinuteTextStyle.CopyWith(color: WithOpacity(_colors.OnSurface, 0.36)),
-        ErrorStyle: new TextStyle(FontSize: 0));
+        hintStyle: HourMinuteTextStyle.CopyWith(color: WithOpacity(_colors.OnSurface, 0.36)),
+        errorStyle: new TextStyle(FontSize: 0));
 
     public override EdgeInsetsGeometry Padding => EdgeInsetsGeometry.All(24);
 

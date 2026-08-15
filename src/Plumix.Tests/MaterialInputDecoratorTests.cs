@@ -38,16 +38,16 @@ public sealed class MaterialInputDecoratorTests
     public void InputDecoration_ApplyDefaultsFillsOnlyNullFieldsFromTheme()
     {
         var theme = new InputDecorationThemeData(
-            HelperMaxLines: 2,
-            ErrorMaxLines: 3,
-            FloatingLabelBehavior: FloatingLabelBehavior.Never,
-            FloatingLabelAlignment: FloatingLabelAlignment.Center,
-            IsDense: true,
-            ContentPadding: EdgeInsetsGeometry.All(1.0),
-            Filled: true,
-            Border: InputBorder.None,
-            AlignLabelWithHint: true,
-            VisualDensity: VisualDensity.Compact);
+            helperMaxLines: 2,
+            errorMaxLines: 3,
+            floatingLabelBehavior: FloatingLabelBehavior.Never,
+            floatingLabelAlignment: FloatingLabelAlignment.Center,
+            isDense: true,
+            contentPadding: EdgeInsetsGeometry.All(1.0),
+            filled: true,
+            border: InputBorder.None,
+            alignLabelWithHint: true,
+            visualDensity: VisualDensity.Compact);
 
         InputDecoration applied = new InputDecoration().ApplyDefaults(theme);
         Assert.Equal(2, applied.HelperMaxLines);
@@ -537,7 +537,7 @@ public sealed class MaterialInputDecoratorTests
         var theme = ThemeData.Light with
         {
             InputDecorationTheme = new InputDecorationThemeData(
-                Constraints: new BoxConstraints(0, 300, 0, 40)),
+                constraints: new BoxConstraints(0, 300, 0, 40)),
         };
 
         using var themed = new DecoratorHarness(Decorator(new InputDecoration(filled: true)), theme);
@@ -559,7 +559,7 @@ public sealed class MaterialInputDecoratorTests
         var theme = ThemeData.Light with
         {
             InputDecorationTheme = new InputDecorationThemeData(
-                ContentPadding: EdgeInsetsGeometry.DirectionalOnly(start: 11, top: 13, end: 15, bottom: 17)),
+                contentPadding: EdgeInsetsGeometry.DirectionalOnly(start: 11, top: 13, end: 15, bottom: 17)),
         };
 
         using var harness = new DecoratorHarness(
@@ -860,6 +860,478 @@ public sealed class MaterialInputDecoratorTests
         invisible.Paint(emptyProbe, new Rect(0, 0, 100, 100), gapStart: null);
         Assert.Equal(EdgeInsetsGeometry.Zero, invisible.Dimensions);
     }
+
+    [Fact]
+    public void InputDecorationThemeData_MergeNeverOverridesTheNonNullableFields()
+    {
+        var overrideTheme = new InputDecorationThemeData(
+            helperMaxLines: 7,
+            hintMaxLines: 5,
+            contentPadding: EdgeInsetsGeometry.All(3.0),
+            floatingLabelBehavior: FloatingLabelBehavior.Never,
+            floatingLabelAlignment: FloatingLabelAlignment.Center,
+            isDense: true,
+            isCollapsed: true,
+            filled: true,
+            alignLabelWithHint: true,
+            visualDensity: VisualDensity.Compact);
+
+        InputDecorationThemeData merged = new InputDecorationThemeData().Merge(overrideTheme);
+
+        // Nullable fields are taken from `other`...
+        Assert.Equal(7, merged.HelperMaxLines);
+        Assert.Equal(5, merged.HintMaxLines);
+        Assert.Equal(EdgeInsetsGeometry.All(3.0), merged.ContentPadding);
+        Assert.Equal(VisualDensity.Compact, merged.VisualDensity);
+
+        // ...while Flutter deliberately omits the six non-nullable ones from the merge call.
+        Assert.Equal(FloatingLabelBehavior.Auto, merged.FloatingLabelBehavior);
+        Assert.Equal(FloatingLabelAlignment.Start, merged.FloatingLabelAlignment);
+        Assert.False(merged.IsDense);
+        Assert.False(merged.IsCollapsed);
+        Assert.False(merged.Filled);
+        Assert.False(merged.AlignLabelWithHint);
+
+        Assert.Same(overrideTheme, overrideTheme.Merge(null));
+    }
+
+    [Fact]
+    public void InputDecorationThemeData_CopyWithAndEqualityFollowTheSourceFieldList()
+    {
+        var theme = new InputDecorationThemeData(
+            fillColor: Colors.Red,
+            iconColor: Colors.Blue,
+            helperMaxLines: 2);
+
+        InputDecorationThemeData copy = theme.CopyWith(fillColor: Colors.Green);
+        Assert.Equal(Colors.Green, copy.FillColor!.DefaultValue);
+        // Copying one field leaves the rest alone, and the original is never mutated.
+        Assert.Equal(Colors.Blue, copy.IconColor!.DefaultValue);
+        Assert.Equal(2, copy.HelperMaxLines);
+        Assert.Equal(Colors.Red, theme.FillColor!.DefaultValue);
+
+        Assert.Equal(new InputDecorationThemeData(), new InputDecorationThemeData().CopyWith());
+        Assert.Equal(
+            new InputDecorationThemeData().GetHashCode(),
+            new InputDecorationThemeData().CopyWith().GetHashCode());
+        Assert.True(new InputDecorationThemeData(isDense: true) != new InputDecorationThemeData());
+
+        // Dart's `==` opens with a runtimeType check, so a defaults subclass is never equal to a
+        // plain InputDecorationThemeData — not even the empty one.
+        InputDecorationThemeData defaults = InputDecoratorDefaults.Resolve(ThemeData.Light);
+        Assert.NotEqual(new InputDecorationThemeData(), defaults);
+        Assert.NotEqual(defaults, new InputDecorationThemeData());
+    }
+
+    [Fact]
+    public void InputDecorationTheme_LegacyFieldSurfaceProjectsThroughData()
+    {
+        var fieldBased = new InputDecorationTheme(
+            child: new SizedBox(),
+            helperMaxLines: 4,
+            isDense: true,
+            filled: true,
+            border: InputBorder.None);
+
+        // The obsolete per-field constructor normalizes null to the source defaults at construction.
+        Assert.Equal(4, fieldBased.HelperMaxLines);
+        Assert.True(fieldBased.IsDense);
+        Assert.True(fieldBased.Filled);
+        Assert.Equal(FloatingLabelBehavior.Auto, fieldBased.FloatingLabelBehavior);
+        Assert.False(fieldBased.AlignLabelWithHint);
+
+        InputDecorationThemeData projected = fieldBased.Data;
+        Assert.Equal(4, projected.HelperMaxLines);
+        Assert.True(projected.IsDense);
+        Assert.True(projected.Filled);
+        Assert.Same(InputBorder.None, projected.Border);
+
+        // A data-backed theme forwards every getter to the data instead.
+        var dataBased = new InputDecorationTheme(
+            new InputDecorationThemeData(helperMaxLines: 9, isCollapsed: true),
+            new SizedBox());
+        Assert.Equal(9, dataBased.HelperMaxLines);
+        Assert.True(dataBased.IsCollapsed);
+
+        // copyWith is field-backed: it keeps neither the data argument nor the child.
+        InputDecorationTheme copied = dataBased.CopyWith(helperMaxLines: 3);
+        Assert.Equal(3, copied.HelperMaxLines);
+        Assert.True(copied.IsCollapsed);
+        Assert.NotSame(dataBased.Child, copied.Child);
+
+        // merge omits the same six non-nullable fields as InputDecorationThemeData.merge.
+        InputDecorationTheme merged = new InputDecorationTheme(child: new SizedBox())
+            .Merge(new InputDecorationTheme(child: new SizedBox(), helperMaxLines: 6, isDense: true));
+        Assert.Equal(6, merged.HelperMaxLines);
+        Assert.False(merged.IsDense);
+    }
+
+    [Fact]
+    public void InputDecorationTheme_RejectsDataAndFieldArgumentsTogether()
+    {
+        Assert.Throws<ArgumentException>(() => new InputDecorationTheme(
+            data: new InputDecorationThemeData(),
+            child: new SizedBox(),
+            isDense: true));
+    }
+
+    [Fact]
+    public void InputDecoration_ApplyDefaultsAcceptsTheThemeWidget()
+    {
+        var theme = new InputDecorationTheme(child: new SizedBox(), helperMaxLines: 5, filled: true);
+        InputDecoration applied = new InputDecoration().ApplyDefaults(theme);
+        Assert.Equal(5, applied.HelperMaxLines);
+        Assert.True(applied.Filled);
+
+        // The theme's six non-nullable fields make these non-null after applyDefaults, which is what
+        // lets the decorator read them without a fallback.
+        Assert.NotNull(applied.IsDense);
+        Assert.NotNull(applied.IsCollapsed);
+        Assert.NotNull(applied.AlignLabelWithHint);
+        Assert.NotNull(applied.FloatingLabelBehavior);
+        Assert.NotNull(applied.FloatingLabelAlignment);
+    }
+
+    [Fact]
+    public void InputDecorator_Material3LabelStyleResolvesPerState()
+    {
+        ColorScheme colors = ThemeData.Light.ColorScheme;
+
+        Color LabelColor(bool focused = false, bool hovering = false, bool enabled = true, bool error = false)
+        {
+            using var harness = new DecoratorHarness(new InputDecorator(
+                decoration: new InputDecoration(
+                    labelText: "Label",
+                    filled: true,
+                    enabled: enabled,
+                    errorText: error ? "Invalid" : null),
+                isFocused: focused,
+                isHovering: hovering,
+                child: new Text("value")));
+            harness.Pump();
+            return StyleOf(harness, "Label").Color!.Value;
+        }
+
+        Assert.Equal(colors.OnSurfaceVariant, LabelColor());
+        Assert.Equal(colors.OnSurfaceVariant, LabelColor(hovering: true));
+        Assert.Equal(colors.Primary, LabelColor(focused: true));
+        // focused wins over hovered for InputDecorator, the inverse of most M3 components.
+        Assert.Equal(colors.Primary, LabelColor(focused: true, hovering: true));
+        Assert.Equal(InputDecoratorDefaults.WithOpacity(colors.OnSurface, 0.38), LabelColor(enabled: false));
+        Assert.Equal(colors.Error, LabelColor(error: true));
+        Assert.Equal(colors.Error, LabelColor(error: true, focused: true));
+        Assert.Equal(colors.OnErrorContainer, LabelColor(error: true, hovering: true));
+        Assert.Equal(colors.Error, LabelColor(error: true, focused: true, hovering: true));
+    }
+
+    [Fact]
+    public void InputDecorator_Material3SubtextAndHintStylesResolvePerState()
+    {
+        ColorScheme colors = ThemeData.Light.ColorScheme;
+        Color disabled = InputDecoratorDefaults.WithOpacity(colors.OnSurface, 0.38);
+
+        using var enabled = new DecoratorHarness(Decorator(
+            new InputDecoration(hintText: "Hint", helperText: "Helper", counterText: "0/10", filled: true),
+            isEmpty: true,
+            child: new SizedBox()));
+        enabled.Pump();
+        Assert.Equal(colors.OnSurfaceVariant, StyleOf(enabled, "Hint").Color);
+        Assert.Equal(colors.OnSurfaceVariant, StyleOf(enabled, "Helper").Color);
+        Assert.Equal(colors.OnSurfaceVariant, StyleOf(enabled, "0/10").Color);
+
+        using var off = new DecoratorHarness(Decorator(
+            new InputDecoration(
+                hintText: "Hint", helperText: "Helper", counterText: "0/10", filled: true, enabled: false),
+            isEmpty: true,
+            child: new SizedBox()));
+        off.Pump();
+        Assert.Equal(disabled, StyleOf(off, "Hint").Color);
+        Assert.Equal(disabled, StyleOf(off, "Helper").Color);
+        Assert.Equal(disabled, StyleOf(off, "0/10").Color);
+
+        // The error style carries no state branches at all, and the counter keeps the helper color.
+        using var errored = new DecoratorHarness(Decorator(
+            new InputDecoration(errorText: "Invalid", counterText: "0/10", filled: true)));
+        errored.Pump();
+        Assert.Equal(colors.Error, StyleOf(errored, "Invalid").Color);
+        // Helper and error share the bodySmall slot, and the counter keeps the helper color.
+        Assert.Equal(StyleOf(enabled, "Helper").FontSize, StyleOf(errored, "Invalid").FontSize);
+        Assert.Equal(colors.OnSurfaceVariant, StyleOf(errored, "0/10").Color);
+    }
+
+    [Fact]
+    public void InputDecorator_Material3IconColorsFollowErrorAndHoverOnTheSuffixOnly()
+    {
+        ColorScheme colors = ThemeData.Light.ColorScheme;
+
+        (Color Prefix, Color Suffix, Color Icon) Resolve(
+            bool error = false, bool hovering = false, bool enabled = true)
+        {
+            using var harness = new DecoratorHarness(new InputDecorator(
+                decoration: new InputDecoration(
+                    icon: new Icon(Icons.Email),
+                    prefixIcon: new Icon(Icons.Lock),
+                    suffixIcon: new Icon(Icons.Visibility),
+                    enabled: enabled,
+                    errorText: error ? "Invalid" : null),
+                isHovering: hovering,
+                child: new Text("value")));
+            harness.Pump();
+            List<RenderParagraph> icons = DecoratorHarness.FindAll<RenderParagraph>(harness.RenderView);
+            return (
+                IconColor(icons, Icons.Lock),
+                IconColor(icons, Icons.Visibility),
+                IconColor(icons, Icons.Email));
+        }
+
+        (Color prefix, Color suffix, Color icon) = Resolve();
+        Assert.Equal(colors.OnSurfaceVariant, prefix);
+        Assert.Equal(colors.OnSurfaceVariant, suffix);
+        Assert.Equal(colors.OnSurfaceVariant, icon);
+
+        // Only the suffix icon reacts to the error state; the prefix keeps the enabled color.
+        (prefix, suffix, _) = Resolve(error: true);
+        Assert.Equal(colors.OnSurfaceVariant, prefix);
+        Assert.Equal(colors.Error, suffix);
+
+        (prefix, suffix, _) = Resolve(error: true, hovering: true);
+        Assert.Equal(colors.OnSurfaceVariant, prefix);
+        Assert.Equal(colors.OnErrorContainer, suffix);
+
+        Color disabled = InputDecoratorDefaults.WithOpacity(colors.OnSurface, 0.38);
+        (prefix, suffix, _) = Resolve(enabled: false);
+        Assert.Equal(disabled, prefix);
+        Assert.Equal(disabled, suffix);
+    }
+
+    [Fact]
+    public void InputDecorator_PrefixAndSuffixIconColorFallsBackToTheIconButtonTheme()
+    {
+        ColorScheme colors = ThemeData.Light.ColorScheme;
+        var iconButtonTheme = new IconButtonThemeData(
+            new ButtonStyle(ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(
+                states => states.HasFlag(MaterialState.Error) ? Colors.Orange : Colors.Purple)));
+
+        (Color Prefix, Color Suffix) Resolve(bool error, InputDecoration decoration)
+        {
+            using var harness = new DecoratorHarness(new IconButtonTheme(
+                iconButtonTheme,
+                new InputDecorator(
+                    decoration: decoration with { ErrorText = error ? "Invalid" : null },
+                    child: new Text("value"))));
+            harness.Pump();
+            List<RenderParagraph> icons = DecoratorHarness.FindAll<RenderParagraph>(harness.RenderView);
+            return (IconColor(icons, Icons.Lock), IconColor(icons, Icons.Visibility));
+        }
+
+        var plain = new InputDecoration(
+            prefixIcon: new Icon(Icons.Lock),
+            suffixIcon: new Icon(Icons.Visibility));
+
+        // The ambient IconButtonTheme sits between the decoration and the decorator defaults, and it
+        // sees the decorator's own states.
+        (Color prefix, Color suffix) = Resolve(error: false, plain);
+        Assert.Equal(Colors.Purple, prefix);
+        Assert.Equal(Colors.Purple, suffix);
+
+        (prefix, suffix) = Resolve(error: true, plain);
+        Assert.Equal(Colors.Orange, prefix);
+        Assert.Equal(Colors.Orange, suffix);
+
+        // An explicit decoration color still wins over the button theme.
+        (prefix, suffix) = Resolve(error: false, plain with
+        {
+            PrefixIconColor = Colors.Teal,
+            SuffixIconColor = Colors.Teal,
+        });
+        Assert.Equal(Colors.Teal, prefix);
+        Assert.Equal(Colors.Teal, suffix);
+        Assert.NotEqual(colors.OnSurfaceVariant, prefix);
+    }
+
+    [Fact]
+    public void InputDecorator_Material2DefaultsResolvePerState()
+    {
+        var light = ThemeData.Light with { UseMaterial3 = false };
+        var dark = ThemeData.Dark with { UseMaterial3 = false };
+
+        InputBorderPainter Fill(ThemeData theme, bool enabled = true)
+        {
+            using var harness = new DecoratorHarness(
+                Decorator(new InputDecoration(labelText: "Label", filled: true, enabled: enabled)),
+                theme);
+            harness.Pump();
+            return Painter(harness);
+        }
+
+        Assert.Equal(Color.FromArgb(0x0A, 0x00, 0x00, 0x00), Fill(light).FillColor);
+        Assert.Equal(Color.FromArgb(0x05, 0x00, 0x00, 0x00), Fill(light, enabled: false).FillColor);
+        Assert.Equal(Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF), Fill(dark).FillColor);
+        Assert.Equal(Color.FromArgb(0x0D, 0xFF, 0xFF, 0xFF), Fill(dark, enabled: false).FillColor);
+
+        // M2 label/hint use hintColor, and the floating label switches on error/focus.
+        using var inline = new DecoratorHarness(
+            Decorator(new InputDecoration(labelText: "Label", hintText: "Hint"), isEmpty: true,
+                child: new SizedBox()),
+            light);
+        inline.Pump();
+        Assert.Equal(light.HintColor, StyleOf(inline, "Label").Color);
+
+        using var floating = new DecoratorHarness(
+            Decorator(new InputDecoration(
+                labelText: "Label",
+                errorText: "Invalid",
+                floatingLabelBehavior: FloatingLabelBehavior.Always)),
+            light);
+        floating.Pump();
+        Assert.Equal(light.ColorScheme.Error, StyleOf(floating, "Label").Color);
+
+        // Disabled M2 helper and error text collapse to transparent rather than a dimmed color.
+        using var disabled = new DecoratorHarness(
+            Decorator(new InputDecoration(helperText: "Helper", enabled: false)),
+            light);
+        disabled.Pump();
+        Assert.Equal(Colors.Transparent, StyleOf(disabled, "Helper").Color);
+    }
+
+    [Fact]
+    public void InputDecorator_Material2IconColorsFollowFocusBeforeDisabled()
+    {
+        var light = ThemeData.Light with { UseMaterial3 = false };
+        Color unfocused = Color.FromArgb(0x73, 0x00, 0x00, 0x00);
+
+        (Color Prefix, Color Suffix) Resolve(bool focused = false, bool enabled = true, bool error = false)
+        {
+            using var harness = new DecoratorHarness(
+                new InputDecorator(
+                    decoration: new InputDecoration(
+                        prefixIcon: new Icon(Icons.Lock),
+                        suffixIcon: new Icon(Icons.Visibility),
+                        enabled: enabled,
+                        errorText: error ? "Invalid" : null),
+                    isFocused: focused,
+                    child: new Text("value")),
+                light);
+            harness.Pump();
+            List<RenderParagraph> icons = DecoratorHarness.FindAll<RenderParagraph>(harness.RenderView);
+            return (IconColor(icons, Icons.Lock), IconColor(icons, Icons.Visibility));
+        }
+
+        Assert.Equal(unfocused, Resolve().Prefix);
+        Assert.Equal(light.ColorScheme.Primary, Resolve(focused: true).Prefix);
+        Assert.Equal(light.DisabledColor, Resolve(enabled: false).Prefix);
+        // `disabled && !focused` is the guard, so a focused disabled field still uses the primary color.
+        Assert.Equal(light.ColorScheme.Primary, Resolve(enabled: false, focused: true).Prefix);
+        // Only the suffix has an error branch in M2 as well.
+        Assert.Equal(light.ColorScheme.Error, Resolve(error: true).Suffix);
+        Assert.Equal(unfocused, Resolve(error: true).Prefix);
+    }
+
+    [Fact]
+    public void InputDecorator_Material3OutlineAndIndicatorLetFocusBeatHover()
+    {
+        ColorScheme colors = ThemeData.Light.ColorScheme;
+
+        BorderSide Side(bool filled, bool focused = false, bool hovering = false, bool error = false)
+        {
+            using var harness = new DecoratorHarness(new InputDecorator(
+                decoration: new InputDecoration(
+                    labelText: "Label",
+                    filled: filled,
+                    border: filled ? null : new OutlineInputBorder(),
+                    errorText: error ? "Invalid" : null),
+                isFocused: focused,
+                isHovering: hovering,
+                child: new Text("value")));
+            harness.Pump();
+            return Painter(harness).Border.BorderSide;
+        }
+
+        Assert.Equal(colors.Primary, Side(filled: true, focused: true, hovering: true).Color);
+        Assert.Equal(2.0, Side(filled: true, focused: true, hovering: true).Width, precision: 6);
+        Assert.Equal(colors.Primary, Side(filled: false, focused: true, hovering: true).Color);
+
+        Assert.Equal(colors.OnErrorContainer, Side(filled: true, hovering: true, error: true).Color);
+        Assert.Equal(colors.Error, Side(filled: true, focused: true, hovering: true, error: true).Color);
+        Assert.Equal(2.0, Side(filled: true, focused: true, error: true).Width, precision: 6);
+        Assert.Equal(colors.OnErrorContainer, Side(filled: false, hovering: true, error: true).Color);
+
+        // The outlined disabled color is the 12% one, not the indicator's 38%.
+        Assert.Equal(colors.Outline, Side(filled: false).Color);
+    }
+
+    [Fact]
+    public void InputDecorationTheme_StateResolvingValuesAreResolvedByTheDecorator()
+    {
+        var stateFill = WidgetStateColor.ResolveWith(states =>
+            states.Contains(WidgetState.Focused) ? Colors.Goldenrod : Colors.Gainsboro);
+        var stateLabel = WidgetStateTextStyle.ResolveWith(states =>
+            new TextStyle(Color: states.Contains(WidgetState.Focused) ? Colors.Crimson : Colors.DarkSlateGray));
+        var theme = ThemeData.Light with
+        {
+            InputDecorationTheme = new InputDecorationThemeData(
+                filled: true,
+                fillColor: stateFill,
+                floatingLabelStyle: stateLabel,
+                activeIndicatorBorder: WidgetStateBorderSide.ResolveWith(
+                    states => new BorderSide(
+                        states.HasFlag(MaterialState.Focused) ? Colors.Magenta : Colors.SeaGreen,
+                        2.0))),
+        };
+
+        using var resting = new DecoratorHarness(
+            Decorator(new InputDecoration(labelText: "Label")), theme);
+        resting.Pump();
+        Assert.Equal(Colors.Gainsboro, Painter(resting).FillColor);
+        Assert.Equal(Colors.DarkSlateGray, StyleOf(resting, "Label").Color);
+        Assert.Equal(Colors.SeaGreen, Painter(resting).Border.BorderSide.Color);
+
+        using var focused = new DecoratorHarness(
+            new InputDecorator(
+                decoration: new InputDecoration(labelText: "Label"),
+                isFocused: true,
+                child: new Text("value")),
+            theme);
+        focused.Pump();
+        Assert.Equal(Colors.Goldenrod, Painter(focused).FillColor);
+        Assert.Equal(Colors.Crimson, StyleOf(focused, "Label").Color);
+        Assert.Equal(Colors.Magenta, Painter(focused).Border.BorderSide.Color);
+    }
+
+    [Fact]
+    public void InputDecorator_FloatingLabelStyleMergesTheBaseStyle()
+    {
+        // Under M2 the default floating-label style carries only a color, so the base style's own
+        // metrics survive the merge chain and the omission is observable.
+        using var harness = new DecoratorHarness(
+            new InputDecorator(
+                decoration: new InputDecoration(
+                    labelText: "Label",
+                    floatingLabelBehavior: FloatingLabelBehavior.Always),
+                baseStyle: new TextStyle(FontSize: 31.0, LetterSpacing: 3.0),
+                child: new Text("value")),
+            ThemeData.Light with { UseMaterial3 = false });
+        harness.Pump();
+
+        TextStyle style = StyleOf(harness, "Label");
+        Assert.Equal(31.0, style.FontSize);
+        Assert.Equal(3.0, style.LetterSpacing);
+        Assert.Equal(1.0, style.Height);
+    }
+
+    private static Color IconColor(List<RenderParagraph> paragraphs, IconData icon)
+    {
+        RenderParagraph paragraph = paragraphs.Single(
+            value => value.PlainText == char.ConvertFromUtf32(icon.CodePoint));
+        return paragraph.Text.Style?.Color
+               ?? throw new InvalidOperationException("The icon carries no resolved color.");
+    }
+
+    private static TextStyle StyleOf(DecoratorHarness harness, string text) =>
+        DecoratorHarness.FindAll<RenderParagraph>(harness.RenderView)
+            .Single(value => value.PlainText == text)
+            .Text.Style
+        ?? throw new InvalidOperationException($"No resolved style for \"{text}\".");
 
     private static Widget Decorator(
         InputDecoration decoration,

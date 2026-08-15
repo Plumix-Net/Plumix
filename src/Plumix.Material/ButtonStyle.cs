@@ -63,6 +63,25 @@ public sealed class WidgetStatesController : MaterialStatesController
     }
 }
 
+/// Bridges Material's `[Flags] MaterialState` onto the core `IReadOnlySet&lt;WidgetState&gt;` the
+/// framework's state-resolving values (`WidgetStateColor`, `WidgetStateTextStyle`,
+/// `WidgetStateBorderSide`) are declared against. Dart has one `WidgetState` set everywhere.
+public static class MaterialStateSet
+{
+    public static IReadOnlySet<WidgetState> Of(MaterialState states)
+    {
+        var set = new HashSet<WidgetState>();
+        if (states.HasFlag(MaterialState.Hovered)) set.Add(WidgetState.Hovered);
+        if (states.HasFlag(MaterialState.Focused)) set.Add(WidgetState.Focused);
+        if (states.HasFlag(MaterialState.Pressed)) set.Add(WidgetState.Pressed);
+        if (states.HasFlag(MaterialState.Disabled)) set.Add(WidgetState.Disabled);
+        if (states.HasFlag(MaterialState.Selected)) set.Add(WidgetState.Selected);
+        if (states.HasFlag(MaterialState.Dragged)) set.Add(WidgetState.Dragged);
+        if (states.HasFlag(MaterialState.Error)) set.Add(WidgetState.Error);
+        return set;
+    }
+}
+
 public abstract class MaterialStateProperty<T> : WidgetStateProperty<T>
 {
     public abstract T Resolve(MaterialState states);
@@ -80,6 +99,7 @@ public abstract class MaterialStateProperty<T> : WidgetStateProperty<T>
                 WidgetState.Disabled => MaterialState.Disabled,
                 WidgetState.Selected => MaterialState.Selected,
                 WidgetState.Dragged => MaterialState.Dragged,
+                WidgetState.Error => MaterialState.Error,
                 _ => MaterialState.None,
             };
         }

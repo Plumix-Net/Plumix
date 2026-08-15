@@ -41,7 +41,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             useMaterial3: false,
             platform: TargetPlatform.Windows,
             materialTapTargetSize: MaterialTapTargetSize.Padded,
-            inputDecorationTheme: new InputDecorationThemeData(IsDense: false),
+            inputDecorationTheme: new InputDecorationThemeData(isDense: false),
             buttonTheme: new ButtonThemeData(AlignedDropdown: false),
             splashFactory: Plumix.Material.InkSplash.SplashFactory,
             applyElevationOverlayColor: false);
@@ -55,7 +55,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             useMaterial3: true,
             platform: TargetPlatform.Linux,
             materialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
-            inputDecorationTheme: new InputDecorationThemeData(IsDense: true),
+            inputDecorationTheme: new InputDecorationThemeData(isDense: true),
             buttonTheme: new ButtonThemeData(AlignedDropdown: true),
             splashFactory: InkRipple.SplashFactory,
             applyElevationOverlayColor: true);

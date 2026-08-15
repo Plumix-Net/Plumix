@@ -312,7 +312,7 @@ internal sealed class DropdownMenuState<T> : RawMenuAnchorBaseState
         var inputTheme = Current.InputDecorationTheme
                          ?? dropdownTheme.InputDecorationTheme
                          ?? defaults.InputDecorationTheme
-                         ?? new InputDecorationThemeData(Border: new OutlineInputBorder());
+                         ?? new InputDecorationThemeData(border: new OutlineInputBorder());
 
         var decoration = Current.DecorationBuilder?.Invoke(context, MenuController)
                          ?? new InputDecoration(

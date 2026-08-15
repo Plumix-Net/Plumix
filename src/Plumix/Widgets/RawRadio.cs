@@ -19,6 +19,7 @@ public enum WidgetState
     Selected,
     Dragged,
     ScrolledUnder,
+    Error,
 }
 
 public abstract class WidgetStateProperty<T>

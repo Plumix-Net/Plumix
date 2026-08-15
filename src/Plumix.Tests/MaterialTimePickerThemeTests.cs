@@ -71,14 +71,14 @@ public sealed class MaterialTimePickerThemeTests
             Elevation: 0,
             DialHandColor: Color.FromArgb(255, 0, 0, 0),
             HourMinuteColor: Color.FromArgb(255, 0, 0, 0),
-            InputDecorationTheme: new InputDecorationThemeData(Filled: true),
+            InputDecorationTheme: new InputDecorationThemeData(filled: true),
             Padding: EdgeInsetsGeometry.All(0));
         var b = new TimePickerThemeData(
             BackgroundColor: Color.FromArgb(255, 100, 100, 100),
             Elevation: 10,
             DialHandColor: Color.FromArgb(255, 100, 100, 100),
             HourMinuteColor: Color.FromArgb(255, 100, 100, 100),
-            InputDecorationTheme: new InputDecorationThemeData(Filled: false),
+            InputDecorationTheme: new InputDecorationThemeData(filled: false),
             Padding: EdgeInsetsGeometry.All(20));
 
         var mid = TimePickerThemeData.Lerp(a, b, 0.5);

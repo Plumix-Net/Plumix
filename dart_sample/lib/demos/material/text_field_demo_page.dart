@@ -160,6 +160,46 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
               ),
             ),
           ),
+          const Text(
+            'Ambient InputDecorationTheme probes',
+            style: TextStyle(fontSize: 18),
+          ),
+          const Text(
+            "The theme's fill, floating label and active indicator resolve per state, and an "
+            'ambient IconButtonTheme colors the affix icons.',
+            style: TextStyle(fontSize: 13, color: Colors.black54),
+          ),
+          InputDecorationTheme(
+            data: InputDecorationThemeData(
+              filled: true,
+              fillColor: WidgetStateColor.resolveWith(_resolveStateFill),
+              floatingLabelStyle: WidgetStateTextStyle.resolveWith(_resolveStateLabel),
+              activeIndicatorBorder: WidgetStateBorderSide.resolveWith(
+                _resolveStateIndicator,
+              ),
+            ),
+            child: IconButtonTheme(
+              data: IconButtonThemeData(
+                style: ButtonStyle(
+                  foregroundColor: WidgetStateProperty.resolveWith(
+                    _resolveAffixColor,
+                  ),
+                ),
+              ),
+              child: TextField(
+                enabled: _enabled,
+                decoration: InputDecoration(
+                  labelText: 'State-resolving theme',
+                  hintText: 'Focus, hover or break this field',
+                  errorText: _error ? 'Error state' : null,
+                  prefixIcon: const Icon(Icons.lock),
+                  suffixIcon: const Icon(Icons.visibility),
+                  helperText:
+                      'fillColor/floatingLabelStyle/activeIndicatorBorder',
+                ),
+              ),
+            ),
+          ),
           Text(
             'Last submitted email: $_submitted',
             style: const TextStyle(fontSize: 13),
@@ -240,6 +280,46 @@ class _TextFieldDemoPageState extends State<TextFieldDemoPage> {
     _formKey.currentState?.reset();
     setState(() => _formStatus = 'reset');
   }
+
+  Color _resolveStateFill(Set<WidgetState> states) {
+    if (states.contains(WidgetState.disabled)) {
+      return const Color(0xFFDCDCDC);
+    }
+    if (states.contains(WidgetState.error)) {
+      return const Color(0xFFFFE4E1);
+    }
+    if (states.contains(WidgetState.focused)) {
+      return const Color(0xFFF0F8FF);
+    }
+    if (states.contains(WidgetState.hovered)) {
+      return const Color(0xFFF0FFF0);
+    }
+    return const Color(0xFFF5F5F5);
+  }
+
+  TextStyle _resolveStateLabel(Set<WidgetState> states) => TextStyle(
+    color: states.contains(WidgetState.error)
+        ? const Color(0xFFDC143C)
+        : states.contains(WidgetState.focused)
+        ? const Color(0xFF1E90FF)
+        : const Color(0xFF708090),
+  );
+
+  BorderSide _resolveStateIndicator(Set<WidgetState> states) => BorderSide(
+    color: states.contains(WidgetState.error)
+        ? const Color(0xFFDC143C)
+        : states.contains(WidgetState.focused)
+        ? const Color(0xFF1E90FF)
+        : states.contains(WidgetState.hovered)
+        ? const Color(0xFF3CB371)
+        : const Color(0xFF708090),
+    width: states.contains(WidgetState.focused) ? 3 : 1,
+  );
+
+  Color _resolveAffixColor(Set<WidgetState> states) =>
+      states.contains(WidgetState.error)
+      ? const Color(0xFFDC143C)
+      : const Color(0xFF4B0082);
 
   InputBorder _resolveStateBorder(Set<WidgetState> states) {
     final Color color = states.contains(WidgetState.disabled)

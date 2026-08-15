@@ -77,7 +77,7 @@ public sealed class DropdownMenuTheme : InheritedWidget
         return new DropdownMenuThemeData(
             TextStyle: theme.TextTheme.BodyLarge,
             InputDecorationTheme: new InputDecorationThemeData(
-                Border: new OutlineInputBorder()),
+                border: new OutlineInputBorder()),
             MenuStyle: new MenuStyle(
                 BackgroundColor: MaterialStateProperty<Color?>.All(theme.SurfaceContainerColor),
                 ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),

@@ -1359,12 +1359,12 @@ public sealed class SearchBar : StatefulWidget
                 enabled: CurrentWidget.Enabled,
                 decoration: new InputDecoration(hintText: CurrentWidget.HintText).ApplyDefaults(
                     new InputDecorationThemeData(
-                        HintStyle: effectiveHintStyle,
-                        EnabledBorder: InputBorder.None,
-                        Border: InputBorder.None,
-                        FocusedBorder: InputBorder.None,
-                        ContentPadding: EdgeInsetsGeometry.Zero,
-                        IsDense: true)),
+                        hintStyle: effectiveHintStyle,
+                        enabledBorder: InputBorder.None,
+                        border: InputBorder.None,
+                        focusedBorder: InputBorder.None,
+                        contentPadding: EdgeInsetsGeometry.Zero,
+                        isDense: true)),
                 textCapitalization: effectiveTextCapitalization,
                 textInputAction: CurrentWidget.TextInputAction,
                 keyboardType: CurrentWidget.KeyboardType,

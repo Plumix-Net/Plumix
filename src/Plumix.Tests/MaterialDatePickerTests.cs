@@ -501,9 +501,9 @@ public sealed class MaterialDatePickerTests : IDisposable
     {
         var theme = ThemeData.Light with
         {
-            InputDecorationTheme = new InputDecorationThemeData(Border: new UnderlineInputBorder()),
+            InputDecorationTheme = new InputDecorationThemeData(border: new UnderlineInputBorder()),
             DatePickerTheme = new DatePickerThemeData(
-                InputDecorationTheme: new InputDecorationThemeData(Border: new OutlineInputBorder())),
+                InputDecorationTheme: new InputDecorationThemeData(border: new OutlineInputBorder())),
         };
         using var harness = CreateHarness(new InputDatePickerFormField(
             firstDate: new DateTime(2026, 1, 1),

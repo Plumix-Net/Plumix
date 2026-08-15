@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Material;
@@ -128,6 +129,29 @@ public sealed class TextFieldDemoPage : StatefulWidget
                             decoration: new InputDecoration(
                                 labelText: "Expanded, bottom aligned",
                                 filled: true))),
+                    new Text("Ambient InputDecorationTheme probes", fontSize: 18),
+                    new Text(
+                        "The theme's fill, floating label and active indicator resolve per state, and "
+                        + "an ambient IconButtonTheme colors the affix icons.",
+                        fontSize: 13, color: Colors.DimGray),
+                    new InputDecorationTheme(
+                        data: new InputDecorationThemeData(
+                            filled: true,
+                            fillColor: WidgetStateColor.ResolveWith(ResolveStateFill),
+                            floatingLabelStyle: WidgetStateTextStyle.ResolveWith(ResolveStateLabel),
+                            activeIndicatorBorder: WidgetStateBorderSide.ResolveWith(ResolveStateIndicator)),
+                        child: new IconButtonTheme(
+                            new IconButtonThemeData(new ButtonStyle(
+                                ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(ResolveAffixColor))),
+                            new TextField(
+                                enabled: _enabled,
+                                decoration: new InputDecoration(
+                                    labelText: "State-resolving theme",
+                                    hintText: "Focus, hover or break this field",
+                                    errorText: _error ? "Error state" : null,
+                                    prefixIcon: new Icon(Icons.Lock),
+                                    suffixIcon: new Icon(Icons.Visibility),
+                                    helperText: "fillColor/floatingLabelStyle/activeIndicatorBorder")))),
                     new Text($"Last submitted email: {_submitted}", fontSize: 13),
                     new Divider(),
                     new Text("TextFormField + Form", fontSize: 18),
@@ -203,6 +227,30 @@ public sealed class TextFieldDemoPage : StatefulWidget
             double width = states.HasFlag(MaterialState.Focused) ? 3 : 1;
             return new OutlineInputBorder(new BorderSide(color, width), BorderRadius.Circular(10));
         }
+
+        private static Color ResolveStateFill(IReadOnlySet<WidgetState> states)
+        {
+            if (states.Contains(WidgetState.Disabled)) return Colors.Gainsboro;
+            if (states.Contains(WidgetState.Error)) return Colors.MistyRose;
+            if (states.Contains(WidgetState.Focused)) return Colors.AliceBlue;
+            if (states.Contains(WidgetState.Hovered)) return Colors.Honeydew;
+            return Colors.WhiteSmoke;
+        }
+
+        private static TextStyle ResolveStateLabel(IReadOnlySet<WidgetState> states) => new(
+            Color: states.Contains(WidgetState.Error) ? Colors.Crimson
+                : states.Contains(WidgetState.Focused) ? Colors.DodgerBlue
+                : Colors.SlateGray);
+
+        private static BorderSide? ResolveStateIndicator(MaterialState states) => new BorderSide(
+            states.HasFlag(MaterialState.Error) ? Colors.Crimson
+                : states.HasFlag(MaterialState.Focused) ? Colors.DodgerBlue
+                : states.HasFlag(MaterialState.Hovered) ? Colors.MediumSeaGreen
+                : Colors.SlateGray,
+            states.HasFlag(MaterialState.Focused) ? 3 : 1);
+
+        private static Color? ResolveAffixColor(MaterialState states) =>
+            states.HasFlag(MaterialState.Error) ? Colors.Crimson : Colors.Indigo;
 
         private static Widget Control(string label, Action action) => new TextButton(new Text(label, fontSize: 12), action);
     }

@@ -23,18 +23,18 @@ public sealed record InputDecoration
 
     public InputDecoration(
         Widget? icon = null,
-        Color? iconColor = null,
+        WidgetStateColor? iconColor = null,
         Widget? label = null,
         string? labelText = null,
-        TextStyle? labelStyle = null,
-        TextStyle? floatingLabelStyle = null,
+        WidgetStateTextStyle? labelStyle = null,
+        WidgetStateTextStyle? floatingLabelStyle = null,
         Widget? helper = null,
         string? helperText = null,
-        TextStyle? helperStyle = null,
+        WidgetStateTextStyle? helperStyle = null,
         int? helperMaxLines = null,
         string? hintText = null,
         Widget? hint = null,
-        TextStyle? hintStyle = null,
+        WidgetStateTextStyle? hintStyle = null,
         TextDirection? hintTextDirection = null,
         int? hintMaxLines = null,
         TimeSpan? hintFadeDuration = null,
@@ -42,7 +42,7 @@ public sealed record InputDecoration
         bool maintainLabelSize = false,
         Widget? error = null,
         string? errorText = null,
-        TextStyle? errorStyle = null,
+        WidgetStateTextStyle? errorStyle = null,
         int? errorMaxLines = null,
         FloatingLabelBehavior? floatingLabelBehavior = null,
         FloatingLabelAlignment? floatingLabelAlignment = null,
@@ -53,19 +53,19 @@ public sealed record InputDecoration
         BoxConstraints? prefixIconConstraints = null,
         Widget? prefix = null,
         string? prefixText = null,
-        TextStyle? prefixStyle = null,
-        Color? prefixIconColor = null,
+        WidgetStateTextStyle? prefixStyle = null,
+        WidgetStateColor? prefixIconColor = null,
         Widget? suffixIcon = null,
         Widget? suffix = null,
         string? suffixText = null,
-        TextStyle? suffixStyle = null,
-        Color? suffixIconColor = null,
+        WidgetStateTextStyle? suffixStyle = null,
+        WidgetStateColor? suffixIconColor = null,
         BoxConstraints? suffixIconConstraints = null,
         Widget? counter = null,
         string? counterText = null,
-        TextStyle? counterStyle = null,
+        WidgetStateTextStyle? counterStyle = null,
         bool? filled = null,
-        Color? fillColor = null,
+        WidgetStateColor? fillColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
         InputBorder? errorBorder = null,
@@ -174,18 +174,18 @@ public sealed record InputDecoration
     }
 
     public Widget? Icon { get; init; }
-    public Color? IconColor { get; init; }
+    public WidgetStateColor? IconColor { get; init; }
     public Widget? Label { get; init; }
     public string? LabelText { get; init; }
-    public TextStyle? LabelStyle { get; init; }
-    public TextStyle? FloatingLabelStyle { get; init; }
+    public WidgetStateTextStyle? LabelStyle { get; init; }
+    public WidgetStateTextStyle? FloatingLabelStyle { get; init; }
     public Widget? Helper { get; init; }
     public string? HelperText { get; init; }
-    public TextStyle? HelperStyle { get; init; }
+    public WidgetStateTextStyle? HelperStyle { get; init; }
     public int? HelperMaxLines { get; init; }
     public string? HintText { get; init; }
     public Widget? Hint { get; init; }
-    public TextStyle? HintStyle { get; init; }
+    public WidgetStateTextStyle? HintStyle { get; init; }
     public TextDirection? HintTextDirection { get; init; }
     public int? HintMaxLines { get; init; }
     public TimeSpan? HintFadeDuration { get; init; }
@@ -193,7 +193,7 @@ public sealed record InputDecoration
     public bool MaintainLabelSize { get; init; }
     public Widget? Error { get; init; }
     public string? ErrorText { get; init; }
-    public TextStyle? ErrorStyle { get; init; }
+    public WidgetStateTextStyle? ErrorStyle { get; init; }
     public int? ErrorMaxLines { get; init; }
     public FloatingLabelBehavior? FloatingLabelBehavior { get; init; }
     public FloatingLabelAlignment? FloatingLabelAlignment { get; init; }
@@ -204,19 +204,19 @@ public sealed record InputDecoration
     public BoxConstraints? PrefixIconConstraints { get; init; }
     public Widget? Prefix { get; init; }
     public string? PrefixText { get; init; }
-    public TextStyle? PrefixStyle { get; init; }
-    public Color? PrefixIconColor { get; init; }
+    public WidgetStateTextStyle? PrefixStyle { get; init; }
+    public WidgetStateColor? PrefixIconColor { get; init; }
     public Widget? SuffixIcon { get; init; }
     public Widget? Suffix { get; init; }
     public string? SuffixText { get; init; }
-    public TextStyle? SuffixStyle { get; init; }
-    public Color? SuffixIconColor { get; init; }
+    public WidgetStateTextStyle? SuffixStyle { get; init; }
+    public WidgetStateColor? SuffixIconColor { get; init; }
     public BoxConstraints? SuffixIconConstraints { get; init; }
     public Widget? Counter { get; init; }
     public string? CounterText { get; init; }
-    public TextStyle? CounterStyle { get; init; }
+    public WidgetStateTextStyle? CounterStyle { get; init; }
     public bool? Filled { get; init; }
-    public Color? FillColor { get; init; }
+    public WidgetStateColor? FillColor { get; init; }
     public Color? FocusColor { get; init; }
     public Color? HoverColor { get; init; }
     public InputBorder? ErrorBorder { get; init; }
@@ -233,14 +233,14 @@ public sealed record InputDecoration
 
     public static InputDecoration Collapsed(
         string? hintText = null,
-        TextStyle? hintStyle = null,
+        WidgetStateTextStyle? hintStyle = null,
         Widget? hint = null,
         TextDirection? hintTextDirection = null,
         int? hintMaxLines = null,
         TimeSpan? hintFadeDuration = null,
         bool maintainHintSize = true,
         bool? filled = null,
-        Color? fillColor = null,
+        WidgetStateColor? fillColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
         bool enabled = true,
@@ -263,6 +263,16 @@ public sealed record InputDecoration
         enabled: enabled,
         alignLabelWithHint: false,
         constraints: constraints);
+
+    /// Applies the ambient theme to every field Flutter's `applyDefaults` defaults, leaving the widget
+    /// slots (icon/label/helper/error/prefix/suffix/counter content, `enabled`, `semanticCounterText`)
+    /// untouched. The theme's six non-nullable fields make `IsDense`, `IsCollapsed`, `Filled`,
+    /// `AlignLabelWithHint`, `FloatingLabelBehavior` and `FloatingLabelAlignment` non-null afterwards.
+    public InputDecoration ApplyDefaults(InputDecorationTheme theme)
+    {
+        ArgumentNullException.ThrowIfNull(theme);
+        return ApplyDefaults(theme.Data);
+    }
 
     public InputDecoration ApplyDefaults(InputDecorationThemeData theme)
     {
@@ -504,7 +514,9 @@ public sealed class InputDecorator : StatefulWidget
 
         private bool IsHovering => Current.IsHovering && Decoration.Enabled;
 
-        private MaterialState WidgetState
+        /// The only four states an `InputDecorator` ever produces; `pressed`, `selected`, `dragged` and
+        /// `scrolledUnder` are never part of the set.
+        private MaterialState WidgetStates
         {
             get
             {
@@ -521,12 +533,14 @@ public sealed class InputDecorator : StatefulWidget
         {
             var themeData = Theme.Of(context);
             InputDecoration decoration = Decoration;
-            MaterialState states = WidgetState;
-            InputDecoratorDefaults defaults = InputDecoratorDefaults.Resolve(themeData, states, HasError);
+            MaterialState states = WidgetStates;
+            IReadOnlySet<Plumix.Widgets.WidgetState> stateSet = MaterialStateSet.Of(states);
+            InputDecorationThemeData defaults = InputDecoratorDefaults.Resolve(themeData);
+            IconButtonThemeData iconButtonTheme = IconButtonTheme.Of(context);
             var textDirection = Directionality.Of(context);
             bool flipHorizontal = textDirection == TextDirection.Rtl;
 
-            InputBorder border = ResolveBorder(themeData, defaults, states, context);
+            InputBorder border = ResolveBorder(themeData, defaults, states, stateSet, context);
             bool isDense = decoration.IsDense ?? false;
             bool isCollapsed = decoration.IsCollapsed ?? false;
             bool filled = decoration.Filled ?? false;
@@ -534,19 +548,22 @@ public sealed class InputDecorator : StatefulWidget
 
             TextStyle labelStyle = themeData.TextTheme.TitleMedium
                 .Merge(Current.BaseStyle)
-                .Merge(defaults.LabelStyle)
-                .Merge(decoration.LabelStyle)
+                .Merge(defaults.LabelStyle?.Resolve(stateSet))
+                .Merge(decoration.LabelStyle?.Resolve(stateSet))
                 .CopyWith(height: 1.0);
             TextStyle hintStyle = (themeData.UseMaterial3
                     ? themeData.TextTheme.BodyLarge
                     : themeData.TextTheme.TitleMedium)
                 .Merge(Current.BaseStyle)
-                .Merge(defaults.HintStyle)
-                .Merge(decoration.HintStyle);
-            TextStyle floatingLabelStyle = BuildFloatingLabelStyle(themeData, defaults, decoration);
-            TextStyle helperStyle = defaults.HelperStyle.Merge(decoration.HelperStyle);
-            TextStyle errorStyle = defaults.ErrorStyle.Merge(decoration.ErrorStyle);
-            TextStyle counterStyle = helperStyle.Merge(decoration.CounterStyle);
+                .Merge(defaults.HintStyle?.Resolve(stateSet))
+                .Merge(decoration.HintStyle?.Resolve(stateSet));
+            TextStyle floatingLabelStyle = BuildFloatingLabelStyle(themeData, defaults, decoration, stateSet);
+            TextStyle helperStyle = (defaults.HelperStyle?.Resolve(stateSet) ?? new TextStyle())
+                .Merge(decoration.HelperStyle?.Resolve(stateSet));
+            // Flutter merges the decoration's error style unresolved here, unlike the helper style.
+            TextStyle errorStyle = (defaults.ErrorStyle?.Resolve(stateSet) ?? new TextStyle())
+                .Merge(decoration.ErrorStyle);
+            TextStyle counterStyle = helperStyle.Merge(decoration.CounterStyle?.Resolve(stateSet));
 
             double inputGap = 0.0;
             if (themeData.UseMaterial3)
@@ -571,9 +588,9 @@ public sealed class InputDecorator : StatefulWidget
                 flipHorizontal);
 
             double iconSize = isDense ? 18.0 : 24.0;
-            Color fillColor = filled
-                ? decoration.FillColor ?? defaults.FillColor
-                : Colors.Transparent;
+            Color fillColor = !filled
+                ? Colors.Transparent
+                : (decoration.FillColor ?? defaults.FillColor)?.Resolve(stateSet) ?? Colors.Transparent;
             Color hoverColor = !filled || !decoration.Enabled
                 ? Colors.Transparent
                 : decoration.HoverColor ?? themeData.HoverColor;
@@ -595,21 +612,28 @@ public sealed class InputDecorator : StatefulWidget
                         EdgeInsetsGeometry.DirectionalOnly(end: 16.0).Resolve(textDirection),
                         new IconTheme(
                             new IconThemeData(
-                                Color: decoration.IconColor ?? defaults.IconColor,
+                                Color: (decoration.IconColor ?? defaults.IconColor)?.Resolve(stateSet),
                                 Size: iconSize),
                             decoration.Icon)));
 
+            // An ambient IconButtonTheme foreground sits between the decoration and the defaults.
+            Color? prefixIconColor = decoration.PrefixIconColor?.Resolve(stateSet)
+                                     ?? iconButtonTheme.Style?.ForegroundColor?.Resolve(states)
+                                     ?? defaults.PrefixIconColor?.Resolve(stateSet);
+            Color? suffixIconColor = decoration.SuffixIconColor?.Resolve(stateSet)
+                                     ?? iconButtonTheme.Style?.ForegroundColor?.Resolve(states)
+                                     ?? defaults.SuffixIconColor?.Resolve(stateSet);
             Widget? prefixIcon = BuildIconSlot(
                 decoration.PrefixIcon,
                 decoration.PrefixIconConstraints,
-                decoration.PrefixIconColor ?? defaults.PrefixIconColor,
+                prefixIconColor,
                 iconSize,
                 visualDensity,
                 InputDecorator.PrefixIconSemanticsTag);
             Widget? suffixIcon = BuildIconSlot(
                 decoration.SuffixIcon,
                 decoration.SuffixIconConstraints,
-                decoration.SuffixIconColor ?? defaults.SuffixIconColor,
+                suffixIconColor,
                 iconSize,
                 visualDensity,
                 InputDecorator.SuffixIconSemanticsTag);
@@ -627,13 +651,13 @@ public sealed class InputDecorator : StatefulWidget
             Widget? prefix = BuildAffix(
                 decoration.Prefix,
                 decoration.PrefixText,
-                decoration.PrefixStyle ?? hintStyle,
+                decoration.PrefixStyle?.Resolve(stateSet) ?? hintStyle,
                 needsSemanticsSortOrder ? _prefixSemanticsSortOrder : null,
                 InputDecorator.PrefixSemanticsTag);
             Widget? suffix = BuildAffix(
                 decoration.Suffix,
                 decoration.SuffixText,
-                decoration.SuffixStyle ?? hintStyle,
+                decoration.SuffixStyle?.Resolve(stateSet) ?? hintStyle,
                 needsSemanticsSortOrder ? _suffixSemanticsSortOrder : null,
                 InputDecorator.SuffixSemanticsTag);
 
@@ -713,22 +737,25 @@ public sealed class InputDecorator : StatefulWidget
             return result;
         }
 
-        private static TextStyle BuildFloatingLabelStyle(
+        private TextStyle BuildFloatingLabelStyle(
             ThemeData themeData,
-            InputDecoratorDefaults defaults,
-            InputDecoration decoration)
+            InputDecorationThemeData defaults,
+            InputDecoration decoration,
+            IReadOnlySet<Plumix.Widgets.WidgetState> stateSet)
         {
-            TextStyle defaultTextStyle = defaults.FloatingLabelStyle;
+            TextStyle defaultTextStyle = defaults.FloatingLabelStyle?.Resolve(stateSet) ?? new TextStyle();
             if ((decoration.ErrorText is not null || decoration.Error is not null)
-                && decoration.ErrorStyle?.Color is { } errorColor)
+                && decoration.ErrorStyle?.DefaultValue.Color is { } errorColor)
             {
                 defaultTextStyle = defaultTextStyle.CopyWith(color: errorColor);
             }
 
+            // Flutter merges the unresolved widget style here, then the resolved one on top.
             defaultTextStyle = defaultTextStyle.Merge(decoration.FloatingLabelStyle ?? decoration.LabelStyle);
             return themeData.TextTheme.TitleMedium
+                .Merge(Current.BaseStyle)
                 .Merge(defaultTextStyle)
-                .Merge(decoration.FloatingLabelStyle)
+                .Merge(decoration.FloatingLabelStyle?.Resolve(stateSet))
                 .CopyWith(height: 1.0);
         }
 
@@ -836,7 +863,7 @@ public sealed class InputDecorator : StatefulWidget
         private static Widget? BuildIconSlot(
             Widget? icon,
             BoxConstraints? constraints,
-            Color color,
+            Color? color,
             double iconSize,
             VisualDensity visualDensity,
             SemanticsTag semanticsTag)
@@ -862,8 +889,9 @@ public sealed class InputDecorator : StatefulWidget
 
         private InputBorder ResolveBorder(
             ThemeData themeData,
-            InputDecoratorDefaults defaults,
+            InputDecorationThemeData defaults,
             MaterialState states,
+            IReadOnlySet<Plumix.Widgets.WidgetState> stateSet,
             BuildContext context)
         {
             InputDecoration decoration = Decoration;
@@ -881,13 +909,14 @@ public sealed class InputDecorator : StatefulWidget
                 border = HasError ? decoration.ErrorBorder : decoration.EnabledBorder;
             }
 
-            return border ?? GetDefaultBorder(themeData, defaults, states, context);
+            return border ?? GetDefaultBorder(themeData, defaults, states, stateSet, context);
         }
 
         private InputBorder GetDefaultBorder(
             ThemeData themeData,
-            InputDecoratorDefaults defaults,
+            InputDecorationThemeData defaults,
             MaterialState states,
+            IReadOnlySet<Plumix.Widgets.WidgetState> stateSet,
             BuildContext context)
         {
             InputDecoration decoration = Decoration;
@@ -910,15 +939,17 @@ public sealed class InputDecorator : StatefulWidget
             {
                 if (decoration.Filled ?? false)
                 {
-                    BorderSide? themeSide = InputDecorationTheme.Of(context).ActiveIndicatorBorder;
-                    return border.CopyWith(themeSide ?? defaults.ActiveIndicatorBorder);
+                    // applyDefaults never copies activeIndicatorBorder onto the decoration, so the
+                    // ambient theme is consulted directly here, exactly as Flutter does.
+                    WidgetStateBorderSide? themeSide = InputDecorationTheme.Of(context).ActiveIndicatorBorder;
+                    return border.CopyWith((themeSide ?? defaults.ActiveIndicatorBorder)?.Resolve(states));
                 }
 
-                return border.CopyWith(defaults.OutlineBorder);
+                return border.CopyWith(defaults.OutlineBorder?.Resolve(states));
             }
 
             double width = (decoration.IsCollapsed ?? false)
-                           || ReferenceEquals(decoration.Border, InputBorder.None)
+                           || decoration.Border == InputBorder.None
                            || !decoration.Enabled
                 ? 0.0
                 : Current.IsFocused ? 2.0 : 1.0;
@@ -1371,125 +1402,164 @@ internal sealed class InputBorderPainter : CustomPainter
                                                                      || old.TextDirection != TextDirection;
 }
 
-// Dart parity source: material_ui/lib/src/input_decorator.dart
-// (_InputDecoratorDefaultsM2 / _InputDecoratorDefaultsM3).
-internal sealed record InputDecoratorDefaults(
-    TextStyle HintStyle,
-    TextStyle LabelStyle,
-    TextStyle FloatingLabelStyle,
-    TextStyle HelperStyle,
-    TextStyle ErrorStyle,
-    Color FillColor,
-    Color IconColor,
-    Color PrefixIconColor,
-    Color SuffixIconColor,
-    BorderSide ActiveIndicatorBorder,
-    BorderSide OutlineBorder)
+// Dart parity source: material_ui/lib/src/input_decorator.dart (_InputDecoratorDefaultsM2).
+internal sealed class InputDecoratorDefaultsM2 : InputDecorationThemeData
 {
-    public static InputDecoratorDefaults Resolve(ThemeData theme, MaterialState states, bool hasError)
+    private readonly ThemeData _theme;
+
+    internal InputDecoratorDefaultsM2(ThemeData theme) => _theme = theme;
+
+    private bool IsDark => _theme.Brightness == Brightness.Dark;
+
+    private Color UnfocusedIconColor => IsDark
+        ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)
+        : Color.FromArgb(0x73, 0x00, 0x00, 0x00);
+
+    public override WidgetStateTextStyle HintStyle => WidgetStateTextStyle.ResolveWith(states =>
+        new TextStyle(Color: states.Contains(WidgetState.Disabled) ? _theme.DisabledColor : _theme.HintColor));
+
+    public override WidgetStateTextStyle LabelStyle => HintStyle;
+
+    public override WidgetStateTextStyle FloatingLabelStyle => WidgetStateTextStyle.ResolveWith(states =>
     {
-        return theme.UseMaterial3 ? ResolveMaterial3(theme, states) : ResolveMaterial2(theme, states, hasError);
+        if (states.Contains(WidgetState.Disabled)) return new TextStyle(Color: _theme.DisabledColor);
+        if (states.Contains(WidgetState.Error)) return new TextStyle(Color: _theme.ColorScheme.Error);
+        if (states.Contains(WidgetState.Focused)) return new TextStyle(Color: _theme.ColorScheme.Primary);
+        return new TextStyle(Color: _theme.HintColor);
+    });
+
+    public override WidgetStateTextStyle HelperStyle => WidgetStateTextStyle.ResolveWith(states =>
+        _theme.TextTheme.BodySmall.CopyWith(
+            color: states.Contains(WidgetState.Disabled) ? Colors.Transparent : _theme.HintColor));
+
+    public override WidgetStateTextStyle ErrorStyle => WidgetStateTextStyle.ResolveWith(states =>
+        _theme.TextTheme.BodySmall.CopyWith(
+            color: states.Contains(WidgetState.Disabled) ? Colors.Transparent : _theme.ColorScheme.Error));
+
+    public override WidgetStateColor FillColor => WidgetStateColor.ResolveWith(states =>
+        (IsDark, states.Contains(WidgetState.Disabled)) switch
+        {
+            (true, true) => Color.FromArgb(0x0D, 0xFF, 0xFF, 0xFF),
+            (true, false) => Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF),
+            (false, true) => Color.FromArgb(0x05, 0x00, 0x00, 0x00),
+            (false, false) => Color.FromArgb(0x0A, 0x00, 0x00, 0x00),
+        });
+
+    public override WidgetStateColor IconColor => WidgetStateColor.ResolveWith(states =>
+    {
+        bool focused = states.Contains(WidgetState.Focused);
+        if (states.Contains(WidgetState.Disabled) && !focused) return _theme.DisabledColor;
+        if (focused) return _theme.ColorScheme.Primary;
+        return UnfocusedIconColor;
+    });
+
+    public override WidgetStateColor PrefixIconColor => IconColor;
+
+    public override WidgetStateColor SuffixIconColor => WidgetStateColor.ResolveWith(states =>
+    {
+        bool focused = states.Contains(WidgetState.Focused);
+        if (states.Contains(WidgetState.Disabled) && !focused) return _theme.DisabledColor;
+        if (states.Contains(WidgetState.Error)) return _theme.ColorScheme.Error;
+        if (focused) return _theme.ColorScheme.Primary;
+        return UnfocusedIconColor;
+    });
+}
+
+// Dart parity source: material_ui/lib/src/input_decorator.dart (_InputDecoratorDefaultsM3).
+//
+// For InputDecorator, `focused` takes precedence over `hovered` — the inverse of most components.
+internal sealed class InputDecoratorDefaultsM3 : InputDecorationThemeData
+{
+    private readonly ThemeData _theme;
+
+    internal InputDecoratorDefaultsM3(ThemeData theme) => _theme = theme;
+
+    private ColorScheme Colors_ => _theme.ColorScheme;
+
+    private Color Disabled(double opacity) =>
+        InputDecoratorDefaults.WithOpacity(Colors_.OnSurface, opacity);
+
+    /// The shared error/focused/hovered chain both border sides use; only the enabled color differs.
+    private BorderSide? ResolveSide(MaterialState states, Color enabledColor, Color disabledColor)
+    {
+        if (states.HasFlag(MaterialState.Disabled)) return new BorderSide(disabledColor);
+        if (states.HasFlag(MaterialState.Error))
+        {
+            if (states.HasFlag(MaterialState.Focused)) return new BorderSide(Colors_.Error, 2.0);
+            if (states.HasFlag(MaterialState.Hovered)) return new BorderSide(Colors_.OnErrorContainer);
+            return new BorderSide(Colors_.Error);
+        }
+
+        if (states.HasFlag(MaterialState.Focused)) return new BorderSide(Colors_.Primary, 2.0);
+        if (states.HasFlag(MaterialState.Hovered)) return new BorderSide(Colors_.OnSurface);
+        return new BorderSide(enabledColor);
     }
 
-    private static InputDecoratorDefaults ResolveMaterial3(ThemeData theme, MaterialState states)
+    private Color ResolveLabelColor(IReadOnlySet<WidgetState> states)
     {
-        bool disabled = states.HasFlag(MaterialState.Disabled);
-        bool error = states.HasFlag(MaterialState.Error);
-        bool focused = states.HasFlag(MaterialState.Focused);
-        bool hovered = states.HasFlag(MaterialState.Hovered);
-
-        Color LabelColor()
+        if (states.Contains(WidgetState.Disabled)) return Disabled(0.38);
+        if (states.Contains(WidgetState.Error))
         {
-            if (disabled) return WithOpacity(theme.OnSurfaceColor, 0.38);
-            if (error && focused) return theme.ErrorColor;
-            if (error && hovered) return theme.ColorScheme.OnErrorContainer;
-            if (error) return theme.ErrorColor;
-            if (focused) return theme.PrimaryColor;
-            return theme.OnSurfaceVariantColor;
+            if (states.Contains(WidgetState.Focused)) return Colors_.Error;
+            if (states.Contains(WidgetState.Hovered)) return Colors_.OnErrorContainer;
+            return Colors_.Error;
         }
 
-        BorderSide IndicatorSide(Color enabledColor)
-        {
-            if (disabled) return new BorderSide(WithOpacity(theme.OnSurfaceColor, 0.38));
-            if (error && focused) return new BorderSide(theme.ErrorColor, 2.0);
-            if (error && hovered) return new BorderSide(theme.ColorScheme.OnErrorContainer);
-            if (error) return new BorderSide(theme.ErrorColor);
-            if (focused) return new BorderSide(theme.PrimaryColor, 2.0);
-            if (hovered) return new BorderSide(theme.OnSurfaceColor);
-            return new BorderSide(enabledColor);
-        }
-
-        BorderSide OutlineSide()
-        {
-            if (disabled) return new BorderSide(WithOpacity(theme.OnSurfaceColor, 0.12));
-            return IndicatorSide(theme.OutlineColor);
-        }
-
-        TextStyle labelStyle = theme.TextTheme.BodyLarge.CopyWith(color: LabelColor());
-        return new InputDecoratorDefaults(
-            HintStyle: new TextStyle(
-                Color: disabled ? WithOpacity(theme.OnSurfaceColor, 0.38) : theme.OnSurfaceVariantColor),
-            LabelStyle: labelStyle,
-            FloatingLabelStyle: labelStyle,
-            HelperStyle: theme.TextTheme.BodySmall.CopyWith(
-                color: disabled ? WithOpacity(theme.OnSurfaceColor, 0.38) : theme.OnSurfaceVariantColor),
-            ErrorStyle: theme.TextTheme.BodySmall.CopyWith(color: theme.ErrorColor),
-            FillColor: disabled
-                ? WithOpacity(theme.OnSurfaceColor, 0.04)
-                : theme.SurfaceContainerHighestColor,
-            IconColor: theme.OnSurfaceVariantColor,
-            PrefixIconColor: disabled
-                ? WithOpacity(theme.OnSurfaceColor, 0.38)
-                : theme.OnSurfaceVariantColor,
-            SuffixIconColor: disabled ? WithOpacity(theme.OnSurfaceColor, 0.38)
-                : error && hovered ? theme.ColorScheme.OnErrorContainer
-                : error ? theme.ErrorColor
-                : theme.OnSurfaceVariantColor,
-            ActiveIndicatorBorder: IndicatorSide(theme.OnSurfaceVariantColor),
-            OutlineBorder: OutlineSide());
+        if (states.Contains(WidgetState.Focused)) return Colors_.Primary;
+        return Colors_.OnSurfaceVariant;
     }
 
-    private static InputDecoratorDefaults ResolveMaterial2(
-        ThemeData theme,
-        MaterialState states,
-        bool hasError)
-    {
-        bool disabled = states.HasFlag(MaterialState.Disabled);
-        bool focused = states.HasFlag(MaterialState.Focused);
-        bool dark = theme.Brightness == Brightness.Dark;
+    public override WidgetStateTextStyle HintStyle => WidgetStateTextStyle.ResolveWith(states =>
+        new TextStyle(Color: states.Contains(WidgetState.Disabled) ? Disabled(0.38) : Colors_.OnSurfaceVariant));
 
-        Color IconColorValue()
+    public override WidgetStateColor FillColor => WidgetStateColor.ResolveWith(states =>
+        states.Contains(WidgetState.Disabled) ? Disabled(0.04) : Colors_.SurfaceContainerHighest);
+
+    public override WidgetStateBorderSide ActiveIndicatorBorder => WidgetStateBorderSide.ResolveWith(
+        states => ResolveSide(states, Colors_.OnSurfaceVariant, Disabled(0.38)));
+
+    public override WidgetStateBorderSide OutlineBorder => WidgetStateBorderSide.ResolveWith(
+        states => ResolveSide(states, Colors_.Outline, Disabled(0.12)));
+
+    /// Flutter's M3 `iconColor` is a plain color, not a state-resolving one.
+    public override WidgetStateColor IconColor => new(Colors_.OnSurfaceVariant);
+
+    public override WidgetStateColor PrefixIconColor => WidgetStateColor.ResolveWith(states =>
+        states.Contains(WidgetState.Disabled) ? Disabled(0.38) : Colors_.OnSurfaceVariant);
+
+    public override WidgetStateColor SuffixIconColor => WidgetStateColor.ResolveWith(states =>
+    {
+        if (states.Contains(WidgetState.Disabled)) return Disabled(0.38);
+        if (states.Contains(WidgetState.Error))
         {
-            if (disabled && !focused) return theme.DisabledColor;
-            if (focused) return theme.PrimaryColor;
-            return dark ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x73, 0x00, 0x00, 0x00);
+            return states.Contains(WidgetState.Hovered) ? Colors_.OnErrorContainer : Colors_.Error;
         }
 
-        var hintStyle = new TextStyle(Color: disabled ? theme.DisabledColor : theme.HintColor);
-        return new InputDecoratorDefaults(
-            HintStyle: hintStyle,
-            LabelStyle: hintStyle,
-            FloatingLabelStyle: new TextStyle(
-                Color: disabled ? theme.DisabledColor
-                    : hasError ? theme.ErrorColor
-                    : focused ? theme.PrimaryColor
-                    : theme.HintColor),
-            HelperStyle: theme.TextTheme.BodySmall.CopyWith(
-                color: disabled ? Colors.Transparent : theme.HintColor),
-            ErrorStyle: theme.TextTheme.BodySmall.CopyWith(
-                color: disabled ? Colors.Transparent : theme.ErrorColor),
-            FillColor: dark
-                ? disabled ? Color.FromArgb(0x0D, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)
-                : disabled ? Color.FromArgb(0x05, 0x00, 0x00, 0x00) : Color.FromArgb(0x0A, 0x00, 0x00, 0x00),
-            IconColor: IconColorValue(),
-            PrefixIconColor: IconColorValue(),
-            SuffixIconColor: disabled && !focused ? theme.DisabledColor
-                : hasError ? theme.ErrorColor
-                : focused ? theme.PrimaryColor
-                : dark ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF) : Color.FromArgb(0x73, 0x00, 0x00, 0x00),
-            ActiveIndicatorBorder: BorderSide.None,
-            OutlineBorder: BorderSide.None);
-    }
+        return Colors_.OnSurfaceVariant;
+    });
+
+    public override WidgetStateTextStyle LabelStyle => WidgetStateTextStyle.ResolveWith(states =>
+        _theme.TextTheme.BodyLarge.CopyWith(color: ResolveLabelColor(states)));
+
+    public override WidgetStateTextStyle FloatingLabelStyle => LabelStyle;
+
+    public override WidgetStateTextStyle HelperStyle => WidgetStateTextStyle.ResolveWith(states =>
+        _theme.TextTheme.BodySmall.CopyWith(
+            color: states.Contains(WidgetState.Disabled) ? Disabled(0.38) : Colors_.OnSurfaceVariant));
+
+    public override WidgetStateTextStyle ErrorStyle => WidgetStateTextStyle.ResolveWith(
+        _ => _theme.TextTheme.BodySmall.CopyWith(color: Colors_.Error));
+}
+
+// Dart parity source: material_ui/lib/src/input_decorator.dart.
+//
+// Flutter reaches these through `dart:ui`; Plumix's Material files each carry their own copy (see
+// ElevationOverlay, DatePickerTheme, NavigationBar).
+internal static class InputDecoratorDefaults
+{
+    internal static InputDecorationThemeData Resolve(ThemeData theme) => theme.UseMaterial3
+        ? new InputDecoratorDefaultsM3(theme)
+        : new InputDecoratorDefaultsM2(theme);
 
     internal static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
         (byte)Math.Round(255 * Math.Clamp(opacity, 0.0, 1.0)),

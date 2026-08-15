@@ -162,6 +162,11 @@
   - `MergeableMaterial` (strict constructor/defaults, keyed gap/chunk reconciliation, source 200ms gap/corner/divider
     transitions, transparent slice materials, directional list-body layout, render-owned group shadows, and a
     mirrored live merge/separate probe).
+  - `InputDecorator`/`InputDecoration`/`InputDecorationTheme` (the exact `_InputDecoratorDefaultsM2`/
+    `_InputDecoratorDefaultsM3` tables as real `InputDecorationThemeData` subclasses, the six non-nullable
+    theme fields with their source defaults, `applyDefaults`' 35-field list, the obsolete field-based
+    `InputDecorationTheme` surface with `data`/`copyWith`/`merge`/`wrap`, the `IconButtonTheme` affix-colour
+    precedence, state-resolving theme values, and mirrored state-resolving demo probes).
   - The `Dialog` family (`Dialog`/`AlertDialog`/`SimpleDialog` on a real `Material` card surface with exact M2/M3
     role tables, `AlertDialog.Adaptive`/`ShowAdaptiveDialog`, `DialogRoute` on the new core `RawDialogRoute` with
     captured themes/safe area/150ms fade/traversal edges/`requestFocus`, the ported Cupertino

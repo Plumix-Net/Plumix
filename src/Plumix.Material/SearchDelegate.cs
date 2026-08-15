@@ -94,8 +94,8 @@ public abstract class SearchDelegate<T> : IDisposable
             : Colors.White;
         var decorationTheme = SearchFieldDecorationTheme
                               ?? new InputDecorationThemeData(
-                                  HintStyle: SearchFieldStyle ?? theme.InputDecorationTheme.HintStyle,
-                                  Border: InputBorder.None);
+                                  hintStyle: SearchFieldStyle ?? theme.InputDecorationTheme.HintStyle,
+                                  border: InputBorder.None);
         return theme with
         {
             AppBarTheme = theme.AppBarTheme with

@@ -455,7 +455,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/view.dart` | `src/Plumix/Widgets/View.cs` | `src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/PageViewTests.cs`<br>`src/Plumix.Tests/ViewportPortTests.cs`<br>`src/Plumix.Tests/ViewportRevealTests.cs` | `dart_sample/lib/demos/general/center_viewport_demo_page.dart`<br>`dart_sample/lib/demos/general/grid_view_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_fixed_extent_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_reverse_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_separated_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/page_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CenterViewportDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/GridViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewFixedExtentDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewReverseDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewSeparatedDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/PageViewDemoPage.cs` |
 | `widgets/viewport.dart` | `src/Plumix/Widgets/Viewport.cs` | `src/Plumix.Tests/ViewportPortTests.cs`<br>`src/Plumix.Tests/ViewportRevealTests.cs` | `dart_sample/lib/demos/general/center_viewport_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CenterViewportDemoPage.cs` |
 | `widgets/widget_span.dart` | `src/Plumix/Widgets/WidgetSpan.cs` | — | — |
-| `widgets/widget_state.dart` | `src/Plumix/Widgets/RawRadio.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
+| `widgets/widget_state.dart` | `src/Plumix/Widgets/RawRadio.cs`<br>`src/Plumix/Widgets/WidgetState.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
 
 ## Gaps
 
@@ -485,7 +485,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 ## Summary
 
 - Flutter files mapped: 438
-- C# files carrying a marker: 564
+- C# files carrying a marker: 565
 - C# files without a marker: 18
 - Markers not resolvable in the pinned checkout: 0
 
