@@ -16,6 +16,8 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   bool _hideUnderline = false;
   bool _aligned = false;
   bool _rightToLeft = false;
+  bool _wideMenu = false;
+  bool _variableRows = false;
   String _status = 'idle';
   String? _formValue;
   String _formStatus = 'not validated';
@@ -45,7 +47,7 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   @override
   Widget build(BuildContext context) {
     Widget dropdown = DropdownButton<String>(
-      items: _buildItems(),
+      items: _buildItems(variableRows: _variableRows),
       onChanged: _enabled
           ? (String? value) => setState(() {
               _value = value;
@@ -66,6 +68,8 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
       isDense: _dense,
       isExpanded: _expanded,
       alignment: AlignmentDirectional.centerEnd,
+      itemHeight: _variableRows ? null : 48,
+      menuWidth: _wideMenu ? 280 : null,
       dropdownColor: Colors.amber.shade50,
       menuMaxHeight: 180,
       borderRadius: BorderRadius.circular(10),
@@ -121,6 +125,19 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
               _controlButton(
                 _rightToLeft ? 'Direction: RTL' : 'Direction: LTR',
                 () => setState(() => _rightToLeft = !_rightToLeft),
+              ),
+            ],
+          ),
+          Wrap(
+            spacing: 8,
+            children: <Widget>[
+              _controlButton(
+                _wideMenu ? 'Menu width: 280' : 'Menu width: button',
+                () => setState(() => _wideMenu = !_wideMenu),
+              ),
+              _controlButton(
+                _variableRows ? 'Rows: variable' : 'Rows: 48px',
+                () => setState(() => _variableRows = !_variableRows),
               ),
             ],
           ),
@@ -684,13 +701,18 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
     });
   }
 
-  List<DropdownMenuItem<String>> _buildItems() =>
-      const <DropdownMenuItem<String>>[
-        DropdownMenuItem<String>(value: null, child: Text('None')),
-        DropdownMenuItem<String>(value: 'one', child: Text('One')),
-        DropdownMenuItem<String>(value: 'two', child: Text('Two')),
-        DropdownMenuItem<String>(value: 'three', child: Text('Three')),
+  List<DropdownMenuItem<String>> _buildItems({bool variableRows = false}) =>
+      <DropdownMenuItem<String>>[
+        const DropdownMenuItem<String>(value: null, child: Text('None')),
+        const DropdownMenuItem<String>(value: 'one', child: Text('One')),
         DropdownMenuItem<String>(
+          value: 'two',
+          child: variableRows
+              ? const SizedBox(height: 76, child: Text('Two (tall row)'))
+              : const Text('Two'),
+        ),
+        const DropdownMenuItem<String>(value: 'three', child: Text('Three')),
+        const DropdownMenuItem<String>(
           value: 'disabled',
           enabled: false,
           child: Text('Disabled entry'),

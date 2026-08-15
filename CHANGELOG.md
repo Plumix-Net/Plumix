@@ -1,5 +1,35 @@
 # Changelog
 
+- Breaking: closed the legacy `DropdownButton` family (`DropdownButton`/`DropdownMenuItem`/
+  `DropdownButtonHideUnderline`/`DropdownButtonFormField`). The menu is now Dart's structure: a
+  `PopupRoute` whose page is `MediaQuery.removePadding > CustomSingleChildLayout` driven by
+  `_DropdownMenuRouteLayout`, and whose surface is `FadeTransition > CustomPaint > Semantics >
+  ClipRRect > Material(transparency) > ScrollConfiguration > PrimaryScrollController > Scrollbar >
+  ListView`. The bespoke reveal render object is gone: `_DropdownMenuPainter` paints the background
+  into a `Tween`-animated rect over the `[0.25, 0.5]` resize interval and no longer clips the
+  content, item rows fade on Dart's `0.5 / (n + 1.5)` stagger, and the shadow comes from the exact
+  `kElevationToShadow` table instead of a synthesized pair. `getMenuLimits`/`getItemOffset` now match
+  Dart to the pixel (scroll offsets, `2 * kMinInteractiveDimension` breathing room, selected-row
+  alignment), item heights are measured through `_MenuItem`/`_RenderMenuItem`, and menu-item focus
+  scrolls the list. On the button: `padding` is `EdgeInsetsGeometry?` (was `Thickness?`) and applies
+  inside the `SizedBox` around the `Row`, the aligned/unaligned button padding and menu margin come
+  from the four Dart constants, the `Row` always uses `MainAxisSize.Min`, the default underline is a
+  hairline bottom `BorderSide` (was a 1px `ColoredBox`), the hint is wrapped in `IgnorePointer`,
+  activation goes through `Actions`/`ActivateIntent`/`ButtonActivateIntent`, the outer `Semantics`
+  drops the button flag when the displayed child already carries one, and the menu closes on an
+  orientation change. `DropdownButtonFormField` now builds Dart's
+  `Focus(canRequestFocus: false, skipTraversal: true) > DropdownButtonHideUnderline >
+  DropdownButton._formField`, applies `InputDecorationTheme` defaults, and moves the trailing icon
+  into the decoration's `suffixIcon` with Dart's `suffixIconConstraints`; its own focus-node
+  bookkeeping moved to the button, where `focusColor`/`decoration.focusColor` drive the fill.
+  Constructor validation is now exactly Dart's asserts: the `elevation`, `iconSize`, `menuWidth`,
+  `menuMaxHeight` and `padding` range checks are gone.
+- Primitives landed for that port: `kElevationToShadow` (`src/Plumix.Material/Shadows.cs`),
+  `kMaterialListPadding` (`MaterialConstants.MaterialListPadding`),
+  `WidgetStateMouseCursor.Clickable`, `EdgeInsets.inflateRect` (`Thickness.InflateRect`) and
+  `Scrollbar.thumbVisibility`. `NavigatorState.FlushHistoryUpdates` is now re-entrancy guarded, so a
+  nested flush can no longer shrink `_history` under the outer scan's index.
+
 - Breaking: closed the `CarouselView` family (`CarouselView`/`.weighted`/`.builder`/`.weightedBuilder`
   with `CarouselController`, `CarouselScrollPhysics`, `CarouselMetrics`, `CarouselScrollPosition`
   and `CarouselViewTheme`). The two Dart render slivers are now real render objects

@@ -1407,12 +1407,14 @@ public sealed class Scrollbar : StatelessWidget
         ScrollController? controller = null,
         double thickness = 4,
         Color? thumbColor = null,
+        bool? thumbVisibility = null,
         Key? key = null) : base(key)
     {
         Child = child;
         Controller = controller;
         Thickness = thickness;
         ThumbColor = thumbColor ?? Color.Parse("#AA5A6B82");
+        ThumbVisibility = thumbVisibility;
     }
 
     public Widget Child { get; }
@@ -1420,11 +1422,15 @@ public sealed class Scrollbar : StatelessWidget
     public double Thickness { get; }
     public Color ThumbColor { get; }
 
+    /// <summary>Dart's `Scrollbar.thumbVisibility`: keeps the thumb on screen without a fade-out.</summary>
+    public bool? ThumbVisibility { get; }
+
     public override Widget Build(BuildContext context) => new RawScrollbar(
         child: Child,
         controller: Controller,
         thickness: Thickness,
-        thumbColor: ThumbColor);
+        thumbColor: ThumbColor,
+        thumbVisibility: ThumbVisibility);
 }
 
 internal sealed class RawScrollbarOverlay : SingleChildRenderObjectWidget

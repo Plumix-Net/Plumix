@@ -18,6 +18,13 @@ public abstract record WidgetStateMouseCursor : MouseCursor
     }
 
     /// <summary>
+    /// Dart's `WidgetStateMouseCursor.clickable` (`widgets/widget_state.dart`): the click cursor unless
+    /// the widget is disabled, in which case the basic cursor.
+    /// </summary>
+    public static WidgetStateMouseCursor Clickable { get; } = ResolveWith(states =>
+        states.HasFlag(MaterialState.Disabled) ? SystemMouseCursors.Basic : SystemMouseCursors.Click);
+
+    /// <summary>
     /// Dart's `WidgetStateMouseCursor.adaptiveClickable` (`widgets/widget_state.dart`): the click
     /// cursor on web only, and the basic cursor when disabled or on any other platform.
     /// </summary>

@@ -168,6 +168,23 @@ public readonly record struct EdgeInsetsGeometry
     }
 }
 
+/// <summary>Dart's `EdgeInsets` helpers that operate on already resolved insets.</summary>
+public static class ResolvedEdgeInsetsExtensions
+{
+    /// <summary>
+    /// Dart's `EdgeInsets.inflateRect`: a rectangle with the edges of <paramref name="rect"/> moved
+    /// outwards by the corresponding edge of <paramref name="insets"/>.
+    /// </summary>
+    public static Rect InflateRect(this Thickness insets, Rect rect)
+    {
+        double left = rect.Left - insets.Left;
+        double top = rect.Top - insets.Top;
+        double right = rect.Right + insets.Right;
+        double bottom = rect.Bottom + insets.Bottom;
+        return new Rect(left, top, Math.Max(0.0, right - left), Math.Max(0.0, bottom - top));
+    }
+}
+
 public readonly record struct EdgeInsets(double Left, double Top, double Right, double Bottom)
 {
     public static EdgeInsets Zero => default;

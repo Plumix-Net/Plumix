@@ -35,7 +35,6 @@ public sealed class MaterialDropdownTests : IDisposable
         Scheduler.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = _previousPlatform;
     }
-
     [Fact]
     public void DropdownButtonAndMenuItem_ExposeFlutterDefaultsAndValidateContracts()
     {
@@ -51,10 +50,14 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.False(button.IsDense);
         Assert.False(button.IsExpanded);
         Assert.Equal(48, button.ItemHeight);
+        Assert.Null(button.MenuWidth);
+        Assert.Null(button.MenuMaxHeight);
+        Assert.Null(button.EnableFeedback);
         Assert.True(button.BarrierDismissible);
         Assert.False(button.Autofocus);
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.CenterStart, button.Alignment);
 
+        // Dart declares exactly two asserts: a unique matching item, and a minimum item height.
         Assert.Throws<ArgumentException>(() => new DropdownButton<string>(
             [
                 new DropdownMenuItem<string>(new Text("A"), value: "same"),
@@ -67,9 +70,8 @@ public sealed class MaterialDropdownTests : IDisposable
             _ => { },
             value: "missing"));
         Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButton<string>([item], _ => { }, itemHeight: 47));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButton<string>([item], _ => { }, iconSize: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButton<string>([item], _ => { }, menuWidth: 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButton<string>([item], _ => { }, menuMaxHeight: -1));
+        _ = new DropdownButton<string>([item], _ => { }, value: null);
+        _ = new DropdownButton<string>(null, null, value: "anything");
     }
 
     [Theory]
@@ -127,6 +129,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.NotNull(FindParagraph(hint.RenderView, "Choose"));
         Assert.Equal(2, Assert.Single(FindDescendants<RenderIndexedStack>(hint.RenderView)).Index);
 
+        // Disabled with no value falls back to disabledHint, and to hint when disabledHint is null.
         using var disabled = new WidgetRenderHarness(Wrap(
             new DropdownButton<string>(items, null,
                 hint: new Text("Fallback"),
@@ -136,8 +139,23 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Equal(2, Assert.Single(FindDescendants<RenderIndexedStack>(disabled.RenderView)).Index);
         var disabledNode = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsButton));
         Assert.NotNull(disabledNode);
-        Assert.False(disabledNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
-        Assert.False(disabledNode.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.False(disabledNode!.Actions.HasFlag(SemanticsActions.Tap));
+
+        using var disabledFallback = new WidgetRenderHarness(Wrap(
+            new DropdownButton<string>(items, null, hint: new Text("Fallback"))));
+        disabledFallback.Pump(new Size(400, 160));
+        Assert.NotNull(FindParagraph(disabledFallback.RenderView, "Fallback"));
+
+        // Disabled with a value keeps showing the selected item.
+        using var disabledSelected = new WidgetRenderHarness(Wrap(
+            new DropdownButton<string>(items, null, value: "long", disabledHint: new Text("Disabled"))));
+        disabledSelected.Pump(new Size(400, 160));
+        Assert.Equal(1, Assert.Single(FindDescendants<RenderIndexedStack>(disabledSelected.RenderView)).Index);
+
+        // With hint, disabledHint and value all null the stack has no selection at all.
+        using var empty = new WidgetRenderHarness(Wrap(new DropdownButton<string>(items, _ => { })));
+        empty.Pump(new Size(400, 160));
+        Assert.Null(Assert.Single(FindDescendants<RenderIndexedStack>(empty.RenderView)).Index);
     }
 
     [Fact]
@@ -158,15 +176,17 @@ public sealed class MaterialDropdownTests : IDisposable
                         selectedItemBuilder: _ => [new Text("Selected one"), new Text("Selected two")],
                         value: "two",
                         isDense: true,
-                        padding: new Thickness(3))))));
+                        padding: EdgeInsetsGeometry.All(3))))));
         harness.Pump(new Size(400, 160));
 
         Assert.NotNull(FindParagraph(harness.RenderView, "Selected two"));
         Assert.Equal(1, Assert.Single(FindDescendants<RenderIndexedStack>(harness.RenderView)).Index);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(3));
-        Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value => value.Padding == new Thickness(16, 0, 4, 0));
-        Assert.DoesNotContain(FindDescendants<RenderColoredBox>(harness.RenderView),
-            box => box.Color == Color.Parse("#FFBDBDBD"));
+        // `_kAlignedButtonPadding` is directional: start 16, end 4.
+        Assert.Contains(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            value => value.Padding == new Thickness(16, 0, 4, 0));
+        Assert.Empty(UnderlineBorders(harness));
 
         Assert.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(
             new DropdownButton<string>(
@@ -174,6 +194,28 @@ public sealed class MaterialDropdownTests : IDisposable
                 _ => { },
                 selectedItemBuilder: _ => [new Text("Only one")],
                 value: "one"))));
+    }
+
+    [Fact]
+    public void DropdownButton_DefaultUnderlineIsAHairlineBottomBorderAndCanBeReplaced()
+    {
+        var items = new DropdownMenuItem<string>[] { new(new Text("One"), value: "one") };
+        using var harness = new WidgetRenderHarness(Wrap(
+            new DropdownButton<string>(items, _ => { }, value: "one")));
+        harness.Pump(new Size(400, 160));
+        BorderSide underline = Assert.Single(UnderlineBorders(harness));
+        Assert.Equal(Color.Parse("#FFBDBDBD"), underline.Color);
+        Assert.Equal(0.0, underline.Width);
+
+        using var custom = new WidgetRenderHarness(Wrap(
+            new DropdownButton<string>(
+                items,
+                _ => { },
+                value: "one",
+                underline: new SizedBox(height: 3, child: new ColoredBox(Colors.Purple)))));
+        custom.Pump(new Size(400, 160));
+        Assert.Empty(UnderlineBorders(custom));
+        Assert.Contains(FindDescendants<RenderColoredBox>(custom.RenderView), box => box.Color == Colors.Purple);
     }
 
     [Fact]
@@ -210,22 +252,32 @@ public sealed class MaterialDropdownTests : IDisposable
         PumpAnimation();
         var openedSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
 
-        var layout = Assert.Single(FindDescendants<RenderDropdownMenuPositionLayout<string>>(harness.RenderView));
+        var layout = Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
+        Assert.IsType<DropdownMenuRouteLayout<string>>(layout.LayoutDelegate);
         Assert.Equal(190, layout.Child!.Size.Width, precision: 3);
         Assert.True(layout.Child.Size.Height <= 120.01);
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == Colors.Orange
-            && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(9));
+        var painter = Assert.IsType<DropdownMenuPainter>(
+            Assert.Single(FindDescendants<RenderCustomPaint>(harness.RenderView)).Painter);
+        Assert.Equal(Colors.Orange, painter.Color);
+        Assert.Equal(BorderRadius.Circular(9), painter.BorderRadius);
+        Assert.Equal(8, painter.Elevation);
+        // A non-null border radius adds the clip that Dart configures with `Clip.antiAlias`.
+        Assert.Contains(
+            FindDescendants<RenderClipRRect>(harness.RenderView),
+            clip => clip.BorderRadius == BorderRadius.Circular(9));
         Assert.NotNull(FindSemantics(openedSemantics, node =>
             node.Role == SemanticsRole.Menu
             && node.Label == "Popup menu"));
 
+        // The selected row autofocuses; arrow traversal skips the disabled row, which has no InkWell.
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
+        harness.Pump(new Size(500, 360));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
         Assert.Equal("three", selected);
         Assert.Equal(0, firstTap);
+        Assert.Equal(1, buttonTap);
     }
 
     [Fact]
@@ -257,6 +309,7 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.Null(FindSemantics(openSemantics, node => node.Label == "Dismiss"));
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp)));
+        harness.Pump(new Size(500, 360));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
         PumpAnimation();
         harness.Pump(new Size(500, 360));
@@ -266,7 +319,7 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
-    public void DropdownButton_MenuUsesThreeStageRevealAndMeasuresVariableItemHeights()
+    public void DropdownButton_MenuMeasuresVariableItemHeightsAndRevealsOverTheResizeInterval()
     {
         Widget page = new Align(
             alignment: Alignment.TopLeft,
@@ -288,22 +341,26 @@ public sealed class MaterialDropdownTests : IDisposable
             node.Flags.HasFlag(SemanticsFlags.HasExpandedState)
             && node.Actions.HasFlag(SemanticsActions.Tap))!.PerformAction(SemanticsActions.Tap));
 
+        // `_resize` runs over the [0.25, 0.5] interval of the 300 ms route animation.
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.03));
         harness.Pump(new Size(500, 360));
-        var reveal = Assert.Single(FindDescendants<RenderDropdownMenuReveal>(harness.RenderView));
-        Assert.InRange(reveal.RevealRect.Height, 47.9, 48.1);
+        var painter = Assert.IsType<DropdownMenuPainter>(
+            Assert.Single(FindDescendants<RenderCustomPaint>(harness.RenderView)).Painter);
+        Assert.Equal(0.0, painter.Resize.Value, precision: 3);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.09));
         harness.Pump(new Size(500, 360));
-        reveal = Assert.Single(FindDescendants<RenderDropdownMenuReveal>(harness.RenderView));
-        Assert.True(reveal.RevealRect.Height > 48);
+        Assert.True(painter.Resize.Value > 0.0);
 
         PumpAnimation();
         harness.Pump(new Size(500, 360));
-        var layout = Assert.Single(FindDescendants<RenderDropdownMenuPositionLayout<string>>(harness.RenderView));
-        Assert.True(layout.Route.ItemHeights[0] >= 72);
-        Assert.Equal(layout.Child!.Size.Height, reveal.Size.Height, precision: 3);
+        Assert.Equal(1.0, painter.Resize.Value, precision: 3);
+        var layout = Assert.Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView));
+        var layoutDelegate = Assert.IsType<DropdownMenuRouteLayout<string>>(layout.LayoutDelegate);
+        Assert.True(layoutDelegate.Route.ItemHeights[0] >= 72);
+        // Dart floors every measured row at the interactive minimum.
+        Assert.Equal(48, layoutDelegate.Route.ItemHeights[1]);
     }
 
     [Fact]
@@ -330,6 +387,201 @@ public sealed class MaterialDropdownTests : IDisposable
     }
 
     [Fact]
+    public void DropdownButton_DisabledButtonCannotTakeFocusEvenWithAutofocus()
+    {
+        var focusNode = new FocusNode();
+        using (var harness = new WidgetRenderHarness(Wrap(new DropdownButton<string>(
+                   items: [new DropdownMenuItem<string>(new Text("One"), value: "one")],
+                   onChanged: null,
+                   value: "one",
+                   focusNode: focusNode,
+                   autofocus: true))))
+        {
+            harness.Pump(new Size(500, 360));
+            Assert.False(focusNode.HasFocus);
+        }
+        focusNode.Dispose();
+    }
+
+    [Theory]
+    // Flutter's `Dropdown in middle/top/bottom/center ...` scroll-offset expectations, 100 items of 48.
+    [InlineData(276.0, 50, 2180.0)]
+    [InlineData(0.0, 99, 4312.0)]
+    [InlineData(552.0, 0, 0.0)]
+    [InlineData(276.0, 99, 4312.0)]
+    public void DropdownRoute_MenuLimitsMatchTheSourceScrollOffsets(
+        double buttonTop,
+        int selectedIndex,
+        double expectedScrollOffset)
+    {
+        DropdownRoute<string> route = BuildRoute(100, selectedIndex);
+        var buttonRect = new Rect(0.0, buttonTop, 100.0, 48.0);
+        DropdownMenuLimits limits = route.GetMenuLimits(buttonRect, 600.0, selectedIndex);
+        Assert.Equal(expectedScrollOffset, limits.ScrollOffset, precision: 3);
+        // The menu is one interactive row shy of the view on both edges.
+        Assert.Equal(504.0, limits.Height, precision: 3);
+        Assert.Equal(limits.Height, limits.Bottom - limits.Top, precision: 6);
+    }
+
+    [Fact]
+    public void DropdownRoute_MenuLimitsAlignTheSelectedRowAndHonorMenuMaxHeight()
+    {
+        // Three rows fit, so the menu is placed so that the selected row covers the button.
+        DropdownRoute<string> route = BuildRoute(3, 1);
+        var buttonRect = new Rect(0.0, 276.0, 100.0, 48.0);
+        DropdownMenuLimits limits = route.GetMenuLimits(buttonRect, 600.0, 1);
+        Assert.Equal(8.0 + (3 * 48.0) + 8.0, limits.Height, precision: 3);
+        Assert.Equal(276.0 - 8.0 - 48.0, limits.Top, precision: 3);
+        Assert.Equal(0.0, limits.ScrollOffset, precision: 3);
+        Assert.Equal(8.0, route.GetItemOffset(0), precision: 3);
+        Assert.Equal(8.0 + 48.0, route.GetItemOffset(1), precision: 3);
+
+        DropdownRoute<string> capped = BuildRoute(20, 0, menuMaxHeight: 7 * 48.0);
+        DropdownMenuLimits cappedLimits = capped.GetMenuLimits(buttonRect, 600.0, 0);
+        Assert.Equal(336.0, cappedLimits.Height, precision: 3);
+
+        // A menuMaxHeight above the default cap is clamped back to it.
+        DropdownRoute<string> tall = BuildRoute(20, 0, menuMaxHeight: 600.0);
+        Assert.Equal(504.0, tall.GetMenuLimits(buttonRect, 600.0, 0).Height, precision: 3);
+    }
+
+    [Theory]
+    [InlineData(TextDirection.Ltr, 120.0)]
+    [InlineData(TextDirection.Rtl, 100.0)]
+    public void DropdownMenuRouteLayout_ConstrainsAndPositionsLikeTheSource(
+        TextDirection direction,
+        double expectedLeft)
+    {
+        DropdownRoute<string> route = BuildRoute(3, 0);
+        var buttonRect = new Rect(120.0, 100.0, 80.0, 48.0);
+        var layout = new DropdownMenuRouteLayout<string>(buttonRect, route, direction, menuWidth: null);
+        BoxConstraints constraints = layout.GetConstraintsForChild(BoxConstraints.Tight(new Size(400.0, 600.0)));
+        Assert.Equal(80.0, constraints.MinWidth, precision: 3);
+        Assert.Equal(80.0, constraints.MaxWidth, precision: 3);
+        Assert.Equal(504.0, constraints.MaxHeight, precision: 3);
+
+        Point position = layout.GetPositionForChild(new Size(400.0, 600.0), new Size(100.0, 112.0));
+        Assert.Equal(expectedLeft, position.X, precision: 3);
+        Assert.Equal(route.GetMenuLimits(buttonRect, 600.0, 0).Top, position.Y, precision: 3);
+
+        // `menuWidth` overrides the button width, and never exceeds the view.
+        var wide = new DropdownMenuRouteLayout<string>(buttonRect, route, direction, menuWidth: 200.0);
+        Assert.Equal(200.0, wide.GetConstraintsForChild(BoxConstraints.Tight(new Size(400.0, 600.0))).MaxWidth, 3);
+        var clamped = new DropdownMenuRouteLayout<string>(buttonRect, route, direction, menuWidth: 900.0);
+        Assert.Equal(400.0, clamped.GetConstraintsForChild(BoxConstraints.Tight(new Size(400.0, 600.0))).MaxWidth, 3);
+
+        // Dart relayouts only when the button rect or the text direction changed.
+        var same = new DropdownMenuRouteLayout<string>(buttonRect, route, direction, menuWidth: null);
+        var moved = new DropdownMenuRouteLayout<string>(
+            new Rect(0.0, 0.0, 10.0, 10.0),
+            route,
+            direction,
+            menuWidth: null);
+        Assert.False(layout.ShouldRelayout(same));
+        Assert.True(layout.ShouldRelayout(moved));
+    }
+
+    [Fact]
+    public void DropdownMenuPainter_GrowsFromTheSelectedRowToTheWholeMenu()
+    {
+        var size = new Size(120.0, 208.0);
+        Rect start = DropdownMenuPainter.ResolveRect(56.0, size, 0.0);
+        Assert.Equal(new Rect(0.0, 56.0, 120.0, 48.0), start);
+
+        Rect middle = DropdownMenuPainter.ResolveRect(56.0, size, 0.5);
+        Assert.Equal(28.0, middle.Top, precision: 3);
+        Assert.Equal(156.0, middle.Bottom, precision: 3);
+
+        Rect end = DropdownMenuPainter.ResolveRect(56.0, size, 1.0);
+        Assert.Equal(new Rect(0.0, 0.0, 120.0, 208.0), end);
+
+        // A menu shorter than one row still produces a normalized rect.
+        var shortSize = new Size(112.0, 47.0);
+        Rect shortStart = DropdownMenuPainter.ResolveRect(8.0, shortSize, 0.0);
+        Assert.Equal(0.0, shortStart.Top, precision: 3);
+        Assert.Equal(47.0, shortStart.Bottom, precision: 3);
+    }
+
+    [Fact]
+    public void MaterialShadows_MatchTheSourceElevationTable()
+    {
+        Assert.Empty(MaterialShadows.ForElevation(0)!);
+        Assert.Null(MaterialShadows.ForElevation(5));
+        Assert.Null(MaterialShadows.ForElevation(-1));
+
+        IReadOnlyList<Plumix.Rendering.BoxShadow> eight = MaterialShadows.ForElevation(8)!;
+        Assert.Equal(3, eight.Count);
+        Assert.Equal(Color.FromArgb(0x33, 0, 0, 0), eight[0].Color);
+        Assert.Equal(new Point(0.0, 5.0), eight[0].Offset);
+        Assert.Equal(5.0, eight[0].BlurRadius);
+        Assert.Equal(-3.0, eight[0].SpreadRadius);
+        Assert.Equal(Color.FromArgb(0x24, 0, 0, 0), eight[1].Color);
+        Assert.Equal(new Point(0.0, 8.0), eight[1].Offset);
+        Assert.Equal(10.0, eight[1].BlurRadius);
+        Assert.Equal(1.0, eight[1].SpreadRadius);
+        Assert.Equal(Color.FromArgb(0x1F, 0, 0, 0), eight[2].Color);
+        Assert.Equal(new Point(0.0, 3.0), eight[2].Offset);
+        Assert.Equal(14.0, eight[2].BlurRadius);
+        Assert.Equal(2.0, eight[2].SpreadRadius);
+
+        Assert.Equal(new Point(0.0, 11.0), MaterialShadows.ForElevation(24)![0].Offset);
+        Assert.Equal(46.0, MaterialShadows.ForElevation(24)![2].BlurRadius);
+    }
+
+    [Fact]
+    public void DropdownButton_ClosesTheMenuOnOrientationChangeButNotOnHeightChange()
+    {
+        Action<Size>? resize = null;
+        var current = new Size(500, 360);
+        Widget root = new StatefulBuilder((_, setState) =>
+        {
+            resize = next => setState(() => current = next);
+            return new Directionality(
+                TextDirection.Ltr,
+                new MediaQuery(
+                    new MediaQueryData(Size: current),
+                    new Theme(
+                        ThemeData.Light,
+                        new Overlay(initialEntries:
+                        [
+                            new OverlayEntry(_ => new Navigator(new BuilderPageRoute(_ =>
+                                new DropdownButton<string>(
+                                    items: [new DropdownMenuItem<string>(new Text("One"), value: "one")],
+                                    onChanged: _ => { },
+                                    value: "one")))),
+                        ]))));
+        });
+        using var harness = new WidgetRenderHarness(root);
+        var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
+        Assert.True(FindSemantics(semantics, node =>
+            node.Flags.HasFlag(SemanticsFlags.HasExpandedState)
+            && node.Actions.HasFlag(SemanticsActions.Tap))!.PerformAction(SemanticsActions.Tap));
+        PumpAnimation();
+        Assert.NotNull(FindSemantics(
+            harness.PumpAndGetSemantics(new Size(500, 360)),
+            node => node.Role == SemanticsRole.Menu));
+
+        // A keyboard-sized height change keeps the same orientation, so the menu survives.
+        resize!(new Size(500, 300));
+        harness.Pump(new Size(500, 300));
+        PumpAnimation();
+        Assert.NotNull(FindSemantics(
+            harness.PumpAndGetSemantics(new Size(500, 300)),
+            node => node.Role == SemanticsRole.Menu));
+
+        var layoutDelegate = (DropdownMenuRouteLayout<string>)Assert
+            .Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView)).LayoutDelegate;
+        resize(new Size(300, 500));
+        harness.Pump(new Size(300, 500));
+        harness.Pump(new Size(300, 500));
+        PumpAnimation();
+        // The route leaves the navigator history. Its overlay entry only disappears on the next full
+        // frame, because `NavigatorState.RemoveRoute` invoked from inside a build does not finish the
+        // removal lifecycle — see `docs/ai/DIVERGENCES.md`.
+        Assert.False(layoutDelegate.Route.IsActive);
+    }
+
+    [Fact]
     public void DropdownButtonFormField_ExposesFlutterDefaultsAndValidatesContracts()
     {
         var items = new[] { new DropdownMenuItem<string>(new Text("One"), value: "one") };
@@ -343,8 +595,13 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.NotNull(field.Decoration);
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.CenterStart, field.Alignment);
 
-        Assert.Throws<ArgumentException>(() => new DropdownButtonFormField<string>(items, _ => { }, initialValue: "missing"));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new DropdownButtonFormField<string>(items, _ => { }, itemHeight: 47));
+        // The deprecated `value` parameter still seeds the form value.
+        Assert.Equal("one", new DropdownButtonFormField<string>(items, _ => { }, value: "one").InitialValue);
+
+        Assert.Throws<ArgumentException>(() =>
+            new DropdownButtonFormField<string>(items, _ => { }, initialValue: "missing"));
+        Assert.Throws<ArgumentOutOfRangeException>(() =>
+            new DropdownButtonFormField<string>(items, _ => { }, itemHeight: 47));
         Assert.Throws<ArgumentException>(() => new DropdownButtonFormField<string>(
             items,
             _ => { },
@@ -416,6 +673,78 @@ public sealed class MaterialDropdownTests : IDisposable
         harness.Pump(new Size(420, 180));
         Assert.NotNull(FindParagraph(harness.RenderView, "custom Required"));
     }
+
+    [Fact]
+    public void DropdownButtonFormField_DecorationHintTextNeverOverridesAnExplicitHint()
+    {
+        var items = new[] { new DropdownMenuItem<string>(new Text("One"), value: "one") };
+        using var explicitHint = new WidgetRenderHarness(Wrap(new DropdownButtonFormField<string>(
+            items,
+            _ => { },
+            hint: new Text("Explicit"),
+            decoration: new InputDecoration(hintText: "Decoration"))));
+        explicitHint.Pump(new Size(420, 140));
+        Assert.NotNull(FindParagraph(explicitHint.RenderView, "Explicit"));
+
+        // With no items the field is disabled, so the decoration hint becomes the disabled hint.
+        using var disabled = new WidgetRenderHarness(Wrap(new DropdownButtonFormField<string>(
+            [],
+            null,
+            decoration: new InputDecoration(hintText: "Decoration"))));
+        disabled.Pump(new Size(420, 140));
+        Assert.NotNull(FindParagraph(disabled.RenderView, "Decoration"));
+    }
+
+    [Fact]
+    public void DropdownButtonFormField_AlignedDropdownThemeDoesNotShiftTheFieldContent()
+    {
+        var items = new[] { new DropdownMenuItem<string>(new Text("One"), value: "one") };
+        using var harness = new WidgetRenderHarness(Wrap(new ButtonTheme(
+            new ButtonThemeData(AlignedDropdown: true),
+            new DropdownButtonFormField<string>(items, _ => { }, initialValue: "one"))));
+        harness.Pump(new Size(420, 140));
+        // The form field always uses `_kUnalignedButtonPadding` because it carries an InputDecoration.
+        Assert.DoesNotContain(
+            FindDescendants<RenderPadding>(harness.RenderView),
+            value => value.Padding == new Thickness(16, 0, 4, 0));
+        Assert.NotNull(FindParagraph(harness.RenderView, "One"));
+    }
+
+    private static DropdownRoute<string> BuildRoute(
+        int itemCount,
+        int selectedIndex,
+        double? itemHeight = 48.0,
+        double? menuMaxHeight = null)
+    {
+        var items = new MenuItem<string>[itemCount];
+        for (int index = 0; index < itemCount; index++)
+        {
+            items[index] = new MenuItem<string>(
+                onLayout: _ => { },
+                item: new DropdownMenuItem<string>(new Text($"Item {index}"), value: $"{index}"));
+        }
+
+        return new DropdownRoute<string>(
+            items: items,
+            padding: EdgeInsetsGeometry.Symmetric(horizontal: 16.0),
+            buttonRect: new Rect(0.0, 0.0, 100.0, 48.0),
+            selectedIndex: selectedIndex,
+            capturedThemes: new CapturedThemes([]),
+            style: ThemeData.Light.TextTheme.TitleMedium,
+            itemHeight: itemHeight,
+            menuMaxHeight: menuMaxHeight);
+    }
+
+    private static List<BorderSide> UnderlineBorders(WidgetRenderHarness harness) =>
+        FindDescendants<RenderDecoratedBox>(harness.RenderView)
+            .Select(box => box.Decoration)
+            .OfType<BoxDecoration>()
+            .Select(decoration => decoration.Border)
+            .OfType<Plumix.Rendering.Border>()
+            .Where(border => border.Bottom.Color == Color.Parse("#FFBDBDBD") && border.Top == BorderSide.None)
+            .Select(border => border.Bottom)
+            .ToList();
+
 
     [Fact]
     public void MenuAnchor_ControllerAndMenuItem_FollowOpenCloseAndActivationContracts()

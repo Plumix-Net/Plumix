@@ -24,6 +24,8 @@ public sealed class DropdownDemoPage : StatefulWidget
         private bool _hideUnderline;
         private bool _aligned;
         private bool _rightToLeft;
+        private bool _wideMenu;
+        private bool _variableRows;
         private string _status = "idle";
         private string? _formValue;
         private string _formStatus = "not validated";
@@ -53,7 +55,7 @@ public sealed class DropdownDemoPage : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             Widget dropdown = new DropdownButton<string>(
-                items: BuildItems(),
+                items: BuildItems(_variableRows),
                 onChanged: _enabled
                     ? value => SetState(() =>
                     {
@@ -76,6 +78,8 @@ public sealed class DropdownDemoPage : StatefulWidget
                 isDense: _dense,
                 isExpanded: _expanded,
                 alignment: AlignmentDirectional.CenterEnd,
+                itemHeight: _variableRows ? null : 48,
+                menuWidth: _wideMenu ? 280 : null,
                 dropdownColor: Color.Parse("#FFFFF8E1"),
                 menuMaxHeight: 180,
                 borderRadius: BorderRadius.Circular(10),
@@ -122,6 +126,17 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 ControlButton(
                                     _rightToLeft ? "Direction: RTL" : "Direction: LTR",
                                     () => SetState(() => _rightToLeft = !_rightToLeft)),
+                            ]),
+                        new Row(
+                            spacing: 8,
+                            children:
+                            [
+                                ControlButton(
+                                    _wideMenu ? "Menu width: 280" : "Menu width: button",
+                                    () => SetState(() => _wideMenu = !_wideMenu)),
+                                ControlButton(
+                                    _variableRows ? "Rows: variable" : "Rows: 48px",
+                                    () => SetState(() => _variableRows = !_variableRows)),
                             ]),
                         new Align(alignment: Alignment.CenterLeft, child: dropdown),
                         new Text($"Value: {_value ?? "none"}", fontSize: 13),
@@ -509,11 +524,13 @@ public sealed class DropdownDemoPage : StatefulWidget
             });
         }
 
-        private static IReadOnlyList<DropdownMenuItem<string>> BuildItems() =>
+        private static IReadOnlyList<DropdownMenuItem<string>> BuildItems(bool variableRows = false) =>
         [
             new DropdownMenuItem<string>(new Text("None"), value: null),
             new DropdownMenuItem<string>(new Text("One"), value: "one"),
-            new DropdownMenuItem<string>(new Text("Two"), value: "two"),
+            new DropdownMenuItem<string>(
+                variableRows ? new SizedBox(height: 76, child: new Text("Two (tall row)")) : new Text("Two"),
+                value: "two"),
             new DropdownMenuItem<string>(new Text("Three"), value: "three"),
             new DropdownMenuItem<string>(new Text("Disabled entry"), value: "disabled", enabled: false),
         ];

@@ -172,6 +172,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/segmented_button_theme.dart` | `src/Plumix.Material/SegmentedButtonTheme.cs` | — | — |
 | `material_ui/selectable_text.dart` | `src/Plumix.Material/SelectableText.cs` | — | — |
 | `material_ui/selection_area.dart` | `src/Plumix.Material/SelectionArea.cs` | — | — |
+| `material_ui/shadows.dart` | `src/Plumix.Material/Shadows.cs` | — | — |
 | `material_ui/slider.dart` | `src/Plumix.Material/Slider.cs` | `src/Plumix.Tests/MaterialRangeSliderTests.cs`<br>`src/Plumix.Tests/MaterialSliderTests.cs` | `dart_sample/lib/demos/material/range_slider_demo_page.dart`<br>`dart_sample/lib/demos/material/slider_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/RangeSliderDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SliderDemoPage.cs` |
 | `material_ui/slider_parts.dart` | `src/Plumix.Material/SliderShapes.cs` | — | — |
 | `material_ui/slider_theme.dart` | `src/Plumix.Material/SliderShapes.cs`<br>`src/Plumix.Material/SliderTheme.cs` | — | — |
@@ -486,8 +487,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 440
-- C# files carrying a marker: 567
+- Flutter files mapped: 441
+- C# files carrying a marker: 568
 - C# files without a marker: 18
 - Markers not resolvable in the pinned checkout: 0
 

@@ -25,7 +25,7 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
         Widget? icon = null,
         Color? iconDisabledColor = null,
         Color? iconEnabledColor = null,
-        double iconSize = 24,
+        double iconSize = 24.0,
         bool isDense = true,
         bool isExpanded = false,
         double? itemHeight = null,
@@ -43,7 +43,7 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
         bool? enableFeedback = null,
         AlignmentGeometry? alignment = null,
         BorderRadius? borderRadius = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         bool barrierDismissible = true,
         MouseCursor? mouseCursor = null,
         MouseCursor? dropdownMenuItemMouseCursor = null,
@@ -88,12 +88,12 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
             autovalidateMode: autovalidateMode,
             key: key)
     {
-        if (elevation < 0) throw new ArgumentOutOfRangeException(nameof(elevation));
-        if (!double.IsFinite(iconSize) || iconSize < 0) throw new ArgumentOutOfRangeException(nameof(iconSize));
-        if (itemHeight.HasValue && (!double.IsFinite(itemHeight.Value) || itemHeight.Value < 48))
-            throw new ArgumentOutOfRangeException(nameof(itemHeight));
-        if (menuMaxHeight.HasValue && (!double.IsFinite(menuMaxHeight.Value) || menuMaxHeight.Value <= 0))
-            throw new ArgumentOutOfRangeException(nameof(menuMaxHeight));
+        if (itemHeight.HasValue && itemHeight.Value < DropdownConstants.MenuItemHeight)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(itemHeight),
+                $"itemHeight must be greater than or equal to {DropdownConstants.MenuItemHeight}.");
+        }
 
         Items = items;
         OnChanged = onChanged;
@@ -153,7 +153,7 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
     public bool? EnableFeedback { get; }
     public AlignmentGeometry Alignment { get; }
     public BorderRadius? BorderRadius { get; }
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
     public bool BarrierDismissible { get; }
     public MouseCursor? MouseCursor { get; }
     public MouseCursor? DropdownMenuItemMouseCursor { get; }
@@ -168,13 +168,14 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
         FormFieldErrorBuilder? errorBuilder)
     {
         if (errorBuilder is not null && decoration?.ErrorText is not null)
-            throw new ArgumentException("errorBuilder and decoration.errorText cannot both be specified.", nameof(errorBuilder));
-        var result = initialValue is not null ? initialValue : value;
-        if (items is not null && items.Count > 0 && result is not null
-            && items.Count(item => EqualityComparer<T?>.Default.Equals(item.Value, result)) != 1)
         {
-            throw new ArgumentException("There must be exactly one dropdown item matching initialValue or value.", nameof(initialValue));
+            throw new ArgumentException(
+                "Declaring both errorBuilder and decoration.errorText is not supported.",
+                nameof(errorBuilder));
         }
+
+        T? result = initialValue is not null ? initialValue : value;
+        DropdownButton<T>.ValidateSelection(items, result, "DropdownButton");
         return result;
     }
 
@@ -205,95 +206,82 @@ public sealed class DropdownButtonFormField<T> : FormField<T>
         bool? enableFeedback,
         AlignmentGeometry? alignment,
         BorderRadius? borderRadius,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         bool barrierDismissible,
         MouseCursor? mouseCursor,
         MouseCursor? dropdownMenuItemMouseCursor)
     {
-        bool showSelectedItem = items?.Any(item =>
-            EqualityComparer<T?>.Default.Equals(item.Value, state.Value)) == true;
-        bool enabled = onChanged is not null && items is { Count: > 0 };
-        var decorationHint = decoration.HintText is null ? null : new Text(decoration.HintText);
-        var effectiveHint = hint ?? decorationHint;
-        var effectiveDisabledHint = disabledHint ?? effectiveHint;
-        bool hintAvailable = enabled
+        InputDecoration effectiveDecoration = decoration.ApplyDefaults(InputDecorationTheme.Of(state.Context));
+        bool showSelectedItem = items is not null
+                                && items.Any(item => EqualityComparer<T?>.Default.Equals(item.Value, state.Value));
+        bool isDropdownEnabled = onChanged is not null && items is { Count: > 0 };
+        // If [decoration] hintText is provided, use it as the default value for both [hint] and
+        // [disabledHint].
+        Widget? decorationHint = effectiveDecoration.HintText is null ? null : new Text(effectiveDecoration.HintText);
+        Widget? effectiveHint = hint ?? decorationHint;
+        Widget? effectiveDisabledHint = disabledHint ?? effectiveHint;
+        bool isHintOrDisabledHintAvailable = isDropdownEnabled
             ? effectiveHint is not null
             : effectiveHint is not null || effectiveDisabledHint is not null;
-        bool isEmpty = !showSelectedItem && !hintAvailable;
+        bool isEmpty = !showSelectedItem && !isHintOrDisabledHintAvailable;
 
-        var effectiveDecoration = decoration;
-        if (state.ErrorText is { } errorText || decoration.HintText is not null)
+        if (state.ErrorText is not null || effectiveDecoration.HintText is not null)
         {
-            var error = state.ErrorText is null ? null : errorBuilder?.Invoke(state.Context, state.ErrorText);
-            effectiveDecoration = decoration.WithFormError(state.ErrorText, error, clearHintText: true);
+            Widget? error = state.ErrorText is not null && errorBuilder is not null
+                ? errorBuilder(state.Context, state.ErrorText)
+                : null;
+            effectiveDecoration = effectiveDecoration.WithFormError(
+                state.ErrorText,
+                error,
+                clearHintText: effectiveDecoration.HintText is not null);
         }
 
-        Widget button = new DropdownButton<T>(
-            items: items,
-            onChanged: onChanged is null ? null : state.DidChange,
-            selectedItemBuilder: selectedItemBuilder,
-            value: state.Value,
-            hint: effectiveHint,
-            disabledHint: effectiveDisabledHint,
-            onTap: onTap,
-            elevation: elevation,
-            style: style,
-            icon: icon,
-            iconDisabledColor: iconDisabledColor,
-            iconEnabledColor: iconEnabledColor,
-            iconSize: iconSize,
-            isDense: isDense,
-            isExpanded: isExpanded,
-            itemHeight: itemHeight,
-            focusColor: focusColor,
-            focusNode: state.EffectiveFocusNode,
-            autofocus: autofocus,
-            dropdownColor: dropdownColor,
-            menuMaxHeight: menuMaxHeight,
-            enableFeedback: enableFeedback,
-            alignment: alignment,
-            borderRadius: borderRadius,
-            padding: padding,
-            barrierDismissible: barrierDismissible,
-            mouseCursor: mouseCursor,
-            dropdownMenuItemMouseCursor: dropdownMenuItemMouseCursor);
-        button = new DropdownButtonHideUnderline(button);
-
-        return new InputDecorator(
-            decoration: effectiveDecoration,
-            baseStyle: style,
-            isFocused: state.EffectiveFocusNode.HasFocus,
-            isEmpty: isEmpty,
-            child: button);
+        // An unfocusable Focus widget so that this widget can detect if its children have focus or not.
+        return new Focus(
+            canRequestFocus: false,
+            skipTraversal: true,
+            child: new DropdownButtonHideUnderline(
+                new DropdownButton<T>(
+                    items: items,
+                    onChanged: onChanged is null ? null : state.DidChange,
+                    selectedItemBuilder: selectedItemBuilder,
+                    value: state.Value,
+                    hint: effectiveHint,
+                    disabledHint: effectiveDisabledHint,
+                    onTap: onTap,
+                    elevation: elevation,
+                    style: style,
+                    underline: null,
+                    icon: icon,
+                    iconDisabledColor: iconDisabledColor,
+                    iconEnabledColor: iconEnabledColor,
+                    iconSize: iconSize,
+                    isDense: isDense,
+                    isExpanded: isExpanded,
+                    itemHeight: itemHeight,
+                    menuWidth: null,
+                    focusColor: focusColor,
+                    focusNode: focusNode,
+                    autofocus: autofocus,
+                    dropdownColor: dropdownColor,
+                    menuMaxHeight: menuMaxHeight,
+                    enableFeedback: enableFeedback,
+                    alignment: alignment,
+                    borderRadius: borderRadius,
+                    padding: padding,
+                    barrierDismissible: barrierDismissible,
+                    mouseCursor: mouseCursor,
+                    dropdownMenuItemMouseCursor: dropdownMenuItemMouseCursor,
+                    inputDecoration: effectiveDecoration,
+                    isEmpty: isEmpty,
+                    valueLabel: "DropdownButtonFormField",
+                    key: null)));
     }
 }
 
 public sealed class DropdownButtonFormFieldState<T> : FormFieldState<T>
 {
-    private FocusNode? _focusNode;
-    private bool _ownsFocusNode;
     private DropdownButtonFormField<T> Current => (DropdownButtonFormField<T>)StateWidget;
-
-    public FocusNode EffectiveFocusNode => Current.FocusNode ?? _focusNode!;
-
-    public override void InitState()
-    {
-        base.InitState();
-        AttachFocusNode(Current.FocusNode);
-    }
-
-    public override void DidUpdateWidget(StatefulWidget oldWidget)
-    {
-        base.DidUpdateWidget(oldWidget);
-        var old = (DropdownButtonFormField<T>)oldWidget;
-        if (!ReferenceEquals(old.FocusNode, Current.FocusNode))
-        {
-            DetachFocusNode(old.FocusNode);
-            AttachFocusNode(Current.FocusNode);
-        }
-        if (!EqualityComparer<T?>.Default.Equals(old.InitialValue, Current.InitialValue))
-            SetValue(Current.InitialValue);
-    }
 
     public override void DidChange(T? value)
     {
@@ -301,37 +289,19 @@ public sealed class DropdownButtonFormFieldState<T> : FormFieldState<T>
         Current.OnChanged?.Invoke(value);
     }
 
+    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        var old = (DropdownButtonFormField<T>)oldWidget;
+        if (!EqualityComparer<T?>.Default.Equals(old.InitialValue, Current.InitialValue))
+        {
+            SetValue(Current.InitialValue);
+        }
+    }
+
     public override void Reset()
     {
         base.Reset();
         Current.OnChanged?.Invoke(Value);
-    }
-
-    public override void Dispose()
-    {
-        DetachFocusNode(Current.FocusNode);
-        base.Dispose();
-    }
-
-    private void AttachFocusNode(FocusNode? external)
-    {
-        _focusNode = external ?? new FocusNode();
-        _ownsFocusNode = external is null;
-        _focusNode.AddListener(HandleFocusChanged);
-    }
-
-    private void DetachFocusNode(FocusNode? external)
-    {
-        var node = external ?? _focusNode;
-        if (node is null) return;
-        node.RemoveListener(HandleFocusChanged);
-        if (_ownsFocusNode) node.Dispose();
-        _focusNode = null;
-        _ownsFocusNode = false;
-    }
-
-    private void HandleFocusChanged()
-    {
-        if (Mounted) InvokeSetState(() => { });
     }
 }

@@ -21,6 +21,10 @@ public static class MaterialConstants
     // Mirrors Flutter's `kTabLabelPadding` from `material/constants.dart`.
     /// <summary>The horizontal padding included by default in each <see cref="Tab"/> label.</summary>
     public static readonly EdgeInsetsGeometry TabLabelPadding = EdgeInsetsGeometry.Symmetric(horizontal: 16.0);
+
+    // Mirrors Flutter's `kMaterialListPadding` from `material/constants.dart`.
+    /// <summary>The padding added around Material list contents.</summary>
+    public static readonly EdgeInsetsGeometry MaterialListPadding = EdgeInsetsGeometry.Symmetric(vertical: 8.0);
 }
 
 /// <summary>The visual kind of a <see cref="Material"/> surface.</summary>
