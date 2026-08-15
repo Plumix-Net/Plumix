@@ -21,6 +21,7 @@ public delegate InputDecoration DropdownMenuDecorationBuilder(
     BuildContext context,
     MenuController controller);
 
+/// <summary>Defines a <see cref="DropdownMenu{T}"/> menu entry.</summary>
 public sealed class DropdownMenuEntry<T>
 {
     public DropdownMenuEntry(
@@ -50,15 +51,35 @@ public sealed class DropdownMenuEntry<T>
     public ButtonStyle? Style { get; }
 }
 
+/// <summary>Defines which menus a <see cref="DropdownMenu{T}"/> selection closes.</summary>
 public enum DropdownMenuCloseBehavior
 {
+    /// <summary>Closes every open menu in the widget tree.</summary>
     All,
+
+    /// <summary>Closes only this dropdown menu.</summary>
     Self,
+
+    /// <summary>Closes nothing.</summary>
     None,
 }
 
+internal sealed class DropdownMenuArrowUpIntent : Intent;
+
+internal sealed class DropdownMenuArrowDownIntent : Intent;
+
+internal sealed class DropdownMenuEnterIntent : Intent;
+
+/// <summary>
+/// A dropdown menu that can be opened from a <see cref="TextField"/>. The selected menu item is
+/// displayed in that field, which allows the user to filter and search the entries.
+/// </summary>
 public sealed class DropdownMenu<T> : StatefulWidget
 {
+    internal const double MinimumWidth = 112.0;
+    internal const double DefaultHorizontalPadding = 12.0;
+    internal const double InputStartGap = 4.0;
+
     public DropdownMenu(
         IReadOnlyList<DropdownMenuEntry<T>> dropdownMenuEntries,
         bool enabled = true,
@@ -75,6 +96,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
         Widget? selectedTrailingIcon = null,
         bool enableFilter = false,
         bool enableSearch = true,
+        TextInputType? keyboardType = null,
         TextStyle? textStyle = null,
         TextAlign textAlign = TextAlign.Start,
         InputDecorationThemeData? inputDecorationTheme = null,
@@ -86,12 +108,14 @@ public sealed class DropdownMenu<T> : StatefulWidget
         FocusNode? focusNode = null,
         bool? requestFocusOnTap = null,
         bool selectOnly = false,
-        Thickness? expandedInsets = null,
+        EdgeInsetsGeometry? expandedInsets = null,
         DropdownMenuFilterCallback<T>? filterCallback = null,
         DropdownMenuSearchCallback<T>? searchCallback = null,
         Vector? alignmentOffset = null,
+        IReadOnlyList<TextInputFormatter>? inputFormatters = null,
         DropdownMenuCloseBehavior closeBehavior = DropdownMenuCloseBehavior.All,
         int? maxLines = 1,
+        TextInputAction? textInputAction = null,
         double? cursorHeight = null,
         string? restorationId = null,
         MenuController? menuController = null,
@@ -99,18 +123,21 @@ public sealed class DropdownMenu<T> : StatefulWidget
         Key? key = null) : base(key)
     {
         if (dropdownMenuEntries is null) throw new ArgumentNullException(nameof(dropdownMenuEntries));
-        ValidatePositive(width, nameof(width));
-        ValidatePositive(menuHeight, nameof(menuHeight));
-        ValidatePositive(cursorHeight, nameof(cursorHeight));
-        if (maxLines.HasValue && maxLines.Value <= 0) throw new ArgumentOutOfRangeException(nameof(maxLines));
         if (filterCallback is not null && !enableFilter)
             throw new ArgumentException("filterCallback requires enableFilter=true.", nameof(filterCallback));
         if (trailingIconFocusNode is not null && !showTrailingIcon)
-            throw new ArgumentException("trailingIconFocusNode requires showTrailingIcon=true.", nameof(trailingIconFocusNode));
-        if (decorationBuilder is not null && (label is not null || hintText is not null || helperText is not null || errorText is not null))
-            throw new ArgumentException("label/hint/helper/error must be supplied by decorationBuilder when it is set.", nameof(decorationBuilder));
-        ValidateFiniteInsets(expandedInsets, nameof(expandedInsets));
-        ValidateFiniteInsets(scrollPadding, nameof(scrollPadding));
+        {
+            throw new ArgumentException(
+                "trailingIconFocusNode requires showTrailingIcon=true.",
+                nameof(trailingIconFocusNode));
+        }
+        if (decorationBuilder is not null
+            && (label is not null || hintText is not null || helperText is not null || errorText is not null))
+        {
+            throw new ArgumentException(
+                "label/hintText/helperText/errorText must be supplied by decorationBuilder when it is set.",
+                nameof(decorationBuilder));
+        }
 
         DropdownMenuEntries = dropdownMenuEntries;
         Enabled = enabled;
@@ -127,6 +154,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
         SelectedTrailingIcon = selectedTrailingIcon;
         EnableFilter = enableFilter;
         EnableSearch = enableSearch;
+        KeyboardType = keyboardType;
         TextStyle = textStyle;
         TextAlign = textAlign;
         InputDecorationTheme = inputDecorationTheme;
@@ -142,8 +170,10 @@ public sealed class DropdownMenu<T> : StatefulWidget
         FilterCallback = filterCallback;
         SearchCallback = searchCallback;
         AlignmentOffset = alignmentOffset ?? default;
+        InputFormatters = inputFormatters;
         CloseBehavior = closeBehavior;
         MaxLines = maxLines;
+        TextInputAction = textInputAction;
         CursorHeight = cursorHeight;
         RestorationId = restorationId;
         MenuController = menuController;
@@ -165,6 +195,7 @@ public sealed class DropdownMenu<T> : StatefulWidget
     public Widget? SelectedTrailingIcon { get; }
     public bool EnableFilter { get; }
     public bool EnableSearch { get; }
+    public TextInputType? KeyboardType { get; }
     public TextStyle? TextStyle { get; }
     public TextAlign TextAlign { get; }
     public InputDecorationThemeData? InputDecorationTheme { get; }
@@ -176,68 +207,106 @@ public sealed class DropdownMenu<T> : StatefulWidget
     public FocusNode? FocusNode { get; }
     public bool? RequestFocusOnTap { get; }
     public bool SelectOnly { get; }
-    public Thickness? ExpandedInsets { get; }
+    public EdgeInsetsGeometry? ExpandedInsets { get; }
     public DropdownMenuFilterCallback<T>? FilterCallback { get; }
     public DropdownMenuSearchCallback<T>? SearchCallback { get; }
     public Vector AlignmentOffset { get; }
+    public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
     public DropdownMenuCloseBehavior CloseBehavior { get; }
     public int? MaxLines { get; }
+    public TextInputAction? TextInputAction { get; }
     public double? CursorHeight { get; }
     public string? RestorationId { get; }
     public MenuController? MenuController { get; }
     public Thickness ScrollPadding { get; }
 
     public override State CreateState() => new DropdownMenuState<T>();
-
-    private static void ValidatePositive(double? value, string name)
-    {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value <= 0))
-            throw new ArgumentOutOfRangeException(name);
-    }
-
-    private static void ValidateFiniteInsets(Thickness? value, string name)
-    {
-        if (!value.HasValue) return;
-        var p = value.Value;
-        if (!double.IsFinite(p.Left) || !double.IsFinite(p.Top)
-            || !double.IsFinite(p.Right) || !double.IsFinite(p.Bottom))
-            throw new ArgumentOutOfRangeException(name);
-    }
 }
 
-internal sealed class DropdownMenuState<T> : RawMenuAnchorBaseState
+public sealed class DropdownMenuState<T> : State
 {
-    private TextEditingController? _controller;
-    private FocusNode? _focusNode;
-    private FocusNode? _trailingFocusNode;
-    private MenuController? _internalMenuController;
-    private bool _menuOpen;
-    private bool _ownsController;
-    private bool _ownsFocusNode;
-    private bool _ownsTrailingFocusNode;
-    private bool _suppressControllerChange;
-    private bool _filterActive;
-    private bool _searchActive;
-    private int? _currentHighlight;
+    private static readonly IReadOnlyDictionary<ShortcutActivator, Intent> EditableShortcuts =
+        new Dictionary<ShortcutActivator, Intent>
+        {
+            [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] =
+                new ExtendSelectionByCharacterIntent(forward: false, collapseSelection: true),
+            [new SingleActivator(LogicalKeyboardKey.ArrowRight)] =
+                new ExtendSelectionByCharacterIntent(forward: true, collapseSelection: true),
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp)] = new DropdownMenuArrowUpIntent(),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown)] = new DropdownMenuArrowDownIntent(),
+        };
+
+    private static readonly IReadOnlyDictionary<ShortcutActivator, Intent> SelectOnlyShortcuts =
+        new Dictionary<ShortcutActivator, Intent>
+        {
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp)] = new DropdownMenuArrowUpIntent(),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown)] = new DropdownMenuArrowDownIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Enter)] = new DropdownMenuEnterIntent(),
+        };
+
+    private readonly GlobalKey _anchorKey = new GlobalObjectKey<State>(new object());
+    private readonly GlobalKey _leadingKey = new GlobalObjectKey<State>(new object());
+    private readonly FocusNode _internalFocusNode = new();
+    private List<GlobalKey> _buttonItemKeys = [];
+    private MenuController _controller = null!;
+    private bool _enableFilter;
+    private bool _enableSearch;
     private IReadOnlyList<DropdownMenuEntry<T>> _filteredEntries = [];
-    private DropdownRoute<T>? _route;
+    private IReadOnlyList<Widget>? _initialMenu;
+    private int? _currentHighlight;
+    private double? _leadingPadding;
+    private bool _menuHasEnabledItem;
+    private TextEditingController? _localTextEditingController;
+    private MaterialStatesController? _highlightedItemStatesController;
+    private FocusNode? _localTrailingIconButtonFocusNode;
 
     private DropdownMenu<T> Current => (DropdownMenu<T>)StateWidget;
 
-    internal override MenuController MenuController => Current.MenuController ?? _internalMenuController!;
+    private TextEditingController EffectiveTextEditingController =>
+        Current.Controller ?? (_localTextEditingController ??= new TextEditingController());
 
-    internal override bool IsOpen => _menuOpen;
+    private FocusNode TrailingIconButtonFocusNode =>
+        Current.TrailingIconFocusNode ?? (_localTrailingIconButtonFocusNode ??= new FocusNode());
+
+    /// <summary>The highlighted entry index; exposed for parity tests only.</summary>
+    internal int? DebugCurrentHighlight => _currentHighlight;
+
+    /// <summary>The entries the menu is currently showing; exposed for parity tests only.</summary>
+    internal IReadOnlyList<DropdownMenuEntry<T>> DebugFilteredEntries => _filteredEntries;
+
+    /// <summary>Flutter's `_DropdownMenuState.selectOnly`.</summary>
+    private bool SelectOnly => Current.SelectOnly;
+
+    /// <summary>Flutter's `_DropdownMenuState.isButton`.</summary>
+    private bool IsButton => !CanRequestFocus() || SelectOnly;
 
     public override void InitState()
     {
-        AttachController(Current.Controller);
-        AttachFocusNode(Current.FocusNode);
-        AttachTrailingFocusNode(Current.TrailingIconFocusNode);
-        _internalMenuController = Current.MenuController is null ? new MenuController() : null;
-        base.InitState();
+        _enableSearch = Current.EnableSearch;
         _filteredEntries = Current.DropdownMenuEntries;
-        _searchActive = Current.EnableSearch;
-        ApplyInitialSelection();
+        _buttonItemKeys = CreateButtonItemKeys(_filteredEntries.Count);
+        _menuHasEnabledItem = _filteredEntries.Any(entry => entry.Enabled);
+
+        int index = IndexOfValue(_filteredEntries, Current.InitialSelection);
+        if (index != -1)
+        {
+            string label = _filteredEntries[index].Label;
+            EffectiveTextEditingController.Value = new TextEditingValue(label, TextSelection.Collapsed(label.Length));
+        }
+
+        RefreshLeadingPadding();
+        _controller = Current.MenuController ?? new MenuController();
+    }
+
+    public override void Dispose()
+    {
+        _localTextEditingController?.Dispose();
+        _localTextEditingController = null;
+        _internalFocusNode.Dispose();
+        _localTrailingIconButtonFocusNode?.Dispose();
+        _localTrailingIconButtonFocusNode = null;
+        _highlightedItemStatesController?.Dispose();
+        base.Dispose();
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -245,508 +314,636 @@ internal sealed class DropdownMenuState<T> : RawMenuAnchorBaseState
         var old = (DropdownMenu<T>)oldWidget;
         if (!ReferenceEquals(old.Controller, Current.Controller))
         {
-            DetachController();
-            AttachController(Current.Controller);
+            _localTextEditingController?.Dispose();
+            _localTextEditingController = null;
         }
-        if (!ReferenceEquals(old.FocusNode, Current.FocusNode))
-        {
-            DetachFocusNode();
-            AttachFocusNode(Current.FocusNode);
-        }
-        if (!ReferenceEquals(old.TrailingIconFocusNode, Current.TrailingIconFocusNode))
-        {
-            DetachTrailingFocusNode();
-            AttachTrailingFocusNode(Current.TrailingIconFocusNode);
-        }
-        if (!ReferenceEquals(old.MenuController, Current.MenuController))
-        {
-            MenuController.Detach(this);
-            _internalMenuController = Current.MenuController is null ? new MenuController() : null;
-            MenuController.Attach(this);
-        }
-        if (!ReferenceEquals(old.DropdownMenuEntries, Current.DropdownMenuEntries))
-        {
-            _filteredEntries = Current.DropdownMenuEntries;
-            _currentHighlight = null;
-            RecomputeEntries();
-            UpdateRouteItems(notify: false);
-        }
+
         if (old.EnableFilter != Current.EnableFilter && !Current.EnableFilter)
-            _filterActive = false;
+        {
+            _enableFilter = false;
+        }
+
         if (old.EnableSearch != Current.EnableSearch && !Current.EnableSearch)
         {
-            _searchActive = false;
+            _enableSearch = Current.EnableSearch;
             _currentHighlight = null;
         }
+
+        if (!ReferenceEquals(old.DropdownMenuEntries, Current.DropdownMenuEntries))
+        {
+            _currentHighlight = null;
+            _filteredEntries = Current.DropdownMenuEntries;
+            _buttonItemKeys = CreateButtonItemKeys(_filteredEntries.Count);
+            _menuHasEnabledItem = _filteredEntries.Any(entry => entry.Enabled);
+        }
+
+        if (!ReferenceEquals(old.LeadingIcon, Current.LeadingIcon))
+        {
+            RefreshLeadingPadding();
+        }
+
         if (!EqualityComparer<T?>.Default.Equals(old.InitialSelection, Current.InitialSelection))
-            ApplyInitialSelection();
+        {
+            int index = IndexOfValue(_filteredEntries, Current.InitialSelection);
+            if (index != -1)
+            {
+                string label = _filteredEntries[index].Label;
+                EffectiveTextEditingController.Value =
+                    new TextEditingValue(label, TextSelection.Collapsed(label.Length));
+            }
+        }
+
+        if (!ReferenceEquals(old.MenuController, Current.MenuController))
+        {
+            _controller = Current.MenuController ?? new MenuController();
+        }
     }
 
-    public override void Dispose()
+    /// <summary>Flutter's `_DropdownMenuState.canRequestFocus`.</summary>
+    private bool CanRequestFocus()
     {
-        base.Dispose();
-        DetachTrailingFocusNode();
-        DetachFocusNode();
-        DetachController();
+        if (Current.FocusNode is { } node) return node.CanRequestFocus;
+        if (Current.RequestFocusOnTap is { } requested) return requested;
+        return Theme.Of(Context).Platform switch
+        {
+            TargetPlatform.IOS or TargetPlatform.Android or TargetPlatform.Fuchsia => false,
+            _ => true,
+        };
     }
 
-    internal override void Open(Vector? position = null) => OpenMenu();
-
-    internal override void Close(bool inDispose = false) => CloseMenu();
-
-    internal override void HandleOpenRequest(Vector? position = null) => Open(position);
-
-    internal override void HandleCloseRequest() => Close();
-
-    protected override Widget BuildAnchor(BuildContext context)
+    private static List<GlobalKey> CreateButtonItemKeys(int count)
     {
-        var theme = Theme.Of(context);
-        var dropdownTheme = DropdownMenuTheme.Of(context);
-        var defaults = DropdownMenuTheme.Defaults(context);
-        bool canRequestFocus = CanRequestFocus(theme);
-        bool isButton = !canRequestFocus || Current.SelectOnly;
-        var baseStyle = Current.TextStyle ?? dropdownTheme.TextStyle ?? defaults.TextStyle ?? theme.TextTheme.BodyLarge;
-        var effectiveStyle = Current.Enabled
-            ? baseStyle
-            : baseStyle.CopyWith(color: dropdownTheme.DisabledColor ?? defaults.DisabledColor);
-        var inputTheme = Current.InputDecorationTheme
-                         ?? dropdownTheme.InputDecorationTheme
-                         ?? defaults.InputDecorationTheme
-                         ?? new InputDecorationThemeData(border: new OutlineInputBorder());
+        var keys = new List<GlobalKey>(count);
+        for (int i = 0; i < count; i++) keys.Add(new GlobalObjectKey<State>(new object()));
+        return keys;
+    }
 
-        var decoration = Current.DecorationBuilder?.Invoke(context, MenuController)
-                         ?? new InputDecoration(
-                             label: Current.Label,
-                             hintText: Current.HintText,
-                             helperText: Current.HelperText,
-                             errorText: Current.ErrorText,
-                             prefixIcon: Current.LeadingIcon,
-                             suffixIcon: BuildSuffixIcon());
-        if (decoration.SuffixIcon is null && Current.ShowTrailingIcon)
-            decoration = decoration.WithSuffixIcon(BuildSuffixIcon());
-        decoration = decoration.ApplyDefaults(inputTheme);
+    private static int IndexOfValue(IReadOnlyList<DropdownMenuEntry<T>> entries, T? value)
+    {
+        for (int i = 0; i < entries.Count; i++)
+        {
+            if (EqualityComparer<T?>.Default.Equals(entries[i].Value, value)) return i;
+        }
 
-        Widget textField = new Semantics(
-            flags: isButton ? SemanticsFlags.IsButton : SemanticsFlags.None,
-            expanded: MenuController.IsOpen,
-            onTap: Current.Enabled ? ToggleMenu : null,
-            child: new TextField(
-                controller: _controller,
-                focusNode: _focusNode,
-                decoration: decoration,
+        return -1;
+    }
+
+    private static double? GetWidth(GlobalKey key)
+    {
+        if (key.CurrentContext is not { } context) return null;
+        return context.FindRenderObject() is RenderBox { HasSize: true } box ? box.Size.Width : null;
+    }
+
+    private void RefreshLeadingPadding()
+    {
+        Scheduler.AddPostFrameCallback(timestamp =>
+        {
+            if (!Mounted) return;
+            SetState(() => _leadingPadding = GetWidth(_leadingKey));
+        });
+    }
+
+    private void ScrollToHighlight()
+    {
+        Scheduler.AddPostFrameCallback(timestamp =>
+        {
+            if (_currentHighlight is not { } highlight
+                || highlight < 0
+                || highlight >= _buttonItemKeys.Count)
+            {
+                return;
+            }
+
+            if (_buttonItemKeys[highlight].CurrentContext is not { } highlightContext) return;
+            if (highlightContext.FindRenderObject() is not { } renderObject) return;
+            // Dart uses `Scrollable.of(context).position.ensureVisible(...)`, i.e. the *nearest*
+            // scrollable only, so an ancestor list never scrolls along with the menu.
+            _ = Scrollable.MaybeOf(highlightContext)?.Position.EnsureVisible(renderObject);
+        });
+    }
+
+    private static IReadOnlyList<DropdownMenuEntry<T>> Filter(
+        IReadOnlyList<DropdownMenuEntry<T>> entries,
+        TextEditingController controller)
+    {
+        string filterText = controller.Text.ToLowerInvariant();
+        return entries.Where(entry => entry.Label.ToLowerInvariant().Contains(filterText, StringComparison.Ordinal))
+            .ToList();
+    }
+
+    private bool ShouldUpdateCurrentHighlight(IReadOnlyList<DropdownMenuEntry<T>> entries)
+    {
+        string searchText = EffectiveTextEditingController.Value.Text.ToLowerInvariant();
+        if (searchText.Length == 0) return true;
+        if (_currentHighlight is not { } highlight || highlight >= entries.Count) return true;
+        // Keep the current highlight when it still matches the search text.
+        return !entries[highlight].Label.ToLowerInvariant().Contains(searchText, StringComparison.Ordinal);
+    }
+
+    private static int? Search(IReadOnlyList<DropdownMenuEntry<T>> entries, TextEditingController controller)
+    {
+        string searchText = controller.Value.Text.ToLowerInvariant();
+        if (searchText.Length == 0) return null;
+        for (int i = 0; i < entries.Count; i++)
+        {
+            if (entries[i].Label.ToLowerInvariant().Contains(searchText, StringComparison.Ordinal)) return i;
+        }
+
+        return null;
+    }
+
+    private List<Widget> BuildButtons(
+        IReadOnlyList<DropdownMenuEntry<T>> filteredEntries,
+        TextDirection textDirection,
+        int? focusedIndex = null,
+        bool enableScrollToHighlight = true,
+        bool excludeSemantics = false,
+        bool useMaterial3 = true)
+    {
+        var result = new List<Widget>(filteredEntries.Count);
+        double effectiveInputStartGap = useMaterial3 ? DropdownMenu<T>.InputStartGap : 0.0;
+        for (int i = 0; i < filteredEntries.Count; i++)
+        {
+            var entry = filteredEntries[i];
+            int index = i;
+
+            // The leading padding is the width of the field's leading icon, so the entry labels line
+            // up with the field text; entries with their own leading icon keep the default padding.
+            double padding = entry.LeadingIcon is null
+                ? _leadingPadding ?? DropdownMenu<T>.DefaultHorizontalPadding
+                : DropdownMenu<T>.DefaultHorizontalPadding;
+            // `ButtonStyle.Padding` is a resolved `Thickness`, so the directional inset Dart writes
+            // as `EdgeInsetsDirectional.only(start: padding, end: 12)` is resolved here instead.
+            var itemPadding = EdgeInsetsGeometry
+                .DirectionalOnly(start: padding, end: DropdownMenu<T>.DefaultHorizontalPadding)
+                .Resolve(textDirection);
+            var effectiveStyle = entry.Style
+                                 ?? new ButtonStyle(Padding: MaterialStateProperty<Thickness?>.All(itemPadding));
+
+            var themeStyle = MenuButtonTheme.Of(Context).Style;
+            var effectiveForegroundColor = entry.Style?.ForegroundColor ?? themeStyle?.ForegroundColor;
+            var effectiveIconColor = entry.Style?.IconColor ?? themeStyle?.IconColor;
+            var effectiveOverlayColor = entry.Style?.OverlayColor ?? themeStyle?.OverlayColor;
+            var effectiveBackgroundColor = entry.Style?.BackgroundColor ?? themeStyle?.BackgroundColor;
+
+            bool entryIsSelected = entry.Enabled && index == focusedIndex;
+            if (entryIsSelected)
+            {
+                // Dart recreates the controller so the highlighted item reports `focused` without
+                // owning real focus (focus stays on the text field).
+                _highlightedItemStatesController?.Dispose();
+                _highlightedItemStatesController = new MaterialStatesController(MaterialState.Focused);
+
+                var defaultStyle = new MenuItemButton().DefaultStyleOf(Context);
+                Color focusedForegroundColor =
+                    (effectiveForegroundColor ?? defaultStyle.ForegroundColor!).Resolve(MaterialState.Focused)!.Value;
+                Color focusedIconColor =
+                    (effectiveIconColor ?? defaultStyle.IconColor!).Resolve(MaterialState.Focused)!.Value;
+                Color focusedOverlayColor =
+                    (effectiveOverlayColor ?? defaultStyle.OverlayColor!).Resolve(MaterialState.Focused)!.Value;
+                Color focusedBackgroundColor = effectiveBackgroundColor?.Resolve(MaterialState.Focused)
+                                               ?? MaterialButtonCore.ApplyOpacity(
+                                                   Theme.Of(Context).ColorScheme.OnSurface,
+                                                   0.12);
+                effectiveStyle = effectiveStyle with
+                {
+                    BackgroundColor = MaterialStateProperty<Color?>.All(focusedBackgroundColor),
+                    ForegroundColor = MaterialStateProperty<Color?>.All(focusedForegroundColor),
+                    IconColor = MaterialStateProperty<Color?>.All(focusedIconColor),
+                    OverlayColor = MaterialStateProperty<Color?>.All(focusedOverlayColor),
+                };
+            }
+            else
+            {
+                effectiveStyle = effectiveStyle with
+                {
+                    BackgroundColor = effectiveBackgroundColor ?? effectiveStyle.BackgroundColor,
+                    ForegroundColor = effectiveForegroundColor ?? effectiveStyle.ForegroundColor,
+                    IconColor = effectiveIconColor ?? effectiveStyle.IconColor,
+                    OverlayColor = effectiveOverlayColor ?? effectiveStyle.OverlayColor,
+                };
+            }
+
+            Widget label = entry.LabelWidget ?? new Text(entry.Label);
+            if (Current.Width is { } menuWidth)
+            {
+                double horizontalPadding = padding + DropdownMenu<T>.DefaultHorizontalPadding + effectiveInputStartGap;
+                label = new ConstrainedBox(
+                    constraints: new BoxConstraints(MaxWidth: Math.Max(0.0, menuWidth - horizontalPadding)),
+                    child: label);
+            }
+
+            Widget menuItemButton = new MenuItemButton(
+                // A custom `filterCallback` may return more entries than the source list, so the key
+                // list is only used while it covers the index.
+                key: enableScrollToHighlight && index < _buttonItemKeys.Count ? _buttonItemKeys[index] : null,
+                statesController: entryIsSelected ? _highlightedItemStatesController : null,
                 style: effectiveStyle,
-                textAlign: Current.TextAlign,
-                readOnly: isButton,
-                maxLines: Current.MaxLines,
-                enabled: Current.Enabled,
-                onTap: Current.Enabled ? ToggleMenu : null,
-                onChanged: HandleTextChanged,
-                onSubmitted: _ => HandleSubmitted(),
-                canRequestFocus: canRequestFocus,
-                mouseCursor: Current.Enabled
-                    ? isButton ? SystemMouseCursors.Click : SystemMouseCursors.Text
-                    : SystemMouseCursors.Basic,
-                onKeyEvent: HandleKeyEvent));
+                leadingIcon: entry.LeadingIcon,
+                trailingIcon: entry.TrailingIcon,
+                closeOnActivate: Current.CloseBehavior == DropdownMenuCloseBehavior.All,
+                onPressed: entry.Enabled && Current.Enabled ? () => HandleEntryPressed(entry, index) : null,
+                requestFocusOnHover: false,
+                child: new Padding(
+                    insets: EdgeInsetsGeometry.DirectionalOnly(start: effectiveInputStartGap).Resolve(textDirection),
+                    child: label));
 
-        Widget body;
-        if (Current.ExpandedInsets.HasValue)
-        {
-            var p = Current.ExpandedInsets.Value;
-            body = new Padding(new Thickness(p.Left, 0, p.Right, 0), textField);
-        }
-        else
-        {
-            var measureChildren = new List<Widget> { textField };
-            measureChildren.AddRange(Current.DropdownMenuEntries.Select(entry =>
-                new Padding(new Thickness(16, 0), BuildEntryContent(entry, false))));
-            if (Current.Label is not null) measureChildren.Add(new Padding(new Thickness(4, 0), Current.Label));
-            body = new DropdownMenuBody(Current.Width, measureChildren);
+            result.Add(new ExcludeFocus(
+                child: new ExcludeSemantics(excluding: excludeSemantics, child: menuItemButton)));
         }
 
-        return new Align(
-            alignment: Alignment.TopLeft,
-            widthFactor: 1,
-            heightFactor: 1,
-            child: body);
+        return result;
     }
 
-    private Widget? BuildSuffixIcon()
+    private void HandleEntryPressed(DropdownMenuEntry<T> entry, int index)
     {
-        if (!Current.ShowTrailingIcon) return null;
-        return new IconButton(
-            focusNode: _trailingFocusNode,
-            isSelected: MenuController.IsOpen,
-            icon: Current.TrailingIcon ?? new Icon(Icons.ArrowDropDown),
-            selectedIcon: Current.SelectedTrailingIcon ?? new Icon(Icons.ArrowDropUp),
-            onPressed: Current.Enabled ? ToggleMenu : null);
-    }
-
-    private void ToggleMenu()
-    {
-        if (_route is null) OpenMenu();
-        else CloseMenu();
-    }
-
-    private void OpenMenu()
-    {
-        if (!Mounted || !Current.Enabled || _route is not null) return;
-        if (Context.FindRenderObject() is not RenderBox anchor || !anchor.HasSize) return;
-
-        _filteredEntries = Current.DropdownMenuEntries;
-        if (!string.IsNullOrEmpty(_controller?.Text)) _filterActive = false;
-        RecomputeEntries();
-
-        var bounds = ResolveGlobalBounds(anchor);
-        bounds = new Rect(
-            bounds.X + Current.AlignmentOffset.X,
-            bounds.Y + Current.AlignmentOffset.Y,
-            bounds.Width,
-            bounds.Height);
-        var style = ResolveMenuStyle();
-        var states = MaterialState.None;
-        var min = style.MinimumSize?.Resolve(states);
-        var fixedSize = style.FixedSize?.Resolve(states);
-        var max = style.MaximumSize?.Resolve(states);
-        double desiredWidth = Current.Width ?? bounds.Width;
-        if (fixedSize is { } fixedValue && double.IsFinite(fixedValue.Width)) desiredWidth = fixedValue.Width;
-        desiredWidth = Math.Max(min?.Width ?? 112, desiredWidth);
-        if (max is { } maximum && double.IsFinite(maximum.Width)) desiredWidth = Math.Min(desiredWidth, maximum.Width);
-        double? maxHeight = Current.MenuHeight;
-        if (!maxHeight.HasValue && max is { } maximumSize && double.IsFinite(maximumSize.Height))
-            maxHeight = maximumSize.Height;
-        var shape = style.Shape?.Resolve(states);
-        var side = style.Side?.Resolve(states);
-        Thickness? menuPadding = style.Padding?.Resolve(states)?.Resolve(Directionality.Of(Context));
-        var routeItems = BuildRouteItems();
-        int selectedIndex = _currentHighlight ?? FirstEnabledIndex(_filteredEntries);
-        _route = new DropdownRoute<T>(
-            context: Context,
-            items: routeItems,
-            buttonRect: bounds,
-            selectedIndex: selectedIndex < 0 ? 0 : selectedIndex,
-            elevation: (int)Math.Round(style.Elevation?.Resolve(states) ?? 3),
-            style: Current.TextStyle ?? DropdownMenuTheme.Of(Context).TextStyle ?? Theme.Of(Context).TextTheme.BodyLarge,
-            itemHeight: null,
-            menuWidth: desiredWidth,
-            dropdownColor: style.BackgroundColor?.Resolve(states),
-            menuMaxHeight: maxHeight,
-            enableFeedback: true,
-            borderRadius: ShapeBorderGeometry.ResolveRadiusOrNull(shape),
-            barrierDismissible: true,
-            mouseCursor: style.MouseCursor?.Resolve(states),
-            requestFocus: false,
-            closeOnSelect: Current.CloseBehavior != DropdownMenuCloseBehavior.None,
-            menuBelowAnchor: true,
-            shadowColor: style.ShadowColor?.Resolve(states),
-            side: side,
-            menuPadding: menuPadding);
-        Navigator.Of(Context).Push(_route);
-        _menuOpen = true;
-        if (CanRequestFocus(Theme.Of(Context))) _focusNode?.RequestFocus();
-        SetState(() => { });
-        _ = AwaitRoute(_route);
-    }
-
-    private async Task AwaitRoute(DropdownRoute<T> route)
-    {
-        await route.Completed;
-        if (!Mounted || !ReferenceEquals(route, _route)) return;
-        _menuOpen = false;
-        SetState(() => _route = null);
-    }
-
-    private void CloseMenu()
-    {
-        _menuOpen = false;
-        _route?.Navigator?.MaybePop();
-    }
-
-    private void HandleTextChanged(string text)
-    {
-        _filteredEntries = Current.DropdownMenuEntries;
-        _filterActive = Current.EnableFilter;
-        _searchActive = Current.EnableSearch;
-        RecomputeEntries();
-        if (_route is null) OpenMenu();
-        else UpdateRouteItems();
-    }
-
-    private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
-    {
-        if (@event is not KeyDownEvent || !Current.Enabled) return KeyEventResult.Ignored;
-        if (@event.LogicalKey.Equals(LogicalKeyboardKey.Escape))
+        if (!Mounted)
         {
-            if (_route is null) return KeyEventResult.Ignored;
-            CloseMenu();
-            return KeyEventResult.Handled;
+            if (Current.Controller is { } external)
+            {
+                external.Value = new TextEditingValue(entry.Label, TextSelection.Collapsed(entry.Label.Length));
+            }
+
+            Current.OnSelected?.Invoke(entry.Value);
+            return;
         }
-        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowDown))
+
+        EffectiveTextEditingController.Value =
+            new TextEditingValue(entry.Label, TextSelection.Collapsed(entry.Label.Length));
+        _currentHighlight = Current.EnableSearch ? index : null;
+        Current.OnSelected?.Invoke(entry.Value);
+        _enableFilter = false;
+        if (Current.CloseBehavior == DropdownMenuCloseBehavior.Self)
         {
-            if (_route is null) return KeyEventResult.Ignored;
-            MoveHighlight(1);
-            return KeyEventResult.Handled;
+            _controller.Close();
         }
-        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowUp))
+    }
+
+    private void HandleUpKey()
+    {
+        SetState(() =>
         {
-            if (_route is null) return KeyEventResult.Ignored;
+            if (!Current.Enabled || !_menuHasEnabledItem || !_controller.IsOpen) return;
             MoveHighlight(-1);
-            return KeyEventResult.Handled;
-        }
-        if ((@event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
-    || @event.LogicalKey.Equals(LogicalKeyboardKey.NumpadEnter)))
+        });
+    }
+
+    private void HandleDownKey()
+    {
+        SetState(() =>
         {
-            if (Current.SelectOnly && _route is null) OpenMenu();
-            else HandleSubmitted();
-            return KeyEventResult.Handled;
-        }
-        return KeyEventResult.Ignored;
+            if (!Current.Enabled || !_menuHasEnabledItem || !_controller.IsOpen) return;
+            MoveHighlight(1);
+        });
     }
 
     private void MoveHighlight(int delta)
     {
-        if (!_filteredEntries.Any(entry => entry.Enabled)) return;
-        _filterActive = false;
-        _searchActive = false;
-        int next = _currentHighlight ?? (delta > 0 ? -1 : 0);
-        for (int count = 0; count < _filteredEntries.Count; count++)
+        _enableFilter = false;
+        _enableSearch = false;
+        int count = _filteredEntries.Count;
+        if (count == 0) return;
+        int highlight = _currentHighlight ?? (delta < 0 ? 0 : -1);
+        highlight = Modulo(highlight + delta, count);
+        int guard = 0;
+        while (!_filteredEntries[highlight].Enabled && guard++ < count)
         {
-            next = (next + delta + _filteredEntries.Count) % _filteredEntries.Count;
-            if (!_filteredEntries[next].Enabled) continue;
-            _currentHighlight = next;
-            SetControllerText(_filteredEntries[next].Label);
-            SetState(() => { });
-            UpdateRouteItems();
+            highlight = Modulo(highlight + delta, count);
+        }
+
+        _currentHighlight = highlight;
+        string currentLabel = _filteredEntries[highlight].Label;
+        EffectiveTextEditingController.Value =
+            new TextEditingValue(currentLabel, TextSelection.Collapsed(currentLabel.Length));
+    }
+
+    /// <summary>Dart's `%` never returns a negative result; C#'s does, so it is normalized here.</summary>
+    private static int Modulo(int value, int count) => ((value % count) + count) % count;
+
+    private void HandleEnterKey()
+    {
+        if (SelectOnly && !_controller.IsOpen)
+        {
+            _controller.Open();
             return;
         }
+
+        HandleSubmitted();
+    }
+
+    private void HandlePressed(MenuController controller, bool focusForKeyboard = true)
+    {
+        if (controller.IsOpen)
+        {
+            _currentHighlight = null;
+            controller.Close();
+        }
+        else
+        {
+            _filteredEntries = Current.DropdownMenuEntries;
+            if (EffectiveTextEditingController.Text.Length > 0) _enableFilter = false;
+            controller.Open();
+            if (focusForKeyboard) _internalFocusNode.RequestFocus();
+        }
+
+        SetState(() => { });
     }
 
     private void HandleSubmitted()
     {
-        if (_route is null) return;
-        if (_currentHighlight is { } index && index >= 0 && index < _filteredEntries.Count
-            && _filteredEntries[index].Enabled)
+        if (_currentHighlight is { } highlight && highlight >= 0 && highlight < _filteredEntries.Count)
         {
-            SelectEntry(_filteredEntries[index], index);
+            var entry = _filteredEntries[highlight];
+            if (entry.Enabled)
+            {
+                EffectiveTextEditingController.Value =
+                    new TextEditingValue(entry.Label, TextSelection.Collapsed(entry.Label.Length));
+                Current.OnSelected?.Invoke(entry.Value);
+            }
         }
-        else
+        else if (_controller.IsOpen)
         {
             Current.OnSelected?.Invoke(default);
         }
-        if (Current.CloseBehavior != DropdownMenuCloseBehavior.None) CloseMenu();
+
+        if (!Current.EnableSearch) _currentHighlight = null;
+        _controller.Close();
     }
 
-    private void SelectEntry(DropdownMenuEntry<T> entry, int index)
+    public override Widget Build(BuildContext context)
     {
-        if (!entry.Enabled) return;
-        SetControllerText(entry.Label);
-        _currentHighlight = Current.EnableSearch ? index : null;
-        _filterActive = false;
-        Current.OnSelected?.Invoke(entry.Value);
-        if (Mounted) SetState(() => { });
-    }
+        var theme = Theme.Of(context);
+        TextDirection textDirection = Directionality.Of(context);
+        var dropdownMenuTheme = DropdownMenuTheme.Of(context);
+        var defaults = DropdownMenuTheme.Defaults(context);
+        double? anchorWidth = GetWidth(_anchorKey);
 
-    private void RecomputeEntries()
-    {
-        var entries = Current.DropdownMenuEntries;
-        if (_filterActive)
+        if (_enableFilter)
         {
-            _filteredEntries = Current.FilterCallback?.Invoke(entries, _controller?.Text ?? string.Empty)
-                               ?? entries.Where(entry => entry.Label.Contains(
-                                   _controller?.Text ?? string.Empty,
-                                   StringComparison.OrdinalIgnoreCase)).ToArray();
+            _filteredEntries = Current.FilterCallback?.Invoke(_filteredEntries, EffectiveTextEditingController.Text)
+                               ?? Filter(Current.DropdownMenuEntries, EffectiveTextEditingController);
+        }
+
+        _menuHasEnabledItem = _filteredEntries.Any(entry => entry.Enabled);
+
+        if (_enableSearch)
+        {
+            if (Current.SearchCallback is { } searchCallback)
+            {
+                _currentHighlight = searchCallback(_filteredEntries, EffectiveTextEditingController.Text);
+            }
+            else if (ShouldUpdateCurrentHighlight(_filteredEntries))
+            {
+                _currentHighlight = Search(_filteredEntries, EffectiveTextEditingController);
+            }
+
+            if (_currentHighlight is not null) ScrollToHighlight();
+        }
+
+        List<Widget> menu = BuildButtons(
+            _filteredEntries,
+            textDirection,
+            focusedIndex: _currentHighlight,
+            useMaterial3: theme.UseMaterial3);
+        _initialMenu ??= BuildButtons(
+            Current.DropdownMenuEntries,
+            textDirection,
+            enableScrollToHighlight: false,
+            excludeSemantics: true,
+            useMaterial3: theme.UseMaterial3);
+
+        var effectiveMenuStyle = Current.MenuStyle ?? dropdownMenuTheme.MenuStyle ?? defaults.MenuStyle!;
+        if (Current.Width is { } requestedWidth)
+        {
+            effectiveMenuStyle = WithMinimumWidth(effectiveMenuStyle, requestedWidth);
+        }
+        else if (anchorWidth is { } resolvedAnchorWidth)
+        {
+            effectiveMenuStyle = WithMinimumWidth(effectiveMenuStyle, resolvedAnchorWidth);
+        }
+
+        if (Current.MenuHeight is { } menuHeight)
+        {
+            effectiveMenuStyle = effectiveMenuStyle.CopyWith(
+                maximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, menuHeight)));
+        }
+
+        var baseTextStyle = Current.TextStyle ?? dropdownMenuTheme.TextStyle ?? defaults.TextStyle;
+        Color? disabledColor = dropdownMenuTheme.DisabledColor ?? defaults.DisabledColor;
+        var effectiveTextStyle = Current.Enabled
+            ? baseTextStyle
+            : baseTextStyle?.CopyWith(color: disabledColor) ?? new TextStyle(Color: disabledColor);
+        var effectiveInputDecorationTheme = Current.InputDecorationTheme
+                                            ?? dropdownMenuTheme.InputDecorationTheme
+                                            ?? defaults.InputDecorationTheme!;
+
+        Widget menuAnchor = new MenuAnchor(
+            style: effectiveMenuStyle,
+            alignmentOffset: Current.AlignmentOffset,
+            reservedPadding: EdgeInsetsGeometry.Zero,
+            controller: _controller,
+            menuChildren: menu,
+            crossAxisUnconstrained: false,
+            builder: (anchorContext, controller, _) =>
+                BuildAnchorChild(anchorContext, controller, effectiveTextStyle, effectiveInputDecorationTheme));
+
+        if (Current.ExpandedInsets is { } expandedInsets)
+        {
+            // Clamping to zero vertically is what makes `expandedInsets`' top/bottom no-ops.
+            var clamped = expandedInsets.Clamp(
+                EdgeInsetsGeometry.Zero,
+                EdgeInsetsGeometry.Only(left: double.PositiveInfinity, right: double.PositiveInfinity)
+                    .Add(EdgeInsetsGeometry.DirectionalOnly(
+                        start: double.PositiveInfinity,
+                        end: double.PositiveInfinity)));
+            menuAnchor = new Padding(insets: clamped, child: menuAnchor);
+        }
+
+        menuAnchor = new Align(
+            alignment: AlignmentDirectional.TopStart,
+            widthFactor: 1.0,
+            heightFactor: 1.0,
+            child: menuAnchor);
+
+        return new Actions(
+            actions: new Dictionary<Type, FlutterAction>
+            {
+                [typeof(DropdownMenuArrowUpIntent)] =
+                    new CallbackAction<DropdownMenuArrowUpIntent>(_ => { HandleUpKey(); return null; }),
+                [typeof(DropdownMenuArrowDownIntent)] =
+                    new CallbackAction<DropdownMenuArrowDownIntent>(_ => { HandleDownKey(); return null; }),
+                [typeof(DropdownMenuEnterIntent)] =
+                    new CallbackAction<DropdownMenuEnterIntent>(_ => { HandleEnterKey(); return null; }),
+                [typeof(DismissIntent)] = new DismissMenuAction(_controller),
+            },
+            child: new Stack(children:
+            [
+                new Shortcuts(
+                    shortcuts: new Dictionary<ShortcutActivator, Intent>
+                    {
+                        [new SingleActivator(LogicalKeyboardKey.ArrowUp)] = new DropdownMenuArrowUpIntent(),
+                        [new SingleActivator(LogicalKeyboardKey.ArrowDown)] = new DropdownMenuArrowDownIntent(),
+                        [new SingleActivator(LogicalKeyboardKey.Enter)] = new DropdownMenuEnterIntent(),
+                        [new SingleActivator(LogicalKeyboardKey.Escape)] = new DismissIntent(),
+                    },
+                    child: new Focus(
+                        focusNode: _internalFocusNode,
+                        skipTraversal: true,
+                        child: new SizedBox(width: 0, height: 0))),
+                menuAnchor,
+            ]));
+    }
+
+    private static MenuStyle WithMinimumWidth(MenuStyle style, double width)
+    {
+        MenuStyle? mutated = null;
+        mutated = style.CopyWith(minimumSize: MaterialStateProperty<Size?>.ResolveWith(states =>
+        {
+            double? maxWidth = mutated!.MaximumSize?.Resolve(states)?.Width;
+            return new Size(Math.Min(width, maxWidth ?? width), 0.0);
+        }));
+        return mutated;
+    }
+
+    private Widget BuildAnchorChild(
+        BuildContext context,
+        MenuController controller,
+        TextStyle? effectiveTextStyle,
+        InputDecorationThemeData effectiveInputDecorationTheme)
+    {
+        bool isButton = IsButton;
+        var decorationBuilder = Current.DecorationBuilder ?? BuildDefaultDecoration;
+        var decoration = decorationBuilder(context, controller);
+        if (decoration.SuffixIcon is null)
+        {
+            decoration = decoration with { SuffixIcon = BuildDefaultSuffixIcon(controller) };
+        }
+
+        var effectiveDecoration = decoration.ApplyDefaults(effectiveInputDecorationTheme);
+        var textFieldDecoration = effectiveDecoration.PrefixIcon is null
+            ? effectiveDecoration
+            : effectiveDecoration with
+            {
+                PrefixIcon = new SizedBox(key: _leadingKey, child: effectiveDecoration.PrefixIcon),
+            };
+        var localizations = MaterialLocalizations.Of(context);
+
+        Widget textField = new Semantics(
+            flags: isButton ? SemanticsFlags.IsButton : SemanticsFlags.None,
+            hint: Theme.Of(context).Platform == TargetPlatform.IOS
+                ? controller.IsOpen ? localizations.CollapsedHint : localizations.ExpandedHint
+                : null,
+            expanded: controller.IsOpen,
+            onExpand: controller.IsOpen ? null : () => controller.Open(),
+            onCollapse: !controller.IsOpen ? null : () => controller.Close(),
+            child: new ExcludeSemantics(
+                excluding: isButton && PlatformDefaults.IsWeb,
+                child: new TextField(
+                    key: _anchorKey,
+                    enabled: Current.Enabled,
+                    mouseCursor: Current.Enabled
+                        ? isButton ? SystemMouseCursors.Click : SystemMouseCursors.Text
+                        : null,
+                    focusNode: Current.FocusNode,
+                    canRequestFocus: CanRequestFocus(),
+                    enableInteractiveSelection: !isButton,
+                    readOnly: isButton,
+                    keyboardType: Current.KeyboardType,
+                    textAlign: Current.TextAlign,
+                    textAlignVertical: Plumix.Rendering.TextAlignVertical.Center,
+                    maxLines: Current.MaxLines,
+                    textInputAction: Current.TextInputAction,
+                    cursorHeight: Current.CursorHeight,
+                    style: effectiveTextStyle,
+                    controller: EffectiveTextEditingController,
+                    // Dart routes Enter through `_EnterIntent`; Plumix's `EditableText` consumes the
+                    // key itself and reports it as a submission, so the same handler runs from here.
+                    onSubmitted: _ => HandleEnterKey(),
+                    onTap: !Current.Enabled
+                        ? null
+                        : () => HandlePressed(controller, focusForKeyboard: !CanRequestFocus()),
+                    onChanged: _ =>
+                    {
+                        controller.Open();
+                        SetState(() =>
+                        {
+                            _filteredEntries = Current.DropdownMenuEntries;
+                            _enableFilter = Current.EnableFilter;
+                            _enableSearch = Current.EnableSearch;
+                        });
+                    },
+                    inputFormatters: Current.InputFormatters,
+                    decoration: textFieldDecoration,
+                    restorationId: Current.RestorationId,
+                    scrollPadding: Current.ScrollPadding)));
+
+        Widget? effectiveLabel = effectiveDecoration.Label
+                                 ?? (effectiveDecoration.LabelText is { } labelText ? new Text(labelText) : null);
+
+        Widget body;
+        if (Current.ExpandedInsets is not null)
+        {
+            body = textField;
         }
         else
         {
-            _filteredEntries = entries;
+            var children = new List<Widget> { textField };
+            children.AddRange(_initialMenu!);
+            if (effectiveLabel is not null)
+            {
+                children.Add(new ExcludeSemantics(child: new Padding(
+                    insets: new Thickness(4.0, 0.0),
+                    child: new DefaultTextStyle(effectiveTextStyle ?? new TextStyle(), effectiveLabel))));
+            }
+
+            children.Add(effectiveDecoration.SuffixIcon ?? new SizedBox(width: 0, height: 0));
+            children.Add(new Padding(
+                insets: new Thickness(8.0),
+                child: effectiveDecoration.PrefixIcon ?? new SizedBox(width: 0, height: 0)));
+            body = new DropdownMenuBody(Current.Width, children);
         }
 
-        if (_searchActive)
+        return new Shortcuts(
+            shortcuts: SelectOnly ? SelectOnlyShortcuts : EditableShortcuts,
+            child: body);
+    }
+
+    private InputDecoration BuildDefaultDecoration(BuildContext context, MenuController controller)
+    {
+        return new InputDecoration
         {
-            _currentHighlight = Current.SearchCallback?.Invoke(_filteredEntries, _controller?.Text ?? string.Empty)
-                                ?? DefaultSearch(_filteredEntries, _controller?.Text ?? string.Empty);
-        }
-        if (_currentHighlight.HasValue
-            && (_currentHighlight.Value < 0 || _currentHighlight.Value >= _filteredEntries.Count))
-            _currentHighlight = null;
-    }
-
-    private static int? DefaultSearch(IReadOnlyList<DropdownMenuEntry<T>> entries, string query)
-    {
-        if (string.IsNullOrEmpty(query)) return null;
-        for (int i = 0; i < entries.Count; i++)
-            if (entries[i].Label.Contains(query, StringComparison.OrdinalIgnoreCase)) return i;
-        return null;
-    }
-
-    private IReadOnlyList<DropdownMenuItem<T>> BuildRouteItems()
-    {
-        var result = new List<DropdownMenuItem<T>>(_filteredEntries.Count);
-        for (int i = 0; i < _filteredEntries.Count; i++)
-        {
-            int index = i;
-            var entry = _filteredEntries[index];
-            result.Add(new DropdownMenuItem<T>(
-                child: BuildEntryContent(entry, _currentHighlight == index),
-                value: entry.Value,
-                enabled: entry.Enabled && Current.Enabled,
-                onTap: () => SelectEntry(entry, index)));
-        }
-        return result;
-    }
-
-    private Widget BuildEntryContent(DropdownMenuEntry<T> entry, bool highlighted)
-    {
-        var theme = Theme.Of(Context);
-        var states = entry.Enabled ? MaterialState.None : MaterialState.Disabled;
-        if (highlighted) states |= MaterialState.Focused;
-        var textStyle = entry.Style?.TextStyle?.Resolve(states)
-                        ?? (Current.TextStyle ?? DropdownMenuTheme.Of(Context).TextStyle ?? theme.TextTheme.LabelLarge);
-        var foreground = entry.Style?.ForegroundColor?.Resolve(states)
-                         ?? (entry.Enabled ? theme.OnSurfaceColor : theme.DisabledColor);
-        var iconColor = entry.Style?.IconColor?.Resolve(states) ?? foreground;
-        var background = entry.Style?.BackgroundColor?.Resolve(states)
-                         ?? (highlighted ? MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.12) : null);
-        var children = new List<Widget>();
-        if (entry.LeadingIcon is not null)
-        {
-            children.Add(new IconTheme(new IconThemeData(Color: iconColor), entry.LeadingIcon));
-            children.Add(new SizedBox(width: 12));
-        }
-        children.Add(entry.LabelWidget ?? new Text(entry.Label, maxLines: 1, overflow: TextOverflow.Ellipsis));
-        if (entry.TrailingIcon is not null)
-        {
-            children.Add(new SizedBox(width: 12));
-            children.Add(new IconTheme(new IconThemeData(Color: iconColor), entry.TrailingIcon));
-        }
-        Widget content = new DefaultTextStyle(
-            textStyle.CopyWith(color: foreground),
-            new Row(mainAxisSize: MainAxisSize.Min, children: children));
-        if (background.HasValue) content = new ColoredBox(background.Value, content);
-        return content;
-    }
-
-    private void UpdateRouteItems(bool notify = true)
-    {
-        if (_route is null) return;
-        int selected = _currentHighlight ?? FirstEnabledIndex(_filteredEntries);
-        _route.UpdateItems(BuildRouteItems(), selected < 0 ? 0 : selected, notify);
-    }
-
-    private MenuStyle ResolveMenuStyle()
-    {
-        var local = DropdownMenuTheme.Of(Context).MenuStyle;
-        var defaults = DropdownMenuTheme.Defaults(Context).MenuStyle!;
-        var widget = Current.MenuStyle;
-        return (widget ?? new MenuStyle()).Merge(local).Merge(defaults);
-    }
-
-    private bool CanRequestFocus(ThemeData theme) => Current.FocusNode?.CanRequestFocus
-        ?? Current.RequestFocusOnTap
-        ?? theme.Platform is not (TargetPlatform.Android or TargetPlatform.Fuchsia or TargetPlatform.IOS);
-
-    private void ApplyInitialSelection()
-    {
-        var entry = Current.DropdownMenuEntries.FirstOrDefault(item =>
-            EqualityComparer<T?>.Default.Equals(item.Value, Current.InitialSelection));
-        if (entry is not null) SetControllerText(entry.Label);
-    }
-
-    private void SetControllerText(string text)
-    {
-        if (_controller is null || string.Equals(_controller.Text, text, StringComparison.Ordinal)) return;
-        _suppressControllerChange = true;
-        _controller.Text = text;
-        _suppressControllerChange = false;
-    }
-
-    private void AttachController(TextEditingController? external, string initialText = "")
-    {
-        _controller = external ?? new TextEditingController(initialText);
-        _ownsController = external is null;
-        _controller.AddListener(HandleControllerChanged);
-    }
-
-    private void DetachController()
-    {
-        if (_controller is null) return;
-        _controller.RemoveListener(HandleControllerChanged);
-        if (_ownsController) _controller.Dispose();
-        _controller = null;
-        _ownsController = false;
-    }
-
-    private void HandleControllerChanged()
-    {
-        if (_suppressControllerChange || !Mounted) return;
-        SetState(() =>
-        {
-            _filteredEntries = Current.DropdownMenuEntries;
-            _searchActive = Current.EnableSearch;
-            RecomputeEntries();
-        });
-        UpdateRouteItems();
-    }
-
-    private void AttachFocusNode(FocusNode? external)
-    {
-        _focusNode = external ?? new FocusNode();
-        _ownsFocusNode = external is null;
-    }
-
-    private void DetachFocusNode()
-    {
-        if (_ownsFocusNode) _focusNode?.Dispose();
-        _focusNode = null;
-        _ownsFocusNode = false;
-    }
-
-    private void AttachTrailingFocusNode(FocusNode? external)
-    {
-        _trailingFocusNode = external ?? new FocusNode();
-        _ownsTrailingFocusNode = external is null;
-    }
-
-    private void DetachTrailingFocusNode()
-    {
-        if (_ownsTrailingFocusNode) _trailingFocusNode?.Dispose();
-        _trailingFocusNode = null;
-        _ownsTrailingFocusNode = false;
-    }
-
-    private static int FirstEnabledIndex(IReadOnlyList<DropdownMenuEntry<T>> entries)
-    {
-        for (int i = 0; i < entries.Count; i++) if (entries[i].Enabled) return i;
-        return -1;
-    }
-
-    private static Rect ResolveGlobalBounds(RenderBox renderBox)
-    {
-        Matrix4 transform = Matrix4.Identity();
-        RenderObject? child = renderBox;
-        while (child?.Parent is not null)
-        {
-            var parent = child.Parent;
-            var childOffset = child.parentData is BoxParentData data ? data.offset : default;
-            Matrix4 childTransform = Matrix4.TranslationValues(childOffset.X, childOffset.Y, 0.0);
-            if (parent is RenderTransform renderTransform) childTransform.Multiply(renderTransform.Transform);
-            MatrixUtils.MultiplyInPlace(childTransform, transform);
-            child = parent;
-        }
-        var points = new[]
-        {
-            MatrixUtils.TransformPoint(transform, new Point(0, 0)),
-            MatrixUtils.TransformPoint(transform, new Point(renderBox.Size.Width, 0)),
-            MatrixUtils.TransformPoint(transform, new Point(0, renderBox.Size.Height)),
-            MatrixUtils.TransformPoint(transform, new Point(renderBox.Size.Width, renderBox.Size.Height)),
+            Label = Current.Label,
+            HintText = Current.HintText,
+            HelperText = Current.HelperText,
+            ErrorText = Current.ErrorText,
+            PrefixIcon = Current.LeadingIcon,
+            SuffixIcon = BuildDefaultSuffixIcon(controller),
         };
-        double left = points.Min(point => point.X);
-        double top = points.Min(point => point.Y);
-        double right = points.Max(point => point.X);
-        double bottom = points.Max(point => point.Y);
-        return new Rect(left, top, right - left, bottom - top);
+    }
+
+    private Widget? BuildDefaultSuffixIcon(MenuController controller)
+    {
+        if (!Current.ShowTrailingIcon) return null;
+        bool isCollapsed = Current.InputDecorationTheme?.IsCollapsed ?? false;
+        return new Padding(
+            insets: isCollapsed ? new Thickness(0) : new Thickness(4.0),
+            child: new ExcludeSemantics(
+                excluding: IsButton,
+                child: new IconButton(
+                    focusNode: TrailingIconButtonFocusNode,
+                    isSelected: controller.IsOpen,
+                    constraints: Current.InputDecorationTheme?.SuffixIconConstraints,
+                    padding: isCollapsed ? EdgeInsetsGeometry.Zero : null,
+                    icon: Current.TrailingIcon ?? new Icon(Icons.ArrowDropDown),
+                    selectedIcon: Current.SelectedTrailingIcon ?? new Icon(Icons.ArrowDropUp),
+                    onPressed: !Current.Enabled ? null : () => HandlePressed(controller))));
     }
 }
 
+/// <summary>
+/// Flutter's `_DropdownMenuBody`: lays out every child so the field can be sized from the widest
+/// menu entry, but paints and hit-tests only the text field.
+/// </summary>
 internal sealed class DropdownMenuBody : MultiChildRenderObjectWidget
 {
     public DropdownMenuBody(double? width, IReadOnlyList<Widget> children) : base(children)
@@ -798,36 +995,133 @@ internal sealed class RenderDropdownMenuBody : RenderBox,
 
     protected override void PerformLayout()
     {
-        if (FirstChild is null)
+        BoxConstraints constraints = Constraints;
+        double maxWidth = 0.0;
+        double? maxHeight = null;
+        RenderBox? child = FirstChild;
+
+        double intrinsicWidth = Width ?? GetMaxIntrinsicWidth(constraints.MaxHeight);
+        double widthConstraint = Math.Min(intrinsicWidth, constraints.MaxWidth);
+        var innerConstraints = new BoxConstraints(
+            MaxWidth: widthConstraint,
+            MaxHeight: GetMaxIntrinsicHeight(widthConstraint));
+
+        while (child is not null)
         {
-            Size = Constraints.Constrain(new Size(Math.Max(112, Width ?? 112), 0));
-            return;
+            var childParentData = (DropdownMenuBodyParentData)child.parentData!;
+            if (ReferenceEquals(child, FirstChild))
+            {
+                // The text field's offset stays at its default; only its height feeds the size.
+                child.Layout(innerConstraints, parentUsesSize: true);
+                maxHeight ??= child.Size.Height;
+                child = childParentData.nextSibling as RenderBox;
+                continue;
+            }
+
+            child.Layout(innerConstraints, parentUsesSize: true);
+            childParentData.offset = default;
+            maxWidth = Math.Max(maxWidth, child.Size.Width);
+            maxHeight ??= child.Size.Height;
+            child = childParentData.nextSibling as RenderBox;
         }
-        var loose = new BoxConstraints(
-            MaxWidth: Constraints.HasBoundedWidth ? Constraints.MaxWidth : double.PositiveInfinity,
-            MaxHeight: Constraints.HasBoundedHeight ? Constraints.MaxHeight : double.PositiveInfinity);
-        double measuredWidth = 112.0;
-        for (var child = ChildAfter(FirstChild); child is not null; child = ChildAfter(child))
-        {
-            child.Layout(loose, parentUsesSize: true);
-            measuredWidth = Math.Max(measuredWidth, child.Size.Width);
-            ((DropdownMenuBodyParentData)child.parentData!).offset = default;
-        }
-        double width = Width ?? measuredWidth;
-        if (Constraints.HasBoundedWidth) width = Math.Min(width, Constraints.MaxWidth);
-        width = Math.Max(0, width);
-        FirstChild.Layout(new BoxConstraints(MinWidth: width, MaxWidth: width, MaxHeight: loose.MaxHeight), parentUsesSize: true);
-        ((DropdownMenuBodyParentData)FirstChild.parentData!).offset = default;
-        Size = Constraints.Constrain(new Size(width, FirstChild.Size.Height));
+
+        maxWidth = Math.Max(DropdownMenuBodyMetrics.MinimumWidth, maxWidth);
+        Size = constraints.Constrain(new Size(Width ?? maxWidth, maxHeight ?? 0.0));
     }
 
     public override void Paint(PaintingContext context, Point offset)
     {
-        if (FirstChild is not null) context.PaintChild(FirstChild, offset);
+        if (FirstChild is not { } child) return;
+        var parentData = (DropdownMenuBodyParentData)child.parentData!;
+        context.PaintChild(child, offset + parentData.offset);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position) =>
-        FirstChild?.HitTest(result, position) == true;
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        double maxWidth = 0.0;
+        double? maxHeight = null;
+        RenderBox? child = FirstChild;
+
+        double intrinsicWidth = Width ?? GetMaxIntrinsicWidth(constraints.MaxHeight);
+        double widthConstraint = Math.Min(intrinsicWidth, constraints.MaxWidth);
+        var innerConstraints = new BoxConstraints(
+            MaxWidth: widthConstraint,
+            MaxHeight: GetMaxIntrinsicHeight(widthConstraint));
+
+        while (child is not null)
+        {
+            if (ReferenceEquals(child, FirstChild))
+            {
+                Size firstChildSize = child.GetDryLayout(innerConstraints);
+                maxHeight ??= firstChildSize.Height;
+                child = ChildAfter(child);
+                continue;
+            }
+
+            Size childSize = child.GetDryLayout(innerConstraints);
+            maxWidth = Math.Max(maxWidth, childSize.Width);
+            maxHeight ??= childSize.Height;
+            child = ChildAfter(child);
+        }
+
+        maxWidth = Math.Max(DropdownMenuBodyMetrics.MinimumWidth, maxWidth);
+        return constraints.Constrain(new Size(Width ?? maxWidth, maxHeight ?? 0.0));
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height) => ComputeIntrinsicWidth(height, max: false);
+
+    protected override double ComputeMaxIntrinsicWidth(double height) => ComputeIntrinsicWidth(height, max: true);
+
+    private double ComputeIntrinsicWidth(double height, bool max)
+    {
+        RenderBox? child = FirstChild;
+        double width = 0.0;
+        while (child is not null)
+        {
+            if (ReferenceEquals(child, FirstChild))
+            {
+                child = ChildAfter(child);
+                continue;
+            }
+
+            double childWidth = max ? child.GetMaxIntrinsicWidth(height) : child.GetMinIntrinsicWidth(height);
+            // Dart accumulates the trailing suffix icon and the leading icon block, then takes the
+            // max against the widest measurement child.
+            if (ReferenceEquals(child, LastChild)) width += childWidth;
+            if (LastChild is { } last && ReferenceEquals(child, ChildBefore(last))) width += childWidth;
+            width = Math.Max(width, childWidth);
+            child = ChildAfter(child);
+        }
+
+        return Math.Max(width, DropdownMenuBodyMetrics.MinimumWidth);
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width) => ComputeIntrinsicHeight(max: false);
+
+    protected override double ComputeMaxIntrinsicHeight(double width) => ComputeIntrinsicHeight(max: true);
+
+    // Dart shadows the `width` parameter with a local `0.0` here, so the first child is measured
+    // against a zero width; ported literally.
+    private double ComputeIntrinsicHeight(bool max)
+    {
+        double width = 0.0;
+        if (FirstChild is { } child)
+        {
+            width = Math.Max(width, max ? child.GetMaxIntrinsicHeight(width) : child.GetMinIntrinsicHeight(width));
+        }
+
+        return width;
+    }
+
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        if (FirstChild is not { } child) return false;
+        var parentData = (DropdownMenuBodyParentData)child.parentData!;
+        return result.AddWithPaintOffset(
+            offset: parentData.offset,
+            position: position,
+            hitTest: (hitResult, transformed) => child.HitTest(hitResult, transformed));
+    }
 
     public override void VisitChildren(Action<RenderObject> visitor)
     {
@@ -836,15 +1130,28 @@ internal sealed class RenderDropdownMenuBody : RenderBox,
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
+        // Only the text field contributes semantics; the measurement-only copies never do.
         if (FirstChild is not null) visitor(FirstChild);
     }
 
     public void DefaultPaint(PaintingContext ctx, Point offset) => _children.DefaultPaint(ctx, offset);
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) => _children.DefaultHitTestChildren(result, position);
+
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+        _children.DefaultHitTestChildren(result, position);
+
     public void Insert(RenderBox child, RenderBox? after = null) => _children.Insert(child, after);
     public void Move(RenderBox child, RenderBox? after = null) => _children.Move(child, after);
     public void Remove(RenderBox child) => _children.Remove(child);
-    void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after) => Insert((RenderBox)child, after as RenderBox);
-    void IRenderObjectContainer.Move(RenderObject child, RenderObject? after) => Move((RenderBox)child, after as RenderBox);
+    void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after) =>
+        Insert((RenderBox)child, after as RenderBox);
+
+    void IRenderObjectContainer.Move(RenderObject child, RenderObject? after) =>
+        Move((RenderBox)child, after as RenderBox);
     void IRenderObjectContainer.Remove(RenderObject child) => Remove((RenderBox)child);
+}
+
+internal static class DropdownMenuBodyMetrics
+{
+    /// <summary>Dart's `_kMinimumWidth`.</summary>
+    public const double MinimumWidth = 112.0;
 }

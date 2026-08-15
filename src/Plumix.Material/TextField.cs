@@ -56,6 +56,9 @@ public sealed class TextField : StatefulWidget
         TextFieldCounterBuilder? buildCounter = null,
         bool canRequestFocus = true,
         FocusOnKeyEventCallback? onKeyEvent = null,
+        IReadOnlyList<TextInputFormatter>? inputFormatters = null,
+        double? cursorHeight = null,
+        string? restorationId = null,
         bool? enableInteractiveSelection = null,
         TextSelectionControls? selectionControls = null,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
@@ -110,6 +113,9 @@ public sealed class TextField : StatefulWidget
         BuildCounter = buildCounter;
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
+        InputFormatters = inputFormatters;
+        CursorHeight = cursorHeight;
+        RestorationId = restorationId;
         EnableInteractiveSelection = enableInteractiveSelection ?? (!readOnly || !obscureText);
         SelectionControls = selectionControls;
         ContextMenuBuilder = contextMenuBuilder ?? DefaultContextMenuBuilder;
@@ -152,6 +158,9 @@ public sealed class TextField : StatefulWidget
     public TextFieldCounterBuilder? BuildCounter { get; }
     public bool CanRequestFocus { get; }
     public FocusOnKeyEventCallback? OnKeyEvent { get; }
+    public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
+    public double? CursorHeight { get; }
+    public string? RestorationId { get; }
     public bool EnableInteractiveSelection { get; }
     public TextSelectionControls? SelectionControls { get; }
     public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
@@ -187,11 +196,12 @@ public sealed class TextField : StatefulWidget
                                                     ?? DefaultSpellCheckSuggestionsToolbarBuilder);
     }
 
-    private sealed class TextFieldState : State
+    private sealed class TextFieldState : RestorationState
     {
         private readonly GlobalKey<EditableText.EditableTextState> _editableTextKey =
             new GlobalObjectKey<EditableText.EditableTextState>(new object());
         private TextEditingController? _controller;
+        private RestorableTextEditingController? _restorableController;
         private FocusNode? _focusNode;
         private bool _ownsController;
         private bool _ownsFocusNode;
@@ -200,14 +210,22 @@ public sealed class TextField : StatefulWidget
         private MouseCursor? _resolvedMouseCursor;
         private TextField Current => (TextField)StateWidget;
 
+        protected override string? RestorationId => Current.RestorationId;
+
         public override void InitState()
         {
             AttachController(Current.Controller);
             AttachFocusNode(Current.FocusNode);
         }
 
+        protected override void RestoreState(RestorationBucket? oldBucket, bool initialRestore)
+        {
+            if (_restorableController is not null) RegisterForRestoration(_restorableController, "controller");
+        }
+
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
+            base.DidUpdateWidget(oldWidget);
             var old = (TextField)oldWidget;
             if (!ReferenceEquals(old.Controller, Current.Controller)) { DetachController(); AttachController(Current.Controller); }
             if (!ReferenceEquals(old.FocusNode, Current.FocusNode)) { DetachFocusNode(); AttachFocusNode(Current.FocusNode); }
@@ -215,6 +233,7 @@ public sealed class TextField : StatefulWidget
 
         public override Widget Build(BuildContext context)
         {
+            EnsureController();
             var theme = Theme.Of(context);
             DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
             TextSelectionThemeData selectionTheme = TextSelectionTheme.Of(context);
@@ -273,6 +292,8 @@ public sealed class TextField : StatefulWidget
                 enableSuggestions: Current.EnableSuggestions,
                 canRequestFocus: Current.CanRequestFocus,
                 onKeyEvent: Current.OnKeyEvent,
+                inputFormatters: Current.InputFormatters,
+                cursorHeight: Current.CursorHeight,
                 enableInteractiveSelection: Current.EnableInteractiveSelection,
                 contextMenuBuilder: Current.ContextMenuBuilder,
                 selectionControls: Current.EnableInteractiveSelection ? selectionControls : null,
@@ -352,17 +373,55 @@ public sealed class TextField : StatefulWidget
             EndHover();
             DetachController();
             DetachFocusNode();
+            base.Dispose();
         }
 
         private void AttachController(TextEditingController? external)
         {
-            _controller = external ?? new TextEditingController(); _ownsController = external is null;
+            if (external is null)
+            {
+                // Dart's `_TextFieldState._createLocalController`: the owned controller is restorable
+                // so `restorationId` survives a state restoration. Its value only becomes readable
+                // once `RestoreState` has registered it, so it is resolved lazily in `Build`.
+                _restorableController = new RestorableTextEditingController();
+                if (!RestorePending) RegisterForRestoration(_restorableController, "controller");
+                _ownsController = true;
+                return;
+            }
+
+            _controller = external;
+            _ownsController = false;
+            _controller.AddListener(Changed);
+        }
+
+        /// <summary>Binds to the restorable controller's current value, re-binding after a restore.</summary>
+        private void EnsureController()
+        {
+            if (_restorableController is null) return;
+            TextEditingController restored = _restorableController.Value;
+            if (ReferenceEquals(_controller, restored)) return;
+            _controller?.RemoveListener(Changed);
+            _controller = restored;
             _controller.AddListener(Changed);
         }
         private void DetachController()
         {
-            if (_controller is null) return; _controller.RemoveListener(Changed);
-            if (_ownsController) _controller.Dispose(); _controller = null; _ownsController = false;
+            _controller?.RemoveListener(Changed);
+            if (_ownsController)
+            {
+                if (_restorableController is not null)
+                {
+                    if (_restorableController.RegisteredRestorationId is not null)
+                        UnregisterFromRestoration(_restorableController);
+                    _restorableController.Dispose();
+                    _restorableController = null;
+                }
+                else
+                {
+                    _controller?.Dispose();
+                }
+            }
+            _controller = null; _ownsController = false;
         }
         private void AttachFocusNode(FocusNode? external)
         {

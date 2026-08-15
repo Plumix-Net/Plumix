@@ -1,21 +1,26 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
-using Plumix.Rendering;
-using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/dropdown_menu_theme.dart
 
+/// <summary>
+/// Overrides the defaults of <see cref="DropdownMenu{T}"/> descendants.
+/// </summary>
 public sealed partial record DropdownMenuThemeData(
     TextStyle? TextStyle = null,
     InputDecorationThemeData? InputDecorationTheme = null,
     MenuStyle? MenuStyle = null,
     Color? DisabledColor = null);
 
-public sealed class DropdownMenuTheme : InheritedWidget
+/// <summary>
+/// An <see cref="InheritedTheme"/> that overrides the default properties of the
+/// <see cref="DropdownMenu{T}"/> widgets below it.
+/// </summary>
+public sealed class DropdownMenuTheme : InheritedTheme
 {
     public DropdownMenuTheme(DropdownMenuThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -28,6 +33,8 @@ public sealed class DropdownMenuTheme : InheritedWidget
 
     public override Widget Build(BuildContext context) => Child;
 
+    public override Widget Wrap(BuildContext context, Widget child) => new DropdownMenuTheme(Data, child);
+
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(Data, ((DropdownMenuTheme)oldWidget).Data);
 
@@ -37,26 +44,22 @@ public sealed class DropdownMenuTheme : InheritedWidget
     public static DropdownMenuThemeData Of(BuildContext context) =>
         MaybeOf(context) ?? Theme.Of(context).DropdownMenuTheme;
 
+    /// <summary>
+    /// Flutter's `_DropdownMenuDefaultsM3`. It deliberately leaves the menu surface properties
+    /// (background/shadow/surface tint/elevation/shape/padding) unset so they resolve through
+    /// <see cref="MenuAnchor"/>'s own `_MenuDefaultsM3`, exactly as in Dart.
+    /// </summary>
     internal static DropdownMenuThemeData Defaults(BuildContext context)
     {
         var theme = Theme.Of(context);
         return new DropdownMenuThemeData(
             TextStyle: theme.TextTheme.BodyLarge,
-            InputDecorationTheme: new InputDecorationThemeData(
-                border: new OutlineInputBorder()),
+            InputDecorationTheme: new InputDecorationThemeData(border: new OutlineInputBorder()),
             MenuStyle: new MenuStyle(
-                backgroundColor: MaterialStateProperty<Color?>.All(theme.ColorScheme.SurfaceContainer),
-                shadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
-                surfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                elevation: MaterialStateProperty<double?>.All(3),
-                padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
-                    EdgeInsetsGeometry.Symmetric(vertical: 8)),
-                minimumSize: MaterialStateProperty<Size?>.All(new Size(112, 0)),
+                minimumSize: MaterialStateProperty<Size?>.All(new Size(112.0, 0.0)),
                 maximumSize: MaterialStateProperty<Size?>.All(
                     new Size(double.PositiveInfinity, double.PositiveInfinity)),
-                shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(
-                    borderRadius: Plumix.Rendering.BorderRadius.Circular(4))),
-                visualDensity: Plumix.Material.VisualDensity.Standard),
-            DisabledColor: MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38));
+                visualDensity: VisualDensity.Standard),
+            DisabledColor: MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38));
     }
 }

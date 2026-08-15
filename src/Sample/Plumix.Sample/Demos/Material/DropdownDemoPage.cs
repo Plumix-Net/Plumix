@@ -29,6 +29,7 @@ public sealed class DropdownDemoPage : StatefulWidget
         private string _formStatus = "not validated";
         private string? _modernValue = "two";
         private string _modernStatus = "idle";
+        private string? _selectOnlyValue = "one";
         private string? _modernFormValue;
         private string _modernFormStatus = "not validated";
         private string _anchorStatus = "closed";
@@ -149,6 +150,23 @@ public sealed class DropdownDemoPage : StatefulWidget
                                 }))),
                         new Text($"Modern value: {_modernValue ?? "none"}", fontSize: 13),
                         new Text($"Modern status: {_modernStatus}", fontSize: 13),
+                        new Text(
+                            "Select-only variant: read-only field, no trailing icon, and a selection"
+                            + " that keeps the menu open.",
+                            fontSize: 14,
+                            color: Colors.DimGray),
+                        new Align(
+                            alignment: Alignment.CenterLeft,
+                            child: new DropdownMenu<string>(
+                                dropdownMenuEntries: BuildModernEntries(),
+                                initialSelection: _selectOnlyValue,
+                                width: 320,
+                                selectOnly: true,
+                                showTrailingIcon: false,
+                                closeBehavior: DropdownMenuCloseBehavior.None,
+                                label: new Text("Select only"),
+                                onSelected: value => SetState(() => _selectOnlyValue = value))),
+                        new Text($"Select-only value: {_selectOnlyValue ?? "none"}", fontSize: 13),
                         new Divider(),
                         new Text("MenuAnchor + MenuItemButton", fontSize: 18),
                         new Text(

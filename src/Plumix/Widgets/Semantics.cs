@@ -44,6 +44,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Action? onTap = null,
         Action? onLongPress = null,
         Action? onDismiss = null,
+        Action? onExpand = null,
+        Action? onCollapse = null,
         Action? onIncrease = null,
         Action? onDecrease = null,
         IReadOnlyDictionary<CustomSemanticsAction, Action>? customSemanticsActions = null,
@@ -94,6 +96,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         OnTap = onTap;
         OnLongPress = onLongPress;
         OnDismiss = onDismiss;
+        OnExpand = onExpand;
+        OnCollapse = onCollapse;
         OnIncrease = onIncrease;
         OnDecrease = onDecrease;
         CustomSemanticsActions = customSemanticsActions;
@@ -141,6 +145,12 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public Action? OnLongPress { get; }
 
     public Action? OnDismiss { get; }
+
+    /// <summary>Handler for <c>SemanticsAction.expand</c>, invoked to expand a collapsed node.</summary>
+    public Action? OnExpand { get; }
+
+    /// <summary>Handler for <c>SemanticsAction.collapse</c>, invoked to collapse an expanded node.</summary>
+    public Action? OnCollapse { get; }
 
     public Action? OnIncrease { get; }
 
@@ -210,6 +220,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             onTap: OnTap,
             onLongPress: OnLongPress,
             onDismiss: OnDismiss,
+            onExpand: OnExpand,
+            onCollapse: OnCollapse,
             onIncrease: OnIncrease,
             onDecrease: OnDecrease,
             customSemanticsActions: CustomSemanticsActions,
@@ -243,6 +255,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.OnTap = OnTap;
         semantics.OnLongPress = OnLongPress;
         semantics.OnDismiss = OnDismiss;
+        semantics.OnExpand = OnExpand;
+        semantics.OnCollapse = OnCollapse;
         semantics.OnIncrease = OnIncrease;
         semantics.OnDecrease = OnDecrease;
         semantics.CustomSemanticsActions = CustomSemanticsActions;

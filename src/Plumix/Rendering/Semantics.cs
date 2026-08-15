@@ -114,6 +114,12 @@ public enum SemanticsActions
     /// Move a scrollable to an absolute offset. The action argument carries the target offset.
     /// </summary>
     ScrollToOffset = 1 << 11,
+
+    /// <summary>Expand a collapsed, expandable node (Flutter's <c>SemanticsAction.expand</c>).</summary>
+    Expand = 1 << 12,
+
+    /// <summary>Collapse an expanded node (Flutter's <c>SemanticsAction.collapse</c>).</summary>
+    Collapse = 1 << 13,
 }
 
 /// <summary>

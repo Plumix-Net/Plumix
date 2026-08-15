@@ -21,6 +21,7 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   String _formStatus = 'not validated';
   String? _modernValue = 'two';
   String _modernStatus = 'idle';
+  String? _selectOnlyValue = 'one';
   String? _modernFormValue;
   String _modernFormStatus = 'not validated';
   String _anchorStatus = 'closed';
@@ -161,6 +162,28 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           ),
           Text(
             'Modern status: $_modernStatus',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Text(
+            'Select-only variant: read-only field, no trailing icon, and a selection that keeps the menu open.',
+            style: TextStyle(fontSize: 14, color: Colors.black54),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: DropdownMenu<String>(
+              dropdownMenuEntries: _buildModernEntries(),
+              initialSelection: _selectOnlyValue,
+              width: 320,
+              selectOnly: true,
+              showTrailingIcon: false,
+              closeBehavior: DropdownMenuCloseBehavior.none,
+              label: const Text('Select only'),
+              onSelected: (String? value) =>
+                  setState(() => _selectOnlyValue = value),
+            ),
+          ),
+          Text(
+            'Select-only value: ${_selectOnlyValue ?? 'none'}',
             style: const TextStyle(fontSize: 13),
           ),
           const Divider(),

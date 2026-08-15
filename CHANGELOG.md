@@ -1,5 +1,23 @@
 # Changelog
 
+- Breaking: closed the `DropdownMenu` family (`DropdownMenu`/`DropdownMenuEntry`/
+  `DropdownMenuThemeData`/`DropdownMenuFormField`). The control is now a strict port built on
+  `MenuAnchor`/`MenuItemButton` instead of the legacy `DropdownRoute`: every entry is built twice
+  (once keyed in the menu, once unkeyed inside `_DropdownMenuBody` for measurement), the render
+  object matches Dart's layout/dry-layout/intrinsics/hit-test/semantics rules, and the anchor is
+  wired with `reservedPadding: zero` and `crossAxisUnconstrained: false`. `_DropdownMenuDefaultsM3`
+  now sets only `textStyle`, `menuStyle` (min/max size + standard density) and an
+  `OutlineInputBorder` decoration theme, so the menu surface resolves through `MenuAnchor`'s own M3
+  defaults. New API: `keyboardType`, `textInputAction`, `inputFormatters`, `selectOnly` shortcuts,
+  and `expandedInsets` is now `EdgeInsetsGeometry`. `DropdownMenuFormField` gained restoration
+  (`UnmanagedRestorationScope` + `RestorableTextEditingController`) and Dart's exact
+  `didChange`/`reset` ordering. Closes the `DropdownMenu` divergence row.
+- Primitives landed for that port: `TextInputFormatter`/`FilteringTextInputFormatter`/
+  `LengthLimitingTextInputFormatter` (`src/Plumix/UI/TextFormatter.cs`) applied to every user edit in
+  `EditableText`; `EditableText.CursorHeight`; `TextField.InputFormatters`/`CursorHeight`/
+  `RestorationId`; and `SemanticsActions.Expand`/`Collapse` with `Semantics(onExpand:, onCollapse:)`.
+  `EditableText` no longer swallows Escape when there is no composing region, so it reaches
+  `DismissIntent`.
 - Breaking: closed the menus (`MenuAnchor`/`MenuBar`/`SubmenuButton`/`MenuItemButton`) token/theme
   pass. `MenuStyle` moved out of `DropdownMenuTheme.cs` into its own `MenuStyle.cs` and is now
   Flutter's subclassable class (13 virtual fields in Dart's declaration order, `CopyWith`, `Merge`,

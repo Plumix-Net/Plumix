@@ -3062,6 +3062,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private Action? _onTap;
     private Action? _onLongPress;
     private Action? _onDismiss;
+    private Action? _onExpand;
+    private Action? _onCollapse;
     private Action? _onIncrease;
     private Action? _onDecrease;
     private IReadOnlyDictionary<CustomSemanticsAction, Action>? _customSemanticsActions;
@@ -3091,6 +3093,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         Action? onTap = null,
         Action? onLongPress = null,
         Action? onDismiss = null,
+        Action? onExpand = null,
+        Action? onCollapse = null,
         Action? onIncrease = null,
         Action? onDecrease = null,
         IReadOnlyDictionary<CustomSemanticsAction, Action>? customSemanticsActions = null,
@@ -3119,6 +3123,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _onTap = onTap;
         _onLongPress = onLongPress;
         _onDismiss = onDismiss;
+        _onExpand = onExpand;
+        _onCollapse = onCollapse;
         _onIncrease = onIncrease;
         _onDecrease = onDecrease;
         _customSemanticsActions = customSemanticsActions;
@@ -3349,6 +3355,28 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    public Action? OnExpand
+    {
+        get => _onExpand;
+        set
+        {
+            if (ReferenceEquals(_onExpand, value)) return;
+            _onExpand = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public Action? OnCollapse
+    {
+        get => _onCollapse;
+        set
+        {
+            if (ReferenceEquals(_onCollapse, value)) return;
+            _onCollapse = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     public Action? OnFocus
     {
         get => _onFocus;
@@ -3510,6 +3538,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _onTap is null
             && _onLongPress is null
             && _onDismiss is null
+            && _onExpand is null
+            && _onCollapse is null
             && _onIncrease is null
             && _onDecrease is null
             && _customSemanticsActions is null
@@ -3585,6 +3615,14 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (_onDismiss is not null)
         {
             configuration.AddActionHandler(SemanticsActions.Dismiss, _onDismiss);
+        }
+        if (_onExpand is not null)
+        {
+            configuration.AddActionHandler(SemanticsActions.Expand, _onExpand);
+        }
+        if (_onCollapse is not null)
+        {
+            configuration.AddActionHandler(SemanticsActions.Collapse, _onCollapse);
         }
         if (_onIncrease is not null)
         {

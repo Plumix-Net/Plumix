@@ -661,6 +661,8 @@ public sealed class EditableText : StatefulWidget
         bool enableSuggestions = true,
         bool canRequestFocus = true,
         FocusOnKeyEventCallback? onKeyEvent = null,
+        IReadOnlyList<TextInputFormatter>? inputFormatters = null,
+        double? cursorHeight = null,
         bool enableInteractiveSelection = true,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
@@ -711,6 +713,8 @@ public sealed class EditableText : StatefulWidget
         EnableSuggestions = enableSuggestions;
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
+        InputFormatters = inputFormatters;
+        CursorHeight = cursorHeight;
         EnableInteractiveSelection = enableInteractiveSelection;
         ContextMenuBuilder = contextMenuBuilder;
         MagnifierConfiguration = magnifierConfiguration ?? TextMagnifierConfiguration.Disabled;
@@ -775,6 +779,12 @@ public sealed class EditableText : StatefulWidget
     public bool EnableSuggestions { get; }
     public bool CanRequestFocus { get; }
     public FocusOnKeyEventCallback? OnKeyEvent { get; }
+
+    /// <summary>Formatters applied, in order, to every user-driven edit.</summary>
+    public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
+
+    /// <summary>Overrides the caret height; <c>null</c> uses the preferred line height.</summary>
+    public double? CursorHeight { get; }
     public bool EnableInteractiveSelection { get; }
     public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
     public TextMagnifierConfiguration MagnifierConfiguration { get; }
@@ -952,6 +962,7 @@ public sealed class EditableText : StatefulWidget
                         multiline: Widget.Multiline,
                         selectionColor: Widget.SelectionColor ?? selectionStyle.SelectionColor ?? default,
                         cursorColor: Widget.CursorColor ?? selectionStyle.CursorColor ?? Widget.TextColor,
+                        cursorHeight: Widget.CursorHeight,
                         showCursor: _focusNode.HasFocus && !showPlaceholder,
                         suggestionSpans: _spellCheckResults?.SuggestionSpans,
                         misspelledColor: Widget.SpellCheckConfiguration?.MisspelledTextStyle?.Color ?? Colors.Red,
@@ -1027,12 +1038,36 @@ public sealed class EditableText : StatefulWidget
                 _pendingSelectionCause = cause.Value;
             }
 
+            TextEditingValue oldValue = controller.Value;
             bool textChanged = !string.Equals(controller.Text, value.Text, StringComparison.Ordinal);
             controller.Value = value;
             _pendingSelectionCause = null;
             if (textChanged)
             {
+                ApplyInputFormatters(oldValue);
                 Widget.OnChanged?.Invoke(controller.Text);
+            }
+        }
+
+        /// <summary>
+        /// Runs <see cref="EditableText.InputFormatters"/> over the value the user just produced.
+        /// Dart funnels every user edit through <c>_formatAndSetValue</c>; Plumix mutates the
+        /// controller in place, so the formatters run right after the mutation instead.
+        /// </summary>
+        private void ApplyInputFormatters(TextEditingValue oldValue)
+        {
+            IReadOnlyList<TextInputFormatter>? formatters = Widget.InputFormatters;
+            if (formatters is null || formatters.Count == 0) return;
+            TextEditingController controller = _controller!;
+            TextEditingValue value = controller.Value;
+            foreach (TextInputFormatter formatter in formatters)
+            {
+                value = formatter.FormatEditUpdate(oldValue, value);
+            }
+
+            if (!value.Equals(controller.Value))
+            {
+                controller.Value = value;
             }
         }
 
@@ -1261,10 +1296,12 @@ public sealed class EditableText : StatefulWidget
             TextEditingController controller = _controller!;
             if (!Widget.ReadOnly && !controller.Selection.IsCollapsed)
             {
+                TextEditingValue oldValue = controller.Value;
                 TextClipboard.SetText(controller.SelectedText);
                 _pendingSelectionCause = SelectionChangedCause.Toolbar;
                 if (controller.DeleteBackward())
                 {
+                    ApplyInputFormatters(oldValue);
                     Widget.OnChanged?.Invoke(controller.Text);
                 }
                 _pendingSelectionCause = null;
@@ -1288,9 +1325,11 @@ public sealed class EditableText : StatefulWidget
             if (!Widget.ReadOnly && !string.IsNullOrEmpty(value))
             {
                 TextEditingController controller = _controller!;
+                TextEditingValue oldValue = controller.Value;
                 _pendingSelectionCause = SelectionChangedCause.Toolbar;
                 if (controller.Insert(LimitInsertion(value)))
                 {
+                    ApplyInputFormatters(oldValue);
                     Widget.OnChanged?.Invoke(controller.Text);
                 }
                 _pendingSelectionCause = null;
@@ -1328,6 +1367,7 @@ public sealed class EditableText : StatefulWidget
             }
 
             var controller = _controller!;
+            TextEditingValue valueBeforeKey = controller.Value;
             LogicalKeyboardKey key = @event.LogicalKey;
             bool textChanged = false;
             bool keepVerticalNavigationX = false;
@@ -1367,6 +1407,7 @@ public sealed class EditableText : StatefulWidget
                     textChanged = !Widget.ReadOnly && controller.DeleteBackward();
                     if (textChanged)
                     {
+                        ApplyInputFormatters(valueBeforeKey);
                         Widget.OnChanged?.Invoke(controller.Text);
                     }
                 }
@@ -1387,6 +1428,7 @@ public sealed class EditableText : StatefulWidget
                         : controller.Insert(pasteText);
                     if (textChanged)
                     {
+                        ApplyInputFormatters(valueBeforeKey);
                         Widget.OnChanged?.Invoke(controller.Text);
                     }
                 }
@@ -1468,7 +1510,9 @@ public sealed class EditableText : StatefulWidget
             }
             else if (key.Equals(LogicalKeyboardKey.Escape))
             {
-                _ = controller.ClearComposing();
+                // Dart's `EditableText` only cancels an in-flight composing region on escape and
+                // otherwise lets the key bubble up to `DismissIntent`, which menus and dialogs use.
+                if (!controller.ClearComposing()) return KeyEventResult.Ignored;
             }
             else
             {
@@ -1483,6 +1527,7 @@ public sealed class EditableText : StatefulWidget
 
             if (textChanged)
             {
+                ApplyInputFormatters(valueBeforeKey);
                 Widget.OnChanged?.Invoke(controller.Text);
             }
 
@@ -1507,13 +1552,15 @@ public sealed class EditableText : StatefulWidget
 
             normalizedInput = LimitInsertion(normalizedInput);
             if (string.IsNullOrEmpty(normalizedInput)) return false;
-            bool changed = _controller!.Composing.HasValue
+            TextEditingValue oldValue = _controller!.Value;
+            bool changed = _controller.Composing.HasValue
                 ? _controller.CommitComposing(normalizedInput)
                 : _controller.Insert(normalizedInput);
             if (changed)
             {
                 _verticalNavigationX = null;
                 _verticalNavigationColumn = null;
+                ApplyInputFormatters(oldValue);
                 Widget.OnChanged?.Invoke(_controller.Text);
             }
 
@@ -1528,13 +1575,15 @@ public sealed class EditableText : StatefulWidget
             }
 
             string limitedText = LimitInsertion(text);
+            TextEditingValue oldValue = _controller!.Value;
             bool changed = isCommit
-                ? _controller!.CommitComposing(limitedText)
-                : _controller!.SetComposing(limitedText);
+                ? _controller.CommitComposing(limitedText)
+                : _controller.SetComposing(limitedText);
             if (changed)
             {
                 _verticalNavigationX = null;
                 _verticalNavigationColumn = null;
+                ApplyInputFormatters(oldValue);
                 Widget.OnChanged?.Invoke(_controller.Text);
             }
 
@@ -1933,6 +1982,7 @@ internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
         bool multiline,
         Color selectionColor,
         Color cursorColor,
+        double? cursorHeight,
         bool showCursor,
         IReadOnlyList<SuggestionSpan>? suggestionSpans,
         Color misspelledColor,
@@ -1956,6 +2006,7 @@ internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
         Multiline = multiline;
         SelectionColor = selectionColor;
         CursorColor = cursorColor;
+        CursorHeight = cursorHeight;
         ShowCursor = showCursor;
         SuggestionSpans = suggestionSpans ?? [];
         MisspelledColor = misspelledColor;
@@ -1979,6 +2030,7 @@ internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
     public bool Multiline { get; }
     public Color SelectionColor { get; }
     public Color CursorColor { get; }
+    public double? CursorHeight { get; }
     public bool ShowCursor { get; }
     public IReadOnlyList<SuggestionSpan> SuggestionSpans { get; }
     public Color MisspelledColor { get; }
@@ -2016,6 +2068,7 @@ internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
         render.MaxLines = Multiline ? null : 1;
         render.SelectionColor = SelectionColor;
         render.CursorColor = CursorColor;
+        render.CursorHeight = CursorHeight;
         render.ShowCursor = ShowCursor;
         render.SuggestionSpans = SuggestionSpans;
         render.MisspelledColor = MisspelledColor;
