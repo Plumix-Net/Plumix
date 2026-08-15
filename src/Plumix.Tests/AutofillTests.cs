@@ -111,7 +111,7 @@ public sealed class AutofillTests : IDisposable
         Dictionary<string, object?> json = new TextInputConfiguration().ToJson();
 
         Assert.False(json.ContainsKey("autofill"));
-        Assert.Equal(0, json["viewId"]);
+        Assert.Null(json["viewId"]);
         Assert.Equal(false, json["readOnly"]);
         Assert.Equal("1", json["smartDashesType"]);
         Assert.Equal("TextInputAction.done", json["inputAction"]);
@@ -230,14 +230,18 @@ public sealed class AutofillTests : IDisposable
         UI.TextInput.FinishAutofillContext();
         UI.TextInput.FinishAutofillContext(shouldSave: false);
 
+        // The platform control stays registered while a custom control is installed, so both the
+        // custom control and the channel see every request (Dart's `_inputControls` set).
         Assert.Equal([true, false], control.FinishCalls);
-        Assert.Empty(_log);
+        Assert.Equal(2, _log.Count);
 
+        _log.Clear();
         UI.TextInput.RestorePlatformInputControl();
         UI.TextInput.FinishAutofillContext(shouldSave: false);
         MethodCall call = Assert.Single(_log);
         Assert.Equal("TextInput.finishAutofillContext", call.Method);
         Assert.Equal(false, call.Arguments);
+        Assert.Equal([true, false], control.FinishCalls);
     }
 
     // -------------------------------------------------------------- AutofillGroup
@@ -508,36 +512,36 @@ public sealed class AutofillTests : IDisposable
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
 
         Assert.Equal(
-            TextInputKeyboardType.Text,
+            TextInputType.Text,
             EditableText.InferKeyboardType(null, multiline: false));
         Assert.Equal(
-            TextInputKeyboardType.Multiline,
+            TextInputType.Multiline,
             EditableText.InferKeyboardType([], multiline: true));
         Assert.Equal(
-            TextInputKeyboardType.EmailAddress,
+            TextInputType.EmailAddress,
             EditableText.InferKeyboardType([AutofillHints.Email], multiline: false));
         Assert.Equal(
-            TextInputKeyboardType.Phone,
+            TextInputType.Phone,
             EditableText.InferKeyboardType([AutofillHints.TelephoneNumber], multiline: false));
         Assert.Equal(
-            TextInputKeyboardType.StreetAddress,
+            TextInputType.StreetAddress,
             EditableText.InferKeyboardType([AutofillHints.FullStreetAddress], multiline: false));
         Assert.Equal(
-            TextInputKeyboardType.Datetime,
+            TextInputType.Datetime,
             EditableText.InferKeyboardType([AutofillHints.Birthday], multiline: false));
         Assert.Equal(
-            TextInputKeyboardType.Name,
+            TextInputType.Name,
             EditableText.InferKeyboardType([AutofillHints.GivenName], multiline: false));
         Assert.Equal(
-            TextInputKeyboardType.Url,
+            TextInputType.Url,
             EditableText.InferKeyboardType([AutofillHints.Impp], multiline: false));
         Assert.Equal(
-            TextInputKeyboardType.Text,
+            TextInputType.Text,
             EditableText.InferKeyboardType(["not-a-hint"], multiline: false));
 
         // A multiline field ignores the hint table on non-Apple platforms.
         Assert.Equal(
-            TextInputKeyboardType.Multiline,
+            TextInputType.Multiline,
             EditableText.InferKeyboardType([AutofillHints.Email], multiline: true));
     }
 
@@ -547,23 +551,23 @@ public sealed class AutofillTests : IDisposable
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
 
         Assert.Equal(
-            TextInputKeyboardType.Name,
+            TextInputType.Name,
             EditableText.InferKeyboardType([AutofillHints.TelephoneNumber], multiline: false));
         Assert.Equal(
-            TextInputKeyboardType.Number,
+            TextInputType.Number,
             EditableText.InferKeyboardType([AutofillHints.OneTimeCode], multiline: false));
         Assert.Equal(
-            TextInputKeyboardType.Text,
+            TextInputType.Text,
             EditableText.InferKeyboardType([AutofillHints.Password], multiline: false));
 
         // The Apple table wins over the multiline short circuit.
         Assert.Equal(
-            TextInputKeyboardType.Name,
+            TextInputType.Name,
             EditableText.InferKeyboardType([AutofillHints.GivenName], multiline: true));
 
         // A hint outside the Apple table falls through to the general one.
         Assert.Equal(
-            TextInputKeyboardType.Datetime,
+            TextInputType.Datetime,
             EditableText.InferKeyboardType([AutofillHints.Birthday], multiline: false));
     }
 
@@ -641,6 +645,21 @@ public sealed class AutofillTests : IDisposable
         }
 
         public void ConnectionClosed()
+        {
+        }
+
+        public TextEditingValue? CurrentTextEditingValue =>
+            TextInputConfiguration.AutofillConfiguration.CurrentEditingValue;
+
+        public void PerformPrivateCommand(string action, System.Collections.IDictionary data)
+        {
+        }
+
+        public void UpdateFloatingCursor(RawFloatingCursorPoint point)
+        {
+        }
+
+        public void ShowAutocorrectionPromptRect(int start, int end)
         {
         }
     }

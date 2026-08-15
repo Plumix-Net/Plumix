@@ -49,6 +49,10 @@ public sealed record Locale
         }
     }
 
+    /// <summary>The BCP-47 language tag of this locale.</summary>
+    /// <remarks>Dart's <c>Locale.toLanguageTag()</c>; identical to <see cref="Name"/>.</remarks>
+    public string ToLanguageTag() => Name;
+
     public static Locale FromCultureInfo(CultureInfo culture)
     {
         ArgumentNullException.ThrowIfNull(culture);

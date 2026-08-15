@@ -11,7 +11,11 @@ using Plumix.UI;
 
 namespace Plumix.Widgets;
 
-public readonly record struct TextSelection(int BaseOffset, int ExtentOffset)
+public readonly record struct TextSelection(
+    int BaseOffset,
+    int ExtentOffset,
+    TextAffinity Affinity = TextAffinity.Downstream,
+    bool IsDirectional = false)
 {
     public int Start => Math.Min(BaseOffset, ExtentOffset);
 
@@ -19,16 +23,75 @@ public readonly record struct TextSelection(int BaseOffset, int ExtentOffset)
 
     public bool IsCollapsed => BaseOffset == ExtentOffset;
 
-    public static TextSelection Collapsed(int offset)
+    /// <summary>Whether this selection represents a valid position in the text.</summary>
+    public bool IsValid => Start >= 0 && End >= 0;
+
+    public static TextSelection Collapsed(int offset, TextAffinity affinity = TextAffinity.Downstream)
     {
-        return new TextSelection(offset, offset);
+        return new TextSelection(offset, offset, affinity);
     }
+
+    /// <summary>A selection that is not in the text.</summary>
+    public static TextSelection Invalid => new(-1, -1);
+
+    /// <summary>This selection viewed as a text range.</summary>
+    /// <remarks>Dart's <c>TextSelection extends TextRange</c>; a C# record struct cannot derive from
+    /// another, so the conversion is explicit.</remarks>
+    public TextRange AsTextRange() => new(Start, End);
 
     internal TextSelection Clamp(int textLength)
     {
         int clampedBaseOffset = Math.Clamp(BaseOffset, 0, textLength);
         int clampedExtentOffset = Math.Clamp(ExtentOffset, 0, textLength);
-        return new TextSelection(clampedBaseOffset, clampedExtentOffset);
+        return new TextSelection(clampedBaseOffset, clampedExtentOffset, Affinity, IsDirectional);
+    }
+
+    /// <inheritdoc/>
+    /// <remarks>Dart's rules: every invalid selection is the same selection, and the affinity only
+    /// participates while the selection is collapsed.</remarks>
+    public bool Equals(TextSelection other)
+    {
+        if (!IsValid)
+        {
+            return !other.IsValid;
+        }
+
+        return other.BaseOffset == BaseOffset
+               && other.ExtentOffset == ExtentOffset
+               && (!IsCollapsed || other.Affinity == Affinity)
+               && other.IsDirectional == IsDirectional;
+    }
+
+    /// <inheritdoc/>
+    public override int GetHashCode()
+    {
+        if (!IsValid)
+        {
+            return HashCode.Combine(-1, -1, TextAffinity.Downstream);
+        }
+
+        return HashCode.Combine(
+            BaseOffset,
+            ExtentOffset,
+            IsCollapsed ? Affinity : TextAffinity.Downstream,
+            IsDirectional);
+    }
+
+    /// <inheritdoc/>
+    public override string ToString()
+    {
+        if (!IsValid)
+        {
+            return "TextSelection.invalid";
+        }
+
+        string affinity = $"TextAffinity.{char.ToLowerInvariant(Affinity.ToString()[0])}{Affinity.ToString()[1..]}";
+        string directional = IsDirectional ? "true" : "false";
+        return IsCollapsed
+            ? $"TextSelection.collapsed(offset: {BaseOffset}, affinity: {affinity}, "
+              + $"isDirectional: {directional})"
+            : $"TextSelection(baseOffset: {BaseOffset}, extentOffset: {ExtentOffset}, "
+              + $"isDirectional: {directional})";
     }
 }
 
@@ -68,10 +131,22 @@ public readonly record struct TextRange(int Start, int End)
             Start: Math.Clamp(Start, 0, textLength),
             End: Math.Clamp(End, 0, textLength));
     }
+
+    /// <inheritdoc/>
+    public override string ToString() => $"TextRange(start: {Start}, end: {End})";
 }
 
 public readonly record struct TextEditingValue
 {
+    /// <summary>Creates an empty editing value.</summary>
+    /// <remarks>A struct's implicit parameterless constructor wins over one whose parameters are all
+    /// optional, so without this <c>new TextEditingValue()</c> would zero-initialize instead of
+    /// running the defaulting rules.</remarks>
+    public TextEditingValue()
+        : this(string.Empty, null, null)
+    {
+    }
+
     public TextEditingValue(
         string text = "",
         TextSelection? selection = null,
@@ -89,20 +164,76 @@ public readonly record struct TextEditingValue
 
     public TextRange? Composing { get; }
 
+    /// <summary>Whether the composing region is a valid range within the text.</summary>
+    public bool IsComposingRangeValid =>
+        Composing is { IsValid: true, IsNormalized: true } composing && composing.End <= Text.Length;
+
+    /// <summary>Creates a copy of this value with the given fields replaced.</summary>
+    public TextEditingValue CopyWith(
+        string? text = null,
+        TextSelection? selection = null,
+        TextRange? composing = null)
+    {
+        return new TextEditingValue(
+            text: text ?? Text,
+            selection: selection ?? Selection,
+            composing: composing ?? Composing);
+    }
+
+    /// <summary>
+    /// Returns a value with the text in <paramref name="replacementRange"/> replaced by
+    /// <paramref name="replacementString"/>, with the selection and composing region adjusted.
+    /// </summary>
+    public TextEditingValue Replaced(TextRange replacementRange, string replacementString)
+    {
+        if (!replacementRange.IsValid)
+        {
+            return this;
+        }
+
+        string newText = string.Concat(
+            Text[..replacementRange.Start],
+            replacementString,
+            Text[replacementRange.End..]);
+        if (replacementRange.End - replacementRange.Start == replacementString.Length)
+        {
+            return CopyWith(text: newText);
+        }
+
+        int AdjustIndex(int originalIndex)
+        {
+            int replacedLength =
+                originalIndex <= replacementRange.Start && originalIndex < replacementRange.End
+                    ? 0
+                    : replacementString.Length;
+            int removedLength =
+                Math.Clamp(originalIndex, replacementRange.Start, replacementRange.End) - replacementRange.Start;
+            return originalIndex + replacedLength - removedLength;
+        }
+
+        return new TextEditingValue(
+            text: newText,
+            selection: new TextSelection(
+                BaseOffset: AdjustIndex(Selection.BaseOffset),
+                ExtentOffset: AdjustIndex(Selection.ExtentOffset)),
+            composing: Composing is { } composing
+                ? new TextRange(AdjustIndex(composing.Start), AdjustIndex(composing.End))
+                : null);
+    }
+
     /// <summary>The JSON payload the host exchanges with the framework.</summary>
-    /// <remarks>
-    /// Plumix's value carries no affinity or directionality, so <c>selectionAffinity</c> and
-    /// <c>selectionIsDirectional</c> are emitted with Dart's defaults.
-    /// </remarks>
     public Dictionary<string, object?> ToJson()
     {
+        string affinity = Selection.Affinity == TextAffinity.Upstream
+            ? "TextAffinity.upstream"
+            : "TextAffinity.downstream";
         return new Dictionary<string, object?>
         {
             ["text"] = Text,
             ["selectionBase"] = Selection.BaseOffset,
             ["selectionExtent"] = Selection.ExtentOffset,
-            ["selectionAffinity"] = "TextAffinity.downstream",
-            ["selectionIsDirectional"] = false,
+            ["selectionAffinity"] = affinity,
+            ["selectionIsDirectional"] = Selection.IsDirectional,
             ["composingBase"] = Composing?.Start ?? -1,
             ["composingExtent"] = Composing?.End ?? -1,
         };
@@ -117,13 +248,36 @@ public readonly record struct TextEditingValue
         int selectionExtent = ReadInt(json, "selectionExtent", -1);
         int composingBase = ReadInt(json, "composingBase", -1);
         int composingExtent = ReadInt(json, "composingExtent", -1);
+        TextAffinity affinity = ReadAffinity(json) ?? TextAffinity.Downstream;
+        bool isDirectional = json.Contains("selectionIsDirectional")
+                             && json["selectionIsDirectional"] is true;
         TextSelection? selection = selectionBase < 0 && selectionExtent < 0
             ? null
-            : new TextSelection(Math.Max(0, selectionBase), Math.Max(0, selectionExtent));
+            : new TextSelection(
+                Math.Max(0, selectionBase),
+                Math.Max(0, selectionExtent),
+                affinity,
+                isDirectional);
         TextRange? composing = composingBase < 0 || composingExtent < 0
             ? null
             : new TextRange(composingBase, composingExtent);
         return new TextEditingValue(text, selection, composing);
+    }
+
+    /// <inheritdoc/>
+    public override string ToString() =>
+        $"TextEditingValue(text: ┤{Text}├, selection: {Selection}, "
+        + $"composing: {Composing ?? TextRange.Empty})";
+
+    private static TextAffinity? ReadAffinity(IDictionary json)
+    {
+        object? value = json.Contains("selectionAffinity") ? json["selectionAffinity"] : null;
+        return value as string switch
+        {
+            "TextAffinity.downstream" => TextAffinity.Downstream,
+            "TextAffinity.upstream" => TextAffinity.Upstream,
+            _ => null,
+        };
     }
 
     private static int ReadInt(IDictionary json, string key, int fallback)
@@ -695,7 +849,7 @@ public sealed class EditableText : StatefulWidget
         string? semanticsLabel = null,
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
-        TextInputKeyboardType? keyboardType = null,
+        TextInputType? keyboardType = null,
         TextInputActionType textInputAction = TextInputActionType.Unspecified,
         TextCapitalization textCapitalization = TextCapitalization.None,
         SmartDashesType? smartDashesType = null,
@@ -817,7 +971,7 @@ public sealed class EditableText : StatefulWidget
     public string? SemanticsLabel { get; }
     public TextAlign TextAlign { get; }
     public TextDirection? TextDirection { get; }
-    public TextInputKeyboardType KeyboardType { get; }
+    public TextInputType KeyboardType { get; }
     public TextInputActionType TextInputAction { get; }
     public TextCapitalization TextCapitalization { get; }
     public SmartDashesType SmartDashesType { get; }
@@ -862,18 +1016,13 @@ public sealed class EditableText : StatefulWidget
     public static IReadOnlyList<string> AutofillDisabled { get; } = new List<string>();
 
     /// <summary>Dart's <c>EditableText._inferKeyboardType</c>.</summary>
-    /// <remarks>
-    /// Plumix's keyboard type is a flat enum with no <c>numberWithOptions</c>, so
-    /// <see cref="UI.AutofillHints.TransactionAmount"/> infers a plain
-    /// <see cref="TextInputKeyboardType.Number"/> where Dart infers a decimal one.
-    /// </remarks>
-    internal static TextInputKeyboardType InferKeyboardType(
+    internal static TextInputType InferKeyboardType(
         IReadOnlyList<string>? autofillHints,
         bool multiline)
     {
         if (autofillHints is null || autofillHints.Count == 0)
         {
-            return multiline ? TextInputKeyboardType.Multiline : TextInputKeyboardType.Text;
+            return multiline ? TextInputType.Multiline : TextInputType.Text;
         }
 
         string effectiveHint = autofillHints[0];
@@ -883,7 +1032,7 @@ public sealed class EditableText : StatefulWidget
             {
                 case TargetPlatform.IOS:
                 case TargetPlatform.MacOS:
-                    if (AppleKeyboardTypes.TryGetValue(effectiveHint, out TextInputKeyboardType appleType))
+                    if (AppleKeyboardTypes.TryGetValue(effectiveHint, out TextInputType? appleType))
                     {
                         return appleType;
                     }
@@ -896,12 +1045,12 @@ public sealed class EditableText : StatefulWidget
 
         if (multiline)
         {
-            return TextInputKeyboardType.Multiline;
+            return TextInputType.Multiline;
         }
 
-        return InferredKeyboardTypes.TryGetValue(effectiveHint, out TextInputKeyboardType inferred)
+        return InferredKeyboardTypes.TryGetValue(effectiveHint, out TextInputType? inferred)
             ? inferred
-            : TextInputKeyboardType.Text;
+            : TextInputType.Text;
     }
 
     /// <summary>Dart's <c>EditableText._inferAutocorrect</c>.</summary>
@@ -926,106 +1075,106 @@ public sealed class EditableText : StatefulWidget
         return !passwordRelatedHint;
     }
 
-    private static readonly Dictionary<string, TextInputKeyboardType> AppleKeyboardTypes = new()
+    private static readonly Dictionary<string, TextInputType> AppleKeyboardTypes = new()
     {
-        [UI.AutofillHints.AddressCity] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.AddressCityAndState] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.AddressState] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.CountryName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.CreditCardNumber] = TextInputKeyboardType.Number,
-        [UI.AutofillHints.Email] = TextInputKeyboardType.EmailAddress,
-        [UI.AutofillHints.FamilyName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.FullStreetAddress] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.GivenName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.JobTitle] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.Location] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.MiddleName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.Name] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.NamePrefix] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.NameSuffix] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.NewPassword] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.NewUsername] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.Nickname] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.OneTimeCode] = TextInputKeyboardType.Number,
-        [UI.AutofillHints.OrganizationName] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.Password] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.PostalCode] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.StreetAddressLine1] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.StreetAddressLine2] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.Sublocality] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.TelephoneNumber] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.Url] = TextInputKeyboardType.Url,
-        [UI.AutofillHints.Username] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.AddressCity] = TextInputType.Name,
+        [UI.AutofillHints.AddressCityAndState] = TextInputType.Name,
+        [UI.AutofillHints.AddressState] = TextInputType.Name,
+        [UI.AutofillHints.CountryName] = TextInputType.Name,
+        [UI.AutofillHints.CreditCardNumber] = TextInputType.Number,
+        [UI.AutofillHints.Email] = TextInputType.EmailAddress,
+        [UI.AutofillHints.FamilyName] = TextInputType.Name,
+        [UI.AutofillHints.FullStreetAddress] = TextInputType.Name,
+        [UI.AutofillHints.GivenName] = TextInputType.Name,
+        [UI.AutofillHints.JobTitle] = TextInputType.Name,
+        [UI.AutofillHints.Location] = TextInputType.Name,
+        [UI.AutofillHints.MiddleName] = TextInputType.Name,
+        [UI.AutofillHints.Name] = TextInputType.Name,
+        [UI.AutofillHints.NamePrefix] = TextInputType.Name,
+        [UI.AutofillHints.NameSuffix] = TextInputType.Name,
+        [UI.AutofillHints.NewPassword] = TextInputType.Text,
+        [UI.AutofillHints.NewUsername] = TextInputType.Text,
+        [UI.AutofillHints.Nickname] = TextInputType.Name,
+        [UI.AutofillHints.OneTimeCode] = TextInputType.Number,
+        [UI.AutofillHints.OrganizationName] = TextInputType.Text,
+        [UI.AutofillHints.Password] = TextInputType.Text,
+        [UI.AutofillHints.PostalCode] = TextInputType.Name,
+        [UI.AutofillHints.StreetAddressLine1] = TextInputType.Name,
+        [UI.AutofillHints.StreetAddressLine2] = TextInputType.Name,
+        [UI.AutofillHints.Sublocality] = TextInputType.Name,
+        [UI.AutofillHints.TelephoneNumber] = TextInputType.Name,
+        [UI.AutofillHints.Url] = TextInputType.Url,
+        [UI.AutofillHints.Username] = TextInputType.Text,
     };
 
-    private static readonly Dictionary<string, TextInputKeyboardType> InferredKeyboardTypes = new()
+    private static readonly Dictionary<string, TextInputType> InferredKeyboardTypes = new()
     {
-        [UI.AutofillHints.AddressCity] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.AddressCityAndState] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.AddressState] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.Birthday] = TextInputKeyboardType.Datetime,
-        [UI.AutofillHints.BirthdayDay] = TextInputKeyboardType.Datetime,
-        [UI.AutofillHints.BirthdayMonth] = TextInputKeyboardType.Datetime,
-        [UI.AutofillHints.BirthdayYear] = TextInputKeyboardType.Datetime,
-        [UI.AutofillHints.CountryCode] = TextInputKeyboardType.Number,
-        [UI.AutofillHints.CountryName] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.CreditCardExpirationDate] = TextInputKeyboardType.Datetime,
-        [UI.AutofillHints.CreditCardExpirationDay] = TextInputKeyboardType.Datetime,
-        [UI.AutofillHints.CreditCardExpirationMonth] = TextInputKeyboardType.Datetime,
-        [UI.AutofillHints.CreditCardExpirationYear] = TextInputKeyboardType.Datetime,
-        [UI.AutofillHints.CreditCardFamilyName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.CreditCardGivenName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.CreditCardMiddleName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.CreditCardName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.CreditCardNumber] = TextInputKeyboardType.Number,
-        [UI.AutofillHints.CreditCardSecurityCode] = TextInputKeyboardType.Number,
-        [UI.AutofillHints.CreditCardType] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.Email] = TextInputKeyboardType.EmailAddress,
-        [UI.AutofillHints.FamilyName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.FullStreetAddress] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.Gender] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.GivenName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.Impp] = TextInputKeyboardType.Url,
-        [UI.AutofillHints.JobTitle] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.Language] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.Location] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.MiddleInitial] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.MiddleName] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.Name] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.NamePrefix] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.NameSuffix] = TextInputKeyboardType.Name,
-        [UI.AutofillHints.NewPassword] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.NewUsername] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.Nickname] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.OneTimeCode] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.OrganizationName] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.Password] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.Photo] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.PostalAddress] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.PostalAddressExtended] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.PostalAddressExtendedPostalCode] = TextInputKeyboardType.Number,
-        [UI.AutofillHints.PostalCode] = TextInputKeyboardType.Number,
-        [UI.AutofillHints.StreetAddressLevel1] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.StreetAddressLevel2] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.StreetAddressLevel3] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.StreetAddressLevel4] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.StreetAddressLine1] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.StreetAddressLine2] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.StreetAddressLine3] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.Sublocality] = TextInputKeyboardType.StreetAddress,
-        [UI.AutofillHints.TelephoneNumber] = TextInputKeyboardType.Phone,
-        [UI.AutofillHints.TelephoneNumberAreaCode] = TextInputKeyboardType.Phone,
-        [UI.AutofillHints.TelephoneNumberCountryCode] = TextInputKeyboardType.Phone,
-        [UI.AutofillHints.TelephoneNumberDevice] = TextInputKeyboardType.Phone,
-        [UI.AutofillHints.TelephoneNumberExtension] = TextInputKeyboardType.Phone,
-        [UI.AutofillHints.TelephoneNumberLocal] = TextInputKeyboardType.Phone,
-        [UI.AutofillHints.TelephoneNumberLocalPrefix] = TextInputKeyboardType.Phone,
-        [UI.AutofillHints.TelephoneNumberLocalSuffix] = TextInputKeyboardType.Phone,
-        [UI.AutofillHints.TelephoneNumberNational] = TextInputKeyboardType.Phone,
-        [UI.AutofillHints.TransactionAmount] = TextInputKeyboardType.Number,
-        [UI.AutofillHints.TransactionCurrency] = TextInputKeyboardType.Text,
-        [UI.AutofillHints.Url] = TextInputKeyboardType.Url,
-        [UI.AutofillHints.Username] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.AddressCity] = TextInputType.StreetAddress,
+        [UI.AutofillHints.AddressCityAndState] = TextInputType.StreetAddress,
+        [UI.AutofillHints.AddressState] = TextInputType.StreetAddress,
+        [UI.AutofillHints.Birthday] = TextInputType.Datetime,
+        [UI.AutofillHints.BirthdayDay] = TextInputType.Datetime,
+        [UI.AutofillHints.BirthdayMonth] = TextInputType.Datetime,
+        [UI.AutofillHints.BirthdayYear] = TextInputType.Datetime,
+        [UI.AutofillHints.CountryCode] = TextInputType.Number,
+        [UI.AutofillHints.CountryName] = TextInputType.Text,
+        [UI.AutofillHints.CreditCardExpirationDate] = TextInputType.Datetime,
+        [UI.AutofillHints.CreditCardExpirationDay] = TextInputType.Datetime,
+        [UI.AutofillHints.CreditCardExpirationMonth] = TextInputType.Datetime,
+        [UI.AutofillHints.CreditCardExpirationYear] = TextInputType.Datetime,
+        [UI.AutofillHints.CreditCardFamilyName] = TextInputType.Name,
+        [UI.AutofillHints.CreditCardGivenName] = TextInputType.Name,
+        [UI.AutofillHints.CreditCardMiddleName] = TextInputType.Name,
+        [UI.AutofillHints.CreditCardName] = TextInputType.Name,
+        [UI.AutofillHints.CreditCardNumber] = TextInputType.Number,
+        [UI.AutofillHints.CreditCardSecurityCode] = TextInputType.Number,
+        [UI.AutofillHints.CreditCardType] = TextInputType.Text,
+        [UI.AutofillHints.Email] = TextInputType.EmailAddress,
+        [UI.AutofillHints.FamilyName] = TextInputType.Name,
+        [UI.AutofillHints.FullStreetAddress] = TextInputType.StreetAddress,
+        [UI.AutofillHints.Gender] = TextInputType.Text,
+        [UI.AutofillHints.GivenName] = TextInputType.Name,
+        [UI.AutofillHints.Impp] = TextInputType.Url,
+        [UI.AutofillHints.JobTitle] = TextInputType.Text,
+        [UI.AutofillHints.Language] = TextInputType.Text,
+        [UI.AutofillHints.Location] = TextInputType.StreetAddress,
+        [UI.AutofillHints.MiddleInitial] = TextInputType.Name,
+        [UI.AutofillHints.MiddleName] = TextInputType.Name,
+        [UI.AutofillHints.Name] = TextInputType.Name,
+        [UI.AutofillHints.NamePrefix] = TextInputType.Name,
+        [UI.AutofillHints.NameSuffix] = TextInputType.Name,
+        [UI.AutofillHints.NewPassword] = TextInputType.Text,
+        [UI.AutofillHints.NewUsername] = TextInputType.Text,
+        [UI.AutofillHints.Nickname] = TextInputType.Text,
+        [UI.AutofillHints.OneTimeCode] = TextInputType.Text,
+        [UI.AutofillHints.OrganizationName] = TextInputType.Text,
+        [UI.AutofillHints.Password] = TextInputType.Text,
+        [UI.AutofillHints.Photo] = TextInputType.Text,
+        [UI.AutofillHints.PostalAddress] = TextInputType.StreetAddress,
+        [UI.AutofillHints.PostalAddressExtended] = TextInputType.StreetAddress,
+        [UI.AutofillHints.PostalAddressExtendedPostalCode] = TextInputType.Number,
+        [UI.AutofillHints.PostalCode] = TextInputType.Number,
+        [UI.AutofillHints.StreetAddressLevel1] = TextInputType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLevel2] = TextInputType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLevel3] = TextInputType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLevel4] = TextInputType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLine1] = TextInputType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLine2] = TextInputType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLine3] = TextInputType.StreetAddress,
+        [UI.AutofillHints.Sublocality] = TextInputType.StreetAddress,
+        [UI.AutofillHints.TelephoneNumber] = TextInputType.Phone,
+        [UI.AutofillHints.TelephoneNumberAreaCode] = TextInputType.Phone,
+        [UI.AutofillHints.TelephoneNumberCountryCode] = TextInputType.Phone,
+        [UI.AutofillHints.TelephoneNumberDevice] = TextInputType.Phone,
+        [UI.AutofillHints.TelephoneNumberExtension] = TextInputType.Phone,
+        [UI.AutofillHints.TelephoneNumberLocal] = TextInputType.Phone,
+        [UI.AutofillHints.TelephoneNumberLocalPrefix] = TextInputType.Phone,
+        [UI.AutofillHints.TelephoneNumberLocalSuffix] = TextInputType.Phone,
+        [UI.AutofillHints.TelephoneNumberNational] = TextInputType.Phone,
+        [UI.AutofillHints.TransactionAmount] = TextInputType.NumberWithOptions(isDecimal: true),
+        [UI.AutofillHints.TransactionCurrency] = TextInputType.Text,
+        [UI.AutofillHints.Url] = TextInputType.Url,
+        [UI.AutofillHints.Username] = TextInputType.Text,
     };
 
     public override State CreateState()
@@ -1138,7 +1287,7 @@ public sealed class EditableText : StatefulWidget
                         currentEditingValue: CurrentTextEditingValue)
                     : AutofillConfiguration.Disabled;
                 return new TextInputConfiguration(
-                    keyboardType: Widget.KeyboardType,
+                    inputType: Widget.KeyboardType,
                     readOnly: Widget.ReadOnly,
                     obscureText: Widget.ObscureText,
                     autocorrect: Widget.Autocorrect,
@@ -1148,8 +1297,7 @@ public sealed class EditableText : StatefulWidget
                     enableInteractiveSelection: Widget.EnableInteractiveSelection,
                     inputAction: Widget.TextInputAction,
                     textCapitalization: Widget.TextCapitalization,
-                    autofillConfiguration: autofillConfiguration,
-                    multiline: Widget.Multiline);
+                    autofillConfiguration: autofillConfiguration);
             }
         }
 
@@ -1194,6 +1342,33 @@ public sealed class EditableText : StatefulWidget
 
         /// <inheritdoc/>
         public void ConnectionClosed() => _textInputConnection = null;
+
+        /// <inheritdoc/>
+        TextEditingValue? ITextInputClient.CurrentTextEditingValue =>
+            _controller is null ? null : _controller.Value;
+
+        /// <inheritdoc/>
+        /// <remarks>Plumix has no <c>ProcessTextService</c>-style private command surface, so this
+        /// is a no-op the way Flutter's own <c>EditableText</c> leaves it.</remarks>
+        public void PerformPrivateCommand(string action, IDictionary data)
+        {
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>The floating cursor needs `RenderEditable`'s caret painting hooks, which the
+        /// editable render object does not expose yet.</remarks>
+        public void UpdateFloatingCursor(RawFloatingCursorPoint point)
+        {
+        }
+
+        /// <inheritdoc/>
+        /// <remarks>Plumix has no autocorrection prompt rect painting.</remarks>
+        public void ShowAutocorrectionPromptRect(int start, int end)
+        {
+        }
+
+        /// <inheritdoc/>
+        void ITextInputClient.ShowToolbar() => ShowToolbar();
 
         private IAutofillClient EffectiveAutofillClient => Widget.AutofillClient ?? this;
 

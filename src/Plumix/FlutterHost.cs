@@ -370,29 +370,37 @@ public class PlumixHost : Control
         TextInputOptions.SetContentType(
             this,
             configuration is not null
-                ? ResolveContentType(configuration.KeyboardType)
+                ? ResolveContentType(configuration.InputType)
                 : TextInputContentType.Normal);
         TextInputOptions.SetReturnKeyType(
             this,
             configuration is not null
                 ? ResolveReturnKeyType(configuration.InputAction)
                 : TextInputReturnKeyType.Default);
-        TextInputOptions.SetMultiline(this, configuration?.Multiline ?? false);
+        TextInputOptions.SetMultiline(this, configuration?.IsMultiline ?? false);
         TextInputOptions.SetIsSensitive(this, configuration?.ObscureText ?? false);
         TextInputOptions.SetShowSuggestions(this, configuration?.EnableSuggestions);
         _textInputClient.RefreshOptions();
     }
 
-    private static TextInputContentType ResolveContentType(TextInputKeyboardType keyboardType)
+    private static TextInputContentType ResolveContentType(TextInputType keyboardType)
     {
-        return keyboardType switch
+        if (keyboardType == TextInputType.Number)
         {
-            TextInputKeyboardType.Number => TextInputContentType.Number,
-            TextInputKeyboardType.Phone => TextInputContentType.Digits,
-            TextInputKeyboardType.EmailAddress => TextInputContentType.Email,
-            TextInputKeyboardType.Url => TextInputContentType.Url,
-            _ => TextInputContentType.Normal,
-        };
+            return TextInputContentType.Number;
+        }
+
+        if (keyboardType == TextInputType.Phone)
+        {
+            return TextInputContentType.Digits;
+        }
+
+        if (keyboardType == TextInputType.EmailAddress)
+        {
+            return TextInputContentType.Email;
+        }
+
+        return keyboardType == TextInputType.Url ? TextInputContentType.Url : TextInputContentType.Normal;
     }
 
     private static TextInputReturnKeyType ResolveReturnKeyType(TextInputActionType inputAction)

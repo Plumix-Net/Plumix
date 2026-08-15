@@ -20,17 +20,6 @@ public enum TextInputAction
     Send,
 }
 
-public enum TextInputType
-{
-    Text,
-    Multiline,
-    Number,
-    Phone,
-    Datetime,
-    EmailAddress,
-    Url,
-}
-
 public delegate Widget SearchAnchorChildBuilder(BuildContext context, SearchController controller);
 
 public delegate ValueTask<IReadOnlyList<Widget>> SuggestionsBuilder(BuildContext context, SearchController controller);

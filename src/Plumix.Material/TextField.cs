@@ -500,19 +500,9 @@ public sealed class TextField : StatefulWidget
                 : theme.ColorScheme.Primary;
         }
 
-        private static TextInputKeyboardType ResolveKeyboardType(TextInputType? keyboardType, bool multiline)
+        private static TextInputType ResolveKeyboardType(TextInputType? keyboardType, bool multiline)
         {
-            return keyboardType switch
-            {
-                TextInputType.Multiline => TextInputKeyboardType.Multiline,
-                TextInputType.Number => TextInputKeyboardType.Number,
-                TextInputType.Phone => TextInputKeyboardType.Phone,
-                TextInputType.Datetime => TextInputKeyboardType.Datetime,
-                TextInputType.EmailAddress => TextInputKeyboardType.EmailAddress,
-                TextInputType.Url => TextInputKeyboardType.Url,
-                TextInputType.Text => TextInputKeyboardType.Text,
-                _ => multiline ? TextInputKeyboardType.Multiline : TextInputKeyboardType.Text,
-            };
+            return keyboardType ?? (multiline ? TextInputType.Multiline : TextInputType.Text);
         }
 
         private static TextInputActionType ResolveTextInputAction(TextInputAction? textInputAction)

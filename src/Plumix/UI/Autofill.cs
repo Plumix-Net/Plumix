@@ -406,7 +406,7 @@ internal sealed class AutofillScopeTextInputConfiguration : TextInputConfigurati
         TextInputConfiguration currentClientConfiguration)
         : base(
             viewId: currentClientConfiguration.ViewId,
-            keyboardType: currentClientConfiguration.KeyboardType,
+            inputType: currentClientConfiguration.InputType,
             obscureText: currentClientConfiguration.ObscureText,
             autocorrect: currentClientConfiguration.Autocorrect,
             smartDashesType: currentClientConfiguration.SmartDashesType,
@@ -415,8 +415,7 @@ internal sealed class AutofillScopeTextInputConfiguration : TextInputConfigurati
             inputAction: currentClientConfiguration.InputAction,
             textCapitalization: currentClientConfiguration.TextCapitalization,
             actionLabel: currentClientConfiguration.ActionLabel,
-            autofillConfiguration: currentClientConfiguration.AutofillConfiguration,
-            multiline: currentClientConfiguration.Multiline)
+            autofillConfiguration: currentClientConfiguration.AutofillConfiguration)
     {
         AllConfigurations = allConfigurations;
     }

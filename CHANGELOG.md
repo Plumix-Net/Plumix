@@ -1,5 +1,40 @@
 # Changelog
 
+- Breaking: ported the rest of Flutter's text input service layer (`services/text_input.dart`,
+  `services/text_editing_delta.dart`); only the autofill half was ported before. New in
+  `Plumix.UI`: the `TextInputType` value type (all 13 variants plus `NumberWithOptions`, with
+  Dart's `index`/`signed`/`decimal` and wire encoding, including `streetAddress`'s
+  `TextInputType.address` name), `TextInputStyle`, `SelectionRect`, `KeyboardInsertedContent`,
+  `RawFloatingCursorPoint`/`FloatingCursorDragState`, `IScribbleClient`, `TextInputActions`, and the
+  `TextEditingDelta` family (`Insertion`/`Deletion`/`Replacement`/`NonTextUpdate`, `FromJson`
+  inference, `Apply`, diagnostics) with the `IDeltaTextInputClient` opt-in.
+  `ITextInputClient` gained `CurrentTextEditingValue`, `PerformPrivateCommand`,
+  `UpdateFloatingCursor`, `ShowAutocorrectionPromptRect`, `InsertContent`, `DidChangeInputControl`,
+  `ShowToolbar`, `InsertTextPlaceholder`, `RemoveTextPlaceholder` and `PerformSelector`;
+  `TextInputConnection` and `TextInputControl` gained `SetEditableSizeAndTransform`,
+  `SetComposingRect`, `SetCaretRect`, `SetSelectionRects` and `UpdateStyle` (with Dart's dedup
+  caches and non-finite-rect sanitization); `TextInput` gained `RegisterScribbleElement`/
+  `UnregisterScribbleElement`/`UpdateEditingValue` and now answers every inbound
+  `flutter/textinput` method Flutter defines.
+  `TextSelection` gained `Affinity`/`IsDirectional` with Dart's equality rules (all invalid
+  selections are equal; affinity counts only while collapsed) and Dart's `ToString`;
+  `TextEditingValue` gained `Replaced`, `CopyWith` and `IsComposingRangeValid` and now round-trips
+  affinity/directionality instead of emitting constants.
+  Breaking for consumers: `TextInputKeyboardType` is replaced by `TextInputType` and
+  `TextInputConfiguration.KeyboardType`/`Multiline` by `InputType`/`IsMultiline` (Material's
+  duplicate `TextInputType` enum is gone, so `TextField.KeyboardType` now takes the core type);
+  `TextInputActionType` gained Flutter's six missing members and takes Flutter's declaration order,
+  and an unknown inbound action now throws instead of degrading to `Unspecified`;
+  `TextInputConfiguration.ViewId` is nullable and defaults to `null`, `HintLocales` defaults to an
+  empty list, and both are reflected in `ToJson`; `TextInput.SetInputControl` keeps the platform
+  control registered (a custom control is now additive, as in Dart) and
+  `RestorePlatformInputControl` reinstalls it rather than passing `null`; `ClearClient` defers the
+  hide to a microtask; `TextInputConnection.ConnectionClosedReceived` no longer notifies the client
+  (the inbound `onConnectionClosed` message does); and four channel error contexts were corrected to
+  Dart's wording.
+  Also fixed `new TextEditingValue()`, which bound to the struct's implicit parameterless
+  constructor and therefore produced a `null` `Text` and an upstream selection affinity.
+
 - Breaking: ported Flutter's diagnostics layer (`foundation/diagnostics.dart`), replacing the
   146-line approximation that stood in for it. New in `Plumix.Foundation`: `DiagnosticsTreeStyle`,
   `TextTreeConfiguration` + the ten `TextTreeConfigurations` presets, `TextTreeRenderer` with

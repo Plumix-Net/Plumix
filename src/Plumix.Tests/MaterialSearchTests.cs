@@ -694,7 +694,7 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.False(field.EnableSuggestions);
         FocusTextInputState inputState = Assert.IsType<FocusTextInputState>(
             FocusManager.Instance.ResolveTextInputState());
-        Assert.Equal(TextInputKeyboardType.EmailAddress, inputState.Configuration?.KeyboardType);
+        Assert.Equal(TextInputType.EmailAddress, inputState.Configuration?.InputType);
         Assert.Equal(TextInputActionType.Done, inputState.Configuration?.InputAction);
         Assert.False(inputState.Configuration?.Autocorrect);
         Assert.False(inputState.Configuration?.EnableSuggestions);
