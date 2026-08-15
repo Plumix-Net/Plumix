@@ -499,8 +499,8 @@ public sealed class MaterialApp : StatefulWidget
             ThemeData theme = ResolveTheme(context);
             TextSelectionThemeData selectionTheme = theme.TextSelectionTheme;
             Color effectiveSelectionColor = selectionTheme.SelectionColor
-                                            ?? WithOpacity(theme.PrimaryColor, 0.40);
-            Color effectiveCursorColor = selectionTheme.CursorColor ?? theme.PrimaryColor;
+                                            ?? WithOpacity(theme.ColorScheme.Primary, 0.40);
+            Color effectiveCursorColor = selectionTheme.CursorColor ?? theme.ColorScheme.Primary;
 
             Widget childWidget = child ?? new SizedBox();
             if (CurrentWidget.Builder != null)

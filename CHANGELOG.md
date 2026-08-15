@@ -1,5 +1,18 @@
 # Changelog
 
+- Breaking: closed the `TextSelectionTheme` family (`TextSelectionThemeData`/`TextSelectionTheme` and
+  the cursor/selection/handle resolution that consumes it). `TextSelectionThemeData` gained Dart's
+  `CopyWith`. The theme now reaches consumers the way Dart routes it: `Theme` wraps its subtree in
+  Dart's `_wrapsWidgetThemes` `DefaultSelectionStyle` (`textSelectionTheme` colour falling back to the
+  ancestor style), so `TextField`, `SelectableText` and `SelectionArea` no longer call
+  `TextSelectionTheme.Of` themselves. Defaults moved from `ThemeData.PrimaryColor` to
+  `ColorScheme.Primary` in `MaterialApp`, `TextField` and `SelectableText` (a visible change under
+  Material 3), `TextField`/`SelectableText` resolve iOS/macOS against the ambient `CupertinoTheme`,
+  and `SelectionArea` resolves no colours at all — its children read the ambient style, so a bare
+  `Theme` with no selection colours now yields `DefaultSelectionStyle.DefaultColor` instead of a
+  primary tint. `TextField` gained `cursorColor`/`cursorErrorColor` plus Dart's `_hasError`
+  (decoration error text/widget or an over-`maxLength` counter) error-colour branch.
+
 - Breaking: closed the `SnackBar` family (`SnackBar`/`SnackBarAction`/`SnackBarThemeData`/
   `SnackBarTheme` and the `ScaffoldMessenger` queue that drives them). `SnackBar.animation` is now
   `Animation<double>` (was `AnimationController`), and `CreateAnimationController` takes Dart's

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using System.Globalization;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -58,6 +59,8 @@ public sealed class TextField : StatefulWidget
         FocusOnKeyEventCallback? onKeyEvent = null,
         IReadOnlyList<TextInputFormatter>? inputFormatters = null,
         double? cursorHeight = null,
+        Color? cursorColor = null,
+        Color? cursorErrorColor = null,
         string? restorationId = null,
         bool? enableInteractiveSelection = null,
         TextSelectionControls? selectionControls = null,
@@ -115,6 +118,8 @@ public sealed class TextField : StatefulWidget
         OnKeyEvent = onKeyEvent;
         InputFormatters = inputFormatters;
         CursorHeight = cursorHeight;
+        CursorColor = cursorColor;
+        CursorErrorColor = cursorErrorColor;
         RestorationId = restorationId;
         EnableInteractiveSelection = enableInteractiveSelection ?? (!readOnly || !obscureText);
         SelectionControls = selectionControls;
@@ -160,6 +165,8 @@ public sealed class TextField : StatefulWidget
     public FocusOnKeyEventCallback? OnKeyEvent { get; }
     public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
     public double? CursorHeight { get; }
+    public Color? CursorColor { get; }
+    public Color? CursorErrorColor { get; }
     public string? RestorationId { get; }
     public bool EnableInteractiveSelection { get; }
     public TextSelectionControls? SelectionControls { get; }
@@ -236,17 +243,19 @@ public sealed class TextField : StatefulWidget
             EnsureController();
             var theme = Theme.Of(context);
             DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
-            TextSelectionThemeData selectionTheme = TextSelectionTheme.Of(context);
             bool enabled = Current.Enabled ?? Current.Decoration?.Enabled ?? true;
             _resolvedMouseCursor = Current.MouseCursor
                                    ?? selectionStyle.MouseCursor
                                    ?? (enabled ? SystemMouseCursors.Text : SystemMouseCursors.Basic);
-            Color cursorColor = selectionStyle.CursorColor
-                                ?? selectionTheme.CursorColor
-                                ?? theme.PrimaryColor;
-            Color selectionColor = selectionStyle.SelectionColor
-                                   ?? selectionTheme.SelectionColor
-                                   ?? ApplyOpacity(theme.PrimaryColor, 0.40);
+            // Dart's `_TextFieldState.build` platform switch: iOS/macOS resolve the selection colors
+            // against the ambient `CupertinoTheme`, every other platform against the color scheme.
+            // `TextSelectionTheme` is not read here — it reaches the field as the
+            // `DefaultSelectionStyle` that `Theme`/`MaterialApp`/`TextSelectionTheme` insert.
+            Color primaryColor = PlatformPrimaryColor(context, theme);
+            Color cursorColor = HasError
+                ? ErrorColor(theme)
+                : Current.CursorColor ?? selectionStyle.CursorColor ?? primaryColor;
+            Color selectionColor = selectionStyle.SelectionColor ?? ApplyOpacity(primaryColor, 0.40);
             var baseStyle = Current.Style ?? (theme.UseMaterial3 ? theme.TextTheme.BodyLarge : theme.TextTheme.TitleMedium);
             if (!enabled && Current.Style?.Color is null)
                 baseStyle = baseStyle.CopyWith(color: ApplyOpacity(theme.OnSurfaceColor, 0.38));
@@ -446,6 +455,40 @@ public sealed class TextField : StatefulWidget
         }
         private void Changed() { if (Mounted) SetState(() => { }); }
         private static int TextLength(string value) => new StringInfo(value).LengthInTextElements;
+
+        /// <summary>Dart's `_TextFieldState._hasIntrinsicError`: the counter is over `maxLength`.</summary>
+        private bool HasIntrinsicError
+        {
+            get
+            {
+                if (Current.MaxLength is not > 0) return false;
+                if (Current.Controller is null && RestorePending) return false;
+                return TextLength(_controller?.Text ?? string.Empty) > Current.MaxLength;
+            }
+        }
+
+        /// <summary>Dart's `_TextFieldState._hasError`.</summary>
+        private bool HasError => Current.Decoration?.ErrorText is not null
+                                 || Current.Decoration?.Error is not null
+                                 || HasIntrinsicError;
+
+        /// <summary>Dart's `_TextFieldState._errorColor`.</summary>
+        private Color ErrorColor(ThemeData theme)
+        {
+            return Current.CursorErrorColor
+                   ?? Current.Decoration?.ErrorStyle?.DefaultValue.Color
+                   ?? theme.ColorScheme.Error;
+        }
+
+        private static Color PlatformPrimaryColor(BuildContext context, ThemeData theme)
+        {
+            // Dart reaches the Cupertino primary through the `MaterialBasedCupertinoThemeData` that
+            // `Theme` installs, which defers to `colorScheme.primary` when no Cupertino override is
+            // present; Plumix has no bridge yet, so the fallback is applied here (`DIVERGENCES.md`).
+            return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
+                ? CupertinoTheme.Of(context).PrimaryColor ?? theme.ColorScheme.Primary
+                : theme.ColorScheme.Primary;
+        }
 
         private static TextInputKeyboardType ResolveKeyboardType(TextInputType? keyboardType, bool multiline)
         {

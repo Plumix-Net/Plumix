@@ -367,8 +367,12 @@ public sealed class ApplicationWidgetsTests : IDisposable
         MountAndFlush(root, owner);
 
         Assert.Equal(ThemeData.Localize(darkTheme, darkTheme.Typography.EnglishLike), resolvedTheme);
-        Assert.Equal(Color.FromArgb(102, 40, 50, 60), selectionStyle!.SelectionColor);
-        Assert.Equal(darkTheme.PrimaryColor, selectionStyle.CursorColor);
+        // Dart's `_MaterialAppState._materialBuilder` resolves both defaults from the color scheme.
+        Color darkPrimary = darkTheme.ColorScheme.Primary;
+        Assert.Equal(
+            Color.FromArgb(102, darkPrimary.R, darkPrimary.G, darkPrimary.B),
+            selectionStyle!.SelectionColor);
+        Assert.Equal(darkPrimary, selectionStyle.CursorColor);
         Assert.NotNull(messenger);
         Assert.Same(DefaultMaterialLocalizations.Instance, materialLocalizations);
         Assert.Same(DefaultCupertinoLocalizations.Instance, cupertinoLocalizations);

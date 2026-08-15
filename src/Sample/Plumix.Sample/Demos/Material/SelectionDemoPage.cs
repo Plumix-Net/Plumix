@@ -99,6 +99,22 @@ internal sealed class SelectionDemoPageState : State
                         mouseCursor: SystemMouseCursors.Click,
                         child: new SelectableText(
                             "Cursor, selection, and mouse cursor inherit from the core selection style.")),
+                    new Divider(),
+                    new Text("TextSelectionTheme on TextField", fontSize: 18, color: Colors.Black),
+                    new TextSelectionTheme(
+                        data: new TextSelectionThemeData(
+                            CursorColor: Color.Parse("#FF7B1FA2"),
+                            SelectionColor: Color.FromArgb(0x66, 0x7B, 0x1F, 0xA2),
+                            SelectionHandleColor: Color.Parse("#FF7B1FA2")),
+                        child: new TextField(
+                            decoration: new InputDecoration(
+                                labelText: "Themed cursor, selection, and handles"))),
+                    new TextField(
+                        cursorColor: Color.Parse("#FF1565C0"),
+                        cursorErrorColor: Color.Parse("#FFB3261E"),
+                        decoration: new InputDecoration(
+                            labelText: "Explicit cursorColor",
+                            errorText: "An errored field paints cursorErrorColor")),
                 ]));
     }
 }

@@ -9,7 +9,19 @@ namespace Plumix.Material;
 public sealed partial record TextSelectionThemeData(
     Color? CursorColor = null,
     Color? SelectionColor = null,
-    Color? SelectionHandleColor = null);
+    Color? SelectionHandleColor = null)
+{
+    public TextSelectionThemeData CopyWith(
+        Color? cursorColor = null,
+        Color? selectionColor = null,
+        Color? selectionHandleColor = null)
+    {
+        return new TextSelectionThemeData(
+            CursorColor: cursorColor ?? CursorColor,
+            SelectionColor: selectionColor ?? SelectionColor,
+            SelectionHandleColor: selectionHandleColor ?? SelectionHandleColor);
+    }
+}
 
 public sealed class TextSelectionTheme : InheritedTheme
 {

@@ -56,22 +56,15 @@ public sealed class SelectionAreaState : State
 
     public override Widget Build(BuildContext context)
     {
-        ThemeData theme = Theme.Of(context);
-
         // Dart picks handle controls per `Theme.of(context).platform`; the desktop
         // and Cupertino handle-control singletons are not available to this package
         // yet, so every platform uses the Material handles (see `DIVERGENCES.md`).
         TextSelectionControls controls = Current.SelectionControls
                                          ?? MaterialTextSelectionHandleControls.Instance;
 
+        // Dart's `SelectionAreaState.build` resolves no colors: the selectable children read the
+        // ambient `DefaultSelectionStyle` that `MaterialApp`/`Theme`/`TextSelectionTheme` install.
         DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
-        TextSelectionThemeData selectionTheme = TextSelectionTheme.Of(context);
-        Color cursorColor = selectionStyle.CursorColor
-                            ?? selectionTheme.CursorColor
-                            ?? theme.PrimaryColor;
-        Color selectionColor = selectionStyle.SelectionColor
-                               ?? selectionTheme.SelectionColor
-                               ?? ApplyOpacity(theme.PrimaryColor, 0.40);
 
         return new SelectableRegion(
             key: _selectableRegionKey,
@@ -82,16 +75,6 @@ public sealed class SelectionAreaState : State
                                     ?? TextMagnifier.AdaptiveMagnifierConfiguration,
             onSelectionChanged: Current.OnSelectionChanged,
             mouseCursor: selectionStyle.MouseCursor,
-            child: new DefaultSelectionStyle(
-                cursorColor: cursorColor,
-                selectionColor: selectionColor,
-                mouseCursor: selectionStyle.MouseCursor,
-                child: Current.Child));
-    }
-
-    private static Color ApplyOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1));
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+            child: Current.Child);
     }
 }

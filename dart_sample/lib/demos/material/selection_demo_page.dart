@@ -129,6 +129,31 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
               'Cursor, selection, and mouse cursor inherit from the core selection style.',
             ),
           ),
+          const Divider(),
+          const Text(
+            'TextSelectionTheme on TextField',
+            style: TextStyle(fontSize: 18, color: Colors.black),
+          ),
+          const TextSelectionTheme(
+            data: TextSelectionThemeData(
+              cursorColor: Color(0xFF7B1FA2),
+              selectionColor: Color(0x667B1FA2),
+              selectionHandleColor: Color(0xFF7B1FA2),
+            ),
+            child: TextField(
+              decoration: InputDecoration(
+                labelText: 'Themed cursor, selection, and handles',
+              ),
+            ),
+          ),
+          const TextField(
+            cursorColor: Color(0xFF1565C0),
+            cursorErrorColor: Color(0xFFB3261E),
+            decoration: InputDecoration(
+              labelText: 'Explicit cursorColor',
+              errorText: 'An errored field paints cursorErrorColor',
+            ),
+          ),
         ],
       ),
     );
