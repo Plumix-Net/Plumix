@@ -1,5 +1,21 @@
 # Changelog
 
+- Breaking: ported Flutter's autofill subsystem (`services/autofill.dart`, `widgets/autofill.dart`).
+  New in core: `AutofillHints` (all 66 constants), `AutofillConfiguration`, `IAutofillClient`,
+  `IAutofillScope` + the `AutofillScopeMixin` companion, `AutofillContextAction`, `AutofillGroup`/
+  `AutofillGroupState`, plus the autofill half of `text_input.dart`: `ITextInputClient`,
+  `TextInputControl`, `TextInputConnection` and the `TextInput` service that speaks
+  `flutter/textinput` (`setClient` with the scope's `fields` array, `requestAutofill`,
+  `finishAutofillContext`, and the inbound `updateEditingStateWithTag` routing).
+  `TextInputConfiguration` is now an immutable class (not a `readonly record struct`) so the scope
+  can subclass it, and it gained Flutter's full field set plus `ToJson`.
+  `EditableText` gained `autofillHints`/`autofillClient`, implements both client interfaces,
+  registers with the ambient group, and now *infers* `keyboardType`/`autocorrect` from the first hint
+  when they are not given (both are nullable parameters); `TextInputKeyboardType` gained `Name`,
+  `StreetAddress`, `VisiblePassword` and `None`. Material `TextField` forwards `autofillHints`.
+  Dart disables autofill with `autofillHints: null`; C# cannot default an optional reference
+  parameter to a non-null list, so `EditableText.AutofillDisabled` spells that instead.
+
 - Breaking: ported Flutter's platform-channel layer, which several divergence rows were blocked on.
   New in core: `ByteData`/`Endian` and `WriteBuffer`/`ReadBuffer` (`Plumix.Foundation`), `MessageCodec<T>`,
   `MethodCodec`, `MethodCall`, `PlatformException`, `MissingPluginException`, `BinaryCodec`, `StringCodec`,

@@ -38,6 +38,7 @@ internal static class SampleRoutes
     public const string Scrollbar = "/scrollbar";
     public const string DraggableScrollableSheet = "/draggable-scrollable-sheet";
     public const string EditableText = "/editable-text";
+    public const string AutofillGroup = "/autofill-group";
     public const string MaterialButtons = "/material-buttons";
     public const string AnimatedIcon = "/animated-icon";
     public const string Tabs = "/tabs";
@@ -303,6 +304,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "drag-to-resize + snap + controller + actuator reset",
             () => new DraggableScrollableSheetDemoPage()),
         new(SampleRoutes.EditableText, "EditableText", "focus + IME + multiline caret", () => new EditableTextDemoPage()),
+        new(
+            SampleRoutes.AutofillGroup,
+            "AutofillGroup",
+            "autofill scope + hints + finishAutofillContext",
+            () => new AutofillGroupDemoPage()),
         new(
             SampleRoutes.ProxyWidgets,
             "Proxy widgets",

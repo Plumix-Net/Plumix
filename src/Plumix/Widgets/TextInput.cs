@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
+using System.Collections;
 using System.Globalization;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -87,6 +88,49 @@ public readonly record struct TextEditingValue
     public TextSelection Selection { get; }
 
     public TextRange? Composing { get; }
+
+    /// <summary>The JSON payload the host exchanges with the framework.</summary>
+    /// <remarks>
+    /// Plumix's value carries no affinity or directionality, so <c>selectionAffinity</c> and
+    /// <c>selectionIsDirectional</c> are emitted with Dart's defaults.
+    /// </remarks>
+    public Dictionary<string, object?> ToJson()
+    {
+        return new Dictionary<string, object?>
+        {
+            ["text"] = Text,
+            ["selectionBase"] = Selection.BaseOffset,
+            ["selectionExtent"] = Selection.ExtentOffset,
+            ["selectionAffinity"] = "TextAffinity.downstream",
+            ["selectionIsDirectional"] = false,
+            ["composingBase"] = Composing?.Start ?? -1,
+            ["composingExtent"] = Composing?.End ?? -1,
+        };
+    }
+
+    /// <summary>Creates a value from the host's JSON payload.</summary>
+    public static TextEditingValue FromJson(IDictionary json)
+    {
+        ArgumentNullException.ThrowIfNull(json);
+        string text = json["text"] as string ?? string.Empty;
+        int selectionBase = ReadInt(json, "selectionBase", -1);
+        int selectionExtent = ReadInt(json, "selectionExtent", -1);
+        int composingBase = ReadInt(json, "composingBase", -1);
+        int composingExtent = ReadInt(json, "composingExtent", -1);
+        TextSelection? selection = selectionBase < 0 && selectionExtent < 0
+            ? null
+            : new TextSelection(Math.Max(0, selectionBase), Math.Max(0, selectionExtent));
+        TextRange? composing = composingBase < 0 || composingExtent < 0
+            ? null
+            : new TextRange(composingBase, composingExtent);
+        return new TextEditingValue(text, selection, composing);
+    }
+
+    private static int ReadInt(IDictionary json, string key, int fallback)
+    {
+        object? value = json.Contains(key) ? json[key] : null;
+        return value is null ? fallback : Convert.ToInt32(value);
+    }
 }
 
 public class TextEditingController : ChangeNotifier
@@ -651,13 +695,13 @@ public sealed class EditableText : StatefulWidget
         string? semanticsLabel = null,
         TextAlign textAlign = TextAlign.Start,
         TextDirection? textDirection = null,
-        TextInputKeyboardType keyboardType = TextInputKeyboardType.Text,
+        TextInputKeyboardType? keyboardType = null,
         TextInputActionType textInputAction = TextInputActionType.Unspecified,
         TextCapitalization textCapitalization = TextCapitalization.None,
         SmartDashesType? smartDashesType = null,
         SmartQuotesType? smartQuotesType = null,
         Thickness? scrollPadding = null,
-        bool autocorrect = true,
+        bool? autocorrect = null,
         bool enableSuggestions = true,
         bool canRequestFocus = true,
         FocusOnKeyEventCallback? onKeyEvent = null,
@@ -671,6 +715,8 @@ public sealed class EditableText : StatefulWidget
         SpellCheckConfiguration? spellCheckConfiguration = null,
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
         bool rendererIgnoresPointer = false,
+        IReadOnlyList<string>? autofillHints = null,
+        IAutofillClient? autofillClient = null,
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
@@ -703,13 +749,15 @@ public sealed class EditableText : StatefulWidget
         SemanticsLabel = semanticsLabel;
         TextAlign = textAlign;
         TextDirection = textDirection;
-        KeyboardType = keyboardType;
+        AutofillHints = ReferenceEquals(autofillHints, AutofillDisabled) ? null : autofillHints ?? [];
+        AutofillClient = autofillClient;
+        KeyboardType = keyboardType ?? InferKeyboardType(AutofillHints, multiline);
         TextInputAction = textInputAction;
         TextCapitalization = textCapitalization;
         SmartDashesType = smartDashesType ?? (obscureText ? SmartDashesType.Disabled : SmartDashesType.Enabled);
         SmartQuotesType = smartQuotesType ?? (obscureText ? SmartQuotesType.Disabled : SmartQuotesType.Enabled);
         ScrollPadding = scrollPadding ?? new Thickness(20);
-        Autocorrect = autocorrect;
+        Autocorrect = autocorrect ?? InferAutocorrect(AutofillHints);
         EnableSuggestions = enableSuggestions;
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
@@ -794,13 +842,202 @@ public sealed class EditableText : StatefulWidget
     public Action<TextSelection, SelectionChangedCause?>? OnSelectionChanged { get; }
     public bool RendererIgnoresPointer { get; }
 
+    /// <summary>
+    /// A list of strings that helps the autofill service identify the type of this text input.
+    /// </summary>
+    /// <remarks>
+    /// <c>null</c> disables autofill for this field. Dart spells that as <c>autofillHints: null</c>
+    /// and defaults the parameter to <c>const &lt;String&gt;[]</c>; C# cannot express a non-null
+    /// default for an optional reference parameter, so the constructor treats an omitted argument as
+    /// the empty list and <see cref="AutofillDisabled"/> as Dart's <c>null</c>.
+    /// </remarks>
+    public IReadOnlyList<string>? AutofillHints { get; }
+
+    /// <summary>The <see cref="IAutofillClient"/> that directs the autofill of this field, when it
+    /// is not the <see cref="EditableTextState"/> itself.</summary>
+    public IAutofillClient? AutofillClient { get; }
+
+    /// <summary>Pass as <c>autofillHints</c> to disable autofill, the way Dart passes <c>null</c>.
+    /// </summary>
+    public static IReadOnlyList<string> AutofillDisabled { get; } = new List<string>();
+
+    /// <summary>Dart's <c>EditableText._inferKeyboardType</c>.</summary>
+    /// <remarks>
+    /// Plumix's keyboard type is a flat enum with no <c>numberWithOptions</c>, so
+    /// <see cref="UI.AutofillHints.TransactionAmount"/> infers a plain
+    /// <see cref="TextInputKeyboardType.Number"/> where Dart infers a decimal one.
+    /// </remarks>
+    internal static TextInputKeyboardType InferKeyboardType(
+        IReadOnlyList<string>? autofillHints,
+        bool multiline)
+    {
+        if (autofillHints is null || autofillHints.Count == 0)
+        {
+            return multiline ? TextInputKeyboardType.Multiline : TextInputKeyboardType.Text;
+        }
+
+        string effectiveHint = autofillHints[0];
+        if (!OperatingSystem.IsBrowser())
+        {
+            switch (PlatformDefaults.TargetPlatform)
+            {
+                case TargetPlatform.IOS:
+                case TargetPlatform.MacOS:
+                    if (AppleKeyboardTypes.TryGetValue(effectiveHint, out TextInputKeyboardType appleType))
+                    {
+                        return appleType;
+                    }
+
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (multiline)
+        {
+            return TextInputKeyboardType.Multiline;
+        }
+
+        return InferredKeyboardTypes.TryGetValue(effectiveHint, out TextInputKeyboardType inferred)
+            ? inferred
+            : TextInputKeyboardType.Text;
+    }
+
+    /// <summary>Dart's <c>EditableText._inferAutocorrect</c>.</summary>
+    internal static bool InferAutocorrect(IReadOnlyList<string>? autofillHints)
+    {
+        if (autofillHints is null || autofillHints.Count == 0 || OperatingSystem.IsBrowser())
+        {
+            return true;
+        }
+
+        if (PlatformDefaults.TargetPlatform != TargetPlatform.IOS)
+        {
+            return true;
+        }
+
+        // username, password and newPassword are password related hints; newUsername is not
+        // supported on iOS. Autocorrect is turned off so the password bar does not flash.
+        bool passwordRelatedHint = autofillHints.Any(
+            hint => hint is UI.AutofillHints.Username
+                or UI.AutofillHints.Password
+                or UI.AutofillHints.NewPassword);
+        return !passwordRelatedHint;
+    }
+
+    private static readonly Dictionary<string, TextInputKeyboardType> AppleKeyboardTypes = new()
+    {
+        [UI.AutofillHints.AddressCity] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.AddressCityAndState] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.AddressState] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.CountryName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.CreditCardNumber] = TextInputKeyboardType.Number,
+        [UI.AutofillHints.Email] = TextInputKeyboardType.EmailAddress,
+        [UI.AutofillHints.FamilyName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.FullStreetAddress] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.GivenName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.JobTitle] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.Location] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.MiddleName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.Name] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.NamePrefix] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.NameSuffix] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.NewPassword] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.NewUsername] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.Nickname] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.OneTimeCode] = TextInputKeyboardType.Number,
+        [UI.AutofillHints.OrganizationName] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.Password] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.PostalCode] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.StreetAddressLine1] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.StreetAddressLine2] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.Sublocality] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.TelephoneNumber] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.Url] = TextInputKeyboardType.Url,
+        [UI.AutofillHints.Username] = TextInputKeyboardType.Text,
+    };
+
+    private static readonly Dictionary<string, TextInputKeyboardType> InferredKeyboardTypes = new()
+    {
+        [UI.AutofillHints.AddressCity] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.AddressCityAndState] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.AddressState] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.Birthday] = TextInputKeyboardType.Datetime,
+        [UI.AutofillHints.BirthdayDay] = TextInputKeyboardType.Datetime,
+        [UI.AutofillHints.BirthdayMonth] = TextInputKeyboardType.Datetime,
+        [UI.AutofillHints.BirthdayYear] = TextInputKeyboardType.Datetime,
+        [UI.AutofillHints.CountryCode] = TextInputKeyboardType.Number,
+        [UI.AutofillHints.CountryName] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.CreditCardExpirationDate] = TextInputKeyboardType.Datetime,
+        [UI.AutofillHints.CreditCardExpirationDay] = TextInputKeyboardType.Datetime,
+        [UI.AutofillHints.CreditCardExpirationMonth] = TextInputKeyboardType.Datetime,
+        [UI.AutofillHints.CreditCardExpirationYear] = TextInputKeyboardType.Datetime,
+        [UI.AutofillHints.CreditCardFamilyName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.CreditCardGivenName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.CreditCardMiddleName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.CreditCardName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.CreditCardNumber] = TextInputKeyboardType.Number,
+        [UI.AutofillHints.CreditCardSecurityCode] = TextInputKeyboardType.Number,
+        [UI.AutofillHints.CreditCardType] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.Email] = TextInputKeyboardType.EmailAddress,
+        [UI.AutofillHints.FamilyName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.FullStreetAddress] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.Gender] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.GivenName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.Impp] = TextInputKeyboardType.Url,
+        [UI.AutofillHints.JobTitle] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.Language] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.Location] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.MiddleInitial] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.MiddleName] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.Name] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.NamePrefix] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.NameSuffix] = TextInputKeyboardType.Name,
+        [UI.AutofillHints.NewPassword] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.NewUsername] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.Nickname] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.OneTimeCode] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.OrganizationName] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.Password] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.Photo] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.PostalAddress] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.PostalAddressExtended] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.PostalAddressExtendedPostalCode] = TextInputKeyboardType.Number,
+        [UI.AutofillHints.PostalCode] = TextInputKeyboardType.Number,
+        [UI.AutofillHints.StreetAddressLevel1] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLevel2] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLevel3] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLevel4] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLine1] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLine2] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.StreetAddressLine3] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.Sublocality] = TextInputKeyboardType.StreetAddress,
+        [UI.AutofillHints.TelephoneNumber] = TextInputKeyboardType.Phone,
+        [UI.AutofillHints.TelephoneNumberAreaCode] = TextInputKeyboardType.Phone,
+        [UI.AutofillHints.TelephoneNumberCountryCode] = TextInputKeyboardType.Phone,
+        [UI.AutofillHints.TelephoneNumberDevice] = TextInputKeyboardType.Phone,
+        [UI.AutofillHints.TelephoneNumberExtension] = TextInputKeyboardType.Phone,
+        [UI.AutofillHints.TelephoneNumberLocal] = TextInputKeyboardType.Phone,
+        [UI.AutofillHints.TelephoneNumberLocalPrefix] = TextInputKeyboardType.Phone,
+        [UI.AutofillHints.TelephoneNumberLocalSuffix] = TextInputKeyboardType.Phone,
+        [UI.AutofillHints.TelephoneNumberNational] = TextInputKeyboardType.Phone,
+        [UI.AutofillHints.TransactionAmount] = TextInputKeyboardType.Number,
+        [UI.AutofillHints.TransactionCurrency] = TextInputKeyboardType.Text,
+        [UI.AutofillHints.Url] = TextInputKeyboardType.Url,
+        [UI.AutofillHints.Username] = TextInputKeyboardType.Text,
+    };
+
     public override State CreateState()
     {
         return new EditableTextState();
     }
 
-    public sealed class EditableTextState : State, ITextSelectionDelegate
+    public sealed class EditableTextState : State, ITextSelectionDelegate, IAutofillClient, ITextInputClient
     {
+        private AutofillGroupState? _currentAutofillScope;
+        private TextInputConnection? _textInputConnection;
+
         private TextEditingController? _controller;
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
@@ -880,6 +1117,133 @@ public sealed class EditableText : StatefulWidget
 
         public TextSelectionOverlay? SelectionOverlay => _selectionOverlay;
 
+        // ------------------------------------------------------------- autofill
+
+        /// <inheritdoc/>
+        public IAutofillScope? CurrentAutofillScope => _currentAutofillScope;
+
+        /// <inheritdoc/>
+        public string AutofillId => $"EditableText-{GetHashCode()}";
+
+        /// <inheritdoc/>
+        public TextInputConfiguration TextInputConfiguration
+        {
+            get
+            {
+                IReadOnlyList<string>? autofillHints = Widget.AutofillHints;
+                AutofillConfiguration autofillConfiguration = autofillHints != null
+                    ? new AutofillConfiguration(
+                        uniqueIdentifier: AutofillId,
+                        autofillHints: autofillHints,
+                        currentEditingValue: CurrentTextEditingValue)
+                    : AutofillConfiguration.Disabled;
+                return new TextInputConfiguration(
+                    keyboardType: Widget.KeyboardType,
+                    readOnly: Widget.ReadOnly,
+                    obscureText: Widget.ObscureText,
+                    autocorrect: Widget.Autocorrect,
+                    smartDashesType: Widget.SmartDashesType,
+                    smartQuotesType: Widget.SmartQuotesType,
+                    enableSuggestions: Widget.EnableSuggestions,
+                    enableInteractiveSelection: Widget.EnableInteractiveSelection,
+                    inputAction: Widget.TextInputAction,
+                    textCapitalization: Widget.TextCapitalization,
+                    autofillConfiguration: autofillConfiguration,
+                    multiline: Widget.Multiline);
+            }
+        }
+
+        /// <inheritdoc/>
+        public void Autofill(TextEditingValue newEditingValue) => UpdateEditingValue(newEditingValue);
+
+        /// <inheritdoc/>
+        public void UpdateEditingValue(TextEditingValue value)
+        {
+            TextEditingController? controller = _controller;
+            if (controller is null || Widget.ReadOnly)
+            {
+                return;
+            }
+
+            if (controller.Value.Equals(value))
+            {
+                return;
+            }
+
+            controller.Value = value;
+            Widget.OnChanged?.Invoke(controller.Text);
+        }
+
+        /// <inheritdoc/>
+        public void PerformAction(TextInputActionType action)
+        {
+            switch (action)
+            {
+                case TextInputActionType.Done:
+                case TextInputActionType.Go:
+                case TextInputActionType.Send:
+                case TextInputActionType.Search:
+                    Widget.OnEditingComplete?.Invoke();
+                    Widget.OnSubmitted?.Invoke(_controller!.Text);
+                    break;
+                default:
+                    Widget.OnEditingComplete?.Invoke();
+                    break;
+            }
+        }
+
+        /// <inheritdoc/>
+        public void ConnectionClosed() => _textInputConnection = null;
+
+        private IAutofillClient EffectiveAutofillClient => Widget.AutofillClient ?? this;
+
+        private bool NeedsAutofill =>
+            EffectiveAutofillClient.TextInputConfiguration.AutofillConfiguration.Enabled;
+
+        private void OpenInputConnection()
+        {
+            if (_textInputConnection is { Attached: true })
+            {
+                return;
+            }
+
+            TextInputConfiguration configuration = EffectiveAutofillClient.TextInputConfiguration;
+            _textInputConnection = NeedsAutofill && _currentAutofillScope != null
+                ? _currentAutofillScope.Attach(this, configuration)
+                : UI.TextInput.Attach(this, configuration);
+            _textInputConnection.SetEditingState(CurrentTextEditingValue);
+            _textInputConnection.Show();
+            if (NeedsAutofill)
+            {
+                _textInputConnection.RequestAutofill();
+            }
+        }
+
+        private void CloseInputConnection()
+        {
+            _textInputConnection?.Close();
+            _textInputConnection = null;
+        }
+
+        private void UpdateAutofillRegistration()
+        {
+            AutofillGroupState? newAutofillGroup = AutofillGroup.MaybeOf(Context);
+            if (ReferenceEquals(_currentAutofillScope, newAutofillGroup))
+            {
+                return;
+            }
+
+            _currentAutofillScope?.Unregister(AutofillId);
+            _currentAutofillScope = newAutofillGroup;
+            _currentAutofillScope?.Register(EffectiveAutofillClient);
+        }
+
+        public override void DidChangeDependencies()
+        {
+            base.DidChangeDependencies();
+            UpdateAutofillRegistration();
+        }
+
         public override void InitState()
         {
             AttachController(Widget.Controller);
@@ -901,6 +1265,12 @@ public sealed class EditableText : StatefulWidget
                 DetachFocusNode(disposeOwned: true);
                 AttachFocusNode(Widget.FocusNode);
             }
+            if (!ReferenceEquals(oldEditableText.AutofillClient, Widget.AutofillClient))
+            {
+                _currentAutofillScope?.Unregister(oldEditableText.AutofillClient?.AutofillId ?? AutofillId);
+                _currentAutofillScope?.Register(EffectiveAutofillClient);
+            }
+
             if (!Widget.EnableInteractiveSelection
                 || oldEditableText.ContextMenuBuilder != Widget.ContextMenuBuilder)
             {
@@ -910,6 +1280,9 @@ public sealed class EditableText : StatefulWidget
 
         public override void Dispose()
         {
+            CloseInputConnection();
+            _currentAutofillScope?.Unregister(AutofillId);
+            _currentAutofillScope = null;
             _selectionOverlay?.Dispose();
             _selectionOverlay = null;
             _clipboardStatus.Dispose();
@@ -1601,16 +1974,7 @@ public sealed class EditableText : StatefulWidget
                 SelectionBaseOffset: selection.BaseOffset,
                 SelectionExtentOffset: selection.ExtentOffset,
                 CursorRectangle: cursorRectangle,
-                Configuration: new TextInputConfiguration(
-                    KeyboardType: Widget.KeyboardType,
-                    InputAction: Widget.TextInputAction,
-                    Autocorrect: Widget.Autocorrect,
-                    EnableSuggestions: Widget.EnableSuggestions,
-                    ObscureText: Widget.ObscureText,
-                    Multiline: Widget.Multiline,
-                    TextCapitalization: Widget.TextCapitalization,
-                    SmartDashesType: Widget.SmartDashesType,
-                    SmartQuotesType: Widget.SmartQuotesType));
+                Configuration: TextInputConfiguration);
         }
 
         private bool HandleTextSelectionChanged(FocusNode node, int baseOffset, int extentOffset)
@@ -1831,9 +2195,14 @@ public sealed class EditableText : StatefulWidget
         {
             _verticalNavigationX = null;
             _verticalNavigationColumn = null;
-            if (_focusNode?.HasFocus == false)
+            if (_focusNode?.HasFocus == true)
+            {
+                OpenInputConnection();
+            }
+            else if (_focusNode?.HasFocus == false)
             {
                 _selectionOverlay?.Hide();
+                CloseInputConnection();
             }
             SetState(static () => { });
         }

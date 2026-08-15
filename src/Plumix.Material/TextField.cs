@@ -58,6 +58,7 @@ public sealed class TextField : StatefulWidget
         bool canRequestFocus = true,
         FocusOnKeyEventCallback? onKeyEvent = null,
         IReadOnlyList<TextInputFormatter>? inputFormatters = null,
+        IReadOnlyList<string>? autofillHints = null,
         double? cursorHeight = null,
         Color? cursorColor = null,
         Color? cursorErrorColor = null,
@@ -117,6 +118,7 @@ public sealed class TextField : StatefulWidget
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
         InputFormatters = inputFormatters;
+        AutofillHints = autofillHints;
         CursorHeight = cursorHeight;
         CursorColor = cursorColor;
         CursorErrorColor = cursorErrorColor;
@@ -164,6 +166,13 @@ public sealed class TextField : StatefulWidget
     public bool CanRequestFocus { get; }
     public FocusOnKeyEventCallback? OnKeyEvent { get; }
     public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
+
+    /// <summary>A list of strings that helps the autofill service identify the type of this field.
+    /// </summary>
+    /// <remarks>Pass <see cref="EditableText.AutofillDisabled"/> to turn autofill off, the way Dart
+    /// passes <c>null</c>.</remarks>
+    public IReadOnlyList<string>? AutofillHints { get; }
+
     public double? CursorHeight { get; }
     public Color? CursorColor { get; }
     public Color? CursorErrorColor { get; }
@@ -302,6 +311,7 @@ public sealed class TextField : StatefulWidget
                 canRequestFocus: Current.CanRequestFocus,
                 onKeyEvent: Current.OnKeyEvent,
                 inputFormatters: Current.InputFormatters,
+                autofillHints: Current.AutofillHints,
                 cursorHeight: Current.CursorHeight,
                 enableInteractiveSelection: Current.EnableInteractiveSelection,
                 contextMenuBuilder: Current.ContextMenuBuilder,

@@ -52,6 +52,7 @@ import 'demos/general/drag_target_demo_page.dart';
 import 'demos/material/drawer_demo_page.dart';
 import 'demos/material/drawer_headers_demo_page.dart';
 import 'demos/material/divider_demo_page.dart';
+import 'demos/general/autofill_group_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
 import 'demos/general/flow_demo_page.dart';
@@ -582,6 +583,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'EditableText',
           subtitle: 'focus + IME + multiline caret',
           builder: () => const EditableTextDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.autofillGroup,
+          title: 'AutofillGroup',
+          subtitle: 'autofill scope + hints + finishAutofillContext',
+          builder: () => const AutofillGroupDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.proxyWidgets,

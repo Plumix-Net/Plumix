@@ -369,13 +369,13 @@ public class PlumixHost : Control
             FrameworkFocusManager.Instance.ResolveTextInputState()?.Configuration;
         TextInputOptions.SetContentType(
             this,
-            configuration.HasValue
-                ? ResolveContentType(configuration.Value.KeyboardType)
+            configuration is not null
+                ? ResolveContentType(configuration.KeyboardType)
                 : TextInputContentType.Normal);
         TextInputOptions.SetReturnKeyType(
             this,
-            configuration.HasValue
-                ? ResolveReturnKeyType(configuration.Value.InputAction)
+            configuration is not null
+                ? ResolveReturnKeyType(configuration.InputAction)
                 : TextInputReturnKeyType.Default);
         TextInputOptions.SetMultiline(this, configuration?.Multiline ?? false);
         TextInputOptions.SetIsSensitive(this, configuration?.ObscureText ?? false);
