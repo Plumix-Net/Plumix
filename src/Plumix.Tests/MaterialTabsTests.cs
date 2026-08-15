@@ -1189,7 +1189,7 @@ public sealed class MaterialTabsTests
 
         Assert.Contains(notifications, notification => notification is ScrollEndNotification);
         Assert.Equal(300, notifications[^1].Metrics.Pixels, precision: 3);
-        Assert.Equal(1, notifications[^1].Metrics.Page, precision: 3);
+        Assert.Equal(1, ((PageMetrics)notifications[^1].Metrics).Page!.Value, precision: 3);
         controller.Dispose();
     }
 

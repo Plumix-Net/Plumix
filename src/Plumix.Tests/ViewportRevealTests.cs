@@ -247,6 +247,39 @@ public sealed class ViewportRevealTests
         controller.Dispose();
     }
 
+    /// <remarks>
+    /// Flutter's pivot walk stops at real boxes because its `RenderSliver` is not a `RenderBox`.
+    /// Plumix's is, so the walk has to exclude slivers explicitly: with a padded list the inner
+    /// sliver would otherwise become the pivot and the tile's paint offset inside it would be added
+    /// on top of its child scroll offset.
+    /// </remarks>
+    [Fact]
+    public void SliverViewport_GetOffsetToRevealDoesNotCountANestedSliverTwice()
+    {
+        var target = new SizedBoxKeyProbe();
+        var controller = new ScrollController(initialScrollOffset: 300.0);
+        var harness = new WidgetRenderHarness(
+            new CustomScrollView(
+                controller: controller,
+                slivers:
+                [
+                    new SliverPadding(
+                        padding: new Thickness(0, 22, 0, 23),
+                        sliver: new SliverList(
+                            new SliverChildListDelegate(BuildTiles(20, target, index: 5)))),
+                ]));
+        harness.Pump(new Size(300, 200));
+
+        RenderObject renderTarget = target.RequireRenderObject();
+        var viewport = (RenderViewport)RenderAbstractViewport.Of(renderTarget);
+
+        // The leading padding plus five preceding 100-pixel tiles, counted once.
+        Assert.Equal(522.0, viewport.GetOffsetToReveal(renderTarget, 0.0).Offset, Tolerance);
+        Assert.Equal(422.0, viewport.GetOffsetToReveal(renderTarget, 1.0).Offset, Tolerance);
+
+        controller.Dispose();
+    }
+
     [Fact]
     public void SliverViewport_GetOffsetToRevealReportsTheCurrentOffsetForAForeignTarget()
     {

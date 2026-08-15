@@ -677,7 +677,7 @@ public sealed class MaterialScrollbarTests
             crossAxisMargin: 2,
             radius: 4,
             minLength: 48);
-        var metrics = new TestScrollMetrics(0, 0, 560, 240);
+        FixedScrollMetrics metrics = TestScrollMetrics(0, 0, 560, 240);
         painter.Update(metrics, AxisDirection.Down);
         using var harness = new WidgetRenderHarness(new CustomPaint(
             foregroundPainter: painter,
@@ -696,7 +696,7 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(560, painter.GetTrackToScroll(geometry.MaxThumbTravel), precision: 3);
         Assert.Equal(geometry.MaxThumbTravel, painter.GetScrollToTrack(560), precision: 3);
 
-        painter.Update(new TestScrollMetrics(0, 0, double.PositiveInfinity, 240), AxisDirection.Down);
+        painter.Update(TestScrollMetrics(0, 0, double.PositiveInfinity, 240), AxisDirection.Down);
         harness.Pump(new Size(200, 240));
         Assert.Null(painter.Geometry);
     }
@@ -776,11 +776,17 @@ public sealed class MaterialScrollbarTests
         itemBuilder: (_, index) => new SizedBox(height: 40, child: new Text($"row {index}")),
         addAutomaticKeepAlives: false);
 
-    private sealed record TestScrollMetrics(
-        double Pixels,
-        double MinScrollExtent,
-        double MaxScrollExtent,
-        double ViewportDimension) : IScrollMetrics;
+    private static FixedScrollMetrics TestScrollMetrics(
+        double pixels,
+        double minScrollExtent,
+        double maxScrollExtent,
+        double viewportDimension) => new(
+        minScrollExtent: minScrollExtent,
+        maxScrollExtent: maxScrollExtent,
+        pixels: pixels,
+        viewportDimension: viewportDimension,
+        axisDirection: AxisDirection.Down,
+        devicePixelRatio: 1.0);
 
     private static RenderRawScrollbarOverlay RequireOverlay(RenderObject root) =>
         Assert.IsType<RenderRawScrollbarOverlay>(FindDescendant<RenderRawScrollbarOverlay>(root));

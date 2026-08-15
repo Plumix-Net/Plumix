@@ -378,16 +378,17 @@ public sealed class OverscrollIndicatorTests : IDisposable
                 now.AddMilliseconds(48)));
     }
 
-    private static ScrollMetricsSnapshot Metrics(
+    private static FixedScrollMetrics Metrics(
         double viewportDimension = 200,
         AxisDirection axisDirection = AxisDirection.Down)
     {
-        return new ScrollMetricsSnapshot(
-            Pixels: 0,
-            MinScrollExtent: 0,
-            MaxScrollExtent: 600,
-            ViewportDimension: viewportDimension,
-            AxisDirection: axisDirection);
+        return new FixedScrollMetrics(
+            minScrollExtent: 0,
+            maxScrollExtent: 600,
+            pixels: 0,
+            viewportDimension: viewportDimension,
+            axisDirection: axisDirection,
+            devicePixelRatio: 1.0);
     }
 
     private static Widget Wrap(

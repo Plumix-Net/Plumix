@@ -1,5 +1,23 @@
 # Changelog
 
+- Breaking: ported `widgets/scroll_metrics.dart` in full and gave notifications a real metrics
+  hierarchy. `ScrollMetricsSnapshot` (a `readonly record struct`) is gone: `IScrollMetrics` now
+  carries Dart's whole mixin (`hasPixels`/`hasContentDimensions`/`hasViewportDimension`,
+  `axisDirection`, `axis`, `atEdge`, `extentTotal`, `copyWith`) with `ScrollMetricsUtils` holding the
+  shared bodies, and `FixedScrollMetrics` is an unsealed class with nullable-backed values and a
+  virtual `CopyWith`. Every `ScrollNotification`, `ScrollMetricsNotification` and
+  `ScrollIncrementDetails` carries `IScrollMetrics`, and `ScrollPosition.CopyWith` takes Dart's six
+  optional overrides. `PageMetrics` and `NestedScrollMetrics` are now `FixedScrollMetrics`
+  subclasses, so `notification.Metrics is PageMetrics` type-tests as in Flutter. Behavior changes:
+  `AtEdge` is Dart's exact `pixels == min || pixels == max` instead of a 0.0001 tolerance,
+  `ExtentTotal` is `max - min + viewportDimension` instead of the sum of the three extents, and the
+  `FixedScrollMetrics` constructor takes Flutter's argument order. Closes the nested-metrics and
+  page-metrics divergences.
+- Fixed `RenderViewport.GetOffsetToReveal` counting a descendant's paint offset twice whenever
+  slivers nest (a padded list, a `PageView`'s fractional padding): Plumix's `RenderSliver` is a
+  `RenderBox`, so the pivot walk picked the inner sliver as its pivot where Dart's type test cannot.
+  `ShowOnScreen`/`EnsureVisible` now reveal the right offset, including a `PageView`'s cached page.
+
 - Breaking: ported `widgets/nested_scroll_view.dart` in full — `NestedScrollView`,
   `NestedScrollViewState` (`InnerController`/`OuterController`),
   `NestedScrollView.SliverOverlapAbsorberHandleFor`, `SliverOverlapAbsorber`/`SliverOverlapInjector`

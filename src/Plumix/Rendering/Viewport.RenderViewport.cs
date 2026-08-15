@@ -567,7 +567,10 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
                 return new RevealedOffset(_offset.Pixels, rect ?? target.PaintBounds);
             }
 
-            if (current is RenderBox box)
+            // Flutter's `RenderSliver` is not a `RenderBox`, so its walk can test the type directly.
+            // Plumix's is (see the sliver hit-testing divergence), so a nested sliver would otherwise
+            // become the pivot and the descendant's paint offset inside it would be counted twice.
+            if (current is RenderBox box && current is not RenderSliver)
             {
                 pivot = box;
             }

@@ -221,7 +221,13 @@ public sealed class ScrollNotificationObserverTests
             observer.AddListener(first);
             observer.AddListener(second);
             new ScrollStartNotification(
-                new ScrollMetricsSnapshot(0, 0, 100, 50)).Dispatch(context);
+                new FixedScrollMetrics(
+                    minScrollExtent: 0,
+                    maxScrollExtent: 100,
+                    pixels: 0,
+                    viewportDimension: 50,
+                    axisDirection: AxisDirection.Down,
+                    devicePixelRatio: 1.0)).Dispatch(context);
             return new SizedBox(width: 1, height: 1);
         }
     }

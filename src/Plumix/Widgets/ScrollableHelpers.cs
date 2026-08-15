@@ -23,7 +23,7 @@ public enum ScrollIncrementType
 /// </summary>
 public sealed class ScrollIncrementDetails
 {
-    public ScrollIncrementDetails(ScrollIncrementType type, ScrollMetricsSnapshot metrics)
+    public ScrollIncrementDetails(ScrollIncrementType type, IScrollMetrics metrics)
     {
         Type = type;
         Metrics = metrics;
@@ -33,7 +33,7 @@ public sealed class ScrollIncrementDetails
     public ScrollIncrementType Type { get; }
 
     /// The current metrics of the scrollable that is being scrolled.
-    public ScrollMetricsSnapshot Metrics { get; }
+    public IScrollMetrics Metrics { get; }
 }
 
 /// <summary>Computes the scroll distance for one keyboard-driven scroll request.</summary>

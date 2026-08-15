@@ -9,19 +9,35 @@ namespace Plumix.Tests;
 
 public sealed class ScrollInfrastructureTests
 {
+    /// <remarks>
+    /// Dart parity: <c>notification_test.dart</c>'s "Notification basics - listener null return value".
+    /// </remarks>
     [Fact]
-    public void ScrollMetricsSnapshot_ExposesFlutterEdgeAndAxisMetrics()
+    public void ScrollMetricsNotification_CarriesItsMetricsThroughAsScrollUpdate()
     {
-        var vertical = new ScrollMetricsSnapshot(25, 0, 100, 40, AxisDirection.Down);
-        Assert.Equal(25, vertical.ExtentBefore);
-        Assert.Equal(75, vertical.ExtentAfter);
-        Assert.Equal(Axis.Vertical, vertical.Axis);
-        Assert.False(vertical.AtEdge);
+        var owner = new BuildOwner();
+        ScrollMetricsNotification? notification = null;
 
-        var horizontalEdge = new ScrollMetricsSnapshot(100, 0, 100, 40, AxisDirection.Left);
-        Assert.Equal(Axis.Horizontal, horizontalEdge.Axis);
-        Assert.True(horizontalEdge.AtEdge);
-        Assert.Equal(0, horizontalEdge.ExtentAfter);
+        var root = new TestRootElement(
+            new MetricsNotificationProbe(context => notification = new ScrollMetricsNotification(
+                new FixedScrollMetrics(
+                    minScrollExtent: 1.0,
+                    maxScrollExtent: 2.0,
+                    pixels: 3.0,
+                    viewportDimension: 4.0,
+                    axisDirection: AxisDirection.Down,
+                    devicePixelRatio: 5.0),
+                context)));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Equal(3.0, notification!.Metrics.Pixels);
+        ScrollUpdateNotification update = notification.AsScrollUpdate();
+        Assert.Equal(3.0, update.Metrics.Pixels);
+        Assert.Equal(5.0, update.Metrics.DevicePixelRatio);
+        Assert.Equal(AxisDirection.Down, update.Metrics.AxisDirection);
     }
 
     [Fact]
@@ -560,6 +576,15 @@ public sealed class ScrollInfrastructureTests
         }
     }
 
+    private sealed class MetricsNotificationProbe(Action<BuildContext> onBuild) : StatelessWidget
+    {
+        public override Widget Build(BuildContext context)
+        {
+            onBuild(context);
+            return new SizedBox(width: 1, height: 1);
+        }
+    }
+
     private sealed class PrimaryControllerProbe : StatelessWidget
     {
         private readonly Action<ScrollController> _onResolved;
@@ -770,7 +795,13 @@ public sealed class ScrollInfrastructureTests
     }
 
     private sealed class TestScrollNotification(int value) : ScrollNotification(
-        new ScrollMetricsSnapshot(0, 0, 0, 0))
+        new FixedScrollMetrics(
+            minScrollExtent: 0,
+            maxScrollExtent: 0,
+            pixels: 0,
+            viewportDimension: 0,
+            axisDirection: AxisDirection.Down,
+            devicePixelRatio: 1.0))
     {
         public int Value { get; } = value;
     }

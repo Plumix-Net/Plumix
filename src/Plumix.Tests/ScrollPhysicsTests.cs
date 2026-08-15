@@ -24,11 +24,12 @@ public sealed class ScrollPhysicsTests
         double devicePixelRatio = 3.0)
     {
         return new FixedScrollMetrics(
-            Pixels: pixels,
-            MinScrollExtent: minScrollExtent,
-            MaxScrollExtent: maxScrollExtent,
-            ViewportDimension: viewportDimension,
-            DevicePixelRatio: devicePixelRatio);
+            minScrollExtent: minScrollExtent,
+            maxScrollExtent: maxScrollExtent,
+            pixels: pixels,
+            viewportDimension: viewportDimension,
+            axisDirection: AxisDirection.Down,
+            devicePixelRatio: devicePixelRatio);
     }
 
     [Fact]

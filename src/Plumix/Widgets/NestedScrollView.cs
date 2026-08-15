@@ -301,16 +301,85 @@ internal sealed class InheritedNestedScrollView : InheritedWidget
 /// The metrics of the outer scroll view of a <see cref="NestedScrollView"/>, extended with the range
 /// the outer position may travel through before the inner positions take over.
 /// </summary>
-internal sealed record NestedScrollMetrics(
-    double Pixels,
-    double MinScrollExtent,
-    double MaxScrollExtent,
-    double ViewportDimension,
-    AxisDirection AxisDirection,
-    double MinRange,
-    double MaxRange,
-    double CorrectionOffset,
-    double DevicePixelRatio = 1.0) : IScrollMetrics;
+internal sealed class NestedScrollMetrics : FixedScrollMetrics
+{
+    public NestedScrollMetrics(
+        double? minScrollExtent,
+        double? maxScrollExtent,
+        double? pixels,
+        double? viewportDimension,
+        AxisDirection axisDirection,
+        double devicePixelRatio,
+        double minRange,
+        double maxRange,
+        double correctionOffset)
+        : base(
+            minScrollExtent,
+            maxScrollExtent,
+            pixels,
+            viewportDimension,
+            axisDirection,
+            devicePixelRatio)
+    {
+        MinRange = minRange;
+        MaxRange = maxRange;
+        CorrectionOffset = correctionOffset;
+    }
+
+    public double MinRange { get; }
+
+    public double MaxRange { get; }
+
+    public double CorrectionOffset { get; }
+
+    public override NestedScrollMetrics CopyWith(
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
+    {
+        return CopyWith(
+            minRange: null,
+            maxRange: null,
+            correctionOffset: null,
+            minScrollExtent: minScrollExtent,
+            maxScrollExtent: maxScrollExtent,
+            pixels: pixels,
+            viewportDimension: viewportDimension,
+            axisDirection: axisDirection,
+            devicePixelRatio: devicePixelRatio);
+    }
+
+    /// <summary>
+    /// Dart adds <c>minRange</c>/<c>maxRange</c>/<c>correctionOffset</c> to <c>copyWith</c>'s named
+    /// arguments. C# forbids widening an override's parameter list, so the three extra values move to
+    /// the front of a separate overload with no defaults.
+    /// </summary>
+    public NestedScrollMetrics CopyWith(
+        double? minRange,
+        double? maxRange,
+        double? correctionOffset,
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
+    {
+        return new NestedScrollMetrics(
+            minScrollExtent: minScrollExtent ?? (HasContentDimensions ? MinScrollExtent : null),
+            maxScrollExtent: maxScrollExtent ?? (HasContentDimensions ? MaxScrollExtent : null),
+            pixels: pixels ?? (HasPixels ? Pixels : null),
+            viewportDimension: viewportDimension ?? (HasViewportDimension ? ViewportDimension : null),
+            axisDirection: axisDirection ?? AxisDirection,
+            devicePixelRatio: devicePixelRatio ?? DevicePixelRatio,
+            minRange: minRange ?? MinRange,
+            maxRange: maxRange ?? MaxRange,
+            correctionOffset: correctionOffset ?? CorrectionOffset);
+    }
+}
 
 /// <summary>Which of the two scroll views a ballistic activity belongs to.</summary>
 internal enum NestedBallisticScrollActivityMode
@@ -573,18 +642,18 @@ internal sealed class NestedScrollCoordinator : IScrollActivityDelegate, IScroll
         }
 
         return new NestedScrollMetrics(
-            Pixels: pixels,
-            MinScrollExtent: outer.MinScrollExtent,
-            MaxScrollExtent: outer.MaxScrollExtent
+            minScrollExtent: outer.MinScrollExtent,
+            maxScrollExtent: outer.MaxScrollExtent
                              + innerPosition.MaxScrollExtent
                              - innerPosition.MinScrollExtent
                              + extra,
-            ViewportDimension: outer.ViewportDimension,
-            AxisDirection: outer.AxisDirection,
-            MinRange: minRange,
-            MaxRange: maxRange,
-            CorrectionOffset: correctionOffset,
-            DevicePixelRatio: outer.DevicePixelRatio);
+            pixels: pixels,
+            viewportDimension: outer.ViewportDimension,
+            axisDirection: outer.AxisDirection,
+            devicePixelRatio: outer.DevicePixelRatio,
+            minRange: minRange,
+            maxRange: maxRange,
+            correctionOffset: correctionOffset);
     }
 
     /// <summary>Converts an offset in <paramref name="source"/>'s coordinates to outer coordinates.</summary>

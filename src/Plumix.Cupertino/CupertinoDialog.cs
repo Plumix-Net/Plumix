@@ -886,7 +886,7 @@ internal sealed class OverscrollBackgroundState : State
 
     private bool OnScrollUpdate(ScrollUpdateNotification notification)
     {
-        ScrollMetricsSnapshot metrics = notification.Metrics;
+        IScrollMetrics metrics = notification.Metrics;
         SetState(() =>
         {
             _topOverscroll = Math.Min(

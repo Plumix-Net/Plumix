@@ -9,57 +9,6 @@ using Plumix.Widgets;
 
 namespace Plumix.Rendering;
 
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/scroll_metrics.dart
-public interface IScrollMetrics
-{
-    double Pixels { get; }
-    double MinScrollExtent { get; }
-    double MaxScrollExtent { get; }
-    double ViewportDimension { get; }
-
-    /// <summary>Whether the <see cref="Pixels"/> value is outside the <c>Min</c>/<c>Max</c> extents.</summary>
-    bool OutOfRange => Pixels < MinScrollExtent || Pixels > MaxScrollExtent;
-
-    /// <summary>The number of device pixels for each logical pixel of the view the scrollable is in.</summary>
-    double DevicePixelRatio => 1.0;
-
-    /// <summary>The quantity of content conceptually "above" the viewport.</summary>
-    double ExtentBefore => Math.Max(Pixels - MinScrollExtent, 0.0);
-
-    /// <summary>The quantity of content conceptually "below" the viewport.</summary>
-    double ExtentAfter => Math.Max(MaxScrollExtent - Pixels, 0.0);
-
-    /// <summary>The quantity of content conceptually "inside" the viewport.</summary>
-    double ExtentInside
-    {
-        get
-        {
-            double leadingOverscroll = Math.Clamp(MinScrollExtent - Pixels, 0.0, ViewportDimension);
-            double trailingOverscroll = Math.Clamp(Pixels - MaxScrollExtent, 0.0, ViewportDimension);
-            return Math.Max(0.0, ViewportDimension - leadingOverscroll - trailingOverscroll);
-        }
-    }
-}
-
-/// <summary>An immutable snapshot of values associated with a <see cref="ScrollPosition"/>.</summary>
-public sealed record FixedScrollMetrics(
-    double Pixels,
-    double MinScrollExtent,
-    double MaxScrollExtent,
-    double ViewportDimension,
-    double DevicePixelRatio = 1.0) : IScrollMetrics
-{
-    /// <summary>Whether the <see cref="Pixels"/> value is outside the min/max extents.</summary>
-    public bool OutOfRange => Pixels < MinScrollExtent || Pixels > MaxScrollExtent;
-
-    public static FixedScrollMetrics From(IScrollMetrics metrics) => new(
-        metrics.Pixels,
-        metrics.MinScrollExtent,
-        metrics.MaxScrollExtent,
-        metrics.ViewportDimension,
-        metrics.DevicePixelRatio);
-}
-
 public enum CacheExtentStyle
 {
     Pixel,
@@ -732,8 +681,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     private bool _haveDimensions;
     private ScrollActivity _activity;
     private ScrollDirection _userScrollDirection = ScrollDirection.Idle;
-    private FixedScrollMetrics? _lastMetrics;
-    private AxisDirection _lastMetricsAxisDirection = AxisDirection.Down;
+    private IScrollMetrics? _lastMetrics;
     private Axis? _lastAxis;
     private bool _pendingDimensions;
     private bool _haveScheduledUpdateNotification;
@@ -798,16 +746,22 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     public bool KeepScrollOffset { get; }
 
     /// <summary>Whether the <see cref="Pixels"/> value is outside the min/max scroll extents.</summary>
-    public bool OutOfRange => _pixels < _minScrollExtent || _pixels > _maxScrollExtent;
+    public bool OutOfRange => ScrollMetricsUtils.OutOfRange(this);
+
+    /// <summary>Whether <see cref="Pixels"/> sits exactly on one of the two scroll extents.</summary>
+    public bool AtEdge => ScrollMetricsUtils.AtEdge(this);
 
     /// <summary>The quantity of content conceptually "above" the viewport.</summary>
-    public double ExtentBefore => Math.Max(_pixels - _minScrollExtent, 0.0);
+    public double ExtentBefore => ScrollMetricsUtils.ExtentBefore(this);
 
     /// <summary>The quantity of content conceptually "below" the viewport.</summary>
-    public double ExtentAfter => Math.Max(_maxScrollExtent - _pixels, 0.0);
+    public double ExtentAfter => ScrollMetricsUtils.ExtentAfter(this);
 
     /// <summary>The quantity of content conceptually "inside" the viewport.</summary>
-    public double ExtentInside => ((IScrollMetrics)this).ExtentInside;
+    public double ExtentInside => ScrollMetricsUtils.ExtentInside(this);
+
+    /// <summary>The total quantity of content available.</summary>
+    public double ExtentTotal => ScrollMetricsUtils.ExtentTotal(this);
 
     public ScrollPhysics Physics => _physics;
 
@@ -1131,7 +1085,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     {
         return Physics.RecommendDeferredLoading(
             Activity.Velocity + _impliedVelocity,
-            FixedScrollMetrics.From(this),
+            CopyWith(),
             context);
     }
 
@@ -1236,7 +1190,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
             _maxScrollExtent = maxScrollExtent;
             _hasContentDimensions = true;
             _lastAxis = Axis;
-            FixedScrollMetrics? currentMetrics = _haveDimensions ? FixedScrollMetrics.From(this) : null;
+            IScrollMetrics? currentMetrics = _haveDimensions ? CopyWith() : null;
             _didChangeViewportDimensionOrReceiveCorrection = false;
             _pendingDimensions = true;
             if (_haveDimensions && !CorrectForNewDimensions(_lastMetrics!, currentMetrics!))
@@ -1264,8 +1218,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
                 _haveScheduledUpdateNotification = true;
             }
 
-            _lastMetrics = FixedScrollMetrics.From(this);
-            _lastMetricsAxisDirection = AxisDirection;
+            _lastMetrics = CopyWith();
         }
 
         return true;
@@ -1317,32 +1270,35 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
             return true;
         }
 
-        ScrollMetricsSnapshot current = CopyWith();
-        var previous = new ScrollMetricsSnapshot(
-            Pixels: last.Pixels,
-            MinScrollExtent: last.MinScrollExtent,
-            MaxScrollExtent: last.MaxScrollExtent,
-            ViewportDimension: last.ViewportDimension,
-            AxisDirection: _lastMetricsAxisDirection);
-        return !(current.ExtentBefore == previous.ExtentBefore
-                 && current.ExtentInside == previous.ExtentInside
-                 && current.ExtentAfter == previous.ExtentAfter
-                 && current.AxisDirection == previous.AxisDirection);
+        IScrollMetrics current = CopyWith();
+        return !(current.ExtentBefore == last.ExtentBefore
+                 && current.ExtentInside == last.ExtentInside
+                 && current.ExtentAfter == last.ExtentAfter
+                 && current.AxisDirection == last.AxisDirection);
     }
 
     /// <summary>An immutable snapshot of this position's metrics.</summary>
     /// <remarks>
-    /// Flutter's <c>ScrollMetrics.copyWith</c> with no overrides. Subclasses that carry extra metrics
-    /// (a page view's viewport fraction, for instance) override this.
+    /// Flutter's <c>ScrollMetrics.copyWith</c>, which a <see cref="ScrollPosition"/> inherits from the
+    /// mixin. Subclasses that carry extra metrics (a page view's viewport fraction, for instance)
+    /// override this and return their own <see cref="FixedScrollMetrics"/> subclass.
     /// </remarks>
-    public virtual ScrollMetricsSnapshot CopyWith()
+    public virtual IScrollMetrics CopyWith(
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
     {
-        return new ScrollMetricsSnapshot(
-            Pixels: _pixels,
-            MinScrollExtent: _minScrollExtent,
-            MaxScrollExtent: _maxScrollExtent,
-            ViewportDimension: _viewportDimension,
-            AxisDirection: AxisDirection);
+        return ScrollMetricsUtils.Copy(
+            this,
+            minScrollExtent,
+            maxScrollExtent,
+            pixels,
+            viewportDimension,
+            axisDirection,
+            devicePixelRatio);
     }
 
     /// <remarks>Flutter's <c>nearEqual</c>.</remarks>

@@ -158,7 +158,13 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         harness.Pump(Viewport);
         var state = harness.FindState<RefreshIndicatorState>();
         var emitterState = harness.FindState<NotificationEmitterState>();
-        var metrics = new ScrollMetricsSnapshot(0, 0, 600, 400, AxisDirection.Down);
+        var metrics = new FixedScrollMetrics(
+            minScrollExtent: 0,
+            maxScrollExtent: 600,
+            pixels: 0,
+            viewportDimension: 400,
+            axisDirection: AxisDirection.Down,
+            devicePixelRatio: 1.0);
 
         emitterState.Dispatch(new ScrollStartNotification(metrics, hasDragDetails: true));
         Assert.Equal(RefreshIndicatorStatus.Drag, state.Status);
@@ -199,11 +205,17 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         var state = harness.FindState<RefreshIndicatorState>();
         var emitterState = harness.FindState<NotificationEmitterState>();
 
-        var horizontal = new ScrollMetricsSnapshot(0, 0, 600, 400, AxisDirection.Right);
+        var horizontal = new FixedScrollMetrics(
+            minScrollExtent: 0,
+            maxScrollExtent: 600,
+            pixels: 0,
+            viewportDimension: 400,
+            axisDirection: AxisDirection.Right,
+            devicePixelRatio: 1.0);
         emitterState.Dispatch(new ScrollStartNotification(horizontal, hasDragDetails: true));
         Assert.Null(state.Status);
 
-        var vertical = horizontal with { AxisDirection = AxisDirection.Down };
+        FixedScrollMetrics vertical = horizontal.CopyWith(axisDirection: AxisDirection.Down);
         emitterState.Dispatch(new ScrollStartNotification(vertical, hasDragDetails: true));
         emitterState.Dispatch(new OverscrollNotification(vertical, overscroll: -20, hasDragDetails: true));
         emitterState.Dispatch(new ScrollEndNotification(vertical));
@@ -222,7 +234,13 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         harness.Pump(Viewport);
         var state = harness.FindState<RefreshIndicatorState>();
         var emitterState = harness.FindState<NotificationEmitterState>();
-        var metrics = new ScrollMetricsSnapshot(0, 0, 600, 400, AxisDirection.Down);
+        var metrics = new FixedScrollMetrics(
+            minScrollExtent: 0,
+            maxScrollExtent: 600,
+            pixels: 0,
+            viewportDimension: 400,
+            axisDirection: AxisDirection.Down,
+            devicePixelRatio: 1.0);
 
         var idleLeading = new OverscrollIndicatorNotification(leading: true);
         Assert.False(idleLeading.Dispatch(emitterState.Context));
@@ -350,7 +368,13 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
 
     private static void BeginDrag(NotificationEmitterState emitter)
     {
-        var metrics = new ScrollMetricsSnapshot(0, 0, 600, 400, AxisDirection.Down);
+        var metrics = new FixedScrollMetrics(
+            minScrollExtent: 0,
+            maxScrollExtent: 600,
+            pixels: 0,
+            viewportDimension: 400,
+            axisDirection: AxisDirection.Down,
+            devicePixelRatio: 1.0);
         emitter.Dispatch(new ScrollStartNotification(metrics, hasDragDetails: true));
         emitter.Dispatch(new OverscrollNotification(metrics, overscroll: -80, hasDragDetails: true));
     }

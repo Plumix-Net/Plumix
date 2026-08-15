@@ -4183,12 +4183,13 @@ public sealed class MaterialScaffoldTests
             material => material.Color == Colors.Goldenrod);
 
         var notification = new ScrollUpdateNotification(
-            new ScrollMetricsSnapshot(
-                Pixels: 12,
-                MinScrollExtent: 0,
-                MaxScrollExtent: 100,
-                ViewportDimension: 40,
-                AxisDirection: AxisDirection.Down));
+            new FixedScrollMetrics(
+                minScrollExtent: 0,
+                maxScrollExtent: 100,
+                pixels: 12,
+                viewportDimension: 40,
+                axisDirection: AxisDirection.Down,
+                devicePixelRatio: 1.0));
         notification.Dispatch(emitterContext);
         owner.FlushBuild();
 

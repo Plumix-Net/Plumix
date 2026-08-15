@@ -163,6 +163,79 @@ public class PageController : ScrollController
     }
 }
 
+/// <summary>An immutable snapshot of values associated with a <see cref="PageView"/>.</summary>
+public class PageMetrics : FixedScrollMetrics
+{
+    public PageMetrics(
+        double? minScrollExtent,
+        double? maxScrollExtent,
+        double? pixels,
+        double? viewportDimension,
+        AxisDirection axisDirection,
+        double viewportFraction,
+        double devicePixelRatio)
+        : base(
+            minScrollExtent,
+            maxScrollExtent,
+            pixels,
+            viewportDimension,
+            axisDirection,
+            devicePixelRatio)
+    {
+        ViewportFraction = viewportFraction;
+    }
+
+    public override PageMetrics CopyWith(
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
+    {
+        return CopyWith(
+            viewportFraction: null,
+            minScrollExtent: minScrollExtent,
+            maxScrollExtent: maxScrollExtent,
+            pixels: pixels,
+            viewportDimension: viewportDimension,
+            axisDirection: axisDirection,
+            devicePixelRatio: devicePixelRatio);
+    }
+
+    /// <summary>
+    /// Dart adds <c>viewportFraction</c> to <c>copyWith</c>'s named arguments. C# forbids widening an
+    /// override's parameter list, so the extra value moves to the front of a separate overload whose
+    /// <paramref name="viewportFraction"/> has no default.
+    /// </summary>
+    public PageMetrics CopyWith(
+        double? viewportFraction,
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
+    {
+        return new PageMetrics(
+            minScrollExtent: minScrollExtent ?? (HasContentDimensions ? MinScrollExtent : null),
+            maxScrollExtent: maxScrollExtent ?? (HasContentDimensions ? MaxScrollExtent : null),
+            pixels: pixels ?? (HasPixels ? Pixels : null),
+            viewportDimension: viewportDimension ?? (HasViewportDimension ? ViewportDimension : null),
+            axisDirection: axisDirection ?? AxisDirection,
+            viewportFraction: viewportFraction ?? ViewportFraction,
+            devicePixelRatio: devicePixelRatio ?? DevicePixelRatio);
+    }
+
+    /// <summary>The current page displayed in the <see cref="PageView"/>.</summary>
+    public double? Page =>
+        Math.Max(0.0, Math.Clamp(Pixels, MinScrollExtent, Math.Max(MinScrollExtent, MaxScrollExtent)))
+        / Math.Max(1.0, ViewportDimension * ViewportFraction);
+
+    /// <summary>The fraction of the viewport that each page occupies.</summary>
+    public double ViewportFraction { get; }
+}
+
 /// <summary>
 /// The <see cref="ScrollPosition"/> a <see cref="PageController"/> creates, which measures its
 /// offset in whole viewport-fraction-sized pages.
@@ -353,13 +426,45 @@ internal sealed class PagePosition : ScrollPosition
             Math.Max(newMinScrollExtent, maxScrollExtent - InitialPageOffset));
     }
 
-    /// <summary>
-    /// Adds the viewport fraction to the shared metrics snapshot, which is where Flutter's
-    /// <c>PageMetrics</c> subclass carries it.
-    /// </summary>
-    public override ScrollMetricsSnapshot CopyWith()
+    public override PageMetrics CopyWith(
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
     {
-        return base.CopyWith() with { ViewportFraction = ViewportFraction };
+        return CopyWith(
+            viewportFraction: null,
+            minScrollExtent: minScrollExtent,
+            maxScrollExtent: maxScrollExtent,
+            pixels: pixels,
+            viewportDimension: viewportDimension,
+            axisDirection: axisDirection,
+            devicePixelRatio: devicePixelRatio);
+    }
+
+    /// <summary>
+    /// The viewport-fraction-carrying form of <see cref="CopyWith(double?, double?, double?, double?,
+    /// AxisDirection?, double?)"/>, split out because C# forbids widening an override's parameter list.
+    /// </summary>
+    public PageMetrics CopyWith(
+        double? viewportFraction,
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
+    {
+        return new PageMetrics(
+            minScrollExtent: minScrollExtent ?? (HasContentDimensions ? MinScrollExtent : null),
+            maxScrollExtent: maxScrollExtent ?? (HasContentDimensions ? MaxScrollExtent : null),
+            pixels: pixels ?? (HasPixels ? Pixels : null),
+            viewportDimension: viewportDimension ?? (HasViewportDimension ? ViewportDimension : null),
+            axisDirection: axisDirection ?? AxisDirection,
+            viewportFraction: viewportFraction ?? ViewportFraction,
+            devicePixelRatio: devicePixelRatio ?? DevicePixelRatio);
     }
 
     public override void Absorb(ScrollPosition other)
@@ -715,7 +820,8 @@ public sealed class PageView : StatefulWidget
                 return false;
             }
 
-            int currentPage = (int)Math.Round(notification.Metrics.Page, MidpointRounding.AwayFromZero);
+            var metrics = (PageMetrics)notification.Metrics;
+            int currentPage = (int)Math.Round(metrics.Page!.Value, MidpointRounding.AwayFromZero);
             if (currentPage != _lastReportedPage)
             {
                 _lastReportedPage = currentPage;

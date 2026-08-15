@@ -227,7 +227,7 @@ internal sealed class ScrollObserverReadoutState : State
 
     private void HandleNotification(ScrollNotification notification)
     {
-        ScrollMetricsSnapshot metrics = notification.Metrics;
+        IScrollMetrics metrics = notification.Metrics;
         SetState(() =>
         {
             _summary =

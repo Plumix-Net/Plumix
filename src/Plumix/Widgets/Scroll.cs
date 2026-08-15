@@ -13,55 +13,10 @@ public delegate Widget IndexedWidgetBuilder(BuildContext context, int index);
 
 public delegate int? ChildIndexGetter(Key key);
 
-/// <summary>
-/// An immutable snapshot of a scroll position, delivered with every <see cref="ScrollNotification"/>.
-/// </summary>
-/// <remarks>
-/// Flutter models page metrics as a <c>PageMetrics</c> subclass of <c>FixedScrollMetrics</c> that a
-/// <c>PageView</c> casts its notification metrics to. Notifications here carry a value type, which
-/// cannot be subclassed, so <see cref="ViewportFraction"/> and <see cref="Page"/> live on the shared
-/// snapshot and read as the identity fraction for every non-paged scrollable.
-/// </remarks>
-public readonly record struct ScrollMetricsSnapshot(
-    double Pixels,
-    double MinScrollExtent,
-    double MaxScrollExtent,
-    double ViewportDimension,
-    AxisDirection AxisDirection = AxisDirection.Down,
-    double ViewportFraction = 1.0)
-{
-    /// <summary>Dart parity: <c>PageMetrics.page</c>.</summary>
-    public double Page =>
-        Math.Max(0.0, Math.Clamp(Pixels, MinScrollExtent, Math.Max(MinScrollExtent, MaxScrollExtent)))
-        / Math.Max(1.0, ViewportDimension * ViewportFraction);
-
-    public double ExtentBefore => Math.Max(Pixels - MinScrollExtent, 0.0);
-
-    public double ExtentAfter => Math.Max(MaxScrollExtent - Pixels, 0.0);
-
-    public double ExtentInside
-    {
-        get
-        {
-            double leadingOverscroll = Math.Clamp(MinScrollExtent - Pixels, 0.0, ViewportDimension);
-            double trailingOverscroll = Math.Clamp(Pixels - MaxScrollExtent, 0.0, ViewportDimension);
-            return Math.Max(0.0, ViewportDimension - leadingOverscroll - trailingOverscroll);
-        }
-    }
-
-    public double ExtentTotal => ExtentBefore + ExtentInside + ExtentAfter;
-
-    public Axis Axis => AxisDirection is AxisDirection.Left or AxisDirection.Right
-        ? Axis.Horizontal
-        : Axis.Vertical;
-
-    public bool AtEdge => ExtentBefore <= 0.0001 || ExtentAfter <= 0.0001;
-}
-
 public abstract class ScrollNotification : LayoutChangedNotification, IViewportNotification
 {
     protected ScrollNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         int depth = 0,
         BuildContext? sourceContext = null)
     {
@@ -73,7 +28,7 @@ public abstract class ScrollNotification : LayoutChangedNotification, IViewportN
         }
     }
 
-    public ScrollMetricsSnapshot Metrics { get; }
+    public IScrollMetrics Metrics { get; }
 
     public int Depth { get; private set; }
 
@@ -86,7 +41,7 @@ public abstract class ScrollNotification : LayoutChangedNotification, IViewportN
 public sealed class ScrollMetricsNotification : Notification, IViewportNotification
 {
     public ScrollMetricsNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         BuildContext context,
         int depth = 0)
     {
@@ -95,7 +50,7 @@ public sealed class ScrollMetricsNotification : Notification, IViewportNotificat
         SetContext(context);
     }
 
-    public ScrollMetricsSnapshot Metrics { get; }
+    public IScrollMetrics Metrics { get; }
 
     public int Depth { get; private set; }
 
@@ -119,7 +74,7 @@ public sealed class ScrollMetricsNotification : Notification, IViewportNotificat
 public sealed class ScrollStartNotification : ScrollNotification
 {
     public ScrollStartNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         DragStartDetails? dragDetails = null,
         int depth = 0) : base(metrics, depth)
     {
@@ -127,7 +82,7 @@ public sealed class ScrollStartNotification : ScrollNotification
     }
 
     public ScrollStartNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         bool hasDragDetails,
         int depth = 0) : this(
         metrics,
@@ -144,7 +99,7 @@ public sealed class ScrollStartNotification : ScrollNotification
 public sealed class ScrollUpdateNotification : ScrollNotification
 {
     public ScrollUpdateNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         DragUpdateDetails? dragDetails = null,
         double? scrollDelta = null,
         int depth = 0,
@@ -155,7 +110,7 @@ public sealed class ScrollUpdateNotification : ScrollNotification
     }
 
     public ScrollUpdateNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         double? scrollDelta,
         bool hasDragDetails,
         int depth = 0) : this(
@@ -178,7 +133,7 @@ public sealed class ScrollUpdateNotification : ScrollNotification
 public sealed class OverscrollNotification : ScrollNotification
 {
     public OverscrollNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         double overscroll,
         DragUpdateDetails? dragDetails = null,
         double velocity = 0.0,
@@ -200,7 +155,7 @@ public sealed class OverscrollNotification : ScrollNotification
     }
 
     public OverscrollNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         double overscroll,
         bool hasDragDetails,
         int depth = 0) : this(
@@ -226,7 +181,7 @@ public sealed class OverscrollNotification : ScrollNotification
 public sealed class ScrollEndNotification : ScrollNotification
 {
     public ScrollEndNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         DragEndDetails? dragDetails = null,
         int depth = 0) : base(metrics, depth)
     {
@@ -234,7 +189,7 @@ public sealed class ScrollEndNotification : ScrollNotification
     }
 
     public ScrollEndNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         int depth) : this(metrics, dragDetails: null, depth)
     {
     }
@@ -248,7 +203,7 @@ public sealed class ScrollEndNotification : ScrollNotification
 public sealed class UserScrollNotification : ScrollNotification
 {
     public UserScrollNotification(
-        ScrollMetricsSnapshot metrics,
+        IScrollMetrics metrics,
         ScrollDirection direction,
         int depth = 0) : base(metrics, depth)
     {
@@ -844,7 +799,7 @@ public sealed class Scrollable : StatefulWidget
         public ScrollIncrementCalculator? IncrementCalculator => CurrentWidget.IncrementCalculator;
 
         /// <summary>The scrollable's current metrics.</summary>
-        public ScrollMetricsSnapshot Metrics => CurrentMetrics();
+        public IScrollMetrics Metrics => CurrentMetrics();
 
         public override void DidChangeDependencies()
         {
@@ -1240,7 +1195,7 @@ public sealed class Scrollable : StatefulWidget
                 return;
             }
 
-            FixedScrollMetrics before = FixedScrollMetrics.From(_position);
+            IScrollMetrics before = _position.CopyWith();
             double applied;
             _isApplyingDrag = true;
             try
@@ -1328,7 +1283,7 @@ public sealed class Scrollable : StatefulWidget
             return HardwareKeyboard.Instance.IsLogicalKeyPressed(key);
         }
 
-        private ScrollMetricsSnapshot CurrentMetrics() => _position.CopyWith();
+        private IScrollMetrics CurrentMetrics() => _position.CopyWith();
 
         private bool IsReversedAxisDirection()
         {

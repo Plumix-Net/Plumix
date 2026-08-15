@@ -131,16 +131,17 @@ public sealed class PageViewTests
     [Fact]
     public void PageMetrics_PageClampsPixelsIntoRange()
     {
-        var metrics = new ScrollMetricsSnapshot(
-            Pixels: 150,
-            MinScrollExtent: 100,
-            MaxScrollExtent: 200,
-            ViewportDimension: 25,
-            AxisDirection: AxisDirection.Right,
-            ViewportFraction: 1.0);
+        var metrics = new PageMetrics(
+            minScrollExtent: 100,
+            maxScrollExtent: 200,
+            pixels: 150,
+            viewportDimension: 25,
+            axisDirection: AxisDirection.Right,
+            viewportFraction: 1.0,
+            devicePixelRatio: 1.0);
 
-        Assert.Equal(6.0, metrics.Page, precision: 6);
-        Assert.Equal(4.0, (metrics with { Pixels = 50 }).Page, precision: 6);
+        Assert.Equal(6.0, metrics.Page!.Value, precision: 6);
+        Assert.Equal(4.0, metrics.CopyWith(pixels: 50).Page!.Value, precision: 6);
     }
 
     // ------------------------------------------------------------------ layout and geometry
@@ -382,6 +383,61 @@ public sealed class PageViewTests
     }
 
     // ------------------------------------------------------------------ page reporting
+
+    /// <remarks>
+    /// Dart parity: <c>page_view_test.dart</c>'s "PageView showOnScreen scrolls when
+    /// allowImplicitScrolling is true". The reveal is the viewport's, not the page view's — the page
+    /// view only widens the cache extent so the neighbour has a render object to reveal.
+    /// </remarks>
+    [Fact]
+    public void PageView_ShowOnScreenRevealsACachedPage()
+    {
+        var controller = new PageController();
+        using var harness = Harness(Pages(
+            controller,
+            4,
+            allowImplicitScrolling: true,
+            scrollCacheExtent: ScrollCacheExtent.Viewport(1.0)));
+        harness.Pump(Viewport);
+
+        List<RenderBox> pages = LaidOutPages(harness);
+        Assert.Equal(2, pages.Count);
+        Assert.Equal(0.0, controller.Page);
+
+        pages[1].ShowOnScreen();
+        Settle(harness);
+
+        Assert.Equal(1.0, controller.Page!.Value, precision: 3);
+        controller.Dispose();
+    }
+
+    [Fact]
+    public void PageView_NotificationMetricsAreThePageMetricsSubclass()
+    {
+        IScrollMetrics? captured = null;
+        var controller = new PageController(viewportFraction: 0.5);
+        using var harness = Harness(new NotificationListener<ScrollUpdateNotification>(
+            onNotification: notification =>
+            {
+                captured ??= notification.Metrics;
+                return false;
+            },
+            child: Pages(controller, 5)));
+        harness.Pump(Viewport);
+
+        Position(controller).JumpTo(400);
+        harness.Pump(Viewport);
+
+        var metrics = Assert.IsType<PageMetrics>(captured);
+        Assert.Equal(0.5, metrics.ViewportFraction);
+        Assert.Equal(1.0, metrics.Page!.Value, precision: 3);
+
+        // Dart's PageMetrics.copyWith keeps the fraction unless it is overridden.
+        Assert.Equal(0.5, metrics.CopyWith(pixels: 0.0).ViewportFraction);
+        Assert.Equal(0.25, metrics.CopyWith(viewportFraction: 0.25).ViewportFraction);
+        Assert.Equal(0.0, metrics.CopyWith(pixels: 0.0).Page!.Value, precision: 3);
+        controller.Dispose();
+    }
 
     [Fact]
     public void PageView_ReportsThePageChangeOnceAtTheHalfwayPoint()
