@@ -292,7 +292,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
             {
                 layers.Add(new DecoratedBox(
                     decoration: new BoxDecoration(
-                        Brush: CreateDarkGradientBrush(gradientBaseColor, Enabled),
+                        Gradient: CreateDarkGradient(gradientBaseColor, Enabled),
                         BorderRadius: shape),
                     child: new SizedBox(width: Width, height: Width)));
             }
@@ -564,20 +564,18 @@ public sealed class CupertinoCheckbox : StatefulWidget
             return CurrentWidget.IsDark && !(Enabled && selected);
         }
 
-        private static IBrush CreateDarkGradientBrush(Color baseColor, bool isEnabled)
+        private static Gradient CreateDarkGradient(Color baseColor, bool isEnabled)
         {
             double topOpacity = isEnabled ? DarkGradientTopOpacity : DisabledDarkGradientTopOpacity;
             double bottomOpacity = isEnabled ? DarkGradientBottomOpacity : DisabledDarkGradientBottomOpacity;
-            return new LinearGradientBrush
-            {
-                StartPoint = new RelativePoint(0.5, 0.0, RelativeUnit.Relative),
-                EndPoint = new RelativePoint(0.5, 1.0, RelativeUnit.Relative),
-                GradientStops = new GradientStops
-                {
-                    new GradientStop(ApplyOpacity(baseColor, topOpacity), 0.0),
-                    new GradientStop(ApplyOpacity(baseColor, bottomOpacity), 1.0),
-                }
-            };
+            return new LinearGradient(
+                colors:
+                [
+                    ApplyOpacity(baseColor, topOpacity),
+                    ApplyOpacity(baseColor, bottomOpacity),
+                ],
+                begin: Alignment.TopCenter,
+                end: Alignment.BottomCenter);
         }
 
         private Size ResolveTapTargetSize()

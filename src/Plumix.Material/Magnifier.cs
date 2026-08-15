@@ -5,6 +5,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 // Dart parity source: material_ui/lib/src/magnifier.dart
 
@@ -194,7 +195,7 @@ public sealed class Magnifier : StatelessWidget
         Point additionalFocalPointOffset = default,
         BorderRadius? borderRadius = null,
         Color? filmColor = null,
-        BoxShadows? shadows = null,
+        IReadOnlyList<BoxShadow>? shadows = null,
         Clip clipBehavior = Clip.HardEdge,
         Size? size = null,
         Key? key = null) : base(key)
@@ -213,19 +214,20 @@ public sealed class Magnifier : StatelessWidget
 
     public Color FilmColor { get; }
 
-    public BoxShadows Shadows { get; }
+    public IReadOnlyList<BoxShadow> Shadows { get; }
 
     public Clip ClipBehavior { get; }
 
     public Size Size { get; }
 
-    internal static BoxShadows DefaultShadows { get; } = new(new BoxShadow
-    {
-        Blur = 1.5,
-        OffsetY = 2.0,
-        Spread = 0.75,
-        Color = Color.FromArgb(25, 0, 0, 0),
-    });
+    internal static IReadOnlyList<BoxShadow> DefaultShadows { get; } =
+    [
+        new BoxShadow(
+            color: Color.FromArgb(25, 0, 0, 0),
+            offset: new Point(0, 2.0),
+            blurRadius: 1.5,
+            spreadRadius: 0.75),
+    ];
 
     public override Widget Build(BuildContext context)
     {

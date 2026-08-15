@@ -2373,9 +2373,9 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        var shadows = decorated!.Decoration.BoxShadows;
-        Assert.True(shadows.HasValue);
-        Assert.True(shadows.Value.Count > 0);
+        IReadOnlyList<Plumix.Rendering.BoxShadow>? shadows = decorated!.Decoration.BoxShadows;
+        Assert.NotNull(shadows);
+        Assert.True(shadows.Count > 0);
     }
 
     [Fact]
@@ -2395,7 +2395,7 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.False(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.Null(decorated!.Decoration.BoxShadows);
     }
 
     [Fact]
@@ -2417,7 +2417,7 @@ public sealed class MaterialButtonsTests
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var defaultDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
         Assert.NotNull(defaultDecorated);
-        Assert.False(defaultDecorated!.Decoration.BoxShadows.HasValue);
+        Assert.Null(defaultDecorated!.Decoration.BoxShadows);
 
         var hoverListener = FindHoverPointerListener(renderRoot);
         Assert.NotNull(hoverListener);
@@ -2434,7 +2434,7 @@ public sealed class MaterialButtonsTests
         var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
         var hoveredShadow = RequirePrimaryShadow(hoveredDecorated!);
-        Assert.Equal(1, hoveredShadow.OffsetY);
+        Assert.Equal(1, hoveredShadow.Offset.Y);
     }
 
     [Fact]
@@ -2458,7 +2458,7 @@ public sealed class MaterialButtonsTests
         var defaultDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
         Assert.NotNull(defaultDecorated);
         var defaultShadow = RequirePrimaryShadow(defaultDecorated!);
-        Assert.Equal(2, defaultShadow.OffsetY);
+        Assert.Equal(2, defaultShadow.Offset.Y);
 
         var hoverListener = FindHoverPointerListener(renderRoot);
         Assert.NotNull(hoverListener);
@@ -2476,7 +2476,7 @@ public sealed class MaterialButtonsTests
         var hoveredDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
         Assert.NotNull(hoveredDecorated);
         var hoveredShadow = RequirePrimaryShadow(hoveredDecorated!);
-        Assert.Equal(4, hoveredShadow.OffsetY);
+        Assert.Equal(4, hoveredShadow.Offset.Y);
 
         var interactiveListener = FindInteractivePointerListener(renderRoot);
         Assert.NotNull(interactiveListener);
@@ -2493,7 +2493,7 @@ public sealed class MaterialButtonsTests
         var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(pressedDecorated);
         var pressedShadow = RequirePrimaryShadow(pressedDecorated!);
-        Assert.Equal(8, pressedShadow.OffsetY);
+        Assert.Equal(8, pressedShadow.Offset.Y);
     }
 
     [Fact]
@@ -2517,8 +2517,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
-        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+        Assert.NotNull(decorated!.Decoration.BoxShadows);
+        Assert.True(decorated.Decoration.BoxShadows!.Count > 0);
     }
 
     [Fact]
@@ -2541,7 +2541,7 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.False(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.Null(decorated!.Decoration.BoxShadows);
     }
 
     [Fact]
@@ -2568,8 +2568,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
-        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+        Assert.NotNull(decorated!.Decoration.BoxShadows);
+        Assert.True(decorated.Decoration.BoxShadows!.Count > 0);
     }
 
     [Fact]
@@ -2593,8 +2593,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
-        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+        Assert.NotNull(decorated!.Decoration.BoxShadows);
+        Assert.True(decorated.Decoration.BoxShadows!.Count > 0);
     }
 
     [Fact]
@@ -2617,7 +2617,7 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.False(decorated!.Decoration.BoxShadows.HasValue);
+        Assert.Null(decorated!.Decoration.BoxShadows);
     }
 
     [Fact]
@@ -2644,8 +2644,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
-        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+        Assert.NotNull(decorated!.Decoration.BoxShadows);
+        Assert.True(decorated.Decoration.BoxShadows!.Count > 0);
     }
 
     [Fact]
@@ -2668,8 +2668,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
-        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+        Assert.NotNull(decorated!.Decoration.BoxShadows);
+        Assert.True(decorated.Decoration.BoxShadows!.Count > 0);
     }
 
     [Fact]
@@ -2690,8 +2690,8 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.True(decorated!.Decoration.BoxShadows.HasValue);
-        Assert.True(decorated.Decoration.BoxShadows.Value.Count > 0);
+        Assert.NotNull(decorated!.Decoration.BoxShadows);
+        Assert.True(decorated.Decoration.BoxShadows!.Count > 0);
     }
 
     [Fact]
@@ -6925,10 +6925,10 @@ public sealed class MaterialButtonsTests
         return result;
     }
 
-    private static BoxShadow RequirePrimaryShadow(RenderDecoratedBox decorated)
+    private static Plumix.Rendering.BoxShadow RequirePrimaryShadow(RenderDecoratedBox decorated)
     {
-        Assert.True(decorated.Decoration.BoxShadows.HasValue);
-        var shadows = decorated.Decoration.BoxShadows!.Value;
+        IReadOnlyList<Plumix.Rendering.BoxShadow>? shadows = decorated.Decoration.BoxShadows;
+        Assert.NotNull(shadows);
         Assert.True(shadows.Count > 0);
         return shadows[0];
     }

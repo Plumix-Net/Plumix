@@ -784,7 +784,7 @@ public sealed class MaterialFloatingActionButtonTests
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         var defaultDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
         Assert.NotNull(defaultDecorated);
-        Assert.Equal(2, RequirePrimaryShadow(defaultDecorated!).OffsetY);
+        Assert.Equal(2, RequirePrimaryShadow(defaultDecorated!).Offset.Y);
 
         var hoverListener = FindHoverPointerListener(renderRoot);
         Assert.NotNull(hoverListener);
@@ -800,7 +800,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
-        Assert.Equal(4, RequirePrimaryShadow(hoveredDecorated!).OffsetY);
+        Assert.Equal(4, RequirePrimaryShadow(hoveredDecorated!).Offset.Y);
 
         var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(interactiveListener);
@@ -816,7 +816,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(pressedDecorated);
-        Assert.Equal(7, RequirePrimaryShadow(pressedDecorated!).OffsetY);
+        Assert.Equal(7, RequirePrimaryShadow(pressedDecorated!).Offset.Y);
     }
 
     [Fact]
@@ -837,7 +837,7 @@ public sealed class MaterialFloatingActionButtonTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(5, RequirePrimaryShadow(decorated!).OffsetY);
+        Assert.Equal(5, RequirePrimaryShadow(decorated!).Offset.Y);
     }
 
     [Fact]
@@ -1129,10 +1129,10 @@ public sealed class MaterialFloatingActionButtonTests
         return result;
     }
 
-    private static BoxShadow RequirePrimaryShadow(RenderDecoratedBox decorated)
+    private static Plumix.Rendering.BoxShadow RequirePrimaryShadow(RenderDecoratedBox decorated)
     {
-        Assert.True(decorated.Decoration.BoxShadows.HasValue);
-        var shadows = decorated.Decoration.BoxShadows!.Value;
+        IReadOnlyList<Plumix.Rendering.BoxShadow>? shadows = decorated.Decoration.BoxShadows;
+        Assert.NotNull(shadows);
         Assert.True(shadows.Count > 0);
         return shadows[0];
     }

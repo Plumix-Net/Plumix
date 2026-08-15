@@ -664,7 +664,7 @@ public sealed class MagnifierLayer : ContainerLayer
 
     private void DrawDecoration(DrawingContext context, Rect lensRect, double radius)
     {
-        BoxShadows shadows = Decoration.Shadows ?? default;
+        BoxShadows shadows = Decoration.Shadows.ToAvalonia();
         BorderSide side = Decoration.Shape is OutlinedBorder outlined ? outlined.Side : BorderSide.None;
         IPen? pen = side is { Style: BorderStyle.Solid, Width: > 0 }
             ? new Pen(new SolidColorBrush(side.Color), side.Width)

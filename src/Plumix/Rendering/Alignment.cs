@@ -43,6 +43,23 @@ public readonly record struct Alignment(double X, double Y)
             rect.Top + halfHeight + (Y * halfHeight));
     }
 
+    public override string ToString()
+    {
+        return (X, Y) switch
+        {
+            (-1.0, -1.0) => "Alignment.topLeft",
+            (0.0, -1.0) => "Alignment.topCenter",
+            (1.0, -1.0) => "Alignment.topRight",
+            (-1.0, 0.0) => "Alignment.centerLeft",
+            (0.0, 0.0) => "Alignment.center",
+            (1.0, 0.0) => "Alignment.centerRight",
+            (-1.0, 1.0) => "Alignment.bottomLeft",
+            (0.0, 1.0) => "Alignment.bottomCenter",
+            (1.0, 1.0) => "Alignment.bottomRight",
+            _ => $"Alignment({DartFormat.Fixed(X)}, {DartFormat.Fixed(Y)})",
+        };
+    }
+
     /// <summary>A rect of the given size, aligned within <paramref name="rect"/> by this alignment.</summary>
     public Rect Inscribe(Size size, Rect rect)
     {

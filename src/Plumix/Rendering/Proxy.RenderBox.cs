@@ -1977,7 +1977,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
             Gradient: decoration.Gradient,
             Border: border,
             BorderRadius: shape == BoxShape.Circle ? null : radius,
-            BoxShadows: decoration.Shadows.Count == 0 ? null : decoration.Shadows,
+            BoxShadows: decoration.Shadows is { Count: > 0 } ? decoration.Shadows : null,
             Image: decoration.Image,
             Shape: shape);
     }

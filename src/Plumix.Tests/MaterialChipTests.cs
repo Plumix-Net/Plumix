@@ -263,8 +263,8 @@ public sealed class MaterialChipTests : IDisposable
         var decoration = FindChipDecoration(harness.RenderView);
         Assert.Equal(Colors.MediumPurple, decoration.Decoration.Color);
         Assert.Equal(Colors.Transparent, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
-        Assert.True(decoration.Decoration.BoxShadows.HasValue);
-        Assert.True(decoration.Decoration.BoxShadows.Value.Count > 0);
+        Assert.NotNull(decoration.Decoration.BoxShadows);
+        Assert.True(decoration.Decoration.BoxShadows!.Count > 0);
     }
 
     [Fact]
@@ -543,7 +543,7 @@ public sealed class MaterialChipTests : IDisposable
             FilterChip.Elevated(new Text("Enabled"), _ => { })));
         enabled.Pump(new Size(320, 120));
         Assert.Equal(Colors.MediumPurple, FindChipDecoration(enabled.RenderView).Decoration.Color);
-        Assert.True(FindChipDecoration(enabled.RenderView).Decoration.BoxShadows.HasValue);
+        Assert.NotNull(FindChipDecoration(enabled.RenderView).Decoration.BoxShadows);
 
         using var disabled = new WidgetRenderHarness(Root(
             theme,

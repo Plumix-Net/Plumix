@@ -5,6 +5,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
@@ -3272,34 +3273,24 @@ internal sealed class MaterialButtonCore : StatefulWidget
             return shadowColor;
         }
 
-        private static BoxShadows? ResolveBoxShadows(double elevation, Color? shadowColor)
+        private static IReadOnlyList<BoxShadow>? ResolveBoxShadows(double elevation, Color? shadowColor)
         {
             if (elevation <= 0 || !shadowColor.HasValue || shadowColor.Value.A == 0)
             {
                 return null;
             }
 
-            var keyShadow = new BoxShadow
-            {
-                OffsetX = 0,
-                OffsetY = Math.Max(1, Math.Round(elevation)),
-                Blur = Math.Max(2, elevation * 2.4),
-                Spread = 0,
-                Color = ApplyShadowOpacity(shadowColor.Value, 0.20),
-                IsInset = false
-            };
+            var keyShadow = new BoxShadow(
+            color: ApplyShadowOpacity(shadowColor.Value, 0.20),
+            offset: new Point(0, Math.Max(1, Math.Round(elevation))),
+            blurRadius: Math.Max(2, elevation * 2.4));
 
-            var ambientShadow = new BoxShadow
-            {
-                OffsetX = 0,
-                OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
-                Blur = Math.Max(3, elevation * 3.2),
-                Spread = 0,
-                Color = ApplyShadowOpacity(shadowColor.Value, 0.14),
-                IsInset = false
-            };
+            var ambientShadow = new BoxShadow(
+            color: ApplyShadowOpacity(shadowColor.Value, 0.14),
+            offset: new Point(0, Math.Max(1, Math.Round(elevation * 0.5))),
+            blurRadius: Math.Max(3, elevation * 3.2));
 
-            return new BoxShadows(keyShadow, [ambientShadow]);
+            return [keyShadow, ambientShadow];
         }
 
         private static Color ApplyShadowOpacity(Color color, double opacityMultiplier)

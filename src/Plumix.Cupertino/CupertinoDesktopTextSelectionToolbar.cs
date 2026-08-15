@@ -45,14 +45,11 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
         Color borderColor = dark
             ? Color.Parse("#FF5B5B5B")
             : Color.Parse("#FFB8B8B8");
-        var shadow = new BoxShadow
-        {
-            Color = Color.FromArgb(60, 0, 0, 0),
-            Blur = 10.0,
-            Spread = 0.5,
-            OffsetX = 0.0,
-            OffsetY = 4.0,
-        };
+        var shadow = new Plumix.Rendering.BoxShadow(
+            color: Color.FromArgb(60, 0, 0, 0),
+            offset: new Point(0.0, 4.0),
+            blurRadius: 10.0,
+            spreadRadius: 0.5);
         var shape = new ContinuousRectangleBorder(
             borderRadius: BorderRadius.Circular(8.0));
         var borderedShape = new ContinuousRectangleBorder(
@@ -80,7 +77,7 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
             width: ToolbarWidth,
             decoration: new ShapeDecoration(
                 Shape: shape,
-                Shadows: new BoxShadows(shadow)),
+                Shadows: [shadow]),
             child: contents);
 
         return new Padding(

@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
@@ -455,7 +456,7 @@ public sealed class Stepper : StatefulWidget
                             Color: style?.Color ?? ResolveCircleColor(index),
                             Gradient: style?.Gradient,
                             Border: style?.Border,
-                            BoxShadows: style?.BoxShadow is { } shadow ? new BoxShadows(shadow) : null,
+                            BoxShadows: style?.BoxShadow is { } shadow ? [shadow] : null,
                             Shape: BoxShape.Circle),
                         child: new Center(child: BuildIconChild(index, state)))));
         }

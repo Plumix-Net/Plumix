@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
@@ -117,15 +118,16 @@ internal sealed class MagnifierDemoPageState : State
                 .ToArray());
     }
 
-    private static BoxShadows BuildLensShadow()
+    private static IReadOnlyList<Plumix.Rendering.BoxShadow> BuildLensShadow()
     {
-        return new BoxShadows(new BoxShadow
-        {
-            Blur = 1.5,
-            OffsetY = 2,
-            Spread = 0.75,
-            Color = Color.FromArgb(25, 0, 0, 0),
-        });
+        return
+        [
+            new Plumix.Rendering.BoxShadow(
+                color: Color.FromArgb(25, 0, 0, 0),
+                offset: new Point(0, 2),
+                blurRadius: 1.5,
+                spreadRadius: 0.75),
+        ];
     }
 
     private static Widget ControlButton(string label, Action onPressed)

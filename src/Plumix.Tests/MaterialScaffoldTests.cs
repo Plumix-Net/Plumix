@@ -154,9 +154,9 @@ public sealed class MaterialScaffoldTests
         var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
         Assert.NotNull(decorated);
         Assert.Equal(Colors.CadetBlue, decorated!.Decoration.Color);
-        Assert.True(decorated.Decoration.BoxShadows.HasValue);
+        Assert.NotNull(decorated.Decoration.BoxShadows);
 
-        var shadows = decorated.Decoration.BoxShadows!.Value;
+        var shadows = decorated.Decoration.BoxShadows!;
         Assert.True(shadows.Count > 0);
         for (int i = 0; i < shadows.Count; i++)
         {
@@ -206,9 +206,9 @@ public sealed class MaterialScaffoldTests
         var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
         Assert.NotNull(decorated);
         Assert.Equal(Colors.Crimson, decorated!.Decoration.Color);
-        Assert.True(decorated.Decoration.BoxShadows.HasValue);
+        Assert.NotNull(decorated.Decoration.BoxShadows);
 
-        var shadows = decorated.Decoration.BoxShadows!.Value;
+        var shadows = decorated.Decoration.BoxShadows!;
         Assert.True(shadows.Count > 0);
         for (int i = 0; i < shadows.Count; i++)
         {

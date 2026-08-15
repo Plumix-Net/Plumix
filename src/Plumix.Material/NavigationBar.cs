@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
@@ -603,15 +604,16 @@ internal static class NavigationSurfaceUtilities
             background = ElevationOverlay.ApplySurfaceTint(background, surfaceTintColor, elevation);
         }
 
-        BoxShadows? shadows = null;
+        IReadOnlyList<BoxShadow>? shadows = null;
         if (elevation > 0 && shadowColor.HasValue && shadowColor.Value.A > 0)
         {
-            shadows = new BoxShadows(new BoxShadow
-            {
-                OffsetY = Math.Max(1, elevation * 0.5),
-                Blur = Math.Max(2, elevation * 2.4),
-                Color = WithOpacity(shadowColor.Value, 0.20),
-            });
+            shadows =
+            [
+                new BoxShadow(
+                    color: WithOpacity(shadowColor.Value, 0.20),
+                    offset: new Point(0, Math.Max(1, elevation * 0.5)),
+                    blurRadius: Math.Max(2, elevation * 2.4)),
+            ];
         }
 
         return new BoxDecoration(Color: background, BoxShadows: shadows);

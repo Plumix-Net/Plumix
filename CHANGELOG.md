@@ -1,5 +1,22 @@
 # Changelog
 
+- Breaking: ported `painting/gradient.dart` and `painting/box_shadow.dart` in full.
+  `Gradient` now carries `Colors`/`Stops`/`Transform` with `ImpliedStops`, `CreateShader(rect, textDirection)`,
+  `Scale`, `WithOpacity`, `FromColor` and the `LerpFrom`/`LerpTo` dispatch, alongside `LinearGradient`
+  (rewritten), `RadialGradient`, `SweepGradient`, `GradientTransform`/`GradientRotation` and a `TileMode`
+  on every gradient. Stop interpolation is Dart's union-of-stops resample, and `ShapeDecoration.Lerp`
+  bridges a plain color into the other side's gradient through `FromColor`. `Shadow`/`BoxShadow`
+  (`BlurStyle`, `SpreadRadius`, `BlurSigma`, `Scale`, `CopyWith`, `Lerp`, `LerpList`) replace the Avalonia
+  shadow structs on `BoxDecoration`/`ShapeDecoration`/`MagnifierDecoration`/`BannerPainter`, so shadow
+  lists interpolate instead of snapping at 50%. `Alignment`/`AlignmentGeometry` gained Dart-shaped
+  `ToString` plus `AlignmentGeometry.Resolve(TextDirection?)`, which throws when a directional value has
+  no direction.
+  **Breaking:** `BoxDecoration.BoxShadows`, `ShapeDecoration.Shadows`, `MagnifierDecoration.Shadows`,
+  `CupertinoMagnifier.Shadows`, `Magnifier.Shadows`, `BannerPainter.Shadow` and `StepStyle.BoxShadow` take
+  the framework `BoxShadow` instead of `Avalonia.Media.BoxShadow(s)`; `Gradient.CreateBrush()` is replaced
+  by `CreateShader(rect, textDirection)`; `LinearGradient.Begin`/`End` are `AlignmentGeometry`; and
+  `BoxDecoration.Brush` (the Avalonia-brush escape hatch) is gone — use a `Gradient`.
+
 - Breaking: ported the keyboard identity stack. `keyboard_key.g.dart` is now generated into
   `src/Plumix/UI/KeyboardKey.g.cs` by `scripts/generate_keyboard_keys.py` (444 `LogicalKeyboardKey` and
   269 `PhysicalKeyboardKey` constants with Flutter's key ids, USB HID usages, labels, debug names,

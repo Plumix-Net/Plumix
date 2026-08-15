@@ -10,7 +10,7 @@ public sealed record MagnifierDecoration
 {
     public MagnifierDecoration(
         double opacity = 1.0,
-        BoxShadows? shadows = null,
+        IReadOnlyList<BoxShadow>? shadows = null,
         ShapeBorder? shape = null)
     {
         if (!double.IsFinite(opacity) || opacity < 0 || opacity > 1)
@@ -25,9 +25,22 @@ public sealed record MagnifierDecoration
 
     public double Opacity { get; }
 
-    public BoxShadows? Shadows { get; }
+    public IReadOnlyList<BoxShadow>? Shadows { get; }
 
     public ShapeBorder Shape { get; }
+
+    public bool Equals(MagnifierDecoration? other)
+    {
+        return other is not null
+               && Opacity.Equals(other.Opacity)
+               && ShadowList.Equals(Shadows, other.Shadows)
+               && Shape.Equals(other.Shape);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Opacity, ShadowList.GetHashCode(Shadows), Shape);
+    }
 }
 
 public sealed class RenderMagnifier : RenderProxyBox

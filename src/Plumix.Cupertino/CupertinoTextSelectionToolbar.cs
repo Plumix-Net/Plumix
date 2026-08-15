@@ -365,17 +365,15 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
         Plumix.UI.Path path = BuildPath();
         if (ShadowColor.HasValue)
         {
-            var shadow = new BoxShadow
-            {
-                Color = ShadowColor.Value,
-                Blur = 15.0,
-            };
+            var shadow = new Plumix.Rendering.BoxShadow(
+                color: ShadowColor.Value,
+                blurRadius: 15.0);
             context.DrawRectangle(
                 new SolidColorBrush(Colors.Transparent),
                 null,
                 new Rect(offset.X, offset.Y, Size.Width, Size.Height),
                 BorderRadius.Circular(BorderRadiusValue),
-                new BoxShadows(shadow));
+                new BoxShadows(shadow.ToAvalonia()));
         }
 
         context.PushTransform(

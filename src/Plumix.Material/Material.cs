@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
@@ -624,32 +625,22 @@ internal static class InkFeatureTransform
 
 internal static class MaterialSurface
 {
-    public static BoxShadows? BuildBoxShadows(Color shadowColor, double elevation)
+    public static IReadOnlyList<BoxShadow>? BuildBoxShadows(Color shadowColor, double elevation)
     {
         if (elevation <= 0 || shadowColor.A == 0)
         {
             return null;
         }
 
-        var keyShadow = new BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = Math.Max(1, Math.Round(elevation)),
-            Blur = Math.Max(2, elevation * 2.4),
-            Spread = 0,
-            Color = ApplyOpacity(shadowColor, 0.20),
-            IsInset = false,
-        };
-        var ambientShadow = new BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = Math.Max(1, Math.Round(elevation * 0.5)),
-            Blur = Math.Max(3, elevation * 3.2),
-            Spread = 0,
-            Color = ApplyOpacity(shadowColor, 0.14),
-            IsInset = false,
-        };
-        return new BoxShadows(keyShadow, [ambientShadow]);
+        var keyShadow = new BoxShadow(
+            color: ApplyOpacity(shadowColor, 0.20),
+            offset: new Point(0, Math.Max(1, Math.Round(elevation))),
+            blurRadius: Math.Max(2, elevation * 2.4));
+        var ambientShadow = new BoxShadow(
+            color: ApplyOpacity(shadowColor, 0.14),
+            offset: new Point(0, Math.Max(1, Math.Round(elevation * 0.5))),
+            blurRadius: Math.Max(3, elevation * 3.2));
+        return [keyShadow, ambientShadow];
     }
 
     public static Color ApplySurfaceTint(Color color, Color surfaceTint, double elevation)

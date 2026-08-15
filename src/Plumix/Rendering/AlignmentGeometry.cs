@@ -29,6 +29,23 @@ public readonly record struct AlignmentDirectional(double Start, double Y)
         double x = direction == TextDirection.Rtl ? -Start : Start;
         return new Alignment(x, Y);
     }
+
+    public override string ToString()
+    {
+        return (Start, Y) switch
+        {
+            (-1.0, -1.0) => "AlignmentDirectional.topStart",
+            (0.0, -1.0) => "AlignmentDirectional.topCenter",
+            (1.0, -1.0) => "AlignmentDirectional.topEnd",
+            (-1.0, 0.0) => "AlignmentDirectional.centerStart",
+            (0.0, 0.0) => "AlignmentDirectional.center",
+            (1.0, 0.0) => "AlignmentDirectional.centerEnd",
+            (-1.0, 1.0) => "AlignmentDirectional.bottomStart",
+            (0.0, 1.0) => "AlignmentDirectional.bottomCenter",
+            (1.0, 1.0) => "AlignmentDirectional.bottomEnd",
+            _ => $"AlignmentDirectional({DartFormat.Fixed(Start)}, {DartFormat.Fixed(Y)})",
+        };
+    }
 }
 
 public readonly record struct AlignmentGeometry
@@ -56,10 +73,37 @@ public readonly record struct AlignmentGeometry
     /// </summary>
     public bool IsDirectional { get; }
 
+    /// <summary>
+    /// Whether resolving this value needs a text direction, mirroring the assert Dart's
+    /// `AlignmentDirectional.resolve` and `_MixedAlignment.resolve` share.
+    /// </summary>
+    public bool RequiresTextDirection => Start != 0.0;
+
     public Alignment Resolve(TextDirection direction)
     {
         double x = PhysicalX + (direction == TextDirection.Rtl ? -Start : Start);
         return new Alignment(x, Y);
+    }
+
+    /// <summary>
+    /// Resolves against an optional direction: a purely physical alignment ignores it, while a
+    /// directional (or mixed) one requires it.
+    /// </summary>
+    public Alignment Resolve(TextDirection? direction)
+    {
+        if (direction is { } value)
+        {
+            return Resolve(value);
+        }
+
+        if (RequiresTextDirection)
+        {
+            throw new ArgumentNullException(
+                nameof(direction),
+                "A directional alignment cannot be resolved without a text direction.");
+        }
+
+        return new Alignment(PhysicalX, Y);
     }
 
     public static AlignmentGeometry? Lerp(
@@ -111,4 +155,20 @@ public readonly record struct AlignmentGeometry
     }
 
     private static double LerpDouble(double a, double b, double t) => a + ((b - a) * t);
+
+    public override string ToString()
+    {
+        if (Start == 0.0)
+        {
+            return new Alignment(PhysicalX, Y).ToString();
+        }
+
+        if (PhysicalX == 0.0)
+        {
+            return new AlignmentDirectional(Start, Y).ToString();
+        }
+
+        // Dart's `_MixedAlignment` prints as the sum of its physical and directional halves.
+        return $"{new Alignment(PhysicalX, Y)} + {new AlignmentDirectional(Start, 0.0)}";
+    }
 }

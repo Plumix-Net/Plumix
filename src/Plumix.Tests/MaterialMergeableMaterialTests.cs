@@ -52,7 +52,7 @@ public sealed class MaterialMergeableMaterialTests
         Assert.All(SliceDecorations(harness), decoration => Assert.Equal(2, decoration.BorderRadius!.Value.Radius));
         Assert.DoesNotContain(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.BoxShadows.HasValue);
+            box => box.Decoration.BoxShadows is not null);
 
         harness.Update(Build([Slice("A", 100, FirstColor)], elevation: 0));
         harness.Pump(ViewSize);

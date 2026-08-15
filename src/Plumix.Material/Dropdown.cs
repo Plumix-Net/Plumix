@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
@@ -831,15 +832,16 @@ internal sealed class DropdownMenuPanel<T> : StatelessWidget
                 content));
     }
 
-    private static BoxShadows? BuildShadow(Color color, int elevation)
+    private static IReadOnlyList<BoxShadow>? BuildShadow(Color color, int elevation)
     {
         if (elevation <= 0 || color.A == 0) return null;
-        return new BoxShadows(new BoxShadow
-        {
-            OffsetY = Math.Max(1, elevation * 0.5),
-            Blur = Math.Max(2, elevation * 2.4),
-            Color = MaterialButtonCore.ApplyOpacity(color, 0.20),
-        });
+        return
+        [
+            new BoxShadow(
+                color: MaterialButtonCore.ApplyOpacity(color, 0.20),
+                offset: new Point(0, Math.Max(1, elevation * 0.5)),
+                blurRadius: Math.Max(2, elevation * 2.4)),
+        ];
     }
 
     private static double Interval(double value, double start, double end) =>

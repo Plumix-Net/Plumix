@@ -5,6 +5,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
@@ -506,16 +507,16 @@ public sealed class SnackBar : StatefulWidget
             : new Thickness(end, 0, start, 0);
     }
 
-    private static BoxShadows? BuildBoxShadows(Color color, double elevation)
+    private static IReadOnlyList<BoxShadow>? BuildBoxShadows(Color color, double elevation)
     {
         if (elevation <= 0 || color.A == 0) return null;
-        return new BoxShadows(new BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = Math.Max(1, elevation * 0.5),
-            Blur = Math.Max(2, elevation * 2.4),
-            Color = ApplyOpacity(color, 0.22),
-        });
+        return
+        [
+            new BoxShadow(
+                color: ApplyOpacity(color, 0.22),
+                offset: new Point(0, Math.Max(1, elevation * 0.5)),
+                blurRadius: Math.Max(2, elevation * 2.4)),
+        ];
     }
 
     private static Color ApplyOpacity(Color color, double opacity)

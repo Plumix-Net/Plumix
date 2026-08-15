@@ -4,6 +4,7 @@ using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Widgets;
 
@@ -29,15 +30,9 @@ public sealed class BannerPainter : CustomPainter
         Color: Colors.White,
         FontWeight: FontWeight.Black,
         Height: 1.0);
-    public static BoxShadow DefaultShadow { get; } = new()
-    {
-        Color = Color.FromArgb(0x7F, 0, 0, 0),
-        Blur = 6.0,
-        Spread = 0,
-        OffsetX = 0,
-        OffsetY = 0,
-        IsInset = false,
-    };
+    public static BoxShadow DefaultShadow { get; } = new(
+        color: Color.FromArgb(0x7F, 0, 0, 0),
+        blurRadius: 6.0);
 
     private TextLayout? _textLayout;
     private bool _disposed;
@@ -115,7 +110,7 @@ public sealed class BannerPainter : CustomPainter
                     Brushes.Transparent,
                     null,
                     BannerRect,
-                    boxShadows: new BoxShadows(Shadow));
+                    boxShadows: new BoxShadows(Shadow.ToAvalonia()));
                 rotatedContext.DrawRectangle(new SolidColorBrush(Color), null, BannerRect);
                 PaintText(rotatedContext);
             });

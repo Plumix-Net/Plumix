@@ -47,7 +47,7 @@ public sealed class MagnifierTests : IDisposable
             opacity: 0.75,
             shape: new RoundedRectangleBorder(
                 new BorderSide(Colors.Blue, 2), Plumix.Rendering.BorderRadius.Circular(9)),
-            shadows: new BoxShadows(new BoxShadow { Blur = 2, Color = Colors.Black }));
+            shadows: [new Plumix.Rendering.BoxShadow(color: Colors.Black, blurRadius: 2)]);
         using var harness = new WidgetRenderHarness(new Align(
             alignment: Alignment.TopLeft,
             child: new RawMagnifier(
@@ -210,7 +210,7 @@ public sealed class MagnifierTests : IDisposable
             render.FocalPointOffset);
         Assert.Equal(40, ShapeBorderGeometry.ResolveRadius(render.Decoration.Shape).Radius);
         Assert.Equal(Clip.HardEdge, render.ClipBehavior);
-        Assert.Equal(1, render.Decoration.Shadows!.Value.Count);
+        Assert.Equal(1, render.Decoration.Shadows!.Count);
     }
 
     [Fact]

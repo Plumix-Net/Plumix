@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 // Dart parity source: cupertino_ui/lib/src/magnifier.dart
 
@@ -207,7 +208,7 @@ public sealed class CupertinoMagnifier : StatelessWidget
         Size? size = null,
         BorderRadius? borderRadius = null,
         Point additionalFocalPointOffset = default,
-        BoxShadows? shadows = null,
+        IReadOnlyList<BoxShadow>? shadows = null,
         Clip clipBehavior = Clip.None,
         BorderSide? borderSide = null,
         Animation<double>? inOutAnimation = null,
@@ -235,7 +236,7 @@ public sealed class CupertinoMagnifier : StatelessWidget
 
     public Point AdditionalFocalPointOffset { get; }
 
-    public BoxShadows Shadows { get; }
+    public IReadOnlyList<BoxShadow> Shadows { get; }
 
     public Clip ClipBehavior { get; }
 
@@ -245,12 +246,13 @@ public sealed class CupertinoMagnifier : StatelessWidget
 
     public double MagnificationScale { get; }
 
-    internal static BoxShadows DefaultShadows { get; } = new(new BoxShadow
-    {
-        Blur = 11,
-        Spread = 0.2,
-        Color = Color.FromArgb(25, 0, 0, 0),
-    });
+    internal static IReadOnlyList<BoxShadow> DefaultShadows { get; } =
+    [
+        new BoxShadow(
+            color: Color.FromArgb(25, 0, 0, 0),
+            blurRadius: 11,
+            spreadRadius: 0.2),
+    ];
 
     public override Widget Build(BuildContext context)
     {

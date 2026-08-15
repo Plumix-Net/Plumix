@@ -6,6 +6,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
@@ -22,27 +23,11 @@ public sealed class Switch : StatefulWidget
     private static readonly Color CupertinoInactiveTrackColorDark = Color.FromArgb(0x51, 0x78, 0x78, 0x80);
     private static readonly Color CupertinoActiveTrackColor = Color.FromRgb(0x34, 0xC7, 0x59);
     private static readonly Color CupertinoActiveTrackColorDark = Color.FromRgb(0x30, 0xD1, 0x58);
-    private static readonly BoxShadows CupertinoThumbShadows = new(
-        new BoxShadow
-        {
-            OffsetX = 0,
-            OffsetY = 3,
-            Blur = 8,
-            Spread = 0,
-            Color = Color.FromArgb(0x26, 0x00, 0x00, 0x00),
-            IsInset = false
-        },
-        [
-            new BoxShadow
-            {
-                OffsetX = 0,
-                OffsetY = 3,
-                Blur = 1,
-                Spread = 0,
-                Color = Color.FromArgb(0x0F, 0x00, 0x00, 0x00),
-                IsInset = false
-            }
-        ]);
+    private static readonly IReadOnlyList<BoxShadow> CupertinoThumbShadows =
+    [
+        new BoxShadow(color: Color.FromArgb(0x26, 0x00, 0x00, 0x00), offset: new Point(0, 3), blurRadius: 8),
+        new BoxShadow(color: Color.FromArgb(0x0F, 0x00, 0x00, 0x00), offset: new Point(0, 3), blurRadius: 1),
+    ];
     private readonly SwitchType _switchType;
 
     private enum SwitchType

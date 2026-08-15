@@ -76,8 +76,8 @@ public sealed class MaterialBottomNavigationBarTests
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
         Assert.Equal(Colors.DarkSlateBlue, ResolveBackgroundColor(renderRoot));
         var decorated = Assert.IsType<RenderDecoratedBox>(renderRoot);
-        Assert.True(decorated.Decoration.BoxShadows.HasValue);
-        var shadows = decorated.Decoration.BoxShadows.Value;
+        Assert.NotNull(decorated.Decoration.BoxShadows);
+        var shadows = decorated.Decoration.BoxShadows!;
         Assert.Equal(2, shadows.Count);
         for (int index = 0; index < shadows.Count; index++)
         {

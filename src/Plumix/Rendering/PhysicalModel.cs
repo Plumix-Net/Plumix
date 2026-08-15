@@ -173,16 +173,11 @@ public sealed class RenderPhysicalModel : RenderProxyBox
             return default;
         }
 
-        var shadow = new BoxShadow
-        {
-            OffsetX = 0.0,
-            OffsetY = _elevation * 0.5,
-            Blur = Math.Max(1.0, _elevation * 2.0),
-            Spread = 0.0,
-            Color = _shadowColor,
-            IsInset = false,
-        };
-        return new BoxShadows(shadow);
+        var shadow = new BoxShadow(
+            color: _shadowColor,
+            offset: new Point(0.0, _elevation * 0.5),
+            blurRadius: Math.Max(1.0, _elevation * 2.0));
+        return new BoxShadows(shadow.ToAvalonia());
     }
 
     private static void ValidateElevation(double elevation)

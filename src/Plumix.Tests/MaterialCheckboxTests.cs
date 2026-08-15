@@ -1063,7 +1063,7 @@ public sealed class MaterialCheckboxTests
     private static bool HasGradientBrushFill(RenderObject root)
     {
         return FindDescendants<RenderDecoratedBox>(root)
-            .Any(box => box.Decoration.Brush is LinearGradientBrush);
+            .Any(box => box.Decoration.Gradient is Plumix.Rendering.LinearGradient);
     }
 
     private static SemanticsNode? FindFirstSemanticsNode(SemanticsNode node, Func<SemanticsNode, bool> predicate)

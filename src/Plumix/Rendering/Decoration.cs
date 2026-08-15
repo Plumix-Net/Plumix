@@ -563,7 +563,7 @@ public sealed record ShapeDecoration(
     Color? Color = null,
     Gradient? Gradient = null,
     DecorationImage? Image = null,
-    BoxShadows Shadows = default) : Decoration
+    IReadOnlyList<BoxShadow>? Shadows = null) : Decoration
 {
     /// Creates a shape decoration configured to match a [BoxDecoration].
     public static ShapeDecoration FromBoxDecoration(BoxDecoration source)
@@ -589,12 +589,12 @@ public sealed record ShapeDecoration(
             Color: source.Color,
             Gradient: source.Gradient,
             Image: source.Image,
-            Shadows: source.EffectiveBoxShadows);
+            Shadows: source.BoxShadows);
     }
 
     public override EdgeInsetsGeometry Padding => Shape.Dimensions;
 
-    public override bool IsComplex => Shadows.Count > 0;
+    public override bool IsComplex => Shadows is { Count: > 0 };
 
     public override Plumix.UI.Path GetClipPath(Rect rect, TextDirection textDirection)
     {
@@ -651,12 +651,41 @@ public sealed record ShapeDecoration(
             }
         }
 
+        // Dart bridges a plain color into a uniform gradient of the other side's kind, so a
+        // color-to-gradient transition interpolates instead of cross-fading.
+        Gradient? aGradient = a?.Gradient;
+        Gradient? bGradient = b?.Gradient;
+        if (aGradient is null && bGradient is not null && a?.Color is { } aColor)
+        {
+            aGradient = bGradient.FromColor(aColor);
+        }
+        else if (bGradient is null && aGradient is not null && b?.Color is { } bColor)
+        {
+            bGradient = aGradient.FromColor(bColor);
+        }
+
+        Gradient? gradient = Plumix.Rendering.Gradient.Lerp(aGradient, bGradient, t);
         return new ShapeDecoration(
             Shape: ShapeBorder.Lerp(a?.Shape, b?.Shape, t)!,
-            Color: BoxDecoration.LerpColor(a?.Color, b?.Color, t),
-            Gradient: Plumix.Rendering.Gradient.Lerp(a?.Gradient, b?.Gradient, t),
+            Color: gradient is null ? BoxDecoration.LerpColor(a?.Color, b?.Color, t) : null,
+            Gradient: gradient,
             Image: DecorationImage.Lerp(a?.Image, b?.Image, t),
-            Shadows: t < 0.5 ? a?.Shadows ?? default : b?.Shadows ?? default);
+            Shadows: BoxShadow.LerpList(a?.Shadows, b?.Shadows, t));
+    }
+
+    public bool Equals(ShapeDecoration? other)
+    {
+        return other is not null
+               && Shape.Equals(other.Shape)
+               && Nullable.Equals(Color, other.Color)
+               && Equals(Gradient, other.Gradient)
+               && Equals(Image, other.Image)
+               && ShadowList.Equals(Shadows, other.Shadows);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(Shape, Color, Gradient, Image, ShadowList.GetHashCode(Shadows));
     }
 }
 
@@ -676,14 +705,14 @@ internal sealed class ShapeDecorationPainter : BoxPainter
         var rect = new Rect(offset, size);
         TextDirection? textDirection = configuration.TextDirection;
 
-        IBrush? fill = _decoration.Gradient?.CreateBrush();
+        IBrush? fill = _decoration.Gradient?.CreateShader(rect, textDirection);
         if (fill is null && _decoration.Color.HasValue)
         {
             fill = new SolidColorBrush(_decoration.Color.Value);
         }
 
         RRect? outerRRect = TryResolveRRect(_decoration.Shape, rect, textDirection);
-        if (_decoration.Shadows.Count > 0 || fill is not null)
+        if (_decoration.Shadows is { Count: > 0 } || fill is not null)
         {
             PaintInterior(context, rect, fill ?? Brushes.Transparent, textDirection, outerRRect);
         }
@@ -706,10 +735,9 @@ internal sealed class ShapeDecorationPainter : BoxPainter
         TextDirection? textDirection,
         RRect? outerRRect)
     {
-        BoxShadows shadows = _decoration.Shadows;
-        if (shadows.Count > 0 && outerRRect is { } shadowRect)
+        if (_decoration.Shadows is { Count: > 0 } shadows && outerRRect is { } shadowRect)
         {
-            context.DrawRectangle(brush, null, shadowRect.Rect, shadowRect.Radii, shadows);
+            context.DrawRectangle(brush, null, shadowRect.Rect, shadowRect.Radii, shadows.ToAvalonia());
             return;
         }
 
@@ -763,17 +791,14 @@ internal sealed class ShapeDecorationPainter : BoxPainter
 
 public sealed record BoxDecoration(
     Color? Color = null,
-    IBrush? Brush = null,
     Gradient? Gradient = null,
     BoxBorder? Border = null,
     BorderRadius? BorderRadius = null,
-    BoxShadows? BoxShadows = null,
+    IReadOnlyList<BoxShadow>? BoxShadows = null,
     DecorationImage? Image = null,
     BoxShape Shape = BoxShape.Rectangle) : Decoration
 {
     public BorderRadius EffectiveBorderRadius => BorderRadius ?? Plumix.Rendering.BorderRadius.Zero;
-
-    public BoxShadows EffectiveBoxShadows => BoxShadows ?? default;
 
     public override EdgeInsetsGeometry Padding => Border?.Dimensions ?? EdgeInsetsGeometry.Zero;
 
@@ -832,11 +857,10 @@ public sealed record BoxDecoration(
 
         return new BoxDecoration(
             Color: LerpColor(a.Color, b.Color, t),
-            Brush: t < 0.5 ? a.Brush : b.Brush,
             Gradient: Plumix.Rendering.Gradient.Lerp(a.Gradient, b.Gradient, t),
             Border: BoxBorder.Lerp(a.Border, b.Border, t),
             BorderRadius: LerpBorderRadius(a.BorderRadius, b.BorderRadius, t),
-            BoxShadows: t < 0.5 ? a.BoxShadows : b.BoxShadows,
+            BoxShadows: BoxShadow.LerpList(a.BoxShadows, b.BoxShadows, t),
             Image: DecorationImage.Lerp(a.Image, b.Image, t),
             Shape: t < 0.5 ? a.Shape : b.Shape);
     }
@@ -848,8 +872,34 @@ public sealed record BoxDecoration(
             Color = LerpColor(null, Color, factor),
             Gradient = Gradient?.Scale(factor),
             Border = (BoxBorder?)Border?.Scale(factor),
+            BorderRadius = Plumix.Rendering.BorderRadius.Lerp(null, BorderRadius, factor),
+            BoxShadows = BoxShadow.LerpList(null, BoxShadows, factor),
             Image = DecorationImage.Lerp(null, Image, factor),
         };
+    }
+
+    public bool Equals(BoxDecoration? other)
+    {
+        return other is not null
+               && Nullable.Equals(Color, other.Color)
+               && Equals(Gradient, other.Gradient)
+               && Equals(Border, other.Border)
+               && Nullable.Equals(BorderRadius, other.BorderRadius)
+               && ShadowList.Equals(BoxShadows, other.BoxShadows)
+               && Equals(Image, other.Image)
+               && Shape == other.Shape;
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(
+            Color,
+            Gradient,
+            Border,
+            BorderRadius,
+            ShadowList.GetHashCode(BoxShadows),
+            Image,
+            Shape);
     }
 
     internal static Color? LerpColor(Color? a, Color? b, double t)
@@ -893,8 +943,8 @@ internal sealed class BoxDecorationPainter : BoxPainter
         Size size = configuration.Size ?? default;
         var rect = new Rect(offset, size);
         BorderRadius borderRadius = _decoration.EffectiveBorderRadius;
-        BoxShadows boxShadows = _decoration.EffectiveBoxShadows;
-        IBrush? fill = _decoration.Gradient?.CreateBrush() ?? _decoration.Brush;
+        BoxShadows boxShadows = _decoration.BoxShadows.ToAvalonia();
+        IBrush? fill = _decoration.Gradient?.CreateShader(rect, configuration.TextDirection);
         if (fill is null && _decoration.Color.HasValue)
         {
             fill = new SolidColorBrush(_decoration.Color.Value);

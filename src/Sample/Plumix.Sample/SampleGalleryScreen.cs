@@ -97,6 +97,7 @@ internal static class SampleRoutes
     public const string Align = "/align";
     public const string Stack = "/stack";
     public const string DecoratedBox = "/decorated-box";
+    public const string Gradients = "/gradients";
     public const string ShapeBorders = "/shape-borders";
     public const string Container = "/container";
     public const string AspectRatio = "/aspect-ratio";
@@ -295,6 +296,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new AlignDemoPage()),
         new(SampleRoutes.Stack, "Stack + Positioned", "multi-child overlay layout", () => new StackDemoPage()),
         new(SampleRoutes.DecoratedBox, "DecoratedBox", "border + radius + fill decoration", () => new DecoratedBoxDemoPage()),
+        new(
+            SampleRoutes.Gradients,
+            "Gradients",
+            "linear/radial/sweep gradients + shadow lerp",
+            () => new GradientsDemoPage()),
         new(
             SampleRoutes.ShapeBorders,
             "ShapeBorders",
