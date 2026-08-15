@@ -200,8 +200,10 @@ public sealed class MaterialTooltipTests
             DiagnosticsNode diagnostic = Assert.Single(
                 diagnostics.Properties,
                 node => !node.IsFiltered(DiagnosticLevel.Info));
-            Assert.Equal(string.Empty, diagnostic.Name);
-            Assert.Equal("Semantic event", diagnostic.Description);
+            Assert.Equal("message", diagnostic.Name);
+            Assert.False(diagnostic.ShowName);
+            Assert.Equal("\"Semantic event\"", diagnostic.ToDescription());
+            Assert.Equal("\"Semantic event\"", diagnostic.ToString());
 
             var richDiagnostics = new DiagnosticPropertiesBuilder();
             new Tooltip(richMessage: new TextSpan(text: "Rich diagnostic"))
@@ -209,7 +211,8 @@ public sealed class MaterialTooltipTests
             DiagnosticsNode richDiagnostic = Assert.Single(
                 richDiagnostics.Properties,
                 node => !node.IsFiltered(DiagnosticLevel.Info));
-            Assert.Equal("Rich diagnostic", richDiagnostic.Description);
+            Assert.Equal("richMessage", richDiagnostic.Name);
+            Assert.Equal("\"Rich diagnostic\"", richDiagnostic.ToDescription());
 
             using var harness = new WidgetRenderHarness(new Theme(ThemeData.Light, tooltip));
             harness.Pump(new Size(160, 80));

@@ -13,7 +13,7 @@ namespace Plumix.Widgets;
 /// inflated into elements, which manage the underlying render tree.
 ///
 /// </summary>
-public abstract class Widget(Key? key = null)
+public abstract class Widget(Key? key = null) : DiagnosticableTree
 {
     public Key? Key { get; } = key;
 
@@ -24,9 +24,17 @@ public abstract class Widget(Key? key = null)
 
     internal abstract Element CreateElement();
 
-    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    /// A short, textual description of this widget.
+    public override string ToStringShort()
     {
-        ArgumentNullException.ThrowIfNull(properties);
+        string type = Diagnostics.ObjectRuntimeType(this);
+        return Key is null ? type : $"{type}-{Key}";
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.DefaultDiagnosticsTreeStyle = DiagnosticsTreeStyle.Dense;
     }
 }
 

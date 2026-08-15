@@ -134,25 +134,62 @@ public sealed class Tooltip : StatefulWidget
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new StringProperty("message", Message, showName: Message is null));
+        properties.Add(new StringProperty(
+            "message",
+            Message,
+            showName: Message is null,
+            defaultValue: Message is null ? DiagnosticsDefaults.NullValue : DiagnosticsDefaults.NoDefaultValue));
         properties.Add(new StringProperty(
             "richMessage",
             RichMessage?.ToPlainText(),
-            showName: RichMessage is null));
-        properties.Add(new DoubleProperty("height", Height));
-        properties.Add(new DiagnosticsProperty<BoxConstraints?>("constraints", Constraints));
-        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("padding", Padding));
-        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("margin", Margin));
-        properties.Add(new DoubleProperty("vertical offset", VerticalOffset));
+            showName: RichMessage is null,
+            defaultValue: RichMessage is null
+                ? DiagnosticsDefaults.NullValue
+                : DiagnosticsDefaults.NoDefaultValue));
+        properties.Add(new DoubleProperty("height", Height, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<BoxConstraints?>(
+            "constraints",
+            Constraints,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>(
+            "padding",
+            Padding,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>(
+            "margin",
+            Margin,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty(
+            "vertical offset",
+            VerticalOffset,
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new FlagProperty("position", PreferBelow, "below", "above", showName: true));
         properties.Add(new FlagProperty("semantics", ExcludeFromSemantics, "excluded", showName: true));
-        properties.Add(new DiagnosticsProperty<TimeSpan?>("wait duration", WaitDuration));
-        properties.Add(new DiagnosticsProperty<TimeSpan?>("show duration", ShowDuration));
-        properties.Add(new DiagnosticsProperty<TimeSpan?>("exit duration", ExitDuration));
-        properties.Add(new DiagnosticsProperty<TooltipTriggerMode?>("triggerMode", TriggerMode));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>(
+            "wait duration",
+            WaitDuration,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>(
+            "show duration",
+            ShowDuration,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>(
+            "exit duration",
+            ExitDuration,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<TooltipTriggerMode?>(
+            "triggerMode",
+            TriggerMode,
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new FlagProperty("enableFeedback", EnableFeedback, "true", showName: true));
-        properties.Add(new DiagnosticsProperty<TextAlign?>("textAlign", TextAlign));
-        properties.Add(new DiagnosticsProperty<TooltipPositionDelegate?>("positionDelegate", PositionDelegate));
+        properties.Add(new DiagnosticsProperty<TextAlign?>(
+            "textAlign",
+            TextAlign,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<TooltipPositionDelegate?>(
+            "positionDelegate",
+            PositionDelegate,
+            defaultValue: DiagnosticsDefaults.NullValue));
     }
 }
 

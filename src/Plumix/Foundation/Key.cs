@@ -53,8 +53,11 @@ public record ValueKey<T>(T Value) : LocalKey
 {
     public override string ToString()
     {
-        string valueString = typeof(T) == typeof(string) ? $"<'{Value}'>" : $"<{Value}>";
+        string valueString = typeof(T) == typeof(string) ? $"<'{Value}'>" : $"<{Diagnostics.DescribeValue(Value)}>";
 
-        return $"[{typeof(T)} {valueString}]";
+        // Dart omits the type for a plain `ValueKey<T>` and prints it only for subclasses.
+        return GetType() == typeof(ValueKey<T>)
+            ? $"[{valueString}]"
+            : $"[{Diagnostics.DescribeType(typeof(T))} {valueString}]";
     }
 }

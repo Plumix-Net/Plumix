@@ -10,15 +10,15 @@ using Plumix.Foundation;
 namespace Plumix.UI;
 
 /// <summary>A base class for all keyboard key types.</summary>
-public abstract class KeyboardKey
+public abstract class KeyboardKey : Diagnosticable
 {
     protected KeyboardKey()
     {
     }
 
-    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
     }
 }
 

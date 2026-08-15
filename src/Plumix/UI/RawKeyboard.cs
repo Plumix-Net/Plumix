@@ -241,7 +241,7 @@ public sealed class HostRawKeyEventData : RawKeyEventData
 
 /// <summary>Base class for raw key events.</summary>
 [Obsolete("Use KeyEvent and KeyboardListener instead. Mirrors Flutter's deprecation after v3.18.0-2.0.pre.")]
-public abstract class RawKeyEvent
+public abstract class RawKeyEvent : Diagnosticable
 {
     protected RawKeyEvent(RawKeyEventData data, string? character = null, bool repeat = false)
     {
@@ -284,9 +284,9 @@ public abstract class RawKeyEvent
     public bool IsMetaPressed => IsKeyPressed(LogicalKeyboardKey.MetaLeft)
                                  || IsKeyPressed(LogicalKeyboardKey.MetaRight);
 
-    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
         properties.Add(new StringProperty("logicalKey", LogicalKey.DebugName));
         properties.Add(new StringProperty("physicalKey", PhysicalKey.DebugName));
         if (this is RawKeyDownEvent)

@@ -1,5 +1,28 @@
 # Changelog
 
+- Breaking: ported Flutter's diagnostics layer (`foundation/diagnostics.dart`), replacing the
+  146-line approximation that stood in for it. New in `Plumix.Foundation`: `DiagnosticsTreeStyle`,
+  `TextTreeConfiguration` + the ten `TextTreeConfigurations` presets, `TextTreeRenderer` with
+  Flutter's word-wrap state machine, `DiagnosticsNode` (`ToDescription`/`ToStringDeep`/`ToJsonMap`/
+  `ToTimelineArguments`), `DiagnosticsBlock`, `DiagnosticsSerializationDelegate`,
+  `DiagnosticPropertiesBuilder` (with `DefaultDiagnosticsTreeStyle`/`EmptyBodyDescription`),
+  `DiagnosticsProperty<T>` plus `MessageProperty`, `StringProperty`, `NumProperty<T>`,
+  `DoubleProperty`, `IntProperty`, `PercentProperty`, `FlagProperty`, `IterableProperty<T>`,
+  `EnumProperty<T>`, `ObjectFlagProperty<T>`, `FlagsSummary<T>`, `DiagnosticableNode<T>`,
+  `DiagnosticableTreeNode`, the `IDiagnosticable`/`IDiagnosticableTree` interfaces and the
+  `Diagnosticable`/`DiagnosticableTree` base classes, and the `ShortHash`/`DescribeIdentity`/
+  `ObjectRuntimeType`/`DescribeType`/`EnumName`/`DescribeEnum` helpers.
+  `Widget` now extends `DiagnosticableTree` (dense tree style, `Type-Key` short name), and
+  `KeyboardKey`/`KeyEvent`/`RawKeyEvent` extend `Diagnosticable`.
+  Breaking for consumers: `DiagnosticsNode.Description` is now `ToDescription()`; a property with
+  `showName: false` keeps its `Name` and reports `ShowName == false` instead of blanking the name;
+  properties no longer treat `default(T)` as an implicit default value, so Dart's `defaultValue:
+  null` must be written `defaultValue: DiagnosticsDefaults.NullValue` (Material's `Tooltip`,
+  `TooltipThemeData`, `ButtonBarThemeData` and `BottomSheetThemeData` were corrected to match
+  Flutter, which passes it on every slot); `StringProperty` now quotes by default as Dart does.
+  Also fixed `ValueKey<T>.ToString()`, which printed the CLR type name for every key where Dart
+  prints the type only for subclasses.
+
 - Breaking: ported Flutter's autofill subsystem (`services/autofill.dart`, `widgets/autofill.dart`).
   New in core: `AutofillHints` (all 66 constants), `AutofillConfiguration`, `IAutofillClient`,
   `IAutofillScope` + the `AutofillScopeMixin` companion, `AutofillContextAction`, `AutofillGroup`/

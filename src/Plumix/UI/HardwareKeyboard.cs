@@ -83,7 +83,7 @@ public sealed class KeyboardLockMode : IEquatable<KeyboardLockMode>
 /// <summary>
 /// Defines the interface for keyboard key events.
 /// </summary>
-public abstract class KeyEvent
+public abstract class KeyEvent : Diagnosticable
 {
     protected KeyEvent(
         PhysicalKeyboardKey physicalKey,
@@ -122,9 +122,9 @@ public abstract class KeyEvent
     /// <summary>Whether this event is synthesized by Plumix to synchronize key states.</summary>
     public bool Synthesized { get; }
 
-    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
         properties.Add(new StringProperty("physicalKey", PhysicalKey.DebugName));
         properties.Add(new StringProperty("logicalKey", LogicalKey.DebugName));
         properties.Add(new StringProperty("character", Character));

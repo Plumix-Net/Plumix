@@ -190,6 +190,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/DefaultSelectionStyle.cs`
   - `src/Plumix/Widgets/Title.cs`
   - `src/Plumix/Foundation/Key.cs`
+  - `src/Plumix/Foundation/Diagnosticable.cs` (diagnostics layer entry point; nodes/properties/text
+    tree live in `Diagnostics.Node.cs`, `DiagnosticProperties.cs`, `Diagnostics.TextTree.cs`)
 - Primary Tests:
   - `src/Plumix.Tests/ElementLifecycleTests.cs`
   - `src/Plumix.Tests/InheritedWidgetTests.cs`
@@ -197,6 +199,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/InheritedNotifierTests.cs`
   - `src/Plumix.Tests/StatefulBuilderLookupBoundaryTests.cs`
   - `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs`
+  - `src/Plumix.Tests/DiagnosticsTests.cs`
 
 ### Core Layout/Paint/Compositing
 

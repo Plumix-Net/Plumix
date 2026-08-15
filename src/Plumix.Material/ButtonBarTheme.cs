@@ -96,18 +96,34 @@ public sealed record ButtonBarThemeData
     public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         ArgumentNullException.ThrowIfNull(properties);
-        properties.Add(new DiagnosticsProperty<MainAxisAlignment?>("alignment", Alignment));
-        properties.Add(new DiagnosticsProperty<MainAxisSize?>("mainAxisSize", MainAxisSize));
-        properties.Add(new DiagnosticsProperty<ButtonTextTheme?>("textTheme", ButtonTextTheme));
-        properties.Add(new DoubleProperty("minWidth", ButtonMinWidth));
-        properties.Add(new DoubleProperty("height", ButtonHeight));
-        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("padding", ButtonPadding));
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        properties.Add(new DiagnosticsProperty<MainAxisAlignment?>("alignment", Alignment, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MainAxisSize?>(
+            "mainAxisSize",
+            MainAxisSize,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<ButtonTextTheme?>(
+            "textTheme",
+            ButtonTextTheme,
+            defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("minWidth", ButtonMinWidth, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("height", ButtonHeight, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>(
+            "padding",
+            ButtonPadding,
+            defaultValue: nullDefault));
         properties.Add(new FlagProperty(
             "buttonAlignedDropdown",
             ButtonAlignedDropdown,
             "dropdown width matches button"));
-        properties.Add(new DiagnosticsProperty<ButtonBarLayoutBehavior?>("layoutBehavior", LayoutBehavior));
-        properties.Add(new DiagnosticsProperty<VerticalDirection?>("overflowDirection", OverflowDirection));
+        properties.Add(new DiagnosticsProperty<ButtonBarLayoutBehavior?>(
+            "layoutBehavior",
+            LayoutBehavior,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<VerticalDirection?>(
+            "overflowDirection",
+            OverflowDirection,
+            defaultValue: nullDefault));
     }
 
     private static double? LerpDouble(double? a, double? b, double t)

@@ -116,20 +116,24 @@ public sealed partial record TooltipThemeData
     public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         ArgumentNullException.ThrowIfNull(properties);
-        properties.Add(new DoubleProperty("height", Height));
-        properties.Add(new DiagnosticsProperty<BoxConstraints?>("constraints", Constraints));
-        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("padding", Padding));
-        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("margin", Margin));
-        properties.Add(new DoubleProperty("vertical offset", VerticalOffset));
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        properties.Add(new DoubleProperty("height", Height, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<BoxConstraints?>("constraints", Constraints, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("padding", Padding, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("margin", Margin, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("vertical offset", VerticalOffset, defaultValue: nullDefault));
         properties.Add(new FlagProperty("position", PreferBelow, "below", "above", showName: true));
         properties.Add(new FlagProperty("semantics", ExcludeFromSemantics, "excluded", showName: true));
-        properties.Add(new DiagnosticsProperty<Decoration?>("decoration", Decoration));
-        properties.Add(new DiagnosticsProperty<TextStyle?>("textStyle", TextStyle));
-        properties.Add(new DiagnosticsProperty<TextAlign?>("textAlign", TextAlign));
-        properties.Add(new DiagnosticsProperty<TimeSpan?>("wait duration", WaitDuration));
-        properties.Add(new DiagnosticsProperty<TimeSpan?>("show duration", ShowDuration));
-        properties.Add(new DiagnosticsProperty<TimeSpan?>("exit duration", ExitDuration));
-        properties.Add(new DiagnosticsProperty<TooltipTriggerMode?>("triggerMode", TriggerMode));
+        properties.Add(new DiagnosticsProperty<Decoration?>("decoration", Decoration, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<TextStyle?>("textStyle", TextStyle, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<TextAlign?>("textAlign", TextAlign, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>("wait duration", WaitDuration, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>("show duration", ShowDuration, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>("exit duration", ExitDuration, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<TooltipTriggerMode?>(
+            "triggerMode",
+            TriggerMode,
+            defaultValue: nullDefault));
         properties.Add(new FlagProperty("enableFeedback", EnableFeedback, "true", showName: true));
     }
 }

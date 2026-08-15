@@ -100,19 +100,38 @@ public sealed partial record BottomSheetThemeData
     public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         ArgumentNullException.ThrowIfNull(properties);
-        properties.Add(new DiagnosticsProperty<Color?>("backgroundColor", BackgroundColor));
-        properties.Add(new DiagnosticsProperty<Color?>("surfaceTintColor", SurfaceTintColor));
-        properties.Add(new DoubleProperty("elevation", Elevation));
-        properties.Add(new DiagnosticsProperty<Color?>("modalBackgroundColor", ModalBackgroundColor));
-        properties.Add(new DiagnosticsProperty<Color?>("shadowColor", ShadowColor));
-        properties.Add(new DiagnosticsProperty<Color?>("modalBarrierColor", ModalBarrierColor));
-        properties.Add(new DoubleProperty("modalElevation", ModalElevation));
-        properties.Add(new DiagnosticsProperty<ShapeBorder?>("shape", Shape));
-        properties.Add(new DiagnosticsProperty<bool?>("showDragHandle", ShowDragHandle));
-        properties.Add(new DiagnosticsProperty<WidgetStateColor?>("dragHandleColor", DragHandleColor));
-        properties.Add(new DiagnosticsProperty<Size?>("dragHandleSize", DragHandleSize));
-        properties.Add(new DiagnosticsProperty<Clip?>("clipBehavior", ClipBehavior));
-        properties.Add(new DiagnosticsProperty<BoxConstraints?>("constraints", Constraints));
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        properties.Add(new DiagnosticsProperty<Color?>(
+            "backgroundColor",
+            BackgroundColor,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<Color?>(
+            "surfaceTintColor",
+            SurfaceTintColor,
+            defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("elevation", Elevation, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<Color?>(
+            "modalBackgroundColor",
+            ModalBackgroundColor,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<Color?>("shadowColor", ShadowColor, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<Color?>(
+            "modalBarrierColor",
+            ModalBarrierColor,
+            defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("modalElevation", ModalElevation, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<ShapeBorder?>("shape", Shape, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<bool?>("showDragHandle", ShowDragHandle, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+            "dragHandleColor",
+            DragHandleColor,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<Size?>("dragHandleSize", DragHandleSize, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<Clip?>("clipBehavior", ClipBehavior, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<BoxConstraints?>(
+            "constraints",
+            Constraints,
+            defaultValue: nullDefault));
     }
 
     private static void ValidateElevation(double? value, string name)
