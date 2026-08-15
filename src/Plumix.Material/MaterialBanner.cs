@@ -86,7 +86,7 @@ public sealed class MaterialBanner : StatefulWidget
     public Animation<double>? Animation { get; }
     public Action? OnVisible { get; }
 
-    public static AnimationController CreateAnimationController() => new(TransitionDuration);
+    public static AnimationController CreateAnimationController() => new(duration: TransitionDuration);
 
     public MaterialBanner WithAnimation(Animation<double> animation, Key? fallbackKey = null)
     {

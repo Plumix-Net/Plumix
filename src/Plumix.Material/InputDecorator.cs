@@ -414,14 +414,18 @@ public sealed class InputDecorator : StatefulWidget
             bool labelIsInitiallyFloating =
                 Current.Decoration.FloatingLabelBehavior != Plumix.Material.FloatingLabelBehavior.Never
                 && Current.LabelShouldWithdraw;
-            _floatingLabelController = new AnimationController(InputDecoration.TransitionDuration, this);
+            _floatingLabelController = new AnimationController(
+                duration: InputDecoration.TransitionDuration,
+                vsync: this);
             _floatingLabelController.SetValue(labelIsInitiallyFloating ? 1.0 : 0.0);
             _floatingLabelController.AddListener(HandleChange);
             _floatingLabelAnimation = new CurvedAnimation(
                 _floatingLabelController,
                 Curves.FastOutSlowIn,
                 Curves.Flipped(Curves.FastOutSlowIn));
-            _shakingLabelController = new AnimationController(InputDecoration.TransitionDuration, this);
+            _shakingLabelController = new AnimationController(
+                duration: InputDecoration.TransitionDuration,
+                vsync: this);
 
             string group = GetHashCode().ToString(CultureInfo.InvariantCulture);
             _prefixSemanticsSortOrder = new OrdinalSortKey(0, group);
@@ -1059,7 +1063,7 @@ internal sealed class HelperError : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(InputDecoration.TransitionDuration, this);
+            _controller = new AnimationController(duration: InputDecoration.TransitionDuration, vsync: this);
             if (Current.Error is not null || Current.ErrorText is not null)
             {
                 _error = BuildError();
@@ -1230,13 +1234,13 @@ internal sealed class BorderContainer : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(InputDecoration.TransitionDuration, this);
+            _controller = new AnimationController(duration: InputDecoration.TransitionDuration, vsync: this);
             _controller.AddListener(HandleChange);
             _borderAnimation = new CurvedAnimation(
                 _controller,
                 Curves.FastOutSlowIn,
                 Curves.Flipped(Curves.FastOutSlowIn));
-            _hoverColorController = new AnimationController(HoverDuration, this);
+            _hoverColorController = new AnimationController(duration: HoverDuration, vsync: this);
             _hoverColorController.SetValue(Current.IsHovering ? 1.0 : 0.0);
             _hoverColorController.AddListener(HandleChange);
             _hoverAnimation = new CurvedAnimation(_hoverColorController, Curves.Linear);

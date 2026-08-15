@@ -692,7 +692,7 @@ public abstract class TransitionRoute : OverlayRoute
 
     protected virtual AnimationController CreateAnimationController()
     {
-        return new AnimationController(NormalizeDuration(TransitionDuration))
+        return new AnimationController(duration: NormalizeDuration(TransitionDuration))
         {
             ReverseDuration = NormalizeDuration(ReverseTransitionDuration),
         };
@@ -764,7 +764,7 @@ public abstract class TransitionRoute : OverlayRoute
         _result = result;
         if (CreateSimulation(forward: false) is { } simulation)
         {
-            Controller.AnimateWith(simulation, reverse: true);
+            Controller.AnimateBackWith(simulation);
         }
         else if (ReverseTransitionDuration == TimeSpan.Zero)
         {

@@ -174,6 +174,7 @@ public sealed class HeroNavigatorTests
             harness.Pump(viewportSize);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
             harness.Pump(viewportSize);
 
@@ -862,14 +863,21 @@ public sealed class HeroNavigatorTests
         PumpHeroTransitionFrame(harness, viewportSize);
 
         double afterStart = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.40));
         harness.Pump(viewportSize);
     }
 
     private static void PumpHeroTransitionFrame(WidgetRenderHarness harness, Size viewportSize)
     {
+        // The flight controller is created by the build this frame runs, so it takes its start
+        // timestamp from the priming frame and only advances on the one after it.
+        AnimationPump.Prime();
+        harness.Pump(viewportSize);
         double now = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.016));
+        harness.Pump(viewportSize);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.032));
         harness.Pump(viewportSize);
     }
 

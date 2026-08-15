@@ -73,22 +73,22 @@ public abstract class ToggleableState : State
     public override void InitState()
     {
         base.InitState();
-        _positionController = new AnimationController(ToggleDuration, this);
+        _positionController = new AnimationController(duration: ToggleDuration, vsync: this);
         _positionController.SetValue(IsValueSelected ? 1.0 : 0.0);
         _position = new CurvedAnimation(
             _positionController,
             Curves.EaseIn,
             Curves.EaseOut);
 
-        _reactionController = new AnimationController(ReactionDuration, this);
+        _reactionController = new AnimationController(duration: ReactionDuration, vsync: this);
         _reaction = new CurvedAnimation(_reactionController, Curves.FastOutSlowIn);
 
-        _reactionHoverFadeController = new AnimationController(ReactionFadeDuration, this);
+        _reactionHoverFadeController = new AnimationController(duration: ReactionFadeDuration, vsync: this);
         _reactionHoverFade = new CurvedAnimation(
             _reactionHoverFadeController,
             Curves.FastOutSlowIn);
 
-        _reactionFocusFadeController = new AnimationController(ReactionFadeDuration, this);
+        _reactionFocusFadeController = new AnimationController(duration: ReactionFadeDuration, vsync: this);
         _reactionFocusFade = new CurvedAnimation(
             _reactionFocusFadeController,
             Curves.FastOutSlowIn);

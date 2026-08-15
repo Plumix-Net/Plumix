@@ -131,7 +131,7 @@ public sealed class SliverOpacityTests : IDisposable
     [Fact]
     public void RenderSliverAnimatedOpacity_TracksAnimationWithoutWidgetRebuilds()
     {
-        using var controller = new AnimationController(TimeSpan.FromMilliseconds(200));
+        using var controller = new AnimationController(duration: TimeSpan.FromMilliseconds(200));
         var box = new PaintTrackingRenderBox(new Size(100, 80));
         var child = new RenderSliverToBoxAdapter(box);
         var opacity = new RenderSliverAnimatedOpacity(controller, sliver: child);
@@ -187,6 +187,7 @@ public sealed class SliverOpacityTests : IDisposable
         owner.FlushBuild();
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
         var halfway = RequireRenderObject<RenderSliverAnimatedOpacity>(root.ChildElement);
@@ -206,6 +207,7 @@ public sealed class SliverOpacityTests : IDisposable
         Assert.Equal(interruptedOpacity, interrupted.Opacity.Value, precision: 6);
         Assert.True(interrupted.AlwaysIncludeSemantics);
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
         var finished = RequireRenderObject<RenderSliverAnimatedOpacity>(root.ChildElement);

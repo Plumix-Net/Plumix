@@ -768,13 +768,15 @@ public sealed class MaterialScaffoldGeometryTests
 
         WidgetsBinding.Instance.HandleStatusBarTap();
         double start = Scheduler.CurrentSeconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start));
 
         // The source animation runs for 1000ms on Curves.easeOutCirc; these are the offsets Flutter's own
         // status-bar test samples.
         Assert.InRange(PixelsAt(0.25), 156.0, 160.0);
         Assert.InRange(PixelsAt(0.5), 39.0, 43.0);
         Assert.InRange(PixelsAt(0.75), 5.0, 9.0);
-        Assert.Equal(0.0, PixelsAt(1.0));
+        // Past the end of the 1000ms run the activity reports the exact target.
+        Assert.Equal(0.0, PixelsAt(1.1));
 
         double PixelsAt(double offset)
         {
@@ -893,7 +895,7 @@ public sealed class MaterialScaffoldGeometryTests
 
         public void Tick(double seconds)
         {
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + seconds));
+            AnimationPump.Advance(seconds);
         }
 
         /// <summary>Runs the 200ms entrance and the 400ms segue to completion.</summary>

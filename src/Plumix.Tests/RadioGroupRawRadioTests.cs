@@ -73,6 +73,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
 
             registry.SetGroupValue("b");
             state.AnimateToValue();
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(
                 TimeSpan.FromSeconds(Scheduler.CurrentSeconds) + TimeSpan.FromMilliseconds(250));
             harness.Pump(new Size(80, 40));

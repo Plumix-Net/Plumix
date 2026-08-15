@@ -64,7 +64,7 @@ public sealed class MaterialFloatingActionButtonLocationTests
     [Fact]
     public void ScalingAnimator_ScalesDownThenUpAndTurnsOnlyOnTheWayIn()
     {
-        using var parent = new AnimationController(TimeSpan.FromMilliseconds(400));
+        using var parent = new AnimationController(duration: TimeSpan.FromMilliseconds(400));
         Animation<double> scale = FloatingActionButtonAnimator.Scaling.GetScaleAnimation(parent);
         Animation<double> rotation = FloatingActionButtonAnimator.Scaling.GetRotationAnimation(parent);
 
@@ -85,7 +85,7 @@ public sealed class MaterialFloatingActionButtonLocationTests
     [Fact]
     public void NoAnimationAnimator_KeepsScaleAndRotationConstant()
     {
-        using var parent = new AnimationController(TimeSpan.FromMilliseconds(400));
+        using var parent = new AnimationController(duration: TimeSpan.FromMilliseconds(400));
         Animation<double> scale = FloatingActionButtonAnimator.NoAnimation.GetScaleAnimation(parent);
         Animation<double> rotation = FloatingActionButtonAnimator.NoAnimation.GetRotationAnimation(parent);
 

@@ -115,7 +115,7 @@ public sealed class AnimatedTheme : StatefulWidget
         public override void InitState()
         {
             _begin = _end = CurrentWidget.Data;
-            _controller = new AnimationController(CurrentWidget.Duration, this)
+            _controller = new AnimationController(duration: CurrentWidget.Duration, vsync: this)
             {
                 Curve = CurrentWidget.Curve,
             };

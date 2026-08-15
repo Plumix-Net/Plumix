@@ -42,7 +42,7 @@ public sealed partial class NavigatorState : RestorationState
         _overlayKey = new GlobalObjectKey<OverlayState>(this);
         _backButtonHandler = HandleBackButton;
         _heroFlightController = new Plumix.AnimationController(
-            TimeSpan.FromMilliseconds(HeroTransitionDurationMilliseconds))
+            duration: TimeSpan.FromMilliseconds(HeroTransitionDurationMilliseconds))
         {
             Curve = Plumix.Curves.EaseInOut,
         };

@@ -271,6 +271,7 @@ public sealed class MaterialSwitchTests
         harness.Pump(new Size(220, 120));
 
         double start = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.15));
         harness.Pump(new Size(220, 120));

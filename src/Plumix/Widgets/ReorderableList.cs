@@ -382,7 +382,7 @@ public sealed class SliverReorderableListState : State
 
     public override void InitState()
     {
-        _proxyAnimation = new AnimationController(TimeSpan.FromMilliseconds(250), this);
+        _proxyAnimation = new AnimationController(duration: TimeSpan.FromMilliseconds(250), vsync: this);
         _proxyAnimation.Changed += HandleProxyAnimationChanged;
         _proxyAnimation.Dismissed += HandleProxyAnimationDismissed;
     }
@@ -1168,7 +1168,7 @@ internal sealed class ReorderableItemState : State
         DisposeOffsetAnimation();
         if (animate)
         {
-            _offsetAnimation = new AnimationController(TimeSpan.FromMilliseconds(250), this)
+            _offsetAnimation = new AnimationController(duration: TimeSpan.FromMilliseconds(250), vsync: this)
             {
                 Curve = Curves.EaseInOut,
             };

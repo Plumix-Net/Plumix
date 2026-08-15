@@ -637,6 +637,7 @@ public sealed class MaterialSearchTests : IDisposable
         state.Open();
         Assert.Equal(AnimationStatus.Forward, searchDelegate.TransitionAnimation.Status);
         harness.Pump(new Size(640, 420));
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
@@ -658,6 +659,7 @@ public sealed class MaterialSearchTests : IDisposable
 
         searchDelegate.Close("Widget");
         Assert.Equal(AnimationStatus.Reverse, searchDelegate.TransitionAnimation.Status);
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
@@ -681,6 +683,7 @@ public sealed class MaterialSearchTests : IDisposable
 
         harness.FindState<SearchLaunchHostState>().Open();
         harness.Pump(new Size(640, 420));
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.4));
         harness.Pump(new Size(640, 420));
 
@@ -800,6 +803,7 @@ public sealed class MaterialSearchTests : IDisposable
         for (int i = 0; i < 3; i++)
         {
             harness.Pump(size);
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.7));
         }
 

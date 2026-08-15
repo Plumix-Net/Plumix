@@ -190,6 +190,7 @@ public sealed class ImageWidgetTests : IDisposable
             harness,
             () => FindRenderImages(harness.RenderView).Any(image => ReferenceEquals(image.Image, targetImage)));
         double start = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.15));
         harness.FlushBuild();
 

@@ -288,6 +288,7 @@ public sealed class MaterialDropdownTests : IDisposable
             node.Flags.HasFlag(SemanticsFlags.HasExpandedState)
             && node.Actions.HasFlag(SemanticsActions.Tap))!.PerformAction(SemanticsActions.Tap));
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.03));
         harness.Pump(new Size(500, 360));
         var reveal = Assert.Single(FindDescendants<RenderDropdownMenuReveal>(harness.RenderView));
@@ -1515,6 +1516,7 @@ public sealed class MaterialDropdownTests : IDisposable
     private static void PumpAnimation()
     {
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
     }

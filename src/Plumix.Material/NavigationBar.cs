@@ -517,7 +517,7 @@ internal sealed class NavigationBarDestinationTileState : State
 
     private void CreateController(double value)
     {
-        _controller = new AnimationController(CurrentWidget.Duration, this)
+        _controller = new AnimationController(duration: CurrentWidget.Duration, vsync: this)
         {
             Curve = Curves.EaseInOut
         };

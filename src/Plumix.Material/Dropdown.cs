@@ -513,7 +513,7 @@ internal sealed class DropdownRoute<T> : PageRoute
         _localizations = MaterialLocalizations.Of(context);
         _mediaQuery = MediaQuery.Of(context);
         _direction = Directionality.Of(context);
-        _animation = new AnimationController(TimeSpan.FromMilliseconds(300));
+        _animation = new AnimationController(duration: TimeSpan.FromMilliseconds(300));
         _animation.Changed += HandleAnimationChanged;
         _animation.Dismissed += HandleDismissed;
         ButtonRect = buttonRect;

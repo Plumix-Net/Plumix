@@ -212,7 +212,7 @@ public sealed class AnimatedSwitcher : StatefulWidget
                 return;
             }
 
-            var controller = new AnimationController(CurrentWidget.Duration, this)
+            var controller = new AnimationController(duration: CurrentWidget.Duration, vsync: this)
             {
                 ReverseDuration = CurrentWidget.ReverseDuration,
             };
@@ -386,7 +386,7 @@ public sealed class AnimatedCrossFade : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(CurrentWidget.Duration, this)
+            _controller = new AnimationController(duration: CurrentWidget.Duration, vsync: this)
             {
                 ReverseDuration = CurrentWidget.ReverseDuration,
             };

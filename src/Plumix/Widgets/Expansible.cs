@@ -213,7 +213,7 @@ public sealed class Expansible : StatefulWidget
 
         private void CreateAnimation(double initialValue)
         {
-            _animation = new AnimationController(NormalizeDuration(EffectiveDuration), this);
+            _animation = new AnimationController(duration: NormalizeDuration(EffectiveDuration), vsync: this);
             UpdateAnimationCurve();
             _animation.Changed += HandleAnimationChanged;
             _animation.Dismissed += HandleAnimationSettled;

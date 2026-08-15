@@ -19,7 +19,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         _ = new CircularProgressIndicator(strokeWidth: -1);
         _ = new CircularProgressIndicator(strokeAlign: 2);
         _ = new CircularProgressIndicator(trackGap: -1);
-        using var controller = new AnimationController(TimeSpan.FromSeconds(1));
+        using var controller = new AnimationController(duration: TimeSpan.FromSeconds(1));
         Assert.Throws<ArgumentException>(() => new CircularProgressIndicator(value: 0.3, controller: controller));
     }
 
@@ -356,7 +356,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         double defaultArcStart = ReadProperty<double>(defaultRender!, "ArcStart");
         double defaultArcSweep = ReadProperty<double>(defaultRender, "ArcSweep");
 
-        using var explicitController = new AnimationController(TimeSpan.FromSeconds(1))
+        using var explicitController = new AnimationController(duration: TimeSpan.FromSeconds(1))
         {
             Curve = Curves.EaseIn
         };
@@ -377,7 +377,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         double explicitArcSweep = ReadProperty<double>(explicitRender, "ArcSweep");
         Assert.True(Math.Abs(explicitArcStart - defaultArcStart) > 0.0001 || Math.Abs(explicitArcSweep - defaultArcSweep) > 0.0001);
 
-        using var themedController = new AnimationController(TimeSpan.FromSeconds(1))
+        using var themedController = new AnimationController(duration: TimeSpan.FromSeconds(1))
         {
             Curve = Curves.EaseIn
         };
@@ -538,6 +538,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         double firstStart = ReadProperty<double>(renderIndicator, "ArcStart");
         double firstSweep = ReadProperty<double>(renderIndicator, "ArcSweep");
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.30));
         harness.Pump(new Size(140, 140));
 

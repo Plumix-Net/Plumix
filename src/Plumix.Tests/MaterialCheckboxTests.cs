@@ -736,6 +736,7 @@ public sealed class MaterialCheckboxTests
             harness.Pump(new Size(160, 120));
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
             harness.Pump(new Size(160, 120));
 

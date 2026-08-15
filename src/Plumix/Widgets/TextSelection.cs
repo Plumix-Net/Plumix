@@ -1116,7 +1116,7 @@ internal sealed class SelectionToolbarWrapper : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(SelectionOverlay.FadeDuration, this);
+            _controller = new AnimationController(duration: SelectionOverlay.FadeDuration, vsync: this);
             HandleVisibilityChanged();
             CurrentWidget.Visibility?.AddListener(HandleVisibilityChanged);
         }
@@ -1234,7 +1234,7 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(SelectionOverlay.FadeDuration, this);
+            _controller = new AnimationController(duration: SelectionOverlay.FadeDuration, vsync: this);
             HandleVisibilityChanged();
             CurrentWidget.Visibility?.AddListener(HandleVisibilityChanged);
         }

@@ -187,7 +187,7 @@ public sealed class SnackBar : StatefulWidget
     public DismissDirection? DismissDirection { get; }
     public Clip ClipBehavior { get; }
 
-    public static AnimationController CreateAnimationController() => new(TransitionDuration);
+    public static AnimationController CreateAnimationController() => new(duration: TransitionDuration);
 
     public SnackBar WithAnimation(AnimationController animation, Key? fallbackKey = null)
     {

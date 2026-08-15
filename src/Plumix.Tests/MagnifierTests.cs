@@ -136,13 +136,14 @@ public sealed class MagnifierTests : IDisposable
         using var harness = new WidgetRenderHarness(new Overlay(initialEntries: [rootEntry]));
         harness.Pump(new Size(240, 160));
         var probeState = harness.FindState<ContextProbeState>();
-        using var animation = new AnimationController(TimeSpan.FromMilliseconds(100));
+        using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(100));
         var controller = new MagnifierController(animation);
         double now = Scheduler.CurrentSeconds;
 
         Task show = controller.Show(probeState.Context, _ => new SizedBox(width: 20, height: 10));
         Assert.Equal(AnimationStatus.Forward, animation.Status);
         Assert.True(controller.Shown);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
         await show;
 
@@ -152,6 +153,7 @@ public sealed class MagnifierTests : IDisposable
         Task hide = controller.Hide();
         Assert.Equal(AnimationStatus.Reverse, animation.Status);
         Assert.False(controller.Shown);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.4));
         await hide;
 
@@ -262,7 +264,7 @@ public sealed class MagnifierTests : IDisposable
     [Fact]
     public void CupertinoMagnifier_UsesSourceGeometryAndAnimationValues()
     {
-        var animation = new AnimationController(TimeSpan.FromMilliseconds(150));
+        var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(150));
         animation.SetValue(0.5);
         using var harness = new WidgetRenderHarness(new CupertinoMagnifier(
             inOutAnimation: animation,

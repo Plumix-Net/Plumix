@@ -1,5 +1,23 @@
 # Changelog
 
+- Breaking: ported `scheduler/ticker.dart` and `animation/animation_controller.dart` in full.
+  `Ticker` now owns Flutter's lifecycle (`Start` returning a `TickerFuture`, `Stop(canceled:)`,
+  `Muted`, `IsActive`/`IsTicking`, `ScheduleTick`/`UnscheduleTick`, `AbsorbTicker`, `DebugLabel`), and
+  its callback reports **time elapsed since the ticker started** instead of the previous frame delta,
+  so the first frame after a start reports zero. New `TickerFuture` (primary/secondary completer split,
+  `Task`, `OrCancel`, `WhenCompleteOrCancel`, `TickerFuture.Completed()`), `TickerCanceled`, and the
+  `TickerCallback` delegate; `Scheduler` gained `CurrentFrameTimeStamp`, `FramesEnabled` and
+  `ScheduleForcedFrame`. `AnimationController` is now simulation-driven exactly as in Dart: Flutter's
+  constructor shape (`value`/`duration`/`reverseDuration`/`debugLabel`/`lowerBound`/`upperBound`/
+  `animationBehavior`/`vsync`), `Toggle`, `AnimateBackWith`, `Repeat(min, max, reverse, period, count)`,
+  `Fling(springDescription:, animationBehavior:)`, `Resync`, `LastElapsedDuration`, `Behavior`,
+  `AnimationBehavior` with the `DisableAnimations` hook, and ported `_InterpolationSimulation`/
+  `_RepeatingSimulation`. Every entry point returns a `TickerFuture`, `Velocity` is simulation-backed for
+  duration-driven runs too, and `Stop`/`Dispose` cancel the outstanding future rather than completing it —
+  closing the `DraggableScrollableSheet`/`Velocity` divergence and the `AnimationController.Resync` half of
+  the persistent-header one. `DrawerController` now drives its local history entry from the animation
+  status the way Dart does, and `DraggableScrollableController.AnimateTo` returns the `TickerFuture`.
+
 - Breaking: replaced the 2D affine transform pipeline with Flutter's 4x4 `Matrix4`.
   New `Plumix.UI.Matrix4` (a column-major port of `vector_math` 2.4.2, with `Vector3`/`Vector4`/
   `Quaternion`/`Matrix3`) and `Plumix.Rendering.MatrixUtils` (`painting/matrix_utils.dart` in full).

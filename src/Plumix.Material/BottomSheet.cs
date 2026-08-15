@@ -84,7 +84,7 @@ public sealed class BottomSheet : StatefulWidget
     public static AnimationController CreateAnimationController(
         ITickerProvider? vsync = null,
         AnimationStyle? sheetAnimationStyle = null) =>
-        new(sheetAnimationStyle?.Duration ?? EnterDuration, vsync)
+        new(duration: sheetAnimationStyle?.Duration ?? EnterDuration, vsync: vsync)
         {
             ReverseDuration = sheetAnimationStyle?.ReverseDuration ?? ExitDuration,
         };

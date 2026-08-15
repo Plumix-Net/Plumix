@@ -385,6 +385,7 @@ public sealed class MaterialTooltipTests
             Assert.NotNull(listener);
             listener!.HandleEvent(PointerEnter(1), new BoxHitTestEntry(listener, new Point(5, 5)));
             double clock = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.20));
             harness.Pump(new Size(160, 80));
             Assert.Null(FindParagraph(harness.RenderView, "Delayed tip"));
@@ -397,6 +398,7 @@ public sealed class MaterialTooltipTests
             listener = FindTooltipListener(harness.RenderView);
             listener!.HandleEvent(PointerExit(1), new BoxHitTestEntry(listener, new Point(100, 5)));
             clock = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.10));
             harness.Pump(new Size(160, 80));
             Assert.NotNull(FindParagraph(harness.RenderView, "Delayed tip"));

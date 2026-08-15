@@ -196,6 +196,7 @@ public sealed class MaterialSnackBarTests : IDisposable
 
         second.Close();
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
         harness.Pump(new Size(360, 220));
@@ -214,6 +215,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         var messenger = harness.FindState<ScaffoldMessengerState>();
         var controller = messenger.ShowSnackBar(Bar(showCloseIcon: true, persist: true));
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
         var semantics = harness.PumpAndGetSemantics(new Size(360, 220));

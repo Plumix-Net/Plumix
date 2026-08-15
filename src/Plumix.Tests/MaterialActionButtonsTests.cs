@@ -188,6 +188,7 @@ public sealed class MaterialActionButtonsTests
         Assert.False(scaffold.IsEndDrawerOpen);
 
         scaffold.CloseDrawer();
+        AnimationPump.Advance(0.4);
         semantics = harness.PumpAndGetSemantics(new Size(320, 180));
         buttons = FindAllSemantics(
             semantics,

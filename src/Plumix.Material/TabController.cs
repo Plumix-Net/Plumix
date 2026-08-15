@@ -170,7 +170,7 @@ public sealed class TabController : ChangeNotifier
         {
             _indexIsChangingCount += 1;
             NotifyListeners();
-            Task animation = RequireAnimationController().AnimateTo(_index, effectiveDuration, curve);
+            Task animation = RequireAnimationController().AnimateTo(_index, effectiveDuration, curve).Task;
             _ = animation.ContinueWith(
                 _ => HandleIndexChangeSettled(),
                 CancellationToken.None,

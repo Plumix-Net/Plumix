@@ -272,6 +272,7 @@ public sealed class MaterialAboutTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "Dialog app"));
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         var semantics = harness.PumpAndGetSemantics(new Size(640, 480));
@@ -279,6 +280,7 @@ public sealed class MaterialAboutTests : IDisposable
         Assert.True(actionNodes.Length >= 2);
         Assert.True(harness.PerformSemanticsAction(actionNodes[^1].Id, SemanticsActions.Tap));
         now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(640, 480));
@@ -829,6 +831,7 @@ public sealed class MaterialAboutTests : IDisposable
             Scheduler.FlushMicrotasks();
             harness.Pump(size);
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.6));
             harness.Pump(size);
             Thread.Sleep(2);

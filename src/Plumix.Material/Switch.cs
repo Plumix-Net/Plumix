@@ -333,7 +333,7 @@ public sealed class Switch : StatefulWidget
             _fromPosition = _animatedPosition;
             _toPosition = _animatedPosition;
 
-            _positionController = new AnimationController(TimeSpan.FromMilliseconds(220), this)
+            _positionController = new AnimationController(duration: TimeSpan.FromMilliseconds(220), vsync: this)
             {
                 Curve = Curves.EaseInOut
             };

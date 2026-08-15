@@ -523,9 +523,11 @@ public sealed class DrivenScrollActivity : ScrollActivity
             return;
         }
 
-        _elapsed += elapsed;
+        _elapsed = elapsed;
         double progress = Math.Clamp(_elapsed.TotalSeconds / _duration.TotalSeconds, 0.0, 1.0);
-        double value = _from + ((_to - _from) * _curve(progress));
+        // Flutter drives this activity through an AnimationController, whose interpolation simulation
+        // returns the exact end value at t == 1 rather than the curve's approximation of it.
+        double value = progress >= 1.0 ? _to : _from + ((_to - _from) * _curve(progress));
         Position.SetPixelsFromActivity(value);
         if (progress >= 1.0)
         {
@@ -570,7 +572,7 @@ public sealed class BallisticScrollActivity : ScrollActivity
             return;
         }
 
-        _elapsedSeconds += elapsed.TotalSeconds;
+        _elapsedSeconds = elapsed.TotalSeconds;
 
         // The simulation drives the position directly; the physics decide whether the proposed value
         // is reachable. A non-zero overscroll means the boundary conditions clipped the value, so the

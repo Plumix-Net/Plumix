@@ -292,6 +292,7 @@ public sealed class CupertinoDialogTests : IDisposable
             _ => new CupertinoAlertDialog(title: new Text("Springy")));
         // One micro-frame in: the scale transition is still near its 1.3 starting value.
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
         harness.Pump(new Size(600, 600));
         Assert.NotEmpty(FindDescendants<RenderTransform>(harness.RenderView));
@@ -302,6 +303,7 @@ public sealed class CupertinoDialogTests : IDisposable
 
         Navigator.Of(captured, rootNavigator: true).Pop();
         now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
         harness.Pump(new Size(600, 600));
         // Exit runs fade-only: the reverse-status transition drops the scale wrapper.
@@ -321,6 +323,7 @@ public sealed class CupertinoDialogTests : IDisposable
     private static void PumpSpring()
     {
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));

@@ -48,7 +48,42 @@ public static class Scheduler
     /// <summary>The phase the frame pipeline is currently in.</summary>
     public static SchedulerPhase Phase { get; private set; } = SchedulerPhase.Idle;
 
+    /// <summary>
+    /// The timestamp handed to the callbacks of the frame currently being produced. Dart parity
+    /// source: <c>SchedulerBinding.currentFrameTimeStamp</c>.
+    /// </summary>
+    public static TimeSpan CurrentFrameTimeStamp { get; private set; }
+
+    /// <summary>
+    /// Whether a frame is actually being produced. <see cref="Phase"/> alone cannot answer this in
+    /// Plumix, because <see cref="BuildScope"/> reports the build phase for builds driven outside a
+    /// frame.
+    /// </summary>
+    internal static bool IsHandlingFrame => _handlingFrame;
+
+    /// <summary>
+    /// Whether frames are currently being produced. Dart parity source:
+    /// <c>SchedulerBinding.framesEnabled</c>, which Flutter derives from the app lifecycle state; a
+    /// Plumix host sets it when the view stops being visible.
+    /// </summary>
+    public static bool FramesEnabled { get; set; } = true;
+
     public static void ScheduleFrame()
+    {
+        if (!FramesEnabled)
+        {
+            return;
+        }
+
+        _hasScheduledFrame = true;
+        EnsureRunning();
+    }
+
+    /// <summary>
+    /// Schedules a frame even when <see cref="FramesEnabled"/> is false. Dart parity source:
+    /// <c>SchedulerBinding.scheduleForcedFrame</c>.
+    /// </summary>
+    public static void ScheduleForcedFrame()
     {
         _hasScheduledFrame = true;
         EnsureRunning();
@@ -183,38 +218,19 @@ public static class Scheduler
         return new BuildScopeToken();
     }
 
-    internal static void Add(Ticker ticker)
+    internal static void AddTicker(Ticker ticker)
     {
         if (!_active.Contains(ticker))
         {
             _active.Add(ticker);
         }
-
-        if (ticker.IsTicking)
-        {
-            ScheduleFrame();
-        }
     }
 
-    internal static void Remove(Ticker ticker)
+    internal static void RemoveTicker(Ticker ticker)
     {
         _active.Remove(ticker);
 
         if (!HasTickingTickers() && !_hasScheduledFrame && _postFrameCallbacks.Count == 0)
-        {
-            Stop();
-        }
-    }
-
-    internal static void TickerSchedulingChanged()
-    {
-        if (HasTickingTickers())
-        {
-            ScheduleFrame();
-            return;
-        }
-
-        if (!_hasScheduledFrame && _postFrameCallbacks.Count == 0)
         {
             Stop();
         }
@@ -251,6 +267,8 @@ public static class Scheduler
         _taskSequence = 0;
         SchedulingStrategy = DefaultSchedulingStrategy;
         Phase = SchedulerPhase.Idle;
+        FramesEnabled = true;
+        CurrentFrameTimeStamp = TimeSpan.Zero;
         BeginFrame = null;
         DrawFrame = null;
     }
@@ -335,11 +353,12 @@ public static class Scheduler
         _hasScheduledFrame = false;
 
         var timestamp = TimeSpan.FromSeconds(nowSeconds);
+        CurrentFrameTimeStamp = timestamp;
 
         try
         {
             Phase = SchedulerPhase.TransientCallbacks;
-            TickActiveTickers(nowSeconds);
+            TickActiveTickers(timestamp);
             Phase = SchedulerPhase.PersistentCallbacks;
             BeginFrame?.Invoke(timestamp);
             RunPersistentFrameCallbacks(timestamp);
@@ -365,14 +384,16 @@ public static class Scheduler
         }
     }
 
-    private static void TickActiveTickers(double nowSeconds)
+    private static void TickActiveTickers(TimeSpan timestamp)
     {
         var snapshot = _active.ToArray();
-        foreach (var ticker in snapshot)
+        foreach (Ticker ticker in snapshot)
         {
-            if (ticker.IsTicking)
+            // A ticker stopped or muted by an earlier callback in this same frame has already
+            // unscheduled itself, which is Flutter's `cancelFrameCallbackWithId`.
+            if (ticker.IsTickScheduled && ticker.IsTicking)
             {
-                ticker.InternalTick(nowSeconds);
+                ticker.InternalTick(timestamp);
             }
         }
     }

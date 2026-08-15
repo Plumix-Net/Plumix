@@ -166,6 +166,7 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
     private readonly Func<Rect?> _viewportRectProvider;
     private readonly Action? _onScrollViewScrolled;
     private readonly Ticker _ticker;
+    private TimeSpan _lastElapsed;
     private Rect _dragTarget;
     private bool _disposed;
 
@@ -190,7 +191,7 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
 
     public double VelocityScalar { get; }
 
-    public bool IsAutoScrolling => _ticker.Active;
+    public bool IsAutoScrolling => _ticker.IsActive;
 
     public void StartAutoScrollIfNecessary(Rect dragTarget)
     {
@@ -202,7 +203,11 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
             return;
         }
 
-        _ticker.Start();
+        if (!_ticker.IsActive)
+        {
+            _lastElapsed = TimeSpan.Zero;
+            _ticker.Start();
+        }
     }
 
     public void StopAutoScroll()
@@ -225,6 +230,10 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
     {
         ScrollPosition position = _scrollable.Position;
 
+        // The ticker reports time since it started; auto-scrolling advances by the frame delta.
+        double frameSeconds = (elapsed - _lastElapsed).TotalSeconds;
+        _lastElapsed = elapsed;
+
         double velocity = ResolveScrollVelocity();
         if (velocity == 0.0)
         {
@@ -232,8 +241,15 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
             return;
         }
 
+        // The frame that gives the ticker its start timestamp reports no elapsed time; it must not be
+        // read as "the scrollable cannot move any further".
+        if (frameSeconds <= 0.0)
+        {
+            return;
+        }
+
         double nextOffset = Math.Clamp(
-            position.Pixels + (velocity * elapsed.TotalSeconds),
+            position.Pixels + (velocity * frameSeconds),
             position.MinScrollExtent,
             position.MaxScrollExtent);
         if (Math.Abs(nextOffset - position.Pixels) < 0.0001)

@@ -144,6 +144,7 @@ public sealed class RawTooltipTests
             Assert.NotNull(FindParagraph(harness.RenderView, "Tap overlay"));
 
             double clock = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.25));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.40));
             harness.Pump(new Size(160, 80));

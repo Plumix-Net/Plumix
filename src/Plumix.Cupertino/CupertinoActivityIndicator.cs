@@ -99,7 +99,7 @@ public sealed class CupertinoActivityIndicator : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(DefaultAnimationDuration, this);
+            _controller = new AnimationController(duration: DefaultAnimationDuration, vsync: this);
             _isMounted = true;
             UpdateAnimatingStatus();
             _controller.Changed += HandleControllerTick;

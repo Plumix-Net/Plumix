@@ -702,7 +702,8 @@ public sealed class MaterialBottomSheetTests : IDisposable
     [Fact]
     public void ModalBottomSheet_UsesSuppliedTransitionControllerAndDoesNotDisposeIt()
     {
-        var controller = new AnimationController(TimeSpan.FromSeconds(2)) { ReverseDuration = TimeSpan.FromSeconds(2) };
+        var controller = new AnimationController(
+            duration: TimeSpan.FromSeconds(2)) { ReverseDuration = TimeSpan.FromSeconds(2) };
         BuildContext captured = default;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
@@ -716,12 +717,14 @@ public sealed class MaterialBottomSheetTests : IDisposable
             _ => new SizedBox(height: 120, child: new Text("Modal sheet")),
             transitionAnimationController: controller);
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         harness.Pump(new Size(500, 400));
         Assert.InRange(controller.Value, 0.3, 0.7);
 
         Navigator.Of(captured).Pop();
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 3.5));
         harness.Pump(new Size(500, 400));
         Assert.Null(FindParagraph(harness.RenderView, "Modal sheet"));
@@ -781,6 +784,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             transitionAnimationController: transitionController);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.4));
         harness.Pump(new Size(500, 400));
@@ -1071,6 +1075,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     private static void PumpAnimation()
     {
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.60));

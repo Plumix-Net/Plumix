@@ -1189,6 +1189,7 @@ public sealed class NavigationTests
         Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation!.Value, precision: 6);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         owner.FlushBuild();
         Assert.InRange(detailsAnimation.Value, 0.01, 0.99);
@@ -1205,6 +1206,7 @@ public sealed class NavigationTests
         Assert.Equal(detailsAnimation.Value, rootSecondaryAnimation.Value, precision: 6);
 
         double reverseNow = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseNow + 0.05));
         owner.FlushBuild();
         Assert.InRange(detailsAnimation.Value, 0.01, 0.99);

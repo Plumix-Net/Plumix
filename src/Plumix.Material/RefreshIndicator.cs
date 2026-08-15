@@ -73,7 +73,7 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
 
         public override void InitState()
         {
-            _controller = new AnimationController(IndeterminateDuration, this);
+            _controller = new AnimationController(duration: IndeterminateDuration, vsync: this);
             _controller.Changed += HandleChanged;
             _mounted = true;
         }
@@ -461,8 +461,8 @@ public sealed class RefreshIndicatorState : State
 
     public override void InitState()
     {
-        _positionController = new AnimationController(SnapDuration, this);
-        _scaleController = new AnimationController(ScaleDuration, this);
+        _positionController = new AnimationController(duration: SnapDuration, vsync: this);
+        _scaleController = new AnimationController(duration: ScaleDuration, vsync: this);
         _positionFactor = new DoubleTween(begin: 0.0, end: DragSizeFactorLimit).Animate(_positionController);
         _scaleFactor = new DoubleTween(begin: 1.0, end: 0.0).Animate(_scaleController);
     }
@@ -714,7 +714,7 @@ public sealed class RefreshIndicatorState : State
     {
         await _positionController!
             .AnimateTo(1.0 / DragSizeFactorLimit, SnapDuration)
-            .ConfigureAwait(false);
+            .Task.ConfigureAwait(false);
         if (!Mounted || _status != RefreshIndicatorStatus.Snap)
         {
             return;
@@ -753,11 +753,11 @@ public sealed class RefreshIndicatorState : State
         SetStatus(status);
         if (status == RefreshIndicatorStatus.Done)
         {
-            await _scaleController!.AnimateTo(1.0, ScaleDuration).ConfigureAwait(false);
+            await _scaleController!.AnimateTo(1.0, ScaleDuration).Task.ConfigureAwait(false);
         }
         else
         {
-            await _positionController!.AnimateTo(0.0, ScaleDuration).ConfigureAwait(false);
+            await _positionController!.AnimateTo(0.0, ScaleDuration).Task.ConfigureAwait(false);
         }
 
         if (Mounted && _status == status)

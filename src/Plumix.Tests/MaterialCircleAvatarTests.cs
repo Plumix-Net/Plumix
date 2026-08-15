@@ -206,6 +206,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
             new CircleAvatar(radius: 40, backgroundColor: Colors.Blue)));
         harness.Pump(new Size(120, 120));
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(120, 120));
 

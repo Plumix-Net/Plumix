@@ -192,7 +192,7 @@ public sealed class Dismissible : StatefulWidget
         private const double FlingVelocityScale = 1.0 / 300.0;
         private const double DefaultDismissThreshold = 0.4;
 
-        private readonly AnimationController _moveController = new(DefaultMovementDuration);
+        private readonly AnimationController _moveController = new(duration: DefaultMovementDuration);
         private readonly LabeledGlobalKey<State> _contentKey = new("Dismissible");
         private Animation<Vector> _moveAnimation = null!;
         private AnimationController? _resizeController;
@@ -592,7 +592,7 @@ public sealed class Dismissible : StatefulWidget
                 : _contentKey.CurrentContext?.FindRenderObject() is RenderBox content && content.HasSize
                     ? content.Size
                     : default;
-            _resizeController = new AnimationController(CurrentWidget.ResizeDuration.Value, this);
+            _resizeController = new AnimationController(duration: CurrentWidget.ResizeDuration.Value, vsync: this);
             _resizeController.AddListener(HandleResizeProgressChanged);
             _resizeController.AddStatusListener(HandleResizeStatusChanged);
             _resizeAnimation = new MappedDoubleAnimation(

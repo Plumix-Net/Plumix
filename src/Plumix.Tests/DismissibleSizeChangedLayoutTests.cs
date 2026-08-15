@@ -319,7 +319,7 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
     [Fact]
     public void AnimationController_FlingUsesFlutterSpringAndCompletesInBothDirections()
     {
-        using var controller = new AnimationController(TimeSpan.FromMilliseconds(200));
+        using var controller = new AnimationController(duration: TimeSpan.FromMilliseconds(200));
         var terminalStatuses = new List<AnimationStatus>();
         controller.AddStatusListener(status =>
         {

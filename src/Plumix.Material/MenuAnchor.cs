@@ -190,7 +190,7 @@ public class MenuAnchorState : State
             _internalMenuController = new MenuController();
         }
 
-        _animationController = new AnimationController(TimeSpan.FromMilliseconds(1), this);
+        _animationController = new AnimationController(duration: TimeSpan.FromMilliseconds(1), vsync: this);
         ResolveAnimationController();
         _animationController.AddStatusListener(HandleAnimationStatusChanged);
         HeightAnimation = new CurvedAnimation(

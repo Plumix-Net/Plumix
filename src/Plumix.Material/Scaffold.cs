@@ -347,16 +347,16 @@ public sealed class ScaffoldState : State, WidgetsBindingObserver
     {
         _isDisposed = false;
         _geometryNotifier = new ScaffoldGeometryNotifier(new ScaffoldGeometry(), Context);
-        _bottomSheetScrimAnimationController = new AnimationController(TimeSpan.Zero, this);
+        _bottomSheetScrimAnimationController = new AnimationController(duration: TimeSpan.Zero, vsync: this);
         _floatingActionButtonLocation = CurrentWidget.FloatingActionButtonLocation;
         _floatingActionButtonAnimator = CurrentWidget.FloatingActionButtonAnimator;
         _previousFloatingActionButtonLocation = _floatingActionButtonLocation;
         _floatingActionButtonMoveController = new AnimationController(
-            FloatingActionButtonConstants.Segue * 2,
-            this);
+            duration: FloatingActionButtonConstants.Segue * 2,
+            vsync: this);
         _floatingActionButtonMoveController.SetValue(1.0);
         _floatingActionButtonVisibilityController =
-            new AnimationController(FloatingActionButtonConstants.Segue, this);
+            new AnimationController(duration: FloatingActionButtonConstants.Segue, vsync: this);
         SyncStaticBottomSheetAnimation();
         if (CurrentWidget.Primary)
         {

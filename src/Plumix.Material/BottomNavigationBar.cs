@@ -200,7 +200,7 @@ public sealed class BottomNavigationBar : StatefulWidget
         {
             InitializeSelectionControllers(CurrentWidget.Items.Count, CurrentWidget.CurrentIndex);
 
-            _backgroundController = new AnimationController(BackgroundTransitionDuration, this)
+            _backgroundController = new AnimationController(duration: BackgroundTransitionDuration, vsync: this)
             {
                 Curve = Curves.EaseOut,
             };
@@ -444,7 +444,7 @@ public sealed class BottomNavigationBar : StatefulWidget
             _selectionControllers = new List<AnimationController>(count);
             for (int index = 0; index < count; index++)
             {
-                var controller = new AnimationController(SelectionTransitionDuration, this)
+                var controller = new AnimationController(duration: SelectionTransitionDuration, vsync: this)
                 {
                     Curve = Curves.EaseOut,
                 };

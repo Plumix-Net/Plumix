@@ -155,6 +155,7 @@ public sealed class MaterialExpandIconTests : IDisposable
         rotation = Assert.Single(harness.FindWidgets<RotationTransition>());
         Assert.Equal(0.0, rotation.Turns.Value, precision: 6);
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.1));
         harness.Pump(new Size(80, 80));
         rotation = Assert.Single(harness.FindWidgets<RotationTransition>());
@@ -166,6 +167,7 @@ public sealed class MaterialExpandIconTests : IDisposable
         Assert.Equal(0.5, rotation.Turns.Value, precision: 6);
 
         harness.Update(BuildThemed(new ExpandIcon(_ => { }, isExpanded: false)));
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.25));
         harness.Pump(new Size(80, 80));
         rotation = Assert.Single(harness.FindWidgets<RotationTransition>());

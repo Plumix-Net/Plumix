@@ -26,7 +26,7 @@ internal sealed class LifecycleUtilitiesDemoPageState : State
     public override void InitState()
     {
         base.InitState();
-        _controller = new AnimationController(TimeSpan.FromMilliseconds(600), this);
+        _controller = new AnimationController(duration: TimeSpan.FromMilliseconds(600), vsync: this);
         _disposableContext = new DisposableBuildContext<LifecycleUtilitiesDemoPageState>(this);
         _lifecycleListener = new AppLifecycleListener(onStateChange: HandleLifecycleStateChanged);
     }

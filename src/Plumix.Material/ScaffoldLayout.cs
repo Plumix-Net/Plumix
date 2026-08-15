@@ -491,7 +491,7 @@ internal sealed class FloatingActionButtonTransitionState : State
     public override void InitState()
     {
         base.InitState();
-        _previousController = new AnimationController(FloatingActionButtonConstants.Segue, this);
+        _previousController = new AnimationController(duration: FloatingActionButtonConstants.Segue, vsync: this);
         _previousController.AddStatusListener(HandlePreviousAnimationStatusChanged);
         UpdateAnimations();
 

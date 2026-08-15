@@ -23,14 +23,14 @@ public sealed class MaterialLinearProgressIndicatorTests
         _ = new LinearProgressIndicator(minHeight: double.PositiveInfinity);
         _ = new LinearProgressIndicator(stopIndicatorRadius: -0.1);
         _ = new LinearProgressIndicator(trackGap: -0.1);
-        using var controller = new AnimationController(TimeSpan.FromSeconds(1));
+        using var controller = new AnimationController(duration: TimeSpan.FromSeconds(1));
         Assert.Throws<ArgumentException>(() => new LinearProgressIndicator(value: 0.2, controller: controller));
     }
 
     [Fact]
     public void LinearProgressIndicator_UsesExplicitAndThemeControllersForIndeterminateAnimation()
     {
-        using var explicitController = new AnimationController(TimeSpan.FromSeconds(1))
+        using var explicitController = new AnimationController(duration: TimeSpan.FromSeconds(1))
         {
             Curve = Curves.EaseIn
         };
@@ -51,7 +51,7 @@ public sealed class MaterialLinearProgressIndicatorTests
         Assert.Null(ReadNullableProperty<double>(explicitRender!, "Value"));
         Assert.Equal(Curves.EaseIn(0.5), ReadProperty<double>(explicitRender, "AnimationValue"), 3);
 
-        using var themedController = new AnimationController(TimeSpan.FromSeconds(1))
+        using var themedController = new AnimationController(duration: TimeSpan.FromSeconds(1))
         {
             Curve = Curves.EaseIn
         };
@@ -80,7 +80,7 @@ public sealed class MaterialLinearProgressIndicatorTests
     [Fact]
     public void ProgressIndicatorThemeData_CopyWithAndWrapMatchFlutterSurface()
     {
-        using var controller = new AnimationController(TimeSpan.FromSeconds(1));
+        using var controller = new AnimationController(duration: TimeSpan.FromSeconds(1));
         var data = new ProgressIndicatorThemeData(
             Color: Colors.Red,
             LinearTrackColor: Colors.Blue,
@@ -395,6 +395,7 @@ public sealed class MaterialLinearProgressIndicatorTests
 
         double first = ReadProperty<double>(renderIndicator!, "AnimationValue");
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.30));
         harness.Pump(new Size(240, 80));
 

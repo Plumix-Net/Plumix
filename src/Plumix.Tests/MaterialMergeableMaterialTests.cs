@@ -330,7 +330,7 @@ public sealed class MaterialMergeableMaterialTests
 
     private static void PumpAnimation(WidgetRenderHarness harness, TimeSpan elapsed)
     {
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds) + elapsed);
+        AnimationPump.Advance(elapsed.TotalSeconds);
         harness.Pump(ViewSize);
     }
 

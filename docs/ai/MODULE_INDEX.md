@@ -157,6 +157,21 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/RenderingParityTests.cs`
   - `src/Plumix.Tests/AppLifecycleListenerTests.cs`
 
+### Animation and Ticking
+
+- Goal: Flutter-shaped frame callbacks, ticker lifecycle and simulation-driven animation.
+- Read First:
+  - `src/Plumix/Ticker.cs` (`Ticker`, `TickerFuture`, `TickerCanceled`, `ITickerProvider`)
+  - `src/Plumix/AnimationController.cs`
+  - `src/Plumix/Scheduler.cs`
+  - `src/Plumix/Widgets/TickerProvider.cs`
+  - `src/Plumix/Physics/Simulation.cs`
+- A ticker callback receives the time elapsed since the ticker started, so the first frame after a start
+  reports zero; anything needing a per-frame delta keeps its own previous elapsed value.
+- Primary Tests:
+  - `src/Plumix.Tests/AnimationControllerTickerTests.cs`
+  - `src/Plumix.Tests/TickerProviderTickerModeTests.cs`
+
 ### Widget/Element Lifecycle
 
 - Goal: reconciliation, state retention/disposal, dependency propagation.

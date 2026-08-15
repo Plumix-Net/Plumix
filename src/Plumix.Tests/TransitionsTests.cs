@@ -360,7 +360,7 @@ public sealed class TransitionsTests : IDisposable
     [Fact]
     public void MatrixTransition_DropsFilterQualityOnAnimationControllerTerminalFrame()
     {
-        using var animation = new AnimationController(TimeSpan.FromMilliseconds(100));
+        using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(100));
         var owner = new BuildOwner();
         var root = new TestRootElement(new ScaleTransition(
             scale: animation,
@@ -370,6 +370,7 @@ public sealed class TransitionsTests : IDisposable
 
         animation.Forward(from: 0.0);
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
 

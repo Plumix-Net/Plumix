@@ -265,6 +265,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Same(child, Assert.Single(passedChildren));
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
         double halfway = values[^1];
@@ -281,6 +282,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Equal(200.0, replacement.End);
         Assert.Same(child, passedChildren[^1]);
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
         Assert.Equal(200.0, values[^1], precision: 6);
@@ -328,6 +330,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Equal(42.0, tween.End);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
         Assert.Single(values);
@@ -541,11 +544,13 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Equal(1, child.BuildCount);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         owner.FlushBuild();
         Assert.InRange(values[^1], 20.0, 30.0);
         Assert.Equal(1, child.BuildCount);
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.10));
         owner.FlushBuild();
         Assert.InRange(values[^1], 5.0, 15.0);
@@ -604,14 +609,17 @@ public sealed class BuilderWidgetsTests : IDisposable
         Mount(root, owner);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.50));
         owner.FlushBuild();
         Assert.InRange(values[^1], 0.30, 0.33);
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.25));
         owner.FlushBuild();
         Assert.InRange(values[^1], 0.60, 0.65);
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.75));
         owner.FlushBuild();
         Assert.InRange(values[^1], 0.05, 0.10);
@@ -632,6 +640,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Mount(root, owner);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         owner.FlushBuild();
         Assert.InRange(values[^1], 0.20, 0.30);
@@ -643,13 +652,18 @@ public sealed class BuilderWidgetsTests : IDisposable
         owner.FlushBuild();
         Assert.InRange(values[^1], 0.05, 0.10);
 
+        // The update restarts the repeat, so its ticker needs a frame of its own to start its clock.
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.75));
         owner.FlushBuild();
-        Assert.InRange(values[^1], 0.30, 0.33);
+        // Flutter's repeating simulation keeps the phase the current value implies: 0.75s into a 2s
+        // period that started ~0.19s in, so the forward leg is a bit under halfway.
+        Assert.InRange(values[^1], 0.44, 0.48);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 4.25));
         owner.FlushBuild();
-        Assert.InRange(values[^1], 0.05, 0.10);
+        // 4.25s plus the same phase offset is two full periods and a bit, so the forward leg restarts.
+        Assert.InRange(values[^1], 0.18, 0.26);
 
         root.Unmount();
 

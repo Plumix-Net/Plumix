@@ -365,7 +365,9 @@ public sealed class ScaffoldMessengerState : State
         }
 
         _currentMaterialBanner = _materialBanners.Peek();
-        _materialBannerAnimation!.Forward(from: 0.0);
+        // Flutter forwards without resetting the value: the controller is dismissed at this point, and
+        // a `from: 0.0` would report `dismissed` again and re-enter the status handler.
+        _materialBannerAnimation!.Forward();
     }
 
     private void CompleteCurrentMaterialBanner(MaterialBannerEntry entry)

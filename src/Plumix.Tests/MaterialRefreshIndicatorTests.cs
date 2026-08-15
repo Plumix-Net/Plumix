@@ -241,24 +241,28 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
     }
 
     [Fact]
-    public async Task AnimationController_AnimateToUsesTheRequestedTargetAndDuration()
+    public void AnimationController_AnimateToUsesTheRequestedTargetAndDuration()
     {
-        using var controller = new AnimationController(TimeSpan.FromSeconds(1));
-        Task animation = controller.AnimateTo(0.4, TimeSpan.FromMilliseconds(100));
+        using var controller = new AnimationController(duration: TimeSpan.FromSeconds(1));
+        double start = Scheduler.CurrentSeconds;
+        TickerFuture animation = controller.AnimateTo(0.4, TimeSpan.FromMilliseconds(100));
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.05));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.05));
         Assert.InRange(controller.Value, 0.1, 0.3);
-        Assert.False(animation.IsCompleted);
+        Assert.False(animation.Task.IsCompleted);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.1));
-        await animation;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.11));
+        Assert.True(animation.Task.IsCompleted);
         Assert.Equal(0.4, controller.Value, 3);
         Assert.Equal(AnimationStatus.Completed, controller.Status);
 
-        Task decreasingAnimation = controller.AnimateTo(0.1, TimeSpan.FromMilliseconds(50));
+        start = Scheduler.CurrentSeconds;
+        TickerFuture decreasingAnimation = controller.AnimateTo(0.1, TimeSpan.FromMilliseconds(50));
         Assert.Equal(AnimationStatus.Forward, controller.Status);
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.06));
-        await decreasingAnimation;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + 0.06));
+        Assert.True(decreasingAnimation.Task.IsCompleted);
         Assert.Equal(0.1, controller.Value, 3);
         Assert.Equal(AnimationStatus.Completed, controller.Status);
     }
@@ -382,7 +386,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
 
     private static void PumpAnimation(WidgetRenderHarness harness, TimeSpan elapsed)
     {
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds) + elapsed);
+        AnimationPump.Advance(elapsed.TotalSeconds);
         harness.Pump(Viewport);
     }
 

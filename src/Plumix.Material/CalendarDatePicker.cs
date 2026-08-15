@@ -85,7 +85,7 @@ public sealed class CalendarDatePicker : StatefulWidget
             _focusedDate = widget.InitialDate ?? widget.CurrentDate;
             var source = widget.InitialDate ?? widget.CurrentDate;
             _displayedMonth = widget.CalendarDelegate.GetMonth(source.Year, source.Month);
-            _modeController = new AnimationController(TimeSpan.FromMilliseconds(200), this)
+            _modeController = new AnimationController(duration: TimeSpan.FromMilliseconds(200), vsync: this)
             {
                 Curve = Curves.EaseIn,
             };

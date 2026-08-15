@@ -29,7 +29,7 @@ public sealed class MaterialScaffoldTests
     private static void SettleDrawerAnimation(BuildOwner owner)
     {
         owner.FlushBuild();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.5));
+        AnimationPump.Advance(0.5);
         owner.FlushBuild();
     }
 
@@ -971,6 +971,7 @@ public sealed class MaterialScaffoldTests
             Assert.Null(FindColoredBox(harness.RenderView, IsBlackScrim));
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.05));
             harness.Pump(size);
 
@@ -1032,6 +1033,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
@@ -1041,6 +1043,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1086,6 +1089,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
@@ -1095,6 +1099,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1145,6 +1150,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1190,6 +1196,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsDrawerOpen);
@@ -1205,6 +1212,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1250,6 +1258,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1296,6 +1305,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1343,6 +1353,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1394,6 +1405,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1439,6 +1451,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
             Assert.True(state.IsEndDrawerOpen);
@@ -1454,6 +1467,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1499,6 +1513,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1545,6 +1560,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1599,6 +1615,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1618,6 +1635,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1636,6 +1654,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1691,6 +1710,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1710,6 +1730,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1728,6 +1749,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1776,6 +1798,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -1825,6 +1848,7 @@ public sealed class MaterialScaffoldTests
             harness.Pump(size);
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
@@ -3922,11 +3946,13 @@ public sealed class MaterialScaffoldTests
 
         key.CurrentState.Open();
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
         harness.Pump(new Size(400, 300));
         Assert.True(key.CurrentState.IsOpen);
 
         key.CurrentState.Close();
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.80));
         harness.Pump(new Size(400, 300));
         Assert.False(key.CurrentState.IsOpen);
@@ -3983,6 +4009,7 @@ public sealed class MaterialScaffoldTests
                 timestampUtc: start.AddMilliseconds(150));
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(new Size(400, 300));
 
@@ -4042,6 +4069,7 @@ public sealed class MaterialScaffoldTests
                 timestampUtc: start.AddSeconds(1.1));
 
             double now = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(new Size(400, 300));
 

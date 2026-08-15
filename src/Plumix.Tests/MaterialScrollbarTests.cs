@@ -193,6 +193,7 @@ public sealed class MaterialScrollbarTests
             PointerButtons.None,
             now.AddMilliseconds(20)));
         double schedulerNow = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.35));
         harness.Pump(new Size(200, 240));
@@ -320,6 +321,7 @@ public sealed class MaterialScrollbarTests
             timestampUtc: DateTime.UtcNow), new BoxHitTestEntry(overlay, point));
 
         double schedulerNow = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.12));
 
         Assert.Equal(240, controller.Offset, precision: 3);
@@ -349,6 +351,7 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(0, controller.Offset);
 
         double schedulerNow = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.12));
         overlay.HandleEvent(new PointerMoveEvent(21, PointerDeviceKind.Touch, end, PointerButtons.Primary, true, now.AddMilliseconds(120)),
@@ -617,6 +620,7 @@ public sealed class MaterialScrollbarTests
         harness.UpdateWidget(BuildMaterialScrollbar(controller, thumbVisibility: false));
         harness.Pump(new Size(200, 240));
         double schedulerNow = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.35));
         harness.Pump(new Size(200, 240));
         Assert.Equal(0, RequireOverlay(harness.RenderView).Opacity, precision: 3);
@@ -650,6 +654,7 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(idle, RequireOverlay(harness.RenderView).ThumbColor);
 
         double schedulerNow = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.1));
         harness.Pump(new Size(200, 240));
         Color halfway = RequireOverlay(harness.RenderView).ThumbColor;
@@ -740,8 +745,10 @@ public sealed class MaterialScrollbarTests
                 new PointerDownEvent(51, PointerDeviceKind.Touch, point, PointerButtons.Primary, now),
                 new BoxHitTestEntry(overlay, point));
             double schedulerNow = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.11));
             double resizeStart = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(resizeStart + 0.05));
             harness.Pump(new Size(200, 240));
 

@@ -255,6 +255,7 @@ public sealed class MaterialDataTableTests : IDisposable
         double now = Scheduler.CurrentSeconds;
         state.SetAscending(false);
         harness.Pump(new Size(360.0, 180.0));
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.075));
         harness.Pump(new Size(360.0, 180.0));
         RenderTransform halfway = Assert.Single(FindDescendants<RenderTransform>(harness.RenderView));

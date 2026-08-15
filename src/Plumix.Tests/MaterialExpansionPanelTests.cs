@@ -74,6 +74,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
                 container => container.Child is ConstrainedBox box && box.Constraints.MinHeight == 48.0).Margin);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(360, 240));
         Assert.Equal(CrossFadeState.ShowSecond, Assert.Single(harness.FindWidgets<AnimatedCrossFade>()).CrossFadeState);
@@ -112,6 +113,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
         harness.Pump(new Size(360, 280));
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(360, 280));
         Assert.Contains(

@@ -630,10 +630,10 @@ public sealed class DataTable : StatelessWidget
             public override void InitState()
             {
                 _up = CurrentWidget.Up;
-                _opacityController = new AnimationController(CurrentWidget.Duration, this);
+                _opacityController = new AnimationController(duration: CurrentWidget.Duration, vsync: this);
                 _opacityController.SetValue(CurrentWidget.Visible ? 1.0 : 0.0);
                 _opacityController.Changed += HandleChanged;
-                _orientationController = new AnimationController(CurrentWidget.Duration, this);
+                _orientationController = new AnimationController(duration: CurrentWidget.Duration, vsync: this);
                 _orientationController.Changed += HandleChanged;
                 _orientationController.Completed += HandleOrientationCompleted;
                 if (CurrentWidget.Visible)

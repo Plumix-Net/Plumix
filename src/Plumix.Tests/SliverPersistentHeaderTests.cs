@@ -487,7 +487,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     {
         private readonly List<Ticker> _tickers = [];
 
-        public Ticker CreateTicker(Action<TimeSpan> onTick)
+        public Ticker CreateTicker(TickerCallback onTick)
         {
             var ticker = new Ticker(onTick);
             _tickers.Add(ticker);
@@ -497,6 +497,8 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         public void Advance(TimeSpan elapsed)
         {
             double now = Scheduler.CurrentSeconds;
+            // The first frame only gives a freshly started ticker its start timestamp.
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now) + elapsed);
         }
     }

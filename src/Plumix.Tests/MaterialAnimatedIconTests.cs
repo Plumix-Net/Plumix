@@ -57,7 +57,7 @@ public sealed class MaterialAnimatedIconTests
     [Fact]
     public void AnimatedIcon_ResolvesThemeSizeColorOpacitySemanticsAndRtlMirroring()
     {
-        using var animation = new AnimationController(TimeSpan.FromMilliseconds(200));
+        using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(200));
         animation.SetValue(0.5);
         var color = Color.Parse("#FF2468AC");
         using var harness = new WidgetRenderHarness(
@@ -86,7 +86,7 @@ public sealed class MaterialAnimatedIconTests
     [Fact]
     public void AnimatedIcon_ExplicitValuesOverrideThemeAndNonDirectionalIconDoesNotMirror()
     {
-        using var animation = new AnimationController(TimeSpan.FromMilliseconds(200));
+        using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(200));
         var explicitColor = Color.Parse("#FF9A3412");
         using var harness = new WidgetRenderHarness(
             new Directionality(
@@ -127,7 +127,7 @@ public sealed class MaterialAnimatedIconTests
     [Fact]
     public void AnimatedIcon_ProgressMarksCustomPaintDirtyWithoutWidgetRebuild()
     {
-        using var animation = new AnimationController(TimeSpan.FromMilliseconds(200));
+        using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(200));
         using var harness = new WidgetRenderHarness(
             new Directionality(
                 TextDirection.Ltr,
@@ -146,7 +146,7 @@ public sealed class MaterialAnimatedIconTests
     [Fact]
     public void AnimatedIcon_RejectsInvalidSize()
     {
-        using var animation = new AnimationController(TimeSpan.FromMilliseconds(200));
+        using var animation = new AnimationController(duration: TimeSpan.FromMilliseconds(200));
         Assert.Throws<ArgumentOutOfRangeException>(() =>
             new AnimatedIcon(AnimatedIcons.MenuArrow, animation, size: -1));
         Assert.Throws<ArgumentOutOfRangeException>(() =>

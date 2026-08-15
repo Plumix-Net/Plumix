@@ -167,6 +167,7 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.True(next!.PerformAction(SemanticsActions.Tap));
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
@@ -805,6 +806,7 @@ public sealed class MaterialDatePickerTests : IDisposable
     private static void PumpAnimation()
     {
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
     }

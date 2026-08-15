@@ -143,12 +143,12 @@ public abstract class State : ITickerProvider
     {
     }
 
-    public Ticker CreateTicker(Action<TimeSpan> onTick)
+    public Ticker CreateTicker(TickerCallback onTick)
     {
         ArgumentNullException.ThrowIfNull(onTick);
         UpdateTickerModeNotifier();
         TickerModeData values = _tickerModeNotifier!.Value;
-        var ticker = new Ticker(onTick, RemoveTicker)
+        var ticker = new WidgetTicker(onTick, RemoveTicker, $"created by {GetType().Name}")
         {
             Muted = !values.Enabled,
             ForceFrames = values.ForceFrames

@@ -309,6 +309,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.True(callbackValue);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(360, 240));
         var midAlign = FindDescendants<RenderAlign>(harness.RenderView)
@@ -340,6 +341,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         controller.Collapse();
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         harness.Pump(new Size(360, 240));
 

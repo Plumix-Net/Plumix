@@ -499,7 +499,7 @@ internal sealed class StretchController : ChangeNotifier
             -(velocity * FlingVelocityFriction),
             -MaxFlingVelocity,
             MaxFlingVelocity);
-        if (!_ticker.Active)
+        if (!_ticker.IsActive)
         {
             Animate(scaledVelocity);
         }
@@ -507,7 +507,7 @@ internal sealed class StretchController : ChangeNotifier
 
     public void Pull(double normalizedOverscroll)
     {
-        if (_ticker.Active)
+        if (_ticker.IsActive)
         {
             _interruptedOverscroll = Overscroll;
             _ticker.Stop();
@@ -543,7 +543,7 @@ internal sealed class StretchController : ChangeNotifier
 
     private void HandleTick(TimeSpan elapsed)
     {
-        _elapsedSeconds += elapsed.TotalSeconds;
+        _elapsedSeconds = elapsed.TotalSeconds;
         double angularFrequency = NaturalFrequency * TimeCorrectionFactor;
         double damping = DampingRatio * angularFrequency;
         double dampedFrequency =
@@ -591,6 +591,9 @@ internal sealed class GlowController : ChangeNotifier
     private double _glowSize;
     private double _phaseDuration;
     private double _phaseElapsed;
+    // The ticker reports time since it started, so the per-frame delta this controller's exponential
+    // smoothing needs is derived from the previous elapsed value.
+    private TimeSpan _lastElapsed;
     private double _phaseStartOpacity;
     private double _phaseStartSize;
     private double _phaseTargetOpacity;
@@ -755,15 +758,17 @@ internal sealed class GlowController : ChangeNotifier
         _phaseTargetSize = targetSize;
         _phaseDuration = Math.Max(duration, 0.000001);
         _phaseElapsed = 0.0;
-        if (!_ticker.Active)
+        if (!_ticker.IsActive)
         {
+            _lastElapsed = TimeSpan.Zero;
             _ticker.Start();
         }
     }
 
     private void HandleTick(TimeSpan elapsed)
     {
-        double seconds = elapsed.TotalSeconds;
+        double seconds = (elapsed - _lastElapsed).TotalSeconds;
+        _lastElapsed = elapsed;
         if (Math.Abs(_displacementTarget - _displacement) > 0.0001)
         {
             _displacement = _displacementTarget

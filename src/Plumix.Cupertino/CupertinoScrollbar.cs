@@ -146,7 +146,7 @@ public sealed class CupertinoScrollbar : StatelessWidget
         public override void InitState()
         {
             base.InitState();
-            _resizeController = new AnimationController(TimeSpan.FromMilliseconds(100), this);
+            _resizeController = new AnimationController(duration: TimeSpan.FromMilliseconds(100), vsync: this);
             _resizeController.Changed += HandleResizeChanged;
         }
 

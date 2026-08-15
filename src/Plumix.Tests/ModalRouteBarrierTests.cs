@@ -65,6 +65,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
         Assert.Equal(0, barrier.Color.Value!.Value.A);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         harness.Pump(new Size(400, 300));
@@ -176,6 +177,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
 
         Navigator.Of(context).Pop();
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.001));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         harness.Pump(new Size(400, 300));
@@ -224,6 +226,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
     private static void PumpAnimation()
     {
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.60));

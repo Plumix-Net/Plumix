@@ -124,6 +124,7 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.True(callbackSawDrivenScroll);
         Assert.Equal(0, controller.Offset);
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.1));
         harness.Pump(new Size(320, 300));
         Assert.True(controller.Offset > 0);

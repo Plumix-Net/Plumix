@@ -465,7 +465,7 @@ internal sealed class RenderSliverFloatingHeader : RenderSliverSingleBoxAdapter
 
         if (_snapController == null)
         {
-            _snapController = new AnimationController(duration);
+            _snapController = new AnimationController(duration: duration);
             _snapController.AddListener(HandleSnapTick);
         }
 

@@ -169,8 +169,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
             extent: 200,
             crossAxisOffset: 50,
             crossExtent: 100);
-        Scheduler.PumpFrameForTests(
-            TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.10));
+        AnimationPump.Advance(0.10);
         var rootLayer = new ContainerLayer();
 
         painter.Paint(new PaintingContext(rootLayer), new Size(240, 300));
@@ -405,7 +404,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
 
     private static void PumpAnimation(WidgetRenderHarness harness, TimeSpan elapsed)
     {
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds) + elapsed);
+        AnimationPump.Advance(elapsed.TotalSeconds);
         harness.Pump(Viewport);
     }
 

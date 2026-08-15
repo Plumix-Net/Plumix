@@ -143,7 +143,7 @@ public sealed class LinearProgressIndicator : ProgressIndicator
 
         public override void InitState()
         {
-            _internalController = new AnimationController(DefaultAnimationDuration, this);
+            _internalController = new AnimationController(duration: DefaultAnimationDuration, vsync: this);
             _isMounted = true;
         }
 
@@ -1010,7 +1010,7 @@ public class CircularProgressIndicator : ProgressIndicator
 
         public override void InitState()
         {
-            _internalController = new AnimationController(DefaultAnimationDuration, this);
+            _internalController = new AnimationController(duration: DefaultAnimationDuration, vsync: this);
             _isMounted = true;
         }
 

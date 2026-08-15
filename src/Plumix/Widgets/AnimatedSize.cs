@@ -62,7 +62,7 @@ public sealed class AnimatedSize : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(CurrentWidget.Duration, this)
+            _controller = new AnimationController(duration: CurrentWidget.Duration, vsync: this)
             {
                 Curve = CurrentWidget.Curve,
             };

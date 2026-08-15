@@ -1469,7 +1469,7 @@ internal sealed class DialState : State
 
     public override void InitState()
     {
-        _controller = new AnimationController(TimePickerConstants.DialAnimateDuration, this);
+        _controller = new AnimationController(duration: TimePickerConstants.DialAnimateDuration, vsync: this);
         _thetaTween = new DoubleTween(begin: GetThetaForTime(Current.SelectedTime), end: 0);
         _thetaTween.End = _thetaTween.Begin;
         _radiusTween = new DoubleTween(begin: GetRadiusForTime(Current.SelectedTime), end: 0);

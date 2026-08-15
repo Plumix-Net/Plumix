@@ -752,6 +752,7 @@ public sealed class MaterialButtonsTests
         double now = Scheduler.CurrentSeconds;
         statesController.Update(MaterialState.Focused, true);
         owner.FlushBuild();
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
         owner.FlushBuild();
 

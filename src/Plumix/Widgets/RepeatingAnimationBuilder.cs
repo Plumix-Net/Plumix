@@ -62,7 +62,7 @@ public sealed class RepeatingAnimationBuilder<T> : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(CurrentWidget.Duration, this);
+            _controller = new AnimationController(duration: CurrentWidget.Duration, vsync: this);
             _curvedAnimation = new CurvedAnimation(
                 parent: _controller,
                 curve: CurrentWidget.Curve);

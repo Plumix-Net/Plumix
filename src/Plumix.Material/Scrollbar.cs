@@ -235,7 +235,7 @@ public sealed class Scrollbar : StatelessWidget
         public override void InitState()
         {
             base.InitState();
-            _hoverAnimationController = new AnimationController(TimeSpan.FromMilliseconds(200), this);
+            _hoverAnimationController = new AnimationController(duration: TimeSpan.FromMilliseconds(200), vsync: this);
             _hoverAnimationController.Changed += HandleHoverAnimationChanged;
         }
 

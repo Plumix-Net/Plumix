@@ -2502,14 +2502,14 @@ internal sealed class MaterialButtonCore : StatefulWidget
             AttachFocusNode(CurrentWidget.FocusNode);
             AttachStatesController(CurrentWidget.StatesController);
 
-            _splashController = new AnimationController(TimeSpan.FromMilliseconds(225), this)
+            _splashController = new AnimationController(duration: TimeSpan.FromMilliseconds(225), vsync: this)
             {
                 Curve = Curves.Linear
             };
             _splashController.Changed += HandleSplashTick;
             _splashController.Completed += HandleSplashCompleted;
 
-            _keyboardPressController = new AnimationController(TimeSpan.FromMilliseconds(100), this);
+            _keyboardPressController = new AnimationController(duration: TimeSpan.FromMilliseconds(100), vsync: this);
             _keyboardPressController.Completed += HandleKeyboardPressCompleted;
         }
 

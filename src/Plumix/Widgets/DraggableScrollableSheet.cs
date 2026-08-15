@@ -68,11 +68,12 @@ public class DraggableScrollableController : ChangeNotifier
     /// the duration, and resumes at the next user interaction.
     /// </summary>
     /// <returns>
-    /// A task that completes when the animation finishes or is interrupted. Flutter's ticker future
-    /// never completes when the animation is cancelled; a task that never completes is not a usable
-    /// C# contract, so an interrupted animation completes the task instead.
+    /// The animation's <see cref="TickerFuture"/>. Its <see cref="TickerFuture.Task"/> resolves only
+    /// when the animation runs to completion, exactly as Dart's returned future does;
+    /// <see cref="TickerFuture.OrCancel"/> faults with <see cref="TickerCanceled"/> when a drag,
+    /// another animation or a detach interrupts it.
     /// </returns>
-    public async Task AnimateTo(double size, TimeSpan duration, Curve curve)
+    public TickerFuture AnimateTo(double size, TimeSpan duration, Curve curve)
     {
         AssertAttached();
         ArgumentNullException.ThrowIfNull(curve);
@@ -105,17 +106,10 @@ public class DraggableScrollableController : ChangeNotifier
         animationController.AddListener(() =>
             attached.Extent.UpdateSize(animationController.Value, attached.Position.NotificationContext));
 
-        try
-        {
-            await animationController.AnimateTo(
-                Math.Clamp(size, attached.Extent.MinSize, attached.Extent.MaxSize),
-                duration,
-                curve);
-        }
-        catch (TaskCanceledException)
-        {
-            // The animation was interrupted by a drag, another animation, or a detach.
-        }
+        return animationController.AnimateTo(
+            Math.Clamp(size, attached.Extent.MinSize, attached.Extent.MaxSize),
+            duration,
+            curve);
     }
 
     /// <summary>Jumps the attached sheet to the given size without animating.</summary>
@@ -992,15 +986,13 @@ internal sealed class DraggableScrollableSheetScrollPosition : ScrollPosition
         }
 
         ballisticController.AddListener(Tick);
-        _ = ballisticController.AnimateWith(simulation).ContinueWith(
-            _ =>
+        ballisticController.AnimateWith(simulation).WhenCompleteOrCancel(() =>
+        {
+            if (_ballisticControllers.Remove(ballisticController))
             {
-                if (_ballisticControllers.Remove(ballisticController))
-                {
-                    ballisticController.Dispose();
-                }
-            },
-            TaskContinuationOptions.ExecuteSynchronously);
+                ballisticController.Dispose();
+            }
+        });
     }
 
     public override void Dispose()

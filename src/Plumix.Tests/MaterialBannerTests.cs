@@ -329,6 +329,7 @@ public sealed class MaterialBannerTests
         Assert.True(liveRegion!.Actions.HasFlag(SemanticsActions.Dismiss));
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
         harness.Pump(new Size(360, 180));
@@ -392,6 +393,7 @@ public sealed class MaterialBannerTests
         Assert.Null(FindParagraph(harness.RenderView, "Second"));
 
         messenger.RemoveCurrentMaterialBanner();
+        PumpAnimation();
         harness.Pump(new Size(360, 220));
         Assert.Equal(MaterialBannerClosedReason.Remove, await first.Closed);
         Assert.Null(FindParagraph(harness.RenderView, "First"));
@@ -605,6 +607,7 @@ public sealed class MaterialBannerTests
     private static void PumpAnimation()
     {
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.35));
     }

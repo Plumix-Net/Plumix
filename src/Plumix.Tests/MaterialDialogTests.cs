@@ -586,6 +586,7 @@ public sealed class MaterialDialogTests : IDisposable
             },
             animationStyle: new AnimationStyle(Duration: TimeSpan.FromSeconds(1)));
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
         harness.Pump(new Size(600, 400));
@@ -628,6 +629,7 @@ public sealed class MaterialDialogTests : IDisposable
     private static void PumpAnimation()
     {
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
     }

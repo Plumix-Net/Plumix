@@ -418,17 +418,17 @@ public sealed class DraggableScrollableSheetTests
     }
 
     [Fact]
-    public async Task Controller_RejectsSizesOutsideTheUnitRangeAndAZeroDuration()
+    public void Controller_RejectsSizesOutsideTheUnitRangeAndAZeroDuration()
     {
         using var harness = new SheetHarness();
 
         Assert.Throws<ArgumentOutOfRangeException>(() => harness.Controller.JumpTo(-1));
         Assert.Throws<ArgumentOutOfRangeException>(() => harness.Controller.JumpTo(1.1));
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+        Assert.Throws<ArgumentOutOfRangeException>(
             () => harness.Controller.AnimateTo(-1, TimeSpan.FromMilliseconds(100), Curves.Linear));
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+        Assert.Throws<ArgumentOutOfRangeException>(
             () => harness.Controller.AnimateTo(1.1, TimeSpan.FromMilliseconds(100), Curves.Linear));
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
+        Assert.Throws<ArgumentOutOfRangeException>(
             () => harness.Controller.AnimateTo(0.5, TimeSpan.Zero, Curves.Linear));
     }
 
@@ -495,7 +495,11 @@ public sealed class DraggableScrollableSheetTests
     {
         using var harness = new SheetHarness(initialChildSize: 0.5, snap: true, snapSizes: [0.5, 1.0]);
 
-        Task animation = harness.Controller.AnimateTo(0.7, TimeSpan.FromMilliseconds(100), Curves.Linear);
+        TickerFuture animation = harness.Controller.AnimateTo(
+            0.7,
+            TimeSpan.FromMilliseconds(100),
+            Curves.Linear);
+        harness.PumpFrame(0.0);
         harness.PumpFrame(0.05);
         Assert.InRange(harness.Controller.Size, 0.55, 0.65);
 
@@ -513,15 +517,21 @@ public sealed class DraggableScrollableSheetTests
     {
         using var harness = new SheetHarness(initialChildSize: 0.5);
 
-        Task animation = harness.Controller.AnimateTo(1.0, TimeSpan.FromMilliseconds(200), Curves.Linear);
+        TickerFuture animation = harness.Controller.AnimateTo(
+            1.0,
+            TimeSpan.FromMilliseconds(200),
+            Curves.Linear);
+        harness.PumpFrame(0.0);
         harness.PumpFrame(0.1);
         double midpoint = harness.Controller.Size;
         Assert.InRange(midpoint, 0.6, 0.9);
 
         harness.Drag(60);
         harness.PumpFrame(0.2);
-        await animation;
 
+        // Flutter's ticker future never resolves for a canceled animation; only `orCancel` reports it.
+        Assert.False(animation.Task.IsCompleted);
+        await Assert.ThrowsAsync<TickerCanceled>(() => animation.OrCancel);
         Assert.Equal(midpoint - 0.1, harness.Controller.Size, 6);
     }
 
@@ -530,12 +540,17 @@ public sealed class DraggableScrollableSheetTests
     {
         using var harness = new SheetHarness(initialChildSize: 0.5);
 
-        Task animation = harness.Controller.AnimateTo(1.0, TimeSpan.FromMilliseconds(200), Curves.Linear);
+        TickerFuture animation = harness.Controller.AnimateTo(
+            1.0,
+            TimeSpan.FromMilliseconds(200),
+            Curves.Linear);
+        harness.PumpFrame(0.0);
         harness.PumpFrame(0.05);
         harness.Controller.JumpTo(0.6);
         harness.PumpFrame(0.2);
-        await animation;
 
+        Assert.False(animation.Task.IsCompleted);
+        await Assert.ThrowsAsync<TickerCanceled>(() => animation.OrCancel);
         Assert.Equal(0.6, harness.Controller.Size, 6);
     }
 
@@ -545,11 +560,13 @@ public sealed class DraggableScrollableSheetTests
         var harness = new SheetHarness(initialChildSize: 0.5);
         DraggableScrollableController controller = harness.Controller;
 
-        Task animation = controller.AnimateTo(1.0, TimeSpan.FromMilliseconds(200), Curves.Linear);
+        TickerFuture animation = controller.AnimateTo(1.0, TimeSpan.FromMilliseconds(200), Curves.Linear);
+        harness.PumpFrame(0.0);
         harness.PumpFrame(0.05);
         harness.Dispose();
-        await animation;
 
+        Assert.False(animation.Task.IsCompleted);
+        await Assert.ThrowsAsync<TickerCanceled>(() => animation.OrCancel);
         Assert.False(controller.IsAttached);
     }
 
@@ -813,6 +830,7 @@ public sealed class DraggableScrollableSheetTests
         Assert.Equal(0.85, harness.Controller.Size, 6);
 
         harness.Position.GoBallistic(0.0);
+        harness.PumpFrame(0.0);
         harness.PumpFrame(0.5);
 
         // A fixed duration crosses the remaining 0.15 in two seconds, so a quarter of it per frame.

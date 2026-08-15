@@ -1296,7 +1296,7 @@ public sealed class RawChip : StatefulWidget
 
         private AnimationController CreateController(AnimationStyle? style, TimeSpan defaultDuration)
         {
-            return new AnimationController(style?.Duration ?? defaultDuration, this)
+            return new AnimationController(duration: style?.Duration ?? defaultDuration, vsync: this)
             {
                 ReverseDuration = style?.ReverseDuration,
                 Curve = Curves.Linear,

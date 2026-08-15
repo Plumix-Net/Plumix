@@ -151,19 +151,29 @@ public sealed class TickerModeTests : IDisposable
         var key = new LabeledGlobalKey<TickingState>("ticker");
         var child = new TickingWidget(key);
         var owner = new BuildOwner();
-        var root = new TestRootElement(new TickerMode(child: child, enabled: false));
+        var root = new TestRootElement(new TickerMode(child: child, enabled: true));
         Mount(root, owner);
         TickingState state = Assert.IsType<TickingState>(key.CurrentState);
         double now = Scheduler.CurrentSeconds;
 
+        // A ticker started outside a frame takes its start timestamp from the first frame it sees, so
+        // this frame reports zero elapsed time and establishes the clock the mute must not reset.
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now));
+        Assert.Equal(1, state.TickCount);
+        Assert.Equal(TimeSpan.Zero, state.LastElapsed);
+
+        root.Update(new TickerMode(child: child, enabled: false));
+        owner.FlushBuild();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
-        Assert.Equal(0, state.TickCount);
+        Assert.Equal(1, state.TickCount);
+        Assert.False(state.Ticker.IsTicking);
+        Assert.True(state.Ticker.IsActive);
 
         root.Update(new TickerMode(child: child, enabled: true));
         owner.FlushBuild();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 2.0));
 
-        Assert.Equal(1, state.TickCount);
+        Assert.Equal(2, state.TickCount);
         Assert.True(state.LastElapsed >= TimeSpan.FromSeconds(1.9));
         root.Unmount();
     }

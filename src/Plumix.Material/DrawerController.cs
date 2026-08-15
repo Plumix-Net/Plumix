@@ -93,7 +93,6 @@ public sealed class DrawerControllerState : State
     private AnimationController _controller = null!;
     private LocalHistoryEntry? _historyEntry;
     private ModalRoute? _historyRoute;
-    private bool _isRemovingHistoryEntry;
     private bool _isDragging;
     private bool _previouslyOpened;
 
@@ -105,36 +104,24 @@ public sealed class DrawerControllerState : State
 
     public override void InitState()
     {
-        _controller = new AnimationController(BaseSettleDuration, this);
+        _controller = new AnimationController(duration: BaseSettleDuration, vsync: this);
         _controller.Changed += HandleAnimationChanged;
-        _controller.Dismissed += HandleAnimationDismissed;
+        _controller.AddStatusListener(HandleAnimationStatusChanged);
         _controller.SetValue(CurrentWidget.IsDrawerOpen ? 1.0 : 0.0);
-    }
-
-    public override void DidChangeDependencies()
-    {
-        if (_controller.Value > 0)
-        {
-            EnsureHistoryEntry();
-        }
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
         var oldController = (DrawerController)oldWidget;
-        if (!_controller.IsAnimating
-            && !_isDragging
-            && CurrentWidget.IsDrawerOpen != oldController.IsDrawerOpen)
+        if (_controller.Status.IsAnimating() || _isDragging)
+        {
+            // Don't snap the drawer open or shut while the user is dragging.
+            return;
+        }
+
+        if (CurrentWidget.IsDrawerOpen != oldController.IsDrawerOpen)
         {
             _controller.SetValue(CurrentWidget.IsDrawerOpen ? 1.0 : 0.0);
-            if (CurrentWidget.IsDrawerOpen)
-            {
-                EnsureHistoryEntry();
-            }
-            else
-            {
-                RemoveHistoryEntry();
-            }
         }
     }
 
@@ -142,21 +129,19 @@ public sealed class DrawerControllerState : State
     {
         RemoveHistoryEntry();
         _controller.Changed -= HandleAnimationChanged;
-        _controller.Dismissed -= HandleAnimationDismissed;
+        _controller.RemoveStatusListener(HandleAnimationStatusChanged);
         _controller.Dispose();
         _focusScopeNode.Dispose();
     }
 
     public void Open()
     {
-        EnsureHistoryEntry();
         _controller.Fling();
         CurrentWidget.DrawerCallback?.Invoke(true);
     }
 
     public void Close()
     {
-        RemoveHistoryEntry();
         _controller.Fling(velocity: -1.0);
         CurrentWidget.DrawerCallback?.Invoke(false);
     }
@@ -369,30 +354,14 @@ public sealed class DrawerControllerState : State
         var entry = _historyEntry;
         _historyEntry = null;
         _historyRoute = null;
-        if (entry is null)
-        {
-            return;
-        }
-
-        _isRemovingHistoryEntry = true;
-        try
-        {
-            entry.Remove();
-        }
-        finally
-        {
-            _isRemovingHistoryEntry = false;
-        }
+        entry?.Remove();
     }
 
     private void HandleHistoryEntryRemoved()
     {
         _historyEntry = null;
         _historyRoute = null;
-        if (!_isRemovingHistoryEntry)
-        {
-            Close();
-        }
+        Close();
     }
 
     private void HandleAnimationChanged()
@@ -403,9 +372,21 @@ public sealed class DrawerControllerState : State
         }
     }
 
-    private void HandleAnimationDismissed()
+    // The history entry follows the animation's direction: an opening drawer owns a pop target, a
+    // closing one gives it up. The terminal statuses leave it alone.
+    private void HandleAnimationStatusChanged(AnimationStatus status)
     {
-        RemoveHistoryEntry();
+        switch (status)
+        {
+            case AnimationStatus.Forward:
+                EnsureHistoryEntry();
+                break;
+            case AnimationStatus.Reverse:
+                RemoveHistoryEntry();
+                break;
+            default:
+                break;
+        }
     }
 
     private double ResolveDrawerWidth(BuildContext context)

@@ -443,6 +443,7 @@ public sealed class MaterialBottomNavigationBarTests
                     buttons: PointerButtons.None,
                     timestampUtc: DateTime.UtcNow),
                 new BoxHitTestEntry(tooltipListener, new Point(40, 20)));
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.20));
             harness.Pump(new Size(320, 120));
             renderRoot = harness.RenderView.Child;
@@ -458,6 +459,7 @@ public sealed class MaterialBottomNavigationBarTests
                     buttons: PointerButtons.None,
                     timestampUtc: DateTime.UtcNow),
                 new BoxHitTestEntry(tooltipListener, new Point(1200, 20)));
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.50));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.70));
             harness.Pump(new Size(320, 120));
@@ -502,6 +504,7 @@ public sealed class MaterialBottomNavigationBarTests
                         currentIndex: 2,
                         items: items)));
 
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.15));
             harness.Pump(new Size(360, 140));
             var midWidths = GetBottomNavigationTileWidths(harness.RenderView.Child, items.Count);

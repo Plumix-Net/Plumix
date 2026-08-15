@@ -123,7 +123,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
         public override void InitState()
         {
             _previousValue = CurrentWidget.Value;
-            _transitionController = new AnimationController(TimeSpan.FromMilliseconds(200), this)
+            _transitionController = new AnimationController(duration: TimeSpan.FromMilliseconds(200), vsync: this)
             {
                 Curve = Curves.EaseInOut
             };

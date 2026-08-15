@@ -196,6 +196,7 @@ public sealed class MaterialDrawerHeaderTests
             node => node.Label?.Contains("Hide accounts", StringComparison.Ordinal) == true));
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(304, 260));
@@ -210,6 +211,7 @@ public sealed class MaterialDrawerHeaderTests
         Assert.True(button!.PerformAction(SemanticsActions.Tap));
         harness.Pump(new Size(304, 260));
         now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         harness.Pump(new Size(304, 260));
@@ -298,6 +300,7 @@ public sealed class MaterialDrawerHeaderTests
         harness.Update(BuildHeader());
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(304, 260));
 
@@ -318,6 +321,7 @@ public sealed class MaterialDrawerHeaderTests
 
         TapDetails(harness);
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.06));
         harness.Pump(new Size(304, 260));
@@ -328,6 +332,7 @@ public sealed class MaterialDrawerHeaderTests
         TapDetails(harness);
         TapDetails(harness);
         now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
         harness.Pump(new Size(304, 260));

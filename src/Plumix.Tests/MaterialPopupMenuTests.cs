@@ -267,6 +267,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.NotNull(action);
         Assert.True(action!.PerformAction(SemanticsActions.Tap));
 
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.075));
         harness.Pump(new Size(500, 360));
         Assert.NotNull(FindParagraph(harness.RenderView, char.ConvertFromUtf32(Icons.Done.CodePoint)));
@@ -838,6 +839,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     private static void PumpAnimation()
     {
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
     }

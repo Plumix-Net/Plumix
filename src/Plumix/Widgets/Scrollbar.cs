@@ -1142,13 +1142,13 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
 
         private void CreateFadeControllers()
         {
-            _fadeController = new AnimationController(CurrentWidget.FadeDuration, this)
+            _fadeController = new AnimationController(duration: CurrentWidget.FadeDuration, vsync: this)
             {
                 Curve = Curves.FastOutSlowIn,
             };
             SetFadeValue(1);
             _fadeController.Changed += HandleFadeTick;
-            _fadeDelayController = new AnimationController(CurrentWidget.TimeToFade, this);
+            _fadeDelayController = new AnimationController(duration: CurrentWidget.TimeToFade, vsync: this);
             _fadeDelayController.Completed += HandleFadeDelayCompleted;
         }
 
@@ -1182,7 +1182,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
 
         private void CreatePressController()
         {
-            _pressController = new AnimationController(CurrentWidget.PressDuration, this);
+            _pressController = new AnimationController(duration: CurrentWidget.PressDuration, vsync: this);
             _pressController.Completed += HandlePressDurationCompleted;
         }
 

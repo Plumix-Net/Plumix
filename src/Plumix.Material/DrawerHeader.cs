@@ -247,7 +247,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
 
         public override void InitState()
         {
-            _controller = new AnimationController(TimeSpan.FromMilliseconds(200), this);
+            _controller = new AnimationController(duration: TimeSpan.FromMilliseconds(200), vsync: this);
             _controller.SetValue(CurrentWidget.IsOpen ? 1.0 : 0.0);
             _animation = new CurvedAnimation(
                 parent: _controller,

@@ -45,7 +45,7 @@ internal sealed class AnimatedIconDemoPageState : State
 
     public override void InitState()
     {
-        _controller = new AnimationController(TimeSpan.FromMilliseconds(700), this);
+        _controller = new AnimationController(duration: TimeSpan.FromMilliseconds(700), vsync: this);
     }
 
     public override void Dispose()

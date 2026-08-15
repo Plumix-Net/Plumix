@@ -431,7 +431,7 @@ public sealed class MergeableMaterial : StatefulWidget
 
         private void InitGap(MaterialGap gap)
         {
-            var controller = new AnimationController(MaterialConstants.ThemeAnimationDuration, this)
+            var controller = new AnimationController(duration: MaterialConstants.ThemeAnimationDuration, vsync: this)
             {
                 Curve = Curves.FastOutSlowIn
             };

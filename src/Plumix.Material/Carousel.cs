@@ -161,7 +161,7 @@ public sealed class CarouselController : ScrollController
         StopAnimation();
         _animationStart = Offset;
         _animationTarget = target;
-        _animationController = new AnimationController(duration)
+        _animationController = new AnimationController(duration: duration)
         {
             Curve = curve,
         };

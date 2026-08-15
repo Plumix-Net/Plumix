@@ -401,6 +401,7 @@ public sealed class MaterialChipTests : IDisposable
         var start = FindChipDecoration(harness.RenderView).Decoration.Color;
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1));
         harness.Pump(new Size(320, 120));
         var middle = FindChipDecoration(harness.RenderView).Decoration.Color;
@@ -828,6 +829,7 @@ public sealed class MaterialChipTests : IDisposable
                 chipAnimationStyle: animations)));
         harness.Pump(new Size(320, 120));
         double forwardStart = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(forwardStart + 0.25));
         harness.Pump(new Size(320, 120));
         RenderChip opening = FindChipRender(harness.RenderView);
@@ -844,6 +846,7 @@ public sealed class MaterialChipTests : IDisposable
             new RawChip(label: new Text("Animated slots"), chipAnimationStyle: animations)));
         harness.Pump(new Size(320, 120));
         double reverseStart = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(reverseStart + 0.125));
         harness.Pump(new Size(320, 120));
         RenderChip closing = FindChipRender(harness.RenderView);

@@ -364,13 +364,14 @@ public sealed class MaterialPageTransitionsTests : IDisposable
     private static void Settle(BuildOwner owner)
     {
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
     }
 
     private static void PumpAfter(RenderHarness harness, Size size, TimeSpan duration)
     {
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds) + duration);
+        AnimationPump.Advance(duration.TotalSeconds);
         harness.Pump(size);
     }
 

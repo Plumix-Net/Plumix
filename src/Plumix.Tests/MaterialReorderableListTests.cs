@@ -683,7 +683,9 @@ public sealed class MaterialReorderableListTests
                 paragraph => paragraph.PlainText == "Item 0");
             Assert.Equal(31, proxyText.FontSize);
 
+            AnimationPump.Prime();
             double pickupClock = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.01));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(pickupClock + 0.30));
 
@@ -691,7 +693,9 @@ public sealed class MaterialReorderableListTests
             Assert.Empty(reorders);
             Assert.Equal(baselineEntries + 1, harness.FindState<OverlayState>().Entries.Count);
 
+            AnimationPump.Prime();
             double clock = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.13));
             Assert.Empty(reorders);
@@ -766,6 +770,7 @@ public sealed class MaterialReorderableListTests
             DispatchMove(binding, harness.RenderView, 81, new Point(100, 190), start.AddMilliseconds(100));
 
             double clock = Scheduler.CurrentSeconds;
+            AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
             harness.Pump(new Size(200, 150));
             double firstOffset = controller.Offset;
@@ -868,9 +873,10 @@ public sealed class MaterialReorderableListTests
 
     private static void CompleteDropAnimation()
     {
-        double now = Scheduler.CurrentSeconds;
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.30));
+        // One frame to give the pickup and drop tickers their start timestamps, then one past the
+        // 250ms proxy animation.
+        AnimationPump.Advance(0.01);
+        AnimationPump.Advance(0.30);
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

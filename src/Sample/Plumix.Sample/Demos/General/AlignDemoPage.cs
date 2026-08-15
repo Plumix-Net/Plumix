@@ -55,7 +55,7 @@ internal sealed class AlignDemoPageState : State
     {
         _builderCounter = new ValueNotifier<int>(0);
         _scrollController = new ScrollController();
-        _explicitTransitionsController = new AnimationController(TimeSpan.FromMilliseconds(800), this);
+        _explicitTransitionsController = new AnimationController(duration: TimeSpan.FromMilliseconds(800), vsync: this);
         _explicitTransitionsController.SetValue(0.25);
         _explicitSlideAnimation = new DerivedAnimation<Vector>(
             _explicitTransitionsController,

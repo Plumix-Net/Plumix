@@ -269,7 +269,7 @@ internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
     public override void InitState()
     {
         _opacity = CheckedWidget.Checked ? 1 : 0;
-        _controller = new AnimationController(FadeDuration, this);
+        _controller = new AnimationController(duration: FadeDuration, vsync: this);
         _controller.SetValue(_opacity);
         _controller.Changed += HandleAnimationChanged;
     }

@@ -91,6 +91,11 @@ public sealed class AnimatedSwitcherTests : IDisposable
         owner.FlushBuild();
         Assert.Equal(1, previousCount);
 
+        // A frame has to elapse before the second child can become a *retained* outgoing child: a
+        // reverse from a still-dismissed controller has nothing to animate and settles at once.
+        AnimationPump.Advance(0.05);
+        owner.FlushBuild();
+
         root.Update(BuildSwitcher(
             value: "three",
             childKey: new ValueKey<int>(3),
@@ -100,6 +105,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         Assert.Equal(2, previousCount);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.2));
         owner.FlushBuild();
         Assert.Equal(0, previousCount);
@@ -257,6 +263,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 5.0));
         owner.FlushBuild();
         FindRenderObject<RenderAnimatedSize>(clip)!.MarkNeedsLayout();
@@ -327,6 +334,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         Assert.True(bottomTickerEnabled);
 
         double now = Scheduler.CurrentSeconds;
+        AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
         Assert.False(bottomTickerEnabled);

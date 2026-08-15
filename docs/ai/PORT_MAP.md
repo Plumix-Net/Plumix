@@ -208,10 +208,10 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/tooltip_visibility.dart` | `src/Plumix.Material/TooltipVisibility.cs` | — | — |
 | `material_ui/typography.dart` | `src/Plumix.Material/Typography.cs` | — | — |
 | `material_ui/user_accounts_drawer_header.dart` | `src/Plumix.Material/DrawerHeader.cs` | `src/Plumix.Tests/MaterialDrawerHeaderTests.cs` | `dart_sample/lib/demos/material/drawer_headers_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DrawerHeadersDemoPage.cs` |
-| `animation/animation.dart` | `src/Plumix/Animation.cs` | `src/Plumix.Tests/CompoundAnimationTests.cs`<br>`src/Plumix.Tests/ImplicitAnimationsTests.cs`<br>`src/Plumix.Tests/MaterialThemeAnimationTests.cs` | — |
-| `animation/animation_controller.dart` | `src/Plumix/AnimationController.cs` | — | — |
+| `animation/animation.dart` | `src/Plumix/Animation.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs`<br>`src/Plumix.Tests/CompoundAnimationTests.cs`<br>`src/Plumix.Tests/ImplicitAnimationsTests.cs`<br>`src/Plumix.Tests/MaterialThemeAnimationTests.cs` | — |
+| `animation/animation_controller.dart` | `src/Plumix/AnimationController.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs` | — |
 | `animation/animation_style.dart` | `src/Plumix/AnimationStyle.cs` | — | — |
-| `animation/animations.dart` | `src/Plumix/Animation.cs`<br>`src/Plumix/CompoundAnimation.cs` | `src/Plumix.Tests/CompoundAnimationTests.cs`<br>`src/Plumix.Tests/ImplicitAnimationsTests.cs`<br>`src/Plumix.Tests/MaterialThemeAnimationTests.cs` | — |
+| `animation/animations.dart` | `src/Plumix/Animation.cs`<br>`src/Plumix/CompoundAnimation.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs`<br>`src/Plumix.Tests/CompoundAnimationTests.cs`<br>`src/Plumix.Tests/ImplicitAnimationsTests.cs`<br>`src/Plumix.Tests/MaterialThemeAnimationTests.cs` | — |
 | `foundation/binding.dart` | `src/Plumix/HotReload.cs` | `src/Plumix.Tests/HotReloadTests.cs` | — |
 | `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` | — | — |
 | `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` | — | — |
@@ -304,7 +304,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/wrap.dart` | `src/Plumix/Rendering/Wrap.cs` | `src/Plumix.Tests/WrapTests.cs` | — |
 | `scheduler/binding.dart` | `src/Plumix/Scheduler.cs` | — | — |
 | `scheduler/priority.dart` | `src/Plumix/SchedulerPriority.cs` | — | — |
-| `scheduler/ticker.dart` | `src/Plumix/Ticker.cs` | `src/Plumix.Tests/TickerProviderTickerModeTests.cs` | — |
+| `scheduler/ticker.dart` | `src/Plumix/Ticker.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs`<br>`src/Plumix.Tests/TickerProviderTickerModeTests.cs` | — |
 | `semantics/semantics.dart` | `src/Plumix/Rendering/Semantics.cs`<br>`src/Plumix/Rendering/SemanticsTraversal.cs` | `src/Plumix.Tests/FlutterHostSemanticsTests.cs`<br>`src/Plumix.Tests/MetaDataIndexedSemanticsTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs`<br>`src/Plumix.Tests/SemanticsTraversalTests.cs`<br>`src/Plumix.Tests/SemanticsTreeTests.cs` | — |
 | `semantics/semantics_service.dart` | `src/Plumix/UI/SemanticsService.cs` | — | — |
 | `services/binding.dart` | `src/Plumix/Widgets/AppLifecycleListener.cs` | `src/Plumix.Tests/AppLifecycleListenerTests.cs` | — |

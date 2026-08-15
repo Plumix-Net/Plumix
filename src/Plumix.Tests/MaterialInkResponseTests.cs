@@ -152,6 +152,10 @@ public sealed class MaterialInkResponseTests : IDisposable
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(hoverStartSeconds));
         harness.Pump(new Size(120.0, 80.0));
 
+        // That build is what creates the highlight controller, so it needs a frame of its own before
+        // any time can elapse for it.
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(hoverStartSeconds));
+
         PumpAnimation(
             harness,
             new Size(120.0, 80.0),

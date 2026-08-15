@@ -521,7 +521,7 @@ public class InkResponse : StatefulWidget
                 return;
             }
 
-            var controller = new Plumix.AnimationController(feature.UnconfirmedDuration, this)
+            var controller = new Plumix.AnimationController(duration: feature.UnconfirmedDuration, vsync: this)
             {
                 Curve = Curves.Linear,
             };
@@ -606,8 +606,8 @@ public class InkResponse : StatefulWidget
             if (_activationController is null)
             {
                 _activationController = new Plumix.AnimationController(
-                    TimeSpan.FromMilliseconds(100.0),
-                    this);
+                    duration: TimeSpan.FromMilliseconds(100.0),
+                    vsync: this);
                 _activationController.Completed += () =>
                 {
                     if (Mounted)
@@ -713,7 +713,7 @@ public class InkResponse : StatefulWidget
                     return;
                 }
 
-                var controller = new Plumix.AnimationController(duration, this)
+                var controller = new Plumix.AnimationController(duration: duration, vsync: this)
                 {
                     Curve = Curves.Linear,
                 };

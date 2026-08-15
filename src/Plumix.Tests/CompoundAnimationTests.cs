@@ -11,8 +11,8 @@ public sealed class CompoundAnimationTests
     [Fact]
     public void AnimationMinAndMax_TrackTheirChildrenAndPreferAnAnimatingStatus()
     {
-        using var first = new AnimationController(TimeSpan.FromSeconds(1));
-        using var next = new AnimationController(TimeSpan.FromSeconds(1));
+        using var first = new AnimationController(duration: TimeSpan.FromSeconds(1));
+        using var next = new AnimationController(duration: TimeSpan.FromSeconds(1));
         var min = new AnimationMin<double>(first, next);
         var max = new AnimationMax<double>(first, next);
         var mean = new AnimationMean(first, next);
@@ -24,7 +24,10 @@ public sealed class CompoundAnimationTests
         Assert.Equal(0.75, max.Value);
         Assert.Equal(0.5, mean.Value);
 
-        // status is next's when next is animating, and first's otherwise.
+        // A mid-range value reports the controller's own direction, so bring both children back to a
+        // bound before checking that the status is next's when next is animating, and first's otherwise.
+        first.SetValue(0.0);
+        next.SetValue(0.0);
         Assert.Equal(AnimationStatus.Dismissed, min.Status);
         next.Forward();
         Assert.Equal(AnimationStatus.Forward, min.Status);
@@ -33,8 +36,8 @@ public sealed class CompoundAnimationTests
     [Fact]
     public void CompoundAnimation_NotifiesOnlyWhenTheCombinedValueChanges()
     {
-        using var first = new AnimationController(TimeSpan.FromSeconds(1));
-        using var next = new AnimationController(TimeSpan.FromSeconds(1));
+        using var first = new AnimationController(duration: TimeSpan.FromSeconds(1));
+        using var next = new AnimationController(duration: TimeSpan.FromSeconds(1));
         var min = new AnimationMin<double>(first, next);
 
         first.SetValue(0.2);
@@ -57,8 +60,8 @@ public sealed class CompoundAnimationTests
     [Fact]
     public void TrainHoppingAnimation_HopsWhenTheNextTrainCatchesTheCurrentOne()
     {
-        using var current = new AnimationController(TimeSpan.FromSeconds(1));
-        using var next = new AnimationController(TimeSpan.FromSeconds(1));
+        using var current = new AnimationController(duration: TimeSpan.FromSeconds(1));
+        using var next = new AnimationController(duration: TimeSpan.FromSeconds(1));
         current.SetValue(0.8);
         next.SetValue(0.2);
 
@@ -81,8 +84,8 @@ public sealed class CompoundAnimationTests
     [Fact]
     public void TrainHoppingAnimation_WithEqualValues_UsesTheNextTrainImmediately()
     {
-        using var current = new AnimationController(TimeSpan.FromSeconds(1));
-        using var next = new AnimationController(TimeSpan.FromSeconds(1));
+        using var current = new AnimationController(duration: TimeSpan.FromSeconds(1));
+        using var next = new AnimationController(duration: TimeSpan.FromSeconds(1));
         current.SetValue(0.4);
         next.SetValue(0.4);
 
@@ -96,7 +99,7 @@ public sealed class CompoundAnimationTests
     [Fact]
     public void TrainHoppingAnimation_WithoutANextTrain_ProxiesForever()
     {
-        using var current = new AnimationController(TimeSpan.FromSeconds(1));
+        using var current = new AnimationController(duration: TimeSpan.FromSeconds(1));
         using var hopping = new TrainHoppingAnimation(current, null);
 
         int notifications = 0;
@@ -111,7 +114,7 @@ public sealed class CompoundAnimationTests
     [Fact]
     public void AnimatableChainAndDrive_ComposeInSourceOrder()
     {
-        using var parent = new AnimationController(TimeSpan.FromSeconds(1));
+        using var parent = new AnimationController(duration: TimeSpan.FromSeconds(1));
         Animatable<double> chained = new DoubleTween(begin: 0.875, end: 1.0)
             .Chain(new CurveTween(Curves.EaseIn));
         Animation<double> driven = parent.Drive(chained);
