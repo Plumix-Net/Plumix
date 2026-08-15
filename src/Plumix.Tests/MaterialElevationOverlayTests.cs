@@ -32,7 +32,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
         Color color = Color.Parse("#FF888888");
 
         Assert.Equal(color, ElevationOverlay.ApplySurfaceTint(color, null, 42.0));
-        Assert.Equal(color, ElevationOverlay.ApplySurfaceTint(color, Colors.Transparent, 42.0));
+        Assert.Equal(color, ElevationOverlay.ApplySurfaceTint(color, MaterialColors.Transparent, 42.0));
     }
 
     [Theory]

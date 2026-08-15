@@ -657,7 +657,7 @@ public sealed class Stepper : StatefulWidget
         {
             var theme = Theme.Of(context);
             return CurrentWidget.Steps[index].StepStyle?.ErrorColor
-                   ?? (theme.Brightness == Brightness.Dark ? Color.Parse("#FFEF5350") : Colors.Red);
+                   ?? (theme.Brightness == Brightness.Dark ? Colors.Red.Shade400 : Colors.Red);
         }
 
         private bool HasLabels => CurrentWidget.Steps.Any(step => step.Label is not null);

@@ -8,9 +8,9 @@ Use this block as the fastest machine-readable status summary.
 
 ```yaml
 framework_plan_version: 1
-last_updated: 2026-08-14
+last_updated: 2026-08-15
 north_star: "Flutter-like widget/rendering framework in C# with Avalonia as host infrastructure."
-current_phase: "M4 material library rewrite (theme/scaffold/material controls) in progress."
+current_phase: "M5 cross-host sample parity and stability; M4 material library rewrite closed."
 flutter_pin: "3.47.0 (4cf24164269); 3.44->3.47 re-port backlog: docs/ai/notes/migration-2026-08-13-flutter-3.47-pin.md"
 status:
   widget_element_state_lifecycle: done
@@ -20,8 +20,8 @@ status:
   navigation_stack_and_observers: done
   scroll_sliver_list_grid_pipeline: done
   desktop_widget_host_app_flow: done
-  material_library_rewrite: in_progress
-  browser_android_ios_sample_hosts: planned
+  material_library_rewrite: done
+  browser_android_ios_sample_hosts: in_progress
   dart_to_csharp_control_porting_readiness: in_progress
   docs_alignment_and_tracking: in_progress
 next_milestones:
@@ -36,10 +36,10 @@ next_milestones:
     status: done
   - id: M4
     title: "Material library rewrite"
-    status: in_progress
+    status: done
   - id: M5
     title: "Cross-host sample parity and stability"
-    status: planned
+    status: in_progress
 ```
 
 ## Confirmed Done (Repository Baseline)
@@ -73,29 +73,17 @@ Status: `done` (closed 2026-03-12). Completion notes and exit criteria: `docs/FR
 
 ### M4. Material Library Rewrite
 
-Status: `in_progress`
+Status: `done` (closed 2026-08-15). Every widget family in `material_ui/lib/src/` is ported and the
+theming foundation is closed in both Material 2 and Material 3, down to the swatch derivation
+(`MaterialColor`/`Colors`, `ColorScheme.FromSwatch`, `ThemeData(primarySwatch:)`).
 
-What is left (live list, do not duplicate it here): `docs/MATERIAL_TODO.md`.
-Per-control completion notes for passes already closed: `docs/FRAMEWORK_PLAN-archive.md`.
-Shipped changes: `CHANGELOG.md`. Active divergences: `docs/ai/DIVERGENCES.md`.
-
-Initial scope:
-
-- Introduce framework-level theming primitives (`ThemeData`, `Theme`, baseline color/text style propagation).
-- Introduce shell/layout primitives for Material app structure (`Scaffold`, `AppBar`, and supporting slots).
-- Introduce first Material control set (`TextButton`, `ElevatedButton`, `OutlinedButton`) on top of framework render/widget layers.
-- Keep architecture boundaries explicit: behavior in framework libraries (`src/Plumix`, `src/Plumix.Material`), host integration in sample hosts only.
-
-Exit criteria:
-
-- Material theming is available through inherited framework state and can drive common control defaults.
-- Material shell primitives are sufficient to host route pages without custom sample-only wrappers.
-- Initial Material control set supports core states and API shape needed for straightforward Dart-to-C# rewrites.
-- Regression coverage exists for widget-to-render wiring and theming resolution behavior.
+Remaining tightening passes are tracked as rows in `docs/ai/DIVERGENCES.md` and `(approximate)`/
+`(reference)` markers in `docs/ai/PORT_MAP.md`; `docs/MATERIAL_TODO.md` stays as the contributor
+entry point. Shipped changes: `CHANGELOG.md`.
 
 ### M5. Cross-Host Sample Parity and Stability
 
-Status: `planned`
+Status: `in_progress`
 
 Scheduling note (2026-03-12):
 

@@ -1,5 +1,22 @@
 # Changelog
 
+- Breaking: closed the Material 2 scheme derivation — the last open item of the Material rewrite.
+  Added `ColorSwatch<T>` (core `Plumix.Painting`), `MaterialColor`/`MaterialAccentColor`, and the
+  full `Colors` palette, generated from `colors.dart` by `scripts/generate_material_colors.py`.
+  `ColorScheme.FromSwatch` and `ThemeData(primarySwatch:)` are ported, so `useMaterial3: false` now
+  yields Flutter's blue-swatch scheme (`colorScheme.primary` `0xFF2196F3`, not the baseline
+  `0xFF6200EE`) and every M2 default that reads the scheme moves with it. `PrimaryColor`,
+  `PrimaryColorLight`, `PrimaryColorDark`, `CanvasColor`, `CardColor`, `DividerColor`,
+  `ScaffoldBackgroundColor` now follow Dart's derivation order in both modes (`primaryColorLight`/
+  `primaryColorDark` stay swatch-derived under M3, as in Dart). `HintColor`, `DisabledColor` and
+  `UnselectedWidgetColor` are the fixed black/white opacity ramps instead of `onSurface` tints, and
+  `ApplyElevationOverlayColor` reads the nullable `brightness` argument the way Dart does.
+  `Plumix.Material.Colors` shadows `Avalonia.Media.Colors` inside the Material namespace, so
+  `Colors.Transparent` is Dart's `0x00000000` (was `0x00FFFFFF`), `TextField`'s misspelled-word
+  underline and `MaterialApp.Color` pick up the Material red/blue, and `SearchDelegate` uses
+  Material grey; `CupertinoColors.Transparent` is `0x00000000` too. Projects importing both
+  namespaces need a `using Colors = ...` alias (see `src/Plumix.Tests/GlobalUsings.cs`).
+
 - Breaking: closed the `TextSelectionTheme` family (`TextSelectionThemeData`/`TextSelectionTheme` and
   the cursor/selection/handle resolution that consumes it). `TextSelectionThemeData` gained Dart's
   `CopyWith`. The theme now reaches consumers the way Dart routes it: `Theme` wraps its subtree in

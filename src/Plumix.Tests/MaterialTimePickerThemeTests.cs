@@ -51,7 +51,7 @@ public sealed class MaterialTimePickerThemeTests
     {
         var plain = new TimePickerThemeData(DayPeriodColor: Colors.Red);
         Assert.Equal(Colors.Red, plain.DayPeriodColor!.Resolve(SelectedSet));
-        Assert.Equal(Colors.Transparent, plain.DayPeriodColor!.Resolve(EmptySet));
+        Assert.Equal(MaterialColors.Transparent, plain.DayPeriodColor!.Resolve(EmptySet));
 
         var stateful = new TimePickerThemeData(DayPeriodColor: WidgetStateColor.ResolveWith(
             Colors.Blue,

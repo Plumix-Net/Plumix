@@ -76,7 +76,7 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(6.0, surface.Elevation);
         Assert.Equal(theme.SurfaceContainerHighColor, surface.Color);
         Assert.Equal(theme.ShadowColor, surface.ShadowColor);
-        Assert.Equal(Colors.Transparent, surface.SurfaceTintColor);
+        Assert.Equal(MaterialColors.Transparent, surface.SurfaceTintColor);
         Assert.IsType<StadiumBorder>(surface.Shape);
 
         // The resolved padding is applied twice: around the Row and around the inner text field.
@@ -267,7 +267,7 @@ public sealed class MaterialSearchTests : IDisposable
             material => material.ClipBehavior == Clip.AntiAlias);
         Assert.Equal(6.0, view.Elevation);
         Assert.Equal(ThemeData.Light.SurfaceContainerHighColor, view.Color);
-        Assert.Equal(Colors.Transparent, view.SurfaceTintColor);
+        Assert.Equal(MaterialColors.Transparent, view.SurfaceTintColor);
         Assert.Equal(
             new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(28.0)),
             view.Shape);
@@ -738,7 +738,7 @@ public sealed class MaterialSearchTests : IDisposable
 
         Assert.NotNull(resolved);
         Assert.Equal(Colors.White, resolved.AppBarTheme.BackgroundColor);
-        Assert.Equal(Colors.Gray, resolved.AppBarTheme.IconTheme?.Color);
+        Assert.Equal(MaterialColors.Grey, resolved.AppBarTheme.IconTheme?.Color);
         Assert.Equal(31, resolved.AppBarTheme.IconTheme?.Size);
         Assert.Equal(SystemUiIconBrightness.Dark, resolved.AppBarTheme.SystemOverlayStyle?.StatusBarIconBrightness);
         Assert.Equal(InputBorder.None, resolved.InputDecorationTheme.Border);

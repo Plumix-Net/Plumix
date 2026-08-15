@@ -225,12 +225,7 @@ public sealed record AppBarThemeData(
 
 public sealed record ThemeData
 {
-    private static readonly Color Material2LightCanvasColor = Color.Parse("#FFFAFAFA");
-    private static readonly Color Material2DarkCanvasColor = Color.Parse("#FF303030");
-    private static readonly Color Material2DarkCardColor = Color.Parse("#FF424242");
     private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
-    private static readonly Color DefaultPrimaryColorLight = Color.Parse("#FFBBDEFB");
-    private static readonly Color DefaultPrimaryColorDark = Color.Parse("#FF1976D2");
     private static readonly Color LightSecondaryColor = Color.Parse("#FF625B71");
     private static readonly Color LightPrimaryContainerColor = Color.Parse("#FFEADDFF");
     private static readonly Color LightOnPrimaryContainerColor = Color.Parse("#FF21005D");
@@ -319,6 +314,7 @@ public sealed record ThemeData
         Color? scaffoldBackgroundColor = null,
         Color? canvasColor = null,
         Color? primaryColor = null,
+        MaterialColor? primarySwatch = null,
         Color? secondaryColor = null,
         Color? onPrimaryColor = null,
         Color? primaryContainerColor = null,
@@ -434,19 +430,60 @@ public sealed record ThemeData
             throw new ArgumentException(
                 "Only one of colorSchemeSeed and primaryColor may be specified.");
         }
+        if (colorSchemeSeed.HasValue && primarySwatch is not null)
+        {
+            throw new ArgumentException(
+                "Only one of colorSchemeSeed and primarySwatch may be specified.");
+        }
 
         Brightness = brightness ?? colorScheme?.Brightness ?? Brightness.Light;
+        bool isDark = Brightness == Brightness.Dark;
         UseMaterial3 = useMaterial3 ?? true;
-        ColorScheme = colorSchemeSeed.HasValue
+
+        // Mirrors Flutter's derivation order: the Material 3 branch resolves the scheme-backed
+        // colors first, then the shared Material 2 fallbacks fill in whatever is still unset, and
+        // the Material 2 scheme itself is derived from `primarySwatch` last.
+        ColorScheme? scheme = colorSchemeSeed.HasValue
             ? ColorScheme.FromSeed(colorSchemeSeed.Value, Brightness)
-            : colorScheme
-              ?? (UseMaterial3
-                  ? Brightness == Brightness.Dark
-                      ? ColorScheme.Material3Dark
-                      : ColorScheme.Material3Light
-                  : Brightness == Brightness.Dark
-                      ? ColorScheme.Dark()
-                      : ColorScheme.Light());
+            : colorScheme;
+        Color? resolvedPrimaryColor = primaryColor;
+        Color? resolvedCanvasColor = canvasColor;
+        Color? resolvedScaffoldBackgroundColor = scaffoldBackgroundColor;
+        Color? resolvedCardColor = cardColor;
+        Color? resolvedDividerColor = dividerColor;
+        if (colorSchemeSeed.HasValue || UseMaterial3)
+        {
+            scheme ??= isDark ? ColorScheme.Material3Dark : ColorScheme.Material3Light;
+            resolvedPrimaryColor ??= isDark ? scheme.Surface : scheme.Primary;
+            resolvedCanvasColor ??= scheme.Surface;
+            resolvedScaffoldBackgroundColor ??= scheme.Surface;
+            resolvedCardColor ??= scheme.Surface;
+            resolvedDividerColor ??= scheme.Outline;
+        }
+
+        MaterialColor swatch = primarySwatch ?? Colors.Blue;
+        resolvedPrimaryColor ??= isDark ? Colors.Grey.Shade900 : swatch.Primary;
+        PrimaryColorLight = primaryColorLight ?? (isDark ? Colors.Grey.Shade500 : swatch.Shade100);
+        PrimaryColorDark = primaryColorDark ?? (isDark ? Colors.Black : swatch.Shade700);
+        resolvedCanvasColor ??= isDark ? Colors.Grey[850]!.Value : Colors.Grey.Shade50;
+        resolvedScaffoldBackgroundColor ??= resolvedCanvasColor;
+        resolvedCardColor ??= isDark ? Colors.Grey.Shade800 : Colors.White;
+        resolvedDividerColor ??= isDark
+            ? Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF)
+            : Color.FromArgb(0x1F, 0x00, 0x00, 0x00);
+        ColorScheme = scheme ?? ColorScheme.FromSwatch(
+            primarySwatch: swatch,
+            accentColor: isDark ? Colors.TealAccent.Shade200 : swatch.Shade500,
+            cardColor: resolvedCardColor,
+            backgroundColor: isDark ? Colors.Grey.Shade700 : swatch.Shade200,
+            errorColor: Colors.Red.Shade700,
+            brightness: Brightness);
+        CanvasColor = resolvedCanvasColor.Value;
+        ScaffoldBackgroundColor = resolvedScaffoldBackgroundColor.Value;
+        PrimaryColor = resolvedPrimaryColor.Value;
+        CardColor = resolvedCardColor.Value;
+        DividerColor = resolvedDividerColor.Value;
+
         Typography = typography
                      ?? (UseMaterial3
                          ? Plumix.Material.Typography.Material2021(
@@ -454,7 +491,8 @@ public sealed record ThemeData
                              colorScheme: ColorScheme)
                          : Plumix.Material.Typography.Material2014(platform: Platform));
         ApplyElevationOverlayColor = applyElevationOverlayColor
-                                     ?? (UseMaterial3 && Brightness == Brightness.Dark);
+                                     ?? ((colorSchemeSeed.HasValue || UseMaterial3)
+                                         && brightness == Brightness.Dark);
         TextTheme defaultTextTheme = Brightness == Brightness.Dark
             ? Typography.White
             : Typography.Black;
@@ -471,19 +509,6 @@ public sealed record ThemeData
             defaultTextTheme = defaultTextTheme.Apply(package: package);
         }
         TextTheme = defaultTextTheme.Merge(textTheme);
-        CanvasColor = canvasColor
-                      ?? (UseMaterial3
-                          ? ColorScheme.Surface
-                          : Brightness == Brightness.Dark
-                              ? Material2DarkCanvasColor
-                              : Material2LightCanvasColor);
-        ScaffoldBackgroundColor = scaffoldBackgroundColor ?? CanvasColor;
-        PrimaryColor = primaryColor
-                       ?? (Brightness == Brightness.Dark
-                           ? ColorScheme.Surface
-                           : ColorScheme.Primary);
-        PrimaryColorLight = primaryColorLight ?? DefaultPrimaryColorLight;
-        PrimaryColorDark = primaryColorDark ?? DefaultPrimaryColorDark;
         TextTheme defaultPrimaryTextTheme = EstimateBrightnessForColor(PrimaryColor) == Brightness.Dark
             ? Typography.White
             : Typography.Black;
@@ -521,18 +546,6 @@ public sealed record ThemeData
         OnSurfaceVariantColor = onSurfaceVariantColor ?? ColorScheme.OnSurfaceVariant;
         OutlineColor = outlineColor ?? ColorScheme.Outline;
         OutlineVariantColor = outlineVariantColor ?? ColorScheme.OutlineVariant;
-        DividerColor = dividerColor
-                       ?? (UseMaterial3
-                           ? ColorScheme.Outline
-                           : Brightness == Brightness.Dark
-                               ? Color.FromArgb(0x1F, 0xFF, 0xFF, 0xFF)
-                               : Color.FromArgb(0x1F, 0x00, 0x00, 0x00));
-        CardColor = cardColor
-                    ?? (UseMaterial3
-                        ? ColorScheme.Surface
-                        : Brightness == Brightness.Dark
-                            ? Material2DarkCardColor
-                            : Colors.White);
         SurfaceContainerLowColor = surfaceContainerLowColor ?? ColorScheme.SurfaceContainerLow;
         SurfaceContainerColor = surfaceContainerColor ?? ColorScheme.SurfaceContainer;
         SurfaceContainerHighColor = surfaceContainerHighColor ?? ColorScheme.SurfaceContainerHigh;
@@ -544,12 +557,11 @@ public sealed record ThemeData
         InversePrimaryColor = inversePrimaryColor ?? ColorScheme.InversePrimary;
         ErrorColor = errorColor ?? ColorScheme.Error;
         OnErrorColor = onErrorColor ?? ColorScheme.OnError;
-        DisabledColor = disabledColor ?? ApplyOpacity(OnSurfaceColor, 0.38);
+        DisabledColor = disabledColor ?? (isDark ? Colors.White38 : Colors.Black38);
         UnselectedWidgetColor = unselectedWidgetColor
-                                ?? (Brightness == Brightness.Dark
-                                    ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)
-                                    : Color.FromArgb(0x8A, 0x00, 0x00, 0x00));
-        HintColor = hintColor ?? ApplyOpacity(OnSurfaceColor, 0.60);
+                                ?? (isDark ? Colors.White70 : Colors.Black54);
+        HintColor = hintColor
+                    ?? (isDark ? Colors.White60 : ApplyOpacity(Colors.Black, 0.60));
         FocusColor = focusColor ?? ApplyOpacity(
             Brightness == Brightness.Dark ? Colors.White : Colors.Black,
             0.12);

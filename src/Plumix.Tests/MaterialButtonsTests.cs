@@ -2726,7 +2726,7 @@ public sealed class MaterialButtonsTests
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(Colors.Transparent, decorated!.Decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, decorated!.Decoration.Color);
         Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
             new BorderSide(theme.ColorScheme.Outline, 1)), decorated.Decoration.Border);
         Assert.NotNull(paragraph);
@@ -2904,7 +2904,7 @@ public sealed class MaterialButtonsTests
             OutlinedButtonTheme = new OutlinedButtonThemeData(
                 new ButtonStyle(
                     BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Disabled) ? Colors.IndianRed : Colors.Transparent)))
+                        states.HasFlag(MaterialState.Disabled) ? Colors.IndianRed : MaterialColors.Transparent)))
         };
 
         var root = new TestRootElement(
@@ -3981,7 +3981,7 @@ public sealed class MaterialButtonsTests
     public void TextButton_StyleFrom_TransparentOverlay_DisablesVisualHighlights()
     {
         var owner = new BuildOwner();
-        var style = TextButton.StyleFrom(overlayColor: Colors.Transparent);
+        var style = TextButton.StyleFrom(overlayColor: MaterialColors.Transparent);
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -4013,7 +4013,7 @@ public sealed class MaterialButtonsTests
 
         var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
-        Assert.Equal(Colors.Transparent, hoveredDecorated!.Decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, hoveredDecorated!.Decoration.Color);
 
         var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(interactiveListener);
@@ -4030,7 +4030,7 @@ public sealed class MaterialButtonsTests
 
         var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(pressedDecorated);
-        Assert.Equal(Colors.Transparent, pressedDecorated!.Decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, pressedDecorated!.Decoration.Color);
 
         var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(splash);
@@ -5793,7 +5793,7 @@ public sealed class MaterialButtonsTests
                 data: theme,
                 child: new FilledButton(
                     onPressed: () => { },
-                    style: FilledButton.StyleFrom(overlayColor: Colors.Transparent),
+                    style: FilledButton.StyleFrom(overlayColor: MaterialColors.Transparent),
                     child: new Text("Filled transparent"))));
 
         root.Attach(owner);
@@ -5849,7 +5849,7 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButton(
                     onPressed: () => { },
                     style: OutlinedButton.StyleFrom(
-                        overlayColor: Colors.Transparent,
+                        overlayColor: MaterialColors.Transparent,
                         animationDuration: TimeSpan.Zero),
                     child: new Text("Outlined transparent"))));
 
@@ -5859,7 +5859,7 @@ public sealed class MaterialButtonsTests
 
         var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(initialDecorated);
-        Assert.Equal(Colors.Transparent, initialDecorated!.Decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, initialDecorated!.Decoration.Color);
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -5876,7 +5876,7 @@ public sealed class MaterialButtonsTests
 
         var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
-        Assert.Equal(Colors.Transparent, hoveredDecorated!.Decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, hoveredDecorated!.Decoration.Color);
 
         var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(interactiveListener);
@@ -6279,7 +6279,7 @@ public sealed class MaterialButtonsTests
         AssertVariant(
             icon => new IconButton(icon: icon, onPressed: () => { }),
             Colors.Purple,
-            Colors.Transparent,
+            MaterialColors.Transparent,
             null);
         AssertVariant(
             icon => IconButton.Filled(icon: icon, onPressed: () => { }),
@@ -6304,7 +6304,7 @@ public sealed class MaterialButtonsTests
         AssertVariant(
             icon => IconButton.Outlined(icon: icon, isSelected: false, onPressed: () => { }),
             Colors.Purple,
-            Colors.Transparent,
+            MaterialColors.Transparent,
             new BorderSide(Colors.Brown));
 
         void AssertVariant(

@@ -185,7 +185,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
             var overlayColor = ResolveOverlayColor(activeColor);
             var focusRingColor = ResolveFocusRingColor(activeColor);
             bool useDarkGradient = ShouldUseDarkGradient(selected);
-            var baseFillColor = useDarkGradient ? Colors.Transparent : fillColor;
+            var baseFillColor = useDarkGradient ? CupertinoColors.Transparent : fillColor;
 
             var indicator = BuildIndicator(checkColor);
             var body = BuildCheckboxBody(
@@ -508,7 +508,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
             if (CurrentWidget.Side.HasValue)
             {
                 return selected
-                    ? new BorderSide(Colors.Transparent, 0)
+                    ? new BorderSide(CupertinoColors.Transparent, 0)
                     : CurrentWidget.Side.Value;
             }
 
@@ -519,7 +519,7 @@ public sealed class CupertinoCheckbox : StatefulWidget
 
             if (selected || _hasFocus)
             {
-                return new BorderSide(Colors.Transparent, 0);
+                return new BorderSide(CupertinoColors.Transparent, 0);
             }
 
             var color = CurrentWidget.IsDark

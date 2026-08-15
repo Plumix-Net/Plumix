@@ -68,11 +68,11 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
     {
         var theme = new ThemeData(useMaterial3: false);
 
-        // Flutter's own test hard-codes `0xff2196f3`/`0x662196f3`, which is `Colors.blue[500]` from
-        // the M2 `ColorScheme.fromSwatch` default. Plumix's M2 default is the baseline scheme
-        // instead (`DIVERGENCES.md`), so the rule is asserted against the resolved scheme.
-        Color defaultCursorColor = theme.ColorScheme.Primary;
-        Color defaultSelectionColor = WithOpacity(defaultCursorColor, 0.40);
+        // The values Flutter's own test hard-codes: `Colors.blue[500]` from the M2
+        // `ColorScheme.fromSwatch` default, and the same color at 40% opacity.
+        Color defaultCursorColor = Color.FromUInt32(0xFF2196F3);
+        Color defaultSelectionColor = Color.FromUInt32(0x662196F3);
+        Assert.Equal(defaultCursorColor, theme.ColorScheme.Primary);
 
         (Color cursorColor, Color selectionColor) = ResolveFieldColors(theme);
         Assert.Equal(defaultCursorColor, cursorColor);

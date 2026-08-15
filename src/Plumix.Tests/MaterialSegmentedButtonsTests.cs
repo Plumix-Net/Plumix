@@ -570,9 +570,9 @@ public sealed class MaterialSegmentedButtonsTests
         Assert.IsType<StadiumBorder>(style.Shape!.Resolve(MaterialState.None));
         Assert.Same(NoSplash.SplashFactory, style.SplashFactory);
 
-        ButtonStyle transparent = SegmentedButton<int>.StyleFrom(overlayColor: Colors.Transparent);
-        Assert.Equal(Colors.Transparent, transparent.OverlayColor!.Resolve(MaterialState.Hovered));
-        Assert.Equal(Colors.Transparent, transparent.OverlayColor.Resolve(MaterialState.Pressed));
+        ButtonStyle transparent = SegmentedButton<int>.StyleFrom(overlayColor: MaterialColors.Transparent);
+        Assert.Equal(MaterialColors.Transparent, transparent.OverlayColor!.Resolve(MaterialState.Hovered));
+        Assert.Equal(MaterialColors.Transparent, transparent.OverlayColor.Resolve(MaterialState.Pressed));
     }
 
     [Fact]

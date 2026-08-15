@@ -89,6 +89,7 @@ class SampleRoutes {
   static const String appBarActionsPadding = '/appbar-actions-padding';
   static const String appBarIconTheme = '/appbar-icon-theme';
   static const String appBarTextStyles = '/appbar-text-styles';
+  static const String colorPalette = '/color-palette';
   static const String proxyWidgets = '/proxy-widgets';
   static const String align = '/align';
   static const String stack = '/stack';

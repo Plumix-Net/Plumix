@@ -302,7 +302,7 @@ public sealed class MaterialRadioTests
         Assert.Equal(Color.FromArgb(255, 0, 122, 255), outer!.Decoration.Color);
         Assert.True(outer.Decoration.Border is not null);
         Assert.Equal(0, ((Plumix.Rendering.Border)outer.Decoration.Border!).Top.Width);
-        Assert.Equal(Colors.Transparent, ((Plumix.Rendering.Border)outer.Decoration.Border!).Top.Color);
+        Assert.Equal(MaterialColors.Transparent, ((Plumix.Rendering.Border)outer.Decoration.Border!).Top.Color);
         Assert.Equal(Colors.White, dot!.Decoration.Color);
     }
 
@@ -630,7 +630,7 @@ public sealed class MaterialRadioTests
                 box.Decoration.Border is null
                 && box.Decoration.Color.HasValue
                 && box.Decoration.Color.Value.A > 0
-                && box.Decoration.Color.Value != Colors.Transparent);
+                && box.Decoration.Color.Value != MaterialColors.Transparent);
     }
 
     private static RadioPainter FindRadioPainter(RenderObject root)

@@ -95,6 +95,7 @@ internal static class SampleRoutes
     public const string AppBarActionsPadding = "/appbar-actions-padding";
     public const string AppBarIconTheme = "/appbar-icon-theme";
     public const string AppBarTextStyles = "/appbar-text-styles";
+    public const string ColorPalette = "/color-palette";
     public const string ProxyWidgets = "/proxy-widgets";
     public const string Align = "/align";
     public const string Stack = "/stack";
@@ -226,6 +227,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.AppBarActionsPadding, "AppBar actionsPadding theme", "theme fallback + widget override runtime probe", () => new AppBarActionsPaddingDemoPage()),
         new(SampleRoutes.AppBarIconTheme, "AppBar icon themes", "iconTheme/actionsIconTheme precedence runtime probe", () => new AppBarIconThemeDemoPage()),
         new(SampleRoutes.AppBarTextStyles, "AppBar text styles", "title/toolbar text style precedence runtime probe", () => new AppBarTextStylesDemoPage()),
+        new(
+            SampleRoutes.ColorPalette,
+            "Colors + primarySwatch",
+            "MaterialColor shades + fromSwatch M2 scheme + swatch-derived theme colors",
+            () => new ColorPaletteDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleRouteDefinition> CupertinoDemoPages =

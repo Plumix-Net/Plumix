@@ -55,7 +55,7 @@ public sealed class MaterialBottomNavigationBarTests
             CanvasColor = Colors.Pink,
             PrimaryColor = Colors.Purple,
             OnSurfaceVariantColor = Colors.Yellow,
-            ShadowColor = Colors.Transparent,
+            ShadowColor = MaterialColors.Transparent,
         };
 
         var root = new TestRootElement(

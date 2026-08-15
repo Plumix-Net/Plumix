@@ -22,7 +22,15 @@ Size legend: **S** — one focused widget, few states. **M** — widget family o
 
 | Subsystem | Flutter source | Size | Notes |
 | --- | --- | --- | --- |
-| `ColorScheme` + `Typography` closeout | `color_scheme.dart`, `typography.dart`, `text_theme.dart`, component defaults | L | The Material 3 role model, HCT seed generation, 2014/2018/2021 type scales, exact platform themes, locale-script geometry, and `ThemeData` projection now exist; navigation surfaces, standard `AppBar`, bottom/FAB surfaces, `BottomSheet`, progress indicators, `MaterialBanner`, `Scrollbar`, `ReorderableListView`, `Slider`/`RangeSlider`, `IconButton`, action buttons, `ButtonBar`, `Tooltip`, `ExpandIcon`, `ExpansionTile`, `ListTile`, `PopupMenu`, `DataTable`, `Card`, `Divider`, `Badge`, `RefreshIndicator`, `CircleAvatar`, `DrawerHeader`, `Checkbox`, `Switch`, `Radio`/`RadioListTile`, `ToggleButtons`, `SegmentedButton`, `FlexibleSpaceBar`, `Autocomplete`, Chips, `DatePicker`/range pickers, `TimePicker`, the Tabs family (`TabBar`/`TabBar.secondary`/`TabBarView`/`TabPageSelector`/`TabController`/`UnderlineTabIndicator`), `SearchBar`/`SearchAnchor`, `InputDecorator`/`InputDecoration`/`InputDecorationTheme`, and the `TextButton`/`ElevatedButton`/`OutlinedButton`/`FilledButton` families have direct-token or strict-default/theme closeouts. The menus family (`MenuAnchor`/`MenuBar`/`SubmenuButton`/`MenuItemButton` with `MenuStyle` and the `MenuTheme`/`MenuBarTheme`/`MenuButtonTheme` trio) is closed too, as are the `DropdownMenu` family (`DropdownMenu`/`DropdownMenuEntry`/`DropdownMenuTheme`/`DropdownMenuFormField`) and the `CarouselView` family (`CarouselView`/`CarouselController`/`CarouselScrollPhysics`/`CarouselViewTheme`). The legacy `DropdownButton` family (`DropdownButton`/`DropdownMenuItem`/`DropdownButtonHideUnderline`/`DropdownButtonFormField`) is closed too, as are the `SnackBar` family (`SnackBar`/`SnackBarAction`/`SnackBarThemeData`/`SnackBarTheme` with the `ScaffoldMessenger` queue) and the `TextSelectionTheme` family (theme data, widget, and the `DefaultSelectionStyle` resolution chain through `MaterialApp`/`Theme`/`TextField`/`SelectableText`/`SelectionArea`/handles). Every component family is now closed; the remaining work is the Material 2 scheme derivation itself — `MaterialColor` swatches, `ColorScheme.FromSwatch` and `ThemeData.primarySwatch`, without which `ThemeData(useMaterial3: false)` yields the baseline scheme (primary `0xFF6200EE`) where Flutter yields `Colors.blue[500]` (`0xFF2196F3`) and every M2 default that reads the scheme shifts with it (`docs/ai/DIVERGENCES.md`). See `docs/ai/notes/material-2026-07-29-color-scheme-typography-foundation.md`. |
+
+**Nothing is open right now.** Every widget family in `material_ui/lib/src/` is ported, and the
+theming foundation is closed end-to-end: the Material 3 role model, HCT seed generation, the
+2014/2018/2021 type scales, and — as of 2026-08-15 — the Material 2 swatch derivation
+(`MaterialColor`/`MaterialAccentColor`/`Colors`, `ColorScheme.FromSwatch`,
+`ThemeData(primarySwatch:)`). Remaining work is tracked as tightening passes in
+[`ai/DIVERGENCES.md`](ai/DIVERGENCES.md) and as `(approximate)`/`(reference)` markers in
+[`ai/PORT_MAP.md`](ai/PORT_MAP.md); pick from there, or from
+[`FRAMEWORK_PLAN.md`](FRAMEWORK_PLAN.md)'s current milestone.
 
 ## Not listed / out of scope
 

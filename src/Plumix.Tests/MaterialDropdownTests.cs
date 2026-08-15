@@ -1038,7 +1038,7 @@ public sealed class MaterialDropdownTests : IDisposable
         ButtonStyle style = CaptureMenuButtonDefaults(theme);
         ColorScheme colors = theme.ColorScheme;
 
-        Assert.Equal(Colors.Transparent, style.BackgroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(MaterialColors.Transparent, style.BackgroundColor!.Resolve(MaterialState.None));
         Assert.Equal(0.0, style.Elevation!.Resolve(MaterialState.None));
         Assert.Equal(colors.OnSurface, style.ForegroundColor!.Resolve(MaterialState.None));
         Assert.Equal(
@@ -1056,7 +1056,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var shape = Assert.IsType<RoundedRectangleBorder>(style.Shape!.Resolve(MaterialState.None));
         Assert.Equal(BorderRadius.Zero, shape.BorderRadius.Resolve(TextDirection.Ltr));
 
-        Assert.Equal(Colors.Transparent, style.OverlayColor!.Resolve(MaterialState.None));
+        Assert.Equal(MaterialColors.Transparent, style.OverlayColor!.Resolve(MaterialState.None));
         Assert.Equal(Opacity(colors.OnSurface, 0.08), style.OverlayColor.Resolve(MaterialState.Hovered));
         Assert.Equal(Opacity(colors.OnSurface, 0.1), style.OverlayColor.Resolve(MaterialState.Focused));
         Assert.Equal(Opacity(colors.OnSurface, 0.1), style.OverlayColor.Resolve(MaterialState.Pressed));
@@ -1610,7 +1610,7 @@ public sealed class MaterialDropdownTests : IDisposable
         // Everything else is shared, and min/fixed/max size and side stay unset in both tables.
         Assert.Equal(3.0, bar.Elevation!.Resolve(MaterialState.None));
         Assert.Equal(3.0, menu.Elevation!.Resolve(MaterialState.None));
-        Assert.Equal(Colors.Transparent, menu.SurfaceTintColor!.Resolve(MaterialState.None));
+        Assert.Equal(MaterialColors.Transparent, menu.SurfaceTintColor!.Resolve(MaterialState.None));
         foreach (MenuStyle style in new[] { bar, menu })
         {
             Assert.Null(style.MinimumSize);

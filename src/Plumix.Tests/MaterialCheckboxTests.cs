@@ -59,7 +59,7 @@ public sealed class MaterialCheckboxTests
         Assert.Equal(Colors.Coral, painter.ActiveColor);
         Assert.True(painter.ActiveSide.HasValue);
         Assert.Equal(0, painter.ActiveSide!.Value.Width);
-        Assert.Equal(Colors.Transparent, painter.ActiveSide.Value.Color);
+        Assert.Equal(MaterialColors.Transparent, painter.ActiveSide.Value.Color);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public sealed class MaterialCheckboxTests
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
-        Assert.Equal(Colors.Transparent, painter.InactiveColor);
+        Assert.Equal(MaterialColors.Transparent, painter.InactiveColor);
         Assert.True(painter.InactiveSide.HasValue);
         Assert.Equal(2, painter.InactiveSide!.Value.Width);
         Assert.Equal(Colors.CadetBlue, painter.InactiveSide.Value.Color);
@@ -536,7 +536,7 @@ public sealed class MaterialCheckboxTests
         Assert.Equal(Color.FromArgb(255, 0, 122, 255), decorated!.Decoration.Color);
         Assert.True(decorated.Decoration.Border is not null);
         Assert.Equal(0, ((Plumix.Rendering.Border)decorated.Decoration.Border!).Top.Width);
-        Assert.Equal(Colors.Transparent, ((Plumix.Rendering.Border)decorated.Decoration.Border!).Top.Color);
+        Assert.Equal(MaterialColors.Transparent, ((Plumix.Rendering.Border)decorated.Decoration.Border!).Top.Color);
     }
 
     [Fact]

@@ -40,7 +40,7 @@ public sealed class MaterialBarControlsTests
         Assert.NotNull(m3Surface);
         Assert.Equal(Colors.MistyRose, m3Surface!.Color);
         Assert.Equal(3, m3Surface.Elevation);
-        Assert.Equal(Colors.Transparent, m3Surface.ShadowColor);
+        Assert.Equal(MaterialColors.Transparent, m3Surface.ShadowColor);
         Assert.IsType<AutomaticNotchedShape>(m3Surface.Shape);
         Assert.Equal(80, m3Surface.Size.Height, 3);
         Assert.Contains(
@@ -71,7 +71,7 @@ public sealed class MaterialBarControlsTests
                 Elevation: 5,
                 Shape: themedShape,
                 Height: 72,
-                SurfaceTintColor: Colors.Transparent,
+                SurfaceTintColor: MaterialColors.Transparent,
                 ShadowColor: Colors.DarkSlateGray,
                 Padding: new Thickness(9)),
         };

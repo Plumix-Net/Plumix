@@ -174,7 +174,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
             var borderColor = ResolveBorderColor(selected);
             var overlayColor = ResolvePressedOverlayColor();
             var focusRingColor = ResolveFocusRingColor(activeColor);
-            var bodyColor = CurrentWidget.IsDark ? Colors.Transparent : outerColor;
+            var bodyColor = CurrentWidget.IsDark ? CupertinoColors.Transparent : outerColor;
             double borderWidth = borderColor.A == 0 ? 0 : BorderWidth;
 
             var layers = new List<Widget>
@@ -444,7 +444,7 @@ public sealed class CupertinoRadio<T> : StatefulWidget
         {
             if (Enabled && (selected || _hasFocus))
             {
-                return Colors.Transparent;
+                return CupertinoColors.Transparent;
             }
 
             if (!Enabled)

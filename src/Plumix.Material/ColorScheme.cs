@@ -446,6 +446,47 @@ public sealed record ColorScheme
         secondary: Color.Parse("#FF66FFF9"),
         error: Color.Parse("#FF9B374D"));
 
+    /// <summary>
+    /// Creates a Material 2 color scheme from a <see cref="MaterialColor"/> swatch.
+    /// </summary>
+    /// <remarks>
+    /// In Material 3 this factory is ignored by <see cref="ThemeData"/> when it creates its default
+    /// color scheme. If <see cref="ThemeData.UseMaterial3"/> is false, then this factory is used by
+    /// <see cref="ThemeData"/> to create its default color scheme.
+    /// </remarks>
+    public static ColorScheme FromSwatch(
+        MaterialColor? primarySwatch = null,
+        Color? accentColor = null,
+        Color? cardColor = null,
+        Color? backgroundColor = null,
+        Color? errorColor = null,
+        Brightness brightness = Brightness.Light)
+    {
+        primarySwatch ??= Colors.Blue;
+        bool isDark = brightness == Brightness.Dark;
+        bool primaryIsDark = BrightnessFor(primarySwatch) == Brightness.Dark;
+        Color secondary = accentColor
+                          ?? (isDark ? Colors.TealAccent.Shade200 : primarySwatch.Primary);
+        bool secondaryIsDark = BrightnessFor(secondary) == Brightness.Dark;
+
+        return new ColorScheme(
+            brightness: brightness,
+            primary: primarySwatch,
+            secondary: secondary,
+            surface: cardColor ?? (isDark ? Colors.Grey.Shade800 : Colors.White),
+            error: errorColor ?? Colors.Red.Shade700,
+            onPrimary: primaryIsDark ? Colors.White : Colors.Black,
+            onSecondary: secondaryIsDark ? Colors.White : Colors.Black,
+            onSurface: isDark ? Colors.White : Colors.Black,
+            onError: isDark ? Colors.Black : Colors.White,
+            background: backgroundColor
+                        ?? (isDark ? Colors.Grey.Shade700 : primarySwatch.Shade200),
+            onBackground: primaryIsDark ? Colors.White : Colors.Black);
+    }
+
+    private static Brightness BrightnessFor(Color color) =>
+        ThemeData.EstimateBrightnessForColor(color);
+
     public static ColorScheme FromSeed(
         Color seedColor,
         Brightness brightness = Brightness.Light,

@@ -36,6 +36,7 @@ import 'demos/material/carousel_demo_page.dart';
 import 'demos/material/reorderable_list_demo_page.dart';
 import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/material/circle_avatar_demo_page.dart';
+import 'demos/material/color_palette_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -427,6 +428,13 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'AppBar text styles',
       subtitle: 'title/toolbar text style precedence runtime probe',
       builder: () => const AppBarTextStylesDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.colorPalette,
+      title: 'Colors + primarySwatch',
+      subtitle:
+          'MaterialColor shades + fromSwatch M2 scheme + swatch-derived theme colors',
+      builder: () => const ColorPaletteDemoPage(),
     ),
   ];
 

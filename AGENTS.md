@@ -121,7 +121,8 @@ defaults change between releases, so a port validated against a different checko
 When a pin moves, update this line, re-point the symlink(s), and re-run
 `python3 scripts/generate_port_map.py` (it flags markers whose Dart file no longer exists) and
 `python3 scripts/generate_keyboard_keys.py` (it regenerates the logical/physical key tables from
-Flutter's own generated `keyboard_key.g.dart`).
+Flutter's own generated `keyboard_key.g.dart`) and `python3 scripts/generate_material_colors.py`
+(it regenerates the Material palette from `colors.dart`).
 
 ## Common Commands
 
@@ -134,6 +135,7 @@ dotnet test src/Plumix.Tests/Plumix.Tests.csproj  # ~15 s for 1771 tests — alw
 scripts/check_line_length.sh                      # 120-char rule on new/edited lines
 python3 scripts/generate_port_map.py              # regenerate docs/ai/PORT_MAP.md
 python3 scripts/generate_keyboard_keys.py         # regenerate src/Plumix/UI/KeyboardKey.g.cs
+python3 scripts/generate_material_colors.py       # regenerate src/Plumix.Material/Colors.g.cs
 dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
 dotnet run --project src/Sample/Plumix.Browser/Plumix.Browser.csproj
 ```

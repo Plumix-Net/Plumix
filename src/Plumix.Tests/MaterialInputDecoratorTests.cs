@@ -449,7 +449,7 @@ public sealed class MaterialInputDecoratorTests
         Assert.IsType<OutlineInputBorder>(painter.Border);
         Assert.Equal(theme.OutlineColor, painter.Border.BorderSide.Color);
         Assert.Equal(1.0, painter.Border.BorderSide.Width, precision: 6);
-        Assert.Equal(Colors.Transparent, painter.FillColor);
+        Assert.Equal(MaterialColors.Transparent, painter.FillColor);
     }
 
     [Fact]
@@ -1191,7 +1191,7 @@ public sealed class MaterialInputDecoratorTests
             Decorator(new InputDecoration(helperText: "Helper", enabled: false)),
             light);
         disabled.Pump();
-        Assert.Equal(Colors.Transparent, StyleOf(disabled, "Helper").Color);
+        Assert.Equal(MaterialColors.Transparent, StyleOf(disabled, "Helper").Color);
     }
 
     [Fact]

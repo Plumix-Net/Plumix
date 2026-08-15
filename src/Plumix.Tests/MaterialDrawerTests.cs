@@ -104,8 +104,8 @@ public sealed class MaterialDrawerTests
 
         Assert.Equal(directSurface, m3Material.Color);
         Assert.Equal(1.0, m3Material.Elevation);
-        Assert.Equal(Colors.Transparent, m3Material.ShadowColor);
-        Assert.Equal(Colors.Transparent, m3Material.SurfaceTintColor);
+        Assert.Equal(MaterialColors.Transparent, m3Material.ShadowColor);
+        Assert.Equal(MaterialColors.Transparent, m3Material.SurfaceTintColor);
         Assert.Equal(BorderRadius.Only(topRight: 16.0, bottomRight: 16.0), ShapeBorderGeometry.ResolveRadius(
             m3Material.Shape));
         Assert.Equal(Clip.HardEdge, m3Material.ClipBehavior);

@@ -302,8 +302,8 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.NotNull(material3);
         Assert.Equal(surfaceContainerHigh, material3!.BackgroundColor);
         Assert.Equal(6.0, material3.Elevation);
-        Assert.Equal(Colors.Transparent, material3.ShadowColor);
-        Assert.Equal(Colors.Transparent, material3.HeaderBackgroundColor);
+        Assert.Equal(MaterialColors.Transparent, material3.ShadowColor);
+        Assert.Equal(MaterialColors.Transparent, material3.HeaderBackgroundColor);
         Assert.Equal(onSurfaceVariant, material3.HeaderForegroundColor);
         Assert.Equal(32.0, material3.HeaderHeadlineStyle!.FontSize);
         Assert.Equal(primary, material3.DayBackgroundColor!.Resolve(MaterialState.Selected));
@@ -312,7 +312,7 @@ public sealed class MaterialDatePickerTests : IDisposable
             material3.DayOverlayColor!.Resolve(MaterialState.Selected | MaterialState.Pressed));
         Assert.Equal(onSurfaceVariant, material3.YearForegroundColor!.Resolve(MaterialState.None));
         Assert.Null(material3.RangePickerBackgroundColor);
-        Assert.Equal(Colors.Transparent, material3.RangePickerHeaderBackgroundColor);
+        Assert.Equal(MaterialColors.Transparent, material3.RangePickerHeaderBackgroundColor);
         Assert.Equal(onSurfaceVariant, material3.RangePickerHeaderForegroundColor);
         Assert.Equal(14.0, material3.RangePickerHeaderHelpStyle!.FontSize);
         Assert.Equal(secondaryContainer, material3.RangeSelectionBackgroundColor);

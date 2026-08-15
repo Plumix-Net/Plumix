@@ -13,10 +13,10 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialExpandIconTests : IDisposable
 {
-    private static readonly Color Black54 = Color.FromArgb(0x8A, 0x00, 0x00, 0x00);
-    private static readonly Color Black38 = Color.FromArgb(0x61, 0x00, 0x00, 0x00);
-    private static readonly Color White60 = Color.FromArgb(0x99, 0xFF, 0xFF, 0xFF);
-    private static readonly Color White38 = Color.FromArgb(0x61, 0xFF, 0xFF, 0xFF);
+    private static readonly Color Black54 = MaterialColors.Black54;
+    private static readonly Color Black38 = MaterialColors.Black38;
+    private static readonly Color White60 = MaterialColors.White60;
+    private static readonly Color White38 = MaterialColors.White38;
 
     public MaterialExpandIconTests()
     {

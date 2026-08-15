@@ -236,7 +236,7 @@ public sealed class MaterialChipTests : IDisposable
         harness.Pump(new Size(320, 120));
 
         var decoration = FindChipDecoration(harness.RenderView);
-        Assert.Equal(Colors.Transparent, decoration.Decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, decoration.Decoration.Color);
         Assert.Equal(8, decoration.Decoration.BorderRadius!.Value.Radius);
         Assert.Equal(Colors.CadetBlue, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
         Assert.Equal(1, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Width);
@@ -262,7 +262,7 @@ public sealed class MaterialChipTests : IDisposable
 
         var decoration = FindChipDecoration(harness.RenderView);
         Assert.Equal(Colors.MediumPurple, decoration.Decoration.Color);
-        Assert.Equal(Colors.Transparent, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
+        Assert.Equal(MaterialColors.Transparent, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
         Assert.NotNull(decoration.Decoration.BoxShadows);
         Assert.True(decoration.Decoration.BoxShadows!.Count > 0);
     }
@@ -490,7 +490,7 @@ public sealed class MaterialChipTests : IDisposable
 
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
 
-        Assert.Equal(Colors.Transparent, FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, FindChipDecoration(harness.RenderView).Decoration.Color);
         RenderParagraph clear = FindDescendants<RenderParagraph>(harness.RenderView)
             .Single(paragraph => paragraph.PlainText == IconText(Icons.Clear));
         Assert.Equal(Colors.Purple, ForegroundColor(clear));
@@ -652,7 +652,7 @@ public sealed class MaterialChipTests : IDisposable
 
         var decoration = FindChipDecoration(harness.RenderView);
         Assert.Equal(Colors.CadetBlue, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
-        Assert.Equal(Colors.Transparent, decoration.Decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, decoration.Decoration.Color);
         var body = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
         Assert.Null(body);
         var delete = FindSemantics(

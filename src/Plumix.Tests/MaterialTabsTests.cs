@@ -1249,7 +1249,7 @@ public sealed class MaterialTabsTests
             .ToList();
         Assert.Equal(3, circles.Count);
         Assert.Equal(
-            [Colors.Transparent, ThemeData.Light.ColorScheme.Secondary, Colors.Transparent],
+            [MaterialColors.Transparent, ThemeData.Light.ColorScheme.Secondary, MaterialColors.Transparent],
             circles.Select(circle => circle.Decoration.Color!.Value).ToArray());
         Assert.All(circles, circle => Assert.Equal(
             Plumix.Rendering.Border.FromBorderSide(new BorderSide(ThemeData.Light.ColorScheme.Secondary)),
@@ -1263,7 +1263,7 @@ public sealed class MaterialTabsTests
         using var controller = new TabController(length: 3, initialIndex: 1);
         using var harness = new WidgetRenderHarness(Wrap(new TabPageSelector(
             controller: controller,
-            color: Colors.Transparent,
+            color: MaterialColors.Transparent,
             selectedColor: Colors.Red)));
         harness.Pump(new Size(200, 60));
 
@@ -1286,7 +1286,7 @@ public sealed class MaterialTabsTests
         using var controller = new TabController(length: 3);
         using var harness = new WidgetRenderHarness(Wrap(new TabPageSelector(
             controller: controller,
-            color: Colors.Transparent,
+            color: MaterialColors.Transparent,
             selectedColor: Colors.Red)));
         harness.Pump(new Size(200, 60));
 

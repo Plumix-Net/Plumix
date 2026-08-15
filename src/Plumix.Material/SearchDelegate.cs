@@ -104,7 +104,7 @@ public abstract class SearchDelegate<T> : IDisposable
                     ? SystemUiOverlayStyle.Light
                     : SystemUiOverlayStyle.Dark,
                 BackgroundColor = background,
-                IconTheme = theme.PrimaryIconTheme.CopyWith(color: Colors.Gray),
+                IconTheme = theme.PrimaryIconTheme.CopyWith(color: Colors.Grey),
                 TitleTextStyle = theme.TextTheme.TitleLarge,
                 ToolbarTextStyle = theme.TextTheme.BodyMedium,
             },

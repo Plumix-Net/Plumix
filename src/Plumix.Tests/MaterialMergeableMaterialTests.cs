@@ -280,7 +280,7 @@ public sealed class MaterialMergeableMaterialTests
     {
         return FindDescendants<RenderDecoratedBox>(harness.RenderView)
             .Select(box => box.Decoration)
-            .Where(decoration => decoration.Color is { } color && color != Colors.Transparent)
+            .Where(decoration => decoration.Color is { } color && color != MaterialColors.Transparent)
             .ToArray();
     }
 

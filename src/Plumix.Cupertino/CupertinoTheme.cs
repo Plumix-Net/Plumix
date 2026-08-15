@@ -136,7 +136,12 @@ public static class CupertinoColors
 
     public static Color White => Colors.White;
 
-    public static Color Transparent => Colors.Transparent;
+    /// <summary>A fully-transparent color, completely invisible.</summary>
+    /// <remarks>
+    /// Dart's <c>CupertinoColors.transparent</c> is <c>Color(0x00000000)</c>, not Avalonia's
+    /// <c>Colors.Transparent</c> (<c>0x00FFFFFF</c>).
+    /// </remarks>
+    public static Color Transparent => Color.FromUInt32(0x00000000);
 
     public static Color InactiveGray => Color.Parse("#FF8E8E93");
 
