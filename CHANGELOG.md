@@ -1,5 +1,31 @@
 # Changelog
 
+- Breaking: closed the `SnackBar` family (`SnackBar`/`SnackBarAction`/`SnackBarThemeData`/
+  `SnackBarTheme` and the `ScaffoldMessenger` queue that drives them). `SnackBar.animation` is now
+  `Animation<double>` (was `AnimationController`), and `CreateAnimationController` takes Dart's
+  `duration`/`reverseDuration`; the state builds Dart's five `CurvedAnimation`s and picks one of the
+  four transition branches (accessible-navigation bypass, M2 floating fade, M3 floating fade over an
+  `easeInOutQuart` height factor, fixed height factor from `AlignmentDirectional.TopStart`), with the
+  M2-only fade-out living inside the `Material`. Swipe is now the shared core `Dismissible`
+  (`resizeDuration: null`, direction from the widget/theme chain, `Opaque` unless a margin or theme
+  inset padding is set) instead of a hand-rolled `GestureDetector`, so the bar follows the drag. The
+  surface moved onto `Material(shape/elevation/color/clipBehavior)` — the bespoke `DecoratedBox` plus
+  synthesized shadow pair is gone — and the bespoke `SnackBarContentLayout` render object was replaced
+  by Dart's `Wrap > Row > Expanded` composition whose overflow decision comes from a `TextPainter`
+  probe of the action label. `SnackBarThemeData` is an ordinary class (was a record) so
+  `_SnackbarDefaultsM2`/`_SnackbarDefaultsM3` can subclass it; its constructor parameters are
+  camelCase, `actionTextColor`/`actionBackgroundColor` are `WidgetStateColor?`, `dismissDirection`
+  uses core's `DismissDirection` (the duplicate Material enum is gone), and `Lerp` now reproduces
+  Dart exactly, including its omission of `showCloseIcon`. `ScaffoldMessenger` drives the whole queue
+  from one reused controller with the timeout timer created in `build`, `ShowSnackBar` takes an
+  `AnimationStyle` and throws when no descendant `Scaffold` is registered, `RemoveCurrentSnackBar`
+  jumps the controller to zero, and `HideCurrentSnackBar` completes synchronously under accessible
+  navigation. Constructor validation is now exactly Dart's asserts, so a zero `width` and negative
+  insets are accepted where Plumix used to throw; fixed behavior reports the margin/width misuse with
+  Dart's three source-specific messages.
+- Added `Curves.EaseInCirc`/`Curves.EaseInOutQuart` and a measurement-only `TextPainter`
+  (`src/Plumix/Painting/TextPainter.cs`) for text sizing outside a render object.
+
 - Breaking: closed the legacy `DropdownButton` family (`DropdownButton`/`DropdownMenuItem`/
   `DropdownButtonHideUnderline`/`DropdownButtonFormField`). The menu is now Dart's structure: a
   `PopupRoute` whose page is `MediaQuery.removePadding > CustomSingleChildLayout` driven by

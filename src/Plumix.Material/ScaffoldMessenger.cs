@@ -87,25 +87,23 @@ public sealed class ScaffoldMessengerState : State
 
     private sealed class SnackBarEntry
     {
-        public required SnackBar Original { get; init; }
         public required SnackBar Presented { get; init; }
-        public required AnimationController Animation { get; init; }
         public required ScaffoldFeatureController<SnackBar, SnackBarClosedReason> Controller { get; init; }
-        public SnackBarClosedReason PendingReason { get; set; } = SnackBarClosedReason.Hide;
-        public CancellationTokenSource? TimeoutCancellation { get; set; }
     }
 
-    private readonly Queue<SnackBarEntry> _snackBars = [];
+    private readonly LinkedList<SnackBarEntry> _snackBars = [];
     private readonly Queue<MaterialBannerEntry> _materialBanners = [];
     private readonly HashSet<ScaffoldState> _scaffolds = [];
-    private SnackBarEntry? _currentSnackBar;
     private MaterialBannerEntry? _currentMaterialBanner;
+    private AnimationController? _snackBarController;
     private AnimationController? _materialBannerAnimation;
+    private CancellationTokenSource? _snackBarTimer;
+    private bool _accessibleNavigation;
     private bool _disposed;
 
     private ScaffoldMessenger CurrentWidget => (ScaffoldMessenger)StateWidget;
 
-    internal SnackBar? CurrentSnackBar => _currentSnackBar?.Presented;
+    internal SnackBar? CurrentSnackBar => _snackBars.First?.Value.Presented;
 
     internal void Register(ScaffoldState scaffold)
     {
@@ -120,7 +118,7 @@ public sealed class ScaffoldMessengerState : State
 
     internal SnackBar? SnackBarFor(ScaffoldState scaffold)
     {
-        return IsRoot(scaffold) ? _currentSnackBar?.Presented : null;
+        return IsRoot(scaffold) ? CurrentSnackBar : null;
     }
 
     internal MaterialBanner? MaterialBannerFor(ScaffoldState scaffold)
@@ -134,67 +132,105 @@ public sealed class ScaffoldMessengerState : State
         return parent is null || !_scaffolds.Contains(parent);
     }
 
-    public ScaffoldFeatureController<SnackBar, SnackBarClosedReason> ShowSnackBar(SnackBar snackBar)
+    public ScaffoldFeatureController<SnackBar, SnackBarClosedReason> ShowSnackBar(
+        SnackBar snackBar,
+        AnimationStyle? snackBarAnimationStyle = null)
     {
         ArgumentNullException.ThrowIfNull(snackBar);
+        if (_scaffolds.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "ScaffoldMessenger.ShowSnackBar was called, but there are currently no "
+                + "descendant Scaffolds to present to.");
+        }
+
+        if (snackBarAnimationStyle is not null
+            && (_snackBarController?.Duration != snackBarAnimationStyle.Duration
+                || _snackBarController?.ReverseDuration != snackBarAnimationStyle.ReverseDuration))
+        {
+            _snackBarController?.Dispose();
+            _snackBarController = null;
+        }
+
+        if (_snackBarController is null)
+        {
+            _snackBarController = SnackBar.CreateAnimationController(
+                duration: snackBarAnimationStyle?.Duration,
+                reverseDuration: snackBarAnimationStyle?.ReverseDuration);
+            _snackBarController.AddStatusListener(HandleSnackBarStatusChanged);
+        }
+
+        if (_snackBars.Count == 0)
+        {
+            _snackBarController.Forward();
+        }
 
         SnackBarEntry? entry = null;
         var controller = new ScaffoldFeatureController<SnackBar, SnackBarClosedReason>(
-            snackBar,
-            () => CloseEntry(entry!, SnackBarClosedReason.Hide));
-        var animation = SnackBar.CreateAnimationController();
+            snackBar.WithAnimation(_snackBarController, new UniqueKey()),
+            () =>
+            {
+                // The Dart close callback asserts the entry is still the head of the queue.
+                if (ReferenceEquals(_snackBars.First?.Value, entry))
+                {
+                    HideCurrentSnackBar();
+                }
+            });
         entry = new SnackBarEntry
         {
-            Original = snackBar,
-            Presented = snackBar.WithAnimation(animation, snackBar.Key ?? new UniqueKey()),
-            Animation = animation,
+            Presented = controller.Feature,
             Controller = controller,
         };
-        animation.Completed += () => BeginTimeout(entry);
-        animation.Dismissed += () => CompleteCurrent(entry);
 
-        SetState(() =>
-        {
-            _snackBars.Enqueue(entry);
-            if (_currentSnackBar is null)
-            {
-                ShowNextSnackBar();
-            }
-        });
+        SetState(() => _snackBars.AddLast(entry));
         return controller;
     }
 
     public void HideCurrentSnackBar(SnackBarClosedReason reason = SnackBarClosedReason.Hide)
     {
-        var entry = _currentSnackBar;
-        if (entry is null) return;
-        CancelTimeout(entry);
-        entry.PendingReason = reason;
-        if (entry.Animation.Value <= 0)
+        if (_snackBars.Count == 0 || _snackBarController!.Status == AnimationStatus.Dismissed)
         {
-            CompleteCurrent(entry);
             return;
         }
 
-        entry.Animation.Reverse();
+        SnackBarEntry entry = _snackBars.First!.Value;
+        if (_accessibleNavigation)
+        {
+            _snackBarController!.SetValue(0.0);
+            entry.Controller.Complete(reason);
+        }
+        else
+        {
+            _snackBarController!.Reverse().WhenCompleteOrCancel(() => entry.Controller.Complete(reason));
+        }
+
+        CancelSnackBarTimer();
     }
 
     public void RemoveCurrentSnackBar(SnackBarClosedReason reason = SnackBarClosedReason.Remove)
     {
-        var entry = _currentSnackBar;
-        if (entry is null) return;
-        entry.PendingReason = reason;
-        CompleteCurrent(entry);
+        if (_snackBars.Count == 0)
+        {
+            return;
+        }
+
+        SnackBarEntry entry = _snackBars.First!.Value;
+        entry.Controller.Complete(reason);
+        CancelSnackBarTimer();
+        // This will trigger the animation's status callback, which removes the entry.
+        _snackBarController!.SetValue(0.0);
     }
 
     public void ClearSnackBars()
     {
-        while (_snackBars.Count > 1)
+        if (_snackBars.Count == 0 || _snackBarController!.Status == AnimationStatus.Dismissed)
         {
-            var queued = _snackBars.Last();
-            RemoveQueuedEntry(queued, SnackBarClosedReason.Remove);
+            return;
         }
 
+        SnackBarEntry current = _snackBars.First!.Value;
+        _snackBars.Clear();
+        _snackBars.AddLast(current);
         HideCurrentSnackBar();
     }
 
@@ -286,8 +322,42 @@ public sealed class ScaffoldMessengerState : State
         HideCurrentMaterialBanner();
     }
 
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        bool accessibleNavigation = MediaQuery.MaybeOf(Context)?.AccessibleNavigation == true;
+        // If we transition from accessible navigation to non-accessible navigation and there is a
+        // SnackBar that would have timed out that has already completed its timer, dismiss that
+        // SnackBar. If the timer hasn't finished yet, let it timeout as normal.
+        if (_accessibleNavigation
+            && !accessibleNavigation
+            && _snackBars.Count > 0
+            && _snackBarTimer is null)
+        {
+            HideCurrentSnackBar(SnackBarClosedReason.Timeout);
+        }
+
+        _accessibleNavigation = accessibleNavigation;
+    }
+
     public override Widget Build(BuildContext context)
     {
+        _accessibleNavigation = MediaQuery.MaybeOf(context)?.AccessibleNavigation == true;
+        if (_snackBars.Count > 0)
+        {
+            ModalRoute? route = ModalRoute.MaybeOf(context);
+            if (route is null || route.IsCurrent)
+            {
+                if (_snackBarController!.Status == AnimationStatus.Completed && _snackBarTimer is null)
+                {
+                    SnackBar snackBar = _snackBars.First!.Value.Presented;
+                    var cancellation = new CancellationTokenSource();
+                    _snackBarTimer = cancellation;
+                    _ = RunSnackBarTimer(snackBar, cancellation.Token);
+                }
+            }
+        }
+
         return new ScaffoldMessengerScope(
             messenger: this,
             snackBar: CurrentSnackBar,
@@ -298,15 +368,20 @@ public sealed class ScaffoldMessengerState : State
     public override void Dispose()
     {
         _disposed = true;
-        foreach (var entry in _snackBars.ToArray())
+        foreach (SnackBarEntry entry in _snackBars)
         {
-            CancelTimeout(entry);
-            entry.Animation.Dispose();
             entry.Controller.Complete(SnackBarClosedReason.Remove);
         }
 
         _snackBars.Clear();
-        _currentSnackBar = null;
+        if (_snackBarController is not null)
+        {
+            _snackBarController.RemoveStatusListener(HandleSnackBarStatusChanged);
+            _snackBarController.Dispose();
+            _snackBarController = null;
+        }
+
+        CancelSnackBarTimer();
         _materialBanners.Clear();
         _currentMaterialBanner = null;
         if (_materialBannerAnimation is not null)
@@ -318,33 +393,61 @@ public sealed class ScaffoldMessengerState : State
         _scaffolds.Clear();
     }
 
-    private void CloseEntry(SnackBarEntry entry, SnackBarClosedReason reason)
+    private void HandleSnackBarStatusChanged(AnimationStatus status)
     {
-        if (ReferenceEquals(entry, _currentSnackBar))
+        switch (status)
         {
-            HideCurrentSnackBar(reason);
+            case AnimationStatus.Dismissed:
+                if (_snackBars.Count == 0 || _disposed)
+                {
+                    return;
+                }
+
+                SetState(() => _snackBars.RemoveFirst());
+                if (_snackBars.Count > 0)
+                {
+                    _snackBarController!.Forward();
+                }
+
+                break;
+            case AnimationStatus.Completed:
+                if (_disposed)
+                {
+                    return;
+                }
+
+                SetState(() => { });
+                break;
+        }
+    }
+
+    private async Task RunSnackBarTimer(SnackBar snackBar, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(snackBar.Duration, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
             return;
         }
 
-        RemoveQueuedEntry(entry, reason);
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (cancellationToken.IsCancellationRequested || _disposed || snackBar.Persist)
+            {
+                return;
+            }
+
+            HideCurrentSnackBar(SnackBarClosedReason.Timeout);
+        });
     }
 
-    private void RemoveQueuedEntry(SnackBarEntry entry, SnackBarClosedReason reason)
+    private void CancelSnackBarTimer()
     {
-        if (!_snackBars.Contains(entry)) return;
-        var retained = _snackBars.Where(candidate => !ReferenceEquals(candidate, entry)).ToArray();
-        _snackBars.Clear();
-        foreach (var candidate in retained) _snackBars.Enqueue(candidate);
-        CancelTimeout(entry);
-        entry.Animation.Dispose();
-        entry.Controller.Complete(reason);
-    }
-
-    private void ShowNextSnackBar()
-    {
-        if (_currentSnackBar is not null || _snackBars.Count == 0) return;
-        _currentSnackBar = _snackBars.Peek();
-        _currentSnackBar.Animation.Forward(from: 0);
+        _snackBarTimer?.Cancel();
+        _snackBarTimer?.Dispose();
+        _snackBarTimer = null;
     }
 
     private void CloseMaterialBannerEntry(MaterialBannerEntry entry)
@@ -417,63 +520,4 @@ public sealed class ScaffoldMessengerState : State
         }
     }
 
-    private void CompleteCurrent(SnackBarEntry entry)
-    {
-        if (!ReferenceEquals(entry, _currentSnackBar)) return;
-        CancelTimeout(entry);
-        entry.Animation.Dispose();
-        if (_snackBars.Count > 0 && ReferenceEquals(_snackBars.Peek(), entry))
-        {
-            _snackBars.Dequeue();
-        }
-
-        _currentSnackBar = null;
-        entry.Controller.Complete(entry.PendingReason);
-        if (_disposed) return;
-        SetState(ShowNextSnackBar);
-    }
-
-    private void BeginTimeout(SnackBarEntry entry)
-    {
-        if (!ReferenceEquals(entry, _currentSnackBar)) return;
-        if (entry.Original.Persist) return;
-        if (entry.Original.Action is not null
-            && MediaQuery.MaybeOf(Context)?.AccessibleNavigation == true)
-        {
-            return;
-        }
-
-        CancelTimeout(entry);
-        var cancellation = new CancellationTokenSource();
-        entry.TimeoutCancellation = cancellation;
-        _ = WaitForTimeout(entry, cancellation.Token);
-    }
-
-    private async Task WaitForTimeout(SnackBarEntry entry, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await Task.Delay(entry.Original.Duration, cancellationToken).ConfigureAwait(false);
-            if (!cancellationToken.IsCancellationRequested)
-            {
-                Dispatcher.UIThread.Post(() =>
-                {
-                    if (!cancellationToken.IsCancellationRequested && ReferenceEquals(entry, _currentSnackBar))
-                    {
-                        HideCurrentSnackBar(SnackBarClosedReason.Timeout);
-                    }
-                });
-            }
-        }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    private static void CancelTimeout(SnackBarEntry entry)
-    {
-        entry.TimeoutCancellation?.Cancel();
-        entry.TimeoutCancellation?.Dispose();
-        entry.TimeoutCancellation = null;
-    }
 }

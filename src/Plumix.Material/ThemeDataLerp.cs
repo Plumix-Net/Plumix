@@ -522,48 +522,49 @@ public sealed partial record ScrollbarThemeData
     private static bool? LerpBool(bool? a, bool? b, double t) => t < 0.5 ? a : b;
 }
 
-public sealed partial record SnackBarThemeData
+public partial class SnackBarThemeData
 {
-    public static SnackBarThemeData Lerp(SnackBarThemeData a, SnackBarThemeData b, double t)
+    /// Dart lerps the state-color fields with `Color.lerp`, which collapses a `WidgetStateColor` to
+    /// its default resolution; `StateColor` reproduces that.
+    private static WidgetStateColor? StateColor(WidgetStateColor? a, WidgetStateColor? b, double t)
     {
-        ArgumentNullException.ThrowIfNull(a);
-        ArgumentNullException.ThrowIfNull(b);
-        if (ReferenceEquals(a, b))
+        Color? lerped = MaterialThemeLerp.Color(a?.DefaultValue, b?.DefaultValue, t);
+        return lerped is null ? null : new WidgetStateColor(lerped.Value);
+    }
+
+    public static SnackBarThemeData Lerp(SnackBarThemeData? a, SnackBarThemeData? b, double t)
+    {
+        if (ReferenceEquals(a, b) && a is not null)
         {
             return a;
         }
 
-        SnackBarThemeData selected = t < 0.5 ? a : b;
-        return selected with
-        {
-            BackgroundColor = MaterialThemeLerp.Color(a.BackgroundColor, b.BackgroundColor, t),
-            ActionTextColor = MaterialThemeLerp.Color(a.ActionTextColor, b.ActionTextColor, t),
-            DisabledActionTextColor = MaterialThemeLerp.Color(
-                a.DisabledActionTextColor,
-                b.DisabledActionTextColor,
+        // Dart's `SnackBarThemeData.lerp` omits `showCloseIcon` from the result it constructs, so a
+        // theme animation drops the flag rather than stepping it at t == 0.5. Reproduced verbatim.
+        return new SnackBarThemeData(
+            backgroundColor: MaterialThemeLerp.Color(a?.BackgroundColor, b?.BackgroundColor, t),
+            actionTextColor: StateColor(a?.ActionTextColor, b?.ActionTextColor, t),
+            disabledActionTextColor: MaterialThemeLerp.Color(
+                a?.DisabledActionTextColor,
+                b?.DisabledActionTextColor,
                 t),
-            ContentTextStyle = MaterialThemeLerp.TextStyle(a.ContentTextStyle, b.ContentTextStyle, t),
-            Elevation = MaterialThemeLerp.Double(a.Elevation, b.Elevation, t),
-            Shape = MaterialThemeLerp.Shape(a.Shape, b.Shape, t),
-            Behavior = t < 0.5 ? a.Behavior : b.Behavior,
-            Width = MaterialThemeLerp.Double(a.Width, b.Width, t),
-            InsetPadding = MaterialThemeLerp.Thickness(a.InsetPadding, b.InsetPadding, t),
-            ShowCloseIcon = t < 0.5 ? a.ShowCloseIcon : b.ShowCloseIcon,
-            CloseIconColor = MaterialThemeLerp.Color(a.CloseIconColor, b.CloseIconColor, t),
-            ActionOverflowThreshold = MaterialThemeLerp.Double(
-                a.ActionOverflowThreshold,
-                b.ActionOverflowThreshold,
+            contentTextStyle: MaterialThemeLerp.TextStyle(a?.ContentTextStyle, b?.ContentTextStyle, t),
+            elevation: MaterialThemeLerp.Double(a?.Elevation, b?.Elevation, t),
+            shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
+            behavior: t < 0.5 ? a?.Behavior : b?.Behavior,
+            width: MaterialThemeLerp.Double(a?.Width, b?.Width, t),
+            insetPadding: MaterialThemeLerp.Thickness(a?.InsetPadding, b?.InsetPadding, t),
+            closeIconColor: MaterialThemeLerp.Color(a?.CloseIconColor, b?.CloseIconColor, t),
+            actionOverflowThreshold: MaterialThemeLerp.Double(
+                a?.ActionOverflowThreshold,
+                b?.ActionOverflowThreshold,
                 t),
-            ActionBackgroundColor = MaterialThemeLerp.Color(
-                a.ActionBackgroundColor,
-                b.ActionBackgroundColor,
+            actionBackgroundColor: StateColor(a?.ActionBackgroundColor, b?.ActionBackgroundColor, t),
+            disabledActionBackgroundColor: MaterialThemeLerp.Color(
+                a?.DisabledActionBackgroundColor,
+                b?.DisabledActionBackgroundColor,
                 t),
-            DisabledActionBackgroundColor = MaterialThemeLerp.Color(
-                a.DisabledActionBackgroundColor,
-                b.DisabledActionBackgroundColor,
-                t),
-            DismissDirection = t < 0.5 ? a.DismissDirection : b.DismissDirection,
-        };
+            dismissDirection: t < 0.5 ? a?.DismissDirection : b?.DismissDirection);
     }
 }
 

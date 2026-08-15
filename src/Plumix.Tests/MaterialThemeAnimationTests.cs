@@ -161,7 +161,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
                 ThumbColor: MaterialStateProperty<Color?>.All(Colors.Black),
                 MouseCursor: MaterialStateProperty<MouseCursor?>.All(switchCursorBegin)),
             datePickerTheme: new DatePickerThemeData(RangePickerElevation: 4),
-            snackBarTheme: new SnackBarThemeData(Elevation: 2),
+            snackBarTheme: new SnackBarThemeData(elevation: 2),
             menuBarTheme: new MenuBarThemeData(
                 new MenuStyle(elevation: MaterialStateProperty<double?>.All(2))));
         var end = new ThemeData(
@@ -172,7 +172,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
                 ThumbColor: MaterialStateProperty<Color?>.All(Colors.White),
                 MouseCursor: MaterialStateProperty<MouseCursor?>.All(switchCursorEnd)),
             datePickerTheme: new DatePickerThemeData(RangePickerElevation: 12),
-            snackBarTheme: new SnackBarThemeData(Elevation: 10),
+            snackBarTheme: new SnackBarThemeData(elevation: 10),
             menuBarTheme: new MenuBarThemeData(
                 new MenuStyle(elevation: MaterialStateProperty<double?>.All(10))));
 

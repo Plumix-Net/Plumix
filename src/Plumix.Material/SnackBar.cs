@@ -1,50 +1,99 @@
 using Avalonia;
 using Avalonia.Media;
-using Plumix;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
-using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/snack_bar.dart
 
+/// Specify how a [SnackBar] was closed.
 public enum SnackBarClosedReason
 {
+    /// The snack bar was closed after the user tapped a [SnackBarAction].
     Action,
+
+    /// The snack bar was closed through a [SemanticsAction.dismiss].
     Dismiss,
+
+    /// The snack bar was closed by a user's swipe.
     Swipe,
+
+    /// The snack bar was closed by the `ScaffoldFeatureController` close callback or by calling
+    /// `ScaffoldMessengerState.hideCurrentSnackBar` directly.
     Hide,
+
+    /// The snack bar was closed by a call to `ScaffoldMessengerState.removeCurrentSnackBar`.
     Remove,
+
+    /// The snack bar was closed because its timer expired.
     Timeout,
 }
 
+internal static class SnackBarConstants
+{
+    internal const double SingleLineVerticalPadding = 14.0;
+
+    internal static readonly TimeSpan TransitionDuration = TimeSpan.FromMilliseconds(250);
+
+    internal static readonly TimeSpan DisplayDuration = TimeSpan.FromMilliseconds(4000);
+
+    internal static readonly Curve HeightCurve = Curves.FastOutSlowIn;
+
+    internal static readonly Curve M3HeightCurve = Curves.EaseInOutQuart;
+
+    internal static readonly Curve FadeInCurve = Curves.Interval(0.4, 1.0);
+
+    internal static readonly Curve M3FadeInCurve = Curves.Interval(0.4, 0.6, Curves.EaseInCirc);
+
+    internal static readonly Curve FadeOutCurve = Curves.Interval(0.72, 1.0, Curves.FastOutSlowIn);
+}
+
+/// A button for a [SnackBar], known as an "action".
+///
+/// Snack bar actions are always enabled. Instead of disabling a snack bar action, avoid including it
+/// in the snack bar in the first place.
+///
+/// Snack bar actions can only be pressed once. Subsequent presses are ignored.
 public sealed class SnackBarAction : StatefulWidget
 {
     public SnackBarAction(
         string label,
         Action onPressed,
-        Color? textColor = null,
+        WidgetStateColor? textColor = null,
         Color? disabledTextColor = null,
-        Color? backgroundColor = null,
+        WidgetStateColor? backgroundColor = null,
         Color? disabledBackgroundColor = null,
         Key? key = null) : base(key)
     {
         Label = label ?? throw new ArgumentNullException(nameof(label));
         OnPressed = onPressed ?? throw new ArgumentNullException(nameof(onPressed));
+        if (backgroundColor is { IsConstantColor: false } && disabledBackgroundColor is not null)
+        {
+            throw new ArgumentException(
+                "disabledBackgroundColor must not be provided when background color is a WidgetStateColor",
+                nameof(disabledBackgroundColor));
+        }
+
         TextColor = textColor;
         DisabledTextColor = disabledTextColor;
         BackgroundColor = backgroundColor;
         DisabledBackgroundColor = disabledBackgroundColor;
     }
 
-    public Color? TextColor { get; }
+    public WidgetStateColor? TextColor { get; }
+
     public Color? DisabledTextColor { get; }
-    public Color? BackgroundColor { get; }
+
+    public WidgetStateColor? BackgroundColor { get; }
+
     public Color? DisabledBackgroundColor { get; }
+
     public string Label { get; }
+
     public Action OnPressed { get; }
 
     public override State CreateState() => new SnackBarActionState();
@@ -52,68 +101,102 @@ public sealed class SnackBarAction : StatefulWidget
     private sealed class SnackBarActionState : State
     {
         private bool _haveTriggeredAction;
+
         private SnackBarAction CurrentWidget => (SnackBarAction)StateWidget;
-
-        public override Widget Build(BuildContext context)
-        {
-            var widget = CurrentWidget;
-            var theme = Theme.Of(context);
-            var snackBarTheme = SnackBarTheme.Of(context);
-            var enabledForeground = widget.TextColor
-                                    ?? snackBarTheme.ActionTextColor
-                                    ?? (theme.UseMaterial3 ? theme.InversePrimaryColor : theme.SecondaryColor);
-            var disabledForeground = widget.DisabledTextColor
-                                     ?? snackBarTheme.DisabledActionTextColor
-                                     ?? (theme.UseMaterial3
-                                         ? theme.InversePrimaryColor
-                                         : ApplyOpacity(theme.OnSurfaceColor, theme.Brightness == Brightness.Light ? 0.38 : 0.30));
-            var enabledBackground = widget.BackgroundColor
-                                    ?? snackBarTheme.ActionBackgroundColor
-                                    ?? Colors.Transparent;
-            var disabledBackground = widget.DisabledBackgroundColor
-                                     ?? snackBarTheme.DisabledActionBackgroundColor
-                                     ?? Colors.Transparent;
-
-            return new TextButton(
-                child: new Text(widget.Label),
-                onPressed: _haveTriggeredAction ? null : HandlePressed,
-                style: TextButton.StyleFrom(
-                    foregroundColor: enabledForeground,
-                    disabledForegroundColor: disabledForeground,
-                    backgroundColor: enabledBackground,
-                    disabledBackgroundColor: disabledBackground,
-                    overlayColor: enabledForeground,
-                    padding: new Thickness(8, 0),
-                    minimumSize: new Size(0, 36)));
-        }
 
         private void HandlePressed()
         {
-            if (_haveTriggeredAction) return;
+            if (_haveTriggeredAction)
+            {
+                return;
+            }
+
             SetState(() => _haveTriggeredAction = true);
             CurrentWidget.OnPressed();
-            ScaffoldMessenger.MaybeOf(Context)?.HideCurrentSnackBar(SnackBarClosedReason.Action);
+            ScaffoldMessenger.Of(Context).HideCurrentSnackBar(SnackBarClosedReason.Action);
         }
-    }
 
-    private static Color ApplyOpacity(Color color, double opacity)
-    {
-        byte alpha = (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1));
-        return Color.FromArgb(alpha, color.R, color.G, color.B);
+        public override Widget Build(BuildContext context)
+        {
+            SnackBarAction widget = CurrentWidget;
+            SnackBarThemeData defaults = Theme.Of(context).UseMaterial3
+                ? new SnackBarDefaultsM3(context)
+                : new SnackBarDefaultsM2(context);
+            SnackBarThemeData snackBarTheme = SnackBarTheme.Of(context);
+
+            MaterialStateProperty<Color?> ResolveForegroundColor()
+            {
+                // Dart checks `x is WidgetStateColor` down the chain with `else if`, so a plain
+                // widget color short-circuits the theme/defaults probes and falls through.
+                if (widget.TextColor is { IsConstantColor: false } widgetStateColor)
+                {
+                    return Bridge(widgetStateColor);
+                }
+
+                if (widget.TextColor is null && snackBarTheme.ActionTextColor is { IsConstantColor: false } themeColor)
+                {
+                    return Bridge(themeColor);
+                }
+
+                if (widget.TextColor is null
+                    && snackBarTheme.ActionTextColor is null
+                    && defaults.ActionTextColor is { IsConstantColor: false } defaultColor)
+                {
+                    return Bridge(defaultColor);
+                }
+
+                return MaterialStateProperty<Color?>.ResolveWith(states => states.HasFlag(MaterialState.Disabled)
+                    ? widget.DisabledTextColor
+                      ?? snackBarTheme.DisabledActionTextColor
+                      ?? defaults.DisabledActionTextColor!.Value
+                    : (Color)(widget.TextColor ?? snackBarTheme.ActionTextColor ?? defaults.ActionTextColor!));
+            }
+
+            MaterialStateProperty<Color?> ResolveBackgroundColor()
+            {
+                if (widget.BackgroundColor is { IsConstantColor: false } widgetStateColor)
+                {
+                    return Bridge(widgetStateColor);
+                }
+
+                if (snackBarTheme.ActionBackgroundColor is { IsConstantColor: false } themeColor)
+                {
+                    return Bridge(themeColor);
+                }
+
+                return MaterialStateProperty<Color?>.ResolveWith(states => states.HasFlag(MaterialState.Disabled)
+                    ? widget.DisabledBackgroundColor
+                      ?? snackBarTheme.DisabledActionBackgroundColor
+                      ?? Colors.Transparent
+                    : (Color)(widget.BackgroundColor ?? snackBarTheme.ActionBackgroundColor
+                        ?? new WidgetStateColor(Colors.Transparent)));
+            }
+
+            MaterialStateProperty<Color?> foregroundColor = ResolveForegroundColor();
+            return new TextButton(
+                child: new Text(widget.Label),
+                onPressed: _haveTriggeredAction ? null : HandlePressed,
+                style: TextButton.StyleFrom(overlayColor: foregroundColor.Resolve(MaterialState.None)) with
+                {
+                    ForegroundColor = foregroundColor,
+                    BackgroundColor = ResolveBackgroundColor(),
+                });
+        }
+
+        private static MaterialStateProperty<Color?> Bridge(WidgetStateColor color) =>
+            MaterialStateProperty<Color?>.ResolveWith(states => color.Resolve(states));
     }
 }
 
+/// A lightweight message with an optional action which briefly displays at the bottom of the screen.
 public sealed class SnackBar : StatefulWidget
 {
-    public static readonly TimeSpan TransitionDuration = TimeSpan.FromMilliseconds(250);
-    public static readonly TimeSpan DefaultDuration = TimeSpan.FromSeconds(4);
-
     public SnackBar(
         Widget content,
         Color? backgroundColor = null,
         double? elevation = null,
-        Thickness? margin = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? margin = null,
+        EdgeInsetsGeometry? padding = null,
         double? width = null,
         ShapeBorder? shape = null,
         HitTestBehavior? hitTestBehavior = null,
@@ -124,26 +207,28 @@ public sealed class SnackBar : StatefulWidget
         Color? closeIconColor = null,
         TimeSpan? duration = null,
         bool? persist = null,
-        AnimationController? animation = null,
+        Animation<double>? animation = null,
         Action? onVisible = null,
         DismissDirection? dismissDirection = null,
         Clip clipBehavior = Clip.HardEdge,
         Key? key = null) : base(key)
     {
         Content = content ?? throw new ArgumentNullException(nameof(content));
-        ValidateNonNegativeFinite(elevation, nameof(elevation));
-        ValidatePositiveFinite(width, nameof(width));
-        ValidateUnitInterval(actionOverflowThreshold, nameof(actionOverflowThreshold));
-        ValidateInsets(margin, nameof(margin));
-        ValidateInsets(padding, nameof(padding));
-        if (width.HasValue && margin.HasValue)
+        if (elevation is < 0.0)
         {
-            throw new ArgumentException("SnackBar width and margin cannot both be specified.", nameof(width));
+            throw new ArgumentOutOfRangeException(nameof(elevation));
         }
 
-        if (behavior == SnackBarBehavior.Fixed && (width.HasValue || margin.HasValue))
+        if (width is not null && margin is not null)
         {
-            throw new ArgumentException("SnackBar width and margin require floating behavior.", nameof(behavior));
+            throw new ArgumentException("Width and margin can not be used together", nameof(width));
+        }
+
+        if (actionOverflowThreshold is < 0.0 or > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(actionOverflowThreshold),
+                "Action overflow threshold must be between 0 and 1 inclusive");
         }
 
         BackgroundColor = backgroundColor;
@@ -158,8 +243,7 @@ public sealed class SnackBar : StatefulWidget
         ActionOverflowThreshold = actionOverflowThreshold;
         ShowCloseIcon = showCloseIcon;
         CloseIconColor = closeIconColor;
-        Duration = duration ?? DefaultDuration;
-        if (Duration < TimeSpan.Zero) throw new ArgumentOutOfRangeException(nameof(duration));
+        Duration = duration ?? SnackBarConstants.DisplayDuration;
         Persist = persist ?? action is not null;
         Animation = animation;
         OnVisible = onVisible;
@@ -167,32 +251,67 @@ public sealed class SnackBar : StatefulWidget
         ClipBehavior = clipBehavior;
     }
 
+    /// The transition duration a `ScaffoldMessenger` drives a snack bar with.
+    public static TimeSpan TransitionDuration => SnackBarConstants.TransitionDuration;
+
+    /// The default `duration` — how long the bar stays up once it is fully shown.
+    public static TimeSpan DefaultDuration => SnackBarConstants.DisplayDuration;
+
     public Widget Content { get; }
+
     public Color? BackgroundColor { get; }
+
     public double? Elevation { get; }
-    public Thickness? Margin { get; }
-    public Thickness? Padding { get; }
+
+    public EdgeInsetsGeometry? Margin { get; }
+
+    public EdgeInsetsGeometry? Padding { get; }
+
     public double? Width { get; }
+
     public ShapeBorder? Shape { get; }
+
     public HitTestBehavior? HitTestBehavior { get; }
+
     public SnackBarBehavior? Behavior { get; }
+
     public SnackBarAction? Action { get; }
+
     public double? ActionOverflowThreshold { get; }
+
     public bool? ShowCloseIcon { get; }
+
     public Color? CloseIconColor { get; }
+
     public TimeSpan Duration { get; }
+
+    /// Whether the snack bar ignores its `Duration` timeout. Defaults to `Action != null`.
     public bool Persist { get; }
-    public AnimationController? Animation { get; }
+
+    public Animation<double>? Animation { get; }
+
     public Action? OnVisible { get; }
+
     public DismissDirection? DismissDirection { get; }
+
     public Clip ClipBehavior { get; }
 
-    public static AnimationController CreateAnimationController() => new(duration: TransitionDuration);
-
-    public SnackBar WithAnimation(AnimationController animation, Key? fallbackKey = null)
+    /// Creates the controller a `ScaffoldMessenger` drives its snack bars with.
+    public static AnimationController CreateAnimationController(
+        TimeSpan? duration = null,
+        TimeSpan? reverseDuration = null)
     {
-        ArgumentNullException.ThrowIfNull(animation);
+        return new AnimationController(
+            duration: duration ?? SnackBarConstants.TransitionDuration,
+            reverseDuration: reverseDuration);
+    }
+
+    /// Copies this snack bar with the animation the messenger drives it with.
+    public SnackBar WithAnimation(Animation<double> newAnimation, Key? fallbackKey = null)
+    {
+        ArgumentNullException.ThrowIfNull(newAnimation);
         return new SnackBar(
+            key: Key ?? fallbackKey,
             content: Content,
             backgroundColor: BackgroundColor,
             elevation: Elevation,
@@ -208,327 +327,455 @@ public sealed class SnackBar : StatefulWidget
             closeIconColor: CloseIconColor,
             duration: Duration,
             persist: Persist,
-            animation: animation,
+            animation: newAnimation,
             onVisible: OnVisible,
             dismissDirection: DismissDirection,
-            clipBehavior: ClipBehavior,
-            key: Key ?? fallbackKey);
+            clipBehavior: ClipBehavior);
     }
 
     public override State CreateState() => new SnackBarState();
 
     private sealed class SnackBarState : State
     {
-        private readonly object _heroTag = new();
+        private readonly Key _dismissibleKey = new UniqueKey();
         private bool _wasVisible;
-        private double _dragExtent;
+        private CurvedAnimation? _heightAnimation;
+        private CurvedAnimation? _fadeInAnimation;
+        private CurvedAnimation? _fadeInM3Animation;
+        private CurvedAnimation? _fadeOutAnimation;
+        private CurvedAnimation? _heightM3Animation;
+
         private SnackBar CurrentWidget => (SnackBar)StateWidget;
 
         public override void InitState()
         {
-            Subscribe(CurrentWidget.Animation);
+            base.InitState();
+            CurrentWidget.Animation?.AddStatusListener(OnAnimationStatusChanged);
+            SetAnimations();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
+            base.DidUpdateWidget(oldWidget);
             var oldSnackBar = (SnackBar)oldWidget;
-            if (ReferenceEquals(oldSnackBar.Animation, CurrentWidget.Animation)) return;
-            Unsubscribe(oldSnackBar.Animation);
-            Subscribe(CurrentWidget.Animation);
+            if (ReferenceEquals(CurrentWidget.Animation, oldSnackBar.Animation))
+            {
+                return;
+            }
+
+            oldSnackBar.Animation?.RemoveStatusListener(OnAnimationStatusChanged);
+            CurrentWidget.Animation?.AddStatusListener(OnAnimationStatusChanged);
+            DisposeAnimations();
+            SetAnimations();
         }
 
         public override void Dispose()
         {
-            Unsubscribe(CurrentWidget.Animation);
+            CurrentWidget.Animation?.RemoveStatusListener(OnAnimationStatusChanged);
+            DisposeAnimations();
+            base.Dispose();
+        }
+
+        private void SetAnimations()
+        {
+            Animation<double>? parent = CurrentWidget.Animation;
+            if (parent is null)
+            {
+                return;
+            }
+
+            _heightAnimation = new CurvedAnimation(parent, SnackBarConstants.HeightCurve);
+            _fadeInAnimation = new CurvedAnimation(parent, SnackBarConstants.FadeInCurve);
+            _fadeInM3Animation = new CurvedAnimation(parent, SnackBarConstants.M3FadeInCurve);
+            // Material 3 has a height animation on entry but a direct fade out on exit, so both
+            // exit-side curves are pinned by a zero threshold reverse curve.
+            _fadeOutAnimation = new CurvedAnimation(
+                parent,
+                SnackBarConstants.FadeOutCurve,
+                Curves.Threshold(0.0));
+            _heightM3Animation = new CurvedAnimation(
+                parent,
+                SnackBarConstants.M3HeightCurve,
+                Curves.Threshold(0.0));
+        }
+
+        private void DisposeAnimations()
+        {
+            _heightAnimation?.Dispose();
+            _fadeInAnimation?.Dispose();
+            _fadeInM3Animation?.Dispose();
+            _fadeOutAnimation?.Dispose();
+            _heightM3Animation?.Dispose();
+            _heightAnimation = null;
+            _fadeInAnimation = null;
+            _fadeInM3Animation = null;
+            _fadeOutAnimation = null;
+            _heightM3Animation = null;
+        }
+
+        private void OnAnimationStatusChanged(AnimationStatus status)
+        {
+            if (status != AnimationStatus.Completed)
+            {
+                return;
+            }
+
+            if (CurrentWidget.OnVisible is not null && !_wasVisible)
+            {
+                CurrentWidget.OnVisible();
+            }
+
+            _wasVisible = true;
         }
 
         public override Widget Build(BuildContext context)
         {
-            var widget = CurrentWidget;
-            var theme = Theme.Of(context);
-            var snackBarTheme = SnackBarTheme.Of(context);
-            var behavior = widget.Behavior ?? snackBarTheme.Behavior ?? SnackBarBehavior.Fixed;
+            SnackBar widget = CurrentWidget;
+            bool accessibleNavigation = MediaQuery.AccessibleNavigationOf(context);
+            ThemeData theme = Theme.Of(context);
+            ColorScheme colorScheme = theme.ColorScheme;
+            SnackBarThemeData snackBarTheme = SnackBarTheme.Of(context);
+            bool isThemeDark = theme.Brightness == Brightness.Dark;
+            Color buttonColor = isThemeDark ? colorScheme.Primary : colorScheme.Secondary;
+            SnackBarThemeData defaults = theme.UseMaterial3
+                ? new SnackBarDefaultsM3(context)
+                : new SnackBarDefaultsM2(context);
+
+            // SnackBar uses a theme that is the opposite brightness from the surrounding theme, so
+            // that the action button and content read against the inverted surface. Material 3
+            // tokens are already inverted, so M3 keeps the ambient theme.
+            var brightness = isThemeDark ? Brightness.Light : Brightness.Dark;
+            ThemeData effectiveTheme = theme.UseMaterial3
+                ? theme
+                : theme with
+                {
+                    ColorScheme = new ColorScheme(
+                        brightness: brightness,
+                        primary: colorScheme.OnPrimary,
+                        onPrimary: colorScheme.Primary,
+                        secondary: buttonColor,
+                        onSecondary: colorScheme.Secondary,
+                        error: colorScheme.OnError,
+                        onError: colorScheme.Error,
+                        surface: colorScheme.OnSurface,
+                        onSurface: colorScheme.Surface,
+                        background: defaults.BackgroundColor,
+                        onBackground: colorScheme.Background),
+                };
+
+            TextStyle? contentTextStyle = snackBarTheme.ContentTextStyle ?? defaults.ContentTextStyle;
+            SnackBarBehavior snackBarBehavior = widget.Behavior ?? snackBarTheme.Behavior ?? defaults.Behavior!.Value;
+            bool isFloatingSnackBar = snackBarBehavior == SnackBarBehavior.Floating;
+            bool showCloseIcon = widget.ShowCloseIcon ?? snackBarTheme.ShowCloseIcon ?? defaults.ShowCloseIcon!.Value;
+            double horizontalPadding = isFloatingSnackBar ? 16.0 : 24.0;
+            EdgeInsetsGeometry padding = widget.Padding
+                                         ?? EdgeInsetsDirectional.Only(
+                                             start: horizontalPadding,
+                                             end: widget.Action is not null || showCloseIcon
+                                                 ? 0
+                                                 : horizontalPadding);
+
             double? width = widget.Width ?? snackBarTheme.Width;
-            if (behavior != SnackBarBehavior.Floating && (widget.Margin.HasValue || width.HasValue))
-            {
-                throw new InvalidOperationException("SnackBar width and margin require floating behavior.");
-            }
+            ValidateBehavior(widget, snackBarTheme, snackBarBehavior, width);
 
-            bool showCloseIcon = widget.ShowCloseIcon ?? snackBarTheme.ShowCloseIcon ?? false;
-            var direction = Directionality.Of(context);
-            double horizontalPadding = behavior == SnackBarBehavior.Floating ? 16.0 : 24.0;
-            var effectivePadding = widget.Padding ?? ResolveDirectionalPadding(
-                direction,
-                start: horizontalPadding,
-                end: widget.Action is not null || showCloseIcon ? 0 : horizontalPadding);
-            double actionHorizontalMargin = (widget.Padding?.Right ?? horizontalPadding) / 2.0;
-            double iconHorizontalMargin = (widget.Padding?.Right ?? horizontalPadding) / 12.0;
+            double actionHorizontalMargin =
+                (widget.Padding?.Resolve(TextDirection.Ltr).Right ?? horizontalPadding) / 2;
+            double iconHorizontalMargin =
+                (widget.Padding?.Resolve(TextDirection.Ltr).Right ?? horizontalPadding) / 12.0;
 
-            var trailingChildren = new List<Widget>();
+            IconButton? iconButton = showCloseIcon
+                ? new IconButton(
+                    key: StandardComponentType.CloseButton.Key(),
+                    icon: new Icon(Icons.Close),
+                    iconSize: 24.0,
+                    color: widget.CloseIconColor ?? snackBarTheme.CloseIconColor ?? defaults.CloseIconColor,
+                    onPressed: () => ScaffoldMessenger.Of(context)
+                        .HideCurrentSnackBar(SnackBarClosedReason.Dismiss),
+                    tooltip: MaterialLocalizations.Of(context).CloseButtonTooltip)
+                : null;
+
+            // Calculate combined width of Action, Icon and their padding, if they are present.
+            using var actionTextPainter = new TextPainter(
+                text: new TextSpan(text: widget.Action?.Label ?? string.Empty, style: theme.TextTheme.LabelLarge),
+                maxLines: 1,
+                textDirection: TextDirection.Ltr);
+            actionTextPainter.Layout();
+            double actionAndIconWidth = actionTextPainter.Size.Width
+                                        + (widget.Action is not null ? actionHorizontalMargin : 0)
+                                        + (showCloseIcon ? iconButton!.IconSize ?? 0 + iconHorizontalMargin : 0);
+
+            Thickness margin = widget.Margin?.Resolve(TextDirection.Ltr)
+                               ?? snackBarTheme.InsetPadding
+                               ?? defaults.InsetPadding!.Value;
+            double snackBarWidth = widget.Width ?? MediaQuery.WidthOf(context) - (margin.Left + margin.Right);
+            // Action and Icon will overflow to a new line if their width is greater than the width
+            // of the SnackBar times the actionOverflowThreshold.
+            double actionOverflowThreshold = widget.ActionOverflowThreshold
+                                             ?? snackBarTheme.ActionOverflowThreshold
+                                             ?? defaults.ActionOverflowThreshold!.Value;
+            bool willOverflowAction = actionAndIconWidth / snackBarWidth > actionOverflowThreshold;
+
+            var maybeActionAndIcon = new List<Widget>();
             if (widget.Action is not null)
             {
-                trailingChildren.Add(new Padding(
+                maybeActionAndIcon.Add(new Padding(
                     new Thickness(actionHorizontalMargin, 0),
-                    widget.Action));
+                    new TextButtonTheme(
+                        data: new TextButtonThemeData(style: TextButton.StyleFrom(
+                            foregroundColor: buttonColor,
+                            padding: new Thickness(horizontalPadding, 0))),
+                        child: widget.Action)));
             }
 
             if (showCloseIcon)
             {
-                trailingChildren.Add(new Padding(
-                    new Thickness(iconHorizontalMargin, 0),
-                    new IconButton(
-                        icon: new Icon(Icons.Close),
-                        onPressed: () => ScaffoldMessenger.MaybeOf(context)?.HideCurrentSnackBar(SnackBarClosedReason.Dismiss),
-                        iconSize: 24,
-                        color: widget.CloseIconColor
-                               ?? snackBarTheme.CloseIconColor
-                               ?? (theme.UseMaterial3 ? theme.OnInverseSurfaceColor : theme.OnSurfaceColor),
-                        padding: default,
-                        constraints: new BoxConstraints(MinWidth: 48, MinHeight: 48))));
+                maybeActionAndIcon.Add(new Padding(new Thickness(iconHorizontalMargin, 0), iconButton!));
             }
 
-            Widget content = new DefaultTextStyle(
-                snackBarTheme.ContentTextStyle
-                ?? ResolveDefaultContentTextStyle(theme),
-                widget.Content);
-            if (!widget.Padding.HasValue)
+            var rowChildren = new List<Widget>
             {
-                content = new Padding(new Thickness(0, 14), content);
+                new Expanded(new Padding(
+                    widget.Padding is null
+                        ? new Thickness(0, SnackBarConstants.SingleLineVerticalPadding)
+                        : default,
+                    new DefaultTextStyle(contentTextStyle!, widget.Content))),
+            };
+
+            if (!willOverflowAction)
+            {
+                rowChildren.AddRange(maybeActionAndIcon);
+            }
+            else
+            {
+                rowChildren.Add(new SizedBox(width: snackBarWidth * 0.4));
             }
 
-            Widget trailing = trailingChildren.Count == 0
-                ? new SizedBox()
-                : new Row(mainAxisSize: MainAxisSize.Min, children: trailingChildren, textDirection: direction);
-            Widget snackBar = new Padding(
-                effectivePadding,
-                new SnackBarContentLayout(
-                    content: content,
-                    trailing: trailing,
-                    actionOverflowThreshold: widget.ActionOverflowThreshold
-                                             ?? snackBarTheme.ActionOverflowThreshold
-                                             ?? 0.25,
-                    textDirection: direction));
+            var wrapChildren = new List<Widget> { new Row(children: rowChildren) };
+            if (willOverflowAction)
+            {
+                wrapChildren.Add(new Padding(
+                    new Thickness(0, 0, 0, SnackBarConstants.SingleLineVerticalPadding),
+                    new Row(mainAxisAlignment: MainAxisAlignment.End, children: maybeActionAndIcon)));
+            }
 
-            if (behavior == SnackBarBehavior.Fixed)
+            Widget snackBar = new Padding(padding, new Wrap(children: wrapChildren));
+            if (!isFloatingSnackBar)
             {
                 snackBar = new SafeArea(top: false, child: snackBar);
             }
 
-            double elevation = widget.Elevation ?? snackBarTheme.Elevation ?? 6.0;
-            var background = widget.BackgroundColor
-                             ?? snackBarTheme.BackgroundColor
-                             ?? ResolveDefaultBackground(theme);
-            var shape = widget.Shape
-                        ?? snackBarTheme.Shape
-                        ?? (behavior == SnackBarBehavior.Floating ? new RoundedRectangleBorder(borderRadius:
-                            Plumix.Rendering.BorderRadius.Circular(4)) : null);
-            var radius = ShapeBorderGeometry.ResolveRadiusOrNull(shape) ?? BorderRadius.Zero;
-            var shadow = theme.ShadowColor;
-            snackBar = new DecoratedBox(
-                new BoxDecoration(
-                    Color: background,
-                    Border: ShapeBorderGeometry.SideOrNull(
-                        shape) is { } shapeSide ? Plumix.Rendering.Border.FromBorderSide(shapeSide) : null,
-                    BorderRadius: radius,
-                    BoxShadows: BuildBoxShadows(shadow, elevation)),
-                snackBar);
-
-            if (widget.ClipBehavior != Clip.None && radius != BorderRadius.Zero)
+            if (!accessibleNavigation && !theme.UseMaterial3)
             {
-                snackBar = new ClipRRect(radius, snackBar);
+                snackBar = new FadeTransition(opacity: _fadeOutAnimation!, child: snackBar);
             }
 
-            var margin = widget.Margin ?? snackBarTheme.InsetPadding ?? new Thickness(15, 5, 15, 10);
-            if (behavior == SnackBarBehavior.Floating)
+            double elevation = widget.Elevation ?? snackBarTheme.Elevation ?? defaults.Elevation!.Value;
+            Color backgroundColor = widget.BackgroundColor
+                                    ?? snackBarTheme.BackgroundColor
+                                    ?? defaults.BackgroundColor!.Value;
+            ShapeBorder? shape = widget.Shape
+                                 ?? snackBarTheme.Shape
+                                 ?? (isFloatingSnackBar ? defaults.Shape : null);
+
+            snackBar = new Material(
+                shape: shape,
+                elevation: elevation,
+                color: backgroundColor,
+                clipBehavior: widget.ClipBehavior,
+                child: new Theme(effectiveTheme, snackBar));
+
+            if (isFloatingSnackBar)
             {
-                snackBar = width.HasValue
+                // If width is provided, do not include horizontal margins.
+                snackBar = width is not null
                     ? new Padding(
                         new Thickness(0, margin.Top, 0, margin.Bottom),
-                        new Align(alignment: Alignment.BottomCenter, child: new SizedBox(width: width, child: snackBar)))
+                        new SizedBox(width: width, child: snackBar))
                     : new Padding(margin, snackBar);
                 snackBar = new SafeArea(top: false, bottom: false, child: snackBar);
             }
 
-            var dismissDirection = widget.DismissDirection
-                                   ?? snackBarTheme.DismissDirection
-                                   ?? Plumix.Material.DismissDirection.Down;
-            snackBar = BuildDismissible(snackBar, dismissDirection, widget.HitTestBehavior
-                ?? (widget.Margin.HasValue || snackBarTheme.InsetPadding.HasValue
-                    ? Plumix.Rendering.HitTestBehavior.DeferToChild
-                    : Plumix.Rendering.HitTestBehavior.Opaque));
             snackBar = new Semantics(
                 container: true,
                 liveRegion: true,
-                onDismiss: () => ScaffoldMessenger.MaybeOf(context)?.RemoveCurrentSnackBar(SnackBarClosedReason.Dismiss),
-                child: snackBar);
+                onDismiss: () => ScaffoldMessenger.Of(context).RemoveCurrentSnackBar(SnackBarClosedReason.Dismiss),
+                child: new Dismissible(
+                    key: _dismissibleKey,
+                    resizeDuration: null,
+                    direction: widget.DismissDirection
+                               ?? snackBarTheme.DismissDirection
+                               ?? Plumix.Widgets.DismissDirection.Down,
+                    behavior: widget.HitTestBehavior
+                              ?? (widget.Margin is not null || snackBarTheme.InsetPadding is not null
+                                  ? Plumix.Rendering.HitTestBehavior.DeferToChild
+                                  : Plumix.Rendering.HitTestBehavior.Opaque),
+                    onDismissed: _ => ScaffoldMessenger.Of(context)
+                        .RemoveCurrentSnackBar(SnackBarClosedReason.Swipe),
+                    child: snackBar));
 
-            snackBar = ApplyTransition(snackBar, behavior, theme, MediaQuery.AccessibleNavigationOf(context));
-            if (widget.ClipBehavior != Clip.None)
+            Widget snackBarTransition;
+            if (accessibleNavigation)
             {
-                snackBar = new ClipRect(child: snackBar);
+                snackBarTransition = snackBar;
+            }
+            else if (isFloatingSnackBar && !theme.UseMaterial3)
+            {
+                snackBarTransition = new FadeTransition(opacity: _fadeInAnimation!, child: snackBar);
+            }
+            else if (isFloatingSnackBar && theme.UseMaterial3)
+            {
+                snackBarTransition = new FadeTransition(
+                    opacity: _fadeInM3Animation!,
+                    child: new ValueListenableBuilder<double>(
+                        valueListenable: _heightM3Animation!,
+                        builder: (_, value, child) => new Align(
+                            alignment: Alignment.BottomLeft,
+                            heightFactor: value,
+                            child: child),
+                        child: snackBar));
+            }
+            else
+            {
+                snackBarTransition = new ValueListenableBuilder<double>(
+                    valueListenable: _heightAnimation!,
+                    builder: (_, value, child) => new Align(
+                        alignment: AlignmentDirectional.TopStart,
+                        heightFactor: value,
+                        child: child),
+                    child: snackBar);
             }
 
+            // Dart derives the tag from `widget.content.toString()`, which is content-specific
+            // because every Dart widget prints its fields. Plumix widgets inherit `object.ToString`,
+            // so this collapses to one tag per content *type*; see `docs/ai/DIVERGENCES.md`.
             return new Hero(
-                tag: _heroTag,
+                tag: $"<SnackBar Hero tag - {widget.Content}>",
                 transitionOnUserGestures: true,
-                child: snackBar);
+                child: new ClipRect(clipBehavior: widget.ClipBehavior, child: snackBarTransition));
         }
 
-        private Widget BuildDismissible(Widget child, DismissDirection direction, Plumix.Rendering.HitTestBehavior behavior)
+        private static void ValidateBehavior(
+            SnackBar widget,
+            SnackBarThemeData snackBarTheme,
+            SnackBarBehavior behavior,
+            double? width)
         {
-            if (direction == Plumix.Material.DismissDirection.None) return child;
-            _dragExtent = 0;
-            if (direction is Plumix.Material.DismissDirection.Up or Plumix.Material.DismissDirection.Down or Plumix.Material.DismissDirection.Vertical)
-            {
-                return new GestureDetector(
-                    excludeFromSemantics: true,
-                    behavior: behavior,
-                    onVerticalDragStart: _ => _dragExtent = 0,
-                    onVerticalDragUpdate: details => _dragExtent += details.PrimaryDelta,
-                    onVerticalDragEnd: details =>
-                    {
-                        double velocity = details.PrimaryVelocity;
-                        bool matches = direction switch
-                        {
-                            Plumix.Material.DismissDirection.Up => _dragExtent < -40 || velocity < -365,
-                            Plumix.Material.DismissDirection.Down => _dragExtent > 40 || velocity > 365,
-                            _ => Math.Abs(_dragExtent) > 40 || Math.Abs(velocity) > 365,
-                        };
-                        if (matches)
-                        {
-                            ScaffoldMessenger.MaybeOf(Context)?.RemoveCurrentSnackBar(SnackBarClosedReason.Swipe);
-                        }
-                    },
-                    child: child);
-            }
-
-            return new GestureDetector(
-                excludeFromSemantics: true,
-                behavior: behavior,
-                onHorizontalDragStart: _ => _dragExtent = 0,
-                onHorizontalDragUpdate: details => _dragExtent += details.PrimaryDelta,
-                onHorizontalDragEnd: details =>
-                {
-                    var directionality = Directionality.Of(Context);
-                    double velocity = details.PrimaryVelocity;
-                    bool matches = direction switch
-                    {
-                        Plumix.Material.DismissDirection.StartToEnd => directionality == TextDirection.Ltr
-                            ? _dragExtent > 40 || velocity > 365
-                            : _dragExtent < -40 || velocity < -365,
-                        Plumix.Material.DismissDirection.EndToStart => directionality == TextDirection.Ltr
-                            ? _dragExtent < -40 || velocity < -365
-                            : _dragExtent > 40 || velocity > 365,
-                        _ => Math.Abs(_dragExtent) > 40 || Math.Abs(velocity) > 365,
-                    };
-                    if (matches)
-                    {
-                        ScaffoldMessenger.MaybeOf(Context)?.RemoveCurrentSnackBar(SnackBarClosedReason.Swipe);
-                    }
-                },
-                child: child);
-        }
-
-        private Widget ApplyTransition(Widget child, SnackBarBehavior behavior, ThemeData theme, bool accessibleNavigation)
-        {
-            if (accessibleNavigation || CurrentWidget.Animation is null) return child;
-            double raw = Math.Clamp(CurrentWidget.Animation.Value, 0, 1);
             if (behavior == SnackBarBehavior.Floating)
             {
-                double fade = theme.UseMaterial3
-                    ? EvaluateInterval(raw, 0.4, 0.6, Curves.EaseIn)
-                    : EvaluateInterval(raw, 0.4, 1.0, Curves.Linear);
-                Widget result = new Opacity(fade, child);
-                if (theme.UseMaterial3)
-                {
-                    result = new Align(
-                        alignment: Alignment.BottomLeft,
-                        heightFactor: Curves.EaseInOut(raw),
-                        child: result);
-                }
-
-                return result;
-            }
-
-            return new Align(
-                alignment: Alignment.TopLeft,
-                heightFactor: Curves.FastOutSlowIn(raw),
-                child: child);
-        }
-
-        private void Subscribe(AnimationController? animation)
-        {
-            if (animation is null)
-            {
-                NotifyVisible();
                 return;
             }
 
-            animation.Changed += HandleAnimationChanged;
-            animation.Completed += NotifyVisible;
-        }
+            string Source() => widget.Behavior is not null
+                ? "SnackBarBehavior.fixed was set in the SnackBar constructor."
+                : snackBarTheme.Behavior is not null
+                    ? "SnackBarBehavior.fixed was set by the inherited SnackBarThemeData."
+                    : "SnackBarBehavior.fixed was set by default.";
 
-        private void Unsubscribe(AnimationController? animation)
-        {
-            if (animation is null) return;
-            animation.Changed -= HandleAnimationChanged;
-            animation.Completed -= NotifyVisible;
-        }
+            if (widget.Margin is not null)
+            {
+                throw new InvalidOperationException($"Margin can only be used with floating behavior. {Source()}");
+            }
 
-        private void HandleAnimationChanged() => SetState(() => { });
-
-        private void NotifyVisible()
-        {
-            if (_wasVisible) return;
-            _wasVisible = true;
-            CurrentWidget.OnVisible?.Invoke();
+            if (width is not null)
+            {
+                throw new InvalidOperationException($"Width can only be used with floating behavior. {Source()}");
+            }
         }
     }
+}
 
-    private static TextStyle ResolveDefaultContentTextStyle(ThemeData theme)
+// Dart parity source: material_ui/lib/src/snack_bar.dart (_SnackbarDefaultsM2).
+internal sealed class SnackBarDefaultsM2 : SnackBarThemeData
+{
+    private readonly ThemeData _theme;
+    private readonly ColorScheme _colors;
+
+    internal SnackBarDefaultsM2(BuildContext context) : base(elevation: 6.0)
     {
-        return theme.UseMaterial3
-            ? theme.TextTheme.BodyMedium.CopyWith(color: theme.OnInverseSurfaceColor)
-            : theme.TextTheme.TitleMedium.CopyWith(
-                color: theme.Brightness == Brightness.Light ? Colors.White : Colors.Black);
+        _theme = Theme.Of(context);
+        _colors = _theme.ColorScheme;
     }
 
-    private static Color ResolveDefaultBackground(ThemeData theme)
+    public override Color? BackgroundColor => _theme.Brightness == Brightness.Light
+        ? ColorUtilities.AlphaBlend(ColorUtilities.WithOpacity(_colors.OnSurface, 0.80), _colors.Surface)
+        : _colors.OnSurface;
+
+    public override TextStyle? ContentTextStyle => new ThemeData(
+        useMaterial3: _theme.UseMaterial3,
+        brightness: _theme.Brightness == Brightness.Light ? Brightness.Dark : Brightness.Light)
+        .TextTheme.TitleMedium;
+
+    public override SnackBarBehavior? Behavior => SnackBarBehavior.Fixed;
+
+    public override WidgetStateColor? ActionTextColor => _colors.Secondary;
+
+    public override Color? DisabledActionTextColor => ColorUtilities.WithOpacity(
+        _colors.OnSurface,
+        _theme.Brightness == Brightness.Light ? 0.38 : 0.3);
+
+    public override ShapeBorder? Shape => new RoundedRectangleBorder(
+        borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0));
+
+    public override Thickness? InsetPadding => new Thickness(15.0, 5.0, 15.0, 10.0);
+
+    public override bool? ShowCloseIcon => false;
+
+    public override Color? CloseIconColor => _colors.OnSurface;
+
+    public override double? ActionOverflowThreshold => 0.25;
+}
+
+// Dart parity source: material_ui/lib/src/snack_bar.dart (_SnackbarDefaultsM3).
+internal sealed class SnackBarDefaultsM3 : SnackBarThemeData
+{
+    private readonly ThemeData _theme;
+    private readonly ColorScheme _colors;
+
+    internal SnackBarDefaultsM3(BuildContext context)
     {
-        if (theme.UseMaterial3) return theme.InverseSurfaceColor;
-        if (theme.Brightness == Brightness.Dark) return theme.OnSurfaceColor;
-        return AlphaBlend(ApplyOpacity(theme.OnSurfaceColor, 0.80), theme.SurfaceColor);
+        _theme = Theme.Of(context);
+        _colors = _theme.ColorScheme;
     }
 
-    private static Thickness ResolveDirectionalPadding(TextDirection direction, double start, double end)
-    {
-        return direction == TextDirection.Ltr
-            ? new Thickness(start, 0, end, 0)
-            : new Thickness(end, 0, start, 0);
-    }
+    public override Color? BackgroundColor => _colors.InverseSurface;
 
-    private static IReadOnlyList<BoxShadow>? BuildBoxShadows(Color color, double elevation)
-    {
-        if (elevation <= 0 || color.A == 0) return null;
-        return
-        [
-            new BoxShadow(
-                color: ApplyOpacity(color, 0.22),
-                offset: new Point(0, Math.Max(1, elevation * 0.5)),
-                blurRadius: Math.Max(2, elevation * 2.4)),
-        ];
-    }
+    public override WidgetStateColor? ActionTextColor => WidgetStateColor.ResolveWith(
+        _colors.InversePrimary,
+        _ => _colors.InversePrimary);
 
-    private static Color ApplyOpacity(Color color, double opacity)
+    public override Color? DisabledActionTextColor => _colors.InversePrimary;
+
+    public override TextStyle? ContentTextStyle =>
+        _theme.TextTheme.BodyMedium.CopyWith(color: _colors.OnInverseSurface);
+
+    public override double? Elevation => 6.0;
+
+    public override ShapeBorder? Shape => new RoundedRectangleBorder(
+        borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0));
+
+    public override SnackBarBehavior? Behavior => SnackBarBehavior.Fixed;
+
+    public override Thickness? InsetPadding => new Thickness(15.0, 5.0, 15.0, 10.0);
+
+    public override bool? ShowCloseIcon => false;
+
+    public override Color? CloseIconColor => _colors.OnInverseSurface;
+
+    public override double? ActionOverflowThreshold => 0.25;
+}
+
+internal static class ColorUtilities
+{
+    internal static Color WithOpacity(Color color, double opacity)
     {
         return Color.FromArgb(
-            (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)),
+            (byte)Math.Round(255 * Math.Clamp(opacity, 0, 1)),
             color.R,
             color.G,
             color.B);
     }
 
-    private static Color AlphaBlend(Color foreground, Color background)
+    internal static Color AlphaBlend(Color foreground, Color background)
     {
         double alpha = foreground.A / 255.0;
         byte Blend(byte foregroundChannel, byte backgroundChannel) =>
@@ -539,179 +786,4 @@ public sealed class SnackBar : StatefulWidget
             Blend(foreground.G, background.G),
             Blend(foreground.B, background.B));
     }
-
-    private static double EvaluateInterval(double value, double begin, double end, Curve curve)
-    {
-        if (value <= begin) return 0;
-        if (value >= end) return 1;
-        return curve((value - begin) / (end - begin));
-    }
-
-    private static void ValidateNonNegativeFinite(double? value, string name)
-    {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0))
-            throw new ArgumentOutOfRangeException(name);
-    }
-
-    private static void ValidatePositiveFinite(double? value, string name)
-    {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value <= 0))
-            throw new ArgumentOutOfRangeException(name);
-    }
-
-    private static void ValidateUnitInterval(double? value, string name)
-    {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0 || value.Value > 1))
-            throw new ArgumentOutOfRangeException(name);
-    }
-
-    private static void ValidateInsets(Thickness? value, string name)
-    {
-        if (!value.HasValue) return;
-        var insets = value.Value;
-        if (!double.IsFinite(insets.Left) || !double.IsFinite(insets.Top)
-            || !double.IsFinite(insets.Right) || !double.IsFinite(insets.Bottom)
-            || insets.Left < 0 || insets.Top < 0 || insets.Right < 0 || insets.Bottom < 0)
-            throw new ArgumentOutOfRangeException(name);
-    }
-}
-
-internal sealed class SnackBarContentLayout : MultiChildRenderObjectWidget
-{
-    public SnackBarContentLayout(
-        Widget content,
-        Widget trailing,
-        double actionOverflowThreshold,
-        TextDirection textDirection,
-        Key? key = null) : base([content, trailing], key)
-    {
-        ActionOverflowThreshold = actionOverflowThreshold;
-        TextDirection = textDirection;
-    }
-
-    public double ActionOverflowThreshold { get; }
-    public TextDirection TextDirection { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderSnackBarContentLayout(ActionOverflowThreshold, TextDirection);
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var layout = (RenderSnackBarContentLayout)renderObject;
-        layout.ActionOverflowThreshold = ActionOverflowThreshold;
-        layout.TextDirection = TextDirection;
-    }
-}
-
-internal sealed class SnackBarContentParentData : ContainerBoxParentData<RenderBox>;
-
-internal sealed class RenderSnackBarContentLayout : RenderBox,
-    IRenderBoxContainerDefaultsMixin<RenderBox, SnackBarContentParentData>,
-    IRenderObjectContainer
-{
-    private readonly RenderBoxContainerDefaultsMixin<RenderBox, SnackBarContentParentData> _container;
-    private double _actionOverflowThreshold;
-    private TextDirection _textDirection;
-
-    public RenderSnackBarContentLayout(double actionOverflowThreshold, TextDirection textDirection)
-    {
-        _actionOverflowThreshold = actionOverflowThreshold;
-        _textDirection = textDirection;
-        _container = new RenderBoxContainerDefaultsMixin<RenderBox, SnackBarContentParentData>(this);
-    }
-
-    public double ActionOverflowThreshold
-    {
-        get => _actionOverflowThreshold;
-        set { if (_actionOverflowThreshold != value) { _actionOverflowThreshold = value; MarkNeedsLayout(); } }
-    }
-
-    public TextDirection TextDirection
-    {
-        get => _textDirection;
-        set { if (_textDirection != value) { _textDirection = value; MarkNeedsLayout(); } }
-    }
-
-    public int ChildCount => _container.ChildCount;
-    public RenderBox? FirstChild => _container.FirstChild;
-    public RenderBox? LastChild => _container.LastChild;
-    public void AddAll(List<RenderBox> children) => _container.AddAll(children);
-    public RenderBox? ChildBefore(RenderBox child) => _container.ChildBefore(child);
-    public RenderBox? ChildAfter(RenderBox child) => _container.ChildAfter(child);
-
-    public override void SetupParentData(RenderObject child)
-    {
-        if (child.parentData is not SnackBarContentParentData) child.parentData = new SnackBarContentParentData();
-    }
-
-    protected override void PerformLayout()
-    {
-        var content = FirstChild;
-        var trailing = content is null ? null : ChildAfter(content);
-        if (content is null || trailing is null)
-        {
-            Size = Constraints.Smallest;
-            return;
-        }
-
-        if (!Constraints.HasBoundedWidth)
-        {
-            trailing.Layout(new BoxConstraints(), parentUsesSize: true);
-            content.Layout(new BoxConstraints(), parentUsesSize: true);
-            Size = Constraints.Constrain(new Size(
-                content.Size.Width + trailing.Size.Width,
-                Math.Max(content.Size.Height, trailing.Size.Height)));
-            ((SnackBarContentParentData)content.parentData!).offset = new Point(0, 0);
-            ((SnackBarContentParentData)trailing.parentData!).offset = new Point(
-                content.Size.Width,
-                (Size.Height - trailing.Size.Height) / 2);
-            return;
-        }
-
-        double maxWidth = Constraints.MaxWidth;
-        trailing.Layout(new BoxConstraints(MaxWidth: maxWidth), parentUsesSize: true);
-        bool overflow = maxWidth > 0 && trailing.Size.Width / maxWidth > ActionOverflowThreshold;
-        double contentWidth = overflow
-            ? maxWidth * 0.6
-            : Math.Max(0, maxWidth - trailing.Size.Width);
-        content.Layout(new BoxConstraints(MaxWidth: contentWidth), parentUsesSize: true);
-
-        double height = overflow
-            ? content.Size.Height + trailing.Size.Height + 14
-            : Math.Max(content.Size.Height, trailing.Size.Height);
-        Size = Constraints.Constrain(new Size(maxWidth, height));
-        var contentData = (SnackBarContentParentData)content.parentData!;
-        var trailingData = (SnackBarContentParentData)trailing.parentData!;
-        contentData.offset = TextDirection == TextDirection.Ltr
-            ? new Point(0, 0)
-            : new Point(Size.Width - content.Size.Width, 0);
-        if (overflow)
-        {
-            trailingData.offset = new Point(
-                TextDirection == TextDirection.Ltr ? Size.Width - trailing.Size.Width : 0,
-                content.Size.Height);
-        }
-        else
-        {
-            trailingData.offset = new Point(
-                TextDirection == TextDirection.Ltr ? Size.Width - trailing.Size.Width : 0,
-                (Size.Height - trailing.Size.Height) / 2);
-        }
-    }
-
-    public override void Paint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position) => _container.DefaultHitTestChildren(result, position);
-    public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) => _container.DefaultHitTestChildren(result, position);
-    public override void VisitChildren(Action<RenderObject> visitor) { for (var child = FirstChild; child is not null; child = ChildAfter(child)) visitor(child); }
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
-    {
-        for (var child = FirstChild; child is not null; child = ChildAfter(child)) { visitor(child); }
-    }
-    public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);
-    public void Move(RenderBox child, RenderBox? after = null) => _container.Move(child, after);
-    public void Remove(RenderBox child) => _container.Remove(child);
-    void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after) => Insert((RenderBox)child, after as RenderBox);
-    void IRenderObjectContainer.Move(RenderObject child, RenderObject? after) => Move((RenderBox)child, after as RenderBox);
-    void IRenderObjectContainer.Remove(RenderObject child) => Remove((RenderBox)child);
 }

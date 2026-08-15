@@ -18,6 +18,8 @@ public sealed class SnackBarDemoPage : StatefulWidget
         private bool _showAction = true;
         private bool _showCloseIcon;
         private bool _customColors;
+        private bool _swipeUp;
+        private bool _fixedWidth;
         private int _actionCount;
 
         public override Widget Build(BuildContext context)
@@ -44,12 +46,27 @@ public sealed class SnackBarDemoPage : StatefulWidget
                         spacing: 8,
                         children:
                         [
-                            ControlButton(_customColors ? "Colors on" : "Colors off", () => SetState(() => _customColors = !_customColors)),
+                            ControlButton(
+                                _customColors ? "Colors on" : "Colors off",
+                                () => SetState(() => _customColors = !_customColors)),
+                            ControlButton(
+                                _swipeUp ? "Swipe up" : "Swipe down",
+                                () => SetState(() => _swipeUp = !_swipeUp)),
+                            ControlButton(
+                                _fixedWidth ? "Width 320" : "Full width",
+                                () => SetState(() => _fixedWidth = !_fixedWidth)),
+                        ]),
+                    new Row(
+                        spacing: 8,
+                        children:
+                        [
                             new ElevatedButton(new Text("SHOW SNACKBAR"), () => ShowSnackBar(context)),
                         ]),
                     new Text($"Action presses: {_actionCount}", fontSize: 13),
                     new Text(
-                        "Narrow the window to move a wide action below the message; repeated SHOW calls demonstrate queue order.",
+                        "Narrow the window to move a wide action below the message; repeated SHOW calls "
+                        + "show queue order. Drag the bar in the swipe direction to dismiss it; the width "
+                        + "probe needs floating behavior.",
                         fontSize: 13,
                         color: Colors.DimGray),
                 ]);
@@ -64,6 +81,8 @@ public sealed class SnackBarDemoPage : StatefulWidget
                 closeIconColor: _customColors ? Color.Parse("#FFFFD54F") : null,
                 showCloseIcon: _showCloseIcon,
                 persist: _showAction || _showCloseIcon,
+                dismissDirection: _swipeUp ? DismissDirection.Up : DismissDirection.Down,
+                width: _floating && _fixedWidth ? 320 : null,
                 action: _showAction
                     ? new SnackBarAction(
                         label: "UNDO LONG ACTION",

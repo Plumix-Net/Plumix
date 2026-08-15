@@ -264,7 +264,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `painting/shape_decoration.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
 | `painting/stadium_border.dart` | `src/Plumix/Rendering/StadiumBorder.cs` | — | — |
 | `painting/star_border.dart` | `src/Plumix/Rendering/StarBorder.cs` | — | — |
-| `painting/text_painter.dart` | `src/Plumix/Painting/ParagraphSource.cs`<br>`src/Plumix/RenderParagraph.Text.cs` | — | — |
+| `painting/text_painter.dart` | `src/Plumix/Painting/ParagraphSource.cs`<br>`src/Plumix/Painting/TextPainter.cs`<br>`src/Plumix/RenderParagraph.Text.cs` | — | — |
 | `painting/text_scaler.dart` | `src/Plumix/Painting/TextScaler.cs` | — | — |
 | `painting/text_span.dart` | `src/Plumix/Painting/TextSpan.cs` | — | — |
 | `physics/clamped_simulation.dart` | `src/Plumix/Physics/ClampedSimulation.cs` | — | — |
@@ -488,7 +488,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 ## Summary
 
 - Flutter files mapped: 441
-- C# files carrying a marker: 568
+- C# files carrying a marker: 569
 - C# files without a marker: 18
 - Markers not resolvable in the pinned checkout: 0
 

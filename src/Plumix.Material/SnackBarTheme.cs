@@ -9,122 +9,198 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/snack_bar_theme.dart
 
+/// Defines where a [SnackBar] should appear within a `Scaffold` and how its location should be
+/// adjusted when the scaffold also includes a `FloatingActionButton` or a `BottomNavigationBar`.
 public enum SnackBarBehavior
 {
+    /// Fixes the [SnackBar] at the bottom of the `Scaffold`.
     Fixed,
+
+    /// The [SnackBar] floats above the `Scaffold`'s contents.
     Floating,
 }
 
-public enum DismissDirection
-{
-    Vertical,
-    Horizontal,
-    EndToStart,
-    StartToEnd,
-    Up,
-    Down,
-    None,
-}
-
-public sealed partial record SnackBarThemeData
+/// Customizes default property values for [SnackBar] widgets.
+///
+/// Flutter declares this as an ordinary class so `_SnackbarDefaultsM2`/`_SnackbarDefaultsM3` can
+/// extend it and override individual getters; Plumix keeps that shape, which is why the members are
+/// `virtual` rather than record properties.
+public partial class SnackBarThemeData
 {
     public SnackBarThemeData(
-        Color? BackgroundColor = null,
-        Color? ActionTextColor = null,
-        Color? DisabledActionTextColor = null,
-        TextStyle? ContentTextStyle = null,
-        double? Elevation = null,
-        ShapeBorder? Shape = null,
-        SnackBarBehavior? Behavior = null,
-        double? Width = null,
-        Thickness? InsetPadding = null,
-        bool? ShowCloseIcon = null,
-        Color? CloseIconColor = null,
-        double? ActionOverflowThreshold = null,
-        Color? ActionBackgroundColor = null,
-        Color? DisabledActionBackgroundColor = null,
-        DismissDirection? DismissDirection = null)
+        Color? backgroundColor = null,
+        WidgetStateColor? actionTextColor = null,
+        Color? disabledActionTextColor = null,
+        TextStyle? contentTextStyle = null,
+        double? elevation = null,
+        ShapeBorder? shape = null,
+        SnackBarBehavior? behavior = null,
+        double? width = null,
+        Thickness? insetPadding = null,
+        bool? showCloseIcon = null,
+        Color? closeIconColor = null,
+        double? actionOverflowThreshold = null,
+        WidgetStateColor? actionBackgroundColor = null,
+        Color? disabledActionBackgroundColor = null,
+        DismissDirection? dismissDirection = null)
     {
-        ValidateNonNegativeFinite(Elevation, nameof(Elevation));
-        ValidatePositiveFinite(Width, nameof(Width));
-        ValidateUnitInterval(ActionOverflowThreshold, nameof(ActionOverflowThreshold));
-        ValidateInsets(InsetPadding, nameof(InsetPadding));
-        if (Width.HasValue && Behavior != SnackBarBehavior.Floating)
+        if (elevation is < 0.0)
         {
-            throw new ArgumentException("SnackBar theme width requires floating behavior.", nameof(Width));
+            throw new ArgumentOutOfRangeException(nameof(elevation));
         }
 
-        this.BackgroundColor = BackgroundColor;
-        this.ActionTextColor = ActionTextColor;
-        this.DisabledActionTextColor = DisabledActionTextColor;
-        this.ContentTextStyle = ContentTextStyle;
-        this.Elevation = Elevation;
-        this.Shape = Shape;
-        this.Behavior = Behavior;
-        this.Width = Width;
-        this.InsetPadding = InsetPadding;
-        this.ShowCloseIcon = ShowCloseIcon;
-        this.CloseIconColor = CloseIconColor;
-        this.ActionOverflowThreshold = ActionOverflowThreshold;
-        this.ActionBackgroundColor = ActionBackgroundColor;
-        this.DisabledActionBackgroundColor = DisabledActionBackgroundColor;
-        this.DismissDirection = DismissDirection;
+        if (width is not null && behavior != SnackBarBehavior.Floating)
+        {
+            throw new ArgumentException(
+                "Width can only be set if behaviour is SnackBarBehavior.floating",
+                nameof(width));
+        }
+
+        if (actionOverflowThreshold is < 0.0 or > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(actionOverflowThreshold),
+                "Action overflow threshold must be between 0 and 1 inclusive");
+        }
+
+        if (actionBackgroundColor is { IsConstantColor: false } && disabledActionBackgroundColor is not null)
+        {
+            throw new ArgumentException(
+                "disabledBackgroundColor must not be provided when background color is a WidgetStateColor",
+                nameof(disabledActionBackgroundColor));
+        }
+
+        BackgroundColor = backgroundColor;
+        ActionTextColor = actionTextColor;
+        DisabledActionTextColor = disabledActionTextColor;
+        ContentTextStyle = contentTextStyle;
+        Elevation = elevation;
+        Shape = shape;
+        Behavior = behavior;
+        Width = width;
+        InsetPadding = insetPadding;
+        ShowCloseIcon = showCloseIcon;
+        CloseIconColor = closeIconColor;
+        ActionOverflowThreshold = actionOverflowThreshold;
+        ActionBackgroundColor = actionBackgroundColor;
+        DisabledActionBackgroundColor = disabledActionBackgroundColor;
+        DismissDirection = dismissDirection;
     }
 
-    public Color? BackgroundColor { get; init; }
-    public Color? ActionTextColor { get; init; }
-    public Color? DisabledActionTextColor { get; init; }
-    public TextStyle? ContentTextStyle { get; init; }
-    public double? Elevation { get; init; }
-    public ShapeBorder? Shape { get; init; }
-    public SnackBarBehavior? Behavior { get; init; }
-    public double? Width { get; init; }
-    public Thickness? InsetPadding { get; init; }
-    public bool? ShowCloseIcon { get; init; }
-    public Color? CloseIconColor { get; init; }
-    public double? ActionOverflowThreshold { get; init; }
-    public Color? ActionBackgroundColor { get; init; }
-    public Color? DisabledActionBackgroundColor { get; init; }
-    public DismissDirection? DismissDirection { get; init; }
+    public virtual Color? BackgroundColor { get; }
 
-    private static void ValidateNonNegativeFinite(double? value, string name)
+    public virtual WidgetStateColor? ActionTextColor { get; }
+
+    public virtual Color? DisabledActionTextColor { get; }
+
+    public virtual TextStyle? ContentTextStyle { get; }
+
+    public virtual double? Elevation { get; }
+
+    public virtual ShapeBorder? Shape { get; }
+
+    public virtual SnackBarBehavior? Behavior { get; }
+
+    public virtual double? Width { get; }
+
+    public virtual Thickness? InsetPadding { get; }
+
+    public virtual bool? ShowCloseIcon { get; }
+
+    public virtual Color? CloseIconColor { get; }
+
+    public virtual double? ActionOverflowThreshold { get; }
+
+    public virtual WidgetStateColor? ActionBackgroundColor { get; }
+
+    public virtual Color? DisabledActionBackgroundColor { get; }
+
+    public virtual DismissDirection? DismissDirection { get; }
+
+    public SnackBarThemeData CopyWith(
+        Color? backgroundColor = null,
+        WidgetStateColor? actionTextColor = null,
+        Color? disabledActionTextColor = null,
+        TextStyle? contentTextStyle = null,
+        double? elevation = null,
+        ShapeBorder? shape = null,
+        SnackBarBehavior? behavior = null,
+        double? width = null,
+        Thickness? insetPadding = null,
+        bool? showCloseIcon = null,
+        Color? closeIconColor = null,
+        double? actionOverflowThreshold = null,
+        WidgetStateColor? actionBackgroundColor = null,
+        Color? disabledActionBackgroundColor = null,
+        DismissDirection? dismissDirection = null)
     {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(name, "Value must be non-negative and finite.");
-        }
+        return new SnackBarThemeData(
+            backgroundColor: backgroundColor ?? BackgroundColor,
+            actionTextColor: actionTextColor ?? ActionTextColor,
+            disabledActionTextColor: disabledActionTextColor ?? DisabledActionTextColor,
+            contentTextStyle: contentTextStyle ?? ContentTextStyle,
+            elevation: elevation ?? Elevation,
+            shape: shape ?? Shape,
+            behavior: behavior ?? Behavior,
+            width: width ?? Width,
+            insetPadding: insetPadding ?? InsetPadding,
+            showCloseIcon: showCloseIcon ?? ShowCloseIcon,
+            closeIconColor: closeIconColor ?? CloseIconColor,
+            actionOverflowThreshold: actionOverflowThreshold ?? ActionOverflowThreshold,
+            actionBackgroundColor: actionBackgroundColor ?? ActionBackgroundColor,
+            disabledActionBackgroundColor: disabledActionBackgroundColor ?? DisabledActionBackgroundColor,
+            dismissDirection: dismissDirection ?? DismissDirection);
     }
 
-    private static void ValidatePositiveFinite(double? value, string name)
+    public override bool Equals(object? obj)
     {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value <= 0))
+        if (ReferenceEquals(this, obj))
         {
-            throw new ArgumentOutOfRangeException(name, "Value must be positive and finite.");
+            return true;
         }
+
+        return obj is SnackBarThemeData other
+               && other.BackgroundColor == BackgroundColor
+               && Equals(other.ActionTextColor, ActionTextColor)
+               && other.DisabledActionTextColor == DisabledActionTextColor
+               && Equals(other.ContentTextStyle, ContentTextStyle)
+               && other.Elevation == Elevation
+               && Equals(other.Shape, Shape)
+               && other.Behavior == Behavior
+               && other.Width == Width
+               && other.InsetPadding == InsetPadding
+               && other.ShowCloseIcon == ShowCloseIcon
+               && other.CloseIconColor == CloseIconColor
+               && other.ActionOverflowThreshold == ActionOverflowThreshold
+               && Equals(other.ActionBackgroundColor, ActionBackgroundColor)
+               && other.DisabledActionBackgroundColor == DisabledActionBackgroundColor
+               && other.DismissDirection == DismissDirection;
     }
 
-    private static void ValidateUnitInterval(double? value, string name)
+    public override int GetHashCode()
     {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0 || value.Value > 1))
-        {
-            throw new ArgumentOutOfRangeException(name, "Value must be between zero and one.");
-        }
-    }
-
-    private static void ValidateInsets(Thickness? value, string name)
-    {
-        if (!value.HasValue) return;
-        var insets = value.Value;
-        if (!double.IsFinite(insets.Left) || !double.IsFinite(insets.Top)
-            || !double.IsFinite(insets.Right) || !double.IsFinite(insets.Bottom)
-            || insets.Left < 0 || insets.Top < 0 || insets.Right < 0 || insets.Bottom < 0)
-        {
-            throw new ArgumentOutOfRangeException(name, "Insets must be non-negative and finite.");
-        }
+        var hash = new HashCode();
+        hash.Add(BackgroundColor);
+        hash.Add(ActionTextColor);
+        hash.Add(DisabledActionTextColor);
+        hash.Add(ContentTextStyle);
+        hash.Add(Elevation);
+        hash.Add(Shape);
+        hash.Add(Behavior);
+        hash.Add(Width);
+        hash.Add(InsetPadding);
+        hash.Add(ShowCloseIcon);
+        hash.Add(CloseIconColor);
+        hash.Add(ActionOverflowThreshold);
+        hash.Add(ActionBackgroundColor);
+        hash.Add(DisabledActionBackgroundColor);
+        hash.Add(DismissDirection);
+        return hash.ToHashCode();
     }
 }
 
-public sealed class SnackBarTheme : InheritedWidget
+/// Applies a snack bar theme to descendant [SnackBar] widgets.
+public sealed class SnackBarTheme : InheritedTheme
 {
     public SnackBarTheme(SnackBarThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -133,9 +209,12 @@ public sealed class SnackBarTheme : InheritedWidget
     }
 
     public SnackBarThemeData Data { get; }
+
     public Widget Child { get; }
 
     public override Widget Build(BuildContext context) => Child;
+
+    public override Widget Wrap(BuildContext context, Widget child) => new SnackBarTheme(Data, child);
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((SnackBarTheme)oldWidget).Data, Data);
