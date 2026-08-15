@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Plumix.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class ModalBarrierTests
 {
     [Fact]
@@ -104,31 +105,18 @@ public sealed class ModalBarrierTests
     [Fact]
     public void ModalBarrier_NonDismissibleTapEmitsAlertFeedback()
     {
-        int alertCount = 0;
-        Action<SystemSoundType> listener = type =>
-        {
-            if (type == SystemSoundType.Alert)
-            {
-                alertCount++;
-            }
-        };
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
 
-        SystemSound.SoundRequested += listener;
-        try
-        {
-            var owner = new BuildOwner();
-            var root = new TestRootElement(new ModalBarrier(dismissible: false));
-            Mount(root, owner);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new ModalBarrier(dismissible: false));
+        Mount(root, owner);
 
-            FindWidget<GestureDetector>(root).OnTap!();
+        FindWidget<GestureDetector>(root).OnTap!();
 
-            Assert.Equal(1, alertCount);
-            root.Unmount();
-        }
-        finally
-        {
-            SystemSound.SoundRequested -= listener;
-        }
+        MethodCall call = Assert.Single(platform.Log);
+        Assert.Equal("SystemSound.play", call.Method);
+        Assert.Equal("SystemSoundType.alert", call.Arguments);
+        root.Unmount();
     }
 
     [Fact]

@@ -865,28 +865,25 @@ public sealed class RouterTests : IDisposable
     public void PlatformRouteInformationProvider_ReportsThroughSystemNavigator()
     {
         var provider = new PlatformRouteInformationProvider(Info("initial"));
-        var updates = new List<RouteInformationUpdate>();
-        var modes = new List<BrowserHistoryMode>();
-        SystemNavigator.RouteInformationReported += updates.Add;
-        SystemNavigator.HistoryModeSelected += modes.Add;
+        using var navigation = new MockMethodCallHandler(SystemChannels.Navigation);
 
-        try
-        {
-            provider.RouterReportsNewRouteInformation(Info("a", state: true));
-            provider.RouterReportsNewRouteInformation(Info("a", state: false));
-            provider.RouterReportsNewRouteInformation(Info("b"), RouteInformationReportingType.Neglect);
-            provider.RouterReportsNewRouteInformation(Info("b"), RouteInformationReportingType.Navigate);
-        }
-        finally
-        {
-            SystemNavigator.ResetForTests();
-        }
+        provider.RouterReportsNewRouteInformation(Info("a", state: true));
+        provider.RouterReportsNewRouteInformation(Info("a", state: false));
+        provider.RouterReportsNewRouteInformation(Info("b"), RouteInformationReportingType.Neglect);
+        provider.RouterReportsNewRouteInformation(Info("b"), RouteInformationReportingType.Navigate);
 
+        List<MethodCall> modes = navigation.Log.FindAll(call => call.Method == "selectMultiEntryHistory");
+        List<MethodCall> updates = navigation.Log.FindAll(call => call.Method == "routeInformationUpdated");
         Assert.Equal(4, modes.Count);
-        Assert.All(modes, mode => Assert.Equal(BrowserHistoryMode.MultiEntry, mode));
-        Assert.Equal([false, true, true, false], updates.Select(update => update.Replace));
-        Assert.Equal(["a", "a", "b", "b"], updates.Select(update => update.Uri.ToString()));
+        Assert.Equal([false, true, true, false], updates.Select(RouteUpdateReplace));
+        Assert.Equal(["a", "a", "b", "b"], updates.Select(RouteUpdateUri));
     }
+
+    private static bool RouteUpdateReplace(MethodCall call) =>
+        (bool)((IDictionary<string, object?>)call.Arguments!)["replace"]!;
+
+    private static string RouteUpdateUri(MethodCall call) =>
+        (string)((IDictionary<string, object?>)call.Arguments!)["uri"]!;
 
     [Theory]
     [InlineData("initial?a=ws/abcd", "initial?a=ws%2Fabcd")]
@@ -897,21 +894,14 @@ public sealed class RouterTests : IDisposable
         string second)
     {
         var provider = new PlatformRouteInformationProvider(Info(first));
-        var updates = new List<RouteInformationUpdate>();
-        SystemNavigator.RouteInformationReported += updates.Add;
+        using var navigation = new MockMethodCallHandler(SystemChannels.Navigation);
 
-        try
-        {
-            provider.RouterReportsNewRouteInformation(Info(first));
-            provider.RouterReportsNewRouteInformation(Info(second));
-        }
-        finally
-        {
-            SystemNavigator.ResetForTests();
-        }
+        provider.RouterReportsNewRouteInformation(Info(first));
+        provider.RouterReportsNewRouteInformation(Info(second));
 
+        List<MethodCall> updates = navigation.Log.FindAll(call => call.Method == "routeInformationUpdated");
         Assert.Equal(2, updates.Count);
-        Assert.True(updates[1].Replace);
+        Assert.True(RouteUpdateReplace(updates[1]));
     }
 
     [Fact]

@@ -42,8 +42,7 @@ public class PlumixHost : Control
     private bool _isSubscribedToApplicationSwitcherDescription;
     private bool _isSubscribedToMouseCursor;
     private bool _isSubscribedToFeedback;
-    private bool _isSubscribedToSystemSound;
-    private bool _isSubscribedToHapticFeedback;
+    private bool _isSubscribedToPlatformChannel;
     private bool _allowWindowClose;
     private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
     private ApplicationSwitcherDescription? _currentApplicationSwitcherDescription =
@@ -324,8 +323,7 @@ public class PlumixHost : Control
         AttachApplicationSwitcherDescriptionListener();
         AttachMouseCursorListener();
         AttachFeedbackListener();
-        AttachSystemSoundListener();
-        AttachHapticFeedbackListener();
+        AttachPlatformChannelHandler();
         AttachTextInputConfigurationListener();
         AttachMetricSources();
         OnMetricsChanged();
@@ -334,8 +332,7 @@ public class PlumixHost : Control
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
         DetachMetricSources();
-        DetachHapticFeedbackListener();
-        DetachSystemSoundListener();
+        DetachPlatformChannelHandler();
         DetachFeedbackListener();
         DetachTextInputConfigurationListener();
         DetachMouseCursorListener();
@@ -811,65 +808,65 @@ public class PlumixHost : Control
     {
     }
 
-    private void AttachSystemSoundListener()
+    /// <summary>
+    /// Registers this host as the platform side of <c>flutter/platform</c>. Flutter's platform side is
+    /// the engine; in Plumix the host adapter answers the channel directly.
+    /// </summary>
+    private void AttachPlatformChannelHandler()
     {
-        if (_isSubscribedToSystemSound)
+        if (_isSubscribedToPlatformChannel)
         {
             return;
         }
 
-        SystemSound.SoundRequested += HandleSystemSoundRequested;
-        _isSubscribedToSystemSound = true;
+        SystemChannels.Platform.SetPlatformMethodCallHandler(HandlePlatformMethodCall);
+        _isSubscribedToPlatformChannel = true;
     }
 
-    private void DetachSystemSoundListener()
+    private void DetachPlatformChannelHandler()
     {
-        if (!_isSubscribedToSystemSound)
+        if (!_isSubscribedToPlatformChannel)
         {
             return;
         }
 
-        SystemSound.SoundRequested -= HandleSystemSoundRequested;
-        _isSubscribedToSystemSound = false;
+        SystemChannels.Platform.SetPlatformMethodCallHandler(null);
+        _isSubscribedToPlatformChannel = false;
     }
 
-    private void HandleSystemSoundRequested(SystemSoundType type)
+    private Task<object?> HandlePlatformMethodCall(MethodCall call)
     {
-        OnFrameworkSystemSound(type);
+        switch (call.Method)
+        {
+            case "SystemSound.play":
+                OnFrameworkSystemSound(ParseSystemSoundType(call.Arguments as string));
+                return Task.FromResult<object?>(null);
+            case "HapticFeedback.vibrate":
+                OnFrameworkHapticFeedback(call.Arguments as string);
+                return Task.FromResult<object?>(null);
+            default:
+                // Dart: "calls to methods that are not implemented on the shell side are ignored".
+                throw new MissingPluginException(call.Method);
+        }
     }
+
+    private static SystemSoundType ParseSystemSoundType(string? type) => type switch
+    {
+        "SystemSoundType.tick" => SystemSoundType.Tick,
+        "SystemSoundType.alert" => SystemSoundType.Alert,
+        _ => SystemSoundType.Click,
+    };
 
     protected virtual void OnFrameworkSystemSound(SystemSoundType type)
     {
     }
 
-    private void AttachHapticFeedbackListener()
-    {
-        if (_isSubscribedToHapticFeedback)
-        {
-            return;
-        }
-
-        HapticFeedback.FeedbackRequested += HandleHapticFeedbackRequested;
-        _isSubscribedToHapticFeedback = true;
-    }
-
-    private void DetachHapticFeedbackListener()
-    {
-        if (!_isSubscribedToHapticFeedback)
-        {
-            return;
-        }
-
-        HapticFeedback.FeedbackRequested -= HandleHapticFeedbackRequested;
-        _isSubscribedToHapticFeedback = false;
-    }
-
-    private void HandleHapticFeedbackRequested(HapticFeedbackType type)
-    {
-        OnFrameworkHapticFeedback(type);
-    }
-
-    protected virtual void OnFrameworkHapticFeedback(HapticFeedbackType type)
+    /// <summary>
+    /// Receives <c>HapticFeedback.vibrate</c>. <paramref name="type"/> is Dart's
+    /// <c>HapticFeedbackType</c> string (for example <c>HapticFeedbackType.mediumImpact</c>), or
+    /// <c>null</c> for the plain system default.
+    /// </summary>
+    protected virtual void OnFrameworkHapticFeedback(string? type)
     {
     }
 

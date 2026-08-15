@@ -59,7 +59,7 @@ public sealed class RestorationManagerTests : IDisposable
     public void RootBucket_ReceivedBeforeRetrievalNeverQueriesTheEngine()
     {
         var manager = new TestRestorationManager();
-        manager.HandleRestorationUpdateFromEngine(
+        manager.RespondWith(
             enabled: true,
             data: RawRestorationData.Build(values: new Dictionary<object, object?> { ["foo"] = 33 }));
 
@@ -79,7 +79,7 @@ public sealed class RestorationManagerTests : IDisposable
         Assert.True(manager.EngineQueried);
         Assert.Null(bucket);
 
-        manager.HandleRestorationUpdateFromEngine(
+        manager.RespondWith(
             enabled: true,
             data: RawRestorationData.Build(values: new Dictionary<object, object?> { ["foo"] = 33 }));
 
@@ -105,7 +105,7 @@ public sealed class RestorationManagerTests : IDisposable
             manager.GetRootBucket(value => bucketDuringNotification = value);
         });
 
-        manager.HandleRestorationUpdateFromEngine(
+        manager.RespondWith(
             enabled: true,
             data: RawRestorationData.Build(
                 values: new Dictionary<object, object?> { ["foo"] = 33 },
@@ -143,10 +143,10 @@ public sealed class RestorationManagerTests : IDisposable
         Assert.Null(bucket);
         Assert.Equal(0, notifications);
 
-        manager.HandleRestorationUpdateFromEngine(enabled: true, data: RawRestorationData.Build());
+        manager.RespondWith(enabled: true, data: RawRestorationData.Build());
         Assert.Equal(1, notifications);
 
-        manager.HandleRestorationUpdateFromEngine(enabled: false, data: null);
+        manager.RespondWith(enabled: false, data: null);
         Assert.Equal(2, notifications);
     }
 
@@ -192,7 +192,7 @@ public sealed class RestorationManagerTests : IDisposable
         Assert.False(manager.IsReplacing);
         Assert.False(bucket!.IsReplacing);
 
-        manager.HandleRestorationUpdateFromEngine(enabled: true, data: null);
+        manager.RespondWith(enabled: true, data: null);
         RestorationBucket? newBucket = null;
         manager.GetRootBucket(value => newBucket = value);
 
@@ -213,7 +213,7 @@ public sealed class RestorationManagerTests : IDisposable
         var manager = new TestRestorationManager { Data = RawRestorationData.Build() };
         manager.GetRootBucket(_ => { });
 
-        manager.HandleRestorationUpdateFromEngine(enabled: false, data: null);
+        manager.RespondWith(enabled: false, data: null);
 
         RestorationBucket? bucket = null;
         manager.GetRootBucket(value => bucket = value);

@@ -11,6 +11,10 @@ internal sealed class MockRestorationManager : RestorationManager
 {
     public List<RestorationBucket> Scheduled { get; } = [];
 
+    protected override void InitChannels()
+    {
+    }
+
     public override void ScheduleSerializationFor(RestorationBucket bucket) => Scheduled.Add(bucket);
 
     public override void UnscheduleSerializationFor(RestorationBucket bucket) => Scheduled.Remove(bucket);
@@ -48,6 +52,10 @@ internal sealed class TestRestorationManager : RestorationManager
 
     public List<Dictionary<object, object?>> SentToEngine { get; } = [];
 
+    protected override void InitChannels()
+    {
+    }
+
     public override void GetRootBucket(Action<RestorationBucket?> callback)
     {
         RootBucketAccessed++;
@@ -59,7 +67,7 @@ internal sealed class TestRestorationManager : RestorationManager
     {
         Enabled = enabled;
         Data = data;
-        HandleRestorationUpdateFromEngine(enabled, data);
+        HandleRestorationUpdateFromEngine(enabled, Encode(data));
     }
 
     protected override void GetRootBucketFromEngine()
@@ -67,14 +75,17 @@ internal sealed class TestRestorationManager : RestorationManager
         EngineQueried = true;
         if (AnswerSynchronously)
         {
-            HandleRestorationUpdateFromEngine(Enabled, Data);
+            HandleRestorationUpdateFromEngine(Enabled, Encode(Data));
         }
     }
 
-    protected override void SendToEngine(IDictionary<object, object?> encodedData)
+    protected override void SendToEngine(byte[] encodedData)
     {
-        SentToEngine.Add((Dictionary<object, object?>)encodedData);
+        SentToEngine.Add((Dictionary<object, object?>)DecodeRestorationData(encodedData)!);
     }
+
+    private static byte[]? Encode(Dictionary<object, object?>? data) =>
+        data is null ? null : EncodeRestorationData(data);
 }
 
 /// <summary>Helpers for building and inspecting the raw restoration data maps.</summary>

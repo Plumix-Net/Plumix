@@ -75,6 +75,13 @@ public class WidgetsBinding
     private readonly List<WidgetsBindingObserver> _observers = [];
     private readonly List<WidgetsBindingObserver> _backGestureObservers = [];
 
+    static WidgetsBinding()
+    {
+        // Only the ambient binding owns the platform channels; a locally constructed one (tests do this)
+        // must not hijack them.
+        SharedInstance.InitInstances();
+    }
+
     public static WidgetsBinding Instance => SharedInstance;
 
     public AppLifecycleState? LifecycleState { get; private set; }
@@ -154,6 +161,43 @@ public class WidgetsBinding
         }
 
         return didCancel ? AppExitResponse.Cancel : AppExitResponse.Exit;
+    }
+
+    /// <summary>
+    /// Flutter's <c>WidgetsBinding.initInstances</c>: installs the <c>flutter/navigation</c> handler so a
+    /// host can push deep links and back requests through the channel.
+    /// </summary>
+    public void InitInstances()
+    {
+        SystemChannels.Navigation.SetMethodCallHandler(HandleNavigationInvocation);
+    }
+
+    private Task<object?> HandleNavigationInvocation(MethodCall call)
+    {
+        switch (call.Method)
+        {
+            case "popRoute":
+                return Task.FromResult<object?>(HandlePopRoute());
+            case "pushRoute":
+                return Task.FromResult<object?>(HandlePushRoute((string)call.Arguments!));
+            case "pushRouteInformation":
+                var arguments = (IDictionary<string, object?>)call.Arguments!;
+                return Task.FromResult<object?>(HandlePushRouteInformation(new RouteInformation(
+                    new Uri((string)arguments["location"]!, UriKind.RelativeOrAbsolute),
+                    arguments.TryGetValue("state", out object? state) ? state : null)));
+            default:
+                return Task.FromResult<object?>(null);
+        }
+    }
+
+    /// <summary>
+    /// Flutter's <c>WidgetsBinding.handlePushRoute</c>: offers a deep-linked route name to the observers.
+    /// </summary>
+    public bool HandlePushRoute(string route)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        return HandlePushRouteInformation(
+            new RouteInformation(new Uri(route, UriKind.RelativeOrAbsolute)));
     }
 
     /// <summary>

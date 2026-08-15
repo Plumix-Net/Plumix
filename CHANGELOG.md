@@ -1,5 +1,26 @@
 # Changelog
 
+- Breaking: ported Flutter's platform-channel layer, which several divergence rows were blocked on.
+  New in core: `ByteData`/`Endian` and `WriteBuffer`/`ReadBuffer` (`Plumix.Foundation`), `MessageCodec<T>`,
+  `MethodCodec`, `MethodCall`, `PlatformException`, `MissingPluginException`, `BinaryCodec`, `StringCodec`,
+  `JsonMessageCodec`, `JsonMethodCodec`, `StandardMessageCodec`, `StandardMethodCodec`, `BinaryMessenger`,
+  `ServicesBinding`, `BasicMessageChannel<T>`, `MethodChannel`, `OptionalMethodChannel`, `EventChannel` and
+  `SystemChannels`. The standard codec is byte-compatible with Dart's, down to the size encoding and the
+  typed-list alignment. Since Plumix has no engine, the host answers a channel through the new
+  `MethodChannel.SetPlatformMethodCallHandler`.
+  `SystemNavigator` now sends Flutter's real messages (`SystemNavigator.pop`, `selectSingleEntryHistory`,
+  `selectMultiEntryHistory`, `routeInformationUpdated`) instead of raising C# events — the
+  `HistoryModeSelected`/`RouteInformationReported`/`PopRequested` events, `BrowserHistoryMode` and
+  `RouteInformationUpdate` are gone. `SystemSound.Play`/`HapticFeedback.*` send `flutter/platform` messages
+  (`SystemSound.SoundRequested`/`HapticFeedback.FeedbackRequested` and `HapticFeedbackType` are gone;
+  `HapticFeedback` gained Dart's light/heavy/success/warning/error members and `SystemSoundType` gained
+  `Tick`), and `PlumixHost` answers that channel — `OnFrameworkHapticFeedback` now takes Dart's type string.
+  `RestorationManager` speaks `flutter/restoration` (`get`/`put`/`push`): `HandleRestorationUpdateFromEngine`
+  and `SendToEngine` now exchange `StandardMessageCodec` bytes instead of a live map.
+  `WidgetsBinding` answers the inbound `popRoute`/`pushRoute`/`pushRouteInformation` calls and gained
+  `HandlePushRoute`. `Navigator(reportsRouteUpdateToEngine:)` finally reports the route name to the host
+  instead of only recording it, and `Router`'s restorable route information round-trips as a `List<object?>`.
+
 - Breaking: closed the Material 2 scheme derivation — the last open item of the Material rewrite.
   Added `ColorSwatch<T>` (core `Plumix.Painting`), `MaterialColor`/`MaterialAccentColor`, and the
   full `Colors` palette, generated from `colors.dart` by `scripts/generate_material_colors.py`.

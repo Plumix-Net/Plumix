@@ -722,9 +722,7 @@ public sealed class MaterialScrollbarTests
     public void CupertinoScrollbar_UsesBrightnessResizeAnimationAndHapticRequests()
     {
         using var controller = new ScrollController();
-        var requested = new List<HapticFeedbackType>();
-        HapticFeedback.FeedbackRequested += requested.Add;
-        try
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
         {
             using var harness = new WidgetRenderHarness(new MediaQuery(
                 data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
@@ -752,13 +750,10 @@ public sealed class MaterialScrollbarTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(resizeStart + 0.05));
             harness.Pump(new Size(200, 240));
 
-            Assert.Single(requested);
-            Assert.Equal(HapticFeedbackType.MediumImpact, requested[0]);
+            MethodCall call = Assert.Single(platform.Log);
+            Assert.Equal("HapticFeedback.vibrate", call.Method);
+            Assert.Equal("HapticFeedbackType.mediumImpact", call.Arguments);
             Assert.InRange(RequireOverlay(harness.RenderView).Thickness, 3.01, 7.99);
-        }
-        finally
-        {
-            HapticFeedback.FeedbackRequested -= requested.Add;
         }
     }
 

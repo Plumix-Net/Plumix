@@ -1111,6 +1111,7 @@ public sealed partial class NavigatorState : RestorationState
             string? routeName = lastEntry?.Route.Settings.Name;
             if (routeName is not null && !string.Equals(routeName, _lastAnnouncedRouteName, StringComparison.Ordinal))
             {
+                _ = SystemNavigator.RouteInformationUpdated(new Uri(routeName, UriKind.RelativeOrAbsolute));
                 _lastAnnouncedRouteName = routeName;
             }
         }

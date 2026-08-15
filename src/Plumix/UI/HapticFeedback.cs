@@ -2,40 +2,59 @@ namespace Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/services/haptic_feedback.dart
 
-public enum HapticFeedbackType
-{
-    Vibrate,
-    MediumImpact,
-    SelectionClick,
-}
-
+/// <summary>Allows access to the haptic feedback interface on the device.</summary>
 public static class HapticFeedback
 {
-    private static Action<HapticFeedbackType>? _feedbackRequested;
-
-    public static event Action<HapticFeedbackType>? FeedbackRequested
+    /// <summary>Provides vibration haptic feedback to the user for a short duration.</summary>
+    public static Task Vibrate()
     {
-        add => _feedbackRequested += value;
-        remove => _feedbackRequested -= value;
+        return SystemChannels.Platform.InvokeMethod<object>("HapticFeedback.vibrate");
     }
 
-    public static void Vibrate()
+    /// <summary>Provides a haptic feedback corresponding a collision impact with a light mass.</summary>
+    public static Task LightImpact()
     {
-        _feedbackRequested?.Invoke(HapticFeedbackType.Vibrate);
+        return Feedback("HapticFeedbackType.lightImpact");
     }
 
-    public static void MediumImpact()
+    /// <summary>Provides a haptic feedback corresponding a collision impact with a medium mass.</summary>
+    public static Task MediumImpact()
     {
-        _feedbackRequested?.Invoke(HapticFeedbackType.MediumImpact);
+        return Feedback("HapticFeedbackType.mediumImpact");
     }
 
-    public static void SelectionClick()
+    /// <summary>Provides a haptic feedback corresponding a collision impact with a heavy mass.</summary>
+    public static Task HeavyImpact()
     {
-        _feedbackRequested?.Invoke(HapticFeedbackType.SelectionClick);
+        return Feedback("HapticFeedbackType.heavyImpact");
     }
 
-    internal static void ResetForTests()
+    /// <summary>Provides a haptic feedback indicating a selection changing through discrete values.</summary>
+    public static Task SelectionClick()
     {
-        _feedbackRequested = null;
+        return Feedback("HapticFeedbackType.selectionClick");
+    }
+
+    /// <summary>Provides a haptic feedback indicating a task completed successfully.</summary>
+    public static Task SuccessNotification()
+    {
+        return Feedback("HapticFeedbackType.successNotification");
+    }
+
+    /// <summary>Provides a haptic feedback indicating a warning.</summary>
+    public static Task WarningNotification()
+    {
+        return Feedback("HapticFeedbackType.warningNotification");
+    }
+
+    /// <summary>Provides a haptic feedback indicating a task failed.</summary>
+    public static Task ErrorNotification()
+    {
+        return Feedback("HapticFeedbackType.errorNotification");
+    }
+
+    private static Task Feedback(string type)
+    {
+        return SystemChannels.Platform.InvokeMethod<object>("HapticFeedback.vibrate", type);
     }
 }

@@ -221,6 +221,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/key.dart` | `src/Plumix/Foundation/Key.cs` | `src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `foundation/licenses.dart` | `src/Plumix/Foundation/Licenses.cs` | — | — |
 | `foundation/platform.dart` | `src/Plumix/UI/TargetPlatform.cs` | — | — |
+| `foundation/serialization.dart` | `src/Plumix/Foundation/Serialization.cs` | — | — |
 | `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` | — | — |
 | `gestures/binding.dart` | `src/Plumix/Gestures/GestureBinding.cs` | — | — |
 | `gestures/constants.dart` | `src/Plumix/Gestures/Constants.cs` | — | — |
@@ -312,17 +313,22 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `scheduler/ticker.dart` | `src/Plumix/Ticker.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs`<br>`src/Plumix.Tests/TickerProviderTickerModeTests.cs` | — |
 | `semantics/semantics.dart` | `src/Plumix/Rendering/Semantics.cs`<br>`src/Plumix/Rendering/SemanticsTraversal.cs` | `src/Plumix.Tests/FlutterHostSemanticsTests.cs`<br>`src/Plumix.Tests/MetaDataIndexedSemanticsTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs`<br>`src/Plumix.Tests/SemanticsTraversalTests.cs`<br>`src/Plumix.Tests/SemanticsTreeTests.cs` | — |
 | `semantics/semantics_service.dart` | `src/Plumix/UI/SemanticsService.cs` | — | — |
+| `services/binary_messenger.dart` | `src/Plumix/UI/BinaryMessenger.cs` | — | — |
 | `services/binding.dart` | `src/Plumix/Widgets/AppLifecycleListener.cs` | `src/Plumix.Tests/AppLifecycleListenerTests.cs` | — |
 | `services/clipboard.dart` | `src/Plumix/Widgets/TextClipboard.cs` | — | — |
 | `services/haptic_feedback.dart` | `src/Plumix/UI/HapticFeedback.cs` | — | — |
 | `services/hardware_keyboard.dart` | `src/Plumix/UI/HardwareKeyboard.cs`<br>`src/Plumix/UI/KeyEventManager.cs` | `src/Plumix.Tests/HardwareKeyboardTests.cs` | — |
 | `services/keyboard_key.g.dart` | `src/Plumix/UI/KeyboardKey.cs` | — | — |
+| `services/message_codec.dart` | `src/Plumix/UI/MessageCodec.cs` | `src/Plumix.Tests/MessageCodecsTests.cs` | — |
+| `services/message_codecs.dart` | `src/Plumix/UI/MessageCodecs.cs` | `src/Plumix.Tests/MessageCodecsTests.cs` | — |
 | `services/mouse_cursor.dart` | `src/Plumix/Widgets/MouseCursor.cs` | — | — |
 | `services/mouse_tracking.dart` | `src/Plumix/UI/MouseTracking.cs` | — | — |
+| `services/platform_channel.dart` | `src/Plumix/UI/PlatformChannel.cs` | `src/Plumix.Tests/PlatformChannelTests.cs` | — |
 | `services/predictive_back_event.dart` | `src/Plumix/UI/PredictiveBackEvent.cs` | — | — |
 | `services/raw_keyboard.dart` | `src/Plumix/UI/RawKeyboard.cs` | — | — |
 | `services/restoration.dart` | `src/Plumix/UI/Restoration.cs` | `src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | — |
 | `services/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
+| `services/system_channels.dart` | `src/Plumix/UI/SystemChannels.cs` | — | — |
 | `services/system_chrome.dart` | `src/Plumix/UI/SystemChrome.cs` | — | — |
 | `services/system_navigator.dart` | `src/Plumix/UI/SystemNavigator.cs` | — | — |
 | `services/system_sound.dart` | `src/Plumix/UI/SystemSound.cs` | — | — |
@@ -470,6 +476,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 - `src/Plumix/AndroidLifecycleChannel.cs`
 - `src/Plumix/AssemblyInfo.cs`
+- `src/Plumix/Foundation/TypedData.cs`
 - `src/Plumix/Gestures/GestureTimer.cs`
 - `src/Plumix/HostKeyboardMap.cs`
 - `src/Plumix/PlumixApplication.cs`
@@ -489,8 +496,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 443
-- C# files carrying a marker: 571
-- C# files without a marker: 18
+- Flutter files mapped: 449
+- C# files carrying a marker: 577
+- C# files without a marker: 19
 - Markers not resolvable in the pinned checkout: 0
 

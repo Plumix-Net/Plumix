@@ -10,15 +10,15 @@ namespace Plumix.UI;
 /// Manages the restoration data in the framework and synchronizes it with the host.
 /// </summary>
 /// <remarks>
-/// Flutter talks to the engine over the <c>flutter/restoration</c> method channel and encodes the
-/// data with <c>StandardMessageCodec</c>. Plumix has neither, so the host contract is expressed as
-/// three overridable members — <see cref="InitChannels"/>, <see cref="GetRootBucketFromEngine"/> and
-/// <see cref="SendToEngine"/> — that exchange the raw restoration map directly. The default
-/// implementation behaves exactly like Flutter's <c>OptionalMethodChannel</c> on a platform without
-/// the plugin: the engine reports restoration as disabled.
+/// Like Flutter, the manager talks to the host over the <c>flutter/restoration</c>
+/// <see cref="OptionalMethodChannel"/> and encodes the data with <see cref="StandardMessageCodec"/>.
+/// A host that ships no restoration handler answers nothing, which is exactly Flutter's behavior on a
+/// platform without the plugin: restoration is reported as disabled.
 /// </remarks>
 public class RestorationManager : ChangeNotifier
 {
+    private static readonly StandardMessageCodec RestorationCodec = new StandardMessageCodec();
+
     private readonly HashSet<RestorationBucket> _bucketsNeedingSerialization = [];
 
     private RestorationBucket? _rootBucket;
@@ -47,9 +47,38 @@ public class RestorationManager : ChangeNotifier
     /// </summary>
     public bool IsReplacing => _isReplacing;
 
-    /// <summary>Installs the host message handlers. The default implementation does nothing.</summary>
+    /// <summary>Installs the <c>flutter/restoration</c> method-call handler.</summary>
     protected virtual void InitChannels()
     {
+        SystemChannels.Restoration.SetMethodCallHandler(HandleMethodCall);
+    }
+
+    private Task<object?> HandleMethodCall(MethodCall call)
+    {
+        switch (call.Method)
+        {
+            case "push":
+                ParseAndHandleRestorationUpdateFromEngine(call.Arguments);
+                return Task.FromResult<object?>(null);
+            default:
+                throw new NotImplementedException(
+                    $"{call.Method} was invoked but isn't implemented by {GetType().Name}.");
+        }
+    }
+
+    private void ParseAndHandleRestorationUpdateFromEngine(object? update)
+    {
+        var config = update as IDictionary<object, object?>;
+        bool enabled = config is not null
+            && config.TryGetValue("enabled", out object? enabledValue)
+            && enabledValue is true;
+        byte[]? data = null;
+        if (config is not null && config.TryGetValue("data", out object? rawData))
+        {
+            data = rawData as byte[];
+        }
+
+        HandleRestorationUpdateFromEngine(enabled, data);
     }
 
     /// <summary>
@@ -76,16 +105,34 @@ public class RestorationManager : ChangeNotifier
     }
 
     /// <summary>
-    /// Asks the host for the restoration data. Implementations must eventually call
-    /// <see cref="HandleRestorationUpdateFromEngine"/>; the default reports restoration as disabled.
+    /// Asks the host for the restoration data over the <c>flutter/restoration</c> channel.
+    /// Implementations must eventually call <see cref="HandleRestorationUpdateFromEngine"/>; a host
+    /// without a restoration channel answers <c>null</c>, which reports restoration as disabled.
     /// </summary>
     protected virtual void GetRootBucketFromEngine()
     {
-        HandleRestorationUpdateFromEngine(enabled: false, data: null);
+        Task<object?> pending = SystemChannels.Restoration.InvokeMethod<object>("get");
+        if (pending.IsCompletedSuccessfully)
+        {
+            // Dart's `SynchronousFuture` equivalent: a host that answers inline keeps the root bucket
+            // available in the same turn, which is what every restoration test relies on.
+            ParseAndHandleRestorationUpdateFromEngine(pending.Result);
+            return;
+        }
+
+        _ = AwaitRootBucketFromEngine(pending);
+    }
+
+    private async Task AwaitRootBucketFromEngine(Task<object?> pending)
+    {
+        object? update = await pending.ConfigureAwait(false);
+        ParseAndHandleRestorationUpdateFromEngine(update);
     }
 
     /// <summary>Called by the host when it has new restoration data for the framework.</summary>
-    public void HandleRestorationUpdateFromEngine(bool enabled, IDictionary<object, object?>? data)
+    /// <param name="enabled">Whether the host supports state restoration.</param>
+    /// <param name="data">The restoration data, encoded with <see cref="StandardMessageCodec"/>.</param>
+    public void HandleRestorationUpdateFromEngine(bool enabled, byte[]? data)
     {
         if (!enabled && data is not null)
         {
@@ -100,7 +147,7 @@ public class RestorationManager : ChangeNotifier
 
         RestorationBucket? oldRoot = _rootBucket;
         _rootBucket = enabled
-            ? RestorationBucket.Root(this, RestorationSerialization.CopyRestorationData(data))
+            ? RestorationBucket.Root(this, DecodeRestorationData(data))
             : null;
         _rootBucketIsValid = true;
 
@@ -124,9 +171,29 @@ public class RestorationManager : ChangeNotifier
         }
     }
 
-    /// <summary>Hands the serialized restoration data to the host. The default does nothing.</summary>
-    protected virtual void SendToEngine(IDictionary<object, object?> encodedData)
+    /// <summary>Hands the serialized restoration data to the host over the
+    /// <c>flutter/restoration</c> channel.</summary>
+    protected virtual void SendToEngine(byte[] encodedData)
     {
+        _ = SystemChannels.Restoration.InvokeMethod<object>("put", encodedData);
+    }
+
+    /// <summary>Decodes restoration data received from the host.</summary>
+    protected static IDictionary<object, object?>? DecodeRestorationData(byte[]? data)
+    {
+        if (data is null)
+        {
+            return null;
+        }
+
+        return RestorationCodec.DecodeMessage(ByteData.SublistView(data)) as IDictionary<object, object?>;
+    }
+
+    /// <summary>Encodes restoration data for the host.</summary>
+    protected static byte[] EncodeRestorationData(IDictionary<object, object?> data)
+    {
+        ArgumentNullException.ThrowIfNull(data);
+        return RestorationCodec.EncodeMessage(data)!.ToUint8List();
     }
 
     /// <summary>Schedules <paramref name="bucket"/> to be finalized before the next data send.</summary>
@@ -195,7 +262,7 @@ public class RestorationManager : ChangeNotifier
         }
 
         _bucketsNeedingSerialization.Clear();
-        SendToEngine(RestorationSerialization.CopyRestorationData(_rootBucket!.RawData)!);
+        SendToEngine(EncodeRestorationData(_rootBucket!.RawData));
         _debugDoingUpdate = false;
     }
 

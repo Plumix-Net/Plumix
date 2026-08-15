@@ -1139,7 +1139,9 @@ internal sealed class RestorableRouteInformation : RestorableValue<RouteInformat
 
     public override RouteInformation? FromPrimitives(object? data)
     {
-        if (data is not object?[] { Length: 2 } serialized)
+        // Dart's `List<Object?>`: the restoration data round-trips through `StandardMessageCodec`, which
+        // hands every list back as a `List<object?>` regardless of what was stored.
+        if (data is not System.Collections.IList { Count: 2 } serialized)
         {
             return null;
         }
@@ -1154,6 +1156,6 @@ internal sealed class RestorableRouteInformation : RestorableValue<RouteInformat
 
     public override object? ToPrimitives()
     {
-        return Value is null ? null : new object?[] { Value.Uri.ToString(), Value.State };
+        return Value is null ? null : new List<object?> { Value.Uri.ToString(), Value.State };
     }
 }
