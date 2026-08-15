@@ -311,8 +311,11 @@ public class MenuAnchorState : State
         Size? fixedSize = style.FixedSize?.Resolve(state);
         if (fixedSize.HasValue)
         {
-            double? width = double.IsFinite(fixedSize.Value.Width) ? fixedSize.Value.Width : null;
-            double? height = double.IsFinite(fixedSize.Value.Height) ? fixedSize.Value.Height : null;
+            // Flutter constrains the fixed size first, so a fixed size outside the min/max window is
+            // clamped rather than winning outright.
+            Size size = constraints.Constrain(fixedSize.Value);
+            double? width = double.IsFinite(size.Width) ? size.Width : null;
+            double? height = double.IsFinite(size.Height) ? size.Height : null;
             constraints = constraints.Tighten(width, height);
         }
 
@@ -543,8 +546,8 @@ internal sealed class Submenu : StatelessWidget
         ThemeData theme = Theme.Of(context);
         TextDirection textDirection = Directionality.Of(context);
         MenuStyle defaults = Anchor.AnchorParentOrientation == Axis.Vertical
-            ? MenuStyleDefaults.Menu(theme)
-            : MenuStyleDefaults.MenuBar(theme);
+            ? new MenuDefaultsM3(context)
+            : new MenuBarDefaultsM3(context);
         MenuStyle? themeStyle = Anchor.AnchorParentOrientation == Axis.Vertical
             ? MenuTheme.Of(context).Style
             : MenuBarTheme.Of(context).Style;
@@ -680,10 +683,9 @@ internal sealed class MenuPanelState : State
 
     public override Widget Build(BuildContext context)
     {
-        ThemeData theme = Theme.Of(context);
         MenuStyle defaults = Current.Orientation == Axis.Horizontal
-            ? MenuStyleDefaults.MenuBar(theme)
-            : MenuStyleDefaults.Menu(theme);
+            ? new MenuBarDefaultsM3(context)
+            : new MenuDefaultsM3(context);
         MenuStyle? themeStyle = Current.Orientation == Axis.Horizontal
             ? MenuBarTheme.Of(context).Style
             : MenuTheme.Of(context).Style;
@@ -691,16 +693,15 @@ internal sealed class MenuPanelState : State
         MaterialState states = MaterialState.None;
 
         Color? backgroundColor = style.BackgroundColor?.Resolve(states);
-        Color shadowColor = style.ShadowColor?.Resolve(states) ?? theme.ShadowColor;
-        Color surfaceTint = style.SurfaceTintColor?.Resolve(states) ?? Colors.Transparent;
+        Color? shadowColor = style.ShadowColor?.Resolve(states);
+        Color? surfaceTint = style.SurfaceTintColor?.Resolve(states);
         double elevation = style.Elevation?.Resolve(states) ?? 0.0;
-        ShapeBorder shape = style.Shape?.Resolve(states)
-                            ?? new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(4.0));
         BorderSide? side = style.Side?.Resolve(states);
-        if (side.HasValue && shape is OutlinedBorder outlined)
-        {
-            shape = outlined.CopyWith(side);
-        }
+
+        // Flutter force-unwraps the resolved shape and always folds `side` into it, so a theme that
+        // sets only `side` still decorates the default border.
+        OutlinedBorder shape = (style.Shape?.Resolve(states) ?? MenuBarDefaultsM3.DefaultMenuBorder)
+            .CopyWith(side);
 
         VisualDensity density = style.VisualDensity ?? VisualDensity.Standard;
         EdgeInsetsGeometry padding = style.Padding?.Resolve(states) ?? EdgeInsetsGeometry.Zero;
@@ -748,8 +749,8 @@ internal sealed class MenuPanelState : State
                 child: padded);
 
         Widget surface = new Material(
-            type: backgroundColor is null ? MaterialType.Transparency : MaterialType.Card,
-            color: backgroundColor ?? Colors.Transparent,
+            type: backgroundColor is null ? MaterialType.Transparency : MaterialType.Canvas,
+            color: backgroundColor,
             shadowColor: shadowColor,
             surfaceTintColor: surfaceTint,
             elevation: elevation,
@@ -776,34 +777,73 @@ internal sealed class MenuPanelState : State
     }
 }
 
-/// <summary>Material 3 component defaults for menu bars and menu panels.</summary>
-internal static class MenuStyleDefaults
+/// <summary>Flutter's `_MenuBarDefaultsM3`: the Material 3 defaults for a <see cref="MenuBar"/> strip.</summary>
+internal sealed class MenuBarDefaultsM3 : MenuStyle
 {
-    public static MenuStyle MenuBar(ThemeData theme) => new(
-        BackgroundColor: MaterialStateProperty<Color?>.All(theme.SurfaceContainerColor),
-        ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
-        SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-        Elevation: MaterialStateProperty<double?>.All(3.0),
-        Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
-            EdgeInsetsGeometry.DirectionalOnly(
-                start: MenuConstants.TopLevelMenuHorizontalMinPadding,
-                end: MenuConstants.TopLevelMenuHorizontalMinPadding)),
-        Shape: MaterialStateProperty<ShapeBorder?>.All(
-            new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(4.0))),
-        Alignment: AlignmentDirectional.BottomStart,
-        VisualDensity: theme.VisualDensity);
+    internal static readonly RoundedRectangleBorder DefaultMenuBorder =
+        new(borderRadius: BorderRadius.Circular(4.0));
 
-    public static MenuStyle Menu(ThemeData theme) => new(
-        BackgroundColor: MaterialStateProperty<Color?>.All(theme.SurfaceContainerColor),
-        ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
-        SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-        Elevation: MaterialStateProperty<double?>.All(3.0),
-        Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
-            EdgeInsetsGeometry.Symmetric(vertical: MenuConstants.MenuVerticalMinPadding)),
-        Shape: MaterialStateProperty<ShapeBorder?>.All(
-            new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(4.0))),
-        Alignment: AlignmentDirectional.TopEnd,
-        VisualDensity: theme.VisualDensity);
+    private readonly BuildContext _context;
+    private ColorScheme? _colorScheme;
+
+    public MenuBarDefaultsM3(BuildContext context) : base(
+        elevation: MaterialStateProperty<double?>.All(3.0),
+        shape: MaterialStateProperty<OutlinedBorder?>.All(DefaultMenuBorder),
+        alignment: AlignmentDirectional.BottomStart)
+    {
+        _context = context;
+    }
+
+    private ColorScheme ColorRoles => _colorScheme ??= Theme.Of(_context).ColorScheme;
+
+    public override MaterialStateProperty<Color?>? BackgroundColor =>
+        MaterialStateProperty<Color?>.All(ColorRoles.SurfaceContainer);
+
+    public override MaterialStateProperty<Color?>? ShadowColor =>
+        MaterialStateProperty<Color?>.All(ColorRoles.Shadow);
+
+    public override MaterialStateProperty<Color?>? SurfaceTintColor =>
+        MaterialStateProperty<Color?>.All(Colors.Transparent);
+
+    public override MaterialStateProperty<EdgeInsetsGeometry?>? Padding =>
+        MaterialStateProperty<EdgeInsetsGeometry?>.All(
+            EdgeInsetsGeometry.DirectionalSymmetric(
+                horizontal: MenuConstants.TopLevelMenuHorizontalMinPadding));
+
+    public override VisualDensity? VisualDensity => Theme.Of(_context).VisualDensity;
+}
+
+/// <summary>Flutter's `_MenuDefaultsM3`: the Material 3 defaults for a dropped-down menu panel.</summary>
+internal sealed class MenuDefaultsM3 : MenuStyle
+{
+    private readonly BuildContext _context;
+    private ColorScheme? _colorScheme;
+
+    public MenuDefaultsM3(BuildContext context) : base(
+        elevation: MaterialStateProperty<double?>.All(3.0),
+        shape: MaterialStateProperty<OutlinedBorder?>.All(MenuBarDefaultsM3.DefaultMenuBorder),
+        alignment: AlignmentDirectional.TopEnd)
+    {
+        _context = context;
+    }
+
+    private ColorScheme ColorRoles => _colorScheme ??= Theme.Of(_context).ColorScheme;
+
+    public override MaterialStateProperty<Color?>? BackgroundColor =>
+        MaterialStateProperty<Color?>.All(ColorRoles.SurfaceContainer);
+
+    public override MaterialStateProperty<Color?>? SurfaceTintColor =>
+        MaterialStateProperty<Color?>.All(Colors.Transparent);
+
+    public override MaterialStateProperty<Color?>? ShadowColor =>
+        MaterialStateProperty<Color?>.All(ColorRoles.Shadow);
+
+    public override MaterialStateProperty<EdgeInsetsGeometry?>? Padding =>
+        MaterialStateProperty<EdgeInsetsGeometry?>.All(
+            EdgeInsetsGeometry.DirectionalSymmetric(
+                vertical: MenuConstants.MenuVerticalMinPadding));
+
+    public override VisualDensity? VisualDensity => Theme.Of(_context).VisualDensity;
 }
 
 /// <summary>Flutter's `_LocalizedShortcutLabeler`: renders a menu item's shortcut as label text.</summary>
@@ -1131,21 +1171,59 @@ internal static class MenuButtonDefaults
             BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
             Elevation: MaterialStateProperty<double?>.All(0.0),
             ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
-                    ? MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.38)
-                    : colors.OnSurface),
+            {
+                if (states.HasFlag(MaterialState.Disabled))
+                {
+                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.38);
+                }
+
+                if (states.HasFlag(MaterialState.Pressed))
+                {
+                    return colors.OnSurface;
+                }
+
+                if (states.HasFlag(MaterialState.Hovered))
+                {
+                    return colors.OnSurface;
+                }
+
+                if (states.HasFlag(MaterialState.Focused))
+                {
+                    return colors.OnSurface;
+                }
+
+                return colors.OnSurface;
+            }),
             IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
-                    ? MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.38)
-                    : colors.OnSurfaceVariant),
+            {
+                if (states.HasFlag(MaterialState.Disabled))
+                {
+                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.38);
+                }
+
+                if (states.HasFlag(MaterialState.Pressed))
+                {
+                    return colors.OnSurfaceVariant;
+                }
+
+                if (states.HasFlag(MaterialState.Hovered))
+                {
+                    return colors.OnSurfaceVariant;
+                }
+
+                if (states.HasFlag(MaterialState.Focused))
+                {
+                    return colors.OnSurfaceVariant;
+                }
+
+                return colors.OnSurfaceVariant;
+            }),
             IconSize: MaterialStateProperty<double?>.All(24.0),
             MaximumSize: MaterialStateProperty<Size?>.All(
                 new Size(double.PositiveInfinity, double.PositiveInfinity)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(64.0, 48.0)),
-            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled) || !OperatingSystem.IsBrowser()
-                    ? SystemMouseCursors.Basic
-                    : SystemMouseCursors.Click),
+            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(
+                WidgetStateMouseCursor.AdaptiveClickable.Resolve),
             OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
             {
                 if (states.HasFlag(MaterialState.Pressed))
@@ -1939,7 +2017,7 @@ public sealed class SubmenuButtonState : State
         MaterialState states = Current.StatesController?.Value ?? MaterialState.None;
         EdgeInsetsGeometry menuPaddingGeometry = Current.MenuStyle?.Padding?.Resolve(states)
                                                  ?? MenuTheme.Of(context).Style?.Padding?.Resolve(states)
-                                                 ?? MenuStyleDefaults.Menu(Theme.Of(context)).Padding!
+                                                 ?? new MenuDefaultsM3(context).Padding!
                                                      .Resolve(states)!.Value;
         TextDirection direction = Directionality.Of(context);
         Thickness menuPadding = menuPaddingGeometry.Resolve(direction);

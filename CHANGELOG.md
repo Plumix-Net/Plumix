@@ -1,5 +1,26 @@
 # Changelog
 
+- Breaking: closed the menus (`MenuAnchor`/`MenuBar`/`SubmenuButton`/`MenuItemButton`) token/theme
+  pass. `MenuStyle` moved out of `DropdownMenuTheme.cs` into its own `MenuStyle.cs` and is now
+  Flutter's subclassable class (13 virtual fields in Dart's declaration order, `CopyWith`, `Merge`,
+  `Lerp` and value equality with Dart's `runtimeType` guard) instead of a record, so the collapsed
+  `MenuStyleDefaults` helper is replaced by the real `_MenuBarDefaultsM3`/`_MenuDefaultsM3`
+  subclasses reading `theme.ColorScheme` directly. `MenuThemeData`, `MenuBarThemeData` and
+  `MenuButtonThemeData` are classes too, with `MenuBarThemeData` extending `MenuThemeData` as in
+  Dart, and `MenuTheme`/`MenuBarTheme`/`MenuButtonTheme` are `InheritedTheme`s with `Wrap`.
+  Behavior changes: panel defaults now resolve `ColorScheme.SurfaceContainer`/`ColorScheme.Shadow`
+  rather than `ThemeData.SurfaceContainerColor`/`ThemeData.ShadowColor`, so a theme that overrides
+  only the flat compatibility colors no longer tints menus; `MenuStyle.Shape` is typed
+  `OutlinedBorder?` (was `ShapeBorder?`) and a resolved `Side` is now always folded into the shape,
+  so a `side`-only style outlines the default border; the panel `Material` uses `MaterialType.Canvas`
+  instead of `Card`; and a `FixedSize` is clamped by `MinimumSize`/`MaximumSize` before it tightens
+  the panel. `MenuTheme.MaybeOf` is gone (Dart has no `maybeOf`), and `MenuStyle`/`MenuThemeData`
+  constructor parameters are camelCase now.
+  Prerequisite primitives: new `EdgeInsetsGeometry.DirectionalSymmetric`, a shared
+  `WidgetStateMouseCursor.AdaptiveClickable`, and value equality on `WidgetStatePropertyAll`/
+  `MaterialStatePropertyAll` (Dart compares them by runtime type and value, and theme equality
+  depends on it).
+
 - Breaking: closed the `InputDecorator` token/theme pass — the last `ColorScheme` closeout family.
   `InputDecorationThemeData` is now Flutter's subclassable class (37 fields, six of them non-nullable
   with source defaults, plus `CopyWith`/`Merge`/value equality with Dart's `runtimeType` guard)

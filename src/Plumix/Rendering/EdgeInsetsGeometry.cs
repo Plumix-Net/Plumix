@@ -74,6 +74,14 @@ public readonly record struct EdgeInsetsGeometry
         return new EdgeInsetsGeometry(0.0, top, 0.0, bottom, start, end);
     }
 
+    /// <summary>Dart's `EdgeInsetsDirectional.symmetric`.</summary>
+    public static EdgeInsetsGeometry DirectionalSymmetric(
+        double horizontal = 0.0,
+        double vertical = 0.0)
+    {
+        return new EdgeInsetsGeometry(0.0, vertical, 0.0, vertical, horizontal, horizontal);
+    }
+
     public Thickness Resolve(TextDirection direction)
     {
         return direction == TextDirection.Ltr

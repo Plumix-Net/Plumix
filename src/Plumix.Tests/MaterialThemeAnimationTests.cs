@@ -163,7 +163,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             datePickerTheme: new DatePickerThemeData(RangePickerElevation: 4),
             snackBarTheme: new SnackBarThemeData(Elevation: 2),
             menuBarTheme: new MenuBarThemeData(
-                new MenuStyle(Elevation: MaterialStateProperty<double?>.All(2))));
+                new MenuStyle(elevation: MaterialStateProperty<double?>.All(2))));
         var end = new ThemeData(
             dividerTheme: new DividerThemeData(Space: 12),
             tooltipTheme: new TooltipThemeData(Height: 24),
@@ -174,7 +174,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             datePickerTheme: new DatePickerThemeData(RangePickerElevation: 12),
             snackBarTheme: new SnackBarThemeData(Elevation: 10),
             menuBarTheme: new MenuBarThemeData(
-                new MenuStyle(Elevation: MaterialStateProperty<double?>.All(10))));
+                new MenuStyle(elevation: MaterialStateProperty<double?>.All(10))));
 
         ThemeData result = ThemeData.Lerp(begin, end, 0.25);
 

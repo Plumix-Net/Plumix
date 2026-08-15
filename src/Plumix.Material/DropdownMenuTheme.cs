@@ -7,41 +7,7 @@ using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity sources: material_ui/lib/src/dropdown_menu_theme.dart;
-// material_ui/lib/src/menu_style.dart
-
-public sealed partial record MenuStyle(
-    MaterialStateProperty<Color?>? BackgroundColor = null,
-    MaterialStateProperty<Color?>? ShadowColor = null,
-    MaterialStateProperty<Color?>? SurfaceTintColor = null,
-    MaterialStateProperty<double?>? Elevation = null,
-    MaterialStateProperty<EdgeInsetsGeometry?>? Padding = null,
-    MaterialStateProperty<Size?>? MinimumSize = null,
-    MaterialStateProperty<Size?>? FixedSize = null,
-    MaterialStateProperty<Size?>? MaximumSize = null,
-    MaterialStateProperty<BorderSide?>? Side = null,
-    MaterialStateProperty<ShapeBorder?>? Shape = null,
-    MaterialStateProperty<MouseCursor?>? MouseCursor = null,
-    AlignmentGeometry? Alignment = null,
-    VisualDensity? VisualDensity = null)
-{
-    public MenuStyle Merge(MenuStyle? style) => style is null ? this : this with
-    {
-        BackgroundColor = BackgroundColor ?? style.BackgroundColor,
-        ShadowColor = ShadowColor ?? style.ShadowColor,
-        SurfaceTintColor = SurfaceTintColor ?? style.SurfaceTintColor,
-        Elevation = Elevation ?? style.Elevation,
-        Padding = Padding ?? style.Padding,
-        MinimumSize = MinimumSize ?? style.MinimumSize,
-        FixedSize = FixedSize ?? style.FixedSize,
-        MaximumSize = MaximumSize ?? style.MaximumSize,
-        Side = Side ?? style.Side,
-        Shape = Shape ?? style.Shape,
-        MouseCursor = MouseCursor ?? style.MouseCursor,
-        Alignment = Alignment ?? style.Alignment,
-        VisualDensity = VisualDensity ?? style.VisualDensity,
-    };
-}
+// Dart parity source: material_ui/lib/src/dropdown_menu_theme.dart
 
 public sealed partial record DropdownMenuThemeData(
     TextStyle? TextStyle = null,
@@ -79,16 +45,18 @@ public sealed class DropdownMenuTheme : InheritedWidget
             InputDecorationTheme: new InputDecorationThemeData(
                 border: new OutlineInputBorder()),
             MenuStyle: new MenuStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(theme.SurfaceContainerColor),
-                ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
-                SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                Elevation: MaterialStateProperty<double?>.All(3),
-                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(EdgeInsetsGeometry.Symmetric(vertical: 8)),
-                MinimumSize: MaterialStateProperty<Size?>.All(new Size(112, 0)),
-                MaximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, double.PositiveInfinity)),
-                Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                    Plumix.Rendering.BorderRadius.Circular(4))),
-                VisualDensity: Plumix.Material.VisualDensity.Standard),
+                backgroundColor: MaterialStateProperty<Color?>.All(theme.ColorScheme.SurfaceContainer),
+                shadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
+                surfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
+                elevation: MaterialStateProperty<double?>.All(3),
+                padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
+                    EdgeInsetsGeometry.Symmetric(vertical: 8)),
+                minimumSize: MaterialStateProperty<Size?>.All(new Size(112, 0)),
+                maximumSize: MaterialStateProperty<Size?>.All(
+                    new Size(double.PositiveInfinity, double.PositiveInfinity)),
+                shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(
+                    borderRadius: Plumix.Rendering.BorderRadius.Circular(4))),
+                visualDensity: Plumix.Material.VisualDensity.Standard),
             DisabledColor: MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.38));
     }
 }

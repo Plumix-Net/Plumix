@@ -637,20 +637,7 @@ internal sealed class DropdownMenuState<T> : RawMenuAnchorBaseState
         var local = DropdownMenuTheme.Of(Context).MenuStyle;
         var defaults = DropdownMenuTheme.Defaults(Context).MenuStyle!;
         var widget = Current.MenuStyle;
-        return new MenuStyle(
-            BackgroundColor: widget?.BackgroundColor ?? local?.BackgroundColor ?? defaults.BackgroundColor,
-            ShadowColor: widget?.ShadowColor ?? local?.ShadowColor ?? defaults.ShadowColor,
-            SurfaceTintColor: widget?.SurfaceTintColor ?? local?.SurfaceTintColor ?? defaults.SurfaceTintColor,
-            Elevation: widget?.Elevation ?? local?.Elevation ?? defaults.Elevation,
-            Padding: widget?.Padding ?? local?.Padding ?? defaults.Padding,
-            MinimumSize: widget?.MinimumSize ?? local?.MinimumSize ?? defaults.MinimumSize,
-            FixedSize: widget?.FixedSize ?? local?.FixedSize ?? defaults.FixedSize,
-            MaximumSize: widget?.MaximumSize ?? local?.MaximumSize ?? defaults.MaximumSize,
-            Side: widget?.Side ?? local?.Side ?? defaults.Side,
-            Shape: widget?.Shape ?? local?.Shape ?? defaults.Shape,
-            MouseCursor: widget?.MouseCursor ?? local?.MouseCursor ?? defaults.MouseCursor,
-            Alignment: widget?.Alignment ?? local?.Alignment ?? defaults.Alignment,
-            VisualDensity: widget?.VisualDensity ?? local?.VisualDensity ?? defaults.VisualDensity);
+        return (widget ?? new MenuStyle()).Merge(local).Merge(defaults);
     }
 
     private bool CanRequestFocus(ThemeData theme) => Current.FocusNode?.CanRequestFocus

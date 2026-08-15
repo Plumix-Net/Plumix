@@ -567,38 +567,6 @@ public sealed partial record SnackBarThemeData
     }
 }
 
-public sealed partial record MenuStyle
-{
-    public static MenuStyle? Lerp(MenuStyle? a, MenuStyle? b, double t)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return a;
-        }
-
-        return new MenuStyle(
-            BackgroundColor: MaterialThemeLerp.ColorStateProperty(
-                a?.BackgroundColor,
-                b?.BackgroundColor,
-                t),
-            ShadowColor: MaterialThemeLerp.ColorStateProperty(a?.ShadowColor, b?.ShadowColor, t),
-            SurfaceTintColor: MaterialThemeLerp.ColorStateProperty(
-                a?.SurfaceTintColor,
-                b?.SurfaceTintColor,
-                t),
-            Elevation: MaterialThemeLerp.DoubleStateProperty(a?.Elevation, b?.Elevation, t),
-            Padding: MaterialThemeLerp.EdgeInsetsStateProperty(a?.Padding, b?.Padding, t),
-            MinimumSize: MaterialThemeLerp.SizeStateProperty(a?.MinimumSize, b?.MinimumSize, t),
-            FixedSize: MaterialThemeLerp.SizeStateProperty(a?.FixedSize, b?.FixedSize, t),
-            MaximumSize: MaterialThemeLerp.SizeStateProperty(a?.MaximumSize, b?.MaximumSize, t),
-            Side: MaterialThemeLerp.BorderSideStateProperty(a?.Side, b?.Side, t),
-            Shape: MaterialThemeLerp.ShapeStateProperty(a?.Shape, b?.Shape, t),
-            MouseCursor: t < 0.5 ? a?.MouseCursor : b?.MouseCursor,
-            Alignment: AlignmentGeometry.Lerp(a?.Alignment, b?.Alignment, t),
-            VisualDensity: t < 0.5 ? a?.VisualDensity : b?.VisualDensity);
-    }
-}
-
 public sealed partial record DropdownMenuThemeData
 {
     public static DropdownMenuThemeData Lerp(
@@ -616,47 +584,6 @@ public sealed partial record DropdownMenuThemeData
             InputDecorationTheme: t < 0.5 ? a?.InputDecorationTheme : b?.InputDecorationTheme,
             MenuStyle: MenuStyle.Lerp(a?.MenuStyle, b?.MenuStyle, t),
             DisabledColor: MaterialThemeLerp.Color(a?.DisabledColor, b?.DisabledColor, t));
-    }
-}
-
-public sealed partial record MenuThemeData
-{
-    public static MenuThemeData? Lerp(MenuThemeData? a, MenuThemeData? b, double t)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return a;
-        }
-
-        return new MenuThemeData(
-            Style: MenuStyle.Lerp(a?.Style, b?.Style, t),
-            SubmenuIcon: t < 0.5 ? a?.SubmenuIcon : b?.SubmenuIcon);
-    }
-}
-
-public sealed partial record MenuBarThemeData
-{
-    public static MenuBarThemeData? Lerp(MenuBarThemeData? a, MenuBarThemeData? b, double t)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return a;
-        }
-
-        return new MenuBarThemeData(MenuStyle.Lerp(a?.Style, b?.Style, t));
-    }
-}
-
-public sealed partial record MenuButtonThemeData
-{
-    public static MenuButtonThemeData? Lerp(MenuButtonThemeData? a, MenuButtonThemeData? b, double t)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return a;
-        }
-
-        return new MenuButtonThemeData(ButtonStyle.Lerp(a?.Style, b?.Style, t));
     }
 }
 

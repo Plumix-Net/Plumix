@@ -457,7 +457,7 @@ public sealed class MaterialDropdownTests : IDisposable
         using var harness = new WidgetRenderHarness(Wrap(new DropdownMenuTheme(
             new DropdownMenuThemeData(
                 TextStyle: new TextStyle(FontSize: 19, Color: Colors.Purple),
-                MenuStyle: new MenuStyle(BackgroundColor: MaterialStateProperty<Color?>.All(background))),
+                MenuStyle: new MenuStyle(backgroundColor: MaterialStateProperty<Color?>.All(background))),
             new DropdownMenu<string>(
                 dropdownMenuEntries:
                 [
@@ -492,13 +492,13 @@ public sealed class MaterialDropdownTests : IDisposable
                 width: 210,
                 menuHeight: 120,
                 menuStyle: new MenuStyle(
-                    BackgroundColor: MaterialStateProperty<Color?>.All(background),
-                    ShadowColor: MaterialStateProperty<Color?>.All(shadow),
-                    Elevation: MaterialStateProperty<double?>.All(5),
-                    Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(EdgeInsetsGeometry.Symmetric(vertical: 6)),
-                    Side: MaterialStateProperty<BorderSide?>.All(side),
-                    Shape: MaterialStateProperty<ShapeBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                        Plumix.Rendering.BorderRadius.Circular(11))))));
+                    backgroundColor: MaterialStateProperty<Color?>.All(background),
+                    shadowColor: MaterialStateProperty<Color?>.All(shadow),
+                    elevation: MaterialStateProperty<double?>.All(5),
+                    padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(EdgeInsetsGeometry.Symmetric(vertical: 6)),
+                    side: MaterialStateProperty<BorderSide?>.All(side),
+                    shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(
+                        borderRadius: Plumix.Rendering.BorderRadius.Circular(11))))));
         using var harness = new WidgetRenderHarness(Wrap(new Navigator(new BuilderPageRoute(_ => page))));
         var semantics = harness.PumpAndGetSemantics(new Size(500, 360));
         var anchor = FindSemantics(semantics, node =>
@@ -702,7 +702,7 @@ public sealed class MaterialDropdownTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             MenuBarTheme = new MenuBarThemeData(new MenuStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(themeBackground))),
+                backgroundColor: MaterialStateProperty<Color?>.All(themeBackground))),
             MenuButtonTheme = new MenuButtonThemeData(new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.CadetBlue))),
         };
@@ -737,7 +737,7 @@ public sealed class MaterialDropdownTests : IDisposable
             Assert.IsType<SolidColorBrush>(FindParagraph(item.RenderView, "Run")!.Foreground).Color);
 
         Widget localBar = new MenuBarTheme(
-            new MenuBarThemeData(new MenuStyle(BackgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+            new MenuBarThemeData(new MenuStyle(backgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
             new MenuButtonTheme(
                 new MenuButtonThemeData(new ButtonStyle(
                     ForegroundColor: MaterialStateProperty<Color?>.All(Colors.MediumVioletRed))),
@@ -759,7 +759,7 @@ public sealed class MaterialDropdownTests : IDisposable
                 [new MenuItemButton(child: new Text("Close"), onPressed: () => { })],
                 new Text("View"),
                 style: new ButtonStyle(ForegroundColor: MaterialStateProperty<Color?>.All(Colors.OrangeRed)))],
-            style: new MenuStyle(BackgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)));
+            style: new MenuStyle(backgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)));
         using var widget = new WidgetRenderHarness(Wrap(widgetBar, theme));
         widget.Pump(new Size(500, 180));
         Assert.Contains(
@@ -779,7 +779,7 @@ public sealed class MaterialDropdownTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             MenuTheme = new MenuThemeData(new MenuStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(globalBackground))),
+                backgroundColor: MaterialStateProperty<Color?>.All(globalBackground))),
         };
 
         var globalController = new MenuController();
@@ -797,7 +797,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var localController = new MenuController();
         using var local = new WidgetRenderHarness(Wrap(new MenuTheme(
             new MenuThemeData(new MenuStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+                backgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
             new MenuAnchor(
                 [new MenuItemButton(child: new Text("Local"), onPressed: () => { })],
                 child: new SizedBox(width: 80, height: 40),
@@ -812,13 +812,13 @@ public sealed class MaterialDropdownTests : IDisposable
         var widgetController = new MenuController();
         using var widget = new WidgetRenderHarness(Wrap(new MenuTheme(
             new MenuThemeData(new MenuStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+                backgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
             new MenuAnchor(
                 [new MenuItemButton(child: new Text("Widget"), onPressed: () => { })],
                 child: new SizedBox(width: 80, height: 40),
                 controller: widgetController,
                 style: new MenuStyle(
-                    BackgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)))), theme));
+                    backgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)))), theme));
         widget.Pump(new Size(500, 180));
         widgetController.Open();
         widget.Pump(new Size(500, 180));
@@ -833,13 +833,13 @@ public sealed class MaterialDropdownTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             MenuTheme = new MenuThemeData(
-                SubmenuIcon: MaterialStateProperty<Widget?>.All(new Text("theme icon"))),
+                submenuIcon: MaterialStateProperty<Widget?>.All(new Text("theme icon"))),
         };
 
         var controller = new MenuController();
         Widget themed = new MenuTheme(
             new MenuThemeData(
-                SubmenuIcon: MaterialStateProperty<Widget?>.All(new Text("local icon"))),
+                submenuIcon: MaterialStateProperty<Widget?>.All(new Text("local icon"))),
             new MenuAnchor(
                 [
                     new SubmenuButton(
@@ -1479,6 +1479,181 @@ public sealed class MaterialDropdownTests : IDisposable
         key.CurrentState.Reset();
         Assert.Equal(string.Empty, key.CurrentState.EffectiveController.Text);
     }
+
+    // ---- _MenuBarDefaultsM3 / _MenuDefaultsM3 token tables ----
+
+    [Fact]
+    public void MenuPanelDefaults_MatchTheSourceM3TokenTableForBothOrientations()
+    {
+        // Flutter's "Menu defaults": the menu-bar strip and the dropped-down panel agree on
+        // background/shadow/tint/elevation/shape, and every value comes from the ColorScheme.
+        var theme = ThemeData.Light;
+        var controller = new MenuController();
+        Widget bar = new MenuBar(
+            [new SubmenuButton(
+                [new MenuItemButton(child: new Text("Open"), onPressed: () => { })],
+                new Text("File"),
+                controller: controller)]);
+
+        using var harness = new WidgetRenderHarness(Wrap(bar, theme));
+        harness.Pump(new Size(500, 240));
+        List<RenderDecoratedBox> closed = MenuPanels(harness);
+        controller.Open();
+        harness.Pump(new Size(500, 240));
+        List<RenderDecoratedBox> opened = MenuPanels(harness);
+
+        Assert.Single(closed);
+        Assert.Equal(2, opened.Count);
+        foreach (RenderDecoratedBox panel in opened)
+        {
+            Assert.Equal(theme.ColorScheme.SurfaceContainer, panel.Decoration.Color);
+            Assert.Equal(4.0, panel.Decoration.EffectiveBorderRadius.Radius);
+
+            // elevation 3.0 draws its key and ambient shadows from the scheme's shadow role.
+            Assert.All(panel.Decoration.BoxShadows!, shadow =>
+            {
+                Assert.Equal(theme.ColorScheme.Shadow.R, shadow.Color.R);
+                Assert.Equal(theme.ColorScheme.Shadow.G, shadow.Color.G);
+                Assert.Equal(theme.ColorScheme.Shadow.B, shadow.Color.B);
+            });
+        }
+    }
+
+    [Fact]
+    public void MenuPanelDefaults_UseTheSourceDirectionalPaddingAndAlignment()
+    {
+        // `_MenuBarDefaultsM3` pads 4 horizontally and aligns bottomStart; `_MenuDefaultsM3` pads 8
+        // vertically and aligns topEnd. Those are the only two fields that differ between them.
+        MenuStyle bar = CaptureMenuStyleDefaults(horizontal: true);
+        MenuStyle menu = CaptureMenuStyleDefaults(horizontal: false);
+
+        Assert.Equal(
+            new Thickness(4.0, 0.0, 4.0, 0.0),
+            bar.Padding!.Resolve(MaterialState.None)!.Value.Resolve(TextDirection.Ltr));
+        Assert.Equal(
+            new Thickness(0.0, 8.0, 0.0, 8.0),
+            menu.Padding!.Resolve(MaterialState.None)!.Value.Resolve(TextDirection.Ltr));
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.BottomStart, bar.Alignment);
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopEnd, menu.Alignment);
+
+        // Everything else is shared, and min/fixed/max size and side stay unset in both tables.
+        Assert.Equal(3.0, bar.Elevation!.Resolve(MaterialState.None));
+        Assert.Equal(3.0, menu.Elevation!.Resolve(MaterialState.None));
+        Assert.Equal(Colors.Transparent, menu.SurfaceTintColor!.Resolve(MaterialState.None));
+        foreach (MenuStyle style in new[] { bar, menu })
+        {
+            Assert.Null(style.MinimumSize);
+            Assert.Null(style.FixedSize);
+            Assert.Null(style.MaximumSize);
+            Assert.Null(style.Side);
+            Assert.Null(style.MouseCursor);
+        }
+    }
+
+    [Fact]
+    public void MenuPanel_FoldsTheResolvedSideIntoTheResolvedShape()
+    {
+        // Flutter's "Material parameters are honored": `shape!.copyWith(side: side)` runs even when
+        // the shape itself came from the defaults, so a theme setting only `side` still draws it.
+        Color outlineColor = Color.Parse("#FFD81B60");
+        ThemeData theme = ThemeData.Light with
+        {
+            MenuBarTheme = new MenuBarThemeData(new MenuStyle(
+                side: MaterialStateProperty<BorderSide?>.All(new BorderSide(outlineColor, 3.0)))),
+        };
+
+        using var harness = new WidgetRenderHarness(Wrap(
+            new MenuBar([new MenuItemButton(child: new Text("Only"), onPressed: () => { })]),
+            theme));
+        harness.Pump(new Size(500, 240));
+
+        // `Material` paints the outline as a separate foreground shape over the filled background,
+        // so the fold shows up as an outline box carrying the default 4px radius.
+        RenderDecoratedBox outline = Assert.Single(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Border is not null && box.Decoration.Color is null);
+        Assert.Equal(4.0, outline.Decoration.EffectiveBorderRadius.Radius);
+        Assert.Equal(outlineColor, outline.Decoration.Border!.Top.Color);
+        Assert.Equal(3.0, outline.Decoration.Border.Top.Width);
+    }
+
+    [Fact]
+    public void MenuPanel_ClampsAFixedSizeInsideTheMinimumAndMaximumWindow()
+    {
+        // Flutter's "fixedSize/maximumSize/minimumSize affects geometry": the fixed size is run
+        // through the min/max constraints before it tightens them.
+        ThemeData theme = ThemeData.Light with
+        {
+            MenuBarTheme = new MenuBarThemeData(new MenuStyle(
+                fixedSize: MaterialStateProperty<Size?>.All(new Size(600.0, 60.0)),
+                maximumSize: MaterialStateProperty<Size?>.All(new Size(250.0, 40.0)))),
+        };
+
+        BoxConstraints constraints = MenuAnchorState.ResolveMenuConstraints(
+            new MenuStyle(
+                fixedSize: MaterialStateProperty<Size?>.All(new Size(600.0, 60.0)),
+                maximumSize: MaterialStateProperty<Size?>.All(new Size(250.0, 40.0))),
+            MaterialState.None,
+            VisualDensity.Standard);
+
+        Assert.Equal(250.0, constraints.MaxWidth);
+        Assert.Equal(250.0, constraints.MinWidth);
+        Assert.Equal(40.0, constraints.MaxHeight);
+        Assert.Equal(40.0, constraints.MinHeight);
+
+        using var harness = new WidgetRenderHarness(Wrap(
+            new Align(
+                alignment: Alignment.TopLeft,
+                child: new MenuBar(
+                    [new MenuItemButton(child: new Text("Fixed"), onPressed: () => { })])),
+            theme));
+        harness.Pump(new Size(500, 240));
+        Assert.Equal(250.0, Assert.Single(MenuPanels(harness)).Size.Width, 3);
+    }
+
+    [Fact]
+    public void MenuThemes_WrapRebuildsTheInheritedThemeAroundACapturedChild()
+    {
+        // All three menu themes are `InheritedTheme`s in Dart, so a captured theme can be replayed
+        // into an overlay or route subtree.
+        var menuData = new MenuThemeData(new MenuStyle(
+            elevation: MaterialStateProperty<double?>.All(7.0)));
+        var barData = new MenuBarThemeData(new MenuStyle(
+            elevation: MaterialStateProperty<double?>.All(8.0)));
+        var buttonData = new MenuButtonThemeData(new ButtonStyle(
+            Elevation: MaterialStateProperty<double?>.All(9.0)));
+        var leaf = new SizedBox();
+
+        Assert.Equal(
+            menuData,
+            Assert.IsType<MenuTheme>(new MenuTheme(menuData, leaf).Wrap(default, leaf)).Data);
+        Assert.Equal(
+            barData,
+            Assert.IsType<MenuBarTheme>(new MenuBarTheme(barData, leaf).Wrap(default, leaf)).Data);
+        Assert.Equal(
+            buttonData,
+            Assert.IsType<MenuButtonTheme>(
+                new MenuButtonTheme(buttonData, leaf).Wrap(default, leaf)).Data);
+    }
+
+    private static MenuStyle CaptureMenuStyleDefaults(bool horizontal)
+    {
+        MenuStyle? captured = null;
+        using var harness = new WidgetRenderHarness(Wrap(new Builder(context =>
+        {
+            captured = horizontal ? new MenuBarDefaultsM3(context) : new MenuDefaultsM3(context);
+            return new SizedBox();
+        })));
+        harness.Pump(new Size(500, 360));
+        Assert.NotNull(captured);
+        return captured;
+    }
+
+    /// <summary>The decorated boxes a menu panel's `Material` paints, in tree order.</summary>
+    private static List<RenderDecoratedBox> MenuPanels(WidgetRenderHarness harness) =>
+        FindDescendants<RenderDecoratedBox>(harness.RenderView)
+            .Where(box => box.Decoration.BoxShadows is { Count: > 0 })
+            .ToList();
 
     private static Widget Wrap(
         Widget child,

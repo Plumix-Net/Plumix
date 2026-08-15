@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Media;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -324,7 +325,7 @@ public sealed class MaterialMenuAnchorTests
     public void MenuStylePaddingIsDirectionalGeometryResolvedAgainstTextDirection()
     {
         var style = new MenuStyle(
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
+            padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
                 EdgeInsetsGeometry.DirectionalOnly(start: 10, top: 12, end: 11, bottom: 13)));
 
         EdgeInsetsGeometry padding = style.Padding!.Resolve(MaterialState.None)!.Value;
@@ -405,23 +406,109 @@ public sealed class MaterialMenuAnchorTests
             Layout(anchorRect: AnchorRect, avoidBounds: [new Rect(0.0, 0.0, 1.0, 1.0)])));
     }
 
+    // ---- MenuStyle and the menu theme datas ----
+
     [Fact]
-    public void MenuStyleDefaults_UseTheSourceDirectionalPanelAlignments()
+    public void MenuStyle_CopyWithKeepsUnspecifiedFieldsAndMergeLetsTheReceiverWin()
     {
-        Assert.Equal(
-            (AlignmentGeometry)AlignmentDirectional.BottomStart,
-            MenuStyleDefaults.MenuBar(ThemeData.Light).Alignment);
-        Assert.Equal(
-            (AlignmentGeometry)AlignmentDirectional.TopEnd,
-            MenuStyleDefaults.Menu(ThemeData.Light).Alignment);
-        Assert.Equal(
-            new Thickness(4.0, 0.0, 4.0, 0.0),
-            MenuStyleDefaults.MenuBar(ThemeData.Light).Padding!
-                .Resolve(MaterialState.None)!.Value.Resolve(TextDirection.Ltr));
-        Assert.Equal(
-            new Thickness(0.0, 8.0, 0.0, 8.0),
-            MenuStyleDefaults.Menu(ThemeData.Light).Padding!
-                .Resolve(MaterialState.None)!.Value.Resolve(TextDirection.Ltr));
+        var baseStyle = new MenuStyle(
+            backgroundColor: MaterialStateProperty<Color?>.All(Colors.Red),
+            elevation: MaterialStateProperty<double?>.All(3.0));
+        var other = new MenuStyle(
+            backgroundColor: MaterialStateProperty<Color?>.All(Colors.Green),
+            shadowColor: MaterialStateProperty<Color?>.All(Colors.Blue),
+            alignment: AlignmentDirectional.TopEnd);
+
+        MenuStyle copied = baseStyle.CopyWith(elevation: MaterialStateProperty<double?>.All(9.0));
+        MenuStyle merged = baseStyle.Merge(other);
+
+        // `copyWith` replaces only what it is given; every other field is carried over.
+        Assert.Equal(Colors.Red, copied.BackgroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(9.0, copied.Elevation!.Resolve(MaterialState.None));
+
+        // `merge` fills this style's null fields from the argument; non-null receiver fields win.
+        Assert.Equal(Colors.Red, merged.BackgroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(Colors.Blue, merged.ShadowColor!.Resolve(MaterialState.None));
+        Assert.Equal(3.0, merged.Elevation!.Resolve(MaterialState.None));
+        Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopEnd, merged.Alignment);
+        Assert.Same(baseStyle, baseStyle.Merge(null));
+    }
+
+    [Fact]
+    public void MenuStyle_EqualityComparesEveryFieldUnderTheSourceRuntimeTypeGuard()
+    {
+        var left = new MenuStyle(elevation: MaterialStateProperty<double?>.All(3.0));
+        var right = new MenuStyle(elevation: MaterialStateProperty<double?>.All(3.0));
+
+        Assert.Equal(left, right);
+        Assert.Equal(left.GetHashCode(), right.GetHashCode());
+        Assert.NotEqual(left, new MenuStyle(elevation: MaterialStateProperty<double?>.All(4.0)));
+        Assert.NotEqual(left, new MenuStyle());
+    }
+
+    [Fact]
+    public void MenuStyle_LerpMatchesTheSourceSpecialCases()
+    {
+        // Flutter's "MenuStyle lerp special cases".
+        var data = new MenuStyle(elevation: MaterialStateProperty<double?>.All(3.0));
+
+        Assert.Null(MenuStyle.Lerp(null, null, 0.0));
+        Assert.Same(data, MenuStyle.Lerp(data, data, 0.5));
+    }
+
+    [Fact]
+    public void MenuStyle_LerpUsesDiscreteSwitchesForCursorDensityAndContinuousColors()
+    {
+        var a = new MenuStyle(
+            backgroundColor: MaterialStateProperty<Color?>.All(Color.FromArgb(255, 0, 0, 0)),
+            mouseCursor: MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
+            visualDensity: VisualDensity.Standard);
+        var b = new MenuStyle(
+            backgroundColor: MaterialStateProperty<Color?>.All(Color.FromArgb(255, 255, 255, 255)),
+            mouseCursor: MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Click),
+            visualDensity: VisualDensity.Compact);
+
+        MenuStyle mid = MenuStyle.Lerp(a, b, 0.5)!;
+        MenuStyle late = MenuStyle.Lerp(a, b, 0.75)!;
+
+        Assert.Equal(127, mid.BackgroundColor!.Resolve(MaterialState.None)!.Value.R);
+        Assert.Equal(SystemMouseCursors.Click, mid.MouseCursor!.Resolve(MaterialState.None));
+        Assert.Equal(VisualDensity.Compact, late.VisualDensity);
+    }
+
+    [Fact]
+    public void MenuThemeDatas_DefaultToNullAndFollowTheSourceLerpSpecialCases()
+    {
+        // Flutter's "MenuThemeData defaults" plus the three `lerp special cases` tests.
+        Assert.Null(new MenuThemeData().Style);
+        Assert.Null(new MenuThemeData().SubmenuIcon);
+        Assert.Null(new MenuBarThemeData().Style);
+        Assert.Null(new MenuButtonThemeData().Style);
+
+        var menu = new MenuThemeData();
+        var bar = new MenuBarThemeData();
+        var button = new MenuButtonThemeData();
+
+        Assert.Null(MenuThemeData.Lerp(null, null, 0.0));
+        Assert.Null(MenuBarThemeData.Lerp(null, null, 0.0));
+        Assert.Null(MenuButtonThemeData.Lerp(null, null, 0.0));
+        Assert.Same(menu, MenuThemeData.Lerp(menu, menu, 0.5));
+        Assert.Same(bar, MenuBarThemeData.Lerp(bar, bar, 0.5));
+        Assert.Same(button, MenuButtonThemeData.Lerp(button, button, 0.5));
+    }
+
+    [Fact]
+    public void MenuBarThemeData_ExtendsMenuThemeDataButNeverComparesEqualToIt()
+    {
+        var style = new MenuStyle(elevation: MaterialStateProperty<double?>.All(3.0));
+        var bar = new MenuBarThemeData(style);
+
+        // Dart declares `MenuBarThemeData extends MenuThemeData` but keeps `MenuThemeData`'s
+        // runtimeType guard in `operator ==`, and never exposes `submenuIcon` on the bar theme.
+        Assert.IsAssignableFrom<MenuThemeData>(bar);
+        Assert.Null(bar.SubmenuIcon);
+        Assert.NotEqual<MenuThemeData>(new MenuThemeData(style), bar);
+        Assert.Equal(bar, new MenuBarThemeData(style));
     }
 
     private static readonly Rect AnchorRect = new(328.0, 14.0, 144.0, 48.0);

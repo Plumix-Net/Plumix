@@ -159,6 +159,17 @@ public sealed class MaterialStatePropertyAll<T> : MaterialStateProperty<T>
     {
         return Value;
     }
+
+    // Dart's `WidgetStatePropertyAll` compares by runtime type and value, so two independently
+    // constructed `WidgetStatePropertyAll(3.0)` are equal — theme equality depends on it.
+    public override bool Equals(object? obj)
+    {
+        return obj is MaterialStatePropertyAll<T> other
+               && other.GetType() == GetType()
+               && EqualityComparer<T>.Default.Equals(other.Value, Value);
+    }
+
+    public override int GetHashCode() => Value?.GetHashCode() ?? 0;
 }
 
 internal sealed class MaterialStatePropertyResolver<T> : MaterialStateProperty<T>

@@ -32,8 +32,10 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
   final MenuController _editMenuController = MenuController();
   final MenuController _animatedMenuController = MenuController();
   final MenuController _alignedMenuController = MenuController();
+  final MenuController _outlinedMenuController = MenuController();
   AlignmentGeometry _menuAlignment = AlignmentDirectional.bottomStart;
   String _alignedMenuStatus = 'idle';
+  bool _outlinedMenuSized = false;
   String _animatedMenuStatus = 'dismissed';
   String _animatedMenuPick = 'none';
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
@@ -318,6 +320,77 @@ class _DropdownDemoPageState extends State<DropdownDemoPage> {
           Text(
             'Aligned menu: $_alignedMenuStatus',
             style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const Text(
+            'MenuStyle surface tokens',
+            style: TextStyle(fontSize: 18),
+          ),
+          const Text(
+            'The panel defaults come straight from the ColorScheme '
+            '(surfaceContainer fill, shadow role, elevation 3, 4px corners). '
+            'A MenuStyle.side is folded into the resolved shape, and a '
+            'fixedSize is clamped by minimumSize and maximumSize before it '
+            'tightens the panel.',
+            style: TextStyle(fontSize: 14, color: Colors.grey),
+          ),
+          Row(
+            spacing: 8,
+            children: <Widget>[
+              TextButton(
+                onPressed: () =>
+                    setState(() => _outlinedMenuSized = !_outlinedMenuSized),
+                child: Text(
+                  _outlinedMenuSized ? 'Drop fixed size' : 'Apply fixed size',
+                ),
+              ),
+            ],
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: MenuAnchor(
+              controller: _outlinedMenuController,
+              style: MenuStyle(
+                side: const WidgetStatePropertyAll<BorderSide>(
+                  BorderSide(color: Colors.pink, width: 2),
+                ),
+                fixedSize: _outlinedMenuSized
+                    ? const WidgetStatePropertyAll<Size>(Size(420, 200))
+                    : null,
+                maximumSize: const WidgetStatePropertyAll<Size>(Size(220, 120)),
+              ),
+              menuChildren: <Widget>[
+                MenuItemButton(
+                  onPressed: () {},
+                  child: const Text('Outlined one'),
+                ),
+                MenuItemButton(
+                  onPressed: () {},
+                  child: const Text('Outlined two'),
+                ),
+              ],
+              builder:
+                  (
+                    BuildContext context,
+                    MenuController controller,
+                    Widget? child,
+                  ) {
+                    return TextButton(
+                      onPressed: () {
+                        if (controller.isOpen) {
+                          controller.close();
+                        } else {
+                          controller.open();
+                        }
+                      },
+                      child: Text(
+                        controller.isOpen
+                            ? 'Close outlined menu'
+                            : 'Open outlined menu',
+                      ),
+                    );
+                  },
+            ),
           ),
           const Divider(),
           const Text('MenuBar + SubmenuButton', style: TextStyle(fontSize: 18)),

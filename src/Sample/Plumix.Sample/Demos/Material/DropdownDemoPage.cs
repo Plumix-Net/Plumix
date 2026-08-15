@@ -40,8 +40,10 @@ public sealed class DropdownDemoPage : StatefulWidget
         private readonly MenuController _editMenuController = new();
         private readonly MenuController _animatedMenuController = new();
         private readonly MenuController _alignedMenuController = new();
+        private readonly MenuController _outlinedMenuController = new();
         private AlignmentGeometry _menuAlignment = AlignmentDirectional.BottomStart;
         private string _alignedMenuStatus = "idle";
+        private bool _outlinedMenuSized;
         private string _animatedMenuStatus = "Dismissed";
         private string _animatedMenuPick = "none";
         private readonly LabeledGlobalKey<FormState> _formKey = new("dropdown-form");
@@ -228,7 +230,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                             alignment: Alignment.CenterLeft,
                             child: new MenuAnchor(
                                 controller: _alignedMenuController,
-                                style: new MenuStyle(Alignment: _menuAlignment),
+                                style: new MenuStyle(alignment: _menuAlignment),
                                 menuChildren:
                                 [
                                     new MenuItemButton(
@@ -248,6 +250,45 @@ public sealed class DropdownDemoPage : StatefulWidget
                                     }))),
                         new Text($"Aligned menu: {_alignedMenuStatus}", fontSize: 13),
                         new Divider(),
+                        new Text("MenuStyle surface tokens", fontSize: 18),
+                        new Text(
+                            "The panel defaults come straight from the ColorScheme (surfaceContainer "
+                            + "fill, shadow role, elevation 3, 4px corners). A MenuStyle.side is folded "
+                            + "into the resolved shape, and a fixedSize is clamped by minimumSize and "
+                            + "maximumSize before it tightens the panel.",
+                            fontSize: 14,
+                            color: Colors.DimGray),
+                        new Row(
+                            spacing: 8,
+                            children:
+                            [
+                                new TextButton(
+                                    new Text(_outlinedMenuSized ? "Drop fixed size" : "Apply fixed size"),
+                                    () => SetState(() => _outlinedMenuSized = !_outlinedMenuSized)),
+                            ]),
+                        new Align(
+                            alignment: Alignment.CenterLeft,
+                            child: new MenuAnchor(
+                                controller: _outlinedMenuController,
+                                style: new MenuStyle(
+                                    side: MaterialStateProperty<BorderSide?>.All(
+                                        new BorderSide(Colors.MediumVioletRed, 2)),
+                                    fixedSize: _outlinedMenuSized
+                                        ? MaterialStateProperty<Size?>.All(new Size(420, 200))
+                                        : null,
+                                    maximumSize: MaterialStateProperty<Size?>.All(new Size(220, 120))),
+                                menuChildren:
+                                [
+                                    new MenuItemButton(child: new Text("Outlined one"), onPressed: () => { }),
+                                    new MenuItemButton(child: new Text("Outlined two"), onPressed: () => { }),
+                                ],
+                                builder: (_, controller, _) => new TextButton(
+                                    new Text(controller.IsOpen ? "Close outlined menu" : "Open outlined menu"),
+                                    () =>
+                                    {
+                                        if (controller.IsOpen) controller.Close(); else controller.Open();
+                                    }))),
+                        new Divider(),
                         new Text("MenuBar + SubmenuButton", fontSize: 18),
                         new Text(
                             "Horizontal menu bar with controller-owned sibling closing, nested side submenu, "
@@ -258,12 +299,15 @@ public sealed class DropdownDemoPage : StatefulWidget
                             alignment: Alignment.CenterLeft,
                             child: new MenuTheme(
                                 new MenuThemeData(
-                                    Style: new MenuStyle(
-                                        BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFFFF3E0"))),
-                                    SubmenuIcon: MaterialStateProperty<Widget?>.All(new Icon(Icons.InfoOutline))),
+                                    style: new MenuStyle(
+                                        backgroundColor: MaterialStateProperty<Color?>.All(
+                                            Color.Parse("#FFFFF3E0"))),
+                                    submenuIcon: MaterialStateProperty<Widget?>.All(
+                                        new Icon(Icons.InfoOutline))),
                                 new MenuBarTheme(
                                     new MenuBarThemeData(new MenuStyle(
-                                        BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFF3E5F5")))),
+                                        backgroundColor: MaterialStateProperty<Color?>.All(
+                                            Color.Parse("#FFF3E5F5")))),
                                     new MenuButtonTheme(
                                     new MenuButtonThemeData(new ButtonStyle(
                                         ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkSlateBlue))),

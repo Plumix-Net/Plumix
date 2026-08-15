@@ -17,6 +17,15 @@ public abstract record WidgetStateMouseCursor : MouseCursor
         return new ResolverWidgetStateMouseCursor(resolver);
     }
 
+    /// <summary>
+    /// Dart's `WidgetStateMouseCursor.adaptiveClickable` (`widgets/widget_state.dart`): the click
+    /// cursor on web only, and the basic cursor when disabled or on any other platform.
+    /// </summary>
+    public static WidgetStateMouseCursor AdaptiveClickable { get; } = ResolveWith(states =>
+        states.HasFlag(MaterialState.Disabled) || !OperatingSystem.IsBrowser()
+            ? SystemMouseCursors.Basic
+            : SystemMouseCursors.Click);
+
     private sealed record ResolverWidgetStateMouseCursor(
         Func<MaterialState, MouseCursor?> Resolver) : WidgetStateMouseCursor
     {

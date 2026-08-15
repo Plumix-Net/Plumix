@@ -167,6 +167,10 @@
     theme fields with their source defaults, `applyDefaults`' 35-field list, the obsolete field-based
     `InputDecorationTheme` surface with `data`/`copyWith`/`merge`/`wrap`, the `IconButtonTheme` affix-colour
     precedence, state-resolving theme values, and mirrored state-resolving demo probes).
+  - The menus family (`MenuAnchor`/`MenuBar`/`SubmenuButton`/`MenuItemButton`) with `MenuStyle` as Flutter's
+    subclassable class, the verbatim `_MenuBarDefaultsM3`/`_MenuDefaultsM3`/`_MenuButtonDefaultsM3` tables reading
+    `ColorScheme` roles, `MenuBarThemeData extends MenuThemeData`, `InheritedTheme` wrap/lerp/equality on all three
+    menu themes, the side-into-shape fold, the clamped fixed size, and mirrored surface-token demo probes.
   - The `Dialog` family (`Dialog`/`AlertDialog`/`SimpleDialog` on a real `Material` card surface with exact M2/M3
     role tables, `AlertDialog.Adaptive`/`ShowAdaptiveDialog`, `DialogRoute` on the new core `RawDialogRoute` with
     captured themes/safe area/150ms fade/traversal edges/`requestFocus`, the ported Cupertino
