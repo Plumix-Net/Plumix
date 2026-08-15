@@ -19,7 +19,7 @@ public class PageController : ScrollController
         double viewportFraction = 1.0,
         Action<ScrollPosition>? onAttach = null,
         Action<ScrollPosition>? onDetach = null)
-        : base(keepScrollOffset: keepPage)
+        : base(keepScrollOffset: keepPage, onAttach: onAttach, onDetach: onDetach)
     {
         if (!double.IsFinite(viewportFraction) || viewportFraction <= 0.0)
         {
@@ -31,8 +31,6 @@ public class PageController : ScrollController
         InitialPage = initialPage;
         KeepPage = keepPage;
         ViewportFraction = viewportFraction;
-        OnAttach = onAttach;
-        OnDetach = onDetach;
     }
 
     /// <summary>The page to show when first creating the <see cref="PageView"/>.</summary>
@@ -43,12 +41,6 @@ public class PageController : ScrollController
 
     /// <summary>The fraction of the viewport each page should occupy.</summary>
     public double ViewportFraction { get; }
-
-    /// <summary>Called when a <see cref="ScrollPosition"/> is attached to this controller.</summary>
-    public Action<ScrollPosition>? OnAttach { get; }
-
-    /// <summary>Called when a <see cref="ScrollPosition"/> is detached from this controller.</summary>
-    public Action<ScrollPosition>? OnDetach { get; }
 
     /// <summary>
     /// The current page, which may be fractional while a scroll is in flight. Null while the
@@ -138,13 +130,6 @@ public class PageController : ScrollController
     {
         base.Attach(position);
         ((PagePosition)position).ViewportFraction = ViewportFraction;
-        OnAttach?.Invoke(position);
-    }
-
-    internal override void Detach(ScrollPosition position)
-    {
-        base.Detach(position);
-        OnDetach?.Invoke(position);
     }
 
     /// <summary>Dart parity: <c>_debugCheckPageControllerAttached</c>.</summary>

@@ -66,6 +66,7 @@ import 'demos/general/grid_view_demo_page.dart';
 import 'demos/material/grid_tile_demo_page.dart';
 import 'demos/material/linear_progress_indicator_demo_page.dart';
 import 'demos/general/list_view_fixed_extent_demo_page.dart';
+import 'demos/general/list_wheel_scroll_view_demo_page.dart';
 import 'demos/general/page_view_demo_page.dart';
 import 'demos/general/ensure_visible_demo_page.dart';
 import 'demos/general/center_viewport_demo_page.dart';
@@ -528,6 +529,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'PageView.builder',
           subtitle: 'lazy pages + viewportFraction',
           builder: () => const PageViewDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.listWheelScrollView,
+          title: 'ListWheelScrollView',
+          subtitle: 'cylindrical wheel + FixedExtentScrollController',
+          builder: () => const ListWheelScrollViewDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.scrollPhysics,

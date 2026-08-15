@@ -1,5 +1,19 @@
 # Changelog
 
+- Breaking: ported Flutter's list wheel (`widgets/list_wheel_scroll_view.dart`,
+  `rendering/list_wheel_viewport.dart`) 1:1: `ListWheelScrollView` (list and `useDelegate` forms),
+  the `ListWheelChildListDelegate`/`LoopingListDelegate`/`BuilderDelegate` family,
+  `FixedExtentScrollController` (`selectedItem`/`jumpToItem`/`animateToItem`), `FixedExtentMetrics`,
+  `FixedExtentScrollPhysics` (all five ballistic scenarios), `ChangeReportingBehavior`,
+  `ListWheelViewport`/`ListWheelElement`, and `RenderListWheelViewport` with Dart's cylindrical
+  projection, magnifier, off-center opacity layer, per-child paint transforms for hit testing,
+  `getOffsetToReveal`/`showOnScreen`, and the lazy child window (`IListWheelChildManager`,
+  `ListWheelParentData`). Core primitives that came with it: `ScrollController` gained
+  `debugLabel`, `onAttach`/`onDetach` and Dart's `toString`/`debugFillDescription`
+  (`PageController` now forwards its callbacks to the base), `NullableIndexedWidgetBuilder`, and
+  `Scrollable.FixedExtentItemExtent` (the internal `_FixedExtentScrollable` hook). Demo page in both
+  samples; coverage in `ListWheelScrollViewTests.cs`.
+
 - Breaking: ported the rest of Flutter's text input service layer (`services/text_input.dart`,
   `services/text_editing_delta.dart`); only the autofill half was ported before. New in
   `Plumix.UI`: the `TextInputType` value type (all 13 variants plus `NumberWithOptions`, with

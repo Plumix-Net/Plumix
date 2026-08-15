@@ -1,3 +1,4 @@
+using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -466,16 +467,32 @@ public class ScrollController : ChangeNotifier
     public ScrollController(
         double initialScrollOffset = 0.0,
         ScrollPhysics? physics = null,
-        bool keepScrollOffset = true)
+        bool keepScrollOffset = true,
+        string? debugLabel = null,
+        Action<ScrollPosition>? onAttach = null,
+        Action<ScrollPosition>? onDetach = null)
     {
         InitialScrollOffset = initialScrollOffset;
         KeepScrollOffset = keepScrollOffset;
+        DebugLabel = debugLabel;
+        OnAttach = onAttach;
+        OnDetach = onDetach;
         Physics = physics ?? new ClampingScrollPhysics();
     }
 
     public double InitialScrollOffset { get; }
 
     public bool KeepScrollOffset { get; }
+
+    /// <summary>A label that is used in the <see cref="ToString"/> output. Intended to aid with
+    /// identifying scroll controller instances in debug output.</summary>
+    public string? DebugLabel { get; }
+
+    /// <summary>Called when a <see cref="ScrollPosition"/> is attached to the scroll controller.</summary>
+    public Action<ScrollPosition>? OnAttach { get; }
+
+    /// <summary>Called when a <see cref="ScrollPosition"/> is detached from the scroll controller.</summary>
+    public Action<ScrollPosition>? OnDetach { get; }
 
     public ScrollPhysics Physics { get; }
 
@@ -509,16 +526,19 @@ public class ScrollController : ChangeNotifier
 
         _positions.Add(position);
         position.AddListener(NotifyListeners);
+        OnAttach?.Invoke(position);
     }
 
     internal virtual void Detach(ScrollPosition position)
     {
-        if (!_positions.Remove(position))
+        if (!_positions.Contains(position))
         {
             return;
         }
 
+        OnDetach?.Invoke(position);
         position.RemoveListener(NotifyListeners);
+        _positions.Remove(position);
     }
 
     public void JumpTo(double value)
@@ -546,6 +566,43 @@ public class ScrollController : ChangeNotifier
 
         _positions.Clear();
         base.Dispose();
+    }
+
+    public override string ToString()
+    {
+        var description = new List<string>();
+        DebugFillDescription(description);
+        return $"{Diagnostics.DescribeIdentity(this)}({string.Join(", ", description)})";
+    }
+
+    /// <summary>Add additional information to the given description for use by
+    /// <see cref="ToString"/>.</summary>
+    protected virtual void DebugFillDescription(List<string> description)
+    {
+        if (DebugLabel != null)
+        {
+            description.Add(DebugLabel);
+        }
+
+        if (InitialScrollOffset != 0.0)
+        {
+            description.Add(
+                $"initialScrollOffset: {InitialScrollOffset.ToString("F1", CultureInfo.InvariantCulture)}, ");
+        }
+
+        if (_positions.Count == 0)
+        {
+            description.Add("no clients");
+        }
+        else if (_positions.Count == 1)
+        {
+            // Don't actually list the client itself, since its toString may refer to us.
+            description.Add($"one client, offset {Offset.ToString("F1", CultureInfo.InvariantCulture)}");
+        }
+        else
+        {
+            description.Add($"{_positions.Count} clients");
+        }
     }
 }
 
@@ -667,6 +724,19 @@ public sealed class Scrollable : StatefulWidget
     /// overridable <c>buildViewport</c>.
     /// </remarks>
     internal Func<BuildContext, ViewportOffset, Widget>? ViewportBuilder { get; init; }
+
+    /// <summary>
+    /// The fixed main-axis extent of every item, when this scrollable is a
+    /// <see cref="ListWheelScrollView"/>'s. Null for every other scrollable.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's private <c>_FixedExtentScrollable</c> subclass carries this as <c>itemExtent</c>
+    /// and its <c>_FixedExtentScrollableState</c> exposes it as the position's
+    /// <c>ScrollContext</c>. Plumix's <see cref="Scrollable"/> is sealed and its position reads
+    /// the widget through <see cref="ScrollPosition.NotificationContext"/> instead, so the extent
+    /// lives here.
+    /// </remarks>
+    internal double? FixedExtentItemExtent { get; init; }
 
     public override State CreateState()
     {

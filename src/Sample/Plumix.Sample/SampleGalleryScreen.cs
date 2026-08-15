@@ -32,6 +32,7 @@ internal static class SampleRoutes
     public const string ListViewReverse = "/list-reverse";
     public const string CenterViewport = "/center-viewport";
     public const string PageView = "/page-view";
+    public const string ListWheelScrollView = "/list-wheel-scroll-view";
     public const string GridView = "/grid-view";
     public const string CustomSlivers = "/custom-slivers";
     public const string NestedScrollView = "/nested-scroll-view";
@@ -266,6 +267,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "center key + negative scroll offsets",
             () => new CenterViewportDemoPage()),
         new(SampleRoutes.PageView, "PageView.Builder", "lazy pages + viewportFraction", () => new PageViewDemoPage()),
+        new(
+            SampleRoutes.ListWheelScrollView,
+            "ListWheelScrollView",
+            "cylindrical wheel + FixedExtentScrollController",
+            () => new ListWheelScrollViewDemoPage()),
         new(
             SampleRoutes.ScrollPhysics,
             "Scroll physics",

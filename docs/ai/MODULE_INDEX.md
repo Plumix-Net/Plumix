@@ -379,6 +379,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Goal: scroll activities, viewport behavior, sliver child lifecycle, keep-alive.
 - Read First:
   - `src/Plumix/Widgets/Scroll.cs`
+  - `src/Plumix/Widgets/ListWheelScrollView.cs` (list wheel: delegates, `FixedExtentScrollController`/physics, `ListWheelElement`)
+  - `src/Plumix/Rendering/ListWheelViewport.cs` (`RenderListWheelViewport`: cylindrical layout/paint/hit test)
   - `src/Plumix/Widgets/Notifications.cs`
   - `src/Plumix/Widgets/ScrollNotificationObserver.cs`
   - `src/Plumix/Widgets/ScrollConfiguration.cs`
@@ -402,6 +404,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/DraggableScrollableSheet.cs`
 - Primary Tests:
   - `src/Plumix.Tests/ScrollPipelineTests.cs`
+  - `src/Plumix.Tests/ListWheelScrollViewTests.cs`
   - `src/Plumix.Tests/ViewportRevealTests.cs`
   - `src/Plumix.Tests/ScrollInfrastructureTests.cs`
   - `src/Plumix.Tests/ScrollBehaviorParityTests.cs`
