@@ -353,6 +353,15 @@ internal sealed class PagePosition : ScrollPosition
             Math.Max(newMinScrollExtent, maxScrollExtent - InitialPageOffset));
     }
 
+    /// <summary>
+    /// Adds the viewport fraction to the shared metrics snapshot, which is where Flutter's
+    /// <c>PageMetrics</c> subclass carries it.
+    /// </summary>
+    public override ScrollMetricsSnapshot CopyWith()
+    {
+        return base.CopyWith() with { ViewportFraction = ViewportFraction };
+    }
+
     public override void Absorb(ScrollPosition other)
     {
         base.Absorb(other);

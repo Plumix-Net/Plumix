@@ -6,18 +6,16 @@ namespace Plumix.Rendering;
 public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractViewport
 {
     private AxisDirection _axisDirection;
-    private double _offsetPixels;
-    private ViewportMetricsChangedCallback? _onViewportMetricsChanged;
+    private ViewportOffset _offset;
 
     public RenderSingleChildViewport(
         AxisDirection axisDirection,
-        double offsetPixels = 0,
-        ViewportMetricsChangedCallback? onViewportMetricsChanged = null,
+        ViewportOffset offset,
         RenderBox? child = null)
     {
+        ArgumentNullException.ThrowIfNull(offset);
         _axisDirection = axisDirection;
-        _offsetPixels = offsetPixels;
-        _onViewportMetricsChanged = onViewportMetricsChanged;
+        _offset = offset;
         Child = child;
     }
 
@@ -32,33 +30,46 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         }
     }
 
-    public double OffsetPixels
+    /// <inheritdoc />
+    public ViewportOffset Offset
     {
-        get => _offsetPixels;
+        get => _offset;
         set
         {
-            if (Math.Abs(_offsetPixels - value) < 0.0001) return;
-            _offsetPixels = value;
+            ArgumentNullException.ThrowIfNull(value);
+            if (ReferenceEquals(_offset, value)) return;
+            if (Owner != null)
+            {
+                _offset.RemoveListener(MarkNeedsLayout);
+            }
+
+            _offset = value;
+            if (Owner != null)
+            {
+                _offset.AddListener(MarkNeedsLayout);
+            }
+
             MarkNeedsLayout();
         }
     }
 
-    public ViewportMetricsChangedCallback? OnViewportMetricsChanged
-    {
-        get => _onViewportMetricsChanged;
-        set => _onViewportMetricsChanged = value;
-    }
+    /// <summary>The current scroll offset, in pixels.</summary>
+    public double OffsetPixels => _offset.Pixels;
 
     public Axis Axis => ScrollDirectionUtils.AxisDirectionToAxis(AxisDirection);
     public double MaxScrollExtent { get; private set; }
 
-    /// <inheritdoc />
-    public ViewportMoveToCallback? OnMoveTo { get; set; }
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        _offset.AddListener(MarkNeedsLayout);
+    }
 
-    /// <inheritdoc />
-    public bool AllowImplicitScrolling { get; set; } = true;
-
-    double IRenderAbstractViewport.RevealOffsetPixels => _offsetPixels;
+    protected override void OnDetach()
+    {
+        _offset.RemoveListener(MarkNeedsLayout);
+        base.OnDetach();
+    }
 
     /// <summary>
     /// The semantics clip covers the whole scrollable content, so a child scrolled off screen stays in
@@ -142,13 +153,19 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         TimeSpan duration = default,
         Curve? curve = null)
     {
-        if (!AllowImplicitScrolling)
+        if (!_offset.AllowImplicitScrolling)
         {
             base.ShowOnScreen(descendant, rect, duration, curve);
             return;
         }
 
-        Rect? revealed = RenderAbstractViewport.ShowInViewport(this, descendant, rect, duration, curve);
+        Rect? revealed = RenderAbstractViewport.ShowInViewport(
+            this,
+            _offset,
+            descendant,
+            rect,
+            duration,
+            curve);
         base.ShowOnScreen(rect: revealed, duration: duration, curve: curve);
     }
 
@@ -158,7 +175,8 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         {
             Size = Constraints.Constrain(new Size());
             MaxScrollExtent = 0;
-            OnViewportMetricsChanged?.Invoke(MainExtent(Size), 0, 0);
+            Offset.ApplyViewportDimension(MainExtent(Size));
+            Offset.ApplyContentDimensions(0, 0);
             return;
         }
 
@@ -171,10 +189,11 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         double viewportExtent = MainExtent(Size);
         double childExtent = MainExtent(Child.Size);
         MaxScrollExtent = Math.Max(0, childExtent - viewportExtent);
+        Offset.ApplyViewportDimension(viewportExtent);
+        Offset.ApplyContentDimensions(0, MaxScrollExtent);
         // Out-of-range offsets are kept: physics that allow overscroll (iOS bouncing) shift the child
         // instead of being clamped back into range.
         ((BoxParentData)Child.parentData!).offset = ResolvePaintOffset(OffsetPixels);
-        OnViewportMetricsChanged?.Invoke(viewportExtent, 0, MaxScrollExtent);
     }
 
     public override void Paint(PaintingContext context, Point offset)

@@ -125,22 +125,11 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void RenderViewport_OffsetsChild_AndReportsMetrics()
     {
-        double viewportExtent = -1;
-        double minExtent = -1;
-        double maxExtent = -1;
 
         var child = new FixedSizeBox(new Size(80, 600));
-        var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 50,
-            onViewportMetricsChanged: (viewport, min, max) =>
-            {
-                viewportExtent = viewport;
-                minExtent = min;
-                maxExtent = max;
-                return null;
-            },
-            child: child);
+        var viewportOffset = new TestViewportOffset(50);
+        var viewport = new RenderViewport(offset: viewportOffset);
+        viewport.Insert(new RenderSliverToBoxAdapter(child));
 
         var root = new RenderView
         {
@@ -153,26 +142,19 @@ public sealed class ScrollPipelineTests
 
         var childParentData = (BoxParentData)child.parentData!;
         Assert.Equal(new Point(0, -50), childParentData.offset);
-        Assert.Equal(200, viewportExtent);
-        Assert.Equal(0, minExtent);
-        Assert.Equal(400, maxExtent);
+        Assert.Equal(200, viewportOffset.ViewportDimension);
+        Assert.Equal(0, viewportOffset.MinScrollExtent);
+        Assert.Equal(400, viewportOffset.MaxScrollExtent);
     }
 
     [Fact]
     public void RenderViewport_LaysOutMultipleSlivers_AndAggregatesScrollExtent()
     {
-        double maxExtent = -1;
 
         var first = new RenderSliverToBoxAdapter(new FixedSizeBox(new Size(100, 120)));
         var second = new RenderSliverToBoxAdapter(new FixedSizeBox(new Size(100, 160)));
-        var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 80,
-            onViewportMetricsChanged: (_, _, max) =>
-            {
-                maxExtent = max;
-                return null;
-            });
+        var viewportOffset = new TestViewportOffset(80);
+        var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(first);
         viewport.Insert(second, after: first);
 
@@ -181,7 +163,7 @@ public sealed class ScrollPipelineTests
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 150));
 
-        Assert.Equal(130, maxExtent);
+        Assert.Equal(130, viewportOffset.MaxScrollExtent);
 
         var firstBoxOffset = ((BoxParentData)((RenderBox)first.Child!).parentData!).offset;
         var secondBoxOffset = ((BoxParentData)((RenderBox)second.Child!).parentData!).offset;
@@ -195,7 +177,8 @@ public sealed class ScrollPipelineTests
         var paintOrder = new List<string>();
         var first = new PaintTrackingSliver("first", paintOrder);
         var second = new PaintTrackingSliver("second", paintOrder);
-        var viewport = new RenderViewport(axis: Axis.Vertical);
+        var viewportOffset = new TestViewportOffset();
+        var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(first);
         viewport.Insert(second, after: first);
 
@@ -213,18 +196,11 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void RenderViewport_AppliesScrollOffsetCorrection_FromSliver()
     {
-        double maxExtent = -1;
         var correcting = new CorrectingSliver(
             correction: -100,
             scrollExtent: 500);
-        var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 100,
-            onViewportMetricsChanged: (_, _, max) =>
-            {
-                maxExtent = max;
-                return null;
-            });
+        var viewportOffset = new TestViewportOffset(100);
+        var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(correcting);
 
         var root = new RenderView { Child = viewport };
@@ -232,23 +208,16 @@ public sealed class ScrollPipelineTests
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
 
-        Assert.Equal(0, viewport.OffsetPixels);
-        Assert.Equal(300, maxExtent);
+        Assert.Equal(0, viewportOffset.Pixels);
+        Assert.Equal(300, viewportOffset.MaxScrollExtent);
     }
 
     [Fact]
     public void RenderViewport_OverscrolledOffset_ShiftsChildrenInsteadOfBeingClamped()
     {
         var innerSliver = new RenderSliverToBoxAdapter(new FixedSizeBox(new Size(100, 300)));
-        double maxExtent = -1;
-        var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0,
-            onViewportMetricsChanged: (_, _, max) =>
-            {
-                maxExtent = max;
-                return null;
-            });
+        var viewportOffset = new TestViewportOffset();
+        var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(innerSliver);
 
         var root = new RenderView { Child = viewport };
@@ -256,16 +225,16 @@ public sealed class ScrollPipelineTests
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Equal(200, maxExtent);
+        Assert.Equal(200, viewportOffset.MaxScrollExtent);
         var sliverParentData = (SliverPhysicalParentData)innerSliver.parentData!;
         Assert.Equal(new Point(0, 0), sliverParentData.offset);
 
         // Overscrolled past the leading edge: the offset survives layout and the content is pushed
         // down by exactly the overscroll, which is what makes the iOS rubber band visible.
-        viewport.OffsetPixels = -30;
+        viewportOffset.JumpTo(-30);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Equal(-30, viewport.OffsetPixels);
+        Assert.Equal(-30, viewportOffset.Pixels);
         Assert.Equal(new Point(0, 30), sliverParentData.offset);
 
         // The leading sliver is told about the overscroll through a negative overlap, which is what
@@ -274,34 +243,27 @@ public sealed class ScrollPipelineTests
         Assert.Equal(0, innerSliver.ConstraintsForSliver.ScrollOffset);
 
         // Overscrolled past the trailing edge: the offset is kept rather than clamped to the max.
-        viewport.OffsetPixels = 240;
+        viewportOffset.JumpTo(240);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Equal(240, viewport.OffsetPixels);
-        Assert.Equal(200, maxExtent);
+        Assert.Equal(240, viewportOffset.Pixels);
+        Assert.Equal(200, viewportOffset.MaxScrollExtent);
 
         // Back in range, the offset is used as-is again.
-        viewport.OffsetPixels = 50;
+        viewportOffset.JumpTo(50);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Equal(50, viewport.OffsetPixels);
+        Assert.Equal(50, viewportOffset.Pixels);
         Assert.Equal(new Point(0, 0), sliverParentData.offset);
     }
 
     [Fact]
     public void RenderSliverPadding_ContributesPaddingToScrollExtent()
     {
-        double maxExtent = -1;
         var innerSliver = new RenderSliverToBoxAdapter(new FixedSizeBox(new Size(100, 120)));
         var sliverPadding = new RenderSliverPadding(new Thickness(0, 10, 0, 20), innerSliver);
-        var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0,
-            onViewportMetricsChanged: (_, _, max) =>
-            {
-                maxExtent = max;
-                return null;
-            });
+        var viewportOffset = new TestViewportOffset();
+        var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(sliverPadding);
 
         var root = new RenderView { Child = viewport };
@@ -309,11 +271,11 @@ public sealed class ScrollPipelineTests
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Equal(50, maxExtent);
+        Assert.Equal(50, viewportOffset.MaxScrollExtent);
         var sliverParentData = (SliverPhysicalParentData)innerSliver.parentData!;
         Assert.Equal(new Point(0, 10), sliverParentData.offset);
 
-        viewport.OffsetPixels = 15;
+        viewportOffset.JumpTo(15);
         pipeline.FlushLayout(new Size(100, 100));
 
         Assert.Equal(new Point(0, 0), sliverParentData.offset);
@@ -322,13 +284,14 @@ public sealed class ScrollPipelineTests
     }
 
     [Fact]
-    public void RenderViewport_AxisDirectionUp_MapsUserOffsetFromTrailingEdge()
+    public void RenderViewport_AxisDirectionUp_PaintsContentFromTheTrailingEdge()
     {
         var child = new FixedSizeBox(new Size(80, 600));
+        var viewportOffset = new TestViewportOffset();
         var viewport = new RenderViewport(
-            axisDirection: AxisDirection.Up,
-            offsetPixels: 0,
-            child: child);
+            offset: viewportOffset,
+            axisDirection: AxisDirection.Up);
+        viewport.Insert(new RenderSliverToBoxAdapter(child));
         var root = new RenderView { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
@@ -337,7 +300,7 @@ public sealed class ScrollPipelineTests
         var childParentData = (BoxParentData)child.parentData!;
         Assert.Equal(new Point(0, -400), childParentData.offset);
 
-        viewport.OffsetPixels = 400;
+        viewportOffset.JumpTo(400);
         pipeline.FlushLayout(new Size(100, 200));
         Assert.Equal(new Point(0, 0), childParentData.offset);
     }
@@ -346,11 +309,15 @@ public sealed class ScrollPipelineTests
     public void RenderViewport_PropagatesAxisAndGrowthDirectionToSlivers()
     {
         var sliver = new ConstraintCapturingSliver(scrollExtent: 300);
+        var center = new RenderSliverToBoxAdapter(new FixedSizeBox(new Size(100, 40)));
+        var viewportOffset = new TestViewportOffset();
         var viewport = new RenderViewport(
-            axisDirection: AxisDirection.Up,
-            growthDirection: GrowthDirection.Reverse,
-            offsetPixels: 0);
+            offset: viewportOffset,
+            axisDirection: AxisDirection.Up);
         viewport.Insert(sliver);
+        viewport.Insert(center, after: sliver);
+        // Every sliver laid out before the center child grows in the reverse direction.
+        viewport.Center = center;
 
         var root = new RenderView { Child = viewport };
         var pipeline = new PipelineOwner(root);
@@ -369,9 +336,10 @@ public sealed class ScrollPipelineTests
         var sliverList = new RenderSliverList(manager);
         manager.AttachOwner(sliverList);
 
+        var viewportOffset = new TestViewportOffset();
         var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0);
+            offset: viewportOffset,
+            scrollCacheExtent: ScrollCacheExtent.Pixels(0));
         viewport.Insert(sliverList);
 
         var root = new RenderView { Child = viewport };
@@ -382,11 +350,11 @@ public sealed class ScrollPipelineTests
         Assert.InRange(manager.MaxCreatedIndex, 0, 6);
         Assert.Equal(0, manager.RemoveCount);
 
-        viewport.OffsetPixels = 450;
+        viewportOffset.JumpTo(450);
         pipeline.FlushLayout(new Size(100, 200));
         Assert.InRange(manager.MaxCreatedIndex, 9, 15);
 
-        viewport.OffsetPixels = 0;
+        viewportOffset.JumpTo(0);
         pipeline.FlushLayout(new Size(100, 200));
         Assert.True(manager.RemoveCount > 0);
     }
@@ -401,9 +369,8 @@ public sealed class ScrollPipelineTests
         var sliverList = new RenderSliverList(manager);
         manager.AttachOwner(sliverList);
 
-        var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0);
+        var viewportOffset = new TestViewportOffset();
+        var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(sliverList);
 
         var root = new RenderView { Child = viewport };
@@ -414,12 +381,12 @@ public sealed class ScrollPipelineTests
         Assert.Equal(1, manager.CreateCountFor(0));
         Assert.Contains(0, ActiveIndices(sliverList));
 
-        viewport.OffsetPixels = 600;
+        viewportOffset.JumpTo(600);
         pipeline.FlushLayout(new Size(100, 200));
         Assert.DoesNotContain(0, ActiveIndices(sliverList));
         Assert.DoesNotContain(0, manager.RemovedIndices);
 
-        viewport.OffsetPixels = 0;
+        viewportOffset.JumpTo(0);
         pipeline.FlushLayout(new Size(100, 200));
         Assert.Equal(1, manager.CreateCountFor(0));
         Assert.Contains(0, ActiveIndices(sliverList));
@@ -436,10 +403,10 @@ public sealed class ScrollPipelineTests
         manager.AttachOwner(sliverList);
 
         const double viewportExtent = 220;
+        var viewportOffset = new TestViewportOffset();
         var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0,
-            cacheExtent: 250);
+            offset: viewportOffset,
+            scrollCacheExtent: ScrollCacheExtent.Pixels(250));
         viewport.Insert(sliverList);
 
         var root = new RenderView { Child = viewport };
@@ -453,13 +420,49 @@ public sealed class ScrollPipelineTests
 
         for (double offset = 0; offset <= maxOffsetToCheck; offset += 37)
         {
-            viewport.OffsetPixels = offset;
+            viewportOffset.JumpTo(offset);
             pipeline.FlushLayout(new Size(100, viewportExtent));
 
             Assert.True(CoversViewportPosition(sliverList, viewportExtent * 0.25), $"No child covers 25% of viewport at offset {offset}.");
             Assert.True(CoversViewportPosition(sliverList, viewportExtent * 0.5), $"No child covers 50% of viewport at offset {offset}.");
             Assert.True(CoversViewportPosition(sliverList, viewportExtent * 0.75), $"No child covers 75% of viewport at offset {offset}.");
         }
+    }
+
+    [Fact]
+    public void CustomScrollView_CenterKey_GrowsPrecedingSliversIntoNegativeScrollOffsets()
+    {
+        var controller = new ScrollController();
+        var centerKey = new ValueKey<string>("center");
+        var widget = new CustomScrollView(
+            controller: controller,
+            center: centerKey,
+            slivers:
+            [
+                new SliverToBoxAdapter(child: new SizedBox(height: 300)),
+                new SliverToBoxAdapter(key: centerKey, child: new SizedBox(height: 400)),
+            ]);
+
+        var harness = new WidgetRenderHarness(widget);
+        var viewportSize = new Size(300, 200);
+        harness.Pump(viewportSize);
+
+        ScrollPosition position = Assert.IsAssignableFrom<ScrollPosition>(controller.PrimaryPosition);
+        // The sliver before the center child occupies negative scroll offsets.
+        Assert.Equal(-300, position.MinScrollExtent);
+        Assert.Equal(200, position.MaxScrollExtent);
+        Assert.Equal(0, position.Pixels);
+
+        controller.JumpTo(-150);
+        harness.Pump(viewportSize);
+        Assert.Equal(-150, position.Pixels);
+
+        var viewport = Assert.IsType<RenderViewport>(FindRenderObject<RenderViewport>(harness.RenderView)!);
+        RenderSliver reverseChild = viewport.FirstChild!;
+        Assert.NotNull(viewport.Center);
+        Assert.NotSame(reverseChild, viewport.Center);
+        Assert.Equal(GrowthDirection.Reverse, reverseChild.ConstraintsForSliver.GrowthDirection);
+        Assert.Equal(150.0, reverseChild.Geometry.PaintExtent);
     }
 
     [Fact]
@@ -519,10 +522,10 @@ public sealed class ScrollPipelineTests
         var sliverList = new RenderSliverList(manager);
         manager.AttachOwner(sliverList);
 
+        var viewportOffset = new TestViewportOffset();
         var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0,
-            cacheExtent: 100);
+            offset: viewportOffset,
+            scrollCacheExtent: ScrollCacheExtent.Pixels(100));
         viewport.Insert(sliverList);
 
         var root = new RenderView { Child = viewport };
@@ -547,11 +550,10 @@ public sealed class ScrollPipelineTests
         var sliverList = new RenderSliverList(manager);
         manager.AttachOwner(sliverList);
 
+        var viewportOffset = new TestViewportOffset();
         var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0,
-            cacheExtent: 1,
-            cacheExtentStyle: CacheExtentStyle.Viewport);
+            offset: viewportOffset,
+            scrollCacheExtent: ScrollCacheExtent.Viewport(1));
         viewport.Insert(sliverList);
 
         var root = new RenderView { Child = viewport };
@@ -566,19 +568,14 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void RenderSliverFixedExtentList_ComputesIndicesFromItemExtent()
     {
-        double maxExtent = -1;
         var manager = new TestSliverChildManager(childCount: 100, childExtent: 10);
         var sliverList = new RenderSliverFixedExtentList(itemExtent: 40, childManager: manager);
         manager.AttachOwner(sliverList);
 
+        var viewportOffset = new TestViewportOffset();
         var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0,
-            onViewportMetricsChanged: (_, _, max) =>
-            {
-                maxExtent = max;
-                return null;
-            });
+            offset: viewportOffset,
+            scrollCacheExtent: ScrollCacheExtent.Pixels(0));
         viewport.Insert(sliverList);
 
         var root = new RenderView { Child = viewport };
@@ -586,11 +583,11 @@ public sealed class ScrollPipelineTests
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
 
-        Assert.Equal(3800, maxExtent);
+        Assert.Equal(3800, viewportOffset.MaxScrollExtent);
         Assert.Contains(4, ActiveIndices(sliverList));
         Assert.DoesNotContain(5, ActiveIndices(sliverList));
 
-        viewport.OffsetPixels = 480;
+        viewportOffset.JumpTo(480);
         pipeline.FlushLayout(new Size(100, 200));
 
         Assert.DoesNotContain(0, ActiveIndices(sliverList));
@@ -608,9 +605,8 @@ public sealed class ScrollPipelineTests
         var sliverList = new RenderSliverFixedExtentList(itemExtent: 50, childManager: manager);
         manager.AttachOwner(sliverList);
 
-        var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0);
+        var viewportOffset = new TestViewportOffset();
+        var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(sliverList);
 
         var root = new RenderView { Child = viewport };
@@ -621,12 +617,12 @@ public sealed class ScrollPipelineTests
         Assert.Equal(1, manager.CreateCountFor(0));
         Assert.Contains(0, ActiveIndices(sliverList));
 
-        viewport.OffsetPixels = 600;
+        viewportOffset.JumpTo(600);
         pipeline.FlushLayout(new Size(100, 200));
         Assert.DoesNotContain(0, ActiveIndices(sliverList));
         Assert.DoesNotContain(0, manager.RemovedIndices);
 
-        viewport.OffsetPixels = 0;
+        viewportOffset.JumpTo(0);
         pipeline.FlushLayout(new Size(100, 200));
         Assert.Equal(1, manager.CreateCountFor(0));
         Assert.Contains(0, ActiveIndices(sliverList));
@@ -797,7 +793,6 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void RenderSliverGrid_ComputesVisibleChildren_AndCrossAxisOffsets()
     {
-        double maxExtent = -1;
         var manager = new TestSliverChildManager(childCount: 100, childExtent: 10);
         var sliverGrid = new RenderSliverGrid(
             gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
@@ -808,14 +803,10 @@ public sealed class ScrollPipelineTests
             childManager: manager);
         manager.AttachOwner(sliverGrid);
 
+        var viewportOffset = new TestViewportOffset();
         var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0,
-            onViewportMetricsChanged: (_, _, max) =>
-            {
-                maxExtent = max;
-                return null;
-            });
+            offset: viewportOffset,
+            scrollCacheExtent: ScrollCacheExtent.Pixels(0));
         viewport.Insert(sliverGrid);
 
         var root = new RenderView { Child = viewport };
@@ -823,7 +814,7 @@ public sealed class ScrollPipelineTests
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
 
-        Assert.Equal(2290, maxExtent);
+        Assert.Equal(2290, viewportOffset.MaxScrollExtent);
         Assert.Contains(6, ActiveIndices(sliverGrid));
         Assert.DoesNotContain(8, ActiveIndices(sliverGrid));
 
@@ -834,7 +825,7 @@ public sealed class ScrollPipelineTests
         Assert.Equal(0, firstParentData.CrossAxisOffset);
         Assert.Equal(55, secondParentData.CrossAxisOffset);
 
-        viewport.OffsetPixels = 500;
+        viewportOffset.JumpTo(500);
         pipeline.FlushLayout(new Size(100, 200));
 
         Assert.DoesNotContain(0, ActiveIndices(sliverGrid));
@@ -856,9 +847,8 @@ public sealed class ScrollPipelineTests
             childManager: manager);
         manager.AttachOwner(sliverGrid);
 
-        var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 0);
+        var viewportOffset = new TestViewportOffset();
+        var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(sliverGrid);
 
         var root = new RenderView { Child = viewport };
@@ -869,12 +859,12 @@ public sealed class ScrollPipelineTests
         Assert.Equal(1, manager.CreateCountFor(0));
         Assert.Contains(0, ActiveIndices(sliverGrid));
 
-        viewport.OffsetPixels = 600;
+        viewportOffset.JumpTo(600);
         pipeline.FlushLayout(new Size(100, 200));
         Assert.DoesNotContain(0, ActiveIndices(sliverGrid));
         Assert.DoesNotContain(0, manager.RemovedIndices);
 
-        viewport.OffsetPixels = 0;
+        viewportOffset.JumpTo(0);
         pipeline.FlushLayout(new Size(100, 200));
         Assert.Equal(1, manager.CreateCountFor(0));
         Assert.Contains(0, ActiveIndices(sliverGrid));

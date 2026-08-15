@@ -1,5 +1,28 @@
 # Changelog
 
+- Breaking: ported `rendering/viewport_offset.dart`, `rendering/viewport.dart` and
+  `widgets/viewport.dart` in full. New `ViewportOffset` (with `ViewportOffset.Fixed`/`Zero`,
+  `CorrectBy`, `MoveTo(clamp:)`, `UserScrollDirection`, `AllowImplicitScrolling`) is the protocol
+  viewports lay out against; `ScrollPosition` now extends it, gained `CorrectForNewDimensions`,
+  `DidUpdateScrollMetrics` and `CopyWith`, applies Flutter's `applyViewportDimension`/
+  `applyContentDimensions` return contract, and `CorrectPixels` no longer notifies. The single
+  approximate `RenderViewport` is replaced by `RenderViewportBase<TParentData>` plus
+  `RenderViewport` (physical parent data, `Center`, `Anchor`, Flutter's `_attemptLayout` correction
+  loop bounded by `10 * childCount`) and `RenderShrinkWrappingViewport` (logical parent data,
+  `maxPaintExtent`-driven shrink-wrap extent), with `LayoutChildSequence`, `SliverPaintOrder`,
+  `ChildrenInPaintOrder`/`ChildrenInHitTestOrder`, `ScrollOffsetOf`/`MaxScrollObstructionExtentBefore`
+  per growth direction, `ComputeChildMainAxisPosition`, `IndexOfFirstChild` and the visual-overflow
+  gated clip. The offset is now pulled during layout instead of pushed at build time, so
+  `ViewportMetricsChangedCallback`/`ViewportMoveToCallback` are gone and `IRenderAbstractViewport`
+  exposes `Offset`. New `Viewport`/`ShrinkWrappingViewport` widgets with a `center` key and
+  `ViewportElement`; `Scrollable` and `CustomScrollView` gained `center`, `SliverConstraints` gained
+  `CrossAxisDirection`, `RenderSliver` gained `CenterOffsetAdjustment`, and
+  `RenderSliverSingleBoxAdapter.SetChildParentData` now uses Flutter's reversed-axis formula.
+  `ScrollDirection` moved to the new `ViewportOffset.cs` and gained `FlipScrollDirection`. Default
+  cache extent is now 250 (`RenderAbstractViewport.DefaultCacheExtent`) rather than zero, and
+  `ScrollPosition.MoveTo` clamps into the scroll extents. `PlumixHost` ignores frames pumped from a
+  thread other than the one that created it, which an Avalonia control may not be touched from.
+
 - Breaking: ported `scheduler/ticker.dart` and `animation/animation_controller.dart` in full.
   `Ticker` now owns Flutter's lifecycle (`Start` returning a `TickerFuture`, `Stop(canceled:)`,
   `Muted`, `IsActive`/`IsTicking`, `ScheduleTick`/`UnscheduleTick`, `AbsorbTicker`, `DebugLabel`), and

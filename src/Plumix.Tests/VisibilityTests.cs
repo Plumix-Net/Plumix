@@ -273,7 +273,7 @@ public sealed class VisibilityTests
         var box = new HitTestRenderBox(new Size(100, 80));
         var child = new RenderSliverToBoxAdapter(box);
         var offstage = new RenderSliverOffstage(offstage: true, sliver: child);
-        var viewport = new RenderViewport(axis: Axis.Vertical);
+        var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(offstage);
         var renderView = new RenderView { Child = viewport };
         var pipeline = new PipelineOwner(renderView);
@@ -332,7 +332,7 @@ public sealed class VisibilityTests
             visible: false,
             maintainSemantics: false,
             sliver: ignore);
-        var viewport = new RenderViewport(axis: Axis.Vertical);
+        var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(visibility);
         var renderView = new RenderView { Child = viewport };
         var pipeline = new PipelineOwner(renderView);

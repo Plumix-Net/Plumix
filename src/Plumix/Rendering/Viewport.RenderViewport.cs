@@ -1,94 +1,75 @@
 using Avalonia;
-using Avalonia.Media;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/viewport.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/viewport.dart
 
 namespace Plumix.Rendering;
 
-/// <summary>
-/// Reports the measured viewport extent and content extents to the owning scrollable.
-/// </summary>
-/// <returns>
-/// The offset the viewport must lay out at, when applying the dimensions moved the scroll position
-/// (Flutter's <c>applyViewportDimension</c> returning false); null when nothing was corrected.
-/// </returns>
-public delegate double? ViewportMetricsChangedCallback(
-    double viewportExtent,
-    double minScrollExtent,
-    double maxScrollExtent);
-
-public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderAbstractViewport
+/// <summary>The order in which a viewport paints its slivers.</summary>
+public enum SliverPaintOrder
 {
-    private readonly RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData> _container;
-    private Axis _axis;
+    /// <summary>The first sliver in the child list paints on top of the following ones.</summary>
+    FirstIsTop,
+
+    /// <summary>The last sliver in the child list paints on top of the preceding ones.</summary>
+    LastIsTop,
+}
+
+/// <summary>
+/// A render object that is bigger on the inside: it displays a subset of its children, selected by a
+/// <see cref="ViewportOffset"/>.
+/// </summary>
+/// <remarks>
+/// Flutter declares this as <c>RenderViewportBase&lt;ParentDataClass&gt;</c> mixing in
+/// <c>ContainerRenderObjectMixin</c>. Plumix composes the container mixin instead of mixing it in,
+/// and its <see cref="RenderSliver"/> is a <see cref="RenderBox"/>, so hit testing goes through the
+/// box protocol rather than <c>SliverHitTestResult</c>.
+/// </remarks>
+public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObjectContainer, IRenderAbstractViewport
+    where TParentData : ContainerBoxParentData<RenderSliver>, new()
+{
+    private readonly RenderBoxContainerDefaultsMixin<RenderSliver, TParentData> _container;
     private AxisDirection _axisDirection;
-    private GrowthDirection _growthDirection;
-    private ScrollDirection _userScrollDirection;
-    private double _offsetPixels;
-    private double _cacheExtent;
-    private CacheExtentStyle _cacheExtentStyle;
-    private bool _shrinkWrap;
-    private double _anchor;
+    private AxisDirection _crossAxisDirection;
+    private ViewportOffset _offset;
+    private ScrollCacheExtent _scrollCacheExtent;
+    private SliverPaintOrder _paintOrder;
     private Clip _clipBehavior;
-    private double _maxScrollExtent;
-    private double? _calculatedCacheExtent;
-    private double? _reportedPixels;
-    private RenderSliverToBoxAdapter? _legacyChildSliver;
 
-    public RenderViewport(
-        Axis axis = Axis.Vertical,
-        AxisDirection? axisDirection = null,
-        GrowthDirection growthDirection = GrowthDirection.Forward,
-        double offsetPixels = 0.0,
-        double cacheExtent = 0.0,
-        CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
-        bool shrinkWrap = false,
-        double anchor = 0.0,
-        ViewportMetricsChangedCallback? onViewportMetricsChanged = null,
-        RenderBox? child = null,
-        Clip clipBehavior = Clip.HardEdge,
-        ScrollDirection userScrollDirection = ScrollDirection.Idle)
+    protected RenderViewportBase(
+        ViewportOffset offset,
+        AxisDirection? crossAxisDirection,
+        AxisDirection axisDirection = AxisDirection.Down,
+        ScrollCacheExtent? scrollCacheExtent = null,
+        SliverPaintOrder paintOrder = SliverPaintOrder.FirstIsTop,
+        Clip clipBehavior = Clip.HardEdge)
     {
-        _container = new RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData>(this);
-        _axisDirection = axisDirection ?? ScrollDirectionUtils.DefaultAxisDirection(axis);
-        _axis = ScrollDirectionUtils.AxisDirectionToAxis(_axisDirection);
-        _growthDirection = growthDirection;
-        _userScrollDirection = userScrollDirection;
-        _offsetPixels = offsetPixels;
-        _cacheExtent = Math.Max(0, cacheExtent);
-        _cacheExtentStyle = cacheExtentStyle;
-        _shrinkWrap = shrinkWrap;
-        Anchor = anchor;
+        ArgumentNullException.ThrowIfNull(offset);
+        // Flutter requires the cross axis direction; Plumix defaults it to the perpendicular
+        // reading-order direction so a render object can be built without a BuildContext.
+        AxisDirection resolvedCrossAxisDirection = crossAxisDirection
+            ?? (ScrollDirectionUtils.AxisDirectionToAxis(axisDirection) == Axis.Vertical
+                ? AxisDirection.Right
+                : AxisDirection.Down);
+        if (ScrollDirectionUtils.AxisDirectionToAxis(axisDirection)
+            == ScrollDirectionUtils.AxisDirectionToAxis(resolvedCrossAxisDirection))
+        {
+            throw new ArgumentException(
+                "The cross axis direction must be perpendicular to the main axis direction.",
+                nameof(crossAxisDirection));
+        }
+
+        _container = new RenderBoxContainerDefaultsMixin<RenderSliver, TParentData>(this);
+        _axisDirection = axisDirection;
+        _crossAxisDirection = resolvedCrossAxisDirection;
+        _offset = offset;
+        _scrollCacheExtent = scrollCacheExtent
+                             ?? ScrollCacheExtent.Pixels(RenderAbstractViewport.DefaultCacheExtent);
+        _paintOrder = paintOrder;
         _clipBehavior = clipBehavior;
-        OnViewportMetricsChanged = onViewportMetricsChanged;
-
-        if (child != null)
-        {
-            Child = child;
-        }
     }
 
-    public Axis Axis
-    {
-        get => _axis;
-        set
-        {
-            if (_axis == value)
-            {
-                return;
-            }
-
-            _axis = value;
-            if (ScrollDirectionUtils.AxisDirectionToAxis(_axisDirection) != value)
-            {
-                _axisDirection = ScrollDirectionUtils.DefaultAxisDirection(value);
-            }
-
-            MarkNeedsLayout();
-        }
-    }
-
+    /// <summary>The direction in which the scroll offset increases.</summary>
     public AxisDirection AxisDirection
     {
         get => _axisDirection;
@@ -100,125 +81,122 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
             }
 
             _axisDirection = value;
-            _axis = ScrollDirectionUtils.AxisDirectionToAxis(value);
             MarkNeedsLayout();
         }
     }
 
-    public GrowthDirection GrowthDirection
+    /// <summary>The direction in which child should be laid out in the cross axis.</summary>
+    public AxisDirection CrossAxisDirection
     {
-        get => _growthDirection;
+        get => _crossAxisDirection;
         set
         {
-            if (_growthDirection == value)
+            if (_crossAxisDirection == value)
             {
                 return;
             }
 
-            _growthDirection = value;
+            _crossAxisDirection = value;
             MarkNeedsLayout();
         }
     }
 
-    public ScrollDirection UserScrollDirection
-    {
-        get => _userScrollDirection;
-        set
-        {
-            if (_userScrollDirection == value)
-            {
-                return;
-            }
-
-            _userScrollDirection = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double OffsetPixels
-    {
-        get => _offsetPixels;
-        set
-        {
-            if (Math.Abs(_offsetPixels - value) < 0.0001)
-            {
-                return;
-            }
-
-            _offsetPixels = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public ViewportMetricsChangedCallback? OnViewportMetricsChanged { get; set; }
+    /// <summary>The axis along which the scroll offset increases.</summary>
+    public Axis Axis => ScrollDirectionUtils.AxisDirectionToAxis(_axisDirection);
 
     /// <inheritdoc />
-    public ViewportMoveToCallback? OnMoveTo { get; set; }
-
-    /// <inheritdoc />
-    public bool AllowImplicitScrolling { get; set; } = true;
-
-    double IRenderAbstractViewport.RevealOffsetPixels => _offsetPixels;
-
-    public bool ShrinkWrap
+    public ViewportOffset Offset
     {
-        get => _shrinkWrap;
+        get => _offset;
         set
         {
-            if (_shrinkWrap == value) return;
-            _shrinkWrap = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double Anchor
-    {
-        get => _anchor;
-        set
-        {
-            if (!double.IsFinite(value) || value < 0.0 || value > 1.0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value));
-            }
-
-            if (Math.Abs(_anchor - value) < 0.0001)
+            ArgumentNullException.ThrowIfNull(value);
+            if (ReferenceEquals(_offset, value))
             {
                 return;
             }
 
-            _anchor = value;
+            if (Owner != null)
+            {
+                _offset.RemoveListener(MarkNeedsLayout);
+            }
+
+            _offset = value;
+            if (Owner != null)
+            {
+                _offset.AddListener(MarkNeedsLayout);
+            }
+
+            // We need to go through layout even if the new offset has the same pixels value as the
+            // old offset so that we will apply our viewport and content dimensions.
             MarkNeedsLayout();
         }
     }
 
+    /// <summary>The extent, in pixels or viewport fractions, laid out beyond the visible area.</summary>
+    public ScrollCacheExtent ScrollCacheExtent
+    {
+        get => _scrollCacheExtent;
+        set
+        {
+            ScrollCacheExtent effectiveValue = value
+                                               ?? ScrollCacheExtent.Pixels(
+                                                   RenderAbstractViewport.DefaultCacheExtent);
+            if (_scrollCacheExtent == effectiveValue)
+            {
+                return;
+            }
+
+            _scrollCacheExtent = effectiveValue;
+            MarkNeedsLayout();
+        }
+    }
+
+    /// <summary>The raw value of <see cref="ScrollCacheExtent"/>, in its own <see cref="CacheExtentStyle"/>.</summary>
+    /// <remarks>Flutter's deprecated <c>cacheExtent</c>; the style is preserved across assignments.</remarks>
     public double CacheExtent
     {
-        get => _cacheExtent;
+        get => _scrollCacheExtent.Value;
         set
         {
-            double normalized = Math.Max(0, value);
-            if (Math.Abs(_cacheExtent - normalized) < 0.0001)
-            {
-                return;
-            }
-
-            _cacheExtent = normalized;
-            MarkNeedsLayout();
+            ScrollCacheExtent = _scrollCacheExtent.Style == CacheExtentStyle.Viewport
+                ? ScrollCacheExtent.Viewport(value)
+                : ScrollCacheExtent.Pixels(value);
         }
     }
 
+    /// <summary>Whether <see cref="CacheExtent"/> counts pixels or viewport fractions.</summary>
+    /// <remarks>Flutter's deprecated <c>cacheExtentStyle</c>.</remarks>
     public CacheExtentStyle CacheExtentStyle
     {
-        get => _cacheExtentStyle;
+        get => _scrollCacheExtent.Style;
         set
         {
-            if (_cacheExtentStyle == value)
+            if (_scrollCacheExtent.Style == value)
             {
                 return;
             }
 
-            _cacheExtentStyle = value;
-            MarkNeedsLayout();
+            ScrollCacheExtent = value == CacheExtentStyle.Viewport
+                ? ScrollCacheExtent.Viewport(_scrollCacheExtent.Value)
+                : ScrollCacheExtent.Pixels(_scrollCacheExtent.Value);
+        }
+    }
+
+    /// <summary>Which sliver paints on top when slivers overlap.</summary>
+    public SliverPaintOrder PaintOrder
+    {
+        get => _paintOrder;
+        set
+        {
+            if (_paintOrder == value)
+            {
+                return;
+            }
+
+            _paintOrder = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -238,29 +216,24 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
         }
     }
 
-    // Backward-compatible single child API used by existing tests/widgets.
-    public RenderBox? Child
+    public override bool IsRepaintBoundary => true;
+
+    /// <summary>The resolved cache extent in pixels, established during layout.</summary>
+    protected double? CalculatedCacheExtent { get; set; }
+
+    /// <summary>Whether any child reported that it painted beyond the viewport bounds.</summary>
+    protected abstract bool HasVisualOverflow { get; }
+
+    protected override void OnAttach()
     {
-        get => _legacyChildSliver?.Child;
-        set
-        {
-            if (ReferenceEquals(_legacyChildSliver?.Child, value))
-            {
-                return;
-            }
+        base.OnAttach();
+        _offset.AddListener(MarkNeedsLayout);
+    }
 
-            if (_legacyChildSliver != null)
-            {
-                Remove(_legacyChildSliver);
-                _legacyChildSliver = null;
-            }
-
-            if (value != null)
-            {
-                _legacyChildSliver = new RenderSliverToBoxAdapter(value);
-                Insert(_legacyChildSliver, after: LastChild);
-            }
-        }
+    protected override void OnDetach()
+    {
+        _offset.RemoveListener(MarkNeedsLayout);
+        base.OnDetach();
     }
 
     public int ChildCount => _container.ChildCount;
@@ -269,7 +242,11 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
 
     public RenderSliver? LastChild => _container.LastChild;
 
-    public void Insert(RenderSliver child, RenderSliver? after = null)
+    public RenderSliver? ChildAfter(RenderSliver child) => _container.ChildAfter(child);
+
+    public RenderSliver? ChildBefore(RenderSliver child) => _container.ChildBefore(child);
+
+    public virtual void Insert(RenderSliver child, RenderSliver? after = null)
     {
         _container.Insert(child, after);
     }
@@ -279,13 +256,8 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
         _container.Move(child, after);
     }
 
-    public void Remove(RenderSliver child)
+    public virtual void Remove(RenderSliver child)
     {
-        if (ReferenceEquals(child, _legacyChildSliver))
-        {
-            _legacyChildSliver = null;
-        }
-
         _container.Remove(child);
     }
 
@@ -306,179 +278,272 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
 
     public override void SetupParentData(RenderObject child)
     {
-        if (child.parentData is not SliverPhysicalParentData)
+        if (child.parentData is not TParentData)
         {
-            child.parentData = new SliverPhysicalParentData();
+            child.parentData = new TParentData();
         }
     }
 
     public override void VisitChildren(Action<RenderObject> visitor)
     {
-        for (var child = FirstChild; child != null; child = _container.ChildAfter(child))
+        for (RenderSliver? child = FirstChild; child != null; child = _container.ChildAfter(child))
         {
             visitor(child);
         }
     }
 
-    protected override void PerformLayout()
+    /// <summary>
+    /// Walks the children in the order they are painted, which is the reverse of
+    /// <see cref="ChildrenInHitTestOrder"/>.
+    /// </summary>
+    public IEnumerable<RenderSliver> ChildrenInPaintOrder => _paintOrder == SliverPaintOrder.FirstIsTop
+        ? ChildrenLastToFirst()
+        : ChildrenFirstToLast();
+
+    /// <summary>Walks the children in the order they are hit tested.</summary>
+    public IEnumerable<RenderSliver> ChildrenInHitTestOrder => _paintOrder == SliverPaintOrder.FirstIsTop
+        ? ChildrenFirstToLast()
+        : ChildrenLastToFirst();
+
+    private List<RenderSliver> ChildrenFirstToLast()
     {
-        // A position that resolves its offset from the viewport extent (a page view's, say) only
-        // learns its pixels once the dimensions reach it, so the reported correction is laid out
-        // again in this same frame rather than surfacing as a one-frame flash.
-        for (int attempt = 0; attempt < 5; attempt++)
+        var children = new List<RenderSliver>(ChildCount);
+        for (RenderSliver? child = FirstChild; child != null; child = _container.ChildAfter(child))
         {
-            if (!LayoutOnce())
-            {
-                return;
-            }
+            children.Add(child);
         }
 
-        LayoutOnce();
+        return children;
     }
 
-    /// <summary>Runs one layout pass; returns true when the scroll position corrected the offset.</summary>
-    private bool LayoutOnce()
+    private List<RenderSliver> ChildrenLastToFirst()
     {
-        double laidOutOffset = _offsetPixels;
-        PerformLayoutPass();
-        if (_reportedPixels is not { } corrected
-            || Math.Abs(corrected - laidOutOffset) <= 0.0001
-            || Math.Abs(corrected - _offsetPixels) <= 0.0001)
+        var children = new List<RenderSliver>(ChildCount);
+        for (RenderSliver? child = LastChild; child != null; child = _container.ChildBefore(child))
         {
-            return false;
+            children.Add(child);
         }
 
-        _offsetPixels = corrected;
-        return true;
+        return children;
     }
 
-    private void PerformLayoutPass()
+    protected override double ComputeMinIntrinsicWidth(double height) => ThrowIntrinsicsUnsupported();
+
+    protected override double ComputeMaxIntrinsicWidth(double height) => ThrowIntrinsicsUnsupported();
+
+    protected override double ComputeMinIntrinsicHeight(double width) => ThrowIntrinsicsUnsupported();
+
+    protected override double ComputeMaxIntrinsicHeight(double width) => ThrowIntrinsicsUnsupported();
+
+    /// <remarks>Flutter's <c>debugThrowIfNotCheckingIntrinsics</c>.</remarks>
+    private double ThrowIntrinsicsUnsupported()
     {
-        _reportedPixels = null;
-        Size = Constraints.Constrain(Constraints.Biggest);
-
-        double viewportMainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
-        double crossAxisExtent = Axis == Axis.Vertical ? Size.Width : Size.Height;
-        if (ShrinkWrap && double.IsFinite(viewportMainAxisExtent))
-        {
-            var probe = LayoutWithCorrections(0, viewportMainAxisExtent, crossAxisExtent);
-            double desiredExtent = Math.Min(probe.totalScrollExtent, viewportMainAxisExtent);
-            Size = Axis == Axis.Vertical
-                ? Constraints.Constrain(new Size(Size.Width, desiredExtent))
-                : Constraints.Constrain(new Size(desiredExtent, Size.Height));
-            viewportMainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
-        }
-        double rawOffset = _offsetPixels;
-        double currentOffset = Math.Max(0, _offsetPixels);
-        double currentMaxScrollExtent = Math.Max(0, _maxScrollExtent);
-        const double precisionErrorTolerance = 0.0001;
-
-        for (int pass = 0; pass < 6; pass++)
-        {
-            double effectiveScrollOffset = EffectiveScrollOffsetForLayout(currentOffset, currentMaxScrollExtent);
-            var layout = LayoutWithCorrections(
-                scrollOffset: effectiveScrollOffset,
-                viewportMainAxisExtent: viewportMainAxisExtent,
-                crossAxisExtent: crossAxisExtent);
-
-            double anchoredViewportExtent = viewportMainAxisExtent * (1.0 - Anchor);
-            double maxScrollExtent = Math.Max(0, layout.totalScrollExtent - anchoredViewportExtent);
-            double clampedOffset = Math.Clamp(currentOffset, 0, maxScrollExtent);
-            if (Math.Abs(layout.scrollOffset - effectiveScrollOffset) > precisionErrorTolerance)
-            {
-                clampedOffset = UserOffsetFromEffective(layout.scrollOffset, maxScrollExtent);
-            }
-
-            double targetEffectiveScrollOffset = EffectiveScrollOffsetForLayout(clampedOffset, maxScrollExtent);
-            bool offsetStable = Math.Abs(clampedOffset - currentOffset) <= precisionErrorTolerance;
-            bool effectiveOffsetStable = Math.Abs(targetEffectiveScrollOffset - effectiveScrollOffset) <= precisionErrorTolerance;
-            bool maxExtentStable = Math.Abs(maxScrollExtent - currentMaxScrollExtent) <= precisionErrorTolerance;
-
-            if (offsetStable && effectiveOffsetStable && maxExtentStable)
-            {
-                currentOffset = clampedOffset;
-                _maxScrollExtent = maxScrollExtent;
-
-                // Offsets outside [0, maxScrollExtent] are legitimate under physics that allow
-                // overscroll (iOS bouncing): keep them and lay the children out shifted by the
-                // overscroll instead of clamping the position back into range.
-                double inRangeOffset = Math.Clamp(rawOffset, 0, maxScrollExtent);
-                bool correctedByLayout = Math.Abs(currentOffset - inRangeOffset) > precisionErrorTolerance;
-                double overscroll = correctedByLayout ? 0.0 : rawOffset - inRangeOffset;
-                if (Math.Abs(overscroll) > precisionErrorTolerance)
-                {
-                    LayoutWithCorrections(
-                        scrollOffset: EffectiveScrollOffsetForOverscroll(rawOffset, maxScrollExtent),
-                        viewportMainAxisExtent: viewportMainAxisExtent,
-                        crossAxisExtent: crossAxisExtent);
-                    _offsetPixels = rawOffset;
-                }
-                else
-                {
-                    _offsetPixels = currentOffset;
-                }
-
-                _reportedPixels = OnViewportMetricsChanged?.Invoke(viewportMainAxisExtent, 0, _maxScrollExtent);
-                return;
-            }
-
-            currentOffset = clampedOffset;
-            currentMaxScrollExtent = maxScrollExtent;
-        }
-
-        double finalEffectiveScrollOffset = EffectiveScrollOffsetForLayout(currentOffset, currentMaxScrollExtent);
-        var finalLayout = LayoutWithCorrections(
-            scrollOffset: finalEffectiveScrollOffset,
-            viewportMainAxisExtent: viewportMainAxisExtent,
-            crossAxisExtent: crossAxisExtent);
-        double finalAnchoredViewportExtent = viewportMainAxisExtent * (1.0 - Anchor);
-        _maxScrollExtent = Math.Max(0, finalLayout.totalScrollExtent - finalAnchoredViewportExtent);
-        _offsetPixels = UserOffsetFromEffective(finalLayout.scrollOffset, _maxScrollExtent);
-        _reportedPixels = OnViewportMetricsChanged?.Invoke(viewportMainAxisExtent, 0, _maxScrollExtent);
+        throw new InvalidOperationException(
+            $"{GetType().Name} does not support returning intrinsic dimensions. Calculating the "
+            + "intrinsic dimensions would require instantiating every child of the viewport, which "
+            + $"defeats the point of viewports being lazy. {IntrinsicsHint}");
     }
+
+    /// <summary>The closing hint of the intrinsics error message.</summary>
+    protected virtual string IntrinsicsHint =>
+        "If you are merely trying to shrink-wrap the viewport in the main axis direction, consider a "
+        + "RenderShrinkWrappingViewport render object (ShrinkWrappingViewport widget), which achieves "
+        + "that effect without implementing the intrinsic dimension API.";
 
     /// <summary>
-    /// The scroll offset of the leading edge of <paramref name="child"/>, plus
-    /// <paramref name="scrollOffsetWithinChild"/>.
+    /// Lays out a contiguous run of slivers, starting with <paramref name="child"/> and walking with
+    /// <paramref name="advance"/>, and returns the scroll offset correction one of them asked for
+    /// (zero when the whole sequence was laid out).
     /// </summary>
-    /// <remarks>
-    /// Plumix's viewport has no <c>center</c> sliver, so every child grows forward from the first
-    /// one; this is Flutter's <c>RenderShrinkWrappingViewport.scrollOffsetOf</c>.
-    /// </remarks>
-    public double ScrollOffsetOf(RenderSliver child, double scrollOffsetWithinChild)
+    /// <remarks>Flutter's <c>RenderViewportBase.layoutChildSequence</c>.</remarks>
+    protected double LayoutChildSequence(
+        RenderSliver? child,
+        double scrollOffset,
+        double overlap,
+        double layoutOffset,
+        double remainingPaintExtent,
+        double mainAxisExtent,
+        double crossAxisExtent,
+        GrowthDirection growthDirection,
+        Func<RenderSliver, RenderSliver?> advance,
+        double remainingCacheExtent,
+        double cacheOrigin)
     {
-        double scrollOffsetToChild = 0.0;
-        for (RenderSliver? current = FirstChild;
-             current != null && !ReferenceEquals(current, child);
-             current = _container.ChildAfter(current))
+        if (!double.IsFinite(scrollOffset) || scrollOffset < 0.0)
         {
-            scrollOffsetToChild += current.Geometry.ScrollExtent;
+            throw new ArgumentOutOfRangeException(nameof(scrollOffset));
         }
 
-        return scrollOffsetToChild + scrollOffsetWithinChild;
+        double initialLayoutOffset = layoutOffset;
+        ScrollDirection adjustedUserScrollDirection = ApplyGrowthDirectionToScrollDirection(
+            _offset.UserScrollDirection,
+            growthDirection);
+        double maxPaintOffset = layoutOffset + overlap;
+        double precedingScrollExtent = 0.0;
+
+        while (child != null)
+        {
+            double sliverScrollOffset = scrollOffset <= 0.0 ? 0.0 : scrollOffset;
+            // If the scrollOffset is 0.0 the child may not be laid out yet; give it a cache origin
+            // it can start painting from.
+            double correctedCacheOrigin = Math.Max(cacheOrigin, -sliverScrollOffset);
+            double cacheExtentCorrection = cacheOrigin - correctedCacheOrigin;
+
+            child.LayoutWithSliverConstraints(new SliverConstraints(
+                Axis: Axis,
+                ScrollOffset: sliverScrollOffset,
+                RemainingPaintExtent: Math.Max(0.0, remainingPaintExtent - layoutOffset + initialLayoutOffset),
+                CrossAxisExtent: crossAxisExtent,
+                ViewportMainAxisExtent: mainAxisExtent,
+                CacheOrigin: correctedCacheOrigin,
+                RemainingCacheExtent: Math.Max(0.0, remainingCacheExtent + cacheExtentCorrection),
+                AxisDirection: _axisDirection,
+                GrowthDirection: growthDirection,
+                Overlap: maxPaintOffset - layoutOffset,
+                PrecedingScrollExtent: precedingScrollExtent,
+                UserScrollDirection: adjustedUserScrollDirection,
+                CrossAxisDirection: _crossAxisDirection));
+
+            SliverGeometry childLayoutGeometry = child.Geometry;
+
+            // If the child overflowed, ask the viewport to relayout at a corrected scroll offset.
+            if (childLayoutGeometry.ScrollOffsetCorrection != 0.0)
+            {
+                return childLayoutGeometry.ScrollOffsetCorrection;
+            }
+
+            double effectiveLayoutOffset = layoutOffset + childLayoutGeometry.PaintOrigin;
+
+            // `effectiveLayoutOffset` is not the layout offset of the child after the trailing edge
+            // of the viewport, because the child is not visible there; the scroll offset, which keeps
+            // increasing, roughly orders the invisible children instead.
+            if (childLayoutGeometry.Visible || scrollOffset > 0)
+            {
+                UpdateChildLayoutOffset(child, effectiveLayoutOffset, growthDirection);
+            }
+            else
+            {
+                UpdateChildLayoutOffset(child, -scrollOffset + initialLayoutOffset, growthDirection);
+            }
+
+            maxPaintOffset = Math.Max(effectiveLayoutOffset + childLayoutGeometry.PaintExtent, maxPaintOffset);
+            scrollOffset -= childLayoutGeometry.ScrollExtent;
+            precedingScrollExtent += childLayoutGeometry.ScrollExtent;
+            layoutOffset += childLayoutGeometry.LayoutExtent;
+            if (childLayoutGeometry.CacheExtent != 0.0)
+            {
+                remainingCacheExtent -= childLayoutGeometry.CacheExtent - cacheExtentCorrection;
+                cacheOrigin = Math.Min(correctedCacheOrigin + childLayoutGeometry.CacheExtent, 0.0);
+            }
+
+            UpdateOutOfBandData(growthDirection, childLayoutGeometry);
+
+            child = advance(child);
+        }
+
+        // We made it without a correction, whee!
+        return 0.0;
     }
 
-    /// <summary>The total extent pinned by the slivers laid out before <paramref name="child"/>.</summary>
-    public double MaxScrollObstructionExtentBefore(RenderSliver child)
+    /// <remarks>Flutter's <c>applyGrowthDirectionToScrollDirection</c>.</remarks>
+    private static ScrollDirection ApplyGrowthDirectionToScrollDirection(
+        ScrollDirection scrollDirection,
+        GrowthDirection growthDirection)
     {
-        double pinnedExtent = 0.0;
-        for (RenderSliver? current = FirstChild;
-             current != null && !ReferenceEquals(current, child);
-             current = _container.ChildAfter(current))
+        return growthDirection == GrowthDirection.Forward
+            ? scrollDirection
+            : ScrollDirectionUtils.FlipScrollDirection(scrollDirection);
+    }
+
+    /// <summary>Records a child's geometry into the viewport's own out-of-band totals.</summary>
+    protected abstract void UpdateOutOfBandData(
+        GrowthDirection growthDirection,
+        SliverGeometry childLayoutGeometry);
+
+    /// <summary>Stores a child's layout offset in whatever form this viewport's parent data takes.</summary>
+    protected abstract void UpdateChildLayoutOffset(
+        RenderSliver child,
+        double layoutOffset,
+        GrowthDirection growthDirection);
+
+    /// <summary>The offset at which the given child should be painted.</summary>
+    public abstract Point PaintOffsetOf(RenderSliver child);
+
+    /// <summary>
+    /// The scroll offset within the viewport at which the given point in the given child is located.
+    /// </summary>
+    public abstract double ScrollOffsetOf(RenderSliver child, double scrollOffsetWithinChild);
+
+    /// <summary>The total extent pinned by the slivers laid out before <paramref name="child"/>.</summary>
+    public abstract double MaxScrollObstructionExtentBefore(RenderSliver child);
+
+    /// <summary>Converts a main-axis position in this viewport into one inside the given child.</summary>
+    public abstract double ComputeChildMainAxisPosition(RenderSliver child, double parentMainAxisPosition);
+
+    /// <summary>Converts a layout offset in the given growth direction into a paint offset.</summary>
+    protected Point ComputeAbsolutePaintOffset(
+        RenderSliver child,
+        double layoutOffset,
+        GrowthDirection growthDirection)
+    {
+        return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(_axisDirection, growthDirection) switch
         {
-            pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+            AxisDirection.Up => new Point(0.0, Size.Height - layoutOffset - child.Geometry.PaintExtent),
+            AxisDirection.Left => new Point(Size.Width - layoutOffset - child.Geometry.PaintExtent, 0.0),
+            AxisDirection.Right => new Point(layoutOffset, 0.0),
+            _ => new Point(0.0, layoutOffset),
+        };
+    }
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        if (FirstChild is null)
+        {
+            return;
         }
 
-        return pinnedExtent;
+        if (HasVisualOverflow && ClipBehavior != Clip.None)
+        {
+            context.PushClipRect(
+                new Rect(offset, Size),
+                clippedContext => PaintContents(clippedContext, offset),
+                ClipBehavior);
+            return;
+        }
+
+        PaintContents(context, offset);
+    }
+
+    private void PaintContents(PaintingContext context, Point offset)
+    {
+        foreach (RenderSliver child in ChildrenInPaintOrder)
+        {
+            if (child.Geometry.Visible)
+            {
+                context.PaintChild(child, offset + PaintOffsetOf(child));
+            }
+        }
+    }
+
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        foreach (RenderSliver child in ChildrenInHitTestOrder)
+        {
+            if (!child.Geometry.Visible)
+            {
+                continue;
+            }
+
+            if (child.HitTest(result, position - PaintOffsetOf(child)))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <inheritdoc />
-    /// <remarks>
-    /// Plumix lays every sliver out in the physically forward direction and expresses a reversed
-    /// axis purely through the offset mapping, so the leading edge is taken in layout space and the
-    /// resulting scroll offset is mapped back to the position's pixels at the end. Flutter selects
-    /// the edge from the effective axis direction instead and needs no final mapping.
-    /// </remarks>
     public RevealedOffset GetOffsetToReveal(
         RenderObject target,
         double alignment,
@@ -499,7 +564,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
             if (current.Parent is not { } parent)
             {
                 // Not a descendant of this viewport: nothing to reveal.
-                return new RevealedOffset(_offsetPixels, rect ?? target.PaintBounds);
+                return new RevealedOffset(_offset.Pixels, rect ?? target.PaintBounds);
             }
 
             if (current is RenderBox box)
@@ -524,15 +589,21 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
 
         double pivotExtent;
         Rect rectLocal;
+        GrowthDirection growthDirection;
         if (pivot != null)
         {
+            var pivotParent = (RenderSliver)pivot.Parent!;
+            growthDirection = pivotParent.ConstraintsForSliver.GrowthDirection;
             pivotExtent = effectiveAxis == Axis.Horizontal ? pivot.Size.Width : pivot.Size.Height;
             rect ??= target.PaintBounds;
             rectLocal = RenderObject.TransformRect(target.GetTransformTo(pivot), rect.Value);
         }
         else if (onlySlivers)
         {
+            // The target is a sliver and there is no box between it and this viewport, so a rect is
+            // made up from the sliver's own geometry.
             var targetSliver = (RenderSliver)target;
+            growthDirection = targetSliver.ConstraintsForSliver.GrowthDirection;
             pivotExtent = targetSliver.Geometry.ScrollExtent;
             double crossAxisExtent = targetSliver.ConstraintsForSliver.CrossAxisExtent;
             rect ??= effectiveAxis == Axis.Horizontal
@@ -542,30 +613,58 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
         }
         else
         {
-            return new RevealedOffset(_offsetPixels, rect ?? target.PaintBounds);
+            return new RevealedOffset(_offset.Pixels, rect ?? target.PaintBounds);
         }
 
         var sliver = (RenderSliver)current;
-        leadingScrollOffset += effectiveAxis == Axis.Horizontal ? rectLocal.Left : rectLocal.Top;
+        leadingScrollOffset += ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            _axisDirection,
+            growthDirection) switch
+        {
+            AxisDirection.Up => pivotExtent - rectLocal.Bottom,
+            AxisDirection.Left => pivotExtent - rectLocal.Right,
+            AxisDirection.Right => rectLocal.Left,
+            _ => rectLocal.Top,
+        };
+
+        // The scroll offset at which the leading edge of the sliver would already be pinned in place.
         bool isPinned = sliver.Geometry.MaxScrollObstructionExtent > 0.0 && leadingScrollOffset >= 0.0;
         leadingScrollOffset = ScrollOffsetOf(sliver, leadingScrollOffset);
 
         Rect targetRect = RenderObject.TransformRect(target.GetTransformTo(this), rect.Value);
         double extentOfPinnedSlivers = MaxScrollObstructionExtentBefore(sliver);
-        if (isPinned && alignment <= 0.0)
+        switch (sliver.ConstraintsForSliver.GrowthDirection)
         {
-            // Aligning a pinned sliver's leading edge is already satisfied at every offset; the
-            // caller clamps this to the maximum scroll extent.
-            return new RevealedOffset(double.PositiveInfinity, targetRect);
+            case GrowthDirection.Forward:
+                if (isPinned && alignment <= 0)
+                {
+                    // Aligning a pinned sliver's leading edge is already satisfied at every offset;
+                    // the caller clamps this to the maximum scroll extent.
+                    return new RevealedOffset(double.PositiveInfinity, targetRect);
+                }
+
+                leadingScrollOffset -= extentOfPinnedSlivers;
+                break;
+            case GrowthDirection.Reverse:
+                if (isPinned && alignment >= 1)
+                {
+                    return new RevealedOffset(double.NegativeInfinity, targetRect);
+                }
+
+                // If child's growth direction is reverse, when viewport.offset is
+                // `leadingScrollOffset`, it is positioned just outside of the leading edge of the
+                // viewport.
+                leadingScrollOffset -= effectiveAxis == Axis.Vertical
+                    ? targetRect.Height
+                    : targetRect.Width;
+                break;
         }
 
-        leadingScrollOffset -= extentOfPinnedSlivers;
         double mainAxisExtentDifference = effectiveAxis == Axis.Horizontal
             ? Size.Width - extentOfPinnedSlivers - rectLocal.Width
             : Size.Height - extentOfPinnedSlivers - rectLocal.Height;
-        double targetLayoutOffset = leadingScrollOffset - mainAxisExtentDifference * alignment;
-        double targetOffset = UserOffsetFromEffectiveUnclamped(targetLayoutOffset);
-        double offsetDifference = _offsetPixels - targetOffset;
+        double targetOffset = leadingScrollOffset - mainAxisExtentDifference * alignment;
+        double offsetDifference = _offset.Pixels - targetOffset;
         targetRect = _axisDirection switch
         {
             AxisDirection.Up => TranslateRect(targetRect, 0.0, -offsetDifference),
@@ -577,78 +676,31 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
         return new RevealedOffset(targetOffset, targetRect);
     }
 
+    private static Rect TranslateRect(Rect rect, double dx, double dy)
+    {
+        return new Rect(rect.X + dx, rect.Y + dy, rect.Width, rect.Height);
+    }
+
     public override void ShowOnScreen(
         RenderObject? descendant = null,
         Rect? rect = null,
         TimeSpan duration = default,
         Curve? curve = null)
     {
-        if (!AllowImplicitScrolling)
+        if (!_offset.AllowImplicitScrolling)
         {
             base.ShowOnScreen(descendant, rect, duration, curve);
             return;
         }
 
-        Rect? revealed = RenderAbstractViewport.ShowInViewport(this, descendant, rect, duration, curve);
-        base.ShowOnScreen(rect: revealed, duration: duration, curve: curve);
-    }
-
-    private static Rect TranslateRect(Rect rect, double dx, double dy)
-    {
-        return new Rect(rect.X + dx, rect.Y + dy, rect.Width, rect.Height);
-    }
-
-    public override void Paint(PaintingContext ctx, Point offset)
-    {
-        if (Size.Width <= 0 || Size.Height <= 0)
-        {
-            return;
-        }
-
-        if (ClipBehavior == Clip.None)
-        {
-            PaintChildrenFirstIsTop(ctx, offset);
-            return;
-        }
-
-        var clipRect = new Rect(offset, Size);
-        ctx.PushClipRect(clipRect, clippedContext => PaintChildrenFirstIsTop(clippedContext, offset));
-    }
-
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
-    {
-        if (position.X < 0 || position.Y < 0 || position.X > Size.Width || position.Y > Size.Height)
-        {
-            return false;
-        }
-
-        // Flutter viewports use SliverPaintOrder.firstIsTop by default. Since the
-        // first sliver is painted last, hit testing must inspect it first.
-        for (var child = FirstChild; child != null; child = _container.ChildAfter(child))
-        {
-            var parentData = (SliverPhysicalParentData)child.parentData!;
-            if (child.HitTest(result, position - parentData.offset))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private void PaintChildrenFirstIsTop(PaintingContext context, Point offset)
-    {
-        // Match RenderViewport's default SliverPaintOrder.firstIsTop. This is
-        // essential for pinned headers: following list slivers may paint into
-        // the header's area, but the leading header must remain above them.
-        for (var child = LastChild; child != null; child = _container.ChildBefore(child))
-        {
-            var parentData = (SliverPhysicalParentData)child.parentData!;
-            if (child.Geometry.PaintExtent > 0)
-            {
-                context.PaintChild(child, parentData.offset + offset);
-            }
-        }
+        Rect? newRect = RenderAbstractViewport.ShowInViewport(
+            this,
+            _offset,
+            descendant,
+            rect,
+            duration,
+            curve);
+        base.ShowOnScreen(rect: newRect, duration: duration, curve: curve);
     }
 
     /// <summary>
@@ -697,6 +749,8 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
         }
 
         SliverConstraints constraints = clippedSliver.ConstraintsForSliver;
+        // The viewport's main axis extent is infinite for a shrink-wrapping viewport inside a flex,
+        // which makes the overlap start meaningless.
         if (constraints.Overlap == 0 || double.IsInfinity(constraints.ViewportMainAxisExtent))
         {
             return viewportClip;
@@ -741,8 +795,7 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
         }
 
         var semanticBounds = new Rect(new Point(0, 0), Size);
-        double cacheExtent = _calculatedCacheExtent ?? 0.0;
-        if (_calculatedCacheExtent is null)
+        if (CalculatedCacheExtent is not { } cacheExtent)
         {
             return semanticBounds;
         }
@@ -758,167 +811,588 @@ public sealed class RenderViewport : RenderBox, IRenderObjectContainer, IRenderA
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        // Flutter walks `childrenInPaintOrder` here; Plumix has no geometry-driven traversal sort, so it
-        // keeps first-to-last order and applies only the visible-or-cached filter.
-        for (var child = FirstChild; child != null; child = _container.ChildAfter(child))
+        // Flutter walks `childrenInPaintOrder` here; Plumix has no geometry-driven traversal sort, so
+        // it keeps first-to-last order and applies only the visible-or-cached filter.
+        foreach (RenderSliver child in ChildrenFirstToLast())
         {
-            if (!IsSemanticallyRelevant(child))
+            if (IsSemanticallyRelevant(child))
             {
+                visitor(child);
+            }
+        }
+    }
+}
+
+/// <summary>
+/// A render object that is bigger on the inside, laying its slivers out in both growth directions
+/// from a <see cref="Center"/> child.
+/// </summary>
+public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
+{
+    /// <summary>The maximum number of layout passes each child may force through a correction.</summary>
+    private const int MaxLayoutCyclesPerChild = 10;
+
+    private double _anchor;
+    private RenderSliver? _center;
+    private double _minScrollExtent;
+    private double _maxScrollExtent;
+    private bool _hasVisualOverflow;
+
+    public RenderViewport(
+        ViewportOffset offset,
+        AxisDirection? crossAxisDirection = null,
+        AxisDirection axisDirection = AxisDirection.Down,
+        double anchor = 0.0,
+        IReadOnlyList<RenderSliver>? children = null,
+        RenderSliver? center = null,
+        ScrollCacheExtent? scrollCacheExtent = null,
+        SliverPaintOrder paintOrder = SliverPaintOrder.FirstIsTop,
+        Clip clipBehavior = Clip.HardEdge)
+        : base(offset, crossAxisDirection, axisDirection, scrollCacheExtent, paintOrder, clipBehavior)
+    {
+        if (!double.IsFinite(anchor) || anchor < 0.0 || anchor > 1.0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(anchor));
+        }
+
+        _anchor = anchor;
+        _center = center;
+        if (children != null)
+        {
+            foreach (RenderSliver child in children)
+            {
+                Insert(child, after: LastChild);
+            }
+        }
+
+        if (center == null && FirstChild != null)
+        {
+            _center = FirstChild;
+        }
+    }
+
+    /// <summary>
+    /// The relative position of the zero scroll offset, as a fraction of the viewport's main axis
+    /// extent measured from the leading edge.
+    /// </summary>
+    public double Anchor
+    {
+        get => _anchor;
+        set
+        {
+            if (!double.IsFinite(value) || value < 0.0 || value > 1.0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+
+            if (_anchor == value)
+            {
+                return;
+            }
+
+            _anchor = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    /// <summary>
+    /// The first child in the <see cref="GrowthDirection.Forward"/> growth direction; every child
+    /// before it grows in the reverse direction and occupies negative scroll offsets.
+    /// </summary>
+    public RenderSliver? Center
+    {
+        get => _center;
+        set
+        {
+            if (ReferenceEquals(_center, value))
+            {
+                return;
+            }
+
+            _center = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    /// <inheritdoc />
+    protected override bool HasVisualOverflow => _hasVisualOverflow;
+
+    public override void Insert(RenderSliver child, RenderSliver? after = null)
+    {
+        base.Insert(child, after);
+        // Flutter's constructor falls back to `firstChild` when no center was supplied, and its
+        // `_ViewportElement` assigns one on every mount/update. A render object driven directly
+        // keeps that fallback alive as children arrive, so the first sliver anchors the viewport.
+        _center ??= FirstChild;
+    }
+
+    public override void Remove(RenderSliver child)
+    {
+        if (ReferenceEquals(_center, child))
+        {
+            _center = null;
+        }
+
+        base.Remove(child);
+    }
+
+    protected override void PerformLayout()
+    {
+        Size = Constraints.Biggest;
+        switch (Axis)
+        {
+            case Axis.Vertical:
+                Offset.ApplyViewportDimension(Size.Height);
+                break;
+            default:
+                Offset.ApplyViewportDimension(Size.Width);
+                break;
+        }
+
+        if (Center is null)
+        {
+            _minScrollExtent = 0.0;
+            _maxScrollExtent = 0.0;
+            _hasVisualOverflow = false;
+            Offset.ApplyContentDimensions(0.0, 0.0);
+            return;
+        }
+
+        double mainAxisExtent = Axis == Axis.Vertical ? Size.Height : Size.Width;
+        double crossAxisExtent = Axis == Axis.Vertical ? Size.Width : Size.Height;
+        double centerOffsetAdjustment = Center.CenterOffsetAdjustment;
+        int maxLayoutCycles = MaxLayoutCyclesPerChild * ChildCount;
+
+        int count = 0;
+        do
+        {
+            double correction = AttemptLayout(
+                mainAxisExtent,
+                crossAxisExtent,
+                Offset.Pixels + centerOffsetAdjustment);
+            if (correction != 0.0)
+            {
+                Offset.CorrectBy(correction);
+            }
+            else if (Offset.ApplyContentDimensions(
+                         Math.Min(0.0, _minScrollExtent + mainAxisExtent * Anchor),
+                         Math.Max(0.0, _maxScrollExtent - mainAxisExtent * (1.0 - Anchor))))
+            {
+                break;
+            }
+
+            count += 1;
+        }
+        while (count < maxLayoutCycles);
+    }
+
+    /// <remarks>Flutter's <c>RenderViewport._attemptLayout</c>.</remarks>
+    private double AttemptLayout(double mainAxisExtent, double crossAxisExtent, double correctedOffset)
+    {
+        _minScrollExtent = 0.0;
+        _maxScrollExtent = 0.0;
+        _hasVisualOverflow = false;
+
+        // Center offset: the distance from the leading edge to the zero scroll offset (the line
+        // between the forward slivers and the reverse slivers).
+        double centerOffset = mainAxisExtent * Anchor - correctedOffset;
+        double reverseDirectionRemainingPaintExtent = Math.Clamp(centerOffset, 0.0, mainAxisExtent);
+        double forwardDirectionRemainingPaintExtent =
+            Math.Clamp(mainAxisExtent - centerOffset, 0.0, mainAxisExtent);
+
+        double calculatedCacheExtent = ScrollCacheExtent.CalculateCacheOffset(mainAxisExtent);
+        CalculatedCacheExtent = calculatedCacheExtent;
+
+        double fullCacheExtent = mainAxisExtent + 2 * calculatedCacheExtent;
+        double centerCacheOffset = centerOffset + calculatedCacheExtent;
+        double reverseDirectionRemainingCacheExtent = Math.Clamp(centerCacheOffset, 0.0, fullCacheExtent);
+        double forwardDirectionRemainingCacheExtent =
+            Math.Clamp(fullCacheExtent - centerCacheOffset, 0.0, fullCacheExtent);
+
+        RenderSliver? leadingNegativeChild = ChildBefore(Center!);
+        if (leadingNegativeChild != null)
+        {
+            // The negative scroll offsets.
+            double result = LayoutChildSequence(
+                child: leadingNegativeChild,
+                scrollOffset: Math.Max(mainAxisExtent, centerOffset) - mainAxisExtent,
+                overlap: 0.0,
+                layoutOffset: forwardDirectionRemainingPaintExtent,
+                remainingPaintExtent: reverseDirectionRemainingPaintExtent,
+                mainAxisExtent: mainAxisExtent,
+                crossAxisExtent: crossAxisExtent,
+                growthDirection: GrowthDirection.Reverse,
+                advance: ChildBefore,
+                remainingCacheExtent: reverseDirectionRemainingCacheExtent,
+                cacheOrigin: Math.Clamp(mainAxisExtent - centerOffset, -calculatedCacheExtent, 0.0));
+            if (result != 0.0)
+            {
+                return -result;
+            }
+        }
+
+        // The positive scroll offsets.
+        return LayoutChildSequence(
+            child: Center,
+            scrollOffset: Math.Max(0.0, -centerOffset),
+            overlap: leadingNegativeChild == null ? Math.Min(0.0, -centerOffset) : 0.0,
+            layoutOffset: centerOffset >= mainAxisExtent ? centerOffset : reverseDirectionRemainingPaintExtent,
+            remainingPaintExtent: forwardDirectionRemainingPaintExtent,
+            mainAxisExtent: mainAxisExtent,
+            crossAxisExtent: crossAxisExtent,
+            growthDirection: GrowthDirection.Forward,
+            advance: ChildAfter,
+            remainingCacheExtent: forwardDirectionRemainingCacheExtent,
+            cacheOrigin: Math.Clamp(centerOffset, -calculatedCacheExtent, 0.0));
+    }
+
+    protected override void UpdateOutOfBandData(
+        GrowthDirection growthDirection,
+        SliverGeometry childLayoutGeometry)
+    {
+        switch (growthDirection)
+        {
+            case GrowthDirection.Forward:
+                _maxScrollExtent += childLayoutGeometry.ScrollExtent;
+                break;
+            case GrowthDirection.Reverse:
+                _minScrollExtent -= childLayoutGeometry.ScrollExtent;
+                break;
+        }
+
+        if (childLayoutGeometry.HasVisualOverflow)
+        {
+            _hasVisualOverflow = true;
+        }
+    }
+
+    protected override void UpdateChildLayoutOffset(
+        RenderSliver child,
+        double layoutOffset,
+        GrowthDirection growthDirection)
+    {
+        var childParentData = (SliverPhysicalParentData)child.parentData!;
+        childParentData.offset = ComputeAbsolutePaintOffset(child, layoutOffset, growthDirection);
+    }
+
+    public override Point PaintOffsetOf(RenderSliver child)
+    {
+        return ((SliverPhysicalParentData)child.parentData!).offset;
+    }
+
+    public override double ScrollOffsetOf(RenderSliver child, double scrollOffsetWithinChild)
+    {
+        switch (child.ConstraintsForSliver.GrowthDirection)
+        {
+            case GrowthDirection.Forward:
+            {
+                double scrollOffsetToChild = 0.0;
+                RenderSliver? current = Center;
+                while (current != null && !ReferenceEquals(current, child))
+                {
+                    scrollOffsetToChild += current.Geometry.ScrollExtent;
+                    current = ChildAfter(current);
+                }
+
+                return scrollOffsetToChild + scrollOffsetWithinChild;
+            }
+
+            default:
+            {
+                double scrollOffsetToChild = 0.0;
+                RenderSliver? current = ChildBefore(Center!);
+                while (current != null && !ReferenceEquals(current, child))
+                {
+                    scrollOffsetToChild -= current.Geometry.ScrollExtent;
+                    current = ChildBefore(current);
+                }
+
+                return scrollOffsetToChild - scrollOffsetWithinChild;
+            }
+        }
+    }
+
+    public override double MaxScrollObstructionExtentBefore(RenderSliver child)
+    {
+        double pinnedExtent = 0.0;
+        switch (child.ConstraintsForSliver.GrowthDirection)
+        {
+            case GrowthDirection.Forward:
+            {
+                RenderSliver? current = Center;
+                while (current != null && !ReferenceEquals(current, child))
+                {
+                    pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+                    current = ChildAfter(current);
+                }
+
+                return pinnedExtent;
+            }
+
+            default:
+            {
+                RenderSliver? current = ChildBefore(Center!);
+                while (current != null && !ReferenceEquals(current, child))
+                {
+                    pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+                    current = ChildBefore(current);
+                }
+
+                return pinnedExtent;
+            }
+        }
+    }
+
+    public override double ComputeChildMainAxisPosition(RenderSliver child, double parentMainAxisPosition)
+    {
+        Point paintOffset = ((SliverPhysicalParentData)child.parentData!).offset;
+        return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            child.ConstraintsForSliver.AxisDirection,
+            child.ConstraintsForSliver.GrowthDirection) switch
+        {
+            AxisDirection.Down => parentMainAxisPosition - paintOffset.Y,
+            AxisDirection.Right => parentMainAxisPosition - paintOffset.X,
+            AxisDirection.Up => child.Geometry.PaintExtent - (parentMainAxisPosition - paintOffset.Y),
+            _ => child.Geometry.PaintExtent - (parentMainAxisPosition - paintOffset.X),
+        };
+    }
+
+    /// <summary>The index of the first child relative to <see cref="Center"/>, which is index zero.</summary>
+    public int IndexOfFirstChild
+    {
+        get
+        {
+            int count = 0;
+            RenderSliver? child = Center;
+            while (child != null && !ReferenceEquals(child, FirstChild))
+            {
+                count -= 1;
+                child = ChildBefore(child);
+            }
+
+            return count;
+        }
+    }
+
+    /// <summary>The debug label of the child at the given index relative to <see cref="Center"/>.</summary>
+    public static string LabelForChild(int index) => index == 0 ? "center child" : $"child {index}";
+}
+
+/// <summary>
+/// A viewport that sizes itself to the total extent of its slivers along the main axis.
+/// </summary>
+public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalParentData>
+{
+    private double _maxScrollExtent;
+    private double _shrinkWrapExtent;
+    private bool _hasVisualOverflow;
+
+    public RenderShrinkWrappingViewport(
+        ViewportOffset offset,
+        AxisDirection? crossAxisDirection = null,
+        AxisDirection axisDirection = AxisDirection.Down,
+        ScrollCacheExtent? scrollCacheExtent = null,
+        SliverPaintOrder paintOrder = SliverPaintOrder.FirstIsTop,
+        Clip clipBehavior = Clip.HardEdge,
+        IReadOnlyList<RenderSliver>? children = null)
+        : base(offset, crossAxisDirection, axisDirection, scrollCacheExtent, paintOrder, clipBehavior)
+    {
+        if (children != null)
+        {
+            foreach (RenderSliver child in children)
+            {
+                Insert(child, after: LastChild);
+            }
+        }
+    }
+
+    /// <inheritdoc />
+    protected override bool HasVisualOverflow => _hasVisualOverflow;
+
+    /// <inheritdoc />
+    protected override string IntrinsicsHint =>
+        "If you are merely trying to shrink-wrap the viewport in the main axis direction, you should "
+        + "be able to achieve that effect by just giving the viewport loose constraints, without "
+        + "needing to measure its intrinsic dimensions.";
+
+    protected override void PerformLayout()
+    {
+        BoxConstraints constraints = Constraints;
+        if (FirstChild is null)
+        {
+            CheckHasBoundedCrossAxis(constraints);
+            Size = Axis == Axis.Vertical
+                ? new Size(constraints.MaxWidth, constraints.MinHeight)
+                : new Size(constraints.MinWidth, constraints.MaxHeight);
+            Offset.ApplyViewportDimension(0.0);
+            _maxScrollExtent = 0.0;
+            _shrinkWrapExtent = 0.0;
+            _hasVisualOverflow = false;
+            Offset.ApplyContentDimensions(0.0, 0.0);
+            return;
+        }
+
+        CheckHasBoundedCrossAxis(constraints);
+
+        double mainAxisExtent;
+        double crossAxisExtent;
+        if (Axis == Axis.Vertical)
+        {
+            mainAxisExtent = constraints.MaxHeight;
+            crossAxisExtent = constraints.MaxWidth;
+        }
+        else
+        {
+            mainAxisExtent = constraints.MaxWidth;
+            crossAxisExtent = constraints.MaxHeight;
+        }
+
+        double effectiveExtent;
+        while (true)
+        {
+            double correction = AttemptLayout(mainAxisExtent, crossAxisExtent, Offset.Pixels);
+            if (correction != 0.0)
+            {
+                Offset.CorrectBy(correction);
                 continue;
             }
 
-            var parentData = (SliverPhysicalParentData)child.parentData!;
-            visitor(child);
+            effectiveExtent = Axis == Axis.Vertical
+                ? constraints.ConstrainHeight(_shrinkWrapExtent)
+                : constraints.ConstrainWidth(_shrinkWrapExtent);
+            bool didAcceptViewportDimension = Offset.ApplyViewportDimension(effectiveExtent);
+            bool didAcceptContentDimension =
+                Offset.ApplyContentDimensions(0.0, Math.Max(0.0, _maxScrollExtent - effectiveExtent));
+            if (didAcceptViewportDimension && didAcceptContentDimension)
+            {
+                break;
+            }
         }
+
+        Size = Axis == Axis.Vertical
+            ? new Size(constraints.ConstrainWidth(crossAxisExtent), constraints.ConstrainHeight(effectiveExtent))
+            : new Size(constraints.ConstrainWidth(effectiveExtent), constraints.ConstrainHeight(crossAxisExtent));
     }
 
-    private (double scrollOffset, double totalScrollExtent, double paintedExtent) LayoutWithCorrections(
-        double scrollOffset,
-        double viewportMainAxisExtent,
-        double crossAxisExtent)
+    private void CheckHasBoundedCrossAxis(BoxConstraints constraints)
     {
-        const double precisionErrorTolerance = 0.0001;
-
-        // A scroll offset before the leading edge is not passed to the slivers: they keep laying out
-        // from zero and the whole sequence is shifted down by the overscroll instead.
-        double leadingOverscroll = Math.Max(0.0, -scrollOffset);
-        double currentScrollOffset = Math.Max(0, scrollOffset);
-
-        for (int pass = 0; pass < 8; pass++)
+        if (Axis == Axis.Vertical)
         {
-            var result = LayoutChildren(
-                currentScrollOffset,
-                viewportMainAxisExtent,
-                crossAxisExtent,
-                leadingOverscroll);
-            if (!result.scrollOffsetCorrection.HasValue
-                || Math.Abs(result.scrollOffsetCorrection.Value) <= precisionErrorTolerance)
+            if (!constraints.HasBoundedWidth)
             {
-                return (currentScrollOffset, result.totalScrollExtent, result.paintedExtent);
+                throw new InvalidOperationException(
+                    "Vertical viewport was given unbounded width. Viewports expand in the cross axis "
+                    + "to fill their container and constrain their children to match their extent in "
+                    + "the cross axis. In this case, a vertical shrinkwrapping viewport was given an "
+                    + "unlimited amount of horizontal space in which to expand.");
             }
 
-            currentScrollOffset = Math.Max(0, currentScrollOffset + result.scrollOffsetCorrection.Value);
+            return;
         }
 
-        var finalResult = LayoutChildren(
-            currentScrollOffset,
-            viewportMainAxisExtent,
-            crossAxisExtent,
-            leadingOverscroll);
-        return (currentScrollOffset, finalResult.totalScrollExtent, finalResult.paintedExtent);
+        if (!constraints.HasBoundedHeight)
+        {
+            throw new InvalidOperationException(
+                "Horizontal viewport was given unbounded height. Viewports expand in the cross axis "
+                + "to fill their container and constrain their children to match their extent in the "
+                + "cross axis. In this case, a horizontal shrinkwrapping viewport was given an "
+                + "unlimited amount of vertical space in which to expand.");
+        }
     }
 
-    private (double totalScrollExtent, double paintedExtent, double? scrollOffsetCorrection) LayoutChildren(
-        double scrollOffset,
-        double viewportMainAxisExtent,
-        double crossAxisExtent,
-        double leadingOverscroll = 0.0)
+    /// <remarks>Flutter's <c>RenderShrinkWrappingViewport._attemptLayout</c>.</remarks>
+    private double AttemptLayout(double mainAxisExtent, double crossAxisExtent, double correctedOffset)
     {
-        double precedingScrollExtent = 0.0;
-        double layoutOffset = viewportMainAxisExtent * Anchor + leadingOverscroll;
-        double maxPaintOffset = leadingOverscroll;
-        double cacheExtent = Math.Max(0, _cacheExtentStyle == CacheExtentStyle.Viewport
-            ? _cacheExtent * viewportMainAxisExtent
-            : _cacheExtent);
-        _calculatedCacheExtent = cacheExtent;
-        double cacheStart = Math.Max(0, scrollOffset - cacheExtent);
-        double cacheEnd = scrollOffset + viewportMainAxisExtent + cacheExtent;
+        _maxScrollExtent = 0.0;
+        _shrinkWrapExtent = 0.0;
+        // Since the viewport is shrink wrapped, the content is always at the end of the viewport.
+        _hasVisualOverflow = correctedOffset < 0.0;
+        double calculatedCacheExtent = double.IsFinite(mainAxisExtent)
+            ? ScrollCacheExtent.CalculateCacheOffset(mainAxisExtent)
+            : 0.0;
+        CalculatedCacheExtent = calculatedCacheExtent;
 
-        for (var child = FirstChild; child != null; child = _container.ChildAfter(child))
-        {
-            double localScrollOffset = Math.Max(0, scrollOffset - precedingScrollExtent);
-            double remainingPaintExtent = Math.Max(0, viewportMainAxisExtent - layoutOffset);
-            double localCacheStart = Math.Max(0, cacheStart - precedingScrollExtent);
-            double localCacheEnd = Math.Max(localCacheStart, cacheEnd - precedingScrollExtent);
-            double remainingCacheExtent = Math.Max(0, localCacheEnd - localCacheStart);
-            double cacheOrigin = localCacheStart - localScrollOffset;
-
-            child.LayoutWithSliverConstraints(new SliverConstraints(
-                Axis,
-                localScrollOffset,
-                remainingPaintExtent,
-                crossAxisExtent,
-                viewportMainAxisExtent,
-                CacheOrigin: cacheOrigin,
-                RemainingCacheExtent: remainingCacheExtent,
-                AxisDirection: _axisDirection,
-                GrowthDirection: _growthDirection,
-                // The leading sliver receives the leading overscroll as a negative overlap, which is
-                // what overscroll-aware slivers stretch into.
-                Overlap: ReferenceEquals(child, FirstChild)
-                    ? -leadingOverscroll
-                    : maxPaintOffset - layoutOffset,
-                PrecedingScrollExtent: precedingScrollExtent,
-                UserScrollDirection: _userScrollDirection));
-
-            if (Math.Abs(child.Geometry.ScrollOffsetCorrection) > 0.0001)
-            {
-                return (precedingScrollExtent, maxPaintOffset, child.Geometry.ScrollOffsetCorrection);
-            }
-
-            var parentData = (SliverPhysicalParentData)child.parentData!;
-            double effectiveLayoutOffset = layoutOffset + child.Geometry.PaintOrigin;
-            parentData.offset = Axis == Axis.Vertical
-                ? new Point(0, effectiveLayoutOffset)
-                : new Point(effectiveLayoutOffset, 0);
-
-            maxPaintOffset = Math.Max(
-                maxPaintOffset,
-                effectiveLayoutOffset + child.Geometry.PaintExtent);
-            precedingScrollExtent += child.Geometry.ScrollExtent;
-            layoutOffset += child.Geometry.LayoutExtent;
-        }
-
-        return (precedingScrollExtent, maxPaintOffset, null);
+        return LayoutChildSequence(
+            child: FirstChild,
+            scrollOffset: Math.Max(0.0, correctedOffset),
+            overlap: Math.Min(0.0, correctedOffset),
+            layoutOffset: Math.Max(0.0, -correctedOffset),
+            remainingPaintExtent: mainAxisExtent + Math.Min(0.0, correctedOffset),
+            mainAxisExtent: mainAxisExtent,
+            crossAxisExtent: crossAxisExtent,
+            growthDirection: GrowthDirection.Forward,
+            advance: ChildAfter,
+            remainingCacheExtent: mainAxisExtent + 2 * calculatedCacheExtent,
+            cacheOrigin: -calculatedCacheExtent);
     }
 
-    private double EffectiveScrollOffsetForLayout(double userOffset, double maxScrollExtent)
+    protected override void UpdateOutOfBandData(
+        GrowthDirection growthDirection,
+        SliverGeometry childLayoutGeometry)
     {
-        double clampedOffset = Math.Clamp(userOffset, 0, Math.Max(0, maxScrollExtent));
-        if (!ScrollDirectionUtils.AxisDirectionIsReversed(_axisDirection))
+        _maxScrollExtent += childLayoutGeometry.ScrollExtent;
+        if (childLayoutGeometry.HasVisualOverflow)
         {
-            return clampedOffset;
+            _hasVisualOverflow = true;
         }
 
-        return Math.Max(0, maxScrollExtent - clampedOffset);
+        _shrinkWrapExtent += childLayoutGeometry.MaxPaintExtent;
     }
 
-    /// <summary>
-    /// Maps a user offset that may lie outside <c>[0, maxScrollExtent]</c> into layout space without
-    /// clamping, so the overscroll survives into the sliver layout.
-    /// </summary>
-    private double EffectiveScrollOffsetForOverscroll(double userOffset, double maxScrollExtent)
+    protected override void UpdateChildLayoutOffset(
+        RenderSliver child,
+        double layoutOffset,
+        GrowthDirection growthDirection)
     {
-        if (!ScrollDirectionUtils.AxisDirectionIsReversed(_axisDirection))
-        {
-            return userOffset;
-        }
-
-        return Math.Max(0, maxScrollExtent) - userOffset;
+        var childParentData = (SliverLogicalParentData)child.parentData!;
+        childParentData.LayoutOffset = layoutOffset;
     }
 
-    /// <summary>
-    /// Maps a layout-space scroll offset back to the position's pixels without clamping, so a reveal
-    /// target outside the current extents survives for the caller to clamp.
-    /// </summary>
-    private double UserOffsetFromEffectiveUnclamped(double effectiveOffset)
+    public override Point PaintOffsetOf(RenderSliver child)
     {
-        if (!ScrollDirectionUtils.AxisDirectionIsReversed(_axisDirection))
-        {
-            return effectiveOffset;
-        }
-
-        return Math.Max(0, _maxScrollExtent) - effectiveOffset;
+        var childParentData = (SliverLogicalParentData)child.parentData!;
+        return ComputeAbsolutePaintOffset(
+            child,
+            childParentData.LayoutOffset ?? 0.0,
+            GrowthDirection.Forward);
     }
 
-    private double UserOffsetFromEffective(double effectiveOffset, double maxScrollExtent)
+    public override double ScrollOffsetOf(RenderSliver child, double scrollOffsetWithinChild)
     {
-        double clampedEffectiveOffset = Math.Clamp(effectiveOffset, 0, Math.Max(0, maxScrollExtent));
-        if (!ScrollDirectionUtils.AxisDirectionIsReversed(_axisDirection))
+        double scrollOffsetToChild = 0.0;
+        RenderSliver? current = FirstChild;
+        while (current != null && !ReferenceEquals(current, child))
         {
-            return clampedEffectiveOffset;
+            scrollOffsetToChild += current.Geometry.ScrollExtent;
+            current = ChildAfter(current);
         }
 
-        return Math.Max(0, maxScrollExtent - clampedEffectiveOffset);
+        return scrollOffsetToChild + scrollOffsetWithinChild;
+    }
+
+    public override double MaxScrollObstructionExtentBefore(RenderSliver child)
+    {
+        double pinnedExtent = 0.0;
+        RenderSliver? current = FirstChild;
+        while (current != null && !ReferenceEquals(current, child))
+        {
+            pinnedExtent += current.Geometry.MaxScrollObstructionExtent;
+            current = ChildAfter(current);
+        }
+
+        return pinnedExtent;
+    }
+
+    public override double ComputeChildMainAxisPosition(RenderSliver child, double parentMainAxisPosition)
+    {
+        double layoutOffset = ((SliverLogicalParentData)child.parentData!).LayoutOffset ?? 0.0;
+        return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            child.ConstraintsForSliver.AxisDirection,
+            child.ConstraintsForSliver.GrowthDirection) switch
+        {
+            AxisDirection.Down or AxisDirection.Right => parentMainAxisPosition - layoutOffset,
+            AxisDirection.Up => Size.Height - parentMainAxisPosition - layoutOffset,
+            _ => Size.Width - parentMainAxisPosition - layoutOffset,
+        };
     }
 }

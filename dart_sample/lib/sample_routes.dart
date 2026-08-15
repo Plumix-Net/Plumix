@@ -22,6 +22,7 @@ class SampleRoutes {
   static const String scrollPhysics = '/scroll-physics';
   static const String ensureVisible = '/ensure-visible';
   static const String listViewReverse = '/list-reverse';
+  static const String centerViewport = '/center-viewport';
   static const String pageView = '/page-view';
   static const String gridView = '/grid-view';
   static const String customSlivers = '/custom-slivers';

@@ -52,7 +52,7 @@ public sealed class DecoratedPinnedSliverTests
         var decoration = new RecordingDecoration(order, calls);
         var child = new PaintTrackingSliver(order, scrollExtent: 120.0);
         var decorated = new RenderDecoratedSliver(decoration, position, sliver: child);
-        var viewport = new RenderViewport(axis: Axis.Vertical, offsetPixels: 30.0);
+        var viewport = new RenderViewport(offset: new TestViewportOffset(30.0));
         viewport.Insert(decorated);
         var root = new RenderView { Child = viewport };
         var pipeline = new PipelineOwner(root);
@@ -77,9 +77,8 @@ public sealed class DecoratedPinnedSliverTests
         var child = new PaintTrackingSliver([], double.PositiveInfinity);
         var decorated = new RenderDecoratedSliver(decoration, sliver: child);
         var viewport = new RenderViewport(
-            axis: Axis.Vertical,
-            offsetPixels: 40.0,
-            cacheExtent: 50.0);
+            offset: new TestViewportOffset(40.0),
+            scrollCacheExtent: ScrollCacheExtent.Pixels(50.0));
         viewport.Insert(decorated);
         var root = new RenderView { Child = viewport };
         var pipeline = new PipelineOwner(root);
@@ -196,7 +195,7 @@ public sealed class DecoratedPinnedSliverTests
         };
         var bodyBox = new FixedSizeRenderBox(new Size(100, 300));
         var body = new RenderSliverToBoxAdapter(bodyBox);
-        var viewport = new RenderViewport(axis: Axis.Vertical, offsetPixels: 80);
+        var viewport = new RenderViewport(offset: new TestViewportOffset(80));
         viewport.Insert(header);
         viewport.Insert(body, after: header);
         var root = new RenderView { Child = viewport };

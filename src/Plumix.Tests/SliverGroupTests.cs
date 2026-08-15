@@ -219,7 +219,7 @@ public sealed class SliverGroupTests
 
     private static void PaintSliver(RenderSliver sliver, Size size)
     {
-        var viewport = new RenderViewport();
+        var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(sliver);
         var root = new RenderView { Child = viewport };
         var pipeline = new PipelineOwner(root);

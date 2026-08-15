@@ -267,7 +267,9 @@ public sealed class SliverFillTests
             remainingCacheExtent: 170));
 
         Assert.Equal(new Size(200, 80), child.Size);
-        Assert.Equal(new Point(-30, 0), ((BoxParentData)child.parentData!).offset);
+        // A reversed axis measures the scroll offset from the trailing end of the child, so a filled
+        // sliver whose scroll extent is the viewport extent keeps its box at the sliver's origin.
+        Assert.Equal(new Point(0, 0), ((BoxParentData)child.parentData!).offset);
     }
 
     private static SliverConstraints CreateConstraints(

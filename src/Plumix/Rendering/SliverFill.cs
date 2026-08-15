@@ -188,7 +188,7 @@ public sealed class RenderSliverFillRemainingWithScrollable : RenderSliverSingle
 
         if (Child != null)
         {
-            SetChildParentData(Child, constraints);
+            SetChildParentData(Child, constraints, Geometry);
         }
     }
 }
@@ -225,7 +225,7 @@ public sealed class RenderSliverFillRemaining : RenderSliverSingleBoxAdapter
 
         if (Child != null)
         {
-            SetChildParentData(Child, constraints);
+            SetChildParentData(Child, constraints, Geometry);
         }
     }
 
@@ -284,7 +284,7 @@ public sealed class RenderSliverFillRemainingAndOverscroll : RenderSliverSingleB
 
         if (Child != null)
         {
-            SetChildParentData(Child, constraints);
+            SetChildParentData(Child, constraints, Geometry);
         }
     }
 }

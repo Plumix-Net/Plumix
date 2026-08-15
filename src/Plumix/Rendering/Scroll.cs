@@ -91,16 +91,20 @@ public enum GrowthDirection
     Reverse
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/rendering/viewport_offset.dart
-public enum ScrollDirection
-{
-    Idle,
-    Forward,
-    Reverse
-}
-
 public static class ScrollDirectionUtils
 {
+    /// <summary>Returns the opposite of the given <see cref="ScrollDirection"/>.</summary>
+    /// <remarks>Flutter's <c>flipScrollDirection</c> (<c>rendering/viewport_offset.dart</c>).</remarks>
+    public static ScrollDirection FlipScrollDirection(ScrollDirection direction)
+    {
+        return direction switch
+        {
+            ScrollDirection.Idle => ScrollDirection.Idle,
+            ScrollDirection.Forward => ScrollDirection.Reverse,
+            _ => ScrollDirection.Forward,
+        };
+    }
+
     public static Axis AxisDirectionToAxis(AxisDirection direction)
     {
         return direction switch
@@ -615,7 +619,7 @@ public enum ScrollPositionAlignmentPolicy
     KeepVisibleAtStart,
 }
 
-public class ScrollPosition : ChangeNotifier, IScrollMetrics
+public class ScrollPosition : ViewportOffset, IScrollMetrics
 {
     private readonly ScrollPhysics _physics;
     private double _pixels;
@@ -629,6 +633,10 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     private ScrollActivity _activity;
     private ScrollDirection _userScrollDirection = ScrollDirection.Idle;
     private FixedScrollMetrics? _lastMetrics;
+    private AxisDirection _lastMetricsAxisDirection = AxisDirection.Down;
+    private Axis? _lastAxis;
+    private bool _pendingDimensions;
+    private bool _haveScheduledUpdateNotification;
     private bool _didChangeViewportDimensionOrReceiveCorrection = true;
     private ScrollDragController? _currentDrag;
     private double _heldPreviousVelocity;
@@ -666,10 +674,10 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     /// reports zero and exposes <see cref="HasPixels"/> instead, because the offset is pushed into
     /// the viewport widget at build time rather than pulled during layout.
     /// </summary>
-    public double Pixels => _pixels;
+    public override double Pixels => _pixels;
 
     /// <summary>Whether <see cref="Pixels"/> has been established by a layout or a correction.</summary>
-    public bool HasPixels => _hasPixels;
+    public override bool HasPixels => _hasPixels;
 
     public double MinScrollExtent => _minScrollExtent;
 
@@ -698,6 +706,9 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
     public AxisDirection AxisDirection { get; internal set; } = AxisDirection.Down;
 
+    /// <summary>The axis along which this position scrolls.</summary>
+    public Axis Axis => ScrollDirectionUtils.AxisDirectionToAxis(AxisDirection);
+
     public double DevicePixelRatio { get; internal set; } = 1.0;
 
     public ValueNotifier<bool> IsScrollingNotifier { get; }
@@ -723,14 +734,14 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     /// </summary>
     internal Action<bool>? CanDragChanged { get; set; }
 
-    public ScrollDirection UserScrollDirection => _userScrollDirection;
+    public override ScrollDirection UserScrollDirection => _userScrollDirection;
 
-    public void JumpTo(double value)
+    public override void JumpTo(double pixels)
     {
         GoIdle();
-        if (Pixels != value)
+        if (Pixels != pixels)
         {
-            ForcePixels(value);
+            ForcePixels(pixels);
         }
 
         // Physics that allow out-of-range offsets settle the jump back into range.
@@ -741,11 +752,11 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
     /// Animates the position to <paramref name="value"/>, returning a task that completes when the
     /// animation ends or is superseded by another activity (Flutter's <c>Future&lt;void&gt;</c>).
     /// </summary>
-    public Task AnimateTo(double value, TimeSpan duration, Curve? curve = null)
+    public override Task AnimateTo(double to, TimeSpan duration, Curve? curve = null)
     {
-        if (!double.IsFinite(value))
+        if (!double.IsFinite(to))
         {
-            throw new ArgumentOutOfRangeException(nameof(value));
+            throw new ArgumentOutOfRangeException(nameof(to));
         }
         if (duration < TimeSpan.Zero)
         {
@@ -753,34 +764,50 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         }
         if (duration == TimeSpan.Zero)
         {
-            JumpTo(value);
+            JumpTo(to);
             return Task.CompletedTask;
         }
 
-        var activity = new DrivenScrollActivity(this, value, duration, curve ?? Curves.Linear);
+        var activity = new DrivenScrollActivity(this, to, duration, curve ?? Curves.Linear);
         BeginActivity(activity);
         return activity.Done;
     }
 
     /// <summary>
-    /// Jumps or animates to <paramref name="to"/> depending on whether a duration was supplied.
+    /// Jumps or animates to <paramref name="to"/> depending on whether a duration was supplied,
+    /// clamping the target into the scroll extents unless <paramref name="clamp"/> is false.
     /// </summary>
-    public Task MoveTo(double to, TimeSpan? duration = null, Curve? curve = null)
+    public override Task MoveTo(
+        double to,
+        TimeSpan? duration = null,
+        Curve? curve = null,
+        bool? clamp = null)
     {
-        if (duration is not { } animationDuration || animationDuration == TimeSpan.Zero)
+        double target = clamp ?? true ? Math.Clamp(to, MinScrollExtent, MaxScrollExtent) : to;
+        return base.MoveTo(target, duration, curve);
+    }
+
+    /// <summary>
+    /// Applies a layout-time correction: the offset moves without notifying listeners, and the next
+    /// <see cref="ApplyContentDimensions"/> is treated as a fresh set of dimensions.
+    /// </summary>
+    public override void CorrectBy(double correction)
+    {
+        if (!_hasPixels)
         {
-            JumpTo(to);
-            return Task.CompletedTask;
+            throw new InvalidOperationException(
+                "An initial pixels value must exist by calling CorrectPixels on the ScrollPosition.");
         }
 
-        return AnimateTo(to, animationDuration, curve ?? Curves.Ease);
+        _pixels += correction;
+        _didChangeViewportDimensionOrReceiveCorrection = true;
     }
 
     /// <summary>
     /// Whether this position may be scrolled implicitly, for instance because an assistive
     /// technology asked a descendant to show itself on screen.
     /// </summary>
-    public bool AllowImplicitScrolling => Physics.AllowImplicitScrolling;
+    public override bool AllowImplicitScrolling => Physics.AllowImplicitScrolling;
 
     /// <summary>
     /// Scrolls this position so that <paramref name="target"/> becomes visible in the enclosing
@@ -1054,57 +1081,153 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         GoBallistic(0.0);
     }
 
-    public virtual bool ApplyViewportDimension(double viewportDimension)
+    public override bool ApplyViewportDimension(double viewportDimension)
     {
-        if (_hasViewportDimension && Math.Abs(_viewportDimension - viewportDimension) < 0.0001)
+        if (!_hasViewportDimension || _viewportDimension != viewportDimension)
         {
-            return false;
+            _viewportDimension = viewportDimension;
+            _hasViewportDimension = true;
+            // Everything that needs both values is done in ApplyContentDimensions, which the viewport
+            // always calls soon afterwards in the same layout phase.
+            _didChangeViewportDimensionOrReceiveCorrection = true;
         }
 
-        _viewportDimension = viewportDimension;
-        _hasViewportDimension = true;
-        _didChangeViewportDimensionOrReceiveCorrection = true;
         return true;
     }
 
-    public virtual bool ApplyContentDimensions(double minScrollExtent, double maxScrollExtent)
+    public override bool ApplyContentDimensions(double minScrollExtent, double maxScrollExtent)
     {
-        bool minChanged = Math.Abs(_minScrollExtent - minScrollExtent) > 0.0001;
-        bool maxChanged = Math.Abs(_maxScrollExtent - maxScrollExtent) > 0.0001;
-        if (_hasContentDimensions
-            && !minChanged
-            && !maxChanged
-            && !_didChangeViewportDimensionOrReceiveCorrection)
+        double tolerance = Tolerance.DefaultTolerance.Distance;
+        if (!_hasContentDimensions
+            || !NearEqual(_minScrollExtent, minScrollExtent, tolerance)
+            || !NearEqual(_maxScrollExtent, maxScrollExtent, tolerance)
+            || _didChangeViewportDimensionOrReceiveCorrection
+            || _lastAxis != Axis)
         {
+            if (minScrollExtent > maxScrollExtent)
+            {
+                throw new ArgumentOutOfRangeException(
+                    nameof(minScrollExtent),
+                    "minScrollExtent must be less than or equal to maxScrollExtent.");
+            }
+
+            _minScrollExtent = minScrollExtent;
+            _maxScrollExtent = maxScrollExtent;
+            _hasContentDimensions = true;
+            _lastAxis = Axis;
+            FixedScrollMetrics? currentMetrics = _haveDimensions ? FixedScrollMetrics.From(this) : null;
+            _didChangeViewportDimensionOrReceiveCorrection = false;
+            _pendingDimensions = true;
+            if (_haveDimensions && !CorrectForNewDimensions(_lastMetrics!, currentMetrics!))
+            {
+                return false;
+            }
+
+            _haveDimensions = true;
+        }
+
+        if (_pendingDimensions)
+        {
+            // Lets the current activity settle a position the new dimensions put out of range.
+            ApplyNewDimensions();
+            _pendingDimensions = false;
+        }
+
+        if (IsMetricsChanged())
+        {
+            // It is too late to send a useful notification now: the potential listeners have already
+            // been built this frame, so the dispatch waits until the frame is complete.
+            if (!_haveScheduledUpdateNotification)
+            {
+                Scheduler.ScheduleMicrotask(DidUpdateScrollMetrics);
+                _haveScheduledUpdateNotification = true;
+            }
+
+            _lastMetrics = FixedScrollMetrics.From(this);
+            _lastMetricsAxisDirection = AxisDirection;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Verifies that the new content and viewport dimensions are acceptable, correcting the offset
+    /// and returning false when they are not.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>ScrollPosition.correctForNewDimensions</c>. The default implementation defers to
+    /// <see cref="ScrollPhysics.AdjustPositionForNewDimensions"/>.
+    /// </remarks>
+    protected virtual bool CorrectForNewDimensions(IScrollMetrics oldPosition, IScrollMetrics newPosition)
+    {
+        // The physics decide where the position lands after the dimensions change: clamping physics
+        // reinforce the boundary, bouncing physics keep the relative overscroll.
+        double newPixels = Physics.AdjustPositionForNewDimensions(
+            oldPosition: oldPosition,
+            newPosition: newPosition,
+            isScrolling: Activity.IsScrolling,
+            velocity: Activity.Velocity);
+        if (newPixels != _pixels)
+        {
+            CorrectPixels(newPixels);
             return false;
         }
 
-        _minScrollExtent = minScrollExtent;
-        _maxScrollExtent = maxScrollExtent;
-        _hasContentDimensions = true;
-        _didChangeViewportDimensionOrReceiveCorrection = false;
+        return true;
+    }
 
-        var currentMetrics = FixedScrollMetrics.From(this);
-        if (_lastMetrics != null)
+    /// <summary>Dispatches a notification that the scroll metrics changed.</summary>
+    /// <remarks>Flutter's <c>ScrollPosition.didUpdateScrollMetrics</c>.</remarks>
+    public void DidUpdateScrollMetrics()
+    {
+        _haveScheduledUpdateNotification = false;
+        if (NotificationContext is { } context)
         {
-            // The physics decide where the position lands after the dimensions change: clamping
-            // physics reinforce the boundary, bouncing physics keep the relative overscroll.
-            double newPixels = Physics.AdjustPositionForNewDimensions(
-                oldPosition: _lastMetrics,
-                newPosition: currentMetrics,
-                isScrolling: Activity.IsScrolling,
-                velocity: Activity.Velocity);
-            if (Math.Abs(newPixels - _pixels) > 0.0001)
-            {
-                CorrectPixels(newPixels);
-            }
+            new ScrollMetricsNotification(CopyWith(), context).Dispatch(context);
+        }
+    }
+
+    /// <summary>Whether the visible/hidden extents or the axis direction moved since the last dispatch.</summary>
+    /// <remarks>Flutter's <c>ScrollPosition._isMetricsChanged</c>.</remarks>
+    private bool IsMetricsChanged()
+    {
+        if (_lastMetrics is not { } last)
+        {
+            return true;
         }
 
-        // Lets the current activity settle a position the new dimensions put out of range.
-        ApplyNewDimensions();
-        _lastMetrics = FixedScrollMetrics.From(this);
-        _haveDimensions = true;
-        return true;
+        ScrollMetricsSnapshot current = CopyWith();
+        var previous = new ScrollMetricsSnapshot(
+            Pixels: last.Pixels,
+            MinScrollExtent: last.MinScrollExtent,
+            MaxScrollExtent: last.MaxScrollExtent,
+            ViewportDimension: last.ViewportDimension,
+            AxisDirection: _lastMetricsAxisDirection);
+        return !(current.ExtentBefore == previous.ExtentBefore
+                 && current.ExtentInside == previous.ExtentInside
+                 && current.ExtentAfter == previous.ExtentAfter
+                 && current.AxisDirection == previous.AxisDirection);
+    }
+
+    /// <summary>An immutable snapshot of this position's metrics.</summary>
+    /// <remarks>
+    /// Flutter's <c>ScrollMetrics.copyWith</c> with no overrides. Subclasses that carry extra metrics
+    /// (a page view's viewport fraction, for instance) override this.
+    /// </remarks>
+    public virtual ScrollMetricsSnapshot CopyWith()
+    {
+        return new ScrollMetricsSnapshot(
+            Pixels: _pixels,
+            MinScrollExtent: _minScrollExtent,
+            MaxScrollExtent: _maxScrollExtent,
+            ViewportDimension: _viewportDimension,
+            AxisDirection: AxisDirection);
+    }
+
+    /// <remarks>Flutter's <c>nearEqual</c>.</remarks>
+    private static bool NearEqual(double a, double b, double epsilon)
+    {
+        return (a > b - epsilon && a < b + epsilon) || a == b;
     }
 
     /// <summary>
@@ -1241,6 +1364,10 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
         return SetPixels(value);
     }
 
+    /// <summary>
+    /// Changes <see cref="Pixels"/> without notifying listeners, which is what makes it safe to call
+    /// while the viewport is laying out (Flutter's <c>ScrollPosition.correctPixels</c>).
+    /// </summary>
     protected bool CorrectPixels(double value)
     {
         if (_hasPixels && Math.Abs(value - _pixels) < 0.0001)
@@ -1250,7 +1377,6 @@ public class ScrollPosition : ChangeNotifier, IScrollMetrics
 
         _pixels = value;
         _hasPixels = true;
-        NotifyListeners();
         return true;
     }
 

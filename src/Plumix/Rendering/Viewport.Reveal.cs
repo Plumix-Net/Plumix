@@ -5,15 +5,6 @@ using Avalonia;
 namespace Plumix.Rendering;
 
 /// <summary>
-/// Moves a viewport's offset so that a revealed element becomes visible.
-/// </summary>
-/// <remarks>
-/// Flutter's viewports own a <c>ViewportOffset</c> and call <c>offset.moveTo</c>. Plumix pushes the
-/// offset into the viewport at build time instead, so the owning scrollable supplies this hook.
-/// </remarks>
-public delegate void ViewportMoveToCallback(double pixels, TimeSpan duration, Curve curve);
-
-/// <summary>
 /// The offset a viewport must be scrolled to in order to reveal a particular element, together with
 /// the rectangle that element would then occupy.
 /// </summary>
@@ -92,17 +83,8 @@ public interface IRenderAbstractViewport
         Rect? rect = null,
         Axis? axis = null);
 
-    /// <summary>The current scroll offset of this viewport, in the owning position's pixels.</summary>
-    double RevealOffsetPixels { get; }
-
-    /// <summary>
-    /// Whether this viewport may scroll itself in response to a <see cref="RenderObject.ShowOnScreen"/>
-    /// request (Flutter's <c>ViewportOffset.allowImplicitScrolling</c>).
-    /// </summary>
-    bool AllowImplicitScrolling { get; }
-
-    /// <summary>The hook that moves the owning scroll position; null when nothing drives it.</summary>
-    ViewportMoveToCallback? OnMoveTo { get; }
+    /// <summary>Which part of the content inside the viewport should be visible.</summary>
+    ViewportOffset Offset { get; }
 }
 
 /// <summary>Statics from Dart's <c>RenderAbstractViewport</c>.</summary>
@@ -144,6 +126,7 @@ public static class RenderAbstractViewport
     /// <remarks>Flutter's <c>RenderViewportBase.showInViewport</c>.</remarks>
     public static Rect? ShowInViewport(
         IRenderAbstractViewport viewport,
+        ViewportOffset offset,
         RenderObject? descendant = null,
         Rect? rect = null,
         TimeSpan duration = default,
@@ -159,7 +142,7 @@ public static class RenderAbstractViewport
         RevealedOffset? targetOffset = RevealedOffset.ClampOffset(
             leadingEdgeOffset,
             trailingEdgeOffset,
-            viewport.RevealOffsetPixels);
+            offset.Pixels);
         if (targetOffset is null)
         {
             // Already fully visible: report the untouched rect in the viewport's parent space, so an
@@ -176,7 +159,7 @@ public static class RenderAbstractViewport
                 localRect);
         }
 
-        viewport.OnMoveTo?.Invoke(targetOffset.Offset, duration, curve ?? Curves.Ease);
+        _ = offset.MoveTo(targetOffset.Offset, duration, curve ?? Curves.Ease);
         return targetOffset.Rect;
     }
 }

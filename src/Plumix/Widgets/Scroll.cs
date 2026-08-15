@@ -590,6 +590,7 @@ public sealed class Scrollable : StatefulWidget
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
         double anchor = 0.0,
+        Key? center = null,
         HitTestBehavior hitTestBehavior = HitTestBehavior.Opaque,
         ScrollBehavior? scrollBehavior = null,
         ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
@@ -624,6 +625,7 @@ public sealed class Scrollable : StatefulWidget
         CacheExtentStyle = cacheExtentStyle;
         ShrinkWrap = shrinkWrap;
         Anchor = anchor;
+        Center = center;
         ClipBehavior = clipBehavior;
         HitTestBehavior = hitTestBehavior;
         ScrollBehavior = scrollBehavior;
@@ -652,6 +654,9 @@ public sealed class Scrollable : StatefulWidget
     public bool ShrinkWrap { get; }
 
     public double Anchor { get; }
+
+    /// <summary>The key of the sliver that grows forward from the zero scroll offset.</summary>
+    public Key? Center { get; }
 
     public Clip ClipBehavior { get; }
 
@@ -788,12 +793,9 @@ public sealed class Scrollable : StatefulWidget
         private ScrollController? _attachedController;
         private ScrollPosition _position = null!;
         private bool _isApplyingDrag;
-        private bool _isApplyingViewportMetrics;
         private ScrollBehavior _configuration = null!;
         private ScrollPhysics _effectivePhysics = null!;
         private bool _hasPosition;
-        private bool _hasDispatchedScrollMetrics;
-        private ScrollMetricsSnapshot _lastDispatchedScrollMetrics;
         // Keys are records, so the identity has to come from a per-state sentinel: two scrollables
         // must never share one global key.
         private readonly GlobalObjectKey<RawGestureDetector.RawGestureDetectorState> _gestureDetectorKey =
@@ -912,29 +914,37 @@ public sealed class Scrollable : StatefulWidget
             var widget = CurrentWidget;
             var axisDirection = ResolveAxisDirection(widget.Axis, widget.Reverse);
             _position.AxisDirection = axisDirection;
-            Widget viewport = widget.UseSingleChildViewport
-                ? new SingleChildViewport(
+            ScrollCacheExtent scrollCacheExtent = widget.CacheExtentStyle == CacheExtentStyle.Viewport
+                ? ScrollCacheExtent.Viewport(widget.CacheExtent)
+                : ScrollCacheExtent.Pixels(widget.CacheExtent);
+            Widget viewport;
+            if (widget.UseSingleChildViewport)
+            {
+                viewport = new SingleChildViewport(
                     child: widget.Child ?? new SizedBox(),
                     axisDirection: axisDirection,
-                    offsetPixels: _position.Pixels,
-                    onViewportMetricsChanged: HandleViewportMetricsChanged,
-                    onMoveTo: HandleViewportMoveTo,
-                    allowImplicitScrolling: _position.AllowImplicitScrolling)
-                : new Viewport(
-                    axis: widget.Axis,
+                    offset: _position);
+            }
+            else if (widget.ShrinkWrap)
+            {
+                viewport = new ShrinkWrappingViewport(
+                    offset: _position,
                     axisDirection: axisDirection,
-                    growthDirection: GrowthDirection.Forward,
-                    userScrollDirection: _position.UserScrollDirection,
-                    offsetPixels: _position.Pixels,
-                    cacheExtent: widget.CacheExtent,
-                    cacheExtentStyle: widget.CacheExtentStyle,
-                    shrinkWrap: widget.ShrinkWrap,
-                    anchor: widget.ShrinkWrap ? 0.0 : widget.Anchor,
+                    scrollCacheExtent: scrollCacheExtent,
                     clipBehavior: widget.ClipBehavior,
-                    slivers: ResolveSlivers(widget),
-                    onViewportMetricsChanged: HandleViewportMetricsChanged,
-                    onMoveTo: HandleViewportMoveTo,
-                    allowImplicitScrolling: _position.AllowImplicitScrolling);
+                    slivers: ResolveSlivers(widget));
+            }
+            else
+            {
+                viewport = new Viewport(
+                    offset: _position,
+                    axisDirection: axisDirection,
+                    anchor: widget.Anchor,
+                    center: widget.Center,
+                    scrollCacheExtent: scrollCacheExtent,
+                    clipBehavior: widget.ClipBehavior,
+                    slivers: ResolveSlivers(widget));
+            }
 
             bool horizontal = widget.Axis == Axis.Horizontal;
             bool vertical = widget.Axis == Axis.Vertical;
@@ -986,15 +996,6 @@ public sealed class Scrollable : StatefulWidget
                 context,
                 _configuration.BuildOverscrollIndicator(context, scrollable, details),
                 details);
-        }
-
-        /// <summary>
-        /// The viewport's hook for a reveal that has to move the offset (Flutter's
-        /// <c>ViewportOffset.moveTo</c>).
-        /// </summary>
-        private void HandleViewportMoveTo(double pixels, TimeSpan duration, Curve curve)
-        {
-            _position.MoveTo(pixels, duration == TimeSpan.Zero ? null : duration, curve);
         }
 
         /// <summary>
@@ -1075,7 +1076,6 @@ public sealed class Scrollable : StatefulWidget
             // The new position absorbs the old one before the old one is disposed, so a drag or
             // ballistic run crossing the replacement is not dropped.
             _position = AttachToController(controller, physics, oldPosition);
-            _hasDispatchedScrollMetrics = false;
             _position.AddListener(HandlePositionChanged);
             oldPosition.Dispose();
             SetState(static () => { });
@@ -1108,15 +1108,9 @@ public sealed class Scrollable : StatefulWidget
                 return;
             }
 
-            // An offset the position corrected while the fresh dimensions were handed to it is not
-            // a scroll: Flutter's `correctPixels` deliberately notifies nobody, and reporting it
-            // would announce a page/offset measured against extents that are still being replaced.
-            if (!_isApplyingViewportMetrics)
-            {
-                new ScrollUpdateNotification(CurrentMetrics()).Dispatch(Context);
-            }
-
-            SetState(static () => { });
+            // A correction applied while the fresh dimensions were handed to the position never
+            // reaches this point: Flutter's `correctPixels`/`correctBy` deliberately notify nobody.
+            new ScrollUpdateNotification(CurrentMetrics()).Dispatch(Context);
         }
 
         /// <summary>
@@ -1304,60 +1298,7 @@ public sealed class Scrollable : StatefulWidget
             return HardwareKeyboard.Instance.IsLogicalKeyPressed(key);
         }
 
-        /// <summary>
-        /// Hands the freshly measured viewport to the position and reports the offset the viewport
-        /// must lay out at. A position that corrects its offset while applying the dimensions (a
-        /// <see cref="PageController"/> resolving its initial page, for instance) reports the
-        /// corrected value here, and the viewport re-runs its layout in the same frame, the way
-        /// Flutter's <c>RenderViewport._attemptLayout</c> correction loop does.
-        /// </summary>
-        private double? HandleViewportMetricsChanged(
-            double viewportExtent,
-            double minScrollExtent,
-            double maxScrollExtent)
-        {
-            _isApplyingViewportMetrics = true;
-            try
-            {
-                _position.ApplyViewportDimension(viewportExtent);
-                _position.ApplyContentDimensions(minScrollExtent, maxScrollExtent);
-            }
-            finally
-            {
-                _isApplyingViewportMetrics = false;
-            }
-
-            ScrollMetricsSnapshot currentMetrics = CurrentMetrics();
-            if (!_hasDispatchedScrollMetrics
-                || !MetricsEqual(_lastDispatchedScrollMetrics, currentMetrics))
-            {
-                _lastDispatchedScrollMetrics = currentMetrics;
-                _hasDispatchedScrollMetrics = true;
-                new ScrollMetricsNotification(currentMetrics, Context).Dispatch(Context);
-            }
-
-            return _position.Pixels;
-        }
-
-        private ScrollMetricsSnapshot CurrentMetrics()
-        {
-            return new ScrollMetricsSnapshot(
-                Pixels: _position.Pixels,
-                MinScrollExtent: _position.MinScrollExtent,
-                MaxScrollExtent: _position.MaxScrollExtent,
-                ViewportDimension: _position.ViewportDimension,
-                AxisDirection: ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse),
-                ViewportFraction: (_position as PagePosition)?.ViewportFraction ?? 1.0);
-        }
-
-        private static bool MetricsEqual(ScrollMetricsSnapshot left, ScrollMetricsSnapshot right)
-        {
-            return Math.Abs(left.Pixels - right.Pixels) <= 0.0001
-                   && Math.Abs(left.MinScrollExtent - right.MinScrollExtent) <= 0.0001
-                   && Math.Abs(left.MaxScrollExtent - right.MaxScrollExtent) <= 0.0001
-                   && Math.Abs(left.ViewportDimension - right.ViewportDimension) <= 0.0001
-                   && left.AxisDirection == right.AxisDirection;
-        }
+        private ScrollMetricsSnapshot CurrentMetrics() => _position.CopyWith();
 
         private bool IsReversedAxisDirection()
         {
@@ -1385,147 +1326,30 @@ public sealed class Scrollable : StatefulWidget
     }
 }
 
-public sealed class Viewport : MultiChildRenderObjectWidget
-{
-    public Viewport(
-        Axis axis,
-        AxisDirection axisDirection,
-        GrowthDirection growthDirection,
-        double offsetPixels,
-        double cacheExtent,
-        CacheExtentStyle cacheExtentStyle,
-        bool shrinkWrap,
-        double anchor,
-        IReadOnlyList<Widget> slivers,
-        ViewportMetricsChangedCallback? onViewportMetricsChanged = null,
-        Key? key = null,
-        Clip clipBehavior = Clip.HardEdge,
-        ScrollDirection userScrollDirection = ScrollDirection.Idle,
-        ViewportMoveToCallback? onMoveTo = null,
-        bool allowImplicitScrolling = true) : base(slivers, key)
-    {
-        OnMoveTo = onMoveTo;
-        AllowImplicitScrolling = allowImplicitScrolling;
-        Axis = axis;
-        AxisDirection = axisDirection;
-        GrowthDirection = growthDirection;
-        UserScrollDirection = userScrollDirection;
-        OffsetPixels = offsetPixels;
-        CacheExtent = cacheExtent;
-        CacheExtentStyle = cacheExtentStyle;
-        ShrinkWrap = shrinkWrap;
-        Anchor = anchor;
-        ClipBehavior = clipBehavior;
-        OnViewportMetricsChanged = onViewportMetricsChanged;
-    }
-
-    public Axis Axis { get; }
-
-    public AxisDirection AxisDirection { get; }
-
-    public GrowthDirection GrowthDirection { get; }
-
-    public ScrollDirection UserScrollDirection { get; }
-
-    public double OffsetPixels { get; }
-
-    public double CacheExtent { get; }
-
-    public CacheExtentStyle CacheExtentStyle { get; }
-
-    public bool ShrinkWrap { get; }
-
-    public double Anchor { get; }
-
-    public Clip ClipBehavior { get; }
-
-    public ViewportMetricsChangedCallback? OnViewportMetricsChanged { get; }
-
-    /// <summary>The hook a reveal uses to move the owning scroll position.</summary>
-    public ViewportMoveToCallback? OnMoveTo { get; }
-
-    /// <summary>Whether a show-on-screen request may scroll this viewport.</summary>
-    public bool AllowImplicitScrolling { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderViewport(
-            axis: Axis,
-            axisDirection: AxisDirection,
-            growthDirection: GrowthDirection,
-            userScrollDirection: UserScrollDirection,
-            offsetPixels: OffsetPixels,
-            cacheExtent: CacheExtent,
-            cacheExtentStyle: CacheExtentStyle,
-            shrinkWrap: ShrinkWrap,
-            anchor: Anchor,
-            clipBehavior: ClipBehavior,
-            onViewportMetricsChanged: OnViewportMetricsChanged)
-        {
-            OnMoveTo = OnMoveTo,
-            AllowImplicitScrolling = AllowImplicitScrolling,
-        };
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var viewport = (RenderViewport)renderObject;
-        viewport.OnMoveTo = OnMoveTo;
-        viewport.AllowImplicitScrolling = AllowImplicitScrolling;
-        viewport.Axis = Axis;
-        viewport.AxisDirection = AxisDirection;
-        viewport.GrowthDirection = GrowthDirection;
-        viewport.UserScrollDirection = UserScrollDirection;
-        viewport.OffsetPixels = OffsetPixels;
-        viewport.CacheExtent = CacheExtent;
-        viewport.CacheExtentStyle = CacheExtentStyle;
-        viewport.ShrinkWrap = ShrinkWrap;
-        viewport.Anchor = Anchor;
-        viewport.ClipBehavior = ClipBehavior;
-        viewport.OnViewportMetricsChanged = OnViewportMetricsChanged;
-    }
-}
-
 internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
 {
     public SingleChildViewport(
         Widget child,
         AxisDirection axisDirection,
-        double offsetPixels,
-        ViewportMetricsChangedCallback? onViewportMetricsChanged = null,
-        ViewportMoveToCallback? onMoveTo = null,
-        bool allowImplicitScrolling = true) : base(child)
+        ViewportOffset offset) : base(child)
     {
         AxisDirection = axisDirection;
-        OffsetPixels = offsetPixels;
-        OnViewportMetricsChanged = onViewportMetricsChanged;
-        OnMoveTo = onMoveTo;
-        AllowImplicitScrolling = allowImplicitScrolling;
+        Offset = offset;
     }
 
     public AxisDirection AxisDirection { get; }
-    public double OffsetPixels { get; }
-    public ViewportMetricsChangedCallback? OnViewportMetricsChanged { get; }
-    public ViewportMoveToCallback? OnMoveTo { get; }
-    public bool AllowImplicitScrolling { get; }
+
+    public ViewportOffset Offset { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSingleChildViewport(
         axisDirection: AxisDirection,
-        offsetPixels: OffsetPixels,
-        onViewportMetricsChanged: OnViewportMetricsChanged)
-    {
-        OnMoveTo = OnMoveTo,
-        AllowImplicitScrolling = AllowImplicitScrolling,
-    };
+        offset: Offset);
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderSingleChildViewport)renderObject;
         viewport.AxisDirection = AxisDirection;
-        viewport.OffsetPixels = OffsetPixels;
-        viewport.OnViewportMetricsChanged = OnViewportMetricsChanged;
-        viewport.OnMoveTo = OnMoveTo;
-        viewport.AllowImplicitScrolling = AllowImplicitScrolling;
+        viewport.Offset = Offset;
     }
 }
 
@@ -2649,6 +2473,7 @@ public sealed class CustomScrollView : StatelessWidget
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         bool shrinkWrap = false,
         double anchor = 0.0,
+        Key? center = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         string? restorationId = null,
         int? semanticChildCount = null,
@@ -2683,6 +2508,7 @@ public sealed class CustomScrollView : StatelessWidget
         CacheExtentStyle = cacheExtentStyle;
         ShrinkWrap = shrinkWrap;
         Anchor = anchor;
+        Center = center;
         DragStartBehavior = dragStartBehavior;
         RestorationId = restorationId;
         ClipBehavior = clipBehavior;
@@ -2711,6 +2537,12 @@ public sealed class CustomScrollView : StatelessWidget
     public bool ShrinkWrap { get; }
 
     public double Anchor { get; }
+
+    /// <summary>
+    /// The key of the first sliver laid out in the forward growth direction; every sliver before it
+    /// grows in the reverse direction and occupies negative scroll offsets.
+    /// </summary>
+    public Key? Center { get; }
 
     public DragStartBehavior DragStartBehavior { get; }
 
@@ -2747,6 +2579,7 @@ public sealed class CustomScrollView : StatelessWidget
             cacheExtentStyle: CacheExtentStyle,
             shrinkWrap: ShrinkWrap,
             anchor: Anchor,
+            center: Center,
             dragStartBehavior: DragStartBehavior,
             restorationId: RestorationId,
             semanticChildCount: SemanticChildCount,

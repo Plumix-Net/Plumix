@@ -18,7 +18,8 @@ public readonly record struct SliverConstraints(
     GrowthDirection GrowthDirection = GrowthDirection.Forward,
     double Overlap = 0,
     double PrecedingScrollExtent = 0,
-    ScrollDirection UserScrollDirection = ScrollDirection.Idle) : IConstraints
+    ScrollDirection UserScrollDirection = ScrollDirection.Idle,
+    AxisDirection CrossAxisDirection = AxisDirection.Right) : IConstraints
 {
     public bool IsTight => false;
 
@@ -449,6 +450,19 @@ public sealed class SliverPhysicalParentData : ContainerBoxParentData<RenderSliv
     public int? CrossAxisFlex { get; set; }
 }
 
+/// <summary>
+/// Parent data for slivers positioned by a scroll offset rather than by a paint offset.
+/// </summary>
+/// <remarks>Flutter's <c>SliverLogicalContainerParentData</c>.</remarks>
+public sealed class SliverLogicalParentData : ContainerBoxParentData<RenderSliver>
+{
+    /// <summary>
+    /// The position of the child relative to the zero scroll offset, along the main axis, or null
+    /// before the child has been laid out.
+    /// </summary>
+    public double? LayoutOffset { get; set; }
+}
+
 public class SliverMultiBoxAdaptorParentData : ContainerBoxParentData<RenderBox>
 {
     public int Index { get; set; }
@@ -483,6 +497,13 @@ public abstract class RenderSliver : RenderBox
     /// </summary>
     /// <remarks>Flutter's <c>RenderSliver.ensureSemantics</c>. Defaults to <c>false</c>.</remarks>
     public virtual bool EnsureSemantics => false;
+
+    /// <summary>
+    /// The amount by which the viewport's zero scroll offset is shifted when this sliver is the
+    /// viewport's <c>center</c>.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderSliver.centerOffsetAdjustment</c>. Defaults to <c>0.0</c>.</remarks>
+    public virtual double CenterOffsetAdjustment => 0.0;
 
     public void LayoutWithSliverConstraints(SliverConstraints constraints)
     {
@@ -1248,12 +1269,23 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
 
     protected static void SetChildParentData(
         RenderBox child,
-        SliverConstraints constraints)
+        SliverConstraints constraints,
+        SliverGeometry geometry)
     {
         var childParentData = (BoxParentData)child.parentData!;
-        childParentData.offset = constraints.Axis == Axis.Vertical
-            ? new Point(0.0, -constraints.ScrollOffset)
-            : new Point(-constraints.ScrollOffset, 0.0);
+        childParentData.offset = ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            constraints.AxisDirection,
+            constraints.GrowthDirection) switch
+        {
+            AxisDirection.Up => new Point(
+                0.0,
+                -(geometry.ScrollExtent - (geometry.PaintExtent + constraints.ScrollOffset))),
+            AxisDirection.Right => new Point(-constraints.ScrollOffset, 0.0),
+            AxisDirection.Down => new Point(0.0, -constraints.ScrollOffset),
+            _ => new Point(
+                -(geometry.ScrollExtent - (geometry.PaintExtent + constraints.ScrollOffset)),
+                0.0),
+        };
     }
 
     public override void Paint(PaintingContext ctx, Point offset)
@@ -1342,7 +1374,7 @@ public class RenderSliverToBoxAdapter : RenderSliverSingleBoxAdapter
             MaxPaintExtent: childExtent,
             CacheExtent: cacheExtent,
             HasVisualOverflow: remaining > constraints.RemainingPaintExtent);
-        SetChildParentData(Child, constraints with { ScrollOffset = effectiveScrollOffset });
+        SetChildParentData(Child, constraints with { ScrollOffset = effectiveScrollOffset }, Geometry);
     }
 }
 

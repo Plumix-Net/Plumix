@@ -32,6 +32,7 @@ public class PlumixHost : Control
     private readonly PipelineOwner _pipeline;
     private readonly GestureBinding _gestureBinding = GestureBinding.Instance;
     private readonly PlumixTextInputMethodClient _textInputClient;
+    private readonly Thread _ownerThread;
     private bool _isSubscribedToScheduler;
     private Size _lastArrangedSize;
     private TopLevel? _attachedTopLevel;
@@ -77,6 +78,7 @@ public class PlumixHost : Control
         _pipeline.OnNeedVisualUpdate = ScheduleVisualUpdate;
         _pipeline.Attach(_root);
         _textInputClient = new PlumixTextInputMethodClient(this);
+        _ownerThread = Thread.CurrentThread;
 
         ClipToBounds = true;
         Focusable = true;
@@ -461,6 +463,14 @@ public class PlumixHost : Control
 
     private void HandleSchedulerDrawFrame(TimeSpan timestamp)
     {
+        // The scheduler is process-wide and a frame can be pumped from any thread, while an Avalonia
+        // control may only be touched from the thread that created it. Flutter has one isolate per
+        // engine and needs no such guard.
+        if (!ReferenceEquals(Thread.CurrentThread, _ownerThread))
+        {
+            return;
+        }
+
         if (!IsVisible)
         {
             return;

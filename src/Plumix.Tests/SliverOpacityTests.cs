@@ -96,7 +96,7 @@ public sealed class SliverOpacityTests : IDisposable
         var box = new PaintTrackingRenderBox(new Size(100, 80));
         var child = new RenderSliverToBoxAdapter(box);
         var opacity = new RenderSliverOpacity(opacity: 0.0, sliver: child);
-        var viewport = new RenderViewport(axis: Axis.Vertical);
+        var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(opacity);
         var renderView = new RenderView { Child = viewport };
         var pipeline = new PipelineOwner(renderView);
@@ -135,7 +135,7 @@ public sealed class SliverOpacityTests : IDisposable
         var box = new PaintTrackingRenderBox(new Size(100, 80));
         var child = new RenderSliverToBoxAdapter(box);
         var opacity = new RenderSliverAnimatedOpacity(controller, sliver: child);
-        var viewport = new RenderViewport(axis: Axis.Vertical);
+        var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(opacity);
         var renderView = new RenderView { Child = viewport };
         var pipeline = new PipelineOwner(renderView);

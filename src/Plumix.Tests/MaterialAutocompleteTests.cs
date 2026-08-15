@@ -256,7 +256,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
             cappedHarness.Pump(new Size(480, 360));
             Assert.Equal(
                 200.0,
-                Assert.Single(FindDescendants<RenderViewport>(cappedHarness.RenderView)).Size.Height,
+                Assert.Single(FindDescendants<RenderShrinkWrappingViewport>(cappedHarness.RenderView)).Size.Height,
                 precision: 3);
             cappedHeight = FindOptionsSurface(cappedHarness.RenderView).Size.Height;
         }
@@ -531,10 +531,11 @@ public sealed class MaterialAutocompleteTests : IDisposable
             harness.Pump(new Size(480, 320));
         }
 
-        RenderViewport viewport = Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
+        RenderShrinkWrappingViewport viewport =
+            Assert.Single(FindDescendants<RenderShrinkWrappingViewport>(harness.RenderView));
         Assert.True(
             FindParagraph(harness.RenderView, "option-29") is not null,
-            $"Expected last option at scroll offset {viewport.OffsetPixels}.");
+            $"Expected last option at scroll offset {viewport.Offset.Pixels}.");
         Assert.Null(FindParagraph(harness.RenderView, "option-0"));
     }
 

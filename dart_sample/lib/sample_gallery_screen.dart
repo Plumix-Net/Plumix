@@ -65,6 +65,7 @@ import 'demos/material/linear_progress_indicator_demo_page.dart';
 import 'demos/general/list_view_fixed_extent_demo_page.dart';
 import 'demos/general/page_view_demo_page.dart';
 import 'demos/general/ensure_visible_demo_page.dart';
+import 'demos/general/center_viewport_demo_page.dart';
 import 'demos/general/list_view_reverse_demo_page.dart';
 import 'demos/general/scroll_physics_demo_page.dart';
 import 'demos/general/list_view_separated_demo_page.dart';
@@ -499,6 +500,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'ListView reverse',
           subtitle: 'reverse=true behavior',
           builder: () => const ListViewReverseDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.centerViewport,
+          title: 'CustomScrollView center',
+          subtitle: 'center key + negative scroll offsets',
+          builder: () => const CenterViewportDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.ensureVisible,

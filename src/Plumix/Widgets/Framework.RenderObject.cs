@@ -327,7 +327,7 @@ public sealed class SingleChildRenderObjectElement : RenderObjectElement
     }
 }
 
-public sealed class MultiChildRenderObjectElement : RenderObjectElement
+public class MultiChildRenderObjectElement : RenderObjectElement
 {
     private List<Element> _children = [];
     private readonly HashSet<Element> _forgottenChildren = [];
@@ -335,6 +335,9 @@ public sealed class MultiChildRenderObjectElement : RenderObjectElement
     public MultiChildRenderObjectElement(MultiChildRenderObjectWidget widget) : base(widget)
     {
     }
+
+    /// <summary>The child elements, in the order their widgets were supplied.</summary>
+    protected IReadOnlyList<Element> Children => _children;
 
     protected override void OnMount()
     {
