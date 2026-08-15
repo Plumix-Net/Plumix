@@ -918,7 +918,7 @@ public sealed class ScrollPhysicsTests
         position.ApplyContentDimensions(0, 1000);
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
         var drag = new ScrollDragController(
-            position: position,
+            @delegate: position,
             details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start),
             motionStartDistanceThreshold: 3.5);
 
@@ -942,7 +942,7 @@ public sealed class ScrollPhysicsTests
         position.ApplyContentDimensions(0, 1000);
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
         var drag = new ScrollDragController(
-            position: position,
+            @delegate: position,
             details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start),
             motionStartDistanceThreshold: 3.5);
 
@@ -958,7 +958,7 @@ public sealed class ScrollPhysicsTests
         position.ApplyContentDimensions(0, 1000);
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
         var drag = new ScrollDragController(
-            position: position,
+            @delegate: position,
             details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start),
             motionStartDistanceThreshold: 3.5);
 
@@ -981,7 +981,7 @@ public sealed class ScrollPhysicsTests
         position.ApplyContentDimensions(0, 1000);
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
         var drag = new ScrollDragController(
-            position: position,
+            @delegate: position,
             details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start));
 
         Assert.Equal(-1.0, Update(drag, -1.0, start.AddMilliseconds(16)), precision: 6);
@@ -1005,7 +1005,7 @@ public sealed class ScrollPhysicsTests
             position.ApplyContentDimensions(0, 1000);
             DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
             var drag = new ScrollDragController(
-                position: position,
+                @delegate: position,
                 details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start));
 
             // Dragging down a reversed list scrolls forward instead of backward.
@@ -1062,7 +1062,7 @@ public sealed class ScrollPhysicsTests
     {
         using var position = new ScrollPosition();
         Assert.Throws<ArgumentOutOfRangeException>(() => new ScrollDragController(
-            position: position,
+            @delegate: position,
             details: new DragStartDetails(new Point(0, 0)),
             motionStartDistanceThreshold: 0.0));
     }
@@ -1077,7 +1077,7 @@ public sealed class ScrollPhysicsTests
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
         var drag = new ScrollDragController(
-            position: position,
+            @delegate: position,
             details: new DragStartDetails(new Point(0, 0), SourceTimeStampUtc: start),
             carriedVelocity: carriedVelocity);
 

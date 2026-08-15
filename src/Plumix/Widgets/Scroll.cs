@@ -242,6 +242,23 @@ public sealed class ScrollEndNotification : ScrollNotification
     public DragEndDetails? DragDetails { get; }
 }
 
+/// <summary>
+/// A notification that the user has changed the direction in which they are scrolling.
+/// </summary>
+public sealed class UserScrollNotification : ScrollNotification
+{
+    public UserScrollNotification(
+        ScrollMetricsSnapshot metrics,
+        ScrollDirection direction,
+        int depth = 0) : base(metrics, depth)
+    {
+        Direction = direction;
+    }
+
+    /// <summary>The direction in which the user is scrolling.</summary>
+    public ScrollDirection Direction { get; }
+}
+
 public sealed class KeepAliveNotification : Notification
 {
     public KeepAliveNotification(KeepAliveHandle handle)
@@ -687,6 +704,15 @@ public sealed class Scrollable : StatefulWidget
 
     internal bool UseSingleChildViewport { get; init; }
 
+    /// <summary>
+    /// Builds the viewport this scrollable scrolls, when the default composition is not wanted.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>Scrollable.viewportBuilder</c>, which <c>ScrollView.build</c> supplies from its
+    /// overridable <c>buildViewport</c>.
+    /// </remarks>
+    internal Func<BuildContext, ViewportOffset, Widget>? ViewportBuilder { get; init; }
+
     public override State CreateState()
     {
         return new ScrollableState();
@@ -918,7 +944,11 @@ public sealed class Scrollable : StatefulWidget
                 ? ScrollCacheExtent.Viewport(widget.CacheExtent)
                 : ScrollCacheExtent.Pixels(widget.CacheExtent);
             Widget viewport;
-            if (widget.UseSingleChildViewport)
+            if (widget.ViewportBuilder is { } viewportBuilder)
+            {
+                viewport = viewportBuilder(context, _position);
+            }
+            else if (widget.UseSingleChildViewport)
             {
                 viewport = new SingleChildViewport(
                     child: widget.Child ?? new SizedBox(),
@@ -1276,9 +1306,9 @@ public sealed class Scrollable : StatefulWidget
                 return;
             }
 
-            new ScrollStartNotification(CurrentMetrics()).Dispatch(Context);
+            // The start/update/end notifications are dispatched by the position itself, exactly like
+            // Flutter's `ScrollPositionWithSingleContext.pointerScroll`.
             _position.ApplyPointerScrollDelta(delta);
-            new ScrollEndNotification(CurrentMetrics()).Dispatch(Context);
             scroll.Respond(allowPlatformDefault: false);
         }
 
@@ -2458,7 +2488,7 @@ public sealed class SliverGrid : SliverMultiBoxAdaptorWidget
     }
 }
 
-public sealed class CustomScrollView : StatelessWidget
+public class CustomScrollView : StatelessWidget
 {
     public CustomScrollView(
         IReadOnlyList<Widget> slivers,
@@ -2477,6 +2507,7 @@ public sealed class CustomScrollView : StatelessWidget
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         string? restorationId = null,
         int? semanticChildCount = null,
+        HitTestBehavior hitTestBehavior = HitTestBehavior.Opaque,
         Key? key = null,
         Clip clipBehavior = Clip.HardEdge) : base(key)
     {
@@ -2511,6 +2542,7 @@ public sealed class CustomScrollView : StatelessWidget
         Center = center;
         DragStartBehavior = dragStartBehavior;
         RestorationId = restorationId;
+        HitTestBehavior = hitTestBehavior;
         ClipBehavior = clipBehavior;
     }
 
@@ -2556,6 +2588,9 @@ public sealed class CustomScrollView : StatelessWidget
 
     public Clip ClipBehavior { get; }
 
+    /// <summary>How the scroll view should behave during hit testing.</summary>
+    public HitTestBehavior HitTestBehavior { get; }
+
     public override Widget Build(BuildContext context)
     {
         bool usePrimary = Primary
@@ -2583,11 +2618,66 @@ public sealed class CustomScrollView : StatelessWidget
             dragStartBehavior: DragStartBehavior,
             restorationId: RestorationId,
             semanticChildCount: SemanticChildCount,
-            clipBehavior: ClipBehavior);
+            hitTestBehavior: HitTestBehavior,
+            clipBehavior: ClipBehavior)
+        {
+            ViewportBuilder = HasCustomViewport
+                ? (viewportContext, offset) => BuildViewport(
+                    viewportContext,
+                    offset,
+                    GetDirection(viewportContext),
+                    Slivers)
+                : null,
+        };
         // Further descendant scroll views must not inherit the same PrimaryScrollController.
         return usePrimary && effectiveController != null
             ? PrimaryScrollController.None(scrollable)
             : scrollable;
+    }
+
+    /// <summary>
+    /// Whether <see cref="BuildViewport"/> is overridden, so the scrollable must be handed a viewport
+    /// builder instead of composing its own viewport.
+    /// </summary>
+    protected virtual bool HasCustomViewport => false;
+
+    /// <summary>The axis direction this view scrolls in.</summary>
+    /// <remarks>Flutter's <c>ScrollView.getDirection</c>.</remarks>
+    protected AxisDirection GetDirection(BuildContext context)
+    {
+        return ScrollDirectionUtils.GetAxisDirectionFromAxisReverseAndDirectionality(
+            context,
+            ScrollDirection,
+            Reverse);
+    }
+
+    /// <summary>
+    /// Builds the viewport that holds <paramref name="slivers"/>. Subclasses override this together
+    /// with <see cref="HasCustomViewport"/> to supply their own viewport render object.
+    /// </summary>
+    /// <remarks>Flutter's <c>ScrollView.buildViewport</c>.</remarks>
+    protected virtual Widget BuildViewport(
+        BuildContext context,
+        ViewportOffset offset,
+        AxisDirection axisDirection,
+        IReadOnlyList<Widget> slivers)
+    {
+        if (ShrinkWrap)
+        {
+            return new ShrinkWrappingViewport(
+                offset: offset,
+                axisDirection: axisDirection,
+                clipBehavior: ClipBehavior,
+                slivers: slivers);
+        }
+
+        return new Viewport(
+            offset: offset,
+            axisDirection: axisDirection,
+            anchor: Anchor,
+            center: Center,
+            clipBehavior: ClipBehavior,
+            slivers: slivers);
     }
 }
 

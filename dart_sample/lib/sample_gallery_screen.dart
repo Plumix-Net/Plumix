@@ -42,6 +42,7 @@ import 'demos/general/container_demo_page.dart';
 import 'demos/general/custom_multi_child_layout_demo_page.dart';
 import 'demos/general/dismissible_size_changed_layout_demo_page.dart';
 import 'demos/general/custom_slivers_demo_page.dart';
+import 'demos/general/nested_scroll_view_demo_page.dart';
 import 'demos/general/decorated_box_demo_page.dart';
 import 'demos/general/gradients_demo_page.dart';
 import 'demos/general/shape_borders_demo_page.dart';
@@ -549,6 +550,12 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Custom slivers',
           subtitle: 'resizing/floating/fill/group/prototype/varied sliver adapters',
           builder: () => const CustomSliversDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.nestedScrollView,
+          title: 'NestedScrollView',
+          subtitle: 'header/body coordination + overlap absorber and injector',
+          builder: () => const NestedScrollViewDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.scrollbar,

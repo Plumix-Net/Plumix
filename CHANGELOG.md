@@ -1,5 +1,25 @@
 # Changelog
 
+- Breaking: ported `widgets/nested_scroll_view.dart` in full — `NestedScrollView`,
+  `NestedScrollViewState` (`InnerController`/`OuterController`),
+  `NestedScrollView.SliverOverlapAbsorberHandleFor`, `SliverOverlapAbsorber`/`SliverOverlapInjector`
+  with their render objects, `NestedScrollViewViewport`/`RenderNestedScrollViewViewport`, and the
+  private coordinator/controller/position/ballistic-activity stack (`UnnestOffset`/`NestOffset`,
+  `_getMetrics` ranges and correction offset, the clamped/full drag and clamped pointer-signal
+  updates, `FloatHeaderSlivers`).
+  Prerequisite primitives: Flutter's `ScrollActivityDelegate` now exists as `IScrollActivityDelegate`
+  and every `ScrollActivity` plus `ScrollDragController` targets it instead of a concrete
+  `ScrollPosition` (their constructors take `@delegate`, and `DrivenScrollActivity`/
+  `BallisticScrollActivity` take explicit `from`/`vsync`); `BallisticScrollActivity` is subclassable
+  with `ApplyMoveTo`/`ResetActivity`; `ScrollPosition.SetPixels` is public and `Hold`/`GoIdle`/
+  `ApplyPointerScrollDelta` are virtual; `ScrollPosition` gained Flutter's `DidStartScroll`/
+  `DidEndScroll`/`DidUpdateScrollPositionBy`/`DidOverscrollBy`/`DidUpdateScrollDirection` and
+  `ExtentBefore`/`ExtentInside`/`ExtentAfter`, and `ApplyPointerScrollDelta` now dispatches its own
+  start/update/end notifications the way `ScrollPositionWithSingleContext.pointerScroll` does instead
+  of `ScrollableState` doing it. New `UserScrollNotification`; `CustomScrollView` is no longer sealed
+  and gained Flutter's `BuildViewport` hook plus `hitTestBehavior`; `Scrollable` accepts a viewport
+  builder.
+
 - Breaking: ported `rendering/viewport_offset.dart`, `rendering/viewport.dart` and
   `widgets/viewport.dart` in full. New `ViewportOffset` (with `ViewportOffset.Fixed`/`Zero`,
   `CorrectBy`, `MoveTo(clamp:)`, `UserScrollDirection`, `AllowImplicitScrolling`) is the protocol

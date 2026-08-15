@@ -22,6 +22,23 @@ public interface IScrollMetrics
 
     /// <summary>The number of device pixels for each logical pixel of the view the scrollable is in.</summary>
     double DevicePixelRatio => 1.0;
+
+    /// <summary>The quantity of content conceptually "above" the viewport.</summary>
+    double ExtentBefore => Math.Max(Pixels - MinScrollExtent, 0.0);
+
+    /// <summary>The quantity of content conceptually "below" the viewport.</summary>
+    double ExtentAfter => Math.Max(MaxScrollExtent - Pixels, 0.0);
+
+    /// <summary>The quantity of content conceptually "inside" the viewport.</summary>
+    double ExtentInside
+    {
+        get
+        {
+            double leadingOverscroll = Math.Clamp(MinScrollExtent - Pixels, 0.0, ViewportDimension);
+            double trailingOverscroll = Math.Clamp(Pixels - MaxScrollExtent, 0.0, ViewportDimension);
+            return Math.Max(0.0, ViewportDimension - leadingOverscroll - trailingOverscroll);
+        }
+    }
 }
 
 /// <summary>An immutable snapshot of values associated with a <see cref="ScrollPosition"/>.</summary>
@@ -127,6 +144,32 @@ public static class ScrollDirectionUtils
         return axis == Axis.Vertical ? AxisDirection.Down : AxisDirection.Right;
     }
 
+    /// <summary>
+    /// Resolves the direction in which the scroll offset increases from a scroll axis, whether the
+    /// view is reversed, and the ambient reading direction.
+    /// </summary>
+    /// <remarks>Flutter's <c>getAxisDirectionFromAxisReverseAndDirectionality</c>.</remarks>
+    public static AxisDirection GetAxisDirectionFromAxisReverseAndDirectionality(
+        BuildContext context,
+        Axis axis,
+        bool reverse)
+    {
+        if (axis == Axis.Vertical)
+        {
+            return reverse ? AxisDirection.Up : AxisDirection.Down;
+        }
+
+        AxisDirection readingDirection = Directionality.Of(context) == UI.TextDirection.Rtl
+            ? AxisDirection.Left
+            : AxisDirection.Right;
+        if (!reverse)
+        {
+            return readingDirection;
+        }
+
+        return readingDirection == AxisDirection.Left ? AxisDirection.Right : AxisDirection.Left;
+    }
+
     /// <remarks>Flutter's <c>applyGrowthDirectionToAxisDirection</c>.</remarks>
     public static AxisDirection ApplyGrowthDirectionToAxisDirection(
         AxisDirection axisDirection,
@@ -148,22 +191,50 @@ public static class ScrollDirectionUtils
     }
 }
 
-public abstract class ScrollActivity : IDisposable
+/// <summary>
+/// The interface a <see cref="ScrollActivity"/> drives. Implemented by <see cref="ScrollPosition"/>
+/// and by coordinators that own several positions at once, such as the one behind
+/// <see cref="Plumix.Widgets.NestedScrollView"/>.
+/// </summary>
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/scroll_activity.dart
+public interface IScrollActivityDelegate
 {
-    protected ScrollActivity(ScrollPosition position)
-    {
-        Position = position;
-    }
-
-    protected ScrollPosition Position { get; private set; }
+    /// <summary>The direction in which the scroll offset increases.</summary>
+    AxisDirection AxisDirection { get; }
 
     /// <summary>
-    /// Re-points this activity at the position that absorbed it, so an in-flight drag or ballistic
+    /// Updates the scroll position to the given value, applying the physics' boundary conditions and
+    /// returning the overscroll that could not be applied.
+    /// </summary>
+    double SetPixels(double pixels);
+
+    /// <summary>Applies a user-driven delta, in the opposite sense to the scroll offset.</summary>
+    void ApplyUserOffset(double delta);
+
+    /// <summary>Terminates the current activity and goes idle.</summary>
+    void GoIdle();
+
+    /// <summary>Terminates the current activity and starts a ballistic one at the given velocity.</summary>
+    void GoBallistic(double velocity);
+}
+
+public abstract class ScrollActivity : IDisposable
+{
+    protected ScrollActivity(IScrollActivityDelegate @delegate)
+    {
+        Delegate = @delegate;
+    }
+
+    /// <summary>The delegate this activity drives.</summary>
+    public IScrollActivityDelegate Delegate { get; private set; }
+
+    /// <summary>
+    /// Re-points this activity at the delegate that absorbed it, so an in-flight drag or ballistic
     /// run survives a scrollable replacing its <see cref="ScrollPosition"/>.
     /// </summary>
-    public virtual void UpdateDelegate(ScrollPosition value)
+    public virtual void UpdateDelegate(IScrollActivityDelegate value)
     {
-        Position = value;
+        Delegate = value;
     }
 
     /// <summary>Whether performing this activity constitutes scrolling.</summary>
@@ -171,6 +242,15 @@ public abstract class ScrollActivity : IDisposable
 
     /// <summary>The velocity at which the scroll offset is currently independently changing.</summary>
     public virtual double Velocity => 0.0;
+
+    /// <summary>
+    /// Called when the position this activity drives is absorbed by a position of a different type,
+    /// so an activity that captured type-specific state can restart itself.
+    /// </summary>
+    /// <remarks>Flutter's <c>ScrollActivity.resetActivity</c>.</remarks>
+    public virtual void ResetActivity()
+    {
+    }
 
     /// <summary>
     /// Called when the viewport or content dimensions change, so the activity can react to a
@@ -185,11 +265,11 @@ public abstract class ScrollActivity : IDisposable
     }
 }
 
-public sealed class IdleScrollActivity(ScrollPosition position) : ScrollActivity(position)
+public sealed class IdleScrollActivity(IScrollActivityDelegate @delegate) : ScrollActivity(@delegate)
 {
     public override bool IsScrolling => false;
 
-    public override void ApplyNewDimensions() => Position.GoBallistic(0.0);
+    public override void ApplyNewDimensions() => Delegate.GoBallistic(0.0);
 }
 
 /// <summary>
@@ -200,7 +280,8 @@ public sealed class HoldScrollActivity : ScrollActivity, IScrollHoldController
 {
     private readonly Action? _onHoldCanceled;
 
-    public HoldScrollActivity(ScrollPosition position, Action? onHoldCanceled = null) : base(position)
+    public HoldScrollActivity(IScrollActivityDelegate @delegate, Action? onHoldCanceled = null)
+        : base(@delegate)
     {
         _onHoldCanceled = onHoldCanceled;
     }
@@ -211,7 +292,7 @@ public sealed class HoldScrollActivity : ScrollActivity, IScrollHoldController
 
     public void Cancel()
     {
-        Position.GoBallistic(0.0);
+        Delegate.GoBallistic(0.0);
     }
 
     public override void Dispose()
@@ -226,8 +307,8 @@ public sealed class DragScrollActivity : ScrollActivity
 {
     private ScrollDragController? _controller;
 
-    public DragScrollActivity(ScrollPosition position, ScrollDragController? controller = null)
-        : base(position)
+    public DragScrollActivity(IScrollActivityDelegate @delegate, ScrollDragController? controller = null)
+        : base(@delegate)
     {
         _controller = controller;
     }
@@ -274,7 +355,7 @@ public sealed class ScrollDragController : IDrag, IDisposable
     private bool _retainMomentum;
 
     public ScrollDragController(
-        ScrollPosition position,
+        IScrollActivityDelegate @delegate,
         DragStartDetails details,
         Action? onDragCanceled = null,
         double? carriedVelocity = null,
@@ -287,7 +368,7 @@ public sealed class ScrollDragController : IDrag, IDisposable
                 "motionStartDistanceThreshold must be a positive number or null");
         }
 
-        Position = position;
+        Delegate = @delegate;
         CarriedVelocity = carriedVelocity;
         MotionStartDistanceThreshold = motionStartDistanceThreshold;
         _onDragCanceled = onDragCanceled;
@@ -296,16 +377,16 @@ public sealed class ScrollDragController : IDrag, IDisposable
         _offsetSinceLastStop = motionStartDistanceThreshold == null ? null : 0.0;
     }
 
-    /// <summary>The position this drag scrolls.</summary>
-    public ScrollPosition Position { get; private set; }
+    /// <summary>The delegate this drag scrolls.</summary>
+    public IScrollActivityDelegate Delegate { get; private set; }
 
     /// <summary>
-    /// Re-points this drag at the position that absorbed it (Flutter's
-    /// <c>ScrollDragController.updatePosition</c>).
+    /// Re-points this drag at the delegate that absorbed it (Flutter's
+    /// <c>ScrollDragController.updateDelegate</c>).
     /// </summary>
-    public void UpdatePosition(ScrollPosition value)
+    public void UpdateDelegate(IScrollActivityDelegate value)
     {
-        Position = value;
+        Delegate = value;
     }
 
     /// <summary>Velocity carried over from a previous ballistic activity, if any.</summary>
@@ -314,7 +395,7 @@ public sealed class ScrollDragController : IDrag, IDisposable
     /// <summary>The distance a resting drag must travel before the position starts moving.</summary>
     public double? MotionStartDistanceThreshold { get; }
 
-    private bool Reversed => ScrollDirectionUtils.AxisDirectionIsReversed(Position.AxisDirection);
+    private bool Reversed => ScrollDirectionUtils.AxisDirectionIsReversed(Delegate.AxisDirection);
 
     /// <summary>
     /// Applies a drag update, returning the offset actually handed to the position (zero when the
@@ -342,7 +423,7 @@ public sealed class ScrollDragController : IDrag, IDisposable
             offset = -offset;
         }
 
-        Position.ApplyUserOffset(offset);
+        Delegate.ApplyUserOffset(offset);
         return offset;
     }
 
@@ -372,12 +453,12 @@ public sealed class ScrollDragController : IDrag, IDisposable
             }
         }
 
-        Position.GoBallistic(velocity);
+        Delegate.GoBallistic(velocity);
     }
 
     public void Cancel()
     {
-        Position.GoBallistic(0.0);
+        Delegate.GoBallistic(0.0);
     }
 
     public void Dispose()
@@ -463,7 +544,7 @@ public sealed class ScrollDragController : IDrag, IDisposable
     }
 }
 
-public sealed class PointerScrollActivity(ScrollPosition position) : ScrollActivity(position)
+public sealed class PointerScrollActivity(IScrollActivityDelegate @delegate) : ScrollActivity(@delegate)
 {
 }
 
@@ -480,11 +561,17 @@ public sealed class DrivenScrollActivity : ScrollActivity
     private bool _disposed;
 
     public DrivenScrollActivity(
-        ScrollPosition position,
+        IScrollActivityDelegate @delegate,
+        double from,
         double to,
         TimeSpan duration,
-        Curve curve) : base(position)
+        Curve curve,
+        ITickerProvider? vsync) : base(@delegate)
     {
+        if (!double.IsFinite(from))
+        {
+            throw new ArgumentOutOfRangeException(nameof(from));
+        }
         if (!double.IsFinite(to))
         {
             throw new ArgumentOutOfRangeException(nameof(to));
@@ -494,11 +581,11 @@ public sealed class DrivenScrollActivity : ScrollActivity
             throw new ArgumentOutOfRangeException(nameof(duration));
         }
 
-        _from = position.Pixels;
+        _from = from;
         _to = to;
         _duration = duration;
         _curve = curve ?? throw new ArgumentNullException(nameof(curve));
-        _ticker = position.TickerProvider?.CreateTicker(OnTick) ?? new Ticker(OnTick);
+        _ticker = vsync?.CreateTicker(OnTick) ?? new Ticker(OnTick);
         _ticker.Start();
     }
 
@@ -532,31 +619,46 @@ public sealed class DrivenScrollActivity : ScrollActivity
         // Flutter drives this activity through an AnimationController, whose interpolation simulation
         // returns the exact end value at t == 1 rather than the curve's approximation of it.
         double value = progress >= 1.0 ? _to : _from + ((_to - _from) * _curve(progress));
-        Position.SetPixelsFromActivity(value);
+        Delegate.SetPixels(value);
         if (progress >= 1.0)
         {
-            Position.GoIdle();
+            Delegate.GoIdle();
         }
     }
 }
 
-public sealed class BallisticScrollActivity : ScrollActivity
+public class BallisticScrollActivity : ScrollActivity
 {
     private readonly Simulation _simulation;
     private readonly Ticker _ticker;
     private double _elapsedSeconds;
     private bool _disposed;
 
-    public BallisticScrollActivity(ScrollPosition position, Simulation simulation) : base(position)
+    public BallisticScrollActivity(
+        IScrollActivityDelegate @delegate,
+        Simulation simulation,
+        ITickerProvider? vsync) : base(@delegate)
     {
         _simulation = simulation;
-        _ticker = position.TickerProvider?.CreateTicker(OnTick) ?? new Ticker(OnTick);
+        _ticker = vsync?.CreateTicker(OnTick) ?? new Ticker(OnTick);
         _ticker.Start();
     }
 
     public override double Velocity => _disposed ? 0.0 : _simulation.DX(_elapsedSeconds);
 
-    public override void ApplyNewDimensions() => Position.GoBallistic(Velocity);
+    public override void ResetActivity() => Delegate.GoBallistic(Velocity);
+
+    public override void ApplyNewDimensions() => Delegate.GoBallistic(Velocity);
+
+    /// <summary>
+    /// Moves the delegate to <paramref name="value"/>, returning whether the simulation can still be
+    /// followed. A non-zero overscroll means the boundary conditions clipped the value.
+    /// </summary>
+    /// <remarks>Flutter's <c>BallisticScrollActivity.applyMoveTo</c>.</remarks>
+    protected virtual bool ApplyMoveTo(double value)
+    {
+        return Math.Abs(Delegate.SetPixels(value)) < Constants.PrecisionErrorTolerance;
+    }
 
     public override void Dispose()
     {
@@ -579,12 +681,10 @@ public sealed class BallisticScrollActivity : ScrollActivity
         _elapsedSeconds = elapsed.TotalSeconds;
 
         // The simulation drives the position directly; the physics decide whether the proposed value
-        // is reachable. A non-zero overscroll means the boundary conditions clipped the value, so the
-        // simulation can no longer be followed and the activity ends.
-        if (Math.Abs(Position.SetPixelsFromActivity(_simulation.X(_elapsedSeconds)))
-            >= Constants.PrecisionErrorTolerance)
+        // is reachable. A move that cannot be followed ends the activity.
+        if (!ApplyMoveTo(_simulation.X(_elapsedSeconds)))
         {
-            Position.GoIdle();
+            Delegate.GoIdle();
             return;
         }
 
@@ -592,7 +692,7 @@ public sealed class BallisticScrollActivity : ScrollActivity
         {
             // A completed ballistic run restarts ballistic with zero velocity, which springs the
             // position back when it is still out of range and goes idle otherwise.
-            Position.GoBallistic(0.0);
+            Delegate.GoBallistic(0.0);
         }
     }
 }
@@ -619,7 +719,7 @@ public enum ScrollPositionAlignmentPolicy
     KeepVisibleAtStart,
 }
 
-public class ScrollPosition : ViewportOffset, IScrollMetrics
+public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDelegate
 {
     private readonly ScrollPhysics _physics;
     private double _pixels;
@@ -700,6 +800,15 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
     /// <summary>Whether the <see cref="Pixels"/> value is outside the min/max scroll extents.</summary>
     public bool OutOfRange => _pixels < _minScrollExtent || _pixels > _maxScrollExtent;
 
+    /// <summary>The quantity of content conceptually "above" the viewport.</summary>
+    public double ExtentBefore => Math.Max(_pixels - _minScrollExtent, 0.0);
+
+    /// <summary>The quantity of content conceptually "below" the viewport.</summary>
+    public double ExtentAfter => Math.Max(_maxScrollExtent - _pixels, 0.0);
+
+    /// <summary>The quantity of content conceptually "inside" the viewport.</summary>
+    public double ExtentInside => ((IScrollMetrics)this).ExtentInside;
+
     public ScrollPhysics Physics => _physics;
 
     public ScrollActivity Activity => _activity;
@@ -768,7 +877,13 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
             return Task.CompletedTask;
         }
 
-        var activity = new DrivenScrollActivity(this, to, duration, curve ?? Curves.Linear);
+        var activity = new DrivenScrollActivity(
+            this,
+            from: Pixels,
+            to: to,
+            duration: duration,
+            curve: curve ?? Curves.Linear,
+            vsync: TickerProvider);
         BeginActivity(activity);
         return activity.Done;
     }
@@ -982,7 +1097,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
     /// Stops the current activity and holds the position still, remembering the velocity it was
     /// carrying so a drag started from this hold can restore it.
     /// </summary>
-    public IScrollHoldController Hold(Action? holdCancelCallback = null)
+    public virtual IScrollHoldController Hold(Action? holdCancelCallback = null)
     {
         double previousVelocity = Activity.Velocity;
         var holdActivity = new HoldScrollActivity(this, holdCancelCallback);
@@ -998,7 +1113,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
     public virtual ScrollDragController Drag(DragStartDetails details, Action? dragCancelCallback = null)
     {
         var drag = new ScrollDragController(
-            position: this,
+            @delegate: this,
             details: details,
             onDragCanceled: dragCancelCallback,
             carriedVelocity: Physics.CarriedMomentum(_heldPreviousVelocity),
@@ -1047,18 +1162,19 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
             return;
         }
 
-        BeginActivity(new BallisticScrollActivity(this, simulation));
+        BeginActivity(new BallisticScrollActivity(this, simulation, TickerProvider));
     }
 
     public virtual void ApplyUserOffset(double delta)
     {
         double adjusted = Physics.ApplyPhysicsToUserOffset(this, delta);
         double targetPixels = Pixels - adjusted;
-        UpdateUserScrollDirection(targetPixels);
+        UpdateUserScrollDirectionTowards(targetPixels);
         SetPixels(targetPixels);
     }
 
-    public void ApplyPointerScrollDelta(double delta)
+    /// <remarks>Flutter's <c>ScrollPositionWithSingleContext.pointerScroll</c>.</remarks>
+    public virtual void ApplyPointerScrollDelta(double delta)
     {
         if (delta == 0.0)
         {
@@ -1075,9 +1191,14 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
         }
 
         GoIdle();
-        UpdateUserScrollDirection(targetPixels);
+        UpdateUserScrollDirection(
+            delta > 0.0 ? ScrollDirection.Reverse : ScrollDirection.Forward);
+        double oldPixels = Pixels;
         IsScrollingNotifier.Value = true;
         ForcePixels(targetPixels);
+        DidStartScroll();
+        DidUpdateScrollPositionBy(Pixels - oldPixels);
+        DidEndScroll();
         GoBallistic(0.0);
     }
 
@@ -1318,12 +1439,17 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
         _activity.Dispose();
         _activity = absorbed;
         _activity.UpdateDelegate(this);
+        if (other.GetType() != GetType())
+        {
+            _activity.ResetActivity();
+        }
+
         IsScrollingNotifier.Value = _activity.IsScrolling;
 
         if (other._currentDrag is { } drag)
         {
             other._currentDrag = null;
-            drag.UpdatePosition(this);
+            drag.UpdateDelegate(this);
             _currentDrag = drag;
         }
     }
@@ -1354,14 +1480,9 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
         IsScrollingNotifier.Value = activity is not IdleScrollActivity;
     }
 
-    internal virtual void GoIdle()
+    public virtual void GoIdle()
     {
         BeginActivity(new IdleScrollActivity(this));
-    }
-
-    internal double SetPixelsFromActivity(double value)
-    {
-        return SetPixels(value);
     }
 
     /// <summary>
@@ -1403,7 +1524,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
     /// <see cref="BouncingScrollPhysics"/>) always report 0.0, which is what lets the position travel
     /// outside the scroll extents.
     /// </returns>
-    protected virtual double SetPixels(double value)
+    public virtual double SetPixels(double value)
     {
         if (Math.Abs(value - _pixels) < Constants.PrecisionErrorTolerance)
         {
@@ -1423,15 +1544,81 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics
         return Math.Abs(overscroll) > Constants.PrecisionErrorTolerance ? overscroll : 0.0;
     }
 
-    private void UpdateUserScrollDirection(double targetPixels)
+    private void UpdateUserScrollDirectionTowards(double targetPixels)
     {
         if (targetPixels < Pixels)
         {
-            _userScrollDirection = ScrollDirection.Forward;
+            UpdateUserScrollDirection(ScrollDirection.Forward);
         }
         else if (targetPixels > Pixels)
         {
-            _userScrollDirection = ScrollDirection.Reverse;
+            UpdateUserScrollDirection(ScrollDirection.Reverse);
+        }
+    }
+
+    /// <summary>
+    /// Records the direction the user is scrolling in and announces it through a
+    /// <see cref="UserScrollNotification"/>.
+    /// </summary>
+    /// <remarks>Flutter's <c>ScrollPositionWithSingleContext.updateUserScrollDirection</c>.</remarks>
+    protected internal virtual void UpdateUserScrollDirection(ScrollDirection value)
+    {
+        if (_userScrollDirection == value)
+        {
+            return;
+        }
+
+        _userScrollDirection = value;
+        DidUpdateScrollDirection(value);
+    }
+
+    /// <summary>Dispatches a <see cref="ScrollStartNotification"/>.</summary>
+    /// <remarks>Flutter's <c>ScrollPosition.didStartScroll</c>.</remarks>
+    public void DidStartScroll()
+    {
+        if (NotificationContext is { } context)
+        {
+            new ScrollStartNotification(CopyWith()).Dispatch(context);
+        }
+    }
+
+    /// <summary>Dispatches a <see cref="ScrollUpdateNotification"/>.</summary>
+    /// <remarks>Flutter's <c>ScrollPosition.didUpdateScrollPositionBy</c>.</remarks>
+    public void DidUpdateScrollPositionBy(double delta)
+    {
+        if (NotificationContext is { } context)
+        {
+            new ScrollUpdateNotification(CopyWith(), scrollDelta: delta).Dispatch(context);
+        }
+    }
+
+    /// <summary>Dispatches a <see cref="ScrollEndNotification"/>.</summary>
+    /// <remarks>Flutter's <c>ScrollPosition.didEndScroll</c>.</remarks>
+    public void DidEndScroll()
+    {
+        if (NotificationContext is { } context)
+        {
+            new ScrollEndNotification(CopyWith()).Dispatch(context);
+        }
+    }
+
+    /// <summary>Dispatches an <see cref="OverscrollNotification"/>.</summary>
+    /// <remarks>Flutter's <c>ScrollPosition.didOverscrollBy</c>.</remarks>
+    public void DidOverscrollBy(double value)
+    {
+        if (NotificationContext is { } context)
+        {
+            new OverscrollNotification(CopyWith(), overscroll: value).Dispatch(context);
+        }
+    }
+
+    /// <summary>Dispatches a <see cref="UserScrollNotification"/>.</summary>
+    /// <remarks>Flutter's <c>ScrollPosition.didUpdateScrollDirection</c>.</remarks>
+    public void DidUpdateScrollDirection(ScrollDirection direction)
+    {
+        if (NotificationContext is { } context)
+        {
+            new UserScrollNotification(CopyWith(), direction).Dispatch(context);
         }
     }
 }

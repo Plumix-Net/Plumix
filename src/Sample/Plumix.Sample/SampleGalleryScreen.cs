@@ -34,6 +34,7 @@ internal static class SampleRoutes
     public const string PageView = "/page-view";
     public const string GridView = "/grid-view";
     public const string CustomSlivers = "/custom-slivers";
+    public const string NestedScrollView = "/nested-scroll-view";
     public const string Scrollbar = "/scrollbar";
     public const string DraggableScrollableSheet = "/draggable-scrollable-sheet";
     public const string EditableText = "/editable-text";
@@ -284,6 +285,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Custom slivers",
             "resizing/floating/fill/group/prototype/varied sliver adapters",
             () => new CustomSliversDemoPage()),
+        new(
+            SampleRoutes.NestedScrollView,
+            "NestedScrollView",
+            "header/body coordination + overlap absorber and injector",
+            () => new NestedScrollViewDemoPage()),
         new(SampleRoutes.Scrollbar, "Scrollbar", "controller + thumb", () => new ScrollbarDemoPage()),
         new(
             SampleRoutes.DraggableScrollableSheet,
