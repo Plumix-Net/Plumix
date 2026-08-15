@@ -11,6 +11,7 @@ namespace Plumix.Material;
 // Dart parity source: material_ui/lib/src/carousel.dart
 // Dart parity source: material_ui/lib/src/carousel_theme.dart
 
+/// <summary>Dart's <c>NullableIndexedWidgetBuilder</c>, the builder a lazy carousel is given.</summary>
 public delegate Widget? CarouselItemBuilder(BuildContext context, int index);
 
 public sealed partial record CarouselViewThemeData(
@@ -39,7 +40,7 @@ public sealed partial record CarouselViewThemeData(
     }
 }
 
-public sealed class CarouselViewTheme : InheritedWidget
+public sealed class CarouselViewTheme : InheritedTheme
 {
     public CarouselViewTheme(CarouselViewThemeData data, Widget child, Key? key = null) : base(key)
     {
@@ -53,364 +54,25 @@ public sealed class CarouselViewTheme : InheritedWidget
 
     public override Widget Build(BuildContext context) => Child;
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => !Equals(Data, ((CarouselViewTheme)oldWidget).Data);
+    public override Widget Wrap(BuildContext context, Widget child) => new CarouselViewTheme(Data, child);
+
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+        !Equals(Data, ((CarouselViewTheme)oldWidget).Data);
+
+    public static CarouselViewThemeData? MaybeOf(BuildContext context) =>
+        context.DependOnInherited<CarouselViewTheme>()?.Data;
 
     public static CarouselViewThemeData Of(BuildContext context) =>
-        context.DependOnInherited<CarouselViewTheme>()?.Data ?? Theme.Of(context).CarouselViewTheme;
+        MaybeOf(context) ?? Theme.Of(context).CarouselViewTheme;
 }
 
-public sealed class CarouselController : ScrollController
-{
-    private CarouselViewState? _carouselState;
-    private AnimationController? _animationController;
-    private double _animationStart;
-    private double _animationTarget;
-    private double? _itemExtent;
-    private IReadOnlyList<int>? _flexWeights;
-    private bool _consumeMaxWeight = true;
-    private bool _infinite;
-    private int? _itemCount;
-
-    public CarouselController(int initialItem = 0) : base()
-    {
-        if (initialItem < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(initialItem));
-        }
-
-        InitialItem = initialItem;
-    }
-
-    public int InitialItem { get; }
-
-    public int LeadingItem => PrimaryPosition is CarouselScrollPosition position
-        ? position.LeadingItem
-        : throw new InvalidOperationException("CarouselController.leadingItem cannot be accessed before a CarouselView is attached.");
-
-    public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
-    {
-        return new CarouselScrollPosition(
-            initialItem: InitialItem,
-            itemExtent: _itemExtent,
-            flexWeights: _flexWeights,
-            consumeMaxWeight: _consumeMaxWeight,
-            infinite: _infinite,
-            itemCount: _itemCount,
-            physics: physics ?? Physics);
-    }
-
-    public void JumpToItem(int index) => _carouselState?.JumpToItem(index);
-
-    public void AnimateToItem(int index, TimeSpan? duration = null, Curve? curve = null)
-    {
-        double? target = _carouselState?.GetTargetPixels(index);
-        if (!target.HasValue)
-        {
-            return;
-        }
-
-        AnimateCarouselTo(target.Value, duration ?? TimeSpan.FromMilliseconds(300), curve ?? Curves.Ease);
-    }
-
-    public override void Dispose()
-    {
-        StopAnimation();
-        base.Dispose();
-    }
-
-    internal void Attach(CarouselViewState state)
-    {
-        _carouselState = state;
-    }
-
-    internal void Detach(CarouselViewState state)
-    {
-        if (ReferenceEquals(_carouselState, state))
-        {
-            _carouselState = null;
-        }
-    }
-
-    internal void Configure(
-        double? itemExtent,
-        IReadOnlyList<int>? flexWeights,
-        bool consumeMaxWeight,
-        bool infinite,
-        int? itemCount)
-    {
-        _itemExtent = itemExtent;
-        _flexWeights = flexWeights;
-        _consumeMaxWeight = consumeMaxWeight;
-        _infinite = infinite;
-        _itemCount = itemCount;
-
-        if (PrimaryPosition is CarouselScrollPosition position)
-        {
-            position.Configure(itemExtent, flexWeights, consumeMaxWeight, infinite, itemCount);
-        }
-    }
-
-    private void AnimateCarouselTo(double target, TimeSpan duration, Curve curve)
-    {
-        if (duration <= TimeSpan.Zero || Math.Abs(Offset - target) < 0.0001)
-        {
-            JumpTo(target);
-            return;
-        }
-
-        StopAnimation();
-        _animationStart = Offset;
-        _animationTarget = target;
-        _animationController = new AnimationController(duration: duration)
-        {
-            Curve = curve,
-        };
-        _animationController.Changed += HandleAnimationChanged;
-        _animationController.Completed += HandleAnimationCompleted;
-        _animationController.Forward(0);
-    }
-
-    private void HandleAnimationChanged()
-    {
-        if (_animationController is not null)
-        {
-            JumpTo(_animationStart + ((_animationTarget - _animationStart) * _animationController.Evaluate()));
-        }
-    }
-
-    private void HandleAnimationCompleted()
-    {
-        JumpTo(_animationTarget);
-        StopAnimation();
-    }
-
-    private void StopAnimation()
-    {
-        if (_animationController is null)
-        {
-            return;
-        }
-
-        _animationController.Changed -= HandleAnimationChanged;
-        _animationController.Completed -= HandleAnimationCompleted;
-        _animationController.Dispose();
-        _animationController = null;
-    }
-}
-
-public sealed class CarouselScrollPhysics : ScrollPhysics
-{
-    public CarouselScrollPhysics(ScrollPhysics? parent = null) : base(parent)
-    {
-    }
-
-    public override Simulation? CreateBallisticSimulation(IScrollMetrics position, double velocity)
-    {
-        if (position is not CarouselScrollPosition carouselPosition)
-        {
-            throw new InvalidOperationException("CarouselScrollPhysics requires CarouselScrollPosition.");
-        }
-
-        if ((velocity <= 0 && carouselPosition.Pixels <= carouselPosition.MinScrollExtent)
-            || (velocity >= 0 && carouselPosition.Pixels >= carouselPosition.MaxScrollExtent))
-        {
-            return base.CreateBallisticSimulation(position, velocity);
-        }
-
-        double itemExtent = carouselPosition.ScrollExtentPerItem;
-        if (itemExtent <= 0)
-        {
-            return null;
-        }
-
-        Tolerance tolerance = ToleranceFor(position);
-        double item = Math.Max(0, carouselPosition.Pixels) / itemExtent;
-        if (velocity < -tolerance.Velocity)
-        {
-            item -= 0.5;
-        }
-        else if (velocity > tolerance.Velocity)
-        {
-            item += 0.5;
-        }
-
-        double target = Math.Clamp(
-            Math.Round(item, MidpointRounding.AwayFromZero) * itemExtent,
-            carouselPosition.MinScrollExtent,
-            carouselPosition.MaxScrollExtent);
-        return Math.Abs(target - carouselPosition.Pixels) < 0.0001
-            ? null
-            : new ScrollSpringSimulation(
-                Spring,
-                carouselPosition.Pixels,
-                target,
-                velocity,
-                tolerance: tolerance);
-    }
-}
-
-public sealed class CarouselScrollPosition : ScrollPosition
-{
-    private double? _itemExtent;
-    private IReadOnlyList<int>? _flexWeights;
-    private bool _consumeMaxWeight;
-    private bool _infinite;
-    private int? _itemCount;
-    private double? _cachedItem;
-
-    public CarouselScrollPosition(
-        int initialItem,
-        double? itemExtent,
-        IReadOnlyList<int>? flexWeights,
-        bool consumeMaxWeight,
-        bool infinite,
-        int? itemCount,
-        ScrollPhysics physics) : base(physics: physics)
-    {
-        if ((itemExtent is null) == (flexWeights is null))
-        {
-            throw new ArgumentException("Exactly one of itemExtent and flexWeights must be supplied.");
-        }
-
-        InitialItem = initialItem;
-        _itemExtent = itemExtent;
-        _flexWeights = flexWeights;
-        _consumeMaxWeight = consumeMaxWeight;
-        _infinite = infinite;
-        _itemCount = itemCount;
-    }
-
-    public int InitialItem { get; }
-
-    public double? ItemExtent => _itemExtent;
-
-    public IReadOnlyList<int>? FlexWeights => _flexWeights;
-
-    public bool ConsumeMaxWeight => _consumeMaxWeight;
-
-    public bool Infinite => _infinite;
-
-    public int LeadingItem
-    {
-        get
-        {
-            if (ViewportDimension <= 0)
-            {
-                return 0;
-            }
-
-            int item = (int)Math.Floor(GetItemFromPixels(Pixels, ViewportDimension));
-            if (_consumeMaxWeight && _flexWeights is not null)
-            {
-                item = Math.Max(item - FirstMaximumWeightIndex(_flexWeights), 0);
-            }
-
-            return _infinite && _itemCount is > 0 ? item % _itemCount.Value : item;
-        }
-    }
-
-    internal double ScrollExtentPerItem => GetScrollExtentPerItem(ViewportDimension);
-
-    internal void Configure(
-        double? itemExtent,
-        IReadOnlyList<int>? flexWeights,
-        bool consumeMaxWeight,
-        bool infinite,
-        int? itemCount)
-    {
-        double item = ViewportDimension > 0 ? GetItemFromPixels(Pixels, ViewportDimension) : InitialItem;
-        _itemExtent = itemExtent;
-        _flexWeights = flexWeights;
-        _consumeMaxWeight = consumeMaxWeight;
-        _infinite = infinite;
-        _itemCount = itemCount;
-        CorrectPixels(GetPixelsFromItem(item, ViewportDimension));
-    }
-
-    public override bool ApplyViewportDimension(double viewportDimension)
-    {
-        double oldViewportDimension = ViewportDimension;
-        double item = oldViewportDimension > 0
-            ? GetItemFromPixels(Pixels, oldViewportDimension)
-            : InitialLeadingItem();
-
-        bool changed = base.ApplyViewportDimension(viewportDimension);
-        _cachedItem = viewportDimension == 0 ? item : null;
-        return CorrectPixels(GetPixelsFromItem(_cachedItem ?? item, viewportDimension)) || changed;
-    }
-
-    public override bool ApplyContentDimensions(double minScrollExtent, double maxScrollExtent)
-    {
-        if (_infinite && Pixels < GetCycleLengthInPixels())
-        {
-            double cycleLength = GetCycleLengthInPixels();
-            if (cycleLength > 0)
-            {
-                double cycles = Math.Ceiling((cycleLength - Pixels) / cycleLength);
-                CorrectPixels(Pixels + cycles * cycleLength);
-            }
-        }
-
-        return base.ApplyContentDimensions(_infinite ? 0 : minScrollExtent, maxScrollExtent);
-    }
-
-    internal double GetPixelsForItem(double item) => GetPixelsFromItem(item, ViewportDimension);
-
-    private int InitialLeadingItem()
-    {
-        return _flexWeights is null
-            ? InitialItem
-            : Math.Max(InitialItem - FirstMaximumWeightIndex(_flexWeights), 0);
-    }
-
-    private double GetItemFromPixels(double pixels, double viewportDimension)
-    {
-        double extent = GetScrollExtentPerItem(viewportDimension);
-        return extent <= 0 ? 0 : Math.Max(0, pixels) / extent;
-    }
-
-    private double GetPixelsFromItem(double item, double viewportDimension)
-    {
-        return item * GetScrollExtentPerItem(viewportDimension);
-    }
-
-    private double GetScrollExtentPerItem(double viewportDimension)
-    {
-        if (viewportDimension <= 0)
-        {
-            return 0;
-        }
-
-        if (_itemExtent.HasValue)
-        {
-            return Math.Min(_itemExtent.Value, viewportDimension);
-        }
-
-        return _flexWeights is null ? 0 : viewportDimension * _flexWeights[0] / _flexWeights.Sum();
-    }
-
-    private double GetCycleLengthInPixels()
-    {
-        return _itemCount is > 0 ? _itemCount.Value * GetScrollExtentPerItem(ViewportDimension) : 0;
-    }
-
-    private static int FirstMaximumWeightIndex(IReadOnlyList<int> weights)
-    {
-        int maximum = weights.Max();
-        for (int index = 0; index < weights.Count; index += 1)
-        {
-            if (weights[index] == maximum)
-            {
-                return index;
-            }
-        }
-
-        return 0;
-    }
-}
-
+/// <summary>
+/// A Material Design carousel: a scrollable strip of items whose extents can vary with the scroll
+/// offset, so that items grow into and shrink out of the viewport edges.
+/// </summary>
 public sealed class CarouselView : StatefulWidget
 {
+    /// <summary>The uncontained layout: every item is <paramref name="itemExtent"/> wide.</summary>
     public CarouselView(
         double itemExtent,
         IReadOnlyList<Widget> children,
@@ -479,36 +141,6 @@ public sealed class CarouselView : StatefulWidget
         Action<int>? onIndexChanged,
         Key? key) : base(key)
     {
-        if ((itemExtent is null) == (flexWeights is null))
-        {
-            throw new ArgumentException("Exactly one of itemExtent and flexWeights must be supplied.");
-        }
-
-        if (itemExtent is <= 0 or double.NaN or double.PositiveInfinity or double.NegativeInfinity)
-        {
-            throw new ArgumentOutOfRangeException(nameof(itemExtent));
-        }
-
-        if (flexWeights is not null && (flexWeights.Count == 0 || flexWeights.Any(weight => weight <= 0)))
-        {
-            throw new ArgumentOutOfRangeException(nameof(flexWeights));
-        }
-
-        if (!double.IsFinite(shrinkExtent) || shrinkExtent < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(shrinkExtent));
-        }
-
-        if (elevation is < 0 or double.NaN or double.PositiveInfinity or double.NegativeInfinity)
-        {
-            throw new ArgumentOutOfRangeException(nameof(elevation));
-        }
-
-        if (itemCount < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(itemCount));
-        }
-
         ItemExtent = itemExtent;
         FlexWeights = flexWeights;
         Children = children ?? throw new ArgumentNullException(nameof(children));
@@ -574,6 +206,7 @@ public sealed class CarouselView : StatefulWidget
 
     public Action<int>? OnIndexChanged { get; }
 
+    /// <summary>Dart's <c>CarouselView.weighted</c>: item extents follow <paramref name="flexWeights"/>.</summary>
     public static CarouselView Weighted(
         IReadOnlyList<int> flexWeights,
         IReadOnlyList<Widget> children,
@@ -595,9 +228,13 @@ public sealed class CarouselView : StatefulWidget
         Action<int>? onIndexChanged = null,
         Key? key = null)
     {
-        return new CarouselView(null, flexWeights, children, null, null, padding, backgroundColor, elevation, shape, itemClipBehavior, overlayColor, itemSnapping, shrinkExtent, controller, scrollDirection, reverse, consumeMaxWeight, onTap, enableSplash, infinite, onIndexChanged, key);
+        return new CarouselView(
+            null, flexWeights, children, null, null, padding, backgroundColor, elevation, shape,
+            itemClipBehavior, overlayColor, itemSnapping, shrinkExtent, controller, scrollDirection,
+            reverse, consumeMaxWeight, onTap, enableSplash, infinite, onIndexChanged, key);
     }
 
+    /// <summary>Dart's <c>CarouselView.builder</c>: the uncontained layout, built lazily.</summary>
     public static CarouselView Builder(
         double itemExtent,
         CarouselItemBuilder itemBuilder,
@@ -619,9 +256,14 @@ public sealed class CarouselView : StatefulWidget
         Action<int>? onIndexChanged = null,
         Key? key = null)
     {
-        return new CarouselView(itemExtent, null, [], itemBuilder ?? throw new ArgumentNullException(nameof(itemBuilder)), itemCount, padding, backgroundColor, elevation, shape, itemClipBehavior, overlayColor, itemSnapping, shrinkExtent, controller, scrollDirection, reverse, true, onTap, enableSplash, infinite, onIndexChanged, key);
+        return new CarouselView(
+            itemExtent, null, [], itemBuilder ?? throw new ArgumentNullException(nameof(itemBuilder)),
+            itemCount, padding, backgroundColor, elevation, shape, itemClipBehavior, overlayColor,
+            itemSnapping, shrinkExtent, controller, scrollDirection, reverse, true, onTap, enableSplash,
+            infinite, onIndexChanged, key);
     }
 
+    /// <summary>Dart's <c>CarouselView.weightedBuilder</c>: the weighted layout, built lazily.</summary>
     public static CarouselView WeightedBuilder(
         IReadOnlyList<int> flexWeights,
         CarouselItemBuilder itemBuilder,
@@ -644,7 +286,11 @@ public sealed class CarouselView : StatefulWidget
         Action<int>? onIndexChanged = null,
         Key? key = null)
     {
-        return new CarouselView(null, flexWeights, [], itemBuilder ?? throw new ArgumentNullException(nameof(itemBuilder)), itemCount, padding, backgroundColor, elevation, shape, itemClipBehavior, overlayColor, itemSnapping, shrinkExtent, controller, scrollDirection, reverse, consumeMaxWeight, onTap, enableSplash, infinite, onIndexChanged, key);
+        return new CarouselView(
+            null, flexWeights, [], itemBuilder ?? throw new ArgumentNullException(nameof(itemBuilder)),
+            itemCount, padding, backgroundColor, elevation, shape, itemClipBehavior, overlayColor,
+            itemSnapping, shrinkExtent, controller, scrollDirection, reverse, consumeMaxWeight, onTap,
+            enableSplash, infinite, onIndexChanged, key);
     }
 
     public override State CreateState() => new CarouselViewState();
@@ -652,208 +298,238 @@ public sealed class CarouselView : StatefulWidget
 
 public sealed class CarouselViewState : State
 {
+    private double? _itemExtent;
     private CarouselController? _internalController;
     private int _lastReportedLeadingItem;
 
-    private CarouselView Current => (CarouselView)StateWidget;
+    internal CarouselView Current => (CarouselView)StateWidget;
 
-    private CarouselController Controller => Current.Controller ?? (_internalController ??= new CarouselController());
+    /// <summary>The item extent clamped to the viewport, recomputed by every layout pass.</summary>
+    internal double? EffectiveItemExtent => _itemExtent;
+
+    internal IReadOnlyList<int>? FlexWeights => Current.FlexWeights;
+
+    internal bool ConsumeMaxWeight => Current.ConsumeMaxWeight;
+
+    internal CarouselController Controller => Current.Controller ?? _internalController!;
 
     public override void InitState()
     {
-        ConfigureController();
-        Controller.Attach(this);
+        _itemExtent = Current.ItemExtent;
+        if (Current.Controller is null)
+        {
+            _internalController = new CarouselController();
+        }
+
+        _lastReportedLeadingItem = GetInitialLeadingItem();
+        Controller.AttachCarousel(this);
         Controller.AddListener(HandleScroll);
-        _lastReportedLeadingItem = InitialLeadingItem();
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
         CarouselView oldCarousel = (CarouselView)oldWidget;
-        if (!ReferenceEquals(oldCarousel.Controller, Current.Controller))
+        if (!ReferenceEquals(Current.Controller, oldCarousel.Controller))
         {
-            CarouselController oldController = oldCarousel.Controller ?? _internalController!;
-            oldController.RemoveListener(HandleScroll);
-            oldController.Detach(this);
+            oldCarousel.Controller?.DetachCarousel(this);
             if (Current.Controller is not null)
             {
+                _internalController?.DetachCarousel(this);
                 _internalController?.Dispose();
                 _internalController = null;
+                Current.Controller.AttachCarousel(this);
             }
-
-            ConfigureController();
-            Controller.Attach(this);
-            Controller.AddListener(HandleScroll);
+            else
+            {
+                _internalController = new CarouselController();
+                Controller.AttachCarousel(this);
+            }
         }
-        else
+
+        if (!WeightsEqual(Current.FlexWeights, oldCarousel.FlexWeights))
         {
-            ConfigureController();
+            AttachedPosition?.SetFlexWeights(Current.FlexWeights);
+        }
+
+        if (Current.ItemExtent != oldCarousel.ItemExtent)
+        {
+            _itemExtent = Current.ItemExtent;
+            AttachedPosition?.SetItemExtent(_itemExtent);
+        }
+
+        if (Current.ConsumeMaxWeight != oldCarousel.ConsumeMaxWeight)
+        {
+            AttachedPosition?.SetConsumeMaxWeight(Current.ConsumeMaxWeight);
         }
     }
 
     public override void Dispose()
     {
         Controller.RemoveListener(HandleScroll);
-        Controller.Detach(this);
+        Controller.DetachCarousel(this);
         _internalController?.Dispose();
     }
 
     public override Widget Build(BuildContext context)
     {
-        ConfigureController();
-        int? childCount = Current.Infinite ? null : (Current.ItemBuilder is null ? Current.Children.Count : Current.ItemCount);
-        SliverChildDelegate childDelegate = new CarouselChildDelegate(this, childCount);
-        SliverVariableExtentLayout layout = Current.ItemExtent.HasValue
-            ? new FixedCarouselLayout(Current.ItemExtent.Value, Current.ShrinkExtent, Current.Infinite)
-            : new WeightedCarouselLayout(Current.FlexWeights!, Current.ShrinkExtent, Current.ConsumeMaxWeight, Current.Infinite);
+        ScrollPhysics physics = Current.ItemSnapping
+            ? new CarouselScrollPhysics()
+            : ScrollConfiguration.Of(context).GetScrollPhysics(context);
 
-        return new Scrollable(
-            slivers: [new SliverVariableExtentList(childDelegate, layout)],
-            axis: Current.ScrollDirection,
-            reverse: Current.Reverse,
-            controller: Controller,
-            physics: Current.ItemSnapping ? new CarouselScrollPhysics() : new ClampingScrollPhysics(),
-            cacheExtent: 0,
-            cacheExtentStyle: CacheExtentStyle.Viewport);
+        return new LayoutBuilder((layoutContext, constraints) =>
+        {
+            double mainAxisExtent = Current.ScrollDirection == Axis.Horizontal
+                ? constraints.MaxWidth
+                : constraints.MaxHeight;
+            _itemExtent = Current.ItemExtent is null
+                ? null
+                : Math.Clamp(Current.ItemExtent.Value, 0, double.IsFinite(mainAxisExtent) ? mainAxisExtent : 0);
+
+            return new CustomScrollView(
+                slivers: [BuildSliverCarousel()],
+                scrollDirection: Current.ScrollDirection,
+                reverse: Current.Reverse,
+                controller: Controller,
+                physics: physics,
+                cacheExtent: 0,
+                cacheExtentStyle: CacheExtentStyle.Viewport,
+                clipBehavior: Clip.AntiAlias);
+        });
     }
 
-    internal Widget? BuildItem(BuildContext itemContext, int index)
+    internal int? ItemCount => Current.ItemBuilder is not null ? Current.ItemCount : Current.Children.Count;
+
+    private CarouselScrollPosition? AttachedPosition => Controller.PrimaryPosition as CarouselScrollPosition;
+
+    private Widget BuildSliverCarousel()
     {
-        int itemIndex = index;
-        int? count = Current.ItemBuilder is null ? Current.Children.Count : Current.ItemCount;
-        if (Current.Infinite && count is > 0)
+        int? childCount = Current.Infinite
+            ? null
+            : Current.ItemBuilder is not null ? Current.ItemCount : Current.Children.Count;
+
+        CarouselItemBuilder effectiveBuilder;
+        if (Current.ItemBuilder is not null)
         {
-            itemIndex %= count.Value;
+            CarouselItemBuilder builder = Current.ItemBuilder;
+            if (Current.Infinite && Current.ItemCount is > 0)
+            {
+                int itemCount = Current.ItemCount.Value;
+                effectiveBuilder = (itemContext, index) => builder(itemContext, index % itemCount);
+            }
+            else
+            {
+                effectiveBuilder = builder;
+            }
+        }
+        else
+        {
+            effectiveBuilder = (itemContext, index) => BuildCarouselItem(itemContext, index);
         }
 
-        Widget? contents = Current.ItemBuilder is null
-            ? itemIndex >= 0 && itemIndex < Current.Children.Count ? Current.Children[itemIndex] : null
-            : Current.ItemBuilder(itemContext, itemIndex);
-        if (contents is null)
+        SliverChildDelegate childDelegate = new CarouselChildDelegate(effectiveBuilder, childCount);
+        if (_itemExtent is { } itemExtent)
         {
-            return null;
+            return new SliverFixedExtentCarousel(
+                itemExtent: itemExtent,
+                minExtent: Current.ShrinkExtent,
+                infinite: Current.Infinite,
+                @delegate: childDelegate);
+        }
+
+        if (FlexWeights is not { Count: > 0 } weights || weights.Any(weight => weight <= 0))
+        {
+            throw new InvalidOperationException("flexWeights is null or it contains non-positive integers");
+        }
+
+        return new SliverWeightedCarousel(
+            consumeMaxWeight: ConsumeMaxWeight,
+            shrinkExtent: Current.ShrinkExtent,
+            weights: weights,
+            infinite: Current.Infinite,
+            @delegate: childDelegate);
+    }
+
+    private Widget BuildCarouselItem(BuildContext itemContext, int index)
+    {
+        if (Current.Infinite && Current.Children.Count > 0)
+        {
+            index %= Current.Children.Count;
         }
 
         CarouselViewThemeData carouselTheme = CarouselViewTheme.Of(itemContext);
-        ThemeData theme = Theme.Of(itemContext);
-        Thickness padding = Current.Padding ?? carouselTheme.Padding ?? new Thickness(4);
-        Color backgroundColor = Current.BackgroundColor ?? carouselTheme.BackgroundColor ?? theme.SurfaceColor;
-        double elevation = Current.Elevation ?? carouselTheme.Elevation ?? 0;
-        ShapeBorder shape = Current.Shape ?? carouselTheme.Shape ?? new RoundedRectangleBorder(borderRadius:
-            Plumix.Rendering.BorderRadius.Circular(28));
-        Clip clipBehavior = Current.ItemClipBehavior ?? carouselTheme.ItemClipBehavior ?? Clip.AntiAlias;
-        MaterialStateProperty<Color?> overlayColor = Current.OverlayColor
+        ColorScheme colorScheme = Theme.Of(itemContext).ColorScheme;
+        Thickness effectivePadding = Current.Padding ?? carouselTheme.Padding ?? new Thickness(4.0);
+        Color effectiveBackgroundColor =
+            Current.BackgroundColor ?? carouselTheme.BackgroundColor ?? colorScheme.Surface;
+        double effectiveElevation = Current.Elevation ?? carouselTheme.Elevation ?? 0.0;
+        ShapeBorder effectiveShape = Current.Shape ?? carouselTheme.Shape ?? new RoundedRectangleBorder(
+            borderRadius: Plumix.Rendering.BorderRadius.Circular(28.0));
+        Clip effectiveClipBehavior = Current.ItemClipBehavior ?? carouselTheme.ItemClipBehavior ?? Clip.AntiAlias;
+        MaterialStateProperty<Color?> effectiveOverlayColor = Current.OverlayColor
             ?? carouselTheme.OverlayColor
-            ?? DefaultOverlayColor(theme.OnSurfaceColor);
+            ?? DefaultOverlayColor(colorScheme.OnSurface);
 
+        Widget contents = index >= 0 && index < Current.Children.Count
+            ? Current.Children[index]
+            : new SizedBox();
         if (Current.EnableSplash)
         {
+            int tapIndex = index;
             contents = new Stack(
                 fit: StackFit.Expand,
                 children:
                 [
                     contents,
-                    new InkWell(
-                        onTap: Current.OnTap is null ? null : () => Current.OnTap(itemIndex),
-                        overlayColor: overlayColor),
+                    new Material(
+                        color: Colors.Transparent,
+                        child: new InkWell(
+                            onTap: () => Current.OnTap?.Invoke(tapIndex),
+                            overlayColor: effectiveOverlayColor)),
                 ]);
         }
         else if (Current.OnTap is not null)
         {
-            contents = new GestureDetector(
-                excludeFromSemantics: true,
-                onTap: () => Current.OnTap(itemIndex),
-                child: contents);
+            int tapIndex = index;
+            Action<int> onTap = Current.OnTap;
+            contents = new GestureDetector(onTap: () => onTap(tapIndex), child: contents);
         }
 
-        Widget material = new DecoratedBox(
-            new BoxDecoration(
-                Color: backgroundColor,
-                Border: null,
-                BorderRadius: ShapeBorderGeometry.ResolveRadius(shape),
-                Shape: ShapeBorderGeometry.BoxShapeOf(shape)),
-            contents);
-        if (clipBehavior != Clip.None)
-        {
-            material = new ClipPath(clipper: new ShapeBorderClipper(shape), child: material);
-        }
-
-        _ = elevation;
-        return new Padding(padding, material);
-    }
-
-    internal void JumpToItem(int index)
-    {
-        double? target = GetTargetPixels(index);
-        if (target.HasValue)
-        {
-            Controller.JumpTo(target.Value);
-        }
-    }
-
-    internal double? GetTargetPixels(int index)
-    {
-        CarouselScrollPosition? position = Controller.PrimaryPosition as CarouselScrollPosition;
-        return position is null
-            ? null
-            : position.GetPixelsForItem(TargetItemForIndex(ClampItemIndex(index)));
-    }
-
-    private void ConfigureController()
-    {
-        int? count = Current.ItemBuilder is null ? Current.Children.Count : Current.ItemCount;
-        Controller.Configure(Current.ItemExtent, Current.FlexWeights, Current.ConsumeMaxWeight, Current.Infinite, count);
+        return new Padding(
+            effectivePadding,
+            new Material(
+                clipBehavior: effectiveClipBehavior,
+                color: effectiveBackgroundColor,
+                elevation: effectiveElevation,
+                shape: effectiveShape,
+                child: contents));
     }
 
     private void HandleScroll()
     {
-        if (Current.OnIndexChanged is null || Controller.PrimaryPosition is not CarouselScrollPosition position)
+        if (Current.OnIndexChanged is null || AttachedPosition is not { } position)
         {
             return;
         }
 
-        int leadingItem = position.LeadingItem;
-        if (leadingItem != _lastReportedLeadingItem)
+        int currentLeadingItem = position.LeadingItem;
+        if (currentLeadingItem != _lastReportedLeadingItem)
         {
-            _lastReportedLeadingItem = leadingItem;
-            Current.OnIndexChanged(leadingItem);
+            _lastReportedLeadingItem = currentLeadingItem;
+            Current.OnIndexChanged(currentLeadingItem);
         }
     }
 
-    private int InitialLeadingItem()
+    private int GetInitialLeadingItem()
     {
-        return Current.FlexWeights is null
-            ? Controller.InitialItem
-            : Math.Max(Controller.InitialItem - FirstMaximumWeightIndex(Current.FlexWeights), 0);
-    }
-
-    private int ClampItemIndex(int index)
-    {
-        int? count = Current.ItemBuilder is null ? Current.Children.Count : Current.ItemCount;
-        if (Current.Infinite)
+        if (Current.FlexWeights is { Count: > 0 } weights)
         {
-            return Math.Max(0, index);
+            return Math.Max(Controller.InitialItem - FirstMaximumWeightIndex(weights), 0);
         }
 
-        if (count is null)
-        {
-            return Current.ItemBuilder is null ? Math.Max(0, index) : 0;
-        }
-
-        return count.Value == 0 ? 0 : Math.Clamp(index, 0, count.Value - 1);
+        return Controller.InitialItem;
     }
 
-    private double TargetItemForIndex(int index)
-    {
-        if (Current.FlexWeights is null)
-        {
-            return index;
-        }
-
-        return Current.ConsumeMaxWeight ? index : index - FirstMaximumWeightIndex(Current.FlexWeights);
-    }
-
-    private static int FirstMaximumWeightIndex(IReadOnlyList<int> weights)
+    internal static int FirstMaximumWeightIndex(IReadOnlyList<int> weights)
     {
         int maximum = weights.Max();
         for (int index = 0; index < weights.Count; index += 1)
@@ -867,25 +543,56 @@ public sealed class CarouselViewState : State
         return 0;
     }
 
-    private static MaterialStateProperty<Color?> DefaultOverlayColor(Color onSurfaceColor)
+    private static bool WeightsEqual(IReadOnlyList<int>? a, IReadOnlyList<int>? b)
+    {
+        if (ReferenceEquals(a, b))
+        {
+            return true;
+        }
+
+        if (a is null || b is null || a.Count != b.Count)
+        {
+            return false;
+        }
+
+        return !a.Where((weight, index) => weight != b[index]).Any();
+    }
+
+    private static MaterialStateProperty<Color?> DefaultOverlayColor(Color onSurface)
     {
         return MaterialStateProperty<Color?>.ResolveWith(states =>
         {
-            double opacity = states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused) ? 0.1
-                : states.HasFlag(MaterialState.Hovered) ? 0.08
-                : 0;
-            return opacity == 0 ? null : Color.FromArgb((byte)Math.Round(onSurfaceColor.A * opacity), onSurfaceColor.R, onSurfaceColor.G, onSurfaceColor.B);
+            if (states.HasFlag(MaterialState.Pressed))
+            {
+                return MaterialButtonCore.ApplyOpacity(onSurface, 0.1);
+            }
+
+            if (states.HasFlag(MaterialState.Hovered))
+            {
+                return MaterialButtonCore.ApplyOpacity(onSurface, 0.08);
+            }
+
+            if (states.HasFlag(MaterialState.Focused))
+            {
+                return MaterialButtonCore.ApplyOpacity(onSurface, 0.1);
+            }
+
+            return null;
         });
     }
 
+    /// <summary>
+    /// Dart passes a <c>NullableIndexedWidgetBuilder</c> to <c>SliverChildBuilderDelegate</c>;
+    /// Plumix's builder delegate takes a non-nullable builder, so the carousel keeps its own.
+    /// </summary>
     private sealed class CarouselChildDelegate : SliverChildDelegate
     {
-        private readonly CarouselViewState _state;
+        private readonly CarouselItemBuilder _builder;
         private readonly int? _childCount;
 
-        public CarouselChildDelegate(CarouselViewState state, int? childCount)
+        public CarouselChildDelegate(CarouselItemBuilder builder, int? childCount)
         {
-            _state = state;
+            _builder = builder;
             _childCount = childCount;
         }
 
@@ -898,247 +605,1235 @@ public sealed class CarouselViewState : State
                 return null;
             }
 
-            Widget? child = _state.BuildItem(context, index);
+            Widget? child = _builder(context, index);
             return child is null ? null : new AutomaticKeepAlive(child);
         }
     }
 }
 
-internal sealed class FixedCarouselLayout : SliverVariableExtentLayout
+/// <summary>Dart's <c>_SliverFixedExtentCarousel</c>.</summary>
+internal sealed class SliverFixedExtentCarousel : SliverMultiBoxAdaptorWidget
 {
-    private readonly double _maxExtent;
-    private readonly double _minExtent;
-    private readonly bool _infinite;
+    public SliverFixedExtentCarousel(
+        double itemExtent,
+        double minExtent,
+        bool infinite,
+        SliverChildDelegate @delegate,
+        Key? key = null) : base(@delegate, key)
+    {
+        ItemExtent = itemExtent;
+        MinExtent = minExtent;
+        Infinite = infinite;
+    }
 
-    public FixedCarouselLayout(double maxExtent, double minExtent, bool infinite)
+    public double ItemExtent { get; }
+
+    public double MinExtent { get; }
+
+    public bool Infinite { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context) =>
+        new RenderSliverFixedExtentCarousel(maxExtent: ItemExtent, minExtent: MinExtent, infinite: Infinite);
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var carousel = (RenderSliverFixedExtentCarousel)renderObject;
+        carousel.MaxExtent = ItemExtent;
+        carousel.MinExtent = MinExtent;
+        carousel.Infinite = Infinite;
+    }
+}
+
+/// <summary>Dart's <c>_SliverWeightedCarousel</c>.</summary>
+internal sealed class SliverWeightedCarousel : SliverMultiBoxAdaptorWidget
+{
+    public SliverWeightedCarousel(
+        bool consumeMaxWeight,
+        double shrinkExtent,
+        IReadOnlyList<int> weights,
+        bool infinite,
+        SliverChildDelegate @delegate,
+        Key? key = null) : base(@delegate, key)
+    {
+        ConsumeMaxWeight = consumeMaxWeight;
+        ShrinkExtent = shrinkExtent;
+        Weights = weights;
+        Infinite = infinite;
+    }
+
+    public bool ConsumeMaxWeight { get; }
+
+    public double ShrinkExtent { get; }
+
+    public IReadOnlyList<int> Weights { get; }
+
+    public bool Infinite { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverWeightedCarousel(
+        consumeMaxWeight: ConsumeMaxWeight,
+        shrinkExtent: ShrinkExtent,
+        weights: Weights,
+        infinite: Infinite);
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var carousel = (RenderSliverWeightedCarousel)renderObject;
+        carousel.ConsumeMaxWeight = ConsumeMaxWeight;
+        carousel.ShrinkExtent = ShrinkExtent;
+        carousel.Weights = Weights;
+        carousel.Infinite = Infinite;
+    }
+}
+
+/// <summary>
+/// Dart's <c>_RenderSliverFixedExtentCarousel</c>: a fixed-extent list whose leading and trailing
+/// items shrink instead of being clipped by the viewport.
+/// </summary>
+internal sealed class RenderSliverFixedExtentCarousel : RenderSliverFixedExtentBoxAdaptor
+{
+    private readonly ItemExtentBuilder _extentBuilder;
+    private double _maxExtent;
+    private double _minExtent;
+    private bool _infinite;
+
+    public RenderSliverFixedExtentCarousel(double maxExtent, double minExtent, bool infinite)
     {
         _maxExtent = maxExtent;
         _minExtent = minExtent;
         _infinite = infinite;
+        _extentBuilder = BuildItemExtent;
     }
 
-    public override int GetMinChildIndexForScrollOffset(SliverConstraints constraints, double scrollOffset)
+    public double MaxExtent
     {
-        double extent = EffectiveMaxExtent(constraints);
-        return extent <= 0 ? 0 : Math.Max((int)Math.Floor(scrollOffset / extent), 0);
-    }
-
-    public override int GetMaxChildIndexForScrollOffset(SliverConstraints constraints, double scrollOffset)
-    {
-        double extent = EffectiveMaxExtent(constraints);
-        if (extent <= 0)
+        get => _maxExtent;
+        set
         {
-            return 0;
+            if (_maxExtent == value)
+            {
+                return;
+            }
+
+            _maxExtent = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public double MinExtent
+    {
+        get => _minExtent;
+        set
+        {
+            if (_minExtent == value)
+            {
+                return;
+            }
+
+            _minExtent = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public bool Infinite
+    {
+        get => _infinite;
+        set
+        {
+            if (_infinite == value)
+            {
+                return;
+            }
+
+            _infinite = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public override double? ItemExtent => null;
+
+    public override ItemExtentBuilder? ItemExtentBuilder => _extentBuilder;
+
+    protected override double IndexToLayoutOffset(double itemExtent, int index)
+    {
+        if (_maxExtent == 0.0)
+        {
+            return _maxExtent;
         }
 
-        double actual = scrollOffset / extent - 1;
-        int rounded = (int)Math.Round(actual);
-        return Math.Abs(actual - rounded) < 0.0001 ? Math.Max(rounded, 0) : Math.Max((int)Math.Ceiling(actual), 0);
-    }
-
-    public override double GetChildMainAxisExtent(SliverConstraints constraints, int index)
-    {
-        double maxExtent = EffectiveMaxExtent(constraints);
-        if (maxExtent <= 0)
-        {
-            return 0;
-        }
-
-        int firstVisibleIndex = GetMinChildIndexForScrollOffset(constraints, constraints.ScrollOffset);
-        double offscreenExtent = constraints.ScrollOffset - firstVisibleIndex * maxExtent;
-        double effectiveMinExtent = Math.Max(Remainder(constraints.RemainingPaintExtent, maxExtent), _minExtent);
+        SliverConstraints constraints = ConstraintsForSliver;
+        int firstVisibleIndex = (int)Math.Floor(constraints.ScrollOffset / _maxExtent);
+        double effectiveMinExtent = Math.Max(
+            EuclideanRemainder(constraints.RemainingPaintExtent, _maxExtent),
+            _minExtent);
         if (index == firstVisibleIndex)
         {
-            return Math.Max(maxExtent - offscreenExtent, effectiveMinExtent);
-        }
-
-        int lastVisibleIndex = GetMaxChildIndexForScrollOffset(constraints, constraints.ScrollOffset + constraints.RemainingPaintExtent);
-        if (index == lastVisibleIndex)
-        {
-            return Math.Clamp(constraints.ScrollOffset + constraints.RemainingPaintExtent - maxExtent * index, effectiveMinExtent, maxExtent);
-        }
-
-        return maxExtent;
-    }
-
-    public override double GetChildLayoutOffset(SliverConstraints constraints, int index)
-    {
-        double maxExtent = EffectiveMaxExtent(constraints);
-        if (maxExtent <= 0)
-        {
-            return 0;
-        }
-
-        int firstVisibleIndex = GetMinChildIndexForScrollOffset(constraints, constraints.ScrollOffset);
-        if (index == firstVisibleIndex)
-        {
-            double effectiveMinExtent = Math.Max(Remainder(constraints.RemainingPaintExtent, maxExtent), _minExtent);
-            return GetChildMainAxisExtent(constraints, index) <= effectiveMinExtent
-                ? maxExtent * index - effectiveMinExtent + maxExtent
+            double firstVisibleItemExtent = BuildItemExtent(index, LayoutDimensions) ?? 0;
+            return firstVisibleItemExtent <= effectiveMinExtent
+                ? (_maxExtent * index) - effectiveMinExtent + _maxExtent
                 : constraints.ScrollOffset;
         }
 
-        return maxExtent * index;
+        return _maxExtent * index;
     }
 
-    public override double ComputeMaxScrollOffset(SliverConstraints constraints, int? childCount)
+    protected override int GetMinChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
-        return _infinite ? double.PositiveInfinity : (childCount ?? 0) * EffectiveMaxExtent(constraints);
+        return _maxExtent > 0.0 ? Math.Max((int)Math.Floor(scrollOffset / _maxExtent), 0) : 0;
     }
 
-    private double EffectiveMaxExtent(SliverConstraints constraints) => Math.Min(_maxExtent, constraints.ViewportMainAxisExtent);
+    protected override int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
+    {
+        if (_maxExtent <= 0.0)
+        {
+            return 0;
+        }
 
-    private static double Remainder(double value, double divisor) => divisor <= 0 ? 0 : value - Math.Floor(value / divisor) * divisor;
+        double actual = (scrollOffset / _maxExtent) - 1;
+        int round = RoundHalfAwayFromZero(actual);
+        return Math.Abs((actual * _maxExtent) - (round * _maxExtent)) < Constants.PrecisionErrorTolerance
+            ? Math.Max(0, round)
+            : Math.Max(0, (int)Math.Ceiling(actual));
+    }
+
+    private double? BuildItemExtent(int index, SliverLayoutDimensions dimensions)
+    {
+        if (_maxExtent == 0.0)
+        {
+            return _maxExtent;
+        }
+
+        SliverConstraints constraints = ConstraintsForSliver;
+        int offscreenItems = (int)Math.Floor(constraints.ScrollOffset / _maxExtent);
+        double offscreenExtent = constraints.ScrollOffset - (offscreenItems * _maxExtent);
+        double effectiveMinExtent = Math.Max(
+            EuclideanRemainder(constraints.RemainingPaintExtent, _maxExtent),
+            _minExtent);
+        if (index == offscreenItems)
+        {
+            return Math.Max(_maxExtent - offscreenExtent, effectiveMinExtent);
+        }
+
+        double scrollOffsetForLastIndex = constraints.ScrollOffset + constraints.RemainingPaintExtent;
+        if (index == GetMaxChildIndexForScrollOffset(scrollOffsetForLastIndex, _maxExtent))
+        {
+            return Math.Clamp(scrollOffsetForLastIndex - (_maxExtent * index), effectiveMinExtent, _maxExtent);
+        }
+
+        return _maxExtent;
+    }
+
+    /// <summary>Dart's <c>%</c> on doubles, which is the Euclidean (never negative) remainder.</summary>
+    private static double EuclideanRemainder(double value, double divisor)
+    {
+        if (divisor == 0)
+        {
+            return double.NaN;
+        }
+
+        double remainder = value % divisor;
+        return remainder < 0 ? remainder + Math.Abs(divisor) : remainder;
+    }
 }
 
-internal sealed class WeightedCarouselLayout : SliverVariableExtentLayout
+/// <summary>
+/// Dart's <c>_RenderSliverWeightedCarousel</c>: item extents are distributed by weight, and each
+/// item morphs toward the size of its predecessor as the leading item scrolls off.
+/// </summary>
+internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxAdaptor
 {
-    private readonly IReadOnlyList<int> _weights;
-    private readonly double _shrinkExtent;
-    private readonly bool _consumeMaxWeight;
-    private readonly bool _infinite;
+    private readonly ItemExtentBuilder _extentBuilder;
+    private bool _consumeMaxWeight;
+    private double _shrinkExtent;
+    private IReadOnlyList<int> _weights;
+    private bool _infinite;
 
-    public WeightedCarouselLayout(IReadOnlyList<int> weights, double shrinkExtent, bool consumeMaxWeight, bool infinite)
+    public RenderSliverWeightedCarousel(
+        bool consumeMaxWeight,
+        double shrinkExtent,
+        IReadOnlyList<int> weights,
+        bool infinite)
     {
-        _weights = weights;
-        _shrinkExtent = shrinkExtent;
         _consumeMaxWeight = consumeMaxWeight;
+        _shrinkExtent = shrinkExtent;
+        _weights = weights;
         _infinite = infinite;
+        _extentBuilder = BuildItemExtent;
     }
 
-    public override int GetMinChildIndexForScrollOffset(SliverConstraints constraints, double scrollOffset) => Math.Max(FirstVisibleItemIndex(constraints), 0);
-
-    public override int GetMaxChildIndexForScrollOffset(SliverConstraints constraints, double scrollOffset)
+    public bool ConsumeMaxWeight
     {
-        double totalExtent = DistanceToLeadingEdge(constraints);
-        int index = FirstVisibleItemIndex(constraints) + 1;
-        int upperBound = FirstVisibleItemIndex(constraints) + (int)Math.Ceiling(constraints.RemainingPaintExtent / Math.Max(MinChildExtent(constraints), 1));
-        while (totalExtent < constraints.RemainingPaintExtent && index <= upperBound)
+        get => _consumeMaxWeight;
+        set
         {
-            totalExtent += GetChildMainAxisExtent(constraints, index);
-            if (totalExtent >= constraints.RemainingPaintExtent)
+            if (_consumeMaxWeight == value)
             {
-                return index;
+                return;
             }
 
-            index += 1;
+            _consumeMaxWeight = value;
+            MarkNeedsLayout();
         }
-
-        return Math.Max(index, 0);
     }
 
-    public override double GetChildMainAxisExtent(SliverConstraints constraints, int index)
+    public double ShrinkExtent
     {
-        if (constraints.ViewportMainAxisExtent <= 0)
+        get => _shrinkExtent;
+        set
         {
-            return 0;
-        }
-
-        int firstIndex = FirstVisibleItemIndex(constraints);
-        if (index == firstIndex)
-        {
-            return Math.Max(DistanceToLeadingEdge(constraints), EffectiveShrinkExtent(constraints));
-        }
-
-        if (index > firstIndex && index - firstIndex + 1 <= _weights.Count)
-        {
-            int relativeIndex = index - firstIndex;
-            double extent = ExtentUnit(constraints) * _weights[relativeIndex];
-            double progress = FirstVisibleItemOffscreenExtent(constraints) / FirstChildExtent(constraints);
-            double finalIncrease = (_weights[relativeIndex - 1] - _weights[relativeIndex]) / (double)_weights.Max();
-            return extent + finalIncrease * progress * MaxChildExtent(constraints);
-        }
-
-        if (index > firstIndex)
-        {
-            double visibleExtent = DistanceToLeadingEdge(constraints);
-            for (int item = firstIndex + 1; item < index; item += 1)
+            if (_shrinkExtent == value)
             {
-                visibleExtent += GetChildMainAxisExtent(constraints, item);
+                return;
             }
 
-            return Math.Max(constraints.RemainingPaintExtent - visibleExtent, EffectiveShrinkExtent(constraints));
+            _shrinkExtent = value;
+            MarkNeedsLayout();
         }
-
-        return Math.Max(MinChildExtent(constraints), EffectiveShrinkExtent(constraints));
     }
 
-    public override double GetChildLayoutOffset(SliverConstraints constraints, int index)
+    public IReadOnlyList<int> Weights
     {
-        int firstIndex = FirstVisibleItemIndex(constraints);
-        if (index == firstIndex)
+        get => _weights;
+        set
         {
-            return DistanceToLeadingEdge(constraints) <= EffectiveShrinkExtent(constraints)
-                ? constraints.ScrollOffset - EffectiveShrinkExtent(constraints) + DistanceToLeadingEdge(constraints)
+            if (ReferenceEquals(_weights, value))
+            {
+                return;
+            }
+
+            _weights = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public bool Infinite
+    {
+        get => _infinite;
+        set
+        {
+            if (_infinite == value)
+            {
+                return;
+            }
+
+            _infinite = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    public override double? ItemExtent => null;
+
+    public override ItemExtentBuilder? ItemExtentBuilder => _extentBuilder;
+
+    private double ExtentUnit => ConstraintsForSliver.ViewportMainAxisExtent / _weights.Sum();
+
+    private double FirstChildExtent => _weights[0] * ExtentUnit;
+
+    private double MaxChildExtent => _weights.Max() * ExtentUnit;
+
+    private double MinChildExtent => _weights.Min() * ExtentUnit;
+
+    private double EffectiveShrinkExtent => Math.Clamp(_shrinkExtent, 0, MinChildExtent);
+
+    /// <summary>
+    /// The index of the item that occupies the leading weight slot. With
+    /// <see cref="ConsumeMaxWeight"/> the index is biased backwards by the weights that precede the
+    /// maximum one, which is what reserves the leading slots for item 0.
+    /// </summary>
+    private int FirstVisibleItemIndex
+    {
+        get
+        {
+            if (ConstraintsForSliver.ViewportMainAxisExtent == 0.0)
+            {
+                return 0;
+            }
+
+            int smallerWeightCount = 0;
+            int maximum = _weights.Max();
+            foreach (int weight in _weights)
+            {
+                if (weight == maximum)
+                {
+                    break;
+                }
+
+                smallerWeightCount += 1;
+            }
+
+            int index = ScrollOffsetInFirstChildExtents();
+            return _consumeMaxWeight ? index - smallerWeightCount : index;
+        }
+    }
+
+    private double FirstVisibleItemOffscreenExtent
+    {
+        get
+        {
+            if (ConstraintsForSliver.ViewportMainAxisExtent == 0.0)
+            {
+                return 0;
+            }
+
+            return ConstraintsForSliver.ScrollOffset - (ScrollOffsetInFirstChildExtents() * FirstChildExtent);
+        }
+    }
+
+    private double DistanceToLeadingEdge => FirstChildExtent - FirstVisibleItemOffscreenExtent;
+
+    protected override double IndexToLayoutOffset(double itemExtent, int index)
+    {
+        SliverConstraints constraints = ConstraintsForSliver;
+        int firstVisibleItemIndex = FirstVisibleItemIndex;
+        if (index == firstVisibleItemIndex)
+        {
+            return DistanceToLeadingEdge <= EffectiveShrinkExtent
+                ? constraints.ScrollOffset - EffectiveShrinkExtent + DistanceToLeadingEdge
                 : constraints.ScrollOffset;
         }
 
-        double visibleExtent = DistanceToLeadingEdge(constraints);
-        for (int item = firstIndex + 1; item < index; item += 1)
+        double visibleItemsTotalExtent = DistanceToLeadingEdge;
+        for (int i = firstVisibleItemIndex + 1; i < index; i += 1)
         {
-            visibleExtent += GetChildMainAxisExtent(constraints, item);
+            visibleItemsTotalExtent += BuildItemExtent(i, LayoutDimensions) ?? 0;
         }
 
-        return constraints.ScrollOffset + visibleExtent;
+        return constraints.ScrollOffset + visibleItemsTotalExtent;
     }
 
-    public override double ComputeMaxScrollOffset(SliverConstraints constraints, int? childCount)
+    protected override int GetMinChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
-        return _infinite ? double.PositiveInfinity : (childCount ?? 0) * MaxChildExtent(constraints);
+        return Math.Max(FirstVisibleItemIndex, 0);
     }
 
-    private int FirstVisibleItemIndex(SliverConstraints constraints)
+    protected override int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
-        double firstExtent = FirstChildExtent(constraints);
-        if (firstExtent <= 0)
+        SliverConstraints constraints = ConstraintsForSliver;
+        int? childCount = ChildManager?.ChildCount;
+        int firstVisibleItemIndex = FirstVisibleItemIndex;
+        if (_infinite && childCount is null)
         {
-            return 0;
-        }
-
-        int smallerWeightCount = _consumeMaxWeight ? FirstMaximumWeightIndex() : 0;
-        double actual = constraints.ScrollOffset / firstExtent;
-        int rounded = (int)Math.Round(actual);
-        int item = Math.Abs(actual - rounded) < 0.0001 ? rounded : (int)Math.Floor(actual);
-        return _consumeMaxWeight ? item - smallerWeightCount : item;
-    }
-
-    private double FirstVisibleItemOffscreenExtent(SliverConstraints constraints)
-    {
-        double firstExtent = FirstChildExtent(constraints);
-        if (firstExtent <= 0)
-        {
-            return 0;
-        }
-
-        double actual = constraints.ScrollOffset / firstExtent;
-        int rounded = (int)Math.Round(actual);
-        int item = Math.Abs(actual - rounded) < 0.0001 ? rounded : (int)Math.Floor(actual);
-        return constraints.ScrollOffset - item * firstExtent;
-    }
-
-    private double DistanceToLeadingEdge(SliverConstraints constraints) => FirstChildExtent(constraints) - FirstVisibleItemOffscreenExtent(constraints);
-
-    private double ExtentUnit(SliverConstraints constraints) => constraints.ViewportMainAxisExtent / _weights.Sum();
-
-    private double FirstChildExtent(SliverConstraints constraints) => _weights[0] * ExtentUnit(constraints);
-
-    private double MaxChildExtent(SliverConstraints constraints) => _weights.Max() * ExtentUnit(constraints);
-
-    private double MinChildExtent(SliverConstraints constraints) => _weights.Min() * ExtentUnit(constraints);
-
-    private double EffectiveShrinkExtent(SliverConstraints constraints) => Math.Clamp(_shrinkExtent, 0, MinChildExtent(constraints));
-
-    private int FirstMaximumWeightIndex()
-    {
-        int maximum = _weights.Max();
-        for (int index = 0; index < _weights.Count; index += 1)
-        {
-            if (_weights[index] == maximum)
+            double visibleItemsTotalExtent = DistanceToLeadingEdge;
+            int index = firstVisibleItemIndex + 1;
+            double safeMinExtent = Math.Max(MinChildExtent, 1.0);
+            int estimatedUpperBound = firstVisibleItemIndex
+                                      + (int)Math.Ceiling(constraints.ViewportMainAxisExtent / safeMinExtent);
+            while (visibleItemsTotalExtent < constraints.ViewportMainAxisExtent && index < estimatedUpperBound)
             {
-                return index;
+                visibleItemsTotalExtent += BuildItemExtent(index, LayoutDimensions) ?? 0;
+                if (visibleItemsTotalExtent >= constraints.ViewportMainAxisExtent)
+                {
+                    return index;
+                }
+
+                index += 1;
+            }
+
+            return index;
+        }
+
+        if (childCount is not null)
+        {
+            double visibleItemsTotalExtent = DistanceToLeadingEdge;
+            for (int i = firstVisibleItemIndex + 1; i < childCount.Value; i += 1)
+            {
+                visibleItemsTotalExtent += BuildItemExtent(i, LayoutDimensions) ?? 0;
+                if (visibleItemsTotalExtent >= constraints.ViewportMainAxisExtent)
+                {
+                    return i;
+                }
             }
         }
 
-        return 0;
+        return childCount ?? 0;
+    }
+
+    protected override double ComputeMaxScrollOffset(SliverConstraints constraints, double itemExtent)
+    {
+        return _infinite ? double.PositiveInfinity : (ChildManager?.ChildCount ?? 0) * MaxChildExtent;
+    }
+
+    /// <summary>
+    /// Dart copies <c>RenderSliverFixedExtentBoxAdaptor.performLayout</c> here to add
+    /// <c>extraLayoutOffset</c>, the trailing-item scroll extent, and the <c>consumeMaxWeight</c>
+    /// paint origin. The copy is kept 1:1 so the two can be diffed against each other.
+    /// </summary>
+    protected override void PerformSliverLayout(SliverConstraints constraints)
+    {
+        IRenderSliverBoxChildManager? childManager = ChildManager;
+        if (childManager is null || _weights.Count == 0)
+        {
+            Geometry = default;
+            return;
+        }
+
+        childManager.SetDidUnderflow(false);
+        SetLayoutDimensions(constraints);
+
+        double scrollOffset = Math.Max(0, constraints.ScrollOffset + constraints.CacheOrigin);
+        double remainingExtent = Math.Max(0, constraints.RemainingCacheExtent);
+        double targetEndScrollOffset = scrollOffset + remainingExtent;
+        int firstIndex = GetMinChildIndexForScrollOffset(scrollOffset, DeprecatedExtraItemExtent);
+        int? targetLastIndex = double.IsFinite(targetEndScrollOffset)
+            ? GetMaxChildIndexForScrollOffset(targetEndScrollOffset, DeprecatedExtraItemExtent)
+            : null;
+
+        if (FirstChild is not null)
+        {
+            int leadingGarbage = CalculateLeadingGarbage(firstIndex);
+            int trailingGarbage = targetLastIndex is null ? 0 : CalculateTrailingGarbage(targetLastIndex.Value);
+            CollectGarbage(leadingGarbage, trailingGarbage);
+        }
+        else
+        {
+            CollectGarbage(0, 0);
+        }
+
+        if (FirstChild is null
+            && !AddInitialChild(firstIndex, IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex)))
+        {
+            double max = firstIndex <= 0 ? 0.0 : ComputeMaxScrollOffset(constraints, DeprecatedExtraItemExtent);
+            Geometry = new SliverGeometry(ScrollExtent: max, MaxPaintExtent: max);
+            return;
+        }
+
+        RenderBox? trailingChildWithLayout = null;
+        for (int index = IndexOf(FirstChild!) - 1; index >= firstIndex; index -= 1)
+        {
+            RenderBox? leading = InsertAndLayoutLeadingChild(ChildConstraintsForIndex(constraints, index));
+            if (leading is null)
+            {
+                Geometry = new SliverGeometry(
+                    ScrollOffsetCorrection: IndexToLayoutOffset(DeprecatedExtraItemExtent, index));
+                return;
+            }
+
+            SetChildGeometry(leading, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, index));
+            trailingChildWithLayout ??= leading;
+        }
+
+        if (trailingChildWithLayout is null)
+        {
+            RenderBox first = FirstChild!;
+            first.Layout(ChildConstraintsForIndex(constraints, IndexOf(first)), parentUsesSize: true);
+            SetChildGeometry(first, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex));
+            trailingChildWithLayout = first;
+        }
+
+        double extraLayoutOffset = 0;
+        if (_consumeMaxWeight)
+        {
+            int maximum = _weights.Max();
+            for (int i = _weights.Count - 1; i >= 0; i -= 1)
+            {
+                if (_weights[i] == maximum)
+                {
+                    break;
+                }
+
+                extraLayoutOffset += _weights[i] * ExtentUnit;
+            }
+        }
+
+        double estimatedMaxScrollOffset = double.PositiveInfinity;
+        for (int index = IndexOf(trailingChildWithLayout) + 1;
+             targetLastIndex is null || index <= targetLastIndex.Value;
+             index += 1)
+        {
+            RenderBox? child = ChildAfter(trailingChildWithLayout);
+            if (child is null || IndexOf(child) != index)
+            {
+                child = InsertAndLayoutChild(ChildConstraintsForIndex(constraints, index), trailingChildWithLayout);
+                if (child is null)
+                {
+                    estimatedMaxScrollOffset =
+                        IndexToLayoutOffset(DeprecatedExtraItemExtent, index) + extraLayoutOffset;
+                    break;
+                }
+            }
+            else
+            {
+                child.Layout(ChildConstraintsForIndex(constraints, index), parentUsesSize: true);
+            }
+
+            trailingChildWithLayout = child;
+            SetChildGeometry(child, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, IndexOf(child)));
+        }
+
+        int lastIndex = IndexOf(LastChild!);
+        double leadingScrollOffset = IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex);
+        double trailingScrollOffset;
+        if (!_infinite && lastIndex + 1 == childManager.ChildCount)
+        {
+            trailingScrollOffset = IndexToLayoutOffset(DeprecatedExtraItemExtent, lastIndex);
+            trailingScrollOffset += Math.Max(
+                _weights[^1] * ExtentUnit,
+                BuildItemExtent(lastIndex, LayoutDimensions) ?? 0);
+            trailingScrollOffset += extraLayoutOffset;
+        }
+        else
+        {
+            trailingScrollOffset = IndexToLayoutOffset(DeprecatedExtraItemExtent, lastIndex + 1);
+        }
+
+        Geometry = BuildGeometry(
+            constraints,
+            DeprecatedExtraItemExtent,
+            firstIndex,
+            lastIndex,
+            leadingScrollOffset,
+            trailingScrollOffset,
+            estimatedMaxScrollOffset,
+            paintFrom: _consumeMaxWeight ? 0 : leadingScrollOffset);
+    }
+
+    private double? BuildItemExtent(int index, SliverLayoutDimensions dimensions)
+    {
+        SliverConstraints constraints = ConstraintsForSliver;
+        if (constraints.ViewportMainAxisExtent == 0)
+        {
+            return 0;
+        }
+
+        int firstVisibleItemIndex = FirstVisibleItemIndex;
+        if (index == firstVisibleItemIndex)
+        {
+            return Math.Max(DistanceToLeadingEdge, EffectiveShrinkExtent);
+        }
+
+        if (index > firstVisibleItemIndex && index - firstVisibleItemIndex + 1 <= _weights.Count)
+        {
+            int currentIndexOnWeightList = index - firstVisibleItemIndex;
+            int currentWeight = _weights[currentIndexOnWeightList];
+            double extent = ExtentUnit * currentWeight;
+            double progress = FirstVisibleItemOffscreenExtent / FirstChildExtent;
+            int previousWeight = _weights[currentIndexOnWeightList - 1];
+            double finalIncrease = (previousWeight - currentWeight) / (double)_weights.Max();
+            return extent + (finalIncrease * progress * MaxChildExtent);
+        }
+
+        if (index > firstVisibleItemIndex)
+        {
+            double visibleItemsTotalExtent = DistanceToLeadingEdge;
+            for (int i = firstVisibleItemIndex + 1; i < index; i += 1)
+            {
+                visibleItemsTotalExtent += BuildItemExtent(i, dimensions) ?? 0;
+            }
+
+            return Math.Max(constraints.RemainingPaintExtent - visibleItemsTotalExtent, EffectiveShrinkExtent);
+        }
+
+        return Math.Max(MinChildExtent, EffectiveShrinkExtent);
+    }
+
+    private int ScrollOffsetInFirstChildExtents()
+    {
+        double firstChildExtent = FirstChildExtent;
+        if (firstChildExtent <= 0)
+        {
+            return 0;
+        }
+
+        double actual = ConstraintsForSliver.ScrollOffset / firstChildExtent;
+        int round = RoundHalfAwayFromZero(actual);
+        return Math.Abs(actual - round) < Constants.PrecisionErrorTolerance ? round : (int)Math.Floor(actual);
+    }
+}
+
+/// <summary>Scroll physics that snap the carousel to whole items.</summary>
+public sealed class CarouselScrollPhysics : ScrollPhysics
+{
+    public CarouselScrollPhysics(ScrollPhysics? parent = null) : base(parent)
+    {
+    }
+
+    public override ScrollPhysics ApplyTo(ScrollPhysics? ancestor) => new CarouselScrollPhysics(BuildParent(ancestor));
+
+    public override bool AllowImplicitScrolling => true;
+
+    public override Simulation? CreateBallisticSimulation(IScrollMetrics position, double velocity)
+    {
+        if (position is not CarouselScrollPosition metrics)
+        {
+            throw new InvalidOperationException(
+                "CarouselScrollPhysics can only be used with Scrollables that uses the CarouselController");
+        }
+
+        if ((velocity <= 0.0 && metrics.Pixels <= metrics.MinScrollExtent)
+            || (velocity >= 0.0 && metrics.Pixels >= metrics.MaxScrollExtent))
+        {
+            return base.CreateBallisticSimulation(position, velocity);
+        }
+
+        Tolerance tolerance = ToleranceFor(position);
+        double target = GetTargetPixels(metrics, tolerance, velocity);
+        return target != metrics.Pixels
+            ? new ScrollSpringSimulation(Spring, metrics.Pixels, target, velocity, tolerance: tolerance)
+            : null;
+    }
+
+    private static double GetTargetPixels(CarouselScrollPosition position, Tolerance tolerance, double velocity)
+    {
+        double fraction = position.ItemExtent is { } itemExtent
+            ? itemExtent / position.ViewportDimension
+            : position.FlexWeights![0] / (double)position.FlexWeights!.Sum();
+        double itemWidth = position.ViewportDimension * fraction;
+        if (itemWidth <= 0)
+        {
+            return position.Pixels;
+        }
+
+        double actual = Math.Max(0.0, position.Pixels) / itemWidth;
+        double round = Math.Round(actual, MidpointRounding.AwayFromZero);
+        double item = Math.Abs(actual - round) < Constants.PrecisionErrorTolerance ? round : actual;
+        if (velocity < -tolerance.Velocity)
+        {
+            item -= 0.5;
+        }
+        else if (velocity > tolerance.Velocity)
+        {
+            item += 0.5;
+        }
+
+        return Math.Round(item, MidpointRounding.AwayFromZero) * itemWidth;
+    }
+}
+
+/// <summary>Dart's <c>_CarouselMetrics</c>.</summary>
+public class CarouselMetrics : FixedScrollMetrics
+{
+    public CarouselMetrics(
+        double? minScrollExtent,
+        double? maxScrollExtent,
+        double? pixels,
+        double? viewportDimension,
+        AxisDirection axisDirection,
+        double? itemExtent,
+        IReadOnlyList<int>? flexWeights,
+        bool? consumeMaxWeight,
+        double devicePixelRatio)
+        : base(minScrollExtent, maxScrollExtent, pixels, viewportDimension, axisDirection, devicePixelRatio)
+    {
+        ItemExtent = itemExtent;
+        FlexWeights = flexWeights;
+        ConsumeMaxWeight = consumeMaxWeight;
+    }
+
+    /// <summary>Extent of each item in the main axis, when the carousel is not weighted.</summary>
+    public double? ItemExtent { get; }
+
+    /// <summary>Weights of the visible items, when the carousel is weighted.</summary>
+    public IReadOnlyList<int>? FlexWeights { get; }
+
+    /// <summary>Whether the first item can expand into the maximum weight slot.</summary>
+    public bool? ConsumeMaxWeight { get; }
+
+    public override CarouselMetrics CopyWith(
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
+    {
+        return CopyWith(
+            itemExtent: null,
+            flexWeights: null,
+            consumeMaxWeight: null,
+            minScrollExtent: minScrollExtent,
+            maxScrollExtent: maxScrollExtent,
+            pixels: pixels,
+            viewportDimension: viewportDimension,
+            axisDirection: axisDirection,
+            devicePixelRatio: devicePixelRatio);
+    }
+
+    /// <summary>
+    /// Dart adds the carousel fields to <c>copyWith</c>'s named arguments. C# forbids widening an
+    /// override's parameter list, so they move to the front of a separate overload.
+    /// </summary>
+    public CarouselMetrics CopyWith(
+        double? itemExtent,
+        IReadOnlyList<int>? flexWeights,
+        bool? consumeMaxWeight,
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
+    {
+        return new CarouselMetrics(
+            minScrollExtent: minScrollExtent ?? (HasContentDimensions ? MinScrollExtent : null),
+            maxScrollExtent: maxScrollExtent ?? (HasContentDimensions ? MaxScrollExtent : null),
+            pixels: pixels ?? (HasPixels ? Pixels : null),
+            viewportDimension: viewportDimension ?? (HasViewportDimension ? ViewportDimension : null),
+            axisDirection: axisDirection ?? AxisDirection,
+            itemExtent: itemExtent ?? ItemExtent,
+            flexWeights: flexWeights ?? FlexWeights,
+            consumeMaxWeight: consumeMaxWeight ?? ConsumeMaxWeight,
+            devicePixelRatio: devicePixelRatio ?? DevicePixelRatio);
+    }
+}
+
+/// <summary>Dart's <c>_CarouselPosition</c>: a scroll position measured in whole carousel items.</summary>
+public sealed class CarouselScrollPosition : ScrollPosition
+{
+    private double _itemToShowOnStartup;
+    private double? _cachedItem;
+    private double? _itemExtent;
+    private IReadOnlyList<int>? _flexWeights;
+    private bool _consumeMaxWeight;
+    private bool _infinite;
+    private int? _itemCount;
+
+    public CarouselScrollPosition(
+        int initialItem = 0,
+        double? itemExtent = null,
+        IReadOnlyList<int>? flexWeights = null,
+        bool consumeMaxWeight = true,
+        bool infinite = false,
+        int? itemCount = null,
+        ScrollPhysics? physics = null)
+        : base(initialPixels: null, physics: physics)
+    {
+        InitialItem = initialItem;
+        _itemToShowOnStartup = initialItem;
+        _consumeMaxWeight = consumeMaxWeight;
+        _infinite = infinite;
+        _itemCount = itemCount;
+        _itemExtent = itemExtent;
+        _flexWeights = flexWeights;
+    }
+
+    public int InitialItem { get; }
+
+    public double? ItemExtent => _itemExtent;
+
+    public IReadOnlyList<int>? FlexWeights => _flexWeights;
+
+    public bool ConsumeMaxWeight => _consumeMaxWeight;
+
+    public bool Infinite => _infinite;
+
+    public int? ItemCount => _itemCount;
+
+    /// <summary>The index of the item that currently occupies the leading slot.</summary>
+    public int LeadingItem
+    {
+        get
+        {
+            if (!HasViewportDimension || ViewportDimension <= 0)
+            {
+                return 0;
+            }
+
+            int leadingItem = (int)GetItemFromPixels(Pixels, ViewportDimension);
+            if (_consumeMaxWeight && _flexWeights is { Count: > 0 } weights)
+            {
+                leadingItem = Math.Max(leadingItem - CarouselViewState.FirstMaximumWeightIndex(weights), 0);
+            }
+
+            if (_infinite && _itemCount is > 0)
+            {
+                leadingItem %= _itemCount.Value;
+            }
+
+            return leadingItem;
+        }
+    }
+
+    internal void SetItemCount(int? value) => _itemCount = value;
+
+    internal void SetInfinite(bool value) => _infinite = value;
+
+    internal void SetConsumeMaxWeight(bool value)
+    {
+        if (_consumeMaxWeight == value)
+        {
+            return;
+        }
+
+        if (HasPixels && _flexWeights is not null)
+        {
+            ForcePixels(GetPixelsFromItem(UpdateLeadingItem(_flexWeights, value), _flexWeights, _itemExtent));
+        }
+
+        _consumeMaxWeight = value;
+    }
+
+    internal void SetItemExtent(double? value)
+    {
+        if (_itemExtent == value)
+        {
+            return;
+        }
+
+        if (HasPixels && _itemExtent is not null && HasViewportDimension && ViewportDimension != 0.0)
+        {
+            double item = GetItemFromPixels(Pixels, ViewportDimension);
+            ForcePixels(GetPixelsFromItem(item, _flexWeights, value));
+        }
+
+        _itemExtent = value;
+    }
+
+    internal void SetFlexWeights(IReadOnlyList<int>? value)
+    {
+        if (ReferenceEquals(_flexWeights, value))
+        {
+            return;
+        }
+
+        IReadOnlyList<int>? oldWeights = _flexWeights;
+        if (HasPixels && oldWeights is not null)
+        {
+            ForcePixels(GetPixelsFromItem(UpdateLeadingItem(value, _consumeMaxWeight), value, _itemExtent));
+        }
+
+        _flexWeights = value;
+    }
+
+    /// <summary>Dart's <c>_updateLeadingItem</c>: the item to keep in view across a layout change.</summary>
+    internal double UpdateLeadingItem(IReadOnlyList<int>? newFlexWeights, bool newConsumeMaxWeight)
+    {
+        double maxItem;
+        if (HasPixels && _flexWeights is { Count: > 0 } weights && HasViewportDimension && ViewportDimension > 0)
+        {
+            double leadingItem = GetItemFromPixels(Pixels, ViewportDimension);
+            maxItem = _consumeMaxWeight
+                ? leadingItem
+                : leadingItem + CarouselViewState.FirstMaximumWeightIndex(weights);
+        }
+        else
+        {
+            if (!newConsumeMaxWeight)
+            {
+                return _itemToShowOnStartup;
+            }
+
+            maxItem = _itemToShowOnStartup;
+        }
+
+        if (newFlexWeights is { Count: > 0 } && !newConsumeMaxWeight)
+        {
+            return maxItem - CarouselViewState.FirstMaximumWeightIndex(newFlexWeights);
+        }
+
+        return maxItem;
+    }
+
+    public double GetItemFromPixels(double pixels, double viewportDimension)
+    {
+        if (viewportDimension <= 0)
+        {
+            return 0;
+        }
+
+        double fraction = _itemExtent is { } itemExtent
+            ? itemExtent / viewportDimension
+            : _flexWeights is { Count: > 0 } weights ? weights[0] / (double)weights.Sum() : 0;
+        double itemWidth = viewportDimension * fraction;
+        if (itemWidth <= 0)
+        {
+            return 0;
+        }
+
+        double actual = Math.Max(0.0, pixels) / itemWidth;
+        double round = Math.Round(actual, MidpointRounding.AwayFromZero);
+        return Math.Abs(actual - round) < Constants.PrecisionErrorTolerance ? round : actual;
+    }
+
+    public double GetPixelsFromItem(double item, IReadOnlyList<int>? flexWeights, double? itemExtent)
+    {
+        if (!HasViewportDimension || ViewportDimension == 0.0)
+        {
+            return 0;
+        }
+
+        double fraction = itemExtent is { } extent
+            ? extent / ViewportDimension
+            : flexWeights is { Count: > 0 } weights ? weights[0] / (double)weights.Sum() : 0;
+        return item * ViewportDimension * fraction;
+    }
+
+    /// <summary>The pixel length of one full pass through an infinite carousel's items.</summary>
+    internal double GetCycleLengthInPixels()
+    {
+        if (_itemCount is not > 0 || !HasViewportDimension || ViewportDimension == 0)
+        {
+            return 0.0;
+        }
+
+        double fraction;
+        if (_itemExtent is { } itemExtent)
+        {
+            fraction = itemExtent / ViewportDimension;
+        }
+        else if (_flexWeights is { Count: > 0 } weights)
+        {
+            fraction = weights[0] / (double)weights.Sum();
+        }
+        else
+        {
+            return 0.0;
+        }
+
+        return _itemCount.Value * ViewportDimension * fraction;
+    }
+
+    public override bool ApplyViewportDimension(double viewportDimension)
+    {
+        double? oldViewportDimensions = HasViewportDimension ? ViewportDimension : null;
+        if (oldViewportDimensions is { } previous && previous == viewportDimension)
+        {
+            return true;
+        }
+
+        bool result = base.ApplyViewportDimension(viewportDimension);
+        double? oldPixels = HasPixels ? Pixels : null;
+        double item;
+        if (oldPixels is null)
+        {
+            item = UpdateLeadingItem(_flexWeights, _consumeMaxWeight);
+        }
+        else if (oldViewportDimensions == 0.0)
+        {
+            item = _cachedItem ?? _itemToShowOnStartup;
+        }
+        else
+        {
+            item = GetItemFromPixels(oldPixels.Value, oldViewportDimensions ?? viewportDimension);
+        }
+
+        double newPixels = GetPixelsFromItem(item, _flexWeights, _itemExtent);
+        _cachedItem = viewportDimension == 0.0 ? item : null;
+        if (oldPixels is null || Math.Abs(newPixels - oldPixels.Value) > Constants.PrecisionErrorTolerance)
+        {
+            CorrectPixels(newPixels);
+            return false;
+        }
+
+        return result;
+    }
+
+    public override bool ApplyContentDimensions(double minScrollExtent, double maxScrollExtent)
+    {
+        if (_infinite && HasPixels)
+        {
+            double cycleLength = GetCycleLengthInPixels();
+            if (cycleLength > 0 && Pixels < cycleLength)
+            {
+                int cyclesToAdd = (int)Math.Ceiling((cycleLength - Pixels) / cycleLength);
+                CorrectPixels(Pixels + (cyclesToAdd * cycleLength));
+                return false;
+            }
+        }
+
+        return base.ApplyContentDimensions(_infinite ? 0.0 : minScrollExtent, maxScrollExtent);
+    }
+
+    public override void Absorb(ScrollPosition other)
+    {
+        base.Absorb(other);
+        if (other is not CarouselScrollPosition carousel)
+        {
+            return;
+        }
+
+        _cachedItem = carousel._cachedItem;
+        _itemExtent = carousel._itemExtent;
+        _itemToShowOnStartup = carousel._itemToShowOnStartup;
+    }
+
+    public override CarouselMetrics CopyWith(
+        double? minScrollExtent = null,
+        double? maxScrollExtent = null,
+        double? pixels = null,
+        double? viewportDimension = null,
+        AxisDirection? axisDirection = null,
+        double? devicePixelRatio = null)
+    {
+        return new CarouselMetrics(
+            minScrollExtent: minScrollExtent ?? (HasContentDimensions ? MinScrollExtent : null),
+            maxScrollExtent: maxScrollExtent ?? (HasContentDimensions ? MaxScrollExtent : null),
+            pixels: pixels ?? (HasPixels ? Pixels : null),
+            viewportDimension: viewportDimension ?? (HasViewportDimension ? ViewportDimension : null),
+            axisDirection: axisDirection ?? AxisDirection,
+            itemExtent: _itemExtent,
+            flexWeights: _flexWeights,
+            consumeMaxWeight: _consumeMaxWeight,
+            devicePixelRatio: DevicePixelRatio);
+    }
+}
+
+/// <summary>A <see cref="ScrollController"/> that addresses a <see cref="CarouselView"/> by item.</summary>
+public sealed class CarouselController : ScrollController
+{
+    private CarouselViewState? _carouselState;
+
+    public CarouselController(int initialItem = 0)
+    {
+        InitialItem = initialItem;
+    }
+
+    /// <summary>The item to show when the carousel is first built.</summary>
+    public int InitialItem { get; }
+
+    /// <summary>The index of the item that currently occupies the leading slot.</summary>
+    public int LeadingItem
+    {
+        get
+        {
+            if (Positions.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    "CarouselController.leadingItem cannot be accessed before a CarouselView is built with it.");
+            }
+
+            if (Positions.Count > 1)
+            {
+                throw new InvalidOperationException(
+                    "CarouselController.leadingItem cannot be read when multiple CarouselViews are "
+                    + "attached to the same controller.");
+            }
+
+            return ((CarouselScrollPosition)Positions[0]).LeadingItem;
+        }
+    }
+
+    /// <summary>Animates the controlled carousel so that <paramref name="index"/> leads it.</summary>
+    public Task AnimateToItem(int index, TimeSpan? duration = null, Curve? curve = null)
+    {
+        if (!HasClients || _carouselState is null)
+        {
+            return Task.CompletedTask;
+        }
+
+        bool hasFlexWeights = _carouselState.FlexWeights is { Count: > 0 };
+        index = ClampToItemCount(index);
+
+        List<Task> animations = [];
+        foreach (ScrollPosition position in Positions)
+        {
+            if (position is not CarouselScrollPosition carouselPosition)
+            {
+                continue;
+            }
+
+            animations.Add(carouselPosition.AnimateTo(
+                GetTargetOffset(carouselPosition, index, hasFlexWeights),
+                duration ?? TimeSpan.FromMilliseconds(300),
+                curve ?? Curves.Ease));
+        }
+
+        return Task.WhenAll(animations);
+    }
+
+    /// <summary>Jumps the controlled carousel so that <paramref name="index"/> leads it.</summary>
+    public void JumpToItem(int index)
+    {
+        if (!HasClients || _carouselState is null)
+        {
+            return;
+        }
+
+        bool hasFlexWeights = _carouselState.FlexWeights is { Count: > 0 };
+        index = ClampToItemCount(index);
+        foreach (ScrollPosition position in Positions)
+        {
+            if (position is CarouselScrollPosition carouselPosition)
+            {
+                carouselPosition.JumpTo(GetTargetOffset(carouselPosition, index, hasFlexWeights));
+            }
+        }
+    }
+
+    public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+    {
+        return new CarouselScrollPosition(
+            initialItem: InitialItem,
+            itemExtent: _carouselState?.EffectiveItemExtent,
+            flexWeights: _carouselState?.FlexWeights,
+            consumeMaxWeight: _carouselState?.ConsumeMaxWeight ?? true,
+            infinite: _carouselState?.Current.Infinite ?? false,
+            itemCount: GetItemCount(),
+            physics: physics ?? Physics);
+    }
+
+    internal override void Attach(ScrollPosition position)
+    {
+        base.Attach(position);
+        if (position is not CarouselScrollPosition carouselPosition || _carouselState is null)
+        {
+            return;
+        }
+
+        carouselPosition.SetFlexWeights(_carouselState.FlexWeights);
+        carouselPosition.SetItemExtent(_carouselState.EffectiveItemExtent);
+        carouselPosition.SetConsumeMaxWeight(_carouselState.ConsumeMaxWeight);
+        carouselPosition.SetInfinite(_carouselState.Current.Infinite);
+        carouselPosition.SetItemCount(GetItemCount());
+    }
+
+    internal void AttachCarousel(CarouselViewState state) => _carouselState = state;
+
+    internal void DetachCarousel(CarouselViewState state)
+    {
+        if (ReferenceEquals(_carouselState, state))
+        {
+            _carouselState = null;
+        }
+    }
+
+    private int? GetItemCount() => _carouselState?.ItemCount;
+
+    private int ClampToItemCount(int index)
+    {
+        int? itemCount = GetItemCount();
+        if (_carouselState?.Current.ItemBuilder is not null)
+        {
+            return itemCount is not null ? Math.Clamp(index, 0, Math.Max(0, itemCount.Value - 1)) : 0;
+        }
+
+        return itemCount is > 0 ? Math.Clamp(index, 0, itemCount.Value - 1) : 0;
+    }
+
+    private double GetTargetOffset(CarouselScrollPosition position, int index, bool hasFlexWeights)
+    {
+        if (!hasFlexWeights)
+        {
+            double target = index * (_carouselState?.EffectiveItemExtent ?? 0);
+            return _carouselState?.Current.Infinite == true ? AdjustForInfiniteCycle(position, target) : target;
+        }
+
+        IReadOnlyList<int> weights = _carouselState!.FlexWeights!;
+        int totalWeight = weights.Sum();
+        double dimension = position.ViewportDimension;
+        int leadingIndex = _carouselState.ConsumeMaxWeight
+            ? index
+            : index - CarouselViewState.FirstMaximumWeightIndex(weights);
+        leadingIndex = ClampToItemCount(leadingIndex);
+        double targetInFirstCycle = dimension * (weights[0] / (double)totalWeight) * leadingIndex;
+        return _carouselState.Current.Infinite
+            ? AdjustForInfiniteCycle(position, targetInFirstCycle)
+            : targetInFirstCycle;
+    }
+
+    /// <summary>
+    /// Maps an item offset inside the first cycle onto the cycle the carousel is currently in, always
+    /// moving forwards so that an infinite carousel never scrolls backwards to reach a nearby item.
+    /// </summary>
+    private static double AdjustForInfiniteCycle(CarouselScrollPosition position, double targetInFirstCycle)
+    {
+        double cycleLength = position.GetCycleLengthInPixels();
+        if (cycleLength <= 0)
+        {
+            return targetInFirstCycle;
+        }
+
+        double currentPixels = position.Pixels;
+        double currentCycleStart = Math.Floor(currentPixels / cycleLength) * cycleLength;
+        double sameCycleTarget = currentCycleStart + targetInFirstCycle;
+        return sameCycleTarget >= currentPixels ? sameCycleTarget : sameCycleTarget + cycleLength;
     }
 }

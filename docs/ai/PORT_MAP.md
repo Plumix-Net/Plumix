@@ -294,6 +294,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/shifted_box.dart` | `src/Plumix/Rendering/Baseline.cs`<br>`src/Plumix/Rendering/CustomSingleChildLayout.cs` | `src/Plumix.Tests/BaselineTests.cs` | `dart_sample/lib/demos/general/baseline_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/BaselineDemoPage.cs` |
 | `rendering/sliver.dart` | `src/Plumix/Rendering/Sliver.cs` | `src/Plumix.Tests/DecoratedPinnedSliverTests.cs`<br>`src/Plumix.Tests/MaterialSliverAppBarTests.cs`<br>`src/Plumix.Tests/SliverFillTests.cs`<br>`src/Plumix.Tests/SliverGroupTests.cs`<br>`src/Plumix.Tests/SliverHeaderTests.cs`<br>`src/Plumix.Tests/SliverOpacityTests.cs`<br>`src/Plumix.Tests/SliverPersistentHeaderTests.cs` | `dart_sample/lib/demos/general/custom_slivers_demo_page.dart`<br>`dart_sample/lib/demos/material/sliver_app_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CustomSliversDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SliverAppBarDemoPage.cs` |
 | `rendering/sliver_fill.dart` | `src/Plumix/Rendering/SliverFill.cs` | `src/Plumix.Tests/SliverFillTests.cs` | — |
+| `rendering/sliver_fixed_extent_list.dart` | `src/Plumix/Rendering/SliverFixedExtentList.cs` | — | — |
 | `rendering/sliver_group.dart` | `src/Plumix/Rendering/SliverGroup.cs` | `src/Plumix.Tests/SliverGroupTests.cs` | — |
 | `rendering/sliver_persistent_header.dart` | `src/Plumix/Rendering/SliverPersistentHeader.cs`<br>`src/Plumix/Rendering/SliverPersistentHeaderReveal.cs` | `src/Plumix.Tests/SliverPersistentHeaderTests.cs` | — |
 | `rendering/stack.dart` | `src/Plumix/Rendering/RelativeRect.cs`<br>`src/Plumix/Rendering/Stack.RenderIndexedStack.cs`<br>`src/Plumix/Rendering/Stack.RenderStack.cs` | — | — |
@@ -485,8 +486,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 439
-- C# files carrying a marker: 566
+- Flutter files mapped: 440
+- C# files carrying a marker: 567
 - C# files without a marker: 18
 - Markers not resolvable in the pinned checkout: 0
 

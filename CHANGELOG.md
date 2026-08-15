@@ -1,5 +1,22 @@
 # Changelog
 
+- Breaking: closed the `CarouselView` family (`CarouselView`/`.weighted`/`.builder`/`.weightedBuilder`
+  with `CarouselController`, `CarouselScrollPhysics`, `CarouselMetrics`, `CarouselScrollPosition`
+  and `CarouselViewTheme`). The two Dart render slivers are now real render objects
+  (`RenderSliverFixedExtentCarousel`, `RenderSliverWeightedCarousel`) instead of extent-strategy
+  objects, so leading/trailing shrinking, weight interpolation, `consumeMaxWeight` slot reservation
+  and the infinite cycle correction all match Dart. Items are built as
+  `Padding > Material(color/elevation/shape/clipBehavior) > Stack > [child, Material + InkWell]`,
+  so `elevation` is no longer dropped. `CarouselView` no longer throws from its constructors:
+  `itemExtent: 0` and `double.PositiveInfinity` are legal (the latter clamps to the viewport) and
+  non-positive `flexWeights` now fail at build time like Dart's assert. `CarouselViewTheme` is an
+  `InheritedTheme` with `Wrap`/`MaybeOf`.
+- Primitive landed for that port: `RenderSliverFixedExtentBoxAdaptor`
+  (`src/Plumix/Rendering/SliverFixedExtentList.cs`) — Flutter's fixed-extent adaptor with the four
+  overridable layout hooks (`IndexToLayoutOffset`, `GetMin`/`GetMaxChildIndexForScrollOffset`,
+  `ComputeMaxScrollOffset`), an `ItemExtentBuilder`, `SliverLayoutDimensions`, scroll-offset
+  correction on a missing leading child, and Flutter's `_extrapolateMaxScrollOffset` estimate.
+
 - Breaking: closed the `DropdownMenu` family (`DropdownMenu`/`DropdownMenuEntry`/
   `DropdownMenuThemeData`/`DropdownMenuFormField`). The control is now a strict port built on
   `MenuAnchor`/`MenuItemButton` instead of the legacy `DropdownRoute`: every entry is built twice

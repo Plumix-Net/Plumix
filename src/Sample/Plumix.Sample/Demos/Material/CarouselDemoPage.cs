@@ -25,6 +25,14 @@ public sealed class CarouselDemoPage : StatelessWidget
                 new SizedBox(height: 132, child: new CarouselView(
                     itemExtent: 176,
                     itemSnapping: true,
+                    elevation: 2,
+                    children: BuildItems())),
+                new Text("Hero [1, 7, 1] with shrinkExtent", fontSize: 14, color: Colors.Black),
+                new SizedBox(height: 132, child: CarouselView.Weighted(
+                    flexWeights: [1, 7, 1],
+                    itemSnapping: true,
+                    consumeMaxWeight: false,
+                    shrinkExtent: 40,
                     children: BuildItems())),
                 new Text("Weighted [1, 6, 1]", fontSize: 14, color: Colors.Black),
                 new SizedBox(height: 132, child: new CarouselViewTheme(

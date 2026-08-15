@@ -17,7 +17,26 @@ class CarouselDemoPage extends StatelessWidget {
         const Text('Fixed extent', style: TextStyle(fontSize: 14, color: Colors.black)),
         SizedBox(
           height: 132,
-          child: CarouselView(itemExtent: 176, itemSnapping: true, children: _items()),
+          child: CarouselView(
+            itemExtent: 176,
+            itemSnapping: true,
+            elevation: 2,
+            children: _items(),
+          ),
+        ),
+        const Text(
+          'Hero [1, 7, 1] with shrinkExtent',
+          style: TextStyle(fontSize: 14, color: Colors.black),
+        ),
+        SizedBox(
+          height: 132,
+          child: CarouselView.weighted(
+            flexWeights: const <int>[1, 7, 1],
+            itemSnapping: true,
+            consumeMaxWeight: false,
+            shrinkExtent: 40,
+            children: _items(),
+          ),
         ),
         const Text('Weighted [1, 6, 1]', style: TextStyle(fontSize: 14, color: Colors.black)),
         SizedBox(
