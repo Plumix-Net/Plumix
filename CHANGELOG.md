@@ -1,5 +1,10 @@
 # Changelog
 
+- Fixed the platform-dependent `FixedExtentScrollPhysics` fling test: it now pins
+  `TargetPlatform.IOS` (Flutter runs it as an iOS/macOS variant, so on Linux CI the parent physics
+  was `ClampingScrollPhysics` and the wheel landed on another item) and runs under a device pixel
+  ratio of 3 like Flutter's test view, which is what sizes the ballistic tolerances.
+
 - Breaking: ported Flutter's `ScrollContext` (`widgets/scroll_context.dart`) as `IScrollContext`,
   which `Scrollable.ScrollableState` now implements (`NotificationContext` = the gesture detector's
   context, `StorageContext`, `Vsync`, `AxisDirection`, `DevicePixelRatio`, `SetIgnorePointer`,

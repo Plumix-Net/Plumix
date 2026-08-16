@@ -1046,32 +1046,51 @@ public sealed class ListWheelScrollViewTests
     [Fact]
     public void FixedExtentScrollPhysics_HighFlingVelocitiesLandExactlyOnItems()
     {
-        var scrolledPositions = new List<double>();
-        var controller = new FixedExtentScrollController(initialItem: 40);
-        using var harness = Harness(new NotificationListener<ScrollUpdateNotification>(
-            onNotification: notification =>
-            {
-                scrolledPositions.Add(notification.Metrics.Pixels);
-                return false;
-            },
-            child: new ListWheelScrollView(
-                controller: controller,
-                physics: new FixedExtentScrollPhysics(),
-                itemExtent: 100.0,
-                children: Enumerable.Range(0, 100).Select(_ => (Widget)new ColoredBox(Colors.Red)).ToArray())));
-        harness.Pump(Screen);
+        // Flutter runs this one as a TargetPlatform iOS/macOS variant, so the parent physics it
+        // ballistically falls through is pinned rather than taken from the host OS: on Linux CI the
+        // default parent would be ClampingScrollPhysics and the wheel would land on a different item.
+        TargetPlatform? previousPlatform = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
+        try
+        {
+            var scrolledPositions = new List<double>();
+            var controller = new FixedExtentScrollController(initialItem: 40);
+            // Flutter's test view has a device pixel ratio of 3, which is what sizes the ballistic
+            // tolerances (velocity 1/(0.05*dpr), distance 1/dpr). At the harness default of 1 the
+            // friction simulation gives up a whole logical pixel short of the item.
+            using var harness = Harness(new MediaQuery(
+                new MediaQueryData(Size: Screen, DevicePixelRatio: 3.0),
+                new NotificationListener<ScrollUpdateNotification>(
+                    onNotification: notification =>
+                    {
+                        scrolledPositions.Add(notification.Metrics.Pixels);
+                        return false;
+                    },
+                    child: new ListWheelScrollView(
+                        controller: controller,
+                        physics: new FixedExtentScrollPhysics(),
+                        itemExtent: 100.0,
+                        children: Enumerable.Range(0, 100)
+                            .Select(_ => (Widget)new ColoredBox(Colors.Red))
+                            .ToArray()))));
+            harness.Pump(Screen);
 
-        Fling(harness, new Point(400, 300), new Vector(0.0, -567.0), 678.0);
-        harness.Pump(Screen);
-        Assert.Equal(46, controller.SelectedItem);
-        Assert.Equal((40 * 100.0) + 567.0, controller.Offset, 5.0);
+            Fling(harness, new Point(400, 300), new Vector(0.0, -567.0), 678.0);
+            harness.Pump(Screen);
+            Assert.Equal(46, controller.SelectedItem);
+            Assert.Equal((40 * 100.0) + 567.0, controller.Offset, 5.0);
 
-        Settle(harness);
-        // The friction simulation is tuned to land exactly on an item.
-        Assert.Equal(controller.SelectedItem * 100.0, scrolledPositions[^1], 0.3);
-        Assert.Equal(controller.SelectedItem * 100.0, controller.Offset, 0.3);
-        Assert.True(controller.SelectedItem > 46);
-        controller.Dispose();
+            Settle(harness);
+            // The friction simulation is tuned to land exactly on an item.
+            Assert.Equal(49, controller.SelectedItem);
+            Assert.Equal(49 * 100.0, scrolledPositions[^1], 0.3);
+            Assert.Equal(49 * 100.0, controller.Offset, 0.3);
+            controller.Dispose();
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previousPlatform;
+        }
     }
 
     [Fact]
