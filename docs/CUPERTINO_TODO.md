@@ -44,16 +44,15 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
   as strict ports. Before extending one, diff it against the Dart file top to bottom; treat missing
   members as gaps to close, and keep the `// Dart parity source:` marker (drop its
   `(reference)`/`(adapted)` qualifier only when the file is a strict port).
-- **Samples**: the gallery already has a Cupertino tab with three demos on both sides
-  (`Checkbox`, `Radio`, `Switch`). Add new demos there and mirror them in `dart_sample`.
+- **Samples**: the gallery already has a Cupertino tab with four demos on both sides
+  (`Checkbox`, `Radio`, `Switch`, `Theme + dynamic colors`). Add new demos there and mirror them in
+  `dart_sample`.
 
 ## Foundation (port these first — most controls below depend on them)
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types missing in C# | Status | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- |
-| `colors.dart`, `theme.dart` | 1301, 703 | `InheritedCupertinoTheme`, `NoDefaultCupertinoThemeData`; `CupertinoColors` is a subset | partial (`CupertinoTheme.cs`, 181 lines) | L | Full `CupertinoColors` table + `CupertinoDynamicColor.resolve` rules, `CupertinoThemeData` defaults, `CupertinoTheme.brightnessOf`/`of`. Everything else resolves colours through this. |
-| `text_theme.dart` | 448 | `CupertinoTextThemeData` | open | M | `CupertinoThemeData.textTheme` cannot be strict without it. |
-| `icon_theme_data.dart` | 64 | `CupertinoIconThemeData` | open | S | Depends on core `IconThemeData` being complete (`src/Plumix/Widgets/IconTheme.cs` is still `(approximate)` — tighten it first). |
+| `icon_theme_data.dart` | 64 | `CupertinoIconThemeData` | open | S | Depends on core `IconThemeData` being complete (`src/Plumix/Widgets/IconTheme.cs` is still `(approximate)` — tighten it first) and closes the `CupertinoTheme.Build` divergence in `docs/ai/DIVERGENCES.md`. |
 | `localizations.dart` | 597 | `DatePickerDateOrder`, `DatePickerDateTimeOrder`; date/time formatting members | partial (`CupertinoLocalizations.cs`, 58 lines) | M | Needed by pickers and nav bar. |
 | `route.dart` | 1613 | `CupertinoPageRoute`, `CupertinoPage`, `CupertinoPageTransition`, `CupertinoFullscreenDialogTransition`, `CupertinoModalPopupRoute`, `CupertinoRouteTransitionMixin`, `showCupertinoModalPopup` | partial (`CupertinoDialogRoute.cs` only) | L | The page transition + back-swipe detector currently live in `src/Plumix.Material/PageTransitionsTheme.cs` (`CupertinoPageTransitionsBuilder`); move them into `Plumix.Cupertino` and have Material reference them. |
 | `page_scaffold.dart` | 323 | `CupertinoPageScaffold`, `ObstructingPreferredSizeWidget` | open | S | Needs `nav_bar.dart` for the full contract but can land first. |
@@ -101,8 +100,9 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 ## Not listed / out of scope
 
-- `constants.dart`, `debug.dart`, `interface_level.dart` — utilities, ported piecemeal as controls
-  need them; don't port standalone.
+- `constants.dart`, `debug.dart` — utilities, ported piecemeal as controls need them; don't port
+  standalone. (`interface_level.dart` shipped with the theme foundation, since
+  `CupertinoDynamicColor.resolveFrom` reads it.)
 - `migration_utility.dart` (`CupertinoUiCompatibilityBridge`) — pub-package migration shim, no C#
   counterpart needed.
 - If you find a gap this list misses (or a listed item that's actually done), a PR fixing **this

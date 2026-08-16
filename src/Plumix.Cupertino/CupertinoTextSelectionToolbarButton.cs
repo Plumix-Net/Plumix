@@ -330,7 +330,7 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
         {
             if (_isHovered)
             {
-                return CupertinoTheme.Of(context).EffectivePrimaryContrastingColor;
+                return CupertinoTheme.Of(context).PrimaryContrastingColor;
             }
 
             return CupertinoTextSelectionToolbarButton.IsDark(context)
@@ -340,7 +340,7 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
 
         private static Color ResolvePrimaryColor(BuildContext context)
         {
-            return CupertinoTheme.Of(context).EffectivePrimaryColor;
+            return CupertinoTheme.Of(context).PrimaryColor;
         }
 
         private void SetHovered(bool value)

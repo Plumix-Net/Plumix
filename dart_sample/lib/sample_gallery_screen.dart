@@ -107,6 +107,7 @@ import 'demos/general/state_storage_demo_page.dart';
 import 'demos/general/stateful_builder_lookup_boundary_demo_page.dart';
 import 'demos/general/navigation_pop_demo_page.dart';
 import 'demos/cupertino/switch_demo_page.dart';
+import 'demos/cupertino/theme_demo_page.dart';
 import 'demos/material/range_slider_demo_page.dart';
 import 'demos/material/refresh_indicator_demo_page.dart';
 import 'demos/material/slider_demo_page.dart';
@@ -459,6 +460,14 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Radio',
           subtitle: 'group selection + toggleable + tap-target policy',
           builder: () => const RadioDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoTheme,
+          title: 'Theme + dynamic colors',
+          subtitle:
+              'brightness/contrast/elevation resolution + '
+              'CupertinoTextThemeData styles',
+          builder: () => const CupertinoThemeDemoPage(),
         ),
       ];
 

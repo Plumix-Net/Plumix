@@ -327,8 +327,7 @@ internal sealed class CupertinoDialogActionState : State, ISlideTarget
         TextStyle style = CupertinoDialogConstants.ActionStyle.CopyWith(
             color: Current.IsDestructiveAction
                 ? CupertinoDynamicColor.Resolve(CupertinoColors.SystemRed, context)
-                : CupertinoTheme.Of(context).PrimaryColor
-                  ?? CupertinoDynamicColor.Resolve(CupertinoColors.SystemBlue, context));
+                : CupertinoTheme.Of(context).PrimaryColor);
         style = style.Merge(Current.TextStyle);
         if (Current.IsDefaultAction)
         {

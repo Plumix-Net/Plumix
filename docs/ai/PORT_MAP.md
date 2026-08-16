@@ -26,10 +26,11 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/adaptive_text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoAdaptiveTextSelectionToolbar.cs` | — | — |
 | `cupertino_ui/button.dart` | `src/Plumix.Cupertino/CupertinoButton.cs` | — | — |
 | `cupertino_ui/checkbox.dart` | `src/Plumix.Cupertino/CupertinoCheckbox.cs` _(reference) (adapted)_<br>`src/Plumix/RenderStrokeGlyph.cs` _(reference) (adapted primitives)_<br>`src/Plumix/Widgets/StrokeGlyph.cs` _(reference) (adapted primitives)_ | — | — |
-| `cupertino_ui/colors.dart` | `src/Plumix.Cupertino/CupertinoTheme.cs` | — | — |
+| `cupertino_ui/colors.dart` | `src/Plumix.Cupertino/CupertinoColors.cs` | `src/Plumix.Tests/CupertinoColorsTests.cs` | — |
 | `cupertino_ui/desktop_text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoDesktopTextSelectionToolbar.cs` | — | — |
 | `cupertino_ui/desktop_text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
 | `cupertino_ui/dialog.dart` | `src/Plumix.Cupertino/CupertinoDialog.cs` | `src/Plumix.Tests/CupertinoDialogTests.cs` | — |
+| `cupertino_ui/interface_level.dart` | `src/Plumix.Cupertino/CupertinoUserInterfaceLevel.cs` | — | — |
 | `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | — | — |
 | `cupertino_ui/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
 | `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` _(reference) (adapted)_ | — | — |
@@ -39,6 +40,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/spell_check_suggestions_toolbar.dart` | `src/Plumix.Cupertino/CupertinoSpellCheckSuggestionsToolbar.cs` | — | — |
 | `cupertino_ui/text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbar.cs` | — | — |
 | `cupertino_ui/text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
+| `cupertino_ui/text_theme.dart` | `src/Plumix.Cupertino/CupertinoTextTheme.cs` | — | — |
 | `cupertino_ui/theme.dart` | `src/Plumix.Cupertino/CupertinoTheme.cs` | — | — |
 | `material_ui/about.dart` | `src/Plumix.Material/About.cs` | `src/Plumix.Tests/MaterialAboutTests.cs` | `dart_sample/lib/demos/material/about_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AboutDemoPage.cs` |
 | `material_ui/action_buttons.dart` | `src/Plumix.Material/ActionButtons.cs` | `src/Plumix.Tests/MaterialActionButtonsTests.cs` | `dart_sample/lib/demos/material/action_buttons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ActionButtonsDemoPage.cs` |
@@ -462,7 +464,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/stretch_effect.dart` | `src/Plumix/Widgets/OverscrollIndicator.cs` | `src/Plumix.Tests/OverscrollIndicatorTests.cs` | — |
 | `widgets/table.dart` | `src/Plumix/Widgets/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs`<br>`src/Plumix.Tests/TableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
 | `widgets/tap_region.dart` | `src/Plumix/Rendering/TapRegion.cs`<br>`src/Plumix/Widgets/TapRegion.cs` | `src/Plumix.Tests/TapRegionTests.cs` | — |
-| `widgets/text.dart` | `src/Plumix/Widgets/DefaultTextStyle.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Text.cs` | `src/Plumix.Tests/DefaultTextEditingShortcutsTests.cs`<br>`src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextFieldTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionThemeTests.cs`<br>`src/Plumix.Tests/TextInputServiceTests.cs`<br>`src/Plumix.Tests/TextInputTests.cs`<br>`src/Plumix.Tests/TextWidgetTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/general/rich_text_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_text_styles_demo_page.dart`<br>`dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/text_field_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RichTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarTextStylesDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/TextFieldDemoPage.cs` |
+| `widgets/text.dart` | `src/Plumix/Widgets/DefaultTextStyle.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Text.cs` | `src/Plumix.Tests/CupertinoTextThemeTests.cs`<br>`src/Plumix.Tests/DefaultTextEditingShortcutsTests.cs`<br>`src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextFieldTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionThemeTests.cs`<br>`src/Plumix.Tests/TextInputServiceTests.cs`<br>`src/Plumix.Tests/TextInputTests.cs`<br>`src/Plumix.Tests/TextWidgetTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/general/rich_text_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_text_styles_demo_page.dart`<br>`dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/text_field_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RichTextDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarTextStylesDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/TextFieldDemoPage.cs` |
 | `widgets/text_editing_intents.dart` | `src/Plumix/Widgets/TextEditingIntents.cs` | — | — |
 | `widgets/text_selection.dart` | `src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionThemeTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
 | `widgets/text_selection_toolbar_anchors.dart` | `src/Plumix/Widgets/ContextMenu.cs` | — | — |
@@ -591,8 +593,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 455
-- C# files carrying a marker: 588
+- Flutter files mapped: 457
+- C# files carrying a marker: 590
 - C# files without a marker: 19
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 78

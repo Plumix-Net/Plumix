@@ -9,6 +9,14 @@ namespace Plumix.Cupertino;
 
 // Dart parity source: cupertino_ui/lib/src/route.dart
 
+/// <summary>Dart's `kCupertinoModalBarrierColor` from `cupertino_ui/lib/src/route.dart`.</summary>
+public static class CupertinoRouteConstants
+{
+    public static CupertinoDynamicColor ModalBarrierColor { get; } = CupertinoDynamicColor.WithBrightness(
+        Color.FromUInt32(0x33000000),
+        Color.FromUInt32(0x7A000000));
+}
+
 /// <summary>A dialog route with iOS-style spring entrance/exit transitions.</summary>
 public sealed class CupertinoDialogRoute<T> : RawDialogRoute<T>
 {

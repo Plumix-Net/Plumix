@@ -240,7 +240,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
         RenderEditable overridden = RenderField(
             theme,
             new CupertinoTheme(
-                new CupertinoThemeData(PrimaryColor: cupertinoPrimary),
+                new CupertinoThemeData(primaryColor: cupertinoPrimary),
                 new TextField()));
         Assert.Equal(cupertinoPrimary, overridden.CursorColor);
         Assert.Equal(WithOpacity(cupertinoPrimary, 0.40), overridden.SelectionColor);

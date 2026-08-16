@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: closed the Cupertino theme foundation (`cupertino_ui/colors.dart`, `theme.dart`, `text_theme.dart`,
+  `interface_level.dart`); `CupertinoColors` is the full table and `CupertinoThemeData` resolves dynamic colors.
 - Docs: opened M6 Cupertino port (`docs/CUPERTINO_TODO.md`); retired per-iteration notes, plan archive and
   changelog rotation files into git history; added `docs/ai/BACKLOG.md`; `PORT_MAP.md` now lists qualified markers.
 - Fixed the platform-dependent `FixedExtentScrollPhysics` fling test (pins iOS target platform, DPR 3).

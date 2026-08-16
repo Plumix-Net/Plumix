@@ -496,7 +496,7 @@ public sealed class TextField : StatefulWidget
             // `Theme` installs, which defers to `colorScheme.primary` when no Cupertino override is
             // present; Plumix has no bridge yet, so the fallback is applied here (`DIVERGENCES.md`).
             return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
-                ? CupertinoTheme.Of(context).PrimaryColor ?? theme.ColorScheme.Primary
+                ? CupertinoTheme.Of(context).NoDefault().PrimaryColor ?? theme.ColorScheme.Primary
                 : theme.ColorScheme.Primary;
         }
 

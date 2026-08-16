@@ -420,7 +420,12 @@ public sealed class MediaQuery : InheritedModel<object>
     public static PlatformBrightness PlatformBrightnessOf(BuildContext context) =>
         Of(context).PlatformBrightness;
 
+    public static PlatformBrightness? MaybePlatformBrightnessOf(BuildContext context) =>
+        MaybeOf(context)?.PlatformBrightness;
+
     public static bool HighContrastOf(BuildContext context) => Of(context).HighContrast;
+
+    public static bool? MaybeHighContrastOf(BuildContext context) => MaybeOf(context)?.HighContrast;
 
     public static bool SupportsAnnounceOf(BuildContext context) => Of(context).SupportsAnnounce;
 

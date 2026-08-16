@@ -98,6 +98,7 @@ internal static class SampleRoutes
     public const string AppBarIconTheme = "/appbar-icon-theme";
     public const string AppBarTextStyles = "/appbar-text-styles";
     public const string ColorPalette = "/color-palette";
+    public const string CupertinoTheme = "/cupertino-theme";
     public const string ProxyWidgets = "/proxy-widgets";
     public const string Align = "/align";
     public const string Stack = "/stack";
@@ -241,6 +242,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
         new(SampleRoutes.Switch, "Switch", "on/off value + track/thumb theming + drag", () => new SwitchDemoPage()),
         new(SampleRoutes.Radio, "Radio", "group selection + toggleable + tap-target policy", () => new RadioDemoPage()),
+        new(
+            SampleRoutes.CupertinoTheme,
+            "Theme + dynamic colors",
+            "brightness/contrast/elevation resolution + CupertinoTextThemeData styles",
+            () => new CupertinoThemeDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleRouteDefinition> GeneralDemoPages =
