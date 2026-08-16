@@ -25,7 +25,7 @@ Model/agent:
 - [ ] The agent followed the repo protocol: `AGENTS.md` → `docs/FRAMEWORK_PLAN.md` → `docs/ai/MODULE_INDEX.md`
 - [ ] `dotnet test src/Plumix.Tests/Plumix.Tests.csproj` passes locally
 - [ ] New behavior is covered by tests and mapped in `docs/ai/TEST_MATRIX.md`
-- [ ] `CHANGELOG.md` has a short entry
+- [ ] `CHANGELOG.md` has a one-line entry under `[Unreleased]`
 - [ ] Ports are closed end-to-end (API/defaults/composition/states/layout/paint/tests), not partial
 - [ ] Sample changes (if any) update both `src/Sample/Plumix.Sample` and `dart_sample`, and `docs/ai/PARITY_MATRIX.md`
 - [ ] Architecture invariants respected (`docs/ai/INVARIANTS.md`); intentional divergences documented in `docs/ai/DIVERGENCES.md`

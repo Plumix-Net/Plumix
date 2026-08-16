@@ -22,6 +22,8 @@
     ],
     "additionalDirectories": [
       "./flutter-src",
+      "./material-ui-src",
+      "./cupertino-ui-src",
       "./avalonia-src"
     ]
   },

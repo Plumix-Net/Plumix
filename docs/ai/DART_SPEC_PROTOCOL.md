@@ -5,8 +5,8 @@ whole context window.
 
 ## Why this exists
 
-Flutter's Material sources are big: `input_decorator.dart` is 6107 lines, `menu_anchor.dart` 4265,
-`scaffold.dart` 3521, `chip.dart` 2569. Reading one of those, plus the existing C# side, plus tests,
+Flutter's design-library sources are big: Material `input_decorator.dart` is 6107 lines, Cupertino
+`nav_bar.dart` 3581, `menu_anchor.dart` 3056, `date_picker.dart` 2974, `dialog.dart` 2751. Reading one of those, plus the existing C# side, plus tests,
 plus the tracking docs, does not fit in a single context. The result is what
 `docs/ai/PORTING_MODE.md` forbids: a control split into many token-level follow-ups.
 
@@ -30,9 +30,10 @@ For control `X`, the extractor reads, in this order:
    **Do not skip
    this.** It is the most reliable source of exact default values and edge-case behavior, and it tells
    you which behaviors Flutter itself considers contractual.
-4. Any `_<X>DefaultsM3` / `_<X>DefaultsM2` token classes, wherever they live.
+4. Any `_<X>DefaultsM3` / `_<X>DefaultsM2` token classes (Material) or private `_k*` constant
+   tables and `CupertinoDynamicColor` definitions (Cupertino), wherever they live.
 
-`docs/ai/PORT_MAP.md` resolves the Flutter paths for an already-ported control; `docs/MATERIAL_TODO.md`
+`docs/ai/PORT_MAP.md` resolves the Flutter paths for an already-ported control; `docs/CUPERTINO_TODO.md`
 carries them for controls not yet ported.
 
 ## Output contract
@@ -52,7 +53,9 @@ values, required/optional, and assert conditions. Quote defaults literally (`8.0
 ## Theme resolution
 The precedence chain for every themable property, in the order Flutter evaluates it, e.g.
   widget.color ?? CardTheme.of(context).color ?? Theme.of(context).cardTheme.color ?? _Defaults.color
-Note where useMaterial3 splits the chain, and give both the M2 and M3 values.
+Note where useMaterial3 splits the chain, and give both the M2 and M3 values. For Cupertino, give the
+light and dark (and high-contrast / elevated, when defined) values of every CupertinoDynamicColor,
+and the CupertinoTheme.of / brightnessOf resolution path.
 
 ## Composition
 The build() tree as an indented outline: widget names and the arguments that affect geometry or
@@ -86,7 +89,8 @@ close in one pass.
 
 - Report what the Dart **does**, not what it should do. No design opinions, no C# suggestions.
 - Never round or generalize a numeric default.
-- If a behavior depends on `useMaterial3`, give both branches; Plumix targets both.
+- If a behavior depends on `useMaterial3`, give both branches; Plumix targets both. If it depends on
+  `Brightness` or `CupertinoUserInterfaceLevel`, give every resolution.
 - Deprecated members: list them and mark deprecated. Do not silently drop them — parity includes them
   until Flutter removes them.
 - If the file is too large to read in one pass, read it in ranges and merge; do not sample.

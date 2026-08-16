@@ -90,10 +90,20 @@ def snake(name: str) -> str:
     return re.sub(r"(?<!^)(?=[A-Z])", "_", name).lower()
 
 
-def scan_markers() -> tuple[dict[str, list[str]], list[str]]:
-    """Return (dart path -> [C# files]) and the list of C# files carrying no marker."""
+# Qualifiers agents put on markers to say the port is not a strict 1:1 port. Anything matching
+# is surfaced in the map so "tighten an approximate port" picks have a real list to pick from.
+QUALIFIER = re.compile(
+    r"\((?=[^)]*(?:reference|approximate|adapted|subset|partial|baseline|custom|host integration))"
+    r"[^)]*\)"
+)
+
+
+def scan_markers() -> tuple[dict[str, list[str]], list[str], dict[str, str]]:
+    """Return (dart path -> [C# files]), the C# files carrying no marker, and
+    (C# file -> qualifier text) for markers that say the port is not strict."""
     index: dict[str, list[str]] = defaultdict(list)
     unmarked: list[str] = []
+    qualifiers: dict[str, str] = {}
 
     for d in FRAMEWORK_DIRS:
         for cs in sorted((REPO / d).rglob("*.cs")):
@@ -109,7 +119,20 @@ def scan_markers() -> tuple[dict[str, list[str]], list[str]]:
                 continue
             for dart in found:
                 index[dart].append(rel)
-    return index, unmarked
+            # Only `//` marker lines count (not `///` doc comments that merely mention a Dart type).
+            marker_lines = [
+                ln.strip() for ln in head.splitlines()
+                if ln.strip().startswith("//") and not ln.strip().startswith("///")
+                and ("Dart parity source" in ln or MARKER.search(ln))
+            ]
+            quals = []
+            for ln in marker_lines:
+                for q in QUALIFIER.findall(ln):
+                    if q not in quals:
+                        quals.append(q)
+            if quals:
+                qualifiers[rel] = " ".join(quals)
+    return index, unmarked, qualifiers
 
 
 def related(cs_files: list[str]) -> tuple[list[str], list[str]]:
@@ -132,6 +155,7 @@ def related(cs_files: list[str]) -> tuple[list[str], list[str]]:
 def render(
     index: dict[str, list[str]],
     unmarked: list[str],
+    qualifiers: dict[str, str],
     froot: Path | None,
     proots: dict[str, Path | None],
 ) -> str:
@@ -147,6 +171,10 @@ def render(
         "`AGENTS.md` > Local Reference Paths for the pins and the symlinks.",
         "",
         "**This is a lookup table — grep it for your control, do not read it end-to-end.**",
+        "",
+        "A C# file whose marker carries a qualifier such as `(reference)`, `(approximate)`, `(adapted)`",
+        "or `(baseline subset)` is shown with that text — the port is not a strict 1:1 port and is a",
+        "candidate for a tightening pass (see the *Ports with a qualified marker* section).",
         "",
         f"Flutter checkout used for validation: `{froot}`" if froot else
         "Flutter checkout not found — existence of `packages/flutter/...` paths was NOT validated.",
@@ -172,8 +200,12 @@ def render(
             missing_dart.append(dart)
         short = dart.removeprefix("packages/flutter/lib/src/").replace("/lib/src/", "/")
         mark = "" if exists else " ⚠️"
+        def cs_cell(c: str) -> str:
+            q = qualifiers.get(c)
+            return f"`{c}` _{q}_" if q else f"`{c}`"
+
         lines.append(
-            f"| `{short}`{mark} | {'<br>'.join(f'`{c}`' for c in cs_files)} "
+            f"| `{short}`{mark} | {'<br>'.join(cs_cell(c) for c in cs_files)} "
             f"| {'<br>'.join(f'`{t}`' for t in tests) or '—'} "
             f"| {'<br>'.join(f'`{d}`' for d in demos) or '—'} |"
         )
@@ -198,7 +230,19 @@ def render(
         ]
         lines += [f"- `{f}`" for f in unmarked]
         lines.append("")
-    if not missing_dart and not unmarked:
+    qualified = sorted(qualifiers)
+    if qualified:
+        lines += [
+            "### Ports with a qualified marker",
+            "",
+            "Markers that say the port is `(reference)`/`(approximate)`/`(adapted)`/a subset. Each is a",
+            "tightening candidate: re-read the Dart source, close the gap, and drop the qualifier from the",
+            "marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).",
+            "",
+        ]
+        lines += [f"- `{f}` — {qualifiers[f]}" for f in qualified]
+        lines.append("")
+    if not missing_dart and not unmarked and not qualified:
         lines += ["None.", ""]
 
     lines += [
@@ -208,6 +252,7 @@ def render(
         f"- C# files carrying a marker: {sum(len(v) for v in index.values())}",
         f"- C# files without a marker: {len(unmarked)}",
         f"- Markers not resolvable in the pinned checkout: {len(missing_dart)}",
+        f"- C# files with a qualified (non-strict) marker: {len(qualifiers)}",
         "",
     ]
     return "\n".join(lines) + "\n"
@@ -220,8 +265,8 @@ def main() -> int:
 
     froot = flutter_root()
     proots = {p: package_root(p) for p in ("material_ui", "cupertino_ui")}
-    index, unmarked = scan_markers()
-    content = render(index, unmarked, froot, proots)
+    index, unmarked, qualifiers = scan_markers()
+    content = render(index, unmarked, qualifiers, froot, proots)
 
     if args.check:
         current = OUT.read_text(encoding="utf-8") if OUT.exists() else ""

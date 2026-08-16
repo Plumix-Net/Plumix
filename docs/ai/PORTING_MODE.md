@@ -35,12 +35,12 @@ Purpose: define a single mandatory workflow for Dart-to-C# control/widget ports.
   - a missing primitive must be landed first,
   - risk requires an isolated foundational step,
   - user explicitly asks for phased delivery.
-- If split is unavoidable, create a feature note (`docs/ai/FEATURE_TEMPLATE.md`, stored in `docs/ai/notes/`) documenting what remains and the immediate next step to close parity for the same control. This is the only case (besides divergences) where a feature note is mandatory.
+- If split is unavoidable, add a row to `docs/ai/BACKLOG.md` (control, what remains, the immediate next step, the blocker) so the next iteration can close parity for the same control. Divergences go to `docs/ai/DIVERGENCES.md`, never to the backlog.
 
 ## When Framework Primitives Are Missing
 
 - Do not introduce control-local workaround logic if it changes structure/behavior from Flutter.
-- First add or fix the missing framework primitive in `src/Plumix` / `src/Plumix.Material`.
+- First add or fix the missing framework primitive in `src/Plumix` (or `src/Plumix.Cupertino` for Cupertino-only pieces; `src/Plumix.Material` only for Material-only ones), respecting the package direction in `docs/ai/INVARIANTS.md`.
 - Then continue the control port with the same structure as Dart and close the control in the same request whenever feasible.
 
 ## Allowed Divergence

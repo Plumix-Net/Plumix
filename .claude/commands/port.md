@@ -23,4 +23,4 @@ because they are the steps most often skipped:
 - Then close the paperwork (Step 8). A port with the code done and the docs not updated is not done.
 
 Work through the whole thing without checking in. If you hit a hard blocker, finish everything that
-does not depend on it, write the note per `docs/ai/FEATURE_TEMPLATE.md`, and say plainly what is left.
+does not depend on it, add the `docs/ai/BACKLOG.md` row (what is left + next step), and say plainly what is left.

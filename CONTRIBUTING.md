@@ -18,8 +18,8 @@ Issues, bug reports, and discussions are welcome from everyone — no AI require
 
 ### 1. Close a gap (port something that's missing)
 
-- **Start here: [`docs/MATERIAL_TODO.md`](docs/MATERIAL_TODO.md)** — the up-for-grabs list of Material widgets not yet ported, with size estimates and Flutter source pointers. Claim an item via a `Claim: <Widget>` issue before starting.
-- Beyond Material: pick an open item from [`docs/FRAMEWORK_PLAN.md`](docs/FRAMEWORK_PLAN.md) (roadmap) or an unported control in [`docs/ai/PARITY_MATRIX.md`](docs/ai/PARITY_MATRIX.md).
+- **Start here: [`docs/CUPERTINO_TODO.md`](docs/CUPERTINO_TODO.md)** — the up-for-grabs list of Cupertino widgets not yet (or only partially) ported, with size estimates and Flutter source pointers. Claim an item via a `Claim: <Widget>` issue before starting. (Every Material widget family is already ported.)
+- Beyond Cupertino: a tightening pass on a port listed under *Ports with a qualified marker* in [`docs/ai/PORT_MAP.md`](docs/ai/PORT_MAP.md), an open row in [`docs/ai/DIVERGENCES.md`](docs/ai/DIVERGENCES.md), or an item from [`docs/ai/BACKLOG.md`](docs/ai/BACKLOG.md) / [`docs/FRAMEWORK_PLAN.md`](docs/FRAMEWORK_PLAN.md).
 - Follow [`docs/ai/PORTING_MODE.md`](docs/ai/PORTING_MODE.md) — close the control end-to-end in one PR, don't submit partial parity.
 - Respect [`docs/ai/INVARIANTS.md`](docs/ai/INVARIANTS.md) (architecture and package boundaries are non-negotiable).
 - If sample behavior changes, update both `src/Sample/Plumix.Sample` and `dart_sample` in the same PR.
@@ -87,7 +87,7 @@ scripts/check_line_length.sh
 python3 scripts/generate_port_map.py
 ```
 3. New behavior is covered by tests and mapped in `docs/ai/TEST_MATRIX.md`.
-4. `CHANGELOG.md` has a short entry (a few lines, no test-inventory prose).
+4. `CHANGELOG.md` has a one-line entry under `[Unreleased]` (rules at the top of that file).
 5. Tracking docs updated where relevant: `docs/FRAMEWORK_PLAN.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/DIVERGENCES.md`.
 6. Fill in the PR template, including the required **"AI model used"** section (e.g. "Claude Opus 4.8 via Claude Code"), and summarize what was ported/fixed and how it maps to Flutter.
 

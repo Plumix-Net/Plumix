@@ -9,7 +9,8 @@ Related docs:
 - `docs/ai/TEST_MATRIX.md`
 - `docs/ai/PARITY_MATRIX.md`
 - `docs/ai/DIVERGENCES.md`
-- `docs/ai/FEATURE_TEMPLATE.md`
+- `docs/ai/BACKLOG.md`
+- `docs/CUPERTINO_TODO.md`
 
 Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI Semantic Snapshot` block); this file does not duplicate it.
 
@@ -139,6 +140,30 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/MaterialScaffoldTests.cs`
   - `src/Plumix.Tests/MaterialButtonsTests.cs`
   - Control-specific `src/Plumix.Tests/Material<Control>Tests.cs`
+
+### Cupertino Layer
+
+- Goal: strict ports of `cupertino_ui/lib/src/*` into `src/Plumix.Cupertino` (depends only on `Plumix`;
+  Material composes it for `.Adaptive` factories). Work list and per-file status: `docs/CUPERTINO_TODO.md`.
+- Read First:
+  - `src/Plumix.Cupertino/CupertinoTheme.cs` (`CupertinoThemeData`, `CupertinoTheme`, `CupertinoDynamicColor`,
+    `CupertinoColors`, `CupertinoUserInterfaceLevel` — a subset today; the foundation rows in the TODO tighten it)
+  - `src/Plumix.Cupertino/CupertinoLocalizations.cs`
+  - `src/Plumix.Cupertino/CupertinoDialog.cs`, `CupertinoDialogRoute.cs` (dialog family + `showCupertinoDialog`)
+  - `src/Plumix.Cupertino/CupertinoTextSelectionToolbar.cs` + `CupertinoTextSelectionToolbarButton.cs`
+    (+ desktop/adaptive/spell-check variants) — the text-selection toolbar family
+  - `src/Plumix.Material/PageTransitionsTheme.cs` (`CupertinoPageTransitionsBuilder` and the back-swipe detector
+    live here until `route.dart` is ported into `Plumix.Cupertino`)
+- Then per target control: `src/Plumix.Cupertino/Cupertino<Control>.cs` + `src/Plumix.Tests/Cupertino<Control>Tests.cs`
+  + demo pages (`src/Sample/Plumix.Sample/Demos/Cupertino/*`, `dart_sample/lib/demos/cupertino/*`).
+- Existing controls (`CupertinoActivityIndicator`, `CupertinoButton`, `CupertinoCheckbox`, `CupertinoRadio`,
+  `CupertinoSlider`, `CupertinoScrollbar`, `CupertinoMagnifier`) were written to serve Material adaptive
+  controls; several carry `(reference)`/`(adapted)` markers — diff against Dart before extending them.
+- Primary Tests:
+  - `src/Plumix.Tests/CupertinoDialogTests.cs`
+  - `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`, `MaterialSelectionTests.cs` (toolbar family)
+  - Adaptive coverage inside `MaterialCheckboxTests.cs`, `MaterialRadioTests.cs`, `MaterialSwitchTests.cs`,
+    `MaterialSliderTests.cs`, `MaterialCircularProgressIndicatorTests.cs`
 
 ### Runtime and Host
 

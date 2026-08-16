@@ -41,10 +41,12 @@ normative may live only there.
 
 ## Progress Source of Truth
 
-- Historical shipped changes: `CHANGELOG.md`
-- Current status + global roadmap: `docs/FRAMEWORK_PLAN.md` (closed milestones: `docs/FRAMEWORK_PLAN-archive.md`)
+- Historical shipped changes (one line per change; detail is in `git log`): `CHANGELOG.md`
+- Current status + global roadmap: `docs/FRAMEWORK_PLAN.md`
+- Current milestone work list (Cupertino port, per-file status): `docs/CUPERTINO_TODO.md`
+- Open work not tied to one control (upstream re-port deltas, host gaps, blocked iterations): `docs/ai/BACKLOG.md`
 - Module entry points by task: `docs/ai/MODULE_INDEX.md`
-- Flutter file -> C# files/tests/demos (generated): `docs/ai/PORT_MAP.md`
+- Flutter file -> C# files/tests/demos (generated; also lists ports whose marker says `(reference)`/`(approximate)`): `docs/ai/PORT_MAP.md`
 - Non-negotiable behavior rules (architecture, package boundaries, versioning): `docs/ai/INVARIANTS.md`
 - Mandatory Dart-to-C# porting workflow: `docs/ai/PORTING_MODE.md`
 - Step-by-step execution of that workflow: `docs/ai/PORT_PLAYBOOK.md`
@@ -52,23 +54,22 @@ normative may live only there.
 - Intentional divergences from Flutter: `docs/ai/DIVERGENCES.md`
 - Sample parity tracker: `docs/ai/PARITY_MATRIX.md`
 - Feature-to-tests map: `docs/ai/TEST_MATRIX.md`
-- Iteration planning template: `docs/ai/FEATURE_TEMPLATE.md`
-- Archived per-iteration notes (journal, not rules): `docs/ai/notes/`
+- There is no per-iteration journal. History lives in git; anything still open lives in the trackers above. Do not create `docs/ai/notes/`-style files.
 - When task scope changes framework behavior, update tracking docs so agents can infer:
   - what is already done,
   - what remains,
   - what direction has priority now.
-- `CHANGELOG.md` entries must be short (a few lines per change, no test-inventory prose). When the file exceeds roughly 100 KB, rotate the older half into `CHANGELOG-<year>-H<half>.md` and keep only the current period in `CHANGELOG.md`.
+- `CHANGELOG.md` entries are one line each (rules at the top of that file). When a release is tagged, collapse `[Unreleased]` into a few bullets under the version heading; never split the changelog into rotation files.
 
 ## Context Budget Protocol (For AI Agents)
 
 1. Start with read order: `AGENTS.md` -> `docs/FRAMEWORK_PLAN.md` -> `docs/ai/MODULE_INDEX.md` -> targeted tests -> targeted implementation files. For a port, `docs/ai/PORT_PLAYBOOK.md` replaces steps 2-7 of this protocol.
 2. Default scope for Dart-to-C# parity requests: close one control end-to-end in one request (`API/defaults/composition/states/layout/paint/tests`), not a sequence of micro-fixes.
 3. Prefer entering unfamiliar subsystems through their tests (`docs/ai/TEST_MATRIX.md`); open implementation hotspot files (`Widgets/Scroll.cs`, `Rendering/Sliver.cs`, `Widgets/Navigation.cs`, `Widgets/Framework.Element.cs`, `SemanticsTreeTests.cs`) only when the task explicitly requires them.
-3a. `docs/ai/PORT_MAP.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/TEST_MATRIX.md` and `docs/ai/DIVERGENCES.md` are lookup tables — grep them for the control/subsystem you are touching, never read them end-to-end. Same for `docs/FRAMEWORK_PLAN-archive.md` and `docs/ai/notes/`.
+3a. `docs/ai/PORT_MAP.md`, `docs/ai/PARITY_MATRIX.md`, `docs/ai/TEST_MATRIX.md` and `docs/ai/DIVERGENCES.md` are lookup tables — grep them for the control/subsystem you are touching, never read them end-to-end.
 3b. Flutter Dart sources over ~800 lines must go through `docs/ai/DART_SPEC_PROTOCOL.md` (separate context, dense spec back) instead of being read into the working context. `input_decorator.dart` alone is 6107 lines.
 4. Expand context proactively when needed to finish the current control in the same request; do not stop at partial parity unless blocked by a concrete missing primitive.
-5. A task note (`docs/ai/FEATURE_TEMPLATE.md`, stored in `docs/ai/notes/`) is required only when an iteration ends blocked (unclosed parity with a concrete blocker) or introduces a divergence. Routine closed iterations need only `CHANGELOG.md` and matrix updates.
+5. If an iteration ends blocked (unclosed parity with a concrete blocker), add a row to `docs/ai/BACKLOG.md` (what remains, next step, blocker); a divergence gets a row in `docs/ai/DIVERGENCES.md`. Routine closed iterations need only `CHANGELOG.md`, the `docs/CUPERTINO_TODO.md` row and matrix updates.
 6. If sample behavior changes, update both `src/Sample/Plumix.Sample` and `dart_sample` in the same iteration and reflect status in `docs/ai/PARITY_MATRIX.md` (scope per `docs/ai/INVARIANTS.md` Sample Parity).
 7. Before finishing, update docs with minimal deltas only (`CHANGELOG.md`, `docs/FRAMEWORK_PLAN.md`, and relevant `docs/ai/*` files) and keep `dotnet test src/Plumix.Tests/Plumix.Tests.csproj` green.
 

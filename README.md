@@ -119,4 +119,4 @@ Prefer classic Flutter style? `StatefulWidget`/`SetState` work from F# too — s
 
 Plumix is developed AI-first: code contributions are expected to be produced with a frontier coding agent (Claude Opus 4.8, GPT-5.5, or newer). Bug reports and discussions are welcome from everyone. See [`CONTRIBUTING.md`](CONTRIBUTING.md) for the workflow, commands, and PR checklist.
 
-Looking for something to work on? [`docs/MATERIAL_TODO.md`](docs/MATERIAL_TODO.md) lists the Material widgets that still need porting — pick one, claim it, and send a PR.
+Looking for something to work on? [`docs/CUPERTINO_TODO.md`](docs/CUPERTINO_TODO.md) lists the Cupertino widgets that still need porting — pick one, claim it, and send a PR.
