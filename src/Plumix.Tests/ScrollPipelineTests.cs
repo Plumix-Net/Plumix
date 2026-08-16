@@ -65,7 +65,10 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void ScrollPosition_JumpForcesTheRequestedOffsetBeforeBallisticSettling()
     {
-        using var position = new ScrollPosition(initialPixels: 10);
+        using var position = new ScrollPosition(
+            new ClampingScrollPhysics(),
+            new TestScrollContext(),
+            initialPixels: 10);
         int notifications = 0;
         position.AddListener(() => notifications += 1);
 
@@ -84,7 +87,7 @@ public sealed class ScrollPipelineTests
         Scheduler.ResetForTests();
         try
         {
-            var position = new ScrollPosition(initialPixels: 40);
+            var position = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext(), initialPixels: 40);
             position.ApplyViewportDimension(120);
             position.ApplyContentDimensions(0, 800);
 
@@ -103,8 +106,8 @@ public sealed class ScrollPipelineTests
     public void ScrollController_JumpTo_UpdatesAttachedPositions()
     {
         var controller = new ScrollController();
-        var first = controller.CreateScrollPosition();
-        var second = controller.CreateScrollPosition();
+        var first = controller.CreateScrollPosition(controller.Physics, new TestScrollContext(), null);
+        var second = controller.CreateScrollPosition(controller.Physics, new TestScrollContext(), null);
 
         first.ApplyViewportDimension(100);
         first.ApplyContentDimensions(0, 200);
@@ -1143,6 +1146,448 @@ public sealed class ScrollPipelineTests
 
         Assert.NotNull(context);
         Assert.False(Scrollable.RecommendDeferredLoadingForContext(context!.Value));
+    }
+
+    // ---- ScrollContext / ignore-pointer parity (scroll_context.dart, scroll_activity.dart) ----
+
+    [Fact]
+    public void ScrollActivity_ShouldIgnorePointer_FollowsFlutterPerActivity()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var context = new TestScrollContext();
+            using var position = new ScrollPosition(new ClampingScrollPhysics(), context);
+            position.ApplyViewportDimension(100);
+            position.ApplyContentDimensions(0, 1000);
+
+            // Idle and hold let pointer events through to the children.
+            Assert.IsType<IdleScrollActivity>(position.Activity);
+            Assert.False(position.Activity.ShouldIgnorePointer);
+            Assert.False(position.ShouldIgnorePointer);
+            position.Hold();
+            Assert.False(position.Activity.ShouldIgnorePointer);
+            Assert.False(context.IgnorePointer);
+
+            // A touch drag ignores them from the moment it is recognized ...
+            position.Drag(new DragStartDetails(new Point(0, 0), Kind: PointerDeviceKind.Touch));
+            Assert.True(position.Activity.ShouldIgnorePointer);
+            Assert.True(context.IgnorePointer);
+
+            // ... and the fling that follows it keeps ignoring them until it stops.
+            position.GoBallistic(500);
+            Assert.IsType<BallisticScrollActivity>(position.Activity);
+            Assert.True(position.Activity.ShouldIgnorePointer);
+            Assert.True(context.IgnorePointer);
+
+            // A trackpad drag does not (Flutter's `_kind != PointerDeviceKind.trackpad`) ...
+            position.Drag(new DragStartDetails(new Point(0, 0), Kind: PointerDeviceKind.Trackpad));
+            Assert.False(position.Activity.ShouldIgnorePointer);
+            Assert.False(context.IgnorePointer);
+            // ... and neither does the inertia following it: the ballistic activity inherits the
+            // position's flag at the moment it starts.
+            position.GoBallistic(500);
+            Assert.IsType<BallisticScrollActivity>(position.Activity);
+            Assert.False(position.Activity.ShouldIgnorePointer);
+            Assert.False(context.IgnorePointer);
+
+            // A driven animation always ignores pointers.
+            position.AnimateTo(300, TimeSpan.FromMilliseconds(200));
+            Assert.IsType<DrivenScrollActivity>(position.Activity);
+            Assert.True(position.Activity.ShouldIgnorePointer);
+            Assert.True(context.IgnorePointer);
+            position.GoIdle();
+            Assert.False(context.IgnorePointer);
+
+            // The context is only told about transitions, never re-told the same value.
+            Assert.Equal([true, false, true, false], context.IgnorePointerLog);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void ScrollPosition_OverscrolledPosition_LetsChildrenReceivePointers()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var context = new TestScrollContext();
+            using var position = new ScrollPosition(new BouncingScrollPhysics(), context);
+            position.ApplyViewportDimension(100);
+            position.ApplyContentDimensions(0, 1000);
+
+            // Drag past the leading edge: the drag itself ignores pointers ...
+            position.Drag(new DragStartDetails(new Point(0, 0), Kind: PointerDeviceKind.Touch));
+            Assert.True(context.IgnorePointer);
+            position.ApplyUserOffset(80);
+            Assert.True(position.OutOfRange);
+            // ... but as soon as the pixels leave the range the flag is dropped, and the ballistic
+            // settle that follows starts without it, so children can be tapped while the view
+            // springs back (Flutter's `shouldIgnorePointer => !outOfRange && ...`).
+            Assert.False(context.IgnorePointer);
+            Assert.False(position.ShouldIgnorePointer);
+            position.GoBallistic(0);
+            Assert.IsType<BallisticScrollActivity>(position.Activity);
+            Assert.False(position.Activity.ShouldIgnorePointer);
+            Assert.False(context.IgnorePointer);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void ScrollPosition_DrivesTheContext_ForCanDragSemanticsAndSaveOffset()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var context = new TestScrollContext(AxisDirection.Right, devicePixelRatio: 3.0);
+            using var position = new ScrollPosition(new ClampingScrollPhysics(), context, initialPixels: 20);
+            Assert.Same(context, position.Context);
+            Assert.Equal(AxisDirection.Right, position.AxisDirection);
+            Assert.Equal(3.0, position.DevicePixelRatio);
+
+            position.ApplyViewportDimension(100);
+            position.ApplyContentDimensions(0, 1000);
+            // Dimensions arriving re-evaluate the physics' shouldAcceptUserOffset through setCanDrag.
+            Assert.True(context.CanDrag);
+            // At pixels 20 on a horizontal axis both scroll-left and scroll-right are possible.
+            Assert.Equal(
+                SemanticsActions.ScrollLeft | SemanticsActions.ScrollRight,
+                context.SemanticsActions);
+
+            position.JumpTo(0);
+            position.ApplyContentDimensions(0, 0);
+            Assert.False(context.CanDrag);
+
+            // Ending a scroll persists the offset through the context (restoration hook).
+            position.ApplyContentDimensions(0, 1000);
+            position.JumpTo(40);
+            position.DidEndScroll();
+            Assert.Equal(40.0, Assert.Single(context.SavedOffsets));
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void ScrollPosition_ConstructorAbsorbsTheOldPosition_AndPushesItsIgnoreFlag()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var oldContext = new TestScrollContext();
+            var oldPosition = new ScrollPosition(new ClampingScrollPhysics(), oldContext, initialPixels: 30);
+            oldPosition.ApplyViewportDimension(100);
+            oldPosition.ApplyContentDimensions(0, 1000);
+            oldPosition.Drag(new DragStartDetails(new Point(0, 0), Kind: PointerDeviceKind.Touch));
+            oldPosition.GoBallistic(800);
+            ScrollActivity ballistic = oldPosition.Activity;
+            Assert.IsType<BallisticScrollActivity>(ballistic);
+
+            var context = new TestScrollContext();
+            using var position = new ScrollPosition(
+                new ClampingScrollPhysics(),
+                context,
+                initialPixels: 0,
+                oldPosition: oldPosition);
+
+            // Dart's base constructor absorbs before initialPixels is looked at: the absorbed
+            // pixels and activity win, and the new context learns the activity's ignore flag.
+            Assert.Equal(30.0, position.Pixels);
+            Assert.Same(ballistic, position.Activity);
+            Assert.True(context.IgnorePointer);
+            Assert.IsType<IdleScrollActivity>(oldPosition.Activity);
+            oldPosition.Dispose();
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void ScrollController_CreateScrollPosition_ReceivesTheContextAndTheReplacedPosition()
+    {
+        var controller = new RecordingScrollController();
+        var harness = new WidgetRenderHarness(
+            new PhysicsSwitcher(
+                controller,
+                new ClampingScrollPhysics(),
+                out Action<ScrollPhysics> setPhysics));
+        harness.Pump(new Size(200, 240));
+
+        (IScrollContext context, ScrollPosition? oldPosition) = Assert.Single(controller.Calls);
+        Assert.Null(oldPosition);
+        Scrollable.ScrollableState state = Assert.IsAssignableFrom<Scrollable.ScrollableState>(context);
+        Assert.Same(state, Scrollable.MaybeOf(controller.PrimaryPosition!.Context.NotificationContext!.Value));
+        Assert.Same(state.Position, controller.PrimaryPosition);
+        ScrollPosition first = controller.PrimaryPosition!;
+
+        // A physics change replaces the position: the old one is handed to the controller so the
+        // new one can absorb it.
+        setPhysics(new BouncingScrollPhysics());
+        harness.Pump(new Size(200, 240));
+        Assert.Equal(2, controller.Calls.Count);
+        Assert.Same(first, controller.Calls[1].OldPosition);
+        Assert.Same(context, controller.Calls[1].Context);
+    }
+
+    [Fact]
+    public void Scrollable_HoldDoesNotDisableUserInteraction()
+    {
+        // Regression test for https://github.com/flutter/flutter/issues/66816.
+        GestureBinding.Instance.ResetForTests();
+        Scheduler.ResetForTests();
+        try
+        {
+            var controller = new ScrollController();
+            var harness = new WidgetRenderHarness(TappableScrollView(controller));
+            var viewport = new Size(200, 240);
+            harness.Pump(viewport);
+            RenderIgnorePointer ignorePointer = ViewportIgnorePointer(harness);
+            Assert.False(ignorePointer.Ignoring);
+
+            DateTime now = DateTime.UtcNow;
+            GestureBinding.Instance.HandlePointerEvent(
+                harness.RenderView,
+                new PointerDownEvent(
+                    820, PointerDeviceKind.Touch, new Point(80, 100), PointerButtons.Primary, now));
+            Assert.IsType<HoldScrollActivity>(controller.PrimaryPosition!.Activity);
+            Assert.False(ignorePointer.Ignoring);
+
+            GestureBinding.Instance.HandlePointerEvent(
+                harness.RenderView,
+                new PointerUpEvent(
+                    820, PointerDeviceKind.Touch, new Point(80, 100), PointerButtons.None, now.AddMilliseconds(30)));
+            Assert.False(ignorePointer.Ignoring);
+        }
+        finally
+        {
+            GestureBinding.Instance.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scrollable_DragDisablesUserInteractionWhenRecognized_BallisticUntilItStops()
+    {
+        GestureBinding.Instance.ResetForTests();
+        Scheduler.ResetForTests();
+        try
+        {
+            var controller = new ScrollController();
+            var harness = new WidgetRenderHarness(TappableScrollView(controller));
+            var viewport = new Size(200, 240);
+            harness.Pump(viewport);
+            RenderIgnorePointer ignorePointer = ViewportIgnorePointer(harness);
+            Assert.False(ignorePointer.Ignoring);
+
+            DateTime now = DateTime.UtcNow;
+            GestureBinding.Instance.HandlePointerEvent(
+                harness.RenderView,
+                new PointerDownEvent(
+                    821, PointerDeviceKind.Touch, new Point(80, 200), PointerButtons.Primary, now));
+            Assert.False(ignorePointer.Ignoring);
+
+            // Starts ignoring when the drag is recognized.
+            GestureBinding.Instance.HandlePointerEvent(
+                harness.RenderView,
+                new PointerMoveEvent(
+                    821, PointerDeviceKind.Touch, new Point(80, 170), PointerButtons.Primary, true,
+                    now.AddMilliseconds(16)));
+            Assert.IsType<DragScrollActivity>(controller.PrimaryPosition!.Activity);
+            Assert.True(ignorePointer.Ignoring);
+
+            // A fling keeps ignoring while the ballistic activity runs ...
+            for (int step = 2; step <= 4; step++)
+            {
+                GestureBinding.Instance.HandlePointerEvent(
+                    harness.RenderView,
+                    new PointerMoveEvent(
+                        821, PointerDeviceKind.Touch, new Point(80, 200 - (step * 30)), PointerButtons.Primary, true,
+                        now.AddMilliseconds(16 * step)));
+            }
+
+            GestureBinding.Instance.HandlePointerEvent(
+                harness.RenderView,
+                new PointerUpEvent(
+                    821, PointerDeviceKind.Touch, new Point(80, 80), PointerButtons.None, now.AddMilliseconds(80)));
+            Assert.IsType<BallisticScrollActivity>(controller.PrimaryPosition!.Activity);
+            Assert.True(ignorePointer.Ignoring);
+
+            // ... and stops when the activity ends.
+            for (int frame = 1; frame <= 600 && controller.PrimaryPosition!.Activity is not IdleScrollActivity; frame++)
+            {
+                Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16 * frame));
+                harness.Pump(viewport);
+            }
+
+            Assert.IsType<IdleScrollActivity>(controller.PrimaryPosition!.Activity);
+            Assert.False(ignorePointer.Ignoring);
+        }
+        finally
+        {
+            GestureBinding.Instance.ResetForTests();
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Scrollable_NotificationContext_SitsInsideTheScrollBehaviorWrappers()
+    {
+        var controller = new ScrollController();
+        var seen = new List<ScrollNotification>();
+        var harness = new WidgetRenderHarness(
+            new ScrollConfiguration(
+                behavior: new NotifyingScrollBehavior(seen.Add),
+                child: ListView.Builder(
+                    itemCount: 40,
+                    itemExtent: 40,
+                    controller: controller,
+                    addAutomaticKeepAlives: false,
+                    itemBuilder: (_, _) => new SizedBox(height: 40))));
+        harness.Pump(new Size(200, 240));
+
+        // The scrollbar/overscroll wrappers a ScrollBehavior builds live *between* the state and
+        // the gesture detector, so notifications dispatched from the notification context reach them.
+        controller.PrimaryPosition!.DidStartScroll();
+        ScrollNotification notification = Assert.Single(seen);
+        Assert.IsType<ScrollStartNotification>(notification);
+        // And Scrollable.of(notification.context) resolves to the scrollable that sent it.
+        Assert.Same(controller.PrimaryPosition!.Context, Scrollable.Of(notification.Context!.Value));
+    }
+
+    private static Widget TappableScrollView(ScrollController controller) => new CustomScrollView(
+        controller: controller,
+        physics: new AlwaysScrollableScrollPhysics(),
+        slivers:
+        [
+            new SliverToBoxAdapter(
+                child: new SizedBox(height: 2000, child: new GestureDetector(onTap: static () => { }))),
+        ]);
+
+    /// <summary>The <see cref="IgnorePointer"/> a scrollable wraps its viewport in.</summary>
+    private static RenderIgnorePointer ViewportIgnorePointer(WidgetRenderHarness harness)
+    {
+        List<RenderIgnorePointer> found = [];
+        void Visit(RenderObject node)
+        {
+            if (node is RenderIgnorePointer ignorePointer && FindDescendant<RenderViewport>(ignorePointer) != null)
+            {
+                found.Add(ignorePointer);
+            }
+
+            node.VisitChildren(Visit);
+        }
+
+        Visit(harness.RenderView);
+        return Assert.Single(found);
+    }
+
+    private static T? FindDescendant<T>(RenderObject root) where T : RenderObject
+    {
+        T? result = null;
+        void Visit(RenderObject node)
+        {
+            if (result != null)
+            {
+                return;
+            }
+
+            if (node is T match)
+            {
+                result = match;
+                return;
+            }
+
+            node.VisitChildren(Visit);
+        }
+
+        root.VisitChildren(Visit);
+        return result;
+    }
+
+    private sealed class RecordingScrollController : ScrollController
+    {
+        public List<(IScrollContext Context, ScrollPosition? OldPosition)> Calls { get; } = [];
+
+        public override ScrollPosition CreateScrollPosition(
+            ScrollPhysics physics,
+            IScrollContext context,
+            ScrollPosition? oldPosition)
+        {
+            Calls.Add((context, oldPosition));
+            return base.CreateScrollPosition(physics, context, oldPosition);
+        }
+    }
+
+    /// <summary>A list whose physics can be swapped from outside, forcing a position replacement.</summary>
+    private sealed class PhysicsSwitcher : StatefulWidget
+    {
+        private readonly ScrollController _controller;
+        private readonly ScrollPhysics _initialPhysics;
+        private readonly Action<Action<ScrollPhysics>> _publish;
+
+        public PhysicsSwitcher(
+            ScrollController controller,
+            ScrollPhysics initialPhysics,
+            out Action<ScrollPhysics> setPhysics)
+        {
+            _controller = controller;
+            _initialPhysics = initialPhysics;
+            Action<ScrollPhysics>? setter = null;
+            _publish = value => setter = value;
+            setPhysics = physics => setter!(physics);
+        }
+
+        public override State CreateState() => new PhysicsSwitcherState();
+
+        private sealed class PhysicsSwitcherState : State
+        {
+            private ScrollPhysics _physics = null!;
+
+            public override void InitState()
+            {
+                base.InitState();
+                var widget = (PhysicsSwitcher)StateWidget;
+                _physics = widget._initialPhysics;
+                widget._publish(physics => SetState(() => _physics = physics));
+            }
+
+            public override Widget Build(BuildContext context)
+            {
+                var widget = (PhysicsSwitcher)StateWidget;
+                return ListView.Builder(
+                    itemCount: 40,
+                    itemExtent: 40,
+                    controller: widget._controller,
+                    physics: _physics,
+                    addAutomaticKeepAlives: false,
+                    itemBuilder: (_, _) => new SizedBox(height: 40));
+            }
+        }
+    }
+
+    private sealed class NotifyingScrollBehavior(Action<ScrollNotification> onNotification) : ScrollBehavior
+    {
+        public override Widget BuildScrollbar(BuildContext context, Widget child, ScrollableDetails details)
+        {
+            return new NotificationListener<ScrollNotification>(
+                onNotification: notification =>
+                {
+                    onNotification(notification);
+                    return false;
+                },
+                child: child);
+        }
     }
 
     private static ScrollActivity FlingAndReadActivity(ScrollPhysics physics, int pointer)

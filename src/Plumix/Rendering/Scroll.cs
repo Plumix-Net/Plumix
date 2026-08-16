@@ -3,6 +3,7 @@ using Plumix;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Physics;
+using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/scroll_position.dart; flutter/packages/flutter/lib/src/widgets/scroll_physics.dart; flutter/packages/flutter/lib/src/widgets/scroll_activity.dart (adapted)
@@ -186,6 +187,15 @@ public abstract class ScrollActivity : IDisposable
         Delegate = value;
     }
 
+    /// <summary>
+    /// Whether the scroll view should ignore pointer events while performing this activity.
+    /// </summary>
+    /// <remarks>
+    /// See also <see cref="IsScrolling"/>, which describes whether the activity is considered to
+    /// represent user interaction or not.
+    /// </remarks>
+    public abstract bool ShouldIgnorePointer { get; }
+
     /// <summary>Whether performing this activity constitutes scrolling.</summary>
     public virtual bool IsScrolling => true;
 
@@ -216,6 +226,8 @@ public abstract class ScrollActivity : IDisposable
 
 public sealed class IdleScrollActivity(IScrollActivityDelegate @delegate) : ScrollActivity(@delegate)
 {
+    public override bool ShouldIgnorePointer => false;
+
     public override bool IsScrolling => false;
 
     public override void ApplyNewDimensions() => Delegate.GoBallistic(0.0);
@@ -234,6 +246,8 @@ public sealed class HoldScrollActivity : ScrollActivity, IScrollHoldController
     {
         _onHoldCanceled = onHoldCanceled;
     }
+
+    public override bool ShouldIgnorePointer => false;
 
     public override bool IsScrolling => false;
 
@@ -262,6 +276,9 @@ public sealed class DragScrollActivity : ScrollActivity
         _controller = controller;
     }
 
+    public override bool ShouldIgnorePointer => _controller?.Kind != PointerDeviceKind.Trackpad;
+
+    // DragScrollActivity is not independently changing velocity yet until the drag is ended.
     public override double Velocity => 0.0;
 
     public override void Dispose()
@@ -324,10 +341,14 @@ public sealed class ScrollDragController : IDrag, IDisposable
         _retainMomentum = carriedVelocity is not null and not 0.0;
         _lastNonStationaryTimestampUtc = details.SourceTimeStampUtc;
         _offsetSinceLastStop = motionStartDistanceThreshold == null ? null : 0.0;
+        Kind = details.Kind;
     }
 
     /// <summary>The delegate this drag scrolls.</summary>
     public IScrollActivityDelegate Delegate { get; private set; }
+
+    /// <summary>The kind of pointer driving this drag (Flutter's <c>_kind</c>).</summary>
+    public PointerDeviceKind? Kind { get; }
 
     /// <summary>
     /// Re-points this drag at the delegate that absorbed it (Flutter's
@@ -495,6 +516,7 @@ public sealed class ScrollDragController : IDrag, IDisposable
 
 public sealed class PointerScrollActivity(IScrollActivityDelegate @delegate) : ScrollActivity(@delegate)
 {
+    public override bool ShouldIgnorePointer => false;
 }
 
 public sealed class DrivenScrollActivity : ScrollActivity
@@ -515,8 +537,9 @@ public sealed class DrivenScrollActivity : ScrollActivity
         double to,
         TimeSpan duration,
         Curve curve,
-        ITickerProvider? vsync) : base(@delegate)
+        ITickerProvider vsync) : base(@delegate)
     {
+        ArgumentNullException.ThrowIfNull(vsync);
         if (!double.IsFinite(from))
         {
             throw new ArgumentOutOfRangeException(nameof(from));
@@ -534,7 +557,7 @@ public sealed class DrivenScrollActivity : ScrollActivity
         _to = to;
         _duration = duration;
         _curve = curve ?? throw new ArgumentNullException(nameof(curve));
-        _ticker = vsync?.CreateTicker(OnTick) ?? new Ticker(OnTick);
+        _ticker = vsync.CreateTicker(OnTick);
         _ticker.Start();
     }
 
@@ -543,6 +566,8 @@ public sealed class DrivenScrollActivity : ScrollActivity
     /// can hand back Flutter's <c>Future&lt;void&gt;</c>.
     /// </summary>
     public Task Done => _completer.Task;
+
+    public override bool ShouldIgnorePointer => true;
 
     public override void Dispose()
     {
@@ -586,12 +611,17 @@ public class BallisticScrollActivity : ScrollActivity
     public BallisticScrollActivity(
         IScrollActivityDelegate @delegate,
         Simulation simulation,
-        ITickerProvider? vsync) : base(@delegate)
+        ITickerProvider vsync,
+        bool shouldIgnorePointer) : base(@delegate)
     {
+        ArgumentNullException.ThrowIfNull(vsync);
         _simulation = simulation;
-        _ticker = vsync?.CreateTicker(OnTick) ?? new Ticker(OnTick);
+        ShouldIgnorePointer = shouldIgnorePointer;
+        _ticker = vsync.CreateTicker(OnTick);
         _ticker.Start();
     }
+
+    public override bool ShouldIgnorePointer { get; }
 
     public override double Velocity => _disposed ? 0.0 : _simulation.DX(_elapsedSeconds);
 
@@ -690,32 +720,56 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     private double _heldPreviousVelocity;
     private double _impliedVelocity;
 
-    public ScrollPosition(
-        double initialPixels = 0.0,
-        ScrollPhysics? physics = null,
-        bool keepScrollOffset = true)
-        : this((double?)initialPixels, physics, keepScrollOffset)
-    {
-    }
-
     /// <summary>
-    /// Creates a position whose offset is not known yet. A null <paramref name="initialPixels"/>
-    /// leaves <see cref="HasPixels"/> false until the first layout supplies a viewport dimension,
-    /// which is what lets a subclass derive its offset from the viewport (Flutter's
-    /// <c>ScrollPosition(initialPixels: null)</c>).
+    /// Creates a scroll position driven by <paramref name="context"/> (Flutter's
+    /// <c>ScrollPositionWithSingleContext</c>, which Plumix folds into <see cref="ScrollPosition"/>).
     /// </summary>
-    protected ScrollPosition(
-        double? initialPixels,
-        ScrollPhysics? physics = null,
-        bool keepScrollOffset = true)
+    /// <param name="physics">How the position responds to user input.</param>
+    /// <param name="context">The scrollable this position drives, and reads its vsync from.</param>
+    /// <param name="initialPixels">
+    /// The offset to start at. Null leaves <see cref="HasPixels"/> false until the first layout
+    /// supplies a viewport dimension, which is what lets a subclass derive its offset from the
+    /// viewport (Flutter's <c>initialPixels: null</c>).
+    /// </param>
+    /// <param name="keepScrollOffset">Whether the offset persists through <see cref="PageStorage"/>.</param>
+    /// <param name="oldPosition">
+    /// A position this one takes the in-flight scroll state over from (<see cref="Absorb"/>).
+    /// </param>
+    /// <param name="debugLabel">A label used in <see cref="ToString"/> output.</param>
+    public ScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
+        double? initialPixels = 0.0,
+        bool keepScrollOffset = true,
+        ScrollPosition? oldPosition = null,
+        string? debugLabel = null)
     {
-        _pixels = initialPixels ?? 0.0;
-        _hasPixels = initialPixels.HasValue;
+        ArgumentNullException.ThrowIfNull(physics);
+        ArgumentNullException.ThrowIfNull(context);
+        _physics = physics;
+        Context = context;
         KeepScrollOffset = keepScrollOffset;
-        _physics = physics ?? new ClampingScrollPhysics();
+        DebugLabel = debugLabel;
         _activity = new IdleScrollActivity(this);
         IsScrollingNotifier = new ValueNotifier<bool>(false);
+        if (oldPosition != null)
+        {
+            // Absorb may set the pixels and the activity, exactly as Dart's base constructor does
+            // before ScrollPositionWithSingleContext looks at initialPixels.
+            Absorb(oldPosition);
+        }
+
+        if (!_hasPixels && initialPixels is { } pixels)
+        {
+            CorrectPixels(pixels);
+        }
     }
+
+    /// <summary>Where the scroll position is being used, and its <see cref="IScrollContext.Vsync"/>.</summary>
+    public IScrollContext Context { get; }
+
+    /// <summary>A label that is used in the <see cref="ToString"/> output.</summary>
+    public string? DebugLabel { get; }
 
     /// <summary>
     /// The current offset. Flutter asserts when the offset has not been established yet; Plumix
@@ -767,35 +821,35 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
 
     public ScrollActivity Activity => _activity;
 
-    public AxisDirection AxisDirection { get; internal set; } = AxisDirection.Down;
+    /// <remarks>Flutter's <c>ScrollPositionWithSingleContext.axisDirection</c>.</remarks>
+    public AxisDirection AxisDirection => Context.AxisDirection;
 
     /// <summary>The axis along which this position scrolls.</summary>
     public Axis Axis => ScrollDirectionUtils.AxisDirectionToAxis(AxisDirection);
 
-    public double DevicePixelRatio { get; internal set; } = 1.0;
+    public double DevicePixelRatio => Context.DevicePixelRatio;
 
     public ValueNotifier<bool> IsScrollingNotifier { get; }
 
-    internal ITickerProvider? TickerProvider { get; set; }
-
     /// <summary>
-    /// The context a scroll position dispatches its notifications from. Flutter reaches this through
-    /// <c>ScrollPosition.context.notificationContext</c>; Plumix has no separate `ScrollContext`, so the
-    /// owning <see cref="Scrollable.ScrollableState"/> hands its own context to the position instead.
-    /// </summary>
-    public BuildContext? NotificationContext { get; internal set; }
-
-    /// <summary>
-    /// The key a <see cref="PageStorage"/> round-trip is filed under. Flutter reaches it through
-    /// <c>ScrollPosition.context.storageContext</c> plus the scrollable's restoration id.
+    /// The key a <see cref="PageStorage"/> round-trip is filed under: the scrollable's restoration
+    /// id. Plumix's <see cref="Scrollable"/> has not adopted the restoration buckets yet, so the
+    /// id keys the <see cref="PageStorage"/> entry instead (Flutter files it under the storage
+    /// context alone).
     /// </summary>
     internal string? RestorationId { get; set; }
 
     /// <summary>
-    /// Invoked with <see cref="ScrollPhysics.ShouldAcceptUserOffset"/> whenever the dimensions
-    /// change, so the owning scrollable can add or remove its drag gesture recognizers.
+    /// Whether scrollables should absorb pointer events at this position.
     /// </summary>
-    internal Action<bool>? CanDragChanged { get; set; }
+    /// <remarks>
+    /// This value relates to the current <see cref="ScrollActivity"/>, which determines if
+    /// additional touch input should be received by the scroll view or its children. If the
+    /// position is overscrolled, as is allowed by <see cref="BouncingScrollPhysics"/>, children of
+    /// the scroll view will receive pointer events as the scroll view settles back from the
+    /// overscrolled state.
+    /// </remarks>
+    public bool ShouldIgnorePointer => !OutOfRange && Activity.ShouldIgnorePointer;
 
     public override ScrollDirection UserScrollDirection => _userScrollDirection;
 
@@ -837,7 +891,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
             to: to,
             duration: duration,
             curve: curve ?? Curves.Linear,
-            vsync: TickerProvider);
+            vsync: Context.Vsync);
         BeginActivity(activity);
         return activity.Done;
     }
@@ -1020,22 +1074,24 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     /// <summary>Stores <paramref name="value"/> under this position's restoration id.</summary>
     protected void WriteStorageOffset(double value)
     {
-        if (!KeepScrollOffset || NotificationContext is not { } context)
+        if (!KeepScrollOffset)
         {
             return;
         }
 
+        BuildContext context = Context.StorageContext;
         PageStorage.MaybeOf(context)?.WriteState(context, value, RestorationId);
     }
 
     /// <summary>Reads the value stored under this position's restoration id.</summary>
     protected double? ReadStorageOffset()
     {
-        if (!KeepScrollOffset || NotificationContext is not { } context)
+        if (!KeepScrollOffset)
         {
             return null;
         }
 
+        BuildContext context = Context.StorageContext;
         return PageStorage.MaybeOf(context)?.ReadState(context, RestorationId) is double offset
                && double.IsFinite(offset)
             ? offset
@@ -1116,7 +1172,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
             return;
         }
 
-        BeginActivity(new BallisticScrollActivity(this, simulation, TickerProvider));
+        BeginActivity(new BallisticScrollActivity(this, simulation, Context.Vsync, ShouldIgnorePointer));
     }
 
     public virtual void ApplyUserOffset(double delta)
@@ -1255,7 +1311,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     public void DidUpdateScrollMetrics()
     {
         _haveScheduledUpdateNotification = false;
-        if (NotificationContext is { } context)
+        if (Context.NotificationContext is { } context)
         {
             new ScrollMetricsNotification(CopyWith(), context).Dispatch(context);
         }
@@ -1315,19 +1371,9 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     protected virtual void ApplyNewDimensions()
     {
         Activity.ApplyNewDimensions();
-        CanDragChanged?.Invoke(Physics.ShouldAcceptUserOffset(this));
+        Context.SetCanDrag(Physics.ShouldAcceptUserOffset(this));
         UpdateSemanticActions();
     }
-
-    /// <summary>
-    /// Raised whenever the set of scroll directions the position still accepts changes, so that the
-    /// scrollable can filter the semantics actions its gesture handler exposes.
-    /// </summary>
-    /// <remarks>
-    /// Flutter routes this through <c>ScrollContext.setSemanticsActions</c>; Plumix has no
-    /// <c>ScrollContext</c>, so the scrollable subscribes to this event instead.
-    /// </remarks>
-    public event Action<SemanticsActions>? SemanticActionsChanged;
 
     private SemanticsActions? _semanticActions;
 
@@ -1363,7 +1409,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
         }
 
         _semanticActions = actions;
-        SemanticActionsChanged?.Invoke(actions);
+        Context.SetSemanticsActions(actions);
     }
 
     /// <summary>
@@ -1400,6 +1446,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
             _activity.ResetActivity();
         }
 
+        Context.SetIgnorePointer(_activity.ShouldIgnorePointer);
         IsScrollingNotifier.Value = _activity.IsScrolling;
 
         if (other._currentDrag is { } drag)
@@ -1428,8 +1475,14 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
             return;
         }
 
+        bool oldIgnorePointer = _activity.ShouldIgnorePointer;
         _activity.Dispose();
         _activity = activity;
+        if (oldIgnorePointer != activity.ShouldIgnorePointer)
+        {
+            Context.SetIgnorePointer(activity.ShouldIgnorePointer);
+        }
+
         ScrollDragController? previousDrag = _currentDrag;
         _currentDrag = null;
         previousDrag?.Dispose();
@@ -1493,6 +1546,11 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
         _hasPixels = true;
         if (Math.Abs(_pixels - oldPixels) > Constants.PrecisionErrorTolerance)
         {
+            if (OutOfRange)
+            {
+                Context.SetIgnorePointer(false);
+            }
+
             NotifyListeners();
             UpdateSemanticActions();
         }
@@ -1532,7 +1590,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     /// <remarks>Flutter's <c>ScrollPosition.didStartScroll</c>.</remarks>
     public void DidStartScroll()
     {
-        if (NotificationContext is { } context)
+        if (Context.NotificationContext is { } context)
         {
             new ScrollStartNotification(CopyWith()).Dispatch(context);
         }
@@ -1542,7 +1600,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     /// <remarks>Flutter's <c>ScrollPosition.didUpdateScrollPositionBy</c>.</remarks>
     public void DidUpdateScrollPositionBy(double delta)
     {
-        if (NotificationContext is { } context)
+        if (Context.NotificationContext is { } context)
         {
             new ScrollUpdateNotification(CopyWith(), scrollDelta: delta).Dispatch(context);
         }
@@ -1552,9 +1610,24 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     /// <remarks>Flutter's <c>ScrollPosition.didEndScroll</c>.</remarks>
     public void DidEndScroll()
     {
-        if (NotificationContext is { } context)
+        if (Context.NotificationContext is { } context)
         {
             new ScrollEndNotification(CopyWith()).Dispatch(context);
+        }
+
+        SaveOffset();
+    }
+
+    /// <summary>
+    /// Called whenever scrolling ends, to persist the current scroll offset for state restoration
+    /// purposes through <see cref="IScrollContext.SaveOffset"/>.
+    /// </summary>
+    /// <remarks>Flutter's <c>ScrollPositionWithSingleContext.saveOffset</c>.</remarks>
+    protected virtual void SaveOffset()
+    {
+        if (_hasPixels)
+        {
+            Context.SaveOffset(Pixels);
         }
     }
 
@@ -1562,7 +1635,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     /// <remarks>Flutter's <c>ScrollPosition.didOverscrollBy</c>.</remarks>
     public void DidOverscrollBy(double value)
     {
-        if (NotificationContext is { } context)
+        if (Context.NotificationContext is { } context)
         {
             new OverscrollNotification(CopyWith(), overscroll: value).Dispatch(context);
         }
@@ -1572,7 +1645,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
     /// <remarks>Flutter's <c>ScrollPosition.didUpdateScrollDirection</c>.</remarks>
     public void DidUpdateScrollDirection(ScrollDirection direction)
     {
-        if (NotificationContext is { } context)
+        if (Context.NotificationContext is { } context)
         {
             new UserScrollNotification(CopyWith(), direction).Dispatch(context);
         }

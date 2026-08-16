@@ -429,6 +429,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/safe_area.dart` | `src/Plumix/Widgets/SafeArea.cs` | `src/Plumix.Tests/SafeAreaTests.cs` | — |
 | `widgets/scroll_activity.dart` | `src/Plumix/Rendering/Scroll.cs` | `src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollMetricsTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs` | `dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `widgets/scroll_configuration.dart` | `src/Plumix/Widgets/ScrollConfiguration.cs` | — | — |
+| `widgets/scroll_context.dart` | `src/Plumix/Widgets/ScrollContext.cs` | — | — |
 | `widgets/scroll_metrics.dart` | `src/Plumix/Widgets/ScrollMetrics.cs` | `src/Plumix.Tests/ScrollMetricsTests.cs` | — |
 | `widgets/scroll_notification_observer.dart` | `src/Plumix/Widgets/ScrollNotificationObserver.cs` | `src/Plumix.Tests/ScrollNotificationObserverTests.cs` | — |
 | `widgets/scroll_physics.dart` | `src/Plumix/Rendering/Scroll.cs`<br>`src/Plumix/Rendering/ScrollPhysics.cs` | `src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollMetricsTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs` | `dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
@@ -501,8 +502,8 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 ## Summary
 
-- Flutter files mapped: 454
-- C# files carrying a marker: 587
+- Flutter files mapped: 455
+- C# files carrying a marker: 588
 - C# files without a marker: 19
 - Markers not resolvable in the pinned checkout: 0
 

@@ -89,7 +89,7 @@ public class DraggableScrollableController : ChangeNotifier
         DraggableScrollableSheetScrollController attached = _attachedController!;
         var animationController = AnimationController.Unbounded(
             value: attached.Extent.CurrentSize,
-            vsync: attached.Position.TickerProvider);
+            vsync: attached.Position.Context.Vsync);
         _animationControllers.Add(animationController);
         attached.Position.GoIdle();
         // Disables snapping until the next user interaction.
@@ -104,7 +104,7 @@ public class DraggableScrollableController : ChangeNotifier
             }
         });
         animationController.AddListener(() =>
-            attached.Extent.UpdateSize(animationController.Value, attached.Position.NotificationContext));
+            attached.Extent.UpdateSize(animationController.Value, attached.Position.Context.NotificationContext));
 
         return animationController.AnimateTo(
             Math.Clamp(size, attached.Extent.MinSize, attached.Extent.MaxSize),
@@ -126,7 +126,7 @@ public class DraggableScrollableController : ChangeNotifier
         _attachedController.Position.GoIdle();
         _attachedController.Extent.HasDragged = false;
         _attachedController.Extent.HasChanged = true;
-        _attachedController.Extent.UpdateSize(size, _attachedController.Position.NotificationContext);
+        _attachedController.Extent.UpdateSize(size, _attachedController.Position.Context.NotificationContext);
     }
 
     /// <summary>Returns the attached sheet to its initial size, without snapping away from it.</summary>
@@ -822,12 +822,17 @@ internal sealed class DraggableScrollableSheetScrollController : ScrollControlle
     public new DraggableScrollableSheetScrollPosition Position =>
         (DraggableScrollableSheetScrollPosition)base.Position;
 
-    public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+    public override ScrollPosition CreateScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
+        ScrollPosition? oldPosition)
     {
         return new DraggableScrollableSheetScrollPosition(
             // The sheet always accepts a drag: it resizes when its child cannot scroll further.
-            physics: (physics ?? Physics).ApplyTo(new AlwaysScrollableScrollPhysics()),
+            physics: physics.ApplyTo(new AlwaysScrollableScrollPhysics()),
+            context: context,
             initialPixels: InitialScrollOffset,
+            oldPosition: oldPosition,
             // Resolved late, so replacing the extent is transparent to a live position.
             getExtent: () => Extent);
     }
@@ -843,7 +848,7 @@ internal sealed class DraggableScrollableSheetScrollController : ScrollControlle
             AnimateTo(0.0, TimeSpan.FromMilliseconds(1), Curves.Linear);
         }
 
-        Extent.UpdateSize(Extent.InitialSize, Position.NotificationContext);
+        Extent.UpdateSize(Extent.InitialSize, Position.Context.NotificationContext);
     }
 
     internal override void Detach(ScrollPosition position)
@@ -860,9 +865,12 @@ internal sealed class DraggableScrollableSheetScrollPosition : ScrollPosition
     private Action? _dragCancelCallback;
 
     public DraggableScrollableSheetScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
         Func<DraggableSheetExtent> getExtent,
         double initialPixels = 0.0,
-        ScrollPhysics? physics = null) : base(initialPixels, physics)
+        ScrollPosition? oldPosition = null)
+        : base(physics, context, initialPixels, oldPosition: oldPosition)
     {
         _getExtent = getExtent;
     }
@@ -910,7 +918,7 @@ internal sealed class DraggableScrollableSheetScrollPosition : ScrollPosition
                 || (Extent.IsAtMin && delta < 0)
                 || (Extent.IsAtMax && delta > 0)))
         {
-            Extent.AddPixelDelta(-delta, NotificationContext);
+            Extent.AddPixelDelta(-delta, Context.NotificationContext);
         }
         else
         {
@@ -954,7 +962,7 @@ internal sealed class DraggableScrollableSheetScrollPosition : ScrollPosition
                 velocity: velocity,
                 tolerance: tolerance);
 
-        var ballisticController = AnimationController.Unbounded(vsync: TickerProvider);
+        var ballisticController = AnimationController.Unbounded(vsync: Context.Vsync);
         _ballisticControllers.Add(ballisticController);
         double lastPosition = Extent.CurrentPixels;
         double currentVelocity = velocity;
@@ -963,7 +971,7 @@ internal sealed class DraggableScrollableSheetScrollPosition : ScrollPosition
         {
             double delta = ballisticController.Value - lastPosition;
             lastPosition = ballisticController.Value;
-            Extent.AddPixelDelta(delta, NotificationContext);
+            Extent.AddPixelDelta(delta, Context.NotificationContext);
             if ((currentVelocity > 0 && Extent.IsAtMax) || (currentVelocity < 0 && Extent.IsAtMin))
             {
                 // Make sure we pass along enough velocity to keep scrolling, rather than bouncing.
@@ -978,7 +986,7 @@ internal sealed class DraggableScrollableSheetScrollPosition : ScrollPosition
                 // its snap size rather than a hair away from it.
                 if (GetCurrentSnapSize() is { } snapSize)
                 {
-                    Extent.UpdateSize(snapSize, NotificationContext);
+                    Extent.UpdateSize(snapSize, Context.NotificationContext);
                 }
 
                 base.GoBallistic(0);

@@ -1076,8 +1076,12 @@ internal sealed class TabBarScrollPosition : ScrollPosition
     private bool _viewportDimensionWasNonZero;
     private bool _needsPixelsCorrection = true;
 
-    public TabBarScrollPosition(ITabBarScrollHost tabBar, ScrollPhysics? physics)
-        : base(initialPixels: 0.0, physics: physics)
+    public TabBarScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
+        ScrollPosition? oldPosition,
+        ITabBarScrollHost tabBar)
+        : base(physics, context, initialPixels: null, oldPosition: oldPosition)
     {
         _tabBar = tabBar;
     }
@@ -1124,10 +1128,13 @@ public sealed class TabBarScrollController : ScrollController
         ? true
         : throw new InvalidOperationException("This TabBarScrollController is not attached to any TabBar.");
 
-    public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+    public override ScrollPosition CreateScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
+        ScrollPosition? oldPosition)
     {
         _ = DebugCheckHasTabBarState();
-        return new TabBarScrollPosition(TabBarState!, physics ?? Physics);
+        return new TabBarScrollPosition(physics, context, oldPosition, TabBarState!);
     }
 
     public override void Dispose()

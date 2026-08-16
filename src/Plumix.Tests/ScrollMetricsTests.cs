@@ -209,9 +209,10 @@ public sealed class ScrollMetricsTests
     [Fact]
     public void ScrollPosition_ImplementsTheMetricsContract()
     {
-        using var position = new ScrollPosition(initialPixels: 25);
-        position.AxisDirection = AxisDirection.Right;
-        position.DevicePixelRatio = 2.0;
+        using var position = new ScrollPosition(
+            new ClampingScrollPhysics(),
+            new TestScrollContext(AxisDirection.Right, devicePixelRatio: 2.0),
+            initialPixels: 25);
 
         Assert.True(position.HasPixels);
         Assert.False(position.HasContentDimensions);
@@ -234,9 +235,10 @@ public sealed class ScrollMetricsTests
     [Fact]
     public void ScrollPosition_CopyWithSnapshotsTheLiveMetrics()
     {
-        using var position = new ScrollPosition(initialPixels: 25);
-        position.AxisDirection = AxisDirection.Up;
-        position.DevicePixelRatio = 2.5;
+        using var position = new ScrollPosition(
+            new ClampingScrollPhysics(),
+            new TestScrollContext(AxisDirection.Up, devicePixelRatio: 2.5),
+            initialPixels: 25);
         position.ApplyViewportDimension(40);
         position.ApplyContentDimensions(0, 100);
 
@@ -264,7 +266,7 @@ public sealed class ScrollMetricsTests
         // A page position is Flutter's own `ScrollPosition(initialPixels: null)` caller: it derives
         // its offset from the first viewport dimension instead of carrying one from the start.
         using var controller = new PageController();
-        var position = new PagePosition();
+        var position = new PagePosition(new PageScrollPhysics(), new TestScrollContext());
 
         IScrollMetrics snapshot = position.CopyWith();
         Assert.False(snapshot.HasPixels);

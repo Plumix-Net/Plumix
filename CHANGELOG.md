@@ -1,5 +1,27 @@
 # Changelog
 
+- Breaking: ported Flutter's `ScrollContext` (`widgets/scroll_context.dart`) as `IScrollContext`,
+  which `Scrollable.ScrollableState` now implements (`NotificationContext` = the gesture detector's
+  context, `StorageContext`, `Vsync`, `AxisDirection`, `DevicePixelRatio`, `SetIgnorePointer`,
+  `SetCanDrag`, `SetSemanticsActions`, `SaveOffset`). `ScrollPosition` takes Dart's constructor
+  `(physics, context, initialPixels, keepScrollOffset, oldPosition, debugLabel)` — the base
+  constructor absorbs `oldPosition` — and reads its axis, DPR, vsync, notification and storage
+  contexts through `Context`; the ad-hoc `TickerProvider`/`NotificationContext`/`CanDragChanged`/
+  `SemanticActionsChanged` members and the settable `AxisDirection`/`DevicePixelRatio` are gone.
+  `ScrollController.CreateScrollPosition` has Dart's `(physics, context, oldPosition)` signature
+  (all overrides updated: page, nested, draggable-sheet, tab-bar, carousel, fixed-extent).
+  `ScrollActivity.ShouldIgnorePointer` is ported for every activity (drag: not for trackpads;
+  ballistic: the position's flag at start), `ScrollPosition.ShouldIgnorePointer`
+  (`!outOfRange && activity`), and `Scrollable` wraps its viewport in the `IgnorePointer` Flutter
+  drives from `BeginActivity`/`Absorb`/`SetPixels`, so a tap during a fling stops the scroll instead
+  of reaching a child. `Scrollable` now applies its widget/behavior physics on top of the ambient
+  configuration's (`physicsFromWidget.applyTo(_physics)`), and dispatches its notifications from
+  the notification context, so `ScrollBehavior`-built scrollbars/indicators receive them and
+  `Scrollable.Of(notification.Context)` resolves. `Scrollable`/`ScrollableState` are unsealed and
+  `ListWheelScrollView` uses a real `FixedExtentScrollable`/`FixedExtentScrollableState` pair
+  (`Scrollable.FixedExtentItemExtent` removed; `initialPixels` known at construction).
+  Coverage: `ScrollPipelineTests.cs`, `ListWheelScrollViewTests.cs`, `TestScrollContext` helper.
+
 - Breaking: ported Flutter's list wheel (`widgets/list_wheel_scroll_view.dart`,
   `rendering/list_wheel_viewport.dart`) 1:1: `ListWheelScrollView` (list and `useDelegate` forms),
   the `ListWheelChildListDelegate`/`LoopingListDelegate`/`BuilderDelegate` family,

@@ -226,7 +226,9 @@ public sealed class NestedScrollViewTests : IDisposable
         injector.LayoutWithSliverConstraints(Constraints());
         Assert.False(NeedsLayout(injector));
 
-        var viewport = new RenderNestedScrollViewViewport(new ScrollPosition(), handle);
+        var viewport = new RenderNestedScrollViewViewport(
+            new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext()),
+            handle);
         viewport.MarkNeedsLayout();
 
         Assert.True(NeedsLayout(injector));

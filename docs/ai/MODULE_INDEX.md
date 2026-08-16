@@ -379,6 +379,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Goal: scroll activities, viewport behavior, sliver child lifecycle, keep-alive.
 - Read First:
   - `src/Plumix/Widgets/Scroll.cs`
+  - `src/Plumix/Widgets/ScrollContext.cs` (`IScrollContext`: the contract `ScrollableState` gives its `ScrollPosition` — vsync, axis, DPR, notification/storage contexts, `SetIgnorePointer`/`SetCanDrag`/`SetSemanticsActions`/`SaveOffset`; `Rendering/Scroll.cs` holds `ScrollPosition`/activities)
   - `src/Plumix/Widgets/ListWheelScrollView.cs` (list wheel: delegates, `FixedExtentScrollController`/physics, `ListWheelElement`)
   - `src/Plumix/Rendering/ListWheelViewport.cs` (`RenderListWheelViewport`: cylindrical layout/paint/hit test)
   - `src/Plumix/Widgets/Notifications.cs`

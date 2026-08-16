@@ -509,12 +509,32 @@ public class ScrollController : ChangeNotifier
         : throw new InvalidOperationException(
             $"ScrollController.Position requires exactly one attached ScrollPosition; found {_positions.Count}.");
 
-    public virtual ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+    /// <summary>
+    /// Creates a <see cref="ScrollPosition"/> for use by a <see cref="Scrollable"/> widget.
+    /// </summary>
+    /// <remarks>
+    /// Subclasses can override this function to customize the <see cref="ScrollPosition"/> used by
+    /// the scrollable widgets they control. For example, <see cref="PageController"/> overrides this
+    /// function to return a page-oriented scroll position subclass that keeps the same page visible
+    /// when the scrollable widget resizes.
+    /// <para>
+    /// The <paramref name="context"/> is the scrollable's <see cref="IScrollContext"/>; the
+    /// <paramref name="oldPosition"/> is the position that is being replaced, if any, whose state the
+    /// new one absorbs.
+    /// </para>
+    /// </remarks>
+    public virtual ScrollPosition CreateScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
+        ScrollPosition? oldPosition)
     {
         return new ScrollPosition(
+            physics: physics,
+            context: context,
             initialPixels: InitialScrollOffset,
-            physics: physics ?? Physics,
-            keepScrollOffset: KeepScrollOffset);
+            keepScrollOffset: KeepScrollOffset,
+            oldPosition: oldPosition,
+            debugLabel: DebugLabel);
     }
 
     internal virtual void Attach(ScrollPosition position)
@@ -606,7 +626,7 @@ public class ScrollController : ChangeNotifier
     }
 }
 
-public sealed class Scrollable : StatefulWidget
+public class Scrollable : StatefulWidget
 {
     public Scrollable(
         Widget? child = null,
@@ -725,19 +745,6 @@ public sealed class Scrollable : StatefulWidget
     /// </remarks>
     internal Func<BuildContext, ViewportOffset, Widget>? ViewportBuilder { get; init; }
 
-    /// <summary>
-    /// The fixed main-axis extent of every item, when this scrollable is a
-    /// <see cref="ListWheelScrollView"/>'s. Null for every other scrollable.
-    /// </summary>
-    /// <remarks>
-    /// Flutter's private <c>_FixedExtentScrollable</c> subclass carries this as <c>itemExtent</c>
-    /// and its <c>_FixedExtentScrollableState</c> exposes it as the position's
-    /// <c>ScrollContext</c>. Plumix's <see cref="Scrollable"/> is sealed and its position reads
-    /// the widget through <see cref="ScrollPosition.NotificationContext"/> instead, so the extent
-    /// lives here.
-    /// </remarks>
-    internal double? FixedExtentItemExtent { get; init; }
-
     public override State CreateState()
     {
         return new ScrollableState();
@@ -838,7 +845,21 @@ public sealed class Scrollable : StatefulWidget
         return futures.Count == 1 ? futures[0] : Task.WhenAll(futures);
     }
 
-    public sealed class ScrollableState : State
+    /// <summary>
+    /// State object for a <see cref="Scrollable"/> widget.
+    /// </summary>
+    /// <remarks>
+    /// To manipulate a <see cref="Scrollable"/> widget's scroll position, use the object obtained
+    /// from the <see cref="Position"/> property. To be informed of when a <see cref="Scrollable"/>
+    /// widget is scrolling, use a <see cref="NotificationListener{T}"/> to listen for
+    /// <see cref="ScrollNotification"/>s.
+    /// <para>
+    /// This class is the <see cref="IScrollContext"/> its <see cref="ScrollPosition"/> drives:
+    /// the position asks it for its vsync, axis direction and notification/storage contexts, and
+    /// tells it whether the user may drag and whether the viewport should ignore pointer events.
+    /// </para>
+    /// </remarks>
+    public class ScrollableState : State, IScrollContext
     {
         private ScrollController? _fallbackController;
         private ScrollController? _attachedController;
@@ -847,20 +868,49 @@ public sealed class Scrollable : StatefulWidget
         private ScrollBehavior _configuration = null!;
         private ScrollPhysics _effectivePhysics = null!;
         private bool _hasPosition;
+        private AxisDirection _axisDirection = AxisDirection.Down;
+        private double _devicePixelRatio = 1.0;
         // Keys are records, so the identity has to come from a per-state sentinel: two scrollables
         // must never share one global key.
         private readonly GlobalObjectKey<RawGestureDetector.RawGestureDetectorState> _gestureDetectorKey =
             new(new object());
+        private readonly GlobalObjectKey<State> _ignorePointerKey = new(new object());
 
         private IScrollHoldController? _hold;
         private ScrollDragController? _drag;
         private bool _canDrag;
+        private bool _shouldIgnorePointer;
 
         private Scrollable CurrentWidget => (Scrollable)Element.Widget;
 
         public ScrollPosition Position => _position;
 
-        public AxisDirection AxisDirection => ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
+        /// <summary>The direction in which the widget scrolls.</summary>
+        public AxisDirection AxisDirection => _axisDirection;
+
+        /// <summary>A <see cref="ITickerProvider"/> to use when animating the scroll position.</summary>
+        public ITickerProvider Vsync => this;
+
+        /// <summary>
+        /// The device pixel ratio of the view the scrollable is drawn into, refreshed whenever the
+        /// dependencies change.
+        /// </summary>
+        public double DevicePixelRatio => _devicePixelRatio;
+
+        /// <summary>
+        /// The <see cref="BuildContext"/> that should be used when dispatching
+        /// <see cref="ScrollNotification"/>s: the gesture detector's, which sits inside the widgets
+        /// the <see cref="ScrollBehavior"/> wraps around the viewport (scrollbar, overscroll
+        /// indicator) so they receive the notifications, and below this state so
+        /// <see cref="Scrollable.Of"/> resolves from a notification's context.
+        /// </summary>
+        public BuildContext? NotificationContext => _gestureDetectorKey.CurrentContext;
+
+        /// <summary>
+        /// The <see cref="BuildContext"/> that should be used when searching for a
+        /// <see cref="PageStorage"/>: this state's own.
+        /// </summary>
+        public BuildContext StorageContext => Context;
 
         /// <summary>The physics this scrollable resolved from its widget and ambient behavior.</summary>
         public ScrollPhysics EffectivePhysics => _effectivePhysics;
@@ -874,9 +924,12 @@ public sealed class Scrollable : StatefulWidget
         public override void DidChangeDependencies()
         {
             base.DidChangeDependencies();
+            _axisDirection = ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
+            // Ballistic tolerances are expressed in device pixels, so the physics need the view's ratio.
+            _devicePixelRatio = MediaQuery.MaybeOf(Context)?.DevicePixelRatio ?? 1.0;
             ScrollBehavior configuration =
                 CurrentWidget.ScrollBehavior ?? ScrollConfiguration.Of(Context);
-            ScrollPhysics effectivePhysics = CurrentWidget.Physics ?? configuration.GetScrollPhysics(Context);
+            ScrollPhysics effectivePhysics = ResolvePhysics(CurrentWidget, configuration);
             if (!_hasPosition)
             {
                 _configuration = configuration;
@@ -895,6 +948,18 @@ public sealed class Scrollable : StatefulWidget
             {
                 ReplacePosition(CurrentWidget.Controller, effectivePhysics);
             }
+        }
+
+        /// <summary>
+        /// The physics the position runs: the widget's own (or its behavior's) applied on top of the
+        /// ambient configuration's, so a bare <see cref="AlwaysScrollableScrollPhysics"/> still
+        /// inherits the platform's ballistics (Flutter's <c>_updatePosition</c>).
+        /// </summary>
+        private ScrollPhysics ResolvePhysics(Scrollable widget, ScrollBehavior configuration)
+        {
+            ScrollPhysics? physicsFromWidget = widget.Physics ?? widget.ScrollBehavior?.GetScrollPhysics(Context);
+            ScrollPhysics physics = configuration.GetScrollPhysics(Context);
+            return physicsFromWidget?.ApplyTo(physics) ?? physics;
         }
 
         /// <summary>
@@ -928,9 +993,10 @@ public sealed class Scrollable : StatefulWidget
                 RestoreScrollOffset();
             }
 
+            _axisDirection = ResolveAxisDirection(current.Axis, current.Reverse);
             bool controllerChanged = !ReferenceEquals(oldScrollable.Controller, current.Controller);
             ScrollBehavior configuration = current.ScrollBehavior ?? ScrollConfiguration.Of(Context);
-            ScrollPhysics effectivePhysics = current.Physics ?? configuration.GetScrollPhysics(Context);
+            ScrollPhysics effectivePhysics = ResolvePhysics(current, configuration);
             bool physicsChanged = !PhysicsChainsMatch(_effectivePhysics, effectivePhysics);
             _configuration = configuration;
             _effectivePhysics = effectivePhysics;
@@ -963,8 +1029,8 @@ public sealed class Scrollable : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var widget = CurrentWidget;
-            var axisDirection = ResolveAxisDirection(widget.Axis, widget.Reverse);
-            _position.AxisDirection = axisDirection;
+            _axisDirection = ResolveAxisDirection(widget.Axis, widget.Reverse);
+            AxisDirection axisDirection = _axisDirection;
             ScrollCacheExtent scrollCacheExtent = widget.CacheExtentStyle == CacheExtentStyle.Viewport
                 ? ScrollCacheExtent.Viewport(widget.CacheExtent)
                 : ScrollCacheExtent.Pixels(widget.CacheExtent);
@@ -1030,7 +1096,10 @@ public sealed class Scrollable : StatefulWidget
                     dragStartBehavior: widget.DragStartBehavior,
                     child: new Semantics(
                         explicitChildNodes: !widget.ExcludeFromSemantics,
-                        child: viewport)));
+                        child: new IgnorePointer(
+                            key: _ignorePointerKey,
+                            ignoring: _shouldIgnorePointer,
+                            child: viewport))));
 
             if (!widget.ExcludeFromSemantics)
             {
@@ -1089,33 +1158,32 @@ public sealed class Scrollable : StatefulWidget
         /// can still be scrolled in.
         /// </summary>
         /// <remarks>Flutter's <c>ScrollableState.setSemanticsActions</c>.</remarks>
-        private void SetSemanticsActions(SemanticsActions actions)
+        public void SetSemanticsActions(SemanticsActions actions)
         {
             _gestureDetectorKey.CurrentState?.ReplaceSemanticsActions(actions);
         }
 
+        /// <summary>
+        /// Persists the offset the position reports when scrolling ends. Plumix's
+        /// <see cref="Scrollable"/> has not adopted the restoration buckets yet: the offset is kept
+        /// through <see cref="PageStorage"/> under the widget's restoration id by the position's own
+        /// <see cref="ScrollPosition.SaveScrollOffset"/>, so there is nothing further to record here.
+        /// </summary>
+        public void SaveOffset(double offset)
+        {
+        }
+
         private ScrollPosition AttachToController(
             ScrollController? providedController,
-            ScrollPhysics? physics,
+            ScrollPhysics physics,
             ScrollPosition? oldPosition = null)
         {
             _fallbackController ??= new ScrollController();
             _attachedController = providedController ?? _fallbackController;
-            var position = _attachedController.CreateScrollPosition(physics);
-            position.TickerProvider = this;
-            position.NotificationContext = Context;
+            // The restoration id must be known before the constructor absorbs the old position and
+            // any subclass constructor reads storage (NestedScrollPosition does).
+            var position = _attachedController.CreateScrollPosition(physics, this, oldPosition);
             position.RestorationId = CurrentWidget.RestorationId;
-            position.CanDragChanged = SetCanDrag;
-            position.SemanticActionsChanged += SetSemanticsActions;
-            position.AxisDirection = ResolveAxisDirection(CurrentWidget.Axis, CurrentWidget.Reverse);
-
-            // Ballistic tolerances are expressed in device pixels, so the physics need the view's ratio.
-            position.DevicePixelRatio = MediaQuery.MaybeOf(Context)?.DevicePixelRatio ?? 1.0;
-            if (oldPosition != null)
-            {
-                position.Absorb(oldPosition);
-            }
-
             _attachedController.Attach(position);
             return position;
         }
@@ -1165,14 +1233,14 @@ public sealed class Scrollable : StatefulWidget
 
             // A correction applied while the fresh dimensions were handed to the position never
             // reaches this point: Flutter's `correctPixels`/`correctBy` deliberately notify nobody.
-            new ScrollUpdateNotification(CurrentMetrics()).Dispatch(Context);
+            new ScrollUpdateNotification(CurrentMetrics()).Dispatch(NotificationContext);
         }
 
         /// <summary>
         /// Adds or removes the drag gesture recognizers. Turning dragging off also cancels any hold
         /// or drag in flight, so a physics change mid-gesture cannot leave the position captured.
         /// </summary>
-        private void SetCanDrag(bool value)
+        public void SetCanDrag(bool value)
         {
             if (value == _canDrag)
             {
@@ -1188,6 +1256,26 @@ public sealed class Scrollable : StatefulWidget
             // Applied straight away rather than through a rebuild: the physics can change their mind
             // during layout, and the next pointer down must already see the new registration.
             _gestureDetectorKey.CurrentState?.SetDragEnabled(value);
+        }
+
+        /// <summary>
+        /// Whether the viewport's contents should ignore pointer events: true while an activity that
+        /// is not the user's own drag moves the position, so a tap during a fling stops the scroll
+        /// instead of reaching a child.
+        /// </summary>
+        public void SetIgnorePointer(bool value)
+        {
+            if (_shouldIgnorePointer == value)
+            {
+                return;
+            }
+
+            _shouldIgnorePointer = value;
+            if (_ignorePointerKey.CurrentContext is { } context
+                && context.FindRenderObject() is RenderIgnorePointer renderBox)
+            {
+                renderBox.Ignoring = _shouldIgnorePointer;
+            }
         }
 
         private void HandleDragDown(DragDownDetails details)
@@ -1224,7 +1312,7 @@ public sealed class Scrollable : StatefulWidget
             }
 
             _drag = _position.Drag(details, DisposeDrag);
-            new ScrollStartNotification(CurrentMetrics(), dragDetails: details).Dispatch(Context);
+            new ScrollStartNotification(CurrentMetrics(), dragDetails: details).Dispatch(NotificationContext);
         }
 
         private bool IsDescendantFocus(FocusNode focusNode)
@@ -1248,14 +1336,14 @@ public sealed class Scrollable : StatefulWidget
         private void HandleDragEnd(DragEndDetails details)
         {
             _drag?.End(details);
-            new ScrollEndNotification(CurrentMetrics(), dragDetails: details).Dispatch(Context);
+            new ScrollEndNotification(CurrentMetrics(), dragDetails: details).Dispatch(NotificationContext);
         }
 
         private void HandleDragCancel()
         {
             _hold?.Cancel();
             _drag?.Cancel();
-            new ScrollEndNotification(CurrentMetrics()).Dispatch(Context);
+            new ScrollEndNotification(CurrentMetrics()).Dispatch(NotificationContext);
         }
 
         private void ApplyDragOffset(DragUpdateDetails details)
@@ -1293,7 +1381,7 @@ public sealed class Scrollable : StatefulWidget
                 new ScrollUpdateNotification(
                     CurrentMetrics(),
                     dragDetails: details,
-                    scrollDelta: actualScrollDelta).Dispatch(Context);
+                    scrollDelta: actualScrollDelta).Dispatch(NotificationContext);
                 SetState(static () => { });
             }
 
@@ -1303,7 +1391,7 @@ public sealed class Scrollable : StatefulWidget
                 new OverscrollNotification(
                     CurrentMetrics(),
                     overscroll: overscroll,
-                    dragDetails: details).Dispatch(Context);
+                    dragDetails: details).Dispatch(NotificationContext);
             }
         }
 

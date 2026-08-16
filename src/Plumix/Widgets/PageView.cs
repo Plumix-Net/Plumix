@@ -117,13 +117,18 @@ public class PageController : ScrollController
     public Task PreviousPage(TimeSpan duration, Curve? curve = null) =>
         AnimateToPage((int)Math.Round(Page!.Value, MidpointRounding.AwayFromZero) - 1, duration, curve);
 
-    public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+    public override ScrollPosition CreateScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
+        ScrollPosition? oldPosition)
     {
         return new PagePosition(
-            physics: physics ?? Physics,
+            physics: physics,
+            context: context,
             initialPage: InitialPage,
             keepPage: KeepPage,
-            viewportFraction: ViewportFraction);
+            viewportFraction: ViewportFraction,
+            oldPosition: oldPosition);
     }
 
     internal override void Attach(ScrollPosition position)
@@ -225,30 +230,40 @@ public class PageMetrics : FixedScrollMetrics
 /// The <see cref="ScrollPosition"/> a <see cref="PageController"/> creates, which measures its
 /// offset in whole viewport-fraction-sized pages.
 /// </summary>
-internal sealed class PagePosition : ScrollPosition
+/// <remarks>
+/// A primary constructor so the field initializers run before the base constructor absorbs
+/// <paramref name="oldPosition"/>, the way Dart's initializer list runs before <c>super</c>: an
+/// absorbed startup page must win over the widget's <paramref name="initialPage"/>.
+/// </remarks>
+internal sealed class PagePosition(
+    ScrollPhysics physics,
+    IScrollContext context,
+    int initialPage = 0,
+    bool keepPage = true,
+    double viewportFraction = 1.0,
+    ScrollPosition? oldPosition = null)
+    : ScrollPosition(
+        physics: physics,
+        context: context,
+        initialPixels: null,
+        keepScrollOffset: keepPage,
+        oldPosition: oldPosition)
 {
-    private double _viewportFraction;
-    private double _pageToUseOnStartup;
+    private double _viewportFraction = CheckViewportFraction(viewportFraction);
+    private double _pageToUseOnStartup = initialPage;
     private double? _cachedPage;
 
-    public PagePosition(
-        ScrollPhysics? physics = null,
-        int initialPage = 0,
-        bool keepPage = true,
-        double viewportFraction = 1.0)
-        : base(initialPixels: null, physics: physics, keepScrollOffset: keepPage)
+    private static double CheckViewportFraction(double viewportFraction)
     {
         if (!double.IsFinite(viewportFraction) || viewportFraction <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(viewportFraction));
         }
 
-        InitialPage = initialPage;
-        _viewportFraction = viewportFraction;
-        _pageToUseOnStartup = initialPage;
+        return viewportFraction;
     }
 
-    public int InitialPage { get; }
+    public int InitialPage { get; } = initialPage;
 
     /// <summary>The page held while the viewport has no extent to derive an offset from.</summary>
     public double? CachedPage

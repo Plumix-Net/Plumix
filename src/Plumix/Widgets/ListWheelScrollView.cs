@@ -257,21 +257,17 @@ public class FixedExtentScrollController : ScrollController
         }
     }
 
-    public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+    public override ScrollPosition CreateScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
+        ScrollPosition? oldPosition)
     {
         return new FixedExtentScrollPosition(
-            physics: physics ?? Physics,
+            physics: physics,
+            context: context,
             initialItem: InitialItem,
-            keepScrollOffset: KeepScrollOffset);
-    }
-
-    internal override void Attach(ScrollPosition position)
-    {
-        // Dart's _FixedExtentScrollPosition receives its ScrollContext in the constructor, so
-        // `initialPixels: itemExtent * initialItem` is known at creation. Plumix's controller has no
-        // context until the scrollable attaches the position, so the initial offset lands here.
-        ((FixedExtentScrollPosition)position).EstablishInitialPixels();
-        base.Attach(position);
+            keepScrollOffset: KeepScrollOffset,
+            oldPosition: oldPosition);
     }
 }
 
@@ -373,34 +369,31 @@ internal static class FixedExtentMath
 internal sealed class FixedExtentScrollPosition : ScrollPosition
 {
     public FixedExtentScrollPosition(
-        ScrollPhysics? physics,
+        ScrollPhysics physics,
+        IScrollContext context,
         int initialItem,
-        bool keepScrollOffset = true)
-        : base(initialPixels: null, physics: physics, keepScrollOffset: keepScrollOffset)
+        bool keepScrollOffset = true,
+        ScrollPosition? oldPosition = null)
+        : base(
+            physics: physics,
+            context: context,
+            initialPixels: GetItemExtentFromScrollContext(context) * initialItem,
+            keepScrollOffset: keepScrollOffset,
+            oldPosition: oldPosition)
     {
-        InitialItem = initialItem;
     }
-
-    /// <summary>The item the position starts on: Dart computes <c>initialPixels</c> from it in the
-    /// constructor; Plumix applies it in <see cref="EstablishInitialPixels"/>.</summary>
-    public int InitialItem { get; }
 
     /// <summary>Dart's <c>_getItemExtentFromScrollContext</c>: the item extent of the
     /// <see cref="ListWheelScrollView"/> this position belongs to.</summary>
-    public double ItemExtent
+    private static double GetItemExtentFromScrollContext(IScrollContext context)
     {
-        get
-        {
-            if (NotificationContext is { } context
-                && context.Owner.Widget is Scrollable { FixedExtentItemExtent: { } itemExtent })
-            {
-                return itemExtent;
-            }
-
-            throw new InvalidOperationException(
+        return context is FixedExtentScrollableState scrollable
+            ? scrollable.ItemExtent
+            : throw new InvalidOperationException(
                 "FixedExtentScrollController can only be used with ListWheelScrollViews");
-        }
     }
+
+    public double ItemExtent => GetItemExtentFromScrollContext(Context);
 
     /// <summary>The scroll view's currently selected item index.</summary>
     public int ItemIndex => FixedExtentMath.GetItemFromOffset(
@@ -408,22 +401,6 @@ internal sealed class FixedExtentScrollPosition : ScrollPosition
         itemExtent: ItemExtent,
         minScrollExtent: MinScrollExtent,
         maxScrollExtent: MaxScrollExtent);
-
-    /// <summary>
-    /// Sets the pixels Dart's constructor would have set from <c>itemExtent * initialItem</c>, once
-    /// the position knows its scrollable. A position that absorbed an older one already has pixels
-    /// and keeps them, exactly as Dart's <c>oldPosition</c> handling does.
-    /// </summary>
-    internal void EstablishInitialPixels()
-    {
-        if (HasPixels || NotificationContext is not { } context
-            || context.Owner.Widget is not Scrollable { FixedExtentItemExtent: { } itemExtent })
-        {
-            return;
-        }
-
-        CorrectPixels(itemExtent * InitialItem);
-    }
 
     public override FixedExtentMetrics CopyWith(
         double? minScrollExtent = null,
@@ -853,16 +830,15 @@ public sealed class ListWheelScrollView : StatefulWidget
             ScrollPhysics physics = widget.Physics?.ApplyTo(ambient) ?? ambient;
             return new NotificationListener<ScrollNotification>(
                 onNotification: HandleScrollNotification,
-                child: new Scrollable(
+                child: new FixedExtentScrollable(
                     controller: EffectiveController,
                     physics: physics,
+                    itemExtent: widget.ItemExtent,
                     restorationId: widget.RestorationId,
                     hitTestBehavior: widget.HitTestBehavior,
                     scrollBehavior: scrollBehavior,
                     dragStartBehavior: widget.DragStartBehavior)
                 {
-                    // Dart's _FixedExtentScrollable(itemExtent:, viewportBuilder:).
-                    FixedExtentItemExtent = widget.ItemExtent,
                     ViewportBuilder = (viewportContext, offset) => new ListWheelViewport(
                         itemExtent: widget.ItemExtent,
                         offset: offset,
@@ -879,6 +855,48 @@ public sealed class ListWheelScrollView : StatefulWidget
                 });
         }
     }
+}
+
+/// <summary>
+/// A <see cref="Scrollable"/> that carries the fixed main-axis extent of every item, so that the
+/// <see cref="FixedExtentScrollPosition"/> its controller creates can read it through its
+/// <see cref="IScrollContext"/> (Dart's private <c>_FixedExtentScrollable</c>).
+/// </summary>
+internal sealed class FixedExtentScrollable : Scrollable
+{
+    public FixedExtentScrollable(
+        double itemExtent,
+        ScrollController? controller = null,
+        ScrollPhysics? physics = null,
+        string? restorationId = null,
+        ScrollBehavior? scrollBehavior = null,
+        HitTestBehavior hitTestBehavior = HitTestBehavior.Opaque,
+        DragStartBehavior dragStartBehavior = DragStartBehavior.Start)
+        : base(
+            controller: controller,
+            physics: physics,
+            restorationId: restorationId,
+            scrollBehavior: scrollBehavior,
+            hitTestBehavior: hitTestBehavior,
+            dragStartBehavior: dragStartBehavior)
+    {
+        ItemExtent = itemExtent;
+    }
+
+    /// <summary>The main-axis extent of every item.</summary>
+    public double ItemExtent { get; }
+
+    public override State CreateState()
+    {
+        return new FixedExtentScrollableState();
+    }
+}
+
+/// <summary>Dart's private <c>_FixedExtentScrollableState</c>.</summary>
+internal sealed class FixedExtentScrollableState : Scrollable.ScrollableState
+{
+    /// <summary>The item extent of the <see cref="FixedExtentScrollable"/> this state belongs to.</summary>
+    public double ItemExtent => ((FixedExtentScrollable)Element.Widget).ItemExtent;
 }
 
 /// <summary>

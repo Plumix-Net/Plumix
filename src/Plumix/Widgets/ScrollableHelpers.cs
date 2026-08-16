@@ -132,7 +132,7 @@ public sealed class ScrollAction : ContextAction<ScrollIntent>
                 return null;
             }
 
-            state = primary.Position.NotificationContext is { } notificationContext
+            state = primary.Position.Context.NotificationContext is { } notificationContext
                 ? Scrollable.MaybeOf(notificationContext)
                 : null;
             if (state is null)

@@ -651,10 +651,13 @@ public sealed class ScrollInfrastructureTests
     {
         public int CreatedPositions { get; private set; }
 
-        public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+        public override ScrollPosition CreateScrollPosition(
+            ScrollPhysics physics,
+            IScrollContext context,
+            ScrollPosition? oldPosition)
         {
             CreatedPositions += 1;
-            return base.CreateScrollPosition(physics);
+            return base.CreateScrollPosition(physics, context, oldPosition);
         }
 
         public void Signal()

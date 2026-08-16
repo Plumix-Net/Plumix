@@ -675,7 +675,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollPosition_BouncingPhysics_AcceptsOverscrollAndResistsFurtherDrags()
     {
-        using var position = new ScrollPosition(physics: new BouncingScrollPhysics());
+        using var position = new ScrollPosition(new BouncingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
 
@@ -745,7 +745,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollPosition_PointerScroll_NeverOverscrollsUnderBouncingPhysics()
     {
-        using var position = new ScrollPosition(physics: new BouncingScrollPhysics());
+        using var position = new ScrollPosition(new BouncingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 500);
 
@@ -772,7 +772,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollPosition_BouncingPhysics_SpringsBackToTheEdgeAfterTheDragEnds()
     {
-        using var position = new ScrollPosition(physics: new BouncingScrollPhysics());
+        using var position = new ScrollPosition(new BouncingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
 
@@ -793,7 +793,8 @@ public sealed class ScrollPhysicsTests
     public void ScrollPosition_BouncingPhysics_SettlesAnOutOfRangePositionWhenTheContentShrinks()
     {
         using var position = new ScrollPosition(
-            physics: new BouncingScrollPhysics(parent: new RangeMaintainingScrollPhysics()));
+            new BouncingScrollPhysics(parent: new RangeMaintainingScrollPhysics()),
+            new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
         position.JumpTo(900);
@@ -869,7 +870,7 @@ public sealed class ScrollPhysicsTests
         Scheduler.ResetForTests();
         try
         {
-            using var position = new ScrollPosition(physics: new BouncingScrollPhysics());
+            using var position = new ScrollPosition(new BouncingScrollPhysics(), new TestScrollContext());
             position.ApplyViewportDimension(100);
             position.ApplyContentDimensions(0, 1000);
             position.GoBallistic(-1200);
@@ -901,7 +902,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollPosition_Drag_UsesTheClampingDefaultsWhenThePhysicsDoNotCarryMomentum()
     {
-        using var position = new ScrollPosition(physics: new ClampingScrollPhysics());
+        using var position = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
 
@@ -914,7 +915,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollDragController_MotionStartThreshold_SwallowsOffsetsUntilItBreaks()
     {
-        using var position = new ScrollPosition(physics: new BouncingScrollPhysics());
+        using var position = new ScrollPosition(new BouncingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
@@ -938,7 +939,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollDragController_MotionStartThreshold_LetsADeliberateFlingThrough()
     {
-        using var position = new ScrollPosition(physics: new BouncingScrollPhysics());
+        using var position = new ScrollPosition(new BouncingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
@@ -954,7 +955,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollDragController_MotionStartThreshold_ReArmsAfterTheDragRests()
     {
-        using var position = new ScrollPosition(physics: new BouncingScrollPhysics());
+        using var position = new ScrollPosition(new BouncingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
@@ -977,7 +978,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollDragController_WithoutAThreshold_AppliesEveryOffset()
     {
-        using var position = new ScrollPosition(physics: new ClampingScrollPhysics());
+        using var position = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
         DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
@@ -998,10 +999,9 @@ public sealed class ScrollPhysicsTests
         Scheduler.ResetForTests();
         try
         {
-            using var position = new ScrollPosition(physics: new ClampingScrollPhysics())
-            {
-                AxisDirection = AxisDirection.Up,
-            };
+            using var position = new ScrollPosition(
+                new ClampingScrollPhysics(),
+                new TestScrollContext(AxisDirection.Up));
             position.ApplyViewportDimension(100);
             position.ApplyContentDimensions(0, 1000);
             DateTime start = new(2026, 8, 11, 12, 0, 0, DateTimeKind.Utc);
@@ -1061,7 +1061,7 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollDragController_RejectsANonPositiveMotionThreshold()
     {
-        using var position = new ScrollPosition();
+        using var position = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
         Assert.Throws<ArgumentOutOfRangeException>(() => new ScrollDragController(
             @delegate: position,
             details: new DragStartDetails(new Point(0, 0)),
@@ -1074,7 +1074,7 @@ public sealed class ScrollPhysicsTests
         DateTime start,
         int? stationaryMilliseconds = null)
     {
-        using var position = new ScrollPosition(physics: new BouncingScrollPhysics());
+        using var position = new ScrollPosition(new BouncingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 1000);
         var drag = new ScrollDragController(
@@ -1111,7 +1111,8 @@ public sealed class ScrollPhysicsTests
         }
     }
 
-    private sealed class TestScrollPosition(ScrollPhysics physics) : ScrollPosition(physics: physics)
+    private sealed class TestScrollPosition(ScrollPhysics physics)
+        : ScrollPosition(physics, new TestScrollContext())
     {
         public double CallSetPixels(double value) => SetPixels(value);
 

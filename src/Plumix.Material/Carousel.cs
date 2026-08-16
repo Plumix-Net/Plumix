@@ -1376,36 +1376,36 @@ public class CarouselMetrics : FixedScrollMetrics
 }
 
 /// <summary>Dart's <c>_CarouselPosition</c>: a scroll position measured in whole carousel items.</summary>
-public sealed class CarouselScrollPosition : ScrollPosition
+/// <remarks>
+/// A primary constructor so the field initializers run before the base constructor absorbs
+/// <paramref name="oldPosition"/>, the way Dart's initializer list runs before <c>super</c>: an
+/// absorbed startup item must win over the widget's <paramref name="initialItem"/>.
+/// </remarks>
+public sealed class CarouselScrollPosition(
+    ScrollPhysics physics,
+    IScrollContext context,
+    int initialItem = 0,
+    double? itemExtent = null,
+    IReadOnlyList<int>? flexWeights = null,
+    bool consumeMaxWeight = true,
+    bool infinite = false,
+    int? itemCount = null,
+    ScrollPosition? oldPosition = null)
+    : ScrollPosition(
+        physics: physics,
+        context: context,
+        initialPixels: null,
+        oldPosition: oldPosition)
 {
-    private double _itemToShowOnStartup;
+    private double _itemToShowOnStartup = initialItem;
     private double? _cachedItem;
-    private double? _itemExtent;
-    private IReadOnlyList<int>? _flexWeights;
-    private bool _consumeMaxWeight;
-    private bool _infinite;
-    private int? _itemCount;
+    private double? _itemExtent = itemExtent;
+    private IReadOnlyList<int>? _flexWeights = flexWeights;
+    private bool _consumeMaxWeight = consumeMaxWeight;
+    private bool _infinite = infinite;
+    private int? _itemCount = itemCount;
 
-    public CarouselScrollPosition(
-        int initialItem = 0,
-        double? itemExtent = null,
-        IReadOnlyList<int>? flexWeights = null,
-        bool consumeMaxWeight = true,
-        bool infinite = false,
-        int? itemCount = null,
-        ScrollPhysics? physics = null)
-        : base(initialPixels: null, physics: physics)
-    {
-        InitialItem = initialItem;
-        _itemToShowOnStartup = initialItem;
-        _consumeMaxWeight = consumeMaxWeight;
-        _infinite = infinite;
-        _itemCount = itemCount;
-        _itemExtent = itemExtent;
-        _flexWeights = flexWeights;
-    }
-
-    public int InitialItem { get; }
+    public int InitialItem { get; } = initialItem;
 
     public double? ItemExtent => _itemExtent;
 
@@ -1748,16 +1748,21 @@ public sealed class CarouselController : ScrollController
         }
     }
 
-    public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+    public override ScrollPosition CreateScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
+        ScrollPosition? oldPosition)
     {
         return new CarouselScrollPosition(
+            physics: physics,
+            context: context,
             initialItem: InitialItem,
             itemExtent: _carouselState?.EffectiveItemExtent,
             flexWeights: _carouselState?.FlexWeights,
             consumeMaxWeight: _carouselState?.ConsumeMaxWeight ?? true,
             infinite: _carouselState?.Current.Infinite ?? false,
             itemCount: GetItemCount(),
-            physics: physics ?? Physics);
+            oldPosition: oldPosition);
     }
 
     internal override void Attach(ScrollPosition position)

@@ -92,7 +92,7 @@ public sealed class ListWheelScrollViewTests
     [Fact]
     public void RenderListWheelViewport_ValidatesItsSetters()
     {
-        var offset = new ScrollController().CreateScrollPosition();
+        var offset = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
         var viewport = new RenderListWheelViewport(new NoChildManager(), offset, itemExtent: 10);
         Assert.Equal(Clip.None, viewport.ClipBehavior);
         Assert.Throws<ArgumentOutOfRangeException>(() => viewport.DiameterRatio = 0);
@@ -812,6 +812,40 @@ public sealed class ListWheelScrollViewTests
     }
 
     [Fact]
+    public void FixedExtentScrollController_InitialItem_IsKnownBeforeTheFirstLayout()
+    {
+        // Dart's _FixedExtentScrollPosition computes `initialPixels: itemExtent * initialItem` in its
+        // constructor from the ScrollContext, so the offset is available as soon as the position
+        // is attached, before any layout.
+        var controller = new FixedExtentScrollController(initialItem: 10);
+        using var harness = Harness(Wheel(controller, 100, itemExtent: 100.0));
+        Assert.True(controller.HasClients);
+        Assert.Equal(1000.0, controller.Offset);
+        Assert.IsType<FixedExtentScrollableState>(controller.Position.Context);
+        controller.Dispose();
+    }
+
+    [Fact]
+    public void FixedExtentScrollController_RejectsScrollablesThatAreNotListWheels()
+    {
+        // Flutter: "FixedExtentScrollController can only be used with ListWheelScrollViews".
+        var controller = new FixedExtentScrollController();
+        Exception error = Assert.ThrowsAny<Exception>(() => Harness(
+            ListView.Builder(
+                controller: controller,
+                itemCount: 3,
+                itemExtent: 100,
+                itemBuilder: (_, _) => new SizedBox(height: 100))));
+        while (error.InnerException is { } inner)
+        {
+            error = inner;
+        }
+
+        Assert.IsType<InvalidOperationException>(error);
+        Assert.Contains("can only be used with ListWheelScrollViews", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void FixedExtentScrollController_JumpToItem()
     {
         var controller = new FixedExtentScrollController(initialItem: 10);
@@ -1067,7 +1101,7 @@ public sealed class ListWheelScrollViewTests
         Assert.True(friction!.X(double.PositiveInfinity) > 300.0);
 
         // Wrong position type is rejected.
-        var plain = new ScrollController().CreateScrollPosition();
+        var plain = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
         Assert.Throws<InvalidOperationException>(() => physics.CreateBallisticSimulation(plain, 100.0));
         Assert.IsType<FixedExtentScrollPhysics>(physics);
         Assert.IsType<ClampingScrollPhysics>(physics.Parent);

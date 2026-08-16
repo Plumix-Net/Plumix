@@ -980,13 +980,19 @@ internal sealed class NestedScrollController : ScrollController
 
     public IEnumerable<NestedScrollPosition> NestedPositions => Positions.Cast<NestedScrollPosition>();
 
-    public override ScrollPosition CreateScrollPosition(ScrollPhysics? physics = null)
+    public override ScrollPosition CreateScrollPosition(
+        ScrollPhysics physics,
+        IScrollContext context,
+        ScrollPosition? oldPosition)
     {
         return new NestedScrollPosition(
             _coordinator,
-            physics ?? Physics,
+            physics,
+            context,
             InitialScrollOffset,
-            KeepScrollOffset);
+            KeepScrollOffset,
+            oldPosition,
+            DebugLabel);
     }
 
     internal override void Attach(ScrollPosition position)
@@ -1025,9 +1031,13 @@ internal sealed class NestedScrollPosition : ScrollPosition
 
     public NestedScrollPosition(
         NestedScrollCoordinator coordinator,
-        ScrollPhysics? physics,
+        ScrollPhysics physics,
+        IScrollContext context,
         double initialPixels = 0.0,
-        bool keepScrollOffset = true) : base(initialPixels, physics, keepScrollOffset)
+        bool keepScrollOffset = true,
+        ScrollPosition? oldPosition = null,
+        string? debugLabel = null)
+        : base(physics, context, initialPixels, keepScrollOffset, oldPosition, debugLabel)
     {
         _coordinator = coordinator;
         // In case we did not restore but could, so that we do not restore it later.
@@ -1186,7 +1196,7 @@ internal sealed class NestedScrollPosition : ScrollPosition
             to: to,
             duration: duration,
             curve: curve,
-            vsync: TickerProvider);
+            vsync: Context.Vsync);
     }
 
     public override void GoIdle()
@@ -1231,15 +1241,17 @@ internal sealed class NestedScrollPosition : ScrollPosition
                     this,
                     metrics,
                     simulation,
-                    TickerProvider);
+                    Context.Vsync,
+                    ShouldIgnorePointer);
             case NestedBallisticScrollActivityMode.Inner:
                 return new NestedInnerBallisticScrollActivity(
                     _coordinator,
                     this,
                     simulation,
-                    TickerProvider);
+                    Context.Vsync,
+                    ShouldIgnorePointer);
             default:
-                return new BallisticScrollActivity(this, simulation, TickerProvider);
+                return new BallisticScrollActivity(this, simulation, Context.Vsync, ShouldIgnorePointer);
         }
     }
 
@@ -1264,7 +1276,7 @@ internal sealed class NestedScrollPosition : ScrollPosition
     /// </summary>
     public void UpdateCanDrag(bool innerCanDrag)
     {
-        CanDragChanged?.Invoke(Physics.ShouldAcceptUserOffset(this) || innerCanDrag);
+        Context.SetCanDrag(Physics.ShouldAcceptUserOffset(this) || innerCanDrag);
     }
 }
 
@@ -1277,7 +1289,8 @@ internal sealed class NestedInnerBallisticScrollActivity : BallisticScrollActivi
         NestedScrollCoordinator coordinator,
         NestedScrollPosition position,
         Simulation simulation,
-        ITickerProvider? vsync) : base(position, simulation, vsync)
+        ITickerProvider vsync,
+        bool shouldIgnorePointer) : base(position, simulation, vsync, shouldIgnorePointer)
     {
         _coordinator = coordinator;
     }
@@ -1314,7 +1327,8 @@ internal sealed class NestedOuterBallisticScrollActivity : BallisticScrollActivi
         NestedScrollPosition position,
         NestedScrollMetrics metrics,
         Simulation simulation,
-        ITickerProvider? vsync) : base(position, simulation, vsync)
+        ITickerProvider vsync,
+        bool shouldIgnorePointer) : base(position, simulation, vsync, shouldIgnorePointer)
     {
         if (metrics.MinRange >= metrics.MaxRange)
         {

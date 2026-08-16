@@ -741,7 +741,7 @@ public sealed class ViewportRevealTests
     [Fact]
     public void ScrollPosition_MoveToJumpsWithoutADurationAndAnimatesWithOne()
     {
-        using var position = new ScrollPosition(initialPixels: 0);
+        using var position = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext(), initialPixels: 0);
         position.ApplyViewportDimension(200);
         position.ApplyContentDimensions(0, 1000);
 

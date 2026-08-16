@@ -308,6 +308,7 @@ public sealed class MaterialCarouselTests
     public void CarouselScrollPhysics_SnapsToTheNearestItemBoundary()
     {
         CarouselScrollPosition position = new(
+            context: new TestScrollContext(),
             initialItem: 0,
             itemExtent: 300,
             physics: new CarouselScrollPhysics());
@@ -342,6 +343,7 @@ public sealed class MaterialCarouselTests
     public void CarouselScrollPosition_KeepsTheItemAcrossViewportChanges()
     {
         CarouselScrollPosition position = new(
+            context: new TestScrollContext(),
             initialItem: 2,
             itemExtent: 100,
             physics: new CarouselScrollPhysics());
@@ -359,6 +361,7 @@ public sealed class MaterialCarouselTests
     public void CarouselScrollPosition_WeightedLeadingItemAccountsForConsumeMaxWeight()
     {
         CarouselScrollPosition position = new(
+            context: new TestScrollContext(),
             initialItem: 0,
             flexWeights: [1, 2, 4, 2, 1],
             consumeMaxWeight: true,
@@ -377,6 +380,7 @@ public sealed class MaterialCarouselTests
     public void CarouselScrollPosition_CopyWithCarriesTheCarouselMetrics()
     {
         CarouselScrollPosition position = new(
+            context: new TestScrollContext(),
             initialItem: 0,
             flexWeights: [1, 7],
             consumeMaxWeight: false,
