@@ -6358,7 +6358,14 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.Equal(expected, capturedTheme);
+        Assert.Equal(
+            expected.CopyWith(
+                fill: IconThemeData.Fallback.Fill,
+                weight: IconThemeData.Fallback.Weight,
+                grade: IconThemeData.Fallback.Grade,
+                opticalSize: IconThemeData.Fallback.OpticalSize,
+                applyTextScaling: IconThemeData.Fallback.ApplyTextScaling),
+            capturedTheme);
     }
 
     [Fact]

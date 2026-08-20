@@ -350,6 +350,25 @@ public sealed class TextWidgetTests
     }
 
     [Fact]
+    public void IconWidget_UsesAmbientApplyTextScaling()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new MediaQuery(
+            new MediaQueryData(TextScaleFactor: 1.5),
+            new IconTheme(
+                data: new IconThemeData(Size: 20, ApplyTextScaling: true),
+                child: new Icon(icon: Plumix.Material.Icons.Add))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
+        Assert.NotNull(paragraph);
+        Assert.Equal(30, paragraph!.FontSize);
+    }
+
+    [Fact]
     public void IconWidget_NullIcon_RendersSquareByResolvedSize()
     {
         var owner = new BuildOwner();

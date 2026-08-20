@@ -1310,14 +1310,10 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
             effectiveForeground,
             effectiveIconTheme);
         double effectiveToolbarOpacity = ResolveToolbarOpacity(ToolbarOpacity);
-        effectiveIconTheme = effectiveIconTheme with
-        {
-            Opacity = (effectiveIconTheme.Opacity ?? 1.0) * effectiveToolbarOpacity,
-        };
-        effectiveActionsIconTheme = effectiveActionsIconTheme with
-        {
-            Opacity = (effectiveActionsIconTheme.Opacity ?? 1.0) * effectiveToolbarOpacity,
-        };
+        effectiveIconTheme = effectiveIconTheme.CopyWith(
+            opacity: (effectiveIconTheme.Opacity ?? 1.0) * effectiveToolbarOpacity);
+        effectiveActionsIconTheme = effectiveActionsIconTheme.CopyWith(
+            opacity: (effectiveActionsIconTheme.Opacity ?? 1.0) * effectiveToolbarOpacity);
         var effectiveLeading = ResolveEffectiveLeading(context);
         var effectiveActions = ResolveEffectiveActions(context);
         double effectiveLeadingWidth = ResolveEffectiveLeadingWidth(appBarTheme);
@@ -1669,10 +1665,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
         var baseTheme = IconTheme
                         ?? appBarTheme.IconTheme
                         ?? ResolveDefaultIconTheme(theme, effectiveForeground);
-        return baseTheme with
-        {
-            Color = baseTheme.Color ?? effectiveForeground,
-        };
+        return baseTheme.CopyWith(color: baseTheme.Color ?? effectiveForeground);
     }
 
     private IconThemeData ResolveEffectiveActionsIconTheme(
@@ -1688,10 +1681,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                         ?? appBarTheme.IconTheme
                         ?? ResolveDefaultActionsIconTheme(theme, actionForeground, effectiveIconTheme);
 
-        return baseTheme with
-        {
-            Color = baseTheme.Color ?? actionForeground ?? effectiveForeground,
-        };
+        return baseTheme.CopyWith(color: baseTheme.Color ?? actionForeground ?? effectiveForeground);
     }
 
     private double ResolveEffectiveToolbarHeight(AppBarThemeData appBarTheme)
@@ -1734,7 +1724,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
     {
         return theme.UseMaterial3
             ? new IconThemeData(Color: effectiveForeground, Size: 24)
-            : theme.IconTheme with { Color = effectiveForeground };
+            : theme.IconTheme.CopyWith(color: effectiveForeground);
     }
 
     private static IconThemeData ResolveDefaultActionsIconTheme(

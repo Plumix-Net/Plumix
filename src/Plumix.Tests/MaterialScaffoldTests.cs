@@ -3038,7 +3038,7 @@ public sealed class MaterialScaffoldTests
 
         Assert.NotNull(capturedTheme);
         Assert.Equal(Colors.CadetBlue, capturedTheme!.Color);
-        Assert.Null(capturedTheme.Size);
+        Assert.Equal(24, capturedTheme.Size);
     }
 
     [Fact]

@@ -58,16 +58,11 @@ public sealed class CupertinoTheme : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        // Dart wraps the child in `IconTheme(data: CupertinoIconThemeData(color: data.primaryColor))`
-        // and lets `CupertinoIconThemeData.resolve` resolve at the consumer's context.
-        // `CupertinoIconThemeData` needs a subclassable core `IconThemeData`, which Plumix does not
-        // have yet (`docs/CUPERTINO_TODO.md` > `icon_theme_data.dart`), so the color is resolved once,
-        // below the inherited theme, where the brightness this theme declares is already visible.
         return new InheritedCupertinoTheme(
             theme: this,
-            child: new Builder(iconContext => new IconTheme(
-                data: new IconThemeData(Color: CupertinoDynamicColor.Resolve(Data.PrimaryColor, iconContext)),
-                child: Child)));
+            child: new IconTheme(
+                data: new CupertinoIconThemeData(Color: Data.PrimaryColor),
+                child: Child));
     }
 }
 

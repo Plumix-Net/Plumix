@@ -15,7 +15,7 @@ public sealed class AnimationControllerTickerTests : IDisposable
     public AnimationControllerTickerTests()
     {
         Scheduler.ResetForTests();
-        _baseTicks = TimeSpan.FromSeconds(Scheduler.CurrentSeconds).Ticks;
+        _baseTicks = Scheduler.CurrentFrameTimeStamp.Ticks;
     }
 
     public void Dispose()

@@ -105,7 +105,7 @@ public sealed class Icon : StatelessWidget
     {
         double iconSize = Size ?? iconTheme.Size ?? DefaultIconSize;
 
-        if (ApplyTextScaling ?? false)
+        if (ApplyTextScaling ?? iconTheme.ApplyTextScaling ?? false)
         {
             iconSize *= MediaQuery.MaybeTextScaleFactorOf(context) ?? 1.0;
         }

@@ -1,22 +1,116 @@
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Rendering;
 
 namespace Plumix.Widgets;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/icon_theme_data.dart; flutter/packages/flutter/lib/src/widgets/icon_theme.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/icon_theme_data.dart;
+// flutter/packages/flutter/lib/src/widgets/icon_theme.dart
 
-public sealed record IconThemeData(
-    Color? Color,
-    double? Size,
-    double? Opacity)
+/// <summary>Defines the size, font variations, color, opacity, and shadows of icons.</summary>
+public class IconThemeData : Diagnosticable, IEquatable<IconThemeData>
 {
-    public IconThemeData(Color? Color = null, double? Size = null) : this(Color, Size, null)
+    private readonly double? _opacity;
+
+    public IconThemeData(
+        Color? Color = null,
+        double? Size = null,
+        double? Opacity = null,
+        double? Fill = null,
+        double? Weight = null,
+        double? Grade = null,
+        double? OpticalSize = null,
+        IReadOnlyList<Shadow>? Shadows = null,
+        bool? ApplyTextScaling = null)
     {
+        if (Fill.HasValue && !(Fill.Value >= 0.0 && Fill.Value <= 1.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(Fill), "Icon fill must be between 0 and 1.");
+        }
+
+        if (Weight.HasValue && !(Weight.Value > 0.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(Weight), "Icon weight must be positive.");
+        }
+
+        if (OpticalSize.HasValue && !(OpticalSize.Value > 0.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(OpticalSize), "Icon optical size must be positive.");
+        }
+
+        this.Size = Size;
+        this.Fill = Fill;
+        this.Weight = Weight;
+        this.Grade = Grade;
+        this.OpticalSize = OpticalSize;
+        this.Color = Color;
+        _opacity = Opacity;
+        this.Shadows = Shadows;
+        this.ApplyTextScaling = ApplyTextScaling;
     }
 
-    public IconThemeData CopyWith(Color? color = null, double? size = null, double? opacity = null)
+    /// <summary>An icon theme with Flutter's concrete fallback values.</summary>
+    public static IconThemeData Fallback { get; } = new(
+        Color: Avalonia.Media.Colors.Black,
+        Size: 24.0,
+        Opacity: 1.0,
+        Fill: 0.0,
+        Weight: 400.0,
+        Grade: 0.0,
+        OpticalSize: 48.0,
+        ApplyTextScaling: false);
+
+    public double? Size { get; }
+
+    public double? Fill { get; }
+
+    public double? Weight { get; }
+
+    public double? Grade { get; }
+
+    public double? OpticalSize { get; }
+
+    public Color? Color { get; }
+
+    public double? Opacity => _opacity is double opacity
+        ? double.IsNaN(opacity) ? 1.0 : Math.Clamp(opacity, 0.0, 1.0)
+        : null;
+
+    public IReadOnlyList<Shadow>? Shadows { get; }
+
+    public bool? ApplyTextScaling { get; }
+
+    public bool IsConcrete =>
+        Size.HasValue
+        && Fill.HasValue
+        && Weight.HasValue
+        && Grade.HasValue
+        && OpticalSize.HasValue
+        && Color.HasValue
+        && Opacity.HasValue
+        && ApplyTextScaling.HasValue;
+
+    public virtual IconThemeData CopyWith(
+        Color? color = null,
+        double? size = null,
+        double? opacity = null,
+        double? fill = null,
+        double? weight = null,
+        double? grade = null,
+        double? opticalSize = null,
+        IReadOnlyList<Shadow>? shadows = null,
+        bool? applyTextScaling = null)
     {
-        return new IconThemeData(color ?? Color, size ?? Size, opacity ?? Opacity);
+        return new IconThemeData(
+            Color: color ?? Color,
+            Size: size ?? Size,
+            Opacity: opacity ?? Opacity,
+            Fill: fill ?? Fill,
+            Weight: weight ?? Weight,
+            Grade: grade ?? Grade,
+            OpticalSize: opticalSize ?? OpticalSize,
+            Shadows: shadows ?? Shadows,
+            ApplyTextScaling: applyTextScaling ?? ApplyTextScaling);
     }
 
     public IconThemeData Merge(IconThemeData? other)
@@ -26,8 +120,17 @@ public sealed record IconThemeData(
             : CopyWith(
                 color: other.Color,
                 size: other.Size,
-                opacity: other.Opacity);
+                opacity: other.Opacity,
+                fill: other.Fill,
+                weight: other.Weight,
+                grade: other.Grade,
+                opticalSize: other.OpticalSize,
+                shadows: other.Shadows,
+                applyTextScaling: other.ApplyTextScaling);
     }
+
+    /// <summary>Resolves context-dependent values after the theme is retrieved.</summary>
+    public virtual IconThemeData Resolve(BuildContext context) => this;
 
     public static IconThemeData Lerp(IconThemeData? a, IconThemeData? b, double t)
     {
@@ -36,11 +139,16 @@ public sealed record IconThemeData(
             return a;
         }
 
-        double clampedT = Math.Clamp(t, 0.0, 1.0);
         return new IconThemeData(
-            Color: LerpColor(a?.Color, b?.Color, clampedT),
-            Size: LerpDouble(a?.Size, b?.Size, clampedT),
-            Opacity: LerpDouble(a?.Opacity, b?.Opacity, clampedT));
+            Color: LerpColor(a?.Color, b?.Color, t),
+            Size: LerpDouble(a?.Size, b?.Size, t),
+            Opacity: LerpDouble(a?.Opacity, b?.Opacity, t),
+            Fill: LerpDouble(a?.Fill, b?.Fill, t),
+            Weight: LerpDouble(a?.Weight, b?.Weight, t),
+            Grade: LerpDouble(a?.Grade, b?.Grade, t),
+            OpticalSize: LerpDouble(a?.OpticalSize, b?.OpticalSize, t),
+            Shadows: Shadow.LerpList(a?.Shadows, b?.Shadows, t),
+            ApplyTextScaling: t < 0.5 ? a?.ApplyTextScaling : b?.ApplyTextScaling);
     }
 
     public void Deconstruct(out Color? color, out double? size)
@@ -49,7 +157,75 @@ public sealed record IconThemeData(
         size = Size;
     }
 
-    internal static IconThemeData Fallback { get; } = new();
+    public void Deconstruct(out Color? color, out double? size, out double? opacity)
+    {
+        color = Color;
+        size = Size;
+        opacity = Opacity;
+    }
+
+    public virtual bool Equals(IconThemeData? other)
+    {
+        return other is not null
+               && other.GetType() == GetType()
+               && other.Size == Size
+               && other.Fill == Fill
+               && other.Weight == Weight
+               && other.Grade == Grade
+               && other.OpticalSize == OpticalSize
+               && other.Color == Color
+               && other.Opacity == Opacity
+               && ShadowListsEqual(other.Shadows, Shadows)
+               && other.ApplyTextScaling == ApplyTextScaling;
+    }
+
+    public override bool Equals(object? obj) => Equals(obj as IconThemeData);
+
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(GetType());
+        hash.Add(Size);
+        hash.Add(Fill);
+        hash.Add(Weight);
+        hash.Add(Grade);
+        hash.Add(OpticalSize);
+        hash.Add(Color);
+        hash.Add(Opacity);
+        if (Shadows is not null)
+        {
+            foreach (Shadow shadow in Shadows)
+            {
+                hash.Add(shadow);
+            }
+        }
+
+        hash.Add(ApplyTextScaling);
+        return hash.ToHashCode();
+    }
+
+    public static bool operator ==(IconThemeData? left, IconThemeData? right) =>
+        left is null ? right is null : left.Equals(right);
+
+    public static bool operator !=(IconThemeData? left, IconThemeData? right) => !(left == right);
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        properties.Add(new DoubleProperty("size", Size, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("fill", Fill, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("weight", Weight, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("grade", Grade, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("opticalSize", OpticalSize, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<Color?>("color", Color, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("opacity", Opacity, defaultValue: nullDefault));
+        properties.Add(new IterableProperty<Shadow>("shadows", Shadows, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<bool?>(
+            "applyTextScaling",
+            ApplyTextScaling,
+            defaultValue: nullDefault));
+    }
 
     private static double? LerpDouble(double? a, double? b, double t)
     {
@@ -70,9 +246,34 @@ public sealed record IconThemeData(
             return null;
         }
 
-        Color from = a ?? Avalonia.Media.Color.FromArgb(0, b!.Value.R, b.Value.G, b.Value.B);
-        Color to = b ?? Avalonia.Media.Color.FromArgb(0, a!.Value.R, a.Value.G, a.Value.B);
-        return new ColorTween().Evaluate(t, from, to);
+        if (!a.HasValue)
+        {
+            Color value = b!.Value;
+            return Avalonia.Media.Color.FromArgb(ScaleAlpha(value.A, t), value.R, value.G, value.B);
+        }
+
+        if (!b.HasValue)
+        {
+            Color value = a.Value;
+            return Avalonia.Media.Color.FromArgb(ScaleAlpha(value.A, 1.0 - t), value.R, value.G, value.B);
+        }
+
+        return new ColorTween().Evaluate(t, a.Value, b.Value);
+    }
+
+    private static byte ScaleAlpha(byte alpha, double factor)
+    {
+        return (byte)Math.Clamp((int)Math.Round(alpha * factor, MidpointRounding.AwayFromZero), 0, 255);
+    }
+
+    private static bool ShadowListsEqual(IReadOnlyList<Shadow>? a, IReadOnlyList<Shadow>? b)
+    {
+        if (ReferenceEquals(a, b))
+        {
+            return true;
+        }
+
+        return a is not null && b is not null && a.SequenceEqual(b);
     }
 }
 
@@ -83,8 +284,8 @@ public sealed class IconTheme : InheritedTheme
         Widget child,
         Key? key = null) : base(key)
     {
-        Data = data;
-        Child = child;
+        Data = data ?? throw new ArgumentNullException(nameof(data));
+        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public IconThemeData Data { get; }
@@ -105,7 +306,19 @@ public sealed class IconTheme : InheritedTheme
 
     public static IconThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<IconTheme>()?.Data ?? IconThemeData.Fallback;
+        IconThemeData iconThemeData = GetInheritedIconThemeData(context).Resolve(context);
+        return iconThemeData.IsConcrete
+            ? iconThemeData
+            : iconThemeData.CopyWith(
+                size: iconThemeData.Size ?? IconThemeData.Fallback.Size,
+                fill: iconThemeData.Fill ?? IconThemeData.Fallback.Fill,
+                weight: iconThemeData.Weight ?? IconThemeData.Fallback.Weight,
+                grade: iconThemeData.Grade ?? IconThemeData.Fallback.Grade,
+                opticalSize: iconThemeData.OpticalSize ?? IconThemeData.Fallback.OpticalSize,
+                color: iconThemeData.Color ?? IconThemeData.Fallback.Color,
+                opacity: iconThemeData.Opacity ?? IconThemeData.Fallback.Opacity,
+                shadows: iconThemeData.Shadows ?? IconThemeData.Fallback.Shadows,
+                applyTextScaling: iconThemeData.ApplyTextScaling ?? IconThemeData.Fallback.ApplyTextScaling);
     }
 
     public static Widget Merge(
@@ -115,8 +328,13 @@ public sealed class IconTheme : InheritedTheme
     {
         return new Builder(context => new IconTheme(
             key: key,
-            data: Of(context).Merge(data),
+            data: GetInheritedIconThemeData(context).Merge(data),
             child: child));
+    }
+
+    private static IconThemeData GetInheritedIconThemeData(BuildContext context)
+    {
+        return context.DependOnInherited<IconTheme>()?.Data ?? IconThemeData.Fallback;
     }
 }
 
