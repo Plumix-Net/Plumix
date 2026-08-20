@@ -35,6 +35,8 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/desktop_text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
 | `cupertino_ui/dialog.dart` | `src/Plumix.Cupertino/CupertinoDialog.cs` | `src/Plumix.Tests/CupertinoDialogTests.cs` | — |
 | `cupertino_ui/expansion_tile.dart` | `src/Plumix.Cupertino/CupertinoExpansionTile.cs` | `src/Plumix.Tests/CupertinoExpansionTileTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_expansion_tile_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoExpansionTileDemoPage.cs` |
+| `cupertino_ui/form_row.dart` | `src/Plumix.Cupertino/CupertinoFormRow.cs` | `src/Plumix.Tests/CupertinoFormRowTests.cs` | — |
+| `cupertino_ui/form_section.dart` | `src/Plumix.Cupertino/CupertinoFormSection.cs` | `src/Plumix.Tests/CupertinoFormSectionTests.cs` | — |
 | `cupertino_ui/icon_theme_data.dart` | `src/Plumix.Cupertino/CupertinoIconThemeData.cs` | — | — |
 | `cupertino_ui/icons.dart` | `src/Plumix.Cupertino/CupertinoIcons.cs` | `src/Plumix.Tests/CupertinoIconsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs` |
 | `cupertino_ui/interface_level.dart` | `src/Plumix.Cupertino/CupertinoUserInterfaceLevel.cs` | — | — |
@@ -395,7 +397,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/focus_manager.dart` | `src/Plumix/Widgets/Focus.cs` _(reference) (adapted)_ | `src/Plumix.Tests/CupertinoFocusHaloTests.cs`<br>`src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs` |
 | `widgets/focus_scope.dart` | `src/Plumix/Widgets/Focus.cs` _(reference) (adapted)_ | `src/Plumix.Tests/CupertinoFocusHaloTests.cs`<br>`src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs` |
 | `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | — |
-| `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`dart_sample/lib/demos/general/transform_demo_page.dart` |
+| `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/CupertinoFormRowTests.cs`<br>`src/Plumix.Tests/CupertinoFormSectionTests.cs`<br>`src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`dart_sample/lib/demos/general/transform_demo_page.dart` |
 | `widgets/framework.dart` | `src/Plumix/Widgets/Framework.BuildOwner.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Element.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.RenderObject.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Widget.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.cs` _(reference) (approximate)_ | — | — |
 | `widgets/gesture_detector.dart` | `src/Plumix/Widgets/GestureRecognizerFactory.cs`<br>`src/Plumix/Widgets/Gestures.cs` _(reference) (approximate)_ | — | — |
 | `widgets/grid_paper.dart` | `src/Plumix/Widgets/GridPaper.cs` | — | — |
@@ -606,8 +608,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 470
-- C# files carrying a marker: 608
+- Flutter files mapped: 472
+- C# files carrying a marker: 610
 - C# files without a marker: 19
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 78

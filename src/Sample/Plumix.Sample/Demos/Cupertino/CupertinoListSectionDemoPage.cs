@@ -20,9 +20,9 @@ public sealed class CupertinoListSectionDemoPage : StatelessWidget
             spacing: 12.0,
             children:
             [
-                new Text("Cupertino list sections", fontSize: 20.0, color: label),
+                new Text("Cupertino list + form sections", fontSize: 20.0, color: label),
                 new Text(
-                    "Compare edge-to-edge borders with inset-grouped superellipse clipping and directional dividers.",
+                    "Compare list rows with split form rows, helper/error content, and inset-grouped decoration.",
                     fontSize: 14.0,
                     color: secondaryLabel),
                 new CupertinoListSection(
@@ -59,6 +59,20 @@ public sealed class CupertinoListSectionDemoPage : StatelessWidget
                             title: new Text("Subscriptions"),
                             trailing: new CupertinoListTileChevron(),
                             onTap: CompleteImmediately),
+                    ]),
+                CupertinoFormSection.InsetGrouped(
+                    header: new Text("PROFILE"),
+                    footer: new Text("Form rows keep values trailing-aligned and supporting text below the row."),
+                    children:
+                    [
+                        new CupertinoFormRow(
+                            prefix: new Text("Name"),
+                            child: new Text("Egor"),
+                            helper: new Text("Shown on shared pages.")),
+                        new CupertinoFormRow(
+                            prefix: new Text("Email"),
+                            child: new Text("egor@example.com"),
+                            error: new Text("Address has not been verified.")),
                     ]),
             ]);
     }

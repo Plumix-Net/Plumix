@@ -271,8 +271,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new CupertinoTabBarDemoPage()),
         new(
             SampleRoutes.CupertinoListSection,
-            "List sections",
-            "edge-to-edge/inset groups + headers/footers + divider geometry",
+            "List + form sections",
+            "edge-to-edge/inset groups + split rows + helper/error content",
             () => new CupertinoListSectionDemoPage()),
         new(
             SampleRoutes.CupertinoExpansionTile,

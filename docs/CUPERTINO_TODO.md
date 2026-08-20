@@ -58,7 +58,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- |
-| `form_row.dart`, `form_section.dart` | 160, 249 | `CupertinoFormRow`, `CupertinoFormSection` | S | After `list_section`. |
 | `switch.dart` + `thumb_painter.dart` | 1443, 70 | `CupertinoSwitch`, `CupertinoThumbPainter` | M | Then rewire `Switch.Adaptive` in `src/Plumix.Material/Switch.cs` to compose it (remove the inlined `Cupertino*` constants). |
 | `picker.dart` | 638 | `CupertinoPicker`, `CupertinoPickerDefaultSelectionOverlay` | M | `ListWheelScrollView`/`FixedExtentScrollController` are ported in core. |
 | `refresh.dart` | 594 | `CupertinoSliverRefreshControl`, `RefreshIndicatorMode` | M | Then rewire `RefreshIndicator.Adaptive`. |
