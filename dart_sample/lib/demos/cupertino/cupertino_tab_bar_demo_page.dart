@@ -11,8 +11,6 @@ class CupertinoTabBarDemoPage extends StatefulWidget {
 class _CupertinoTabBarDemoPageState extends State<CupertinoTabBarDemoPage> {
   static const List<String> _titles = <String>['Home', 'Favorites', 'Profile'];
 
-  int _currentIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     final Color label = CupertinoDynamicColor.resolve(
@@ -31,10 +29,10 @@ class _CupertinoTabBarDemoPageState extends State<CupertinoTabBarDemoPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       spacing: 12,
       children: <Widget>[
-        Text('CupertinoTabBar', style: TextStyle(fontSize: 20, color: label)),
+        Text('CupertinoTabScaffold', style: TextStyle(fontSize: 20, color: label)),
         Text(
-          'Tap a destination to probe selection, active icons, labels, and '
-          'the translucent blur.',
+          'Tap a destination to probe lazy tab bodies, retained state, active '
+          'icons, and blur.',
           style: TextStyle(fontSize: 14, color: secondaryLabel),
         ),
         ClipRRect(
@@ -45,37 +43,34 @@ class _CupertinoTabBarDemoPageState extends State<CupertinoTabBarDemoPage> {
               color: panel,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Column(
-              children: <Widget>[
-                Expanded(
-                  child: Center(
-                    child: Text(
-                      'Selected: ${_titles[_currentIndex]}',
-                      style: TextStyle(fontSize: 18, color: label),
-                    ),
+            child: CupertinoTabScaffold(
+              backgroundColor: CupertinoColors.secondarySystemBackground,
+              tabBar: CupertinoTabBar(
+                items: const <BottomNavigationBarItem>[
+                  BottomNavigationBarItem(
+                    icon: Icon(CupertinoIcons.home),
+                    label: 'Home',
                   ),
-                ),
-                CupertinoTabBar(
-                  items: const <BottomNavigationBarItem>[
-                    BottomNavigationBarItem(
-                      icon: Icon(CupertinoIcons.home),
-                      label: 'Home',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(CupertinoIcons.heart),
-                      activeIcon: Icon(CupertinoIcons.heart_fill),
-                      label: 'Favorites',
-                    ),
-                    BottomNavigationBarItem(
-                      icon: Icon(CupertinoIcons.person),
-                      activeIcon: Icon(CupertinoIcons.person_fill),
-                      label: 'Profile',
-                    ),
-                  ],
-                  currentIndex: _currentIndex,
-                  onTap: (int index) => setState(() => _currentIndex = index),
-                ),
-              ],
+                  BottomNavigationBarItem(
+                    icon: Icon(CupertinoIcons.heart),
+                    activeIcon: Icon(CupertinoIcons.heart_fill),
+                    label: 'Favorites',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(CupertinoIcons.person),
+                    activeIcon: Icon(CupertinoIcons.person_fill),
+                    label: 'Profile',
+                  ),
+                ],
+              ),
+              tabBuilder: (BuildContext context, int index) {
+                return Center(
+                  child: Text(
+                    'Selected: ${_titles[index]}',
+                    style: TextStyle(fontSize: 18, color: label),
+                  ),
+                );
+              },
             ),
           ),
         ),

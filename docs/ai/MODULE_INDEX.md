@@ -168,6 +168,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   controls; several carry `(reference)`/`(adapted)` markers — diff against Dart before extending them.
 - Cupertino tab bars enter through `src/Plumix.Cupertino/CupertinoTabBar.cs`; the shared
   `BottomNavigationBarItem` lives in core `Widgets`, with focused coverage in `CupertinoTabBarTests.cs`.
+- Cupertino tab scaffolds enter through `src/Plumix.Cupertino/CupertinoTabScaffold.cs`; controller/restoration,
+  lazy offstage tab caching, per-tab focus, and inset behavior are covered in `CupertinoTabScaffoldTests.cs`.
 - Per-tab navigation enters through `src/Plumix.Cupertino/CupertinoTabView.cs`; it owns a core `Navigator`,
   Cupertino page-route generation, Hero observation and active-tab back handling, with focused coverage in
   `CupertinoTabViewTests.cs`.

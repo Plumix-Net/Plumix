@@ -44,6 +44,32 @@ public sealed class FocusTests : IDisposable
     }
 
     [Fact]
+    public void FocusScope_RemembersItsLastFocusedChildAfterFocusMovesToASiblingScope()
+    {
+        var manager = new FocusManager();
+        var parent = new FocusScopeNode();
+        var firstScope = new FocusScopeNode();
+        var secondScope = new FocusScopeNode();
+        var firstChild = new FocusNode();
+        var secondChild = new FocusNode();
+        manager.RegisterNode(parent);
+        manager.RegisterNode(firstScope, parent);
+        manager.RegisterNode(secondScope, parent);
+        manager.RegisterNode(firstChild, firstScope);
+        manager.RegisterNode(secondChild, secondScope);
+
+        Assert.True(firstChild.RequestFocus());
+        Assert.Same(firstChild, firstScope.FocusedChild);
+        Assert.True(secondChild.RequestFocus());
+        Assert.Same(firstChild, firstScope.FocusedChild);
+        Assert.Same(secondChild, secondScope.FocusedChild);
+
+        parent.SetFirstFocus(firstScope);
+
+        Assert.Same(firstChild, manager.PrimaryFocus);
+    }
+
+    [Fact]
     public void FocusNode_HasFocusTracksFocusedDescendantsWithoutFlickeringBetweenThem()
     {
         var owner = new BuildOwner();

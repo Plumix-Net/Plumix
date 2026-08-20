@@ -17,7 +17,6 @@ public sealed class CupertinoTabBarDemoPage : StatefulWidget
 internal sealed class CupertinoTabBarDemoPageState : State
 {
     private static readonly string[] Titles = ["Home", "Favorites", "Profile"];
-    private int _currentIndex;
 
     public override Widget Build(BuildContext context)
     {
@@ -29,9 +28,9 @@ internal sealed class CupertinoTabBarDemoPageState : State
             spacing: 12.0,
             children:
             [
-                new Text("CupertinoTabBar", fontSize: 20.0, color: label),
+                new Text("CupertinoTabScaffold", fontSize: 20.0, color: label),
                 new Text(
-                    "Tap a destination to probe selection, active icons, labels, and the translucent blur.",
+                    "Tap a destination to probe lazy tab bodies, retained state, active icons, and blur.",
                     fontSize: 14.0,
                     color: secondaryLabel),
                 new ClipRRect(
@@ -41,33 +40,28 @@ internal sealed class CupertinoTabBarDemoPageState : State
                         decoration: new BoxDecoration(
                             Color: panel,
                             BorderRadius: BorderRadius.Circular(14.0)),
-                        child: new Column(
-                            children:
-                            [
-                                new Expanded(
-                                    child: new Center(
-                                        child: new Text(
-                                            $"Selected: {Titles[_currentIndex]}",
-                                            fontSize: 18.0,
-                                            color: label))),
-                                new CupertinoTabBar(
-                                    items:
-                                    [
-                                        new BottomNavigationBarItem(
-                                            icon: new Icon(CupertinoIcons.Home),
-                                            label: "Home"),
-                                        new BottomNavigationBarItem(
-                                            icon: new Icon(CupertinoIcons.Heart),
-                                            activeIcon: new Icon(CupertinoIcons.HeartFill),
-                                            label: "Favorites"),
-                                        new BottomNavigationBarItem(
-                                            icon: new Icon(CupertinoIcons.Person),
-                                            activeIcon: new Icon(CupertinoIcons.PersonFill),
-                                            label: "Profile"),
-                                    ],
-                                    currentIndex: _currentIndex,
-                                    onTap: index => SetState(() => _currentIndex = index)),
-                            ]))),
+                        child: new CupertinoTabScaffold(
+                            backgroundColor: CupertinoColors.SecondarySystemBackground,
+                            tabBar: new CupertinoTabBar(
+                                items:
+                                [
+                                    new BottomNavigationBarItem(
+                                        icon: new Icon(CupertinoIcons.Home),
+                                        label: "Home"),
+                                    new BottomNavigationBarItem(
+                                        icon: new Icon(CupertinoIcons.Heart),
+                                        activeIcon: new Icon(CupertinoIcons.HeartFill),
+                                        label: "Favorites"),
+                                    new BottomNavigationBarItem(
+                                        icon: new Icon(CupertinoIcons.Person),
+                                        activeIcon: new Icon(CupertinoIcons.PersonFill),
+                                        label: "Profile"),
+                                ]),
+                            tabBuilder: (_, index) => new Center(
+                                child: new Text(
+                                    $"Selected: {Titles[index]}",
+                                    fontSize: 18.0,
+                                    color: label))))),
             ]);
     }
 }

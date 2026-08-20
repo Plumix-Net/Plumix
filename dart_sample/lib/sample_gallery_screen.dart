@@ -476,9 +476,9 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.cupertinoTabBar,
-          title: 'Tab bar',
+          title: 'Tab scaffold + bar',
           subtitle:
-              'selection + active icons + safe-area height + translucent blur',
+              'lazy tab bodies + retained state + active icons + safe-area blur',
           builder: () => const CupertinoTabBarDemoPage(),
         ),
         SampleRouteDefinition(

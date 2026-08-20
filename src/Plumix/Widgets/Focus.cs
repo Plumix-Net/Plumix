@@ -949,11 +949,6 @@ public sealed class FocusManager
         HashSet<FocusNode> nextPath = FocusPath(next).ToHashSet();
         PrimaryFocus = next;
 
-        if (previous != null && !ReferenceEquals(previous.Scope, next?.Scope))
-        {
-            previous.Scope?.SetFocusedChild(null);
-        }
-
         next?.Scope?.SetFocusedChild(next);
         foreach (FocusNode node in previousPath.Except(nextPath))
         {

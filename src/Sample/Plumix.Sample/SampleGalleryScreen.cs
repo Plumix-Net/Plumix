@@ -265,8 +265,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new CupertinoFocusHaloDemoPage()),
         new(
             SampleRoutes.CupertinoTabBar,
-            "Tab bar",
-            "selection + active icons + safe-area height + translucent blur",
+            "Tab scaffold + bar",
+            "lazy tab bodies + retained state + active icons + safe-area blur",
             () => new CupertinoTabBarDemoPage()),
         new(
             SampleRoutes.CupertinoExpansionTile,
