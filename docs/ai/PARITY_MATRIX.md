@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-08-15
+Last checked: 2026-08-20
 
 Status legend:
 
@@ -97,6 +97,7 @@ Status legend:
 | Switch demo | `src/Sample/Plumix.Sample/Demos/Cupertino/SwitchDemoPage.cs` | `dart_sample/lib/demos/cupertino/switch_demo_page.dart` | verify-runtime | Demonstrates strict Material `Switch` behavior with live direct-role M2/M3 defaults, controlled on/off value, tap+drag interaction, thumb-icon toggles, tap-target policy toggle (`padded`/`shrinkWrap`), and widget/theme color precedence probes in both samples. |
 | RadioGroup + Radio demo | `src/Sample/Plumix.Sample/Demos/Cupertino/RadioDemoPage.cs` | `dart_sample/lib/demos/cupertino/radio_demo_page.dart` | verify-runtime | Demonstrates modern ancestor-owned `RadioGroup` selection, selected-only Tab entry, reading-order wraparound arrow/Space keyboard behavior, toggleable selection (`selected -> null`), tap-target policy, widget-level fill/overlay/side/background overrides, and adaptive platform/checkmark probes in both samples. |
 | Cupertino application shell demo | `src/Sample/Plumix.Sample/Demos/Cupertino/AppDemoPage.cs` | `dart_sample/lib/demos/cupertino/app_demo_page.dart` | verify-runtime | Demonstrates matching nested `CupertinoApp` theme, localization, selection and scroll defaults plus named `CupertinoPageRoute` push/pop in both samples. |
+| Cupertino icons demo | `src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart` | verify-runtime | Demonstrates matching legacy, SF Symbols, directional, alias and high-range glyphs from the generated catalog in both samples. |
 | Cupertino theme + dynamic colors demo | `src/Sample/Plumix.Sample/Demos/Cupertino/ThemeDemoPage.cs` | `dart_sample/lib/demos/cupertino/theme_demo_page.dart` | verify-runtime | Demonstrates `CupertinoDynamicColor` resolution against brightness, accessibility contrast and `CupertinoUserInterfaceLevel`, the resolved `CupertinoThemeData` scaffold/separator colours, and the `CupertinoTextThemeData` nav-title/body/action/tab-label styles in both samples. |
 | Cupertino page scaffold demo | `src/Sample/Plumix.Sample/Demos/Cupertino/PageScaffoldDemoPage.cs` | `dart_sample/lib/demos/cupertino/page_scaffold_demo_page.dart` | verify-runtime | Demonstrates dynamic page backgrounds, opaque content offset versus translucent overlap padding, navigation-bar text-scale isolation, simulated keyboard insets, and the `resizeToAvoidBottomInset` opt-out through matching preferred-size probe bars. |
 | Cupertino route demo | `src/Sample/Plumix.Sample/Demos/Cupertino/RouteDemoPage.cs` | `dart_sample/lib/demos/cupertino/route_demo_page.dart` | verify-runtime | Demonstrates standard and fullscreen `CupertinoPageRoute` pushes, leading-edge interactive pop, typed pop results, and a spring-driven Cupertino modal popup in both samples. |

@@ -39,6 +39,7 @@ import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/material/color_palette_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'demos/cupertino/app_demo_page.dart';
+import 'demos/cupertino/cupertino_icons_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -453,6 +454,13 @@ class SampleGalleryScreen extends StatelessWidget {
               'theme + localization + selection + scroll + '
               'CupertinoPageRoute defaults',
           builder: () => const CupertinoAppDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoIcons,
+          title: 'Icons',
+          subtitle:
+              'legacy + SF Symbols catalog, aliases, and directional glyphs',
+          builder: () => const CupertinoIconsDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.checkbox,

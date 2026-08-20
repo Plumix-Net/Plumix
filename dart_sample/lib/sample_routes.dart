@@ -93,6 +93,7 @@ class SampleRoutes {
   static const String appBarTextStyles = '/appbar-text-styles';
   static const String colorPalette = '/color-palette';
   static const String cupertinoApp = '/cupertino-app';
+  static const String cupertinoIcons = '/cupertino-icons';
   static const String cupertinoTheme = '/cupertino-theme';
   static const String cupertinoPageScaffold = '/cupertino-page-scaffold';
   static const String cupertinoRoute = '/cupertino-route';

@@ -32,6 +32,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/desktop_text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
 | `cupertino_ui/dialog.dart` | `src/Plumix.Cupertino/CupertinoDialog.cs` | `src/Plumix.Tests/CupertinoDialogTests.cs` | — |
 | `cupertino_ui/icon_theme_data.dart` | `src/Plumix.Cupertino/CupertinoIconThemeData.cs` | — | — |
+| `cupertino_ui/icons.dart` | `src/Plumix.Cupertino/CupertinoIcons.cs` | `src/Plumix.Tests/CupertinoIconsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs` |
 | `cupertino_ui/interface_level.dart` | `src/Plumix.Cupertino/CupertinoUserInterfaceLevel.cs` | — | — |
 | `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs` | — |
 | `cupertino_ui/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
@@ -390,8 +391,8 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/gesture_detector.dart` | `src/Plumix/Widgets/GestureRecognizerFactory.cs`<br>`src/Plumix/Widgets/Gestures.cs` _(reference) (approximate)_ | — | — |
 | `widgets/grid_paper.dart` | `src/Plumix/Widgets/GridPaper.cs` | — | — |
 | `widgets/heroes.dart` | `src/Plumix/Widgets/Hero.cs` _(reference) (baseline subset)_<br>`src/Plumix/Widgets/Navigation.NavigatorState.Hero.cs` | `src/Plumix.Tests/HeroNavigatorTests.cs` | — |
-| `widgets/icon.dart` | `src/Plumix/Widgets/Icon.cs` _(reference) (approximate)_ | `src/Plumix.Tests/CupertinoIconThemeDataTests.cs`<br>`src/Plumix.Tests/IconThemeDataTests.cs`<br>`src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs` | `dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs` |
-| `widgets/icon_data.dart` | `src/Plumix/Widgets/Icon.cs` _(reference) (approximate)_ | `src/Plumix.Tests/CupertinoIconThemeDataTests.cs`<br>`src/Plumix.Tests/IconThemeDataTests.cs`<br>`src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs` | `dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs` |
+| `widgets/icon.dart` | `src/Plumix/Widgets/Icon.cs` _(reference) (approximate)_ | `src/Plumix.Tests/CupertinoIconThemeDataTests.cs`<br>`src/Plumix.Tests/CupertinoIconsTests.cs`<br>`src/Plumix.Tests/IconThemeDataTests.cs`<br>`src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart`<br>`dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs` |
+| `widgets/icon_data.dart` | `src/Plumix/Widgets/Icon.cs` _(reference) (approximate)_ | `src/Plumix.Tests/CupertinoIconThemeDataTests.cs`<br>`src/Plumix.Tests/CupertinoIconsTests.cs`<br>`src/Plumix.Tests/IconThemeDataTests.cs`<br>`src/Plumix.Tests/MaterialAnimatedIconTests.cs`<br>`src/Plumix.Tests/MaterialExpandIconTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart`<br>`dart_sample/lib/demos/material/animated_icon_demo_page.dart`<br>`dart_sample/lib/demos/material/app_bar_icon_theme_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AnimatedIconDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/AppBarIconThemeDemoPage.cs` |
 | `widgets/icon_theme.dart` | `src/Plumix/Widgets/IconTheme.cs` | — | — |
 | `widgets/icon_theme_data.dart` | `src/Plumix/Widgets/IconTheme.cs` | — | — |
 | `widgets/image.dart` | `src/Plumix/Widgets/Image.cs`<br>`src/Plumix/Widgets/ImageConfiguration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/ImageWidgetTests.cs` | `dart_sample/lib/demos/general/image_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ImageDemoPage.cs` |
@@ -595,8 +596,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 460
-- C# files carrying a marker: 596
+- Flutter files mapped: 461
+- C# files carrying a marker: 597
 - C# files without a marker: 19
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 77

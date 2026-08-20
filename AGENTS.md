@@ -137,6 +137,7 @@ scripts/check_line_length.sh                      # 120-char rule on new/edited 
 python3 scripts/generate_port_map.py              # regenerate docs/ai/PORT_MAP.md
 python3 scripts/generate_keyboard_keys.py         # regenerate src/Plumix/UI/KeyboardKey.g.cs
 python3 scripts/generate_material_colors.py       # regenerate src/Plumix.Material/Colors.g.cs
+python3 scripts/generate_cupertino_icons.py       # regenerate Cupertino icon catalog + font asset
 dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
 dotnet run --project src/Sample/Plumix.Browser/Plumix.Browser.csproj
 ```

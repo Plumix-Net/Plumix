@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
@@ -12,6 +13,33 @@ public sealed record IconData(
     string? FontFamily = null,
     string? FontPackage = null,
     bool MatchTextDirection = false);
+
+internal static class IconFontRegistry
+{
+    private static readonly ConcurrentDictionary<(string Package, string Family), FontFamily> RegisteredFonts =
+        new();
+
+    public static void Register(string package, string family, string resourceUri)
+    {
+        RegisteredFonts[(package, family)] = new FontFamily(resourceUri);
+    }
+
+    public static FontFamily Resolve(IconData iconData)
+    {
+        if (string.IsNullOrWhiteSpace(iconData.FontFamily))
+        {
+            return FontFamily.Default;
+        }
+
+        if (!string.IsNullOrWhiteSpace(iconData.FontPackage)
+            && RegisteredFonts.TryGetValue((iconData.FontPackage, iconData.FontFamily), out FontFamily? fontFamily))
+        {
+            return fontFamily;
+        }
+
+        return new FontFamily(iconData.FontFamily);
+    }
+}
 
 public sealed class Icon : StatelessWidget
 {
@@ -120,9 +148,7 @@ public sealed class Icon : StatelessWidget
 
     private static FontFamily ResolveFontFamily(IconData iconData)
     {
-        return string.IsNullOrWhiteSpace(iconData.FontFamily)
-            ? FontFamily.Default
-            : new FontFamily(iconData.FontFamily);
+        return IconFontRegistry.Resolve(iconData);
     }
 
     private static Color ApplyOpacity(Color color, double opacity)
