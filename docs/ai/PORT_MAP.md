@@ -50,6 +50,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
 | `cupertino_ui/slider.dart` | `src/Plumix.Cupertino/CupertinoSlider.cs` | — | — |
 | `cupertino_ui/spell_check_suggestions_toolbar.dart` | `src/Plumix.Cupertino/CupertinoSpellCheckSuggestionsToolbar.cs` | — | — |
+| `cupertino_ui/switch.dart` | `src/Plumix.Cupertino/CupertinoSwitch.cs` | `src/Plumix.Tests/CupertinoSwitchTests.cs` | — |
 | `cupertino_ui/tab_scaffold.dart` | `src/Plumix.Cupertino/CupertinoTabScaffold.cs` | `src/Plumix.Tests/CupertinoTabScaffoldTests.cs` | — |
 | `cupertino_ui/tab_view.dart` | `src/Plumix.Cupertino/CupertinoTabView.cs` | `src/Plumix.Tests/CupertinoTabViewTests.cs` | — |
 | `cupertino_ui/text_selection.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionControls.cs` | `src/Plumix.Tests/CupertinoTextSelectionControlsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_text_selection_controls_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoTextSelectionControlsDemoPage.cs` |
@@ -57,6 +58,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
 | `cupertino_ui/text_theme.dart` | `src/Plumix.Cupertino/CupertinoTextTheme.cs` | — | — |
 | `cupertino_ui/theme.dart` | `src/Plumix.Cupertino/CupertinoTheme.cs` | — | — |
+| `cupertino_ui/thumb_painter.dart` | `src/Plumix.Cupertino/CupertinoThumbPainter.cs` | — | — |
 | `material_ui/about.dart` | `src/Plumix.Material/About.cs` | `src/Plumix.Tests/MaterialAboutTests.cs` | `dart_sample/lib/demos/material/about_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/AboutDemoPage.cs` |
 | `material_ui/action_buttons.dart` | `src/Plumix.Material/ActionButtons.cs` | `src/Plumix.Tests/MaterialActionButtonsTests.cs` | `dart_sample/lib/demos/material/action_buttons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ActionButtonsDemoPage.cs` |
 | `material_ui/action_chip.dart` | `src/Plumix.Material/Chips.cs` | — | `dart_sample/lib/demos/material/chips_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ChipsDemoPage.cs` |
@@ -204,7 +206,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/spell_check_suggestions_toolbar.dart` | `src/Plumix.Material/SpellCheckSuggestionsToolbar.cs` | — | — |
 | `material_ui/spell_check_suggestions_toolbar_layout_delegate.dart` | `src/Plumix.Material/SpellCheckSuggestionsToolbar.cs` | — | — |
 | `material_ui/stepper.dart` | `src/Plumix.Material/Stepper.cs` | `src/Plumix.Tests/MaterialStepperTests.cs` | `dart_sample/lib/demos/material/stepper_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/StepperDemoPage.cs` |
-| `material_ui/switch.dart` | `src/Plumix.Material/Switch.cs` | `src/Plumix.Tests/AnimatedSwitcherTests.cs`<br>`src/Plumix.Tests/MaterialSwitchTests.cs` | `dart_sample/lib/demos/cupertino/switch_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/SwitchDemoPage.cs` |
+| `material_ui/switch.dart` | `src/Plumix.Material/Switch.cs` | `src/Plumix.Tests/AnimatedSwitcherTests.cs`<br>`src/Plumix.Tests/CupertinoSwitchTests.cs`<br>`src/Plumix.Tests/MaterialSwitchTests.cs` | `dart_sample/lib/demos/cupertino/switch_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/SwitchDemoPage.cs` |
 | `material_ui/switch_theme.dart` | `src/Plumix.Material/SwitchTheme.cs` | — | — |
 | `material_ui/tab_bar_theme.dart` | `src/Plumix.Material/TabBarTheme.cs` | — | — |
 | `material_ui/tab_controller.dart` | `src/Plumix.Material/TabController.cs` | — | — |
@@ -506,6 +508,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/Foundation/TypedData.cs`
 - `src/Plumix/Gestures/GestureTimer.cs`
 - `src/Plumix/HostKeyboardMap.cs`
+- `src/Plumix/Painting/ColorUtilities.cs`
 - `src/Plumix/PlumixApplication.cs`
 - `src/Plumix/PlumixOptions.cs`
 - `src/Plumix/Rendering/FilterLayerRasterizer.cs`
@@ -608,9 +611,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 472
-- C# files carrying a marker: 610
-- C# files without a marker: 19
+- Flutter files mapped: 474
+- C# files carrying a marker: 612
+- C# files without a marker: 20
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 78
 

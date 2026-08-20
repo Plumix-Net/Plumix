@@ -1,3 +1,4 @@
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 class SwitchDemoPage extends StatefulWidget {
@@ -155,6 +156,43 @@ class _SwitchDemoPageState extends State<SwitchDemoPage> {
               ),
             ],
           ),
+        ),
+        const Text(
+          'CupertinoSwitch direct port',
+          style: TextStyle(fontSize: 16, color: Colors.black),
+        ),
+        _buildSwitchRow(
+          toggle: CupertinoSwitch(
+            value: _value,
+            onChanged: _enabled ? _onValueChanged : null,
+          ),
+          title: 'Cupertino default',
+          subtitle: 'iOS geometry, drag thresholds, focus ring, and haptics',
+        ),
+        _buildSwitchRow(
+          toggle: CupertinoSwitch(
+            value: _value,
+            onChanged: _enabled ? _onValueChanged : null,
+            activeTrackColor: const Color(0xFF00695C),
+            inactiveTrackColor: const Color(0xFFB0BEC5),
+            thumbColor: const Color(0xFFE8F5E9),
+            inactiveThumbColor: const Color(0xFFB2DFDB),
+            trackOutlineColor: WidgetStateProperty.resolveWith((states) {
+              return states.contains(WidgetState.selected)
+                  ? Colors.transparent
+                  : const Color(0xFF455A64);
+            }),
+            trackOutlineWidth: const WidgetStatePropertyAll<double>(2.0),
+            thumbIcon: _showThumbIcons
+                ? WidgetStateProperty.resolveWith((states) {
+                    return states.contains(WidgetState.selected)
+                        ? const Icon(Icons.check, size: 14.0)
+                        : const Icon(Icons.close, size: 14.0);
+                  })
+                : null,
+          ),
+          title: 'Cupertino custom',
+          subtitle: 'track/thumb/outline/icon state overrides',
         ),
       ],
     );

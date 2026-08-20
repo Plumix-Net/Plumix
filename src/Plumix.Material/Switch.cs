@@ -1,12 +1,12 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
-using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
@@ -15,19 +15,6 @@ namespace Plumix.Material;
 public sealed class Switch : StatefulWidget
 {
     private const double DefaultSplashRadius = 20.0;
-    private const double CupertinoDisabledOpacity = 0.5;
-    private const double CupertinoThumbExtension = 7.0;
-    private const double CupertinoDragCommitThreshold = 0.7;
-    private const double CupertinoDragReverseThreshold = 0.2;
-    private static readonly Color CupertinoInactiveTrackColor = Color.FromArgb(0x28, 0x78, 0x78, 0x80);
-    private static readonly Color CupertinoInactiveTrackColorDark = Color.FromArgb(0x51, 0x78, 0x78, 0x80);
-    private static readonly Color CupertinoActiveTrackColor = Color.FromRgb(0x34, 0xC7, 0x59);
-    private static readonly Color CupertinoActiveTrackColorDark = Color.FromRgb(0x30, 0xD1, 0x58);
-    private static readonly IReadOnlyList<BoxShadow> CupertinoThumbShadows =
-    [
-        new BoxShadow(color: Color.FromArgb(0x26, 0x00, 0x00, 0x00), offset: new Point(0, 3), blurRadius: 8),
-        new BoxShadow(color: Color.FromArgb(0x0F, 0x00, 0x00, 0x00), offset: new Point(0, 3), blurRadius: 1),
-    ];
     private readonly SwitchType _switchType;
 
     private enum SwitchType
@@ -399,8 +386,13 @@ public sealed class Switch : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var theme = Theme.Of(context);
+            if (IsAdaptiveCupertino(theme))
+            {
+                return BuildCupertinoAdaptive();
+            }
+
             var switchTheme = SwitchTheme.Of(context);
-            bool isCupertinoAdaptive = IsAdaptiveCupertino(theme);
+            bool isCupertinoAdaptive = false;
             var config = ResolveConfig(theme.UseMaterial3, isCupertinoAdaptive);
             var sizeConfig = ResolveConfig(theme.UseMaterial3, isCupertinoAdaptive: false);
             bool enabled = CurrentWidget.OnChanged is not null;
@@ -486,7 +478,7 @@ public sealed class Switch : StatefulWidget
                     Color: thumbColor,
                     BorderRadius: BorderRadius.Circular(thumbHeight / 2),
                     BoxShadows: isCupertinoAdaptive
-                        ? CupertinoThumbShadows
+                        ? CupertinoThumbPainter.SwitchThumb().Shadows
                         : MaterialSurface.BuildBoxShadows(theme.ColorScheme.Shadow, config.ThumbElevation),
                     Image: thumbImage is null
                         ? null
@@ -564,7 +556,7 @@ public sealed class Switch : StatefulWidget
 
                 if (!enabled)
                 {
-                    adaptiveResult = new Opacity(CupertinoDisabledOpacity, adaptiveResult);
+                    adaptiveResult = new Opacity(0.5, adaptiveResult);
                 }
 
                 return new Semantics(
@@ -627,6 +619,62 @@ public sealed class Switch : StatefulWidget
                 child: materialChild);
 
             return result;
+        }
+
+        private Widget BuildCupertinoAdaptive()
+        {
+            WidgetStateColor? thumbColor = BridgeStateColor(
+                CurrentWidget.ThumbColor,
+                CurrentWidget.ActiveThumbColor);
+            WidgetStateColor? inactiveThumbColor = BridgeStateColor(
+                CurrentWidget.ThumbColor,
+                CurrentWidget.InactiveThumbColor);
+            WidgetStateColor? activeTrackColor = BridgeStateColor(
+                CurrentWidget.TrackColor,
+                CurrentWidget.ActiveTrackColor ?? CurrentWidget.ActiveColor);
+            WidgetStateColor? inactiveTrackColor = BridgeStateColor(
+                CurrentWidget.TrackColor,
+                CurrentWidget.InactiveTrackColor);
+            WidgetStateProperty<MouseCursor>? mouseCursor = CurrentWidget.MouseCursor is null
+                ? null
+                : WidgetStateProperty<MouseCursor>.All(CurrentWidget.MouseCursor);
+
+            return new CupertinoSwitch(
+                value: CurrentWidget.Value,
+                onChanged: CurrentWidget.OnChanged,
+                activeTrackColor: activeTrackColor,
+                inactiveTrackColor: inactiveTrackColor,
+                thumbColor: thumbColor,
+                inactiveThumbColor: inactiveThumbColor,
+                applyTheme: CurrentWidget.ApplyCupertinoTheme,
+                focusColor: CurrentWidget.FocusColor,
+                activeThumbImage: CurrentWidget.ActiveThumbImage,
+                onActiveThumbImageError: CurrentWidget.OnActiveThumbImageError,
+                inactiveThumbImage: CurrentWidget.InactiveThumbImage,
+                onInactiveThumbImageError: CurrentWidget.OnInactiveThumbImageError,
+                trackOutlineColor: CurrentWidget.TrackOutlineColor,
+                trackOutlineWidth: CurrentWidget.TrackOutlineWidth,
+                thumbIcon: CurrentWidget.ThumbIcon,
+                mouseCursor: mouseCursor,
+                focusNode: CurrentWidget.FocusNode,
+                onFocusChange: CurrentWidget.OnFocusChange,
+                autofocus: CurrentWidget.Autofocus,
+                dragStartBehavior: CurrentWidget.DragStartBehavior);
+        }
+
+        private static WidgetStateColor? BridgeStateColor(
+            MaterialStateProperty<Color?>? stateColor,
+            Color? fallback)
+        {
+            if (stateColor is null)
+            {
+                return fallback.HasValue ? new WidgetStateColor(fallback.Value) : null;
+            }
+
+            Color defaultColor = stateColor.Resolve(MaterialState.None) ?? fallback ?? Colors.Transparent;
+            return WidgetStateColor.ResolveWith(
+                defaultColor,
+                states => stateColor.Resolve(states) ?? fallback ?? defaultColor);
         }
 
         private SemanticsFlags ResolveToggleSemanticsFlags(bool enabled)
@@ -821,8 +869,8 @@ public sealed class Switch : StatefulWidget
 
             bool valueChangedWhileDragging = CurrentWidget.Value != _adaptiveDragValue.Value;
             double threshold = valueChangedWhileDragging
-                ? CupertinoDragReverseThreshold
-                : CupertinoDragCommitThreshold;
+                ? 0.2
+                : 0.7;
             double effectiveThreshold = CurrentWidget.Value ? -threshold : threshold;
             bool newDragValue = _adaptiveDragDelta >= effectiveThreshold;
 
@@ -1252,7 +1300,7 @@ public sealed class Switch : StatefulWidget
                 return baseDiameter;
             }
 
-            return baseDiameter + CupertinoThumbExtension;
+            return baseDiameter + CupertinoThumbPainter.Extension;
         }
 
         private Size ResolveThumbSize(
@@ -1611,15 +1659,15 @@ public sealed class Switch : StatefulWidget
         private static Color ResolveCupertinoActiveTrackColor(ThemeData theme)
         {
             return theme.Brightness == Brightness.Dark
-                ? CupertinoActiveTrackColorDark
-                : CupertinoActiveTrackColor;
+                ? Color.FromRgb(0x30, 0xD1, 0x58)
+                : Color.FromRgb(0x34, 0xC7, 0x59);
         }
 
         private static Color ResolveCupertinoInactiveTrackColor(ThemeData theme)
         {
             return theme.Brightness == Brightness.Dark
-                ? CupertinoInactiveTrackColorDark
-                : CupertinoInactiveTrackColor;
+                ? Color.FromArgb(0x51, 0x78, 0x78, 0x80)
+                : Color.FromArgb(0x28, 0x78, 0x78, 0x80);
         }
 
         private static byte ToColorChannel(double value)

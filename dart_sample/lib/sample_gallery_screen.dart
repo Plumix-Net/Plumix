@@ -484,9 +484,9 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.cupertinoListSection,
-          title: 'List sections',
+          title: 'List + form sections',
           subtitle:
-              'edge-to-edge/inset groups + headers/footers + divider geometry',
+              'edge-to-edge/inset groups + split rows + helper/error content',
           builder: () => const CupertinoListSectionDemoPage(),
         ),
         SampleRouteDefinition(

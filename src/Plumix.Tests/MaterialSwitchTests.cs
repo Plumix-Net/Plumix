@@ -2,6 +2,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix;
+using Plumix.Cupertino;
 using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -323,14 +324,10 @@ public sealed class MaterialSwitchTests
         };
         var root = MountSwitch(theme, value: true, onChanged: _ => { }, adaptive: true);
 
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var track = FindTrackDecoration(renderRoot);
-        var thumb = FindThumbDecoration(renderRoot);
+        CupertinoSwitchPainter painter = FindCupertinoPainter(root.ChildElement);
 
-        Assert.NotNull(track);
-        Assert.NotNull(thumb);
-        Assert.Equal(Color.FromRgb(0x34, 0xC7, 0x59), track!.Decoration.Color);
-        Assert.Equal(Colors.White, thumb!.Decoration.Color);
+        Assert.Equal(Color.FromRgb(0x34, 0xC7, 0x59), painter.ActiveTrackColor);
+        Assert.Equal(Colors.White, painter.ActiveThumbColor);
     }
 
     [Fact]
@@ -355,14 +352,13 @@ public sealed class MaterialSwitchTests
             Assert.True(focusNode.RequestFocus());
             owner.FlushBuild();
 
-            var boxes = FindDescendants<RenderDecoratedBox>(
-                RequireRenderObject<RenderObject>(root.ChildElement));
-            var focusOutline = boxes.FirstOrDefault(box =>
-                box.Decoration.Border is Plumix.Rendering.Border { Top.Width: 3.5 });
-            Assert.NotNull(focusOutline);
+            Scheduler.PumpFrameForTests();
+            owner.FlushBuild();
+            CupertinoSwitchPainter painter = FindCupertinoPainter(root.ChildElement);
+            Assert.True(painter.Focused);
             Assert.Equal(
                 Color.FromArgb(0xCC, 0x6E, 0xF2, 0x8F),
-                ((Plumix.Rendering.Border)focusOutline!.Decoration.Border!).Top.Color);
+                painter.EffectiveFocusColor);
         }
         finally
         {
@@ -529,13 +525,11 @@ public sealed class MaterialSwitchTests
 
         harness.Pump(new Size(220, 120));
 
-        var track = FindDecoratedBoxBySize(harness.RenderView, width: 51, height: 31);
-        var thumb = FindDecoratedBoxBySize(harness.RenderView, width: 28, height: 28);
+        CupertinoSwitchPainter painter = Assert.IsType<CupertinoSwitchPainter>(
+            Assert.Single(harness.FindWidgets<CustomPaint>()).Painter);
 
-        Assert.NotNull(track);
-        Assert.NotNull(thumb);
-        Assert.Equal(Colors.Orange, track!.Decoration.Color);
-        Assert.Equal(Colors.White, thumb!.Decoration.Color);
+        Assert.Equal(Colors.Orange, painter.ActiveTrackColor);
+        Assert.Equal(Colors.White, painter.ActiveThumbColor);
     }
 
     [Fact]
@@ -607,10 +601,7 @@ public sealed class MaterialSwitchTests
 
         harness.Pump(new Size(220, 120));
 
-        var track = FindDecoratedBoxBySize(harness.RenderView, width: 51, height: 31);
-        Assert.NotNull(track);
-        Assert.Equal(51, track!.Size.Width, precision: 2);
-        Assert.Equal(31, track.Size.Height, precision: 2);
+        Assert.Equal(new Size(51.0, 31.0), CupertinoSwitchPainter.TrackSize);
     }
 
     [Fact]
@@ -937,6 +928,28 @@ public sealed class MaterialSwitchTests
         return result;
     }
 
+    private static CupertinoSwitchPainter FindCupertinoPainter(Element? root)
+    {
+        CustomPaint? customPaint = FindWidget<CustomPaint>(root);
+        return Assert.IsType<CupertinoSwitchPainter>(customPaint?.Painter);
+    }
+
+    private static T? FindWidget<T>(Element? root) where T : Widget
+    {
+        if (root is null)
+        {
+            return null;
+        }
+        if (root.Widget is T match)
+        {
+            return match;
+        }
+
+        T? result = null;
+        root.VisitChildren(child => result ??= FindWidget<T>(child));
+        return result;
+    }
+
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {
         var results = new List<T>();
@@ -1096,6 +1109,13 @@ public sealed class MaterialSwitchTests
 
         public RenderView RenderView { get; }
 
+        public IReadOnlyList<T> FindWidgets<T>() where T : Widget
+        {
+            var result = new List<T>();
+            Visit(_rootElement, result);
+            return result;
+        }
+
         public void Update(Widget widget)
         {
             _rootElement.Update(widget);
@@ -1121,6 +1141,15 @@ public sealed class MaterialSwitchTests
         public void Dispose()
         {
             _rootElement.Unmount();
+        }
+
+        private static void Visit<T>(Element element, List<T> result) where T : Widget
+        {
+            if (element.Widget is T widget)
+            {
+                result.Add(widget);
+            }
+            element.VisitChildren(child => Visit(child, result));
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

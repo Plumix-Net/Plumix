@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using Plumix.UI;
+using Plumix.Rendering;
 using Plumix.Widgets;
 
 namespace Plumix.Painting;
@@ -11,10 +12,9 @@ namespace Plumix.Painting;
 /// Lays an <see cref="InlineSpan"/> out for measurement outside a render object.
 ///
 /// Flutter's `TextPainter` is also the paint-time engine behind `RenderParagraph`; Plumix's
-/// paragraph render objects drive Avalonia's <see cref="TextLayout"/> directly, so this type
-/// carries only the measurement half — the part controls use when they need a text size before
-/// (or without) laying a child out, such as `SnackBar`'s action-overflow probe. Painting,
-/// selection boxes, hit testing and caret metrics stay on `RenderParagraph`.
+/// paragraph render objects drive Avalonia's <see cref="TextLayout"/> directly. This type retains
+/// that layout so paint-time controls can draw it after measuring it. Selection boxes, hit testing
+/// and caret metrics stay on `RenderParagraph`.
 ///
 /// Like the paragraph render objects, this falls back to
 /// <see cref="TextLayoutFallback.EstimateTextSize"/> on hosts with no font manager, so headless
@@ -156,6 +156,20 @@ public sealed class TextPainter : IDisposable
                 rootStyle.Height,
                 rootStyle.LetterSpacing ?? 0);
             _size = new Size(Math.Max(minWidth, estimate.Width), estimate.Height);
+        }
+    }
+
+    public void Paint(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (_size is null)
+        {
+            throw new InvalidOperationException("TextPainter.Paint was called before Layout.");
+        }
+
+        if (_layout is not null)
+        {
+            context.DrawTextLayout(_layout, offset);
         }
     }
 

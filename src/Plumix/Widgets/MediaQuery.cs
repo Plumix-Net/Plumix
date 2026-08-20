@@ -66,7 +66,8 @@ public sealed record MediaQueryData
         bool SupportsAnnounce = false,
         int ViewId = 0,
         BorderRadius? DisplayCornerRadii = null,
-        IReadOnlyList<DisplayFeature>? DisplayFeatures = null)
+        IReadOnlyList<DisplayFeature>? DisplayFeatures = null,
+        bool OnOffSwitchLabels = false)
     {
         if (TextScaler is not null && TextScaleFactor != 1.0)
         {
@@ -89,6 +90,7 @@ public sealed record MediaQueryData
         this.NavigationMode = NavigationMode;
         this.PlatformBrightness = PlatformBrightness;
         this.HighContrast = HighContrast;
+        this.OnOffSwitchLabels = OnOffSwitchLabels;
         this.SupportsAnnounce = SupportsAnnounce;
         this.ViewId = ViewId;
         this.DisplayCornerRadii = DisplayCornerRadii;
@@ -124,6 +126,8 @@ public sealed record MediaQueryData
     public PlatformBrightness PlatformBrightness { get; init; }
 
     public bool HighContrast { get; init; }
+
+    public bool OnOffSwitchLabels { get; init; }
 
     public bool SupportsAnnounce { get; init; }
 
@@ -163,7 +167,8 @@ public sealed record MediaQueryData
         int? viewId = null,
         BorderRadius? displayCornerRadii = null,
         bool clearDisplayCornerRadii = false,
-        IReadOnlyList<DisplayFeature>? displayFeatures = null)
+        IReadOnlyList<DisplayFeature>? displayFeatures = null,
+        bool? onOffSwitchLabels = null)
     {
         if (textScaleFactor is not null && textScaler is not null)
         {
@@ -188,6 +193,7 @@ public sealed record MediaQueryData
             NavigationMode: navigationMode ?? NavigationMode,
             PlatformBrightness: platformBrightness ?? PlatformBrightness,
             HighContrast: highContrast ?? HighContrast,
+            OnOffSwitchLabels: onOffSwitchLabels ?? OnOffSwitchLabels,
             SupportsAnnounce: supportsAnnounce ?? SupportsAnnounce,
             ViewId: viewId ?? ViewId,
             DisplayCornerRadii: clearDisplayCornerRadii ? null : displayCornerRadii ?? DisplayCornerRadii,
@@ -426,6 +432,10 @@ public sealed class MediaQuery : InheritedModel<object>
     public static bool HighContrastOf(BuildContext context) => Of(context).HighContrast;
 
     public static bool? MaybeHighContrastOf(BuildContext context) => MaybeOf(context)?.HighContrast;
+
+    public static bool OnOffSwitchLabelsOf(BuildContext context) => Of(context).OnOffSwitchLabels;
+
+    public static bool? MaybeOnOffSwitchLabelsOf(BuildContext context) => MaybeOf(context)?.OnOffSwitchLabels;
 
     public static bool SupportsAnnounceOf(BuildContext context) => Of(context).SupportsAnnounce;
 

@@ -66,7 +66,7 @@ public abstract class WidgetStateProperty<T>
 /// <summary>
 /// A color whose value can depend on the current widget states.
 /// </summary>
-public sealed class WidgetStateColor : WidgetStateProperty<Color>
+public class WidgetStateColor : WidgetStateProperty<Color>
 {
     private readonly Func<IReadOnlySet<WidgetState>, Color> _resolver;
 
@@ -236,7 +236,7 @@ public sealed class RawRadioState<T> : ToggleableState, RadioClient<T>
 
     public Point? PressPosition => DownPosition;
 
-    internal Animation<double> PositionAnimation => base.Position;
+    internal new Animation<double> PositionAnimation => base.Position;
 
     internal Animation<double> ReactionAnimation => base.Reaction;
 
@@ -252,7 +252,7 @@ public sealed class RawRadioState<T> : ToggleableState, RadioClient<T>
 
     public bool Focused => States.Contains(WidgetState.Focused);
 
-    public bool Pressed => States.Contains(WidgetState.Pressed);
+    public bool Pressed => DownPosition.HasValue;
 
     public bool Tristate => CurrentWidget.Toggleable;
 

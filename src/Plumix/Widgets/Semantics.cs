@@ -67,7 +67,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         TextDirection? textDirection = null,
         SemanticsTag? tagForChildren = null,
         Key? key = null,
-        bool mergeDescendants = false) : base(child, key)
+        bool mergeDescendants = false,
+        bool? toggled = null) : base(child, key)
     {
         TagForChildren = tagForChildren;
         Label = label;
@@ -88,6 +89,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
                 | (@checked.HasValue ? SemanticsFlags.HasCheckedState : SemanticsFlags.None)
                 | (@checked == true ? SemanticsFlags.IsChecked : SemanticsFlags.None)
                 | (mixed == true ? SemanticsFlags.IsCheckStateMixed : SemanticsFlags.None)
+                | (toggled.HasValue ? SemanticsFlags.HasToggledState : SemanticsFlags.None)
+                | (toggled == true ? SemanticsFlags.IsToggled : SemanticsFlags.None)
                 | (selected.HasValue ? SemanticsFlags.HasSelectedState : SemanticsFlags.None)
                 | (selected == true ? SemanticsFlags.IsSelected : SemanticsFlags.None)
                 | (enabled.HasValue ? SemanticsFlags.HasEnabledState : SemanticsFlags.None)
@@ -112,6 +115,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Expanded = expanded;
         Checked = @checked;
         Mixed = mixed;
+        Toggled = toggled;
         Selected = selected;
         Enabled = enabled;
         Focusable = focusable;
@@ -181,6 +185,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public bool? Checked { get; }
 
     public bool? Mixed { get; }
+
+    public bool? Toggled { get; }
 
     public bool? Selected { get; }
 

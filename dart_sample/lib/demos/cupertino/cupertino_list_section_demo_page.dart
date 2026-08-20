@@ -14,12 +14,12 @@ class CupertinoListSectionDemoPage extends StatelessWidget {
       spacing: 12.0,
       children: <Widget>[
         Text(
-          'Cupertino list sections',
+          'Cupertino list + form sections',
           style: TextStyle(fontSize: 20.0, color: label),
         ),
         Text(
-          'Compare edge-to-edge borders with inset-grouped superellipse '
-          'clipping and directional dividers.',
+          'Compare list rows with split form rows, helper/error content, and '
+          'inset-grouped decoration.',
           style: TextStyle(fontSize: 14.0, color: secondaryLabel),
         ),
         CupertinoListSection(
@@ -63,6 +63,25 @@ class CupertinoListSectionDemoPage extends StatelessWidget {
               title: Text('Subscriptions'),
               trailing: CupertinoListTileChevron(),
               onTap: _completeImmediately,
+            ),
+          ],
+        ),
+        CupertinoFormSection.insetGrouped(
+          header: const Text('PROFILE'),
+          footer: const Text(
+            'Form rows keep values trailing-aligned and supporting text below '
+            'the row.',
+          ),
+          children: const <Widget>[
+            CupertinoFormRow(
+              prefix: Text('Name'),
+              helper: Text('Shown on shared pages.'),
+              child: Text('Egor'),
+            ),
+            CupertinoFormRow(
+              prefix: Text('Email'),
+              error: Text('Address has not been verified.'),
+              child: Text('egor@example.com'),
             ),
           ],
         ),

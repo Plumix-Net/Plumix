@@ -33,13 +33,23 @@ public abstract class ToggleableState : State
 
     protected Animation<double> Position => _position!;
 
+    protected CurvedAnimation PositionAnimation => _position!;
+
+    protected AnimationController PositionController => _positionController!;
+
     protected Animation<double> Reaction => _reaction!;
+
+    protected AnimationController ReactionController => _reactionController!;
 
     protected Animation<double> ReactionHoverFade => _reactionHoverFade!;
 
     protected Animation<double> ReactionFocusFade => _reactionFocusFade!;
 
     protected Point? DownPosition => _downPosition;
+
+    protected bool IsFocused => _focused;
+
+    protected bool IsHovered => _hovering;
 
     protected IReadOnlySet<WidgetState> CurrentWidgetStates
     {
@@ -61,10 +71,6 @@ public abstract class ToggleableState : State
             if (_focused)
             {
                 states.Add(WidgetState.Focused);
-            }
-            if (_downPosition.HasValue)
-            {
-                states.Add(WidgetState.Pressed);
             }
             return states;
         }
@@ -173,6 +179,28 @@ public abstract class ToggleableState : State
             autofocus: autofocus);
     }
 
+    protected Widget BuildToggleable(
+        CustomPainter painter,
+        Size size,
+        WidgetStateProperty<MouseCursor>? mouseCursor,
+        Action onTap,
+        FocusNode? focusNode,
+        Action<bool>? onFocusChange,
+        bool autofocus)
+    {
+        Widget result = new CustomPaint(
+            painter: painter,
+            size: size);
+
+        return BuildToggleableChild(
+            child: result,
+            mouseCursor: mouseCursor,
+            onTap: onTap,
+            focusNode: focusNode,
+            onFocusChange: onFocusChange,
+            autofocus: autofocus);
+    }
+
     protected Widget BuildToggleableChild(
         Widget child,
         MouseCursor mouseCursor,
@@ -225,6 +253,59 @@ public abstract class ToggleableState : State
         return new Semantics(
             flags: IsInteractive ? SemanticsFlags.IsEnabled : SemanticsFlags.None,
             onTap: IsInteractive ? HandleTap : null,
+            child: result);
+    }
+
+    protected Widget BuildToggleableChild(
+        Widget child,
+        WidgetStateProperty<MouseCursor>? mouseCursor,
+        Action onTap,
+        FocusNode? focusNode,
+        Action<bool>? onFocusChange,
+        bool autofocus)
+    {
+        _onTap = onTap;
+        Widget result = new Semantics(
+            enabled: IsInteractive,
+            child: child);
+        result = new GestureDetector(
+            behavior: HitTestBehavior.Opaque,
+            excludeFromSemantics: !IsInteractive,
+            onTapDown: IsInteractive ? HandleTapDown : null,
+            onTap: IsInteractive ? HandleTap : null,
+            onTapUp: IsInteractive ? HandleTapUp : null,
+            onTapCancel: IsInteractive ? HandleTapCancel : null,
+            child: result);
+
+        var shortcuts = new Dictionary<ShortcutActivator, Intent>
+        {
+            [new SingleActivator(LogicalKeyboardKey.Space)] = new ActivateIntent(),
+        };
+        if (!OperatingSystem.IsBrowser())
+        {
+            shortcuts[new SingleActivator(LogicalKeyboardKey.Enter)] = new ActivateIntent();
+        }
+        var actions = new Dictionary<Type, FlutterAction>
+        {
+            [typeof(ActivateIntent)] = new CallbackAction<ActivateIntent>(_ =>
+            {
+                HandleTap();
+                return null;
+            }),
+        };
+        MouseCursor effectiveCursor = mouseCursor?.Resolve(CurrentWidgetStates)
+                                      ?? SystemMouseCursors.Basic;
+
+        return new FocusableActionDetector(
+            enabled: IsInteractive,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            shortcuts: shortcuts,
+            actions: actions,
+            onShowFocusHighlight: HandleFocusHighlightChanged,
+            onShowHoverHighlight: HandleHoverChanged,
+            onFocusChange: onFocusChange,
+            mouseCursor: effectiveCursor,
             child: result);
     }
 

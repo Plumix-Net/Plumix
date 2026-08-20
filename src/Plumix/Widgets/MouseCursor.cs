@@ -26,6 +26,8 @@ public static class SystemMouseCursors
     public static MouseCursor Grab { get; } = new SystemMouseCursor("grab");
 
     public static MouseCursor Grabbing { get; } = new SystemMouseCursor("grabbing");
+
+    public static MouseCursor Forbidden { get; } = new SystemMouseCursor("forbidden");
 }
 
 /// <summary>Changes the host cursor while the pointer is inside its child.</summary>

@@ -92,6 +92,8 @@ public enum SemanticsFlags
     /// moves onto an offscreen descendant) instead of only through the explicit scroll actions.
     /// </summary>
     HasImplicitScrolling = 1 << 25,
+    HasToggledState = 1 << 26,
+    IsToggled = 1 << 27,
 }
 
 [Flags]

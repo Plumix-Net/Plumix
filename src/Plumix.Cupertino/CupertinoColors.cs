@@ -573,6 +573,12 @@ public sealed class CupertinoDynamicColor
         return color.Value;
     }
 
+    public static implicit operator WidgetStateColor(CupertinoDynamicColor color)
+    {
+        ArgumentNullException.ThrowIfNull(color);
+        return new CupertinoDynamicWidgetStateColor(color);
+    }
+
     public static implicit operator CupertinoDynamicColor(Color color)
     {
         return new CupertinoDynamicColor(color, color, color, color, color, color, color, color);
@@ -670,4 +676,15 @@ public sealed class CupertinoDynamicColor
         string resolvedBy = _isResolved ? "resolved" : "UNRESOLVED";
         return $"{label}({string.Join(", ", parts)}, resolved by: {resolvedBy})";
     }
+}
+
+internal sealed class CupertinoDynamicWidgetStateColor : WidgetStateColor
+{
+    public CupertinoDynamicWidgetStateColor(CupertinoDynamicColor dynamicColor)
+        : base(dynamicColor.Value)
+    {
+        DynamicColor = dynamicColor;
+    }
+
+    public CupertinoDynamicColor DynamicColor { get; }
 }

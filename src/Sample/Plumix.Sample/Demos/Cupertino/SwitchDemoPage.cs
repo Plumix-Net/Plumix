@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
@@ -159,10 +160,38 @@ internal sealed class SwitchDemoPageState : State
                                 title: "Custom colors",
                                 subtitle: "thumb/track/outline overrides"),
                         ])),
+                new Text("CupertinoSwitch direct port", fontSize: 16, color: Colors.Black),
+                BuildSwitchRow(
+                    toggle: new CupertinoSwitch(
+                        value: _value,
+                        onChanged: _enabled ? OnValueChanged : null),
+                    title: "Cupertino default",
+                    subtitle: "iOS geometry, drag thresholds, focus ring, and haptics"),
+                BuildSwitchRow(
+                    toggle: new CupertinoSwitch(
+                        value: _value,
+                        onChanged: _enabled ? OnValueChanged : null,
+                        activeTrackColor: Color.Parse("#FF00695C"),
+                        inactiveTrackColor: Color.Parse("#FFB0BEC5"),
+                        thumbColor: Color.Parse("#FFE8F5E9"),
+                        inactiveThumbColor: Color.Parse("#FFB2DFDB"),
+                        trackOutlineColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Selected)
+                                ? Colors.Transparent
+                                : Color.Parse("#FF455A64")),
+                        trackOutlineWidth: WidgetStateProperty<double?>.All(2.0),
+                        thumbIcon: _showThumbIcons
+                            ? WidgetStateProperty<Icon?>.ResolveWith(states =>
+                                states.Contains(WidgetState.Selected)
+                                    ? new Icon(Icons.Check, size: 14.0)
+                                    : new Icon(Icons.Close, size: 14.0))
+                            : null),
+                    title: "Cupertino custom",
+                    subtitle: "track/thumb/outline/icon state overrides"),
             ]);
     }
 
-    private Widget BuildSwitchRow(Switch toggle, string title, string subtitle)
+    private Widget BuildSwitchRow(Widget toggle, string title, string subtitle)
     {
         return new Container(
             padding: new Thickness(10, 8),

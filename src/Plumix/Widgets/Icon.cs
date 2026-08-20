@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.UI;
 
 namespace Plumix.Widgets;
@@ -53,7 +54,12 @@ public sealed class Icon : StatelessWidget
         TextDirection? textDirection = null,
         bool? applyTextScaling = null,
         FontWeight? fontWeight = null,
-        Key? key = null) : base(key)
+        Key? key = null,
+        double? fill = null,
+        double? weight = null,
+        double? grade = null,
+        double? opticalSize = null,
+        IReadOnlyList<Shadow>? shadows = null) : base(key)
     {
         IconData = icon;
         Size = size;
@@ -62,10 +68,27 @@ public sealed class Icon : StatelessWidget
         TextDirection = textDirection;
         ApplyTextScaling = applyTextScaling;
         FontWeight = fontWeight;
+        Fill = fill;
+        Weight = weight;
+        Grade = grade;
+        OpticalSize = opticalSize;
+        Shadows = shadows;
 
         if (size.HasValue && (!double.IsFinite(size.Value) || size.Value < 0))
         {
             throw new ArgumentOutOfRangeException(nameof(size), "Icon size must be finite and non-negative.");
+        }
+        if (fill.HasValue && !(fill.Value >= 0.0 && fill.Value <= 1.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(fill), "Icon fill must be between zero and one.");
+        }
+        if (weight.HasValue && !(weight.Value > 0.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(weight), "Icon weight must be positive.");
+        }
+        if (opticalSize.HasValue && !(opticalSize.Value > 0.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(opticalSize), "Icon optical size must be positive.");
         }
     }
 
@@ -82,6 +105,16 @@ public sealed class Icon : StatelessWidget
     public bool? ApplyTextScaling { get; }
 
     public FontWeight? FontWeight { get; }
+
+    public double? Fill { get; }
+
+    public double? Weight { get; }
+
+    public double? Grade { get; }
+
+    public double? OpticalSize { get; }
+
+    public IReadOnlyList<Shadow>? Shadows { get; }
 
     public override Widget Build(BuildContext context)
     {
@@ -146,7 +179,7 @@ public sealed class Icon : StatelessWidget
         return iconSize;
     }
 
-    private static FontFamily ResolveFontFamily(IconData iconData)
+    public static FontFamily ResolveFontFamily(IconData iconData)
     {
         return IconFontRegistry.Resolve(iconData);
     }
