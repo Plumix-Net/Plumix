@@ -104,43 +104,6 @@ internal sealed class BodyBuilder : StatelessWidget
 }
 
 /// <summary>
-/// Ports Flutter's private <c>_HitTestableAtOrigin</c>: an invisible, translucent hit-test target the
-/// scaffold puts in its status-bar slot so a status-bar tap only reaches the foreground scaffold.
-/// </summary>
-internal sealed class HitTestableAtOrigin : StatelessWidget
-{
-    public HitTestableAtOrigin(GlobalKey globalKey, Key? key = null) : base(key)
-    {
-        GlobalKey = globalKey ?? throw new ArgumentNullException(nameof(globalKey));
-    }
-
-    public GlobalKey GlobalKey { get; }
-
-    /// <summary>Whether the widget carrying <paramref name="key"/> is hit at the view's origin.</summary>
-    public static bool IsHitTestableAtOrigin(GlobalKey key)
-    {
-        if (key.CurrentContext is not { } context
-            || context.FindRenderObject() is not RenderMetaData renderObject
-            || renderObject.Owner?.Root is not { } view)
-        {
-            return false;
-        }
-
-        var result = new BoxHitTestResult();
-        view.HitTest(result, default);
-        return result.Path.Any(entry => ReferenceEquals(entry.Target, renderObject));
-    }
-
-    public override Widget Build(BuildContext context)
-    {
-        return new MetaData(
-            key: GlobalKey,
-            behavior: HitTestBehavior.Translucent,
-            child: new SizedBox(width: double.PositiveInfinity, height: double.PositiveInfinity));
-    }
-}
-
-/// <summary>
 /// Ports Flutter's private <c>_ScaffoldLayout</c>: measures every scaffold feature, positions the floating
 /// action button through the active <see cref="FloatingActionButtonAnimator"/>, and publishes the resulting
 /// <see cref="ScaffoldGeometry"/>.

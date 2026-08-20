@@ -52,7 +52,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types missing in C# | Status | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- |
-| `page_scaffold.dart` | 323 | `CupertinoPageScaffold`, `ObstructingPreferredSizeWidget` | open | S | Needs `nav_bar.dart` for the full contract but can land first. |
 | `app.dart` | 794 | `CupertinoApp`, `CupertinoScrollBehavior` | open | M | Mirror `src/Plumix.Material/App.cs` (`WidgetsApp` composition, `Router` form). Depends on theme/localizations. |
 | `icons.dart` | 9811 | `CupertinoIcons` | open | infra | Do not hand-port. Add `scripts/generate_cupertino_icons.py` producing `src/Plumix.Cupertino/CupertinoIcons.g.cs` (same pattern as `scripts/generate_material_colors.py`), then list it in `AGENTS.md` > Common Commands. |
 | `global_cupertino_localizations.dart` + `l10n/` | 569 + arb | `GlobalCupertinoLocalizations` | open — align first | L | No `GlobalMaterialLocalizations` exists either; needs a shared localization-loading design (arb → C#) before either side ports. |

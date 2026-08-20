@@ -38,6 +38,7 @@ import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/material/color_palette_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
+import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
 import 'demos/general/custom_multi_child_layout_demo_page.dart';
@@ -469,6 +470,12 @@ class SampleGalleryScreen extends StatelessWidget {
               'brightness/contrast/elevation resolution + '
               'CupertinoTextThemeData styles',
           builder: () => const CupertinoThemeDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoPageScaffold,
+          title: 'Page scaffold',
+          subtitle: 'opaque/translucent bars + keyboard inset consumption',
+          builder: () => const CupertinoPageScaffoldDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.cupertinoRoute,
@@ -916,7 +923,6 @@ class SampleMenuPage extends StatefulWidget {
   @override
   State<SampleMenuPage> createState() => _SampleMenuPageState();
 }
-
 class _SampleMenuPageState extends State<SampleMenuPage> {
   int _selectedTabIndex = 0;
 

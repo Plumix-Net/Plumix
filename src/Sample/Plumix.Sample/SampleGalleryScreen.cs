@@ -100,6 +100,7 @@ internal static class SampleRoutes
     public const string AppBarTextStyles = "/appbar-text-styles";
     public const string ColorPalette = "/color-palette";
     public const string CupertinoTheme = "/cupertino-theme";
+    public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
     public const string CupertinoRoute = "/cupertino-route";
     public const string ProxyWidgets = "/proxy-widgets";
     public const string Align = "/align";
@@ -249,6 +250,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Theme + dynamic colors",
             "brightness/contrast/elevation resolution + CupertinoTextThemeData styles",
             () => new CupertinoThemeDemoPage()),
+        new(
+            SampleRoutes.CupertinoPageScaffold,
+            "Page scaffold",
+            "opaque/translucent bars + keyboard inset consumption",
+            () => new CupertinoPageScaffoldDemoPage()),
         new(
             SampleRoutes.CupertinoRoute,
             "Routes + modal popup",
