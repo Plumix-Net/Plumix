@@ -59,8 +59,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- |
 | `tab_scaffold.dart` | 556 | `CupertinoTabScaffold`, `CupertinoTabController`, `RestorableCupertinoTabController` | M | After `bottom_tab_bar` + `tab_view`. |
-| `expansion_tile.dart` | 265 | `CupertinoExpansionTile`, `ExpansionTileTransitionMode` | S | Core `ExpansionTile` primitives already exist for Material. |
-| `list_tile.dart` | 419 | `CupertinoListTile`, `CupertinoListTileChevron` | S | |
 | `list_section.dart` | 531 | `CupertinoListSection`, `CupertinoListSectionType` | M | After `list_tile`. |
 | `form_row.dart`, `form_section.dart` | 160, 249 | `CupertinoFormRow`, `CupertinoFormSection` | S | After `list_section`. |
 | `text_selection.dart`, `desktop_text_selection.dart` | 323, 216 | `CupertinoTextSelectionControls`, `CupertinoTextSelectionHandleControls`, `CupertinoDesktopTextSelectionControls` | S | Handles/toolbar glue over the already-ported toolbars; Material `TextField` selects them per platform. |

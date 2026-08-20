@@ -168,6 +168,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Per-tab navigation enters through `src/Plumix.Cupertino/CupertinoTabView.cs`; it owns a core `Navigator`,
   Cupertino page-route generation, Hero observation and active-tab back handling, with focused coverage in
   `CupertinoTabViewTests.cs`.
+- Cupertino list rows and disclosure enter through `CupertinoListTile.cs` + `CupertinoExpansionTile.cs`; expansion
+  uses core `Expansible` and `OverlayPortal`, with focused coverage in the matching Cupertino test files.
 - Focus halos enter through `src/Plumix.Cupertino/CupertinoFocusHalo.cs`; descendant focus ownership lives in
   core `Widgets/Focus.cs`, with shape/color primitives in `Rendering/RoundedSuperellipseBorder.cs` and
   `Painting/HSLColor.cs`. Coverage lives in `CupertinoFocusHaloTests.cs` and `FocusTests.cs`.

@@ -103,6 +103,7 @@ internal static class SampleRoutes
     public const string CupertinoIcons = "/cupertino-icons";
     public const string CupertinoFocusHalo = "/cupertino-focus-halo";
     public const string CupertinoTabBar = "/cupertino-tab-bar";
+    public const string CupertinoExpansionTile = "/cupertino-expansion-tile";
     public const string CupertinoTheme = "/cupertino-theme";
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
     public const string CupertinoRoute = "/cupertino-route";
@@ -266,6 +267,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Tab bar",
             "selection + active icons + safe-area height + translucent blur",
             () => new CupertinoTabBarDemoPage()),
+        new(
+            SampleRoutes.CupertinoExpansionTile,
+            "List + expansion tiles",
+            "base/notched rows + async activation + fade/scroll expansion",
+            () => new CupertinoExpansionTileDemoPage()),
         new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
         new(SampleRoutes.Switch, "Switch", "on/off value + track/thumb theming + drag", () => new SwitchDemoPage()),
         new(SampleRoutes.Radio, "Radio", "group selection + toggleable + tap-target policy", () => new RadioDemoPage()),
