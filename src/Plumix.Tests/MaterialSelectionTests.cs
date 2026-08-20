@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
@@ -488,7 +489,17 @@ public sealed class MaterialSelectionTests
     {
         return new MediaQuery(
             data: new MediaQueryData(Size: new Size(320, 180)),
-            child: new Directionality(TextDirection.Ltr, new Theme(theme, child)));
+            child: new Directionality(
+                TextDirection.Ltr,
+                new Localizations(
+                    locale: new Locale("en", "US"),
+                    delegates:
+                    [
+                        DefaultWidgetsLocalizations.Delegate,
+                        DefaultMaterialLocalizations.Delegate,
+                        DefaultCupertinoLocalizations.Delegate,
+                    ],
+                    child: new Theme(theme, child))));
     }
 
     private static List<RenderParagraph> FindParagraphs(RenderObject? root)

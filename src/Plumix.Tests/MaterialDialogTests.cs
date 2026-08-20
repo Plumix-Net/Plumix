@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
@@ -624,7 +625,15 @@ public sealed class MaterialDialogTests : IDisposable
             TextDirection.Ltr,
             new MediaQuery(
                 mediaQuery ?? new MediaQueryData(Size: new Size(600, 400)),
-                new Theme(theme, child)));
+                new Localizations(
+                    locale: new Locale("en", "US"),
+                    delegates:
+                    [
+                        DefaultWidgetsLocalizations.Delegate,
+                        DefaultMaterialLocalizations.Delegate,
+                        DefaultCupertinoLocalizations.Delegate,
+                    ],
+                    child: new Theme(theme, child))));
 
     private static void PumpAnimation()
     {
@@ -744,4 +753,3 @@ public sealed class MaterialDialogTests : IDisposable
     private static bool HasLabelPart(SemanticsNode node, string part) =>
         node.Label?.Split('\n').Contains(part) == true;
 }
-

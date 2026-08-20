@@ -32,7 +32,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/dialog.dart` | `src/Plumix.Cupertino/CupertinoDialog.cs` | `src/Plumix.Tests/CupertinoDialogTests.cs` | — |
 | `cupertino_ui/icon_theme_data.dart` | `src/Plumix.Cupertino/CupertinoIconThemeData.cs` | — | — |
 | `cupertino_ui/interface_level.dart` | `src/Plumix.Cupertino/CupertinoUserInterfaceLevel.cs` | — | — |
-| `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | — | — |
+| `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs` | — |
 | `cupertino_ui/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
 | `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` _(reference) (adapted)_ | — | — |
 | `cupertino_ui/route.dart` | `src/Plumix.Cupertino/CupertinoDialogRoute.cs`<br>`src/Plumix.Material/PageTransitionsTheme.cs` | — | — |
@@ -401,7 +401,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/keyboard_listener.dart` | `src/Plumix/Widgets/KeyboardListener.cs` | `src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `widgets/layout_builder.dart` | `src/Plumix/Widgets/LayoutBuilder.cs` | `src/Plumix.Tests/LayoutBuilderTests.cs` | `dart_sample/lib/demos/general/layout_builder_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/LayoutBuilderDemoPage.cs` |
 | `widgets/list_wheel_scroll_view.dart` | `src/Plumix/Widgets/ListWheelScrollView.cs` | `src/Plumix.Tests/ListWheelScrollViewTests.cs` | `dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs` |
-| `widgets/localizations.dart` | `src/Plumix/Widgets/Localizations.cs` | — | — |
+| `widgets/localizations.dart` | `src/Plumix/Widgets/Localizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs` | — |
 | `widgets/lookup_boundary.dart` | `src/Plumix/Widgets/LookupBoundary.cs` | `src/Plumix.Tests/StatefulBuilderLookupBoundaryTests.cs` | `dart_sample/lib/demos/general/stateful_builder_lookup_boundary_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/StatefulBuilderLookupBoundaryDemoPage.cs` |
 | `widgets/magnifier.dart` | `src/Plumix/Rendering/Magnifier.cs`<br>`src/Plumix/Widgets/Magnifier.cs` | `src/Plumix.Tests/MagnifierTests.cs` | `dart_sample/lib/demos/material/magnifier_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/MagnifierDemoPage.cs` |
 | `widgets/media_query.dart` | `src/Plumix/Widgets/MediaQuery.cs` | — | — |

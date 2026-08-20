@@ -52,7 +52,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types missing in C# | Status | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- |
-| `localizations.dart` | 597 | `DatePickerDateOrder`, `DatePickerDateTimeOrder`; date/time formatting members | partial (`CupertinoLocalizations.cs`, 58 lines) | M | Needed by pickers and nav bar. |
 | `route.dart` | 1613 | `CupertinoPageRoute`, `CupertinoPage`, `CupertinoPageTransition`, `CupertinoFullscreenDialogTransition`, `CupertinoModalPopupRoute`, `CupertinoRouteTransitionMixin`, `showCupertinoModalPopup` | partial (`CupertinoDialogRoute.cs` only) | L | The page transition + back-swipe detector currently live in `src/Plumix.Material/PageTransitionsTheme.cs` (`CupertinoPageTransitionsBuilder`); move them into `Plumix.Cupertino` and have Material reference them. |
 | `page_scaffold.dart` | 323 | `CupertinoPageScaffold`, `ObstructingPreferredSizeWidget` | open | S | Needs `nav_bar.dart` for the full contract but can land first. |
 | `app.dart` | 794 | `CupertinoApp`, `CupertinoScrollBehavior` | open | M | Mirror `src/Plumix.Material/App.cs` (`WidgetsApp` composition, `Router` form). Depends on route/theme/localizations. |

@@ -318,7 +318,14 @@ public sealed class CupertinoDialogTests : IDisposable
             TextDirection.Ltr,
             new MediaQuery(
                 new MediaQueryData(Size: new Size(600, 600), TextScaleFactor: textScaleFactor),
-                child));
+                new Localizations(
+                    locale: new Locale("en", "US"),
+                    delegates:
+                    [
+                        DefaultWidgetsLocalizations.Delegate,
+                        DefaultCupertinoLocalizations.Delegate,
+                    ],
+                    child: child)));
 
     private static void PumpSpring()
     {

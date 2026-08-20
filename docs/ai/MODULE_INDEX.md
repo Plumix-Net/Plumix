@@ -160,6 +160,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   `CupertinoSlider`, `CupertinoScrollbar`, `CupertinoMagnifier`) were written to serve Material adaptive
   controls; several carry `(reference)`/`(adapted)` markers — diff against Dart before extending them.
 - Primary Tests:
+  - `src/Plumix.Tests/CupertinoLocalizationsTests.cs`
   - `src/Plumix.Tests/CupertinoDialogTests.cs`
   - `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`, `MaterialSelectionTests.cs` (toolbar family)
   - Adaptive coverage inside `MaterialCheckboxTests.cs`, `MaterialRadioTests.cs`, `MaterialSwitchTests.cs`,

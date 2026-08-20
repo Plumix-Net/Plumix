@@ -815,7 +815,12 @@ public sealed class MaterialAboutTests : IDisposable
                 TextDirection.Ltr,
                 new Localizations(
                     locale: new Locale("en", "US"),
-                    delegates: [DefaultWidgetsLocalizations.Delegate, DefaultMaterialLocalizations.Delegate],
+                    delegates:
+                    [
+                        DefaultWidgetsLocalizations.Delegate,
+                        DefaultMaterialLocalizations.Delegate,
+                        DefaultCupertinoLocalizations.Delegate,
+                    ],
                     child: new Theme(theme ?? ThemeData.Light, child))));
 
     private static void PumpUntilLoaded(WidgetRenderHarness harness, double width, Func<bool> condition)
