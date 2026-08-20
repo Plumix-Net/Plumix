@@ -58,7 +58,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- |
-| `tab_view.dart` | 255 | `CupertinoTabView` | S | Nested `Navigator`; `CupertinoPageRoute` is available. |
 | `tab_scaffold.dart` | 556 | `CupertinoTabScaffold`, `CupertinoTabController`, `RestorableCupertinoTabController` | M | After `bottom_tab_bar` + `tab_view`. |
 | `expansion_tile.dart` | 265 | `CupertinoExpansionTile`, `ExpansionTileTransitionMode` | S | Core `ExpansionTile` primitives already exist for Material. |
 | `list_tile.dart` | 419 | `CupertinoListTile`, `CupertinoListTileChevron` | S | |

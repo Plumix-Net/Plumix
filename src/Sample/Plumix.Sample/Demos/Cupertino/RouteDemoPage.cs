@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
@@ -27,7 +28,7 @@ internal sealed class CupertinoRouteDemoPageState : State
             [
                 new Text("Cupertino routes", fontSize: 20.0, color: Colors.Black),
                 new Text(
-                    "Normal and fullscreen page transitions, leading-edge back swipe, and modal popup route.",
+                    "Page transitions, modal popups, and a CupertinoTabView with independent history.",
                     fontSize: 14.0,
                     color: Colors.DimGray),
                 new Text($"last result: {_lastResult}", fontSize: 12.0, color: Color.Parse("#FF607D8B")),
@@ -39,6 +40,10 @@ internal sealed class CupertinoRouteDemoPageState : State
                     "Push fullscreen CupertinoPageRoute",
                     () => PushPage(context, fullscreenDialog: true),
                     Color.Parse("#FFEAE4FF")),
+                BuildAction(
+                    "Open independent CupertinoTabView",
+                    () => PushTabView(context),
+                    Color.Parse("#FFE8F0FE")),
                 BuildAction(
                     "Show Cupertino modal popup",
                     () => ShowPopup(context),
@@ -73,6 +78,41 @@ internal sealed class CupertinoRouteDemoPageState : State
             title: fullscreenDialog ? "Fullscreen" : "Details",
             fullscreenDialog: fullscreenDialog);
         Navigator.Of(context).Push(route);
+    }
+
+    private static void PushTabView(BuildContext context)
+    {
+        Navigator.Of(context).Push(new CupertinoPageRoute<object?>(
+            title: "Tab history",
+            builder: _ => new CupertinoTabView(
+                defaultTitle: "Tab root",
+                builder: tabContext => BuildTabPage(
+                    "Independent tab root",
+                    "Push a named route inside this tab",
+                    () => Navigator.Of(tabContext).PushNamed("/details")),
+                routes: new Dictionary<string, WidgetBuilder>
+                {
+                    ["/details"] = tabContext => BuildTabPage(
+                        "Named tab route",
+                        "Pop back to the tab root",
+                        () => Navigator.Of(tabContext).Pop()),
+                })));
+    }
+
+    private static Widget BuildTabPage(string title, string actionLabel, Action onTap)
+    {
+        return new Center(
+            child: new Container(
+                color: Colors.White,
+                padding: new Thickness(20.0),
+                child: new Column(
+                    mainAxisSize: MainAxisSize.Min,
+                    spacing: 12.0,
+                    children:
+                    [
+                        new Text(title, fontSize: 16.0, color: Colors.Black),
+                        BuildAction(actionLabel, onTap, Color.Parse("#FFE8F0FE")),
+                    ])));
     }
 
     private void ShowPopup(BuildContext context)

@@ -4,10 +4,6 @@ using System.Reflection;
 using Plumix.Foundation;
 using Plumix.UI;
 
-// The serialized history is keyed by page restoration id, where null means the routes below the
-// bottom-most page, exactly as Flutter keys them.
-#pragma warning disable CS8714
-
 namespace Plumix.Widgets;
 
 /// <summary>Builds a route that can be restored after the application was killed and relaunched.</summary>
@@ -216,11 +212,15 @@ internal sealed class AnonymousRestorationInformation : RestorationInformation
 
 /// <summary>
 /// Flutter's <c>_HistoryProperty</c>: serializes the pageless routes of the navigator, grouped by the page
-/// route they sit above (the <see langword="null"/> key holds the routes below the bottom-most page).
+/// route they sit above. Flutter uses a null map key for routes below the bottom-most page; the encoded C#
+/// representation uses distinct root/page prefixes because .NET dictionaries cannot contain null keys.
 /// </summary>
-internal sealed class HistoryProperty : RestorableProperty<Dictionary<string?, List<object>>?>
+internal sealed class HistoryProperty : RestorableProperty<Dictionary<string, List<object>>?>
 {
-    private Dictionary<string?, List<object>>? _pageToPagelessRoutes;
+    private const string RootPageKey = "r";
+    private const string PageKeyPrefix = "p";
+
+    private Dictionary<string, List<object>>? _pageToPagelessRoutes;
 
     public bool HasData => _pageToPagelessRoutes is not null;
 
@@ -234,11 +234,11 @@ internal sealed class HistoryProperty : RestorableProperty<Dictionary<string?, L
 
         RouteEntry? currentPage = null;
         var newRoutesForCurrentPage = new List<object>();
-        List<object> oldRoutesForCurrentPage = _pageToPagelessRoutes.GetValueOrDefault(null) ?? [];
+        List<object> oldRoutesForCurrentPage = _pageToPagelessRoutes.GetValueOrDefault(RootPageKey) ?? [];
         bool restorationEnabled = true;
 
-        var newMap = new Dictionary<string?, List<object>>();
-        var removedPages = new HashSet<string?>(_pageToPagelessRoutes.Keys);
+        var newMap = new Dictionary<string, List<object>>();
+        var removedPages = new HashSet<string>(_pageToPagelessRoutes.Keys);
 
         foreach (RouteEntry entry in history)
         {
@@ -259,7 +259,8 @@ internal sealed class HistoryProperty : RestorableProperty<Dictionary<string?, L
                 if (restorationEnabled)
                 {
                     newRoutesForCurrentPage = [];
-                    oldRoutesForCurrentPage = _pageToPagelessRoutes.GetValueOrDefault(entry.RestorationId) ?? [];
+                    oldRoutesForCurrentPage = _pageToPagelessRoutes.GetValueOrDefault(
+                        PageKeyPrefix + entry.RestorationId) ?? [];
                 }
                 else
                 {
@@ -316,7 +317,8 @@ internal sealed class HistoryProperty : RestorableProperty<Dictionary<string?, L
             return result;
         }
 
-        if (!_pageToPagelessRoutes.TryGetValue(page?.RestorationId, out List<object>? serialized))
+        string pageKey = page is null ? RootPageKey : PageKeyPrefix + page.RestorationId;
+        if (!_pageToPagelessRoutes.TryGetValue(pageKey, out List<object>? serialized))
         {
             return result;
         }
@@ -329,40 +331,44 @@ internal sealed class HistoryProperty : RestorableProperty<Dictionary<string?, L
         return result;
     }
 
-    public override Dictionary<string?, List<object>>? CreateDefaultValue() => null;
+    public override Dictionary<string, List<object>>? CreateDefaultValue() => null;
 
-    public override Dictionary<string?, List<object>>? FromPrimitives(object? data)
+    public override Dictionary<string, List<object>>? FromPrimitives(object? data)
     {
-        if (data is not IReadOnlyDictionary<string?, object?> map)
+        if (data is not System.Collections.IDictionary map)
         {
             return null;
         }
 
-        var result = new Dictionary<string?, List<object>>();
-        foreach ((string? key, object? value) in map)
+        var result = new Dictionary<string, List<object>>();
+        foreach (System.Collections.DictionaryEntry entry in map)
         {
-            result[key] = value is IEnumerable<object> items ? [.. items] : [];
+            if (entry.Key is string key && entry.Value is System.Collections.IEnumerable items)
+            {
+                result[key] = [.. items.Cast<object>()];
+            }
         }
 
         return result;
     }
 
-    public override void InitWithValue(Dictionary<string?, List<object>>? value) => _pageToPagelessRoutes = value;
+    public override void InitWithValue(Dictionary<string, List<object>>? value) => _pageToPagelessRoutes = value;
 
     public override object? ToPrimitives() => _pageToPagelessRoutes;
 
     private static void FinalizeEntry(
         List<object> routes,
         RouteEntry? page,
-        Dictionary<string?, List<object>> pageToRoutes,
-        HashSet<string?> pagesToRemove)
+        Dictionary<string, List<object>> pageToRoutes,
+        HashSet<string> pagesToRemove)
     {
         if (routes.Count == 0)
         {
             return;
         }
 
-        pageToRoutes[page?.RestorationId] = routes;
-        pagesToRemove.Remove(page?.RestorationId);
+        string pageKey = page is null ? RootPageKey : PageKeyPrefix + page.RestorationId;
+        pageToRoutes[pageKey] = routes;
+        pagesToRemove.Remove(pageKey);
     }
 }

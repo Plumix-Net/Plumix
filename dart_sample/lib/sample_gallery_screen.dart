@@ -513,8 +513,8 @@ class SampleGalleryScreen extends StatelessWidget {
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.cupertinoRoute,
-          title: 'Routes + modal popup',
-          subtitle: 'page/fullscreen transitions + edge swipe + popup',
+          title: 'Routes + tab view',
+          subtitle: 'page transitions + independent tab history + popup',
           builder: () => const CupertinoRouteDemoPage(),
         ),
       ];

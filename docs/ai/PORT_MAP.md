@@ -44,6 +44,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
 | `cupertino_ui/slider.dart` | `src/Plumix.Cupertino/CupertinoSlider.cs` | — | — |
 | `cupertino_ui/spell_check_suggestions_toolbar.dart` | `src/Plumix.Cupertino/CupertinoSpellCheckSuggestionsToolbar.cs` | — | — |
+| `cupertino_ui/tab_view.dart` | `src/Plumix.Cupertino/CupertinoTabView.cs` | `src/Plumix.Tests/CupertinoTabViewTests.cs` | — |
 | `cupertino_ui/text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbar.cs` | — | — |
 | `cupertino_ui/text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
 | `cupertino_ui/text_theme.dart` | `src/Plumix.Cupertino/CupertinoTextTheme.cs` | — | — |
@@ -481,7 +482,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/transitions.dart` | `src/Plumix/Widgets/Transitions.cs` | `src/Plumix.Tests/MaterialPageTransitionsTests.cs`<br>`src/Plumix.Tests/TransitionsTests.cs` | — |
 | `widgets/tween_animation_builder.dart` | `src/Plumix/Widgets/TweenAnimationBuilder.cs` | — | — |
 | `widgets/value_listenable_builder.dart` | `src/Plumix/Widgets/ValueListenableBuilder.cs` | — | — |
-| `widgets/view.dart` | `src/Plumix/Widgets/View.cs` | `src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/PageViewTests.cs`<br>`src/Plumix.Tests/ViewportPortTests.cs`<br>`src/Plumix.Tests/ViewportRevealTests.cs` | `dart_sample/lib/demos/general/center_viewport_demo_page.dart`<br>`dart_sample/lib/demos/general/grid_view_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_fixed_extent_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_reverse_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_separated_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/page_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CenterViewportDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/GridViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewFixedExtentDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewReverseDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewSeparatedDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/PageViewDemoPage.cs` |
+| `widgets/view.dart` | `src/Plumix/Widgets/View.cs` | `src/Plumix.Tests/CupertinoTabViewTests.cs`<br>`src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/PageViewTests.cs`<br>`src/Plumix.Tests/ViewportPortTests.cs`<br>`src/Plumix.Tests/ViewportRevealTests.cs` | `dart_sample/lib/demos/general/center_viewport_demo_page.dart`<br>`dart_sample/lib/demos/general/grid_view_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_fixed_extent_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_reverse_demo_page.dart`<br>`dart_sample/lib/demos/general/list_view_separated_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/page_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CenterViewportDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/GridViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewFixedExtentDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewReverseDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListViewSeparatedDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/PageViewDemoPage.cs` |
 | `widgets/viewport.dart` | `src/Plumix/Widgets/Viewport.cs` | `src/Plumix.Tests/ViewportPortTests.cs`<br>`src/Plumix.Tests/ViewportRevealTests.cs` | `dart_sample/lib/demos/general/center_viewport_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CenterViewportDemoPage.cs` |
 | `widgets/widget_span.dart` | `src/Plumix/Widgets/WidgetSpan.cs` | — | — |
 | `widgets/widget_state.dart` | `src/Plumix/Widgets/RawRadio.cs`<br>`src/Plumix/Widgets/WidgetState.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
@@ -599,8 +600,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 463
-- C# files carrying a marker: 601
+- Flutter files mapped: 464
+- C# files carrying a marker: 602
 - C# files without a marker: 19
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 78

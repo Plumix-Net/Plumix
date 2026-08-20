@@ -281,8 +281,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new CupertinoPageScaffoldDemoPage()),
         new(
             SampleRoutes.CupertinoRoute,
-            "Routes + modal popup",
-            "page/fullscreen transitions + edge swipe + spring popup",
+            "Routes + tab view",
+            "page transitions + independent tab history + popup",
             () => new CupertinoRouteDemoPage()),
     ];
 

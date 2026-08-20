@@ -24,8 +24,8 @@ class _CupertinoRouteDemoPageState extends State<CupertinoRouteDemoPage> {
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Normal and fullscreen page transitions, leading-edge back swipe, '
-          'and modal popup route.',
+          'Page transitions, modal popups, and a CupertinoTabView with '
+          'independent history.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
         ),
         Text(
@@ -41,6 +41,11 @@ class _CupertinoRouteDemoPageState extends State<CupertinoRouteDemoPage> {
           label: 'Push fullscreen CupertinoPageRoute',
           onTap: () => _pushPage(context, fullscreenDialog: true),
           background: const Color(0xFFEAE4FF),
+        ),
+        _buildAction(
+          label: 'Open independent CupertinoTabView',
+          onTap: () => _pushTabView(context),
+          background: const Color(0xFFE8F0FE),
         ),
         _buildAction(
           label: 'Show Cupertino modal popup',
@@ -79,6 +84,57 @@ class _CupertinoRouteDemoPageState extends State<CupertinoRouteDemoPage> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  static void _pushTabView(BuildContext context) {
+    Navigator.of(context).push<void>(
+      CupertinoPageRoute<void>(
+        title: 'Tab history',
+        builder: (_) => CupertinoTabView(
+          defaultTitle: 'Tab root',
+          builder: (BuildContext tabContext) => _buildTabPage(
+            title: 'Independent tab root',
+            actionLabel: 'Push a named route inside this tab',
+            onTap: () => Navigator.of(tabContext).pushNamed('/details'),
+          ),
+          routes: <String, WidgetBuilder>{
+            '/details': (BuildContext tabContext) => _buildTabPage(
+              title: 'Named tab route',
+              actionLabel: 'Pop back to the tab root',
+              onTap: () => Navigator.of(tabContext).pop(),
+            ),
+          },
+        ),
+      ),
+    );
+  }
+
+  static Widget _buildTabPage({
+    required String title,
+    required String actionLabel,
+    required VoidCallback onTap,
+  }) {
+    return Center(
+      child: Container(
+        color: Colors.white,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 12,
+          children: <Widget>[
+            Text(
+              title,
+              style: const TextStyle(fontSize: 16, color: Colors.black),
+            ),
+            _buildAction(
+              label: actionLabel,
+              onTap: onTap,
+              background: const Color(0xFFE8F0FE),
+            ),
+          ],
         ),
       ),
     );
