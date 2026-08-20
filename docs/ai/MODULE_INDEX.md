@@ -146,6 +146,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Goal: strict ports of `cupertino_ui/lib/src/*` into `src/Plumix.Cupertino` (depends only on `Plumix`;
   Material composes it for `.Adaptive` factories). Work list and per-file status: `docs/CUPERTINO_TODO.md`.
 - Read First:
+  - `src/Plumix.Cupertino/CupertinoApp.cs` (navigator/router shell, app theme/localizations/selection,
+    `CupertinoScrollBehavior`)
   - `src/Plumix.Cupertino/CupertinoTheme.cs` (`CupertinoThemeData`, `CupertinoTheme`, `CupertinoDynamicColor`,
     `CupertinoColors`, `CupertinoUserInterfaceLevel` — a subset today; the foundation rows in the TODO tighten it)
   - `src/Plumix.Cupertino/CupertinoLocalizations.cs`
@@ -162,6 +164,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   `CupertinoSlider`, `CupertinoScrollbar`, `CupertinoMagnifier`) were written to serve Material adaptive
   controls; several carry `(reference)`/`(adapted)` markers — diff against Dart before extending them.
 - Primary Tests:
+  - `src/Plumix.Tests/CupertinoAppTests.cs`
   - `src/Plumix.Tests/CupertinoLocalizationsTests.cs`
   - `src/Plumix.Tests/CupertinoDialogTests.cs`
   - `src/Plumix.Tests/CupertinoRouteTests.cs`

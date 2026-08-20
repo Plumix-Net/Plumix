@@ -8,6 +8,21 @@ using Plumix.UI;
 
 namespace Plumix.Widgets;
 
+/// <summary>
+/// Observes navigator changes for hero transitions. Plumix's navigator owns the flight engine, so this
+/// observer supplies Flutter's public controller/lifecycle surface while the navigator performs the flights.
+/// </summary>
+public sealed class HeroController : NavigatorObserver, IDisposable
+{
+    public bool IsDisposed { get; private set; }
+
+    public void Dispose()
+    {
+        IsDisposed = true;
+        Navigator = null;
+    }
+}
+
 public delegate Plumix.Tween<Rect> CreateRectTween(Rect begin, Rect end);
 public delegate Widget HeroFlightShuttleBuilder(
     BuildContext fromHeroContext,

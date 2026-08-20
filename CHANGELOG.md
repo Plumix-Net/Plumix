@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Ported `CupertinoApp` and `CupertinoScrollBehavior` with navigator/router shell defaults (`app.dart`).
 - Ported `CupertinoPageScaffold` with obstruction, inset, background and status-bar behavior (`page_scaffold.dart`).
 - Ported Cupertino page routes, transitions, back gestures and modal popups (`cupertino_ui/route.dart`).
 - Breaking: closed Cupertino localizations (`cupertino_ui/localizations.dart`) with picker formats and strict lookup.

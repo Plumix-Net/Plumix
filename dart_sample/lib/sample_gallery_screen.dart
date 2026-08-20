@@ -38,6 +38,7 @@ import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/material/color_palette_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
+import 'demos/cupertino/app_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -445,6 +446,14 @@ class SampleGalleryScreen extends StatelessWidget {
 
   static final List<SampleRouteDefinition> _cupertinoDemoPages =
       <SampleRouteDefinition>[
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoApp,
+          title: 'Application shell',
+          subtitle:
+              'theme + localization + selection + scroll + '
+              'CupertinoPageRoute defaults',
+          builder: () => const CupertinoAppDemoPage(),
+        ),
         SampleRouteDefinition(
           routeName: SampleRoutes.checkbox,
           title: 'Checkbox',
