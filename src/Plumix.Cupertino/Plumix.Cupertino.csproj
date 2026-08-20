@@ -19,6 +19,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Plumix.Tests" />
+        <InternalsVisibleTo Include="Plumix.Material" />
     </ItemGroup>
 
     <ItemGroup>

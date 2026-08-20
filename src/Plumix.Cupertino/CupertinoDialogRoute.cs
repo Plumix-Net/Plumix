@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix;
 using Plumix.Foundation;
 using Plumix.Physics;
+using Plumix.Rendering;
 using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
@@ -20,13 +21,6 @@ public static class CupertinoRouteConstants
 /// <summary>A dialog route with iOS-style spring entrance/exit transitions.</summary>
 public sealed class CupertinoDialogRoute<T> : RawDialogRoute<T>
 {
-    private static readonly SpringDescription StandardSpring = new(
-        mass: 1.0,
-        stiffness: 522.35,
-        damping: 45.7099552);
-
-    private static readonly Tolerance StandardTolerance = new(velocity: 0.03);
-
     private readonly bool _hasCustomTransitionBuilder;
 
     public CupertinoDialogRoute(
@@ -60,12 +54,12 @@ public sealed class CupertinoDialogRoute<T> : RawDialogRoute<T>
     protected internal override Simulation? CreateSimulation(bool forward)
     {
         return new SpringSimulation(
-            StandardSpring,
+            CupertinoRoutePhysics.StandardSpring,
             Controller.Value,
             forward ? 1.0 : 0.0,
             velocity: 0.0,
             snapToEnd: true,
-            tolerance: StandardTolerance);
+            tolerance: CupertinoRoutePhysics.StandardTolerance);
     }
 
     public override Widget BuildTransitions(
@@ -121,6 +115,33 @@ public sealed class CupertinoDialogRoute<T> : RawDialogRoute<T>
 /// <summary>Dart's free function `showCupertinoDialog`.</summary>
 public static class CupertinoDialogs
 {
+    public static Task<T?> ShowCupertinoModalPopup<T>(
+        BuildContext context,
+        WidgetBuilder builder,
+        ImageFilter? filter = null,
+        Color? barrierColor = null,
+        bool barrierDismissible = true,
+        bool useRootNavigator = true,
+        bool semanticsDismissible = false,
+        RouteSettings? routeSettings = null,
+        Point? anchorPoint = null,
+        bool? requestFocus = null)
+    {
+        Color resolvedBarrierColor = barrierColor
+                                     ?? CupertinoRouteConstants.ModalBarrierColor.ResolveFrom(context);
+        var route = new CupertinoModalPopupRoute<T>(
+            builder: builder,
+            filter: filter,
+            barrierColor: resolvedBarrierColor,
+            barrierDismissible: barrierDismissible,
+            semanticsDismissible: semanticsDismissible,
+            settings: routeSettings,
+            anchorPoint: anchorPoint,
+            requestFocus: requestFocus);
+        Navigator.Of(context, rootNavigator: useRootNavigator).Push(route);
+        return route.Completed;
+    }
+
     public static Task<T?> ShowCupertinoDialog<T>(
         BuildContext context,
         WidgetBuilder builder,

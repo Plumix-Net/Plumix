@@ -106,6 +106,7 @@ import 'demos/general/stack_demo_page.dart';
 import 'demos/general/state_storage_demo_page.dart';
 import 'demos/general/stateful_builder_lookup_boundary_demo_page.dart';
 import 'demos/general/navigation_pop_demo_page.dart';
+import 'demos/cupertino/route_demo_page.dart';
 import 'demos/cupertino/switch_demo_page.dart';
 import 'demos/cupertino/theme_demo_page.dart';
 import 'demos/material/range_slider_demo_page.dart';
@@ -468,6 +469,12 @@ class SampleGalleryScreen extends StatelessWidget {
               'brightness/contrast/elevation resolution + '
               'CupertinoTextThemeData styles',
           builder: () => const CupertinoThemeDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoRoute,
+          title: 'Routes + modal popup',
+          subtitle: 'page/fullscreen transitions + edge swipe + popup',
+          builder: () => const CupertinoRouteDemoPage(),
         ),
       ];
 

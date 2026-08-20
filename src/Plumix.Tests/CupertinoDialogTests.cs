@@ -313,6 +313,70 @@ public sealed class CupertinoDialogTests : IDisposable
         Assert.Null(FindParagraph(harness.RenderView, "Springy"));
     }
 
+    [Fact]
+    public void ShowCupertinoModalPopup_ResolvesDarkBarrierAndForwardsRouteOptions()
+    {
+        BuildContext captured = default;
+        Widget navigator = new Navigator(new BuilderPageRoute(context =>
+            new CaptureContext(value => captured = value, new Text("Underlying"))));
+        using var harness = new RenderHarness(Wrap(new CupertinoTheme(
+            new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+            navigator)));
+        harness.Pump(new Size(600, 600));
+
+        _ = CupertinoDialogs.ShowCupertinoModalPopup<string>(
+            captured,
+            _ => new Text("Popup"),
+            barrierDismissible: false,
+            semanticsDismissible: true,
+            routeSettings: new RouteSettings(Name: "/popup"),
+            anchorPoint: new Point(500.0, 0.0),
+            requestFocus: false);
+
+        var route = Assert.IsType<CupertinoModalPopupRoute<string>>(
+            Navigator.Of(captured).CurrentRoute);
+        Assert.Equal(Color.FromUInt32(0x7A000000), route.BarrierColor);
+        Assert.False(route.BarrierDismissible);
+        Assert.True(route.SemanticsDismissible);
+        Assert.Equal("/popup", route.Settings.Name);
+        Assert.Equal(new Point(500.0, 0.0), route.AnchorPoint);
+        Assert.False(route.RequestFocus);
+    }
+
+    [Fact]
+    public void ShowCupertinoModalPopup_UsesRootNavigatorByDefaultAndCanTargetNestedNavigator()
+    {
+        BuildContext rootContext = default;
+        BuildContext nestedContext = default;
+        var rootRoute = new BuilderPageRoute(context =>
+        {
+            rootContext = context;
+            return new Navigator(new BuilderPageRoute(nestedRouteContext =>
+            {
+                nestedContext = nestedRouteContext;
+                return new Text("Nested");
+            }));
+        });
+        using var harness = new RenderHarness(Wrap(new Navigator(rootRoute)));
+        harness.Pump(new Size(600, 600));
+
+        _ = CupertinoDialogs.ShowCupertinoModalPopup<object?>(
+            nestedContext,
+            _ => new Text("Root popup"));
+        Assert.IsType<CupertinoModalPopupRoute<object?>>(Navigator.Of(rootContext).CurrentRoute);
+        Assert.IsNotType<CupertinoModalPopupRoute<object?>>(Navigator.Of(nestedContext).CurrentRoute);
+
+        Navigator.Of(rootContext).Pop();
+        PumpSpring();
+        harness.Pump(new Size(600, 600));
+
+        _ = CupertinoDialogs.ShowCupertinoModalPopup<object?>(
+            nestedContext,
+            _ => new Text("Nested popup"),
+            useRootNavigator: false);
+        Assert.IsType<CupertinoModalPopupRoute<object?>>(Navigator.Of(nestedContext).CurrentRoute);
+    }
+
     private static Widget Wrap(Widget child, double textScaleFactor = 1.0) =>
         new Directionality(
             TextDirection.Ltr,

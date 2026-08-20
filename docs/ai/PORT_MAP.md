@@ -35,7 +35,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs` | — |
 | `cupertino_ui/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
 | `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` _(reference) (adapted)_ | — | — |
-| `cupertino_ui/route.dart` | `src/Plumix.Cupertino/CupertinoDialogRoute.cs`<br>`src/Plumix.Material/PageTransitionsTheme.cs` | — | — |
+| `cupertino_ui/route.dart` | `src/Plumix.Cupertino/CupertinoDialogRoute.cs`<br>`src/Plumix.Cupertino/CupertinoRoute.cs`<br>`src/Plumix.Material/PageTransitionsTheme.cs` | `src/Plumix.Tests/CupertinoRouteTests.cs` | — |
 | `cupertino_ui/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
 | `cupertino_ui/slider.dart` | `src/Plumix.Cupertino/CupertinoSlider.cs` | — | — |
 | `cupertino_ui/spell_check_suggestions_toolbar.dart` | `src/Plumix.Cupertino/CupertinoSpellCheckSuggestionsToolbar.cs` | — | — |
@@ -594,7 +594,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 ## Summary
 
 - Flutter files mapped: 458
-- C# files carrying a marker: 591
+- C# files carrying a marker: 592
 - C# files without a marker: 19
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 77

@@ -32,7 +32,7 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 - **Package direction** (`docs/ai/INVARIANTS.md`): `Plumix.Cupertino` depends only on `Plumix`.
   Never reference `Plumix.Material` from Cupertino code. When a Cupertino port needs a piece that
-  currently lives in `Plumix.Material` (see `route.dart` below), move it down into
+  currently lives in `Plumix.Material`, move it down into
   `Plumix.Cupertino` and make Material reference it — do not duplicate it.
 - **Material `.Adaptive` factories**: Flutter's `Switch.adaptive`, `Slider.adaptive`,
   `RefreshIndicator.adaptive`, `CircularProgressIndicator.adaptive`, `Checkbox.adaptive`,
@@ -44,17 +44,16 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
   as strict ports. Before extending one, diff it against the Dart file top to bottom; treat missing
   members as gaps to close, and keep the `// Dart parity source:` marker (drop its
   `(reference)`/`(adapted)` qualifier only when the file is a strict port).
-- **Samples**: the gallery already has a Cupertino tab with four demos on both sides
-  (`Checkbox`, `Radio`, `Switch`, `Theme + dynamic colors`). Add new demos there and mirror them in
-  `dart_sample`.
+- **Samples**: the gallery already has a Cupertino tab with five demos on both sides
+  (`Checkbox`, `Radio`, `Switch`, `Theme + dynamic colors`, `Routes + modal popup`). Add new demos
+  there and mirror them in `dart_sample`.
 
 ## Foundation (port these first — most controls below depend on them)
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types missing in C# | Status | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- | --- |
-| `route.dart` | 1613 | `CupertinoPageRoute`, `CupertinoPage`, `CupertinoPageTransition`, `CupertinoFullscreenDialogTransition`, `CupertinoModalPopupRoute`, `CupertinoRouteTransitionMixin`, `showCupertinoModalPopup` | partial (`CupertinoDialogRoute.cs` only) | L | The page transition + back-swipe detector currently live in `src/Plumix.Material/PageTransitionsTheme.cs` (`CupertinoPageTransitionsBuilder`); move them into `Plumix.Cupertino` and have Material reference them. |
 | `page_scaffold.dart` | 323 | `CupertinoPageScaffold`, `ObstructingPreferredSizeWidget` | open | S | Needs `nav_bar.dart` for the full contract but can land first. |
-| `app.dart` | 794 | `CupertinoApp`, `CupertinoScrollBehavior` | open | M | Mirror `src/Plumix.Material/App.cs` (`WidgetsApp` composition, `Router` form). Depends on route/theme/localizations. |
+| `app.dart` | 794 | `CupertinoApp`, `CupertinoScrollBehavior` | open | M | Mirror `src/Plumix.Material/App.cs` (`WidgetsApp` composition, `Router` form). Depends on theme/localizations. |
 | `icons.dart` | 9811 | `CupertinoIcons` | open | infra | Do not hand-port. Add `scripts/generate_cupertino_icons.py` producing `src/Plumix.Cupertino/CupertinoIcons.g.cs` (same pattern as `scripts/generate_material_colors.py`), then list it in `AGENTS.md` > Common Commands. |
 | `global_cupertino_localizations.dart` + `l10n/` | 569 + arb | `GlobalCupertinoLocalizations` | open — align first | L | No `GlobalMaterialLocalizations` exists either; needs a shared localization-loading design (arb → C#) before either side ports. |
 
@@ -64,7 +63,7 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 | --- | --- | --- | --- | --- |
 | `cupertino_focus_halo.dart` | 139 | `CupertinoFocusHalo` | S | Used by buttons/list tiles for focus rings. |
 | `bottom_tab_bar.dart` | 312 | `CupertinoTabBar` | S | Icon theme, `CupertinoLocalizations`. |
-| `tab_view.dart` | 255 | `CupertinoTabView` | S | Nested `Navigator`; needs `CupertinoPageRoute`. |
+| `tab_view.dart` | 255 | `CupertinoTabView` | S | Nested `Navigator`; `CupertinoPageRoute` is available. |
 | `tab_scaffold.dart` | 556 | `CupertinoTabScaffold`, `CupertinoTabController`, `RestorableCupertinoTabController` | M | After `bottom_tab_bar` + `tab_view`. |
 | `expansion_tile.dart` | 265 | `CupertinoExpansionTile`, `ExpansionTileTransitionMode` | S | Core `ExpansionTile` primitives already exist for Material. |
 | `list_tile.dart` | 419 | `CupertinoListTile`, `CupertinoListTileChevron` | S | |
@@ -76,14 +75,14 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 | `refresh.dart` | 594 | `CupertinoSliverRefreshControl`, `RefreshIndicatorMode` | M | Then rewire `RefreshIndicator.Adaptive`. |
 | `search_field.dart` | 603 | `CupertinoSearchTextField` | M | After `text_field`. |
 | `segmented_control.dart` | 877 | `CupertinoSegmentedControl` | M | Custom `RenderBox`; compare with Material `SegmentedControlLayout.cs`. |
-| `sheet.dart` | 1405 | `CupertinoSheetRoute`, `CupertinoSheetTransition`, `showCupertinoSheet` | M | After `route.dart`. |
+| `sheet.dart` | 1405 | `CupertinoSheetRoute`, `CupertinoSheetTransition`, `showCupertinoSheet` | M | Route primitives are available. |
 | `sliding_segmented_control.dart` | 1539 | `CupertinoSlidingSegmentedControl` | L | Drag/thumb physics; spec via `dart-spec`. |
 | `context_menu.dart` + `context_menu_action.dart` | 1576, 140 | `CupertinoContextMenu`, `CupertinoContextMenuAction` | L | Overlay + `Hero`-like flight; core `Hero.cs` is `(baseline subset)` — check what it needs first. |
 | `text_field.dart` | 2039 | `CupertinoTextField`, `OverlayVisibilityMode` | L | Composes core `EditableText`; mirror `src/Plumix.Material/TextField.cs` structure. |
 | `text_form_field_row.dart` | 412 | `CupertinoTextFormFieldRow` | S | After `text_field` + `form_row`. |
 | `date_picker.dart` | 2974 | `CupertinoDatePicker`, `CupertinoDatePickerMode`, `CupertinoTimerPicker`, `CupertinoTimerPickerMode` | L | After `picker` + localizations date formatting. |
 | `menu_anchor.dart` | 3056 | `CupertinoMenuAnchor`, `CupertinoMenuItem`, `CupertinoMenuDivider`, `CupertinoMenuEntry` | L | Core `RawMenuAnchor` exists (Material `MenuAnchor.cs`); check `docs/ai/DIVERGENCES.md` menu rows first. |
-| `nav_bar.dart` | 3581 | `CupertinoNavigationBar`, `CupertinoSliverNavigationBar`, `CupertinoNavigationBarBackButton`, `NavigationBarBottomMode` | L | Hero transitions between bars; after `page_scaffold` + `route.dart`. |
+| `nav_bar.dart` | 3581 | `CupertinoNavigationBar`, `CupertinoSliverNavigationBar`, `CupertinoNavigationBarBackButton`, `NavigationBarBottomMode` | L | Hero transitions between bars; after `page_scaffold.dart`. |
 
 ## Partial ports to tighten (existing file, missing members or a qualified marker)
 

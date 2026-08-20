@@ -150,10 +150,12 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
     `CupertinoColors`, `CupertinoUserInterfaceLevel` — a subset today; the foundation rows in the TODO tighten it)
   - `src/Plumix.Cupertino/CupertinoLocalizations.cs`
   - `src/Plumix.Cupertino/CupertinoDialog.cs`, `CupertinoDialogRoute.cs` (dialog family + `showCupertinoDialog`)
+  - `src/Plumix.Cupertino/CupertinoRoute.cs` (page routes/descriptions, page/fullscreen transitions,
+    leading-edge back gestures, modal popup route + `ShowCupertinoModalPopup`)
   - `src/Plumix.Cupertino/CupertinoTextSelectionToolbar.cs` + `CupertinoTextSelectionToolbarButton.cs`
     (+ desktop/adaptive/spell-check variants) — the text-selection toolbar family
-  - `src/Plumix.Material/PageTransitionsTheme.cs` (`CupertinoPageTransitionsBuilder` and the back-swipe detector
-    live here until `route.dart` is ported into `Plumix.Cupertino`)
+  - `src/Plumix.Material/PageTransitionsTheme.cs` (the compatibility `CupertinoPageTransitionsBuilder` adapter
+    delegates to the Cupertino-owned implementation)
 - Then per target control: `src/Plumix.Cupertino/Cupertino<Control>.cs` + `src/Plumix.Tests/Cupertino<Control>Tests.cs`
   + demo pages (`src/Sample/Plumix.Sample/Demos/Cupertino/*`, `dart_sample/lib/demos/cupertino/*`).
 - Existing controls (`CupertinoActivityIndicator`, `CupertinoButton`, `CupertinoCheckbox`, `CupertinoRadio`,
@@ -162,6 +164,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Primary Tests:
   - `src/Plumix.Tests/CupertinoLocalizationsTests.cs`
   - `src/Plumix.Tests/CupertinoDialogTests.cs`
+  - `src/Plumix.Tests/CupertinoRouteTests.cs`
   - `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`, `MaterialSelectionTests.cs` (toolbar family)
   - Adaptive coverage inside `MaterialCheckboxTests.cs`, `MaterialRadioTests.cs`, `MaterialSwitchTests.cs`,
     `MaterialSliderTests.cs`, `MaterialCircularProgressIndicatorTests.cs`

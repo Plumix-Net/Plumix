@@ -139,8 +139,8 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         Settle(harness.Owner);
         harness.Pump(new Size(width, height));
         Assert.Contains(
-            FindRenderObjects<RenderCustomPaint>(harness.RenderView),
-            renderObject => renderObject.Painter is not null);
+            FindRenderObjects<RenderDecoratedBox>(harness.RenderView),
+            renderObject => renderObject.DecorationValue.GetType().Name == "CupertinoEdgeShadowDecoration");
 
         DateTime start = new(2026, 8, 9, 12, 0, 0, DateTimeKind.Utc);
         double edge = textDirection == TextDirection.Ltr ? 5.0 : width - 5.0;

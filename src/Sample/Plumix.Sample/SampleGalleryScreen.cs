@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
@@ -99,6 +100,7 @@ internal static class SampleRoutes
     public const string AppBarTextStyles = "/appbar-text-styles";
     public const string ColorPalette = "/color-palette";
     public const string CupertinoTheme = "/cupertino-theme";
+    public const string CupertinoRoute = "/cupertino-route";
     public const string ProxyWidgets = "/proxy-widgets";
     public const string Align = "/align";
     public const string Stack = "/stack";
@@ -247,6 +249,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Theme + dynamic colors",
             "brightness/contrast/elevation resolution + CupertinoTextThemeData styles",
             () => new CupertinoThemeDemoPage()),
+        new(
+            SampleRoutes.CupertinoRoute,
+            "Routes + modal popup",
+            "page/fullscreen transitions + edge swipe + spring popup",
+            () => new CupertinoRouteDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleRouteDefinition> GeneralDemoPages =
