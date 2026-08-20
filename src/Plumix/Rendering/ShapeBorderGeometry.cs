@@ -40,6 +40,7 @@ public static class ShapeBorderGeometry
         return shape switch
         {
             RoundedRectangleBorder rounded => rounded.BorderRadius.Resolve(textDirection),
+            RoundedSuperellipseBorder rounded => rounded.BorderRadius.Resolve(textDirection),
             BeveledRectangleBorder beveled => beveled.BorderRadius.Resolve(textDirection),
             ContinuousRectangleBorder continuous => continuous.BorderRadius.Resolve(textDirection),
             StadiumBorder or CircleBorder => BorderRadius.Circular(9999.0),

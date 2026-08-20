@@ -757,6 +757,8 @@ internal sealed class ShapeDecorationPainter : BoxPainter
         {
             case RoundedRectangleBorder rounded:
                 return rounded.BorderRadius.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect);
+            case RoundedSuperellipseBorder rounded:
+                return rounded.BorderRadius.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect);
             case StadiumBorder:
                 return RRect.FromRectAndRadius(rect, BoxBorder.ShortestSide(rect) / 2.0);
             case CircleBorder { Eccentricity: 0.0 }:

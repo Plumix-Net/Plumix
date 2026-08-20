@@ -41,6 +41,13 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         _pipeline.FlushLayout(size);
     }
 
+    public void Pump(Size size)
+    {
+        Layout(size);
+        _pipeline.FlushCompositingBits();
+        _pipeline.FlushPaint();
+    }
+
     public void Dispose() => _root.Unmount();
 
     private sealed class RootElement : Element, IRenderObjectHost

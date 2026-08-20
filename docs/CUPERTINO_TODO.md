@@ -58,7 +58,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- |
-| `cupertino_focus_halo.dart` | 139 | `CupertinoFocusHalo` | S | Used by buttons/list tiles for focus rings. |
 | `bottom_tab_bar.dart` | 312 | `CupertinoTabBar` | S | Icon theme, `CupertinoLocalizations`. |
 | `tab_view.dart` | 255 | `CupertinoTabView` | S | Nested `Navigator`; `CupertinoPageRoute` is available. |
 | `tab_scaffold.dart` | 556 | `CupertinoTabScaffold`, `CupertinoTabController`, `RestorableCupertinoTabController` | M | After `bottom_tab_bar` + `tab_view`. |

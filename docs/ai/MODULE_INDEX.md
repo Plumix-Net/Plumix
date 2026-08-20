@@ -163,11 +163,15 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Existing controls (`CupertinoActivityIndicator`, `CupertinoButton`, `CupertinoCheckbox`, `CupertinoRadio`,
   `CupertinoSlider`, `CupertinoScrollbar`, `CupertinoMagnifier`) were written to serve Material adaptive
   controls; several carry `(reference)`/`(adapted)` markers — diff against Dart before extending them.
+- Focus halos enter through `src/Plumix.Cupertino/CupertinoFocusHalo.cs`; descendant focus ownership lives in
+  core `Widgets/Focus.cs`, with shape/color primitives in `Rendering/RoundedSuperellipseBorder.cs` and
+  `Painting/HSLColor.cs`. Coverage lives in `CupertinoFocusHaloTests.cs` and `FocusTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/CupertinoAppTests.cs`
   - `src/Plumix.Tests/CupertinoLocalizationsTests.cs`
   - `src/Plumix.Tests/CupertinoDialogTests.cs`
   - `src/Plumix.Tests/CupertinoRouteTests.cs`
+  - `src/Plumix.Tests/CupertinoFocusHaloTests.cs`
   - `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`, `MaterialSelectionTests.cs` (toolbar family)
   - Adaptive coverage inside `MaterialCheckboxTests.cs`, `MaterialRadioTests.cs`, `MaterialSwitchTests.cs`,
     `MaterialSliderTests.cs`, `MaterialCircularProgressIndicatorTests.cs`

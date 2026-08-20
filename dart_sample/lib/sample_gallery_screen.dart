@@ -40,6 +40,7 @@ import 'demos/material/color_palette_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'demos/cupertino/app_demo_page.dart';
 import 'demos/cupertino/cupertino_icons_demo_page.dart';
+import 'demos/cupertino/cupertino_focus_halo_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -461,6 +462,14 @@ class SampleGalleryScreen extends StatelessWidget {
           subtitle:
               'legacy + SF Symbols catalog, aliases, and directional glyphs',
           builder: () => const CupertinoIconsDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoFocusHalo,
+          title: 'Focus halo',
+          subtitle:
+              'rectangular, rounded-rectangle, and rounded-superellipse '
+              'descendant focus outlines',
+          builder: () => const CupertinoFocusHaloDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.checkbox,

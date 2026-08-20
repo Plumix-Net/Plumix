@@ -44,6 +44,49 @@ public sealed class FocusTests : IDisposable
     }
 
     [Fact]
+    public void FocusNode_HasFocusTracksFocusedDescendantsWithoutFlickeringBetweenThem()
+    {
+        var owner = new BuildOwner();
+        var ancestor = new FocusNode();
+        var first = new FocusNode();
+        var second = new FocusNode();
+        var outside = new FocusNode();
+        var changes = new List<bool>();
+        var root = new TestRootElement(new Column(children:
+        [
+            new Focus(
+                focusNode: ancestor,
+                canRequestFocus: false,
+                onFocusChange: changes.Add,
+                child: new Column(children:
+                [
+                    new Focus(focusNode: first, child: new SizedBox(width: 10.0, height: 10.0)),
+                    new Focus(focusNode: second, child: new SizedBox(width: 10.0, height: 10.0)),
+                ])),
+            new Focus(focusNode: outside, child: new SizedBox(width: 10.0, height: 10.0)),
+        ]));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(first.RequestFocus());
+        owner.FlushBuild();
+        Assert.True(ancestor.HasFocus);
+        Assert.Equal([true], changes);
+
+        Assert.True(second.RequestFocus());
+        owner.FlushBuild();
+        Assert.True(ancestor.HasFocus);
+        Assert.Equal([true], changes);
+
+        Assert.True(outside.RequestFocus());
+        owner.FlushBuild();
+        Assert.False(ancestor.HasFocus);
+        Assert.Equal([true, false], changes);
+    }
+
+    [Fact]
     public void FocusManager_HandleKeyEvent_InvokesPrimaryNodeCallback()
     {
         var manager = new FocusManager();

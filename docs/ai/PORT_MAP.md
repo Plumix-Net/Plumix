@@ -28,6 +28,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/button.dart` | `src/Plumix.Cupertino/CupertinoButton.cs` | — | — |
 | `cupertino_ui/checkbox.dart` | `src/Plumix.Cupertino/CupertinoCheckbox.cs` _(reference) (adapted)_<br>`src/Plumix/RenderStrokeGlyph.cs` _(reference) (adapted primitives)_<br>`src/Plumix/Widgets/StrokeGlyph.cs` _(reference) (adapted primitives)_ | — | — |
 | `cupertino_ui/colors.dart` | `src/Plumix.Cupertino/CupertinoColors.cs` | `src/Plumix.Tests/CupertinoColorsTests.cs` | — |
+| `cupertino_ui/cupertino_focus_halo.dart` | `src/Plumix.Cupertino/CupertinoFocusHalo.cs` | `src/Plumix.Tests/CupertinoFocusHaloTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs` |
 | `cupertino_ui/desktop_text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoDesktopTextSelectionToolbar.cs` | — | — |
 | `cupertino_ui/desktop_text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
 | `cupertino_ui/dialog.dart` | `src/Plumix.Cupertino/CupertinoDialog.cs` | `src/Plumix.Tests/CupertinoDialogTests.cs` | — |
@@ -257,7 +258,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `painting/box_fit.dart` | `src/Plumix/Rendering/BoxFit.cs` _(reference) (approximate)_ | — | — |
 | `painting/box_shadow.dart` | `src/Plumix/Rendering/BoxShadow.cs` | `src/Plumix.Tests/BoxShadowTests.cs` | — |
 | `painting/circle_border.dart` | `src/Plumix/Rendering/CircleBorder.cs` | — | — |
-| `painting/colors.dart` | `src/Plumix/Painting/ColorSwatch.cs` | — | — |
+| `painting/colors.dart` | `src/Plumix/Painting/ColorSwatch.cs`<br>`src/Plumix/Painting/HSLColor.cs` | — | — |
 | `painting/continuous_rectangle_border.dart` | `src/Plumix/Rendering/ContinuousRectangleBorder.cs` | — | — |
 | `painting/decoration.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
 | `painting/decoration_image.dart` | `src/Plumix/Rendering/DecorationImage.cs` | — | — |
@@ -273,7 +274,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `painting/notched_shapes.dart` | `src/Plumix/Rendering/NotchedShape.cs` | — | — |
 | `painting/oval_border.dart` | `src/Plumix/Rendering/OvalBorder.cs` | — | — |
 | `painting/placeholder_span.dart` | `src/Plumix/Painting/PlaceholderSpan.cs` | — | — |
-| `painting/rounded_rectangle_border.dart` | `src/Plumix/Rendering/RoundedRectangleBorder.cs` | — | — |
+| `painting/rounded_rectangle_border.dart` | `src/Plumix/Rendering/RoundedRectangleBorder.cs`<br>`src/Plumix/Rendering/RoundedSuperellipseBorder.cs` _(adapted)_ | — | — |
 | `painting/shape_decoration.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
 | `painting/stadium_border.dart` | `src/Plumix/Rendering/StadiumBorder.cs` | — | — |
 | `painting/star_border.dart` | `src/Plumix/Rendering/StarBorder.cs` | — | — |
@@ -383,8 +384,8 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/expansible.dart` | `src/Plumix/Widgets/Expansible.cs` | — | — |
 | `widgets/fade_in_image.dart` | `src/Plumix/Widgets/FadeInImage.cs` | — | — |
 | `widgets/feedback.dart` | `src/Plumix/UI/Feedback.cs` _(reference) (approximate)_ | — | — |
-| `widgets/focus_manager.dart` | `src/Plumix/Widgets/Focus.cs` _(reference) (adapted)_ | `src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | — |
-| `widgets/focus_scope.dart` | `src/Plumix/Widgets/Focus.cs` _(reference) (adapted)_ | `src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | — |
+| `widgets/focus_manager.dart` | `src/Plumix/Widgets/Focus.cs` _(reference) (adapted)_ | `src/Plumix.Tests/CupertinoFocusHaloTests.cs`<br>`src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs` |
+| `widgets/focus_scope.dart` | `src/Plumix/Widgets/Focus.cs` _(reference) (adapted)_ | `src/Plumix.Tests/CupertinoFocusHaloTests.cs`<br>`src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs` |
 | `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | — |
 | `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`dart_sample/lib/demos/general/transform_demo_page.dart` |
 | `widgets/framework.dart` | `src/Plumix/Widgets/Framework.BuildOwner.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Element.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.RenderObject.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Widget.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.cs` _(reference) (approximate)_ | — | — |
@@ -561,6 +562,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Rendering/Object.RenderObject.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Object.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Proxy.RenderBox.cs` — (reference) (approximate)
+- `src/Plumix/Rendering/RoundedSuperellipseBorder.cs` — (adapted)
 - `src/Plumix/Rendering/Scroll.cs` — (reference) (adapted)
 - `src/Plumix/Rendering/Sliver.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Stack.RenderIndexedStack.cs` — (RenderIndexedStack subset)
@@ -596,9 +598,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 461
-- C# files carrying a marker: 597
+- Flutter files mapped: 462
+- C# files carrying a marker: 600
 - C# files without a marker: 19
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 77
+- C# files with a qualified (non-strict) marker: 78
 

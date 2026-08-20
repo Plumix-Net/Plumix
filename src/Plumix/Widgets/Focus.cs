@@ -527,6 +527,7 @@ public sealed class FocusManager
             return;
         }
 
+        node.SetHasFocus(false);
         node.DetachManager(this);
         node.Scope?.RemoveMember(node);
         node.DetachScope();
@@ -944,6 +945,8 @@ public sealed class FocusManager
         }
 
         var previous = PrimaryFocus;
+        HashSet<FocusNode> previousPath = FocusPath(previous).ToHashSet();
+        HashSet<FocusNode> nextPath = FocusPath(next).ToHashSet();
         PrimaryFocus = next;
 
         if (previous != null && !ReferenceEquals(previous.Scope, next?.Scope))
@@ -952,9 +955,44 @@ public sealed class FocusManager
         }
 
         next?.Scope?.SetFocusedChild(next);
-        previous?.SetHasFocus(false);
-        next?.SetHasFocus(true);
+        foreach (FocusNode node in previousPath.Except(nextPath))
+        {
+            node.SetHasFocus(false);
+        }
+
+        foreach (FocusNode node in nextPath.Except(previousPath))
+        {
+            node.SetHasFocus(true);
+        }
+
         PrimaryFocusChanged?.Invoke();
+    }
+
+    /// <summary>
+    /// Flutter's <c>FocusNode.hasFocus</c> is true for the primary node and every focus node that
+    /// encloses it in the widget tree. Keeping common ancestors in both paths also avoids a false
+    /// focus-change notification when focus moves between two descendants of the same group.
+    /// </summary>
+    private IEnumerable<FocusNode> FocusPath(FocusNode? node)
+    {
+        if (node is null)
+        {
+            yield break;
+        }
+
+        yield return node;
+        for (Element? ancestor = node.AttachmentElement?.Parent;
+             ancestor is not null;
+             ancestor = ancestor.Parent)
+        {
+            FocusNode? ancestorNode = _nodes.FirstOrDefault(candidate =>
+                !ReferenceEquals(candidate, node)
+                && ReferenceEquals(candidate.AttachmentElement, ancestor));
+            if (ancestorNode is not null)
+            {
+                yield return ancestorNode;
+            }
+        }
     }
 
     private void MoveNodeToScope(FocusNode node, FocusScopeNode scope)
