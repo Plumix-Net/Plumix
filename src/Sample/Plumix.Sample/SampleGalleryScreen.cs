@@ -102,6 +102,7 @@ internal static class SampleRoutes
     public const string CupertinoApp = "/cupertino-app";
     public const string CupertinoIcons = "/cupertino-icons";
     public const string CupertinoFocusHalo = "/cupertino-focus-halo";
+    public const string CupertinoTabBar = "/cupertino-tab-bar";
     public const string CupertinoTheme = "/cupertino-theme";
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
     public const string CupertinoRoute = "/cupertino-route";
@@ -260,6 +261,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Focus halo",
             "rectangular, rounded-rectangle, and rounded-superellipse descendant focus outlines",
             () => new CupertinoFocusHaloDemoPage()),
+        new(
+            SampleRoutes.CupertinoTabBar,
+            "Tab bar",
+            "selection + active icons + safe-area height + translucent blur",
+            () => new CupertinoTabBarDemoPage()),
         new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
         new(SampleRoutes.Switch, "Switch", "on/off value + track/thumb theming + drag", () => new SwitchDemoPage()),
         new(SampleRoutes.Radio, "Radio", "group selection + toggleable + tap-target policy", () => new RadioDemoPage()),

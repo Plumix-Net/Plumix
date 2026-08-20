@@ -48,7 +48,32 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         _pipeline.FlushPaint();
     }
 
+    public SemanticsNode? PumpAndGetSemantics(Size size)
+    {
+        Pump(size);
+        _pipeline.RequestSemanticsUpdate();
+        _pipeline.FlushSemantics();
+        return _pipeline.SemanticsOwner.RootNode;
+    }
+
+    public IReadOnlyList<T> FindWidgets<T>() where T : Widget
+    {
+        var result = new List<T>();
+        Visit(_root, result);
+        return result;
+    }
+
     public void Dispose() => _root.Unmount();
+
+    private static void Visit<T>(Element element, List<T> result) where T : Widget
+    {
+        if (element.Widget is T widget)
+        {
+            result.Add(widget);
+        }
+
+        element.VisitChildren(child => Visit(child, result));
+    }
 
     private sealed class RootElement : Element, IRenderObjectHost
     {

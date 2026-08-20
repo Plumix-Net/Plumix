@@ -9,45 +9,12 @@ using BoxShadow = Plumix.Rendering.BoxShadow;
 
 namespace Plumix.Material;
 
-// Dart parity sources (reference):
-// material_ui/lib/src/bottom_navigation_bar.dart
-// flutter/packages/flutter/lib/src/widgets/bottom_navigation_bar_item.dart
+// Dart parity source (reference): material_ui/lib/src/bottom_navigation_bar.dart
 
 public enum BottomNavigationBarType
 {
     Fixed,
     Shifting,
-}
-
-public sealed class BottomNavigationBarItem
-{
-    public BottomNavigationBarItem(
-        Widget icon,
-        string label,
-        Widget? activeIcon = null,
-        Color? backgroundColor = null,
-        string? tooltip = null,
-        Key? key = null)
-    {
-        Icon = icon ?? throw new ArgumentNullException(nameof(icon));
-        Label = label ?? throw new ArgumentNullException(nameof(label));
-        ActiveIcon = activeIcon ?? icon;
-        BackgroundColor = backgroundColor;
-        Tooltip = tooltip;
-        Key = key;
-    }
-
-    public Key? Key { get; }
-
-    public Widget Icon { get; }
-
-    public Widget ActiveIcon { get; }
-
-    public string Label { get; }
-
-    public Color? BackgroundColor { get; }
-
-    public string? Tooltip { get; }
 }
 
 public sealed class BottomNavigationBar : StatefulWidget
@@ -83,6 +50,11 @@ public sealed class BottomNavigationBar : StatefulWidget
         if (items.Count < 2)
         {
             throw new ArgumentException("BottomNavigationBar requires at least two items.", nameof(items));
+        }
+
+        if (items.Any(item => item.Label is null))
+        {
+            throw new ArgumentException("BottomNavigationBar items require non-null labels.", nameof(items));
         }
 
         if (currentIndex < 0 || currentIndex >= items.Count)
@@ -339,7 +311,7 @@ public sealed class BottomNavigationBar : StatefulWidget
                 {
                     tileChildren.Add(new Opacity(
                         labelOpacity,
-                        child: CreateLabel(item.Label, labelStyle)));
+                        child: CreateLabel(item.Label!, labelStyle)));
                 }
 
                 var tileBody = new SizedBox(

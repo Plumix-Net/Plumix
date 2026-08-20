@@ -41,6 +41,7 @@ import 'demos/cupertino/checkbox_demo_page.dart';
 import 'demos/cupertino/app_demo_page.dart';
 import 'demos/cupertino/cupertino_icons_demo_page.dart';
 import 'demos/cupertino/cupertino_focus_halo_demo_page.dart';
+import 'demos/cupertino/cupertino_tab_bar_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -470,6 +471,13 @@ class SampleGalleryScreen extends StatelessWidget {
               'rectangular, rounded-rectangle, and rounded-superellipse '
               'descendant focus outlines',
           builder: () => const CupertinoFocusHaloDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoTabBar,
+          title: 'Tab bar',
+          subtitle:
+              'selection + active icons + safe-area height + translucent blur',
+          builder: () => const CupertinoTabBarDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.checkbox,

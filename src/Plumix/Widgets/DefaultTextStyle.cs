@@ -316,6 +316,35 @@ public sealed class DefaultTextStyle : InheritedTheme
         return context.DependOnInherited<DefaultTextStyle>()?.Style ?? TextStyle.Fallback;
     }
 
+    public static Widget Merge(
+        Widget child,
+        TextStyle? style = null,
+        TextAlign? textAlign = null,
+        bool? softWrap = null,
+        TextOverflow? overflow = null,
+        int? maxLines = null,
+        TextWidthBasis? textWidthBasis = null,
+        TextHeightBehavior? textHeightBehavior = null,
+        Key? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        return new Builder(context =>
+        {
+            DefaultTextStyle? inherited = context.DependOnInherited<DefaultTextStyle>();
+            TextStyle parentStyle = inherited?.Style ?? TextStyle.Fallback;
+            return new DefaultTextStyle(
+                style: parentStyle.Merge(style),
+                child: child,
+                key: key,
+                textAlign: textAlign ?? inherited?.TextAlign,
+                softWrap: softWrap ?? inherited?.SoftWrap ?? true,
+                overflow: overflow ?? inherited?.Overflow ?? TextOverflow.Clip,
+                maxLines: maxLines ?? inherited?.MaxLines,
+                textWidthBasis: textWidthBasis ?? inherited?.TextWidthBasis ?? TextWidthBasis.Parent,
+                textHeightBehavior: textHeightBehavior ?? inherited?.TextHeightBehavior);
+        });
+    }
+
     internal static DefaultTextStyle? MaybeOf(BuildContext context)
     {
         return context.DependOnInherited<DefaultTextStyle>();

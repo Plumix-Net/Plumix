@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: ported `CupertinoTabBar`; moved `BottomNavigationBarItem` into core (`bottom_tab_bar.dart`).
 - Ported `CupertinoFocusHalo` with descendant focus and all three outline shapes (`cupertino_focus_halo.dart`).
 - Ported the generated `CupertinoIcons` catalog and bundled package font (`cupertino_ui/icons.dart`).
 - Ported `CupertinoApp` and `CupertinoScrollBehavior` with navigator/router shell defaults (`app.dart`).
