@@ -96,6 +96,7 @@ class SampleRoutes {
   static const String cupertinoIcons = '/cupertino-icons';
   static const String cupertinoFocusHalo = '/cupertino-focus-halo';
   static const String cupertinoTabBar = '/cupertino-tab-bar';
+  static const String cupertinoListSection = '/cupertino-list-section';
   static const String cupertinoExpansionTile = '/cupertino-expansion-tile';
   static const String cupertinoTextSelectionControls =
       '/cupertino-text-selection-controls';

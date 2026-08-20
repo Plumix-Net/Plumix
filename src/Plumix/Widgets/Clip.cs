@@ -86,3 +86,39 @@ public sealed class ClipPath : SingleChildRenderObjectWidget
         clipPath.ClipBehavior = ClipBehavior;
     }
 }
+
+/// <summary>Clips its child to an iOS-style rounded superellipse.</summary>
+public sealed class ClipRSuperellipse : StatelessWidget
+{
+    public ClipRSuperellipse(
+        BorderRadiusGeometry? borderRadius = null,
+        CustomClipper<Path>? clipper = null,
+        Clip clipBehavior = Clip.AntiAlias,
+        Widget? child = null,
+        Key? key = null) : base(key)
+    {
+        BorderRadius = borderRadius ?? Plumix.Rendering.BorderRadius.Zero;
+        Clipper = clipper;
+        ClipBehavior = clipBehavior;
+        Child = child;
+    }
+
+    public BorderRadiusGeometry BorderRadius { get; }
+
+    public CustomClipper<Path>? Clipper { get; }
+
+    public Clip ClipBehavior { get; }
+
+    public Widget? Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        CustomClipper<Path> effectiveClipper = Clipper ?? new ShapeBorderClipper(
+            new RoundedSuperellipseBorder(borderRadius: BorderRadius),
+            Directionality.MaybeOf(context));
+        return new ClipPath(
+            clipper: effectiveClipper,
+            clipBehavior: ClipBehavior,
+            child: Child);
+    }
+}

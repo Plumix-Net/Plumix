@@ -38,6 +38,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/icon_theme_data.dart` | `src/Plumix.Cupertino/CupertinoIconThemeData.cs` | — | — |
 | `cupertino_ui/icons.dart` | `src/Plumix.Cupertino/CupertinoIcons.cs` | `src/Plumix.Tests/CupertinoIconsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs` |
 | `cupertino_ui/interface_level.dart` | `src/Plumix.Cupertino/CupertinoUserInterfaceLevel.cs` | — | — |
+| `cupertino_ui/list_section.dart` | `src/Plumix.Cupertino/CupertinoListSection.cs` | `src/Plumix.Tests/CupertinoListSectionTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_list_section_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoListSectionDemoPage.cs` |
 | `cupertino_ui/list_tile.dart` | `src/Plumix.Cupertino/CupertinoListTile.cs` | `src/Plumix.Tests/CupertinoListTileTests.cs` | — |
 | `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs` | — |
 | `cupertino_ui/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
@@ -605,8 +606,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 469
-- C# files carrying a marker: 607
+- Flutter files mapped: 470
+- C# files carrying a marker: 608
 - C# files without a marker: 19
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 78

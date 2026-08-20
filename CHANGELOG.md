@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Ported `CupertinoListSection` with base/inset groups and rounded-superellipse clipping (`list_section.dart`).
 - Breaking: ported `CupertinoTabScaffold` with restoration and retained per-tab focus (`tab_scaffold.dart`).
 - Breaking: ported Cupertino mobile/desktop text-selection controls (`text_selection.dart`,
   `desktop_text_selection.dart`).

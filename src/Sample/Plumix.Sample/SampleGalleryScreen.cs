@@ -103,6 +103,7 @@ internal static class SampleRoutes
     public const string CupertinoIcons = "/cupertino-icons";
     public const string CupertinoFocusHalo = "/cupertino-focus-halo";
     public const string CupertinoTabBar = "/cupertino-tab-bar";
+    public const string CupertinoListSection = "/cupertino-list-section";
     public const string CupertinoExpansionTile = "/cupertino-expansion-tile";
     public const string CupertinoTextSelectionControls = "/cupertino-text-selection-controls";
     public const string CupertinoTheme = "/cupertino-theme";
@@ -268,6 +269,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Tab scaffold + bar",
             "lazy tab bodies + retained state + active icons + safe-area blur",
             () => new CupertinoTabBarDemoPage()),
+        new(
+            SampleRoutes.CupertinoListSection,
+            "List sections",
+            "edge-to-edge/inset groups + headers/footers + divider geometry",
+            () => new CupertinoListSectionDemoPage()),
         new(
             SampleRoutes.CupertinoExpansionTile,
             "List + expansion tiles",

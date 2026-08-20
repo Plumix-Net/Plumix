@@ -175,6 +175,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   `CupertinoTabViewTests.cs`.
 - Cupertino list rows and disclosure enter through `CupertinoListTile.cs` + `CupertinoExpansionTile.cs`; expansion
   uses core `Expansible` and `OverlayPortal`, with focused coverage in the matching Cupertino test files.
+- Cupertino list sections enter through `CupertinoListSection.cs`; rounded-superellipse clipping uses core
+  `Widgets/Clip.cs`, with focused coverage in `CupertinoListSectionTests.cs`.
 - Focus halos enter through `src/Plumix.Cupertino/CupertinoFocusHalo.cs`; descendant focus ownership lives in
   core `Widgets/Focus.cs`, with shape/color primitives in `Rendering/RoundedSuperellipseBorder.cs` and
   `Painting/HSLColor.cs`. Coverage lives in `CupertinoFocusHaloTests.cs` and `FocusTests.cs`.

@@ -42,6 +42,7 @@ import 'demos/cupertino/app_demo_page.dart';
 import 'demos/cupertino/cupertino_icons_demo_page.dart';
 import 'demos/cupertino/cupertino_focus_halo_demo_page.dart';
 import 'demos/cupertino/cupertino_tab_bar_demo_page.dart';
+import 'demos/cupertino/cupertino_list_section_demo_page.dart';
 import 'demos/cupertino/cupertino_expansion_tile_demo_page.dart';
 import 'demos/cupertino/cupertino_text_selection_controls_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
@@ -480,6 +481,13 @@ class SampleGalleryScreen extends StatelessWidget {
           subtitle:
               'lazy tab bodies + retained state + active icons + safe-area blur',
           builder: () => const CupertinoTabBarDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoListSection,
+          title: 'List sections',
+          subtitle:
+              'edge-to-edge/inset groups + headers/footers + divider geometry',
+          builder: () => const CupertinoListSectionDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.cupertinoExpansionTile,
