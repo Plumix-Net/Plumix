@@ -104,6 +104,7 @@ internal static class SampleRoutes
     public const string CupertinoFocusHalo = "/cupertino-focus-halo";
     public const string CupertinoTabBar = "/cupertino-tab-bar";
     public const string CupertinoExpansionTile = "/cupertino-expansion-tile";
+    public const string CupertinoTextSelectionControls = "/cupertino-text-selection-controls";
     public const string CupertinoTheme = "/cupertino-theme";
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
     public const string CupertinoRoute = "/cupertino-route";
@@ -272,6 +273,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "List + expansion tiles",
             "base/notched rows + async activation + fade/scroll expansion",
             () => new CupertinoExpansionTileDemoPage()),
+        new(
+            SampleRoutes.CupertinoTextSelectionControls,
+            "Text selection controls",
+            "line-height handles + macOS handle-free defaults",
+            () => new CupertinoTextSelectionControlsDemoPage()),
         new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
         new(SampleRoutes.Switch, "Switch", "on/off value + track/thumb theming + drag", () => new SwitchDemoPage()),
         new(SampleRoutes.Radio, "Radio", "group selection + toggleable + tap-target policy", () => new RadioDemoPage()),

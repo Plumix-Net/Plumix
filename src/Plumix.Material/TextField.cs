@@ -273,7 +273,7 @@ public sealed class TextField : StatefulWidget
             SpellCheckConfiguration spellCheckConfiguration = InferAndroidSpellCheckConfiguration(
                 Current.SpellCheckConfiguration);
             TextSelectionControls selectionControls = Current.SelectionControls
-                                                       ?? MaterialTextSelectionHandleControls.Instance;
+                                                       ?? PlatformSelectionControls(theme.Platform);
 
             Widget editable = new EditableText(
                 controller: _controller!,
@@ -498,6 +498,18 @@ public sealed class TextField : StatefulWidget
             return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
                 ? CupertinoTheme.Of(context).NoDefault().PrimaryColor ?? theme.ColorScheme.Primary
                 : theme.ColorScheme.Primary;
+        }
+
+        private static TextSelectionControls PlatformSelectionControls(TargetPlatform platform)
+        {
+#pragma warning disable CS0618 // Flutter's platform defaults intentionally use the deprecated handle-only surface.
+            return platform switch
+            {
+                TargetPlatform.IOS => CupertinoTextSelectionHandleControls.Instance,
+                TargetPlatform.MacOS => CupertinoDesktopTextSelectionControls.HandleControls,
+                _ => MaterialTextSelectionHandleControls.Instance,
+            };
+#pragma warning restore CS0618
         }
 
         private static TextInputType ResolveKeyboardType(TextInputType? keyboardType, bool multiline)

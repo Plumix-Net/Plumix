@@ -90,6 +90,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   `CupertinoDesktopTextSelectionToolbar.cs`, their button/adaptive/spell-check files, and `CupertinoTheme.cs`;
   Material adaptive routing consumes them on iOS/macOS, while the Android sample host registers the native default
   spell-check handler. Coverage shares `MaterialDesktopTextSelectionToolbarTests.cs`.
+- Cupertino mobile/desktop selection controls enter through `CupertinoTextSelectionControls.cs` and
+  `CupertinoDesktopTextSelectionControls.cs`; Material `TextField` and `SelectableText` choose their handle-only
+  instances on iOS/macOS. Coverage lives in `CupertinoTextSelectionControlsTests.cs`.
 - Material search routes enter through `SearchDelegate.cs` alongside `SearchAnchor.cs`; route ownership uses core `Widgets/Navigation.cs`, query editing stays on `Widgets/TextInput.cs`, and focused coverage lives in `MaterialSearchTests.cs`.
 - Autocomplete enters through core `Widgets/Autocomplete.cs` and Material `Autocomplete.cs`; direct options presentation
   uses `Widgets/Overlay.cs` + `TapRegion.cs`, availability announcements use `UI/SemanticsService.cs`, and focused

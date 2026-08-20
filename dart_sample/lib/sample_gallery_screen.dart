@@ -43,6 +43,7 @@ import 'demos/cupertino/cupertino_icons_demo_page.dart';
 import 'demos/cupertino/cupertino_focus_halo_demo_page.dart';
 import 'demos/cupertino/cupertino_tab_bar_demo_page.dart';
 import 'demos/cupertino/cupertino_expansion_tile_demo_page.dart';
+import 'demos/cupertino/cupertino_text_selection_controls_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -486,6 +487,12 @@ class SampleGalleryScreen extends StatelessWidget {
           subtitle:
               'base/notched rows + async activation + fade/scroll expansion',
           builder: () => const CupertinoExpansionTileDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoTextSelectionControls,
+          title: 'Text selection controls',
+          subtitle: 'line-height handles + macOS handle-free defaults',
+          builder: () => const CupertinoTextSelectionControlsDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.checkbox,

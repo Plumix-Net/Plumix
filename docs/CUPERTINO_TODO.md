@@ -61,7 +61,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 | `tab_scaffold.dart` | 556 | `CupertinoTabScaffold`, `CupertinoTabController`, `RestorableCupertinoTabController` | M | After `bottom_tab_bar` + `tab_view`. |
 | `list_section.dart` | 531 | `CupertinoListSection`, `CupertinoListSectionType` | M | After `list_tile`. |
 | `form_row.dart`, `form_section.dart` | 160, 249 | `CupertinoFormRow`, `CupertinoFormSection` | S | After `list_section`. |
-| `text_selection.dart`, `desktop_text_selection.dart` | 323, 216 | `CupertinoTextSelectionControls`, `CupertinoTextSelectionHandleControls`, `CupertinoDesktopTextSelectionControls` | S | Handles/toolbar glue over the already-ported toolbars; Material `TextField` selects them per platform. |
 | `switch.dart` + `thumb_painter.dart` | 1443, 70 | `CupertinoSwitch`, `CupertinoThumbPainter` | M | Then rewire `Switch.Adaptive` in `src/Plumix.Material/Switch.cs` to compose it (remove the inlined `Cupertino*` constants). |
 | `picker.dart` | 638 | `CupertinoPicker`, `CupertinoPickerDefaultSelectionOverlay` | M | `ListWheelScrollView`/`FixedExtentScrollController` are ported in core. |
 | `refresh.dart` | 594 | `CupertinoSliverRefreshControl`, `RefreshIndicatorMode` | M | Then rewire `RefreshIndicator.Adaptive`. |

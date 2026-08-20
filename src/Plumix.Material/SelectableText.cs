@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -173,7 +174,7 @@ internal sealed class SelectableTextState : State
             textAlign: Current.TextAlign ?? TextAlign.Start,
             textDirection: Current.TextDirection,
             enableInteractiveSelection: Current.EnableInteractiveSelection,
-            selectionControls: Current.SelectionControls ?? MaterialTextSelectionHandleControls.Instance,
+            selectionControls: Current.SelectionControls ?? PlatformSelectionControls(theme.Platform),
             selectionColor: selectionColor,
             cursorColor: cursorColor,
             mouseCursor: Current.MouseCursor ?? selectionStyle.MouseCursor,
@@ -199,6 +200,18 @@ internal sealed class SelectableTextState : State
         }
 
         return result;
+    }
+
+    private static TextSelectionControls PlatformSelectionControls(TargetPlatform platform)
+    {
+#pragma warning disable CS0618 // Flutter's platform defaults intentionally use the deprecated handle-only surface.
+        return platform switch
+        {
+            TargetPlatform.IOS => CupertinoTextSelectionHandleControls.Instance,
+            TargetPlatform.MacOS => CupertinoDesktopTextSelectionControls.HandleControls,
+            _ => MaterialTextSelectionHandleControls.Instance,
+        };
+#pragma warning restore CS0618
     }
 
     public override void Dispose()
