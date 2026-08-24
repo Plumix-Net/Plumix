@@ -63,7 +63,7 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
             return;
         }
 
-        var entry = GestureArena.Add(@event.Pointer, this);
+        GestureArenaEntry entry = AddPointerToArena(@event.Pointer, this);
         VelocityTracker velocityTracker = VelocityTrackerBuilder(@event);
         _trackers[@event.Pointer] = new DragTracker(@event, entry, velocityTracker);
         StartTrackingPointer(@event.Pointer);
@@ -206,6 +206,18 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                 break;
             }
         }
+    }
+
+    public override void Dispose()
+    {
+        foreach ((int pointer, DragTracker tracker) in _trackers.ToArray())
+        {
+            GestureArenaEntry entry = tracker.Entry;
+            Cleanup(pointer);
+            entry.Resolve(GestureDisposition.Rejected);
+        }
+
+        base.Dispose();
     }
 
     /// <summary>

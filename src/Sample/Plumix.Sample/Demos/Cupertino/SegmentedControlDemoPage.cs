@@ -40,9 +40,15 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
             [
                 new Text("Cupertino segmented control", fontSize: 20.0, color: Colors.Black),
                 new Text(
-                    "Controlled selection, press animation, disabled segments, custom colors, and arrow-key focus.",
+                    "Controlled selection, sliding thumb, disabled segments, custom colors, and arrow-key focus.",
                     fontSize: 14.0,
                     color: Color.Parse("#8A000000")),
+                new CupertinoSlidingSegmentedControl<string>(
+                    children: segments,
+                    groupValue: _selected,
+                    disabledChildren: disabled,
+                    proportionalWidth: true,
+                    onValueChanged: value => Select(value)),
                 new CupertinoSegmentedControl<string>(
                     children: segments,
                     groupValue: _selected,
@@ -76,7 +82,7 @@ internal sealed class CupertinoSegmentedControlDemoPageState : State
             ]);
     }
 
-    private void Select(string value)
+    private void Select(string? value)
     {
         SetState(() =>
         {

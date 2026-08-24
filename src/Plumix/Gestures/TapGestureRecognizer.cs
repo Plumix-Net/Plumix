@@ -37,7 +37,7 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
             return;
         }
 
-        var arenaEntry = GestureArena.Add(@event.Pointer, this);
+        GestureArenaEntry arenaEntry = AddPointerToArena(@event.Pointer, this);
         bool isSecondary = (@event.Buttons & PointerButtons.Secondary) != 0;
         _trackers[@event.Pointer] = new TapTracker(@event.Position, arenaEntry, isSecondary);
         if (isSecondary)
@@ -216,6 +216,13 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
 
     public override void Dispose()
     {
+        foreach ((int pointer, TapTracker tracker) in _trackers.ToArray())
+        {
+            GestureArenaEntry entry = tracker.Entry;
+            Cleanup(pointer);
+            entry.Resolve(GestureDisposition.Rejected);
+        }
+
         lock (_doubleTapGate)
         {
             _singleTapTimer?.Dispose();

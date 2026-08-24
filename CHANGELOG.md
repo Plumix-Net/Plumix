@@ -10,6 +10,7 @@ Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
 - Ported Cupertino sheet routes, drag/scroll handoff and painted system-overlay sampling (`sheet.dart`).
 - Ported `CupertinoSegmentedControl` and exact rounded-superellipse paths (`segmented_control.dart`).
+- Ported `CupertinoSlidingSegmentedControl` with gesture-team drag and spring thumb (`sliding_segmented_control.dart`).
 - Ported `CupertinoSliverRefreshControl` with held sliver geometry and native states (`refresh.dart`).
 - Ported `CupertinoPicker` and its selection overlay (`picker.dart`).
 - Breaking: ported Cupertino switch/thumb painter; rewired `Switch.Adaptive` (`switch.dart`, `thumb_painter.dart`).

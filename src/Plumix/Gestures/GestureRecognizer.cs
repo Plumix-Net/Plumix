@@ -13,6 +13,7 @@ public abstract class GestureRecognizer : IDisposable
     private readonly HashSet<int> _trackedPointers = [];
     private readonly Dictionary<int, (PointerDeviceKind Kind, PointerButtons Buttons)> _pointerToEventData = [];
     private readonly PointerRoute _route;
+    private GestureArenaTeam? _team;
 
     protected GestureRecognizer(GestureBinding? binding = null)
     {
@@ -34,6 +35,23 @@ public abstract class GestureRecognizer : IDisposable
 
     /// <summary>Host-supplied gesture tuning that overrides framework defaults such as touch slop.</summary>
     public DeviceGestureSettings? GestureSettings { get; set; }
+
+    /// <summary>The arena team this recognizer competes through, when one is assigned.</summary>
+    public GestureArenaTeam? Team
+    {
+        get => _team;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (_team is not null || HasTrackedPointers)
+            {
+                throw new InvalidOperationException(
+                    "A gesture recognizer's team can only be assigned once before it tracks pointers.");
+            }
+
+            _team = value;
+        }
+    }
 
     /// <summary>Dart's `allowedButtonsFilter`; the default accepts every button combination.</summary>
     public AllowedButtonsFilter AllowedButtonsFilter { get; set; } = DefaultButtonAcceptBehavior;
@@ -141,6 +159,12 @@ public abstract class GestureRecognizer : IDisposable
     /// <summary>Whether any pointer is currently routed to this recognizer.</summary>
     protected bool HasTrackedPointers => _trackedPointers.Count > 0;
 
+    /// <summary>Adds this recognizer, or its team, to the arena for <paramref name="pointer"/>.</summary>
+    protected GestureArenaEntry AddPointerToArena(int pointer, IGestureArenaMember member)
+    {
+        return _team?.Add(pointer, member) ?? GestureArena.Add(pointer, member);
+    }
+
     protected abstract void HandleEvent(PointerEvent @event);
 
     private static bool DefaultButtonAcceptBehavior(PointerButtons buttons) => true;
@@ -240,7 +264,7 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
     {
         base.StartTrackingPointer(pointer);
         // A reused pointer id starts a fresh arena, so the entry is always replaced.
-        _entries[pointer] = GestureArena.Add(pointer, this);
+        _entries[pointer] = AddPointerToArena(pointer, this);
     }
 
     protected override void StopTrackingPointer(int pointer)

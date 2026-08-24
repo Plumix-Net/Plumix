@@ -53,6 +53,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/segmented_control.dart` | `src/Plumix.Cupertino/CupertinoSegmentedControl.cs` | `src/Plumix.Tests/CupertinoSegmentedControlTests.cs` | — |
 | `cupertino_ui/sheet.dart` | `src/Plumix.Cupertino/CupertinoSheet.cs` | `src/Plumix.Tests/CupertinoSheetTests.cs` | — |
 | `cupertino_ui/slider.dart` | `src/Plumix.Cupertino/CupertinoSlider.cs` | — | — |
+| `cupertino_ui/sliding_segmented_control.dart` | `src/Plumix.Cupertino/CupertinoSlidingSegmentedControl.cs` | `src/Plumix.Tests/CupertinoSlidingSegmentedControlTests.cs` | — |
 | `cupertino_ui/spell_check_suggestions_toolbar.dart` | `src/Plumix.Cupertino/CupertinoSpellCheckSuggestionsToolbar.cs` | — | — |
 | `cupertino_ui/switch.dart` | `src/Plumix.Cupertino/CupertinoSwitch.cs` | `src/Plumix.Tests/CupertinoSwitchTests.cs` | — |
 | `cupertino_ui/tab_scaffold.dart` | `src/Plumix.Cupertino/CupertinoTabScaffold.cs` | `src/Plumix.Tests/CupertinoTabScaffoldTests.cs` | — |
@@ -263,6 +264,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs` _(reference) (approximate)_<br>`src/Plumix/UI/DragStartBehavior.cs` | — | — |
 | `gestures/tap.dart` | `src/Plumix/Gestures/TapGestureRecognizer.cs` _(reference) (approximate)_ | — | — |
 | `gestures/tap_and_drag.dart` | `src/Plumix/Gestures/TapAndDrag.cs` | `src/Plumix.Tests/TapAndDragGestureTests.cs` | — |
+| `gestures/team.dart` | `src/Plumix/Gestures/GestureArenaTeam.cs` | — | — |
 | `gestures/velocity_tracker.dart` | `src/Plumix/Gestures/VelocityTracker.cs` | — | — |
 | `painting/alignment.dart` | `src/Plumix/Rendering/Alignment.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/AlignmentGeometry.cs` | — | — |
 | `painting/basic_types.dart` | `src/Plumix/Painting/BasicTypes.cs` _(reference) (approximate)_ | — | — |
@@ -615,8 +617,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 478
-- C# files carrying a marker: 616
+- Flutter files mapped: 480
+- C# files carrying a marker: 618
 - C# files without a marker: 21
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 77

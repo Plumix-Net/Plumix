@@ -33,9 +33,16 @@ class _CupertinoSegmentedControlDemoPageState
           style: TextStyle(fontSize: 20, color: Colors.black),
         ),
         const Text(
-          'Controlled selection, press animation, disabled segments, custom '
+          'Controlled selection, sliding thumb, disabled segments, custom '
           'colors, and arrow-key focus.',
           style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        CupertinoSlidingSegmentedControl<String>(
+          children: segments,
+          groupValue: _selected,
+          disabledChildren: disabled,
+          proportionalWidth: true,
+          onValueChanged: _select,
         ),
         CupertinoSegmentedControl<String>(
           children: segments,
@@ -75,7 +82,7 @@ class _CupertinoSegmentedControlDemoPageState
     );
   }
 
-  void _select(String value) {
+  void _select(String? value) {
     setState(() {
       _selected = value;
       _changes += 1;

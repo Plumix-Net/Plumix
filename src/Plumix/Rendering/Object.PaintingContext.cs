@@ -107,6 +107,46 @@ public sealed class PaintingContext
         DrawGeometry(brush, pen, path.ToGeometry());
     }
 
+    /// <summary>Draws a blurred box shadow using the exact rounded-superellipse contour.</summary>
+    public void DrawRSuperellipseShadow(Plumix.UI.RSuperellipse rsuperellipse, BoxShadow shadow)
+    {
+        ArgumentNullException.ThrowIfNull(shadow);
+        Plumix.UI.RSuperellipse shadowShape = rsuperellipse
+            .Inflate(shadow.SpreadRadius)
+            .Shift(shadow.Offset);
+        Geometry geometry = shadowShape.ToPath().ToGeometry();
+        if (shadow.BlurRadius <= 0.0)
+        {
+            DrawGeometry(new SolidColorBrush(shadow.Color), null, geometry);
+            return;
+        }
+
+        // Avalonia's path API has no mask-filter paint. Concentric strokes sampled from the same
+        // Gaussian falloff keep the superellipse contour exact while providing backend-independent blur.
+        int steps = Math.Max(2, (int)Math.Ceiling(shadow.BlurRadius * 2.0));
+        double sigma = shadow.BlurSigma;
+        double outerRadius = Math.Max(shadow.BlurRadius, sigma * 3.0);
+        double previousOpacity = 0.0;
+        for (int step = 0; step < steps; step++)
+        {
+            double radius = outerRadius * (steps - step) / steps;
+            double targetOpacity = Math.Exp(-(radius * radius) / (2.0 * sigma * sigma));
+            double layerOpacity = 1.0 - ((1.0 - targetOpacity) / (1.0 - previousOpacity));
+            previousOpacity = targetOpacity;
+            byte layerAlpha = (byte)Math.Clamp(
+                (int)Math.Round(shadow.Color.A * layerOpacity),
+                0,
+                byte.MaxValue);
+            Color layerColor = Color.FromArgb(layerAlpha, shadow.Color.R, shadow.Color.G, shadow.Color.B);
+            if (layerColor.A > 0)
+            {
+                DrawGeometry(null, new Pen(new SolidColorBrush(layerColor), radius * 2.0), geometry);
+            }
+        }
+
+        DrawGeometry(new SolidColorBrush(shadow.Color), null, geometry);
+    }
+
     // Dart parity source: dart:ui Canvas.drawDRRect (the ring between two rounded rectangles).
     public void DrawDRRect(Plumix.UI.RRect outer, Plumix.UI.RRect inner, IBrush brush)
     {

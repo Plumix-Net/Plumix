@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.UI;
 
 namespace Plumix.Rendering;
 
@@ -29,8 +30,7 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
         {
             if (_index == value) return;
             _index = value;
-            MarkNeedsPaint();
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsLayout();
         }
     }
 
@@ -57,6 +57,63 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
         {
             child.parentData = new IndexedStackParentData();
         }
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height) =>
+        GetIntrinsicDimension(child => child.GetMinIntrinsicWidth(height));
+
+    protected override double ComputeMaxIntrinsicWidth(double height) =>
+        GetIntrinsicDimension(child => child.GetMaxIntrinsicWidth(height));
+
+    protected override double ComputeMinIntrinsicHeight(double width) =>
+        GetIntrinsicDimension(child => child.GetMinIntrinsicHeight(width));
+
+    protected override double ComputeMaxIntrinsicHeight(double width) =>
+        GetIntrinsicDimension(child => child.GetMaxIntrinsicHeight(width));
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        BoxConstraints childConstraints = BoxConstraints.Loose(constraints.Biggest);
+        double maxWidth = constraints.MinWidth;
+        double maxHeight = constraints.MinHeight;
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            Size childSize = child.GetDryLayout(childConstraints);
+            maxWidth = Math.Max(maxWidth, childSize.Width);
+            maxHeight = Math.Max(maxHeight, childSize.Height);
+        }
+
+        return constraints.Constrain(new Size(maxWidth, maxHeight));
+    }
+
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
+    {
+        RenderBox? child = SelectedChild;
+        if (child is null)
+        {
+            return null;
+        }
+
+        var data = (IndexedStackParentData)child.parentData!;
+        double? childBaseline = child.GetDistanceToBaseline(baseline, onlyReal: true);
+        return childBaseline.HasValue ? childBaseline.Value + data.offset.Y : null;
+    }
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        RenderBox? child = SelectedChild;
+        if (child is null)
+        {
+            return null;
+        }
+
+        BoxConstraints childConstraints = BoxConstraints.Loose(constraints.Biggest);
+        Size stackSize = ComputeDryLayout(constraints);
+        Size childSize = child.GetDryLayout(childConstraints);
+        double? childBaseline = child.GetDryBaseline(childConstraints, baseline);
+        return childBaseline.HasValue
+            ? childBaseline.Value + Alignment.AlongOffset(stackSize, childSize).Y
+            : null;
     }
 
     protected override void PerformLayout()
@@ -127,5 +184,16 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
             for (int i = 0; i < _index.Value && current is not null; i++) current = ChildAfter(current);
             return current;
         }
+    }
+
+    private double GetIntrinsicDimension(Func<RenderBox, double> getter)
+    {
+        double extent = 0.0;
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            extent = Math.Max(extent, getter(child));
+        }
+
+        return extent;
     }
 }

@@ -37,7 +37,7 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
             return;
         }
 
-        var arenaEntry = GestureArena.Add(@event.Pointer, this);
+        GestureArenaEntry arenaEntry = AddPointerToArena(@event.Pointer, this);
         var tracker = new LongPressTracker(@event.Position, @event.LocalPosition, arenaEntry);
         _trackers[@event.Pointer] = tracker;
         StartTrackingPointer(@event.Pointer);
@@ -170,6 +170,18 @@ public sealed class LongPressGestureRecognizer : GestureRecognizer, IGestureAren
             GlobalPosition: tracker.InitialPosition,
             LocalPosition: tracker.InitialLocalPosition));
         OnLongPress?.Invoke();
+    }
+
+    public override void Dispose()
+    {
+        foreach ((int pointer, LongPressTracker tracker) in _trackers.ToArray())
+        {
+            GestureArenaEntry entry = tracker.Entry;
+            Cleanup(pointer);
+            entry.Resolve(GestureDisposition.Rejected);
+        }
+
+        base.Dispose();
     }
 
     private void Cleanup(int pointer)

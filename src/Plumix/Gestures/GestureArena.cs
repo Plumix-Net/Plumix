@@ -16,20 +16,21 @@ public interface IGestureArenaMember
 
 public readonly struct GestureArenaEntry
 {
-    private readonly GestureArenaManager _manager;
-    private readonly int _pointer;
-    private readonly IGestureArenaMember _member;
+    private readonly Action<GestureDisposition> _resolve;
 
     internal GestureArenaEntry(GestureArenaManager manager, int pointer, IGestureArenaMember member)
     {
-        _manager = manager;
-        _pointer = pointer;
-        _member = member;
+        _resolve = disposition => manager.Resolve(pointer, member, disposition);
+    }
+
+    internal GestureArenaEntry(Action<GestureDisposition> resolve)
+    {
+        _resolve = resolve;
     }
 
     public void Resolve(GestureDisposition disposition)
     {
-        _manager.Resolve(_pointer, _member, disposition);
+        _resolve(disposition);
     }
 }
 
