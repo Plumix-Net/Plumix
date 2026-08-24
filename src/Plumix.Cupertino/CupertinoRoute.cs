@@ -14,6 +14,8 @@ namespace Plumix.Cupertino;
 internal interface ICupertinoRouteTransition
 {
     string? Title { get; }
+
+    IValueListenable<string?> PreviousTitle { get; }
 }
 
 internal static class CupertinoRoutePhysics

@@ -22,6 +22,7 @@ public sealed partial class NavigatorState : RestorationState
     private readonly Func<bool> _backButtonHandler;
     private readonly HeroTransitionController _heroTransitionController = new();
     private readonly Plumix.AnimationController _heroFlightController;
+    private readonly Plumix.CurvedAnimation _heroFlightAnimation;
 
     private GlobalKey<OverlayState> _overlayKey;
     private OverlayEntry? _heroFlightEntry;
@@ -49,6 +50,9 @@ public sealed partial class NavigatorState : RestorationState
         _heroFlightController.Changed += HandleHeroFlightTick;
         _heroFlightController.Completed += HandleHeroFlightCompleted;
         _heroFlightController.Dismissed += HandleHeroFlightCompleted;
+        // The shuttle sees the curved flight progress; unwrapping `CurvedAnimation.Parent` yields the
+        // raw controller, the way Flutter's shuttle unwraps to the route animation.
+        _heroFlightAnimation = new Plumix.CurvedAnimation(_heroFlightController, Plumix.Curves.EaseInOut);
     }
 
     /// <summary>The focus node the navigator installs above its overlay; routes focus its enclosing scope.</summary>
@@ -158,6 +162,7 @@ public sealed partial class NavigatorState : RestorationState
         _heroFlightController.Changed -= HandleHeroFlightTick;
         _heroFlightController.Completed -= HandleHeroFlightCompleted;
         _heroFlightController.Dismissed -= HandleHeroFlightCompleted;
+        _heroFlightAnimation.Dispose();
         _heroFlightController.Dispose();
         FocusNode.Dispose();
 

@@ -113,6 +113,7 @@ internal static class SampleRoutes
     public const string CupertinoMenuAnchor = "/cupertino-menu-anchor";
     public const string CupertinoTheme = "/cupertino-theme";
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
+    public const string CupertinoNavBar = "/cupertino-nav-bar";
     public const string CupertinoPicker = "/cupertino-picker";
     public const string CupertinoRefresh = "/cupertino-refresh";
     public const string CupertinoRoute = "/cupertino-route";
@@ -329,6 +330,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Page scaffold",
             "opaque/translucent bars + keyboard inset consumption",
             () => new CupertinoPageScaffoldDemoPage()),
+        new(
+            SampleRoutes.CupertinoNavBar,
+            "Navigation bars",
+            "large-title sliver + search + auto back labels + hero transitions",
+            () => new CupertinoNavigationBarDemoPage()),
         new(
             SampleRoutes.CupertinoPicker,
             "Picker family",

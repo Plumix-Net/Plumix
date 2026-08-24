@@ -24,11 +24,20 @@ public sealed class HeroController : NavigatorObserver, IDisposable
 }
 
 public delegate Plumix.Tween<Rect> CreateRectTween(Rect begin, Rect end);
+
+/// <summary>The direction in which a hero flies during a route transition.</summary>
+public enum HeroFlightDirection
+{
+    Push,
+    Pop,
+}
+
 public delegate Widget HeroFlightShuttleBuilder(
+    BuildContext flightContext,
+    Animation<double> animation,
+    HeroFlightDirection flightDirection,
     BuildContext fromHeroContext,
-    BuildContext toHeroContext,
-    double progress,
-    bool isPushTransition);
+    BuildContext toHeroContext);
 public delegate Widget HeroPlaceholderBuilder(
     BuildContext context,
     Size placeholderSize,
@@ -421,13 +430,17 @@ internal sealed class HeroFlightManifest
 
     public Plumix.Tween<Rect> RectTween { get; }
 
-    public Widget BuildShuttle(double progress, bool isPushTransition)
+    public Widget BuildShuttle(
+        BuildContext flightContext,
+        Animation<double> animation,
+        HeroFlightDirection flightDirection)
     {
         return ShuttleBuilder?.Invoke(
+                   flightContext,
+                   animation,
+                   flightDirection,
                    FromHero.Context,
-                   ToHero.Context,
-                   progress,
-                   isPushTransition)
+                   ToHero.Context)
                ?? DefaultShuttle;
     }
 }

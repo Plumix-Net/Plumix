@@ -146,6 +146,9 @@ public readonly struct BuildContext
     }
 
     public RenderObject? FindRenderObject() => Owner.RenderObject;
+
+    /// <summary>The widget of the element this context belongs to. Dart parity: <c>BuildContext.widget</c>.</summary>
+    public Widget Widget => Owner.Widget;
 }
 
 internal enum ElementLifecycleState

@@ -11,10 +11,11 @@ namespace Plumix.Widgets;
 /// </summary>
 public sealed partial class NavigatorState
 {
-    private static Widget BuildHeroFlightOverlay(
+    private Widget BuildHeroFlightOverlay(
+        BuildContext flightContext,
         IReadOnlyList<HeroFlightManifest> flights,
         double progress,
-        bool isPushTransition)
+        HeroFlightDirection direction)
     {
         var overlayChildren = new List<Widget>(flights.Count);
         foreach (var flight in flights)
@@ -34,7 +35,7 @@ public sealed partial class NavigatorState
                     child: new SizedBox(
                         width: rect.Width,
                         height: rect.Height,
-                        child: flight.BuildShuttle(progress, isPushTransition))));
+                        child: flight.BuildShuttle(flightContext, _heroFlightAnimation, direction))));
         }
 
         if (overlayChildren.Count == 0)
@@ -172,9 +173,12 @@ public sealed partial class NavigatorState
         }
 
         return BuildHeroFlightOverlay(
+            context,
             flights,
             _heroFlightController.Evaluate(),
-            isPushTransition: session.Direction == HeroTransitionDirection.Push);
+            session.Direction == HeroTransitionDirection.Push
+                ? HeroFlightDirection.Push
+                : HeroFlightDirection.Pop);
     }
 
     private void RemoveHeroFlightEntry()

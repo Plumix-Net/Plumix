@@ -222,7 +222,7 @@ public sealed class HeroNavigatorTests
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state,
-                        flightShuttleBuilder: (_, _, _, _) =>
+                        flightShuttleBuilder: (_, _, _, _, _) =>
                         {
                             sourceShuttleBuilderCalls += 1;
                             return new Text("source-shuttle");
@@ -238,7 +238,7 @@ public sealed class HeroNavigatorTests
                     heroColor: Colors.SteelBlue,
                     onBuild: () => { },
                     captureState: _ => { },
-                    flightShuttleBuilder: (_, _, _, _) =>
+                    flightShuttleBuilder: (_, _, _, _, _) =>
                     {
                         destinationShuttleBuilderCalls += 1;
                         return new Text("destination-shuttle");
@@ -280,7 +280,7 @@ public sealed class HeroNavigatorTests
                         heroColor: Colors.OrangeRed,
                         onBuild: () => { },
                         captureState: state => navigatorState ??= state,
-                        flightShuttleBuilder: (_, _, _, _) =>
+                        flightShuttleBuilder: (_, _, _, _, _) =>
                         {
                             sourceShuttleBuilderCalls += 1;
                             return new Text("source-fallback-shuttle");

@@ -108,6 +108,7 @@ class SampleRoutes {
   static const String cupertinoMenuAnchor = '/cupertino-menu-anchor';
   static const String cupertinoTheme = '/cupertino-theme';
   static const String cupertinoPageScaffold = '/cupertino-page-scaffold';
+  static const String cupertinoNavBar = '/cupertino-nav-bar';
   static const String cupertinoPicker = '/cupertino-picker';
   static const String cupertinoRefresh = '/cupertino-refresh';
   static const String cupertinoRoute = '/cupertino-route';

@@ -50,6 +50,7 @@ import 'demos/cupertino/cupertino_search_text_field_demo_page.dart';
 import 'demos/cupertino/segmented_control_demo_page.dart';
 import 'demos/cupertino/context_menu_demo_page.dart';
 import 'demos/cupertino/cupertino_menu_anchor_demo_page.dart';
+import 'demos/cupertino/cupertino_navigation_bar_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'demos/cupertino/picker_demo_page.dart';
 import 'demos/cupertino/refresh_demo_page.dart';
@@ -572,6 +573,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Page scaffold',
       subtitle: 'opaque/translucent bars + keyboard inset consumption',
       builder: () => const CupertinoPageScaffoldDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoNavBar,
+      title: 'Navigation bars',
+      subtitle: 'large-title sliver + search + auto back labels + hero transitions',
+      builder: () => const CupertinoNavigationBarDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.cupertinoPicker,

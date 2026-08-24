@@ -54,9 +54,8 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 ## Open controls
 
-| Dart file (`cupertino_ui/lib/src/`) | Lines | Public types | Size | Notes / dependencies |
-| --- | --- | --- | --- | --- |
-| `nav_bar.dart` | 3581 | `CupertinoNavigationBar`, `CupertinoSliverNavigationBar`, `CupertinoNavigationBarBackButton`, `NavigationBarBottomMode` | L | Hero transitions between bars; after `page_scaffold.dart`. |
+None — every `cupertino_ui/lib/src/` control has at least a first-pass port; what remains is the
+*Foundation* row above and the *Partial ports to tighten* table below.
 
 ## Partial ports to tighten (existing file, missing members or a qualified marker)
 

@@ -166,6 +166,12 @@ public readonly record struct BoxConstraints(
 
     public BoxConstraints Loosen() => new BoxConstraints(MaxWidth: MaxWidth, MaxHeight: MaxHeight);
 
+    /// <summary>Dart's `BoxConstraints.widthConstraints`: only the width constraints.</summary>
+    public BoxConstraints WidthConstraints() => new BoxConstraints(MinWidth: MinWidth, MaxWidth: MaxWidth);
+
+    /// <summary>Dart's `BoxConstraints.heightConstraints`: only the height constraints.</summary>
+    public BoxConstraints HeightConstraints() => new BoxConstraints(MinHeight: MinHeight, MaxHeight: MaxHeight);
+
     public BoxConstraints Tighten(double? width = null, double? height = null)
     {
         double? tightenedWidth = width.HasValue

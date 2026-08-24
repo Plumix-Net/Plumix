@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Ported `CupertinoNavigationBar`/`CupertinoSliverNavigationBar` with search, bottoms and hero transitions (`nav_bar.dart`).
+- Breaking: `HeroFlightShuttleBuilder` now takes Flutter's `(flightContext, animation, direction, from, to)` (`heroes.dart`).
 - Ported `CupertinoMenuAnchor` with menu items, dividers, swipe and long-press opening (`menu_anchor.dart`).
 - Ported the `MultiDragGestureRecognizer` family with pending-delta and velocity semantics (`multidrag.dart`).
 - Breaking: `RawMenuAnchor` forwards every close request to `onCloseRequested` (`raw_menu_anchor.dart`).

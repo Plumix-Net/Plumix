@@ -2,10 +2,27 @@ using Avalonia.Media;
 
 namespace Plumix.Painting;
 
-// C#-only infrastructure: shared equivalents of dart:ui Color.alphaBlend and Color.lerp.
+// C#-only infrastructure: shared equivalents of dart:ui Color.alphaBlend, Color.lerp and
+// Color.computeLuminance.
 
 public static class ColorUtilities
 {
+    /// <summary>Dart's <c>Color.computeLuminance</c>: the WCAG relative luminance of the color.</summary>
+    public static double ComputeLuminance(this Color color)
+    {
+        static double Linearize(byte component)
+        {
+            double value = component / 255.0;
+            return value <= 0.03928
+                ? value / 12.92
+                : Math.Pow((value + 0.055) / 1.055, 2.4);
+        }
+
+        return (0.2126 * Linearize(color.R))
+               + (0.7152 * Linearize(color.G))
+               + (0.0722 * Linearize(color.B));
+    }
+
     public static Color AlphaBlend(Color foreground, Color background)
     {
         double foregroundAlpha = foreground.A / 255.0;

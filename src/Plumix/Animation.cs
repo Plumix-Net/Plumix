@@ -298,6 +298,9 @@ public sealed class CurvedAnimation : Animation<double>, IDisposable
 
     public Curve? ReverseCurve { get; set; }
 
+    /// <summary>The animation this curved animation derives its value from.</summary>
+    public Animation<double> Parent => _parent;
+
     public override double Value
     {
         get
