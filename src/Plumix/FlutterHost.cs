@@ -310,6 +310,7 @@ public class PlumixHost : Control
         _pipeline.FlushLayout(Bounds.Size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
+        _pipeline.UpdateSystemUiOverlayStyle(Bounds.Size);
         _pipeline.CompositeFrame(context);
         FlushSemanticsAndNotify();
     }
@@ -510,6 +511,7 @@ public class PlumixHost : Control
         _pipeline.FlushLayout(viewport ?? Bounds.Size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
+        _pipeline.UpdateSystemUiOverlayStyle(viewport ?? Bounds.Size);
         FlushSemanticsAndNotify();
     }
 

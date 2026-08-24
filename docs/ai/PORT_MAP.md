@@ -51,6 +51,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/route.dart` | `src/Plumix.Cupertino/CupertinoDialogRoute.cs`<br>`src/Plumix.Cupertino/CupertinoRoute.cs`<br>`src/Plumix.Material/PageTransitionsTheme.cs` | `src/Plumix.Tests/CupertinoRouteTests.cs` | — |
 | `cupertino_ui/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
 | `cupertino_ui/segmented_control.dart` | `src/Plumix.Cupertino/CupertinoSegmentedControl.cs` | `src/Plumix.Tests/CupertinoSegmentedControlTests.cs` | — |
+| `cupertino_ui/sheet.dart` | `src/Plumix.Cupertino/CupertinoSheet.cs` | `src/Plumix.Tests/CupertinoSheetTests.cs` | — |
 | `cupertino_ui/slider.dart` | `src/Plumix.Cupertino/CupertinoSlider.cs` | — | — |
 | `cupertino_ui/spell_check_suggestions_toolbar.dart` | `src/Plumix.Cupertino/CupertinoSpellCheckSuggestionsToolbar.cs` | — | — |
 | `cupertino_ui/switch.dart` | `src/Plumix.Cupertino/CupertinoSwitch.cs` | `src/Plumix.Tests/CupertinoSwitchTests.cs` | — |
@@ -614,8 +615,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 477
-- C# files carrying a marker: 615
+- Flutter files mapped: 478
+- C# files carrying a marker: 616
 - C# files without a marker: 21
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 77

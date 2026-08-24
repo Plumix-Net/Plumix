@@ -52,6 +52,11 @@ class _CupertinoRouteDemoPageState extends State<CupertinoRouteDemoPage> {
           onTap: () => _showPopup(context),
           background: const Color(0xFFE8F4E8),
         ),
+        _buildAction(
+          label: 'Show draggable Cupertino sheet',
+          onTap: () => _showSheet(context),
+          background: const Color(0xFFE5F4FF),
+        ),
       ],
     );
   }
@@ -161,6 +166,44 @@ class _CupertinoRouteDemoPageState extends State<CupertinoRouteDemoPage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  static void _showSheet(BuildContext context) {
+    Navigator.of(context).push<void>(
+      CupertinoSheetRoute<void>(
+        topGap: 0.12,
+        showDragHandle: true,
+        scrollableBuilder:
+            (BuildContext sheetContext, ScrollController controller) {
+              return Container(
+                color: Colors.white,
+                child: SafeArea(
+                  child: ListView(
+                    controller: controller,
+                    itemExtent: 48,
+                    padding: const EdgeInsets.fromLTRB(16, 20, 16, 20),
+                    children: <Widget>[
+                      const Text(
+                        'Drag down to dismiss · drag up to stretch',
+                        style: TextStyle(fontSize: 15),
+                      ),
+                      _buildAction(
+                        label: 'Close with CupertinoSheetRoute.popSheet',
+                        onTap: () => CupertinoSheetRoute.popSheet(sheetContext),
+                        background: const Color(0xFFFFF3E0),
+                      ),
+                      for (int index = 1; index <= 12; index += 1)
+                        Text(
+                          'Scrollable sheet row $index',
+                          style: const TextStyle(fontSize: 14),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
       ),
     );
   }

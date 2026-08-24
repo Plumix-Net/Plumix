@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
@@ -48,6 +49,10 @@ internal sealed class CupertinoRouteDemoPageState : State
                     "Show Cupertino modal popup",
                     () => ShowPopup(context),
                     Color.Parse("#FFE8F4E8")),
+                BuildAction(
+                    "Show draggable Cupertino sheet",
+                    () => ShowSheet(context),
+                    Color.Parse("#FFE5F4FF")),
             ]);
     }
 
@@ -133,6 +138,30 @@ internal sealed class CupertinoRouteDemoPageState : State
                             () => Complete(popupContext, "modal popup"),
                             Color.Parse("#FFE0F2F1")),
                     ])));
+    }
+
+    private static void ShowSheet(BuildContext context)
+    {
+        Navigator.Of(context).Push(new CupertinoSheetRoute<object?>(
+            topGap: 0.12,
+            showDragHandle: true,
+            scrollableBuilder: (sheetContext, controller) => new Container(
+                color: Colors.White,
+                child: new SafeArea(
+                    child: new ListView(
+                        controller: controller,
+                        itemExtent: 48.0,
+                        padding: new Thickness(16.0, 20.0),
+                        children:
+                        [
+                            new Text("Drag down to dismiss · drag up to stretch", fontSize: 15.0),
+                            BuildAction(
+                                "Close with CupertinoSheetRoute.PopSheet",
+                                () => CupertinoSheetRoute<object?>.PopSheet(sheetContext),
+                                Color.Parse("#FFFFF3E0")),
+                            .. Enumerable.Range(1, 12)
+                                .Select(index => (Widget)new Text($"Scrollable sheet row {index}", fontSize: 14.0)),
+                        ])))));
     }
 
     private void Complete(BuildContext context, string result)

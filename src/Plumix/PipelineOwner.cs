@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Rendering;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
 
@@ -235,6 +236,35 @@ public sealed class PipelineOwner
         }
 
         _needsPaint = false;
+    }
+
+    /// <summary>
+    /// Samples the front-most painted system-overlay annotations at the status and navigation bars,
+    /// matching Flutter's post-paint system chrome update.
+    /// </summary>
+    public void UpdateSystemUiOverlayStyle(Size viewportSize)
+    {
+        if (viewportSize.Width <= 0.0 || viewportSize.Height <= 0.0)
+        {
+            return;
+        }
+
+        double sampleX = viewportSize.Width / 2.0;
+        SystemUiOverlayStyle? statusStyle = _rootLayer.Find<SystemUiOverlayStyle>(new Point(sampleX, 0.0));
+        SystemUiOverlayStyle? navigationStyle = _rootLayer.Find<SystemUiOverlayStyle>(
+            new Point(sampleX, Math.Max(0.0, viewportSize.Height - 1.0)));
+        if (statusStyle is null && navigationStyle is null)
+        {
+            return;
+        }
+
+        SystemUiOverlayStyle current = SystemChrome.CurrentSystemUiOverlayStyle;
+        SystemChrome.SetSystemUiOverlayStyle(new SystemUiOverlayStyle(
+            StatusBarColor: statusStyle?.StatusBarColor ?? current.StatusBarColor,
+            NavigationBarColor: navigationStyle?.NavigationBarColor ?? current.NavigationBarColor,
+            StatusBarIconBrightness: statusStyle?.StatusBarIconBrightness ?? current.StatusBarIconBrightness,
+            NavigationBarIconBrightness:
+                navigationStyle?.NavigationBarIconBrightness ?? current.NavigationBarIconBrightness));
     }
 
     private void FlushPaintNodes()

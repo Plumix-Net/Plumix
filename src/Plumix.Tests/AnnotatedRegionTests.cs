@@ -193,6 +193,38 @@ public sealed class AnnotatedRegionTests
         Assert.IsType<AnnotatedRegionLayer<string>>(Assert.Single(pipeline.RootLayer.Children));
     }
 
+    [Fact]
+    public void PipelineOwner_SamplesPaintedSystemUiStylesAtBothSystemBars()
+    {
+        SystemChrome.ResetSystemUiOverlayStyleForTests();
+        var renderView = new RenderView();
+        var pipeline = new PipelineOwner(renderView);
+        var fullScreen = new AnnotatedRegionLayer<SystemUiOverlayStyle>(
+            value: new SystemUiOverlayStyle(
+                NavigationBarColor: Colors.Navy,
+                NavigationBarIconBrightness: SystemUiIconBrightness.Light),
+            size: new Size(100.0, 80.0));
+        var statusBar = new AnnotatedRegionLayer<SystemUiOverlayStyle>(
+            value: new SystemUiOverlayStyle(
+                StatusBarColor: Colors.Transparent,
+                StatusBarIconBrightness: SystemUiIconBrightness.Light),
+            size: new Size(100.0, 20.0));
+        pipeline.RootLayer.Append(fullScreen);
+        pipeline.RootLayer.Append(statusBar);
+
+        pipeline.UpdateSystemUiOverlayStyle(new Size(100.0, 80.0));
+
+        Assert.Equal(Colors.Transparent, SystemChrome.CurrentSystemUiOverlayStyle.StatusBarColor);
+        Assert.Equal(Colors.Navy, SystemChrome.CurrentSystemUiOverlayStyle.NavigationBarColor);
+        Assert.Equal(
+            SystemUiIconBrightness.Light,
+            SystemChrome.CurrentSystemUiOverlayStyle.StatusBarIconBrightness);
+        Assert.Equal(
+            SystemUiIconBrightness.Light,
+            SystemChrome.CurrentSystemUiOverlayStyle.NavigationBarIconBrightness);
+        SystemChrome.ResetSystemUiOverlayStyleForTests();
+    }
+
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
