@@ -46,6 +46,7 @@ import 'demos/cupertino/cupertino_list_section_demo_page.dart';
 import 'demos/cupertino/cupertino_expansion_tile_demo_page.dart';
 import 'demos/cupertino/cupertino_text_selection_controls_demo_page.dart';
 import 'demos/cupertino/cupertino_text_field_demo_page.dart';
+import 'demos/cupertino/cupertino_search_text_field_demo_page.dart';
 import 'demos/cupertino/segmented_control_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'demos/cupertino/picker_demo_page.dart';
@@ -454,459 +455,460 @@ class SampleGalleryScreen extends StatelessWidget {
     ),
   ];
 
-  static final List<SampleRouteDefinition> _cupertinoDemoPages =
-      <SampleRouteDefinition>[
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoApp,
-          title: 'Application shell',
-          subtitle:
-              'theme + localization + selection + scroll + '
-              'CupertinoPageRoute defaults',
-          builder: () => const CupertinoAppDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoIcons,
-          title: 'Icons',
-          subtitle:
-              'legacy + SF Symbols catalog, aliases, and directional glyphs',
-          builder: () => const CupertinoIconsDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoFocusHalo,
-          title: 'Focus halo',
-          subtitle:
-              'rectangular, rounded-rectangle, and rounded-superellipse '
-              'descendant focus outlines',
-          builder: () => const CupertinoFocusHaloDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoTabBar,
-          title: 'Tab scaffold + bar',
-          subtitle:
-              'lazy tab bodies + retained state + active icons + safe-area blur',
-          builder: () => const CupertinoTabBarDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoListSection,
-          title: 'List + form sections',
-          subtitle:
-              'edge-to-edge/inset groups + split rows + helper/error content',
-          builder: () => const CupertinoListSectionDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoExpansionTile,
-          title: 'List + expansion tiles',
-          subtitle:
-              'base/notched rows + async activation + fade/scroll expansion',
-          builder: () => const CupertinoExpansionTileDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoTextSelectionControls,
-          title: 'Text selection controls',
-          subtitle: 'line-height handles + macOS handle-free defaults',
-          builder: () => const CupertinoTextSelectionControlsDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoTextField,
-          title: 'Text field',
-          subtitle:
-              'rounded/borderless + validated form row + clear and disabled states',
-          builder: () => const CupertinoTextFieldDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoSegmentedControl,
-          title: 'Segmented control',
-          subtitle:
-              'controlled selection + press animation + disabled/custom states',
-          builder: () => const CupertinoSegmentedControlDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.checkbox,
-          title: 'Checkbox',
-          subtitle: 'bool/bool? values + tristate + tap-target policy',
-          builder: () => const CheckboxDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.switchDemo,
-          title: 'Switch',
-          subtitle: 'on/off value + track/thumb theming + drag',
-          builder: () => const SwitchDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.radio,
-          title: 'Radio',
-          subtitle: 'group selection + toggleable + tap-target policy',
-          builder: () => const RadioDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoTheme,
-          title: 'Theme + dynamic colors',
-          subtitle:
-              'brightness/contrast/elevation resolution + '
-              'CupertinoTextThemeData styles',
-          builder: () => const CupertinoThemeDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoPageScaffold,
-          title: 'Page scaffold',
-          subtitle: 'opaque/translucent bars + keyboard inset consumption',
-          builder: () => const CupertinoPageScaffoldDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoPicker,
-          title: 'Picker',
-          subtitle:
-              'looping list + lazy builder + magnifier + selection overlay',
-          builder: () => const CupertinoPickerDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoRefresh,
-          title: 'Sliver refresh',
-          subtitle:
-              'pull threshold + held refresh extent + native progress states',
-          builder: () => const CupertinoRefreshDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.cupertinoRoute,
-          title: 'Routes + tab view',
-          subtitle: 'page transitions + independent tab history + popup',
-          builder: () => const CupertinoRouteDemoPage(),
-        ),
-      ];
+  static final List<SampleRouteDefinition>
+  _cupertinoDemoPages = <SampleRouteDefinition>[
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoApp,
+      title: 'Application shell',
+      subtitle:
+          'theme + localization + selection + scroll + '
+          'CupertinoPageRoute defaults',
+      builder: () => const CupertinoAppDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoIcons,
+      title: 'Icons',
+      subtitle: 'legacy + SF Symbols catalog, aliases, and directional glyphs',
+      builder: () => const CupertinoIconsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoFocusHalo,
+      title: 'Focus halo',
+      subtitle:
+          'rectangular, rounded-rectangle, and rounded-superellipse '
+          'descendant focus outlines',
+      builder: () => const CupertinoFocusHaloDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoTabBar,
+      title: 'Tab scaffold + bar',
+      subtitle:
+          'lazy tab bodies + retained state + active icons + safe-area blur',
+      builder: () => const CupertinoTabBarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoListSection,
+      title: 'List + form sections',
+      subtitle: 'edge-to-edge/inset groups + split rows + helper/error content',
+      builder: () => const CupertinoListSectionDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoExpansionTile,
+      title: 'List + expansion tiles',
+      subtitle: 'base/notched rows + async activation + fade/scroll expansion',
+      builder: () => const CupertinoExpansionTileDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoTextSelectionControls,
+      title: 'Text selection controls',
+      subtitle: 'line-height handles + macOS handle-free defaults',
+      builder: () => const CupertinoTextSelectionControlsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoTextField,
+      title: 'Text field',
+      subtitle:
+          'rounded/borderless + validated form row + clear and disabled states',
+      builder: () => const CupertinoTextFieldDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoSearchTextField,
+      title: 'Search text field',
+      subtitle:
+          'localized placeholder + clear action + custom icons + disabled state',
+      builder: () => const CupertinoSearchTextFieldDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoSegmentedControl,
+      title: 'Segmented control',
+      subtitle:
+          'controlled selection + press animation + disabled/custom states',
+      builder: () => const CupertinoSegmentedControlDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.checkbox,
+      title: 'Checkbox',
+      subtitle: 'bool/bool? values + tristate + tap-target policy',
+      builder: () => const CheckboxDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.switchDemo,
+      title: 'Switch',
+      subtitle: 'on/off value + track/thumb theming + drag',
+      builder: () => const SwitchDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.radio,
+      title: 'Radio',
+      subtitle: 'group selection + toggleable + tap-target policy',
+      builder: () => const RadioDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoTheme,
+      title: 'Theme + dynamic colors',
+      subtitle:
+          'brightness/contrast/elevation resolution + '
+          'CupertinoTextThemeData styles',
+      builder: () => const CupertinoThemeDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoPageScaffold,
+      title: 'Page scaffold',
+      subtitle: 'opaque/translucent bars + keyboard inset consumption',
+      builder: () => const CupertinoPageScaffoldDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoPicker,
+      title: 'Picker',
+      subtitle: 'looping list + lazy builder + magnifier + selection overlay',
+      builder: () => const CupertinoPickerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoRefresh,
+      title: 'Sliver refresh',
+      subtitle: 'pull threshold + held refresh extent + native progress states',
+      builder: () => const CupertinoRefreshDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoRoute,
+      title: 'Routes + tab view',
+      subtitle: 'page transitions + independent tab history + popup',
+      builder: () => const CupertinoRouteDemoPage(),
+    ),
+  ];
 
-  static final List<SampleRouteDefinition> _generalDemoPages =
-      <SampleRouteDefinition>[
-        SampleRouteDefinition(
-          routeName: SampleRoutes.counter,
-          title: 'Counter',
-          subtitle: 'existing sample',
-          builder: () => const CounterScreen(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.blocCounter,
-          title: 'Bloc counter',
-          subtitle: 'BlocProvider + BlocBuilder + BlocListener + BlocSelector',
-          builder: () => const BlocCounterDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.navigator,
-          title: 'Navigator',
-          subtitle: 'named routes + RouteData + stack APIs',
-          builder: () => const NavigatorDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.navigatorPages,
-          title: 'Navigator.pages',
-          subtitle: 'declarative pages + transition delegate',
-          builder: () => const NavigatorPagesDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.router,
-          title: 'Router',
-          subtitle: 'delegate + parser + provider + back-button dispatcher',
-          builder: () => const RouterDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.listViewSeparated,
-          title: 'ListView.Separated',
-          subtitle: 'item + separator builder',
-          builder: () => const ListViewSeparatedDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.listViewFixedExtent,
-          title: 'ListView fixed extent',
-          subtitle: 'itemExtent + padding',
-          builder: () => const ListViewFixedExtentDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.listViewReverse,
-          title: 'ListView reverse',
-          subtitle: 'reverse=true behavior',
-          builder: () => const ListViewReverseDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.centerViewport,
-          title: 'CustomScrollView center',
-          subtitle: 'center key + negative scroll offsets',
-          builder: () => const CenterViewportDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.ensureVisible,
-          title: 'Ensure visible',
-          subtitle: 'nested reveal + alignment policies',
-          builder: () => const EnsureVisibleDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.pageView,
-          title: 'PageView.builder',
-          subtitle: 'lazy pages + viewportFraction',
-          builder: () => const PageViewDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.listWheelScrollView,
-          title: 'ListWheelScrollView',
-          subtitle: 'cylindrical wheel + FixedExtentScrollController',
-          builder: () => const ListWheelScrollViewDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.scrollPhysics,
-          title: 'Scroll physics',
-          subtitle: 'bouncing overscroll + spring back vs clamping',
-          builder: () => const ScrollPhysicsDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.animatedList,
-          title: 'AnimatedList + SliverAnimatedList',
-          subtitle: 'insert/remove animations + separated and sliver variants',
-          builder: () => const AnimatedListDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.animatedGrid,
-          title: 'AnimatedGrid + SliverAnimatedGrid',
-          subtitle:
-              'insert/remove animations + grid delegate and keyed sliver variants',
-          builder: () => const AnimatedGridDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.gridView,
-          title: 'GridView + SliverGrid',
-          subtitle: 'delegate-based 2D layout',
-          builder: () => const GridViewDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.customSlivers,
-          title: 'Custom slivers',
-          subtitle: 'resizing/floating/fill/group/prototype/varied sliver adapters',
-          builder: () => const CustomSliversDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.nestedScrollView,
-          title: 'NestedScrollView',
-          subtitle: 'header/body coordination + overlap absorber and injector',
-          builder: () => const NestedScrollViewDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.scrollbar,
-          title: 'Scrollbar',
-          subtitle: 'controller + thumb',
-          builder: () => const ScrollbarDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.draggableScrollableSheet,
-          title: 'DraggableScrollableSheet',
-          subtitle: 'drag-to-resize + snap + controller + actuator reset',
-          builder: () => const DraggableScrollableSheetDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.editableText,
-          title: 'EditableText',
-          subtitle: 'focus + IME + multiline caret',
-          builder: () => const EditableTextDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.autofillGroup,
-          title: 'AutofillGroup',
-          subtitle: 'autofill scope + hints + finishAutofillContext',
-          builder: () => const AutofillGroupDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.proxyWidgets,
-          title: 'Proxy widgets',
-          subtitle: 'Opacity + fractional/layout transforms + custom clips',
-          builder: () => const ProxyWidgetsDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.align,
-          title: 'Animations + transitions',
-          subtitle:
-              'implicit motion + explicit scale/rotation controllers + sliver fade',
-          builder: () => const AlignDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.stack,
-          title: 'Stack + Positioned',
-          subtitle: 'multi-child overlay layout',
-          builder: () => const StackDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.decoratedBox,
-          title: 'DecoratedBox',
-          subtitle: 'border + radius + fill decoration',
-          builder: () => const DecoratedBoxDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.gradients,
-          title: 'Gradients',
-          subtitle: 'linear/radial/sweep gradients + shadow lerp',
-          builder: () => const GradientsDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.shapeBorders,
-          title: 'ShapeBorders',
-          subtitle: 'outlined border shapes + lerp',
-          builder: () => const ShapeBordersDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.container,
-          title: 'Container',
-          subtitle: 'alignment + margin + constraints + transform',
-          builder: () => const ContainerDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.aspectRatio,
-          title: 'AspectRatio + Spacer',
-          subtitle: 'tight ratio layout + flex gap',
-          builder: () => const AspectRatioDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.fractionallySizedBox,
-          title: 'FractionallySizedBox',
-          subtitle: 'fractional constraints + alignment',
-          builder: () => const FractionallySizedBoxDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.fittedBox,
-          title: 'FittedBox',
-          subtitle: 'box-fit scaling + alignment',
-          builder: () => const FittedBoxDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.unconstrainedLimitedBox,
-          title: 'ConstraintsTransformBox + UnconstrainedBox',
-          subtitle: 'arbitrary/axis constraint transforms + overflow clipping',
-          builder: () => const UnconstrainedLimitedBoxDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.overflowBox,
-          title: 'OverflowBox + SizedOverflowBox',
-          subtitle: 'constraint override + fixed-size overflow',
-          builder: () => const OverflowBoxDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.overflowIndicator,
-          title: 'Overflow indicator',
-          subtitle: 'RenderFlex debug stripes + overflow label',
-          builder: () => const OverflowIndicatorDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.offstage,
-          title: 'Visibility + SliverVisibility + Offstage',
-          subtitle:
-              'replacement + maintained size + sliver and offstage behavior',
-          builder: () => const OffstageDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.baseline,
-          title: 'Baseline + IgnoreBaseline',
-          subtitle: 'real text baselines + bottom fallback + Row exclusion',
-          builder: () => const BaselineDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.richText,
-          title: 'RichText + TextSpan + WidgetSpan',
-          subtitle: 'styled runs + span recognizers + inline widget alignment',
-          builder: () => const RichTextDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.intrinsicWidgets,
-          title: 'IntrinsicWidth + IntrinsicHeight',
-          subtitle: 'step-snapped width + tallest-child stretch height',
-          builder: () => const IntrinsicWidgetsDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.layoutBuilder,
-          title: 'LayoutBuilder + OrientationBuilder',
-          subtitle: 'layout-time constraints + landscape/portrait composition',
-          builder: () => const LayoutBuilderDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.keyboardListener,
-          title: 'Keyboard listeners + actions',
-          subtitle: 'focused key events + Actions/Shortcuts intent dispatch',
-          builder: () => const KeyboardListenerDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.debugPainting,
-          title: 'Placeholder + GridPaper',
-          subtitle: 'unbounded fallback sizing + foreground layout grid',
-          builder: () => const DebugPaintingDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.flow,
-          title: 'Flow + RepaintBoundary',
-          subtitle: 'paint-time transforms + isolated child display lists',
-          builder: () => const FlowDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.transform,
-          title: 'Transform + Matrix4',
-          subtitle: 'rotate/scale/flip/translate + perspective 3D rotation',
-          builder: () => const TransformDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.compositedTransform,
-          title: 'Composited transforms',
-          subtitle: 'linked target/follower anchors + unlinked visibility',
-          builder: () => const CompositedTransformDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.image,
-          title: 'Image controls',
-          subtitle: 'streams + decoded handles + fade + image icons',
-          builder: () => const ImageDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.customMultiChildLayout,
-          title: 'CustomMultiChildLayout + NavigationToolbar',
-          subtitle:
-              'delegate slots + dependent sizing + centered/start LTR/RTL toolbar',
-          builder: () => const CustomMultiChildLayoutDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.dismissibleSizeChangedLayout,
-          title: 'Dismissible + size notifications',
-          subtitle:
-              'directional swipe thresholds + collapse + layout-change notifications',
-          builder: () => const DismissibleSizeChangedLayoutDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.stateStorage,
-          title: 'PageStorage + SharedAppData',
-          subtitle: 'scroll restoration + keyed inherited-model rebuilds',
-          builder: () => const StateStorageDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.navigationPop,
-          title: 'PopScope + NavigatorPopHandler',
-          subtitle: 'route veto/results + nested navigator Back handling',
-          builder: () => const NavigationPopDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.asyncBuilders,
-          title: 'FutureBuilder + StreamBuilder',
-          subtitle: 'waiting/data/error/done snapshots + source replacement',
-          builder: () => const AsyncBuilderDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.statefulBuilderLookupBoundary,
-          title: 'StatefulBuilder + LookupBoundary',
-          subtitle: 'local state rebuilds + bounded ancestor lookup',
-          builder: () => const StatefulBuilderLookupBoundaryDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.dragTarget,
-          title: 'Draggable + DragTarget',
-          subtitle: 'overlay feedback + accepted/rejected target lifecycle',
-          builder: () => const DragTargetDemoPage(),
-        ),
-        SampleRouteDefinition(
-          routeName: SampleRoutes.lifecycleUtilities,
-          title: 'Lifecycle listener controls',
-          subtitle:
-              'AppLifecycleListener + StatusTransitionWidget + safe BuildContext',
-          builder: () => const LifecycleUtilitiesDemoPage(),
-        ),
-      ];
+  static final List<SampleRouteDefinition>
+  _generalDemoPages = <SampleRouteDefinition>[
+    SampleRouteDefinition(
+      routeName: SampleRoutes.counter,
+      title: 'Counter',
+      subtitle: 'existing sample',
+      builder: () => const CounterScreen(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.blocCounter,
+      title: 'Bloc counter',
+      subtitle: 'BlocProvider + BlocBuilder + BlocListener + BlocSelector',
+      builder: () => const BlocCounterDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.navigator,
+      title: 'Navigator',
+      subtitle: 'named routes + RouteData + stack APIs',
+      builder: () => const NavigatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.navigatorPages,
+      title: 'Navigator.pages',
+      subtitle: 'declarative pages + transition delegate',
+      builder: () => const NavigatorPagesDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.router,
+      title: 'Router',
+      subtitle: 'delegate + parser + provider + back-button dispatcher',
+      builder: () => const RouterDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.listViewSeparated,
+      title: 'ListView.Separated',
+      subtitle: 'item + separator builder',
+      builder: () => const ListViewSeparatedDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.listViewFixedExtent,
+      title: 'ListView fixed extent',
+      subtitle: 'itemExtent + padding',
+      builder: () => const ListViewFixedExtentDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.listViewReverse,
+      title: 'ListView reverse',
+      subtitle: 'reverse=true behavior',
+      builder: () => const ListViewReverseDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.centerViewport,
+      title: 'CustomScrollView center',
+      subtitle: 'center key + negative scroll offsets',
+      builder: () => const CenterViewportDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.ensureVisible,
+      title: 'Ensure visible',
+      subtitle: 'nested reveal + alignment policies',
+      builder: () => const EnsureVisibleDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.pageView,
+      title: 'PageView.builder',
+      subtitle: 'lazy pages + viewportFraction',
+      builder: () => const PageViewDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.listWheelScrollView,
+      title: 'ListWheelScrollView',
+      subtitle: 'cylindrical wheel + FixedExtentScrollController',
+      builder: () => const ListWheelScrollViewDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.scrollPhysics,
+      title: 'Scroll physics',
+      subtitle: 'bouncing overscroll + spring back vs clamping',
+      builder: () => const ScrollPhysicsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.animatedList,
+      title: 'AnimatedList + SliverAnimatedList',
+      subtitle: 'insert/remove animations + separated and sliver variants',
+      builder: () => const AnimatedListDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.animatedGrid,
+      title: 'AnimatedGrid + SliverAnimatedGrid',
+      subtitle:
+          'insert/remove animations + grid delegate and keyed sliver variants',
+      builder: () => const AnimatedGridDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.gridView,
+      title: 'GridView + SliverGrid',
+      subtitle: 'delegate-based 2D layout',
+      builder: () => const GridViewDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.customSlivers,
+      title: 'Custom slivers',
+      subtitle: 'resizing/floating/fill/group/prototype/varied sliver adapters',
+      builder: () => const CustomSliversDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.nestedScrollView,
+      title: 'NestedScrollView',
+      subtitle: 'header/body coordination + overlap absorber and injector',
+      builder: () => const NestedScrollViewDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.scrollbar,
+      title: 'Scrollbar',
+      subtitle: 'controller + thumb',
+      builder: () => const ScrollbarDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.draggableScrollableSheet,
+      title: 'DraggableScrollableSheet',
+      subtitle: 'drag-to-resize + snap + controller + actuator reset',
+      builder: () => const DraggableScrollableSheetDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.editableText,
+      title: 'EditableText',
+      subtitle: 'focus + IME + multiline caret',
+      builder: () => const EditableTextDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.autofillGroup,
+      title: 'AutofillGroup',
+      subtitle: 'autofill scope + hints + finishAutofillContext',
+      builder: () => const AutofillGroupDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.proxyWidgets,
+      title: 'Proxy widgets',
+      subtitle: 'Opacity + fractional/layout transforms + custom clips',
+      builder: () => const ProxyWidgetsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.align,
+      title: 'Animations + transitions',
+      subtitle:
+          'implicit motion + explicit scale/rotation controllers + sliver fade',
+      builder: () => const AlignDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.stack,
+      title: 'Stack + Positioned',
+      subtitle: 'multi-child overlay layout',
+      builder: () => const StackDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.decoratedBox,
+      title: 'DecoratedBox',
+      subtitle: 'border + radius + fill decoration',
+      builder: () => const DecoratedBoxDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.gradients,
+      title: 'Gradients',
+      subtitle: 'linear/radial/sweep gradients + shadow lerp',
+      builder: () => const GradientsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.shapeBorders,
+      title: 'ShapeBorders',
+      subtitle: 'outlined border shapes + lerp',
+      builder: () => const ShapeBordersDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.container,
+      title: 'Container',
+      subtitle: 'alignment + margin + constraints + transform',
+      builder: () => const ContainerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.aspectRatio,
+      title: 'AspectRatio + Spacer',
+      subtitle: 'tight ratio layout + flex gap',
+      builder: () => const AspectRatioDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.fractionallySizedBox,
+      title: 'FractionallySizedBox',
+      subtitle: 'fractional constraints + alignment',
+      builder: () => const FractionallySizedBoxDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.fittedBox,
+      title: 'FittedBox',
+      subtitle: 'box-fit scaling + alignment',
+      builder: () => const FittedBoxDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.unconstrainedLimitedBox,
+      title: 'ConstraintsTransformBox + UnconstrainedBox',
+      subtitle: 'arbitrary/axis constraint transforms + overflow clipping',
+      builder: () => const UnconstrainedLimitedBoxDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.overflowBox,
+      title: 'OverflowBox + SizedOverflowBox',
+      subtitle: 'constraint override + fixed-size overflow',
+      builder: () => const OverflowBoxDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.overflowIndicator,
+      title: 'Overflow indicator',
+      subtitle: 'RenderFlex debug stripes + overflow label',
+      builder: () => const OverflowIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.offstage,
+      title: 'Visibility + SliverVisibility + Offstage',
+      subtitle: 'replacement + maintained size + sliver and offstage behavior',
+      builder: () => const OffstageDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.baseline,
+      title: 'Baseline + IgnoreBaseline',
+      subtitle: 'real text baselines + bottom fallback + Row exclusion',
+      builder: () => const BaselineDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.richText,
+      title: 'RichText + TextSpan + WidgetSpan',
+      subtitle: 'styled runs + span recognizers + inline widget alignment',
+      builder: () => const RichTextDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.intrinsicWidgets,
+      title: 'IntrinsicWidth + IntrinsicHeight',
+      subtitle: 'step-snapped width + tallest-child stretch height',
+      builder: () => const IntrinsicWidgetsDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.layoutBuilder,
+      title: 'LayoutBuilder + OrientationBuilder',
+      subtitle: 'layout-time constraints + landscape/portrait composition',
+      builder: () => const LayoutBuilderDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.keyboardListener,
+      title: 'Keyboard listeners + actions',
+      subtitle: 'focused key events + Actions/Shortcuts intent dispatch',
+      builder: () => const KeyboardListenerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.debugPainting,
+      title: 'Placeholder + GridPaper',
+      subtitle: 'unbounded fallback sizing + foreground layout grid',
+      builder: () => const DebugPaintingDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.flow,
+      title: 'Flow + RepaintBoundary',
+      subtitle: 'paint-time transforms + isolated child display lists',
+      builder: () => const FlowDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.transform,
+      title: 'Transform + Matrix4',
+      subtitle: 'rotate/scale/flip/translate + perspective 3D rotation',
+      builder: () => const TransformDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.compositedTransform,
+      title: 'Composited transforms',
+      subtitle: 'linked target/follower anchors + unlinked visibility',
+      builder: () => const CompositedTransformDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.image,
+      title: 'Image controls',
+      subtitle: 'streams + decoded handles + fade + image icons',
+      builder: () => const ImageDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.customMultiChildLayout,
+      title: 'CustomMultiChildLayout + NavigationToolbar',
+      subtitle:
+          'delegate slots + dependent sizing + centered/start LTR/RTL toolbar',
+      builder: () => const CustomMultiChildLayoutDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.dismissibleSizeChangedLayout,
+      title: 'Dismissible + size notifications',
+      subtitle:
+          'directional swipe thresholds + collapse + layout-change notifications',
+      builder: () => const DismissibleSizeChangedLayoutDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.stateStorage,
+      title: 'PageStorage + SharedAppData',
+      subtitle: 'scroll restoration + keyed inherited-model rebuilds',
+      builder: () => const StateStorageDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.navigationPop,
+      title: 'PopScope + NavigatorPopHandler',
+      subtitle: 'route veto/results + nested navigator Back handling',
+      builder: () => const NavigationPopDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.asyncBuilders,
+      title: 'FutureBuilder + StreamBuilder',
+      subtitle: 'waiting/data/error/done snapshots + source replacement',
+      builder: () => const AsyncBuilderDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.statefulBuilderLookupBoundary,
+      title: 'StatefulBuilder + LookupBoundary',
+      subtitle: 'local state rebuilds + bounded ancestor lookup',
+      builder: () => const StatefulBuilderLookupBoundaryDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.dragTarget,
+      title: 'Draggable + DragTarget',
+      subtitle: 'overlay feedback + accepted/rejected target lifecycle',
+      builder: () => const DragTargetDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.lifecycleUtilities,
+      title: 'Lifecycle listener controls',
+      subtitle:
+          'AppLifecycleListener + StatusTransitionWidget + safe BuildContext',
+      builder: () => const LifecycleUtilitiesDemoPage(),
+    ),
+  ];
 
   static final List<SampleMenuTabDefinition> _demoTabs =
       <SampleMenuTabDefinition>[
@@ -1004,6 +1006,7 @@ class SampleGalleryScreen extends StatelessWidget {
     );
   }
 }
+
 class SampleMenuPage extends StatefulWidget {
   const SampleMenuPage({required this.tabs, super.key});
 
@@ -1012,6 +1015,7 @@ class SampleMenuPage extends StatefulWidget {
   @override
   State<SampleMenuPage> createState() => _SampleMenuPageState();
 }
+
 class _SampleMenuPageState extends State<SampleMenuPage> {
   int _selectedTabIndex = 0;
 

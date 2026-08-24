@@ -107,6 +107,7 @@ internal static class SampleRoutes
     public const string CupertinoExpansionTile = "/cupertino-expansion-tile";
     public const string CupertinoTextSelectionControls = "/cupertino-text-selection-controls";
     public const string CupertinoTextField = "/cupertino-text-field";
+    public const string CupertinoSearchTextField = "/cupertino-search-text-field";
     public const string CupertinoSegmentedControl = "/cupertino-segmented-control";
     public const string CupertinoTheme = "/cupertino-theme";
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
@@ -293,6 +294,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Text field",
             "rounded/borderless + validated form row + clear and disabled states",
             () => new CupertinoTextFieldDemoPage()),
+        new(
+            SampleRoutes.CupertinoSearchTextField,
+            "Search text field",
+            "localized placeholder + clear action + custom icons + disabled state",
+            () => new CupertinoSearchTextFieldDemoPage()),
         new(
             SampleRoutes.CupertinoSegmentedControl,
             "Segmented control",
