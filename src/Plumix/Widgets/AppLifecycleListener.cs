@@ -11,8 +11,17 @@ namespace Plumix.Widgets;
 
 public delegate Task<AppExitResponse> AppExitRequestCallback();
 
+/// <summary>Host-reported accessibility animation preferences.</summary>
+public readonly record struct AccessibilityFeatures(
+    bool ReduceMotion = false,
+    bool DisableAnimations = false);
+
 public interface WidgetsBindingObserver
 {
+    void DidChangeAccessibilityFeatures()
+    {
+    }
+
     void DidChangeAppLifecycleState(AppLifecycleState state)
     {
     }
@@ -86,6 +95,8 @@ public class WidgetsBinding
 
     public AppLifecycleState? LifecycleState { get; private set; }
 
+    public AccessibilityFeatures AccessibilityFeatures { get; private set; }
+
     public void AddObserver(WidgetsBindingObserver observer)
     {
         ArgumentNullException.ThrowIfNull(observer);
@@ -96,6 +107,31 @@ public class WidgetsBinding
     {
         ArgumentNullException.ThrowIfNull(observer);
         return _observers.Remove(observer);
+    }
+
+    /// <summary>Updates accessibility animation preferences and notifies registered widgets.</summary>
+    public void HandleAccessibilityFeaturesChanged(AccessibilityFeatures features)
+    {
+        if (AccessibilityFeatures == features)
+        {
+            return;
+        }
+
+        AccessibilityFeatures = features;
+        AnimationController.DisableAnimations = features.DisableAnimations;
+        foreach (WidgetsBindingObserver observer in _observers.ToArray())
+        {
+            try
+            {
+                observer.DidChangeAccessibilityFeatures();
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine(
+                    $"Exception while dispatching {nameof(WidgetsBindingObserver.DidChangeAccessibilityFeatures)}: "
+                    + exception);
+            }
+        }
     }
 
     public void HandleAppLifecycleStateChanged(AppLifecycleState state)

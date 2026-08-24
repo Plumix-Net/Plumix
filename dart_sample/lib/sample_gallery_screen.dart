@@ -49,6 +49,7 @@ import 'demos/cupertino/cupertino_text_field_demo_page.dart';
 import 'demos/cupertino/cupertino_search_text_field_demo_page.dart';
 import 'demos/cupertino/segmented_control_demo_page.dart';
 import 'demos/cupertino/context_menu_demo_page.dart';
+import 'demos/cupertino/cupertino_menu_anchor_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'demos/cupertino/picker_demo_page.dart';
 import 'demos/cupertino/refresh_demo_page.dart';
@@ -531,6 +532,14 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Context menu',
       subtitle: 'hold preview + action sheet + drag/fling dismissal',
       builder: () => const CupertinoContextMenuDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoMenuAnchor,
+      title: 'Menu anchor',
+      subtitle:
+          'anchored overlay + leading/subtitle/trailing + swipe and '
+          'long-press opening',
+      builder: () => const CupertinoMenuAnchorDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.checkbox,

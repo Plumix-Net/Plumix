@@ -220,6 +220,25 @@ public sealed class RawMenuAnchorTests : IDisposable
     }
 
     [Fact]
+    public void OnCloseRequested_RunsForEveryAttachedCloseRequest()
+    {
+        var controller = new MenuController();
+        int requests = 0;
+        using var harness = new WidgetRenderHarness(Wrap(new RawMenuAnchor(
+            controller: controller,
+            overlayBuilder: (_, _) => new SizedBox(width: 40, height: 40),
+            onCloseRequested: _ => requests++,
+            child: new SizedBox(width: 80, height: 40))));
+        harness.Pump(new Size(400, 300));
+
+        controller.Close();
+        controller.Close();
+
+        Assert.Equal(2, requests);
+        Assert.False(controller.IsOpen);
+    }
+
+    [Fact]
     public void DismissMenuAction_ClosesTheWholeTreeFromTheRootAnchor()
     {
         var root = new MenuController();

@@ -47,6 +47,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/list_tile.dart` | `src/Plumix.Cupertino/CupertinoListTile.cs` | `src/Plumix.Tests/CupertinoListTileTests.cs` | — |
 | `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs` | — |
 | `cupertino_ui/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
+| `cupertino_ui/menu_anchor.dart` | `src/Plumix.Cupertino/CupertinoMenuAnchor.cs` | `src/Plumix.Tests/CupertinoMenuAnchorTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_menu_anchor_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoMenuAnchorDemoPage.cs` |
 | `cupertino_ui/page_scaffold.dart` | `src/Plumix.Cupertino/CupertinoPageScaffold.cs`<br>`src/Plumix/Widgets/HitTestableAtOrigin.cs` | `src/Plumix.Tests/CupertinoPageScaffoldTests.cs` | — |
 | `cupertino_ui/picker.dart` | `src/Plumix.Cupertino/CupertinoPicker.cs` | `src/Plumix.Tests/CupertinoPickerTests.cs` | — |
 | `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` _(reference) (adapted)_ | — | — |
@@ -166,7 +167,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/material_button.dart` | `src/Plumix.Material/MaterialButton.cs` | `src/Plumix.Tests/MaterialButtonsTests.cs` | `dart_sample/lib/demos/material/material_buttons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/MaterialButtonsDemoPage.cs` |
 | `material_ui/material_localizations.dart` | `src/Plumix.Material/MaterialLocalizations.cs` _(reference) (baseline subset)_ | — | — |
 | `material_ui/material_state.dart` | `src/Plumix.Material/InputBorder.cs` | — | — |
-| `material_ui/menu_anchor.dart` | `src/Plumix.Material/MenuAccelerator.cs`<br>`src/Plumix.Material/MenuAnchor.cs` | `src/Plumix.Tests/MaterialMenuAcceleratorTests.cs`<br>`src/Plumix.Tests/MaterialMenuAnchorTests.cs`<br>`src/Plumix.Tests/RawMenuAnchorTests.cs` | — |
+| `material_ui/menu_anchor.dart` | `src/Plumix.Material/MenuAccelerator.cs`<br>`src/Plumix.Material/MenuAnchor.cs` | `src/Plumix.Tests/CupertinoMenuAnchorTests.cs`<br>`src/Plumix.Tests/MaterialMenuAcceleratorTests.cs`<br>`src/Plumix.Tests/MaterialMenuAnchorTests.cs`<br>`src/Plumix.Tests/RawMenuAnchorTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_menu_anchor_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoMenuAnchorDemoPage.cs` |
 | `material_ui/menu_bar_theme.dart` | `src/Plumix.Material/MenuThemes.cs` | — | — |
 | `material_ui/menu_button_theme.dart` | `src/Plumix.Material/MenuThemes.cs` | — | — |
 | `material_ui/menu_style.dart` | `src/Plumix.Material/MenuStyle.cs` | — | — |
@@ -259,15 +260,16 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` _(reference) (approximate)_ | — | — |
 | `gestures/binding.dart` | `src/Plumix/Gestures/GestureBinding.cs` _(reference) (approximate)_ | — | — |
 | `gestures/constants.dart` | `src/Plumix/Gestures/Constants.cs` | — | — |
-| `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragTargetTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/TapAndDragGestureTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs` |
+| `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragTargetTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapAndDragGestureTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs` |
 | `gestures/events.dart` | `src/Plumix/Gestures/Events.cs`<br>`src/Plumix/UI/PointerEvents.cs` _(reference) (approximate)_ | — | — |
 | `gestures/gesture_settings.dart` | `src/Plumix/Gestures/DeviceGestureSettings.cs` | — | — |
 | `gestures/hit_test.dart` | `src/Plumix/Rendering/HitTestTarget.cs` | — | — |
 | `gestures/long_press.dart` | `src/Plumix/Gestures/LongPressGestureRecognizer.cs` _(reference) (approximate)_ | — | — |
 | `gestures/lsq_solver.dart` | `src/Plumix/Gestures/LeastSquaresSolver.cs` | — | — |
-| `gestures/monodrag.dart` | `src/Plumix/Gestures/DragGestureRecognizer.cs` _(reference) (approximate)_ | — | — |
+| `gestures/monodrag.dart` | `src/Plumix/Gestures/DragGestureRecognizer.cs` _(reference) (approximate)_ | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs` | — |
+| `gestures/multidrag.dart` | `src/Plumix/Gestures/MultiDragGestureRecognizer.cs` | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs` | — |
 | `gestures/pointer_router.dart` | `src/Plumix/Gestures/PointerRouter.cs` _(reference) (approximate)_ | — | — |
-| `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs` _(reference) (approximate)_<br>`src/Plumix/UI/DragStartBehavior.cs` | — | — |
+| `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs` _(reference) (approximate)_<br>`src/Plumix/UI/DragStartBehavior.cs` | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs` | — |
 | `gestures/tap.dart` | `src/Plumix/Gestures/TapGestureRecognizer.cs` _(reference) (approximate)_ | — | — |
 | `gestures/tap_and_drag.dart` | `src/Plumix/Gestures/TapAndDrag.cs` | `src/Plumix.Tests/TapAndDragGestureTests.cs` | — |
 | `gestures/team.dart` | `src/Plumix/Gestures/GestureArenaTeam.cs` | — | — |
@@ -623,8 +625,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 486
-- C# files carrying a marker: 624
+- Flutter files mapped: 488
+- C# files carrying a marker: 626
 - C# files without a marker: 21
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 77

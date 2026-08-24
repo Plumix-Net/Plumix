@@ -296,6 +296,7 @@ public sealed class TickerFuture
     private readonly TaskCompletionSource _primaryCompleter = new();
     private TaskCompletionSource? _secondaryCompleter;
     private List<Action>? _completionCallbacks;
+    private List<Action>? _completeOnlyCallbacks;
 
     // null means unresolved, true means complete, false means canceled.
     private bool? _completed;
@@ -373,6 +374,29 @@ public sealed class TickerFuture
     }
 
     /// <summary>
+    /// Calls <paramref name="callback"/> only when this future resolves, matching Dart code that
+    /// chains <c>whenComplete</c> on the <c>TickerFuture</c> itself: a canceled ticker never
+    /// resolves the primary future, so the callback never runs for it.
+    /// </summary>
+    public void WhenComplete(Action callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        if (_completed == true)
+        {
+            Scheduler.ScheduleMicrotask(callback);
+            return;
+        }
+
+        if (_completed == false)
+        {
+            return;
+        }
+
+        (_completeOnlyCallbacks ??= []).Add(callback);
+    }
+
+    /// <summary>
     /// Lets a <see cref="TickerFuture"/> be awaited the way Dart awaits the <c>Future</c> it
     /// implements.
     /// </summary>
@@ -395,6 +419,7 @@ public sealed class TickerFuture
         _primaryCompleter.TrySetResult();
         _secondaryCompleter?.TrySetResult();
         FlushCompletionCallbacks();
+        FlushCompleteOnlyCallbacks();
     }
 
     internal void Cancel(Ticker ticker)
@@ -402,6 +427,7 @@ public sealed class TickerFuture
         _completed = false;
         _secondaryCompleter?.TrySetException(new TickerCanceled(ticker));
         FlushCompletionCallbacks();
+        _completeOnlyCallbacks = null;
     }
 
     private void ObserveOrCancel()
@@ -424,6 +450,18 @@ public sealed class TickerFuture
     {
         List<Action>? callbacks = _completionCallbacks;
         _completionCallbacks = null;
+        Flush(callbacks);
+    }
+
+    private void FlushCompleteOnlyCallbacks()
+    {
+        List<Action>? callbacks = _completeOnlyCallbacks;
+        _completeOnlyCallbacks = null;
+        Flush(callbacks);
+    }
+
+    private static void Flush(List<Action>? callbacks)
+    {
         if (callbacks is null)
         {
             return;

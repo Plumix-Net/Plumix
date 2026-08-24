@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Ported `CupertinoMenuAnchor` with menu items, dividers, swipe and long-press opening (`menu_anchor.dart`).
+- Ported the `MultiDragGestureRecognizer` family with pending-delta and velocity semantics (`multidrag.dart`).
+- Breaking: `RawMenuAnchor` forwards every close request to `onCloseRequested` (`raw_menu_anchor.dart`).
+- Added `WidgetsBinding.AccessibilityFeatures` observer plumbing and `TickerFuture.WhenComplete`.
 - Ported `CupertinoDatePicker` and `CupertinoTimerPicker` with bounded wheel correction (`date_picker.dart`).
 - Ported `CupertinoContextMenu` and action rows with overlay flight and drag dismissal (`context_menu*.dart`).
 - Ported `CupertinoSearchTextField` with collapse fading and accessibility icon scaling (`search_field.dart`).

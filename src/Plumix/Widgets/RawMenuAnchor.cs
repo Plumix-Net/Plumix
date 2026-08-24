@@ -475,11 +475,6 @@ public sealed class RawMenuAnchorState : RawMenuAnchorBaseState
 
     internal override void HandleCloseRequest()
     {
-        if (!IsOpen)
-        {
-            return;
-        }
-
         if (Scheduler.Phase != SchedulerPhase.PersistentCallbacks)
         {
             Current.OnCloseRequested(HideOverlay);
