@@ -108,6 +108,30 @@ public sealed class TextPainter : IDisposable
 
     public double Height => Size.Height;
 
+    /// The distance from the top of the laid-out text to its alphabetic baseline.
+    public double ComputeDistanceToActualBaseline(TextBaseline baseline)
+    {
+        if (_size is null)
+        {
+            throw new InvalidOperationException(
+                "TextPainter.ComputeDistanceToActualBaseline was called before Layout.");
+        }
+
+        if (baseline == TextBaseline.Alphabetic)
+        {
+            return _layout?.Baseline ?? (_size.Value.Height * 0.8);
+        }
+
+        return _size.Value.Height;
+    }
+
+    /// Measures the maximum intrinsic width without retaining a finite-width constraint.
+    public double ComputeMaxIntrinsicWidth()
+    {
+        Layout();
+        return Width;
+    }
+
     /// The plain text of the laid-out span, or an empty string when there is no span.
     public string PlainText => _text?.ToPlainText() ?? string.Empty;
 

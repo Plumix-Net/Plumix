@@ -566,8 +566,8 @@ class SampleGalleryScreen extends StatelessWidget {
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.cupertinoPicker,
-      title: 'Picker',
-      subtitle: 'looping list + lazy builder + magnifier + selection overlay',
+      title: 'Picker family',
+      subtitle: 'wheel + bounded date/time + duration columns and overlays',
       builder: () => const CupertinoPickerDemoPage(),
     ),
     SampleRouteDefinition(

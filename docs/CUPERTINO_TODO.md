@@ -56,7 +56,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- |
-| `date_picker.dart` | 2974 | `CupertinoDatePicker`, `CupertinoDatePickerMode`, `CupertinoTimerPicker`, `CupertinoTimerPickerMode` | L | After `picker` + localizations date formatting. |
 | `menu_anchor.dart` | 3056 | `CupertinoMenuAnchor`, `CupertinoMenuItem`, `CupertinoMenuDivider`, `CupertinoMenuEntry` | L | Core `RawMenuAnchor` exists (Material `MenuAnchor.cs`); check `docs/ai/DIVERGENCES.md` menu rows first. |
 | `nav_bar.dart` | 3581 | `CupertinoNavigationBar`, `CupertinoSliverNavigationBar`, `CupertinoNavigationBarBackButton`, `NavigationBarBottomMode` | L | Hero transitions between bars; after `page_scaffold.dart`. |
 

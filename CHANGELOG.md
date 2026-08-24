@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Ported `CupertinoDatePicker` and `CupertinoTimerPicker` with bounded wheel correction (`date_picker.dart`).
 - Ported `CupertinoContextMenu` and action rows with overlay flight and drag dismissal (`context_menu*.dart`).
 - Ported `CupertinoSearchTextField` with collapse fading and accessibility icon scaling (`search_field.dart`).
 - Ported `CupertinoTextFormFieldRow` with controller, validation and restoration lifecycle (`text_form_field_row.dart`).

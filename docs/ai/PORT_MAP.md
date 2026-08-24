@@ -32,6 +32,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/context_menu.dart` | `src/Plumix.Cupertino/CupertinoContextMenu.cs` | `src/Plumix.Tests/CupertinoContextMenuTests.cs` | — |
 | `cupertino_ui/context_menu_action.dart` | `src/Plumix.Cupertino/CupertinoContextMenuAction.cs` | — | — |
 | `cupertino_ui/cupertino_focus_halo.dart` | `src/Plumix.Cupertino/CupertinoFocusHalo.cs` | `src/Plumix.Tests/CupertinoFocusHaloTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs` |
+| `cupertino_ui/date_picker.dart` | `src/Plumix.Cupertino/CupertinoDatePicker.cs` | `src/Plumix.Tests/CupertinoDatePickerTests.cs` | — |
 | `cupertino_ui/desktop_text_selection.dart` | `src/Plumix.Cupertino/CupertinoDesktopTextSelectionControls.cs` | — | — |
 | `cupertino_ui/desktop_text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoDesktopTextSelectionToolbar.cs` | — | — |
 | `cupertino_ui/desktop_text_selection_toolbar_button.dart` | `src/Plumix.Cupertino/CupertinoTextSelectionToolbarButton.cs` | — | — |
@@ -114,7 +115,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/data_table.dart` | `src/Plumix.Material/DataTable.cs` | `src/Plumix.Tests/MaterialDataTableTests.cs` | `dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
 | `material_ui/data_table_source.dart` | `src/Plumix.Material/PaginatedDataTable.cs` | — | — |
 | `material_ui/data_table_theme.dart` | `src/Plumix.Material/DataTableTheme.cs` | — | — |
-| `material_ui/date.dart` | `src/Plumix.Material/Date.cs` | `src/Plumix.Tests/MaterialDatePickerTests.cs` | `dart_sample/lib/demos/material/date_picker_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DatePickerDemoPage.cs` |
+| `material_ui/date.dart` | `src/Plumix.Material/Date.cs` | `src/Plumix.Tests/CupertinoDatePickerTests.cs`<br>`src/Plumix.Tests/MaterialDatePickerTests.cs` | `dart_sample/lib/demos/material/date_picker_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DatePickerDemoPage.cs` |
 | `material_ui/date_picker.dart` | `src/Plumix.Material/DatePickerDialog.cs`<br>`src/Plumix.Material/DateRangePickerDialog.cs` | — | — |
 | `material_ui/date_picker_theme.dart` | `src/Plumix.Material/DatePickerTheme.cs` | — | — |
 | `material_ui/desktop_text_selection_toolbar.dart` | `src/Plumix.Material/DesktopTextSelectionToolbar.cs` | `src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs` | `dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs` |
@@ -622,8 +623,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 485
-- C# files carrying a marker: 623
+- Flutter files mapped: 486
+- C# files carrying a marker: 624
 - C# files without a marker: 21
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 77

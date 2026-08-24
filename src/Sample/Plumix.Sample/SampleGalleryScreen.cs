@@ -325,8 +325,8 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new CupertinoPageScaffoldDemoPage()),
         new(
             SampleRoutes.CupertinoPicker,
-            "Picker",
-            "looping list + lazy builder + magnifier + selection overlay",
+            "Picker family",
+            "wheel + bounded date/time + duration columns and overlays",
             () => new CupertinoPickerDemoPage()),
         new(
             SampleRoutes.CupertinoRefresh,
