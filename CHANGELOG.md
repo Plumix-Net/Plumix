@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Ported `CupertinoTextFormFieldRow` with controller, validation and restoration lifecycle (`text_form_field_row.dart`).
 - Breaking: ported `CupertinoTextField` and aligned editable cursor/length behavior (`text_field.dart`).
 - Ported Cupertino sheet routes, drag/scroll handoff and painted system-overlay sampling (`sheet.dart`).
 - Ported `CupertinoSegmentedControl` and exact rounded-superellipse paths (`segmented_control.dart`).

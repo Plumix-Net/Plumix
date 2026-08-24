@@ -510,7 +510,7 @@ class SampleGalleryScreen extends StatelessWidget {
           routeName: SampleRoutes.cupertinoTextField,
           title: 'Text field',
           subtitle:
-              'rounded/borderless + attachments + clear and disabled states',
+              'rounded/borderless + validated form row + clear and disabled states',
           builder: () => const CupertinoTextFieldDemoPage(),
         ),
         SampleRouteDefinition(

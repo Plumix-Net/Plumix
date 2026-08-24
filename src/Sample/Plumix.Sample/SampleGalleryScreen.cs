@@ -291,7 +291,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(
             SampleRoutes.CupertinoTextField,
             "Text field",
-            "rounded/borderless + attachments + clear and disabled states",
+            "rounded/borderless + validated form row + clear and disabled states",
             () => new CupertinoTextFieldDemoPage()),
         new(
             SampleRoutes.CupertinoSegmentedControl,

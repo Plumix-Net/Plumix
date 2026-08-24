@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix;
@@ -27,7 +28,7 @@ internal sealed class CupertinoTextFieldDemoPageState : State
             [
                 new Text("Cupertino text fields", fontSize: 20.0, color: Colors.Black),
                 new Text(
-                    "Rounded, borderless, multiline, disabled, attachment, placeholder, and clear-button states.",
+                    "Rounded, borderless, form validation, multiline, disabled, attachment, and clear-button states.",
                     fontSize: 14.0,
                     color: Color.FromUInt32(0x8A000000)),
                 new CupertinoTextField(
@@ -49,6 +50,13 @@ internal sealed class CupertinoTextFieldDemoPageState : State
                     decoration: new BoxDecoration(
                         Color: Color.FromUInt32(0xFFF2F2F7),
                         BorderRadius: BorderRadius.Circular(8.0))),
+                new Form(
+                    child: new CupertinoTextFormFieldRow(
+                        prefix: new Text("Email"),
+                        placeholder: "name@example.com",
+                        keyboardType: TextInputType.EmailAddress,
+                        autovalidateMode: AutovalidateMode.OnUserInteraction,
+                        validator: value => value?.Contains('@') == true ? null : "Enter a valid email")),
                 new CupertinoTextField(
                     enabled: false,
                     placeholder: "Disabled field"),

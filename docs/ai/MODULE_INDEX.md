@@ -183,9 +183,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   uses core `Expansible` and `OverlayPortal`, with focused coverage in the matching Cupertino test files.
 - Cupertino list sections enter through `CupertinoListSection.cs`; rounded-superellipse clipping uses core
   `Widgets/Clip.cs`, with focused coverage in `CupertinoListSectionTests.cs`.
-- Cupertino form rows and sections enter through `CupertinoFormRow.cs` + `CupertinoFormSection.cs`; the section
-  delegates base/inset decoration and divider layout to `CupertinoListSection.cs`, with focused coverage in the
-  matching Cupertino form test files.
+- Cupertino form rows and sections enter through `CupertinoFormRow.cs`, `CupertinoTextFormFieldRow.cs` and
+  `CupertinoFormSection.cs`; the text row owns controller/form synchronization, while the section delegates
+  base/inset decoration and divider layout to `CupertinoListSection.cs`, with focused coverage in the matching
+  Cupertino form test files.
 - Cupertino wheel pickers enter through `src/Plumix.Cupertino/CupertinoPicker.cs`; scrolling and layout live in
   core `Widgets/ListWheelScrollView.cs`, with focused coverage in `CupertinoPickerTests.cs`.
 - Cupertino pull-to-refresh enters through `src/Plumix.Cupertino/CupertinoRefresh.cs`; overscroll and held-extent
