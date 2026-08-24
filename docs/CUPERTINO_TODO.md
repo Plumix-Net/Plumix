@@ -44,9 +44,7 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
   as strict ports. Before extending one, diff it against the Dart file top to bottom; treat missing
   members as gaps to close, and keep the `// Dart parity source:` marker (drop its
   `(reference)`/`(adapted)` qualifier only when the file is a strict port).
-- **Samples**: the gallery already has a Cupertino tab with five demos on both sides
-  (`Checkbox`, `Radio`, `Switch`, `Theme + dynamic colors`, `Routes + modal popup`). Add new demos
-  there and mirror them in `dart_sample`.
+- **Samples**: add new demos to the gallery's Cupertino tab and mirror them in `dart_sample`.
 
 ## Foundation (port these first — most controls below depend on them)
 
@@ -58,7 +56,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- |
-| `picker.dart` | 638 | `CupertinoPicker`, `CupertinoPickerDefaultSelectionOverlay` | M | `ListWheelScrollView`/`FixedExtentScrollController` are ported in core. |
 | `refresh.dart` | 594 | `CupertinoSliverRefreshControl`, `RefreshIndicatorMode` | M | Then rewire `RefreshIndicator.Adaptive`. |
 | `search_field.dart` | 603 | `CupertinoSearchTextField` | M | After `text_field`. |
 | `segmented_control.dart` | 877 | `CupertinoSegmentedControl` | M | Custom `RenderBox`; compare with Material `SegmentedControlLayout.cs`. |

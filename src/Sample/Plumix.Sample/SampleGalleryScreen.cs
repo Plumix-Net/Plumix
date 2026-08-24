@@ -108,6 +108,7 @@ internal static class SampleRoutes
     public const string CupertinoTextSelectionControls = "/cupertino-text-selection-controls";
     public const string CupertinoTheme = "/cupertino-theme";
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
+    public const string CupertinoPicker = "/cupertino-picker";
     public const string CupertinoRoute = "/cupertino-route";
     public const string ProxyWidgets = "/proxy-widgets";
     public const string Align = "/align";
@@ -297,6 +298,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Page scaffold",
             "opaque/translucent bars + keyboard inset consumption",
             () => new CupertinoPageScaffoldDemoPage()),
+        new(
+            SampleRoutes.CupertinoPicker,
+            "Picker",
+            "looping list + lazy builder + magnifier + selection overlay",
+            () => new CupertinoPickerDemoPage()),
         new(
             SampleRoutes.CupertinoRoute,
             "Routes + tab view",

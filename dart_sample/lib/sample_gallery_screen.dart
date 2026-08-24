@@ -46,6 +46,7 @@ import 'demos/cupertino/cupertino_list_section_demo_page.dart';
 import 'demos/cupertino/cupertino_expansion_tile_demo_page.dart';
 import 'demos/cupertino/cupertino_text_selection_controls_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
+import 'demos/cupertino/picker_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
 import 'demos/general/custom_multi_child_layout_demo_page.dart';
@@ -533,6 +534,13 @@ class SampleGalleryScreen extends StatelessWidget {
           title: 'Page scaffold',
           subtitle: 'opaque/translucent bars + keyboard inset consumption',
           builder: () => const CupertinoPageScaffoldDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoPicker,
+          title: 'Picker',
+          subtitle:
+              'looping list + lazy builder + magnifier + selection overlay',
+          builder: () => const CupertinoPickerDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.cupertinoRoute,

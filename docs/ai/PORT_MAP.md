@@ -45,6 +45,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs` | — |
 | `cupertino_ui/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | — | — |
 | `cupertino_ui/page_scaffold.dart` | `src/Plumix.Cupertino/CupertinoPageScaffold.cs`<br>`src/Plumix/Widgets/HitTestableAtOrigin.cs` | `src/Plumix.Tests/CupertinoPageScaffoldTests.cs` | — |
+| `cupertino_ui/picker.dart` | `src/Plumix.Cupertino/CupertinoPicker.cs` | `src/Plumix.Tests/CupertinoPickerTests.cs` | — |
 | `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` _(reference) (adapted)_ | — | — |
 | `cupertino_ui/route.dart` | `src/Plumix.Cupertino/CupertinoDialogRoute.cs`<br>`src/Plumix.Cupertino/CupertinoRoute.cs`<br>`src/Plumix.Material/PageTransitionsTheme.cs` | `src/Plumix.Tests/CupertinoRouteTests.cs` | — |
 | `cupertino_ui/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
@@ -611,8 +612,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 474
-- C# files carrying a marker: 612
+- Flutter files mapped: 475
+- C# files carrying a marker: 613
 - C# files without a marker: 20
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 78

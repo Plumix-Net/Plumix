@@ -180,6 +180,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Cupertino form rows and sections enter through `CupertinoFormRow.cs` + `CupertinoFormSection.cs`; the section
   delegates base/inset decoration and divider layout to `CupertinoListSection.cs`, with focused coverage in the
   matching Cupertino form test files.
+- Cupertino wheel pickers enter through `src/Plumix.Cupertino/CupertinoPicker.cs`; scrolling and layout live in
+  core `Widgets/ListWheelScrollView.cs`, with focused coverage in `CupertinoPickerTests.cs`.
 - Focus halos enter through `src/Plumix.Cupertino/CupertinoFocusHalo.cs`; descendant focus ownership lives in
   core `Widgets/Focus.cs`, with shape/color primitives in `Rendering/RoundedSuperellipseBorder.cs` and
   `Painting/HSLColor.cs`. Coverage lives in `CupertinoFocusHaloTests.cs` and `FocusTests.cs`.
