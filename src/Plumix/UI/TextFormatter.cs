@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using Plumix.Widgets;
@@ -5,6 +6,14 @@ using Plumix.Widgets;
 // Dart parity source: flutter/packages/flutter/lib/src/services/text_formatter.dart
 
 namespace Plumix.UI;
+
+/// <summary>Controls when text longer than a field's maximum length is truncated.</summary>
+public enum MaxLengthEnforcement
+{
+    None,
+    Enforced,
+    TruncateAfterCompositionEnds,
+}
 
 /// <summary>Signature for <see cref="TextInputFormatter.WithFunction"/>.</summary>
 public delegate TextEditingValue TextInputFormatFunction(TextEditingValue oldValue, TextEditingValue newValue);
@@ -137,27 +146,60 @@ public class LengthLimitingTextInputFormatter : TextInputFormatter
     /// <summary>Dart's <c>LengthLimitingTextInputFormatter.maxLengthEnforced</c> sentinel.</summary>
     public const int NoMaxLength = -1;
 
-    public LengthLimitingTextInputFormatter(int? maxLength)
+    public LengthLimitingTextInputFormatter(
+        int? maxLength,
+        MaxLengthEnforcement? maxLengthEnforcement = null)
     {
         if (maxLength.HasValue && maxLength.Value != NoMaxLength && maxLength.Value < 0)
             throw new ArgumentOutOfRangeException(nameof(maxLength));
         MaxLength = maxLength;
+        MaxLengthEnforcement = maxLengthEnforcement ?? GetDefaultMaxLengthEnforcement();
     }
 
     public int? MaxLength { get; }
 
+    public MaxLengthEnforcement MaxLengthEnforcement { get; }
+
+    public static MaxLengthEnforcement GetDefaultMaxLengthEnforcement()
+    {
+        if (OperatingSystem.IsBrowser())
+        {
+            return MaxLengthEnforcement.TruncateAfterCompositionEnds;
+        }
+
+        return PlatformDefaults.TargetPlatform is TargetPlatform.Android or TargetPlatform.Windows
+            ? MaxLengthEnforcement.Enforced
+            : MaxLengthEnforcement.TruncateAfterCompositionEnds;
+    }
+
     public override TextEditingValue FormatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue)
     {
-        if (MaxLength is not { } limit || limit == NoMaxLength || newValue.Text.Length <= limit) return newValue;
-        if (oldValue.Text.Length == limit) return oldValue;
-        string truncated = newValue.Text[..limit];
+        if (MaxLength is not { } limit || limit == NoMaxLength || MaxLengthEnforcement == MaxLengthEnforcement.None)
+        {
+            return newValue;
+        }
+
+        int[] elements = StringInfo.ParseCombiningCharacters(newValue.Text);
+        if (elements.Length <= limit)
+        {
+            return newValue;
+        }
+
+        if (MaxLengthEnforcement == MaxLengthEnforcement.TruncateAfterCompositionEnds
+            && newValue.Composing is { IsValid: true, IsCollapsed: false })
+        {
+            return newValue;
+        }
+
+        int end = limit == elements.Length ? newValue.Text.Length : elements[limit];
+        string truncated = newValue.Text[..end];
         return new TextEditingValue(
             truncated,
             new TextSelection(
-                BaseOffset: Math.Min(newValue.Selection.BaseOffset, limit),
-                ExtentOffset: Math.Min(newValue.Selection.ExtentOffset, limit)),
-            newValue.Composing is { } range && range.Start < limit
-                ? new TextRange(range.Start, Math.Min(range.End, limit))
+                BaseOffset: Math.Min(newValue.Selection.BaseOffset, end),
+                ExtentOffset: Math.Min(newValue.Selection.ExtentOffset, end)),
+            newValue.Composing is { } range && range.Start < end
+                ? new TextRange(range.Start, Math.Min(range.End, end))
                 : null);
     }
 }

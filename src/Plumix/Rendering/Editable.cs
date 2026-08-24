@@ -30,13 +30,20 @@ public sealed class RenderEditable : RenderBox
     private bool _forceLine = true;
     private int? _minLines;
     private int? _maxLines = 1;
+    private bool _expands;
     private double? _height;
     private double _letterSpacing;
     private Color _selectionColor = Color.FromArgb(0x66, 0x67, 0x50, 0xA4);
+    private BoxHeightStyle _selectionHeightStyle = BoxHeightStyle.Tight;
+    private BoxWidthStyle _selectionWidthStyle = BoxWidthStyle.Tight;
     private Color _cursorColor = Colors.Black;
     private bool _showCursor;
     private double _cursorWidth = 1.0;
     private double? _cursorHeight;
+    private Radius _cursorRadius = Radius.Zero;
+    private double _cursorOpacity = 1.0;
+    private Point _cursorOffset;
+    private bool _paintCursorAboveText;
     private IReadOnlyList<SuggestionSpan> _suggestionSpans = [];
     private Color _misspelledColor = Colors.Red;
 
@@ -100,13 +107,32 @@ public sealed class RenderEditable : RenderBox
     public bool ForceLine { get => _forceLine; set => SetLayoutValue(ref _forceLine, value); }
     public int? MinLines { get => _minLines; set => SetLayoutValue(ref _minLines, value); }
     public int? MaxLines { get => _maxLines; set => SetLayoutValue(ref _maxLines, value); }
+    public bool Expands { get => _expands; set => SetLayoutValue(ref _expands, value); }
     public double? Height { get => _height; set => SetLayoutValue(ref _height, value); }
     public double LetterSpacing { get => _letterSpacing; set => SetLayoutValue(ref _letterSpacing, value); }
     public Color SelectionColor { get => _selectionColor; set => SetPaintValue(ref _selectionColor, value); }
+    public BoxHeightStyle SelectionHeightStyle
+    {
+        get => _selectionHeightStyle;
+        set => SetPaintValue(ref _selectionHeightStyle, value);
+    }
+    public BoxWidthStyle SelectionWidthStyle
+    {
+        get => _selectionWidthStyle;
+        set => SetPaintValue(ref _selectionWidthStyle, value);
+    }
     public Color CursorColor { get => _cursorColor; set => SetPaintValue(ref _cursorColor, value); }
     public bool ShowCursor { get => _showCursor; set => SetPaintValue(ref _showCursor, value); }
     public double CursorWidth { get => _cursorWidth; set => SetPaintValue(ref _cursorWidth, value); }
     public double? CursorHeight { get => _cursorHeight; set => SetPaintValue(ref _cursorHeight, value); }
+    public Radius CursorRadius { get => _cursorRadius; set => SetPaintValue(ref _cursorRadius, value); }
+    public double CursorOpacity { get => _cursorOpacity; set => SetPaintValue(ref _cursorOpacity, value); }
+    public Point CursorOffset { get => _cursorOffset; set => SetPaintValue(ref _cursorOffset, value); }
+    public bool PaintCursorAboveText
+    {
+        get => _paintCursorAboveText;
+        set => SetPaintValue(ref _paintCursorAboveText, value);
+    }
     public IReadOnlyList<SuggestionSpan> SuggestionSpans
     {
         get => _suggestionSpans;
@@ -168,7 +194,9 @@ public sealed class RenderEditable : RenderBox
             double maxHeight = _maxLines.HasValue
                 ? PreferredLineHeight * _maxLines.Value
                 : double.PositiveInfinity;
-            double height = Math.Clamp(Math.Max(_layout.Height, minHeight), 0.0, maxHeight);
+            double height = _expands && double.IsFinite(Constraints.MaxHeight)
+                ? Constraints.MaxHeight
+                : Math.Clamp(Math.Max(_layout.Height, minHeight), 0.0, maxHeight);
             Size = Constraints.Constrain(new Size(width, height));
         }
         catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
@@ -180,9 +208,12 @@ public sealed class RenderEditable : RenderBox
                 availableWidth,
                 _height,
                 _letterSpacing);
+            double estimatedHeight = _expands && double.IsFinite(Constraints.MaxHeight)
+                ? Constraints.MaxHeight
+                : Math.Max(estimated.Height, PreferredLineHeight * (_minLines ?? 0));
             Size = Constraints.Constrain(new Size(
                 _forceLine && double.IsFinite(Constraints.MaxWidth) ? Constraints.MaxWidth : estimated.Width,
-                Math.Max(estimated.Height, PreferredLineHeight * (_minLines ?? 0))));
+                estimatedHeight));
         }
 
         _startHandleLeader.Layout(BoxConstraints.Tight(new Size()), parentUsesSize: true);
@@ -226,11 +257,12 @@ public sealed class RenderEditable : RenderBox
             PreferredLineHeight);
         double height = _cursorHeight ?? Math.Max(PreferredLineHeight, hit.Height);
         double top = hit.Y + Math.Max(0.0, (hit.Height - height) / 2.0);
-        return new Rect(
+        Rect caret = new(
             Math.Clamp(hit.X, 0.0, Math.Max(0.0, Size.Width - _cursorWidth)),
             top,
             _cursorWidth,
             height);
+        return new Rect(caret.Position + _cursorOffset, caret.Size);
     }
 
     public Rect? GetRectForComposingRange(TextRange range)
@@ -284,8 +316,15 @@ public sealed class RenderEditable : RenderBox
         {
             PaintSelection(context, offset);
             PaintMisspellings(context, offset);
+            if (!_paintCursorAboveText)
+            {
+                PaintCursor(context, offset);
+            }
             context.DrawTextLayout(_layout, offset);
-            PaintCursor(context, offset);
+            if (_paintCursorAboveText)
+            {
+                PaintCursor(context, offset);
+            }
         }
 
         IReadOnlyList<TextSelectionPoint> endpoints = GetEndpointsForSelection(_selection);
@@ -335,9 +374,19 @@ public sealed class RenderEditable : RenderBox
 
     private void PaintCursor(PaintingContext context, Point offset)
     {
-        if (!_showCursor || !_selection.IsCollapsed) return;
+        if (!_showCursor || !_selection.IsCollapsed || _cursorOpacity <= 0.0) return;
         Rect caret = GetLocalRectForCaret(new TextPosition(_selection.ExtentOffset));
-        context.DrawRectangle(new SolidColorBrush(_cursorColor), null, new Rect(caret.Position + offset, caret.Size));
+        Color color = Color.FromArgb(
+            (byte)Math.Round(_cursorColor.A * Math.Clamp(_cursorOpacity, 0.0, 1.0)),
+            _cursorColor.R,
+            _cursorColor.G,
+            _cursorColor.B);
+        context.DrawRectangle(
+            new SolidColorBrush(color),
+            null,
+            new Rect(caret.Position + offset, caret.Size),
+            _cursorRadius.X,
+            _cursorRadius.Y);
     }
 
     private void PaintMisspellings(PaintingContext context, Point offset)

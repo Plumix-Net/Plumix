@@ -106,6 +106,7 @@ internal static class SampleRoutes
     public const string CupertinoListSection = "/cupertino-list-section";
     public const string CupertinoExpansionTile = "/cupertino-expansion-tile";
     public const string CupertinoTextSelectionControls = "/cupertino-text-selection-controls";
+    public const string CupertinoTextField = "/cupertino-text-field";
     public const string CupertinoSegmentedControl = "/cupertino-segmented-control";
     public const string CupertinoTheme = "/cupertino-theme";
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
@@ -287,6 +288,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Text selection controls",
             "line-height handles + macOS handle-free defaults",
             () => new CupertinoTextSelectionControlsDemoPage()),
+        new(
+            SampleRoutes.CupertinoTextField,
+            "Text field",
+            "rounded/borderless + attachments + clear and disabled states",
+            () => new CupertinoTextFieldDemoPage()),
         new(
             SampleRoutes.CupertinoSegmentedControl,
             "Segmented control",

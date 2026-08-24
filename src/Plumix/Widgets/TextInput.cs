@@ -287,7 +287,7 @@ public readonly record struct TextEditingValue
     }
 }
 
-public class TextEditingController : ChangeNotifier
+public class TextEditingController : ChangeNotifier, IValueListenable<TextEditingValue>
 {
     private string _text;
     private TextSelection _selection;
@@ -820,16 +820,37 @@ public class TextEditingController : ChangeNotifier
     }
 }
 
+/// <summary>Legacy switches controlling which editing commands appear in a text toolbar.</summary>
+public sealed record ToolbarOptions(
+    bool Copy = true,
+    bool Cut = true,
+    bool Paste = true,
+    bool SelectAll = true);
+
+/// <summary>Owns the undo/redo history associated with an editable field.</summary>
+public sealed class UndoHistoryController : ChangeNotifier
+{
+}
+
+/// <summary>Configures rich-content insertion offered by the platform text input service.</summary>
+public sealed record ContentInsertionConfiguration(
+    IReadOnlyList<string>? AllowedMimeTypes = null,
+    Action<string>? OnContentInserted = null);
+
 public sealed class EditableText : StatefulWidget
 {
     public EditableText(
         TextEditingController controller,
         FocusNode? focusNode = null,
+        UndoHistoryController? undoController = null,
         string? placeholder = null,
         Action<string>? onChanged = null,
         bool autofocus = false,
         bool enabled = true,
         bool multiline = false,
+        int? minLines = null,
+        int? maxLines = null,
+        bool expands = false,
         double fontSize = 14,
         Color? textColor = null,
         Color? placeholderColor = null,
@@ -840,6 +861,7 @@ public sealed class EditableText : StatefulWidget
         MouseCursor? mouseCursor = null,
         Thickness? padding = null,
         TextStyle? style = null,
+        StrutStyle? strutStyle = null,
         bool readOnly = false,
         bool obscureText = false,
         string obscuringCharacter = "•",
@@ -855,13 +877,25 @@ public sealed class EditableText : StatefulWidget
         SmartDashesType? smartDashesType = null,
         SmartQuotesType? smartQuotesType = null,
         Thickness? scrollPadding = null,
+        ScrollController? scrollController = null,
+        ScrollPhysics? scrollPhysics = null,
         bool? autocorrect = null,
         bool enableSuggestions = true,
         bool canRequestFocus = true,
         FocusOnKeyEventCallback? onKeyEvent = null,
         IReadOnlyList<TextInputFormatter>? inputFormatters = null,
+        bool? showCursor = null,
+        double cursorWidth = 1.0,
         double? cursorHeight = null,
+        Radius? cursorRadius = null,
+        BoxHeightStyle selectionHeightStyle = BoxHeightStyle.Tight,
+        BoxWidthStyle selectionWidthStyle = BoxWidthStyle.Tight,
+        bool cursorOpacityAnimates = false,
+        Point? cursorOffset = null,
+        bool paintCursorAboveText = false,
         bool enableInteractiveSelection = true,
+        bool? selectAllOnFocus = null,
+        ToolbarOptions? toolbarOptions = null,
         EditableTextContextMenuBuilder? contextMenuBuilder = null,
         TextMagnifierConfiguration? magnifierConfiguration = null,
         TextSelectionControls? selectionControls = null,
@@ -870,20 +904,38 @@ public sealed class EditableText : StatefulWidget
         Action<TextSelection, SelectionChangedCause?>? onSelectionChanged = null,
         bool rendererIgnoresPointer = false,
         IReadOnlyList<string>? autofillHints = null,
+        string? autofillHintText = null,
         IAutofillClient? autofillClient = null,
+        PlatformBrightness keyboardAppearance = PlatformBrightness.Light,
+        bool enableIMEPersonalizedLearning = true,
+        bool? enableInlinePrediction = null,
+        ContentInsertionConfiguration? contentInsertionConfiguration = null,
+        bool scribbleEnabled = true,
+        bool stylusHandwritingEnabled = true,
+        Clip clipBehavior = Clip.HardEdge,
         Key? key = null) : base(key)
     {
         if (string.IsNullOrEmpty(obscuringCharacter) || obscuringCharacter.Length != 1)
             throw new ArgumentException("obscuringCharacter must contain exactly one UTF-16 character.", nameof(obscuringCharacter));
         if (maxLength.HasValue && maxLength.Value <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxLength));
+        if (maxLines.HasValue && maxLines.Value <= 0) throw new ArgumentOutOfRangeException(nameof(maxLines));
+        if (minLines.HasValue && minLines.Value <= 0) throw new ArgumentOutOfRangeException(nameof(minLines));
+        if (maxLines.HasValue && minLines.HasValue && minLines.Value > maxLines.Value)
+            throw new ArgumentException("minLines cannot be greater than maxLines.", nameof(minLines));
+        if (expands && (minLines.HasValue || maxLines.HasValue))
+            throw new ArgumentException("minLines and maxLines must be null when expands is true.", nameof(expands));
         Controller = controller;
         FocusNode = focusNode;
+        UndoController = undoController;
         Placeholder = placeholder;
         OnChanged = onChanged;
         Autofocus = autofocus;
         Enabled = enabled;
         Multiline = multiline;
+        MinLines = minLines;
+        MaxLines = multiline ? maxLines : 1;
+        Expands = expands;
         FontSize = fontSize;
         TextColor = textColor ?? Colors.Black;
         PlaceholderColor = placeholderColor ?? Color.Parse("#FF757575");
@@ -894,6 +946,7 @@ public sealed class EditableText : StatefulWidget
         MouseCursor = mouseCursor;
         Padding = padding ?? new Thickness(8, 6);
         Style = style;
+        StrutStyle = strutStyle;
         ReadOnly = readOnly;
         ObscureText = obscureText;
         ObscuringCharacter = obscuringCharacter;
@@ -911,13 +964,25 @@ public sealed class EditableText : StatefulWidget
         SmartDashesType = smartDashesType ?? (obscureText ? SmartDashesType.Disabled : SmartDashesType.Enabled);
         SmartQuotesType = smartQuotesType ?? (obscureText ? SmartQuotesType.Disabled : SmartQuotesType.Enabled);
         ScrollPadding = scrollPadding ?? new Thickness(20);
+        ScrollController = scrollController;
+        ScrollPhysics = scrollPhysics;
         Autocorrect = autocorrect ?? InferAutocorrect(AutofillHints);
         EnableSuggestions = enableSuggestions;
         CanRequestFocus = canRequestFocus;
         OnKeyEvent = onKeyEvent;
         InputFormatters = inputFormatters;
+        ShowCursor = showCursor;
+        CursorWidth = cursorWidth;
         CursorHeight = cursorHeight;
+        CursorRadius = cursorRadius ?? Radius.Zero;
+        SelectionHeightStyle = selectionHeightStyle;
+        SelectionWidthStyle = selectionWidthStyle;
+        CursorOpacityAnimates = cursorOpacityAnimates;
+        CursorOffset = cursorOffset ?? default;
+        PaintCursorAboveText = paintCursorAboveText;
         EnableInteractiveSelection = enableInteractiveSelection;
+        SelectAllOnFocus = selectAllOnFocus ?? DefaultSelectAllOnFocus();
+        ToolbarOptions = toolbarOptions ?? DefaultToolbarOptions(readOnly, obscureText);
         ContextMenuBuilder = contextMenuBuilder;
         MagnifierConfiguration = magnifierConfiguration ?? TextMagnifierConfiguration.Disabled;
         SelectionControls = selectionControls;
@@ -931,11 +996,20 @@ public sealed class EditableText : StatefulWidget
         }
         OnSelectionChanged = onSelectionChanged;
         RendererIgnoresPointer = rendererIgnoresPointer;
+        AutofillHintText = autofillHintText;
+        KeyboardAppearance = keyboardAppearance;
+        EnableIMEPersonalizedLearning = enableIMEPersonalizedLearning;
+        EnableInlinePrediction = enableInlinePrediction;
+        ContentInsertionConfiguration = contentInsertionConfiguration;
+        ScribbleEnabled = scribbleEnabled;
+        StylusHandwritingEnabled = stylusHandwritingEnabled;
+        ClipBehavior = clipBehavior;
     }
 
     public TextEditingController Controller { get; }
 
     public FocusNode? FocusNode { get; }
+    public UndoHistoryController? UndoController { get; }
 
     public string? Placeholder { get; }
 
@@ -946,6 +1020,9 @@ public sealed class EditableText : StatefulWidget
     public bool Enabled { get; }
 
     public bool Multiline { get; }
+    public int? MinLines { get; }
+    public int? MaxLines { get; }
+    public bool Expands { get; }
 
     public double FontSize { get; }
 
@@ -962,6 +1039,7 @@ public sealed class EditableText : StatefulWidget
 
     public Thickness Padding { get; }
     public TextStyle? Style { get; }
+    public StrutStyle? StrutStyle { get; }
     public bool ReadOnly { get; }
     public bool ObscureText { get; }
     public string ObscuringCharacter { get; }
@@ -977,6 +1055,8 @@ public sealed class EditableText : StatefulWidget
     public SmartDashesType SmartDashesType { get; }
     public SmartQuotesType SmartQuotesType { get; }
     public Thickness ScrollPadding { get; }
+    public ScrollController? ScrollController { get; }
+    public ScrollPhysics? ScrollPhysics { get; }
     public bool Autocorrect { get; }
     public bool EnableSuggestions { get; }
     public bool CanRequestFocus { get; }
@@ -985,9 +1065,19 @@ public sealed class EditableText : StatefulWidget
     /// <summary>Formatters applied, in order, to every user-driven edit.</summary>
     public IReadOnlyList<TextInputFormatter>? InputFormatters { get; }
 
+    public bool? ShowCursor { get; }
+    public double CursorWidth { get; }
     /// <summary>Overrides the caret height; <c>null</c> uses the preferred line height.</summary>
     public double? CursorHeight { get; }
+    public Radius CursorRadius { get; }
+    public BoxHeightStyle SelectionHeightStyle { get; }
+    public BoxWidthStyle SelectionWidthStyle { get; }
+    public bool CursorOpacityAnimates { get; }
+    public Point CursorOffset { get; }
+    public bool PaintCursorAboveText { get; }
     public bool EnableInteractiveSelection { get; }
+    public bool SelectAllOnFocus { get; }
+    public ToolbarOptions ToolbarOptions { get; }
     public EditableTextContextMenuBuilder? ContextMenuBuilder { get; }
     public TextMagnifierConfiguration MagnifierConfiguration { get; }
     public TextSelectionControls? SelectionControls { get; }
@@ -1010,6 +1100,14 @@ public sealed class EditableText : StatefulWidget
     /// <summary>The <see cref="IAutofillClient"/> that directs the autofill of this field, when it
     /// is not the <see cref="EditableTextState"/> itself.</summary>
     public IAutofillClient? AutofillClient { get; }
+    public string? AutofillHintText { get; }
+    public PlatformBrightness KeyboardAppearance { get; }
+    public bool EnableIMEPersonalizedLearning { get; }
+    public bool? EnableInlinePrediction { get; }
+    public ContentInsertionConfiguration? ContentInsertionConfiguration { get; }
+    public bool ScribbleEnabled { get; }
+    public bool StylusHandwritingEnabled { get; }
+    public Clip ClipBehavior { get; }
 
     /// <summary>Pass as <c>autofillHints</c> to disable autofill, the way Dart passes <c>null</c>.
     /// </summary>
@@ -1182,6 +1280,32 @@ public sealed class EditableText : StatefulWidget
         return new EditableTextState();
     }
 
+    private static bool DefaultSelectAllOnFocus()
+    {
+        if (OperatingSystem.IsBrowser())
+        {
+            return true;
+        }
+
+        return PlatformDefaults.TargetPlatform is TargetPlatform.Linux
+            or TargetPlatform.MacOS
+            or TargetPlatform.Windows;
+    }
+
+    private static ToolbarOptions DefaultToolbarOptions(bool readOnly, bool obscureText)
+    {
+        if (obscureText)
+        {
+            return readOnly
+                ? new ToolbarOptions(false, false, false, false)
+                : new ToolbarOptions(Copy: false, Cut: false, Paste: true, SelectAll: true);
+        }
+
+        return readOnly
+            ? new ToolbarOptions(Copy: true, Cut: false, Paste: false, SelectAll: true)
+            : new ToolbarOptions();
+    }
+
     public sealed class EditableTextState : State, ITextSelectionDelegate, IAutofillClient, ITextInputClient
     {
         private AutofillGroupState? _currentAutofillScope;
@@ -1208,6 +1332,14 @@ public sealed class EditableText : StatefulWidget
         private int? _pointerSelectionAnchor;
         private TextSelection _lastSelection;
         private SelectionChangedCause? _pendingSelectionCause;
+        private readonly Ticker _cursorTicker;
+        private double _cursorOpacity = 1.0;
+        private bool _hadFocus;
+
+        public EditableTextState()
+        {
+            _cursorTicker = new Ticker(HandleCursorTick, "EditableText cursor");
+        }
 
         private EditableText Widget => (EditableText)Element.Widget;
 
@@ -1220,19 +1352,20 @@ public sealed class EditableText : StatefulWidget
                 bool selectionCoversAll = controller.Selection.Start == 0
                                           && controller.Selection.End == controller.Text.Length;
                 var items = new List<ContextMenuButtonItem>();
-                if (!Widget.ReadOnly && hasSelection)
+                ToolbarOptions options = Widget.ToolbarOptions;
+                if (options.Cut && !Widget.ReadOnly && !Widget.ObscureText && hasSelection)
                 {
                     items.Add(new ContextMenuButtonItem(CutAndHide, ContextMenuButtonType.Cut));
                 }
-                if (hasSelection)
+                if (options.Copy && !Widget.ObscureText && hasSelection)
                 {
                     items.Add(new ContextMenuButtonItem(CopyAndHide, ContextMenuButtonType.Copy));
                 }
-                if (!Widget.ReadOnly && !string.IsNullOrEmpty(TextClipboard.GetText()))
+                if (options.Paste && !Widget.ReadOnly && !string.IsNullOrEmpty(TextClipboard.GetText()))
                 {
                     items.Add(new ContextMenuButtonItem(PasteAndHide, ContextMenuButtonType.Paste));
                 }
-                if (!selectionCoversAll && controller.Text.Length > 0)
+                if (options.SelectAll && !selectionCoversAll && controller.Text.Length > 0)
                 {
                     items.Add(new ContextMenuButtonItem(SelectAllAndHide, ContextMenuButtonType.SelectAll));
                 }
@@ -1284,7 +1417,8 @@ public sealed class EditableText : StatefulWidget
                     ? new AutofillConfiguration(
                         uniqueIdentifier: AutofillId,
                         autofillHints: autofillHints,
-                        currentEditingValue: CurrentTextEditingValue)
+                        currentEditingValue: CurrentTextEditingValue,
+                        hintText: Widget.AutofillHintText)
                     : AutofillConfiguration.Disabled;
                 return new TextInputConfiguration(
                     inputType: Widget.KeyboardType,
@@ -1297,7 +1431,10 @@ public sealed class EditableText : StatefulWidget
                     enableInteractiveSelection: Widget.EnableInteractiveSelection,
                     inputAction: Widget.TextInputAction,
                     textCapitalization: Widget.TextCapitalization,
-                    autofillConfiguration: autofillConfiguration);
+                    keyboardAppearance: Widget.KeyboardAppearance,
+                    autofillConfiguration: autofillConfiguration,
+                    enableIMEPersonalizedLearning: Widget.EnableIMEPersonalizedLearning,
+                    enableInlinePrediction: Widget.EnableInlinePrediction);
             }
         }
 
@@ -1424,6 +1561,7 @@ public sealed class EditableText : StatefulWidget
             AttachController(Widget.Controller);
             AttachFocusNode(Widget.FocusNode);
             _lastSelection = Widget.Controller.Selection;
+            UpdateCursorTicker();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -1451,6 +1589,11 @@ public sealed class EditableText : StatefulWidget
             {
                 HideToolbar();
             }
+            if (oldEditableText.CursorOpacityAnimates != Widget.CursorOpacityAnimates
+                || oldEditableText.ShowCursor != Widget.ShowCursor)
+            {
+                UpdateCursorTicker();
+            }
         }
 
         public override void Dispose()
@@ -1464,6 +1607,7 @@ public sealed class EditableText : StatefulWidget
             _contextMenuController.Hide();
             DetachController();
             DetachFocusNode(disposeOwned: true);
+            _cursorTicker.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -1478,7 +1622,16 @@ public sealed class EditableText : StatefulWidget
             var textColor = showPlaceholder ? Widget.PlaceholderColor : Widget.TextColor;
             var backgroundColor = _focusNode!.HasFocus ? Widget.FocusedBackgroundColor : Widget.BackgroundColor;
 
-            var style = Widget.Style;
+            TextStyle? style = Widget.Style;
+            if (Widget.StrutStyle is { } strut)
+            {
+                style = (style ?? new TextStyle()).CopyWith(
+                    fontFamily: strut.FontFamily,
+                    fontSize: strut.FontSize,
+                    fontWeight: strut.FontWeight,
+                    fontStyle: strut.FontStyle,
+                    height: strut.Height);
+            }
             Widget result = new Focus(
                 focusNode: _focusNode,
                 autofocus: Widget.Autofocus,
@@ -1510,11 +1663,25 @@ public sealed class EditableText : StatefulWidget
                         multiline: Widget.Multiline,
                         selectionColor: Widget.SelectionColor ?? selectionStyle.SelectionColor ?? default,
                         cursorColor: Widget.CursorColor ?? selectionStyle.CursorColor ?? Widget.TextColor,
+                        minLines: Widget.MinLines,
+                        maxLines: Widget.MaxLines,
+                        expands: Widget.Expands,
+                        cursorWidth: Widget.CursorWidth,
                         cursorHeight: Widget.CursorHeight,
-                        showCursor: _focusNode.HasFocus && !showPlaceholder,
+                        cursorRadius: Widget.CursorRadius,
+                        selectionHeightStyle: Widget.SelectionHeightStyle,
+                        selectionWidthStyle: Widget.SelectionWidthStyle,
+                        cursorOpacity: _cursorOpacity,
+                        cursorOffset: Widget.CursorOffset,
+                        paintCursorAboveText: Widget.PaintCursorAboveText,
+                        showCursor: (Widget.ShowCursor ?? _focusNode.HasFocus) && !showPlaceholder,
                         suggestionSpans: _spellCheckResults?.SuggestionSpans,
                         misspelledColor: Widget.SpellCheckConfiguration?.MisspelledTextStyle?.Color ?? Colors.Red,
                         key: _editableRenderKey)));
+            if (Widget.ClipBehavior != Clip.None)
+            {
+                result = new ClipRect(clipBehavior: Widget.ClipBehavior, child: result);
+            }
             if (!Widget.RendererIgnoresPointer)
             {
                 result = new Listener(
@@ -1566,6 +1733,14 @@ public sealed class EditableText : StatefulWidget
             _contextMenuController.Hide();
             _selectionOverlay?.HideToolbar();
             if (hideHandles) _selectionOverlay?.HideHandles();
+        }
+
+        public void RequestKeyboard()
+        {
+            if (Widget.Enabled && !Widget.ReadOnly && _focusNode?.HasFocus == true)
+            {
+                OpenInputConnection();
+            }
         }
 
         public TextEditingValue TextEditingValue => _controller!.Value;
@@ -1654,6 +1829,7 @@ public sealed class EditableText : StatefulWidget
         {
             _focusNode = externalNode ?? new FocusNode();
             _ownsFocusNode = externalNode is null;
+            _hadFocus = _focusNode.HasFocus;
             _focusNode.AddListener(HandleFocusNodeChanged);
         }
 
@@ -2370,16 +2546,64 @@ public sealed class EditableText : StatefulWidget
         {
             _verticalNavigationX = null;
             _verticalNavigationColumn = null;
-            if (_focusNode?.HasFocus == true)
+            bool hasFocus = _focusNode?.HasFocus == true;
+            if (hasFocus)
             {
+                if (!_hadFocus
+                    && Widget.SelectAllOnFocus
+                    && Widget.EnableInteractiveSelection
+                    && !Widget.Multiline)
+                {
+                    _ = _controller!.SelectAll();
+                }
                 OpenInputConnection();
             }
-            else if (_focusNode?.HasFocus == false)
+            else
             {
                 _selectionOverlay?.Hide();
                 CloseInputConnection();
             }
+            _hadFocus = hasFocus;
+            UpdateCursorTicker();
             SetState(static () => { });
+        }
+
+        private void UpdateCursorTicker()
+        {
+            bool shouldAnimate = Widget.CursorOpacityAnimates
+                                 && (Widget.ShowCursor ?? _focusNode?.HasFocus == true);
+            if (shouldAnimate && !_cursorTicker.IsActive)
+            {
+                _cursorOpacity = 1.0;
+                _cursorTicker.Start();
+            }
+            else if (!shouldAnimate && _cursorTicker.IsActive)
+            {
+                _cursorTicker.Stop();
+                _cursorOpacity = 1.0;
+            }
+        }
+
+        private void HandleCursorTick(TimeSpan elapsed)
+        {
+            double milliseconds = elapsed.TotalMilliseconds % 1000.0;
+            double opacity = milliseconds switch
+            {
+                <= 500.0 => 1.0,
+                < 650.0 => 1.0 - ((milliseconds - 500.0) / 150.0),
+                <= 850.0 => 0.0,
+                _ => (milliseconds - 850.0) / 150.0,
+            };
+            if (Math.Abs(opacity - _cursorOpacity) < 0.0001)
+            {
+                return;
+            }
+
+            _cursorOpacity = Math.Clamp(opacity, 0.0, 1.0);
+            if (Mounted)
+            {
+                SetState(static () => { });
+            }
         }
 
         private string LimitInsertion(string insertion)
@@ -2524,9 +2748,19 @@ internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
         TextAlign textAlign,
         TextDirection textDirection,
         bool multiline,
+        int? minLines,
+        int? maxLines,
+        bool expands,
         Color selectionColor,
         Color cursorColor,
+        double cursorWidth,
         double? cursorHeight,
+        Radius cursorRadius,
+        BoxHeightStyle selectionHeightStyle,
+        BoxWidthStyle selectionWidthStyle,
+        double cursorOpacity,
+        Point cursorOffset,
+        bool paintCursorAboveText,
         bool showCursor,
         IReadOnlyList<SuggestionSpan>? suggestionSpans,
         Color misspelledColor,
@@ -2548,9 +2782,19 @@ internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
         TextAlign = textAlign;
         TextDirection = textDirection;
         Multiline = multiline;
+        MinLines = minLines;
+        MaxLines = maxLines;
+        Expands = expands;
         SelectionColor = selectionColor;
         CursorColor = cursorColor;
+        CursorWidth = cursorWidth;
         CursorHeight = cursorHeight;
+        CursorRadius = cursorRadius;
+        SelectionHeightStyle = selectionHeightStyle;
+        SelectionWidthStyle = selectionWidthStyle;
+        CursorOpacity = cursorOpacity;
+        CursorOffset = cursorOffset;
+        PaintCursorAboveText = paintCursorAboveText;
         ShowCursor = showCursor;
         SuggestionSpans = suggestionSpans ?? [];
         MisspelledColor = misspelledColor;
@@ -2572,9 +2816,19 @@ internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
     public TextAlign TextAlign { get; }
     public TextDirection TextDirection { get; }
     public bool Multiline { get; }
+    public int? MinLines { get; }
+    public int? MaxLines { get; }
+    public bool Expands { get; }
     public Color SelectionColor { get; }
     public Color CursorColor { get; }
+    public double CursorWidth { get; }
     public double? CursorHeight { get; }
+    public Radius CursorRadius { get; }
+    public BoxHeightStyle SelectionHeightStyle { get; }
+    public BoxWidthStyle SelectionWidthStyle { get; }
+    public double CursorOpacity { get; }
+    public Point CursorOffset { get; }
+    public bool PaintCursorAboveText { get; }
     public bool ShowCursor { get; }
     public IReadOnlyList<SuggestionSpan> SuggestionSpans { get; }
     public Color MisspelledColor { get; }
@@ -2609,10 +2863,19 @@ internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
         render.TextAlign = TextAlign;
         render.TextDirection = TextDirection;
         render.Multiline = Multiline;
-        render.MaxLines = Multiline ? null : 1;
+        render.MinLines = MinLines;
+        render.MaxLines = MaxLines;
+        render.Expands = Expands;
         render.SelectionColor = SelectionColor;
         render.CursorColor = CursorColor;
+        render.CursorWidth = CursorWidth;
         render.CursorHeight = CursorHeight;
+        render.CursorRadius = CursorRadius;
+        render.SelectionHeightStyle = SelectionHeightStyle;
+        render.SelectionWidthStyle = SelectionWidthStyle;
+        render.CursorOpacity = CursorOpacity;
+        render.CursorOffset = CursorOffset;
+        render.PaintCursorAboveText = PaintCursorAboveText;
         render.ShowCursor = ShowCursor;
         render.SuggestionSpans = SuggestionSpans;
         render.MisspelledColor = MisspelledColor;

@@ -90,6 +90,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   `CupertinoDesktopTextSelectionToolbar.cs`, their button/adaptive/spell-check files, and `CupertinoTheme.cs`;
   Material adaptive routing consumes them on iOS/macOS, while the Android sample host registers the native default
   spell-check handler. Coverage shares `MaterialDesktopTextSelectionToolbarTests.cs`.
+- Cupertino text fields enter through `src/Plumix.Cupertino/CupertinoTextField.cs`; editing, restoration, formatter,
+  cursor and input-service behavior stays in core `Widgets/TextInput.cs`, `UI/TextFormatter.cs` and
+  `Rendering/Editable.cs`, with focused coverage in `CupertinoTextFieldTests.cs`.
 - Cupertino mobile/desktop selection controls enter through `CupertinoTextSelectionControls.cs` and
   `CupertinoDesktopTextSelectionControls.cs`; Material `TextField` and `SelectableText` choose their handle-only
   instances on iOS/macOS. Coverage lives in `CupertinoTextSelectionControlsTests.cs`.

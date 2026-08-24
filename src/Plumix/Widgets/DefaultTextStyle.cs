@@ -240,6 +240,15 @@ public sealed record TextStyle(
         FontStyle: Avalonia.Media.FontStyle.Normal);
 }
 
+/// <summary>Defines a minimum line height for editable and paragraph text.</summary>
+public sealed record StrutStyle(
+    FontFamily? FontFamily = null,
+    double? FontSize = null,
+    double? Height = null,
+    FontWeight? FontWeight = null,
+    FontStyle? FontStyle = null,
+    bool ForceStrutHeight = false);
+
 public sealed class DefaultTextStyle : InheritedTheme
 {
     public DefaultTextStyle(
