@@ -100,6 +100,8 @@ class SampleRoutes {
   static const String cupertinoExpansionTile = '/cupertino-expansion-tile';
   static const String cupertinoTextSelectionControls =
       '/cupertino-text-selection-controls';
+  static const String cupertinoSegmentedControl =
+      '/cupertino-segmented-control';
   static const String cupertinoTheme = '/cupertino-theme';
   static const String cupertinoPageScaffold = '/cupertino-page-scaffold';
   static const String cupertinoPicker = '/cupertino-picker';

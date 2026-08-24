@@ -229,6 +229,12 @@ public sealed class Path
         AddPath(scaled.ToPath());
     }
 
+    // Dart parity source: dart:ui Path.addRSuperellipse.
+    public void AddRSuperellipse(RSuperellipse rsuperellipse)
+    {
+        AddPath(rsuperellipse.ToPath());
+    }
+
     // Dart parity source: dart:ui Path.addPolygon.
     public void AddPolygon(IReadOnlyList<Point> points, bool close)
     {

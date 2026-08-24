@@ -5,7 +5,7 @@ using Path = Plumix.UI.Path;
 
 namespace Plumix.Rendering;
 
-// Dart parity source (adapted): flutter/packages/flutter/lib/src/painting/rounded_rectangle_border.dart
+// Dart parity source: flutter/packages/flutter/lib/src/painting/rounded_rectangle_border.dart
 
 /// A rectangular border with smooth, iOS-style rounded-superellipse corners.
 public sealed record RoundedSuperellipseBorder : OutlinedBorder
@@ -74,7 +74,7 @@ public sealed record RoundedSuperellipseBorder : OutlinedBorder
             return path;
         }
 
-        path.AddRRect(ResolveRRect(rect, textDirection).Deflate(Side.StrokeInset));
+        path.AddRSuperellipse(ResolveRSuperellipse(rect, textDirection).Deflate(Side.StrokeInset));
         return path;
     }
 
@@ -87,7 +87,7 @@ public sealed record RoundedSuperellipseBorder : OutlinedBorder
             return path;
         }
 
-        path.AddRRect(ResolveRRect(rect, textDirection));
+        path.AddRSuperellipse(ResolveRSuperellipse(rect, textDirection));
         return path;
     }
 
@@ -105,7 +105,7 @@ public sealed record RoundedSuperellipseBorder : OutlinedBorder
             return;
         }
 
-        context.DrawRRect(ResolveRRect(rect, textDirection), brush, null);
+        context.DrawRSuperellipse(ResolveRSuperellipse(rect, textDirection), brush, null);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -122,9 +122,10 @@ public sealed record RoundedSuperellipseBorder : OutlinedBorder
             return;
         }
 
-        // Avalonia's Skia backend has the same rounded-rectangle fallback that Flutter's Skia
-        // display-list adapter uses for RSuperellipse drawing.
-        context.DrawRRect(ResolveRRect(rect, textDirection).Inflate(strokeOffset), null, Side.ToPen());
+        context.DrawRSuperellipse(
+            ResolveRSuperellipse(rect, textDirection).Inflate(strokeOffset),
+            null,
+            Side.ToPen());
     }
 
     public override string ToString()
@@ -132,9 +133,15 @@ public sealed record RoundedSuperellipseBorder : OutlinedBorder
         return $"RoundedSuperellipseBorder({Side}, {BorderRadius})";
     }
 
-    private RRect ResolveRRect(Rect rect, TextDirection? textDirection)
+    private RSuperellipse ResolveRSuperellipse(Rect rect, TextDirection? textDirection)
     {
-        return BorderRadius.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect);
+        BorderRadius radius = BorderRadius.Resolve(textDirection ?? TextDirection.Ltr);
+        return RSuperellipse.FromRectAndCorners(
+            rect,
+            radius.TopLeftRadius,
+            radius.TopRightRadius,
+            radius.BottomRightRadius,
+            radius.BottomLeftRadius);
     }
 }
 

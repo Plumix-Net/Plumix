@@ -106,6 +106,7 @@ internal static class SampleRoutes
     public const string CupertinoListSection = "/cupertino-list-section";
     public const string CupertinoExpansionTile = "/cupertino-expansion-tile";
     public const string CupertinoTextSelectionControls = "/cupertino-text-selection-controls";
+    public const string CupertinoSegmentedControl = "/cupertino-segmented-control";
     public const string CupertinoTheme = "/cupertino-theme";
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
     public const string CupertinoPicker = "/cupertino-picker";
@@ -286,6 +287,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Text selection controls",
             "line-height handles + macOS handle-free defaults",
             () => new CupertinoTextSelectionControlsDemoPage()),
+        new(
+            SampleRoutes.CupertinoSegmentedControl,
+            "Segmented control",
+            "controlled selection + press animation + disabled/custom states",
+            () => new CupertinoSegmentedControlDemoPage()),
         new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
         new(SampleRoutes.Switch, "Switch", "on/off value + track/thumb theming + drag", () => new SwitchDemoPage()),
         new(SampleRoutes.Radio, "Radio", "group selection + toggleable + tap-target policy", () => new RadioDemoPage()),

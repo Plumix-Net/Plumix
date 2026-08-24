@@ -50,6 +50,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/refresh.dart` | `src/Plumix.Cupertino/CupertinoRefresh.cs` | `src/Plumix.Tests/CupertinoRefreshTests.cs` | — |
 | `cupertino_ui/route.dart` | `src/Plumix.Cupertino/CupertinoDialogRoute.cs`<br>`src/Plumix.Cupertino/CupertinoRoute.cs`<br>`src/Plumix.Material/PageTransitionsTheme.cs` | `src/Plumix.Tests/CupertinoRouteTests.cs` | — |
 | `cupertino_ui/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
+| `cupertino_ui/segmented_control.dart` | `src/Plumix.Cupertino/CupertinoSegmentedControl.cs` | `src/Plumix.Tests/CupertinoSegmentedControlTests.cs` | — |
 | `cupertino_ui/slider.dart` | `src/Plumix.Cupertino/CupertinoSlider.cs` | — | — |
 | `cupertino_ui/spell_check_suggestions_toolbar.dart` | `src/Plumix.Cupertino/CupertinoSpellCheckSuggestionsToolbar.cs` | — | — |
 | `cupertino_ui/switch.dart` | `src/Plumix.Cupertino/CupertinoSwitch.cs` | `src/Plumix.Tests/CupertinoSwitchTests.cs` | — |
@@ -288,7 +289,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `painting/notched_shapes.dart` | `src/Plumix/Rendering/NotchedShape.cs` | — | — |
 | `painting/oval_border.dart` | `src/Plumix/Rendering/OvalBorder.cs` | — | — |
 | `painting/placeholder_span.dart` | `src/Plumix/Painting/PlaceholderSpan.cs` | — | — |
-| `painting/rounded_rectangle_border.dart` | `src/Plumix/Rendering/RoundedRectangleBorder.cs`<br>`src/Plumix/Rendering/RoundedSuperellipseBorder.cs` _(adapted)_ | — | — |
+| `painting/rounded_rectangle_border.dart` | `src/Plumix/Rendering/RoundedRectangleBorder.cs`<br>`src/Plumix/Rendering/RoundedSuperellipseBorder.cs` | — | — |
 | `painting/shape_decoration.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
 | `painting/stadium_border.dart` | `src/Plumix/Rendering/StadiumBorder.cs` | — | — |
 | `painting/star_border.dart` | `src/Plumix/Rendering/StarBorder.cs` | — | — |
@@ -521,6 +522,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/Geometry.cs`
 - `src/Plumix/UI/Matrix4.cs`
 - `src/Plumix/UI/Path.cs`
+- `src/Plumix/UI/RSuperellipse.cs`
 - `src/Plumix/UI/Text.cs`
 - `src/Plumix.Material/MaterialThemeLerp.cs`
 - `src/Plumix.Material/SegmentedControlLayout.cs`
@@ -577,7 +579,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Rendering/Object.RenderObject.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Object.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Proxy.RenderBox.cs` — (reference) (approximate)
-- `src/Plumix/Rendering/RoundedSuperellipseBorder.cs` — (adapted)
 - `src/Plumix/Rendering/Scroll.cs` — (reference) (adapted)
 - `src/Plumix/Rendering/Sliver.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Stack.RenderIndexedStack.cs` — (RenderIndexedStack subset)
@@ -613,9 +614,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 476
-- C# files carrying a marker: 614
-- C# files without a marker: 20
+- Flutter files mapped: 477
+- C# files carrying a marker: 615
+- C# files without a marker: 21
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 78
+- C# files with a qualified (non-strict) marker: 77
 

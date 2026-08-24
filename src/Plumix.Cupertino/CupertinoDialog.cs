@@ -459,11 +459,8 @@ public sealed class CupertinoPopupSurface : StatelessWidget
             contents = new BackdropFilter(filter: filter, child: contents);
         }
 
-        // Dart clips with `ClipRSuperellipse`; the framework has no superellipse path yet, so this
-        // uses the plain rounded rectangle (`docs/ai/DIVERGENCES.md`, rounded-superellipse row).
-        return new ClipPath(
-            clipper: new ShapeBorderClipper(
-                new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(13))),
+        return new ClipRSuperellipse(
+            borderRadius: BorderRadius.Circular(13),
             child: contents);
     }
 }

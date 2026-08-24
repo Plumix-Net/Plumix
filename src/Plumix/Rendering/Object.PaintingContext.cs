@@ -99,6 +99,14 @@ public sealed class PaintingContext
         DrawGeometry(brush, pen, path.ToGeometry());
     }
 
+    // Dart parity source: dart:ui Canvas.drawRSuperellipse.
+    public void DrawRSuperellipse(Plumix.UI.RSuperellipse rsuperellipse, IBrush? brush, IPen? pen)
+    {
+        var path = new Plumix.UI.Path();
+        path.AddRSuperellipse(rsuperellipse);
+        DrawGeometry(brush, pen, path.ToGeometry());
+    }
+
     // Dart parity source: dart:ui Canvas.drawDRRect (the ring between two rounded rectangles).
     public void DrawDRRect(Plumix.UI.RRect outer, Plumix.UI.RRect inner, IBrush brush)
     {

@@ -57,7 +57,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- |
 | `search_field.dart` | 603 | `CupertinoSearchTextField` | M | After `text_field`. |
-| `segmented_control.dart` | 877 | `CupertinoSegmentedControl` | M | Custom `RenderBox`; compare with Material `SegmentedControlLayout.cs`. |
 | `sheet.dart` | 1405 | `CupertinoSheetRoute`, `CupertinoSheetTransition`, `showCupertinoSheet` | M | Route primitives are available. |
 | `sliding_segmented_control.dart` | 1539 | `CupertinoSlidingSegmentedControl` | L | Drag/thumb physics; spec via `dart-spec`. |
 | `context_menu.dart` + `context_menu_action.dart` | 1576, 140 | `CupertinoContextMenu`, `CupertinoContextMenuAction` | L | Overlay + `Hero`-like flight; core `Hero.cs` is `(baseline subset)` — check what it needs first. |
