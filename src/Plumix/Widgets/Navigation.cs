@@ -983,7 +983,7 @@ public abstract class ModalRoute : TransitionRoute
     /// Whether the route is currently hidden. An offstage route still builds and lays out, but it is not
     /// painted and its animations report their end values. Mirrors Flutter's <c>ModalRoute.offstage</c>.
     /// </summary>
-    public bool Offstage
+    public virtual bool Offstage
     {
         get => _offstage;
         set

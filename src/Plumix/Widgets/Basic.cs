@@ -531,6 +531,8 @@ public sealed class Opacity : SingleChildRenderObjectWidget
 
 public sealed class Transform : SingleChildRenderObjectWidget
 {
+    private AlignmentGeometry? _geometryAlignment;
+
     public Transform(
         Matrix4 transform,
         Widget? child = null,
@@ -543,6 +545,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
         Matrix = transform;
         Origin = origin;
         Alignment = alignment;
+        _geometryAlignment = alignment is { } value ? (AlignmentGeometry)value : null;
         TransformHitTests = transformHitTests;
         FilterQuality = filterQuality;
     }
@@ -617,6 +620,29 @@ public sealed class Transform : SingleChildRenderObjectWidget
             key);
     }
 
+    /// <summary>
+    /// Creates a uniformly scaled transform whose origin may be directional, matching Flutter's
+    /// <c>Transform.scale</c> alignment surface.
+    /// </summary>
+    public static Transform Scale(
+        double scale,
+        Widget? child,
+        AlignmentGeometry alignment,
+        bool transformHitTests = true,
+        FilterQuality? filterQuality = null,
+        Key? key = null)
+    {
+        var result = Scale(
+            scale: scale,
+            child: child,
+            alignment: null,
+            transformHitTests: transformHitTests,
+            filterQuality: filterQuality,
+            key: key);
+        result._geometryAlignment = alignment;
+        return result;
+    }
+
     /// <summary>Creates a widget that mirrors its child about its center.</summary>
     public static Transform Flip(
         bool flipX = false,
@@ -638,12 +664,20 @@ public sealed class Transform : SingleChildRenderObjectWidget
     public Matrix4 Matrix { get; }
     public Point? Origin { get; }
     public Alignment? Alignment { get; }
+
+    public AlignmentGeometry? GeometryAlignment => _geometryAlignment;
     public bool TransformHitTests { get; }
     public FilterQuality? FilterQuality { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderTransform(Matrix, Alignment, child: null, FilterQuality, Origin, TransformHitTests);
+        return new RenderTransform(
+            Matrix,
+            ResolveAlignment(context),
+            child: null,
+            FilterQuality,
+            Origin,
+            TransformHitTests);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -651,9 +685,22 @@ public sealed class Transform : SingleChildRenderObjectWidget
         var transform = (RenderTransform)renderObject;
         transform.Transform = Matrix;
         transform.Origin = Origin;
-        transform.Alignment = Alignment;
+        transform.Alignment = ResolveAlignment(context);
         transform.TransformHitTests = TransformHitTests;
         transform.FilterQuality = FilterQuality;
+    }
+
+    private Alignment? ResolveAlignment(BuildContext context)
+    {
+        if (_geometryAlignment is not { } alignment)
+        {
+            return null;
+        }
+
+        TextDirection direction = alignment.IsDirectional
+            ? Directionality.Of(context)
+            : TextDirection.Ltr;
+        return alignment.Resolve(direction);
     }
 
     /// <remarks>

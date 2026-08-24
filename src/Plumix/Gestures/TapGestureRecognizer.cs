@@ -30,6 +30,18 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
     public Action<PointerUpEvent>? OnSecondaryTapUp { get; set; }
     public Action? OnSecondaryTapCancel { get; set; }
 
+    /// <summary>
+    /// Resolves every active pointer in the gesture arena, matching Flutter's public
+    /// <c>GestureRecognizer.resolve</c> surface.
+    /// </summary>
+    public void Resolve(GestureDisposition disposition)
+    {
+        foreach (TapTracker tracker in _trackers.Values.ToArray())
+        {
+            tracker.Entry.Resolve(disposition);
+        }
+    }
+
     public override void AddPointer(PointerDownEvent @event)
     {
         if (_trackers.ContainsKey(@event.Pointer) || !IsPointerAllowed(@event))

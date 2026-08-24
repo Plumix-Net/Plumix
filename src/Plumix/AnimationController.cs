@@ -93,6 +93,28 @@ public static class Curves
     // Flutter Curves.easeOutBack: Cubic(0.175, 0.885, 0.32, 1.275).
     public static Curve EaseOutBack { get; } = Cubic(0.175, 0.885, 0.32, 1.275);
 
+    // Flutter Curves.easeOutSine: Cubic(0.39, 0.575, 0.565, 1.0).
+    public static Curve EaseOutSine { get; } = Cubic(0.39, 0.575, 0.565, 1.0);
+
+    // Flutter Curves.easeInBack: Cubic(0.6, -0.28, 0.735, 0.045).
+    public static Curve EaseInBack { get; } = Cubic(0.6, -0.28, 0.735, 0.045);
+
+    // Flutter Curves.elasticIn: ElasticInCurve(0.4).
+    public static double ElasticIn(double t)
+    {
+        double clamped = Math.Clamp(t, 0.0, 1.0);
+        if (clamped is 0.0 or 1.0)
+        {
+            return clamped;
+        }
+
+        const double period = 0.4;
+        double shifted = clamped - 1.0;
+        double phase = period / 4.0;
+        return -Math.Pow(2.0, 10.0 * shifted)
+               * Math.Sin((shifted - phase) * (Math.PI * 2.0) / period);
+    }
+
     // Flutter Curves.easeOutCubic: Cubic(0.33, 1.0, 0.68, 1.0).
     public static Curve EaseOutCubic { get; } = Cubic(0.33, 1.0, 0.68, 1.0);
 

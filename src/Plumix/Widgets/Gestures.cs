@@ -693,6 +693,10 @@ public sealed class GestureDetector : StatelessWidget
         Action<DragUpdateDetails>? onVerticalDragUpdate = null,
         Action<DragEndDetails>? onVerticalDragEnd = null,
         Action? onVerticalDragCancel = null,
+        Action<DragStartDetails>? onPanStart = null,
+        Action<DragUpdateDetails>? onPanUpdate = null,
+        Action<DragEndDetails>? onPanEnd = null,
+        Action? onPanCancel = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         bool excludeFromSemantics = false,
         Key? key = null) : base(key)
@@ -719,6 +723,10 @@ public sealed class GestureDetector : StatelessWidget
         OnVerticalDragUpdate = onVerticalDragUpdate;
         OnVerticalDragEnd = onVerticalDragEnd;
         OnVerticalDragCancel = onVerticalDragCancel;
+        OnPanStart = onPanStart;
+        OnPanUpdate = onPanUpdate;
+        OnPanEnd = onPanEnd;
+        OnPanCancel = onPanCancel;
         DragStartBehavior = dragStartBehavior;
     }
 
@@ -758,6 +766,14 @@ public sealed class GestureDetector : StatelessWidget
 
     public Action? OnVerticalDragCancel { get; }
 
+    public Action<DragStartDetails>? OnPanStart { get; }
+
+    public Action<DragUpdateDetails>? OnPanUpdate { get; }
+
+    public Action<DragEndDetails>? OnPanEnd { get; }
+
+    public Action? OnPanCancel { get; }
+
     public DragStartBehavior DragStartBehavior { get; }
 
     public override Widget Build(BuildContext context)
@@ -785,6 +801,10 @@ public sealed class GestureDetector : StatelessWidget
             onVerticalDragUpdate: OnVerticalDragUpdate,
             onVerticalDragEnd: OnVerticalDragEnd,
             onVerticalDragCancel: OnVerticalDragCancel,
+            onPanStart: OnPanStart,
+            onPanUpdate: OnPanUpdate,
+            onPanEnd: OnPanEnd,
+            onPanCancel: OnPanCancel,
             dragStartBehavior: DragStartBehavior);
     }
 }

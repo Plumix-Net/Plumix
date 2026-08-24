@@ -104,6 +104,7 @@ class SampleRoutes {
   static const String cupertinoSearchTextField = '/cupertino-search-text-field';
   static const String cupertinoSegmentedControl =
       '/cupertino-segmented-control';
+  static const String cupertinoContextMenu = '/cupertino-context-menu';
   static const String cupertinoTheme = '/cupertino-theme';
   static const String cupertinoPageScaffold = '/cupertino-page-scaffold';
   static const String cupertinoPicker = '/cupertino-picker';

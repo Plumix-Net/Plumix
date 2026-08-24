@@ -402,6 +402,9 @@ public sealed class OverlayEntry : IListenable, IDisposable
 
     public bool Mounted => _widgetMounted;
 
+    /// <summary>Whether this entry currently belongs to an overlay.</summary>
+    public bool IsInserted => _overlay is not null;
+
     internal OverlayState? Owner => _overlay;
 
     internal event Action? Changed;
