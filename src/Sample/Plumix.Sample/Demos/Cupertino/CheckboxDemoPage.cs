@@ -1,6 +1,7 @@
 using System;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.Widgets;
@@ -137,7 +138,7 @@ internal sealed class CheckboxDemoPageState : State
                                             Plumix.Rendering.BorderRadius.Circular(6)),
                                         Side: WidgetStateBorderSide.ResolveWith(states =>
                                             new BorderSide(
-                                                states.HasFlag(MaterialState.Error)
+                                                states.Contains(WidgetState.Error)
                                                     ? Colors.Red
                                                     : Color.Parse("#FF7B1FA2"),
                                                 2))),
@@ -147,6 +148,59 @@ internal sealed class CheckboxDemoPageState : State
                                 title: "CheckboxTheme",
                                 subtitle: "fill/check/shape/stateful side precedence"),
                         ])),
+                new Text("CupertinoCheckbox", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "macOS-style checkbox: dynamic colors, focus ring, press overlay, and the dark-mode gradient.",
+                    fontSize: 14,
+                    color: Color.Parse("#8A000000")),
+                BuildCheckboxRow(
+                    checkbox: new CupertinoCheckbox(
+                        value: _checked,
+                        onChanged: _enabled ? OnCheckedChanged : null),
+                    title: "Default CupertinoCheckbox",
+                    subtitle: "activeBlue fill, grey border when unselected"),
+                BuildCheckboxRow(
+                    checkbox: new CupertinoCheckbox(
+                        value: _tristateValue,
+                        tristate: true,
+                        onChanged: _enabled ? OnTristateChanged : null),
+                    title: "Tristate CupertinoCheckbox",
+                    subtitle: "null value paints the dash"),
+                BuildCheckboxRow(
+                    checkbox: new CupertinoCheckbox(
+                        value: _checked,
+                        onChanged: _enabled ? OnCheckedChanged : null,
+                        activeColor: Color.Parse("#FF00695C"),
+                        checkColor: Colors.White,
+                        shape: new RoundedRectangleBorder(borderRadius:
+                            Plumix.Rendering.BorderRadius.Circular(5)),
+                        side: new BorderSide(Color.Parse("#FF00695C"), 2)),
+                    title: "Custom CupertinoCheckbox",
+                    subtitle: "active/check/shape/side overrides"),
+                new Container(
+                    padding: new Thickness(10, 8),
+                    decoration: new BoxDecoration(
+                        Color: Color.Parse("#FF1C1C1E"),
+                        BorderRadius: BorderRadius.Circular(10)),
+                    child: new CupertinoTheme(
+                        new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+                        new Row(
+                            spacing: 10,
+                            children:
+                            [
+                                new CupertinoCheckbox(
+                                    value: _checked,
+                                    onChanged: _enabled ? OnCheckedChanged : null),
+                                new CupertinoCheckbox(
+                                    value: _tristateValue,
+                                    tristate: true,
+                                    onChanged: _enabled ? OnTristateChanged : null),
+                                new Expanded(
+                                    child: new Text(
+                                        "Dark brightness: gradient fill and dark dynamic colors",
+                                        fontSize: 12,
+                                        color: Colors.White)),
+                            ]))),
             ]);
     }
 

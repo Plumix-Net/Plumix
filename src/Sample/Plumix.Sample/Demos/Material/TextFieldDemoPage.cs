@@ -242,12 +242,12 @@ public sealed class TextFieldDemoPage : StatefulWidget
                 : states.Contains(WidgetState.Focused) ? Colors.DodgerBlue
                 : Colors.SlateGray);
 
-        private static BorderSide? ResolveStateIndicator(MaterialState states) => new BorderSide(
-            states.HasFlag(MaterialState.Error) ? Colors.Crimson
-                : states.HasFlag(MaterialState.Focused) ? Colors.DodgerBlue
-                : states.HasFlag(MaterialState.Hovered) ? Colors.MediumSeaGreen
+        private static BorderSide? ResolveStateIndicator(IReadOnlySet<WidgetState> states) => new BorderSide(
+            states.Contains(WidgetState.Error) ? Colors.Crimson
+                : states.Contains(WidgetState.Focused) ? Colors.DodgerBlue
+                : states.Contains(WidgetState.Hovered) ? Colors.MediumSeaGreen
                 : Colors.SlateGray,
-            states.HasFlag(MaterialState.Focused) ? 3 : 1);
+            states.Contains(WidgetState.Focused) ? 3 : 1);
 
         private static Color? ResolveAffixColor(MaterialState states) =>
             states.HasFlag(MaterialState.Error) ? Colors.Crimson : Colors.Indigo;

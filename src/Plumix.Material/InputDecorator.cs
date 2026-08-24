@@ -1516,10 +1516,10 @@ internal sealed class InputDecoratorDefaultsM3 : InputDecorationThemeData
         states.Contains(WidgetState.Disabled) ? Disabled(0.04) : Colors_.SurfaceContainerHighest);
 
     public override WidgetStateBorderSide ActiveIndicatorBorder => WidgetStateBorderSide.ResolveWith(
-        states => ResolveSide(states, Colors_.OnSurfaceVariant, Disabled(0.38)));
+        states => ResolveSide(MaterialStateSet.Flags(states), Colors_.OnSurfaceVariant, Disabled(0.38)));
 
     public override WidgetStateBorderSide OutlineBorder => WidgetStateBorderSide.ResolveWith(
-        states => ResolveSide(states, Colors_.Outline, Disabled(0.12)));
+        states => ResolveSide(MaterialStateSet.Flags(states), Colors_.Outline, Disabled(0.12)));
 
     /// Flutter's M3 `iconColor` is a plain color, not a state-resolving one.
     public override WidgetStateColor IconColor => new(Colors_.OnSurfaceVariant);

@@ -2,6 +2,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -531,12 +532,10 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(Color.FromArgb(255, 0, 122, 255), decorated!.Decoration.Color);
-        Assert.True(decorated.Decoration.Border is not null);
-        Assert.Equal(0, ((Plumix.Rendering.Border)decorated.Decoration.Border!).Top.Width);
-        Assert.Equal(MaterialColors.Transparent, ((Plumix.Rendering.Border)decorated.Decoration.Border!).Top.Color);
+        CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
+        Assert.Equal(Color.FromArgb(255, 0, 122, 255), painter.ActiveColor);
+        Assert.Equal(0.0, painter.Side.Width);
+        Assert.Equal(MaterialColors.Transparent, painter.Side.Color);
     }
 
     [Fact]
@@ -581,34 +580,42 @@ public sealed class MaterialCheckboxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(Colors.Orange, decorated!.Decoration.Color);
+        CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
+        Assert.Equal(Colors.Orange, painter.ActiveColor);
     }
 
     [Fact]
     public void Checkbox_AdaptiveIOS_MaterialTapTargetSizeParameter_IsIgnored_AndUsesCupertinoTapTarget()
     {
-        using var harness = new WidgetRenderHarness(
-            new Theme(
-                data: ThemeData.Light with
-                {
-                    Platform = TargetPlatform.IOS
-                },
-                child: new SizedBox(
-                    width: 120,
-                    child: Checkbox.Adaptive(
-                        value: false,
-                        materialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
-                        onChanged: _ => { }))));
+        TargetPlatform? previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light with
+                    {
+                        Platform = TargetPlatform.IOS
+                    },
+                    child: new SizedBox(
+                        width: 120,
+                        child: Checkbox.Adaptive(
+                            value: false,
+                            materialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
+                            onChanged: _ => { }))));
 
-        harness.Pump(new Size(220, 120));
+            harness.Pump(new Size(220, 120));
 
-        var hitInsideCupertinoTarget = new BoxHitTestResult();
-        Assert.True(harness.RenderView.HitTest(hitInsideCupertinoTarget, new Point(60, 30)));
+            var hitInsideCupertinoTarget = new BoxHitTestResult();
+            Assert.True(harness.RenderView.HitTest(hitInsideCupertinoTarget, new Point(60, 30)));
 
-        var hitOutsideCupertinoTarget = new BoxHitTestResult();
-        Assert.False(harness.RenderView.HitTest(hitOutsideCupertinoTarget, new Point(60, 46)));
+            var hitOutsideCupertinoTarget = new BoxHitTestResult();
+            Assert.False(harness.RenderView.HitTest(hitOutsideCupertinoTarget, new Point(60, 46)));
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
     }
 
     [Fact]
@@ -635,24 +642,37 @@ public sealed class MaterialCheckboxTests
     [Fact]
     public void Checkbox_AdaptiveMacOS_UsesCupertinoVisualWidth()
     {
-        using var harness = new WidgetRenderHarness(
-            new Theme(
-                data: ThemeData.Light with
-                {
-                    Platform = TargetPlatform.MacOS
-                },
-                child: Checkbox.Adaptive(
-                    value: false,
-                    onChanged: _ => { })));
+        TargetPlatform? previous = PlatformDefaults.DebugTargetPlatformOverride;
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.MacOS;
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light with
+                    {
+                        Platform = TargetPlatform.MacOS
+                    },
+                    child: Checkbox.Adaptive(
+                        value: false,
+                        onChanged: _ => { })));
 
-        harness.Pump(new Size(220, 120));
+            harness.Pump(new Size(220, 120));
 
-        var checkboxBody = FindDecoratedBoxBySize(harness.RenderView, width: 14, height: 14, tolerance: 0.02);
-        Assert.NotNull(checkboxBody);
+            RenderCustomPaint? customPaint = FindDescendant<RenderCustomPaint>(harness.RenderView);
+            Assert.NotNull(customPaint);
+            Assert.Equal(new Size(14, 14), customPaint!.Size);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previous;
+        }
     }
 
+    // Flutter's material `Theme` provides a `MaterialBasedCupertinoThemeData`, so a dark Material
+    // theme darkens the adaptive Cupertino checkbox on its own; Plumix's `Theme` does not yet (see
+    // `docs/ai/DIVERGENCES.md`), so these tests provide the `CupertinoTheme` explicitly.
     [Fact]
-    public void Checkbox_AdaptiveDarkUnchecked_UsesGradientFillBrush()
+    public void Checkbox_AdaptiveDarkUnchecked_PainterReceivesDarkBrightness()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -662,20 +682,25 @@ public sealed class MaterialCheckboxTests
                     Platform = TargetPlatform.IOS,
                     Brightness = Brightness.Dark
                 },
-                child: Checkbox.Adaptive(
-                    value: false,
-                    onChanged: _ => { })));
+                child: new CupertinoTheme(
+                    data: new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+                    child: Checkbox.Adaptive(
+                        value: false,
+                        onChanged: _ => { }))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        bool hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.True(hasGradientBrush);
+        // brightness == dark and value == false is exactly the painter's dark-gradient condition.
+        CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
+        Assert.Equal(PlatformBrightness.Dark, painter.Brightness);
+        Assert.Equal(false, painter.Value);
+        Assert.True(painter.IsActive);
     }
 
     [Fact]
-    public void Checkbox_AdaptiveDarkCheckedEnabled_DoesNotUseGradientFillBrush()
+    public void Checkbox_AdaptiveDarkCheckedEnabled_UsesDarkFillWithoutGradient()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -685,16 +710,21 @@ public sealed class MaterialCheckboxTests
                     Platform = TargetPlatform.IOS,
                     Brightness = Brightness.Dark
                 },
-                child: Checkbox.Adaptive(
-                    value: true,
-                    onChanged: _ => { })));
+                child: new CupertinoTheme(
+                    data: new CupertinoThemeData(brightness: PlatformBrightness.Dark),
+                    child: Checkbox.Adaptive(
+                        value: true,
+                        onChanged: _ => { }))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        bool hasGradientBrush = HasGradientBrushFill(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.False(hasGradientBrush);
+        // An enabled checked checkbox paints the dark fill color flat, never the gradient.
+        CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
+        Assert.Equal(Color.FromArgb(255, 50, 100, 215), painter.ActiveColor);
+        Assert.Equal(true, painter.Value);
+        Assert.True(painter.IsActive);
     }
 
     [Fact]
@@ -883,8 +913,8 @@ public sealed class MaterialCheckboxTests
         bool sawSelectedError = false;
         WidgetStateBorderSide side = WidgetStateBorderSide.ResolveWith(states =>
         {
-            sawSelectedError |= states.HasFlag(MaterialState.Selected)
-                                && states.HasFlag(MaterialState.Error);
+            sawSelectedError |= states.Contains(WidgetState.Selected)
+                                && states.Contains(WidgetState.Error);
             return new BorderSide(Colors.Red, 4);
         });
         var owner = new BuildOwner();
@@ -1023,6 +1053,14 @@ public sealed class MaterialCheckboxTests
         return Assert.IsType<CheckboxPainter>(customPaint!.Painter);
     }
 
+    private static CupertinoCheckboxPainter FindCupertinoCheckboxPainter(Element? element)
+    {
+        RenderCustomPaint? customPaint = FindDescendant<RenderCustomPaint>(
+            RequireRenderObject<RenderObject>(element));
+        Assert.NotNull(customPaint);
+        return Assert.IsType<CupertinoCheckboxPainter>(customPaint!.Painter);
+    }
+
     private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
     {
         if (root is null)
@@ -1049,24 +1087,6 @@ public sealed class MaterialCheckboxTests
         return result;
     }
 
-    private static RenderDecoratedBox? FindDecoratedBoxBySize(
-        RenderObject root,
-        double width,
-        double height,
-        double tolerance = 0.01)
-    {
-        return FindDescendants<RenderDecoratedBox>(root)
-            .FirstOrDefault(box =>
-                Math.Abs(box.Size.Width - width) <= tolerance
-                && Math.Abs(box.Size.Height - height) <= tolerance);
-    }
-
-    private static bool HasGradientBrushFill(RenderObject root)
-    {
-        return FindDescendants<RenderDecoratedBox>(root)
-            .Any(box => box.Decoration.Gradient is Plumix.Rendering.LinearGradient);
-    }
-
     private static SemanticsNode? FindFirstSemanticsNode(SemanticsNode node, Func<SemanticsNode, bool> predicate)
     {
         if (predicate(node))
@@ -1084,28 +1104,6 @@ public sealed class MaterialCheckboxTests
         }
 
         return null;
-    }
-
-    private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
-    {
-        var results = new List<T>();
-        CollectDescendants(root, results);
-        return results;
-    }
-
-    private static void CollectDescendants<T>(RenderObject? root, List<T> results) where T : RenderObject
-    {
-        if (root is null)
-        {
-            return;
-        }
-
-        if (root is T typed)
-        {
-            results.Add(typed);
-        }
-
-        root.VisitChildren(child => CollectDescendants(child, results));
     }
 
     private static Color ApplyOpacity(Color color, double opacity)

@@ -64,9 +64,9 @@ public sealed class CupertinoFocusHalo : StatefulWidget
 
     private sealed class CupertinoFocusHaloState : State
     {
-        private const double FocusColorOpacity = 0.80;
-        private const double FocusColorBrightness = 0.69;
-        private const double FocusColorSaturation = 0.835;
+        private const double FocusColorOpacity = CupertinoConstants.CupertinoFocusColorOpacity;
+        private const double FocusColorBrightness = CupertinoConstants.CupertinoFocusColorBrightness;
+        private const double FocusColorSaturation = CupertinoConstants.CupertinoFocusColorSaturation;
         private const double FocusBorderWidth = 3.5;
 
         private bool _childHasFocus;

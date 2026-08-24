@@ -1,3 +1,4 @@
+import 'package:cupertino_ui/cupertino_ui.dart';
 import 'package:material_ui/material_ui.dart';
 
 class CheckboxDemoPage extends StatefulWidget {
@@ -152,6 +153,75 @@ class _CheckboxDemoPageState extends State<CheckboxDemoPage> {
                 subtitle: 'fill/check/shape/stateful side precedence',
               ),
             ],
+          ),
+        ),
+        const Text(
+          'CupertinoCheckbox',
+          style: TextStyle(fontSize: 20, color: Colors.black),
+        ),
+        const Text(
+          'macOS-style checkbox: dynamic colors, focus ring, press overlay, and the dark-mode gradient.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        _buildCheckboxRow(
+          checkbox: CupertinoCheckbox(
+            value: _checked,
+            onChanged: _enabled ? _onCheckedChanged : null,
+          ),
+          title: 'Default CupertinoCheckbox',
+          subtitle: 'activeBlue fill, grey border when unselected',
+        ),
+        _buildCheckboxRow(
+          checkbox: CupertinoCheckbox(
+            value: _tristateValue,
+            tristate: true,
+            onChanged: _enabled ? _onTristateChanged : null,
+          ),
+          title: 'Tristate CupertinoCheckbox',
+          subtitle: 'null value paints the dash',
+        ),
+        _buildCheckboxRow(
+          checkbox: CupertinoCheckbox(
+            value: _checked,
+            onChanged: _enabled ? _onCheckedChanged : null,
+            activeColor: const Color(0xFF00695C),
+            checkColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(5),
+            ),
+            side: const BorderSide(color: Color(0xFF00695C), width: 2),
+          ),
+          title: 'Custom CupertinoCheckbox',
+          subtitle: 'active/check/shape/side overrides',
+        ),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1E),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: CupertinoTheme(
+            data: const CupertinoThemeData(brightness: Brightness.dark),
+            child: Row(
+              spacing: 10,
+              children: <Widget>[
+                CupertinoCheckbox(
+                  value: _checked,
+                  onChanged: _enabled ? _onCheckedChanged : null,
+                ),
+                CupertinoCheckbox(
+                  value: _tristateValue,
+                  tristate: true,
+                  onChanged: _enabled ? _onTristateChanged : null,
+                ),
+                const Expanded(
+                  child: Text(
+                    'Dark brightness: gradient fill and dark dynamic colors',
+                    style: TextStyle(fontSize: 12, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],

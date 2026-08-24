@@ -256,7 +256,7 @@ public sealed class Checkbox : StatefulWidget
             ThemeData theme = Theme.Of(context);
             if (IsAdaptiveCupertino(theme))
             {
-                return BuildAdaptive(theme);
+                return BuildAdaptive();
             }
 
             CheckboxThemeData checkboxTheme = CheckboxTheme.Of(context);
@@ -364,27 +364,20 @@ public sealed class Checkbox : StatefulWidget
                 child: toggleable);
         }
 
-        private Widget BuildAdaptive(ThemeData theme)
+        private Widget BuildAdaptive()
         {
-            MaterialState states = ToMaterialState(CurrentWidgetStates);
-            BorderSide? side = CurrentWidget.Side?.Resolve(states);
-            var tapTargetSize = theme.Platform == TargetPlatform.MacOS
-                ? new Size(CupertinoCheckbox.Width, CupertinoCheckbox.Width)
-                : new Size(44.0, 44.0);
             return new CupertinoCheckbox(
                 value: CurrentWidget.Value,
                 tristate: CurrentWidget.Tristate,
                 onChanged: CurrentWidget.OnChanged,
-                mouseCursor: ResolveWidgetMouseCursor(CurrentWidget.MouseCursor, states),
+                mouseCursor: CurrentWidget.MouseCursor,
                 activeColor: CurrentWidget.ActiveColor,
                 checkColor: CurrentWidget.CheckColor,
                 focusColor: CurrentWidget.FocusColor,
                 focusNode: CurrentWidget.FocusNode,
                 autofocus: CurrentWidget.Autofocus,
-                side: side,
-                shape: ShapeBorderGeometry.ResolveRadiusOrNull(CurrentWidget.Shape),
-                tapTargetSize: tapTargetSize,
-                isDark: theme.Brightness == Brightness.Dark,
+                side: CurrentWidget.Side,
+                shape: CurrentWidget.Shape as OutlinedBorder,
                 semanticLabel: CurrentWidget.SemanticLabel);
         }
 

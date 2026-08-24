@@ -488,11 +488,11 @@ public sealed class MaterialReorderableListTests
         Scheduler.ResetForTests();
         GestureBinding binding = GestureBinding.Instance;
         binding.ResetForTests();
-        List<MaterialState> resolvedStates = [];
+        List<IReadOnlySet<WidgetState>> resolvedStates = [];
         WidgetStateMouseCursor cursor = WidgetStateMouseCursor.ResolveWith(states =>
         {
             resolvedStates.Add(states);
-            return states.HasFlag(MaterialState.Dragged)
+            return states.Contains(WidgetState.Dragged)
                 ? SystemMouseCursors.Grabbing
                 : SystemMouseCursors.Grab;
         });
@@ -511,13 +511,13 @@ public sealed class MaterialReorderableListTests
             using WidgetRenderHarness harness = new(Wrap(list, theme));
             harness.Pump(new Size(240, 100));
 
-            Assert.Contains(MaterialState.None, resolvedStates);
+            Assert.Contains(resolvedStates, states => states.Count == 0);
             DateTime start = DateTime.UtcNow;
             DispatchDown(binding, harness.RenderView, 95, new Point(220, 25), start);
             DispatchMove(binding, harness.RenderView, 95, new Point(220, 75), start.AddMilliseconds(100));
             harness.Pump(new Size(240, 100));
 
-            Assert.Contains(resolvedStates, states => states.HasFlag(MaterialState.Dragged));
+            Assert.Contains(resolvedStates, states => states.Contains(WidgetState.Dragged));
 
             DispatchUp(binding, harness.RenderView, 95, new Point(220, 75), start.AddMilliseconds(200));
             CompleteDropAnimation();

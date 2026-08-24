@@ -1,56 +1,46 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source (reference): cupertino_ui/lib/src/checkbox.dart (adapted)
+// Dart parity source: cupertino_ui/lib/src/checkbox.dart
 
+/// A macOS style checkbox.
+///
+/// The checkbox itself does not maintain any state. When the state of the checkbox changes, the
+/// widget calls the <see cref="OnChanged"/> callback. The checkbox can optionally display three
+/// values — true, false, and null — if <see cref="Tristate"/> is true; when <see cref="Value"/> is
+/// null a dash is displayed.
 public sealed class CupertinoCheckbox : StatefulWidget
 {
-    private const double DefaultPressedOverlayOpacity = 0.15;
-    private const double FocusOpacity = 0.80;
-    private const double FocusLightness = 0.69;
-    private const double FocusSaturation = 0.835;
-    private const double DarkGradientTopOpacity = 0.14;
-    private const double DarkGradientBottomOpacity = 0.29;
-    private const double DisabledDarkGradientTopOpacity = 0.08;
-    private const double DisabledDarkGradientBottomOpacity = 0.14;
-
-    private static readonly Color DisabledCheckColorLight = Color.FromArgb(64, 0, 0, 0);
-    private static readonly Color DisabledCheckColorDark = Color.FromArgb(64, 255, 255, 255);
-    private static readonly Color DisabledBorderColor = Color.FromArgb(13, 0, 0, 0);
-    private static readonly Color DefaultBorderColorLight = Color.FromArgb(255, 209, 209, 214);
-    private static readonly Color DefaultBorderColorDark = Color.FromArgb(50, 128, 128, 128);
-    private static readonly Color DefaultFillColorLight = Color.FromArgb(255, 0, 122, 255);
-    private static readonly Color DefaultFillColorDark = Color.FromArgb(255, 50, 100, 215);
-    private static readonly Color DefaultCheckColorDark = Color.FromArgb(255, 222, 232, 248);
-
-    public const double Width = 14.0;
-
     public CupertinoCheckbox(
         bool? value,
         Action<bool?>? onChanged,
         bool tristate = false,
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
+        Color? inactiveColor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? focusColor = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        BorderSide? side = null,
-        BorderRadius? shape = null,
+        WidgetStateBorderSide? side = null,
+        OutlinedBorder? shape = null,
         Size? tapTargetSize = null,
-        bool isDark = false,
         string? semanticLabel = null,
         Key? key = null) : base(key)
     {
         if (!tristate && value is null)
         {
-            throw new ArgumentException("Checkbox value cannot be null when tristate is false.", nameof(value));
+            throw new ArgumentException(
+                "Checkbox value cannot be null when tristate is false.",
+                nameof(value));
         }
 
         Value = value;
@@ -58,6 +48,8 @@ public sealed class CupertinoCheckbox : StatefulWidget
         Tristate = tristate;
         MouseCursor = mouseCursor;
         ActiveColor = activeColor;
+        _inactiveColor = inactiveColor;
+        FillColor = fillColor;
         CheckColor = checkColor;
         FocusColor = focusColor;
         FocusNode = focusNode;
@@ -65,346 +57,246 @@ public sealed class CupertinoCheckbox : StatefulWidget
         Side = side;
         Shape = shape;
         TapTargetSize = tapTargetSize;
-        IsDark = isDark;
         SemanticLabel = semanticLabel;
     }
 
+    private readonly Color? _inactiveColor;
+
+    /// Whether this checkbox is checked. When <see cref="Tristate"/> is true, a value of null
+    /// corresponds to the mixed state.
     public bool? Value { get; }
 
+    /// Called when the value of the checkbox should change. If null, the checkbox is displayed as
+    /// disabled. When <see cref="Tristate"/> is true the callback cycles false => true => null.
     public Action<bool?>? OnChanged { get; }
 
-    public bool Tristate { get; }
-
+    /// The cursor for a mouse pointer when it enters or is hovering over the widget. A
+    /// <see cref="WidgetStateMouseCursor"/> resolves in the selected/focused/disabled states.
     public MouseCursor? MouseCursor { get; }
 
+    /// The color to use when this checkbox is checked. Defaults to `CupertinoColors.activeBlue`.
     public Color? ActiveColor { get; }
 
+    /// The color used to fill this checkbox, resolved in the selected/hovered/focused/disabled
+    /// states. Takes precedence over <see cref="ActiveColor"/> when it resolves non-null.
+    public WidgetStateProperty<Color?>? FillColor { get; }
+
+    /// The color used if the checkbox is inactive. Currently unused: <see cref="FillColor"/>
+    /// controls the background color in all states, including when unselected.
+    [Obsolete("Use FillColor instead. FillColor now manages the background color in all states. "
+              + "Mirrors Flutter's deprecation after v3.24.0-0.2.pre.")]
+    public Color? InactiveColor => _inactiveColor;
+
+    /// The color to use for the check icon when this checkbox is checked.
     public Color? CheckColor { get; }
 
+    /// If true, the checkbox's <see cref="Value"/> can be true, false, or null.
+    public bool Tristate { get; }
+
+    /// The color for the checkbox's border shadow when it has the input focus. If null, a paler
+    /// form of the <see cref="ActiveColor"/> is used.
     public Color? FocusColor { get; }
 
     public FocusNode? FocusNode { get; }
 
     public bool Autofocus { get; }
 
-    public BorderSide? Side { get; }
+    /// The color and width of the checkbox's border. A stateful side resolves in the
+    /// pressed/selected/hovered/focused/disabled/error states; a plain side is only rendered when
+    /// the checkbox's value is false, for backwards compatibility.
+    public WidgetStateBorderSide? Side { get; }
 
-    public BorderRadius? Shape { get; }
+    /// The shape of the checkbox. Defaults to a `RoundedRectangleBorder` with a circular corner
+    /// radius of 4.0.
+    public OutlinedBorder? Shape { get; }
 
+    /// The tap target and layout size of the checkbox. If null, defaults to a square of
+    /// <see cref="Width"/> pixels on desktop and `kMinInteractiveDimensionCupertino` on mobile.
     public Size? TapTargetSize { get; }
 
-    public bool IsDark { get; }
-
+    /// The semantic label for the checkbox that is announced by screen readers.
     public string? SemanticLabel { get; }
 
-    public override State CreateState()
-    {
-        return new CupertinoCheckboxState();
-    }
+    /// The width of a checkbox widget.
+    public const double Width = 14.0;
 
-    private sealed class CupertinoCheckboxState : State
+    public override State CreateState() => new CupertinoCheckboxState();
+
+    private sealed class CupertinoCheckboxState : ToggleableState
     {
-        private AnimationController? _transitionController;
+        private CupertinoCheckboxPainter? _painter;
         private bool? _previousValue;
-        private bool _isTransitioning;
-        private double _transitionProgress = 1.0;
-
-        private bool _isPressed;
-        private bool _hasFocus;
-        private bool _isHovered;
-
-        private FocusNode? _focusNode;
-        private bool _ownsFocusNode;
 
         private CupertinoCheckbox CurrentWidget => (CupertinoCheckbox)StateWidget;
 
-        private bool Enabled => CurrentWidget.OnChanged is not null;
+        protected override bool IsInteractive => CurrentWidget.OnChanged is not null;
+
+        protected override bool IsValueSelected => CurrentWidget.Value ?? true;
 
         public override void InitState()
         {
+            base.InitState();
             _previousValue = CurrentWidget.Value;
-            _transitionController = new AnimationController(duration: TimeSpan.FromMilliseconds(200), vsync: this)
-            {
-                Curve = Curves.EaseInOut
-            };
-            _transitionController.Changed += HandleTransitionTick;
-            _transitionController.Completed += HandleTransitionCompleted;
-
-            AttachFocusNode(CurrentWidget.FocusNode);
+            _painter = new CupertinoCheckboxPainter(
+                Position,
+                Reaction,
+                ReactionHoverFade,
+                ReactionFocusFade);
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
             var oldCheckbox = (CupertinoCheckbox)oldWidget;
+            base.DidUpdateWidget(oldWidget);
             if (oldCheckbox.Value != CurrentWidget.Value)
             {
                 _previousValue = oldCheckbox.Value;
-                StartTransition();
-            }
-
-            if (!ReferenceEquals(oldCheckbox.FocusNode, CurrentWidget.FocusNode))
-            {
-                DetachFocusNode(disposeOwned: true);
-                AttachFocusNode(CurrentWidget.FocusNode);
-            }
-
-            if (!Enabled && _focusNode is { HasFocus: true })
-            {
-                _focusNode.Unfocus();
-            }
-
-            if (!Enabled)
-            {
-                _isPressed = false;
-                _isHovered = false;
             }
         }
 
         public override void Dispose()
         {
-            if (_transitionController is not null)
-            {
-                _transitionController.Changed -= HandleTransitionTick;
-                _transitionController.Completed -= HandleTransitionCompleted;
-                _transitionController.Dispose();
-                _transitionController = null;
-            }
+            _painter?.Dispose();
+            _painter = null;
+            base.Dispose();
+        }
 
-            DetachFocusNode(disposeOwned: true);
+        private WidgetStateProperty<Color> DefaultFillColor => WidgetStateProperty<Color>.ResolveWith(states =>
+        {
+            if (states.Contains(WidgetState.Disabled))
+            {
+                return CupertinoCheckboxPainter.WithOpacity(CupertinoColors.White, 0.5);
+            }
+            if (states.Contains(WidgetState.Selected))
+            {
+                return CurrentWidget.ActiveColor
+                       ?? CupertinoDynamicColor.Resolve(CupertinoCheckboxPainter.KDefaultFillColor, Context);
+            }
+            return CupertinoColors.White;
+        });
+
+        private WidgetStateProperty<Color> DefaultCheckColor => WidgetStateProperty<Color>.ResolveWith(states =>
+        {
+            if (states.Contains(WidgetState.Disabled) && states.Contains(WidgetState.Selected))
+            {
+                return CurrentWidget.CheckColor
+                       ?? CupertinoDynamicColor.Resolve(CupertinoCheckboxPainter.KDisabledCheckColor, Context);
+            }
+            if (states.Contains(WidgetState.Selected))
+            {
+                return CurrentWidget.CheckColor
+                       ?? CupertinoDynamicColor.Resolve(CupertinoCheckboxPainter.KDefaultCheckColor, Context);
+            }
+            return CupertinoColors.White;
+        });
+
+        private WidgetStateProperty<BorderSide> DefaultSide => WidgetStateProperty<BorderSide>.ResolveWith(states =>
+        {
+            if ((states.Contains(WidgetState.Selected) || states.Contains(WidgetState.Focused))
+                && !states.Contains(WidgetState.Disabled))
+            {
+                return new BorderSide(CupertinoColors.Transparent, 0.0);
+            }
+            if (states.Contains(WidgetState.Disabled))
+            {
+                return new BorderSide(
+                    CupertinoDynamicColor.Resolve(CupertinoCheckboxPainter.KDisabledBorderColor, Context));
+            }
+            return new BorderSide(
+                CupertinoDynamicColor.Resolve(CupertinoCheckboxPainter.KDefaultBorderColor, Context));
+        });
+
+        private static BorderSide? ResolveSide(WidgetStateBorderSide? side, IReadOnlySet<WidgetState> states)
+        {
+            // The wrapper carries Dart's `side is WidgetStateBorderSide` split: a stateful side
+            // resolves with the states, a plain side only renders when not selected.
+            return side?.Resolve(states);
         }
 
         public override Widget Build(BuildContext context)
         {
-            var shape = CurrentWidget.Shape ?? Plumix.Rendering.BorderRadius.Circular(4.0);
-            var targetSize = ResolveTapTargetSize();
-            bool selected = IsSelected(CurrentWidget.Value);
-            var activeColor = ResolveActiveColor();
-            var fillColor = ResolveFillColor(selected, activeColor);
-            var checkColor = ResolveCheckColor(selected);
-            var borderSide = ResolveBorderSide(selected);
-            var overlayColor = ResolveOverlayColor(activeColor);
-            var focusRingColor = ResolveFocusRingColor(activeColor);
-            bool useDarkGradient = ShouldUseDarkGradient(selected);
-            var baseFillColor = useDarkGradient ? CupertinoColors.Transparent : fillColor;
+            // Colors need to be resolved in selected and non selected states separately.
+            var activeStates = new HashSet<WidgetState>(CurrentWidgetStates) { WidgetState.Selected };
+            var inactiveStates = new HashSet<WidgetState>(CurrentWidgetStates);
+            inactiveStates.Remove(WidgetState.Selected);
+            IReadOnlySet<WidgetState> currentStates = CurrentWidgetStates;
 
-            var indicator = BuildIndicator(checkColor);
-            var body = BuildCheckboxBody(
-                shape,
-                baseFillColor,
-                borderSide,
-                overlayColor,
-                indicator,
-                gradientBaseColor: fillColor,
-                useDarkGradient: useDarkGradient);
+            Color effectiveActiveColor = CurrentWidget.FillColor?.Resolve(activeStates)
+                                         ?? DefaultFillColor.Resolve(activeStates);
 
-            if (_hasFocus && Enabled)
-            {
-                body = new DecoratedBox(
-                    decoration: new BoxDecoration(
-                        Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(focusRingColor, 3.5)),
-                        BorderRadius: Plumix.Rendering.BorderRadius.Circular(shape.Radius + 1.0)),
-                    child: new Padding(
-                        new Thickness(1),
-                        body));
-            }
+            Color effectiveInactiveColor = CurrentWidget.FillColor?.Resolve(inactiveStates)
+                                           ?? DefaultFillColor.Resolve(inactiveStates);
 
-            Widget result = new SizedBox(
-                width: targetSize.Width,
-                height: targetSize.Height,
-                child: new Center(child: body));
+            BorderSide effectiveBorderSide = ResolveSide(CurrentWidget.Side, currentStates)
+                                             ?? DefaultSide.Resolve(currentStates);
 
-            if (Enabled)
-            {
-                result = new GestureDetector(
-                    excludeFromSemantics: true,
-                    behavior: HitTestBehavior.Opaque,
-                    onTap: HandleTap,
-                    child: result);
+            Color effectiveFocusOverlayColor = CurrentWidget.FocusColor
+                ?? HSLColor.FromColor(CupertinoCheckboxPainter.WithOpacity(
+                        effectiveActiveColor,
+                        CupertinoConstants.CupertinoFocusColorOpacity))
+                    .WithLightness(CupertinoConstants.CupertinoFocusColorBrightness)
+                    .WithSaturation(CupertinoConstants.CupertinoFocusColorSaturation)
+                    .ToColor();
 
-                result = new Listener(
-                    behavior: HitTestBehavior.Opaque,
-                    onPointerDown: HandlePointerDown,
-                    onPointerUp: HandlePointerUp,
-                    onPointerCancel: HandlePointerCancel,
-                    onPointerEnter: _ => SetHovered(true),
-                    onPointerExit: _ => SetHovered(false),
-                    child: result);
-            }
+            WidgetStateProperty<MouseCursor> effectiveMouseCursor =
+                WidgetStateProperty<MouseCursor>.ResolveWith(states =>
+                    (CurrentWidget.MouseCursor is WidgetStateMouseCursor stateCursor
+                        ? stateCursor.Resolve(states)
+                        : CurrentWidget.MouseCursor)
+                    ?? (PlatformDefaults.IsWeb && !states.Contains(WidgetState.Disabled)
+                        ? SystemMouseCursors.Click
+                        : SystemMouseCursors.Basic));
 
-            var focusedResult = new Focus(
-                focusNode: _focusNode,
-                autofocus: CurrentWidget.Autofocus,
-                canRequestFocus: Enabled,
-                onKeyEvent: HandleKeyEvent,
-                child: result);
+            Size effectiveSize = CurrentWidget.TapTargetSize
+                ?? PlatformDefaults.TargetPlatform switch
+                {
+                    TargetPlatform.IOS or TargetPlatform.Android or TargetPlatform.Fuchsia =>
+                        new Size(
+                            CupertinoConstants.MinInteractiveDimensionCupertino,
+                            CupertinoConstants.MinInteractiveDimensionCupertino),
+                    _ => new Size(CupertinoCheckbox.Width, CupertinoCheckbox.Width),
+                };
 
-            Widget mouseResult = CurrentWidget.MouseCursor is null
-                ? focusedResult
-                : new MouseRegion(
-                    cursor: CurrentWidget.MouseCursor,
-                    child: focusedResult);
+            _painter!.Configure(
+                focusColor: effectiveFocusOverlayColor,
+                downPosition: DownPosition,
+                isFocused: currentStates.Contains(WidgetState.Focused),
+                isHovered: currentStates.Contains(WidgetState.Hovered),
+                activeColor: effectiveActiveColor,
+                inactiveColor: effectiveInactiveColor,
+                checkColor: DefaultCheckColor.Resolve(currentStates),
+                value: CurrentWidget.Value,
+                previousValue: _previousValue,
+                isActive: CurrentWidget.OnChanged is not null,
+                shape: CurrentWidget.Shape
+                       ?? new RoundedRectangleBorder(
+                           borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0)),
+                side: effectiveBorderSide,
+                brightness: CupertinoTheme.Of(context).Brightness);
+
+            Widget toggleable = BuildToggleable(
+                painter: _painter,
+                size: effectiveSize,
+                mouseCursor: effectiveMouseCursor,
+                onTap: HandleTap,
+                focusNode: CurrentWidget.FocusNode,
+                onFocusChange: null,
+                autofocus: CurrentWidget.Autofocus);
 
             return new Semantics(
                 label: CurrentWidget.SemanticLabel,
-                flags: ResolveSemanticsFlags(),
+                flags: IsInteractive ? SemanticsFlags.IsEnabled : SemanticsFlags.None,
                 @checked: CurrentWidget.Value ?? false,
                 mixed: CurrentWidget.Tristate ? CurrentWidget.Value is null : null,
-                onTap: Enabled ? HandleTap : null,
-                child: mouseResult);
-        }
-
-        private SemanticsFlags ResolveSemanticsFlags()
-        {
-            var flags = SemanticsFlags.None;
-            if (Enabled)
-            {
-                flags |= SemanticsFlags.IsEnabled;
-            }
-
-            if (CurrentWidget.Value == true)
-            {
-                flags |= SemanticsFlags.IsChecked;
-            }
-
-            return flags;
-        }
-
-        private Widget BuildCheckboxBody(
-            BorderRadius shape,
-            Color fillColor,
-            BorderSide? borderSide,
-            Color? overlayColor,
-            Widget indicator,
-            Color gradientBaseColor,
-            bool useDarkGradient)
-        {
-            var layers = new List<Widget>
-            {
-                new DecoratedBox(
-                    decoration: new BoxDecoration(
-                        Color: fillColor,
-                        Border: borderSide is { } side ? Plumix.Rendering.Border.FromBorderSide(side) : null,
-                        BorderRadius: shape),
-                    child: new SizedBox(width: Width, height: Width)),
-            };
-
-            if (useDarkGradient)
-            {
-                layers.Add(new DecoratedBox(
-                    decoration: new BoxDecoration(
-                        Gradient: CreateDarkGradient(gradientBaseColor, Enabled),
-                        BorderRadius: shape),
-                    child: new SizedBox(width: Width, height: Width)));
-            }
-
-            if (overlayColor.HasValue && overlayColor.Value.A > 0)
-            {
-                layers.Add(new Container(
-                    width: Width,
-                    height: Width,
-                    color: overlayColor.Value));
-            }
-
-            layers.Add(indicator);
-
-            return new SizedBox(
-                width: Width,
-                height: Width,
-                child: new ClipRRect(
-                    borderRadius: shape,
-                    child: new Stack(
-                        alignment: Alignment.Center,
-                        children: layers)));
-        }
-
-        private Widget BuildIndicator(Color color)
-        {
-            if (!_isTransitioning || _previousValue == CurrentWidget.Value)
-            {
-                return BuildStaticIndicator(CurrentWidget.Value, color);
-            }
-
-            double progress = Math.Clamp(_transitionProgress, 0, 1);
-            double previousOpacity = Math.Clamp(1.0 - progress, 0, 1);
-            double targetOpacity = progress;
-
-            return new SizedBox(
-                width: Width,
-                height: Width,
-                child: new Stack(
-                    alignment: Alignment.Center,
-                    children:
-                    [
-                        BuildFadedIndicator(_previousValue, color, previousOpacity),
-                        BuildFadedIndicator(CurrentWidget.Value, color, targetOpacity)
-                    ]));
-        }
-
-        private static Widget BuildStaticIndicator(bool? value, Color color)
-        {
-            return value switch
-            {
-                true => new StrokeGlyph(StrokeGlyphKind.Check, color, Width),
-                null => new StrokeGlyph(StrokeGlyphKind.Dash, color, Width),
-                _ => new SizedBox()
-            };
-        }
-
-        private static Widget BuildFadedIndicator(bool? value, Color color, double opacity)
-        {
-            if (opacity <= 0.001 || value is false)
-            {
-                return new SizedBox();
-            }
-
-            return new Opacity(
-                opacity,
-                child: BuildStaticIndicator(value, color));
+                onTap: IsInteractive ? HandleTap : null,
+                child: toggleable);
         }
 
         private void HandleTap()
         {
             CurrentWidget.OnChanged?.Invoke(NextValue());
-        }
-
-        private void HandlePointerDown(PointerDownEvent @event)
-        {
-            if (!Enabled)
-            {
-                return;
-            }
-
-            SetPressed(true);
-        }
-
-        private void HandlePointerUp(PointerUpEvent @event)
-        {
-            SetPressed(false);
-        }
-
-        private void HandlePointerCancel(PointerCancelEvent @event)
-        {
-            SetPressed(false);
-        }
-
-        private void SetPressed(bool value)
-        {
-            if (!Enabled || _isPressed == value)
-            {
-                return;
-            }
-
-            SetState(() => _isPressed = value);
-        }
-
-        private void SetHovered(bool value)
-        {
-            if (!Enabled || _isHovered == value)
-            {
-                return;
-            }
-
-            SetState(() => _isHovered = value);
+            SemanticsService.SendEvent(
+                new TapSemanticEvent(Context.FindRenderObject()?.SemanticsNodeId));
         }
 
         private bool? NextValue()
@@ -418,368 +310,286 @@ public sealed class CupertinoCheckbox : StatefulWidget
             {
                 false => true,
                 true => null,
-                _ => false
+                _ => false,
             };
         }
+    }
+}
 
-        private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
+internal sealed class CupertinoCheckboxPainter : ToggleablePainter
+{
+    // Eyeballed from a checkbox on a physical Macbook Pro running macOS version 14.5.
+    internal static readonly CupertinoDynamicColor KDisabledCheckColor = CupertinoDynamicColor.WithBrightness(
+        color: Color.FromArgb(64, 0, 0, 0),
+        darkColor: Color.FromArgb(64, 255, 255, 255));
+    internal static readonly CupertinoDynamicColor KDisabledBorderColor = CupertinoDynamicColor.WithBrightness(
+        color: Color.FromArgb(13, 0, 0, 0),
+        darkColor: Color.FromArgb(13, 0, 0, 0));
+    internal static readonly CupertinoDynamicColor KDefaultBorderColor = CupertinoDynamicColor.WithBrightness(
+        color: Color.FromArgb(255, 209, 209, 214),
+        darkColor: Color.FromArgb(50, 128, 128, 128));
+    internal static readonly CupertinoDynamicColor KDefaultFillColor = CupertinoDynamicColor.WithBrightness(
+        color: CupertinoColors.ActiveBlue.Value,
+        darkColor: Color.FromArgb(255, 50, 100, 215));
+    internal static readonly CupertinoDynamicColor KDefaultCheckColor = CupertinoDynamicColor.WithBrightness(
+        color: CupertinoColors.White,
+        darkColor: Color.FromArgb(255, 222, 232, 248));
+    internal const double KPressedOverlayOpacity = 0.15;
+    // In dark mode, the fill color of a checkbox is an opacity gradient of the background color.
+    internal static readonly IReadOnlyList<double> KDarkGradientOpacities = [0.14, 0.29];
+    internal static readonly IReadOnlyList<double> KDisabledDarkGradientOpacities = [0.08, 0.14];
+
+    private Point? _downPosition;
+    private bool _isFocused;
+    private bool _isHovered;
+    private Color _activeColor;
+    private Color _inactiveColor;
+    private Color _checkColor;
+    private bool? _value;
+    private bool? _previousValue;
+    private bool _isActive;
+    private OutlinedBorder _shape = new RoundedRectangleBorder(
+        borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0));
+    private BorderSide _side;
+    private PlatformBrightness? _brightness;
+
+    public CupertinoCheckboxPainter(
+        Animation<double> position,
+        Animation<double> reaction,
+        Animation<double> reactionHoverFade,
+        Animation<double> reactionFocusFade)
+        : base(position, reaction, reactionHoverFade, reactionFocusFade)
+    {
+    }
+
+    internal Point? DownPosition => _downPosition;
+
+    internal bool Focused => _isFocused;
+
+    internal bool Hovered => _isHovered;
+
+    internal Color ActiveColor => _activeColor;
+
+    internal Color InactiveColor => _inactiveColor;
+
+    internal Color CheckColor => _checkColor;
+
+    internal bool? Value => _value;
+
+    internal bool? PreviousValue => _previousValue;
+
+    internal bool IsActive => _isActive;
+
+    internal OutlinedBorder Shape => _shape;
+
+    internal BorderSide Side => _side;
+
+    internal PlatformBrightness? Brightness => _brightness;
+
+    internal Color EffectiveFocusColor => FocusColor;
+
+    internal void Configure(
+        Color focusColor,
+        Point? downPosition,
+        bool isFocused,
+        bool isHovered,
+        Color activeColor,
+        Color inactiveColor,
+        Color checkColor,
+        bool? value,
+        bool? previousValue,
+        bool isActive,
+        OutlinedBorder shape,
+        BorderSide side,
+        PlatformBrightness? brightness)
+    {
+        FocusColor = focusColor;
+        _downPosition = downPosition;
+        _isFocused = isFocused;
+        _isHovered = isHovered;
+        _activeColor = activeColor;
+        _inactiveColor = inactiveColor;
+        _checkColor = checkColor;
+        _value = value;
+        _previousValue = previousValue;
+        _isActive = isActive;
+        _shape = shape;
+        _side = side;
+        _brightness = brightness;
+        NotifyPainterChanged();
+    }
+
+    private static Rect OuterRectAt(Point origin)
+    {
+        return new Rect(origin.X, origin.Y, CupertinoCheckbox.Width, CupertinoCheckbox.Width);
+    }
+
+    // The checkbox's border color if value == false, or its fill color when value == true or null.
+    private Color ColorAt(bool value)
+    {
+        return value && _isActive ? _activeColor : _inactiveColor;
+    }
+
+    // White stroke used to paint the check and dash.
+    private IPen CreateStrokePen()
+    {
+        return new Pen(new SolidColorBrush(_checkColor), 2.0, lineCap: PenLineCap.Round);
+    }
+
+    // Draw a gradient from the top to the bottom of the checkbox.
+    private void DrawFillGradient(PaintingContext context, Rect outer, Color topColor, Color bottomColor)
+    {
+        var fillGradient = new LinearGradient(
+            colors: [topColor, bottomColor],
+            begin: Alignment.TopCenter,
+            end: Alignment.BottomCenter);
+        DrawShape(context, outer, fillGradient.CreateShader(outer), pen: null);
+    }
+
+    private void DrawBox(
+        PaintingContext context,
+        Rect outer,
+        Color paintColor,
+        double? strokeWidth,
+        BorderSide side,
+        bool value)
+    {
+        // Draw a gradient in dark mode except when the checkbox is enabled and checked.
+        if (_brightness == PlatformBrightness.Dark && !(_isActive && value))
         {
-            if (!IsActivateKey(@event))
-            {
-                return KeyEventResult.Ignored;
-            }
-
-            if (!Enabled)
-            {
-                return KeyEventResult.Handled;
-            }
-
-            if (@event is KeyDownEvent)
-            {
-                HandleTap();
-            }
-
-            return KeyEventResult.Handled;
+            DrawFillGradient(
+                context,
+                outer,
+                WithOpacity(
+                    paintColor,
+                    _isActive ? KDarkGradientOpacities[0] : KDisabledDarkGradientOpacities[0]),
+                WithOpacity(
+                    paintColor,
+                    _isActive ? KDarkGradientOpacities[1] : KDisabledDarkGradientOpacities[1]));
+        }
+        else if (strokeWidth is null)
+        {
+            DrawShape(context, outer, new SolidColorBrush(paintColor), pen: null);
+        }
+        else
+        {
+            DrawShape(context, outer, brush: null, new Pen(new SolidColorBrush(paintColor), strokeWidth.Value));
         }
 
-        private static bool IsActivateKey(KeyEvent @event)
-        {
-            HardwareKeyboard state = HardwareKeyboard.Instance;
-            if (state.IsShiftPressed || state.IsControlPressed || state.IsAltPressed || state.IsMetaPressed)
-            {
-                return false;
-            }
+        DrawSide(context, outer, side);
+    }
 
-            return @event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
-                   || @event.LogicalKey.Equals(LogicalKeyboardKey.NumpadEnter)
-                   || @event.LogicalKey.Equals(LogicalKeyboardKey.Space);
+    private void DrawShape(PaintingContext context, Rect rect, IBrush? brush, IPen? pen)
+    {
+        if (_shape is CircleBorder)
+        {
+            context.DrawOval(rect, brush, pen);
+            return;
         }
 
-        private Color ResolveActiveColor()
-        {
-            if (CurrentWidget.ActiveColor.HasValue)
-            {
-                return CurrentWidget.ActiveColor.Value;
-            }
+        context.DrawRRect(
+            Plumix.UI.RRect.FromRectAndCorners(rect, ShapeBorderGeometry.ResolveRadius(_shape)),
+            brush,
+            pen);
+    }
 
-            return CurrentWidget.IsDark
-                ? DefaultFillColorDark
-                : DefaultFillColorLight;
+    // Flutter's `shape.copyWith(side: side).paint(canvas, outer)`: the side strokes inward from the
+    // shape's outline.
+    private void DrawSide(PaintingContext context, Rect outer, BorderSide side)
+    {
+        if (side.Width <= 0.0 || side.Color.A == 0 || side.Style == BorderStyle.None)
+        {
+            return;
         }
 
-        private Color ResolveFillColor(bool selected, Color activeColor)
+        if (_shape is CircleBorder)
         {
-            if (!Enabled)
-            {
-                return ApplyOpacity(Colors.White, 0.50);
-            }
-
-            return selected
-                ? activeColor
-                : Colors.White;
+            context.DrawOval(
+                outer.Deflate(side.Width / 2.0),
+                brush: null,
+                new Pen(new SolidColorBrush(side.Color), side.Width));
+            return;
         }
 
-        private Color ResolveCheckColor(bool selected)
+        Plumix.UI.RRect outerRRect = Plumix.UI.RRect.FromRectAndCorners(
+            outer,
+            ShapeBorderGeometry.ResolveRadius(_shape));
+        context.DrawDRRect(outerRRect, outerRRect.Deflate(side.Width), new SolidColorBrush(side.Color));
+    }
+
+    private void DrawCheck(PaintingContext context, Point origin, IPen pen)
+    {
+        // The ratios for the offsets below were found from looking at the checkbox examples in the
+        // HIG docs. The distance from the needed point to the edge was measured, then divided by
+        // the total width.
+        var start = new Point(origin.X + (CupertinoCheckbox.Width * 0.22), origin.Y + (CupertinoCheckbox.Width * 0.54));
+        var mid = new Point(origin.X + (CupertinoCheckbox.Width * 0.40), origin.Y + (CupertinoCheckbox.Width * 0.75));
+        var end = new Point(origin.X + (CupertinoCheckbox.Width * 0.78), origin.Y + (CupertinoCheckbox.Width * 0.25));
+        context.DrawLine(pen, start, mid);
+        context.DrawLine(pen, mid, end);
+    }
+
+    private void DrawDash(PaintingContext context, Point origin, IPen pen)
+    {
+        // From measuring the checkbox example in the HIG docs, the dash was found to be half the
+        // total width, centered in the middle.
+        var start = new Point(origin.X + (CupertinoCheckbox.Width * 0.25), origin.Y + (CupertinoCheckbox.Width * 0.5));
+        var end = new Point(origin.X + (CupertinoCheckbox.Width * 0.75), origin.Y + (CupertinoCheckbox.Width * 0.5));
+        context.DrawLine(pen, start, end);
+    }
+
+    public override void Paint(PaintingContext context, Size size)
+    {
+        IPen strokePen = CreateStrokePen();
+        var origin = new Point(
+            (size.Width / 2.0) - (CupertinoCheckbox.Width / 2.0),
+            (size.Height / 2.0) - (CupertinoCheckbox.Width / 2.0));
+        Rect outer = OuterRectAt(origin);
+        Color paintColor = ColorAt(_value ?? true);
+
+        switch (_value)
         {
-            if (!selected)
-            {
-                return Colors.White;
-            }
-
-            if (CurrentWidget.CheckColor.HasValue)
-            {
-                return CurrentWidget.CheckColor.Value;
-            }
-
-            if (!Enabled)
-            {
-                return CurrentWidget.IsDark
-                    ? DisabledCheckColorDark
-                    : DisabledCheckColorLight;
-            }
-
-            return CurrentWidget.IsDark
-                ? DefaultCheckColorDark
-                : Colors.White;
+            case false:
+                DrawBox(context, outer, paintColor, strokeWidth: null, _side, _value ?? true);
+                break;
+            case true:
+                DrawBox(context, outer, paintColor, strokeWidth: null, _side, _value ?? true);
+                DrawCheck(context, origin, strokePen);
+                break;
+            case null:
+                DrawBox(context, outer, paintColor, strokeWidth: null, _side, _value ?? true);
+                DrawDash(context, origin, strokePen);
+                break;
         }
 
-        private BorderSide ResolveBorderSide(bool selected)
+        // The checkbox's opacity changes when pressed.
+        if (_downPosition is not null)
         {
-            if (CurrentWidget.Side.HasValue)
-            {
-                return selected
-                    ? new BorderSide(CupertinoColors.Transparent, 0)
-                    : CurrentWidget.Side.Value;
-            }
-
-            if (!Enabled)
-            {
-                return new BorderSide(DisabledBorderColor, 1.0);
-            }
-
-            if (selected || _hasFocus)
-            {
-                return new BorderSide(CupertinoColors.Transparent, 0);
-            }
-
-            var color = CurrentWidget.IsDark
-                ? DefaultBorderColorDark
-                : DefaultBorderColorLight;
-            return new BorderSide(color, 1.0);
+            Color pressedColor = _brightness == PlatformBrightness.Light
+                ? WithOpacity(CupertinoColors.Black, KPressedOverlayOpacity)
+                : WithOpacity(CupertinoColors.White, KPressedOverlayOpacity);
+            DrawShape(context, outer, new SolidColorBrush(pressedColor), pen: null);
         }
 
-        private Color ResolveFocusRingColor(Color activeColor)
+        if (_isFocused)
         {
-            if (CurrentWidget.FocusColor.HasValue)
-            {
-                return CurrentWidget.FocusColor.Value;
-            }
-
-            var hsl = ToHsl(activeColor);
-            var focus = FromHsl(hsl.H, FocusSaturation, FocusLightness);
-            return ApplyOpacity(focus, FocusOpacity);
-        }
-
-        private Color? ResolveOverlayColor(Color activeColor)
-        {
-            if (_isPressed)
-            {
-                return CurrentWidget.IsDark
-                    ? ApplyOpacity(Colors.White, DefaultPressedOverlayOpacity)
-                    : ApplyOpacity(Colors.Black, DefaultPressedOverlayOpacity);
-            }
-
-            if (_hasFocus)
-            {
-                return ResolveFocusRingColor(activeColor);
-            }
-
-            // Cupertino checkbox has no hover overlay by default.
-            _ = _isHovered;
-            return null;
-        }
-
-        private bool ShouldUseDarkGradient(bool selected)
-        {
-            return CurrentWidget.IsDark && !(Enabled && selected);
-        }
-
-        private static Gradient CreateDarkGradient(Color baseColor, bool isEnabled)
-        {
-            double topOpacity = isEnabled ? DarkGradientTopOpacity : DisabledDarkGradientTopOpacity;
-            double bottomOpacity = isEnabled ? DarkGradientBottomOpacity : DisabledDarkGradientBottomOpacity;
-            return new LinearGradient(
-                colors:
-                [
-                    ApplyOpacity(baseColor, topOpacity),
-                    ApplyOpacity(baseColor, bottomOpacity),
-                ],
-                begin: Alignment.TopCenter,
-                end: Alignment.BottomCenter);
-        }
-
-        private Size ResolveTapTargetSize()
-        {
-            var source = CurrentWidget.TapTargetSize;
-            if (!source.HasValue)
-            {
-                return new Size(44, 44);
-            }
-
-            var size = source.Value;
-            if (double.IsNaN(size.Width) || double.IsInfinity(size.Width) || size.Width <= 0
-                || double.IsNaN(size.Height) || double.IsInfinity(size.Height) || size.Height <= 0)
-            {
-                return new Size(44, 44);
-            }
-
-            return size;
-        }
-
-        private void StartTransition()
-        {
-            if (_transitionController is null)
-            {
-                return;
-            }
-
-            SetState(() =>
-            {
-                _isTransitioning = true;
-                _transitionProgress = 0;
-            });
-
-            _transitionController.Forward(0);
-        }
-
-        private void HandleTransitionTick()
-        {
-            if (_transitionController is null || !_isTransitioning)
-            {
-                return;
-            }
-
-            SetState(() =>
-            {
-                _transitionProgress = Math.Clamp(_transitionController.Evaluate(), 0, 1);
-            });
-        }
-
-        private void HandleTransitionCompleted()
-        {
-            SetState(() =>
-            {
-                _transitionProgress = 1;
-                _isTransitioning = false;
-                _previousValue = CurrentWidget.Value;
-            });
-        }
-
-        private void AttachFocusNode(FocusNode? externalNode)
-        {
-            _focusNode = externalNode ?? new FocusNode();
-            _ownsFocusNode = externalNode is null;
-            _focusNode.AddListener(HandleFocusChanged);
-            _hasFocus = _focusNode.HasFocus;
-        }
-
-        private void DetachFocusNode(bool disposeOwned)
-        {
-            if (_focusNode is null)
-            {
-                return;
-            }
-
-            _focusNode.RemoveListener(HandleFocusChanged);
-            if (disposeOwned && _ownsFocusNode)
-            {
-                _focusNode.Dispose();
-            }
-
-            _focusNode = null;
-            _ownsFocusNode = false;
-            _hasFocus = false;
-        }
-
-        private void HandleFocusChanged()
-        {
-            bool hasFocus = _focusNode?.HasFocus ?? false;
-            if (_hasFocus == hasFocus)
-            {
-                return;
-            }
-
-            SetState(() => _hasFocus = hasFocus);
-        }
-
-        private static bool IsSelected(bool? value)
-        {
-            return value ?? true;
-        }
-
-        private static (double H, double S, double L) ToHsl(Color color)
-        {
-            double r = color.R / 255.0;
-            double g = color.G / 255.0;
-            double b = color.B / 255.0;
-
-            double max = Math.Max(r, Math.Max(g, b));
-            double min = Math.Min(r, Math.Min(g, b));
-            double delta = max - min;
-
-            double l = (max + min) / 2.0;
-            if (delta <= 0.000001)
-            {
-                return (0, 0, l);
-            }
-
-            double s = l < 0.5
-                ? delta / (max + min)
-                : delta / (2.0 - max - min);
-
-            double h;
-            if (Math.Abs(max - r) <= 0.000001)
-            {
-                h = ((g - b) / delta + (g < b ? 6.0 : 0.0)) / 6.0;
-            }
-            else if (Math.Abs(max - g) <= 0.000001)
-            {
-                h = ((b - r) / delta + 2.0) / 6.0;
-            }
-            else
-            {
-                h = ((r - g) / delta + 4.0) / 6.0;
-            }
-
-            return (h, s, l);
-        }
-
-        private static Color FromHsl(double h, double s, double l)
-        {
-            h = Normalize(h);
-            s = Math.Clamp(s, 0, 1);
-            l = Math.Clamp(l, 0, 1);
-
-            if (s <= 0.000001)
-            {
-                byte gray = (byte)Math.Clamp((int)Math.Round(l * 255), 0, 255);
-                return Color.FromArgb(255, gray, gray, gray);
-            }
-
-            double q = l < 0.5
-                ? l * (1 + s)
-                : l + s - l * s;
-            double p = 2 * l - q;
-
-            double r = HueToRgb(p, q, h + 1.0 / 3.0);
-            double g = HueToRgb(p, q, h);
-            double b = HueToRgb(p, q, h - 1.0 / 3.0);
-
-            return Color.FromArgb(
-                255,
-                (byte)Math.Clamp((int)Math.Round(r * 255), 0, 255),
-                (byte)Math.Clamp((int)Math.Round(g * 255), 0, 255),
-                (byte)Math.Clamp((int)Math.Round(b * 255), 0, 255));
-        }
-
-        private static double HueToRgb(double p, double q, double t)
-        {
-            t = Normalize(t);
-            if (t < 1.0 / 6.0)
-            {
-                return p + (q - p) * 6 * t;
-            }
-
-            if (t < 1.0 / 2.0)
-            {
-                return q;
-            }
-
-            if (t < 2.0 / 3.0)
-            {
-                return p + (q - p) * (2.0 / 3.0 - t) * 6;
-            }
-
-            return p;
-        }
-
-        private static double Normalize(double value)
-        {
-            double result = value % 1.0;
-            if (result < 0)
-            {
-                result += 1.0;
-            }
-
-            return result;
-        }
-
-        private static Color ApplyOpacity(Color color, double opacity)
-        {
-            double clampedOpacity = Math.Clamp(opacity, 0, 1);
-            byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * clampedOpacity), 0, 255);
-            return Color.FromArgb(alpha, color.R, color.G, color.B);
+            Rect focusOuter = outer.Inflate(1);
+            DrawBox(context, focusOuter, FocusColor, strokeWidth: 3.5, _side, _value ?? true);
         }
     }
 
+    public override bool ShouldRepaint(CustomPainter oldDelegate)
+    {
+        return !ReferenceEquals(this, oldDelegate);
+    }
+
+    // Dart's `Color.withOpacity`: replaces the alpha channel outright.
+    internal static Color WithOpacity(Color color, double opacity)
+    {
+        byte alpha = (byte)Math.Clamp(
+            (int)Math.Round(byte.MaxValue * Math.Clamp(opacity, 0.0, 1.0)),
+            0,
+            byte.MaxValue);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
+    }
 }

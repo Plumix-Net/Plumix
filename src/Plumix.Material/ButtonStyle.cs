@@ -80,6 +80,19 @@ public static class MaterialStateSet
         if (states.HasFlag(MaterialState.Error)) set.Add(WidgetState.Error);
         return set;
     }
+
+    public static MaterialState Flags(IReadOnlySet<WidgetState> states)
+    {
+        MaterialState result = MaterialState.None;
+        if (states.Contains(WidgetState.Hovered)) result |= MaterialState.Hovered;
+        if (states.Contains(WidgetState.Focused)) result |= MaterialState.Focused;
+        if (states.Contains(WidgetState.Pressed)) result |= MaterialState.Pressed;
+        if (states.Contains(WidgetState.Disabled)) result |= MaterialState.Disabled;
+        if (states.Contains(WidgetState.Selected)) result |= MaterialState.Selected;
+        if (states.Contains(WidgetState.Dragged)) result |= MaterialState.Dragged;
+        if (states.Contains(WidgetState.Error)) result |= MaterialState.Error;
+        return result;
+    }
 }
 
 public abstract class MaterialStateProperty<T> : WidgetStateProperty<T>

@@ -27,8 +27,9 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/app.dart` | `src/Plumix.Cupertino/CupertinoApp.cs` | `src/Plumix.Tests/CupertinoAppTests.cs` | — |
 | `cupertino_ui/bottom_tab_bar.dart` | `src/Plumix.Cupertino/CupertinoTabBar.cs` | `src/Plumix.Tests/CupertinoTabBarTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_tab_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoTabBarDemoPage.cs` |
 | `cupertino_ui/button.dart` | `src/Plumix.Cupertino/CupertinoButton.cs` | — | — |
-| `cupertino_ui/checkbox.dart` | `src/Plumix.Cupertino/CupertinoCheckbox.cs` _(reference) (adapted)_<br>`src/Plumix/RenderStrokeGlyph.cs` _(reference) (adapted primitives)_<br>`src/Plumix/Widgets/StrokeGlyph.cs` _(reference) (adapted primitives)_ | — | — |
+| `cupertino_ui/checkbox.dart` | `src/Plumix.Cupertino/CupertinoCheckbox.cs` | `src/Plumix.Tests/CupertinoCheckboxTests.cs` | — |
 | `cupertino_ui/colors.dart` | `src/Plumix.Cupertino/CupertinoColors.cs` | `src/Plumix.Tests/CupertinoColorsTests.cs` | — |
+| `cupertino_ui/constants.dart` | `src/Plumix.Cupertino/Constants.cs` | — | — |
 | `cupertino_ui/context_menu.dart` | `src/Plumix.Cupertino/CupertinoContextMenu.cs` | `src/Plumix.Tests/CupertinoContextMenuTests.cs` | — |
 | `cupertino_ui/context_menu_action.dart` | `src/Plumix.Cupertino/CupertinoContextMenuAction.cs` | — | — |
 | `cupertino_ui/cupertino_focus_halo.dart` | `src/Plumix.Cupertino/CupertinoFocusHalo.cs` | `src/Plumix.Tests/CupertinoFocusHaloTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs` |
@@ -51,7 +52,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/nav_bar.dart` | `src/Plumix.Cupertino/CupertinoNavigationBar.Components.cs`<br>`src/Plumix.Cupertino/CupertinoNavigationBar.Transition.cs`<br>`src/Plumix.Cupertino/CupertinoNavigationBar.cs`<br>`src/Plumix.Cupertino/CupertinoSliverNavigationBar.cs` | `src/Plumix.Tests/CupertinoNavigationBarTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_navigation_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoNavigationBarDemoPage.cs` |
 | `cupertino_ui/page_scaffold.dart` | `src/Plumix.Cupertino/CupertinoPageScaffold.cs`<br>`src/Plumix/Widgets/HitTestableAtOrigin.cs` | `src/Plumix.Tests/CupertinoPageScaffoldTests.cs` | — |
 | `cupertino_ui/picker.dart` | `src/Plumix.Cupertino/CupertinoPicker.cs` | `src/Plumix.Tests/CupertinoPickerTests.cs` | — |
-| `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` _(reference) (adapted)_ | — | — |
+| `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` _(reference) (adapted)_<br>`src/Plumix/RenderStrokeGlyph.cs` _(reference) (adapted primitives)_<br>`src/Plumix/Widgets/StrokeGlyph.cs` _(reference) (adapted primitives)_ | — | — |
 | `cupertino_ui/refresh.dart` | `src/Plumix.Cupertino/CupertinoRefresh.cs` | `src/Plumix.Tests/CupertinoRefreshTests.cs` | — |
 | `cupertino_ui/route.dart` | `src/Plumix.Cupertino/CupertinoDialogRoute.cs`<br>`src/Plumix.Cupertino/CupertinoRoute.cs`<br>`src/Plumix.Material/PageTransitionsTheme.cs` | `src/Plumix.Tests/CupertinoRouteTests.cs` | — |
 | `cupertino_ui/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
@@ -105,7 +106,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/card_theme.dart` | `src/Plumix.Material/CardTheme.cs` | — | — |
 | `material_ui/carousel.dart` | `src/Plumix.Material/Carousel.cs` | `src/Plumix.Tests/MaterialCarouselTests.cs` | `dart_sample/lib/demos/material/carousel_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/CarouselDemoPage.cs` |
 | `material_ui/carousel_theme.dart` | `src/Plumix.Material/Carousel.cs` | `src/Plumix.Tests/MaterialCarouselTests.cs` | `dart_sample/lib/demos/material/carousel_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/CarouselDemoPage.cs` |
-| `material_ui/checkbox.dart` | `src/Plumix.Material/Checkbox.cs` | `src/Plumix.Tests/MaterialCheckboxTests.cs` | `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CheckboxDemoPage.cs` |
+| `material_ui/checkbox.dart` | `src/Plumix.Material/Checkbox.cs` | `src/Plumix.Tests/CupertinoCheckboxTests.cs`<br>`src/Plumix.Tests/MaterialCheckboxTests.cs` | `dart_sample/lib/demos/cupertino/checkbox_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CheckboxDemoPage.cs` |
 | `material_ui/checkbox_list_tile.dart` | `src/Plumix.Material/ListTileControls.cs` _(reference)_ | — | `dart_sample/lib/demos/material/list_tile_controls_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ListTileControlsDemoPage.cs` |
 | `material_ui/checkbox_theme.dart` | `src/Plumix.Material/CheckboxTheme.cs` | — | — |
 | `material_ui/chip.dart` | `src/Plumix.Material/Chip.cs`<br>`src/Plumix.Material/Chips.cs`<br>`src/Plumix.Material/RenderChip.cs` | `src/Plumix.Tests/MaterialChipTests.cs` | `dart_sample/lib/demos/material/chips_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/ChipsDemoPage.cs` |
@@ -547,7 +548,6 @@ Markers that say the port is `(reference)`/`(approximate)`/`(adapted)`/a subset.
 tightening candidate: re-read the Dart source, close the gap, and drop the qualifier from the
 marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
-- `src/Plumix.Cupertino/CupertinoCheckbox.cs` — (reference) (adapted)
 - `src/Plumix.Cupertino/CupertinoRadio.cs` — (reference) (adapted)
 - `src/Plumix.Material/BottomNavigationBar.cs` — (reference)
 - `src/Plumix.Material/BottomNavigationBarTheme.cs` — (reference) (approximate)
@@ -625,9 +625,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 489
-- C# files carrying a marker: 629
+- Flutter files mapped: 490
+- C# files carrying a marker: 630
 - C# files without a marker: 22
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 75
+- C# files with a qualified (non-strict) marker: 74
 

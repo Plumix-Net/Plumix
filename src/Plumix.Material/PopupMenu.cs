@@ -209,8 +209,8 @@ public class PopupMenuItemState<T> : State
         return WidgetStateMouseCursor.ResolveWith(states =>
         {
             MaterialState effectiveStates = widget.Enabled
-                ? states & ~MaterialState.Disabled
-                : states | MaterialState.Disabled;
+                ? MaterialStateSet.Flags(states) & ~MaterialState.Disabled
+                : MaterialStateSet.Flags(states) | MaterialState.Disabled;
             MouseCursor? widgetCursor = widget.MouseCursor is WidgetStateMouseCursor stateCursor
                 ? stateCursor.Resolve(effectiveStates)
                 : widget.MouseCursor;

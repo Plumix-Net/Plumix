@@ -2,7 +2,7 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
-// Dart parity source (reference): cupertino_ui/lib/src/checkbox.dart (adapted primitives)
+// Dart parity source (reference): cupertino_ui/lib/src/radio.dart (adapted primitives)
 
 namespace Plumix.Widgets;
 

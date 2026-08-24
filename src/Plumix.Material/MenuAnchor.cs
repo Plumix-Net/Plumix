@@ -1222,8 +1222,8 @@ internal static class MenuButtonDefaults
             MaximumSize: MaterialStateProperty<Size?>.All(
                 new Size(double.PositiveInfinity, double.PositiveInfinity)),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(64.0, 48.0)),
-            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(
-                WidgetStateMouseCursor.AdaptiveClickable.Resolve),
+            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
+                WidgetStateMouseCursor.AdaptiveClickable.Resolve(states)),
             OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
             {
                 if (states.HasFlag(MaterialState.Pressed))

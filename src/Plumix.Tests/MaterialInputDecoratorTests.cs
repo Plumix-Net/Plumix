@@ -1275,7 +1275,7 @@ public sealed class MaterialInputDecoratorTests
                 floatingLabelStyle: stateLabel,
                 activeIndicatorBorder: WidgetStateBorderSide.ResolveWith(
                     states => new BorderSide(
-                        states.HasFlag(MaterialState.Focused) ? Colors.Magenta : Colors.SeaGreen,
+                        states.Contains(WidgetState.Focused) ? Colors.Magenta : Colors.SeaGreen,
                         2.0))),
         };
 

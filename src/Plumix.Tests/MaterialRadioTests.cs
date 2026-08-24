@@ -442,7 +442,7 @@ public sealed class MaterialRadioTests
                     backgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                         states.HasFlag(MaterialState.Selected) ? activeBackground : inactiveBackground),
                     side: WidgetStateBorderSide.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Selected) ? activeSide : inactiveSide),
+                        states.Contains(WidgetState.Selected) ? activeSide : inactiveSide),
                     innerRadius: MaterialStateProperty<double?>.ResolveWith(states =>
                         states.HasFlag(MaterialState.Selected) ? 6.0 : 2.0))));
 

@@ -7,92 +7,21 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/checkbox_theme.dart
 
-public abstract record WidgetStateMouseCursor : MouseCursor
+// `WidgetStateMouseCursor` and `WidgetStateBorderSide` moved to the core widgets library
+// (`src/Plumix/Widgets/WidgetState.cs`), where Flutter declares them; these extensions keep
+// Material's `[Flags] MaterialState` call sites working against the core set-based resolvers.
+public static class WidgetStateMaterialExtensions
 {
-    public abstract MouseCursor? Resolve(MaterialState states);
-
-    public static WidgetStateMouseCursor ResolveWith(Func<MaterialState, MouseCursor?> resolver)
+    public static BorderSide? Resolve(this WidgetStateBorderSide side, MaterialState states)
     {
-        ArgumentNullException.ThrowIfNull(resolver);
-        return new ResolverWidgetStateMouseCursor(resolver);
+        ArgumentNullException.ThrowIfNull(side);
+        return side.Resolve(MaterialStateSet.Of(states));
     }
 
-    /// <summary>
-    /// Dart's `WidgetStateMouseCursor.clickable` (`widgets/widget_state.dart`): the click cursor unless
-    /// the widget is disabled, in which case the basic cursor.
-    /// </summary>
-    public static WidgetStateMouseCursor Clickable { get; } = ResolveWith(states =>
-        states.HasFlag(MaterialState.Disabled) ? SystemMouseCursors.Basic : SystemMouseCursors.Click);
-
-    /// <summary>
-    /// Dart's `WidgetStateMouseCursor.adaptiveClickable` (`widgets/widget_state.dart`): the click
-    /// cursor on web only, and the basic cursor when disabled or on any other platform.
-    /// </summary>
-    public static WidgetStateMouseCursor AdaptiveClickable { get; } = ResolveWith(states =>
-        states.HasFlag(MaterialState.Disabled) || !OperatingSystem.IsBrowser()
-            ? SystemMouseCursors.Basic
-            : SystemMouseCursors.Click);
-
-    private sealed record ResolverWidgetStateMouseCursor(
-        Func<MaterialState, MouseCursor?> Resolver) : WidgetStateMouseCursor
+    public static MouseCursor? Resolve(this WidgetStateMouseCursor cursor, MaterialState states)
     {
-        public override MouseCursor? Resolve(MaterialState states) => Resolver(states);
-    }
-}
-
-public abstract class WidgetStateBorderSide
-{
-    public abstract BorderSide? Resolve(MaterialState states);
-
-    internal abstract bool IsStateful { get; }
-
-    public static WidgetStateBorderSide All(BorderSide? side)
-    {
-        return new StatefulBorderSide(_ => side);
-    }
-
-    public static WidgetStateBorderSide ResolveWith(Func<MaterialState, BorderSide?> resolver)
-    {
-        ArgumentNullException.ThrowIfNull(resolver);
-        return new StatefulBorderSide(resolver);
-    }
-
-    public static implicit operator WidgetStateBorderSide(BorderSide side)
-    {
-        return new FixedBorderSide(side);
-    }
-
-    internal static WidgetStateBorderSide? Lerp(
-        WidgetStateBorderSide? a,
-        WidgetStateBorderSide? b,
-        double t)
-    {
-        if (a is null && b is null)
-        {
-            return null;
-        }
-
-        BorderSide? start = a?.Resolve(MaterialState.None);
-        BorderSide? end = b?.Resolve(MaterialState.None);
-        BorderSide? side = MaterialThemeLerp.BorderSide(start, end, t);
-        return side.HasValue ? new FixedBorderSide(side.Value) : null;
-    }
-
-    private sealed class FixedBorderSide(BorderSide side) : WidgetStateBorderSide
-    {
-        public override BorderSide? Resolve(MaterialState states)
-        {
-            return states.HasFlag(MaterialState.Selected) ? null : side;
-        }
-
-        internal override bool IsStateful => false;
-    }
-
-    private sealed class StatefulBorderSide(Func<MaterialState, BorderSide?> resolver) : WidgetStateBorderSide
-    {
-        public override BorderSide? Resolve(MaterialState states) => resolver(states);
-
-        internal override bool IsStateful => true;
+        ArgumentNullException.ThrowIfNull(cursor);
+        return cursor.Resolve(MaterialStateSet.Of(states));
     }
 }
 
