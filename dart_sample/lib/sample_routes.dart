@@ -112,6 +112,7 @@ class SampleRoutes {
   static const String cupertinoPicker = '/cupertino-picker';
   static const String cupertinoActivityIndicator =
       '/cupertino-activity-indicator';
+  static const String cupertinoRadio = '/cupertino-radio';
   static const String cupertinoRefresh = '/cupertino-refresh';
   static const String cupertinoRoute = '/cupertino-route';
   static const String proxyWidgets = '/proxy-widgets';

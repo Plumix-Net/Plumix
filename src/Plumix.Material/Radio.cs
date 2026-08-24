@@ -256,32 +256,26 @@ public sealed class Radio<T> : StatefulWidget
                     "An enabled Radio requires onChanged or a group registry.");
             }
 
+            _legacyRegistry ??= new LegacyRadioRegistry(this);
+            RadioGroupRegistry<T> effectiveRegistry = inheritedRegistry ?? _legacyRegistry;
+
             if (IsAdaptiveCupertino(theme))
             {
-                T? groupValue = inheritedRegistry is null
-                    ? CurrentWidget.GroupValue
-                    : inheritedRegistry.GroupValue;
-                Action<T?>? onChanged = enabled
-                    ? inheritedRegistry?.OnChanged ?? CurrentWidget.OnChanged
-                    : null;
                 return new CupertinoRadio<T>(
                     value: CurrentWidget.Value,
-                    groupValue: groupValue,
-                    onChanged: onChanged,
+                    groupValue: CurrentWidget.GroupValue,
+                    onChanged: CurrentWidget.OnChanged,
+                    mouseCursor: CurrentWidget.MouseCursor,
                     toggleable: CurrentWidget.Toggleable,
                     activeColor: CurrentWidget.ActiveColor,
                     focusColor: CurrentWidget.FocusColor,
-                    mouseCursor: CurrentWidget.MouseCursor,
-                    useCheckmarkStyle: CurrentWidget.UseCupertinoCheckmarkStyle,
                     focusNode: _focusNode,
                     autofocus: CurrentWidget.Autofocus,
+                    useCheckmarkStyle: CurrentWidget.UseCupertinoCheckmarkStyle,
                     enabled: enabled,
-                    groupRegistry: inheritedRegistry,
-                    isDark: theme.Brightness == Brightness.Dark);
+                    groupRegistry: effectiveRegistry);
             }
 
-            _legacyRegistry ??= new LegacyRadioRegistry(this);
-            RadioGroupRegistry<T> effectiveRegistry = inheritedRegistry ?? _legacyRegistry;
             RadioThemeData radioTheme = RadioTheme.Of(context);
             WidgetStateProperty<MouseCursor> mouseCursor = WidgetStateProperty<MouseCursor>.ResolveWith(
                 states => ResolveMouseCursor(radioTheme, ToMaterialState(states)));

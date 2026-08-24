@@ -2,6 +2,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix;
+using Plumix.Cupertino;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -274,43 +275,32 @@ public sealed class MaterialRadioTests
     [Fact]
     public void Radio_AdaptiveIOS_Selected_UsesCupertinoDefaults()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            Platform = TargetPlatform.IOS,
-            PrimaryColor = Colors.Coral
-        };
-
-        var root = new TestRootElement(
+        using var harness = new WidgetRenderHarness(
             new Theme(
-                data: theme,
+                data: ThemeData.Light with
+                {
+                    Platform = TargetPlatform.IOS,
+                    PrimaryColor = Colors.Coral
+                },
                 child: Radio<string>.Adaptive(
                     value: "first",
                     groupValue: "first",
                     onChanged: _ => { })));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        harness.Pump(new Size(220, 120));
 
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var outer = FindOuterDecoration(renderRoot);
-        var dot = FindInnerDotDecoration(renderRoot);
-
-        Assert.NotNull(outer);
-        Assert.NotNull(dot);
-        Assert.Equal(Color.FromArgb(255, 0, 122, 255), outer!.Decoration.Color);
-        Assert.True(outer.Decoration.Border is not null);
-        Assert.Equal(0, ((Plumix.Rendering.Border)outer.Decoration.Border!).Top.Width);
-        Assert.Equal(MaterialColors.Transparent, ((Plumix.Rendering.Border)outer.Decoration.Border!).Top.Color);
-        Assert.Equal(Colors.White, dot!.Decoration.Color);
+        CupertinoRadioPainter painter = FindCupertinoRadioPainter(harness.RenderView);
+        Assert.Equal(Color.FromArgb(255, 0, 122, 255), painter.ActiveColor);
+        Assert.Equal(Colors.White, painter.FillColor);
+        Assert.Equal(MaterialColors.Transparent, painter.BorderColor);
+        Assert.True(painter.IsActive);
+        Assert.Equal(true, painter.Value);
     }
 
     [Fact]
     public void Radio_AdaptiveIOS_FillColorParameter_IsIgnored()
     {
-        var owner = new BuildOwner();
-        var root = new TestRootElement(
+        using var harness = new WidgetRenderHarness(
             new Theme(
                 data: ThemeData.Light with
                 {
@@ -323,25 +313,17 @@ public sealed class MaterialRadioTests
                     activeColor: Colors.Orange,
                     fillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        harness.Pump(new Size(220, 120));
 
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var outer = FindOuterDecoration(renderRoot);
-        var dot = FindInnerDotDecoration(renderRoot);
-
-        Assert.NotNull(outer);
-        Assert.NotNull(dot);
-        Assert.Equal(Colors.Orange, outer!.Decoration.Color);
-        Assert.Equal(Colors.White, dot!.Decoration.Color);
+        CupertinoRadioPainter painter = FindCupertinoRadioPainter(harness.RenderView);
+        Assert.Equal(Colors.Orange, painter.ActiveColor);
+        Assert.Equal(Colors.White, painter.FillColor);
     }
 
     [Fact]
-    public void Radio_AdaptiveIOS_UseCheckmarkStyle_RendersStrokeGlyph()
+    public void Radio_AdaptiveIOS_UseCheckmarkStyle_ReachesTheCupertinoPainter()
     {
-        var owner = new BuildOwner();
-        var root = new TestRootElement(
+        using var harness = new WidgetRenderHarness(
             new Theme(
                 data: ThemeData.Light with
                 {
@@ -353,16 +335,12 @@ public sealed class MaterialRadioTests
                     useCupertinoCheckmarkStyle: true,
                     onChanged: _ => { })));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        harness.Pump(new Size(220, 120));
 
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var glyph = FindDescendants<RenderStrokeGlyph>(renderRoot).FirstOrDefault();
-        var dot = FindInnerDotDecoration(renderRoot);
-
-        Assert.NotNull(glyph);
-        Assert.Null(dot);
+        CupertinoRadioPainter painter = FindCupertinoRadioPainter(harness.RenderView);
+        Assert.True(painter.CheckmarkStyle);
+        Assert.Equal(true, painter.Value);
+        Assert.Empty(FindDescendants<RenderDecoratedBox>(harness.RenderView));
     }
 
     [Fact]
@@ -381,8 +359,10 @@ public sealed class MaterialRadioTests
 
         harness.Pump(new Size(220, 120));
 
-        var radioBody = FindDecoratedBoxBySize(harness.RenderView, width: 18, height: 18, tolerance: 0.02);
-        Assert.NotNull(radioBody);
+        RenderCustomPaint customPaint = Assert.Single(
+            FindDescendants<RenderCustomPaint>(harness.RenderView));
+        Assert.IsType<CupertinoRadioPainter>(customPaint.Painter);
+        Assert.Equal(new Size(18.0, 18.0), customPaint.Size);
     }
 
     [Fact]
@@ -638,6 +618,12 @@ public sealed class MaterialRadioTests
         RenderCustomPaint customPaint = Assert.IsType<RenderCustomPaint>(
             FindDescendants<RenderCustomPaint>(root).Single());
         return Assert.IsType<RadioPainter>(customPaint.Painter);
+    }
+
+    private static CupertinoRadioPainter FindCupertinoRadioPainter(RenderObject root)
+    {
+        RenderCustomPaint customPaint = Assert.Single(FindDescendants<RenderCustomPaint>(root));
+        return Assert.IsType<CupertinoRadioPainter>(customPaint.Painter);
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

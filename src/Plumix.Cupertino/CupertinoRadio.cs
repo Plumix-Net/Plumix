@@ -1,85 +1,244 @@
-using System.Collections.Generic;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source (reference): cupertino_ui/lib/src/radio.dart (adapted)
+// Dart parity source: cupertino_ui/lib/src/radio.dart
 
+/// A widget that builds a <see cref="RawRadio{T}"/> with a macOS-style UI.
+///
+/// Used to select between a number of mutually exclusive values. When one radio button in a group is
+/// selected, the other radio buttons in the group are deselected. This widget typically has a
+/// <see cref="RadioGroup{T}"/> ancestor, which takes in a group value, and the
+/// <see cref="CupertinoRadio{T}"/> under it with a matching <see cref="Value"/> will be selected.
 public sealed class CupertinoRadio<T> : StatefulWidget
 {
-    private const double FocusOpacity = 0.80;
-    private const double FocusLightness = 0.69;
-    private const double FocusSaturation = 0.835;
-    private const double InnerRadius = 2.975;
-    private const double BorderWidth = 0.30;
-    private const double PressedOverlayOpacity = 0.15;
-    private const double FocusRingWidth = 3.0;
-    private const double DarkGradientTopOpacity = 0.14;
-    private const double DarkGradientBottomOpacity = 0.29;
-    private const double DisabledDarkGradientTopOpacity = 0.08;
-    private const double DisabledDarkGradientBottomOpacity = 0.14;
-
-    private static readonly Color DisabledOuterColor = Color.FromArgb(128, 255, 255, 255);
-    private static readonly Color DisabledInnerColorLight = Color.FromArgb(64, 0, 0, 0);
-    private static readonly Color DisabledInnerColorDark = Color.FromArgb(64, 255, 255, 255);
-    private static readonly Color DisabledBorderColor = Color.FromArgb(64, 0, 0, 0);
-    private static readonly Color DefaultBorderColorLight = Color.FromArgb(255, 209, 209, 214);
-    private static readonly Color DefaultBorderColorDark = Color.FromArgb(64, 0, 0, 0);
-    private static readonly Color DefaultOuterColorLight = Color.FromArgb(255, 0, 122, 255);
-    private static readonly Color DefaultOuterColorDark = Color.FromArgb(255, 50, 100, 215);
-    private static readonly Color DefaultInnerColorDark = Color.FromArgb(255, 222, 232, 248);
-
-    public const double Width = 18.0;
-
+    /// Creates a macOS-styled radio button.
     public CupertinoRadio(
         T value,
-        T? groupValue,
-        Action<T?>? onChanged,
+        T? groupValue = default,
+        Action<T?>? onChanged = null,
+        MouseCursor? mouseCursor = null,
         bool toggleable = false,
         Color? activeColor = null,
         Color? inactiveColor = null,
         Color? fillColor = null,
         Color? focusColor = null,
-        MouseCursor? mouseCursor = null,
-        bool useCheckmarkStyle = false,
         FocusNode? focusNode = null,
         bool autofocus = false,
+        bool useCheckmarkStyle = false,
         bool? enabled = null,
         RadioGroupRegistry<T>? groupRegistry = null,
-        Size? tapTargetSize = null,
-        bool isDark = false,
         Key? key = null) : base(key)
     {
         Value = value;
         GroupValue = groupValue;
         OnChanged = onChanged;
+        MouseCursor = mouseCursor;
         Toggleable = toggleable;
         ActiveColor = activeColor;
         InactiveColor = inactiveColor;
         FillColor = fillColor;
         FocusColor = focusColor;
-        MouseCursor = mouseCursor;
-        UseCheckmarkStyle = useCheckmarkStyle;
         FocusNode = focusNode;
         Autofocus = autofocus;
+        UseCheckmarkStyle = useCheckmarkStyle;
         Enabled = enabled;
         GroupRegistry = groupRegistry;
-        TapTargetSize = tapTargetSize;
-        IsDark = isDark;
     }
 
+    /// The value represented by this radio button.
     public T Value { get; }
 
+    /// The currently selected value for a group of radio buttons. This radio button is considered
+    /// selected if its <see cref="Value"/> matches the group value.
+    [Obsolete("Use a RadioGroup ancestor to manage group value instead. "
+              + "Mirrors Flutter's deprecation after v3.32.0-0.0.pre.")]
     public T? GroupValue { get; }
 
+    /// Called when the user selects this radio button. If null, the radio button is displayed as
+    /// disabled. The callback is not invoked when this radio button is already selected and
+    /// <see cref="Toggleable"/> is not set; with <see cref="Toggleable"/>, tapping an already
+    /// selected radio invokes it with null.
+    [Obsolete("Use RadioGroup to handle value change instead. "
+              + "Mirrors Flutter's deprecation after v3.32.0-0.0.pre.")]
     public Action<T?>? OnChanged { get; }
 
+    /// The cursor for a mouse pointer when it enters or is hovering over the widget. If null, then
+    /// `SystemMouseCursors.basic` is used when this radio button is disabled; when enabled,
+    /// `SystemMouseCursors.click` is used on Web and `SystemMouseCursors.basic` elsewhere.
+    public MouseCursor? MouseCursor { get; }
+
+    /// Whether tapping an already selected radio button deselects it, reporting null.
     public bool Toggleable { get; }
+
+    /// Controls whether the radio displays in a checkbox style or the default iOS radio style.
+    /// Defaults to false.
+    public bool UseCheckmarkStyle { get; }
+
+    /// The color to use when this radio button is selected. Defaults to `CupertinoColors.activeBlue`.
+    public Color? ActiveColor { get; }
+
+    /// The color to use when this radio button is not selected. Defaults to `CupertinoColors.white`.
+    public Color? InactiveColor { get; }
+
+    /// The color that fills the inner circle of the radio button when selected. Defaults to
+    /// `CupertinoColors.white`.
+    public Color? FillColor { get; }
+
+    /// The color for the radio's border when it has the input focus. If null, then a paler form of
+    /// the <see cref="ActiveColor"/> is used.
+    public Color? FocusColor { get; }
+
+    public FocusNode? FocusNode { get; }
+
+    public bool Autofocus { get; }
+
+    /// The registry this radio button reports to. Unless provided, the <see cref="BuildContext"/> is
+    /// used to look up the ancestor <see cref="RadioGroupRegistry{T}"/>.
+    public RadioGroupRegistry<T>? GroupRegistry { get; }
+
+    /// Whether this widget is interactive. If not provided, this widget is interactive when an
+    /// <see cref="OnChanged"/> is provided, a <see cref="RadioGroup{T}"/> with the same type sits
+    /// above it, or a <see cref="GroupRegistry"/> is provided.
+    public bool? Enabled { get; }
+
+    public override State CreateState() => new CupertinoRadioState();
+
+    private sealed class CupertinoRadioState : State
+    {
+        private FocusNode? _internalFocusNode;
+        private RadioRegistry? _internalRadioRegistry;
+
+        internal CupertinoRadio<T> CurrentWidget => (CupertinoRadio<T>)StateWidget;
+
+        private FocusNode EffectiveFocusNode =>
+            CurrentWidget.FocusNode ?? (_internalFocusNode ??= new FocusNode());
+
+        private bool IsEnabled => CurrentWidget.Enabled
+                                  ?? (CurrentWidget.OnChanged is not null
+                                      || CurrentWidget.GroupRegistry is not null
+                                      || RadioGroup<T>.MaybeOf(Context) is not null);
+
+        private RadioGroupRegistry<T> EffectiveRegistry
+        {
+            get
+            {
+                if (CurrentWidget.GroupRegistry is not null)
+                {
+                    return CurrentWidget.GroupRegistry;
+                }
+
+                RadioGroupRegistry<T>? inheritedRegistry = RadioGroup<T>.MaybeOf(Context);
+                if (inheritedRegistry is not null)
+                {
+                    return inheritedRegistry;
+                }
+
+                // Handles deprecated API.
+                return _internalRadioRegistry ??= new RadioRegistry(this);
+            }
+        }
+
+        public override void Dispose()
+        {
+            _internalFocusNode?.Dispose();
+            base.Dispose();
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            if ((CurrentWidget.Enabled ?? false)
+                && CurrentWidget.OnChanged is null
+                && CurrentWidget.GroupRegistry is null
+                && RadioGroup<T>.MaybeOf(context) is null)
+            {
+                throw new InvalidOperationException(
+                    "Radio is enabled but has no CupertinoRadio.OnChanged, "
+                    + "CupertinoRadio.GroupRegistry, or RadioGroup above");
+            }
+
+            WidgetStateProperty<MouseCursor> effectiveMouseCursor =
+                WidgetStateProperty<MouseCursor>.ResolveWith(states =>
+                    (CurrentWidget.MouseCursor is WidgetStateMouseCursor stateCursor
+                        ? stateCursor.Resolve(states)
+                        : CurrentWidget.MouseCursor)
+                    ?? (!states.Contains(WidgetState.Disabled) && PlatformDefaults.IsWeb
+                        ? SystemMouseCursors.Click
+                        : SystemMouseCursors.Basic));
+
+            return new RawRadio<T>(
+                value: CurrentWidget.Value,
+                groupRegistry: EffectiveRegistry,
+                mouseCursor: effectiveMouseCursor,
+                toggleable: CurrentWidget.Toggleable,
+                focusNode: EffectiveFocusNode,
+                autofocus: CurrentWidget.Autofocus,
+                enabled: IsEnabled,
+                builder: (_, state) => new CupertinoRadioPaint<T>(
+                    activeColor: CurrentWidget.ActiveColor,
+                    inactiveColor: CurrentWidget.InactiveColor,
+                    fillColor: CurrentWidget.FillColor,
+                    focusColor: CurrentWidget.FocusColor,
+                    useCheckmarkStyle: CurrentWidget.UseCheckmarkStyle,
+                    isActive: IsEnabled,
+                    toggleableState: state,
+                    focused: EffectiveFocusNode.HasFocus));
+        }
+
+        /// A registry for deprecated API.
+        private sealed class RadioRegistry : RadioGroupRegistry<T>
+        {
+            private readonly CupertinoRadioState _state;
+
+            public RadioRegistry(CupertinoRadioState state)
+            {
+                _state = state;
+            }
+
+            public override T? GroupValue => _state.CurrentWidget.GroupValue;
+
+            public override Action<T?> OnChanged => _state.CurrentWidget.OnChanged!;
+
+            public override void RegisterClient(RadioClient<T> radio)
+            {
+            }
+
+            public override void UnregisterClient(RadioClient<T> radio)
+            {
+            }
+        }
+    }
+}
+
+internal sealed class CupertinoRadioPaint<T> : StatefulWidget
+{
+    public CupertinoRadioPaint(
+        bool focused,
+        RawRadioState<T> toggleableState,
+        Color? activeColor,
+        Color? inactiveColor,
+        Color? fillColor,
+        Color? focusColor,
+        bool useCheckmarkStyle,
+        bool isActive)
+    {
+        Focused = focused;
+        ToggleableState = toggleableState;
+        ActiveColor = activeColor;
+        InactiveColor = inactiveColor;
+        FillColor = fillColor;
+        FocusColor = focusColor;
+        UseCheckmarkStyle = useCheckmarkStyle;
+        IsActive = isActive;
+    }
+
+    public RawRadioState<T> ToggleableState { get; }
 
     public Color? ActiveColor { get; }
 
@@ -89,569 +248,366 @@ public sealed class CupertinoRadio<T> : StatefulWidget
 
     public Color? FocusColor { get; }
 
-    public MouseCursor? MouseCursor { get; }
-
     public bool UseCheckmarkStyle { get; }
 
-    public FocusNode? FocusNode { get; }
+    public bool IsActive { get; }
 
-    public bool Autofocus { get; }
+    public bool Focused { get; }
 
-    public bool? Enabled { get; }
+    public override State CreateState() => new CupertinoRadioPaintState();
 
-    public RadioGroupRegistry<T>? GroupRegistry { get; }
-
-    public Size? TapTargetSize { get; }
-
-    public bool IsDark { get; }
-
-    public override State CreateState()
+    private sealed class CupertinoRadioPaintState : State
     {
-        return new CupertinoRadioState();
-    }
+        private CupertinoRadioPainter? _painter;
 
-    private sealed class CupertinoRadioState : State, RadioClient<T>
-    {
-        private FocusNode? _focusNode;
-        private bool _ownsFocusNode;
-        private bool _hasFocus;
-        private bool _isPressed;
-        private RadioGroupRegistry<T>? _registry;
-
-        private CupertinoRadio<T> CurrentWidget => (CupertinoRadio<T>)StateWidget;
-
-        private bool IsEnabled => CurrentWidget.Enabled
-                                  ?? (CurrentWidget.OnChanged is not null || _registry is not null);
-
-        public bool Tristate => CurrentWidget.Toggleable;
-
-        public T RadioValue => CurrentWidget.Value;
-
-        public bool Enabled => IsEnabled;
-
-        public FocusNode FocusNode => _focusNode!;
-
-        public override void InitState()
-        {
-            AttachFocusNode(CurrentWidget.FocusNode);
-            SetRegistry(CurrentWidget.GroupRegistry);
-        }
-
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
-        {
-            var oldRadio = (CupertinoRadio<T>)oldWidget;
-            SetRegistry(CurrentWidget.GroupRegistry);
-            if (!ReferenceEquals(oldRadio.FocusNode, CurrentWidget.FocusNode))
-            {
-                DetachFocusNode(disposeOwned: true);
-                AttachFocusNode(CurrentWidget.FocusNode);
-            }
-
-            if (!Enabled && _focusNode is { HasFocus: true })
-            {
-                _focusNode.Unfocus();
-            }
-
-            if (!Enabled)
-            {
-                _isPressed = false;
-            }
-        }
+        private CupertinoRadioPaint<T> CurrentWidget => (CupertinoRadioPaint<T>)StateWidget;
 
         public override void Dispose()
         {
-            SetRegistry(null);
-            DetachFocusNode(disposeOwned: true);
+            _painter?.Dispose();
+            _painter = null;
+            base.Dispose();
         }
 
-        public override Widget Build(BuildContext context)
+        private WidgetStateProperty<Color> DefaultOuterColor => WidgetStateProperty<Color>.ResolveWith(states =>
         {
-            bool selected = IsSelected();
-            var shape = Plumix.Rendering.BorderRadius.Circular(Width / 2);
-            var activeColor = ResolveActiveColor();
-            var outerColor = ResolveOuterColor(selected, activeColor);
-            var innerColor = ResolveInnerColor(selected);
-            var borderColor = ResolveBorderColor(selected);
-            var overlayColor = ResolvePressedOverlayColor();
-            var focusRingColor = ResolveFocusRingColor(activeColor);
-            var bodyColor = CurrentWidget.IsDark ? CupertinoColors.Transparent : outerColor;
-            double borderWidth = borderColor.A == 0 ? 0 : BorderWidth;
-
-            var layers = new List<Widget>
+            if (states.Contains(WidgetState.Disabled))
             {
-                new DecoratedBox(
-                    decoration: new BoxDecoration(
-                        Color: bodyColor,
-                        Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(borderColor, borderWidth)),
-                        BorderRadius: shape),
-                    child: new SizedBox(width: Width, height: Width))
-            };
-
-            if (CurrentWidget.IsDark)
-            {
-                layers.Add(new DecoratedBox(
-                    decoration: new BoxDecoration(
-                        Gradient: CreateDarkGradient(outerColor, Enabled),
-                        BorderRadius: shape),
-                    child: new SizedBox(width: Width, height: Width)));
+                return CupertinoRadioPainter.KDisabledOuterColor;
             }
-
-            if (overlayColor.HasValue && overlayColor.Value.A > 0)
+            if (states.Contains(WidgetState.Selected))
             {
-                layers.Add(new Container(
-                    width: Width,
-                    height: Width,
-                    color: overlayColor.Value));
+                return CurrentWidget.ActiveColor
+                       ?? CupertinoDynamicColor.Resolve(CupertinoRadioPainter.KDefaultOuterColor, Context);
             }
+            return CurrentWidget.InactiveColor ?? CupertinoColors.White;
+        });
 
-            layers.Add(BuildIndicator(selected, innerColor, activeColor));
-
-            Widget body = new SizedBox(
-                width: Width,
-                height: Width,
-                child: new ClipRRect(
-                    borderRadius: shape,
-                    child: new Stack(
-                        alignment: Alignment.Center,
-                        children: layers)));
-
-            if (_hasFocus && Enabled)
-            {
-                body = new DecoratedBox(
-                    decoration: new BoxDecoration(
-                        Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(focusRingColor, FocusRingWidth)),
-                        BorderRadius: Plumix.Rendering.BorderRadius.Circular(shape.Radius + 1.5)),
-                    child: new Padding(
-                        new Thickness(1.5),
-                        body));
-            }
-
-            var tapTarget = ResolveTapTargetSize();
-            Widget result = new SizedBox(
-                width: tapTarget.Width,
-                height: tapTarget.Height,
-                child: new Center(child: body));
-
-            if (Enabled)
-            {
-                result = new GestureDetector(
-                    excludeFromSemantics: true,
-                    behavior: HitTestBehavior.Opaque,
-                    onTap: HandleTap,
-                    child: result);
-
-                result = new Listener(
-                    behavior: HitTestBehavior.Opaque,
-                    onPointerDown: HandlePointerDown,
-                    onPointerUp: HandlePointerUp,
-                    onPointerCancel: HandlePointerCancel,
-                    child: result);
-            }
-
-            Widget focusedResult = new Focus(
-                focusNode: _focusNode,
-                autofocus: CurrentWidget.Autofocus,
-                canRequestFocus: Enabled,
-                onKeyEvent: HandleKeyEvent,
-                child: result);
-            return CurrentWidget.MouseCursor is null
-                ? focusedResult
-                : new MouseRegion(
-                    cursor: CurrentWidget.MouseCursor,
-                    child: focusedResult);
-        }
-
-        private Widget BuildIndicator(bool selected, Color innerColor, Color activeColor)
+        private WidgetStateProperty<Color> DefaultInnerColor => WidgetStateProperty<Color>.ResolveWith(states =>
         {
-            if (!selected)
+            if (states.Contains(WidgetState.Disabled) && states.Contains(WidgetState.Selected))
             {
-                return new SizedBox();
+                return CurrentWidget.FillColor
+                       ?? CupertinoDynamicColor.Resolve(CupertinoRadioPainter.KDisabledInnerColor, Context);
             }
-
-            if (CurrentWidget.UseCheckmarkStyle)
+            if (states.Contains(WidgetState.Selected))
             {
-                return new StrokeGlyph(StrokeGlyphKind.Check, activeColor, Width);
+                return CurrentWidget.FillColor
+                       ?? CupertinoDynamicColor.Resolve(CupertinoRadioPainter.KDefaultInnerColor, Context);
             }
+            return CupertinoColors.White;
+        });
 
-            return new DecoratedBox(
-                decoration: new BoxDecoration(
-                    Color: innerColor,
-                    BorderRadius: Plumix.Rendering.BorderRadius.Circular(InnerRadius)),
-                child: new SizedBox(
-                    width: InnerRadius * 2,
-                    height: InnerRadius * 2));
-        }
-
-        private void HandleTap()
+        private WidgetStateProperty<Color> DefaultBorderColor => WidgetStateProperty<Color>.ResolveWith(states =>
         {
-            if (!Enabled)
-            {
-                return;
-            }
-
-            if (IsSelected())
-            {
-                if (CurrentWidget.Toggleable)
-                {
-                    NotifyChanged(default);
-                }
-
-                return;
-            }
-
-            NotifyChanged(CurrentWidget.Value);
-        }
-
-        private void HandlePointerDown(PointerDownEvent @event)
-        {
-            SetPressed(true);
-        }
-
-        private void HandlePointerUp(PointerUpEvent @event)
-        {
-            SetPressed(false);
-        }
-
-        private void HandlePointerCancel(PointerCancelEvent @event)
-        {
-            SetPressed(false);
-        }
-
-        private void SetPressed(bool value)
-        {
-            if (!Enabled || _isPressed == value)
-            {
-                return;
-            }
-
-            SetState(() => _isPressed = value);
-        }
-
-        private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
-        {
-            if (!IsActivateKey(@event))
-            {
-                return KeyEventResult.Ignored;
-            }
-
-            if (!Enabled)
-            {
-                return KeyEventResult.Handled;
-            }
-
-            if (@event is KeyDownEvent)
-            {
-                HandleTap();
-            }
-
-            return KeyEventResult.Handled;
-        }
-
-        private static bool IsActivateKey(KeyEvent @event)
-        {
-            HardwareKeyboard state = HardwareKeyboard.Instance;
-            if (state.IsShiftPressed || state.IsControlPressed || state.IsAltPressed || state.IsMetaPressed)
-            {
-                return false;
-            }
-
-            return @event.LogicalKey.Equals(LogicalKeyboardKey.Enter)
-                   || @event.LogicalKey.Equals(LogicalKeyboardKey.NumpadEnter)
-                   || @event.LogicalKey.Equals(LogicalKeyboardKey.Space);
-        }
-
-        private bool IsSelected()
-        {
-            T? groupValue = _registry is null ? CurrentWidget.GroupValue : _registry.GroupValue;
-            return EqualityComparer<T?>.Default.Equals(CurrentWidget.Value, groupValue);
-        }
-
-        private void NotifyChanged(T? value)
-        {
-            if (_registry is not null)
-            {
-                _registry.OnChanged(value);
-                return;
-            }
-
-            CurrentWidget.OnChanged?.Invoke(value);
-        }
-
-        private void SetRegistry(RadioGroupRegistry<T>? registry)
-        {
-            if (ReferenceEquals(_registry, registry))
-            {
-                return;
-            }
-
-            _registry?.UnregisterClient(this);
-            _registry = registry;
-            _registry?.RegisterClient(this);
-        }
-
-        private Color ResolveActiveColor()
-        {
-            if (CurrentWidget.ActiveColor.HasValue)
-            {
-                return CurrentWidget.ActiveColor.Value;
-            }
-
-            return CurrentWidget.IsDark
-                ? DefaultOuterColorDark
-                : DefaultOuterColorLight;
-        }
-
-        private Color ResolveOuterColor(bool selected, Color activeColor)
-        {
-            if (!Enabled)
-            {
-                return DisabledOuterColor;
-            }
-
-            if (selected)
-            {
-                return activeColor;
-            }
-
-            return CurrentWidget.InactiveColor ?? Colors.White;
-        }
-
-        private Color ResolveInnerColor(bool selected)
-        {
-            if (!selected)
-            {
-                return Colors.White;
-            }
-
-            if (CurrentWidget.FillColor.HasValue)
-            {
-                return CurrentWidget.FillColor.Value;
-            }
-
-            if (!Enabled)
-            {
-                return CurrentWidget.IsDark
-                    ? DisabledInnerColorDark
-                    : DisabledInnerColorLight;
-            }
-
-            return CurrentWidget.IsDark
-                ? DefaultInnerColorDark
-                : Colors.White;
-        }
-
-        private Color ResolveBorderColor(bool selected)
-        {
-            if (Enabled && (selected || _hasFocus))
+            if ((states.Contains(WidgetState.Selected) || states.Contains(WidgetState.Focused))
+                && !states.Contains(WidgetState.Disabled))
             {
                 return CupertinoColors.Transparent;
             }
-
-            if (!Enabled)
+            if (states.Contains(WidgetState.Disabled))
             {
-                return DisabledBorderColor;
+                return CupertinoDynamicColor.Resolve(CupertinoRadioPainter.KDisabledBorderColor, Context);
             }
+            return CupertinoDynamicColor.Resolve(CupertinoRadioPainter.KDefaultBorderColor, Context);
+        });
 
-            return CurrentWidget.IsDark
-                ? DefaultBorderColorDark
-                : DefaultBorderColorLight;
-        }
-
-        private Color? ResolvePressedOverlayColor()
+        public override Widget Build(BuildContext context)
         {
-            if (!_isPressed || !Enabled)
-            {
-                return null;
-            }
+            RawRadioState<T> toggleableState = CurrentWidget.ToggleableState;
+            _painter ??= new CupertinoRadioPainter(
+                toggleableState.PositionAnimation,
+                toggleableState.ReactionAnimation,
+                toggleableState.ReactionHoverFadeAnimation,
+                toggleableState.ReactionFocusFadeAnimation);
 
-            return CurrentWidget.IsDark
-                ? ApplyOpacity(Colors.White, PressedOverlayOpacity)
-                : ApplyOpacity(Colors.Black, PressedOverlayOpacity);
+            // Colors need to be resolved in selected and non selected states separately.
+            var activeStates = new HashSet<WidgetState>(toggleableState.States) { WidgetState.Selected };
+            var inactiveStates = new HashSet<WidgetState>(toggleableState.States);
+            inactiveStates.Remove(WidgetState.Selected);
+
+            // Since the states getter always makes a new set, make a copy to use throughout the
+            // lifecycle of this build method.
+            IReadOnlySet<WidgetState> currentStates = toggleableState.States;
+
+            Color effectiveActiveColor = DefaultOuterColor.Resolve(activeStates);
+
+            Color effectiveInactiveColor = DefaultOuterColor.Resolve(inactiveStates);
+
+            Color effectiveFocusOverlayColor = CurrentWidget.FocusColor
+                ?? HSLColor.FromColor(CupertinoRadioPainter.WithOpacity(
+                        effectiveActiveColor,
+                        CupertinoConstants.CupertinoFocusColorOpacity))
+                    .WithLightness(CupertinoConstants.CupertinoFocusColorBrightness)
+                    .WithSaturation(CupertinoConstants.CupertinoFocusColorSaturation)
+                    .ToColor();
+
+            Color effectiveFillColor = DefaultInnerColor.Resolve(currentStates);
+
+            Color effectiveBorderColor = DefaultBorderColor.Resolve(currentStates);
+
+            _painter.Configure(
+                focusColor: effectiveFocusOverlayColor,
+                downPosition: toggleableState.PressPosition,
+                isFocused: CurrentWidget.Focused,
+                activeColor: effectiveActiveColor,
+                inactiveColor: effectiveInactiveColor,
+                fillColor: effectiveFillColor,
+                value: toggleableState.Selected,
+                checkmarkStyle: CurrentWidget.UseCheckmarkStyle,
+                isActive: CurrentWidget.IsActive,
+                borderColor: effectiveBorderColor,
+                brightness: CupertinoTheme.Of(context).Brightness);
+
+            return new CustomPaint(painter: _painter, size: CupertinoRadioPainter.KSize);
         }
+    }
+}
 
-        private Color ResolveFocusRingColor(Color activeColor)
+internal sealed class CupertinoRadioPainter : ToggleablePainter
+{
+    internal static readonly Size KSize = new(18.0, 18.0);
+    internal const double KOuterRadius = 7.0;
+    internal const double KInnerRadius = 2.975;
+
+    // Eyeballed from a radio on a physical Macbook Pro running macOS version 14.5.
+    internal static readonly Color KDisabledOuterColor = WithOpacity(CupertinoColors.White, 0.50);
+    internal static readonly CupertinoDynamicColor KDisabledInnerColor = CupertinoDynamicColor.WithBrightness(
+        color: Color.FromArgb(64, 0, 0, 0),
+        darkColor: Color.FromArgb(64, 255, 255, 255));
+    internal static readonly CupertinoDynamicColor KDisabledBorderColor = CupertinoDynamicColor.WithBrightness(
+        color: Color.FromArgb(64, 0, 0, 0),
+        darkColor: Color.FromArgb(64, 0, 0, 0));
+    internal static readonly CupertinoDynamicColor KDefaultBorderColor = CupertinoDynamicColor.WithBrightness(
+        color: Color.FromArgb(255, 209, 209, 214),
+        darkColor: Color.FromArgb(64, 0, 0, 0));
+    internal static readonly CupertinoDynamicColor KDefaultInnerColor = CupertinoDynamicColor.WithBrightness(
+        color: CupertinoColors.White,
+        darkColor: Color.FromArgb(255, 222, 232, 248));
+    internal static readonly CupertinoDynamicColor KDefaultOuterColor = CupertinoDynamicColor.WithBrightness(
+        color: CupertinoColors.ActiveBlue.Value,
+        darkColor: Color.FromArgb(255, 50, 100, 215));
+    internal const double KPressedOverlayOpacity = 0.15;
+    internal const double KCheckmarkStrokeWidth = 2.0;
+    internal const double KFocusOutlineStrokeWidth = 3.0;
+    internal const double KBorderOutlineStrokeWidth = 0.3;
+    // In dark mode, the outer color of a radio is an opacity gradient of the background color.
+    internal static readonly IReadOnlyList<double> KDarkGradientOpacities = [0.14, 0.29];
+    internal static readonly IReadOnlyList<double> KDisabledDarkGradientOpacities = [0.08, 0.14];
+
+    private Point? _downPosition;
+    private bool _isFocused;
+    private Color _activeColor;
+    private Color _inactiveColor;
+    private bool _isActive;
+    private bool? _value;
+    private Color _fillColor;
+    private bool _checkmarkStyle;
+    private PlatformBrightness? _brightness;
+    private Color _borderColor;
+
+    public CupertinoRadioPainter(
+        Animation<double> position,
+        Animation<double> reaction,
+        Animation<double> reactionHoverFade,
+        Animation<double> reactionFocusFade)
+        : base(position, reaction, reactionHoverFade, reactionFocusFade)
+    {
+    }
+
+    internal Point? DownPosition => _downPosition;
+
+    internal bool Focused => _isFocused;
+
+    internal Color ActiveColor => _activeColor;
+
+    internal Color InactiveColor => _inactiveColor;
+
+    internal bool IsActive => _isActive;
+
+    internal bool? Value => _value;
+
+    internal Color FillColor => _fillColor;
+
+    internal bool CheckmarkStyle => _checkmarkStyle;
+
+    internal PlatformBrightness? Brightness => _brightness;
+
+    internal Color BorderColor => _borderColor;
+
+    internal Color EffectiveFocusColor => FocusColor;
+
+    internal void Configure(
+        Color focusColor,
+        Point? downPosition,
+        bool isFocused,
+        Color activeColor,
+        Color inactiveColor,
+        Color fillColor,
+        bool? value,
+        bool checkmarkStyle,
+        bool isActive,
+        Color borderColor,
+        PlatformBrightness? brightness)
+    {
+        FocusColor = focusColor;
+        _downPosition = downPosition;
+        _isFocused = isFocused;
+        _activeColor = activeColor;
+        _inactiveColor = inactiveColor;
+        _fillColor = fillColor;
+        _value = value;
+        _checkmarkStyle = checkmarkStyle;
+        _isActive = isActive;
+        _borderColor = borderColor;
+        _brightness = brightness;
+        NotifyPainterChanged();
+    }
+
+    private void DrawPressedOverlay(PaintingContext context, Point center, double radius)
+    {
+        Color pressedColor = _brightness == PlatformBrightness.Light
+            ? WithOpacity(CupertinoColors.Black, KPressedOverlayOpacity)
+            : WithOpacity(CupertinoColors.White, KPressedOverlayOpacity);
+        context.DrawCircle(new SolidColorBrush(pressedColor), pen: null, center, radius);
+    }
+
+    private static void DrawFillGradient(
+        PaintingContext context,
+        Point center,
+        double radius,
+        Color topColor,
+        Color bottomColor)
+    {
+        var fillGradient = new LinearGradient(
+            colors: [topColor, bottomColor],
+            begin: Alignment.TopCenter,
+            end: Alignment.BottomCenter);
+        Rect circleRect = RectFromCircle(center, radius);
+        // Dart fills `Path()..addOval(circleRect)`; an oval fill is the same geometry.
+        context.DrawOval(circleRect, fillGradient.CreateShader(circleRect), pen: null);
+    }
+
+    private void DrawOuterBorder(PaintingContext context, Point center)
+    {
+        var borderPen = new Pen(new SolidColorBrush(_borderColor), KBorderOutlineStrokeWidth);
+        context.DrawOval(RectFromCircle(center, KOuterRadius), brush: null, borderPen);
+    }
+
+    public override void Paint(PaintingContext context, Size size)
+    {
+        var center = new Point(size.Width / 2.0, size.Height / 2.0);
+
+        if (_checkmarkStyle)
         {
-            if (CurrentWidget.FocusColor.HasValue)
+            if (_value ?? false)
             {
-                return CurrentWidget.FocusColor.Value;
+                var path = new Plumix.UI.Path();
+                var checkPen = new Pen(
+                    new SolidColorBrush(_activeColor),
+                    KCheckmarkStrokeWidth,
+                    lineCap: PenLineCap.Round);
+                double width = KSize.Width;
+                var origin = new Point(center.X - (width / 2.0), center.Y - (width / 2.0));
+                var start = new Point(width * 0.25, width * 0.52);
+                var mid = new Point(width * 0.46, width * 0.75);
+                var end = new Point(width * 0.85, width * 0.29);
+                path.MoveTo(origin.X + start.X, origin.Y + start.Y);
+                path.LineTo(origin.X + mid.X, origin.Y + mid.Y);
+                context.DrawPath(path, brush: null, checkPen);
+                path.MoveTo(origin.X + mid.X, origin.Y + mid.Y);
+                path.LineTo(origin.X + end.X, origin.Y + end.Y);
+                context.DrawPath(path, brush: null, checkPen);
             }
-
-            var hsl = ToHsl(activeColor);
-            var focus = FromHsl(hsl.H, FocusSaturation, FocusLightness);
-            return ApplyOpacity(focus, FocusOpacity);
         }
-
-        private Size ResolveTapTargetSize()
+        else if (_value ?? false)
         {
-            var source = CurrentWidget.TapTargetSize;
-            if (!source.HasValue)
+            Color outerColor = _activeColor;
+            // Draw a gradient in dark mode if the radio is disabled.
+            if (_brightness == PlatformBrightness.Dark && !_isActive)
             {
-                return new Size(Width, Width);
-            }
-
-            var size = source.Value;
-            if (double.IsNaN(size.Width) || double.IsInfinity(size.Width) || size.Width <= 0
-                || double.IsNaN(size.Height) || double.IsInfinity(size.Height) || size.Height <= 0)
-            {
-                return new Size(Width, Width);
-            }
-
-            return size;
-        }
-
-        private static Gradient CreateDarkGradient(Color baseColor, bool isEnabled)
-        {
-            double topOpacity = isEnabled ? DarkGradientTopOpacity : DisabledDarkGradientTopOpacity;
-            double bottomOpacity = isEnabled ? DarkGradientBottomOpacity : DisabledDarkGradientBottomOpacity;
-            return new LinearGradient(
-                colors:
-                [
-                    ApplyOpacity(baseColor, topOpacity),
-                    ApplyOpacity(baseColor, bottomOpacity),
-                ],
-                begin: Alignment.TopCenter,
-                end: Alignment.BottomCenter);
-        }
-
-        private void AttachFocusNode(FocusNode? externalNode)
-        {
-            _focusNode = externalNode ?? new FocusNode();
-            _ownsFocusNode = externalNode is null;
-            _focusNode.AddListener(HandleFocusChanged);
-            _hasFocus = _focusNode.HasFocus;
-        }
-
-        private void DetachFocusNode(bool disposeOwned)
-        {
-            if (_focusNode is null)
-            {
-                return;
-            }
-
-            _focusNode.RemoveListener(HandleFocusChanged);
-            if (disposeOwned && _ownsFocusNode)
-            {
-                _focusNode.Dispose();
-            }
-
-            _focusNode = null;
-            _ownsFocusNode = false;
-            _hasFocus = false;
-        }
-
-        private void HandleFocusChanged()
-        {
-            bool hasFocus = _focusNode?.HasFocus ?? false;
-            if (_hasFocus == hasFocus)
-            {
-                return;
-            }
-
-            SetState(() => _hasFocus = hasFocus);
-        }
-
-        private static (double H, double S, double L) ToHsl(Color color)
-        {
-            double r = color.R / 255.0;
-            double g = color.G / 255.0;
-            double b = color.B / 255.0;
-
-            double max = Math.Max(r, Math.Max(g, b));
-            double min = Math.Min(r, Math.Min(g, b));
-            double delta = max - min;
-
-            double l = (max + min) / 2.0;
-            if (delta <= 0.000001)
-            {
-                return (0, 0, l);
-            }
-
-            double s = l < 0.5
-                ? delta / (max + min)
-                : delta / (2.0 - max - min);
-
-            double h;
-            if (Math.Abs(max - r) <= 0.000001)
-            {
-                h = ((g - b) / delta + (g < b ? 6.0 : 0.0)) / 6.0;
-            }
-            else if (Math.Abs(max - g) <= 0.000001)
-            {
-                h = ((b - r) / delta + 2.0) / 6.0;
+                DrawFillGradient(
+                    context,
+                    center,
+                    KOuterRadius,
+                    WithOpacity(
+                        outerColor,
+                        _isActive ? KDarkGradientOpacities[0] : KDisabledDarkGradientOpacities[0]),
+                    WithOpacity(
+                        outerColor,
+                        _isActive ? KDarkGradientOpacities[1] : KDisabledDarkGradientOpacities[1]));
             }
             else
             {
-                h = ((r - g) / delta + 4.0) / 6.0;
+                context.DrawCircle(new SolidColorBrush(outerColor), pen: null, center, KOuterRadius);
             }
-
-            return (h, s, l);
+            // The outer circle's opacity changes when the radio is pressed.
+            if (_downPosition is not null)
+            {
+                DrawPressedOverlay(context, center, KOuterRadius);
+            }
+            context.DrawCircle(new SolidColorBrush(_fillColor), pen: null, center, KInnerRadius);
+            // Draw an outer border if the radio is disabled and selected.
+            if (!_isActive)
+            {
+                DrawOuterBorder(context, center);
+            }
         }
-
-        private static Color FromHsl(double h, double s, double l)
+        else
         {
-            h = Normalize(h);
-            s = Math.Clamp(s, 0, 1);
-            l = Math.Clamp(l, 0, 1);
-
-            if (s <= 0.000001)
+            Color paintColor = _isActive ? _inactiveColor : KDisabledOuterColor;
+            if (_brightness == PlatformBrightness.Dark)
             {
-                byte gray = (byte)Math.Clamp((int)Math.Round(l * 255), 0, 255);
-                return Color.FromArgb(255, gray, gray, gray);
+                DrawFillGradient(
+                    context,
+                    center,
+                    KOuterRadius,
+                    WithOpacity(
+                        paintColor,
+                        _isActive ? KDarkGradientOpacities[0] : KDisabledDarkGradientOpacities[0]),
+                    WithOpacity(
+                        paintColor,
+                        _isActive ? KDarkGradientOpacities[1] : KDisabledDarkGradientOpacities[1]));
             }
-
-            double q = l < 0.5
-                ? l * (1 + s)
-                : l + s - l * s;
-            double p = 2 * l - q;
-
-            double r = HueToRgb(p, q, h + 1.0 / 3.0);
-            double g = HueToRgb(p, q, h);
-            double b = HueToRgb(p, q, h - 1.0 / 3.0);
-
-            return Color.FromArgb(
-                255,
-                (byte)Math.Clamp((int)Math.Round(r * 255), 0, 255),
-                (byte)Math.Clamp((int)Math.Round(g * 255), 0, 255),
-                (byte)Math.Clamp((int)Math.Round(b * 255), 0, 255));
+            else
+            {
+                context.DrawCircle(new SolidColorBrush(paintColor), pen: null, center, KOuterRadius);
+            }
+            // The entire circle's opacity changes when the radio is pressed.
+            if (_downPosition is not null)
+            {
+                DrawPressedOverlay(context, center, KOuterRadius);
+            }
+            DrawOuterBorder(context, center);
         }
 
-        private static double HueToRgb(double p, double q, double t)
+        if (_isFocused)
         {
-            t = Normalize(t);
-            if (t < 1.0 / 6.0)
-            {
-                return p + (q - p) * 6 * t;
-            }
-
-            if (t < 1.0 / 2.0)
-            {
-                return q;
-            }
-
-            if (t < 2.0 / 3.0)
-            {
-                return p + (q - p) * (2.0 / 3.0 - t) * 6;
-            }
-
-            return p;
+            var focusPen = new Pen(new SolidColorBrush(FocusColor), KFocusOutlineStrokeWidth);
+            context.DrawOval(
+                RectFromCircle(center, KOuterRadius + (KFocusOutlineStrokeWidth / 2.0)),
+                brush: null,
+                focusPen);
         }
+    }
 
-        private static double Normalize(double value)
-        {
-            double result = value % 1.0;
-            if (result < 0)
-            {
-                result += 1.0;
-            }
+    public override bool ShouldRepaint(CustomPainter oldDelegate)
+    {
+        return !ReferenceEquals(this, oldDelegate);
+    }
 
-            return result;
-        }
+    private static Rect RectFromCircle(Point center, double radius)
+    {
+        return new Rect(center.X - radius, center.Y - radius, radius * 2.0, radius * 2.0);
+    }
 
-        private static Color ApplyOpacity(Color color, double opacity)
-        {
-            double clampedOpacity = Math.Clamp(opacity, 0, 1);
-            byte alpha = (byte)Math.Clamp((int)Math.Round(color.A * clampedOpacity), 0, 255);
-            return Color.FromArgb(alpha, color.R, color.G, color.B);
-        }
+    // Dart's `Color.withOpacity`: replaces the alpha channel outright.
+    internal static Color WithOpacity(Color color, double opacity)
+    {
+        byte alpha = (byte)Math.Clamp(
+            (int)Math.Round(byte.MaxValue * Math.Clamp(opacity, 0.0, 1.0)),
+            0,
+            byte.MaxValue);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
     }
 }

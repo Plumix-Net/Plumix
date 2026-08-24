@@ -52,7 +52,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/nav_bar.dart` | `src/Plumix.Cupertino/CupertinoNavigationBar.Components.cs`<br>`src/Plumix.Cupertino/CupertinoNavigationBar.Transition.cs`<br>`src/Plumix.Cupertino/CupertinoNavigationBar.cs`<br>`src/Plumix.Cupertino/CupertinoSliverNavigationBar.cs` | `src/Plumix.Tests/CupertinoNavigationBarTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_navigation_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoNavigationBarDemoPage.cs` |
 | `cupertino_ui/page_scaffold.dart` | `src/Plumix.Cupertino/CupertinoPageScaffold.cs`<br>`src/Plumix/Widgets/HitTestableAtOrigin.cs` | `src/Plumix.Tests/CupertinoPageScaffoldTests.cs` | — |
 | `cupertino_ui/picker.dart` | `src/Plumix.Cupertino/CupertinoPicker.cs` | `src/Plumix.Tests/CupertinoPickerTests.cs` | — |
-| `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` _(reference) (adapted)_<br>`src/Plumix/RenderStrokeGlyph.cs` _(reference) (adapted primitives)_<br>`src/Plumix/Widgets/StrokeGlyph.cs` _(reference) (adapted primitives)_ | — | — |
+| `cupertino_ui/radio.dart` | `src/Plumix.Cupertino/CupertinoRadio.cs` | `src/Plumix.Tests/CupertinoRadioTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_radio_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoRadioDemoPage.cs` |
 | `cupertino_ui/refresh.dart` | `src/Plumix.Cupertino/CupertinoRefresh.cs` | `src/Plumix.Tests/CupertinoRefreshTests.cs` | — |
 | `cupertino_ui/route.dart` | `src/Plumix.Cupertino/CupertinoDialogRoute.cs`<br>`src/Plumix.Cupertino/CupertinoRoute.cs`<br>`src/Plumix.Material/PageTransitionsTheme.cs` | `src/Plumix.Tests/CupertinoRouteTests.cs` | — |
 | `cupertino_ui/scrollbar.dart` | `src/Plumix.Cupertino/CupertinoScrollbar.cs` | — | — |
@@ -192,7 +192,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/predictive_back_page_transitions_builder.dart` | `src/Plumix.Material/PageTransitionsTheme.cs` | — | — |
 | `material_ui/progress_indicator.dart` | `src/Plumix.Material/ProgressIndicator.cs`<br>`src/Plumix.Material/RefreshIndicator.cs` | `src/Plumix.Tests/MaterialCircularProgressIndicatorTests.cs`<br>`src/Plumix.Tests/MaterialLinearProgressIndicatorTests.cs`<br>`src/Plumix.Tests/MaterialRefreshIndicatorTests.cs` | `dart_sample/lib/demos/material/circular_progress_indicator_demo_page.dart`<br>`dart_sample/lib/demos/material/linear_progress_indicator_demo_page.dart`<br>`dart_sample/lib/demos/material/refresh_indicator_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/CircularProgressIndicatorDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/LinearProgressIndicatorDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/RefreshIndicatorDemoPage.cs` |
 | `material_ui/progress_indicator_theme.dart` | `src/Plumix.Material/ProgressIndicatorTheme.cs` | — | — |
-| `material_ui/radio.dart` | `src/Plumix.Material/Radio.cs` | `src/Plumix.Tests/MaterialRadioExpansionTileTests.cs`<br>`src/Plumix.Tests/MaterialRadioTests.cs`<br>`src/Plumix.Tests/RadioGroupRawRadioTests.cs` | `dart_sample/lib/demos/cupertino/radio_demo_page.dart`<br>`dart_sample/lib/demos/material/radio_expansion_tile_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/RadioDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/RadioExpansionTileDemoPage.cs` |
+| `material_ui/radio.dart` | `src/Plumix.Material/Radio.cs` | `src/Plumix.Tests/CupertinoRadioTests.cs`<br>`src/Plumix.Tests/MaterialRadioExpansionTileTests.cs`<br>`src/Plumix.Tests/MaterialRadioTests.cs`<br>`src/Plumix.Tests/RadioGroupRawRadioTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_radio_demo_page.dart`<br>`dart_sample/lib/demos/cupertino/radio_demo_page.dart`<br>`dart_sample/lib/demos/material/radio_expansion_tile_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoRadioDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/RadioDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/RadioExpansionTileDemoPage.cs` |
 | `material_ui/radio_list_tile.dart` | `src/Plumix.Material/RadioListTile.cs` | — | — |
 | `material_ui/radio_theme.dart` | `src/Plumix.Material/RadioTheme.cs` | — | — |
 | `material_ui/range_slider.dart` | `src/Plumix.Material/RangeSlider.cs` | `src/Plumix.Tests/MaterialRangeSliderTests.cs` | `dart_sample/lib/demos/material/range_slider_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/RangeSliderDemoPage.cs` |
@@ -548,7 +548,6 @@ Markers that say the port is `(reference)`/`(approximate)`/`(adapted)`/a subset.
 tightening candidate: re-read the Dart source, close the gap, and drop the qualifier from the
 marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
-- `src/Plumix.Cupertino/CupertinoRadio.cs` — (reference) (adapted)
 - `src/Plumix.Material/BottomNavigationBar.cs` — (reference)
 - `src/Plumix.Material/BottomNavigationBarTheme.cs` — (reference) (approximate)
 - `src/Plumix.Material/ButtonStyle.cs` — (reference) (approximate)
@@ -576,7 +575,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/PipelineOwner.cs` — (reference) (approximate)
 - `src/Plumix/RenderAnimatedBox.cs` — (reference) (custom adaptation)
 - `src/Plumix/RenderButton.cs` — (reference) (custom adaptation)
-- `src/Plumix/RenderStrokeGlyph.cs` — (reference) (adapted primitives)
 - `src/Plumix/RenderView.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Alignment.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Box.RenderBox.cs` — (reference) (approximate)
@@ -620,14 +618,13 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Widgets/Scroll.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Semantics.cs` — (reference) (Semantics subset)
 - `src/Plumix/Widgets/SharedAppData.cs` — (reference)
-- `src/Plumix/Widgets/StrokeGlyph.cs` — (reference) (adapted primitives)
 - `src/Plumix/Widgets/TextClipboard.cs` — (reference) (adapted)
 
 ## Summary
 
 - Flutter files mapped: 490
-- C# files carrying a marker: 630
+- C# files carrying a marker: 628
 - C# files without a marker: 22
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 74
+- C# files with a qualified (non-strict) marker: 71
 

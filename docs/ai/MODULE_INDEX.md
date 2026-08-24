@@ -80,7 +80,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Radio grouping enters through core `Widgets/RadioGroup.cs` + `RawRadio.cs`; shared geometry/bidi policy and nested
   group flattening live in `Widgets/FocusTraversal.cs`; Material `Radio.cs` and `RadioListTile.cs` consume the registry
   contract, with group, keyboard, animation, and semantics coverage in `RadioGroupRawRadioTests.cs` plus the existing
-  Material radio suites.
+  Material radio suites; `src/Plumix.Cupertino/CupertinoRadio.cs` is the macOS-styled `RawRadio` builder that
+  `Radio.Adaptive` composes on iOS/macOS, covered by `CupertinoRadioTests.cs`.
 - Material text-selection toolbar controls enter through `TextSelectionToolbar.cs` and
   `DesktopTextSelectionToolbar.cs`; delegated viewport placement and size transitions live in core
   `Widgets/TextSelectionToolbarLayoutDelegate.cs`, `Widgets/DesktopTextSelectionToolbarLayoutDelegate.cs`,
@@ -167,9 +168,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
     delegates to the Cupertino-owned implementation)
 - Then per target control: `src/Plumix.Cupertino/Cupertino<Control>.cs` + `src/Plumix.Tests/Cupertino<Control>Tests.cs`
   + demo pages (`src/Sample/Plumix.Sample/Demos/Cupertino/*`, `dart_sample/lib/demos/cupertino/*`).
-- Existing controls (`CupertinoActivityIndicator`, `CupertinoButton`, `CupertinoCheckbox`, `CupertinoRadio`,
-  `CupertinoSlider`, `CupertinoScrollbar`, `CupertinoMagnifier`) were written to serve Material adaptive
-  controls; several carry `(reference)`/`(adapted)` markers — diff against Dart before extending them.
+- Existing controls (`CupertinoButton`, `CupertinoSlider`, `CupertinoScrollbar`, `CupertinoMagnifier`) were
+  written to serve Material adaptive controls; several carry `(reference)`/`(adapted)` markers — diff against
+  Dart before extending them.
 - Cupertino tab bars enter through `src/Plumix.Cupertino/CupertinoTabBar.cs`; the shared
   `BottomNavigationBarItem` lives in core `Widgets`, with focused coverage in `CupertinoTabBarTests.cs`.
 - Cupertino tab scaffolds enter through `src/Plumix.Cupertino/CupertinoTabScaffold.cs`; controller/restoration,

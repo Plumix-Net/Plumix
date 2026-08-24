@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: re-ported `CupertinoRadio` strictly — `RawRadio`-backed, painter-drawn, no `isDark`/`tapTargetSize` (`radio.dart`).
 - Breaking: re-ported `CupertinoCheckbox` strictly — painter-drawn, `fillColor`, stateful side, no `isDark` (`checkbox.dart`).
 - Breaking: `WidgetStateBorderSide`/`WidgetStateMouseCursor` moved to core with set-based `Resolve` (`widget_state.dart`).
 - Breaking: re-ported `CupertinoActivityIndicator` strictly (no `isDark`) and added `CupertinoLinearActivityIndicator` (`activity_indicator.dart`).

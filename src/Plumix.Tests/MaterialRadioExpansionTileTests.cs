@@ -4,6 +4,7 @@ using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Gestures;
+using Plumix.Cupertino;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -222,7 +223,10 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         harness.Pump(new Size(360, 180));
 
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Adaptive radio tile"));
-        Assert.NotNull(FindDescendant<RenderStrokeGlyph>(harness.RenderView));
+        RenderCustomPaint customPaint = Assert.IsType<RenderCustomPaint>(
+            FindDescendant<RenderCustomPaint>(harness.RenderView));
+        var painter = Assert.IsType<CupertinoRadioPainter>(customPaint.Painter);
+        Assert.True(painter.CheckmarkStyle);
     }
 
     [Fact]

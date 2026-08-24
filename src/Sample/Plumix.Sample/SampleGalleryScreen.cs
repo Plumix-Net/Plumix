@@ -116,6 +116,7 @@ internal static class SampleRoutes
     public const string CupertinoNavBar = "/cupertino-nav-bar";
     public const string CupertinoPicker = "/cupertino-picker";
     public const string CupertinoActivityIndicator = "/cupertino-activity-indicator";
+    public const string CupertinoRadio = "/cupertino-radio";
     public const string CupertinoRefresh = "/cupertino-refresh";
     public const string CupertinoRoute = "/cupertino-route";
     public const string ProxyWidgets = "/proxy-widgets";
@@ -321,6 +322,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Checkbox, "Checkbox", "bool/bool? values + tristate + tap-target policy", () => new CheckboxDemoPage()),
         new(SampleRoutes.Switch, "Switch", "on/off value + track/thumb theming + drag", () => new SwitchDemoPage()),
         new(SampleRoutes.Radio, "Radio", "group selection + toggleable + tap-target policy", () => new RadioDemoPage()),
+        new(
+            SampleRoutes.CupertinoRadio,
+            "Radio (Cupertino)",
+            "RadioGroup selection + toggleable + checkmark style + dark-mode painting",
+            () => new CupertinoRadioDemoPage()),
         new(
             SampleRoutes.CupertinoTheme,
             "Theme + dynamic colors",
