@@ -53,6 +53,7 @@ import 'demos/cupertino/cupertino_menu_anchor_demo_page.dart';
 import 'demos/cupertino/cupertino_navigation_bar_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'demos/cupertino/picker_demo_page.dart';
+import 'demos/cupertino/cupertino_activity_indicator_demo_page.dart';
 import 'demos/cupertino/refresh_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -585,6 +586,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Picker family',
       subtitle: 'wheel + bounded date/time + duration columns and overlays',
       builder: () => const CupertinoPickerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoActivityIndicator,
+      title: 'Activity indicators',
+      subtitle: 'spinning + partially revealed ticks + linear progress bar',
+      builder: () => const CupertinoActivityIndicatorDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.cupertinoRefresh,

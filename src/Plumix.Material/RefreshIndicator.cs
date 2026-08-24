@@ -578,7 +578,7 @@ public sealed class RefreshIndicatorState : State
         if (widget.IndicatorType == RefreshIndicatorType.Adaptive
             && theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS)
         {
-            return new CupertinoActivityIndicator(color: widget.Color, isDark: theme.Brightness == Brightness.Dark);
+            return new CupertinoActivityIndicator(color: widget.Color);
         }
 
         return materialIndicator;

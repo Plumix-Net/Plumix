@@ -22,7 +22,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 
 | Flutter source | C# implementation | Tests | Demos (C# / Dart) |
 | --- | --- | --- | --- |
-| `cupertino_ui/activity_indicator.dart` | `src/Plumix.Cupertino/CupertinoActivityIndicator.cs` _(reference) (adapted)_ | — | — |
+| `cupertino_ui/activity_indicator.dart` | `src/Plumix.Cupertino/CupertinoActivityIndicator.cs` | `src/Plumix.Tests/CupertinoActivityIndicatorTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_activity_indicator_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoActivityIndicatorDemoPage.cs` |
 | `cupertino_ui/adaptive_text_selection_toolbar.dart` | `src/Plumix.Cupertino/CupertinoAdaptiveTextSelectionToolbar.cs` | — | — |
 | `cupertino_ui/app.dart` | `src/Plumix.Cupertino/CupertinoApp.cs` | `src/Plumix.Tests/CupertinoAppTests.cs` | — |
 | `cupertino_ui/bottom_tab_bar.dart` | `src/Plumix.Cupertino/CupertinoTabBar.cs` | `src/Plumix.Tests/CupertinoTabBarTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_tab_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoTabBarDemoPage.cs` |
@@ -289,7 +289,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `painting/continuous_rectangle_border.dart` | `src/Plumix/Rendering/ContinuousRectangleBorder.cs` | — | — |
 | `painting/decoration.dart` | `src/Plumix/Rendering/Decoration.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
 | `painting/decoration_image.dart` | `src/Plumix/Rendering/DecorationImage.cs` | — | — |
-| `painting/edge_insets.dart` | `src/Plumix/Rendering/EdgeInsetsGeometry.cs`<br>`src/Plumix/UI/RRect.cs` _(control-port subset used by input borders)_ | — | — |
+| `painting/edge_insets.dart` | `src/Plumix/Rendering/EdgeInsetsGeometry.cs` | — | — |
 | `painting/gradient.dart` | `src/Plumix/Rendering/Gradient.cs` | `src/Plumix.Tests/GradientTests.cs` | `dart_sample/lib/demos/general/gradients_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/GradientsDemoPage.cs` |
 | `painting/image_cache.dart` | `src/Plumix/Rendering/ImageCache.cs` | — | — |
 | `painting/image_provider.dart` | `src/Plumix/Rendering/ImageProvider.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs` | — |
@@ -534,6 +534,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/Geometry.cs`
 - `src/Plumix/UI/Matrix4.cs`
 - `src/Plumix/UI/Path.cs`
+- `src/Plumix/UI/RRect.cs`
 - `src/Plumix/UI/RSuperellipse.cs`
 - `src/Plumix/UI/Text.cs`
 - `src/Plumix.Material/MaterialThemeLerp.cs`
@@ -546,7 +547,6 @@ Markers that say the port is `(reference)`/`(approximate)`/`(adapted)`/a subset.
 tightening candidate: re-read the Dart source, close the gap, and drop the qualifier from the
 marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
-- `src/Plumix.Cupertino/CupertinoActivityIndicator.cs` — (reference) (adapted)
 - `src/Plumix.Cupertino/CupertinoCheckbox.cs` — (reference) (adapted)
 - `src/Plumix.Cupertino/CupertinoRadio.cs` — (reference) (adapted)
 - `src/Plumix.Material/BottomNavigationBar.cs` — (reference)
@@ -598,7 +598,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Scheduler.cs` — (reference) (approximate)
 - `src/Plumix/UI/Feedback.cs` — (reference) (approximate)
 - `src/Plumix/UI/PointerEvents.cs` — (reference) (approximate)
-- `src/Plumix/UI/RRect.cs` — (control-port subset used by input borders)
 - `src/Plumix/UI/SystemChrome.cs` — (reference) (approximate)
 - `src/Plumix/UI/TextLayoutFallback.cs` — (reference) (adapted fallback for host-less test environments)
 - `src/Plumix/WidgetHost.cs` — (reference) (host integration, adapted)
@@ -627,8 +626,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 ## Summary
 
 - Flutter files mapped: 489
-- C# files carrying a marker: 630
-- C# files without a marker: 21
+- C# files carrying a marker: 629
+- C# files without a marker: 22
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 77
+- C# files with a qualified (non-strict) marker: 75
 

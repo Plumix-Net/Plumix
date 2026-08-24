@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: re-ported `CupertinoActivityIndicator` strictly (no `isDark`) and added `CupertinoLinearActivityIndicator` (`activity_indicator.dart`).
 - Ported `CupertinoNavigationBar`/`CupertinoSliverNavigationBar` with search, bottoms and hero transitions (`nav_bar.dart`).
 - Breaking: `HeroFlightShuttleBuilder` now takes Flutter's `(flightContext, animation, direction, from, to)` (`heroes.dart`).
 - Ported `CupertinoMenuAnchor` with menu items, dividers, swipe and long-press opening (`menu_anchor.dart`).

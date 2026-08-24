@@ -115,6 +115,7 @@ internal static class SampleRoutes
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
     public const string CupertinoNavBar = "/cupertino-nav-bar";
     public const string CupertinoPicker = "/cupertino-picker";
+    public const string CupertinoActivityIndicator = "/cupertino-activity-indicator";
     public const string CupertinoRefresh = "/cupertino-refresh";
     public const string CupertinoRoute = "/cupertino-route";
     public const string ProxyWidgets = "/proxy-widgets";
@@ -340,6 +341,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Picker family",
             "wheel + bounded date/time + duration columns and overlays",
             () => new CupertinoPickerDemoPage()),
+        new(
+            SampleRoutes.CupertinoActivityIndicator,
+            "Activity indicators",
+            "spinning + partially revealed ticks + linear progress bar",
+            () => new CupertinoActivityIndicatorDemoPage()),
         new(
             SampleRoutes.CupertinoRefresh,
             "Sliver refresh",

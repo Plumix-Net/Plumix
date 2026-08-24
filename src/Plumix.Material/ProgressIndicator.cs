@@ -1057,7 +1057,7 @@ public class CircularProgressIndicator : ProgressIndicator
 
             if (IsAdaptiveCupertino(theme))
             {
-                return BuildAdaptiveCupertinoIndicator(theme, resolvedValue);
+                return BuildAdaptiveCupertinoIndicator(resolvedValue);
             }
 
             var resolvedValueColor = CurrentWidget.ValueColor?.Value
@@ -1123,22 +1123,19 @@ public class CircularProgressIndicator : ProgressIndicator
                 CurrentWidget.SemanticsValue);
         }
 
-        private Widget BuildAdaptiveCupertinoIndicator(ThemeData theme, double? resolvedValue)
+        private Widget BuildAdaptiveCupertinoIndicator(double? resolvedValue)
         {
-            bool isDark = theme.Brightness == Brightness.Dark;
             var tickColor = CurrentWidget.BackgroundColor;
             if (resolvedValue.HasValue)
             {
                 return CupertinoActivityIndicator.PartiallyRevealed(
                     color: tickColor,
                     progress: resolvedValue.Value,
-                    isDark: isDark,
                     key: CurrentWidget.Key);
             }
 
             return new CupertinoActivityIndicator(
                 color: tickColor,
-                isDark: isDark,
                 key: CurrentWidget.Key);
         }
 

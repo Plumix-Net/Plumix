@@ -2,34 +2,30 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
-using Plumix.Widgets;
 using Plumix.UI;
+using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
-// Dart parity source (reference): cupertino_ui/lib/src/activity_indicator.dart (adapted)
+// Dart parity source: cupertino_ui/lib/src/activity_indicator.dart
 
+/// <summary>An iOS-style activity indicator that spins clockwise.</summary>
 public sealed class CupertinoActivityIndicator : StatefulWidget
 {
-    private const double DefaultIndicatorRadius = 10.0;
-    private const int TickCount = 8;
-    private static readonly TimeSpan DefaultAnimationDuration = TimeSpan.FromSeconds(1);
-    private static readonly Color DefaultActiveTickLightColor = Avalonia.Media.Color.FromArgb(0xFF, 0x3C, 0x3C, 0x44);
-    private static readonly Color DefaultActiveTickDarkColor = Avalonia.Media.Color.FromArgb(0xFF, 0xEB, 0xEB, 0xF5);
+    internal const double DefaultIndicatorRadius = 10.0;
 
+    // Extracted from iOS 13.2 Beta.
+    private static readonly CupertinoDynamicColor ActiveTickColor = CupertinoDynamicColor.WithBrightness(
+        color: Avalonia.Media.Color.FromUInt32(0xFF3C3C44),
+        darkColor: Avalonia.Media.Color.FromUInt32(0xFFEBEBF5));
+
+    /// <summary>Creates an iOS-style activity indicator that spins clockwise.</summary>
     public CupertinoActivityIndicator(
         Color? color = null,
         bool animating = true,
         double radius = DefaultIndicatorRadius,
-        bool isDark = false,
         Key? key = null)
-        : this(
-            color: color,
-            animating: animating,
-            radius: radius,
-            progress: 1.0,
-            isDark: isDark,
-            key: key)
+        : this(color: color, animating: animating, radius: radius, progress: 1.0, key: key)
     {
     }
 
@@ -38,42 +34,33 @@ public sealed class CupertinoActivityIndicator : StatefulWidget
         bool animating,
         double radius,
         double progress,
-        bool isDark,
-        Key? key = null)
+        Key? key)
         : base(key)
     {
-        if (double.IsNaN(radius) || double.IsInfinity(radius) || radius <= 0)
+        if (!(radius > 0.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(radius), "CupertinoActivityIndicator radius must be finite and greater than zero.");
+            throw new ArgumentOutOfRangeException(nameof(radius), "radius must be greater than zero.");
         }
 
-        if (double.IsNaN(progress) || double.IsInfinity(progress) || progress < 0 || progress > 1)
+        if (!(progress >= 0.0) || !(progress <= 1.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(progress), "CupertinoActivityIndicator progress must be finite and between 0 and 1.");
+            throw new ArgumentOutOfRangeException(nameof(progress), "progress must be between 0.0 and 1.0.");
         }
 
         Color = color;
         Animating = animating;
         Radius = radius;
         Progress = progress;
-        IsDark = isDark;
     }
 
-    public Color? Color { get; }
-
-    public bool Animating { get; }
-
-    public double Radius { get; }
-
-    public double Progress { get; }
-
-    public bool IsDark { get; }
-
+    /// <summary>
+    /// Creates a non-animated iOS-style activity indicator that displays a partial count of ticks
+    /// based on the value of <paramref name="progress"/>.
+    /// </summary>
     public static CupertinoActivityIndicator PartiallyRevealed(
         Color? color = null,
         double radius = DefaultIndicatorRadius,
         double progress = 1.0,
-        bool isDark = false,
         Key? key = null)
     {
         return new CupertinoActivityIndicator(
@@ -81,120 +68,118 @@ public sealed class CupertinoActivityIndicator : StatefulWidget
             animating: false,
             radius: radius,
             progress: progress,
-            isDark: isDark,
             key: key);
     }
 
-    public override State CreateState()
-    {
-        return new CupertinoActivityIndicatorState();
-    }
+    /// <summary>Color of the activity indicator. Defaults to color extracted from native iOS.</summary>
+    public Color? Color { get; }
+
+    /// <summary>Whether the activity indicator is running its animation. Defaults to true.</summary>
+    public bool Animating { get; }
+
+    /// <summary>Radius of the spinner widget. Defaults to 10 pixels. Must be positive.</summary>
+    public double Radius { get; }
+
+    /// <summary>
+    /// Determines the percentage of spinner ticks that will be shown. Typical usage would display
+    /// all ticks, however, this allows for more fine-grained control such as during pull-to-refresh
+    /// when the drag-down action shows one tick at a time as the user continues to drag down.
+    /// Defaults to one. Must be between zero and one, inclusive.
+    /// </summary>
+    public double Progress { get; }
+
+    public override State CreateState() => new CupertinoActivityIndicatorState();
 
     private sealed class CupertinoActivityIndicatorState : State
     {
         private AnimationController? _controller;
-        private bool _isMounted;
 
         private CupertinoActivityIndicator CurrentWidget => (CupertinoActivityIndicator)StateWidget;
 
         public override void InitState()
         {
-            _controller = new AnimationController(duration: DefaultAnimationDuration, vsync: this);
-            _isMounted = true;
-            UpdateAnimatingStatus();
-            _controller.Changed += HandleControllerTick;
+            base.InitState();
+            _controller = new AnimationController(duration: TimeSpan.FromSeconds(1), vsync: this);
+
+            if (CurrentWidget.Animating)
+            {
+                _controller.Repeat();
+            }
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
-            var oldIndicator = (CupertinoActivityIndicator)oldWidget;
-            if (oldIndicator.Animating != CurrentWidget.Animating)
+            base.DidUpdateWidget(oldWidget);
+            if (CurrentWidget.Animating != ((CupertinoActivityIndicator)oldWidget).Animating)
             {
-                UpdateAnimatingStatus();
+                if (CurrentWidget.Animating)
+                {
+                    _controller!.Repeat();
+                }
+                else
+                {
+                    _controller!.Stop();
+                }
             }
         }
 
         public override void Dispose()
         {
-            _isMounted = false;
-            if (_controller is null)
-            {
-                return;
-            }
-
-            _controller.Changed -= HandleControllerTick;
-            _controller.Dispose();
-            _controller = null;
+            _controller!.Dispose();
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
         {
-            var resolvedColor = CurrentWidget.Color
-                                ?? (CurrentWidget.IsDark
-                                    ? DefaultActiveTickDarkColor
-                                    : DefaultActiveTickLightColor);
-            double position = _controller?.Evaluate() ?? 0.0;
-
-            return new SizedBox(
-                width: CurrentWidget.Radius * 2.0,
-                height: CurrentWidget.Radius * 2.0,
-                child: new CupertinoActivityIndicatorRenderWidget(
-                    position: position,
-                    activeColor: resolvedColor,
-                    radius: CurrentWidget.Radius,
-                    progress: CurrentWidget.Progress));
-        }
-
-        private void UpdateAnimatingStatus()
-        {
-            if (_controller is null)
-            {
-                return;
-            }
-
-            if (CurrentWidget.Animating)
-            {
-                if (!_controller.IsAnimating)
-                {
-                    _controller.Repeat();
-                }
-                return;
-            }
-
-            if (_controller.IsAnimating)
-            {
-                _controller.Stop();
-            }
-        }
-
-        private void HandleControllerTick()
-        {
-            if (!_isMounted || !CurrentWidget.Animating)
-            {
-                return;
-            }
-
-            SetState(() => { });
+            return SizedBox.Square(
+                dimension: CurrentWidget.Radius * 2,
+                child: new CustomPaint(
+                    painter: new CupertinoActivityIndicatorPainter(
+                        position: _controller!,
+                        activeColor: CurrentWidget.Color
+                                     ?? CupertinoDynamicColor.Resolve(ActiveTickColor, context),
+                        radius: CurrentWidget.Radius,
+                        progress: CurrentWidget.Progress)));
         }
     }
 }
 
-internal sealed class CupertinoActivityIndicatorRenderWidget : LeafRenderObjectWidget
+internal sealed class CupertinoActivityIndicatorPainter : CustomPainter
 {
-    public CupertinoActivityIndicatorRenderWidget(
-        double position,
+    private const double TwoPi = Math.PI * 2.0;
+
+    /// <summary>
+    /// Alpha values extracted from the native component (for both dark and light mode) to draw the
+    /// spinning ticks.
+    /// </summary>
+    internal static readonly IReadOnlyList<byte> AlphaValues = [47, 47, 47, 47, 72, 97, 122, 147];
+
+    /// <summary>The alpha value that is used to draw the partially revealed ticks.</summary>
+    internal const byte PartiallyRevealedAlpha = 147;
+
+    public CupertinoActivityIndicatorPainter(
+        Animation<double> position,
         Color activeColor,
         double radius,
-        double progress,
-        Key? key = null) : base(key)
+        double progress)
+        : base(repaint: position)
     {
         Position = position;
         ActiveColor = activeColor;
         Radius = radius;
         Progress = progress;
+        // Use a RRect instead of RSuperellipse since this shape is really small
+        // and should make little visual difference.
+        TickFundamentalShape = RRect.FromLTRBXY(
+            -radius / CupertinoActivityIndicator.DefaultIndicatorRadius,
+            -radius / 3.0,
+            radius / CupertinoActivityIndicator.DefaultIndicatorRadius,
+            -radius,
+            radius / CupertinoActivityIndicator.DefaultIndicatorRadius,
+            radius / CupertinoActivityIndicator.DefaultIndicatorRadius);
     }
 
-    public double Position { get; }
+    public Animation<double> Position { get; }
 
     public Color ActiveColor { get; }
 
@@ -202,165 +187,161 @@ internal sealed class CupertinoActivityIndicatorRenderWidget : LeafRenderObjectW
 
     public double Progress { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public RRect TickFundamentalShape { get; }
+
+    public override void Paint(PaintingContext context, Size size)
     {
-        return new RenderCupertinoActivityIndicator(
-            position: Position,
-            activeColor: ActiveColor,
-            radius: Radius,
-            progress: Progress);
-    }
+        int tickCount = AlphaValues.Count;
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var indicator = (RenderCupertinoActivityIndicator)renderObject;
-        indicator.Position = Position;
-        indicator.ActiveColor = ActiveColor;
-        indicator.Radius = Radius;
-        indicator.Progress = Progress;
-    }
-}
-
-internal sealed class RenderCupertinoActivityIndicator : RenderBox
-{
-    private const double TwoPi = Math.PI * 2.0;
-    private const double DefaultIndicatorRadius = 10.0;
-    private const int TickCount = 8;
-    private const byte PartiallyRevealedAlpha = 147;
-    private static readonly byte[] TickAlphaValues = [47, 47, 47, 47, 72, 97, 122, 147];
-
-    private double _position;
-    private Color _activeColor;
-    private double _radius;
-    private double _progress;
-
-    public RenderCupertinoActivityIndicator(
-        double position,
-        Color activeColor,
-        double radius,
-        double progress)
-    {
-        _position = position;
-        _activeColor = activeColor;
-        _radius = radius;
-        _progress = progress;
-    }
-
-    public double Position
-    {
-        get => _position;
-        set
-        {
-            if (Math.Abs(_position - value) <= 0.0001)
+        context.PushTransform(
+            Matrix4.TranslationValues(size.Width / 2.0, size.Height / 2.0, 0.0),
+            centeredContext =>
             {
-                return;
-            }
+                int activeTick = (int)Math.Floor(tickCount * Position.Value);
 
-            _position = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color ActiveColor
-    {
-        get => _activeColor;
-        set
-        {
-            if (_activeColor == value)
-            {
-                return;
-            }
-
-            _activeColor = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public double Radius
-    {
-        get => _radius;
-        set
-        {
-            if (Math.Abs(_radius - value) <= 0.0001)
-            {
-                return;
-            }
-
-            _radius = value;
-            MarkNeedsLayout();
-            MarkNeedsPaint();
-        }
-    }
-
-    public double Progress
-    {
-        get => _progress;
-        set
-        {
-            if (Math.Abs(_progress - value) <= 0.0001)
-            {
-                return;
-            }
-
-            _progress = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    protected override void PerformLayout()
-    {
-        double side = Math.Max(0, _radius * 2.0);
-        Size = Constraints.Constrain(new Size(side, side));
-    }
-
-    public override void Paint(PaintingContext ctx, Point offset)
-    {
-        if (Size.Width <= 0 || Size.Height <= 0 || _radius <= 0)
-        {
-            return;
-        }
-
-        double progress = Math.Clamp(_progress, 0.0, 1.0);
-        if (progress <= 0.0)
-        {
-            return;
-        }
-
-        var center = new Point(offset.X + (Size.Width / 2.0), offset.Y + (Size.Height / 2.0));
-        double tickRadius = _radius / DefaultIndicatorRadius;
-        var tickRect = new Rect(
-            x: -tickRadius,
-            y: -_radius,
-            width: tickRadius * 2.0,
-            height: _radius - (_radius / 3.0));
-        int activeTick = PositiveModulo((int)Math.Floor(TickCount * Math.Clamp(_position, 0.0, 1.0)), TickCount);
-
-        ctx.PushTransform(Matrix4.TranslationValues(center.X, center.Y, 0.0), centeredContext =>
-        {
-            for (int i = 0; i < TickCount * progress; i++)
-            {
-                int tickIndex = PositiveModulo(i - activeTick, TickCount);
-                byte alpha = progress < 1.0 ? PartiallyRevealedAlpha : TickAlphaValues[tickIndex];
-                var tickColor = Color.FromArgb(alpha, _activeColor.R, _activeColor.G, _activeColor.B);
-                double angle = i * TwoPi / TickCount;
-                centeredContext.PushTransform(CreateRotationMatrix(angle), rotatedContext =>
+                for (int i = 0; i < tickCount * Progress; ++i)
                 {
-                    rotatedContext.DrawRectangle(
-                        new SolidColorBrush(tickColor),
-                        pen: null,
-                        rect: tickRect,
-                        radiusX: tickRadius,
-                        radiusY: tickRadius);
-                });
-            }
-        });
+                    int t = FloorModulo(i - activeTick, tickCount);
+                    byte alpha = Progress < 1 ? PartiallyRevealedAlpha : AlphaValues[t];
+                    var tickColor = Avalonia.Media.Color.FromArgb(
+                        alpha,
+                        ActiveColor.R,
+                        ActiveColor.G,
+                        ActiveColor.B);
+                    centeredContext.PushTransform(
+                        Matrix4.RotationZ(i * TwoPi / tickCount),
+                        rotatedContext => rotatedContext.DrawRRect(
+                            TickFundamentalShape,
+                            new SolidColorBrush(tickColor),
+                            pen: null));
+                }
+            });
     }
 
-    private static Matrix4 CreateRotationMatrix(double angle) => Matrix4.RotationZ(angle);
+    public override bool ShouldRepaint(CustomPainter oldDelegate)
+    {
+        return oldDelegate is not CupertinoActivityIndicatorPainter oldPainter
+               || !ReferenceEquals(oldPainter.Position, Position)
+               || oldPainter.ActiveColor != ActiveColor
+               || oldPainter.Progress != Progress;
+    }
 
-    private static int PositiveModulo(int value, int modulo)
+    /// <summary>Dart's <c>%</c> operator, whose result is never negative.</summary>
+    private static int FloorModulo(int value, int modulo)
     {
         int result = value % modulo;
         return result < 0 ? result + modulo : result;
+    }
+}
+
+/// <summary>
+/// An iOS-style linear activity indicator: a linear progress bar that displays a colored bar to
+/// indicate the progress of an ongoing task.
+/// </summary>
+public sealed class CupertinoLinearActivityIndicator : StatelessWidget
+{
+    /// <summary>Creates a linear iOS-style activity indicator.</summary>
+    public CupertinoLinearActivityIndicator(
+        double progress,
+        double height = 4.5,
+        Color? color = null,
+        Key? key = null)
+        : base(key)
+    {
+        if (!(height > 0.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(height), "height must be greater than zero.");
+        }
+
+        if (!(progress >= 0.0) || !(progress <= 1.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(progress), "progress must be between 0.0 and 1.0.");
+        }
+
+        Progress = progress;
+        Height = height;
+        Color = color;
+    }
+
+    /// <summary>
+    /// The current progress of the linear activity indicator. This value must be between 0.0 and
+    /// 1.0. A value of 0.0 means no progress and 1.0 means that progress is complete.
+    /// </summary>
+    public double Progress { get; }
+
+    /// <summary>
+    /// The height of the line used to draw the linear activity indicator.
+    /// Defaults to 4.5 units. Must be positive.
+    /// </summary>
+    public double Height { get; }
+
+    /// <summary>
+    /// The color of the progress bar. This color represents the portion of the bar that indicates
+    /// progress. Defaults to <see cref="CupertinoColors.ActiveBlue"/> if no color is specified.
+    /// </summary>
+    public Color? Color { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new ConstrainedBox(
+            constraints: new BoxConstraints(MinHeight: Height, MinWidth: double.PositiveInfinity),
+            child: new CustomPaint(
+                painter: new CupertinoLinearActivityIndicatorPainter(progress: Progress, color: Color)));
+    }
+}
+
+// Dart names this private painter _CupertinoLinearActivityIndicator; C# cannot reuse the widget's
+// name in the same namespace, so the painter carries the Painter suffix.
+internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
+{
+    public CupertinoLinearActivityIndicatorPainter(double progress, Color? color = null)
+    {
+        Progress = progress;
+        Color = color;
+        BackgroundPaint = new SolidColorBrush(CupertinoColors.SystemFill.Value);
+        ProgressPaint = new SolidColorBrush(color ?? CupertinoColors.ActiveBlue.Value);
+    }
+
+    public double Progress { get; }
+
+    public Color? Color { get; }
+
+    /// <summary>
+    /// The background paint used to draw the full width of the progress bar. This paint object is
+    /// created once and reused to fill the background with a system fill color.
+    /// </summary>
+    public SolidColorBrush BackgroundPaint { get; }
+
+    /// <summary>
+    /// The paint used to draw the progress portion of the progress bar. This paint object is
+    /// created once and reused to fill the progress area.
+    /// </summary>
+    public SolidColorBrush ProgressPaint { get; }
+
+    public override void Paint(PaintingContext context, Size size)
+    {
+        // Draw the background of the progress bar.
+        context.DrawRRect(
+            RRect.FromRectAndRadius(new Rect(size), Radius.Circular(size.Height / 2)),
+            BackgroundPaint,
+            pen: null);
+
+        // Draw the progress portion of the bar.
+        if (Progress > 0)
+        {
+            context.DrawRRect(
+                RRect.FromRectAndRadius(
+                    new Rect(new Size(Math.Clamp(Progress, 0.0, 1.0) * size.Width, size.Height)),
+                    Radius.Circular(size.Height / 2)),
+                ProgressPaint,
+                pen: null);
+        }
+    }
+
+    public override bool ShouldRepaint(CustomPainter oldDelegate)
+    {
+        return oldDelegate is not CupertinoLinearActivityIndicatorPainter old
+               || old.Progress != Progress
+               || old.Color != Color;
     }
 }

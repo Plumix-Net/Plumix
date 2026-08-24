@@ -22,6 +22,10 @@ public sealed class SizedBox : SingleChildRenderObjectWidget
 
     public double? Height { get; }
 
+    // Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (SizedBox.square).
+    public static SizedBox Square(double? dimension = null, Widget? child = null, Key? key = null) =>
+        new(width: dimension, height: dimension, child: child, key: key);
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderConstrainedBox(BoxConstraints.TightFor(width: Width, height: Height));

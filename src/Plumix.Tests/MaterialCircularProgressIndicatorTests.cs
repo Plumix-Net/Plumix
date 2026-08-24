@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -43,14 +44,14 @@ public sealed class MaterialCircularProgressIndicatorTests
 
         harness.Pump(new Size(140, 140));
 
-        var cupertinoRender = FindDescendantByTypeName(harness.RenderView, "RenderCupertinoActivityIndicator");
+        var cupertinoPainter = FindCupertinoActivityIndicatorPainter(harness.RenderView);
         var materialRender = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
 
-        Assert.NotNull(cupertinoRender);
+        Assert.NotNull(cupertinoPainter);
         Assert.Null(materialRender);
-        Assert.Equal(Colors.OrangeRed, ReadProperty<Color>(cupertinoRender!, "ActiveColor"));
-        Assert.Equal(1.0, ReadProperty<double>(cupertinoRender, "Progress"), 3);
-        Assert.Equal(10.0, ReadProperty<double>(cupertinoRender, "Radius"), 3);
+        Assert.Equal(Colors.OrangeRed, cupertinoPainter!.ActiveColor);
+        Assert.Equal(1.0, cupertinoPainter.Progress, 3);
+        Assert.Equal(10.0, cupertinoPainter.Radius, 3);
     }
 
     [Fact]
@@ -71,13 +72,13 @@ public sealed class MaterialCircularProgressIndicatorTests
 
         harness.Pump(new Size(140, 140));
 
-        var cupertinoRender = FindDescendantByTypeName(harness.RenderView, "RenderCupertinoActivityIndicator");
+        var cupertinoPainter = FindCupertinoActivityIndicatorPainter(harness.RenderView);
         var materialRender = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
 
-        Assert.NotNull(cupertinoRender);
+        Assert.NotNull(cupertinoPainter);
         Assert.Null(materialRender);
-        Assert.Equal(Colors.SeaGreen, ReadProperty<Color>(cupertinoRender!, "ActiveColor"));
-        Assert.Equal(0.37, ReadProperty<double>(cupertinoRender, "Progress"), 3);
+        Assert.Equal(Colors.SeaGreen, cupertinoPainter!.ActiveColor);
+        Assert.Equal(0.37, cupertinoPainter.Progress, 3);
     }
 
     [Fact]
@@ -118,10 +119,10 @@ public sealed class MaterialCircularProgressIndicatorTests
         harness.Pump(new Size(140, 140));
 
         var materialRender = FindDescendantByTypeName(harness.RenderView, "RenderCircularProgressIndicator");
-        var cupertinoRender = FindDescendantByTypeName(harness.RenderView, "RenderCupertinoActivityIndicator");
+        var cupertinoPainter = FindCupertinoActivityIndicatorPainter(harness.RenderView);
 
         Assert.NotNull(materialRender);
-        Assert.Null(cupertinoRender);
+        Assert.Null(cupertinoPainter);
         Assert.Equal(Colors.DarkOrange, ReadProperty<Color>(materialRender!, "ValueColor"));
     }
 
@@ -598,6 +599,33 @@ public sealed class MaterialCircularProgressIndicatorTests
         }
 
         return (T)value;
+    }
+
+    private static CupertinoActivityIndicatorPainter? FindCupertinoActivityIndicatorPainter(RenderObject? root)
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is RenderCustomPaint customPaint
+            && customPaint.Painter is CupertinoActivityIndicatorPainter painter)
+        {
+            return painter;
+        }
+
+        CupertinoActivityIndicatorPainter? match = null;
+        root.VisitChildren(child =>
+        {
+            if (match is not null)
+            {
+                return;
+            }
+
+            match = FindCupertinoActivityIndicatorPainter(child);
+        });
+
+        return match;
     }
 
     private static RenderObject? FindDescendantByTypeName(RenderObject? root, string typeName)

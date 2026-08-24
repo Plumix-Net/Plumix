@@ -62,6 +62,25 @@ public readonly record struct RRect
     public static RRect FromRectAndRadius(Rect rect, double radius) =>
         FromRectAndRadius(rect, Plumix.Rendering.Radius.Circular(radius));
 
+    // Dart parity source: dart:ui RRect.fromLTRBXY. The rect is stored sorted: dart:ui keeps the
+    // coordinates as given, but Skia sorts an unsorted rect at draw time, so this is render-equivalent.
+    public static RRect FromLTRBXY(
+        double left,
+        double top,
+        double right,
+        double bottom,
+        double radiusX,
+        double radiusY)
+    {
+        var radius = Plumix.Rendering.Radius.Elliptical(radiusX, radiusY);
+        var rect = new Rect(
+            Math.Min(left, right),
+            Math.Min(top, bottom),
+            Math.Abs(right - left),
+            Math.Abs(bottom - top));
+        return new RRect(rect, radius, radius, radius, radius);
+    }
+
     /// Moves each edge out by the matching inset and grows every radius by the same amounts.
     // Dart parity source: flutter/packages/flutter/lib/src/painting/edge_insets.dart EdgeInsets.inflateRRect.
     public RRect InflateEdges(Thickness insets) => new(

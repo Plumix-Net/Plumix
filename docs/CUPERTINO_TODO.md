@@ -61,7 +61,6 @@ None — every `cupertino_ui/lib/src/` control has at least a first-pass port; w
 
 | Dart file | Lines (Dart / C#) | Gap found | Size |
 | --- | --- | --- | --- |
-| `activity_indicator.dart` | 311 / 366 | `CupertinoLinearActivityIndicator` missing; marker `(reference) (adapted)` | S |
 | `button.dart` | 621 / 142 | `CupertinoButtonSize` missing; file is a fraction of the Dart source — re-port strictly | M |
 | `checkbox.dart` | 676 / 785 | marker `(reference) (adapted)` — verify haptics/semantics/motion against Dart | S |
 | `radio.dart` | 657 / 657 | marker `(reference) (adapted)` — same | S |

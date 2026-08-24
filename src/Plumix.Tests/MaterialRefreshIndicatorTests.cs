@@ -2,6 +2,7 @@ using System.Reflection;
 using Avalonia;
 using Avalonia.Media;
 using Plumix;
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
@@ -295,7 +296,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         ios.Pump(Viewport);
         BeginDrag(ios.FindState<NotificationEmitterState>());
         ios.Pump(Viewport);
-        Assert.NotNull(FindDescendantByTypeName(ios.RenderView, "RenderCupertinoActivityIndicator"));
+        Assert.NotNull(FindCupertinoActivityIndicatorPainter(ios.RenderView));
         Assert.Null(FindDescendantByTypeName(ios.RenderView, "RenderCircularProgressIndicator"));
 
         var androidEmitter = new NotificationEmitter();
@@ -306,7 +307,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         BeginDrag(android.FindState<NotificationEmitterState>());
         android.Pump(Viewport);
         Assert.NotNull(FindDescendantByTypeName(android.RenderView, "RenderCircularProgressIndicator"));
-        Assert.Null(FindDescendantByTypeName(android.RenderView, "RenderCupertinoActivityIndicator"));
+        Assert.Null(FindCupertinoActivityIndicatorPainter(android.RenderView));
     }
 
     [Fact]
@@ -432,6 +433,33 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
             }
         }
         return null;
+    }
+
+    private static CupertinoActivityIndicatorPainter? FindCupertinoActivityIndicatorPainter(RenderObject? root)
+    {
+        if (root is null)
+        {
+            return null;
+        }
+
+        if (root is RenderCustomPaint customPaint
+            && customPaint.Painter is CupertinoActivityIndicatorPainter painter)
+        {
+            return painter;
+        }
+
+        CupertinoActivityIndicatorPainter? match = null;
+        root.VisitChildren(child =>
+        {
+            if (match is not null)
+            {
+                return;
+            }
+
+            match = FindCupertinoActivityIndicatorPainter(child);
+        });
+
+        return match;
     }
 
     private static object? FindDescendantByTypeName(RenderObject? root, string typeName)
