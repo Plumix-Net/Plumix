@@ -47,6 +47,7 @@ import 'demos/cupertino/cupertino_expansion_tile_demo_page.dart';
 import 'demos/cupertino/cupertino_text_selection_controls_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'demos/cupertino/picker_demo_page.dart';
+import 'demos/cupertino/refresh_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
 import 'demos/general/custom_multi_child_layout_demo_page.dart';
@@ -541,6 +542,13 @@ class SampleGalleryScreen extends StatelessWidget {
           subtitle:
               'looping list + lazy builder + magnifier + selection overlay',
           builder: () => const CupertinoPickerDemoPage(),
+        ),
+        SampleRouteDefinition(
+          routeName: SampleRoutes.cupertinoRefresh,
+          title: 'Sliver refresh',
+          subtitle:
+              'pull threshold + held refresh extent + native progress states',
+          builder: () => const CupertinoRefreshDemoPage(),
         ),
         SampleRouteDefinition(
           routeName: SampleRoutes.cupertinoRoute,

@@ -63,6 +63,13 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         return result;
     }
 
+    public T FindState<T>() where T : State
+    {
+        T? result = null;
+        VisitStates(_root, state => result ??= state as T);
+        return result ?? throw new InvalidOperationException($"State {typeof(T).Name} was not found.");
+    }
+
     public void Dispose() => _root.Unmount();
 
     private static void Visit<T>(Element element, List<T> result) where T : Widget
@@ -73,6 +80,16 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         }
 
         element.VisitChildren(child => Visit(child, result));
+    }
+
+    private static void VisitStates(Element element, Action<State> visitor)
+    {
+        if (element is StatefulElement statefulElement)
+        {
+            visitor(statefulElement.State);
+        }
+
+        element.VisitChildren(child => VisitStates(child, visitor));
     }
 
     private sealed class RootElement : Element, IRenderObjectHost

@@ -182,6 +182,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   matching Cupertino form test files.
 - Cupertino wheel pickers enter through `src/Plumix.Cupertino/CupertinoPicker.cs`; scrolling and layout live in
   core `Widgets/ListWheelScrollView.cs`, with focused coverage in `CupertinoPickerTests.cs`.
+- Cupertino pull-to-refresh enters through `src/Plumix.Cupertino/CupertinoRefresh.cs`; overscroll and held-extent
+  layout stay in its sliver render object, with focused coverage in `CupertinoRefreshTests.cs`.
 - Focus halos enter through `src/Plumix.Cupertino/CupertinoFocusHalo.cs`; descendant focus ownership lives in
   core `Widgets/Focus.cs`, with shape/color primitives in `Rendering/RoundedSuperellipseBorder.cs` and
   `Painting/HSLColor.cs`. Coverage lives in `CupertinoFocusHaloTests.cs` and `FocusTests.cs`.

@@ -109,6 +109,7 @@ internal static class SampleRoutes
     public const string CupertinoTheme = "/cupertino-theme";
     public const string CupertinoPageScaffold = "/cupertino-page-scaffold";
     public const string CupertinoPicker = "/cupertino-picker";
+    public const string CupertinoRefresh = "/cupertino-refresh";
     public const string CupertinoRoute = "/cupertino-route";
     public const string ProxyWidgets = "/proxy-widgets";
     public const string Align = "/align";
@@ -303,6 +304,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Picker",
             "looping list + lazy builder + magnifier + selection overlay",
             () => new CupertinoPickerDemoPage()),
+        new(
+            SampleRoutes.CupertinoRefresh,
+            "Sliver refresh",
+            "pull threshold + held refresh extent + native progress states",
+            () => new CupertinoRefreshDemoPage()),
         new(
             SampleRoutes.CupertinoRoute,
             "Routes + tab view",

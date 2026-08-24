@@ -103,6 +103,7 @@ class SampleRoutes {
   static const String cupertinoTheme = '/cupertino-theme';
   static const String cupertinoPageScaffold = '/cupertino-page-scaffold';
   static const String cupertinoPicker = '/cupertino-picker';
+  static const String cupertinoRefresh = '/cupertino-refresh';
   static const String cupertinoRoute = '/cupertino-route';
   static const String proxyWidgets = '/proxy-widgets';
   static const String align = '/align';

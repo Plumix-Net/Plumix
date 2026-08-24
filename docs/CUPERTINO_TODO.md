@@ -56,7 +56,6 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 | Dart file (`cupertino_ui/lib/src/`) | Lines | Public types | Size | Notes / dependencies |
 | --- | --- | --- | --- | --- |
-| `refresh.dart` | 594 | `CupertinoSliverRefreshControl`, `RefreshIndicatorMode` | M | Then rewire `RefreshIndicator.Adaptive`. |
 | `search_field.dart` | 603 | `CupertinoSearchTextField` | M | After `text_field`. |
 | `segmented_control.dart` | 877 | `CupertinoSegmentedControl` | M | Custom `RenderBox`; compare with Material `SegmentedControlLayout.cs`. |
 | `sheet.dart` | 1405 | `CupertinoSheetRoute`, `CupertinoSheetTransition`, `showCupertinoSheet` | M | Route primitives are available. |
