@@ -57,7 +57,8 @@ internal sealed class RangeSliderDemoPageState : State
                 [
                     new Text("RangeSlider baseline", fontSize: 20, color: Colors.Black),
                     new Text(
-                        "Two-thumb range mapping, continuous/discrete updates, drag/tap/keyboard flow, and M2/M3 theme/widget color precedence.",
+                        "Two-thumb range mapping, continuous/discrete updates, drag/tap plus Tab focus "
+                        + "between the two thumbs, and M2/M3 theme/widget color precedence.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
@@ -138,11 +139,11 @@ internal sealed class RangeSliderDemoPageState : State
                                 [
                                     BuildPreviewCard(
                                         title: "LTR",
-                                        subtitle: "Left-to-right mapping and keyboard direction",
+                                        subtitle: "Left-to-right mapping and thumb order",
                                         textDirection: TextDirection.Ltr),
                                     BuildPreviewCard(
                                         title: "RTL",
-                                        subtitle: "Right-to-left mapping and keyboard direction",
+                                        subtitle: "Right-to-left mapping and thumb order",
                                         textDirection: TextDirection.Rtl),
                                 ]))),
                 ]));

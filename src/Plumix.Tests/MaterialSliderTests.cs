@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Reflection;
 using Avalonia;
 using Avalonia.Media;
@@ -577,30 +578,47 @@ public sealed class MaterialSliderTests
     }
 
     [Fact]
-    public void Slider_Semantics_ExposeSliderFlagEnabledFlagAndLabel()
+    public void Slider_Semantics_MatchFlutterEnabledAndDisabledNodes()
     {
         FocusManager.Instance.ResetForTests();
         try
         {
-            using var harness = new WidgetRenderHarness(
-                new Theme(
-                    data: ThemeData.Light,
-                    child: new SizedBox(
-                        width: 220,
-                        child: new Slider(
-                            value: 0.5,
-                            onChanged: _ => { },
-                            semanticLabel: "Volume"))));
+            SemanticsNode Build(Action<double>? onChanged)
+            {
+                using var harness = new WidgetRenderHarness(
+                    new Theme(
+                        data: new ThemeData(platform: TargetPlatform.Android),
+                        child: new SizedBox(width: 220, child: new Slider(value: 0.5, onChanged: onChanged))));
 
-            var semanticsRoot = harness.PumpAndGetSemantics(new Size(260, 120));
-            Assert.NotNull(semanticsRoot);
+                SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(260, 120)));
+                return Assert.IsType<SemanticsNode>(
+                    FindFirstSemanticsNode(root, static node => node.Flags.HasFlag(SemanticsFlags.IsSlider)));
+            }
 
-            var semanticsNode = FindFirstSemanticsNode(
-                semanticsRoot!,
-                static node => node.Label == "Volume");
-            Assert.NotNull(semanticsNode);
-            Assert.True(semanticsNode!.Flags.HasFlag(SemanticsFlags.IsSlider));
-            Assert.True(semanticsNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+            SemanticsNode enabled = Build(_ => { });
+            Assert.True(enabled.Flags.HasFlag(SemanticsFlags.IsSlider));
+            Assert.True(enabled.Flags.HasFlag(SemanticsFlags.IsEnabled));
+            Assert.True(enabled.Flags.HasFlag(SemanticsFlags.HasEnabledState));
+            Assert.True(enabled.Flags.HasFlag(SemanticsFlags.IsFocusable));
+            Assert.False(enabled.Flags.HasFlag(SemanticsFlags.IsFocused));
+            Assert.Equal(
+                SemanticsActions.Increase | SemanticsActions.Decrease | SemanticsActions.Focus,
+                enabled.Actions);
+            Assert.Equal("50%", enabled.Value);
+            Assert.Equal("55%", enabled.IncreasedValue);
+            Assert.Equal("45%", enabled.DecreasedValue);
+            Assert.Equal(TextDirection.Ltr, enabled.TextDirection);
+
+            // Flutter keeps the three value strings on a disabled slider and drops every action.
+            SemanticsNode disabled = Build(null);
+            Assert.True(disabled.Flags.HasFlag(SemanticsFlags.IsSlider));
+            Assert.True(disabled.Flags.HasFlag(SemanticsFlags.HasEnabledState));
+            Assert.True(disabled.Flags.HasFlag(SemanticsFlags.IsFocusable));
+            Assert.False(disabled.Flags.HasFlag(SemanticsFlags.IsEnabled));
+            Assert.Equal(SemanticsActions.None, disabled.Actions);
+            Assert.Equal("50%", disabled.Value);
+            Assert.Equal("55%", disabled.IncreasedValue);
+            Assert.Equal("45%", disabled.DecreasedValue);
         }
         finally
         {
@@ -609,29 +627,184 @@ public sealed class MaterialSliderTests
     }
 
     [Fact]
-    public void Slider_SemanticFormatterCallback_OverridesSemanticLabel()
+    public void Slider_Semantics_StepByTenPercentOnApplePlatforms()
     {
         FocusManager.Instance.ResetForTests();
         try
         {
             using var harness = new WidgetRenderHarness(
                 new Theme(
-                    data: ThemeData.Light,
+                    data: new ThemeData(platform: TargetPlatform.MacOS),
+                    child: new SizedBox(
+                        width: 220,
+                        child: new Slider(value: 100.0, max: 200.0, onChanged: _ => { }))));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(260, 120)));
+            SemanticsNode node = Assert.IsType<SemanticsNode>(
+                FindFirstSemanticsNode(root, static candidate => candidate.Flags.HasFlag(SemanticsFlags.IsSlider)));
+
+            Assert.Equal("50%", node.Value);
+            Assert.Equal("60%", node.IncreasedValue);
+            Assert.Equal("40%", node.DecreasedValue);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Slider_SemanticFormatterCallback_FormatsValueIncreasedAndDecreased()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: new ThemeData(platform: TargetPlatform.Android),
+                    child: new SizedBox(
+                        width: 220,
+                        child: new Slider(
+                            value: 40.0,
+                            max: 200.0,
+                            divisions: 10,
+                            onChanged: _ => { },
+                            semanticFormatterCallback: value => Math.Round(value, MidpointRounding.AwayFromZero)
+                                .ToString("0", CultureInfo.InvariantCulture)))));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(260, 120)));
+            SemanticsNode node = Assert.IsType<SemanticsNode>(
+                FindFirstSemanticsNode(root, static candidate => candidate.Flags.HasFlag(SemanticsFlags.IsSlider)));
+
+            // One division of 0..200 is 20, so the formatter sees 40, 60 and 20.
+            Assert.Equal("40", node.Value);
+            Assert.Equal("60", node.IncreasedValue);
+            Assert.Equal("20", node.DecreasedValue);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Slider_Label_DoesNotOverwriteTheSemanticValue()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: new ThemeData(platform: TargetPlatform.Android),
+                    child: new SizedBox(
+                        width: 220,
+                        child: new Slider(
+                            value: 40.0,
+                            max: 200.0,
+                            divisions: 10,
+                            label: "Bingo",
+                            onChanged: _ => { },
+                            semanticFormatterCallback: value => Math.Round(value, MidpointRounding.AwayFromZero)
+                                .ToString("0", CultureInfo.InvariantCulture)))));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(260, 120)));
+            SemanticsNode node = Assert.IsType<SemanticsNode>(
+                FindFirstSemanticsNode(root, static candidate => candidate.Flags.HasFlag(SemanticsFlags.IsSlider)));
+
+            Assert.Equal("Bingo", node.Label);
+            Assert.Equal("40", node.Value);
+            Assert.Equal("60", node.IncreasedValue);
+            Assert.Equal("20", node.DecreasedValue);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Slider_SemanticIncreaseAndDecrease_FireStartChangedAndEndInOrder()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            var calls = new List<string>();
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: new ThemeData(platform: TargetPlatform.Android),
                     child: new SizedBox(
                         width: 220,
                         child: new Slider(
                             value: 0.5,
-                            onChanged: _ => { },
-                            semanticLabel: "Volume",
-                            semanticFormatterCallback: value => $"{Math.Round(value * 100)} percent"))));
+                            onChanged: value => calls.Add(FormattableString.Invariant($"changed {value:0.00}")),
+                            onChangeStart: value => calls.Add(FormattableString.Invariant($"start {value:0.00}")),
+                            onChangeEnd: value => calls.Add(FormattableString.Invariant($"end {value:0.00}"))))));
 
-            var semanticsRoot = harness.PumpAndGetSemantics(new Size(260, 120));
-            Assert.NotNull(semanticsRoot);
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(260, 120)));
+            SemanticsNode node = Assert.IsType<SemanticsNode>(
+                FindFirstSemanticsNode(root, static candidate => candidate.Flags.HasFlag(SemanticsFlags.IsSlider)));
 
-            var semanticsNode = FindFirstSemanticsNode(
-                semanticsRoot!,
-                static node => node.Label == "50 percent");
-            Assert.NotNull(semanticsNode);
+            Assert.True(node.PerformAction(SemanticsActions.Increase));
+            Assert.Equal(["start 0.50", "changed 0.55", "end 0.55"], calls);
+
+            calls.Clear();
+            Assert.True(node.PerformAction(SemanticsActions.Decrease));
+            Assert.Equal(["start 0.50", "changed 0.45", "end 0.45"], calls);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Slider_SemanticFocusAction_RequestsKeyboardFocus()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            var focusNode = new FocusNode();
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: new ThemeData(platform: TargetPlatform.Android),
+                    child: new SizedBox(
+                        width: 220,
+                        child: new Slider(value: 0.5, focusNode: focusNode, onChanged: _ => { }))));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(260, 120)));
+            SemanticsNode node = Assert.IsType<SemanticsNode>(
+                FindFirstSemanticsNode(root, static candidate => candidate.Flags.HasFlag(SemanticsFlags.IsSlider)));
+
+            Assert.False(focusNode.HasFocus);
+            Assert.True(node.PerformAction(SemanticsActions.Focus));
+            Assert.True(focusNode.HasFocus);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void Slider_SemanticsNode_IsAFortyEightSquareCenteredOnTheThumb()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: new ThemeData(platform: TargetPlatform.Android),
+                    child: new SizedBox(width: 220, child: new Slider(value: 0.5, onChanged: _ => { }))));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(260, 120)));
+            SemanticsNode node = Assert.IsType<SemanticsNode>(
+                FindFirstSemanticsNode(root, static candidate => candidate.Flags.HasFlag(SemanticsFlags.IsSlider)));
+
+            Assert.Equal(48.0, node.Rect.Width, 3);
+            Assert.Equal(48.0, node.Rect.Height, 3);
+
+            // The slider is 220 wide, so a mid-value thumb sits on the track's horizontal centre.
+            Assert.Equal(110.0, node.Rect.Left + (node.Rect.Width / 2.0), 0);
         }
         finally
         {

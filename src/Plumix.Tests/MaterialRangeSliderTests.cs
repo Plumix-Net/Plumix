@@ -329,38 +329,37 @@ public sealed class MaterialRangeSliderTests
     }
 
     [Fact]
-    public void RangeSlider_KeyboardArrowRight_IncrementsEndValueInLtr()
+    public void RangeSlider_Semantics_ExposeOneNodePerThumbInStartThenEndOrder()
     {
         FocusManager.Instance.ResetForTests();
         try
         {
-            var focusNode = new FocusNode();
-            RangeValues next = new(0, 0);
+            using var harness = new WidgetRenderHarness(BuildApp(new RangeValues(10.0, 30.0), max: 100.0));
 
-            var owner = new BuildOwner();
-            var root = new TestRootElement(
-                new Theme(
-                    data: new ThemeData(platform: TargetPlatform.MacOS),
-                    child: new SizedBox(
-                        width: 220,
-                        child: new RangeSlider(
-                            values: new RangeValues(0.2, 0.6),
-                            focusNode: focusNode,
-                            onChanged: values => next = values))));
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize));
+            IReadOnlyList<SemanticsNode> thumbs = FindThumbNodes(root);
 
-            root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
-            owner.FlushBuild();
+            Assert.Equal(2, thumbs.Count);
 
-            Assert.True(focusNode.RequestFocus());
-            owner.FlushBuild();
+            // Dart's `_createSemanticsConfiguration` puts everything readable on the two thumb nodes; the
+            // parent carries only `isSemanticBoundary`.
+            Assert.Equal("10%", thumbs[0].Value);
+            Assert.Equal("15%", thumbs[0].IncreasedValue);
+            Assert.Equal("5%", thumbs[0].DecreasedValue);
+            Assert.Equal("30%", thumbs[1].Value);
+            Assert.Equal("35%", thumbs[1].IncreasedValue);
+            Assert.Equal("25%", thumbs[1].DecreasedValue);
 
-            bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
-            Assert.True(handled);
-            owner.FlushBuild();
-
-            Assert.Equal(0.2, next.Start, 3);
-            Assert.Equal(0.7, next.End, 3);
+            foreach (SemanticsNode thumb in thumbs)
+            {
+                Assert.True(thumb.Flags.HasFlag(SemanticsFlags.IsSlider));
+                Assert.True(thumb.Flags.HasFlag(SemanticsFlags.IsEnabled));
+                Assert.True(thumb.Flags.HasFlag(SemanticsFlags.HasEnabledState));
+                Assert.True(thumb.Flags.HasFlag(SemanticsFlags.IsFocusable));
+                Assert.False(thumb.Flags.HasFlag(SemanticsFlags.IsFocused));
+                Assert.True(thumb.Actions.HasFlag(SemanticsActions.Increase));
+                Assert.True(thumb.Actions.HasFlag(SemanticsActions.Decrease));
+            }
         }
         finally
         {
@@ -369,35 +368,353 @@ public sealed class MaterialRangeSliderTests
     }
 
     [Fact]
-    public void RangeSlider_Semantics_ExposeSliderFlagEnabledFlagAndFormattedLabel()
+    public void RangeSlider_Semantics_SaturateTheAdjustmentThatWouldCrossTheOtherThumb()
     {
         FocusManager.Instance.ResetForTests();
         try
         {
+            // The two thumbs are one adjustment unit apart, so Flutter reports the *current* value as the
+            // increased start and the decreased end rather than clamping to the neighbour.
             using var harness = new WidgetRenderHarness(
-                new Theme(
-                    data: ThemeData.Light,
-                    child: new SizedBox(
-                        width: 220,
-                        child: new RangeSlider(
-                            values: new RangeValues(0.2, 0.7),
-                            onChanged: _ => { },
-                            semanticFormatterCallback: value => $"{Math.Round(value * 100):0}%"))));
+                BuildApp(new RangeValues(10.0, 12.0), max: 100.0, labels: new RangeLabels("Begin", "End")));
 
-            var semanticsRoot = harness.PumpAndGetSemantics(new Size(260, 120));
-            Assert.NotNull(semanticsRoot);
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize));
+            IReadOnlyList<SemanticsNode> thumbs = FindThumbNodes(root);
 
-            var semanticsNode = FindFirstSemanticsNode(
-                semanticsRoot!,
-                static node => !string.IsNullOrWhiteSpace(node.Label) && node.Label!.Contains("20% - 70%", StringComparison.Ordinal));
-            Assert.NotNull(semanticsNode);
-            Assert.True(semanticsNode!.Flags.HasFlag(SemanticsFlags.IsSlider));
-            Assert.True(semanticsNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+            Assert.Equal(2, thumbs.Count);
+            Assert.Equal("10%", thumbs[0].Value);
+            Assert.Equal("10%", thumbs[0].IncreasedValue);
+            Assert.Equal("5%", thumbs[0].DecreasedValue);
+            Assert.Equal("12%", thumbs[1].Value);
+            Assert.Equal("17%", thumbs[1].IncreasedValue);
+            Assert.Equal("12%", thumbs[1].DecreasedValue);
+
+            // `RangeSlider.labels` never reaches the semantics tree.
+            Assert.True(string.IsNullOrEmpty(thumbs[0].Label));
+            Assert.True(string.IsNullOrEmpty(thumbs[1].Label));
         }
         finally
         {
             FocusManager.Instance.ResetForTests();
         }
+    }
+
+    [Fact]
+    public void RangeSlider_Semantics_UseFortyEightSquareRectsCenteredOnEachThumb()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(BuildApp(new RangeValues(10.0, 30.0), max: 100.0));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize));
+            IReadOnlyList<SemanticsNode> thumbs = FindThumbNodes(root);
+
+            Assert.Equal(2, thumbs.Count);
+            foreach (SemanticsNode thumb in thumbs)
+            {
+                Assert.Equal(48.0, thumb.Rect.Width, 3);
+                Assert.Equal(48.0, thumb.Rect.Height, 3);
+            }
+
+            // 10% and 30% of the same track: the end thumb sits to the right of the start thumb.
+            Assert.True(thumbs[0].Rect.Left < thumbs[1].Rect.Left);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void RangeSlider_Semantics_SwapTheTwoThumbRectsUnderRtl()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var ltr = new WidgetRenderHarness(BuildApp(new RangeValues(10.0, 30.0), max: 100.0));
+            SemanticsNode ltrRoot = Assert.IsType<SemanticsNode>(ltr.PumpAndGetSemantics(ViewSize));
+            IReadOnlyList<SemanticsNode> ltrThumbs = FindThumbNodes(ltrRoot);
+
+            using var rtl = new WidgetRenderHarness(
+                BuildApp(new RangeValues(10.0, 30.0), max: 100.0, textDirection: TextDirection.Rtl));
+            SemanticsNode rtlRoot = Assert.IsType<SemanticsNode>(rtl.PumpAndGetSemantics(ViewSize));
+            IReadOnlyList<SemanticsNode> rtlThumbs = FindThumbNodes(rtlRoot);
+
+            Assert.Equal(2, rtlThumbs.Count);
+
+            // Child order stays [start, end] and the value strings are unchanged...
+            Assert.Equal("10%", rtlThumbs[0].Value);
+            Assert.Equal("30%", rtlThumbs[1].Value);
+
+            double ltrStart = Center(ltrThumbs[0]);
+            double ltrEnd = Center(ltrThumbs[1]);
+            double rtlStart = Center(rtlThumbs[0]);
+            double rtlEnd = Center(rtlThumbs[1]);
+
+            // ...but the rects are swapped: the start node takes the box where the *end* thumb paints, so
+            // it still reads left-to-right on screen (Flutter's own RTL test has start at 526, end at 677).
+            Assert.True(rtlStart < rtlEnd);
+
+            // Each RTL node mirrors the *other* LTR node about the track centre; without the swap both
+            // sums below would differ. This is the assertion that actually pins the swap down.
+            Assert.Equal(ltrStart + rtlEnd, ltrEnd + rtlStart, 3);
+            Assert.Equal(ltrThumbs[0].Rect.Width, rtlThumbs[0].Rect.Width, 3);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void RangeSlider_Semantics_ReportFocusOnTheThumbThatHoldsIt()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(BuildApp(new RangeValues(10.0, 30.0), max: 100.0));
+            harness.Pump(ViewSize);
+
+            RangeSlider.RangeSliderState state = StateOf(harness);
+            Assert.True(state.StartFocusNode.RequestFocus());
+
+            IReadOnlyList<SemanticsNode> thumbs = FindThumbNodes(
+                Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize)));
+            Assert.True(thumbs[0].Flags.HasFlag(SemanticsFlags.IsFocused));
+            Assert.False(thumbs[1].Flags.HasFlag(SemanticsFlags.IsFocused));
+
+            Assert.True(state.EndFocusNode.RequestFocus());
+
+            thumbs = FindThumbNodes(Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize)));
+            Assert.False(thumbs[0].Flags.HasFlag(SemanticsFlags.IsFocused));
+            Assert.True(thumbs[1].Flags.HasFlag(SemanticsFlags.IsFocused));
+
+            // Values and geometry are untouched by the focus move.
+            Assert.Equal("10%", thumbs[0].Value);
+            Assert.Equal("30%", thumbs[1].Value);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void RangeSlider_Tab_MovesFocusFromTheStartThumbToTheEndThumb()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(BuildApp(new RangeValues(10.0, 30.0), max: 100.0));
+            harness.Pump(ViewSize);
+
+            RangeSlider.RangeSliderState state = StateOf(harness);
+            Assert.True(state.StartFocusNode.RequestFocus());
+            harness.Pump(ViewSize);
+            Assert.Same(state.StartFocusNode, FocusManager.Instance.PrimaryFocus);
+
+            FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
+            harness.Pump(ViewSize);
+
+            Assert.Same(state.EndFocusNode, FocusManager.Instance.PrimaryFocus);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void RangeSlider_SemanticIncreaseAndDecrease_ReportOnlyOnChanged()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            var calls = new List<string>();
+            using var harness = new WidgetRenderHarness(
+                BuildApp(
+                    new RangeValues(20.0, 60.0),
+                    max: 100.0,
+                    onChanged: values => calls.Add(
+                        FormattableString.Invariant($"changed {values.Start:0}-{values.End:0}")),
+                    onChangeStart: _ => calls.Add("start"),
+                    onChangeEnd: _ => calls.Add("end")));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize));
+            IReadOnlyList<SemanticsNode> thumbs = FindThumbNodes(root);
+
+            // Unlike Slider, the range actions call onChanged only — never onChangeStart/onChangeEnd.
+            Assert.True(thumbs[0].PerformAction(SemanticsActions.Increase));
+            Assert.Equal(["changed 25-60"], calls);
+
+            calls.Clear();
+            Assert.True(thumbs[1].PerformAction(SemanticsActions.Decrease));
+            Assert.Equal(["changed 20-55"], calls);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void RangeSlider_Semantics_DropTheAdjustmentActionsWhenDisabled()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                BuildApp(new RangeValues(10.0, 30.0), max: 100.0, omitOnChanged: true));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize));
+            IReadOnlyList<SemanticsNode> thumbs = FindThumbNodes(root);
+
+            Assert.Equal(2, thumbs.Count);
+            foreach (SemanticsNode thumb in thumbs)
+            {
+                Assert.False(thumb.Flags.HasFlag(SemanticsFlags.IsEnabled));
+                Assert.True(thumb.Flags.HasFlag(SemanticsFlags.HasEnabledState));
+
+                // `isFocusable` is unconditional on a range thumb, even disabled.
+                Assert.True(thumb.Flags.HasFlag(SemanticsFlags.IsFocusable));
+                Assert.False(thumb.Actions.HasFlag(SemanticsActions.Increase));
+                Assert.False(thumb.Actions.HasFlag(SemanticsActions.Decrease));
+            }
+
+            // The value strings survive being disabled.
+            Assert.Equal("10%", thumbs[0].Value);
+            Assert.Equal("30%", thumbs[1].Value);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void RangeSlider_Semantics_RebuildAfterTheNodesWereCleared()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(BuildApp(new RangeValues(10.0, 30.0), max: 100.0));
+            Assert.Equal(2, FindThumbNodes(
+                Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize))).Count);
+
+            // Dart nulls both synthesized nodes in `clearSemantics` so a later pass rebuilds them instead
+            // of reusing nodes the previous owner dropped.
+            harness.RenderView.ClearSemantics();
+
+            IReadOnlyList<SemanticsNode> rebuilt = FindThumbNodes(
+                Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize)));
+            Assert.Equal(2, rebuilt.Count);
+            Assert.Equal("10%", rebuilt[0].Value);
+            Assert.Equal("30%", rebuilt[1].Value);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void RangeSlider_PointerDown_MovesFocusOntoTheThumbItPicked()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(BuildApp(new RangeValues(20.0, 80.0), max: 100.0));
+            harness.Pump(ViewSize);
+            RangeSlider.RangeSliderState state = StateOf(harness);
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 811, position: new Point(60, 24));
+            harness.Pump(ViewSize);
+            Assert.True(state.StartFocusNode.HasFocus);
+            DispatchPointerUp(binding, harness.RenderView, pointer: 811, position: new Point(60, 24));
+
+            DispatchPointerDown(binding, harness.RenderView, pointer: 812, position: new Point(190, 24));
+            harness.Pump(ViewSize);
+            Assert.True(state.EndFocusNode.HasFocus);
+            DispatchPointerUp(binding, harness.RenderView, pointer: 812, position: new Point(190, 24));
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+            binding.ResetForTests();
+        }
+    }
+
+    private static readonly Size ViewSize = new(280, 120);
+
+    private static Widget BuildApp(
+        RangeValues values,
+        double max,
+        double min = 0.0,
+        RangeLabels? labels = null,
+        TextDirection textDirection = TextDirection.Ltr,
+        Action<RangeValues>? onChanged = null,
+        Action<RangeValues>? onChangeStart = null,
+        Action<RangeValues>? onChangeEnd = null,
+        bool omitOnChanged = false)
+    {
+        return new Theme(
+            data: new ThemeData(platform: TargetPlatform.Android),
+            child: new Directionality(
+                textDirection: textDirection,
+                child: new Align(
+                    alignment: Alignment.TopLeft,
+                    child: new SizedBox(
+                        width: 220,
+                        child: new RangeSlider(
+                            values: values,
+                            min: min,
+                            max: max,
+                            labels: labels,
+                            onChanged: omitOnChanged ? null : onChanged ?? (_ => { }),
+                            onChangeStart: onChangeStart,
+                            onChangeEnd: onChangeEnd)))));
+    }
+
+    private static RangeSlider.RangeSliderState StateOf(WidgetRenderHarness harness)
+    {
+        RangeSlider.RangeSliderState? found = null;
+        void Visit(Element element)
+        {
+            if (found is null && element is StatefulElement { State: RangeSlider.RangeSliderState state })
+            {
+                found = state;
+            }
+
+            element.VisitChildren(Visit);
+        }
+
+        harness.RootElement.VisitChildren(Visit);
+        return Assert.IsType<RangeSlider.RangeSliderState>(found);
+    }
+
+    private static double Center(SemanticsNode node) => node.Rect.Left + (node.Rect.Width / 2.0);
+
+    private static IReadOnlyList<SemanticsNode> FindThumbNodes(SemanticsNode root)
+    {
+        var thumbs = new List<SemanticsNode>();
+        void Visit(SemanticsNode node)
+        {
+            if (node.Flags.HasFlag(SemanticsFlags.IsSlider))
+            {
+                thumbs.Add(node);
+            }
+
+            foreach (SemanticsNode child in node.Children)
+            {
+                Visit(child);
+            }
+        }
+
+        Visit(root);
+        return thumbs;
     }
 
     private static object? FindDescendantByTypeName(RenderObject? root, string typeName)
@@ -620,6 +937,8 @@ public sealed class MaterialRangeSliderTests
         }
 
         public RenderView RenderView { get; }
+
+        public Element RootElement => _rootElement;
 
         public void Pump(Size size)
         {

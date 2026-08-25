@@ -28,8 +28,6 @@ public sealed class RangeSlider : StatefulWidget
         Color? inactiveColor = null,
         WidgetStateProperty<Color?>? overlayColor = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
-        FocusNode? focusNode = null,
-        bool autofocus = false,
         SemanticFormatterCallback? semanticFormatterCallback = null,
         Key? key = null,
         RangeLabels? labels = null,
@@ -102,8 +100,6 @@ public sealed class RangeSlider : StatefulWidget
         OverlayColor = overlayColor;
         MouseCursor = mouseCursor;
         MaterialTapTargetSize = materialTapTargetSize;
-        FocusNode = focusNode;
-        Autofocus = autofocus;
         SemanticFormatterCallback = semanticFormatterCallback;
         Padding = padding;
         Year2023 = year2023;
@@ -135,10 +131,6 @@ public sealed class RangeSlider : StatefulWidget
 
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
 
-    public FocusNode? FocusNode { get; }
-
-    public bool Autofocus { get; }
-
     public SemanticFormatterCallback? SemanticFormatterCallback { get; }
 
     public EdgeInsetsGeometry? Padding { get; }
@@ -150,40 +142,37 @@ public sealed class RangeSlider : StatefulWidget
         return new RangeSliderState();
     }
 
-    private sealed class RangeSliderState : State
+    /// <remarks>
+    /// Flutter's <c>_RangeSliderState</c> is private, but <c>startFocusNode</c>/<c>endFocusNode</c> are
+    /// public fields on it and its own tests reach them through <c>tester.state(...)</c>. C# has no
+    /// <c>dynamic</c>-friendly equivalent for a private nested type, so the state is <c>internal</c>.
+    /// </remarks>
+    internal sealed class RangeSliderState : State
     {
         private const double DefaultTrackHeight = 4.0;
         private const double DefaultThumbRadius = 10.0;
         private const double PaddedTapTargetExtent = 48.0;
         private const double Epsilon = 0.0001;
 
-        private FocusNode? _focusNode;
-        private bool _ownsFocusNode;
-        private bool _hasFocus;
-        private RangeSliderThumb _keyboardThumb = RangeSliderThumb.End;
+        /// <summary>The focus node for the start thumb.</summary>
+        /// <remarks>
+        /// Flutter's <c>_RangeSliderState.startFocusNode</c>: a range slider always owns both nodes — unlike
+        /// <see cref="Slider"/>, it takes no <c>focusNode</c> parameter.
+        /// </remarks>
+        public FocusNode StartFocusNode { get; } = new FocusNode();
+
+        /// <summary>The focus node for the end thumb.</summary>
+        /// <remarks>Flutter's <c>_RangeSliderState.endFocusNode</c>.</remarks>
+        public FocusNode EndFocusNode { get; } = new FocusNode();
 
         private RangeSlider CurrentWidget => (RangeSlider)StateWidget;
 
         private bool IsInteractive => CurrentWidget.OnChanged is not null && CurrentWidget.Max > CurrentWidget.Min;
 
-        public override void InitState()
-        {
-            AttachFocusNode(CurrentWidget.FocusNode);
-        }
-
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
-        {
-            var oldRangeSlider = (RangeSlider)oldWidget;
-            if (!ReferenceEquals(oldRangeSlider.FocusNode, CurrentWidget.FocusNode))
-            {
-                DetachFocusNode(disposeOwned: true);
-                AttachFocusNode(CurrentWidget.FocusNode);
-            }
-        }
-
         public override void Dispose()
         {
-            DetachFocusNode(disposeOwned: true);
+            StartFocusNode.Dispose();
+            EndFocusNode.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -291,30 +280,33 @@ public sealed class RangeSlider : StatefulWidget
                 TrackGap: trackGap,
                 Year2023: year2023);
 
-            var semanticsFlags = SemanticsFlags.IsSlider;
-            if (IsInteractive)
-            {
-                semanticsFlags |= SemanticsFlags.IsEnabled;
-            }
-
-            string? semanticsLabel = ResolveSemanticsLabel();
             var normalizedValues = Normalize(CurrentWidget.Values);
 
-            Widget result = new Semantics(
-                label: semanticsLabel,
-                flags: semanticsFlags,
-                child: new Focus(
-                    focusNode: _focusNode,
-                    autofocus: CurrentWidget.Autofocus,
-                    canRequestFocus: IsInteractive,
-                    onKeyEvent: HandleKeyEvent,
-                    child: new RangeSliderRenderWidget(
+            // Dart parks two zero-size `Focus` boxes in a `Row` behind the slider: their order gives Tab
+            // traversal start-then-end, and `includeSemantics: false` keeps them out of the semantics tree
+            // so the only slider nodes are the two `_RenderRangeSlider.assembleSemanticsNode` produces.
+            Widget result = new Stack(
+                children:
+                [
+                    new Row(
+                        children:
+                        [
+                            new Focus(
+                                focusNode: StartFocusNode,
+                                includeSemantics: false,
+                                child: new SizedBox(width: 0, height: 0)),
+                            new Focus(
+                                focusNode: EndFocusNode,
+                                includeSemantics: false,
+                                child: new SizedBox(width: 0, height: 0)),
+                        ]),
+                    new RangeSliderRenderWidget(
                         sliderTheme: effectiveSliderTheme,
                         startValueNormalized: normalizedValues.Start,
                         endValueNormalized: normalizedValues.End,
                         divisions: CurrentWidget.Divisions,
                         isInteractive: IsInteractive,
-                        isFocused: _hasFocus,
+                        state: this,
                         trackHeight: trackHeight,
                         thumbRadius: thumbRadius,
                         thumbSize: thumbSize,
@@ -336,181 +328,50 @@ public sealed class RangeSlider : StatefulWidget
                         padding: padding,
                         trackGap: trackGap,
                         textDirection: Directionality.Of(context),
+                        min: CurrentWidget.Min,
+                        max: CurrentWidget.Max,
+                        semanticFormatterCallback: CurrentWidget.SemanticFormatterCallback,
+                        adjustmentUnit: ResolveAdjustmentUnit(theme),
                         onChangeStartNormalized: IsInteractive ? HandleChangeStartNormalized : null,
                         onChangedNormalized: IsInteractive ? HandleChangedNormalized : null,
-                        onChangeEndNormalized: IsInteractive ? HandleChangeEndNormalized : null)));
+                        onChangeEndNormalized: IsInteractive ? HandleChangeEndNormalized : null),
+                ]);
 
-            var cursorStates = BuildStates(interactive: IsInteractive, focused: _hasFocus);
+            // Dart's `RangeSlider` never adds `WidgetState.focused` to the cursor state set — only the
+            // disabled/hovered/dragged triple — because focus lives on the two thumbs, not the widget.
+            var cursorStates = BuildStates(interactive: IsInteractive, focused: false);
             MouseCursor cursor = CurrentWidget.MouseCursor?.Resolve(cursorStates)
                                  ?? sliderTheme.MouseCursor?.Resolve(cursorStates)
                                  ?? (IsInteractive ? SystemMouseCursors.Click : SystemMouseCursors.Basic);
             return new MouseRegion(cursor: cursor, child: result);
         }
 
-        private void AttachFocusNode(FocusNode? externalNode)
-        {
-            _focusNode = externalNode ?? new FocusNode();
-            _ownsFocusNode = externalNode is null;
-            _focusNode.AddListener(HandleFocusChanged);
-            _hasFocus = _focusNode.HasFocus;
-        }
-
-        private void DetachFocusNode(bool disposeOwned)
-        {
-            if (_focusNode is null)
-            {
-                return;
-            }
-
-            _focusNode.RemoveListener(HandleFocusChanged);
-            if (disposeOwned && _ownsFocusNode)
-            {
-                _focusNode.Dispose();
-            }
-
-            _focusNode = null;
-            _ownsFocusNode = false;
-            _hasFocus = false;
-        }
-
-        private void HandleFocusChanged()
-        {
-            bool hasFocus = _focusNode?.HasFocus ?? false;
-            if (hasFocus == _hasFocus)
-            {
-                return;
-            }
-
-            SetState(() => _hasFocus = hasFocus);
-        }
-
-        private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
-        {
-            if (!IsSupportedKeyboardKey(@event.LogicalKey))
-            {
-                return KeyEventResult.Ignored;
-            }
-
-            if (!IsInteractive || @event is not KeyDownEvent || HasModifier(@event))
-            {
-                return KeyEventResult.Handled;
-            }
-
-            var normalized = Normalize(CurrentWidget.Values);
-            var next = ResolveKeyboardTargetNormalized(normalized, _keyboardThumb, @event.LogicalKey);
-            if (AreEqual(normalized, next))
-            {
-                return KeyEventResult.Handled;
-            }
-
-            CurrentWidget.OnChangeStart?.Invoke(Denormalize(normalized));
-            CurrentWidget.OnChanged?.Invoke(Denormalize(next));
-            CurrentWidget.OnChangeEnd?.Invoke(Denormalize(next));
-            return KeyEventResult.Handled;
-        }
-
-        private NormalizedRangeValues ResolveKeyboardTargetNormalized(
-            NormalizedRangeValues current,
-            RangeSliderThumb thumb,
-            LogicalKeyboardKey key)
-        {
-            if (key.Equals(LogicalKeyboardKey.Home))
-            {
-                return thumb == RangeSliderThumb.Start
-                    ? new NormalizedRangeValues(0.0, current.End)
-                    : new NormalizedRangeValues(current.Start, current.Start);
-            }
-
-            if (key.Equals(LogicalKeyboardKey.End))
-            {
-                return thumb == RangeSliderThumb.Start
-                    ? new NormalizedRangeValues(current.End, current.End)
-                    : new NormalizedRangeValues(current.Start, 1.0);
-            }
-
-            double step = ResolveAdjustmentUnit(Theme.Of(Context));
-            var direction = Directionality.Of(Context);
-            double delta = 0.0;
-            if (key.Equals(LogicalKeyboardKey.ArrowRight))
-            {
-                delta = direction == TextDirection.Rtl ? -step : step;
-            }
-            else if (key.Equals(LogicalKeyboardKey.ArrowLeft))
-            {
-                delta = direction == TextDirection.Rtl ? step : -step;
-            }
-            else if (key.Equals(LogicalKeyboardKey.ArrowUp)
-                     || key.Equals(LogicalKeyboardKey.PageUp))
-            {
-                delta = step;
-            }
-            else if (key.Equals(LogicalKeyboardKey.ArrowDown)
-                     || key.Equals(LogicalKeyboardKey.PageDown))
-            {
-                delta = -step;
-            }
-
-            if (Math.Abs(delta) <= Epsilon)
-            {
-                return current;
-            }
-
-            if (thumb == RangeSliderThumb.Start)
-            {
-                double nextStart = SnapNormalized(Math.Clamp(current.Start + delta, 0.0, current.End));
-                return new NormalizedRangeValues(nextStart, current.End);
-            }
-
-            double nextEnd = SnapNormalized(Math.Clamp(current.End + delta, current.Start, 1.0));
-            return new NormalizedRangeValues(current.Start, nextEnd);
-        }
-
-        private static bool HasModifier(KeyEvent @event)
-        {
-            return HardwareKeyboard.Instance.IsShiftPressed
-                   || HardwareKeyboard.Instance.IsControlPressed
-                   || HardwareKeyboard.Instance.IsAltPressed
-                   || HardwareKeyboard.Instance.IsMetaPressed;
-        }
-
-        private static bool IsSupportedKeyboardKey(LogicalKeyboardKey key)
-        {
-            return key.Equals(LogicalKeyboardKey.ArrowLeft)
-                   || key.Equals(LogicalKeyboardKey.ArrowRight)
-                   || key.Equals(LogicalKeyboardKey.ArrowUp)
-                   || key.Equals(LogicalKeyboardKey.ArrowDown)
-                   || key.Equals(LogicalKeyboardKey.PageUp)
-                   || key.Equals(LogicalKeyboardKey.PageDown)
-                   || key.Equals(LogicalKeyboardKey.Home)
-                   || key.Equals(LogicalKeyboardKey.End);
-        }
-
+        /// <remarks>
+        /// Flutter's <c>_RenderRangeSlider._adjustmentUnit</c> maps only iOS to <c>0.1</c>; macOS steps by
+        /// <c>0.05</c> here even though <c>_RenderSlider._adjustmentUnit</c> gives it <c>0.1</c>.
+        /// </remarks>
         private double ResolveAdjustmentUnit(ThemeData theme)
         {
-            return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
-                ? 0.1
-                : 0.05;
+            return theme.Platform is TargetPlatform.IOS ? 0.1 : 0.05;
         }
 
-        private void HandleChangeStartNormalized(NormalizedRangeValues normalized, RangeSliderThumb thumb)
+        private void HandleChangeStartNormalized(NormalizedRangeValues normalized)
         {
             if (!IsInteractive)
             {
                 return;
             }
 
-            _keyboardThumb = thumb;
             CurrentWidget.OnChangeStart?.Invoke(Denormalize(SnapNormalized(normalized)));
         }
 
-        private void HandleChangedNormalized(NormalizedRangeValues normalized, RangeSliderThumb thumb)
+        private void HandleChangedNormalized(NormalizedRangeValues normalized)
         {
             if (!IsInteractive)
             {
                 return;
             }
 
-            _keyboardThumb = thumb;
             var nextValues = Denormalize(SnapNormalized(normalized));
             if (Math.Abs(nextValues.Start - CurrentWidget.Values.Start) <= Epsilon
                 && Math.Abs(nextValues.End - CurrentWidget.Values.End) <= Epsilon)
@@ -521,27 +382,14 @@ public sealed class RangeSlider : StatefulWidget
             CurrentWidget.OnChanged?.Invoke(nextValues);
         }
 
-        private void HandleChangeEndNormalized(NormalizedRangeValues normalized, RangeSliderThumb thumb)
+        private void HandleChangeEndNormalized(NormalizedRangeValues normalized)
         {
             if (!IsInteractive)
             {
                 return;
             }
 
-            _keyboardThumb = thumb;
             CurrentWidget.OnChangeEnd?.Invoke(Denormalize(SnapNormalized(normalized)));
-        }
-
-        private string? ResolveSemanticsLabel()
-        {
-            var formatter = CurrentWidget.SemanticFormatterCallback;
-            if (formatter is null)
-            {
-                return null;
-            }
-
-            var values = CurrentWidget.Values;
-            return $"{formatter(values.Start)} - {formatter(values.End)}";
         }
 
         private NormalizedRangeValues Normalize(RangeValues values)
@@ -826,7 +674,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         double endValueNormalized,
         int? divisions,
         bool isInteractive,
-        bool isFocused,
+        RangeSlider.RangeSliderState state,
         double trackHeight,
         double thumbRadius,
         Size thumbSize,
@@ -848,9 +696,13 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         Thickness padding,
         double trackGap,
         TextDirection textDirection,
-        Action<NormalizedRangeValues, RangeSliderThumb>? onChangeStartNormalized,
-        Action<NormalizedRangeValues, RangeSliderThumb>? onChangedNormalized,
-        Action<NormalizedRangeValues, RangeSliderThumb>? onChangeEndNormalized,
+        double min,
+        double max,
+        SemanticFormatterCallback? semanticFormatterCallback,
+        double adjustmentUnit,
+        Action<NormalizedRangeValues>? onChangeStartNormalized,
+        Action<NormalizedRangeValues>? onChangedNormalized,
+        Action<NormalizedRangeValues>? onChangeEndNormalized,
         Key? key = null) : base(key)
     {
         SliderTheme = sliderTheme;
@@ -858,7 +710,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         EndValueNormalized = endValueNormalized;
         Divisions = divisions;
         IsInteractive = isInteractive;
-        IsFocused = isFocused;
+        State = state;
         TrackHeight = trackHeight;
         ThumbRadius = thumbRadius;
         ThumbSize = thumbSize;
@@ -880,6 +732,10 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         Padding = padding;
         TrackGap = trackGap;
         TextDirection = textDirection;
+        Min = min;
+        Max = max;
+        SemanticFormatterCallback = semanticFormatterCallback;
+        AdjustmentUnit = adjustmentUnit;
         OnChangeStartNormalized = onChangeStartNormalized;
         OnChangedNormalized = onChangedNormalized;
         OnChangeEndNormalized = onChangeEndNormalized;
@@ -895,7 +751,9 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
 
     public bool IsInteractive { get; }
 
-    public bool IsFocused { get; }
+    /// <summary>The state that owns the two thumb focus nodes.</summary>
+    /// <remarks>Flutter passes <c>state: this</c> into <c>_RangeSliderRenderObjectWidget</c> the same way.</remarks>
+    public RangeSlider.RangeSliderState State { get; }
 
     public double TrackHeight { get; }
 
@@ -939,11 +797,19 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
 
     public TextDirection TextDirection { get; }
 
-    public Action<NormalizedRangeValues, RangeSliderThumb>? OnChangeStartNormalized { get; }
+    public double Min { get; }
 
-    public Action<NormalizedRangeValues, RangeSliderThumb>? OnChangedNormalized { get; }
+    public double Max { get; }
 
-    public Action<NormalizedRangeValues, RangeSliderThumb>? OnChangeEndNormalized { get; }
+    public SemanticFormatterCallback? SemanticFormatterCallback { get; }
+
+    public double AdjustmentUnit { get; }
+
+    public Action<NormalizedRangeValues>? OnChangeStartNormalized { get; }
+
+    public Action<NormalizedRangeValues>? OnChangedNormalized { get; }
+
+    public Action<NormalizedRangeValues>? OnChangeEndNormalized { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -953,7 +819,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
             endValueNormalized: EndValueNormalized,
             divisions: Divisions,
             isInteractive: IsInteractive,
-            isFocused: IsFocused,
+            state: State,
             trackHeight: TrackHeight,
             thumbRadius: ThumbRadius,
             thumbSize: ThumbSize,
@@ -975,6 +841,10 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
             padding: Padding,
             trackGap: TrackGap,
             textDirection: TextDirection,
+            min: Min,
+            max: Max,
+            semanticFormatterCallback: SemanticFormatterCallback,
+            adjustmentUnit: AdjustmentUnit,
             onChangeStartNormalized: OnChangeStartNormalized,
             onChangedNormalized: OnChangedNormalized,
             onChangeEndNormalized: OnChangeEndNormalized);
@@ -988,7 +858,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         rangeSlider.EndValueNormalized = EndValueNormalized;
         rangeSlider.Divisions = Divisions;
         rangeSlider.IsInteractive = IsInteractive;
-        rangeSlider.IsFocused = IsFocused;
+        rangeSlider.State = State;
         rangeSlider.TrackHeight = TrackHeight;
         rangeSlider.ThumbRadius = ThumbRadius;
         rangeSlider.ThumbSize = ThumbSize;
@@ -1010,6 +880,10 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
         rangeSlider.Padding = Padding;
         rangeSlider.TrackGap = TrackGap;
         rangeSlider.TextDirection = TextDirection;
+        rangeSlider.Min = Min;
+        rangeSlider.Max = Max;
+        rangeSlider.SemanticFormatterCallback = SemanticFormatterCallback;
+        rangeSlider.AdjustmentUnit = AdjustmentUnit;
         rangeSlider.OnChangeStartNormalized = OnChangeStartNormalized;
         rangeSlider.OnChangedNormalized = OnChangedNormalized;
         rangeSlider.OnChangeEndNormalized = OnChangeEndNormalized;
@@ -1026,7 +900,7 @@ internal sealed class RenderRangeSlider : RenderBox
     private double _endValueNormalized;
     private int? _divisions;
     private bool _isInteractive;
-    private bool _isFocused;
+    private RangeSlider.RangeSliderState _state;
     private double _trackHeight;
     private double _thumbRadius;
     private Size _thumbSize;
@@ -1048,9 +922,17 @@ internal sealed class RenderRangeSlider : RenderBox
     private Thickness _padding;
     private double _trackGap;
     private TextDirection _textDirection;
-    private Action<NormalizedRangeValues, RangeSliderThumb>? _onChangeStartNormalized;
-    private Action<NormalizedRangeValues, RangeSliderThumb>? _onChangedNormalized;
-    private Action<NormalizedRangeValues, RangeSliderThumb>? _onChangeEndNormalized;
+    private double _min;
+    private double _max;
+    private SemanticFormatterCallback? _semanticFormatterCallback;
+    private double _adjustmentUnit;
+    private Point _startThumbCenter;
+    private Point _endThumbCenter;
+    private SemanticsNode? _startSemanticsNode;
+    private SemanticsNode? _endSemanticsNode;
+    private Action<NormalizedRangeValues>? _onChangeStartNormalized;
+    private Action<NormalizedRangeValues>? _onChangedNormalized;
+    private Action<NormalizedRangeValues>? _onChangeEndNormalized;
 
     private bool _hovered;
     private bool _dragging;
@@ -1065,7 +947,7 @@ internal sealed class RenderRangeSlider : RenderBox
         double endValueNormalized,
         int? divisions,
         bool isInteractive,
-        bool isFocused,
+        RangeSlider.RangeSliderState state,
         double trackHeight,
         double thumbRadius,
         Size thumbSize,
@@ -1087,9 +969,13 @@ internal sealed class RenderRangeSlider : RenderBox
         Thickness padding,
         double trackGap,
         TextDirection textDirection,
-        Action<NormalizedRangeValues, RangeSliderThumb>? onChangeStartNormalized,
-        Action<NormalizedRangeValues, RangeSliderThumb>? onChangedNormalized,
-        Action<NormalizedRangeValues, RangeSliderThumb>? onChangeEndNormalized)
+        double min,
+        double max,
+        SemanticFormatterCallback? semanticFormatterCallback,
+        double adjustmentUnit,
+        Action<NormalizedRangeValues>? onChangeStartNormalized,
+        Action<NormalizedRangeValues>? onChangedNormalized,
+        Action<NormalizedRangeValues>? onChangeEndNormalized)
     {
         _sliderTheme = sliderTheme;
         var initial = OrderAndClamp(startValueNormalized, endValueNormalized);
@@ -1097,7 +983,7 @@ internal sealed class RenderRangeSlider : RenderBox
         _endValueNormalized = initial.End;
         _divisions = divisions;
         _isInteractive = isInteractive;
-        _isFocused = isFocused;
+        _state = state;
         _trackHeight = trackHeight;
         _thumbRadius = thumbRadius;
         _thumbSize = thumbSize;
@@ -1119,6 +1005,10 @@ internal sealed class RenderRangeSlider : RenderBox
         _padding = padding;
         _trackGap = trackGap;
         _textDirection = textDirection;
+        _min = min;
+        _max = max;
+        _semanticFormatterCallback = semanticFormatterCallback;
+        _adjustmentUnit = adjustmentUnit;
         _onChangeStartNormalized = onChangeStartNormalized;
         _onChangedNormalized = onChangedNormalized;
         _onChangeEndNormalized = onChangeEndNormalized;
@@ -1217,20 +1107,36 @@ internal sealed class RenderRangeSlider : RenderBox
         }
     }
 
-    public bool IsFocused
+    /// <summary>The state whose two focus nodes drive the per-thumb focus overlays and semantics.</summary>
+    public RangeSlider.RangeSliderState State
     {
-        get => _isFocused;
+        get => _state;
         set
         {
-            if (_isFocused == value)
+            if (ReferenceEquals(_state, value))
             {
                 return;
             }
 
-            _isFocused = value;
+            if (Attached)
+            {
+                DetachFocusListeners(_state);
+                AttachFocusListeners(value);
+            }
+
+            _state = value;
             MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
         }
     }
+
+    /// <summary>Whether either thumb currently holds focus.</summary>
+    /// <remarks>
+    /// Dart has no `isFocused` on `_RenderRangeSlider`; it reads `_state.startFocusNode.hasFocus` and
+    /// `_state.endFocusNode.hasFocus` at each use site. Plumix keeps this aggregate only for the overlay
+    /// colour resolution, which is per-widget rather than per-thumb.
+    /// </remarks>
+    private bool IsFocused => _state.StartFocusNode.HasFocus || _state.EndFocusNode.HasFocus;
 
     public double TrackHeight
     {
@@ -1472,19 +1378,19 @@ internal sealed class RenderRangeSlider : RenderBox
         }
     }
 
-    public Action<NormalizedRangeValues, RangeSliderThumb>? OnChangeStartNormalized
+    public Action<NormalizedRangeValues>? OnChangeStartNormalized
     {
         get => _onChangeStartNormalized;
         set => _onChangeStartNormalized = value;
     }
 
-    public Action<NormalizedRangeValues, RangeSliderThumb>? OnChangedNormalized
+    public Action<NormalizedRangeValues>? OnChangedNormalized
     {
         get => _onChangedNormalized;
         set => _onChangedNormalized = value;
     }
 
-    public Action<NormalizedRangeValues, RangeSliderThumb>? OnChangeEndNormalized
+    public Action<NormalizedRangeValues>? OnChangeEndNormalized
     {
         get => _onChangeEndNormalized;
         set => _onChangeEndNormalized = value;
@@ -1558,8 +1464,15 @@ internal sealed class RenderRangeSlider : RenderBox
         var endCenter = new Point(
             ResolveThumbCenterX(geometry, values.End),
             trackRect.Center.Y);
+        // Flutter caches the two thumb centres in `paint` and reuses them for the semantics rects, so the
+        // rects follow the position animation. Plumix caches them without the paint `offset`, because a
+        // `SemanticsNode.Rect` is in its owning render object's own coordinate system and the parent node's
+        // transform already carries the offset — adding it here would count the position twice.
+        _startThumbCenter = new Point(startCenter.X - offset.X, startCenter.Y - offset.Y);
+        _endThumbCenter = new Point(endCenter.X - offset.X, endCenter.Y - offset.Y);
+
         var enableAnimation = new ConstantAnimation<double>(IsInteractive ? 1.0 : 0.0);
-        bool active = _dragging || _hovered || IsFocused;
+        bool active = _dragging || _hovered;
         var activationAnimation = new ConstantAnimation<double>(active ? 1.0 : 0.0);
         trackShape.Paint(
             ctx,
@@ -1576,6 +1489,23 @@ internal sealed class RenderRangeSlider : RenderBox
         Color? overlayColor = ResolveOverlayColor();
         SliderThemeData paintTheme = SliderTheme.CopyWith(
             overlayColor: WidgetStateProperty<Color?>.All(overlayColor));
+
+        // Flutter paints a fully-activated overlay under each *focused* thumb, before the
+        // activation-driven overlay, so keyboard focus highlights the thumb that actually has it rather
+        // than whichever thumb was dragged last.
+        if (overlayColor is { A: > 0 })
+        {
+            if (_state.StartFocusNode.HasFocus)
+            {
+                PaintThumbOverlay(ctx, paintTheme, startCenter, values.Start, discrete, enableAnimation);
+            }
+
+            if (_state.EndFocusNode.HasFocus)
+            {
+                PaintThumbOverlay(ctx, paintTheme, endCenter, values.End, discrete, enableAnimation);
+            }
+        }
+
         if (active && overlayColor is { A: > 0 })
         {
             Point overlayCenter = _activeThumb == RangeSliderThumb.Start ? startCenter : endCenter;
@@ -1876,7 +1806,19 @@ internal sealed class RenderRangeSlider : RenderBox
 
         if (_activeThumb.HasValue)
         {
-            OnChangeStartNormalized?.Invoke(_dragValues.Value, _activeThumb.Value);
+            // Flutter's `_startInteraction` moves focus onto the thumb the pointer picked, before the drag
+            // starts. `Slider` deliberately does not do this — only `RangeSlider`.
+            switch (_activeThumb.Value)
+            {
+                case RangeSliderThumb.Start:
+                    _state.StartFocusNode.RequestFocus();
+                    break;
+                case RangeSliderThumb.End:
+                    _state.EndFocusNode.RequestFocus();
+                    break;
+            }
+
+            OnChangeStartNormalized?.Invoke(_dragValues.Value);
             UpdateActiveThumbFromLocalX(@event.LocalPosition.X);
         }
 
@@ -1955,7 +1897,7 @@ internal sealed class RenderRangeSlider : RenderBox
         }
 
         _dragValues = next;
-        OnChangedNormalized?.Invoke(next, _activeThumb.Value);
+        OnChangedNormalized?.Invoke(next);
         MarkNeedsPaint();
     }
 
@@ -1988,7 +1930,7 @@ internal sealed class RenderRangeSlider : RenderBox
         }
 
         _dragValues = next;
-        OnChangedNormalized?.Invoke(next, _activeThumb.Value);
+        OnChangedNormalized?.Invoke(next);
         MarkNeedsPaint();
     }
 
@@ -2000,7 +1942,6 @@ internal sealed class RenderRangeSlider : RenderBox
         }
 
         var finalValues = ResolveVisualValues();
-        var finalThumb = _activeThumb ?? RangeSliderThumb.End;
         _activePointer = null;
         _dragging = false;
         _activeThumb = null;
@@ -2009,7 +1950,7 @@ internal sealed class RenderRangeSlider : RenderBox
 
         if (!canceled)
         {
-            OnChangeEndNormalized?.Invoke(finalValues, finalThumb);
+            OnChangeEndNormalized?.Invoke(finalValues);
         }
 
         MarkNeedsPaint();
@@ -2099,6 +2040,303 @@ internal sealed class RenderRangeSlider : RenderBox
         return OrderAndClamp(current.Start, nextEnd);
     }
 
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        AttachFocusListeners(_state);
+    }
+
+    protected override void OnDetach()
+    {
+        DetachFocusListeners(_state);
+        base.OnDetach();
+    }
+
+    /// <remarks>
+    /// Flutter subscribes both focus nodes to <c>markNeedsPaint</c> and <c>markNeedsSemanticsUpdate</c> in
+    /// <c>attach</c>: the paint listener drives the per-thumb focus overlay, the semantics listener is what
+    /// makes keyboard focus show up as <c>isFocused</c> on the matching thumb node.
+    /// </remarks>
+    private void AttachFocusListeners(RangeSlider.RangeSliderState state)
+    {
+        state.StartFocusNode.AddListener(MarkNeedsPaint);
+        state.StartFocusNode.AddListener(MarkNeedsSemanticsUpdate);
+        state.EndFocusNode.AddListener(MarkNeedsPaint);
+        state.EndFocusNode.AddListener(MarkNeedsSemanticsUpdate);
+    }
+
+    private void DetachFocusListeners(RangeSlider.RangeSliderState state)
+    {
+        state.StartFocusNode.RemoveListener(MarkNeedsPaint);
+        state.StartFocusNode.RemoveListener(MarkNeedsSemanticsUpdate);
+        state.EndFocusNode.RemoveListener(MarkNeedsPaint);
+        state.EndFocusNode.RemoveListener(MarkNeedsSemanticsUpdate);
+    }
+
+    /// <summary>The lower bound the normalized values are mapped back onto for semantics.</summary>
+    public double Min
+    {
+        get => _min;
+        set
+        {
+            if (_min.Equals(value))
+            {
+                return;
+            }
+
+            _min = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    /// <summary>The upper bound the normalized values are mapped back onto for semantics.</summary>
+    public double Max
+    {
+        get => _max;
+        set
+        {
+            if (_max.Equals(value))
+            {
+                return;
+            }
+
+            _max = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    /// <remarks>Flutter's <c>_RenderRangeSlider.semanticFormatterCallback</c>.</remarks>
+    public SemanticFormatterCallback? SemanticFormatterCallback
+    {
+        get => _semanticFormatterCallback;
+        set
+        {
+            if (_semanticFormatterCallback == value)
+            {
+                return;
+            }
+
+            _semanticFormatterCallback = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    /// <summary>The platform-derived step a semantics adjustment moves a continuous thumb by.</summary>
+    /// <remarks>
+    /// Flutter's <c>_RenderRangeSlider._adjustmentUnit</c> maps macOS to <c>0.05</c>, unlike
+    /// <c>_RenderSlider._adjustmentUnit</c>, which maps it to <c>0.1</c>. Plumix resolves it in the state and
+    /// reproduces that asymmetry there.
+    /// </remarks>
+    public double AdjustmentUnit
+    {
+        get => _adjustmentUnit;
+        set
+        {
+            if (_adjustmentUnit.Equals(value))
+            {
+                return;
+            }
+
+            _adjustmentUnit = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    /// <remarks>Flutter's <c>_RenderRangeSlider._semanticActionUnit</c>.</remarks>
+    private double SemanticActionUnit => Divisions is { } divisions ? 1.0 / divisions : AdjustmentUnit;
+
+    /// <summary>
+    /// The minimum gap the two thumbs must keep, in normalized units.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>_RenderRangeSlider._minThumbSeparationValue</c>: zero for a discrete slider, and
+    /// otherwise the theme's separation divided by the track width — so it is layout-dependent, and the
+    /// increase/decrease values that read it change with the slider's size.
+    /// </remarks>
+    private double MinThumbSeparationValue
+    {
+        get
+        {
+            if (Divisions is { } divisions && divisions > 0)
+            {
+                return 0.0;
+            }
+
+            double trackWidth = ResolveTrackGeometry(offsetX: 0).Width;
+            return trackWidth > 0 ? (SliderTheme.MinThumbSeparation ?? 0.0) / trackWidth : 0.0;
+        }
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_RenderRangeSlider._increasedStartValue</c>. The <c>toStringAsFixed(2)</c> round-trip is
+    /// Dart's own guard against <c>0.4 + 0.2 == 0.6000000000000001</c>, and the separation bound saturates to
+    /// the current value rather than clamping to the neighbour.
+    /// </remarks>
+    private double IncreasedStartValue
+    {
+        get
+        {
+            double increased = RoundToTwoDecimals(StartValueNormalized + SemanticActionUnit);
+            return increased <= EndValueNormalized - MinThumbSeparationValue ? increased : StartValueNormalized;
+        }
+    }
+
+    /// <remarks>Flutter's <c>_RenderRangeSlider._decreasedStartValue</c> — clamped, no separation bound.</remarks>
+    private double DecreasedStartValue => Math.Clamp(StartValueNormalized - SemanticActionUnit, 0.0, 1.0);
+
+    /// <remarks>Flutter's <c>_RenderRangeSlider._increasedEndValue</c> — clamped, no separation bound.</remarks>
+    private double IncreasedEndValue => Math.Clamp(EndValueNormalized + SemanticActionUnit, 0.0, 1.0);
+
+    /// <remarks>Flutter's <c>_RenderRangeSlider._decreasedEndValue</c> — separation-bounded, not clamped.</remarks>
+    private double DecreasedEndValue
+    {
+        get
+        {
+            double decreased = EndValueNormalized - SemanticActionUnit;
+            return decreased >= StartValueNormalized + MinThumbSeparationValue ? decreased : EndValueNormalized;
+        }
+    }
+
+    /// <remarks>Dart's <c>double.parse(value.toStringAsFixed(2))</c>, which rounds half away from zero.</remarks>
+    private static double RoundToTwoDecimals(double value) =>
+        Math.Round(value, 2, MidpointRounding.AwayFromZero);
+
+    private void IncreaseStartAction() => InvokeRangeChange(IncreasedStartValue, EndValueNormalized);
+
+    private void DecreaseStartAction() => InvokeRangeChange(DecreasedStartValue, EndValueNormalized);
+
+    private void IncreaseEndAction() => InvokeRangeChange(StartValueNormalized, IncreasedEndValue);
+
+    private void DecreaseEndAction() => InvokeRangeChange(StartValueNormalized, DecreasedEndValue);
+
+    /// <remarks>
+    /// Flutter's four range actions call <c>onChanged</c> only — unlike <c>Slider</c>, they never fire
+    /// <c>onChangeStart</c>/<c>onChangeEnd</c>.
+    /// </remarks>
+    private void InvokeRangeChange(double startNormalized, double endNormalized)
+    {
+        if (!IsInteractive)
+        {
+            return;
+        }
+
+        OnChangedNormalized?.Invoke(new NormalizedRangeValues(startNormalized, endNormalized));
+    }
+
+    /// <remarks>Flutter's <c>_RangeSliderState._lerp</c>.</remarks>
+    private double Lerp(double normalized) => Min + ((Max - Min) * normalized);
+
+    private string FormatSemanticValue(double normalized)
+    {
+        return SemanticFormatterCallback is { } formatter
+            ? formatter(Lerp(normalized))
+            : FormattableString.Invariant($"{Math.Round(normalized * 100.0, MidpointRounding.AwayFromZero)}%");
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_RenderRangeSlider.describeSemanticsConfiguration</c> sets nothing but the boundary flag:
+    /// every readable property lives on the two thumb nodes that
+    /// <see cref="AssembleSemanticsNode"/> builds.
+    /// </remarks>
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        configuration.IsSemanticBoundary = true;
+    }
+
+    /// <remarks>Flutter's <c>_RenderRangeSlider._createSemanticsConfiguration</c>.</remarks>
+    private SemanticsConfiguration CreateThumbSemanticsConfiguration(
+        double value,
+        double increasedValue,
+        double decreasedValue,
+        Action increaseAction,
+        Action decreaseAction,
+        bool focused)
+    {
+        var configuration = new SemanticsConfiguration
+        {
+            IsEnabled = IsInteractive,
+            TextDirection = TextDirection,
+            IsSlider = true,
+            IsFocused = focused,
+            Value = FormatSemanticValue(value),
+            IncreasedValue = FormatSemanticValue(increasedValue),
+            DecreasedValue = FormatSemanticValue(decreasedValue),
+        };
+
+        if (IsInteractive)
+        {
+            configuration.OnIncrease = increaseAction;
+            configuration.OnDecrease = decreaseAction;
+        }
+
+        return configuration;
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_RenderRangeSlider.assembleSemanticsNode</c>. The rects are 48x48 boxes centred on each
+    /// thumb; under RTL the two are swapped, so the <em>start</em> node carries the rect that sits where the
+    /// end thumb is painted. That looks like a bug but is contractual — Flutter's own RTL test asserts it.
+    /// </remarks>
+    protected override void AssembleSemanticsNode(
+        SemanticsNode node,
+        SemanticsConfiguration config,
+        IReadOnlyList<SemanticsNode> children)
+    {
+        SemanticsConfiguration startConfiguration = CreateThumbSemanticsConfiguration(
+            StartValueNormalized,
+            IncreasedStartValue,
+            DecreasedStartValue,
+            IncreaseStartAction,
+            DecreaseStartAction,
+            focused: _state.StartFocusNode.HasFocus);
+        SemanticsConfiguration endConfiguration = CreateThumbSemanticsConfiguration(
+            EndValueNormalized,
+            IncreasedEndValue,
+            DecreasedEndValue,
+            IncreaseEndAction,
+            DecreaseEndAction,
+            focused: _state.EndFocusNode.HasFocus);
+
+        Rect leftRect = ThumbSemanticsRect(_startThumbCenter);
+        Rect rightRect = ThumbSemanticsRect(_endThumbCenter);
+
+        _startSemanticsNode ??= Owner!.SemanticsOwner.CreateDetachedNode(this);
+        _endSemanticsNode ??= Owner!.SemanticsOwner.CreateDetachedNode(this);
+
+        if (TextDirection == TextDirection.Rtl)
+        {
+            _startSemanticsNode.Rect = rightRect;
+            _endSemanticsNode.Rect = leftRect;
+        }
+        else
+        {
+            _startSemanticsNode.Rect = leftRect;
+            _endSemanticsNode.Rect = rightRect;
+        }
+
+        _startSemanticsNode.UpdateWith(startConfiguration);
+        _endSemanticsNode.UpdateWith(endConfiguration);
+        node.UpdateWith(config, [_startSemanticsNode, _endSemanticsNode]);
+    }
+
+    private static Rect ThumbSemanticsRect(Point center)
+    {
+        double extent = WidgetConstants.MinInteractiveDimension;
+        return new Rect(center.X - (extent / 2.0), center.Y - (extent / 2.0), extent, extent);
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_RenderRangeSlider.clearSemantics</c> drops both synthesized nodes so a later semantics
+    /// pass rebuilds them against the new owner instead of reusing nodes the old owner disposed.
+    /// </remarks>
+    protected override void ClearOwnSemantics()
+    {
+        base.ClearOwnSemantics();
+        _startSemanticsNode = null;
+        _endSemanticsNode = null;
+    }
+
     private double ResolveThumbCenterX(TrackGeometry geometry, double normalizedValue)
     {
         double value = ClampNormalized(normalizedValue);
@@ -2126,6 +2364,29 @@ internal sealed class RenderRangeSlider : RenderBox
         }
 
         return new TrackGeometry(left, right);
+    }
+
+    private void PaintThumbOverlay(
+        PaintingContext ctx,
+        SliderThemeData paintTheme,
+        Point center,
+        double value,
+        bool discrete,
+        Animation<double> enableAnimation)
+    {
+        paintTheme.OverlayShape!.Paint(
+            ctx,
+            center,
+            new ConstantAnimation<double>(1.0),
+            enableAnimation,
+            discrete,
+            null,
+            this,
+            paintTheme,
+            TextDirection,
+            value,
+            1.0,
+            Size);
     }
 
     private double ResolveOverlayCenterX(double startThumbCenterX, double endThumbCenterX)

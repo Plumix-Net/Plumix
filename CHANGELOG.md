@@ -8,6 +8,13 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `Slider` semantics moved onto its render object — value/increase/decrease/focus (`slider.dart`).
+- Breaking: removed the C#-only `Slider.semanticLabel`; the semantics label now comes from `Slider.label`, as in Dart.
+- Breaking: `RangeSlider` drops `focusNode`/`autofocus` for per-thumb focus nodes (`range_slider.dart`).
+- Breaking: `RangeSlider` has no keyboard adjustment (Dart has none); Tab moves focus between thumbs, taps focus one.
+- Breaking: `RangeSlider` emits one semantics node per thumb with per-thumb rects and RTL swap (`range_slider.dart`).
+- Breaking: `RangeSlider` steps by `0.05` on macOS, not `Slider`'s `0.1` (`range_slider.dart`).
+- Added `SemanticsConfiguration.IsSlider`/`IsEnabled`/`IsFocused`/`OnIncrease`/`OnDecrease`/`OnFocus`.
 - Breaking: removed the C#-only `Widgets.Scrollbar` wrapper, `ScrollbarInteractionState` and the overlay render object.
 - Breaking: strict `RawScrollbar` interaction port — `CustomPaint` + thumb/track recognizers (`scrollbar.dart`).
 - Breaking: `RawScrollbar` drops the C#-only resolver/overlay API; subclasses override `UpdateScrollbarPainter`.

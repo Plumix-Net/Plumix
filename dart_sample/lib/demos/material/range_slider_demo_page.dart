@@ -48,7 +48,7 @@ class _RangeSliderDemoPageState extends State<RangeSliderDemoPage> {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Two-thumb range mapping, continuous/discrete updates, drag/tap/keyboard flow, and M2/M3 theme/widget color precedence.',
+            'Two-thumb range mapping, continuous/discrete updates, drag/tap plus Tab focus between the two thumbs, and M2/M3 theme/widget color precedence.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 10),
@@ -153,13 +153,13 @@ class _RangeSliderDemoPageState extends State<RangeSliderDemoPage> {
                 children: <Widget>[
                   _buildPreviewCard(
                     title: 'LTR',
-                    subtitle: 'Left-to-right mapping and keyboard direction',
+                    subtitle: 'Left-to-right mapping and thumb order',
                     textDirection: TextDirection.ltr,
                   ),
                   const SizedBox(height: 14),
                   _buildPreviewCard(
                     title: 'RTL',
-                    subtitle: 'Right-to-left mapping and keyboard direction',
+                    subtitle: 'Right-to-left mapping and thumb order',
                     textDirection: TextDirection.rtl,
                   ),
                 ],

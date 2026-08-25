@@ -30,7 +30,6 @@ public sealed class Slider : StatefulWidget
         MaterialTapTargetSize? materialTapTargetSize = null,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        string? semanticLabel = null,
         SemanticFormatterCallback? semanticFormatterCallback = null,
         Key? key = null,
         string? label = null,
@@ -112,7 +111,6 @@ public sealed class Slider : StatefulWidget
         MaterialTapTargetSize = materialTapTargetSize;
         FocusNode = focusNode;
         Autofocus = autofocus;
-        SemanticLabel = semanticLabel;
         SemanticFormatterCallback = semanticFormatterCallback;
         AllowedInteraction = allowedInteraction;
         Padding = padding;
@@ -155,8 +153,6 @@ public sealed class Slider : StatefulWidget
     public FocusNode? FocusNode { get; }
 
     public bool Autofocus { get; }
-
-    public string? SemanticLabel { get; }
 
     public SemanticFormatterCallback? SemanticFormatterCallback { get; }
 
@@ -390,21 +386,15 @@ public sealed class Slider : StatefulWidget
                 ThumbSize: sliderTheme.ThumbSize ?? WidgetStateProperty<Size?>.All(thumbSize),
                 TrackGap: trackGap,
                 Year2023: year2023);
-            string? semanticsLabel = ResolveSemanticsLabel();
-
-            var semanticsFlags = SemanticsFlags.IsSlider;
-            if (IsInteractive)
-            {
-                semanticsFlags |= SemanticsFlags.IsEnabled;
-            }
-
-            Widget result = new Semantics(
-                label: semanticsLabel,
-                flags: semanticsFlags,
-                child: new Focus(
+            // Dart emits the slider's semantics from `_RenderSlider.describeSemanticsConfiguration`, not
+            // from a `Semantics` wrapper, and keeps `FocusableActionDetector`'s own focus semantics out of
+            // the tree with `includeFocusSemantics: false`. `Focus.includeSemantics: false` is the
+            // equivalent here, so the render object stays the single source of the slider node.
+            Widget result = new Focus(
                     focusNode: _focusNode,
                     autofocus: CurrentWidget.Autofocus,
                     canRequestFocus: IsInteractive,
+                    includeSemantics: false,
                     onKeyEvent: HandleKeyEvent,
                     child: new SliderRenderWidget(
                         sliderTheme: effectiveSliderTheme,
@@ -436,9 +426,14 @@ public sealed class Slider : StatefulWidget
                         allowedInteraction: allowedInteraction,
                         trackGap: trackGap,
                         textDirection: Directionality.Of(context),
+                        min: CurrentWidget.Min,
+                        max: CurrentWidget.Max,
+                        semanticFormatterCallback: CurrentWidget.SemanticFormatterCallback,
+                        adjustmentUnit: ResolveAdjustmentUnit(theme),
+                        onFocusRequested: RequestFocusFromSemantics,
                         onChangeStartNormalized: IsInteractive ? HandleChangeStartNormalized : null,
                         onChangedNormalized: IsInteractive ? HandleChangedNormalized : null,
-                        onChangeEndNormalized: IsInteractive ? HandleChangeEndNormalized : null)));
+                        onChangeEndNormalized: IsInteractive ? HandleChangeEndNormalized : null));
 
             var cursorStates = BuildStates(interactive: IsInteractive, focused: _hasFocus);
             MouseCursor cursor = CurrentWidget.MouseCursor
@@ -610,15 +605,18 @@ public sealed class Slider : StatefulWidget
             CurrentWidget.OnChangeEnd?.Invoke(Denormalize(SnapNormalized(normalized)));
         }
 
-        private string? ResolveSemanticsLabel()
+        /// <remarks>Flutter's <c>_RenderSlider.onFocusAction</c>.</remarks>
+        private void RequestFocusFromSemantics()
         {
-            var formatter = CurrentWidget.SemanticFormatterCallback;
-            if (formatter is not null)
+            if (!IsInteractive || !Mounted)
             {
-                return formatter(CurrentWidget.Value);
+                return;
             }
 
-            return CurrentWidget.SemanticLabel;
+            if (_focusNode is { HasFocus: false } node)
+            {
+                node.RequestFocus();
+            }
         }
 
         private double Normalize(double value)
@@ -924,6 +922,11 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         SliderInteraction allowedInteraction,
         double trackGap,
         TextDirection textDirection,
+        double min,
+        double max,
+        SemanticFormatterCallback? semanticFormatterCallback,
+        double adjustmentUnit,
+        Action onFocusRequested,
         Action<double>? onChangeStartNormalized,
         Action<double>? onChangedNormalized,
         Action<double>? onChangeEndNormalized,
@@ -958,6 +961,11 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         AllowedInteraction = allowedInteraction;
         TrackGap = trackGap;
         TextDirection = textDirection;
+        Min = min;
+        Max = max;
+        SemanticFormatterCallback = semanticFormatterCallback;
+        AdjustmentUnit = adjustmentUnit;
+        OnFocusRequested = onFocusRequested;
         OnChangeStartNormalized = onChangeStartNormalized;
         OnChangedNormalized = onChangedNormalized;
         OnChangeEndNormalized = onChangeEndNormalized;
@@ -1021,6 +1029,16 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
 
     public TextDirection TextDirection { get; }
 
+    public double Min { get; }
+
+    public double Max { get; }
+
+    public SemanticFormatterCallback? SemanticFormatterCallback { get; }
+
+    public double AdjustmentUnit { get; }
+
+    public Action OnFocusRequested { get; }
+
     public Action<double>? OnChangeStartNormalized { get; }
 
     public Action<double>? OnChangedNormalized { get; }
@@ -1059,6 +1077,11 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
             allowedInteraction: AllowedInteraction,
             trackGap: TrackGap,
             textDirection: TextDirection,
+            min: Min,
+            max: Max,
+            semanticFormatterCallback: SemanticFormatterCallback,
+            adjustmentUnit: AdjustmentUnit,
+            onFocusRequested: OnFocusRequested,
             onChangeStartNormalized: OnChangeStartNormalized,
             onChangedNormalized: OnChangedNormalized,
             onChangeEndNormalized: OnChangeEndNormalized);
@@ -1096,6 +1119,11 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         slider.AllowedInteraction = AllowedInteraction;
         slider.TrackGap = TrackGap;
         slider.TextDirection = TextDirection;
+        slider.Min = Min;
+        slider.Max = Max;
+        slider.SemanticFormatterCallback = SemanticFormatterCallback;
+        slider.AdjustmentUnit = AdjustmentUnit;
+        slider.OnFocusRequested = OnFocusRequested;
         slider.OnChangeStartNormalized = OnChangeStartNormalized;
         slider.OnChangedNormalized = OnChangedNormalized;
         slider.OnChangeEndNormalized = OnChangeEndNormalized;
@@ -1136,6 +1164,10 @@ internal sealed class RenderSlider : RenderBox
     private SliderInteraction _allowedInteraction;
     private double _trackGap;
     private TextDirection _textDirection;
+    private double _min;
+    private double _max;
+    private SemanticFormatterCallback? _semanticFormatterCallback;
+    private double _adjustmentUnit;
     private Action<double>? _onChangeStartNormalized;
     private Action<double>? _onChangedNormalized;
     private Action<double>? _onChangeEndNormalized;
@@ -1175,6 +1207,11 @@ internal sealed class RenderSlider : RenderBox
         SliderInteraction allowedInteraction,
         double trackGap,
         TextDirection textDirection,
+        double min,
+        double max,
+        SemanticFormatterCallback? semanticFormatterCallback,
+        double adjustmentUnit,
+        Action onFocusRequested,
         Action<double>? onChangeStartNormalized,
         Action<double>? onChangedNormalized,
         Action<double>? onChangeEndNormalized)
@@ -1211,7 +1248,81 @@ internal sealed class RenderSlider : RenderBox
         _onChangeStartNormalized = onChangeStartNormalized;
         _onChangedNormalized = onChangedNormalized;
         _onChangeEndNormalized = onChangeEndNormalized;
+        _min = min;
+        _max = max;
+        _semanticFormatterCallback = semanticFormatterCallback;
+        _adjustmentUnit = adjustmentUnit;
+        OnFocusRequested = onFocusRequested;
     }
+
+    /// <summary>The lower bound the normalized value is mapped back onto for semantics.</summary>
+    /// <remarks>Flutter reads <c>_state.widget.min</c> through <c>_SliderState._lerp</c>.</remarks>
+    public double Min
+    {
+        get => _min;
+        set
+        {
+            if (_min.Equals(value))
+            {
+                return;
+            }
+
+            _min = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    /// <summary>The upper bound the normalized value is mapped back onto for semantics.</summary>
+    public double Max
+    {
+        get => _max;
+        set
+        {
+            if (_max.Equals(value))
+            {
+                return;
+            }
+
+            _max = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    /// <remarks>Flutter's <c>_RenderSlider.semanticFormatterCallback</c>.</remarks>
+    public SemanticFormatterCallback? SemanticFormatterCallback
+    {
+        get => _semanticFormatterCallback;
+        set
+        {
+            if (_semanticFormatterCallback == value)
+            {
+                return;
+            }
+
+            _semanticFormatterCallback = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    /// <summary>The platform-derived step a semantics or keyboard adjustment moves a continuous slider by.</summary>
+    /// <remarks>Flutter derives this from <c>_RenderSlider.platform</c>; Plumix resolves it in the state.</remarks>
+    public double AdjustmentUnit
+    {
+        get => _adjustmentUnit;
+        set
+        {
+            if (_adjustmentUnit.Equals(value))
+            {
+                return;
+            }
+
+            _adjustmentUnit = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    /// <remarks>Flutter's <c>_RenderSlider.onFocusAction</c>, which lives on the state.</remarks>
+    public Action OnFocusRequested { get; set; }
 
     public SliderThemeData SliderTheme
     {
@@ -1245,6 +1356,8 @@ internal sealed class RenderSlider : RenderBox
             {
                 MarkNeedsPaint();
             }
+
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -1263,6 +1376,7 @@ internal sealed class RenderSlider : RenderBox
 
             _secondaryTrackValueNormalized = normalized;
             MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -1298,6 +1412,7 @@ internal sealed class RenderSlider : RenderBox
             }
 
             MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -1313,6 +1428,7 @@ internal sealed class RenderSlider : RenderBox
 
             _isFocused = value;
             MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -1517,7 +1633,7 @@ internal sealed class RenderSlider : RenderBox
     public string? Label
     {
         get => _label;
-        set { if (_label != value) { _label = value; MarkNeedsPaint(); } }
+        set { if (_label != value) { _label = value; MarkNeedsPaint(); MarkNeedsSemanticsUpdate(); } }
     }
 
     public ShowValueIndicator ShowValueIndicator
@@ -1574,6 +1690,7 @@ internal sealed class RenderSlider : RenderBox
 
             _textDirection = value;
             MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -2090,6 +2207,132 @@ internal sealed class RenderSlider : RenderBox
         }
 
         return ClampNormalized(normalized);
+    }
+
+    /// <summary>The step one semantics or keyboard adjustment moves the value by, in normalized units.</summary>
+    /// <remarks>
+    /// Flutter's <c>_RenderSlider._semanticActionUnit</c>: a divided slider steps by one division, a
+    /// continuous one by the platform adjustment unit. Note Dart tests <c>divisions != null</c> here, not
+    /// <c>isDiscrete</c>, so a zero-division slider would still step by divisions — the constructor
+    /// assert makes that unreachable.
+    /// </remarks>
+    private double SemanticActionUnit => Divisions is { } divisions ? 1.0 / divisions : AdjustmentUnit;
+
+    /// <remarks>Flutter's <c>_SliderState._lerp</c>.</remarks>
+    private double Lerp(double normalized) => (normalized * (Max - Min)) + Min;
+
+    private double IncreasedValue => Math.Clamp(ValueNormalized + SemanticActionUnit, 0.0, 1.0);
+
+    private double DecreasedValue => Math.Clamp(ValueNormalized - SemanticActionUnit, 0.0, 1.0);
+
+    private string FormatSemanticValue(double normalized)
+    {
+        return SemanticFormatterCallback is { } formatter
+            ? formatter(Lerp(normalized))
+            : FormattableString.Invariant($"{Math.Round(normalized * 100.0, MidpointRounding.AwayFromZero)}%");
+    }
+
+    /// <remarks>Flutter's <c>_RenderSlider.increaseAction</c>.</remarks>
+    public void IncreaseAction()
+    {
+        if (!IsInteractive)
+        {
+            return;
+        }
+
+        OnChangeStartNormalized?.Invoke(Math.Clamp(ValueNormalized, 0.0, 1.0));
+        double increase = IncreasedValue;
+        OnChangedNormalized?.Invoke(increase);
+        OnChangeEndNormalized?.Invoke(increase);
+    }
+
+    /// <remarks>Flutter's <c>_RenderSlider.decreaseAction</c>.</remarks>
+    public void DecreaseAction()
+    {
+        if (!IsInteractive)
+        {
+            return;
+        }
+
+        OnChangeStartNormalized?.Invoke(Math.Clamp(ValueNormalized, 0.0, 1.0));
+        double decrease = DecreasedValue;
+        OnChangedNormalized?.Invoke(decrease);
+        OnChangeEndNormalized?.Invoke(decrease);
+    }
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+
+        configuration.IsSemanticBoundary = true;
+        configuration.IsEnabled = IsInteractive;
+        if (Label is not null)
+        {
+            configuration.Label = Label;
+        }
+
+        configuration.IsSlider = true;
+        configuration.IsFocused = IsFocused;
+        configuration.TextDirection = TextDirection;
+        if (IsInteractive)
+        {
+            configuration.OnIncrease = IncreaseAction;
+            configuration.OnDecrease = DecreaseAction;
+            configuration.OnFocus = OnFocusRequested;
+        }
+
+        configuration.Value = FormatSemanticValue(ValueNormalized);
+        configuration.IncreasedValue = FormatSemanticValue(IncreasedValue);
+        configuration.DecreasedValue = FormatSemanticValue(DecreasedValue);
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_RenderSlider.assembleSemanticsNode</c>: the node is shrunk from the whole slider box
+    /// to a <c>kMinInteractiveDimension</c> square centred on the thumb, so a screen reader's touch
+    /// exploration lands on the thumb rather than anywhere along the track.
+    /// </remarks>
+    protected override void AssembleSemanticsNode(
+        SemanticsNode node,
+        SemanticsConfiguration config,
+        IReadOnlyList<SemanticsNode> children)
+    {
+        Point center = SemanticThumbCenter;
+        double extent = WidgetConstants.MinInteractiveDimension;
+        node.Rect = new Rect(center.X - (extent / 2.0), center.Y - (extent / 2.0), extent, extent);
+        node.UpdateWith(config);
+    }
+
+    /// <summary>
+    /// The thumb centre the semantics node is anchored on.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>_RenderSlider._semanticThumbCenter</c> reads the raw logical value rather than the
+    /// animated position controller, and asks the track shape for its <em>continuous</em> preferred rect
+    /// so a discrete slider's semantics box does not jump with the tick padding.
+    /// </remarks>
+    private Point SemanticThumbCenter
+    {
+        get
+        {
+            Rect preferredRect = SliderTheme.TrackShape!.GetPreferredRect(
+                this,
+                new Point(0.0, 0.0),
+                SliderTheme,
+                IsInteractive,
+                isDiscrete: false);
+            double left = preferredRect.Left;
+            double right = preferredRect.Right;
+            if (right < left)
+            {
+                left = Size.Width / 2.0;
+                right = left;
+            }
+
+            var geometry = new TrackGeometry(left, right);
+            return new Point(
+                ResolveThumbCenterX(geometry, ValueNormalized),
+                preferredRect.Top + (preferredRect.Height / 2.0));
+        }
     }
 
     private double ResolveThumbCenterX(TrackGeometry geometry, double normalizedValue)

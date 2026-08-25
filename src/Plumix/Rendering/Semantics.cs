@@ -258,6 +258,68 @@ public sealed class SemanticsConfiguration
             : Flags & ~SemanticsFlags.IsHidden;
     }
 
+    /// <summary>Whether the node represents a slider.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isSlider</c>, backed by the same flag.</remarks>
+    public bool IsSlider
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsSlider);
+        set => Flags = value
+            ? Flags | SemanticsFlags.IsSlider
+            : Flags & ~SemanticsFlags.IsSlider;
+    }
+
+    /// <summary>Whether the node is enabled, for controls that can be disabled.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsConfiguration.isEnabled</c> is a <c>bool?</c>: <c>null</c> means "this control
+    /// has no enabled/disabled state", which Flutter encodes by clearing <c>hasEnabledState</c>. Plumix
+    /// carries both flags, so the setter mirrors that pairing exactly.
+    /// </remarks>
+    public bool? IsEnabled
+    {
+        get => Flags.HasFlag(SemanticsFlags.HasEnabledState)
+            ? Flags.HasFlag(SemanticsFlags.IsEnabled)
+            : null;
+        set
+        {
+            if (value is null)
+            {
+                Flags &= ~(SemanticsFlags.HasEnabledState | SemanticsFlags.IsEnabled);
+                return;
+            }
+
+            Flags |= SemanticsFlags.HasEnabledState;
+            Flags = value.Value
+                ? Flags | SemanticsFlags.IsEnabled
+                : Flags & ~SemanticsFlags.IsEnabled;
+        }
+    }
+
+    /// <summary>Whether the node currently holds input focus, or <c>null</c> when it cannot be focused.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsConfiguration.isFocused</c> is a tri-state <c>bool?</c>, and assigning a
+    /// non-null value implies <c>isFocusable</c> — which is why Flutter deprecated the separate
+    /// <c>isFocusable</c> setter. Plumix models the pair through the two flags directly.
+    /// </remarks>
+    public bool? IsFocused
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsFocusable)
+            ? Flags.HasFlag(SemanticsFlags.IsFocused)
+            : null;
+        set
+        {
+            if (value is null)
+            {
+                Flags &= ~(SemanticsFlags.IsFocusable | SemanticsFlags.IsFocused);
+                return;
+            }
+
+            Flags |= SemanticsFlags.IsFocusable;
+            Flags = value.Value
+                ? Flags | SemanticsFlags.IsFocused
+                : Flags & ~SemanticsFlags.IsFocused;
+        }
+    }
+
     private HashSet<SemanticsTag>? _tagsForChildren;
 
     /// The tags that this configuration attaches to the semantics nodes created below it.
@@ -386,6 +448,51 @@ public sealed class SemanticsConfiguration
     }
 
     /// <summary>
+    /// Bumps the value of a slider, scrollbar or stepper up by one step, and publishes
+    /// <see cref="IncreasedValue"/> as the value the node will read after the bump.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onIncrease</c>.</remarks>
+    public Action? OnIncrease
+    {
+        get => _onIncrease;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Increase, value);
+            _onIncrease = value;
+        }
+    }
+
+    /// <summary>
+    /// Bumps the value of a slider, scrollbar or stepper down by one step, and publishes
+    /// <see cref="DecreasedValue"/> as the value the node will read after the bump.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onDecrease</c>.</remarks>
+    public Action? OnDecrease
+    {
+        get => _onDecrease;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Decrease, value);
+            _onDecrease = value;
+        }
+    }
+
+    /// <summary>Moves input focus onto the node, without otherwise activating it.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onFocus</c>.</remarks>
+    public Action? OnFocus
+    {
+        get => _onFocus;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Focus, value);
+            _onFocus = value;
+        }
+    }
+
+    /// <summary>
     /// Moves the scrollable to an absolute offset. The action argument is the target
     /// <see cref="Point"/> (a host bridge may also pass a two-element <c>double</c> list).
     /// </summary>
@@ -400,6 +507,9 @@ public sealed class SemanticsConfiguration
         }
     }
 
+    private Action? _onFocus;
+    private Action? _onIncrease;
+    private Action? _onDecrease;
     private Action? _onScrollLeft;
     private Action? _onScrollRight;
     private Action? _onScrollUp;
