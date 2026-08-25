@@ -1010,8 +1010,16 @@ public sealed class Container : StatelessWidget
         double? width = null,
         double? height = null,
         Key? key = null,
-        Decoration? foregroundDecoration = null) : base(key)
+        Decoration? foregroundDecoration = null,
+        Clip clipBehavior = Clip.None) : base(key)
     {
+        if (clipBehavior != Clip.None && decoration is null)
+        {
+            throw new ArgumentException(
+                "Clipping a Container requires a decoration to derive the clip path from.",
+                nameof(clipBehavior));
+        }
+
         Child = child;
         Color = color;
         Decoration = decoration;
@@ -1023,6 +1031,7 @@ public sealed class Container : StatelessWidget
         Padding = padding;
         Width = width;
         Height = height;
+        ClipBehavior = clipBehavior;
     }
 
     public Widget? Child { get; }
@@ -1045,6 +1054,9 @@ public sealed class Container : StatelessWidget
     public double? Width { get; }
 
     public double? Height { get; }
+
+    /// <summary>The clip applied to the decoration's shape; requires <see cref="Decoration"/>.</summary>
+    public Clip ClipBehavior { get; }
 
     public override Widget Build(BuildContext context)
     {
@@ -1081,6 +1093,14 @@ public sealed class Container : StatelessWidget
         if (Padding.HasValue)
         {
             current = new Padding(Padding.Value, current);
+        }
+
+        if (ClipBehavior != Clip.None)
+        {
+            current = new ClipPath(
+                clipper: new DecorationClipper(Decoration!, Directionality.MaybeOf(context)),
+                clipBehavior: ClipBehavior,
+                child: current);
         }
 
         if (Decoration != null)

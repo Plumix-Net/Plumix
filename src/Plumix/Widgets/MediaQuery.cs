@@ -426,6 +426,11 @@ public sealed class MediaQuery : InheritedModel<object>
 
     public static Thickness? MaybeViewPaddingOf(BuildContext context) => MaybeOf(context)?.ViewPadding;
 
+    public static double DevicePixelRatioOf(BuildContext context) => Of(context).DevicePixelRatio;
+
+    public static double? MaybeDevicePixelRatioOf(BuildContext context) =>
+        MaybeOf(context)?.DevicePixelRatio;
+
     public static Size SizeOf(BuildContext context) => Of(context).Size;
 
     public static Size? MaybeSizeOf(BuildContext context) => MaybeOf(context)?.Size;

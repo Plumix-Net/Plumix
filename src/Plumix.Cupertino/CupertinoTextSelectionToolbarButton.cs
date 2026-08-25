@@ -14,6 +14,23 @@ namespace Plumix.Cupertino;
 /// <summary>An iOS-style text-selection toolbar button.</summary>
 public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
 {
+    private static readonly TextStyle ToolbarButtonFontStyle = new(
+        Inherit: false,
+        FontSize: 15.0,
+        LetterSpacing: -0.15,
+        FontWeight: FontWeight.Normal);
+
+    private static readonly CupertinoDynamicColor ToolbarTextColor =
+        CupertinoDynamicColor.WithBrightness(CupertinoColors.Black, CupertinoColors.White);
+
+    private static readonly CupertinoDynamicColor ToolbarPressedColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromArgb(0x10, 0x00, 0x00, 0x00),
+            Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF));
+
+    // Value measured from screenshot of iOS 16.0.2.
+    private static readonly Thickness ToolbarButtonPadding = new(16.0, 18.0);
+
     private CupertinoTextSelectionToolbarButton(
         Action? onPressed,
         Widget? child,
@@ -106,14 +123,17 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             Widget content = BuildContent(context);
-            Color pressedColor = IsDark(context)
-                ? Color.FromArgb(0x10, 0xFF, 0xFF, 0xFF)
-                : Color.FromArgb(0x10, 0x00, 0x00, 0x00);
             Widget child = new CupertinoButton(
-                color: _isPressed ? pressedColor : CupertinoColors.Transparent,
+                color: _isPressed
+                    ? ToolbarPressedColor.ResolveFrom(context)
+                    : CupertinoColors.Transparent,
                 disabledColor: CupertinoColors.Transparent,
+                // This CupertinoButton does not actually handle the onPressed callback, this is only
+                // here to correctly enable/disable the button (see the GestureDetector below).
                 onPressed: Current.OnPressed,
-                padding: new Thickness(16.0, 18.0),
+                padding: ToolbarButtonPadding,
+                // There's no foreground fade on the iOS toolbar anymore, just the background is
+                // darkened.
                 pressedOpacity: 1.0,
                 child: content);
 
@@ -122,9 +142,9 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
                 return child;
             }
 
+            // As it's needed to change the CupertinoButton's background color when pressed, not its
+            // opacity, this GestureDetector handles both the onPressed callback and the color change.
             return new GestureDetector(
-                excludeFromSemantics: true,
-                behavior: HitTestBehavior.Opaque,
                 onTapDown: _ => SetPressed(true),
                 onTapUp: _ =>
                 {
@@ -142,25 +162,26 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
                 return Current.Child;
             }
 
-            if (Current.ButtonItem?.Type == ContextMenuButtonType.LiveTextInput)
+            string label = Current.Text ?? GetButtonLabel(context, Current.ButtonItem!);
+            Widget textWidget = new Text(
+                label,
+                style: ToolbarButtonFontStyle with
+                {
+                    Color = Current.OnPressed is not null
+                        ? ToolbarTextColor.ResolveFrom(context)
+                        : CupertinoColors.InactiveGray.ResolveFrom(context),
+                },
+                overflow: TextOverflow.Ellipsis);
+            if (Current.ButtonItem?.Type != ContextMenuButtonType.LiveTextInput)
             {
-                return new SizedBox(
-                    width: 13.0,
-                    height: 13.0,
-                    child: new CustomPaint(
-                        painter: new LiveTextIconPainter(ResolveTextColor(context, enabled: true))));
+                return textWidget;
             }
 
-            string label = Current.Text ?? GetButtonLabel(context, Current.ButtonItem!);
-            return new Text(
-                label,
-                style: new TextStyle(
-                    FontSize: 15.0,
-                    LetterSpacing: -0.15,
-                    FontWeight: FontWeight.Normal,
-                    Color: ResolveTextColor(context, Current.OnPressed is not null),
-                    Inherit: false),
-                overflow: TextOverflow.Ellipsis);
+            return new SizedBox(
+                width: 13.0,
+                height: 13.0,
+                child: new CustomPaint(
+                    painter: new LiveTextIconPainter(ToolbarTextColor.ResolveFrom(context))));
         }
 
         private void SetPressed(bool value)
@@ -171,16 +192,6 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
             }
 
             SetState(() => _isPressed = value);
-        }
-
-        private static Color ResolveTextColor(BuildContext context, bool enabled)
-        {
-            if (!enabled)
-            {
-                return CupertinoColors.InactiveGray;
-            }
-
-            return IsDark(context) ? CupertinoColors.White : CupertinoColors.Black;
         }
     }
 
@@ -200,19 +211,36 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
                 LineCap = PenLineCap.Round,
                 LineJoin = PenLineJoin.Round,
             };
-            double right = size.Width;
-            double bottom = size.Height;
-            context.DrawLine(pen, new Point(0.0, 3.5), new Point(0.0, 1.0));
-            context.DrawLine(pen, new Point(1.0, 0.0), new Point(3.5, 0.0));
-            context.DrawLine(pen, new Point(right - 3.5, 0.0), new Point(right - 1.0, 0.0));
-            context.DrawLine(pen, new Point(right, 1.0), new Point(right, 3.5));
-            context.DrawLine(pen, new Point(right, bottom - 3.5), new Point(right, bottom - 1.0));
-            context.DrawLine(pen, new Point(right - 1.0, bottom), new Point(right - 3.5, bottom));
-            context.DrawLine(pen, new Point(3.5, bottom), new Point(1.0, bottom));
-            context.DrawLine(pen, new Point(0.0, bottom - 1.0), new Point(0.0, bottom - 3.5));
-            context.DrawLine(pen, new Point(3.5, 3.5), new Point(right - 3.5, 3.5));
-            context.DrawLine(pen, new Point(3.5, size.Height / 2.0), new Point(right - 3.5, size.Height / 2.0));
-            context.DrawLine(pen, new Point(3.5, bottom - 3.5), new Point(right - 4.5, bottom - 3.5));
+            var origin = new Point(-size.Width / 2.0, -size.Height / 2.0);
+
+            // Path for the one corner.
+            var path = new Plumix.UI.Path();
+            path.MoveTo(origin.X, origin.Y + 3.5);
+            path.LineTo(origin.X, origin.Y + 1.0);
+            path.ArcTo(
+                new Rect(origin.X, origin.Y, 2.0, 2.0),
+                Math.PI,
+                Math.PI / 2.0,
+                forceMoveTo: false);
+            path.LineTo(origin.X + 3.5, origin.Y);
+
+            context.PushTransform(
+                Matrix4.TranslationValues(size.Width / 2.0, size.Height / 2.0, 0.0),
+                centered =>
+                {
+                    // Rotate to draw the corner four times.
+                    for (int quarter = 0; quarter < 4; quarter++)
+                    {
+                        centered.PushTransform(
+                            Matrix4.RotationZ(quarter * Math.PI / 2.0),
+                            rotated => rotated.DrawPath(path, null, pen));
+                    }
+
+                    // Draw three lines.
+                    centered.DrawLine(pen, new Point(-3.0, -3.0), new Point(3.0, -3.0));
+                    centered.DrawLine(pen, new Point(-3.0, 0.0), new Point(3.0, 0.0));
+                    centered.DrawLine(pen, new Point(-3.0, 3.0), new Point(1.0, 3.0));
+                });
         }
 
         public override bool ShouldRepaint(CustomPainter oldDelegate)
@@ -220,16 +248,23 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
             return oldDelegate is not LiveTextIconPainter oldPainter || oldPainter._color != _color;
         }
     }
-
-    internal static bool IsDark(BuildContext context)
-    {
-        return MediaQuery.MaybeOf(context)?.PlatformBrightness == PlatformBrightness.Dark;
-    }
 }
 
 /// <summary>A macOS-style text-selection toolbar button.</summary>
 public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
 {
+    // These values were measured from a screenshot of the native context menu on macOS 13.2.
+    private static readonly TextStyle ToolbarButtonFontStyle = new(
+        Inherit: false,
+        FontSize: 14.0,
+        LetterSpacing: -0.15,
+        FontWeight: FontWeight.Normal);
+
+    private static readonly Thickness ToolbarButtonPadding = new(8.0, 2.0, 8.0, 5.0);
+
+    private static readonly CupertinoDynamicColor ToolbarTextColor =
+        CupertinoDynamicColor.WithBrightness(CupertinoColors.Black, CupertinoColors.White);
+
     private CupertinoDesktopTextSelectionToolbarButton(
         Action? onPressed,
         Widget? child,
@@ -298,15 +333,10 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
         {
             Widget child = Current.Child ?? new Text(
                 Current.Text ?? CupertinoTextSelectionToolbarButton.GetButtonLabel(context, Current.ButtonItem!),
-                style: new TextStyle(
-                    FontSize: 14.0,
-                    LetterSpacing: -0.15,
-                    FontWeight: FontWeight.Normal,
-                    Color: ResolveTextColor(context),
-                    Inherit: false),
+                style: ToolbarButtonFontStyle with { Color = ResolveTextColor(context) },
                 overflow: TextOverflow.Ellipsis);
             CupertinoDynamicColor? backgroundColor = _isHovered
-                ? ResolvePrimaryColor(context)
+                ? CupertinoTheme.Of(context).PrimaryColor
                 : null;
             Widget button = new CupertinoButton(
                 alignment: Alignment.CenterLeft,
@@ -314,7 +344,7 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
                 color: backgroundColor,
                 minSize: 0.0,
                 onPressed: Current.OnPressed,
-                padding: new Thickness(8.0, 2.0, 8.0, 5.0),
+                padding: ToolbarButtonPadding,
                 pressedOpacity: 0.7,
                 child: child);
 
@@ -328,19 +358,9 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
 
         private Color ResolveTextColor(BuildContext context)
         {
-            if (_isHovered)
-            {
-                return CupertinoTheme.Of(context).PrimaryContrastingColor;
-            }
-
-            return CupertinoTextSelectionToolbarButton.IsDark(context)
-                ? CupertinoColors.White
-                : CupertinoColors.Black;
-        }
-
-        private static Color ResolvePrimaryColor(BuildContext context)
-        {
-            return CupertinoTheme.Of(context).PrimaryColor;
+            return _isHovered
+                ? CupertinoTheme.Of(context).PrimaryContrastingColor
+                : ToolbarTextColor.ResolveFrom(context);
         }
 
         private void SetHovered(bool value)

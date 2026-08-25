@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
@@ -11,8 +12,35 @@ namespace Plumix.Cupertino;
 /// <summary>A macOS-style desktop text-selection toolbar.</summary>
 public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
 {
+    // The minimum padding from all edges of the selection toolbar to all edges of the screen.
     public const double ToolbarScreenPadding = 8.0;
+
+    // These values were measured from a screenshot of the native context menu on macOS 13.2.
     public const double ToolbarWidth = 222.0;
+    private const double ToolbarSaturationBoost = 3.0;
+    private const double ToolbarBlurSigma = 20.0;
+    private const double ToolbarBorderRadius = 8.0;
+
+    private static readonly Thickness ToolbarPadding = new(6.0);
+
+    private static readonly Plumix.Rendering.BoxShadow[] ToolbarShadow =
+    [
+        new(
+            color: Color.FromArgb(60, 0, 0, 0),
+            offset: new Point(0.0, 4.0),
+            blurRadius: 10.0,
+            spreadRadius: 0.5),
+    ];
+
+    private static readonly CupertinoDynamicColor ToolbarBorderColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0xFFB8B8B8),
+            Color.FromUInt32(0xFF5B5B5B));
+
+    private static readonly CupertinoDynamicColor ToolbarBackgroundColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0xB2FFFFFF),
+            Color.FromUInt32(0xB2303030));
 
     public CupertinoDesktopTextSelectionToolbar(
         Point anchor,
@@ -37,48 +65,6 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
     {
         double paddingAbove = MediaQuery.PaddingOf(context).Top + ToolbarScreenPadding;
         var localAdjustment = new Vector(ToolbarScreenPadding, paddingAbove);
-        var localAnchor = Anchor - localAdjustment;
-        bool dark = CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark;
-        Color background = dark
-            ? Color.Parse("#B2303030")
-            : Color.Parse("#B2FFFFFF");
-        Color borderColor = dark
-            ? Color.Parse("#FF5B5B5B")
-            : Color.Parse("#FFB8B8B8");
-        var shadow = new Plumix.Rendering.BoxShadow(
-            color: Color.FromArgb(60, 0, 0, 0),
-            offset: new Point(0.0, 4.0),
-            blurRadius: 10.0,
-            spreadRadius: 0.5);
-        var shape = new ContinuousRectangleBorder(
-            borderRadius: BorderRadius.Circular(8.0));
-        var borderedShape = new ContinuousRectangleBorder(
-            side: new BorderSide(borderColor),
-            borderRadius: BorderRadius.Circular(8.0));
-
-        Widget contents = new DecoratedBox(
-            decoration: new ShapeDecoration(
-                Shape: borderedShape,
-                Color: background),
-            child: new Padding(
-                new Thickness(6.0),
-                new Column(
-                    mainAxisSize: MainAxisSize.Min,
-                    children: Children)));
-        contents = new BackdropFilter(
-            filter: new ImageFilter.Compose(
-                new ImageFilter.ColorMatrix(SaturationMatrix(3.0)),
-                new ImageFilter.Blur(20.0, 20.0)),
-            child: contents);
-        contents = new ClipRRect(
-            borderRadius: BorderRadius.Circular(8.0),
-            child: contents);
-        Widget toolbar = new Container(
-            width: ToolbarWidth,
-            decoration: new ShapeDecoration(
-                Shape: shape,
-                Shadows: [shadow]),
-            child: contents);
 
         return new Padding(
             new Thickness(
@@ -87,8 +73,34 @@ public sealed class CupertinoDesktopTextSelectionToolbar : StatelessWidget
                 ToolbarScreenPadding,
                 ToolbarScreenPadding),
             new CustomSingleChildLayout(
-                new DesktopTextSelectionToolbarLayoutDelegate(localAnchor),
-                toolbar));
+                new DesktopTextSelectionToolbarLayoutDelegate(Anchor - localAdjustment),
+                DefaultToolbarBuilder(
+                    context,
+                    new Column(mainAxisSize: MainAxisSize.Min, children: Children))));
+    }
+
+    // Builds a toolbar just like the default Mac toolbar, with the right color background, padding
+    // and rounded corners.
+    private static Widget DefaultToolbarBuilder(BuildContext context, Widget child)
+    {
+        return new Container(
+            width: ToolbarWidth,
+            clipBehavior: Clip.HardEdge,
+            decoration: new ShapeDecoration(
+                Shadows: ToolbarShadow,
+                Shape: new RoundedSuperellipseBorder(
+                    borderRadius: BorderRadius.Circular(ToolbarBorderRadius))),
+            child: new BackdropFilter(
+                filter: new ImageFilter.Compose(
+                    outer: new ImageFilter.ColorMatrix(SaturationMatrix(ToolbarSaturationBoost)),
+                    inner: new ImageFilter.Blur(ToolbarBlurSigma, ToolbarBlurSigma)),
+                child: new DecoratedBox(
+                    decoration: new ShapeDecoration(
+                        Color: ToolbarBackgroundColor.ResolveFrom(context),
+                        Shape: new RoundedSuperellipseBorder(
+                            side: new BorderSide(ToolbarBorderColor.ResolveFrom(context)),
+                            borderRadius: BorderRadius.Circular(ToolbarBorderRadius))),
+                    child: new Padding(ToolbarPadding, child))));
     }
 
     internal static IReadOnlyList<double> SaturationMatrix(double saturation)

@@ -54,14 +54,14 @@ dependencies; the Dart source goes through `docs/ai/DART_SPEC_PROTOCOL.md`, and 
 
 ## Open controls
 
-None — every `cupertino_ui/lib/src/` control has at least a first-pass port; what remains is the
-*Foundation* row above and the *Partial ports to tighten* table below.
+None — every `cupertino_ui/lib/src/` control is ported; the only row left is the *Foundation* one
+above.
 
 ## Partial ports to tighten (existing file, missing members or a qualified marker)
 
 | Dart file | Lines (Dart / C#) | Gap found | Size |
 | --- | --- | --- | --- |
- | `text_selection_toolbar*.dart`, `desktop_text_selection_toolbar*.dart`, `spell_check_suggestions_toolbar.dart`, `adaptive_text_selection_toolbar.dart` | — | No missing public types; not re-verified member-by-member in this pass — diff against Dart when you touch them | — |
+| — | — | None; every row in this table has been closed. | — |
 
 ## Not listed / out of scope
 

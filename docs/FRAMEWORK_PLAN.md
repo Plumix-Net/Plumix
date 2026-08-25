@@ -75,7 +75,8 @@ Exit criteria:
 Status: `in_progress` (opened 2026-08-16). Work list and per-file status: `docs/CUPERTINO_TODO.md`.
 
 Order of work: foundation first (`colors`/`theme`/`text_theme` done, then `localizations`, `route`,
-`page_scaffold`, `app`), then controls smallest-first, then the "partial ports to tighten" table.
+`page_scaffold`, `app`), then controls smallest-first, then the "partial ports to tighten" table
+(now empty — only the `global_cupertino_localizations` foundation row is left).
 `Plumix.Cupertino` may depend only on `Plumix`; anything Cupertino that currently lives in
 `Plumix.Material` moves down, never the other way (`docs/ai/INVARIANTS.md` > Package Boundaries).
 

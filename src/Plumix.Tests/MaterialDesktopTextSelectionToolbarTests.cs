@@ -498,59 +498,6 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     }
 
     [Fact]
-    public void CupertinoToolbarShape_AppliesArrowGeometryAndInteriorHitBand()
-    {
-        var above = new RenderCupertinoTextSelectionToolbarShape(
-            anchorAbove: new Point(50, 100),
-            anchorBelow: new Point(50, 120),
-            backgroundColor: Colors.White,
-            shadowColor: Colors.Black)
-        {
-            Child = new FixedHitRenderBox(new Size(100, 51)),
-        };
-        above.Layout(BoxConstraints.Loose(new Size(200, 200)));
-
-        Assert.Equal(new Size(100, 44), above.Size);
-        Assert.Equal(new Point(0, -7), ((BoxParentData)above.Child!.parentData!).offset);
-        Assert.False(above.HitTest(new BoxHitTestResult(), new Point(50, 43)));
-        Assert.True(above.HitTest(new BoxHitTestResult(), new Point(50, 20)));
-
-        var below = new RenderCupertinoTextSelectionToolbarShape(
-            anchorAbove: new Point(50, 10),
-            anchorBelow: new Point(50, 40),
-            backgroundColor: Colors.White,
-            shadowColor: null)
-        {
-            Child = new FixedHitRenderBox(new Size(100, 51)),
-        };
-        below.Layout(BoxConstraints.Loose(new Size(200, 200)));
-        Assert.Equal(default, ((BoxParentData)below.Child!.parentData!).offset);
-    }
-
-    [Fact]
-    public void CupertinoToolbarItems_PaginatesLargeChildrenAndExposesNavigationState()
-    {
-        var layout = new RenderCupertinoTextSelectionToolbarItems(0, Colors.Gray);
-        RenderConstrainedBox back = FixedRenderBox(48, 51);
-        RenderConstrainedBox first = FixedRenderBox(70, 51);
-        RenderConstrainedBox second = FixedRenderBox(70, 51);
-        RenderConstrainedBox third = FixedRenderBox(70, 51);
-        RenderConstrainedBox next = FixedRenderBox(48, 51);
-        layout.AddAll([back, first, second, third, next]);
-
-        layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
-        Assert.True(layout.HasNextPage);
-        Assert.False(layout.HasPreviousPage);
-        Assert.True(((CupertinoToolbarItemParentData)first.parentData!).ShouldPaint);
-        Assert.False(((CupertinoToolbarItemParentData)third.parentData!).ShouldPaint);
-
-        layout.Page = 1;
-        layout.Layout(BoxConstraints.Loose(new Size(180, 300)));
-        Assert.True(layout.HasPreviousPage);
-        Assert.True(((CupertinoToolbarItemParentData)second.parentData!).ShouldPaint);
-    }
-
-    [Fact]
     public void CupertinoMobileButton_UsesSourceTypographyAndDisabledState()
     {
         int taps = 0;

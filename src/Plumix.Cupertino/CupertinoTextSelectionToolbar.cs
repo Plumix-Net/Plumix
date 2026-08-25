@@ -1,14 +1,16 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
-using Plumix.Widgets;
 using Plumix.UI;
+using Plumix.Widgets;
 
 namespace Plumix.Cupertino;
 
 // Dart parity source: cupertino_ui/lib/src/text_selection_toolbar.dart
 
+/// <summary>Builds the toolbar surface (background, shape and shadow) around its children.</summary>
 public delegate Widget CupertinoToolbarBuilder(
     BuildContext context,
     Point anchorAbove,
@@ -18,7 +20,40 @@ public delegate Widget CupertinoToolbarBuilder(
 /// <summary>An iOS-style text-selection toolbar with horizontal overflow pages.</summary>
 public sealed class CupertinoTextSelectionToolbar : StatelessWidget
 {
+    /// <summary>The size of the arrow pointing at the anchor.</summary>
+    internal static readonly Size ToolbarArrowSize = new(14.0, 7.0);
+
+    /// <summary>The radius of the toolbar's rounded corners.</summary>
+    internal static readonly Radius ToolbarBorderRadius = Radius.Circular(8.0);
+
+    /// <summary>The size of the chevron painted on the paging buttons.</summary>
+    internal const double ToolbarChevronSize = 10.0;
+
+    internal const double ToolbarChevronThickness = 2.0;
+
+    /// <summary>The gap between the toolbar and the anchor it points at.</summary>
+    internal const double ToolbarContentDistance = 8.0;
+
+    /// <summary>The minimum horizontal gap between the arrow and the edge of the screen.</summary>
+    internal const double ArrowScreenPadding = 26.0;
+
+    /// <summary>The minimum padding from all edges of the toolbar to all edges of the screen.</summary>
     public const double ToolbarScreenPadding = 8.0;
+
+    internal static readonly CupertinoDynamicColor ToolbarBackgroundColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0xFFF6F6F6),
+            Color.FromUInt32(0xFF222222));
+
+    internal static readonly CupertinoDynamicColor ToolbarDividerColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0xFFD6D6D6),
+            Color.FromUInt32(0xFF424242));
+
+    internal static readonly CupertinoDynamicColor ToolbarTextColor =
+        CupertinoDynamicColor.WithBrightness(CupertinoColors.Black, CupertinoColors.White);
+
+    internal static readonly TimeSpan ToolbarTransitionDuration = TimeSpan.FromMilliseconds(125);
 
     public CupertinoTextSelectionToolbar(
         Point anchorAbove,
@@ -39,31 +74,48 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
         ToolbarBuilder = toolbarBuilder ?? DefaultToolbarBuilder;
     }
 
+    /// <summary>The focal point above the selection that the toolbar attaches to.</summary>
     public Point AnchorAbove { get; }
 
+    /// <summary>The focal point below the selection that the toolbar attaches to.</summary>
     public Point AnchorBelow { get; }
 
+    /// <summary>The children of the toolbar, typically buttons.</summary>
     public IReadOnlyList<Widget> Children { get; }
 
+    /// <summary>Builds the toolbar surface around <see cref="Children"/>.</summary>
     public CupertinoToolbarBuilder ToolbarBuilder { get; }
+
+    // Builds a toolbar just like the default iOS toolbar, with the right color background and a
+    // rounded cutout with an arrow.
+    private static Widget DefaultToolbarBuilder(
+        BuildContext context,
+        Point anchorAbove,
+        Point anchorBelow,
+        Widget child)
+    {
+        return new CupertinoTextSelectionToolbarShape(
+            anchorAbove: anchorAbove,
+            anchorBelow: anchorBelow,
+            shadowColor: CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Light
+                ? Color.FromArgb(0x33, 0x00, 0x00, 0x00)
+                : null,
+            child: new ColoredBox(ToolbarBackgroundColor.ResolveFrom(context), child));
+    }
 
     public override Widget Build(BuildContext context)
     {
-        MediaQueryData mediaQuery = MediaQuery.Of(context);
-        double paddingAbove = mediaQuery.Padding.Top + ToolbarScreenPadding;
-        double leftLimit = 26.0 + mediaQuery.Padding.Left;
-        double rightLimit = mediaQuery.Size.Width - mediaQuery.Padding.Right - 26.0;
-        Point anchorAbove = new(
-            Math.Clamp(AnchorAbove.X, leftLimit, Math.Max(leftLimit, rightLimit)),
-            AnchorAbove.Y - ToolbarScreenPadding - paddingAbove);
-        Point anchorBelow = new(
-            Math.Clamp(AnchorBelow.X, leftLimit, Math.Max(leftLimit, rightLimit)),
-            AnchorBelow.Y + ToolbarScreenPadding - paddingAbove);
-        Widget child = new CupertinoTextSelectionToolbarContent(
-            anchorAbove,
-            anchorBelow,
-            Children,
-            ToolbarBuilder);
+        Thickness mediaQueryPadding = MediaQuery.PaddingOf(context);
+        double paddingAbove = mediaQueryPadding.Top + ToolbarScreenPadding;
+        double leftMargin = ArrowScreenPadding + mediaQueryPadding.Left;
+        double rightMargin = MediaQuery.WidthOf(context) - mediaQueryPadding.Right - ArrowScreenPadding;
+
+        var anchorAboveAdjusted = new Point(
+            Math.Clamp(AnchorAbove.X, leftMargin, Math.Max(leftMargin, rightMargin)),
+            AnchorAbove.Y - ToolbarContentDistance - paddingAbove);
+        var anchorBelowAdjusted = new Point(
+            Math.Clamp(AnchorBelow.X, leftMargin, Math.Max(leftMargin, rightMargin)),
+            AnchorBelow.Y + ToolbarContentDistance - paddingAbove);
 
         return new Padding(
             new Thickness(
@@ -72,28 +124,16 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
                 ToolbarScreenPadding,
                 ToolbarScreenPadding),
             new CustomSingleChildLayout(
-                new TextSelectionToolbarLayoutDelegate(anchorAbove, anchorBelow),
-                child));
-    }
-
-    private static Widget DefaultToolbarBuilder(
-        BuildContext context,
-        Point anchorAbove,
-        Point anchorBelow,
-        Widget child)
-    {
-        bool dark = CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark;
-        Color background = dark ? Color.Parse("#FF222222") : Color.Parse("#FFF6F6F6");
-        Color? shadowColor = dark ? null : Color.FromArgb(51, 0, 0, 0);
-        return new CupertinoTextSelectionToolbarShape(
-            anchorAbove: anchorAbove,
-            anchorBelow: anchorBelow,
-            backgroundColor: background,
-            shadowColor: shadowColor,
-            child: child);
+                new TextSelectionToolbarLayoutDelegate(anchorAboveAdjusted, anchorBelowAdjusted),
+                new CupertinoTextSelectionToolbarContent(
+                    anchorAbove: anchorAboveAdjusted,
+                    anchorBelow: anchorBelowAdjusted,
+                    toolbarBuilder: ToolbarBuilder,
+                    children: Children)));
     }
 }
 
+/// <summary>Dart's `_CupertinoTextSelectionToolbarContent`: paging, chevrons and the fade.</summary>
 internal sealed class CupertinoTextSelectionToolbarContent : StatefulWidget
 {
     public CupertinoTextSelectionToolbarContent(
@@ -119,130 +159,172 @@ internal sealed class CupertinoTextSelectionToolbarContent : StatefulWidget
 
     public override State CreateState() => new CupertinoTextSelectionToolbarContentState();
 
-    private sealed class CupertinoTextSelectionToolbarContentState : State
+    internal sealed class CupertinoTextSelectionToolbarContentState : State
     {
-        private int _page;
+        private readonly GlobalKey _toolbarItemsKey = new LabeledGlobalKey<State>("CupertinoToolbarItems");
+        private AnimationController _controller = null!;
         private int? _nextPage;
-        private double _opacity = 1.0;
-        private readonly GlobalKey<State> _itemsKey = new LabeledGlobalKey<State>("CupertinoToolbarItems");
+        private int _page;
 
         private CupertinoTextSelectionToolbarContent Current =>
             (CupertinoTextSelectionToolbarContent)StateWidget;
 
+        public override void InitState()
+        {
+            base.InitState();
+            _controller = new AnimationController(
+                value: 1.0,
+                vsync: this,
+                duration: CupertinoTextSelectionToolbar.ToolbarTransitionDuration);
+        }
+
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
-            var oldToolbar = (CupertinoTextSelectionToolbarContent)oldWidget;
-            if (!ReferenceEquals(oldToolbar.Children, Current.Children))
+            base.DidUpdateWidget(oldWidget);
+
+            // If the children are changing, the current page may have been invalidated.
+            var oldContent = (CupertinoTextSelectionToolbarContent)oldWidget;
+            if (!ReferenceEquals(oldContent.Children, Current.Children))
             {
                 _page = 0;
+                _nextPage = null;
+                _controller.Forward();
+                _controller.RemoveStatusListener(StatusListener);
             }
+        }
+
+        public override void Dispose()
+        {
+            _controller.Dispose();
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
         {
-            Color dividerColor = CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Dark
-                ? Color.Parse("#FF424242")
-                : Color.Parse("#FFD6D6D6");
-            Widget backButton = BuildChevronButton(pointsRight: false, () => ChangePage(-1));
-            Widget nextButton = BuildChevronButton(pointsRight: true, () => ChangePage(1));
-            Widget contents = new CupertinoTextSelectionToolbarItems(
-                page: _page,
-                dividerColor: dividerColor,
-                key: _itemsKey,
-                children:
-                [
-                    backButton,
-                    .. Current.Children,
-                    nextButton,
-                ]);
-            contents = new GestureDetector(
-                excludeFromSemantics: true,
-                onHorizontalDragEnd: details =>
-                {
-                    if (details.PrimaryVelocity is > 0.0)
-                    {
-                        ChangePage(-1);
-                    }
-                    else if (details.PrimaryVelocity is < 0.0)
-                    {
-                        ChangePage(1);
-                    }
-                },
-                child: contents);
-            contents = new AnimatedSize(
-                duration: TimeSpan.FromMilliseconds(125),
-                curve: Curves.Decelerate,
-                child: contents);
-            contents = new AnimatedOpacity(
-                opacity: _opacity,
-                duration: TimeSpan.FromMilliseconds(125),
-                onEnd: HandleOpacityEnd,
-                child: contents);
+            Color chevronColor = CupertinoTextSelectionToolbar.ToolbarTextColor.ResolveFrom(context);
+
+            // Empty toolbars should not be handled.
+            Widget backButton = new Center(
+                widthFactor: 1.0,
+                heightFactor: 1.0,
+                child: new CupertinoTextSelectionToolbarButton(
+                    onPressed: HandlePreviousPage,
+                    child: new IgnorePointer(
+                        child: new CustomPaint(
+                            painter: new LeftCupertinoChevronPainter(chevronColor),
+                            size: new Size(
+                                CupertinoTextSelectionToolbar.ToolbarChevronSize,
+                                CupertinoTextSelectionToolbar.ToolbarChevronSize)))));
+
+            Widget nextButton = new Center(
+                widthFactor: 1.0,
+                heightFactor: 1.0,
+                child: new CupertinoTextSelectionToolbarButton(
+                    onPressed: HandleNextPage,
+                    child: new IgnorePointer(
+                        child: new CustomPaint(
+                            painter: new RightCupertinoChevronPainter(chevronColor),
+                            size: new Size(
+                                CupertinoTextSelectionToolbar.ToolbarChevronSize,
+                                CupertinoTextSelectionToolbar.ToolbarChevronSize)))));
+
             return Current.ToolbarBuilder(
                 context,
                 Current.AnchorAbove,
                 Current.AnchorBelow,
-                contents);
+                new FadeTransition(
+                    opacity: _controller,
+                    child: new AnimatedSize(
+                        duration: CupertinoTextSelectionToolbar.ToolbarTransitionDuration,
+                        curve: Curves.Decelerate,
+                        child: new GestureDetector(
+                            onHorizontalDragEnd: HandleHorizontalDragEnd,
+                            child: new CupertinoTextSelectionToolbarItems(
+                                page: _page,
+                                backButton: backButton,
+                                dividerColor: CupertinoTextSelectionToolbar.ToolbarDividerColor
+                                    .ResolveFrom(context),
+                                dividerWidth: 1.0 / MediaQuery.DevicePixelRatioOf(context),
+                                nextButton: nextButton,
+                                children: Current.Children
+                                    .Select(child => (Widget)new Center(
+                                        widthFactor: 1.0,
+                                        heightFactor: 1.0,
+                                        child: child))
+                                    .ToList(),
+                                key: _toolbarItemsKey)))));
         }
 
-        private static Widget BuildChevronButton(bool pointsRight, Action onPressed)
+        private void HandleHorizontalDragEnd(DragEndDetails details)
         {
-            return new CupertinoTextSelectionToolbarButton(
-                onPressed,
-                new IgnorePointer(
-                    child: new CustomPaint(
-                        painter: new CupertinoChevronPainter(pointsRight),
-                        size: new Size(10.0, 10.0))));
+            double velocity = details.PrimaryVelocity;
+            if (velocity == 0.0)
+            {
+                return;
+            }
+
+            if (velocity > 0.0)
+            {
+                HandlePreviousPage();
+            }
+            else
+            {
+                HandleNextPage();
+            }
         }
 
-        private void ChangePage(int delta)
+        private void HandleNextPage()
         {
-            RenderCupertinoTextSelectionToolbarItems? render =
-                _itemsKey.CurrentContext?.FindRenderObject() as RenderCupertinoTextSelectionToolbarItems;
-            if (render is null
-                || delta < 0 && !render.HasPreviousPage
-                || delta > 0 && !render.HasNextPage)
+            RenderObject? renderToolbar = _toolbarItemsKey.CurrentContext?.FindRenderObject();
+            if (renderToolbar is RenderCupertinoTextSelectionToolbarItems { HasNextPage: true })
+            {
+                _controller.Reverse();
+                _controller.AddStatusListener(StatusListener);
+                _nextPage = _page + 1;
+            }
+        }
+
+        private void HandlePreviousPage()
+        {
+            RenderObject? renderToolbar = _toolbarItemsKey.CurrentContext?.FindRenderObject();
+            if (renderToolbar is RenderCupertinoTextSelectionToolbarItems { HasPreviousPage: true })
+            {
+                _controller.Reverse();
+                _controller.AddStatusListener(StatusListener);
+                _nextPage = _page - 1;
+            }
+        }
+
+        private void StatusListener(AnimationStatus status)
+        {
+            if (status != AnimationStatus.Dismissed)
             {
                 return;
             }
 
             SetState(() =>
             {
-                _nextPage = _page + delta;
-                _opacity = 0.0;
-            });
-        }
-
-        private void HandleOpacityEnd()
-        {
-            if (_opacity != 0.0 || !_nextPage.HasValue)
-            {
-                return;
-            }
-
-            SetState(() =>
-            {
-                _page = _nextPage.Value;
+                _page = _nextPage!.Value;
                 _nextPage = null;
-                _opacity = 1.0;
             });
+            _controller.Forward();
+            _controller.RemoveStatusListener(StatusListener);
         }
     }
 }
 
+/// <summary>Dart's `_CupertinoTextSelectionToolbarShape`: clips the toolbar into an arrowed card.</summary>
 internal sealed class CupertinoTextSelectionToolbarShape : SingleChildRenderObjectWidget
 {
     public CupertinoTextSelectionToolbarShape(
         Point anchorAbove,
         Point anchorBelow,
-        Color backgroundColor,
         Color? shadowColor,
-        Widget child,
+        Widget? child = null,
         Key? key = null) : base(child, key)
     {
         AnchorAbove = anchorAbove;
         AnchorBelow = anchorBelow;
-        BackgroundColor = backgroundColor;
         ShadowColor = shadowColor;
     }
 
@@ -250,17 +332,11 @@ internal sealed class CupertinoTextSelectionToolbarShape : SingleChildRenderObje
 
     public Point AnchorBelow { get; }
 
-    public Color BackgroundColor { get; }
-
     public Color? ShadowColor { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderCupertinoTextSelectionToolbarShape(
-            AnchorAbove,
-            AnchorBelow,
-            BackgroundColor,
-            ShadowColor);
+        return new RenderCupertinoTextSelectionToolbarShape(AnchorAbove, AnchorBelow, ShadowColor);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -268,39 +344,42 @@ internal sealed class CupertinoTextSelectionToolbarShape : SingleChildRenderObje
         var shape = (RenderCupertinoTextSelectionToolbarShape)renderObject;
         shape.AnchorAbove = AnchorAbove;
         shape.AnchorBelow = AnchorBelow;
-        shape.BackgroundColor = BackgroundColor;
         shape.ShadowColor = ShadowColor;
     }
 }
 
+/// <summary>
+/// Dart's `_RenderCupertinoTextSelectionToolbarShape` (a `RenderShiftedBox` in Flutter; Plumix folds
+/// that role into <see cref="RenderProxyBox"/>).
+/// </summary>
 internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
 {
-    private const double ArrowSize = 14.0;
-    private const double BorderRadiusValue = 8.0;
     private Point _anchorAbove;
     private Point _anchorBelow;
-    private Color _backgroundColor;
     private Color? _shadowColor;
-    private bool _isAbove;
 
     public RenderCupertinoTextSelectionToolbarShape(
         Point anchorAbove,
         Point anchorBelow,
-        Color backgroundColor,
         Color? shadowColor)
     {
         _anchorAbove = anchorAbove;
         _anchorBelow = anchorBelow;
-        _backgroundColor = backgroundColor;
         _shadowColor = shadowColor;
     }
+
+    public override bool IsRepaintBoundary => true;
 
     public Point AnchorAbove
     {
         get => _anchorAbove;
         set
         {
-            if (_anchorAbove == value) return;
+            if (value == _anchorAbove)
+            {
+                return;
+            }
+
             _anchorAbove = value;
             MarkNeedsLayout();
         }
@@ -311,20 +390,13 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
         get => _anchorBelow;
         set
         {
-            if (_anchorBelow == value) return;
+            if (value == _anchorBelow)
+            {
+                return;
+            }
+
             _anchorBelow = value;
             MarkNeedsLayout();
-        }
-    }
-
-    public Color BackgroundColor
-    {
-        get => _backgroundColor;
-        set
-        {
-            if (_backgroundColor == value) return;
-            _backgroundColor = value;
-            MarkNeedsPaint();
         }
     }
 
@@ -333,10 +405,41 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
         get => _shadowColor;
         set
         {
-            if (_shadowColor == value) return;
+            if (value == _shadowColor)
+            {
+                return;
+            }
+
             _shadowColor = value;
             MarkNeedsPaint();
         }
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        if (Child is null)
+        {
+            return constraints.Smallest;
+        }
+
+        Size childSize = Child.GetDryLayout(ConstraintsForChild(constraints));
+        return new Size(
+            childSize.Width,
+            childSize.Height - CupertinoTextSelectionToolbar.ToolbarArrowSize.Height);
+    }
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        if (Child is null)
+        {
+            return null;
+        }
+
+        BoxConstraints enforcedConstraint = ConstraintsForChild(constraints);
+        double? result = Child.GetDryBaseline(enforcedConstraint, baseline);
+        return result is null
+            ? null
+            : result + ComputeChildOffset(Child.GetDryLayout(enforcedConstraint)).Y;
     }
 
     protected override void PerformLayout()
@@ -347,12 +450,15 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
             return;
         }
 
-        BoxConstraints childConstraints = new BoxConstraints(MinWidth: 30.0)
-            .Enforce(Constraints.Loosen());
-        Child.Layout(childConstraints, parentUsesSize: true);
-        _isAbove = AnchorAbove.Y >= Child.Size.Height - (ArrowSize / 2.0);
-        ((BoxParentData)Child.parentData!).offset = new Point(0.0, _isAbove ? -ArrowSize / 2.0 : 0.0);
-        Size = Constraints.Constrain(new Size(Child.Size.Width, Math.Max(0.0, Child.Size.Height - 7.0)));
+        Child.Layout(ConstraintsForChild(Constraints), parentUsesSize: true);
+
+        // The buttons are padded on both sides by _kToolbarArrowSize.height, and the toolbar's
+        // height is the child's height minus one arrow height.
+        var childParentData = (BoxParentData)Child.parentData!;
+        childParentData.offset = ComputeChildOffset(Child.Size);
+        Size = new Size(
+            Child.Size.Width,
+            Child.Size.Height - CupertinoTextSelectionToolbar.ToolbarArrowSize.Height);
     }
 
     public override void Paint(PaintingContext context, Point offset)
@@ -362,28 +468,31 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
             return;
         }
 
-        var childData = (BoxParentData)Child.parentData!;
-        Plumix.UI.Path path = BuildPath();
-        if (ShadowColor.HasValue)
+        var childParentData = (BoxParentData)Child.parentData!;
+        Plumix.UI.RRect rrect = ShapeRRect(Child);
+        Plumix.UI.Path clipPath = ClipPath(Child, rrect);
+
+        if (_shadowColor is { } shadowColor)
         {
-            var shadow = new Plumix.Rendering.BoxShadow(
-                color: ShadowColor.Value,
-                blurRadius: 15.0);
+            var boxShadow = new Plumix.Rendering.BoxShadow(color: shadowColor, blurRadius: 15.0);
+            Point shadowOrigin = offset + (Vector)childParentData.offset;
             context.DrawRectangle(
                 new SolidColorBrush(Colors.Transparent),
                 null,
-                new Rect(offset.X, offset.Y, Size.Width, Size.Height),
-                BorderRadius.Circular(BorderRadiusValue),
-                new BoxShadows(shadow.ToAvalonia()));
+                new Rect(
+                    shadowOrigin.X + rrect.Left,
+                    shadowOrigin.Y + rrect.Top,
+                    rrect.Width,
+                    rrect.Height + CupertinoTextSelectionToolbar.ToolbarArrowSize.Height),
+                BorderRadius.All(CupertinoTextSelectionToolbar.ToolbarBorderRadius),
+                new BoxShadows(boxShadow.ToAvalonia()));
         }
 
-        context.PushTransform(
-            Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
-            childContext => childContext.DrawPath(path, new SolidColorBrush(BackgroundColor), null));
+        Point childOffset = offset + (Vector)childParentData.offset;
         context.PushClipPath(
-            path,
-            childContext => childContext.PaintChild(Child, offset + (Vector)childData.offset),
-            geometryOffset: offset);
+            clipPath,
+            childContext => childContext.PaintChild(Child, childOffset),
+            geometryOffset: childOffset);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
@@ -393,88 +502,414 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
             return false;
         }
 
-        var childData = (BoxParentData)Child.parentData!;
-        Point local = position - (Vector)childData.offset;
-        return local.X >= 0.0
-               && local.X <= Child.Size.Width
-               && local.Y >= 7.0
-               && local.Y <= Child.Size.Height - 7.0
-               && Child.HitTest(result, local);
+        // Positions outside of the clipped area of the child are not counted as hits.
+        var childParentData = (BoxParentData)Child.parentData!;
+        var hitBox = new Rect(
+            childParentData.offset.X,
+            childParentData.offset.Y + CupertinoTextSelectionToolbar.ToolbarArrowSize.Height,
+            Child.Size.Width,
+            Child.Size.Height - (CupertinoTextSelectionToolbar.ToolbarArrowSize.Height * 2.0));
+        if (!hitBox.Contains(position))
+        {
+            return false;
+        }
+
+        return base.HitTestChildren(result, position);
     }
 
-    private Plumix.UI.Path BuildPath()
+    /// <summary>Dart's `_shapeRRect`: the rounded body of the toolbar, in child coordinates.</summary>
+    internal Plumix.UI.RRect ShapeRRect(RenderBox child)
     {
-        double childHeight = Child!.Size.Height;
-        double top = 7.0;
-        double bottom = childHeight - 7.0;
-        Point rootOffset = GetPaintOffsetToRoot();
-        double anchorX = (_isAbove ? AnchorAbove.X : AnchorBelow.X) - rootOffset.X;
-        double arrowX = Math.Clamp(
-            anchorX,
-            BorderRadiusValue + (ArrowSize / 2.0),
-            Math.Max(
-                BorderRadiusValue + (ArrowSize / 2.0),
-                Size.Width - BorderRadiusValue - (ArrowSize / 2.0)));
+        var rect = new Rect(
+            0.0,
+            CupertinoTextSelectionToolbar.ToolbarArrowSize.Height,
+            child.Size.Width,
+            child.Size.Height - (CupertinoTextSelectionToolbar.ToolbarArrowSize.Height * 2.0));
+        return Plumix.UI.RRect
+            .FromRectAndRadius(rect, CupertinoTextSelectionToolbar.ToolbarBorderRadius)
+            .ScaleRadii();
+    }
+
+    /// <summary>Dart's `_clipPath`: the rounded body plus the arrow pointing at the anchor.</summary>
+    internal Plumix.UI.Path ClipPath(RenderBox child, Plumix.UI.RRect rrect)
+    {
         var path = new Plumix.UI.Path();
-        path.AddRRect(Plumix.UI.RRect.FromRectAndRadius(
-            new Rect(0.0, top, Child.Size.Width, Math.Max(0.0, bottom - top)),
-            BorderRadiusValue));
-        path.MoveTo(arrowX - (ArrowSize / 2.0), _isAbove ? bottom : top);
-        path.LineTo(arrowX, _isAbove ? childHeight : 0.0);
-        path.LineTo(arrowX + (ArrowSize / 2.0), _isAbove ? bottom : top);
+
+        // If there isn't enough width for the arrow, don't draw it.
+        double arrowWidth = CupertinoTextSelectionToolbar.ToolbarArrowSize.Width;
+        if ((CupertinoTextSelectionToolbar.ToolbarBorderRadius.X * 2.0) + arrowWidth > Size.Width)
+        {
+            path.AddRRect(rrect);
+            return path;
+        }
+
+        bool isAbove = IsAbove(child.Size.Height);
+        Point localAnchor = GlobalToLocal(isAbove ? _anchorAbove : _anchorBelow);
+        double lowerBound = CupertinoTextSelectionToolbar.ToolbarBorderRadius.X + (arrowWidth / 2.0);
+        double upperBound = Size.Width - (arrowWidth / 2.0)
+            - CupertinoTextSelectionToolbar.ToolbarBorderRadius.X;
+        double arrowTipX = Math.Clamp(localAnchor.X, lowerBound, Math.Max(lowerBound, upperBound));
+
+        if (isAbove)
+        {
+            double arrowBaseY = child.Size.Height - CupertinoTextSelectionToolbar.ToolbarArrowSize.Height;
+            double arrowTipY = child.Size.Height;
+            path.MoveTo(arrowTipX + (arrowWidth / 2.0), arrowBaseY);
+            path.LineTo(arrowTipX, arrowTipY);
+            path.LineTo(arrowTipX - (arrowWidth / 2.0), arrowBaseY);
+        }
+        else
+        {
+            double arrowBaseY = CupertinoTextSelectionToolbar.ToolbarArrowSize.Height;
+            const double arrowTipY = 0.0;
+            path.MoveTo(arrowTipX - (arrowWidth / 2.0), arrowBaseY);
+            path.LineTo(arrowTipX, arrowTipY);
+            path.LineTo(arrowTipX + (arrowWidth / 2.0), arrowBaseY);
+        }
+
+        AddRRectToPath(path, rrect, startAngle: isAbove ? Math.PI / 2.0 : -Math.PI / 2.0);
         path.Close();
         return path;
     }
+
+    /// <summary>Dart's `_addRRectToPath`: appends the rounded rect starting at the given quadrant.</summary>
+    private static Plumix.UI.Path AddRRectToPath(
+        Plumix.UI.Path path,
+        Plumix.UI.RRect rrect,
+        double startAngle)
+    {
+        const double halfPi = Math.PI / 2.0;
+        Rect outerRect = rrect.Rect;
+        (Point Vertex, Radius CenterOffset)[] corners =
+        [
+            (outerRect.BottomRight, new Radius(-rrect.BottomRight.X, -rrect.BottomRight.Y)),
+            (outerRect.BottomLeft, new Radius(rrect.BottomLeft.X, -rrect.BottomLeft.Y)),
+            (outerRect.TopLeft, rrect.TopLeft),
+            (outerRect.TopRight, new Radius(-rrect.TopRight.X, rrect.TopRight.Y)),
+        ];
+
+        int startQuadrantIndex = (int)(startAngle / halfPi);
+        for (int index = startQuadrantIndex; index < 4 + startQuadrantIndex; index++)
+        {
+            (Point vertex, Radius centerOffset) = corners[((index % 4) + 4) % 4];
+            var otherVertex = new Point(
+                vertex.X + (2.0 * centerOffset.X),
+                vertex.Y + (2.0 * centerOffset.Y));
+            Rect cornerRect = RectFromPoints(vertex, otherVertex);
+            path.ArcTo(cornerRect, halfPi * index, halfPi, forceMoveTo: false);
+        }
+
+        return path;
+    }
+
+    private static Rect RectFromPoints(Point a, Point b)
+    {
+        return new Rect(
+            Math.Min(a.X, b.X),
+            Math.Min(a.Y, b.Y),
+            Math.Abs(a.X - b.X),
+            Math.Abs(a.Y - b.Y));
+    }
+
+    private static BoxConstraints ConstraintsForChild(BoxConstraints constraints)
+    {
+        return new BoxConstraints(
+            MinWidth: CupertinoTextSelectionToolbar.ToolbarArrowSize.Width
+                + (CupertinoTextSelectionToolbar.ToolbarBorderRadius.X * 2.0))
+            .Enforce(constraints.Loosen());
+    }
+
+    private Point ComputeChildOffset(Size childSize)
+    {
+        return new Point(
+            0.0,
+            IsAbove(childSize.Height) ? -CupertinoTextSelectionToolbar.ToolbarArrowSize.Height : 0.0);
+    }
+
+    private bool IsAbove(double childHeight)
+    {
+        return _anchorAbove.Y >= childHeight - CupertinoTextSelectionToolbar.ToolbarArrowSize.Height;
+    }
 }
 
-internal sealed class CupertinoToolbarItemParentData : ContainerBoxParentData<RenderBox>
+/// <summary>Dart's `_CupertinoTextSelectionToolbarItemsSlot`.</summary>
+internal enum CupertinoTextSelectionToolbarItemsSlot
 {
-    public bool ShouldPaint { get; set; }
+    BackButton,
+    NextButton,
 }
 
-internal sealed class CupertinoTextSelectionToolbarItems : MultiChildRenderObjectWidget
+/// <summary>Dart's `_CupertinoTextSelectionToolbarItems`: one page of items plus paging buttons.</summary>
+internal sealed class CupertinoTextSelectionToolbarItems : RenderObjectWidget
 {
     public CupertinoTextSelectionToolbarItems(
         int page,
-        Color dividerColor,
         IReadOnlyList<Widget> children,
-        Key? key = null) : base(children, key)
+        Widget backButton,
+        Color dividerColor,
+        double dividerWidth,
+        Widget nextButton,
+        Key? key = null) : base(key)
     {
+        ArgumentNullException.ThrowIfNull(children);
+        if (children.Count == 0)
+        {
+            throw new ArgumentException("Toolbar children must not be empty.", nameof(children));
+        }
+
         Page = page;
+        Children = children;
+        BackButton = backButton;
         DividerColor = dividerColor;
+        DividerWidth = dividerWidth;
+        NextButton = nextButton;
     }
 
-    public int Page { get; }
+    public Widget BackButton { get; }
+
+    public IReadOnlyList<Widget> Children { get; }
 
     public Color DividerColor { get; }
 
+    public double DividerWidth { get; }
+
+    public Widget NextButton { get; }
+
+    public int Page { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderCupertinoTextSelectionToolbarItems(Page, DividerColor);
+        return new RenderCupertinoTextSelectionToolbarItems(DividerColor, DividerWidth, Page);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        var toolbar = (RenderCupertinoTextSelectionToolbarItems)renderObject;
-        toolbar.Page = Page;
-        toolbar.DividerColor = DividerColor;
+        var items = (RenderCupertinoTextSelectionToolbarItems)renderObject;
+        items.Page = Page;
+        items.DividerColor = DividerColor;
+        items.DividerWidth = DividerWidth;
+    }
+
+    internal override Element CreateElement() => new CupertinoTextSelectionToolbarItemsElement(this);
+}
+
+/// <summary>Dart's `_CupertinoTextSelectionToolbarItemsElement`: two slots plus an indexed list.</summary>
+internal sealed class CupertinoTextSelectionToolbarItemsElement : RenderObjectElement
+{
+    private readonly Dictionary<CupertinoTextSelectionToolbarItemsSlot, Element> _slotToChild = [];
+    private readonly HashSet<Element> _forgottenChildren = [];
+    private List<Element> _children = [];
+
+    public CupertinoTextSelectionToolbarItemsElement(CupertinoTextSelectionToolbarItems widget)
+        : base(widget)
+    {
+    }
+
+    private CupertinoTextSelectionToolbarItems ToolbarItems =>
+        (CupertinoTextSelectionToolbarItems)Widget;
+
+    private RenderCupertinoTextSelectionToolbarItems Items =>
+        (RenderCupertinoTextSelectionToolbarItems)RequireRenderObject();
+
+    protected override void OnMount()
+    {
+        base.OnMount();
+        MountChild(ToolbarItems.BackButton, CupertinoTextSelectionToolbarItemsSlot.BackButton);
+        MountChild(ToolbarItems.NextButton, CupertinoTextSelectionToolbarItemsSlot.NextButton);
+
+        _children = new List<Element>(ToolbarItems.Children.Count);
+        Element? previousChild = null;
+        for (int index = 0; index < ToolbarItems.Children.Count; index++)
+        {
+            Element newChild = InflateWidget(
+                ToolbarItems.Children[index],
+                new IndexedSlot<Element?>(index, previousChild));
+            _children.Add(newChild);
+            previousChild = newChild;
+        }
+    }
+
+    internal override void Rebuild()
+    {
+        base.Rebuild();
+        UpdateChildrenAndSlots();
+    }
+
+    internal override void Update(Widget newWidget)
+    {
+        base.Update(newWidget);
+        UpdateChildrenAndSlots();
+    }
+
+    internal override void ForgetChild(Element child)
+    {
+        if (child.Slot is CupertinoTextSelectionToolbarItemsSlot slot && _slotToChild.ContainsKey(slot))
+        {
+            _slotToChild.Remove(slot);
+        }
+        else
+        {
+            _forgottenChildren.Add(child);
+        }
+    }
+
+    internal override void VisitChildren(Action<Element> visitor)
+    {
+        foreach (Element child in _slotToChild.Values)
+        {
+            visitor(child);
+        }
+
+        foreach (Element child in _children)
+        {
+            if (!_forgottenChildren.Contains(child))
+            {
+                visitor(child);
+            }
+        }
+    }
+
+    public override void InsertRenderObjectChild(RenderObject child, object? slot)
+    {
+        switch (slot)
+        {
+            case CupertinoTextSelectionToolbarItemsSlot toolbarSlot:
+                UpdateSlottedRenderObject((RenderBox)child, toolbarSlot);
+                return;
+            case IndexedSlot<Element?> indexedSlot:
+                Items.Insert((RenderBox)child, (RenderBox?)indexedSlot.Value?.RenderObject);
+                return;
+            default:
+                throw new InvalidOperationException(
+                    "slot must be CupertinoTextSelectionToolbarItemsSlot or IndexedSlot.");
+        }
+    }
+
+    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
+    {
+        if (newSlot is not IndexedSlot<Element?> indexedSlot)
+        {
+            throw new InvalidOperationException("Only list children of the toolbar items can move.");
+        }
+
+        Items.Move((RenderBox)child, (RenderBox?)indexedSlot.Value?.RenderObject);
+    }
+
+    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
+    {
+        if (slot is CupertinoTextSelectionToolbarItemsSlot toolbarSlot)
+        {
+            UpdateSlottedRenderObject(null, toolbarSlot);
+            return;
+        }
+
+        Items.Remove((RenderBox)child);
+    }
+
+    internal override void Unmount()
+    {
+        foreach (Element child in _slotToChild.Values.ToList())
+        {
+            UnmountChild(child);
+        }
+
+        foreach (Element child in _children)
+        {
+            if (!_forgottenChildren.Contains(child))
+            {
+                UnmountChild(child);
+            }
+        }
+
+        _slotToChild.Clear();
+        _children.Clear();
+        _forgottenChildren.Clear();
+        base.Unmount();
+    }
+
+    private void UpdateChildrenAndSlots()
+    {
+        MountChild(ToolbarItems.BackButton, CupertinoTextSelectionToolbarItemsSlot.BackButton);
+        MountChild(ToolbarItems.NextButton, CupertinoTextSelectionToolbarItemsSlot.NextButton);
+        _children = UpdateChildren(_children, ToolbarItems.Children, _forgottenChildren);
+        _forgottenChildren.Clear();
+    }
+
+    private void MountChild(Widget widget, CupertinoTextSelectionToolbarItemsSlot slot)
+    {
+        _slotToChild.TryGetValue(slot, out Element? oldChild);
+        Element? newChild = UpdateChild(oldChild, widget, slot);
+        if (oldChild is not null)
+        {
+            _slotToChild.Remove(slot);
+        }
+
+        if (newChild is not null)
+        {
+            _slotToChild[slot] = newChild;
+        }
+    }
+
+    private void UpdateSlottedRenderObject(RenderBox? child, CupertinoTextSelectionToolbarItemsSlot slot)
+    {
+        switch (slot)
+        {
+            case CupertinoTextSelectionToolbarItemsSlot.BackButton:
+                Items.BackButton = child;
+                break;
+            case CupertinoTextSelectionToolbarItemsSlot.NextButton:
+                Items.NextButton = child;
+                break;
+        }
     }
 }
 
+/// <summary>Dart's `_RenderCupertinoTextSelectionToolbarItems`: the greedy per-page layout.</summary>
 internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
-    IRenderBoxContainerDefaultsMixin<RenderBox, CupertinoToolbarItemParentData>,
+    IRenderBoxContainerDefaultsMixin<RenderBox, ToolbarItemsParentData>,
     IRenderObjectContainer
 {
-    private readonly RenderBoxContainerDefaultsMixin<RenderBox, CupertinoToolbarItemParentData> _container;
-    private int _page;
+    private readonly RenderBoxContainerDefaultsMixin<RenderBox, ToolbarItemsParentData> _container;
+    private readonly Dictionary<CupertinoTextSelectionToolbarItemsSlot, RenderBox> _slottedChildren = [];
+    private RenderBox? _backButton;
+    private RenderBox? _nextButton;
     private Color _dividerColor;
-    private int _lastPage;
+    private double _dividerWidth;
+    private int _page;
 
-    public RenderCupertinoTextSelectionToolbarItems(int page, Color dividerColor)
+    public RenderCupertinoTextSelectionToolbarItems(Color dividerColor, double dividerWidth, int page)
     {
-        _page = page;
         _dividerColor = dividerColor;
-        _container = new RenderBoxContainerDefaultsMixin<RenderBox, CupertinoToolbarItemParentData>(this);
+        _dividerWidth = dividerWidth;
+        _page = page;
+        _container = new RenderBoxContainerDefaultsMixin<RenderBox, ToolbarItemsParentData>(this);
+    }
+
+    /// <summary>Whether a page after the current one exists.</summary>
+    public bool HasNextPage { get; private set; }
+
+    /// <summary>Whether a page before the current one exists.</summary>
+    public bool HasPreviousPage { get; private set; }
+
+    internal IReadOnlyDictionary<CupertinoTextSelectionToolbarItemsSlot, RenderBox> SlottedChildren =>
+        _slottedChildren;
+
+    public RenderBox? BackButton
+    {
+        get => _backButton;
+        set => _backButton = UpdateChild(
+            _backButton,
+            value,
+            CupertinoTextSelectionToolbarItemsSlot.BackButton);
+    }
+
+    public RenderBox? NextButton
+    {
+        get => _nextButton;
+        set => _nextButton = UpdateChild(
+            _nextButton,
+            value,
+            CupertinoTextSelectionToolbarItemsSlot.NextButton);
     }
 
     public int Page
@@ -482,7 +917,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
         get => _page;
         set
         {
-            if (_page == value)
+            if (value == _page)
             {
                 return;
             }
@@ -497,19 +932,30 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
         get => _dividerColor;
         set
         {
-            if (_dividerColor == value)
+            if (value == _dividerColor)
             {
                 return;
             }
 
             _dividerColor = value;
-            MarkNeedsPaint();
+            MarkNeedsLayout();
         }
     }
 
-    public bool HasNextPage => Page < _lastPage;
+    public double DividerWidth
+    {
+        get => _dividerWidth;
+        set
+        {
+            if (value.Equals(_dividerWidth))
+            {
+                return;
+            }
 
-    public bool HasPreviousPage => Page > 0 && Page <= _lastPage;
+            _dividerWidth = value;
+            MarkNeedsLayout();
+        }
+    }
 
     public RenderBox? FirstChild => _container.FirstChild;
 
@@ -523,130 +969,6 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
 
     public void AddAll(List<RenderBox> children) => _container.AddAll(children);
 
-    public override void SetupParentData(RenderObject child)
-    {
-        if (child.parentData is not CupertinoToolbarItemParentData)
-        {
-            child.parentData = new CupertinoToolbarItemParentData();
-        }
-    }
-
-    protected override void PerformLayout()
-    {
-        if (ChildCount < 3 || FirstChild is null || LastChild is null)
-        {
-            Size = Constraints.Smallest;
-            return;
-        }
-
-        var children = Children().ToList();
-        RenderBox back = children[0];
-        RenderBox next = children[^1];
-        IReadOnlyList<RenderBox> items = children.Skip(1).Take(children.Count - 2).ToList();
-        double height = items.Count == 0
-            ? 0.0
-            : items.Max(child => child.GetMaxIntrinsicHeight(Constraints.MaxWidth));
-        var navigationConstraints = new BoxConstraints(
-            MaxWidth: Constraints.MaxWidth,
-            MinHeight: height,
-            MaxHeight: height);
-        back.Layout(navigationConstraints, parentUsesSize: true);
-        next.Layout(navigationConstraints, parentUsesSize: true);
-        double divider = 1.0;
-        double x = 0.0;
-        int calculatedPage = 0;
-        double pageWidth = 0.0;
-        foreach (RenderBox child in children)
-        {
-            ((CupertinoToolbarItemParentData)child.parentData!).ShouldPaint = false;
-        }
-
-        foreach (RenderBox child in items)
-        {
-            double reserved = calculatedPage == 0 ? next.Size.Width : back.Size.Width + next.Size.Width;
-            child.Layout(
-                new BoxConstraints(
-                    MaxWidth: Math.Max(0.0, Constraints.MaxWidth - reserved),
-                    MinHeight: height,
-                    MaxHeight: height),
-                parentUsesSize: true);
-            if (x > 0.0 && x + child.Size.Width + reserved > Constraints.MaxWidth)
-            {
-                calculatedPage++;
-                x = back.Size.Width + divider;
-            }
-
-            var parentData = (CupertinoToolbarItemParentData)child.parentData!;
-            parentData.offset = new Point(x, 0.0);
-            parentData.ShouldPaint = calculatedPage == Page;
-            x += child.Size.Width + divider;
-            if (calculatedPage == Page)
-            {
-                pageWidth = Math.Max(pageWidth, x);
-            }
-        }
-
-        int lastPage = calculatedPage;
-        _lastPage = lastPage;
-        bool showBack = Page > 0 && Page <= lastPage;
-        bool showNext = Page < lastPage;
-        var backData = (CupertinoToolbarItemParentData)back.parentData!;
-        backData.ShouldPaint = showBack;
-        backData.offset = new Point(0.0, 0.0);
-        var nextData = (CupertinoToolbarItemParentData)next.parentData!;
-        nextData.ShouldPaint = showNext;
-        nextData.offset = new Point(Math.Max(0.0, pageWidth - divider), 0.0);
-        if (showNext)
-        {
-            pageWidth += next.Size.Width;
-        }
-
-        Size = Constraints.Constrain(new Size(Math.Max(0.0, pageWidth - divider), height));
-    }
-
-    public override void Paint(PaintingContext context, Point offset)
-    {
-        RenderBox? child = FirstChild;
-        while (child is not null)
-        {
-            var parentData = (CupertinoToolbarItemParentData)child.parentData!;
-            if (parentData.ShouldPaint)
-            {
-                context.PaintChild(child, offset + (Vector)parentData.offset);
-                RenderBox? nextSibling = parentData.nextSibling;
-                if (nextSibling is not null
-                    && ((CupertinoToolbarItemParentData)nextSibling.parentData!).ShouldPaint)
-                {
-                    double x = offset.X + parentData.offset.X + child.Size.Width;
-                    context.DrawLine(
-                        new Pen(new SolidColorBrush(DividerColor)),
-                        new Point(x, offset.Y),
-                        new Point(x, offset.Y + Size.Height));
-                }
-            }
-
-            child = parentData.nextSibling;
-        }
-    }
-
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
-    {
-        RenderBox? child = LastChild;
-        while (child is not null)
-        {
-            var parentData = (CupertinoToolbarItemParentData)child.parentData!;
-            if (parentData.ShouldPaint
-                && child.HitTest(result, position - (Vector)parentData.offset))
-            {
-                return true;
-            }
-
-            child = parentData.previousSibling;
-        }
-
-        return false;
-    }
-
     public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);
 
     public void Move(RenderBox child, RenderBox? after = null) => _container.Move(child, after);
@@ -658,8 +980,49 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
     public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
         _container.DefaultHitTestChildren(result, position);
 
+    public override void SetupParentData(RenderObject child)
+    {
+        if (child.parentData is not ToolbarItemsParentData)
+        {
+            child.parentData = new ToolbarItemsParentData();
+        }
+    }
+
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        foreach (RenderBox child in _slottedChildren.Values)
+        {
+            child.Attach(Owner!);
+        }
+    }
+
+    protected override void OnDetach()
+    {
+        base.OnDetach();
+        foreach (RenderBox child in _slottedChildren.Values)
+        {
+            child.Detach();
+        }
+    }
+
+    protected override void RedepthChildren()
+    {
+        VisitChildren(child => RedepthChild(child));
+    }
+
     public override void VisitChildren(Action<RenderObject> visitor)
     {
+        if (_backButton is not null)
+        {
+            visitor(_backButton);
+        }
+
+        if (_nextButton is not null)
+        {
+            visitor(_nextButton);
+        }
+
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             visitor(child);
@@ -668,14 +1031,229 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        VisitChildren(child =>
         {
-            var parentData = (CupertinoToolbarItemParentData)child.parentData!;
-            if (parentData.ShouldPaint)
+            if (((ToolbarItemsParentData)child.parentData!).ShouldPaint)
             {
                 visitor(child);
             }
+        });
+    }
+
+    protected override void PerformLayout()
+    {
+        if (FirstChild is null)
+        {
+            Size = Constraints.Smallest;
+            return;
         }
+
+        // Layout slotted children.
+        double greatestHeight = 0.0;
+        VisitChildren(renderObjectChild =>
+        {
+            var child = (RenderBox)renderObjectChild;
+            double childHeight = child.GetMaxIntrinsicHeight(Constraints.MaxWidth);
+            if (childHeight > greatestHeight)
+            {
+                greatestHeight = childHeight;
+            }
+        });
+
+        var slottedConstraints = new BoxConstraints(
+            MaxWidth: Constraints.MaxWidth,
+            MinHeight: greatestHeight,
+            MaxHeight: greatestHeight);
+        _backButton!.Layout(slottedConstraints, parentUsesSize: true);
+        _nextButton!.Layout(slottedConstraints, parentUsesSize: true);
+
+        double subsequentPageButtonsWidth = _backButton.Size.Width + _nextButton.Size.Width;
+        double currentButtonPosition = 0.0;
+        double toolbarWidth = 0.0;
+        int currentPage = 0;
+        int index = -1;
+
+        VisitChildren(renderObjectChild =>
+        {
+            index++;
+            var child = (RenderBox)renderObjectChild;
+            var childParentData = (ToolbarItemsParentData)child.parentData!;
+            childParentData.ShouldPaint = false;
+
+            // Skip slotted children and children on pages after the visible one.
+            if (ReferenceEquals(child, _backButton)
+                || ReferenceEquals(child, _nextButton)
+                || currentPage > _page)
+            {
+                return;
+            }
+
+            double paginationButtonsWidth = currentPage == 0
+                ? index == ChildCount + 1 ? 0.0 : _nextButton.Size.Width
+                : subsequentPageButtonsWidth;
+
+            // The width of the menu is set by the first page.
+            child.Layout(
+                new BoxConstraints(
+                    MaxWidth: Constraints.MaxWidth - paginationButtonsWidth,
+                    MinHeight: greatestHeight,
+                    MaxHeight: greatestHeight),
+                parentUsesSize: true);
+
+            // If this child causes the current page to overflow, move to the next page and relayout
+            // the child.
+            double currentWidth = currentButtonPosition + paginationButtonsWidth + child.Size.Width;
+            if (currentWidth > Constraints.MaxWidth)
+            {
+                currentPage++;
+                currentButtonPosition = _backButton.Size.Width + DividerWidth;
+                paginationButtonsWidth = _backButton.Size.Width + _nextButton.Size.Width;
+                child.Layout(
+                    new BoxConstraints(
+                        MaxWidth: Constraints.MaxWidth - paginationButtonsWidth,
+                        MinHeight: greatestHeight,
+                        MaxHeight: greatestHeight),
+                    parentUsesSize: true);
+            }
+
+            childParentData.offset = new Point(currentButtonPosition, 0.0);
+            currentButtonPosition += child.Size.Width + DividerWidth;
+            childParentData.ShouldPaint = currentPage == Page;
+
+            if (currentPage == Page)
+            {
+                toolbarWidth = currentButtonPosition;
+            }
+        });
+
+        // It shouldn't be possible to navigate beyond the last page.
+        if (Page > currentPage)
+        {
+            throw new InvalidOperationException("The toolbar page is beyond the last page.");
+        }
+
+        // Position page nav buttons.
+        if (currentPage > 0)
+        {
+            var nextButtonParentData = (ToolbarItemsParentData)_nextButton.parentData!;
+            var backButtonParentData = (ToolbarItemsParentData)_backButton.parentData!;
+
+            // The forward button only shows when there's a page after this one.
+            if (Page != currentPage)
+            {
+                nextButtonParentData.offset = new Point(toolbarWidth, 0.0);
+                nextButtonParentData.ShouldPaint = true;
+                toolbarWidth += _nextButton.Size.Width;
+            }
+
+            if (Page > 0)
+            {
+                backButtonParentData.offset = new Point(0.0, 0.0);
+                backButtonParentData.ShouldPaint = true;
+
+                // No need to add the width of the back button to toolbarWidth here. It's already
+                // been taken care of when laying out the children to assume the back button is
+                // showing.
+            }
+        }
+        else
+        {
+            // No divider for the next button when there's only one page.
+            toolbarWidth -= DividerWidth;
+        }
+
+        HasNextPage = Page != currentPage;
+        HasPreviousPage = Page > 0;
+        Size = Constraints.Constrain(new Size(toolbarWidth, greatestHeight));
+    }
+
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        VisitChildren(renderObjectChild =>
+        {
+            var child = (RenderBox)renderObjectChild;
+            var childParentData = (ToolbarItemsParentData)child.parentData!;
+            if (!childParentData.ShouldPaint)
+            {
+                return;
+            }
+
+            Point childOffset = offset + (Vector)childParentData.offset;
+            context.PaintChild(child, childOffset);
+
+            if (childParentData.nextSibling is null && !ReferenceEquals(child, _backButton))
+            {
+                return;
+            }
+
+            // Dart paints a zero-width (device-pixel hairline) line; Avalonia has no hairline pen, so
+            // this is one logical pixel wide.
+            context.DrawLine(
+                new Pen(new SolidColorBrush(DividerColor)),
+                new Point(childOffset.X + child.Size.Width, childOffset.Y),
+                new Point(childOffset.X + child.Size.Width, childOffset.Y + child.Size.Height));
+        });
+    }
+
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        // Hit test list children.
+        RenderBox? child = LastChild;
+        while (child is not null)
+        {
+            var childParentData = (ToolbarItemsParentData)child.parentData!;
+            if (!childParentData.ShouldPaint)
+            {
+                child = childParentData.previousSibling;
+                continue;
+            }
+
+            if (HitTestChild(child, result, position))
+            {
+                return true;
+            }
+
+            child = childParentData.previousSibling;
+        }
+
+        // Hit test slotted children.
+        return HitTestChild(_backButton, result, position) || HitTestChild(_nextButton, result, position);
+    }
+
+    private static bool HitTestChild(RenderBox? child, BoxHitTestResult result, Point position)
+    {
+        if (child is null)
+        {
+            return false;
+        }
+
+        var childParentData = (ToolbarItemsParentData)child.parentData!;
+        if (!childParentData.ShouldPaint)
+        {
+            return false;
+        }
+
+        return child.HitTest(result, position - (Vector)childParentData.offset);
+    }
+
+    private RenderBox? UpdateChild(
+        RenderBox? oldChild,
+        RenderBox? newChild,
+        CupertinoTextSelectionToolbarItemsSlot slot)
+    {
+        if (oldChild is not null)
+        {
+            DropChild(oldChild);
+            _slottedChildren.Remove(slot);
+        }
+
+        if (newChild is not null)
+        {
+            _slottedChildren[slot] = newChild;
+            AdoptChild(newChild);
+        }
+
+        return newChild;
     }
 
     void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after) =>
@@ -685,39 +1263,77 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
         Move((RenderBox)child, after as RenderBox);
 
     void IRenderObjectContainer.Remove(RenderObject child) => Remove((RenderBox)child);
+}
 
-    private IEnumerable<RenderBox> Children()
+/// <summary>Dart's `_LeftCupertinoChevronPainter`.</summary>
+internal sealed class LeftCupertinoChevronPainter : CupertinoChevronPainter
+{
+    public LeftCupertinoChevronPainter(Color color) : base(color, isLeft: true)
     {
-        RenderBox? child = FirstChild;
-        while (child is not null)
-        {
-            yield return child;
-            child = ((CupertinoToolbarItemParentData)child.parentData!).nextSibling;
-        }
     }
 }
 
-internal sealed class CupertinoChevronPainter : CustomPainter
+/// <summary>Dart's `_RightCupertinoChevronPainter`.</summary>
+internal sealed class RightCupertinoChevronPainter : CupertinoChevronPainter
 {
-    private readonly bool _pointsRight;
-
-    public CupertinoChevronPainter(bool pointsRight)
+    public RightCupertinoChevronPainter(Color color) : base(color, isLeft: false)
     {
-        _pointsRight = pointsRight;
+    }
+}
+
+/// <summary>Dart's `_CupertinoChevronPainter`: the paging chevron glyph.</summary>
+internal abstract class CupertinoChevronPainter : CustomPainter
+{
+    protected CupertinoChevronPainter(Color color, bool isLeft)
+    {
+        Color = color;
+        IsLeft = isLeft;
+    }
+
+    public Color Color { get; }
+
+    /// <summary>Whether the chevron points to the left.</summary>
+    public bool IsLeft { get; }
+
+    /// <summary>The three points of the chevron glyph, for a square of the given size.</summary>
+    internal (Point First, Point Middle, Point Lower) ChevronPoints(Size size)
+    {
+        if (size.Height != size.Width)
+        {
+            throw new ArgumentException($"size must have the same height and width: {size}", nameof(size));
+        }
+
+        double iconSize = size.Height;
+
+        // The chevron is half of a square rotated 45º, so it needs to be shifted so that it does not
+        // appear off center.
+        var centerOffset = new Vector(iconSize / 4.0 * (IsLeft ? 1.0 : -1.0), 0.0);
+
+        return (
+            new Point(iconSize / 2.0, 0.0) + centerOffset,
+            new Point(IsLeft ? 0.0 : iconSize, iconSize / 2.0) + centerOffset,
+            new Point(iconSize / 2.0, iconSize) + centerOffset);
     }
 
     public override void Paint(PaintingContext context, Size size)
     {
-        var pen = new Pen(new SolidColorBrush(Colors.Black), 2.0, lineCap: PenLineCap.Round);
-        double outer = _pointsRight ? 2.5 : 7.5;
-        double inner = _pointsRight ? 7.5 : 2.5;
-        context.DrawLine(pen, new Point(outer, 0.0), new Point(inner, 5.0));
-        context.DrawLine(pen, new Point(inner, 5.0), new Point(outer, 10.0));
+        (Point firstPoint, Point middlePoint, Point lowerPoint) = ChevronPoints(size);
+
+        var pen = new Pen(
+            new SolidColorBrush(Color),
+            CupertinoTextSelectionToolbar.ToolbarChevronThickness,
+            lineCap: PenLineCap.Round,
+            lineJoin: PenLineJoin.Round);
+
+        // `drawPath` is used here because it renders a smoother chevron than `drawLine`.
+        context.DrawLine(pen, firstPoint, middlePoint);
+        context.DrawLine(pen, middlePoint, lowerPoint);
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)
     {
         return oldDelegate is not CupertinoChevronPainter oldPainter
-               || oldPainter._pointsRight != _pointsRight;
+               || oldPainter.Color != Color
+               || oldPainter.IsLeft != IsLeft;
     }
 }

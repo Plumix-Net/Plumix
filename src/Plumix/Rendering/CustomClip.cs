@@ -64,6 +64,33 @@ public sealed class ShapeBorderClipper : CustomClipper<Path>
     }
 }
 
+/// <summary>Dart's `_DecorationClipper`: clips to a decoration's own outer path.</summary>
+internal sealed class DecorationClipper : CustomClipper<Path>
+{
+    public DecorationClipper(Decoration decoration, TextDirection? textDirection = null)
+    {
+        Decoration = decoration ?? throw new ArgumentNullException(nameof(decoration));
+        TextDirection = textDirection;
+    }
+
+    public Decoration Decoration { get; }
+
+    public TextDirection? TextDirection { get; }
+
+    public override Path GetClip(Size size)
+    {
+        return Decoration.GetClipPath(
+            new Rect(new Point(0, 0), size),
+            TextDirection ?? Plumix.UI.TextDirection.Ltr);
+    }
+
+    public override bool ShouldReclip(CustomClipper<Path> oldClipper)
+    {
+        return oldClipper is not DecorationClipper oldDecorationClipper
+               || oldDecorationClipper.Decoration != Decoration;
+    }
+}
+
 public abstract class RenderCustomClip<T> : RenderProxyBox
 {
     private CustomClipper<T>? _clipper;

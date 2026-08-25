@@ -407,11 +407,6 @@ internal sealed class TextSelectionToolbarItemsLayout : MultiChildRenderObjectWi
     }
 }
 
-internal sealed class ToolbarItemsParentData : ContainerBoxParentData<RenderBox>
-{
-    public bool ShouldPaint { get; set; } = true;
-}
-
 internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
     IRenderBoxContainerDefaultsMixin<RenderBox, ToolbarItemsParentData>,
     IRenderObjectContainer

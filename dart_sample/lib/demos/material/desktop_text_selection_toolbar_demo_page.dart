@@ -27,6 +27,7 @@ class _DesktopTextSelectionToolbarDemoPageState
       4 => _buildCupertinoToolbar(anchor),
       5 => _buildCupertinoDesktopToolbar(anchor),
       6 => _buildCupertinoSpellCheckToolbar(anchor),
+      7 => _buildCupertinoOverflowToolbar(anchor),
       _ => _buildDesktopToolbar(context, anchor),
     };
     return Column(
@@ -57,7 +58,7 @@ class _DesktopTextSelectionToolbarDemoPageState
             TextButton(
               onPressed: () {
                 setState(() {
-                  _toolbarKind = (_toolbarKind + 1) % 7;
+                  _toolbarKind = (_toolbarKind + 1) % 8;
                 });
               },
               child: Text('Show $_nextToolbarLabel'),
@@ -203,6 +204,31 @@ class _DesktopTextSelectionToolbarDemoPageState
     );
   }
 
+  Widget _buildCupertinoOverflowToolbar(Offset anchor) {
+    const List<String> labels = <String>[
+      'Cut',
+      'Copy',
+      'Paste',
+      'Select all',
+      'Look up',
+      'Search web',
+      'Share',
+      'Translate',
+      'Add to dictionary',
+    ];
+    return cupertino.CupertinoTextSelectionToolbar(
+      anchorAbove: anchor,
+      anchorBelow: anchor + const Offset(0, 20),
+      children: <Widget>[
+        for (final String label in labels)
+          cupertino.CupertinoTextSelectionToolbarButton.text(
+            onPressed: () => _setAction(label),
+            text: label,
+          ),
+      ],
+    );
+  }
+
   Widget _buildCupertinoDesktopToolbar(Offset anchor) {
     return cupertino.CupertinoDesktopTextSelectionToolbar(
       anchor: anchor,
@@ -250,13 +276,14 @@ class _DesktopTextSelectionToolbarDemoPageState
     );
   }
 
-  String get _nextToolbarLabel => switch ((_toolbarKind + 1) % 7) {
+  String get _nextToolbarLabel => switch ((_toolbarKind + 1) % 8) {
     1 => 'Android',
     2 => 'adaptive',
     3 => 'spell check',
     4 => 'Cupertino mobile',
     5 => 'Cupertino desktop',
     6 => 'Cupertino spell check',
+    7 => 'Cupertino overflow pages',
     _ => 'desktop',
   };
 

@@ -33,6 +33,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             4 => BuildCupertinoToolbar(anchor),
             5 => BuildCupertinoDesktopToolbar(anchor),
             6 => BuildCupertinoSpellCheckToolbar(anchor),
+            7 => BuildCupertinoOverflowToolbar(anchor),
             _ => BuildDesktopToolbar(context, anchor),
         };
         return new Column(
@@ -54,7 +55,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
                             onPressed: () => SetState(() => _nearViewportEdge = !_nearViewportEdge)),
                         new TextButton(
                             child: new Text($"Show {NextToolbarLabel}"),
-                            onPressed: () => SetState(() => _toolbarKind = (_toolbarKind + 1) % 7)),
+                            onPressed: () => SetState(() => _toolbarKind = (_toolbarKind + 1) % 8)),
                         new Text($"Last action: {_lastAction}"),
                     ]),
                 new Expanded(
@@ -140,6 +141,25 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             ]);
     }
 
+    private Widget BuildCupertinoOverflowToolbar(Point anchor)
+    {
+        string[] labels =
+        [
+            "Cut", "Copy", "Paste", "Select all", "Look up", "Search web", "Share", "Translate",
+            "Add to dictionary",
+        ];
+        var children = new List<Widget>(labels.Length);
+        foreach (string label in labels)
+        {
+            children.Add(CupertinoTextSelectionToolbarButton.TextButton(() => SetAction(label), label));
+        }
+
+        return new CupertinoTextSelectionToolbar(
+            anchorAbove: anchor,
+            anchorBelow: anchor + new Vector(0, 20),
+            children: children);
+    }
+
     private Widget BuildCupertinoDesktopToolbar(Point anchor)
     {
         return new CupertinoDesktopTextSelectionToolbar(
@@ -165,7 +185,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
             ]);
     }
 
-    private string NextToolbarLabel => ((_toolbarKind + 1) % 7) switch
+    private string NextToolbarLabel => ((_toolbarKind + 1) % 8) switch
     {
         1 => "Android",
         2 => "adaptive",
@@ -173,6 +193,7 @@ internal sealed class DesktopTextSelectionToolbarDemoPageState : State
         4 => "Cupertino mobile",
         5 => "Cupertino desktop",
         6 => "Cupertino spell check",
+        7 => "Cupertino overflow pages",
         _ => "desktop",
     };
 

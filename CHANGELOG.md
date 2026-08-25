@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: re-ported `CupertinoTextSelectionToolbar` — chevron paging, fade, arrow clip (`text_selection_toolbar`).
+- Breaking: strict Cupertino selection-toolbar buttons and desktop surface (`desktop_text_selection_toolbar.dart`).
+- Added `Container.ClipBehavior`, `MediaQuery.DevicePixelRatioOf` and a shared core `ToolbarItemsParentData`.
 - Breaking: strict `CupertinoMagnifier` port — elliptical rim, themed border, curved in/out (`magnifier.dart`).
 - Magnifier lens and `BorderRadiusGeometry.Resolve` keep elliptical per-corner radii; added `BorderRadius.All`.
 - Breaking: re-ported `CupertinoScrollbar` on `RawScrollbar`; track rect spans the padded viewport (`scrollbar.dart`).
