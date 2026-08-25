@@ -517,6 +517,10 @@ public sealed class ScrollbarPainter : CustomPainter
             return null;
         }
 
+        // Flutter's track rect spans the padded viewport; `mainAxisMargin` insets only the thumb.
+        double trackRectStart = leadingPadding;
+        double trackRectExtent = Math.Max(0, mainExtent - leadingPadding - trailingPadding);
+
         double leadingOverscroll = Math.Max(_metrics.MinScrollExtent - _metrics.Pixels, 0);
         double trailingOverscroll = Math.Max(_metrics.Pixels - _metrics.MaxScrollExtent, 0);
         double extentInside = Math.Max(0, _metrics.ViewportDimension - leadingOverscroll - trailingOverscroll);
@@ -557,7 +561,7 @@ public sealed class ScrollbarPainter : CustomPainter
             double trackX = orientation == global::Plumix.Widgets.ScrollbarOrientation.Left
                 ? Padding.Left
                 : thumbX - CrossAxisMargin;
-            trackRect = new Rect(trackX, trackStart, Thickness + (2 * CrossAxisMargin), trackExtent);
+            trackRect = new Rect(trackX, trackRectStart, Thickness + (2 * CrossAxisMargin), trackRectExtent);
             thumbRect = new Rect(thumbX, trackStart + thumbOffset, Thickness, thumbExtent);
         }
         else
@@ -568,7 +572,7 @@ public sealed class ScrollbarPainter : CustomPainter
             double trackY = orientation == global::Plumix.Widgets.ScrollbarOrientation.Top
                 ? Padding.Top
                 : thumbY - CrossAxisMargin;
-            trackRect = new Rect(trackStart, trackY, trackExtent, Thickness + (2 * CrossAxisMargin));
+            trackRect = new Rect(trackRectStart, trackY, trackRectExtent, Thickness + (2 * CrossAxisMargin));
             thumbRect = new Rect(trackStart + thumbOffset, thumbY, thumbExtent, Thickness);
         }
 
@@ -877,6 +881,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
         private bool _pendingThumbPress;
         private double _dragOffsetWithinThumb;
         private double _lastPointerAxisOffset;
+        private double _thumbPressStartAxisOffset;
         private DateTime _lastPointerTimestamp;
         private double _lastDragVelocity;
         private bool _didDragThumb;
@@ -888,6 +893,15 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
         protected bool IsHovered => _interactionState.HasFlag(ScrollbarInteractionState.Hovered);
 
         protected bool IsDragged => _interactionState.HasFlag(ScrollbarInteractionState.Dragged);
+
+        /// <summary>
+        /// Main-axis offset of the pointer when the current thumb press started. Mirrors the
+        /// position Flutter's <c>handleThumbPressStart</c> records.
+        /// </summary>
+        protected double ThumbPressStartAxisOffset => _thumbPressStartAxisOffset;
+
+        /// <summary>Main-axis offset of the most recent pointer event on the scrollbar.</summary>
+        protected double LastPointerAxisOffset => _lastPointerAxisOffset;
 
         protected IReadOnlySet<WidgetState> WidgetStates
         {
@@ -1218,6 +1232,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
             double thumbEnd = thumbStart + geometry.ThumbMainAxisExtent;
             if (axisOffset >= thumbStart && axisOffset <= thumbEnd)
             {
+                _thumbPressStartAxisOffset = axisOffset;
                 CancelFade();
                 if (CurrentWidget.PressDuration <= TimeSpan.Zero)
                 {
@@ -1233,7 +1248,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
                 return;
             }
 
-            if (!CurrentWidget.TrackTapEnabled) return;
+            if (!ResolveTrackTapEnabled()) return;
 
             int direction = axisOffset < thumbStart ? -1 : 1;
             position.AnimateTo(
@@ -1371,6 +1386,12 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
                 Math.Max(track.Bottom, paddedThumb.Bottom) - Math.Min(track.Top, paddedThumb.Top));
             return hoverRect.Contains(position);
         }
+
+        /// <summary>
+        /// Whether a pointer down outside the thumb pages the scroll view towards the tap.
+        /// Mirrors Flutter's overridable <c>handleTrackTapDown</c>.
+        /// </summary>
+        protected virtual bool ResolveTrackTapEnabled() => CurrentWidget.TrackTapEnabled;
 
         protected virtual void InteractionStateChanged(
             ScrollbarInteractionState oldValue,
@@ -1755,6 +1776,10 @@ internal sealed class RenderRawScrollbarOverlay : RenderProxyBox
         double trackExtent = Math.Max(0, mainExtent - leadingPadding - trailingPadding - (2 * _mainAxisMargin));
         if (trackExtent <= 0) return null;
 
+        // Flutter's track rect spans the padded viewport; `mainAxisMargin` insets only the thumb.
+        double trackRectStart = leadingPadding;
+        double trackRectExtent = Math.Max(0, mainExtent - leadingPadding - trailingPadding);
+
         double leadingOverscroll = Math.Max(position.MinScrollExtent - position.Pixels, 0);
         double trailingOverscroll = Math.Max(position.Pixels - position.MaxScrollExtent, 0);
         double extentInside = Math.Max(0, position.ViewportDimension - leadingOverscroll - trailingOverscroll);
@@ -1796,7 +1821,7 @@ internal sealed class RenderRawScrollbarOverlay : RenderProxyBox
             double trackX = orientation == ScrollbarOrientation.Left
                 ? _padding.Left
                 : thumbX - _crossAxisMargin;
-            trackRect = new Rect(trackX, trackStart, _thickness + (2 * _crossAxisMargin), trackExtent);
+            trackRect = new Rect(trackX, trackRectStart, _thickness + (2 * _crossAxisMargin), trackRectExtent);
             thumbRect = new Rect(thumbX, trackStart + thumbOffset, _thickness, thumbExtent);
         }
         else
@@ -1807,7 +1832,7 @@ internal sealed class RenderRawScrollbarOverlay : RenderProxyBox
             double trackY = orientation == ScrollbarOrientation.Top
                 ? _padding.Top
                 : thumbY - _crossAxisMargin;
-            trackRect = new Rect(trackStart, trackY, trackExtent, _thickness + (2 * _crossAxisMargin));
+            trackRect = new Rect(trackRectStart, trackY, trackRectExtent, _thickness + (2 * _crossAxisMargin));
             thumbRect = new Rect(trackStart + thumbOffset, thumbY, thumbExtent, _thickness);
         }
 

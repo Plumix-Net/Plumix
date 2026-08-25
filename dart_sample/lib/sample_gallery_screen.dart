@@ -56,6 +56,7 @@ import 'demos/cupertino/picker_demo_page.dart';
 import 'demos/cupertino/cupertino_activity_indicator_demo_page.dart';
 import 'demos/cupertino/cupertino_button_demo_page.dart';
 import 'demos/cupertino/cupertino_radio_demo_page.dart';
+import 'demos/cupertino/cupertino_scrollbar_demo_page.dart';
 import 'demos/cupertino/cupertino_slider_demo_page.dart';
 import 'demos/cupertino/refresh_demo_page.dart';
 import 'counter_screen.dart';
@@ -580,6 +581,14 @@ class SampleGalleryScreen extends StatelessWidget {
           'continuous/discrete values + min-max ranges + '
           'active/thumb colors + LTR/RTL drag',
       builder: () => const CupertinoSliderDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoScrollbar,
+      title: 'Scrollbar (Cupertino)',
+      subtitle:
+          'fading thumb + press-and-hold resize + left rail orientation + '
+          'dynamic thumb color',
+      builder: () => const CupertinoScrollbarDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.cupertinoTheme,

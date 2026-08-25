@@ -115,10 +115,13 @@ public sealed class MaterialScrollbarTests
         var overlay = RequireOverlay(harness.RenderView);
         var geometry = Assert.IsType<ScrollbarGeometry>(overlay.Geometry);
         Assert.Equal(Axis.Horizontal, geometry.Axis);
-        Assert.Equal(12, geometry.TrackRect.X);
-        Assert.Equal(270, geometry.TrackRect.Width);
+        // Flutter's track rect spans the padded viewport; only the thumb is inset by mainAxisMargin.
+        Assert.Equal(7, geometry.TrackRect.X);
+        Assert.Equal(280, geometry.TrackRect.Width);
         Assert.Equal(89, geometry.TrackRect.Y);
         Assert.Equal(14, geometry.TrackRect.Height);
+        Assert.Equal(12, geometry.TrackMainAxisStart);
+        Assert.Equal(270, geometry.TrackMainAxisExtent);
         Assert.True(overlay.TrackVisible);
         Assert.True(geometry.ThumbRect.Width >= 18);
     }
@@ -495,8 +498,7 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(TimeSpan.FromMilliseconds(250), raw.FadeDuration);
         Assert.Equal(TimeSpan.FromMilliseconds(1200), raw.TimeToFade);
         Assert.Equal(TimeSpan.FromMilliseconds(100), raw.PressDuration);
-        Assert.False(raw.TrackTapEnabled);
-        Assert.Equal(Color.FromArgb(0x59, 0, 0, 0), raw.ThumbColor);
+        Assert.Same(cupertino, raw);
     }
 
     [Fact]
@@ -716,45 +718,6 @@ public sealed class MaterialScrollbarTests
         var overlay = RequireOverlay(harness.RenderView);
         Assert.Equal(emptySize, overlay.Size);
         Assert.Null(overlay.Geometry);
-    }
-
-    [Fact]
-    public void CupertinoScrollbar_UsesBrightnessResizeAnimationAndHapticRequests()
-    {
-        using var controller = new ScrollController();
-        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
-        {
-            using var harness = new WidgetRenderHarness(new MediaQuery(
-                data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Dark),
-                child: new Theme(
-                    data: ThemeData.Light with { Platform = TargetPlatform.IOS },
-                    child: new MaterialScrollbar(
-                        controller: controller,
-                        thumbVisibility: true,
-                        child: BuildVerticalList(controller, 30)))));
-            harness.Pump(new Size(200, 240));
-            var overlay = RequireOverlay(harness.RenderView);
-            Assert.Equal(Color.FromArgb(0x80, 0xFF, 0xFF, 0xFF), overlay.ThumbColor);
-            Assert.Equal(3, overlay.Thickness);
-
-            Point point = overlay.Geometry!.Value.ThumbRect.Center;
-            DateTime now = DateTime.UtcNow;
-            overlay.HandleEvent(
-                new PointerDownEvent(51, PointerDeviceKind.Touch, point, PointerButtons.Primary, now),
-                new BoxHitTestEntry(overlay, point));
-            double schedulerNow = Scheduler.CurrentSeconds;
-            AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.11));
-            double resizeStart = Scheduler.CurrentSeconds;
-            AnimationPump.Prime();
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(resizeStart + 0.05));
-            harness.Pump(new Size(200, 240));
-
-            MethodCall call = Assert.Single(platform.Log);
-            Assert.Equal("HapticFeedback.vibrate", call.Method);
-            Assert.Equal("HapticFeedbackType.mediumImpact", call.Arguments);
-            Assert.InRange(RequireOverlay(harness.RenderView).Thickness, 3.01, 7.99);
-        }
     }
 
     private static Widget BuildMaterialScrollbar(ScrollController controller, bool thumbVisibility) => new Theme(

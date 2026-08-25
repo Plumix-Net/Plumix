@@ -119,6 +119,7 @@ internal static class SampleRoutes
     public const string CupertinoButton = "/cupertino-button";
     public const string CupertinoRadio = "/cupertino-radio";
     public const string CupertinoSlider = "/cupertino-slider";
+    public const string CupertinoScrollbar = "/cupertino-scrollbar";
     public const string CupertinoRefresh = "/cupertino-refresh";
     public const string CupertinoRoute = "/cupertino-route";
     public const string CupertinoActionSheet = "/cupertino-action-sheet";
@@ -335,6 +336,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Slider (Cupertino)",
             "continuous/discrete values + min-max ranges + active/thumb colors + LTR/RTL drag",
             () => new CupertinoSliderDemoPage()),
+        new(
+            SampleRoutes.CupertinoScrollbar,
+            "Scrollbar (Cupertino)",
+            "fading thumb + press-and-hold resize + left rail orientation + dynamic thumb color",
+            () => new CupertinoScrollbarDemoPage()),
         new(
             SampleRoutes.CupertinoTheme,
             "Theme + dynamic colors",

@@ -7,13 +7,35 @@ namespace Plumix.Cupertino;
 
 // Dart parity source: cupertino_ui/lib/src/scrollbar.dart
 
-public sealed class CupertinoScrollbar : StatelessWidget
+/// <summary>An iOS style scrollbar.</summary>
+/// <remarks>
+/// To add a scrollbar to a scroll view, wrap the scroll view widget in a
+/// <see cref="CupertinoScrollbar"/>. When dragging the thumb, the thickness and radius animate from
+/// <see cref="RawScrollbar.Thickness"/> and <see cref="RawScrollbar.Radius"/> to
+/// <see cref="ThicknessWhileDragging"/> and <see cref="RadiusWhileDragging"/>.
+/// </remarks>
+public sealed class CupertinoScrollbar : RawScrollbar
 {
-    public const double DefaultThickness = 3;
-    public const double DefaultThicknessWhileDragging = 8;
-    public const double DefaultRadius = 1.5;
-    public const double DefaultRadiusWhileDragging = 4;
+    // All values eyeballed.
+    private const double KScrollbarMinLength = 36.0;
+    private const double KScrollbarMinOverscrollLength = 8.0;
 
+    // This is the amount of space from the top of a vertical scrollbar to the top edge of the
+    // scrollable, measured when the vertical scrollbar overscrolls to the top.
+    private const double KScrollbarMainAxisMargin = 3.0;
+    private const double KScrollbarCrossAxisMargin = 3.0;
+
+    private static readonly TimeSpan KScrollbarTimeToFade = TimeSpan.FromMilliseconds(1200);
+    private static readonly TimeSpan KScrollbarFadeDuration = TimeSpan.FromMilliseconds(250);
+    private static readonly TimeSpan KScrollbarResizeDuration = TimeSpan.FromMilliseconds(100);
+    private static readonly TimeSpan KScrollbarPressDuration = TimeSpan.FromMilliseconds(100);
+
+    // Extracted from iOS 13.1 beta using Debug View Hierarchy.
+    internal static readonly CupertinoDynamicColor KScrollbarColor = CupertinoDynamicColor.WithBrightness(
+        color: Color.FromArgb(0x59, 0x00, 0x00, 0x00),
+        darkColor: Color.FromArgb(0x80, 0xFF, 0xFF, 0xFF));
+
+    /// <summary>Creates an iOS style scrollbar that wraps the given <paramref name="child"/>.</summary>
     public CupertinoScrollbar(
         Widget child,
         ScrollController? controller = null,
@@ -24,148 +46,98 @@ public sealed class CupertinoScrollbar : StatelessWidget
         double radiusWhileDragging = DefaultRadiusWhileDragging,
         ScrollNotificationPredicate? notificationPredicate = null,
         ScrollbarOrientation? scrollbarOrientation = null,
-        double mainAxisMargin = 3,
-        Key? key = null) : base(key)
+        double mainAxisMargin = KScrollbarMainAxisMargin,
+        Key? key = null) : base(
+        child: child,
+        controller: controller,
+        thumbVisibility: thumbVisibility ?? false,
+        radius: radius,
+        thickness: thickness,
+        minThumbLength: KScrollbarMinLength,
+        minOverscrollLength: KScrollbarMinOverscrollLength,
+        fadeDuration: KScrollbarFadeDuration,
+        timeToFade: KScrollbarTimeToFade,
+        pressDuration: KScrollbarPressDuration,
+        notificationPredicate: notificationPredicate ?? DefaultScrollNotificationPredicate,
+        scrollbarOrientation: scrollbarOrientation,
+        mainAxisMargin: mainAxisMargin,
+        crossAxisMargin: KScrollbarCrossAxisMargin,
+        key: key)
     {
-        ValidatePositive(nameof(thickness), thickness);
-        ValidatePositive(nameof(thicknessWhileDragging), thicknessWhileDragging);
-        ValidateNonNegative(nameof(radius), radius);
-        ValidateNonNegative(nameof(radiusWhileDragging), radiusWhileDragging);
-        ValidateNonNegative(nameof(mainAxisMargin), mainAxisMargin);
-        Child = child ?? throw new ArgumentNullException(nameof(child));
-        Controller = controller;
-        ThumbVisibility = thumbVisibility;
-        Thickness = thickness;
-        ThicknessWhileDragging = thicknessWhileDragging;
-        Radius = radius;
-        RadiusWhileDragging = radiusWhileDragging;
-        NotificationPredicate = notificationPredicate;
-        ScrollbarOrientation = scrollbarOrientation;
-        MainAxisMargin = mainAxisMargin;
-    }
-
-    public Widget Child { get; }
-    public ScrollController? Controller { get; }
-    public bool? ThumbVisibility { get; }
-    public double Thickness { get; }
-    public double ThicknessWhileDragging { get; }
-    public double Radius { get; }
-    public double RadiusWhileDragging { get; }
-    public ScrollNotificationPredicate? NotificationPredicate { get; }
-    public ScrollbarOrientation? ScrollbarOrientation { get; }
-    public double MainAxisMargin { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        PlatformBrightness brightness = MediaQuery.MaybeOf(context)?.PlatformBrightness
-                                        ?? PlatformBrightness.Light;
-        Color thumbColor = brightness == PlatformBrightness.Dark
-            ? Color.FromArgb(0x80, 0xFF, 0xFF, 0xFF)
-            : Color.FromArgb(0x59, 0, 0, 0);
-        return new _CupertinoScrollbar(
-            child: Child,
-            controller: Controller,
-            thumbVisibility: ThumbVisibility ?? false,
-            thickness: Thickness,
-            thicknessWhileDragging: ThicknessWhileDragging,
-            radius: Radius,
-            radiusWhileDragging: RadiusWhileDragging,
-            thumbColor: thumbColor,
-            notificationPredicate: NotificationPredicate,
-            scrollbarOrientation: ScrollbarOrientation,
-            mainAxisMargin: MainAxisMargin);
-    }
-
-    private sealed class _CupertinoScrollbar : RawScrollbar
-    {
-        public _CupertinoScrollbar(
-            Widget child,
-            ScrollController? controller,
-            bool thumbVisibility,
-            double thickness,
-            double thicknessWhileDragging,
-            double radius,
-            double radiusWhileDragging,
-            Color thumbColor,
-            ScrollNotificationPredicate? notificationPredicate,
-            ScrollbarOrientation? scrollbarOrientation,
-            double mainAxisMargin) : base(
-            child: child,
-            controller: controller,
-            thumbVisibility: thumbVisibility,
-            shape: null,
-            radius: null,
-            thickness: null,
-            thumbColor: thumbColor,
-            minThumbLength: 36,
-            minOverscrollLength: 8,
-            trackVisibility: false,
-            trackRadius: null,
-            trackColor: null,
-            trackBorderColor: null,
-            fadeDuration: TimeSpan.FromMilliseconds(250),
-            timeToFade: TimeSpan.FromMilliseconds(1200),
-            pressDuration: TimeSpan.FromMilliseconds(100),
-            notificationPredicate: notificationPredicate,
-            interactive: true,
-            scrollbarOrientation: scrollbarOrientation,
-            mainAxisMargin: mainAxisMargin,
-            crossAxisMargin: 3,
-            padding: null,
-            thumbColorResolver: null,
-            trackColorResolver: null,
-            trackBorderColorResolver: null,
-            thicknessResolver: null,
-            radiusResolver: null,
-            thumbVisibilityResolver: null,
-            trackVisibilityResolver: null,
-            trackTapEnabled: false,
-            interactionChanged: null)
+        if (!double.IsFinite(thicknessWhileDragging) || thicknessWhileDragging <= 0)
         {
-            IdleThickness = thickness;
-            DragThickness = thicknessWhileDragging;
-            IdleRadius = radius;
-            DragRadius = radiusWhileDragging;
+            throw new ArgumentOutOfRangeException(nameof(thicknessWhileDragging));
         }
 
-        public double IdleThickness { get; }
+        if (!double.IsFinite(radiusWhileDragging) || radiusWhileDragging < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(radiusWhileDragging));
+        }
 
-        public double DragThickness { get; }
-
-        public double IdleRadius { get; }
-
-        public double DragRadius { get; }
-
-        public override State CreateState() => new _CupertinoScrollbarState();
+        ThicknessWhileDragging = thicknessWhileDragging;
+        RadiusWhileDragging = radiusWhileDragging;
     }
 
-    private sealed class _CupertinoScrollbarState : RawScrollbarState<_CupertinoScrollbar>
+    /// <summary>Default value for <see cref="RawScrollbar.Thickness"/>.</summary>
+    public const double DefaultThickness = 3;
+
+    /// <summary>Default value for <see cref="ThicknessWhileDragging"/>.</summary>
+    public const double DefaultThicknessWhileDragging = 8.0;
+
+    /// <summary>Default value for <see cref="RawScrollbar.Radius"/>.</summary>
+    public const double DefaultRadius = 1.5;
+
+    /// <summary>Default value for <see cref="RadiusWhileDragging"/>.</summary>
+    public const double DefaultRadiusWhileDragging = 4.0;
+
+    /// <summary>The thickness of the scrollbar while it is being dragged by the user.</summary>
+    public double ThicknessWhileDragging { get; }
+
+    /// <summary>The radius of the scrollbar edges while it is being dragged by the user.</summary>
+    public double RadiusWhileDragging { get; }
+
+    public override State CreateState() => new CupertinoScrollbarState();
+
+    private sealed class CupertinoScrollbarState : RawScrollbarState<CupertinoScrollbar>
     {
-        private AnimationController _resizeController = null!;
+        private AnimationController _thicknessAnimationController = null!;
+
+        private double Thickness =>
+            CurrentWidget.Thickness!.Value +
+            (_thicknessAnimationController.Evaluate() *
+             (CurrentWidget.ThicknessWhileDragging - CurrentWidget.Thickness!.Value));
+
+        private double Radius =>
+            CurrentWidget.Radius!.Value +
+            (_thicknessAnimationController.Evaluate() *
+             (CurrentWidget.RadiusWhileDragging - CurrentWidget.Radius!.Value));
 
         public override void InitState()
         {
             base.InitState();
-            _resizeController = new AnimationController(duration: TimeSpan.FromMilliseconds(100), vsync: this);
-            _resizeController.Changed += HandleResizeChanged;
+            _thicknessAnimationController = new AnimationController(
+                duration: KScrollbarResizeDuration,
+                vsync: this);
+            _thicknessAnimationController.Changed += UpdateScrollbarPainter;
         }
 
         public override void Dispose()
         {
-            _resizeController.Changed -= HandleResizeChanged;
-            _resizeController.Dispose();
+            _thicknessAnimationController.Changed -= UpdateScrollbarPainter;
+            _thicknessAnimationController.Dispose();
             base.Dispose();
         }
 
-        protected override double ResolveThickness(ScrollbarInteractionState states)
-        {
-            return Lerp(CurrentWidget.IdleThickness, CurrentWidget.DragThickness, _resizeController.Evaluate());
-        }
+        protected override double ResolveThickness(ScrollbarInteractionState states) => Thickness;
 
-        protected override double ResolveRadius(ScrollbarInteractionState states)
-        {
-            return Lerp(CurrentWidget.IdleRadius, CurrentWidget.DragRadius, _resizeController.Evaluate());
-        }
+        protected override double ResolveRadius(ScrollbarInteractionState states) => Radius;
+
+        protected override Color ResolveThumbColor(ScrollbarInteractionState states) =>
+            CupertinoDynamicColor.Resolve(KScrollbarColor, Context);
+
+        // On iOS, tapping the track does not page towards the position of the tap.
+        protected override bool ResolveTrackTapEnabled() =>
+            ScrollConfiguration.Of(Context).GetPlatform(Context) != TargetPlatform.IOS;
 
         protected override void InteractionStateChanged(
             ScrollbarInteractionState oldValue,
@@ -181,48 +153,31 @@ public sealed class CupertinoScrollbar : StatelessWidget
 
             if (isDragged)
             {
-                HapticFeedback.MediumImpact();
-                global::Plumix.Scheduler.AddPostFrameCallback(_ =>
-                {
-                    if (Mounted && IsDragged)
-                    {
-                        _resizeController.Forward(0);
-                    }
-                });
+                // HandleThumbPress: grow to the dragging thickness, then buzz once.
+                _thicknessAnimationController.Forward(0).WhenComplete(() => HapticFeedback.MediumImpact());
             }
             else
             {
-                _resizeController.Reverse();
+                // HandleThumbPressEnd: shrink back before the drag is handed to the scroll position.
+                _thicknessAnimationController.Reverse();
             }
         }
 
         protected override void ThumbDragEnded(bool didDrag, double primaryVelocity)
         {
             base.ThumbDragEnded(didDrag, primaryVelocity);
-            if (didDrag && Math.Abs(primaryVelocity) < 10)
+            if (LastPointerAxisOffset != ThumbPressStartAxisOffset && Math.Abs(primaryVelocity) < 10)
             {
                 HapticFeedback.MediumImpact();
             }
         }
 
-        private void HandleResizeChanged()
+        private void UpdateScrollbarPainter()
         {
             if (Mounted)
             {
                 SetState(() => { });
             }
         }
-
-        private static double Lerp(double a, double b, double t) => a + ((b - a) * t);
-    }
-
-    private static void ValidatePositive(string name, double value)
-    {
-        if (!double.IsFinite(value) || value <= 0) throw new ArgumentOutOfRangeException(name);
-    }
-
-    private static void ValidateNonNegative(string name, double value)
-    {
-        if (!double.IsFinite(value) || value < 0) throw new ArgumentOutOfRangeException(name);
     }
 }
