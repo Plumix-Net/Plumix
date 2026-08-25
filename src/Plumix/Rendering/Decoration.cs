@@ -264,6 +264,20 @@ public readonly record struct BorderRadius
         return new BorderRadius(topLeft, topRight, bottomRight, bottomLeft);
     }
 
+    /// <summary>Dart's `BorderRadius.copyWith`: replaces only the corners that are supplied.</summary>
+    public BorderRadius CopyWith(
+        Radius? topLeft = null,
+        Radius? topRight = null,
+        Radius? bottomRight = null,
+        Radius? bottomLeft = null)
+    {
+        return new BorderRadius(
+            topLeft ?? TopLeftRadius,
+            topRight ?? TopRightRadius,
+            bottomRight ?? BottomRightRadius,
+            bottomLeft ?? BottomLeftRadius);
+    }
+
     public Plumix.UI.RRect ToRRect(Avalonia.Rect rect) => Plumix.UI.RRect.FromRectAndCorners(rect, this);
 
     public static BorderRadius operator *(BorderRadius radius, double factor)

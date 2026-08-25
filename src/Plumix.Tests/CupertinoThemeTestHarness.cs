@@ -63,6 +63,15 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         return result;
     }
 
+    /// <summary>The render object of the first widget of the given type, like Dart's `find.byType`.</summary>
+    public RenderObject FindRenderObject<T>() where T : Widget
+    {
+        Element host = FindElement(_root, element => element.Widget is T)
+                       ?? throw new InvalidOperationException($"Widget {typeof(T).Name} was not found.");
+        return FirstRenderObject(host)
+               ?? throw new InvalidOperationException($"Widget {typeof(T).Name} has no render object.");
+    }
+
     public T FindState<T>() where T : State
     {
         T? result = null;
@@ -80,6 +89,30 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         }
 
         element.VisitChildren(child => Visit(child, result));
+    }
+
+    private static Element? FindElement(Element element, Func<Element, bool> predicate)
+    {
+        if (predicate(element))
+        {
+            return element;
+        }
+
+        Element? found = null;
+        element.VisitChildren(child => found ??= FindElement(child, predicate));
+        return found;
+    }
+
+    private static RenderObject? FirstRenderObject(Element element)
+    {
+        if (element.RenderObject is { } renderObject)
+        {
+            return renderObject;
+        }
+
+        RenderObject? found = null;
+        element.VisitChildren(child => found ??= FirstRenderObject(child));
+        return found;
     }
 
     private static void VisitStates(Element element, Action<State> visitor)

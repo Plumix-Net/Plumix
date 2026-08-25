@@ -120,6 +120,7 @@ internal static class SampleRoutes
     public const string CupertinoRadio = "/cupertino-radio";
     public const string CupertinoRefresh = "/cupertino-refresh";
     public const string CupertinoRoute = "/cupertino-route";
+    public const string CupertinoActionSheet = "/cupertino-action-sheet";
     public const string ProxyWidgets = "/proxy-widgets";
     public const string Align = "/align";
     public const string Stack = "/stack";
@@ -368,6 +369,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Routes + tab view",
             "page transitions + independent tab history + popup",
             () => new CupertinoRouteDemoPage()),
+        new(
+            SampleRoutes.CupertinoActionSheet,
+            "Action sheet",
+            "title/message + hairline actions + detached cancel + slide-to-select",
+            () => new CupertinoActionSheetDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleRouteDefinition> GeneralDemoPages =

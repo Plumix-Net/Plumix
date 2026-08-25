@@ -125,6 +125,7 @@ import 'demos/general/stack_demo_page.dart';
 import 'demos/general/state_storage_demo_page.dart';
 import 'demos/general/stateful_builder_lookup_boundary_demo_page.dart';
 import 'demos/general/navigation_pop_demo_page.dart';
+import 'demos/cupertino/action_sheet_demo_page.dart';
 import 'demos/cupertino/route_demo_page.dart';
 import 'demos/cupertino/switch_demo_page.dart';
 import 'demos/cupertino/theme_demo_page.dart';
@@ -620,6 +621,13 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Routes + tab view',
       subtitle: 'page transitions + independent tab history + popup',
       builder: () => const CupertinoRouteDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoActionSheet,
+      title: 'Action sheet',
+      subtitle:
+          'title/message + hairline actions + detached cancel + slide-to-select',
+      builder: () => const CupertinoActionSheetDemoPage(),
     ),
   ];
 

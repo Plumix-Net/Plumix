@@ -11,7 +11,7 @@ namespace Plumix.Cupertino;
 
 // Dart parity source: cupertino_ui/lib/src/dialog.dart
 
-/// <summary>The file-level constants of Dart's `cupertino/dialog.dart` (dialog family only).</summary>
+/// <summary>The file-level constants of Dart's `cupertino/dialog.dart` (dialogs and action sheets).</summary>
 internal static class CupertinoDialogConstants
 {
     public static readonly TextStyle TitleStyle = new(
@@ -39,6 +39,23 @@ internal static class CupertinoDialogConstants
         FontWeight: FontWeight.Normal,
         TextBaseline: TextBaseline.Alphabetic);
 
+    /// <summary>Dart's `_kActionSheetActionStyle`: the base style of an action sheet button label.</summary>
+    public static readonly TextStyle ActionSheetActionStyle = new(
+        FontFamily: new FontFamily("CupertinoSystemDisplay"),
+        Inherit: false,
+        FontSize: 17.0,
+        FontWeight: FontWeight.Normal,
+        TextBaseline: TextBaseline.Alphabetic);
+
+    /// <summary>Dart's `_kActionSheetContentStyle`: the base style of the title/message section.</summary>
+    public static readonly TextStyle ActionSheetContentStyle = new(
+        FontFamily: new FontFamily("CupertinoSystemText"),
+        Inherit: false,
+        FontSize: 13.0,
+        FontWeight: FontWeight.Normal,
+        TextBaseline: TextBaseline.Alphabetic);
+
+    public const double CornerRadius = 14.0;
     public const double DividerThickness = 0.3;
     public const double DialogWidth = 270.0;
     public const double AccessibilityDialogWidth = 310.0;
@@ -48,6 +65,18 @@ internal static class CupertinoDialogConstants
     public const double ActionsSectionMinHeight = 67.8;
     public const double MaxRegularTextScaleFactor = 1.4;
 
+    public const double ActionSheetEdgePadding = 8.0;
+    public const double ActionSheetCancelButtonPadding = 8.0;
+    public const double ActionSheetContentHorizontalPadding = 16.0;
+    public const double ActionSheetContentVerticalPadding = 13.5;
+    public const double ActionSheetActionsSectionMinHeight = 84.0;
+    public const double ActionSheetButtonHorizontalPadding = 10.0;
+
+    // The height of an action sheet button is proportional to the font size down to a minimum.
+    public const double ActionSheetButtonMinHeight = 57.17;
+    public const double ActionSheetButtonVerticalPaddingFactor = 0.4;
+    public const double ActionSheetButtonVerticalPaddingBase = 1.8;
+
     public static readonly CupertinoDynamicColor DialogColor = CupertinoDynamicColor.WithBrightness(
         Color.FromUInt32(0xCCF2F2F2),
         Color.FromUInt32(0xCC2D2D2D));
@@ -55,6 +84,36 @@ internal static class CupertinoDialogConstants
     public static readonly CupertinoDynamicColor DialogPressedColor = CupertinoDynamicColor.WithBrightness(
         Color.FromUInt32(0xFFE1E1E1),
         Color.FromUInt32(0xFF404040));
+
+    public static readonly CupertinoDynamicColor ActionSheetPressedColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0xCAE0E0E0),
+            Color.FromUInt32(0xC1515151));
+
+    public static readonly CupertinoDynamicColor ActionSheetCancelColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0xFFFFFFFF),
+            Color.FromUInt32(0xFF2C2C2C));
+
+    public static readonly CupertinoDynamicColor ActionSheetCancelPressedColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0xFFECECEC),
+            Color.FromUInt32(0xFF494949));
+
+    public static readonly CupertinoDynamicColor ActionSheetBackgroundColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0xC8FCFCFC),
+            Color.FromUInt32(0xBE292929));
+
+    public static readonly CupertinoDynamicColor ActionSheetContentTextColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0x851D1D1D),
+            Color.FromUInt32(0x96F1F1F1));
+
+    public static readonly CupertinoDynamicColor ActionSheetButtonDividerColor =
+        CupertinoDynamicColor.WithBrightness(
+            Color.FromUInt32(0xD4C9C9C9),
+            Color.FromUInt32(0xD57D7D7D));
 
     /// <summary>Dart's `_isInAccessibilityMode`: effective text scale beyond 1.4 at 14 logical pixels.</summary>
     public static bool IsInAccessibilityMode(BuildContext context)
@@ -690,6 +749,7 @@ internal sealed class CupertinoAlertContentSection : StatelessWidget
         Thickness messagePadding,
         TextStyle titleTextStyle,
         TextStyle messageTextStyle,
+        Thickness? additionalPaddingBetweenTitleAndMessage = null,
         Key? key = null) : base(key)
     {
         Title = title;
@@ -699,6 +759,7 @@ internal sealed class CupertinoAlertContentSection : StatelessWidget
         MessagePadding = messagePadding;
         TitleTextStyle = titleTextStyle;
         MessageTextStyle = messageTextStyle;
+        AdditionalPaddingBetweenTitleAndMessage = additionalPaddingBetweenTitleAndMessage;
     }
 
     public Widget? Title { get; }
@@ -708,6 +769,9 @@ internal sealed class CupertinoAlertContentSection : StatelessWidget
     public Thickness MessagePadding { get; }
     public TextStyle TitleTextStyle { get; }
     public TextStyle MessageTextStyle { get; }
+
+    /// <summary>Extra spacing inserted between title and message; action sheets only.</summary>
+    public Thickness? AdditionalPaddingBetweenTitleAndMessage { get; }
 
     public override Widget Build(BuildContext context)
     {
@@ -731,6 +795,11 @@ internal sealed class CupertinoAlertContentSection : StatelessWidget
             titleContentGroup.Add(new Padding(
                 MessagePadding,
                 new DefaultTextStyle(MessageTextStyle, Message, textAlign: TextAlign.Center)));
+        }
+
+        if (AdditionalPaddingBetweenTitleAndMessage is { } additionalPadding && titleContentGroup.Count > 1)
+        {
+            titleContentGroup.Insert(1, new Padding(additionalPadding));
         }
 
         return new CupertinoScrollbar(

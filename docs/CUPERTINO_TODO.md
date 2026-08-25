@@ -61,7 +61,6 @@ None — every `cupertino_ui/lib/src/` control has at least a first-pass port; w
 
 | Dart file | Lines (Dart / C#) | Gap found | Size |
 | --- | --- | --- | --- |
-| `dialog.dart` | 2751 / 1210 | `CupertinoActionSheet`, `CupertinoActionSheetAction` missing | M |
 | `slider.dart`, `scrollbar.dart`, `magnifier.dart`, `text_selection_toolbar*.dart`, `desktop_text_selection_toolbar*.dart`, `spell_check_suggestions_toolbar.dart`, `adaptive_text_selection_toolbar.dart` | — | No missing public types; not re-verified member-by-member in this pass — diff against Dart when you touch them | — |
 
 ## Not listed / out of scope
