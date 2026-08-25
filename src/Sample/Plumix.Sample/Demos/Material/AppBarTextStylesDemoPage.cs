@@ -125,7 +125,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
                     ToolbarTextStyle: _themeToolbarStyleEnabled ? ThemeToolbarStyle : null),
             },
             child: new AppBar(
-                titleText: "Theme text styles",
+                title: new Text("Theme text styles"),
                 titleTextStyle: _widgetTitleOverrideEnabled ? WidgetTitleStyle : null,
                 toolbarTextStyle: _widgetToolbarOverrideEnabled ? WidgetToolbarStyle : null,
                 actions:
@@ -138,7 +138,7 @@ internal sealed class AppBarTextStylesDemoPageState : State
     private Widget BuildDefaultReferencePreview()
     {
         return new AppBar(
-            titleText: "Default text styles",
+            title: new Text("Default text styles"),
             backgroundColor: AppBarBackground,
             foregroundColor: _foregroundColor,
             actions:

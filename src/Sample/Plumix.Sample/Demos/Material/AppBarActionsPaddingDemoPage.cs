@@ -95,7 +95,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                     ActionsPadding: _themeActionsPadding),
             },
             child: new AppBar(
-                titleText: "Theme actions padding",
+                title: new Text("Theme actions padding"),
                 actionsPadding: _useWidgetOverride ? _widgetActionsPadding : null,
                 actions:
                 [
@@ -107,7 +107,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
     private Widget BuildDefaultReferencePreview()
     {
         return new AppBar(
-            titleText: "Default actions padding",
+            title: new Text("Default actions padding"),
             backgroundColor: Color.Parse("#FF1E3A5F"),
             foregroundColor: Colors.White,
             actions:
@@ -130,7 +130,7 @@ internal sealed class AppBarActionsPaddingDemoPageState : State
                     children:
                     [
                         new AppBar(
-                            titleText: "Scrolled-under state",
+                            title: new Text("Scrolled-under state"),
                             backgroundColor: background,
                             scrolledUnderElevation: 3,
                             animateColor: true),

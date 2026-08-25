@@ -330,6 +330,43 @@ public sealed class CupertinoPickerTests : IDisposable
     }
 
     [Fact]
+    public void TappingAChildAndUnmountingBeforeTheAnimationSettlesDoesNotThrow()
+    {
+        // `_handleTap`'s continuation reads `SelectedItem`, which throws once the scroll view has
+        // detached. Dart's continuation is protected by the widget lifetime; C#'s `async void` is not, so
+        // the state guards on `Mounted` before touching the controller again.
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
+        var controller = new FixedExtentScrollController();
+        double clock;
+
+        using (var harness = new CupertinoThemeTestHarness(Wrap(new CupertinoPicker(
+                   50.0,
+                   _ => { },
+                   [new Text("0"), new Text("1"), new Text("2"), new Text("3")],
+                   scrollController: controller))))
+        {
+            harness.Pump(ViewSize);
+            GestureDetector[] tappableChildren = harness.FindWidgets<GestureDetector>()
+                .Where(detector => detector.Behavior == HitTestBehavior.Translucent
+                                   && detector.ExcludeFromSemantics
+                                   && detector.OnTap is not null)
+                .ToArray();
+            Assert.True(tappableChildren.Length >= 3);
+
+            clock = Scheduler.CurrentSeconds;
+            tappableChildren[2].OnTap!.Invoke();
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.01));
+            harness.Pump(ViewSize);
+        }
+
+        // The picker is unmounted mid-animation; draining the remaining frames must not fault.
+        controller.Dispose();
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.35));
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 1.0));
+    }
+
+    [Fact]
     public void IOSScrollTriggersSelectionFeedbackButOtherPlatformsDoNot()
     {
         using var platform = new MockMethodCallHandler(SystemChannels.Platform);

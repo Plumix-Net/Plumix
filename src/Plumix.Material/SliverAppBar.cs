@@ -26,7 +26,7 @@ public sealed class SliverAppBar : StatefulWidget
         IReadOnlyList<Widget>? actions = null,
         bool automaticallyImplyActions = true,
         Widget? flexibleSpace = null,
-        Widget? bottom = null,
+        IPreferredSizeWidget? bottom = null,
         double? elevation = null,
         double? scrolledUnderElevation = null,
         Color? shadowColor = null,
@@ -78,7 +78,7 @@ public sealed class SliverAppBar : StatefulWidget
         IReadOnlyList<Widget>? actions,
         bool automaticallyImplyActions,
         Widget? flexibleSpace,
-        Widget? bottom,
+        IPreferredSizeWidget? bottom,
         double? elevation,
         double? scrolledUnderElevation,
         Color? shadowColor,
@@ -173,7 +173,7 @@ public sealed class SliverAppBar : StatefulWidget
         IReadOnlyList<Widget>? actions = null,
         bool automaticallyImplyActions = true,
         Widget? flexibleSpace = null,
-        Widget? bottom = null,
+        IPreferredSizeWidget? bottom = null,
         double? elevation = null,
         double? scrolledUnderElevation = null,
         Color? shadowColor = null,
@@ -221,7 +221,7 @@ public sealed class SliverAppBar : StatefulWidget
         IReadOnlyList<Widget>? actions = null,
         bool automaticallyImplyActions = true,
         Widget? flexibleSpace = null,
-        Widget? bottom = null,
+        IPreferredSizeWidget? bottom = null,
         double? elevation = null,
         double? scrolledUnderElevation = null,
         Color? shadowColor = null,
@@ -270,7 +270,7 @@ public sealed class SliverAppBar : StatefulWidget
     public IReadOnlyList<Widget> Actions { get; }
     public bool AutomaticallyImplyActions { get; }
     public Widget? FlexibleSpace { get; }
-    public Widget? Bottom { get; }
+    public IPreferredSizeWidget? Bottom { get; }
     public double? Elevation { get; }
     public double? ScrolledUnderElevation { get; }
     public Color? ShadowColor { get; }
@@ -342,7 +342,7 @@ internal sealed class SliverAppBarState : State
     public override Widget Build(BuildContext context)
     {
         var widget = CurrentWidget;
-        double bottomHeight = widget.Bottom is IPreferredSizeWidget preferred ? preferred.PreferredSize.Height : 0;
+        double bottomHeight = widget.Bottom?.PreferredSize.Height ?? 0.0;
         double topPadding = widget.Primary ? MediaQuery.MaybePaddingOf(context)?.Top ?? 0 : 0;
         double collapsedHeight = widget.Pinned && widget.Floating && widget.Bottom is not null
             ? (widget.CollapsedHeight ?? 0) + bottomHeight + topPadding

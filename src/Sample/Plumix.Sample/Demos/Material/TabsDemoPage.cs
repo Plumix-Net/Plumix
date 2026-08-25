@@ -113,7 +113,7 @@ internal sealed class TabsDemoPageState : State
                         new Expanded(
                             child: new Scaffold(
                                 appBar: new AppBar(
-                                    titleText: "Tabs preview",
+                                    title: new Text("Tabs preview"),
                                     automaticallyImplyLeading: false,
                                     bottom: _isPrimary
                                         ? new TabBar(

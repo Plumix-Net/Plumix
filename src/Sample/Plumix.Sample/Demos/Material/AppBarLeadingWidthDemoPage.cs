@@ -87,7 +87,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
                 ForegroundColor: Colors.White,
                 LeadingWidth: _themeLeadingWidth),
             child: new AppBar(
-                titleText: "Theme leading width",
+                title: new Text("Theme leading width"),
                 leadingWidth: _useWidgetOverride ? _widgetLeadingWidth : null,
                 leading: BuildLeadingProbe(),
                 actions:
@@ -99,7 +99,7 @@ internal sealed class AppBarLeadingWidthDemoPageState : State
     private Widget BuildDefaultReferencePreview()
     {
         return new AppBar(
-            titleText: "Default leading width",
+            title: new Text("Default leading width"),
             backgroundColor: Color.Parse("#FF1E3A5F"),
             foregroundColor: Colors.White,
             leading: BuildLeadingProbe(),

@@ -359,6 +359,15 @@ public sealed class CupertinoPicker : StatefulWidget
                 index,
                 TapToScrollDuration,
                 Curves.EaseInOut);
+
+            // Dart's `_CupertinoPickerState._handleTap` continuation is protected by the widget lifetime;
+            // C#'s `async void` continuation can outlive the picker, and reading `SelectedItem` after the
+            // scroll view detached would throw into an unobserved task.
+            if (!Mounted || !EffectiveController.HasClients)
+            {
+                return;
+            }
+
             _enableHapticFeedback = true;
             _lastHapticIndex = EffectiveController.SelectedItem;
         }

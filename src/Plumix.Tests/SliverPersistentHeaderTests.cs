@@ -428,7 +428,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
         bool expectsStretchConfiguration)
     {
         using var harness = new SliverHarness(new SliverAppBar(
-            titleText: "Title",
+            title: new Text("Title"),
             floating: floating,
             snap: snap,
             stretch: stretch));
@@ -461,7 +461,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
     public void SliverAppBar_ForwardsTheStretchTriggerToTheHeader()
     {
         using var harness = new SliverHarness(new SliverAppBar(
-            titleText: "Title",
+            title: new Text("Title"),
             stretch: true,
             stretchTriggerOffset: 42));
         harness.Pump();

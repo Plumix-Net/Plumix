@@ -195,7 +195,6 @@ type Ui private () =
 
     static member appBar
         (
-            ?titleText: string,
             ?title: Widget,
             ?leading: Widget,
             ?actions: Widget seq,
@@ -203,7 +202,6 @@ type Ui private () =
             ?key: Key
         ) : AppBar =
         AppBar(
-            titleText = obj' titleText,
             title = obj' title,
             leading = obj' leading,
             actions = widgetsOpt actions,

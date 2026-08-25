@@ -36,7 +36,7 @@ let update msg model =
 
 let view model dispatch =
     Ui.scaffold (
-        appBar = Ui.appBar (titleText = "Plumix + F# + Elmish"),
+        appBar = Ui.appBar (title = Ui.text "Plumix + F# + Elmish"),
         body =
             Ui.center (
                 Ui.column (

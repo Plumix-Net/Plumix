@@ -14,15 +14,24 @@ public sealed record SystemUiOverlayStyle(
     Color? StatusBarColor = null,
     Color? NavigationBarColor = null,
     SystemUiIconBrightness? StatusBarIconBrightness = null,
-    SystemUiIconBrightness? NavigationBarIconBrightness = null)
+    SystemUiIconBrightness? NavigationBarIconBrightness = null,
+    SystemUiIconBrightness? StatusBarBrightness = null)
 {
+    /// <summary>
+    /// System overlays drawn in a light color, for applications with a dark background. Dart types
+    /// <c>statusBarBrightness</c> as <c>Brightness</c>; the two enums carry the same two values, and
+    /// <c>Brightness</c> lives in <c>Plumix.Material</c>, which core may not reference.
+    /// </summary>
     public static SystemUiOverlayStyle Light { get; } = new(
         StatusBarIconBrightness: SystemUiIconBrightness.Light,
-        NavigationBarIconBrightness: SystemUiIconBrightness.Light);
+        NavigationBarIconBrightness: SystemUiIconBrightness.Light,
+        StatusBarBrightness: SystemUiIconBrightness.Dark);
 
+    /// <summary>System overlays drawn in a dark color, for applications with a light background.</summary>
     public static SystemUiOverlayStyle Dark { get; } = new(
         StatusBarIconBrightness: SystemUiIconBrightness.Dark,
-        NavigationBarIconBrightness: SystemUiIconBrightness.Dark);
+        NavigationBarIconBrightness: SystemUiIconBrightness.Dark,
+        StatusBarBrightness: SystemUiIconBrightness.Light);
 }
 
 public sealed record ApplicationSwitcherDescription(

@@ -113,7 +113,7 @@ internal sealed class AppBarIconThemeDemoPageState : State
                     ActionsIconTheme: _themeActionsIconEnabled ? new IconThemeData(Color: ThemeActionsIconColor, Size: 16) : null),
             },
             child: new AppBar(
-                titleText: "Theme icon chain",
+                title: new Text("Theme icon chain"),
                 iconTheme: _widgetIconOverrideEnabled ? new IconThemeData(Color: WidgetIconColor, Size: 20) : null,
                 actionsIconTheme: _widgetActionsIconOverrideEnabled ? new IconThemeData(Color: WidgetActionsIconColor, Size: 22) : null,
                 leading: new Icon(Icons.Menu),
@@ -127,7 +127,7 @@ internal sealed class AppBarIconThemeDemoPageState : State
     private Widget BuildDefaultReferencePreview()
     {
         return new AppBar(
-            titleText: "Default icon chain",
+            title: new Text("Default icon chain"),
             backgroundColor: AppBarBackground,
             foregroundColor: _foregroundColor,
             leading: new Icon(Icons.Menu),

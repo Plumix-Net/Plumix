@@ -98,7 +98,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                             Border: Plumix.Rendering.Border.FromBorderSide(
                                 new BorderSide(Color.Parse("#FFD6DEEA"), 1))),
                         child: new Scaffold(
-                            appBar: new AppBar(titleText: "Slots preview"),
+                            appBar: new AppBar(title: new Text("Slots preview")),
                             extendBody: _extendBody,
                             extendBodyBehindAppBar: _extendBodyBehindAppBar,
                             drawer: BuildDrawerPanel(isStartDrawer: true),

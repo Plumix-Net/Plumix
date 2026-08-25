@@ -8,6 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: strict `AppBar` port in its own `AppBar.cs` — toolbar container, title box, M2/M3 defaults (`app_bar.dart`).
+- Breaking: `AppBar` drops the non-Dart `titleText`/`padding`; `bottom` is `IPreferredSizeWidget?`; `Bottom`/`SliverAppBar.Bottom` follow.
+- Breaking: `Scaffold.body` is optional and `Scaffold.appBar` takes any `IPreferredSizeWidget` (`scaffold.dart`).
+- Added `ScaffoldState.HasAppBar`/`AppBarMaxHeight`, `Scaffold.HasDrawerOf`, and `AppBar.PreferredAppBarSize`.
+- Added `SystemUiOverlayStyle.StatusBarBrightness`, which the app bar derives from its background (`system_chrome.dart`).
+- `CupertinoPicker.HandleChildTap` guards its post-animation continuation on `Mounted` (`picker.dart`).
 - Breaking: ported `GlobalMaterialLocalizations` with all 119 locale bundles (`global_material_localizations.dart`).
 - Breaking: `MaterialLocalizations` matches Dart's member set — 1-based `TabLabel`, `TimePickerHourLabel`.
 - Added `DateFormat.Parse`/`ParseStrict` and `NumberFormat(pattern, locale)` to the intl subset (`date_format.dart`).

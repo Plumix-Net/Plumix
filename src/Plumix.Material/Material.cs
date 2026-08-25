@@ -14,6 +14,10 @@ public static class MaterialConstants
 {
     public static readonly TimeSpan ThemeAnimationDuration = TimeSpan.FromMilliseconds(200);
 
+    // Mirrors Flutter's `kToolbarHeight` from `material/constants.dart`.
+    /// <summary>The height of a Material Design toolbar (an <see cref="AppBar"/> without its bottom).</summary>
+    public const double ToolbarHeight = 56.0;
+
     // Mirrors Flutter's `kTabScrollDuration` from `material/constants.dart`.
     /// <summary>The duration of a <see cref="TabController"/>'s index-change animation.</summary>
     public static readonly TimeSpan TabScrollDuration = TimeSpan.FromMilliseconds(300);

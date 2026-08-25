@@ -192,7 +192,7 @@ public sealed class MaterialScaffoldGeometryTests
     {
         BuildContext? plain = null;
         using var withAppBarBehind = new Harness(Wrap(new Scaffold(
-            appBar: new AppBar(titleText: "Demo"),
+            appBar: new AppBar(title: new Text("Demo")),
             extendBodyBehindAppBar: true,
             body: Capture(c => plain = c),
             floatingActionButtonLocation: FloatingActionButtonLocation.EndTop,
@@ -203,7 +203,7 @@ public sealed class MaterialScaffoldGeometryTests
 
         BuildContext? second = null;
         using var normal = new Harness(Wrap(new Scaffold(
-            appBar: new AppBar(titleText: "Demo"),
+            appBar: new AppBar(title: new Text("Demo")),
             body: Capture(c => second = c),
             floatingActionButtonLocation: FloatingActionButtonLocation.EndTop,
             floatingActionButton: new FloatingActionButton(child: new SizedBox(), onPressed: () => { }))));
@@ -217,7 +217,7 @@ public sealed class MaterialScaffoldGeometryTests
     public void ScaffoldLayout_ExtendBodyBehindAppBarPlacesTheBodyUnderTheAppBar()
     {
         using var extended = new Harness(Wrap(new Scaffold(
-            appBar: new AppBar(titleText: "Demo"),
+            appBar: new AppBar(title: new Text("Demo")),
             extendBodyBehindAppBar: true,
             body: new SizedBox())));
         extended.Pump(Viewport);
@@ -226,7 +226,7 @@ public sealed class MaterialScaffoldGeometryTests
             ((MultiChildLayoutParentData)extended.RequireSlot(ScaffoldSlot.Body).parentData!).offset.Y);
 
         using var normal = new Harness(Wrap(new Scaffold(
-            appBar: new AppBar(titleText: "Demo"),
+            appBar: new AppBar(title: new Text("Demo")),
             body: new SizedBox())));
         normal.Pump(Viewport);
         double appBarHeight = normal.RequireSlot(ScaffoldSlot.AppBar).Size.Height;
@@ -575,7 +575,7 @@ public sealed class MaterialScaffoldGeometryTests
             new Scaffold(
                 extendBodyBehindAppBar: extendBodyBehindAppBar,
                 appBar: hasAppBar
-                    ? new AppBar(titleText: "Title", toolbarHeight: 100)
+                    ? new AppBar(title: new Text("Title"), toolbarHeight: 100)
                     : null,
                 body: new Builder(context =>
                 {
@@ -597,7 +597,7 @@ public sealed class MaterialScaffoldGeometryTests
         Widget Build(bool extendBodyBehindAppBar) => Wrap(new Scaffold(
             key: scaffoldKey,
             extendBodyBehindAppBar: extendBodyBehindAppBar,
-            appBar: new AppBar(titleText: "Title"),
+            appBar: new AppBar(title: new Text("Title")),
             body: new ListView(
                 controller: controller,
                 children: [new SizedBox(height: 1200)])));

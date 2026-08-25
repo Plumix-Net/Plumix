@@ -700,7 +700,7 @@ internal sealed class SampleMenuPage : StatefulWidget
             var pages = selectedTab.Pages;
 
             return new Scaffold(
-                appBar: new AppBar(titleText: "Plumix.Sample widget pages"),
+                appBar: new AppBar(title: new Text("Plumix.Sample widget pages")),
                 body: new Container(
                     padding: new Thickness(16),
                     child: new Column(
@@ -789,7 +789,7 @@ internal sealed class SampleDemoPage : StatelessWidget
     public override Widget Build(BuildContext context)
     {
         return new Scaffold(
-            appBar: new AppBar(titleText: _title),
+            appBar: new AppBar(title: new Text(_title)),
             body: new Container(
                 padding: new Thickness(16),
                 child: new Column(

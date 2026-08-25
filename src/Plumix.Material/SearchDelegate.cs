@@ -78,7 +78,7 @@ public abstract class SearchDelegate<T> : IDisposable
 
     public virtual IReadOnlyList<Widget>? BuildActions(BuildContext context) => null;
 
-    public virtual Widget? BuildBottom(BuildContext context) => null;
+    public virtual IPreferredSizeWidget? BuildBottom(BuildContext context) => null;
 
     public virtual Widget? BuildFlexibleSpace(BuildContext context) => null;
 

@@ -274,7 +274,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: ThemeData.Light,
                 child: new Scaffold(
-                    appBar: new AppBar(titleText: "Root"),
+                    appBar: new AppBar(title: new Text("Root")),
                     drawer: new Drawer(
                         child: new SizedBox(width: 80, height: 40)),
                     body: new SizedBox(width: 24, height: 12))));
@@ -304,7 +304,7 @@ public sealed class MaterialScaffoldTests
                 data: ThemeData.Light,
                 child: new Scaffold(
                     appBar: new AppBar(
-                        titleText: "Root",
+                        title: new Text("Root"),
                         automaticallyImplyLeading: false),
                     drawer: new Drawer(
                         child: new SizedBox(width: 80, height: 40)),
@@ -327,7 +327,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: ThemeData.Light,
                 child: new Scaffold(
-                    appBar: new AppBar(titleText: "Root"),
+                    appBar: new AppBar(title: new Text("Root")),
                     endDrawer: new Drawer(
                         child: new SizedBox(width: 80, height: 40)),
                     body: new SizedBox(width: 24, height: 12))));
@@ -350,7 +350,7 @@ public sealed class MaterialScaffoldTests
                 data: ThemeData.Light,
                 child: new Scaffold(
                     appBar: new AppBar(
-                        titleText: "Root",
+                        title: new Text("Root"),
                         automaticallyImplyActions: false),
                     endDrawer: new Drawer(
                         child: new SizedBox(width: 80, height: 40)),
@@ -1882,7 +1882,7 @@ public sealed class MaterialScaffoldTests
                             rootRoute ??= ModalRoute.Of(context);
 
                             return new Scaffold(
-                                appBar: new AppBar(titleText: "Root"),
+                                appBar: new AppBar(title: new Text("Root")),
                                 drawer: new Drawer(child: new Text("Root drawer panel")),
                                 body: new CaptureBuildContextWidget(
                                     capture: captured => scaffoldContext = captured,
@@ -1945,7 +1945,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new Scaffold(
-                    appBar: new AppBar(titleText: "Demo"),
+                    appBar: new AppBar(title: new Text("Demo")),
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
@@ -1979,7 +1979,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new Scaffold(
-                    appBar: new AppBar(titleText: "Demo"),
+                    appBar: new AppBar(title: new Text("Demo")),
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
@@ -2016,7 +2016,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new Scaffold(
-                    appBar: new AppBar(titleText: "Demo"),
+                    appBar: new AppBar(title: new Text("Demo")),
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
@@ -2048,7 +2048,7 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Demo")));
+                child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -2079,7 +2079,7 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Demo")));
+                child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -2112,7 +2112,7 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Demo")));
+                child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -2129,35 +2129,15 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
-    public void AppBar_DefaultTitle_UsesSingleLineEllipsisDefaults()
+    public void AppBar_Title_InheritsSingleLineEllipsisFromTheDefaultTextStyle()
     {
-        var owner = new BuildOwner();
-        const string title = "Very long default app bar title";
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new AppBar(titleText: title)));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
-        var paragraph = FindParagraphByText(appBarBackground, title);
-        Assert.NotNull(paragraph);
-        Assert.False(paragraph!.SoftWrap);
-        Assert.Equal(1, paragraph.MaxLines);
-        Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
-    }
-
-    [Fact]
-    public void AppBar_DefaultTitle_EmptyString_IsRenderedAsText()
-    {
+        // Dart puts `softWrap: false, overflow: TextOverflow.ellipsis` on the title's DefaultTextStyle
+        // and leaves `maxLines` unset.
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
-                child: new AppBar(titleText: string.Empty)));
+                child: new AppBar(title: new Text(string.Empty))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -2167,7 +2147,7 @@ public sealed class MaterialScaffoldTests
         var paragraph = FindParagraphByText(appBarBackground, string.Empty);
         Assert.NotNull(paragraph);
         Assert.False(paragraph!.SoftWrap);
-        Assert.Equal(1, paragraph.MaxLines);
+        Assert.Null(paragraph.MaxLines);
         Assert.Equal(TextOverflow.Ellipsis, paragraph.Overflow);
     }
 
@@ -2184,7 +2164,7 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Demo")));
+                child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -2209,7 +2189,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Demo",
+                    title: new Text("Demo"),
                     backgroundColor: Colors.DarkOliveGreen)));
 
         root.Attach(owner);
@@ -2235,7 +2215,7 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Demo")));
+                child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -2260,7 +2240,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Demo",
+                    title: new Text("Demo"),
                     foregroundColor: Colors.CadetBlue)));
 
         root.Attach(owner);
@@ -2290,13 +2270,15 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Demo")));
+                child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.Equal(themedStyle, SystemChrome.CurrentSystemUiOverlayStyle);
+        Assert.Equal(
+            themedStyle,
+            Assert.Single(FindWidgets<AnnotatedRegion<SystemUiOverlayStyle>>(root.ChildElement)).Value);
     }
 
     [Fact]
@@ -2322,14 +2304,16 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Demo",
+                    title: new Text("Demo"),
                     systemOverlayStyle: widgetStyle)));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.Equal(widgetStyle, SystemChrome.CurrentSystemUiOverlayStyle);
+        Assert.Equal(
+            widgetStyle,
+            Assert.Single(FindWidgets<AnnotatedRegion<SystemUiOverlayStyle>>(root.ChildElement)).Value);
     }
 
     [Fact]
@@ -2340,7 +2324,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: ThemeData.Light,
                 child: new AppBar(
-                    titleText: "Centered",
+                    title: new Text("Centered"),
                     centerTitle: true)));
 
         root.Attach(owner);
@@ -2364,7 +2348,7 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Centered by theme")));
+                child: new AppBar(title: new Text("Centered by theme"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -2388,7 +2372,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Not centered",
+                    title: new Text("Not centered"),
                     centerTitle: false)));
 
         root.Attach(owner);
@@ -2412,7 +2396,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Centered by platform",
+                    title: new Text("Centered by platform"),
                     actions:
                     [
                         new SizedBox(width: 8, height: 8),
@@ -2439,7 +2423,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Not centered by platform",
+                    title: new Text("Not centered by platform"),
                     actions:
                     [
                         new SizedBox(width: 8, height: 8),
@@ -2467,7 +2451,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     leading: new SizedBox(width: 12, height: 12))));
 
         root.Attach(owner);
@@ -2495,7 +2479,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     leading: new SizedBox(width: 12, height: 12),
                     leadingWidth: 64)));
 
@@ -2507,33 +2491,6 @@ public sealed class MaterialScaffoldTests
         var leadingBox = FindConstrainedBox(appBarBackground, constraints =>
             Math.Abs(constraints.MinWidth - 64) < 0.001
             && Math.Abs(constraints.MaxWidth - 64) < 0.001);
-
-        Assert.NotNull(leadingBox);
-    }
-
-    [Fact]
-    public void AppBar_LeadingSlot_IsConstrainedByLeadingWidthAndToolbarHeight()
-    {
-        var owner = new BuildOwner();
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new AppBar(
-                    titleText: "Title",
-                    leading: new SizedBox(width: 12, height: 12),
-                    leadingWidth: 64,
-                    toolbarHeight: 72)));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
-        var leadingBox = FindConstrainedBox(appBarBackground, constraints =>
-            Math.Abs(constraints.MinWidth - 64) < 0.001
-            && Math.Abs(constraints.MaxWidth - 64) < 0.001
-            && Math.Abs(constraints.MinHeight - 72) < 0.001
-            && Math.Abs(constraints.MaxHeight - 72) < 0.001);
 
         Assert.NotNull(leadingBox);
     }
@@ -2555,13 +2512,13 @@ public sealed class MaterialScaffoldTests
                     {
                         rootContext ??= context;
                         return new Scaffold(
-                            appBar: new AppBar(titleText: "Root"),
+                            appBar: new AppBar(title: new Text("Root")),
                             body: BuildBody());
                     },
                     settings: settings),
                 "/details" => new BuilderPageRoute(
                     builder: _ => new Scaffold(
-                        appBar: new AppBar(titleText: "Details"),
+                        appBar: new AppBar(title: new Text("Details")),
                         body: BuildBody()),
                     settings: settings),
                 _ => null,
@@ -2608,7 +2565,7 @@ public sealed class MaterialScaffoldTests
                             navigatorState ??= Navigator.Of(context);
                             rootRoute ??= ModalRoute.Of(context);
                             return new Scaffold(
-                                appBar: new AppBar(titleText: "Root"),
+                                appBar: new AppBar(title: new Text("Root")),
                                 body: new SizedBox(width: 24, height: 12));
                         },
                         settings: new RouteSettings(Name: "/")))));
@@ -2649,13 +2606,13 @@ public sealed class MaterialScaffoldTests
                     {
                         rootContext ??= context;
                         return new Scaffold(
-                            appBar: new AppBar(titleText: "Root"),
+                            appBar: new AppBar(title: new Text("Root")),
                             body: BuildBody());
                     },
                     settings: settings),
                 "/dialog" => new BuilderPageRoute(
                     builder: _ => new Scaffold(
-                        appBar: new AppBar(titleText: "Dialog"),
+                        appBar: new AppBar(title: new Text("Dialog")),
                         body: BuildBody()),
                     settings: settings,
                     fullscreenDialog: true),
@@ -2704,14 +2661,14 @@ public sealed class MaterialScaffoldTests
                     {
                         rootContext ??= context;
                         return new Scaffold(
-                            appBar: new AppBar(titleText: "Root"),
+                            appBar: new AppBar(title: new Text("Root")),
                             body: BuildBody());
                     },
                     settings: settings),
                 "/details" => new BuilderPageRoute(
                     builder: _ => new Scaffold(
                         appBar: new AppBar(
-                            titleText: "Details",
+                            title: new Text("Details"),
                             automaticallyImplyLeading: false),
                         body: BuildBody()),
                     settings: settings),
@@ -2752,7 +2709,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actions:
                     [
                         new Text("Action"),
@@ -2785,7 +2742,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actionsPadding: new Thickness(4, 6, 8, 10),
                     actions:
                     [
@@ -2807,29 +2764,6 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
-    public void AppBar_DefaultOuterPadding_IsZero()
-    {
-        var owner = new BuildOwner();
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new AppBar(titleText: "Title")));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
-        var outerPadding = FindPadding(appBarBackground, padding =>
-            Math.Abs(padding.Left) < 0.001
-            && Math.Abs(padding.Top) < 0.001
-            && Math.Abs(padding.Right) < 0.001
-            && Math.Abs(padding.Bottom) < 0.001);
-
-        Assert.NotNull(outerPadding);
-    }
-
-    [Fact]
     public void AppBar_PrimaryTrue_AppliesMediaQueryTopPadding()
     {
         var owner = new BuildOwner();
@@ -2840,7 +2774,7 @@ public sealed class MaterialScaffoldTests
                     data: new MediaQueryData(
                         Padding: new Thickness(0, 24, 0, 0),
                         ViewPadding: new Thickness(0, 24, 0, 0)),
-                    child: new AppBar(titleText: "Title"))));
+                    child: new AppBar(title: new Text("Title")))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -2868,7 +2802,7 @@ public sealed class MaterialScaffoldTests
                         Padding: new Thickness(0, 24, 0, 0),
                         ViewPadding: new Thickness(0, 24, 0, 0)),
                     child: new AppBar(
-                        titleText: "Title",
+                        title: new Text("Title"),
                         primary: false))));
 
         root.Attach(owner);
@@ -2893,7 +2827,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: ThemeData.Light,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actionsPadding: new Thickness(3, 4, 5, 6),
                     actions:
                     [
@@ -2933,7 +2867,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actionsPadding: new Thickness(7, 8, 9, 10),
                     actions:
                     [
@@ -2976,7 +2910,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     leading: new CaptureIconThemeWidget(themeData => capturedTheme = themeData))));
 
         root.Attach(owner);
@@ -3002,7 +2936,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     leading: new CaptureIconThemeWidget(themeData => capturedTheme = themeData))));
 
         root.Attach(owner);
@@ -3029,7 +2963,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     leading: new CaptureIconThemeWidget(themeData => capturedTheme = themeData))));
 
         root.Attach(owner);
@@ -3058,7 +2992,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     iconTheme: new IconThemeData(
                         Color: Colors.CadetBlue,
                         Size: 21),
@@ -3074,15 +3008,18 @@ public sealed class MaterialScaffoldTests
     }
 
     [Fact]
-    public void AppBar_IconTheme_WithNullColor_FallsBackToForeground_ForLeading()
+    public void AppBar_IconTheme_WithNullColor_KeepsTheAmbientColor_ForLeading()
     {
+        // Dart resolves `widget.iconTheme ?? appBarTheme.iconTheme ?? defaults…copyWith(foregroundColor)`:
+        // a supplied icon theme ends the chain, so a null color falls through `IconTheme.merge` to the
+        // ambient theme rather than to `foregroundColor`.
         IconThemeData? capturedTheme = null;
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     foregroundColor: Colors.DarkRed,
                     iconTheme: new IconThemeData(Size: 22),
                     leading: new CaptureIconThemeWidget(themeData => capturedTheme = themeData))));
@@ -3092,7 +3029,7 @@ public sealed class MaterialScaffoldTests
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
-        Assert.Equal(Colors.DarkRed, capturedTheme!.Color);
+        Assert.Equal(ThemeData.Light.IconTheme.Color, capturedTheme!.Color);
         Assert.Equal(22, capturedTheme.Size);
     }
 
@@ -3113,7 +3050,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actions:
                     [
                         new CaptureIconThemeWidget(themeData => capturedTheme = themeData),
@@ -3144,7 +3081,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actions:
                     [
                         new CaptureIconThemeWidget(themeData => capturedTheme = themeData),
@@ -3174,7 +3111,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actions:
                     [
                         new CaptureIconThemeWidget(themeData => capturedTheme = themeData),
@@ -3205,7 +3142,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actionsIconTheme: new IconThemeData(
                         Color: Colors.LimeGreen,
                         Size: 23),
@@ -3240,7 +3177,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actions:
                     [
                         new CaptureIconThemeWidget(themeData => capturedTheme = themeData),
@@ -3264,7 +3201,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: ThemeData.Light,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     iconTheme: new IconThemeData(
                         Color: Colors.DarkOrange,
                         Size: 11),
@@ -3291,7 +3228,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: ThemeData.Light,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     foregroundColor: Colors.LimeGreen,
                     actionsIconTheme: new IconThemeData(Size: 24),
                     actions:
@@ -3317,7 +3254,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: ThemeData.Light,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     toolbarTextStyle: new TextStyle(
                         FontSize: 18,
                         Color: Colors.CadetBlue,
@@ -3420,18 +3357,14 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Title")));
+                child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
-        var toolbarBox = FindConstrainedBox(appBarBackground, constraints =>
-            Math.Abs(constraints.MinHeight - 72) < 0.001
-            && Math.Abs(constraints.MaxHeight - 72) < 0.001);
-
-        Assert.NotNull(toolbarBox);
+        Assert.Equal(72, ResolvedToolbarHeight(appBarBackground));
     }
 
     [Fact]
@@ -3447,7 +3380,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     toolbarHeight: 64)));
 
         root.Attach(owner);
@@ -3455,11 +3388,7 @@ public sealed class MaterialScaffoldTests
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
-        var toolbarBox = FindConstrainedBox(appBarBackground, constraints =>
-            Math.Abs(constraints.MinHeight - 64) < 0.001
-            && Math.Abs(constraints.MaxHeight - 64) < 0.001);
-
-        Assert.NotNull(toolbarBox);
+        Assert.Equal(64, ResolvedToolbarHeight(appBarBackground));
     }
 
     [Fact]
@@ -3469,18 +3398,14 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
-                child: new AppBar(titleText: "Title")));
+                child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
-        var toolbarBox = FindConstrainedBox(appBarBackground, constraints =>
-            Math.Abs(constraints.MinHeight - 56) < 0.001
-            && Math.Abs(constraints.MaxHeight - 56) < 0.001);
-
-        Assert.NotNull(toolbarBox);
+        Assert.Equal(56, ResolvedToolbarHeight(appBarBackground));
     }
 
     [Fact]
@@ -3494,18 +3419,14 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Title")));
+                child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
-        var toolbarBox = FindConstrainedBox(appBarBackground, constraints =>
-            Math.Abs(constraints.MinHeight - 56) < 0.001
-            && Math.Abs(constraints.MaxHeight - 56) < 0.001);
-
-        Assert.NotNull(toolbarBox);
+        Assert.Equal(56, ResolvedToolbarHeight(appBarBackground));
     }
 
     [Fact]
@@ -3525,7 +3446,7 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Title")));
+                child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -3555,7 +3476,7 @@ public sealed class MaterialScaffoldTests
         var root = new TestRootElement(
             new Theme(
                 data: theme,
-                child: new AppBar(titleText: "Title")));
+                child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -3586,7 +3507,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     titleTextStyle: new TextStyle(
                         FontSize: 18,
                         Color: Colors.LimeGreen,
@@ -3621,7 +3542,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     actions:
                     [
                         new Text("Action"),
@@ -3656,7 +3577,7 @@ public sealed class MaterialScaffoldTests
             new Theme(
                 data: theme,
                 child: new AppBar(
-                    titleText: "Title",
+                    title: new Text("Title"),
                     toolbarTextStyle: new TextStyle(
                         FontSize: 15,
                         Color: Colors.CadetBlue,
@@ -3682,7 +3603,7 @@ public sealed class MaterialScaffoldTests
     public void AppBar_NegativeTitleSpacing_IsAcceptedLikeFlutter()
     {
         var appBar = new AppBar(
-            titleText: "Invalid",
+            title: new Text("Invalid"),
             titleSpacing: -1);
 
         Assert.Equal(-1, appBar.TitleSpacing);
@@ -3698,16 +3619,13 @@ public sealed class MaterialScaffoldTests
                 {
                     AppBarTheme = new AppBarThemeData(ToolbarHeight: 0),
                 },
-                child: new AppBar(titleText: "Invalid")));
+                child: new AppBar(title: new Text("Invalid"))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var toolbar = FindConstrainedBox(
-            root.ChildElement?.RenderObject,
-            constraints => constraints.MinHeight == 0 && constraints.MaxHeight == 0);
-        Assert.NotNull(toolbar);
+        Assert.Equal(0, ResolvedToolbarHeight(root.ChildElement?.RenderObject));
     }
 
     [Fact]
@@ -3721,7 +3639,7 @@ public sealed class MaterialScaffoldTests
                     AppBarTheme = new AppBarThemeData(LeadingWidth: 0),
                 },
                 child: new AppBar(
-                    titleText: "Invalid",
+                    title: new Text("Invalid"),
                     leading: new SizedBox(width: 8, height: 8))));
 
         root.Attach(owner);
@@ -3746,7 +3664,7 @@ public sealed class MaterialScaffoldTests
                 },
                 child: new AppBarTheme(
                     data: new AppBarThemeData(BackgroundColor: Colors.Crimson),
-                    child: new AppBar(titleText: "Local theme"))));
+                    child: new AppBar(title: new Text("Local theme")))));
 
         localRoot.Attach(localOwner);
         localRoot.Mount(parent: null, newSlot: null);
@@ -3762,7 +3680,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBarTheme(
                     data: new AppBarThemeData(BackgroundColor: Colors.Crimson),
                     child: new AppBar(
-                        titleText: "Widget override",
+                        title: new Text("Widget override"),
                         backgroundColor: Colors.DarkGreen))));
 
         widgetRoot.Attach(widgetOwner);
@@ -4165,8 +4083,8 @@ public sealed class MaterialScaffoldTests
                     child: new Column(
                         children:
                         [
-                            new AppBar(titleText: "Theme state"),
-                            new AppBar(titleText: "Widget state", backgroundColor: widgetBackground),
+                            new AppBar(title: new Text("Theme state")),
+                            new AppBar(title: new Text("Widget state"), backgroundColor: widgetBackground),
                             new CaptureBuildContextWidget(context => emitterContext = context),
                         ]))));
 
@@ -4206,7 +4124,7 @@ public sealed class MaterialScaffoldTests
     {
         var shape = new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12));
         var appBar = new AppBar(
-            titleText: "Configured",
+            title: new Text("Configured"),
             elevation: 2,
             scrolledUnderElevation: 5,
             shadowColor: Colors.Black,
@@ -4233,6 +4151,17 @@ public sealed class MaterialScaffoldTests
         Assert.Equal(Clip.AntiAlias, appBar.ClipBehavior);
         Assert.True(appBar.AnimateColor);
         Assert.Throws<ArgumentOutOfRangeException>(() => new AppBar(elevation: -1));
+    }
+
+    /// <summary>
+    /// The toolbar height the app bar resolved, read off the `_ToolbarContainerLayout` delegate that sizes
+    /// and bottom-justifies the toolbar.
+    /// </summary>
+    private static double ResolvedToolbarHeight(RenderObject? root)
+    {
+        var box = FindDescendant<RenderCustomSingleChildLayoutBox>(root);
+        Assert.NotNull(box);
+        return Assert.IsType<ToolbarContainerLayout>(box!.LayoutDelegate).ToolbarHeight;
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

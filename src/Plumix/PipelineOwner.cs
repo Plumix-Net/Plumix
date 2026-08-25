@@ -264,7 +264,8 @@ public sealed class PipelineOwner
             NavigationBarColor: navigationStyle?.NavigationBarColor ?? current.NavigationBarColor,
             StatusBarIconBrightness: statusStyle?.StatusBarIconBrightness ?? current.StatusBarIconBrightness,
             NavigationBarIconBrightness:
-                navigationStyle?.NavigationBarIconBrightness ?? current.NavigationBarIconBrightness));
+                navigationStyle?.NavigationBarIconBrightness ?? current.NavigationBarIconBrightness,
+            StatusBarBrightness: statusStyle?.StatusBarBrightness ?? current.StatusBarBrightness));
     }
 
     private void FlushPaintNodes()

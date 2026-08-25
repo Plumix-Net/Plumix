@@ -21,7 +21,7 @@ and CounterPageState() =
         let update f = fun () -> this.InvokeSetState(fun () -> count <- f count)
 
         Ui.scaffold (
-            appBar = Ui.appBar (titleText = "Plumix + F#"),
+            appBar = Ui.appBar (title = Ui.text "Plumix + F#"),
             body =
                 Ui.center (
                     Ui.column (
