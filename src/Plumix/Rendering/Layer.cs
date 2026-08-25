@@ -180,7 +180,7 @@ public abstract class Layer
         return (dx * dx) + (dy * dy) <= 1.0;
     }
 
-    private static Radius ClampRadius(Radius radius, double maxX, double maxY)
+    internal static Radius ClampRadius(Radius radius, double maxX, double maxY)
     {
         if (radius.X * radius.Y == 0.0)
         {
@@ -606,24 +606,41 @@ public sealed class MagnifierLayer : ContainerLayer
             return;
         }
 
-        double maximumRadius = Math.Min(lensRect.Width, lensRect.Height) / 2.0;
-        double radius = Decoration.Shape switch
-        {
-            CircleBorder or StadiumBorder => maximumRadius,
-            RoundedRectangleBorder rounded => Math.Min(
-                rounded.BorderRadius.Resolve(Plumix.UI.TextDirection.Ltr).Radius,
-                maximumRadius),
-            _ => 0.0,
-        };
+        BorderRadius borderRadius = ResolveBorderRadius(lensRect);
         using (context.PushOpacity(Math.Clamp(Decoration.Opacity, 0.0, 1.0)))
         {
-            using (PushRoundedRectClip(context, lensRect, radius))
+            using (PushRoundedRectClip(context, lensRect, borderRadius))
             {
                 DrawMagnifiedBackdrop(context, lensRect);
                 AddChildrenToScene(context, offset);
             }
 
-            DrawDecoration(context, lensRect, radius);
+            DrawDecoration(context, lensRect, borderRadius);
+        }
+    }
+
+    /// <summary>
+    /// Resolves the decoration shape to the per-corner radii the lens is clipped and stroked with.
+    /// Each corner keeps its own (possibly elliptical) radius, clamped to half the lens so that
+    /// neighbouring corners cannot overlap.
+    /// </summary>
+    private BorderRadius ResolveBorderRadius(Rect lensRect)
+    {
+        double maxX = lensRect.Width / 2.0;
+        double maxY = lensRect.Height / 2.0;
+        switch (Decoration.Shape)
+        {
+            case CircleBorder or StadiumBorder:
+                return BorderRadius.Circular(Math.Min(maxX, maxY));
+            case RoundedRectangleBorder rounded:
+                BorderRadius resolved = rounded.BorderRadius.Resolve(Plumix.UI.TextDirection.Ltr);
+                return new BorderRadius(
+                    ClampRadius(resolved.TopLeftRadius, maxX, maxY),
+                    ClampRadius(resolved.TopRightRadius, maxX, maxY),
+                    ClampRadius(resolved.BottomRightRadius, maxX, maxY),
+                    ClampRadius(resolved.BottomLeftRadius, maxX, maxY));
+            default:
+                return BorderRadius.Zero;
         }
     }
 
@@ -664,7 +681,7 @@ public sealed class MagnifierLayer : ContainerLayer
         }
     }
 
-    private void DrawDecoration(DrawingContext context, Rect lensRect, double radius)
+    private void DrawDecoration(DrawingContext context, Rect lensRect, BorderRadius borderRadius)
     {
         BoxShadows shadows = Decoration.Shadows.ToAvalonia();
         BorderSide side = Decoration.Shape is OutlinedBorder outlined ? outlined.Side : BorderSide.None;
@@ -682,27 +699,52 @@ public sealed class MagnifierLayer : ContainerLayer
         {
             if (ClipBehavior != Clip.None)
             {
+                double inset = pen?.Thickness ?? 0.0;
                 var outer = lensRect.Inflate(Math.Max(lensRect.Width, lensRect.Height));
                 var geometry = new CombinedGeometry(
                     GeometryCombineMode.Exclude,
                     new RectangleGeometry(outer),
                     new RectangleGeometry(
                         new Rect(
-                            lensRect.X + (pen?.Thickness ?? 0),
-                            lensRect.Y + (pen?.Thickness ?? 0),
-                            Math.Max(0, lensRect.Width - ((pen?.Thickness ?? 0) * 2)),
-                            Math.Max(0, lensRect.Height - ((pen?.Thickness ?? 0) * 2))),
-                        radius,
-                        radius));
+                            lensRect.X + inset,
+                            lensRect.Y + inset,
+                            Math.Max(0, lensRect.Width - (inset * 2)),
+                            Math.Max(0, lensRect.Height - (inset * 2))),
+                        Math.Max(0, LargestRadiusX(borderRadius) - inset),
+                        Math.Max(0, LargestRadiusY(borderRadius) - inset)));
                 clip = context.PushGeometryClip(geometry);
             }
 
-            context.DrawRectangle(Brushes.Transparent, pen, new RoundedRect(lensRect, radius), shadows);
+            context.DrawRectangle(Brushes.Transparent, pen, ToRoundedRect(lensRect, borderRadius), shadows);
         }
         finally
         {
             clip?.Dispose();
         }
+    }
+
+    private static RoundedRect ToRoundedRect(Rect rect, BorderRadius borderRadius)
+    {
+        return new RoundedRect(
+            rect,
+            new Vector(borderRadius.TopLeftRadius.X, borderRadius.TopLeftRadius.Y),
+            new Vector(borderRadius.TopRightRadius.X, borderRadius.TopRightRadius.Y),
+            new Vector(borderRadius.BottomRightRadius.X, borderRadius.BottomRightRadius.Y),
+            new Vector(borderRadius.BottomLeftRadius.X, borderRadius.BottomLeftRadius.Y));
+    }
+
+    private static double LargestRadiusX(BorderRadius borderRadius)
+    {
+        return Math.Max(
+            Math.Max(borderRadius.TopLeftRadius.X, borderRadius.TopRightRadius.X),
+            Math.Max(borderRadius.BottomRightRadius.X, borderRadius.BottomLeftRadius.X));
+    }
+
+    private static double LargestRadiusY(BorderRadius borderRadius)
+    {
+        return Math.Max(
+            Math.Max(borderRadius.TopLeftRadius.Y, borderRadius.TopRightRadius.Y),
+            Math.Max(borderRadius.BottomRightRadius.Y, borderRadius.BottomLeftRadius.Y));
     }
 }
 

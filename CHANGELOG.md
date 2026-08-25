@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: strict `CupertinoMagnifier` port — elliptical rim, themed border, curved in/out (`magnifier.dart`).
+- Magnifier lens and `BorderRadiusGeometry.Resolve` keep elliptical per-corner radii; added `BorderRadius.All`.
 - Breaking: re-ported `CupertinoScrollbar` on `RawScrollbar`; track rect spans the padded viewport (`scrollbar.dart`).
 - Breaking: re-ported `CupertinoSlider` strictly — dynamic colors, drag recognizer, track animation (`slider.dart`).
 - Ported `CupertinoActionSheet`/`CupertinoActionSheetAction` with cancel button and slide-to-select (`dialog.dart`).

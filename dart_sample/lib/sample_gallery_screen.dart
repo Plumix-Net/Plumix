@@ -41,6 +41,7 @@ import 'demos/cupertino/checkbox_demo_page.dart';
 import 'demos/cupertino/app_demo_page.dart';
 import 'demos/cupertino/cupertino_icons_demo_page.dart';
 import 'demos/cupertino/cupertino_focus_halo_demo_page.dart';
+import 'demos/cupertino/cupertino_magnifier_demo_page.dart';
 import 'demos/cupertino/cupertino_tab_bar_demo_page.dart';
 import 'demos/cupertino/cupertino_list_section_demo_page.dart';
 import 'demos/cupertino/cupertino_expansion_tile_demo_page.dart';
@@ -647,6 +648,13 @@ class SampleGalleryScreen extends StatelessWidget {
       subtitle:
           'title/message + hairline actions + detached cancel + slide-to-select',
       builder: () => const CupertinoActionSheetDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoMagnifier,
+      title: 'Magnifier',
+      subtitle:
+          'elliptical rim + theme border color + drag-following text magnifier',
+      builder: () => const CupertinoMagnifierDemoPage(),
     ),
   ];
 

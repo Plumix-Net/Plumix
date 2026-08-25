@@ -279,9 +279,13 @@ public sealed class MagnifierTests : IDisposable
         Assert.Equal(2, render.Decoration.Shape is OutlinedBorder shapeOutlined ? shapeOutlined.Side.Width : 0.0);
         Assert.Equal(1, render.MagnificationScale);
         Assert.Equal(2, render.FocalPointOffset.X);
+
+        // The focal point does not follow the in / out animation: `magnifier.dart` throws away the
+        // result of `focalPointOffset.scale(...)`.
         Assert.Equal(
-            (((CupertinoMagnifier.DefaultSize.Height / 2.0)
-              - CupertinoMagnifier.MagnifierAboveFocalPoint) * 0.5) + 3,
+            (CupertinoMagnifier.DefaultSize.Height / 2.0)
+            - CupertinoMagnifier.MagnifierAboveFocalPoint
+            + 3,
             render.FocalPointOffset.Y,
             3);
         animation.Dispose();

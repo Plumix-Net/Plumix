@@ -123,6 +123,7 @@ internal static class SampleRoutes
     public const string CupertinoRefresh = "/cupertino-refresh";
     public const string CupertinoRoute = "/cupertino-route";
     public const string CupertinoActionSheet = "/cupertino-action-sheet";
+    public const string CupertinoMagnifier = "/cupertino-magnifier";
     public const string ProxyWidgets = "/proxy-widgets";
     public const string Align = "/align";
     public const string Stack = "/stack";
@@ -386,6 +387,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Action sheet",
             "title/message + hairline actions + detached cancel + slide-to-select",
             () => new CupertinoActionSheetDemoPage()),
+        new(
+            SampleRoutes.CupertinoMagnifier,
+            "Magnifier",
+            "elliptical rim + theme border color + drag-following text magnifier",
+            () => new CupertinoMagnifierDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleRouteDefinition> GeneralDemoPages =

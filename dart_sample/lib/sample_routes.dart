@@ -119,6 +119,7 @@ class SampleRoutes {
   static const String cupertinoRefresh = '/cupertino-refresh';
   static const String cupertinoRoute = '/cupertino-route';
   static const String cupertinoActionSheet = '/cupertino-action-sheet';
+  static const String cupertinoMagnifier = '/cupertino-magnifier';
   static const String proxyWidgets = '/proxy-widgets';
   static const String align = '/align';
   static const String stack = '/stack';

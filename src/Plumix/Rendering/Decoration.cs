@@ -230,6 +230,12 @@ public readonly record struct BorderRadius
         return new(Math.Max(0, radius));
     }
 
+    /// <summary>Dart's `BorderRadius.all`: the same (possibly elliptical) radius on every corner.</summary>
+    public static BorderRadius All(Radius radius)
+    {
+        return new BorderRadius(radius, radius, radius, radius);
+    }
+
     public static BorderRadius Only(
         double topLeft = 0.0,
         double topRight = 0.0,
@@ -370,15 +376,15 @@ public readonly record struct BorderRadiusGeometry
     {
         return direction == TextDirection.Ltr
             ? new BorderRadius(
-                Physical.TopLeft + Directional.TopStart,
-                Physical.TopRight + Directional.TopEnd,
-                Physical.BottomRight + Directional.BottomEnd,
-                Physical.BottomLeft + Directional.BottomStart)
+                Add(Physical.TopLeftRadius, Directional.TopStart),
+                Add(Physical.TopRightRadius, Directional.TopEnd),
+                Add(Physical.BottomRightRadius, Directional.BottomEnd),
+                Add(Physical.BottomLeftRadius, Directional.BottomStart))
             : new BorderRadius(
-                Physical.TopLeft + Directional.TopEnd,
-                Physical.TopRight + Directional.TopStart,
-                Physical.BottomRight + Directional.BottomStart,
-                Physical.BottomLeft + Directional.BottomEnd);
+                Add(Physical.TopLeftRadius, Directional.TopEnd),
+                Add(Physical.TopRightRadius, Directional.TopStart),
+                Add(Physical.BottomRightRadius, Directional.BottomStart),
+                Add(Physical.BottomLeftRadius, Directional.BottomEnd));
     }
 
     public bool IsZero => Physical == BorderRadius.Zero && Directional == default;
@@ -428,6 +434,17 @@ public readonly record struct BorderRadiusGeometry
     private static double LerpDouble(double a, double b, double t)
     {
         return a + ((b - a) * t);
+    }
+
+    /// <summary>
+    /// Adds a directional corner to a physical one. Directional corners are circular, so the
+    /// physical corner keeps its own (possibly elliptical) shape when nothing is added to it.
+    /// </summary>
+    private static Radius Add(Radius radius, double directional)
+    {
+        return directional == 0.0
+            ? radius
+            : Radius.Elliptical(radius.X + directional, radius.Y + directional);
     }
 }
 
