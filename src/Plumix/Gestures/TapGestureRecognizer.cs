@@ -8,23 +8,69 @@ namespace Plumix.Gestures;
 
 public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMember
 {
-    private const double TouchSlop = 18.0;
+    /// <summary>
+    /// Dart's `_unsetTouchSlop` (`gestures/recognizer.dart`): the sentinel that distinguishes "not
+    /// specified" (fall back to the device touch slop) from an explicit null (never reject on move).
+    /// </summary>
+    private const double UnsetTouchSlop = -1.0;
+
     private static readonly TimeSpan DoubleTapTimeout = TimeSpan.FromMilliseconds(300);
     private readonly Dictionary<int, TapTracker> _trackers = [];
     private readonly object _doubleTapGate = new();
+    private readonly double? _preAcceptSlopTolerance;
+    private readonly double? _postAcceptSlopTolerance;
     private Timer? _singleTapTimer;
     private DateTime? _lastTapAt;
     private Point _lastTapPosition;
 
-    public TapGestureRecognizer(GestureBinding? binding = null) : base(binding)
+    public TapGestureRecognizer(
+        GestureBinding? binding = null,
+        double? preAcceptSlopTolerance = UnsetTouchSlop,
+        double? postAcceptSlopTolerance = UnsetTouchSlop) : base(binding)
     {
+        if (preAcceptSlopTolerance is { } pre && pre != UnsetTouchSlop && pre < 0.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(preAcceptSlopTolerance),
+                "The preAcceptSlopTolerance must be unspecified, positive, or null.");
+        }
+
+        if (postAcceptSlopTolerance is { } post && post != UnsetTouchSlop && post < 0.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(postAcceptSlopTolerance),
+                "The postAcceptSlopTolerance must be unspecified, positive, or null.");
+        }
+
+        _preAcceptSlopTolerance = preAcceptSlopTolerance;
+        _postAcceptSlopTolerance = postAcceptSlopTolerance;
     }
+
+    /// <summary>
+    /// The distance a pointer may travel before the gesture is accepted without the tap being
+    /// rejected. Null means the tap is never rejected for moving before acceptance.
+    /// </summary>
+    public double? PreAcceptSlopTolerance =>
+        _preAcceptSlopTolerance == UnsetTouchSlop ? DefaultTouchSlop : _preAcceptSlopTolerance;
+
+    /// <summary>
+    /// The distance a pointer may travel after the gesture is accepted before the tap is rejected.
+    /// Null means the tap is never rejected for moving after acceptance, which is what
+    /// <c>CupertinoButton</c> relies on to keep tracking a finger that leaves the button.
+    /// </summary>
+    public double? PostAcceptSlopTolerance =>
+        _postAcceptSlopTolerance == UnsetTouchSlop ? DefaultTouchSlop : _postAcceptSlopTolerance;
+
+    private double DefaultTouchSlop => GestureSettings?.TouchSlop ?? GestureConstants.TouchSlop;
 
     public Action? OnTap { get; set; }
     public Action? OnDoubleTap { get; set; }
     public Action<PointerDownEvent>? OnTapDown { get; set; }
     public Action<PointerUpEvent>? OnTapUp { get; set; }
     public Action? OnTapCancel { get; set; }
+
+    /// <summary>A pointer that triggered a tap has moved without the tap being rejected.</summary>
+    public Action<TapMoveDetails>? OnTapMove { get; set; }
     public Action? OnSecondaryTap { get; set; }
     public Action<PointerDownEvent>? OnSecondaryTapDown { get; set; }
     public Action<PointerUpEvent>? OnSecondaryTapUp { get; set; }
@@ -86,7 +132,8 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
                || OnDoubleTap is not null
                || OnTapDown is not null
                || OnTapUp is not null
-               || OnTapCancel is not null;
+               || OnTapCancel is not null
+               || OnTapMove is not null;
     }
 
     public void AcceptGesture(int pointer)
@@ -125,12 +172,23 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
 
         switch (@event)
         {
-            case PointerMoveEvent:
+            case PointerMoveEvent move:
             {
-                if (Distance(tracker.InitialPosition, @event.Position) > TouchSlop)
+                double? tolerance = tracker.Accepted ? PostAcceptSlopTolerance : PreAcceptSlopTolerance;
+                if (tolerance is { } limit && Distance(tracker.InitialPosition, move.Position) > limit)
                 {
                     tracker.Entry.Resolve(GestureDisposition.Rejected);
-                    Cleanup(@event.Pointer);
+                    Cleanup(move.Pointer);
+                    break;
+                }
+
+                if (OnTapMove is not null && move.Buttons == PointerButtons.Primary)
+                {
+                    OnTapMove(new TapMoveDetails(
+                        move.Position,
+                        move.LocalPosition,
+                        move.Delta,
+                        move.Kind));
                 }
 
                 break;
@@ -197,7 +255,7 @@ public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMembe
             var now = DateTime.UtcNow;
             if (_lastTapAt.HasValue
                 && now - _lastTapAt.Value <= DoubleTapTimeout
-                && Distance(_lastTapPosition, position) <= TouchSlop)
+                && Distance(_lastTapPosition, position) <= GestureConstants.DoubleTapTouchSlop)
             {
                 _singleTapTimer?.Dispose();
                 _singleTapTimer = null;

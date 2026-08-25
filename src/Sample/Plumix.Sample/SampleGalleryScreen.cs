@@ -116,6 +116,7 @@ internal static class SampleRoutes
     public const string CupertinoNavBar = "/cupertino-nav-bar";
     public const string CupertinoPicker = "/cupertino-picker";
     public const string CupertinoActivityIndicator = "/cupertino-activity-indicator";
+    public const string CupertinoButton = "/cupertino-button";
     public const string CupertinoRadio = "/cupertino-radio";
     public const string CupertinoRefresh = "/cupertino-refresh";
     public const string CupertinoRoute = "/cupertino-route";
@@ -352,6 +353,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Activity indicators",
             "spinning + partially revealed ticks + linear progress bar",
             () => new CupertinoActivityIndicatorDemoPage()),
+        new(
+            SampleRoutes.CupertinoButton,
+            "Buttons",
+            "plain/tinted/filled styles + size styles + long press",
+            () => new CupertinoButtonDemoPage()),
         new(
             SampleRoutes.CupertinoRefresh,
             "Sliver refresh",

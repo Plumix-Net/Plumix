@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Painting;
 using Plumix.Rendering;
 
@@ -67,7 +68,8 @@ public sealed record MediaQueryData
         int ViewId = 0,
         BorderRadius? DisplayCornerRadii = null,
         IReadOnlyList<DisplayFeature>? DisplayFeatures = null,
-        bool OnOffSwitchLabels = false)
+        bool OnOffSwitchLabels = false,
+        DeviceGestureSettings? GestureSettings = null)
     {
         if (TextScaler is not null && TextScaleFactor != 1.0)
         {
@@ -95,6 +97,7 @@ public sealed record MediaQueryData
         this.ViewId = ViewId;
         this.DisplayCornerRadii = DisplayCornerRadii;
         this.DisplayFeatures = DisplayFeatures;
+        this.GestureSettings = GestureSettings;
     }
 
     public Size Size { get; init; }
@@ -137,6 +140,12 @@ public sealed record MediaQueryData
 
     public IReadOnlyList<DisplayFeature>? DisplayFeatures { get; init; }
 
+    /// <summary>
+    /// The gesture settings for the view this media query is for, used by gesture recognizers to
+    /// size their slop thresholds. Ports Dart's `MediaQueryData.gestureSettings`.
+    /// </summary>
+    public DeviceGestureSettings? GestureSettings { get; init; }
+
     public Orientation Orientation => Size.Width > Size.Height
         ? Orientation.Landscape
         : Orientation.Portrait;
@@ -168,7 +177,8 @@ public sealed record MediaQueryData
         BorderRadius? displayCornerRadii = null,
         bool clearDisplayCornerRadii = false,
         IReadOnlyList<DisplayFeature>? displayFeatures = null,
-        bool? onOffSwitchLabels = null)
+        bool? onOffSwitchLabels = null,
+        DeviceGestureSettings? gestureSettings = null)
     {
         if (textScaleFactor is not null && textScaler is not null)
         {
@@ -197,7 +207,8 @@ public sealed record MediaQueryData
             SupportsAnnounce: supportsAnnounce ?? SupportsAnnounce,
             ViewId: viewId ?? ViewId,
             DisplayCornerRadii: clearDisplayCornerRadii ? null : displayCornerRadii ?? DisplayCornerRadii,
-            DisplayFeatures: displayFeatures ?? DisplayFeatures);
+            DisplayFeatures: displayFeatures ?? DisplayFeatures,
+            GestureSettings: gestureSettings ?? GestureSettings);
     }
 
     public MediaQueryData RemovePadding(
@@ -428,6 +439,12 @@ public sealed class MediaQuery : InheritedModel<object>
 
     public static PlatformBrightness? MaybePlatformBrightnessOf(BuildContext context) =>
         MaybeOf(context)?.PlatformBrightness;
+
+    public static DeviceGestureSettings? GestureSettingsOf(BuildContext context) =>
+        Of(context).GestureSettings;
+
+    public static DeviceGestureSettings? MaybeGestureSettingsOf(BuildContext context) =>
+        MaybeOf(context)?.GestureSettings;
 
     public static bool HighContrastOf(BuildContext context) => Of(context).HighContrast;
 

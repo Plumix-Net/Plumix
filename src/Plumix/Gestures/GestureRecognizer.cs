@@ -294,6 +294,16 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
     }
 }
 
+/// <summary>
+/// Details for <see cref="TapGestureRecognizer.OnTapMove"/>: where a pointer that is still part of
+/// a tap sequence has moved to. Ports Dart's `TapMoveDetails` (`gestures/tap.dart`).
+/// </summary>
+public readonly record struct TapMoveDetails(
+    Point GlobalPosition,
+    Point LocalPosition,
+    Point Delta,
+    PointerDeviceKind Kind);
+
 public readonly record struct DragDownDetails(
     Point GlobalPosition,
     Point LocalPosition = default);

@@ -354,7 +354,7 @@ public sealed class RawGestureDetector : StatefulWidget
         private void AssignSemantics(RenderSemanticsGestureHandler renderObject)
         {
             _semanticsGestureHandler = renderObject;
-            renderObject.OnTap = GetTapHandler();
+            renderObject.OnTap = GetTapHandler(renderObject);
             renderObject.OnLongPress = GetLongPressHandler();
             renderObject.OnHorizontalDragUpdate = GetDragUpdateHandler(renderObject, horizontal: true);
             renderObject.OnVerticalDragUpdate = GetDragUpdateHandler(renderObject, horizontal: false);
@@ -369,18 +369,42 @@ public sealed class RawGestureDetector : StatefulWidget
         }
 
         /// <summary>
-        /// Replays the tap sequence. Plumix's <c>TapGestureRecognizer.OnTapDown</c>/<c>OnTapUp</c>
-        /// take real pointer events, which a semantic tap has none of, so only the callbacks that
-        /// carry no pointer payload are invoked.
+        /// Replays the whole down/up/tap sequence, exactly as Flutter's
+        /// <c>_DefaultSemanticsGestureDelegate._getTapHandler</c> does. Plumix's
+        /// <c>TapGestureRecognizer.OnTapDown</c>/<c>OnTapUp</c> take real pointer events, which a
+        /// semantic tap has none of, so they are synthesized at the render object's center rather
+        /// than at Dart's origin — a button whose bounds exclude the origin still activates.
         /// </summary>
-        private Action? GetTapHandler()
+        private Action? GetTapHandler(RenderObject renderObject)
         {
-            return _tap is { } tap ? () => tap.OnTap?.Invoke() : null;
+            if (ResolveRecognizer(_tap) is not { } tap)
+            {
+                return null;
+            }
+
+            return () =>
+            {
+                Point globalCenter = renderObject.LocalToGlobal(LocalCenterOf(renderObject));
+                DateTime timestamp = DateTime.UtcNow;
+                tap.OnTapDown?.Invoke(new PointerDownEvent(
+                    0,
+                    PointerDeviceKind.Unknown,
+                    globalCenter,
+                    PointerButtons.Primary,
+                    timestamp));
+                tap.OnTapUp?.Invoke(new PointerUpEvent(
+                    0,
+                    PointerDeviceKind.Unknown,
+                    globalCenter,
+                    PointerButtons.Primary,
+                    timestamp));
+                tap.OnTap?.Invoke();
+            };
         }
 
         private Action? GetLongPressHandler()
         {
-            if (_longPress is not { } longPress)
+            if (ResolveRecognizer(_longPress) is not { } longPress)
             {
                 return null;
             }
@@ -390,6 +414,19 @@ public sealed class RawGestureDetector : StatefulWidget
                 longPress.OnLongPress?.Invoke();
                 longPress.OnLongPressUp?.Invoke();
             };
+        }
+
+        /// <summary>
+        /// The recognizer of the given type this detector currently owns: the one built from the
+        /// fixed callback set, or — when the widget supplied a <c>gestures</c> map — the one that
+        /// map registered. Flutter keeps a single map and looks the type up in it.
+        /// </summary>
+        private T? ResolveRecognizer<T>(T? builtIn) where T : GestureRecognizer
+        {
+            return builtIn
+                   ?? (_customRecognizers.TryGetValue(typeof(T), out GestureRecognizer? custom)
+                       ? custom as T
+                       : null);
         }
 
         /// <summary>

@@ -569,11 +569,20 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.True(tap.PerformAction(SemanticsActions.Tap));
         Assert.Equal(1, taps);
 
+        int disabledTaps = 0;
         using var disabledHarness = CreateHarness(
             ThemeData.Light with { Platform = TargetPlatform.IOS },
             CupertinoTextSelectionToolbarButton.TextButton(null, "Disabled"));
         SemanticsNode? disabledSemantics = disabledHarness.PumpAndGetSemantics(new Size(160, 80));
-        Assert.Null(FindSemantics(disabledSemantics, node => node.Actions.HasFlag(SemanticsActions.Tap)));
+
+        // Dart's `_DefaultSemanticsGestureDelegate._getTapHandler` exposes the tap action whenever a
+        // `TapGestureRecognizer` is registered, and `CupertinoButton` always registers one, so a
+        // disabled button keeps an inert tap action rather than dropping it.
+        SemanticsNode disabledTap = Assert.IsType<SemanticsNode>(FindSemantics(
+            disabledSemantics,
+            node => node.Actions.HasFlag(SemanticsActions.Tap)));
+        disabledTap.PerformAction(SemanticsActions.Tap);
+        Assert.Equal(0, disabledTaps);
     }
 
     [Fact]

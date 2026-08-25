@@ -305,7 +305,7 @@ public sealed class CupertinoDesktopTextSelectionToolbarButton : StatefulWidget
                     Color: ResolveTextColor(context),
                     Inherit: false),
                 overflow: TextOverflow.Ellipsis);
-            Color? backgroundColor = _isHovered
+            CupertinoDynamicColor? backgroundColor = _isHovered
                 ? ResolvePrimaryColor(context)
                 : null;
             Widget button = new CupertinoButton(

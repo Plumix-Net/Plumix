@@ -54,6 +54,7 @@ import 'demos/cupertino/cupertino_navigation_bar_demo_page.dart';
 import 'demos/cupertino/page_scaffold_demo_page.dart';
 import 'demos/cupertino/picker_demo_page.dart';
 import 'demos/cupertino/cupertino_activity_indicator_demo_page.dart';
+import 'demos/cupertino/cupertino_button_demo_page.dart';
 import 'demos/cupertino/cupertino_radio_demo_page.dart';
 import 'demos/cupertino/refresh_demo_page.dart';
 import 'counter_screen.dart';
@@ -601,6 +602,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Activity indicators',
       subtitle: 'spinning + partially revealed ticks + linear progress bar',
       builder: () => const CupertinoActivityIndicatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoButton,
+      title: 'Buttons',
+      subtitle: 'plain/tinted/filled styles + size styles + long press',
+      builder: () => const CupertinoButtonDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.cupertinoRefresh,
