@@ -54,8 +54,8 @@ internal sealed class CupertinoScrollbarDemoPageState : State
                         [
                             new Text("CupertinoScrollbar", fontSize: 20.0, color: TitleColor),
                             new Text(
-                                "Press and hold the thumb to grow it from 3 to 8 logical pixels, then "
-                                + "drag. Tapping the track never pages on iOS.",
+                                "Touching the thumb grows it from 3 to 8 logical pixels over 100 ms and "
+                                + "starts the drag. Tapping the track never pages on iOS.",
                                 fontSize: 14.0,
                                 color: SubtitleColor),
                             new Wrap(

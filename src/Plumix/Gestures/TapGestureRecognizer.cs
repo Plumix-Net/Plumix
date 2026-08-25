@@ -6,7 +6,7 @@ using Plumix.UI;
 
 namespace Plumix.Gestures;
 
-public sealed class TapGestureRecognizer : GestureRecognizer, IGestureArenaMember
+public class TapGestureRecognizer : GestureRecognizer, IGestureArenaMember
 {
     /// <summary>
     /// Dart's `_unsetTouchSlop` (`gestures/recognizer.dart`): the sentinel that distinguishes "not

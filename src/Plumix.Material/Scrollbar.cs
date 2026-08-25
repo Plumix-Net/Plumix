@@ -2,15 +2,32 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/scrollbar.dart
 
+/// <summary>A Material Design scrollbar.</summary>
+/// <remarks>
+/// To add a scrollbar to a <see cref="ScrollView"/>, wrap the scroll view widget in a
+/// <see cref="Scrollbar"/> widget. On iOS the widget delegates to <see cref="CupertinoScrollbar"/>.
+/// </remarks>
 public sealed class Scrollbar : StatelessWidget
 {
+    internal const double KScrollbarThickness = 8.0;
+    internal const double KScrollbarThicknessWithTrack = 12.0;
+    internal const double KScrollbarMargin = 2.0;
+    internal const double KScrollbarMinLength = 48.0;
+    internal const double KScrollbarRadius = 8.0;
+
+    private static readonly TimeSpan KScrollbarFadeDuration = TimeSpan.FromMilliseconds(300);
+    private static readonly TimeSpan KScrollbarTimeToFade = TimeSpan.FromMilliseconds(600);
+
+    /// <summary>Creates a Material Design scrollbar that wraps the given <paramref name="child"/>.</summary>
     public Scrollbar(
         Widget child,
         ScrollController? controller = null,
@@ -23,16 +40,6 @@ public sealed class Scrollbar : StatelessWidget
         ScrollbarOrientation? scrollbarOrientation = null,
         Key? key = null) : base(key)
     {
-        if (thickness.HasValue && (!double.IsFinite(thickness.Value) || thickness.Value <= 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(thickness));
-        }
-
-        if (radius.HasValue && (!double.IsFinite(radius.Value) || radius.Value < 0))
-        {
-            throw new ArgumentOutOfRangeException(nameof(radius));
-        }
-
         Child = child ?? throw new ArgumentNullException(nameof(child));
         Controller = controller;
         ThumbVisibility = thumbVisibility;
@@ -56,247 +63,296 @@ public sealed class Scrollbar : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        var theme = Theme.Of(context);
-        var scrollbarTheme = ScrollbarTheme.Of(context);
-        bool isAndroid = theme.Platform == TargetPlatform.Android;
-        bool isIos = theme.Platform == TargetPlatform.IOS;
-        Color onSurface = theme.ColorScheme.OnSurface;
-
-        if (isIos)
+        if (Theme.Of(context).Platform == TargetPlatform.IOS)
         {
             return new CupertinoScrollbar(
-                child: Child,
-                controller: Controller,
-                thumbVisibility: ThumbVisibility,
+                thumbVisibility: ThumbVisibility ?? false,
                 thickness: Thickness ?? CupertinoScrollbar.DefaultThickness,
                 thicknessWhileDragging: Thickness ?? CupertinoScrollbar.DefaultThicknessWhileDragging,
                 radius: Radius ?? CupertinoScrollbar.DefaultRadius,
                 radiusWhileDragging: Radius ?? CupertinoScrollbar.DefaultRadiusWhileDragging,
+                controller: Controller,
                 notificationPredicate: NotificationPredicate,
-                scrollbarOrientation: ScrollbarOrientation);
+                scrollbarOrientation: ScrollbarOrientation,
+                child: Child);
         }
 
-        Color? ResolveThumbColor(ScrollbarInteractionState state)
-        {
-            var widgetStates = ToWidgetStates(state);
-            var themed = scrollbarTheme.ThumbColor?.Resolve(widgetStates);
-            if (themed.HasValue) return themed;
-
-            if (state.HasFlag(ScrollbarInteractionState.Dragged))
-            {
-                return ApplyOpacity(onSurface, theme.Brightness == Brightness.Light ? 0.60 : 0.75);
-            }
-
-            if (ResolveTrackVisibility(state) == true || state.HasFlag(ScrollbarInteractionState.Hovered))
-            {
-                return ApplyOpacity(onSurface, theme.Brightness == Brightness.Light ? 0.50 : 0.65);
-            }
-
-            if (isAndroid) return theme.HighlightColor;
-            return ApplyOpacity(onSurface, theme.Brightness == Brightness.Light ? 0.10 : 0.30);
-        }
-
-        Color? ResolveTrackColor(ScrollbarInteractionState state)
-        {
-            return scrollbarTheme.TrackColor?.Resolve(ToWidgetStates(state))
-                   ?? ApplyOpacity(onSurface, theme.Brightness == Brightness.Light ? 0.03 : 0.05);
-        }
-
-        Color? ResolveTrackBorderColor(ScrollbarInteractionState state)
-        {
-            return scrollbarTheme.TrackBorderColor?.Resolve(ToWidgetStates(state))
-                   ?? ApplyOpacity(onSurface, theme.Brightness == Brightness.Light ? 0.10 : 0.25);
-        }
-
-        bool? ResolveTrackVisibility(ScrollbarInteractionState state) =>
-            TrackVisibility ?? scrollbarTheme.TrackVisibility?.Resolve(ToWidgetStates(state)) ?? false;
-
-        double? ResolveThickness(ScrollbarInteractionState state)
-        {
-            double? resolved = Thickness ?? scrollbarTheme.Thickness?.Resolve(ToWidgetStates(state));
-            if (resolved.HasValue) return resolved;
-            return state.HasFlag(ScrollbarInteractionState.Hovered) && ResolveTrackVisibility(state) == true
-                ? 12
-                : isAndroid ? 4 : 8;
-        }
-
-        return new _MaterialScrollbar(
-            child: Child,
+        return new MaterialScrollbar(
             controller: Controller,
             thumbVisibility: ThumbVisibility,
-            shape: null,
-            radius: Radius ?? scrollbarTheme.Radius ?? (isAndroid ? null : 8),
-            thickness: Thickness,
-            thumbColor: null,
-            minThumbLength: scrollbarTheme.MinThumbLength ?? 48,
-            minOverscrollLength: null,
             trackVisibility: TrackVisibility,
-            trackRadius: null,
-            trackColor: null,
-            trackBorderColor: null,
-            fadeDuration: TimeSpan.FromMilliseconds(300),
-            timeToFade: TimeSpan.FromMilliseconds(600),
-            pressDuration: TimeSpan.Zero,
+            thickness: Thickness,
+            radius: Radius,
             notificationPredicate: NotificationPredicate,
-            interactive: Interactive ?? scrollbarTheme.Interactive ?? !isAndroid,
+            interactive: Interactive,
             scrollbarOrientation: ScrollbarOrientation,
-            mainAxisMargin: scrollbarTheme.MainAxisMargin ?? 0,
-            crossAxisMargin: scrollbarTheme.CrossAxisMargin ?? (isAndroid ? 0 : 2),
-            padding: null,
-            thumbColorResolver: ResolveThumbColor,
-            trackColorResolver: ResolveTrackColor,
-            trackBorderColorResolver: ResolveTrackBorderColor,
-            thicknessResolver: ResolveThickness,
-            radiusResolver: null,
-            thumbVisibilityResolver: state =>
-                ThumbVisibility ?? scrollbarTheme.ThumbVisibility?.Resolve(ToWidgetStates(state)) ?? false,
-            trackVisibilityResolver: ResolveTrackVisibility,
-            trackTapEnabled: true,
-            interactionChanged: null);
+            child: Child);
     }
 
-    private sealed class _MaterialScrollbar : RawScrollbar
+    internal sealed class MaterialScrollbar : RawScrollbar
     {
-        public _MaterialScrollbar(
+        public MaterialScrollbar(
             Widget child,
-            ScrollController? controller,
-            bool? thumbVisibility,
-            ShapeBorder? shape,
-            double? radius,
-            double? thickness,
-            Color? thumbColor,
-            double minThumbLength,
-            double? minOverscrollLength,
-            bool? trackVisibility,
-            double? trackRadius,
-            Color? trackColor,
-            Color? trackBorderColor,
-            TimeSpan? fadeDuration,
-            TimeSpan? timeToFade,
-            TimeSpan? pressDuration,
-            ScrollNotificationPredicate? notificationPredicate,
-            bool? interactive,
-            ScrollbarOrientation? scrollbarOrientation,
-            double mainAxisMargin,
-            double crossAxisMargin,
-            Thickness? padding,
-            Func<ScrollbarInteractionState, Color?>? thumbColorResolver,
-            Func<ScrollbarInteractionState, Color?>? trackColorResolver,
-            Func<ScrollbarInteractionState, Color?>? trackBorderColorResolver,
-            Func<ScrollbarInteractionState, double?>? thicknessResolver,
-            Func<ScrollbarInteractionState, double?>? radiusResolver,
-            Func<ScrollbarInteractionState, bool?>? thumbVisibilityResolver,
-            Func<ScrollbarInteractionState, bool?>? trackVisibilityResolver,
-            bool trackTapEnabled,
-            Action<ScrollbarInteractionState>? interactionChanged,
+            ScrollController? controller = null,
+            bool? thumbVisibility = null,
+            bool? trackVisibility = null,
+            double? thickness = null,
+            double? radius = null,
+            ScrollNotificationPredicate? notificationPredicate = null,
+            bool? interactive = null,
+            ScrollbarOrientation? scrollbarOrientation = null,
             Key? key = null) : base(
-            child,
-            controller,
-            thumbVisibility,
-            shape,
-            radius,
-            thickness,
-            thumbColor,
-            minThumbLength,
-            minOverscrollLength,
-            trackVisibility,
-            trackRadius,
-            trackColor,
-            trackBorderColor,
-            fadeDuration,
-            timeToFade,
-            pressDuration,
-            notificationPredicate,
-            interactive,
-            scrollbarOrientation,
-            mainAxisMargin,
-            crossAxisMargin,
-            padding,
-            thumbColorResolver,
-            trackColorResolver,
-            trackBorderColorResolver,
-            thicknessResolver,
-            radiusResolver,
-            thumbVisibilityResolver,
-            trackVisibilityResolver,
-            trackTapEnabled,
-            interactionChanged,
-            key)
+            child: child,
+            controller: controller,
+            thumbVisibility: thumbVisibility,
+            trackVisibility: trackVisibility,
+            thickness: thickness,
+            radius: radius,
+            fadeDuration: KScrollbarFadeDuration,
+            timeToFade: KScrollbarTimeToFade,
+            pressDuration: TimeSpan.Zero,
+            notificationPredicate: notificationPredicate ?? DefaultScrollNotificationPredicate,
+            interactive: interactive,
+            scrollbarOrientation: scrollbarOrientation,
+            key: key)
         {
         }
 
-        public override State CreateState() => new _MaterialScrollbarState();
+        public override State CreateState() => new MaterialScrollbarState();
     }
 
-    private sealed class _MaterialScrollbarState : RawScrollbarState<_MaterialScrollbar>
+    private sealed class MaterialScrollbarState : RawScrollbarState<MaterialScrollbar>
     {
         private AnimationController _hoverAnimationController = null!;
+        private bool _dragIsActive;
+        private bool _hoverIsActive;
+        private ColorScheme _colorScheme = null!;
+        private ScrollbarThemeData _scrollbarTheme = null!;
+
+        // On Android, scrollbars should match native appearance.
+        private bool _useAndroidScrollbar;
+
+        protected override bool ShowScrollbar =>
+            CurrentWidget.ThumbVisibility ?? _scrollbarTheme.ThumbVisibility?.Resolve(States) ?? false;
+
+        protected override bool EnableGestures =>
+            CurrentWidget.Interactive ?? _scrollbarTheme.Interactive ?? !_useAndroidScrollbar;
+
+        private WidgetStateProperty<bool> TrackVisibility =>
+            WidgetStateProperty<bool>.ResolveWith(states =>
+                CurrentWidget.TrackVisibility ?? _scrollbarTheme.TrackVisibility?.Resolve(states) ?? false);
+
+        private IReadOnlySet<WidgetState> States
+        {
+            get
+            {
+                var states = new HashSet<WidgetState>();
+                if (_dragIsActive) states.Add(WidgetState.Dragged);
+                if (_hoverIsActive) states.Add(WidgetState.Hovered);
+                return states;
+            }
+        }
+
+        private WidgetStateProperty<Color> ThumbColor
+        {
+            get
+            {
+                Color onSurface = _colorScheme.OnSurface;
+                Brightness brightness = _colorScheme.Brightness;
+                Color dragColor;
+                Color hoverColor;
+                Color idleColor;
+                if (brightness == Brightness.Light)
+                {
+                    dragColor = WithOpacity(onSurface, 0.6);
+                    hoverColor = WithOpacity(onSurface, 0.5);
+                    idleColor = _useAndroidScrollbar
+                        ? WithOpacity(Theme.Of(Context).HighlightColor, 1.0)
+                        : WithOpacity(onSurface, 0.1);
+                }
+                else
+                {
+                    dragColor = WithOpacity(onSurface, 0.75);
+                    hoverColor = WithOpacity(onSurface, 0.65);
+                    idleColor = _useAndroidScrollbar
+                        ? WithOpacity(Theme.Of(Context).HighlightColor, 1.0)
+                        : WithOpacity(onSurface, 0.3);
+                }
+
+                return WidgetStateProperty<Color>.ResolveWith(states =>
+                {
+                    if (states.Contains(WidgetState.Dragged))
+                    {
+                        return _scrollbarTheme.ThumbColor?.Resolve(states) ?? dragColor;
+                    }
+
+                    // If the track is visible, the thumb color hover animation is ignored and changes
+                    // immediately.
+                    if (TrackVisibility.Resolve(states))
+                    {
+                        return _scrollbarTheme.ThumbColor?.Resolve(states) ?? hoverColor;
+                    }
+
+                    return new ColorTween().Evaluate(
+                        _hoverAnimationController.Value,
+                        _scrollbarTheme.ThumbColor?.Resolve(states) ?? idleColor,
+                        _scrollbarTheme.ThumbColor?.Resolve(states) ?? hoverColor);
+                });
+            }
+        }
+
+        private WidgetStateProperty<Color> TrackColor
+        {
+            get
+            {
+                Color onSurface = _colorScheme.OnSurface;
+                Brightness brightness = _colorScheme.Brightness;
+                return WidgetStateProperty<Color>.ResolveWith(states =>
+                {
+                    if (ShowScrollbar && TrackVisibility.Resolve(states))
+                    {
+                        return _scrollbarTheme.TrackColor?.Resolve(states)
+                               ?? WithOpacity(onSurface, brightness == Brightness.Light ? 0.03 : 0.05);
+                    }
+
+                    return Transparent;
+                });
+            }
+        }
+
+        private WidgetStateProperty<Color> TrackBorderColor
+        {
+            get
+            {
+                Color onSurface = _colorScheme.OnSurface;
+                Brightness brightness = _colorScheme.Brightness;
+                return WidgetStateProperty<Color>.ResolveWith(states =>
+                {
+                    if (ShowScrollbar && TrackVisibility.Resolve(states))
+                    {
+                        return _scrollbarTheme.TrackBorderColor?.Resolve(states)
+                               ?? WithOpacity(onSurface, brightness == Brightness.Light ? 0.1 : 0.25);
+                    }
+
+                    return Transparent;
+                });
+            }
+        }
+
+        private WidgetStateProperty<double> Thickness =>
+            WidgetStateProperty<double>.ResolveWith(states =>
+            {
+                if (states.Contains(WidgetState.Hovered) && TrackVisibility.Resolve(states))
+                {
+                    return CurrentWidget.Thickness
+                           ?? _scrollbarTheme.Thickness?.Resolve(states)
+                           ?? KScrollbarThicknessWithTrack;
+                }
+
+                // The default scrollbar thickness is smaller on mobile.
+                return CurrentWidget.Thickness
+                       ?? _scrollbarTheme.Thickness?.Resolve(states)
+                       ?? KScrollbarThickness / (_useAndroidScrollbar ? 2 : 1);
+            });
 
         public override void InitState()
         {
             base.InitState();
-            _hoverAnimationController = new AnimationController(duration: TimeSpan.FromMilliseconds(200), vsync: this);
-            _hoverAnimationController.Changed += HandleHoverAnimationChanged;
+            _hoverAnimationController = new AnimationController(
+                duration: TimeSpan.FromMilliseconds(200),
+                vsync: this);
+            _hoverAnimationController.Changed += HandleHoverAnimationTick;
         }
 
-        public override void Dispose()
+        public override void DidChangeDependencies()
         {
-            _hoverAnimationController.Changed -= HandleHoverAnimationChanged;
-            _hoverAnimationController.Dispose();
-            base.Dispose();
+            ThemeData theme = Theme.Of(Context);
+            _colorScheme = theme.ColorScheme;
+            _scrollbarTheme = ScrollbarTheme.Of(Context);
+            _useAndroidScrollbar = theme.Platform == TargetPlatform.Android;
+            base.DidChangeDependencies();
         }
 
-        protected override Color ResolveThumbColor(ScrollbarInteractionState states)
+        protected override void UpdateScrollbarPainter()
         {
-            if (states.HasFlag(ScrollbarInteractionState.Dragged) || ResolveTrackVisibility(states))
-            {
-                return base.ResolveThumbColor(states);
-            }
-
-            Color idleColor = base.ResolveThumbColor(states & ~ScrollbarInteractionState.Hovered);
-            Color hoverColor = base.ResolveThumbColor(states | ScrollbarInteractionState.Hovered);
-            return new ColorTween().Evaluate(_hoverAnimationController.Evaluate(), idleColor, hoverColor);
+            IReadOnlySet<WidgetState> states = States;
+            ScrollbarPainter.Color = ThumbColor.Resolve(states);
+            ScrollbarPainter.TrackColor = TrackColor.Resolve(states);
+            ScrollbarPainter.TrackBorderColor = TrackBorderColor.Resolve(states);
+            ScrollbarPainter.TextDirection = Directionality.Of(Context);
+            ScrollbarPainter.Thickness = Thickness.Resolve(states);
+            ScrollbarPainter.Radius = CurrentWidget.Radius
+                                      ?? _scrollbarTheme.Radius
+                                      ?? (_useAndroidScrollbar ? null : KScrollbarRadius);
+            ScrollbarPainter.CrossAxisMargin = _scrollbarTheme.CrossAxisMargin
+                                               ?? (_useAndroidScrollbar ? 0.0 : KScrollbarMargin);
+            ScrollbarPainter.MainAxisMargin = _scrollbarTheme.MainAxisMargin ?? 0.0;
+            ScrollbarPainter.MinLength = _scrollbarTheme.MinThumbLength ?? KScrollbarMinLength;
+            ScrollbarPainter.Padding = MediaQuery.MaybePaddingOf(Context) ?? default;
+            ScrollbarPainter.ScrollbarOrientation = CurrentWidget.ScrollbarOrientation;
+            ScrollbarPainter.IgnorePointer = !EnableGestures;
         }
 
-        protected override void InteractionStateChanged(
-            ScrollbarInteractionState oldValue,
-            ScrollbarInteractionState newValue)
+        protected override void HandleThumbPressStart(Point localPosition)
         {
-            base.InteractionStateChanged(oldValue, newValue);
-            bool wasHovered = oldValue.HasFlag(ScrollbarInteractionState.Hovered);
-            bool isHovered = newValue.HasFlag(ScrollbarInteractionState.Hovered);
-            if (wasHovered == isHovered)
-            {
-                return;
-            }
+            base.HandleThumbPressStart(localPosition);
+            SetState(() => _dragIsActive = true);
+        }
 
-            if (isHovered)
+        protected override void HandleThumbPressEnd(Point localPosition, Velocity velocity)
+        {
+            base.HandleThumbPressEnd(localPosition, velocity);
+            SetState(() => _dragIsActive = false);
+        }
+
+        protected override void HandleHover(PointerHoverEvent @event)
+        {
+            base.HandleHover(@event);
+
+            // Check if the position of the pointer falls over the painted scrollbar.
+            if (IsPointerOverScrollbar(@event.Position, @event.Kind, forHover: true))
             {
+                // Pointer is hovering over the scrollbar.
+                SetState(() => _hoverIsActive = true);
                 _hoverAnimationController.Forward();
             }
-            else
+            else if (_hoverIsActive)
             {
+                // Pointer was, but is no longer over the painted scrollbar.
+                SetState(() => _hoverIsActive = false);
                 _hoverAnimationController.Reverse();
             }
         }
 
-        private void HandleHoverAnimationChanged()
+        protected override void HandleHoverExit(PointerExitEvent @event)
+        {
+            base.HandleHoverExit(@event);
+            SetState(() => _hoverIsActive = false);
+            _hoverAnimationController.Reverse();
+        }
+
+        public override void Dispose()
+        {
+            _hoverAnimationController.Changed -= HandleHoverAnimationTick;
+            _hoverAnimationController.Dispose();
+            base.Dispose();
+        }
+
+        private void HandleHoverAnimationTick()
         {
             if (Mounted)
             {
-                SetState(() => { });
+                UpdateScrollbarPainter();
             }
         }
+
+        private static Color Transparent => Color.FromArgb(0x00, 0x00, 0x00, 0x00);
     }
 
-    private static IReadOnlySet<WidgetState> ToWidgetStates(ScrollbarInteractionState state)
-    {
-        var result = new HashSet<WidgetState>();
-        if (state.HasFlag(ScrollbarInteractionState.Hovered)) result.Add(WidgetState.Hovered);
-        if (state.HasFlag(ScrollbarInteractionState.Dragged)) result.Add(WidgetState.Dragged);
-        return result;
-    }
-
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Clamp((int)(255 * opacity), 0, 255), color.R, color.G, color.B);
+    // Dart's `Color.withOpacity` replaces the alpha channel outright rather than scaling it.
+    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
+        (byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255),
+        color.R,
+        color.G,
+        color.B);
 }

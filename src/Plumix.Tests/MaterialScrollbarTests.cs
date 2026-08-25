@@ -1,8 +1,8 @@
 using Avalonia;
 using Avalonia.Media;
-using Plumix.Material;
 using Plumix.Cupertino;
 using Plumix.Gestures;
+using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -14,6 +14,11 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialScrollbarTests
 {
+    private static readonly Size ViewportSize = new(200, 240);
+    private static readonly DateTime PressTime = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    private double _clock = Scheduler.CurrentSeconds;
+
     public MaterialScrollbarTests()
     {
         GestureBinding.Instance.ResetForTests();
@@ -61,7 +66,7 @@ public sealed class MaterialScrollbarTests
             child: new SizedBox(),
             shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
             radius: 4));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new MaterialScrollbar(
+        Assert.Throws<ArgumentOutOfRangeException>(() => new RawScrollbar(
             child: new SizedBox(),
             thickness: 0));
     }
@@ -69,6 +74,7 @@ public sealed class MaterialScrollbarTests
     [Fact]
     public void RawScrollbar_OverlaysChildAndComputesVerticalGeometry()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
@@ -77,24 +83,22 @@ public sealed class MaterialScrollbarTests
             radius: 3,
             minThumbLength: 18,
             child: BuildVerticalList(controller, 20)));
+        Settle(harness);
 
-        harness.Pump(new Size(200, 240));
-
-        var overlay = RequireOverlay(harness.RenderView);
-        var geometry = Assert.IsType<ScrollbarGeometry>(overlay.Geometry);
-        Assert.Equal(new Size(200, 240), overlay.Size);
-        Assert.Equal(new Size(200, 240), overlay.Child!.Size);
+        ScrollbarPainter painter = RequirePainter(harness);
+        var geometry = Assert.IsType<ScrollbarGeometry>(painter.Geometry);
         Assert.Equal(Axis.Vertical, geometry.Axis);
         Assert.Equal(new Rect(194, 0, 6, 240), geometry.TrackRect);
         Assert.Equal(72, geometry.ThumbRect.Height, precision: 3);
         Assert.Equal(0, geometry.ThumbRect.Y, precision: 3);
-        Assert.Equal(6, overlay.Thickness);
-        Assert.Equal(1, overlay.Opacity);
+        Assert.Equal(6, painter.Thickness);
+        Assert.Equal(1, painter.FadeoutOpacityAnimation.Value);
     }
 
     [Fact]
     public void RawScrollbar_HorizontalBottomGeometryHonorsMarginsAndPadding()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
@@ -109,11 +113,10 @@ public sealed class MaterialScrollbarTests
                 controller: controller,
                 scrollDirection: Axis.Horizontal,
                 child: new SizedBox(width: 900, height: 120))));
+        Settle(harness, new Size(300, 120));
 
-        harness.Pump(new Size(300, 120));
-
-        var overlay = RequireOverlay(harness.RenderView);
-        var geometry = Assert.IsType<ScrollbarGeometry>(overlay.Geometry);
+        ScrollbarPainter painter = RequirePainter(harness);
+        var geometry = Assert.IsType<ScrollbarGeometry>(painter.Geometry);
         Assert.Equal(Axis.Horizontal, geometry.Axis);
         // Flutter's track rect spans the padded viewport; only the thumb is inset by mainAxisMargin.
         Assert.Equal(7, geometry.TrackRect.X);
@@ -122,13 +125,13 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(14, geometry.TrackRect.Height);
         Assert.Equal(12, geometry.TrackMainAxisStart);
         Assert.Equal(270, geometry.TrackMainAxisExtent);
-        Assert.True(overlay.TrackVisible);
         Assert.True(geometry.ThumbRect.Width >= 18);
     }
 
     [Fact]
     public void RawScrollbar_DefaultVerticalOrientationFollowsTextDirection()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new Directionality(
             textDirection: TextDirection.Rtl,
@@ -137,76 +140,62 @@ public sealed class MaterialScrollbarTests
                 thumbVisibility: true,
                 thickness: 6,
                 child: BuildVerticalList(controller, 20))));
+        Settle(harness);
 
-        harness.Pump(new Size(200, 240));
-
-        var geometry = RequireOverlay(harness.RenderView).Geometry!.Value;
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
         Assert.Equal(0, geometry.TrackRect.X);
-        Assert.Equal(ScrollbarOrientation.Left,
-            Assert.IsType<RawScrollbarOverlay>(FindWidgetObject<RawScrollbarOverlay>(harness.RootElement)).Orientation);
     }
 
     [Fact]
     public void RawScrollbar_ControllerMovementShowsTransientThumb()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
             child: BuildVerticalList(controller, 20)));
-
-        harness.Pump(new Size(200, 240));
-        Assert.Equal(0, RequireOverlay(harness.RenderView).Opacity);
+        Settle(harness);
+        Assert.Equal(0, RequirePainter(harness).FadeoutOpacityAnimation.Value);
 
         controller.JumpTo(80);
-        harness.Pump(new Size(200, 240));
+        AdvanceAndPump(harness, 0.4);
 
-        Assert.Equal(1, RequireOverlay(harness.RenderView).Opacity);
-        Assert.True(RequireOverlay(harness.RenderView).Geometry!.Value.ThumbRect.Y > 0);
+        Assert.Equal(1, RequirePainter(harness).FadeoutOpacityAnimation.Value);
+        Assert.True(RequirePainter(harness).Geometry!.Value.ThumbRect.Y > 0);
     }
 
+    // Flutter: "Scrollbar will fade back in when hovering over known track area".
     [Fact]
     public void RawScrollbar_MouseHoverNearThumbRevealsFadedScrollbarButContentHoverDoesNot()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
             child: BuildVerticalList(controller, 20)));
-        harness.Pump(new Size(200, 240));
+        Settle(harness);
+        Assert.Equal(0, RequirePainter(harness).FadeoutOpacityAnimation.Value);
 
-        var overlay = RequireOverlay(harness.RenderView);
-        Assert.Equal(0, overlay.Opacity);
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
+        Dispatch(harness, new PointerHoverEvent(
+            8, PointerDeviceKind.Mouse, new Point(100, geometry.ThumbRect.Center.Y),
+            PointerButtons.None, PressTime));
+        AdvanceAndPump(harness, 0.4);
+        Assert.Equal(0, RequirePainter(harness).FadeoutOpacityAnimation.Value);
 
-        var geometry = overlay.Geometry!.Value;
-        var now = DateTime.UtcNow;
-        var binding = GestureBinding.Instance;
-        binding.HandlePointerEvent(harness.RenderView, new PointerHoverEvent(
-            8,
-            PointerDeviceKind.Mouse,
-            new Point(100, geometry.ThumbRect.Center.Y),
-            PointerButtons.None,
-            now));
-        harness.Pump(new Size(200, 240));
-        Assert.Equal(0, RequireOverlay(harness.RenderView).Opacity);
-
+        // Inside the 48-logical-pixel proximity rect Flutter grows around the thumb for hovering.
         var proximityPoint = new Point(geometry.ThumbRect.Center.X - 23, geometry.ThumbRect.Center.Y);
-        binding.HandlePointerEvent(harness.RenderView, new PointerHoverEvent(
-            8,
-            PointerDeviceKind.Mouse,
-            proximityPoint,
-            PointerButtons.None,
-            now.AddMilliseconds(20)));
-        double schedulerNow = Scheduler.CurrentSeconds;
-        AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.35));
-        harness.Pump(new Size(200, 240));
+        Dispatch(harness, new PointerHoverEvent(
+            8, PointerDeviceKind.Mouse, proximityPoint, PointerButtons.None, PressTime.AddMilliseconds(20)));
+        AdvanceAndPump(harness, 0.4);
 
-        Assert.Equal(1, RequireOverlay(harness.RenderView).Opacity);
+        Assert.Equal(1, RequirePainter(harness).FadeoutOpacityAnimation.Value);
     }
 
     [Fact]
     public void RawScrollbar_ContentClickDoesNotTriggerTrackPaging()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         int tappedIndex = -1;
         using var harness = new WidgetRenderHarness(new RawScrollbar(
@@ -222,88 +211,167 @@ public sealed class MaterialScrollbarTests
                     onTap: () => tappedIndex = index,
                     child: new SizedBox(height: 40, child: new Text($"row {index}"))),
                 addAutomaticKeepAlives: false)));
-        harness.Pump(new Size(200, 240));
+        Settle(harness);
 
         var point = new Point(100, 100);
-        var now = DateTime.UtcNow;
-        var binding = GestureBinding.Instance;
-        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
-            18, PointerDeviceKind.Mouse, point, PointerButtons.Primary, now));
-        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
-            18, PointerDeviceKind.Mouse, point, PointerButtons.None, now.AddMilliseconds(20)));
+        Dispatch(harness, new PointerDownEvent(
+            18, PointerDeviceKind.Mouse, point, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerUpEvent(
+            18, PointerDeviceKind.Mouse, point, PointerButtons.None, PressTime.AddMilliseconds(20)));
 
         Assert.Equal(2, tappedIndex);
         Assert.Equal(0, controller.Offset);
     }
 
+    // Flutter: "hit test" — taps over the track and the thumb never reach the child.
+    [Fact]
+    public void RawScrollbar_TrackAndThumbAbsorbHitTestsFromTheChild()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        int tappedIndex = -1;
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller,
+            thumbVisibility: true,
+            trackVisibility: true,
+            interactive: true,
+            child: ListView.Builder(
+                itemCount: 30,
+                controller: controller,
+                itemExtent: 40,
+                itemBuilder: (_, index) => new GestureDetector(
+                    behavior: HitTestBehavior.Opaque,
+                    onTap: () => tappedIndex = index,
+                    child: new SizedBox(height: 40, child: new Text($"row {index}"))),
+                addAutomaticKeepAlives: false)));
+        Settle(harness);
+
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
+        var onThumb = geometry.ThumbRect.Center;
+        Dispatch(harness, new PointerDownEvent(
+            50, PointerDeviceKind.Mouse, onThumb, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerUpEvent(
+            50, PointerDeviceKind.Mouse, onThumb, PointerButtons.None, PressTime.AddMilliseconds(20)));
+
+        Assert.Equal(-1, tappedIndex);
+    }
+
+    // Flutter: "Scrollbar thumb can be dragged" — and, since 3.47, the drag engages on pointer down
+    // (`dragStartBehavior: down` with `touchSlop: 0`), so the first move already scrolls.
     [Fact]
     public void RawScrollbar_ThumbDragMapsTrackTravelToScrollExtent()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
             thumbVisibility: true,
             interactive: true,
             child: BuildVerticalList(controller, 30)));
-        harness.Pump(new Size(200, 240));
+        Settle(harness);
 
-        var overlay = RequireOverlay(harness.RenderView);
-        var geometry = overlay.Geometry!.Value;
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
         double x = geometry.ThumbRect.Center.X;
         double downY = geometry.ThumbRect.Center.Y;
-        var now = DateTime.UtcNow;
-        overlay.HandleEvent(new PointerDownEvent(
-            pointer: 9,
-            kind: PointerDeviceKind.Mouse,
-            position: new Point(x, downY),
-            buttons: PointerButtons.Primary,
-            timestampUtc: now), new BoxHitTestEntry(overlay, new Point(x, downY)));
-        overlay.HandleEvent(new PointerMoveEvent(
-            pointer: 9,
-            kind: PointerDeviceKind.Mouse,
-            position: new Point(x, 235),
-            buttons: PointerButtons.Primary,
-            down: true,
-            timestampUtc: now.AddMilliseconds(20)), new BoxHitTestEntry(overlay, new Point(x, 235)));
-        overlay.HandleEvent(new PointerUpEvent(
-            pointer: 9,
-            kind: PointerDeviceKind.Mouse,
-            position: new Point(x, 235),
-            buttons: PointerButtons.None,
-            timestampUtc: now.AddMilliseconds(30)), new BoxHitTestEntry(overlay, new Point(x, 235)));
+        Dispatch(harness, new PointerDownEvent(
+            9, PointerDeviceKind.Mouse, new Point(x, downY), PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerMoveEvent(
+            9, PointerDeviceKind.Mouse, new Point(x, 235), PointerButtons.Primary, true,
+            PressTime.AddMilliseconds(20)));
+        Dispatch(harness, new PointerUpEvent(
+            9, PointerDeviceKind.Mouse, new Point(x, 235), PointerButtons.None,
+            PressTime.AddMilliseconds(30)));
 
         Assert.True(controller.Offset > controller.PrimaryPosition!.MaxScrollExtent * 0.9);
     }
 
+    // Flutter: "Scrollbar thumb can be dragged" — a single one-pixel move is enough, because the
+    // thumb recognizer runs with `DeviceGestureSettings(touchSlop: 0)`.
     [Fact]
-    public void RawScrollbar_ThumbDragWorksThroughGestureBindingPointerRoute()
+    public void RawScrollbar_ThumbDragStartsWithoutCrossingTheTouchSlop()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
             thumbVisibility: true,
             interactive: true,
             child: BuildVerticalList(controller, 30)));
-        harness.Pump(new Size(200, 240));
+        Settle(harness);
 
-        var geometry = RequireOverlay(harness.RenderView).Geometry!.Value;
-        var start = geometry.ThumbRect.Center;
-        var end = new Point(start.X, 235);
-        var now = DateTime.UtcNow;
-        var binding = GestureBinding.Instance;
-        binding.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
-            19, PointerDeviceKind.Mouse, start, PointerButtons.Primary, now));
-        binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
-            19, PointerDeviceKind.Mouse, end, PointerButtons.Primary, true, now.AddMilliseconds(20)));
-        binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
-            19, PointerDeviceKind.Mouse, end, PointerButtons.None, now.AddMilliseconds(30)));
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
+        Point start = geometry.ThumbRect.Center;
+        Dispatch(harness, new PointerDownEvent(
+            11, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerMoveEvent(
+            11, PointerDeviceKind.Touch, new Point(start.X, start.Y + 2), PointerButtons.Primary, true,
+            PressTime.AddMilliseconds(16)));
 
-        Assert.True(controller.Offset > controller.PrimaryPosition!.MaxScrollExtent * 0.9);
+        Assert.True(controller.Offset > 0);
+    }
+
+    // Flutter: "Scrollbar thumb cannot be dragged into overscroll if the physics do not allow".
+    [Fact]
+    public void RawScrollbar_ThumbDragDoesNotEnterOverscrollAtTheTop()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller,
+            thumbVisibility: true,
+            interactive: true,
+            child: BuildVerticalList(controller, 30)));
+        Settle(harness);
+
+        Point start = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Dispatch(harness, new PointerDownEvent(
+            12, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerMoveEvent(
+            12, PointerDeviceKind.Touch, new Point(start.X, start.Y - 40), PointerButtons.Primary, true,
+            PressTime.AddMilliseconds(16)));
+
+        Assert.Equal(0, controller.Offset);
+    }
+
+    // Flutter: "Scrollbar respect the NeverScrollableScrollPhysics physics".
+    [Fact]
+    public void RawScrollbar_RespectsNeverScrollableScrollPhysics()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller,
+            thumbVisibility: true,
+            interactive: true,
+            child: ListView.Builder(
+                itemCount: 30,
+                controller: controller,
+                itemExtent: 40,
+                physics: new NeverScrollableScrollPhysics(),
+                itemBuilder: (_, index) => new SizedBox(height: 40, child: new Text($"row {index}")),
+                addAutomaticKeepAlives: false)));
+        Settle(harness);
+
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
+        Point start = geometry.ThumbRect.Center;
+        Dispatch(harness, new PointerDownEvent(
+            13, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerMoveEvent(
+            13, PointerDeviceKind.Touch, new Point(start.X, start.Y + 40), PointerButtons.Primary, true,
+            PressTime.AddMilliseconds(16)));
+        Assert.Equal(0, controller.Offset);
+
+        var trackPoint = new Point(geometry.TrackRect.Center.X, geometry.TrackRect.Bottom - 2);
+        Dispatch(harness, new PointerDownEvent(
+            14, PointerDeviceKind.Mouse, trackPoint, PointerButtons.Primary, PressTime));
+        AdvanceAndPump(harness, 0.2);
+        Assert.Equal(0, controller.Offset);
     }
 
     [Fact]
     public void RawScrollbar_TrackPressPagesTowardPointer()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
@@ -311,28 +379,23 @@ public sealed class MaterialScrollbarTests
             trackVisibility: true,
             interactive: true,
             child: BuildVerticalList(controller, 30)));
-        harness.Pump(new Size(200, 240));
+        Settle(harness);
 
-        var overlay = RequireOverlay(harness.RenderView);
-        var geometry = overlay.Geometry!.Value;
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
         var point = new Point(geometry.TrackRect.Center.X, geometry.TrackRect.Bottom - 2);
-        overlay.HandleEvent(new PointerDownEvent(
-            pointer: 10,
-            kind: PointerDeviceKind.Mouse,
-            position: point,
-            buttons: PointerButtons.Primary,
-            timestampUtc: DateTime.UtcNow), new BoxHitTestEntry(overlay, point));
+        Dispatch(harness, new PointerDownEvent(
+            10, PointerDeviceKind.Mouse, point, PointerButtons.Primary, PressTime));
+        AdvanceAndPump(harness, 0.2);
 
-        double schedulerNow = Scheduler.CurrentSeconds;
-        AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.12));
-
-        Assert.Equal(240, controller.Offset, precision: 3);
+        // `ScrollAction.getDirectionalIncrement` pages by 0.8 * viewportDimension.
+        Assert.Equal(192, controller.Offset, precision: 3);
     }
 
+    // Flutter: `pressDuration` is declared for source compatibility and never read.
     [Fact]
-    public void RawScrollbar_PressDurationDelaysThumbDrag()
+    public void RawScrollbar_PressDurationDoesNotDelayTheThumbDrag()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
@@ -340,32 +403,85 @@ public sealed class MaterialScrollbarTests
             interactive: true,
             pressDuration: TimeSpan.FromMilliseconds(100),
             child: BuildVerticalList(controller, 30)));
-        harness.Pump(new Size(200, 240));
+        Settle(harness);
 
-        var overlay = RequireOverlay(harness.RenderView);
-        var geometry = overlay.Geometry!.Value;
-        var start = geometry.ThumbRect.Center;
-        var end = new Point(start.X, 235);
-        var now = DateTime.UtcNow;
-        overlay.HandleEvent(new PointerDownEvent(21, PointerDeviceKind.Touch, start, PointerButtons.Primary, now),
-            new BoxHitTestEntry(overlay, start));
-        overlay.HandleEvent(new PointerMoveEvent(21, PointerDeviceKind.Touch, end, PointerButtons.Primary, true, now.AddMilliseconds(20)),
-            new BoxHitTestEntry(overlay, end));
-        Assert.Equal(0, controller.Offset);
-
-        double schedulerNow = Scheduler.CurrentSeconds;
-        AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01));
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.12));
-        overlay.HandleEvent(new PointerMoveEvent(21, PointerDeviceKind.Touch, end, PointerButtons.Primary, true, now.AddMilliseconds(120)),
-            new BoxHitTestEntry(overlay, end));
+        Point start = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Dispatch(harness, new PointerDownEvent(
+            21, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerMoveEvent(
+            21, PointerDeviceKind.Touch, new Point(start.X, 235), PointerButtons.Primary, true,
+            PressTime.AddMilliseconds(16)));
 
         Assert.True(controller.Offset > controller.PrimaryPosition!.MaxScrollExtent * 0.9);
     }
 
+    // Flutter: "Scrollbar gestures disabled when maxScrollExtent == minScrollExtent".
     [Fact]
-    public void MaterialScrollbar_DesktopDefaultsAndThemeStatesMatchFlutter()
+    public void RawScrollbar_InstallsNoRecognizersWhenTheContentFits()
     {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller,
+            interactive: true,
+            child: BuildVerticalList(controller, 2)));
+        Settle(harness);
+
+        var detector = Assert.IsType<RawGestureDetector>(FindWidgetObject<RawGestureDetector>(harness.RootElement));
+        Assert.Empty(detector.Gestures!);
+    }
+
+    [Fact]
+    public void RawScrollbar_InstallsThumbAndTrackRecognizersWhenScrollable()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller,
+            interactive: true,
+            child: BuildVerticalList(controller, 30)));
+        Settle(harness);
+
+        var detector = Assert.IsType<RawGestureDetector>(FindWidgetObject<RawGestureDetector>(harness.RootElement));
+        Assert.Equal(2, detector.Gestures!.Count);
+    }
+
+    // Flutter: "Scrollbar hit test area adjusts for PointerDeviceKind".
+    [Fact]
+    public void RawScrollbar_TouchHitTestAreaIsWiderThanTheMouseOne()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller,
+            thumbVisibility: true,
+            interactive: true,
+            thickness: 6,
+            child: BuildVerticalList(controller, 30)));
+        Settle(harness);
+
+        ScrollbarPainter painter = RequirePainter(harness);
+        ScrollbarGeometry geometry = painter.Geometry!.Value;
+        var justOutside = new Point(geometry.ThumbRect.Left - 8, geometry.ThumbRect.Center.Y);
+
+        Assert.True(painter.HitTestOnlyThumbInteractive(justOutside, PointerDeviceKind.Touch));
+        Assert.False(painter.HitTestOnlyThumbInteractive(justOutside, PointerDeviceKind.Mouse));
+
+        // The move stays under the scroll view's own 18 px touch slop, so only the scrollbar's
+        // zero-slop recognizer claims the pointer — exactly the situation Flutter's test exercises.
+        Dispatch(harness, new PointerDownEvent(
+            15, PointerDeviceKind.Touch, justOutside, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerMoveEvent(
+            15, PointerDeviceKind.Touch, new Point(justOutside.X, justOutside.Y + 8),
+            PointerButtons.Primary, true, PressTime.AddMilliseconds(16)));
+        Assert.True(controller.Offset > 0);
+    }
+
+    [Fact]
+    public void MaterialScrollbar_DesktopThemeStatesResolveOntoThePainter()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
         var themeData = new ScrollbarThemeData(
             thumbVisibility: WidgetStateProperty<bool?>.All(true),
             trackVisibility: WidgetStateProperty<bool?>.ResolveWith(states =>
@@ -382,34 +498,32 @@ public sealed class MaterialScrollbarTests
             minThumbLength: 52,
             interactive: true);
 
-        using var tree = new WidgetTree(new Theme(
+        using var harness = new WidgetRenderHarness(new Theme(
             data: ThemeData.Light with
             {
                 Platform = TargetPlatform.Windows,
                 ScrollbarTheme = themeData,
             },
-            child: new MaterialScrollbar(child: new SizedBox())));
+            child: new MaterialScrollbar(
+                controller: controller,
+                child: BuildVerticalList(controller, 30))));
+        Settle(harness);
 
-        var raw = Assert.IsAssignableFrom<RawScrollbar>(tree.FindWidget<RawScrollbar>());
-        Assert.Equal(6, raw.Radius);
-        Assert.Equal(4, raw.CrossAxisMargin);
-        Assert.Equal(3, raw.MainAxisMargin);
-        Assert.Equal(52, raw.MinThumbLength);
-        Assert.True(raw.Interactive);
-        Assert.True(raw.ThumbVisibilityResolver!(ScrollbarInteractionState.None));
-        Assert.False(raw.TrackVisibilityResolver!(ScrollbarInteractionState.None));
-        Assert.True(raw.TrackVisibilityResolver!(ScrollbarInteractionState.Hovered));
-        Assert.Equal(9, raw.ThicknessResolver!(ScrollbarInteractionState.None));
-        Assert.Equal(14, raw.ThicknessResolver!(ScrollbarInteractionState.Hovered));
-        Assert.Equal(Colors.DarkCyan, raw.ThumbColorResolver!(ScrollbarInteractionState.None));
-        Assert.Equal(Colors.Crimson, raw.ThumbColorResolver!(ScrollbarInteractionState.Dragged));
-        Assert.Equal(Colors.Beige, raw.TrackColorResolver!(ScrollbarInteractionState.Hovered));
-        Assert.Equal(Colors.Brown, raw.TrackBorderColorResolver!(ScrollbarInteractionState.Hovered));
+        ScrollbarPainter painter = RequirePainter(harness);
+        Assert.Equal(6, painter.Radius);
+        Assert.Equal(4, painter.CrossAxisMargin);
+        Assert.Equal(3, painter.MainAxisMargin);
+        Assert.Equal(52, painter.MinLength);
+        Assert.Equal(9, painter.Thickness);
+        Assert.Equal(Colors.DarkCyan, painter.Color);
+        Assert.Equal(1, painter.FadeoutOpacityAnimation.Value);
+        Assert.False(painter.IgnorePointer);
     }
 
     [Fact]
     public void MaterialScrollbar_HoverAndDragUpdateResolvedPainterState()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         var scrollbarTheme = new ScrollbarThemeData(
             thumbVisibility: WidgetStateProperty<bool?>.All(true),
@@ -418,7 +532,8 @@ public sealed class MaterialScrollbarTests
             thickness: WidgetStateProperty<double?>.ResolveWith(states =>
                 states.Contains(WidgetState.Hovered) ? 14 : 9),
             thumbColor: WidgetStateProperty<Color?>.ResolveWith(states =>
-                states.Contains(WidgetState.Dragged) ? Colors.Crimson : Colors.DarkCyan));
+                states.Contains(WidgetState.Dragged) ? Colors.Crimson : Colors.DarkCyan),
+            trackColor: WidgetStateProperty<Color?>.All(Colors.Beige));
         using var harness = new WidgetRenderHarness(new Theme(
             data: ThemeData.Light with
             {
@@ -428,57 +543,67 @@ public sealed class MaterialScrollbarTests
             child: new MaterialScrollbar(
                 controller: controller,
                 child: BuildVerticalList(controller, 30))));
-        harness.Pump(new Size(200, 240));
+        Settle(harness);
 
-        var overlay = RequireOverlay(harness.RenderView);
-        Assert.Equal(9, overlay.Thickness);
-        Assert.Equal(Colors.DarkCyan, overlay.ThumbColor);
-        Assert.False(overlay.TrackVisible);
-        var point = overlay.Geometry!.Value.ThumbRect.Center;
-        overlay.HandleEvent(new PointerHoverEvent(
-            33, PointerDeviceKind.Mouse, point, PointerButtons.None, DateTime.UtcNow),
-            new BoxHitTestEntry(overlay, point));
-        harness.Pump(new Size(200, 240));
+        ScrollbarPainter painter = RequirePainter(harness);
+        Assert.Equal(9, painter.Thickness);
+        Assert.Equal(Colors.DarkCyan, painter.Color);
+        Assert.Equal(Color.FromArgb(0, 0, 0, 0), painter.TrackColor);
 
-        overlay = RequireOverlay(harness.RenderView);
-        Assert.Equal(14, overlay.Thickness);
-        Assert.True(overlay.TrackVisible);
+        Point point = painter.Geometry!.Value.ThumbRect.Center;
+        Dispatch(harness, new PointerHoverEvent(
+            33, PointerDeviceKind.Mouse, point, PointerButtons.None, PressTime));
+        AdvanceAndPump(harness, 0.3);
 
-        point = overlay.Geometry!.Value.ThumbRect.Center;
-        overlay.HandleEvent(new PointerDownEvent(
-            34, PointerDeviceKind.Mouse, point, PointerButtons.Primary, DateTime.UtcNow),
-            new BoxHitTestEntry(overlay, point));
-        harness.Pump(new Size(200, 240));
+        painter = RequirePainter(harness);
+        Assert.Equal(14, painter.Thickness);
+        Assert.Equal(Colors.Beige, painter.TrackColor);
 
-        overlay = RequireOverlay(harness.RenderView);
-        Assert.Equal(Colors.Crimson, overlay.ThumbColor);
+        point = painter.Geometry!.Value.ThumbRect.Center;
+        Dispatch(harness, new PointerDownEvent(
+            34, PointerDeviceKind.Mouse, point, PointerButtons.Primary, PressTime.AddMilliseconds(50)));
+        AdvanceAndPump(harness, 0.05);
+
+        Assert.Equal(Colors.Crimson, RequirePainter(harness).Color);
     }
 
     [Fact]
     public void MaterialScrollbar_PlatformDefaultsMatchAndroidAndDesktopPaths()
     {
-        using var androidTree = new WidgetTree(new Theme(
+        using var timers = new FakeGestureTimers();
+        using var androidController = new ScrollController();
+        using var androidHarness = new WidgetRenderHarness(new Theme(
             data: ThemeData.Light with { Platform = TargetPlatform.Android },
-            child: new MaterialScrollbar(child: new SizedBox())));
-        var android = Assert.IsAssignableFrom<RawScrollbar>(androidTree.FindWidget<RawScrollbar>());
+            child: new MaterialScrollbar(
+                controller: androidController,
+                thumbVisibility: true,
+                child: BuildVerticalList(androidController, 30))));
+        Settle(androidHarness);
+
+        ScrollbarPainter android = RequirePainter(androidHarness);
         Assert.Null(android.Radius);
         Assert.Equal(0, android.CrossAxisMargin);
-        Assert.False(android.Interactive);
-        Assert.Equal(4, android.ThicknessResolver!(ScrollbarInteractionState.None));
+        Assert.Equal(4, android.Thickness);
+        // `interactive` defaults to false on Android, which is what `ignorePointer` reports.
+        Assert.True(android.IgnorePointer);
 
-        using var desktopTree = new WidgetTree(new Theme(
+        using var desktopController = new ScrollController();
+        using var desktopHarness = new WidgetRenderHarness(new Theme(
             data: ThemeData.Light with { Platform = TargetPlatform.Windows },
-            child: new MaterialScrollbar(child: new SizedBox(), trackVisibility: true)));
-        var desktop = Assert.IsAssignableFrom<RawScrollbar>(desktopTree.FindWidget<RawScrollbar>());
+            child: new MaterialScrollbar(
+                controller: desktopController,
+                thumbVisibility: true,
+                trackVisibility: true,
+                child: BuildVerticalList(desktopController, 30))));
+        Settle(desktopHarness);
+
+        ScrollbarPainter desktop = RequirePainter(desktopHarness);
         Assert.Equal(8, desktop.Radius);
         Assert.Equal(2, desktop.CrossAxisMargin);
-        Assert.True(desktop.Interactive);
-        Assert.Equal(8, desktop.ThicknessResolver!(ScrollbarInteractionState.None));
-        Assert.Equal(12, desktop.ThicknessResolver!(ScrollbarInteractionState.Hovered));
-        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.50),
-            desktop.ThumbColorResolver!(ScrollbarInteractionState.None));
-        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.60),
-            desktop.ThumbColorResolver!(ScrollbarInteractionState.Dragged));
+        Assert.Equal(8, desktop.Thickness);
+        Assert.False(desktop.IgnorePointer);
+        // With a visible track Dart skips the hover tween and uses the hover colour immediately.
+        Assert.Equal(WithOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.50), desktop.Color);
     }
 
     [Fact]
@@ -504,6 +629,7 @@ public sealed class MaterialScrollbarTests
     [Fact]
     public void ScrollbarThemeData_CopyWithLerpAndInheritedWrapMatchFlutter()
     {
+        using var timers = new FakeGestureTimers();
         var idleStates = new HashSet<WidgetState>();
         var hoveredStates = new HashSet<WidgetState> { WidgetState.Hovered };
         var start = new ScrollbarThemeData(
@@ -538,7 +664,9 @@ public sealed class MaterialScrollbarTests
         Assert.False(firstHalf.Interactive);
         Assert.True(secondHalf.Interactive);
 
-        using var tree = new WidgetTree(new Theme(
+        // The nearest `ScrollbarTheme` wins over the one installed by `ThemeData`.
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new Theme(
             data: ThemeData.Light with
             {
                 Platform = TargetPlatform.Windows,
@@ -546,9 +674,11 @@ public sealed class MaterialScrollbarTests
             },
             child: new ScrollbarTheme(
                 data: end,
-                child: new MaterialScrollbar(child: new SizedBox()))));
-        var raw = Assert.IsAssignableFrom<RawScrollbar>(tree.FindWidget<RawScrollbar>());
-        Assert.Equal(12, raw.ThicknessResolver!(ScrollbarInteractionState.None));
+                child: new MaterialScrollbar(
+                    controller: controller,
+                    child: BuildVerticalList(controller, 30)))));
+        Settle(harness);
+        Assert.Equal(12, RequirePainter(harness).Thickness);
 
         var inherited = new ScrollbarTheme(end, new SizedBox());
         Assert.IsAssignableFrom<InheritedTheme>(inherited);
@@ -560,33 +690,34 @@ public sealed class MaterialScrollbarTests
     [InlineData(true)]
     public void MaterialScrollbar_UsesDirectColorSchemeRolesWithoutMaterialVersionSplit(bool useMaterial3)
     {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
         ColorScheme scheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.Magenta);
         var data = new ThemeData(
             colorScheme: scheme,
             onSurfaceColor: Colors.Green,
             platform: TargetPlatform.Windows,
             useMaterial3: useMaterial3);
-        using var tree = new WidgetTree(new Theme(
+        using var harness = new WidgetRenderHarness(new Theme(
             data: data,
-            child: new MaterialScrollbar(child: new SizedBox())));
-        var raw = Assert.IsAssignableFrom<RawScrollbar>(tree.FindWidget<RawScrollbar>());
+            child: new MaterialScrollbar(
+                controller: controller,
+                thumbVisibility: true,
+                child: BuildVerticalList(controller, 30))));
+        Settle(harness);
 
-        Assert.Equal(
-            ApplyOpacity(Colors.Magenta, 0.10),
-            raw.ThumbColorResolver!(ScrollbarInteractionState.None));
-        Assert.Equal(
-            ApplyOpacity(Colors.Magenta, 0.60),
-            raw.ThumbColorResolver!(ScrollbarInteractionState.Dragged));
+        Assert.Equal(WithOpacity(Colors.Magenta, 0.10), RequirePainter(harness).Color);
     }
 
     [Fact]
     public void RawScrollbar_ForcedVisibilityRequiresExactlyOneAttachedPosition()
     {
+        using var timers = new FakeGestureTimers();
         Scheduler.ResetForTests();
         using var missingControllerHarness = new WidgetRenderHarness(new RawScrollbar(
             thumbVisibility: true,
             child: new SizedBox()));
-        missingControllerHarness.Pump(new Size(200, 240));
+        missingControllerHarness.Pump(ViewportSize);
         double schedulerNow = Scheduler.CurrentSeconds;
         InvalidOperationException missing = Assert.Throws<InvalidOperationException>(() =>
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01)));
@@ -603,38 +734,36 @@ public sealed class MaterialScrollbarTests
                     BuildVerticalList(controller, 20),
                     BuildVerticalList(controller, 20),
                 ])));
-        multipleHarness.Pump(new Size(200, 240));
+        multipleHarness.Pump(ViewportSize);
         schedulerNow = Scheduler.CurrentSeconds;
         InvalidOperationException multiple = Assert.Throws<InvalidOperationException>(() =>
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01)));
-        Assert.Contains("exactly one attached ScrollPosition", multiple.Message);
+        Assert.Contains("more than one ScrollPosition", multiple.Message);
         Scheduler.ResetForTests();
     }
 
     [Fact]
     public void RawScrollbar_ThumbVisibilityToggleFadesWhileIdle()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(BuildMaterialScrollbar(controller, thumbVisibility: true));
-        harness.Pump(new Size(200, 240));
-        Assert.Equal(1, RequireOverlay(harness.RenderView).Opacity);
+        Settle(harness);
+        Assert.Equal(1, RequirePainter(harness).FadeoutOpacityAnimation.Value);
 
         harness.UpdateWidget(BuildMaterialScrollbar(controller, thumbVisibility: false));
-        harness.Pump(new Size(200, 240));
-        double schedulerNow = Scheduler.CurrentSeconds;
-        AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.35));
-        harness.Pump(new Size(200, 240));
-        Assert.Equal(0, RequireOverlay(harness.RenderView).Opacity, precision: 3);
+        AdvanceAndPump(harness, 0.4);
+        Assert.Equal(0, RequirePainter(harness).FadeoutOpacityAnimation.Value, precision: 3);
 
         harness.UpdateWidget(BuildMaterialScrollbar(controller, thumbVisibility: true));
-        harness.Pump(new Size(200, 240));
-        Assert.Equal(1, RequireOverlay(harness.RenderView).Opacity);
+        AdvanceAndPump(harness, 0.4);
+        Assert.Equal(1, RequirePainter(harness).FadeoutOpacityAnimation.Value, precision: 3);
     }
 
     [Fact]
     public void MaterialScrollbar_ThumbColorUsesTwoHundredMillisecondHoverTransition()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new Theme(
             data: ThemeData.Light with { Platform = TargetPlatform.Windows },
@@ -642,30 +771,25 @@ public sealed class MaterialScrollbarTests
                 controller: controller,
                 thumbVisibility: true,
                 child: BuildVerticalList(controller, 30))));
-        harness.Pump(new Size(200, 240));
-        var overlay = RequireOverlay(harness.RenderView);
-        Color idle = ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.10);
-        Color hovered = ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.50);
-        Assert.Equal(idle, overlay.ThumbColor);
+        Settle(harness);
 
-        Point point = overlay.Geometry!.Value.ThumbRect.Center;
-        overlay.HandleEvent(
-            new PointerHoverEvent(41, PointerDeviceKind.Mouse, point, PointerButtons.None, DateTime.UtcNow),
-            new BoxHitTestEntry(overlay, point));
-        harness.Pump(new Size(200, 240));
-        Assert.Equal(idle, RequireOverlay(harness.RenderView).ThumbColor);
+        Color idle = WithOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.10);
+        Color hovered = WithOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.50);
+        Assert.Equal(idle, RequirePainter(harness).Color);
 
-        double schedulerNow = Scheduler.CurrentSeconds;
-        AnimationPump.Prime();
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.1));
-        harness.Pump(new Size(200, 240));
-        Color halfway = RequireOverlay(harness.RenderView).ThumbColor;
+        Point point = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Dispatch(harness, new PointerHoverEvent(
+            41, PointerDeviceKind.Mouse, point, PointerButtons.None, PressTime));
+        harness.Pump(ViewportSize);
+        Assert.Equal(idle, RequirePainter(harness).Color);
+
+        AdvanceAndPump(harness, 0.1);
+        Color halfway = RequirePainter(harness).Color;
         Assert.NotEqual(idle, halfway);
         Assert.NotEqual(hovered, halfway);
 
-        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.25));
-        harness.Pump(new Size(200, 240));
-        Assert.Equal(hovered, RequireOverlay(harness.RenderView).ThumbColor);
+        AdvanceAndPump(harness, 0.15);
+        Assert.Equal(hovered, RequirePainter(harness).Color);
     }
 
     [Fact]
@@ -683,8 +807,8 @@ public sealed class MaterialScrollbarTests
         painter.Update(metrics, AxisDirection.Down);
         using var harness = new WidgetRenderHarness(new CustomPaint(
             foregroundPainter: painter,
-            size: new Size(200, 240)));
-        harness.Pump(new Size(200, 240));
+            size: ViewportSize));
+        harness.Pump(ViewportSize);
 
         ScrollbarGeometry geometry = Assert.IsType<ScrollbarGeometry>(painter.Geometry);
         Assert.Equal(new Rect(188, 0, 12, 240), geometry.TrackRect);
@@ -695,17 +819,24 @@ public sealed class MaterialScrollbarTests
         Assert.False(painter.HitTestOnlyThumbInteractive(
             new Point(geometry.ThumbRect.Left - 30, geometry.ThumbRect.Center.Y),
             PointerDeviceKind.Mouse));
+        // `getTrackToScroll` maps a *delta* along the thumb track onto a scroll delta.
         Assert.Equal(560, painter.GetTrackToScroll(geometry.MaxThumbTravel), precision: 3);
+        Assert.Equal(0, painter.GetThumbScrollOffset(), precision: 3);
         Assert.Equal(geometry.MaxThumbTravel, painter.GetScrollToTrack(560), precision: 3);
 
+        painter.Update(TestScrollMetrics(280, 0, 560, 240), AxisDirection.Down);
+        harness.Pump(ViewportSize);
+        Assert.Equal(geometry.MaxThumbTravel / 2, painter.GetThumbScrollOffset(), precision: 3);
+
         painter.Update(TestScrollMetrics(0, 0, double.PositiveInfinity, 240), AxisDirection.Down);
-        harness.Pump(new Size(200, 240));
+        harness.Pump(ViewportSize);
         Assert.Null(painter.Geometry);
     }
 
     [Fact]
     public void RawScrollbar_ZeroAreaDoesNotPaintOrCrash()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new RawScrollbar(
             controller: controller,
@@ -714,10 +845,45 @@ public sealed class MaterialScrollbarTests
 
         var emptySize = new Size(0, 0);
         harness.Pump(emptySize);
+        Scheduler.FlushMicrotasks();
+        harness.Pump(emptySize);
 
-        var overlay = RequireOverlay(harness.RenderView);
-        Assert.Equal(emptySize, overlay.Size);
-        Assert.Null(overlay.Geometry);
+        Assert.Null(RequirePainter(harness).Geometry);
+    }
+
+    private static void Dispatch(WidgetRenderHarness harness, PointerEvent @event) =>
+        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, @event);
+
+    /// <summary>
+    /// Lays out and paints, delivers the queued <c>ScrollMetricsNotification</c> (which is what gives
+    /// the scrollbar its axis and installs its recognizers), then runs the fade to completion.
+    /// </summary>
+    private void Settle(WidgetRenderHarness harness) => Settle(harness, ViewportSize);
+
+    private void Settle(WidgetRenderHarness harness, Size size)
+    {
+        harness.Pump(size);
+        Scheduler.FlushMicrotasks();
+        harness.Pump(size);
+        AdvanceAndPump(harness, 0.4, size);
+    }
+
+    private void AdvanceAndPump(WidgetRenderHarness harness, double seconds) =>
+        AdvanceAndPump(harness, seconds, ViewportSize);
+
+    private void AdvanceAndPump(WidgetRenderHarness harness, double seconds, Size size)
+    {
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        _clock += seconds;
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
+        Scheduler.FlushMicrotasks();
+        harness.Pump(size);
+    }
+
+    private static ScrollbarPainter RequirePainter(WidgetRenderHarness harness)
+    {
+        var paint = Assert.IsType<CustomPaint>(FindWidgetObject<CustomPaint>(harness.RootElement));
+        return Assert.IsType<ScrollbarPainter>(paint.ForegroundPainter);
     }
 
     private static Widget BuildMaterialScrollbar(ScrollController controller, bool thumbVisibility) => new Theme(
@@ -746,18 +912,6 @@ public sealed class MaterialScrollbarTests
         axisDirection: AxisDirection.Down,
         devicePixelRatio: 1.0);
 
-    private static RenderRawScrollbarOverlay RequireOverlay(RenderObject root) =>
-        Assert.IsType<RenderRawScrollbarOverlay>(FindDescendant<RenderRawScrollbarOverlay>(root));
-
-    private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
-    {
-        if (root is null) return null;
-        if (root is T match) return match;
-        T? result = null;
-        root.VisitChildren(child => result ??= FindDescendant<T>(child));
-        return result;
-    }
-
     private static Widget? FindWidgetObject<T>(Element? element) where T : Widget
     {
         if (element is null) return null;
@@ -767,8 +921,9 @@ public sealed class MaterialScrollbarTests
         return result;
     }
 
-    private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Clamp((int)(255 * opacity), 0, 255), color.R, color.G, color.B);
+    // Dart's `Color.withOpacity` replaces the alpha channel outright, rounding to the nearest byte.
+    private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
+        (byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255), color.R, color.G, color.B);
 
     private sealed class WidgetRenderHarness : IDisposable
     {

@@ -369,13 +369,25 @@ public readonly record struct DragEndDetails
     {
     }
 
-    public DragEndDetails(Velocity velocity, double primaryVelocity)
+    public DragEndDetails(
+        Velocity velocity,
+        double primaryVelocity,
+        Point globalPosition = default,
+        Point localPosition = default)
     {
         Velocity = velocity;
         PrimaryVelocity = primaryVelocity;
+        GlobalPosition = globalPosition;
+        LocalPosition = localPosition;
     }
 
     public Velocity Velocity { get; }
 
     public double PrimaryVelocity { get; }
+
+    /// <summary>The global position the pointer was at when it stopped contacting the screen.</summary>
+    public Point GlobalPosition { get; }
+
+    /// <summary>The local position in the receiving object's coordinate system.</summary>
+    public Point LocalPosition { get; }
 }

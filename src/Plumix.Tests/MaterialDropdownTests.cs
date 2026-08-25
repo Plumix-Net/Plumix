@@ -256,8 +256,10 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.IsType<DropdownMenuRouteLayout<string>>(layout.LayoutDelegate);
         Assert.Equal(190, layout.Child!.Size.Width, precision: 3);
         Assert.True(layout.Child.Size.Height <= 120.01);
+        // The route's scroll view now carries a scrollbar of its own, which is also a CustomPaint.
         var painter = Assert.IsType<DropdownMenuPainter>(
-            Assert.Single(FindDescendants<RenderCustomPaint>(harness.RenderView)).Painter);
+            Assert.Single(FindDescendants<RenderCustomPaint>(harness.RenderView)
+                .Where(paint => paint.Painter is DropdownMenuPainter)).Painter);
         Assert.Equal(Colors.Orange, painter.Color);
         Assert.Equal(BorderRadius.Circular(9), painter.BorderRadius);
         Assert.Equal(8, painter.Elevation);
@@ -345,8 +347,10 @@ public sealed class MaterialDropdownTests : IDisposable
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.03));
         harness.Pump(new Size(500, 360));
+        // The route's scroll view now carries a scrollbar of its own, which is also a CustomPaint.
         var painter = Assert.IsType<DropdownMenuPainter>(
-            Assert.Single(FindDescendants<RenderCustomPaint>(harness.RenderView)).Painter);
+            Assert.Single(FindDescendants<RenderCustomPaint>(harness.RenderView)
+                .Where(paint => paint.Painter is DropdownMenuPainter)).Painter);
         Assert.Equal(0.0, painter.Resize.Value, precision: 3);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.09));

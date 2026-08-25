@@ -492,7 +492,6 @@ public sealed class MaterialAboutTests : IDisposable
         PumpUntilLoaded(harness, NestedWidth, () => FindParagraph(harness.RenderView, "App license") is not null);
 
         Assert.Single(FindWidgets<Plumix.Material.Scrollbar>(harness.RootElement));
-        Assert.Empty(FindWidgets<Plumix.Widgets.Scrollbar>(harness.RootElement));
         var detailList = FindWidgets<ListView>(harness.RootElement).Last();
         Assert.True(detailList.Primary);
         Assert.NotEmpty(FindWidgets<ScrollConfiguration>(harness.RootElement));

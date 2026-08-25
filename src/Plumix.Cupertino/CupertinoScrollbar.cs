@@ -1,5 +1,8 @@
+using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
+using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -53,15 +56,12 @@ public sealed class CupertinoScrollbar : RawScrollbar
         thumbVisibility: thumbVisibility ?? false,
         radius: radius,
         thickness: thickness,
-        minThumbLength: KScrollbarMinLength,
-        minOverscrollLength: KScrollbarMinOverscrollLength,
         fadeDuration: KScrollbarFadeDuration,
         timeToFade: KScrollbarTimeToFade,
         pressDuration: KScrollbarPressDuration,
         notificationPredicate: notificationPredicate ?? DefaultScrollNotificationPredicate,
         scrollbarOrientation: scrollbarOrientation,
         mainAxisMargin: mainAxisMargin,
-        crossAxisMargin: KScrollbarCrossAxisMargin,
         key: key)
     {
         if (!double.IsFinite(thicknessWhileDragging) || thicknessWhileDragging <= 0)
@@ -101,15 +101,16 @@ public sealed class CupertinoScrollbar : RawScrollbar
     private sealed class CupertinoScrollbarState : RawScrollbarState<CupertinoScrollbar>
     {
         private AnimationController _thicknessAnimationController = null!;
+        private double _pressStartAxisPosition;
 
         private double Thickness =>
             CurrentWidget.Thickness!.Value +
-            (_thicknessAnimationController.Evaluate() *
+            (_thicknessAnimationController.Value *
              (CurrentWidget.ThicknessWhileDragging - CurrentWidget.Thickness!.Value));
 
         private double Radius =>
             CurrentWidget.Radius!.Value +
-            (_thicknessAnimationController.Evaluate() *
+            (_thicknessAnimationController.Value *
              (CurrentWidget.RadiusWhileDragging - CurrentWidget.Radius!.Value));
 
         public override void InitState()
@@ -118,65 +119,90 @@ public sealed class CupertinoScrollbar : RawScrollbar
             _thicknessAnimationController = new AnimationController(
                 duration: KScrollbarResizeDuration,
                 vsync: this);
-            _thicknessAnimationController.Changed += UpdateScrollbarPainter;
+            _thicknessAnimationController.Changed += HandleThicknessTick;
         }
 
-        public override void Dispose()
+        protected override void UpdateScrollbarPainter()
         {
-            _thicknessAnimationController.Changed -= UpdateScrollbarPainter;
-            _thicknessAnimationController.Dispose();
-            base.Dispose();
+            ScrollbarPainter.Color = CupertinoDynamicColor.Resolve(KScrollbarColor, Context);
+            ScrollbarPainter.TextDirection = Directionality.Of(Context);
+            ScrollbarPainter.Thickness = Thickness;
+            ScrollbarPainter.MainAxisMargin = CurrentWidget.MainAxisMargin;
+            ScrollbarPainter.CrossAxisMargin = KScrollbarCrossAxisMargin;
+            ScrollbarPainter.Radius = Radius;
+            ScrollbarPainter.Padding = MediaQuery.MaybePaddingOf(Context) ?? default;
+            ScrollbarPainter.MinLength = KScrollbarMinLength;
+            ScrollbarPainter.MinOverscrollLength = KScrollbarMinOverscrollLength;
+            ScrollbarPainter.ScrollbarOrientation = CurrentWidget.ScrollbarOrientation;
         }
 
-        protected override double ResolveThickness(ScrollbarInteractionState states) => Thickness;
+        // Thumb drag event callbacks handle the gesture where the user presses on the scrollbar
+        // thumb and then drags the scrollbar without releasing.
 
-        protected override double ResolveRadius(ScrollbarInteractionState states) => Radius;
-
-        protected override Color ResolveThumbColor(ScrollbarInteractionState states) =>
-            CupertinoDynamicColor.Resolve(KScrollbarColor, Context);
-
-        // On iOS, tapping the track does not page towards the position of the tap.
-        protected override bool ResolveTrackTapEnabled() =>
-            ScrollConfiguration.Of(Context).GetPlatform(Context) != TargetPlatform.IOS;
-
-        protected override void InteractionStateChanged(
-            ScrollbarInteractionState oldValue,
-            ScrollbarInteractionState newValue)
+        protected override void HandleThumbPressStart(Point localPosition)
         {
-            base.InteractionStateChanged(oldValue, newValue);
-            bool wasDragged = oldValue.HasFlag(ScrollbarInteractionState.Dragged);
-            bool isDragged = newValue.HasFlag(ScrollbarInteractionState.Dragged);
-            if (wasDragged == isDragged)
+            base.HandleThumbPressStart(localPosition);
+            Axis? direction = GetScrollbarDirection();
+            if (direction is null)
             {
                 return;
             }
 
-            if (isDragged)
-            {
-                // HandleThumbPress: grow to the dragging thickness, then buzz once.
-                _thicknessAnimationController.Forward(0).WhenComplete(() => HapticFeedback.MediumImpact());
-            }
-            else
-            {
-                // HandleThumbPressEnd: shrink back before the drag is handed to the scroll position.
-                _thicknessAnimationController.Reverse();
-            }
+            _pressStartAxisPosition = direction == Axis.Vertical ? localPosition.Y : localPosition.X;
         }
 
-        protected override void ThumbDragEnded(bool didDrag, double primaryVelocity)
+        protected override void HandleThumbPress()
         {
-            base.ThumbDragEnded(didDrag, primaryVelocity);
-            if (LastPointerAxisOffset != ThumbPressStartAxisOffset && Math.Abs(primaryVelocity) < 10)
+            if (GetScrollbarDirection() is null)
+            {
+                return;
+            }
+
+            base.HandleThumbPress();
+            _thicknessAnimationController.Forward().WhenComplete(() => HapticFeedback.MediumImpact());
+        }
+
+        protected override void HandleThumbPressEnd(Point localPosition, Velocity velocity)
+        {
+            Axis? direction = GetScrollbarDirection();
+            if (direction is null)
+            {
+                return;
+            }
+
+            _thicknessAnimationController.Reverse();
+            base.HandleThumbPressEnd(localPosition, velocity);
+            double axisPosition = direction == Axis.Horizontal ? localPosition.X : localPosition.Y;
+            double axisVelocity = direction == Axis.Horizontal
+                ? velocity.PixelsPerSecond.X
+                : velocity.PixelsPerSecond.Y;
+            if (axisPosition != _pressStartAxisPosition && Math.Abs(axisVelocity) < 10)
             {
                 HapticFeedback.MediumImpact();
             }
         }
 
-        private void UpdateScrollbarPainter()
+        protected override void HandleTrackTapDown(PointerDownEvent details)
+        {
+            // On iOS, tapping the track does not page towards the position of the tap.
+            if (ScrollConfiguration.Of(Context).GetPlatform(Context) != TargetPlatform.IOS)
+            {
+                base.HandleTrackTapDown(details);
+            }
+        }
+
+        public override void Dispose()
+        {
+            _thicknessAnimationController.Changed -= HandleThicknessTick;
+            _thicknessAnimationController.Dispose();
+            base.Dispose();
+        }
+
+        private void HandleThicknessTick()
         {
             if (Mounted)
             {
-                SetState(() => { });
+                UpdateScrollbarPainter();
             }
         }
     }

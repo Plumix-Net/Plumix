@@ -120,7 +120,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Data-table controls enter through `DataTable.cs` + `DataTableTheme.cs` and `PaginatedDataTable.cs`; shared column negotiation lives in core `Widgets/Table.cs` + `Rendering/Table.cs`, with coverage in `MaterialDataTableTests.cs`.
 - Row-wide data-table ink enters through `TableRowInkWell` in `InkWell.cs`; its source rectangle comes from
   core `RenderTable.GetRowBox`, with geometry/composition coverage in `MaterialDataTableTests.cs`.
-- Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; raw overlay/interaction behavior lives in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
+- Material scrollbars enter through `src/Plumix.Material/Scrollbar.cs` + `ScrollbarTheme.cs`; the painter, the `RawScrollbarState` interaction API and its thumb/track recognizers live in core `Widgets/Scrollbar.cs`, with adaptive defaults in `src/Plumix.Cupertino/CupertinoScrollbar.cs` and focused coverage in `MaterialScrollbarTests.cs`.
 - Reorderable lists enter through core `Widgets/ReorderableList.cs` and Material `ReorderableListView.cs`; inherited
   and explicit proxy bounds come from core `Widgets/DragBoundary.cs`. Gesture-arena drag ownership, keyed sliver
   items, gap animation, variable extents, boundary clamping, and callback normalization are covered by

@@ -8,6 +8,13 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: removed the C#-only `Widgets.Scrollbar` wrapper, `ScrollbarInteractionState` and the overlay render object.
+- Breaking: strict `RawScrollbar` interaction port — `CustomPaint` + thumb/track recognizers (`scrollbar.dart`).
+- Breaking: `RawScrollbar` drops the C#-only resolver/overlay API; subclasses override `UpdateScrollbarPainter`.
+- Breaking: `ScrollbarPainter.GetTrackToScroll` maps a track *delta*; added `GetThumbScrollOffset`/`ThumbOffset`.
+- Breaking: scrollbar track taps page by `0.8 * viewportDimension`; the thumb drags from pointer-down.
+- Breaking: strict Material/Cupertino scrollbar states — `WidgetState` painter resolution, Dart haptics.
+- Unsealed `TapGestureRecognizer` and the drag recognizers; `DragEndDetails` carries global/local positions.
 - Breaking: strict `Scaffold` port — `Material` root, `restorationId`, dismissed-sheet stack (`scaffold.dart`).
 - Breaking: `Scaffold.Of`/`MaybeOf` no longer register a dependency; `_ScaffoldScope` carries only `hasDrawer`.
 - Breaking: `PersistentBottomSheetController` extends `ScaffoldFeatureController`; `StandardBottomSheet` is public.

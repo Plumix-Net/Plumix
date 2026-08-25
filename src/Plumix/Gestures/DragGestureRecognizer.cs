@@ -192,9 +192,15 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                     DragEndDetails? details = estimate == null
                         ? null
                         : ConsiderFling(estimate, tracker.Kind);
-                    OnEnd.Invoke(details ?? new DragEndDetails(
+                    DragEndDetails resolved = details ?? new DragEndDetails(
                         velocity: Velocity.Zero,
-                        primaryVelocity: 0.0));
+                        primaryVelocity: 0.0);
+                    // Dart's `_checkEnd` reports the pointer's last position alongside the velocity.
+                    OnEnd.Invoke(new DragEndDetails(
+                        velocity: resolved.Velocity,
+                        primaryVelocity: resolved.PrimaryVelocity,
+                        globalPosition: @event.Position,
+                        localPosition: @event.LocalPosition));
                 }
 
                 Cleanup(@event.Pointer);
@@ -327,7 +333,7 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
     }
 }
 
-public sealed class HorizontalDragGestureRecognizer : DragGestureRecognizer
+public class HorizontalDragGestureRecognizer : DragGestureRecognizer
 {
     public HorizontalDragGestureRecognizer(GestureBinding? binding = null) : base(binding)
     {
@@ -413,7 +419,7 @@ public sealed class PanGestureRecognizer : DragGestureRecognizer
     }
 }
 
-public sealed class VerticalDragGestureRecognizer : DragGestureRecognizer
+public class VerticalDragGestureRecognizer : DragGestureRecognizer
 {
     public VerticalDragGestureRecognizer(GestureBinding? binding = null) : base(binding)
     {

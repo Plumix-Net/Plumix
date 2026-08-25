@@ -14,6 +14,8 @@ public sealed class CupertinoScrollbarTests
 {
     private static readonly Color LightThumb = Color.FromArgb(0x59, 0x00, 0x00, 0x00);
     private static readonly Color DarkThumb = Color.FromArgb(0x80, 0xFF, 0xFF, 0xFF);
+    private static readonly Size ViewportSize = new(800, 600);
+    private static readonly DateTime PressTime = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
     // Frame timestamps have to advance monotonically from where the scheduler's clock stands, or a
     // ticker started mid-frame (which anchors to `Scheduler.CurrentFrameTimeStamp`) never advances.
@@ -42,17 +44,20 @@ public sealed class CupertinoScrollbarTests
         Assert.Null(scrollbar.Controller);
         Assert.Null(scrollbar.Shape);
         Assert.Null(scrollbar.ThumbColor);
-        Assert.Equal(36, scrollbar.MinThumbLength);
-        Assert.Equal(8, scrollbar.MinOverscrollLength);
         Assert.Equal(TimeSpan.FromMilliseconds(250), scrollbar.FadeDuration);
         Assert.Equal(TimeSpan.FromMilliseconds(1200), scrollbar.TimeToFade);
         Assert.Equal(TimeSpan.FromMilliseconds(100), scrollbar.PressDuration);
         Assert.Equal(3, scrollbar.MainAxisMargin);
-        Assert.Equal(3, scrollbar.CrossAxisMargin);
         Assert.Null(scrollbar.ScrollbarOrientation);
         Assert.Null(scrollbar.Padding);
         Assert.Equal((ScrollNotificationPredicate)RawScrollbar.DefaultScrollNotificationPredicate,
             scrollbar.NotificationPredicate);
+
+        // Dart leaves the thumb-length constants to `updateScrollbarPainter`, not the widget: the
+        // widget keeps `RawScrollbar`'s own defaults.
+        Assert.Equal(RawScrollbar.KMinThumbExtent, scrollbar.MinThumbLength);
+        Assert.Null(scrollbar.MinOverscrollLength);
+        Assert.Equal(0, scrollbar.CrossAxisMargin);
     }
 
     [Fact]
@@ -90,15 +95,15 @@ public sealed class CupertinoScrollbarTests
     [Fact]
     public void DefaultVerticalGeometryMatchesFlutter()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(BuildScrollbar(controller, contentExtent: 1000));
+        Settle(harness);
 
-        harness.Pump(new Size(800, 600));
-
-        var overlay = RequireOverlay(harness.RenderView);
-        ScrollbarGeometry geometry = overlay.Geometry!.Value;
+        ScrollbarPainter painter = RequirePainter(harness);
+        ScrollbarGeometry geometry = painter.Geometry!.Value;
         Assert.Equal(Axis.Vertical, geometry.Axis);
-        Assert.Equal(3, overlay.Thickness);
+        Assert.Equal(3, painter.Thickness);
         // Thumb: x = 800 - crossAxisMargin(3) - thickness(3); y = mainAxisMargin(3);
         // extent = (600 - 2 * 3) * 600 / 1000.
         Assert.Equal(794, geometry.ThumbRect.X, precision: 3);
@@ -116,15 +121,15 @@ public sealed class CupertinoScrollbarTests
     [Fact]
     public void LeftScrollbarOrientationMatchesFlutter()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(BuildScrollbar(
             controller,
             contentExtent: 4000,
             scrollbarOrientation: ScrollbarOrientation.Left));
+        Settle(harness);
 
-        harness.Pump(new Size(800, 600));
-
-        ScrollbarGeometry geometry = RequireOverlay(harness.RenderView).Geometry!.Value;
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
         Assert.Equal(new Rect(0, 0, 9, 600), geometry.TrackRect);
         Assert.Equal(3, geometry.ThumbRect.X, precision: 3);
         Assert.Equal(3, geometry.ThumbRect.Y, precision: 3);
@@ -138,21 +143,22 @@ public sealed class CupertinoScrollbarTests
     [InlineData(PlatformBrightness.Dark)]
     public void ThumbColorResolvesTheDynamicScrollbarColor(PlatformBrightness brightness)
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(BuildScrollbar(
             controller,
             contentExtent: 1000,
             brightness: brightness));
-
-        harness.Pump(new Size(800, 600));
+        Settle(harness);
 
         Color expected = brightness == PlatformBrightness.Dark ? DarkThumb : LightThumb;
-        Assert.Equal(expected, RequireOverlay(harness.RenderView).ThumbColor);
+        Assert.Equal(expected, RequirePainter(harness).Color);
     }
 
     [Fact]
     public void ThumbColorFollowsAnEnclosingCupertinoThemeOverTheMediaQuery()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(new MediaQuery(
             data: new MediaQueryData(PlatformBrightness: PlatformBrightness.Light),
@@ -164,111 +170,145 @@ public sealed class CupertinoScrollbarTests
                         controller: controller,
                         thumbVisibility: true,
                         child: BuildScrollable(controller, 1000))))));
+        Settle(harness);
 
-        harness.Pump(new Size(800, 600));
-
-        Assert.Equal(DarkThumb, RequireOverlay(harness.RenderView).ThumbColor);
+        Assert.Equal(DarkThumb, RequirePainter(harness).Color);
     }
 
     // Flutter: "On first render with thumbVisibility: false, the thumb is hidden".
     [Fact]
     public void ThumbIsHiddenUntilScrolledWhenThumbVisibilityIsFalse()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(BuildScrollbar(
             controller,
             contentExtent: 1000,
             thumbVisibility: false));
+        Settle(harness);
 
-        harness.Pump(new Size(800, 600));
-
-        Assert.Equal(0, RequireOverlay(harness.RenderView).Opacity);
+        Assert.Equal(0, RequirePainter(harness).FadeoutOpacityAnimation.Value);
     }
 
-    // Flutter: "Scrollbar changes thickness and radius when dragged" — linear over 100 ms.
+    // Flutter: "Scrollbar thumb can be dragged with long press" — the thumb drag engages on pointer
+    // down (`dragStartBehavior: down`, `touchSlop: 0`), and the haptic fires when the 100 ms resize
+    // animation completes, not when the press starts.
     [Fact]
     public void DraggingAnimatesThicknessAndRadiusLinearlyOverTheResizeDuration()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var platform = new MockMethodCallHandler(SystemChannels.Platform);
         using var harness = new WidgetRenderHarness(BuildScrollbar(controller, contentExtent: 1000));
+        Settle(harness);
+        Assert.Equal(3, RequirePainter(harness).Thickness);
 
-        harness.Pump(new Size(800, 600));
-        var overlay = RequireOverlay(harness.RenderView);
-        Assert.Equal(3, overlay.Thickness);
+        PressThumb(harness);
 
-        PressThumb(overlay, harness);
+        // t = 0 of the resize animation: still the idle thickness and radius, and no haptic yet.
+        Assert.Equal(3, RequirePainter(harness).Thickness, precision: 3);
+        Assert.Equal(1.5, RequirePainter(harness).Radius!.Value, precision: 3);
         Assert.Empty(platform.Log);
 
-        // t = 0 of the resize animation: still the idle thickness and radius.
-        Assert.Equal(3, ReadThickness(harness), precision: 3);
-        Assert.Equal(1.5, ReadRadius(harness), precision: 3);
-
         AdvanceAndPump(harness, 0.05);
-        Assert.Equal(5.5, ReadThickness(harness), precision: 3);
-        Assert.Equal(2.75, ReadRadius(harness), precision: 3);
+        Assert.Equal(5.5, RequirePainter(harness).Thickness, precision: 3);
+        Assert.Equal(2.75, RequirePainter(harness).Radius!.Value, precision: 3);
         Assert.Empty(platform.Log);
 
         AdvanceAndPump(harness, 0.06);
-        Assert.Equal(8, ReadThickness(harness), precision: 3);
-        Assert.Equal(4, ReadRadius(harness), precision: 3);
+        Assert.Equal(8, RequirePainter(harness).Thickness, precision: 3);
+        Assert.Equal(4, RequirePainter(harness).Radius!.Value, precision: 3);
 
-        // Flutter buzzes once the resize animation finishes, not when the press starts.
         MethodCall call = Assert.Single(platform.Log);
         Assert.Equal("HapticFeedback.vibrate", call.Method);
         Assert.Equal("HapticFeedbackType.mediumImpact", call.Arguments);
 
         // The dragged thumb sits `thicknessWhileDragging` wide against the right edge.
-        ScrollbarGeometry geometry = RequireOverlay(harness.RenderView).Geometry!.Value;
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
         Assert.Equal(789, geometry.ThumbRect.X, precision: 3);
         Assert.Equal(8, geometry.ThumbRect.Width, precision: 3);
     }
 
+    // Flutter: "Scrollbar thumb can be dragged with long press" — the drag moves the scroll view and
+    // a slow release buzzes a second time.
     [Fact]
     public void ReleasingTheThumbShrinksItBackAndBuzzesWhenItMoved()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var platform = new MockMethodCallHandler(SystemChannels.Platform);
         using var harness = new WidgetRenderHarness(BuildScrollbar(controller, contentExtent: 1000));
+        Settle(harness);
 
-        harness.Pump(new Size(800, 600));
-        var overlay = RequireOverlay(harness.RenderView);
-        Point start = PressThumb(overlay, harness);
+        Point start = PressThumb(harness);
         AdvanceAndPump(harness, 0.11);
         Assert.Single(platform.Log);
 
         var moved = new Point(start.X, start.Y + 40);
         DateTime moveTime = PressTime.AddSeconds(5);
-        overlay.HandleEvent(
-            new PointerMoveEvent(71, PointerDeviceKind.Touch, moved, PointerButtons.Primary, true, moveTime),
-            new BoxHitTestEntry(overlay, moved));
-        overlay.HandleEvent(
-            new PointerUpEvent(71, PointerDeviceKind.Touch, moved, PointerButtons.None, moveTime),
-            new BoxHitTestEntry(overlay, moved));
+        Dispatch(harness, new PointerMoveEvent(
+            71, PointerDeviceKind.Touch, moved, PointerButtons.Primary, true, moveTime));
+        Assert.True(controller.PrimaryPosition!.Pixels > 0);
+
+        Dispatch(harness, new PointerUpEvent(
+            71, PointerDeviceKind.Touch, moved, PointerButtons.None, moveTime));
 
         // A slow release buzzes a second time; the thumb then shrinks back to the idle thickness.
         Assert.Equal(2, platform.Log.Count);
-        Assert.True(controller.PrimaryPosition!.Pixels > 0);
 
         AdvanceAndPump(harness, 0.11);
-        Assert.Equal(3, ReadThickness(harness), precision: 3);
-        Assert.Equal(1.5, ReadRadius(harness), precision: 3);
+        Assert.Equal(3, RequirePainter(harness).Thickness, precision: 3);
+        Assert.Equal(1.5, RequirePainter(harness).Radius!.Value, precision: 3);
+    }
+
+    // Flutter: "Scrollbar thumb can be dragged with long press - horizontal axis".
+    [Fact]
+    public void HorizontalThumbCanBeDragged()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new MediaQuery(
+            data: new MediaQueryData(),
+            child: new Directionality(
+                textDirection: TextDirection.Ltr,
+                child: new ScrollConfiguration(
+                    behavior: new TestScrollBehavior(TargetPlatform.IOS),
+                    child: new CupertinoScrollbar(
+                        controller: controller,
+                        thumbVisibility: true,
+                        child: new SingleChildScrollView(
+                            controller: controller,
+                            scrollDirection: Axis.Horizontal,
+                            child: new SizedBox(width: 4000, height: 600)))))));
+        Settle(harness);
+
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
+        Assert.Equal(Axis.Horizontal, geometry.Axis);
+
+        Point start = geometry.ThumbRect.Center;
+        Dispatch(harness, new PointerDownEvent(
+            81, PointerDeviceKind.Touch, start, PointerButtons.Primary, PressTime));
+        var moved = new Point(start.X + 20, start.Y);
+        Dispatch(harness, new PointerMoveEvent(
+            81, PointerDeviceKind.Touch, moved, PointerButtons.Primary, true, PressTime.AddMilliseconds(20)));
+
+        Assert.True(controller.PrimaryPosition!.Pixels > 20);
     }
 
     // Flutter: "Tapping the track area does not page the Scroll View on iOS".
     [Fact]
     public void TappingTheTrackDoesNotPageOnIos()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(BuildScrollbar(
             controller,
             contentExtent: 1000,
             platform: TargetPlatform.IOS));
+        Settle(harness);
 
-        harness.Pump(new Size(800, 600));
-        var overlay = RequireOverlay(harness.RenderView);
-        TapTrackBelowThumb(overlay);
-        harness.Pump(new Size(800, 600));
+        TapTrackBelowThumb(harness);
+        AdvanceAndPump(harness, 0.2);
 
         Assert.Equal(0, controller.PrimaryPosition!.Pixels);
     }
@@ -277,15 +317,15 @@ public sealed class CupertinoScrollbarTests
     [Fact]
     public void TappingTheTrackPagesOnOtherPlatforms()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(BuildScrollbar(
             controller,
             contentExtent: 1000,
             platform: TargetPlatform.Android));
+        Settle(harness);
 
-        harness.Pump(new Size(800, 600));
-        var overlay = RequireOverlay(harness.RenderView);
-        TapTrackBelowThumb(overlay);
+        TapTrackBelowThumb(harness);
         AdvanceAndPump(harness, 0.2);
 
         Assert.Equal(400, controller.PrimaryPosition!.Pixels, precision: 3);
@@ -295,39 +335,50 @@ public sealed class CupertinoScrollbarTests
     [Fact]
     public void ZeroAreaDoesNotPaintOrCrash()
     {
+        using var timers = new FakeGestureTimers();
         using var controller = new ScrollController();
         using var harness = new WidgetRenderHarness(BuildScrollbar(controller, contentExtent: 1000));
 
         harness.Pump(new Size(0, 0));
+        Scheduler.FlushMicrotasks();
+        harness.Pump(new Size(0, 0));
 
-        Assert.Null(RequireOverlay(harness.RenderView).Geometry);
+        Assert.Null(RequirePainter(harness).Geometry);
     }
 
-    private Point PressThumb(RenderRawScrollbarOverlay overlay, WidgetRenderHarness harness)
+    private Point PressThumb(WidgetRenderHarness harness)
     {
-        Point point = overlay.Geometry!.Value.ThumbRect.Center;
-        overlay.HandleEvent(
-            new PointerDownEvent(71, PointerDeviceKind.Touch, point, PointerButtons.Primary, PressTime),
-            new BoxHitTestEntry(overlay, point));
-        // The press has to be held for `pressDuration` before the drag — and the resize — begins.
-        AdvanceAndPump(harness, 0.11);
+        Point point = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Dispatch(harness, new PointerDownEvent(
+            71, PointerDeviceKind.Touch, point, PointerButtons.Primary, PressTime));
+        harness.Pump(ViewportSize);
         return point;
     }
 
-    private static void TapTrackBelowThumb(RenderRawScrollbarOverlay overlay)
+    private void TapTrackBelowThumb(WidgetRenderHarness harness)
     {
-        Rect thumb = overlay.Geometry!.Value.ThumbRect;
+        Rect thumb = RequirePainter(harness).Geometry!.Value.ThumbRect;
         var point = new Point(thumb.Center.X, thumb.Bottom + 100);
-        DateTime now = DateTime.UtcNow;
-        overlay.HandleEvent(
-            new PointerDownEvent(72, PointerDeviceKind.Touch, point, PointerButtons.Primary, now),
-            new BoxHitTestEntry(overlay, point));
-        overlay.HandleEvent(
-            new PointerUpEvent(72, PointerDeviceKind.Touch, point, PointerButtons.None, now),
-            new BoxHitTestEntry(overlay, point));
+        Dispatch(harness, new PointerDownEvent(
+            72, PointerDeviceKind.Touch, point, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerUpEvent(
+            72, PointerDeviceKind.Touch, point, PointerButtons.None, PressTime.AddMilliseconds(10)));
     }
 
-    private static readonly DateTime PressTime = new(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+    private static void Dispatch(WidgetRenderHarness harness, PointerEvent @event) =>
+        GestureBinding.Instance.HandlePointerEvent(harness.RenderView, @event);
+
+    /// <summary>
+    /// Lays out and paints, delivers the queued <c>ScrollMetricsNotification</c> (which is what gives
+    /// the scrollbar its axis and starts the fade-in), then runs the fade to completion.
+    /// </summary>
+    private void Settle(WidgetRenderHarness harness)
+    {
+        harness.Pump(ViewportSize);
+        Scheduler.FlushMicrotasks();
+        harness.Pump(ViewportSize);
+        AdvanceAndPump(harness, 0.4);
+    }
 
     private void AdvanceAndPump(WidgetRenderHarness harness, double seconds)
     {
@@ -335,13 +386,15 @@ public sealed class CupertinoScrollbarTests
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
         _clock += seconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(_clock));
-        harness.Pump(new Size(800, 600));
+        Scheduler.FlushMicrotasks();
+        harness.Pump(ViewportSize);
     }
 
-    private static double ReadThickness(WidgetRenderHarness harness) => RequireOverlay(harness.RenderView).Thickness;
-
-    private static double ReadRadius(WidgetRenderHarness harness) =>
-        Assert.IsType<RawScrollbarOverlay>(FindWidgetObject<RawScrollbarOverlay>(harness.RootElement)).Radius;
+    private static ScrollbarPainter RequirePainter(WidgetRenderHarness harness)
+    {
+        var paint = Assert.IsType<CustomPaint>(FindWidgetObject<CustomPaint>(harness.RootElement));
+        return Assert.IsType<ScrollbarPainter>(paint.ForegroundPainter);
+    }
 
     private static Widget BuildScrollbar(
         ScrollController controller,
@@ -368,18 +421,6 @@ public sealed class CupertinoScrollbarTests
         new SingleChildScrollView(
             controller: controller,
             child: new SizedBox(width: 800, height: contentExtent));
-
-    private static RenderRawScrollbarOverlay RequireOverlay(RenderObject root) =>
-        Assert.IsType<RenderRawScrollbarOverlay>(FindDescendant<RenderRawScrollbarOverlay>(root));
-
-    private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
-    {
-        if (root is null) return null;
-        if (root is T match) return match;
-        T? result = null;
-        root.VisitChildren(child => result ??= FindDescendant<T>(child));
-        return result;
-    }
 
     private static Widget? FindWidgetObject<T>(Element? element) where T : Widget
     {
