@@ -129,7 +129,21 @@ public abstract class WidgetsLocalizations
 
     public virtual string NoResultsFound => "No results found";
 
-    public virtual string RadioButtonUnselectedLabel => "Unselected";
+    public virtual string CopyButtonLabel => "Copy";
+
+    public virtual string CutButtonLabel => "Cut";
+
+    public virtual string PasteButtonLabel => "Paste";
+
+    public virtual string SelectAllButtonLabel => "Select all";
+
+    public virtual string LookUpButtonLabel => "Look Up";
+
+    public virtual string SearchWebButtonLabel => "Search Web";
+
+    public virtual string ShareButtonLabel => "Share";
+
+    public virtual string RadioButtonUnselectedLabel => "Not selected";
 
     public virtual string ReorderItemToStart => "Move to the start";
 

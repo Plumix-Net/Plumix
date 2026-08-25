@@ -115,7 +115,7 @@ ln -s /path/to/your/Avalonia avalonia-src   # optional, for host/backend questio
 - `avalonia-src` — Avalonia source, host/platform questions only.
 
 **Pinned Flutter revision: 3.47.0 (`4cf24164269`, `flutter-3.47-candidate.0`). Pinned packages:
-`material_ui` 1.0.0, `cupertino_ui` 1.0.0** (what `dart_sample` resolves; at these pins the package
+`material_ui` 1.0.0, `cupertino_ui` 1.0.0, `intl` 0.20.3** (what `dart_sample` resolves; at these pins the package
 sources are code-identical to the SDK's frozen `src/material`/`src/cupertino` copies, modulo doc
 comments and constructor-style modernization). Parity is defined against these pins. Material
 defaults change between releases, so a port validated against a different checkout is not validated.
@@ -123,7 +123,9 @@ When a pin moves, update this line, re-point the symlink(s), and re-run
 `python3 scripts/generate_port_map.py` (it flags markers whose Dart file no longer exists) and
 `python3 scripts/generate_keyboard_keys.py` (it regenerates the logical/physical key tables from
 Flutter's own generated `keyboard_key.g.dart`) and `python3 scripts/generate_material_colors.py`
-(it regenerates the Material palette from `colors.dart`).
+(it regenerates the Material palette from `colors.dart`) and `python3 scripts/generate_intl_data.py`
+(it re-reads the CLDR snapshot from `flutter_localizations` and `~/.pub-cache/.../intl-<pin>`) and
+`python3 scripts/generate_localizations.py` (it re-transliterates Flutter's generated locale bundles).
 
 ## Common Commands
 
@@ -138,6 +140,8 @@ python3 scripts/generate_port_map.py              # regenerate docs/ai/PORT_MAP.
 python3 scripts/generate_keyboard_keys.py         # regenerate src/Plumix/UI/KeyboardKey.g.cs
 python3 scripts/generate_material_colors.py       # regenerate src/Plumix.Material/Colors.g.cs
 python3 scripts/generate_cupertino_icons.py       # regenerate Cupertino icon catalog + font asset
+python3 scripts/generate_intl_data.py             # regenerate the CLDR snapshot the intl subset uses
+python3 scripts/generate_localizations.py         # regenerate the Cupertino/widgets locale bundles
 dotnet run --project src/Sample/Plumix.Desktop/Plumix.Desktop.csproj
 dotnet run --project src/Sample/Plumix.Browser/Plumix.Browser.csproj
 ```
@@ -162,7 +166,7 @@ dotnet build src/Sample/Plumix.iOS/Plumix.iOS.csproj -c Debug
 6. Keep nullability correctness (`Nullable` is enabled). Nullable warnings are promoted to errors in `src/Directory.Build.props`, so they fail the build.
 7. Code style: use explicit types for primitives and `string` (`double`, `int`, `bool`, `string`, `char`, `byte`, `long`, `float`, `decimal`, ...); keep `var` only for complex/reference types whose type is obvious from the right-hand side. See `docs/ai/INVARIANTS.md` (Code Style). Emit this correctly on first pass — `EnforceCodeStyleInBuild` makes IDE0008 a **build error**, so a violation breaks the build rather than surfacing in review.
 8. Max line length is 120 characters (`.editorconfig` `max_line_length`), checked by `scripts/check_line_length.sh` on new/edited lines only; do not mass-reformat untouched code. Wrap long argument lists, chained calls, and conditions instead of exceeding it.
-8a. Every framework file carries a `// Dart parity source:` header marker naming its Dart origin: `material_ui/lib/src/<file>.dart` or `cupertino_ui/lib/src/<file>.dart` for the extracted design packages, `flutter/packages/flutter/lib/src/<library>/<file>.dart` for everything else. Keep it on new files — `docs/ai/PORT_MAP.md` is generated from these markers, and a missing one drops the file out of the map. C#-only infrastructure states that in a header comment instead.
+8a. Every framework file carries a `// Dart parity source:` header marker naming its Dart origin: `material_ui/lib/src/<file>.dart` or `cupertino_ui/lib/src/<file>.dart` for the extracted design packages, `flutter/packages/flutter/lib/src/<library>/<file>.dart` (or `flutter/packages/flutter_localizations/lib/src/<file>.dart`) for everything else. Keep it on new files — `docs/ai/PORT_MAP.md` is generated from these markers, and a missing one drops the file out of the map. C#-only infrastructure states that in a header comment instead.
 9. Avoid broad dependency/framework upgrades unless explicitly requested.
 10. Demo feature/route/page-structure updates in `src/Sample/Plumix.Sample` must be mirrored in `dart_sample` in the same change; host glue is exempt (see `docs/ai/INVARIANTS.md`, Sample Parity).
 

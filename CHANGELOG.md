@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Ported `GlobalCupertinoLocalizations` with all 116 generated locale bundles (`global_cupertino_localizations.dart`).
+- Ported `GlobalWidgetsLocalizations` and its locale bundles (`flutter_localizations/widgets_localizations.dart`).
+- Added a pinned `package:intl` subset (`DateFormat`, `NumberFormat`, plural rules, CLDR data) under `Foundation/Intl`.
+- Breaking: `WidgetsLocalizations` gained toolbar labels; unselected radio reads `Not selected` (`localizations.dart`).
 - Breaking: re-ported `CupertinoTextSelectionToolbar` — chevron paging, fade, arrow clip (`text_selection_toolbar`).
 - Breaking: strict Cupertino selection-toolbar buttons and desktop surface (`desktop_text_selection_toolbar.dart`).
 - Added `Container.ClipBehavior`, `MediaQuery.DevicePixelRatioOf` and a shared core `ToolbarItemsParentData`.

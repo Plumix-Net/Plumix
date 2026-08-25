@@ -172,7 +172,7 @@ public sealed class CupertinoRadioTests
             using var unselected = new CupertinoThemeTestHarness(WrapLocalized(
                 new CupertinoRadio<string>(value: "b", groupValue: "a", onChanged: _ => { })));
             SemanticsNode root = Assert.IsType<SemanticsNode>(unselected.PumpAndGetSemantics(ViewSize));
-            Assert.NotNull(FindSemantics(root, candidate => candidate.Hint == "Unselected"));
+            Assert.NotNull(FindSemantics(root, candidate => candidate.Hint == "Not selected"));
 
             using var selected = new CupertinoThemeTestHarness(WrapLocalized(
                 new CupertinoRadio<string>(value: "a", groupValue: "a", onChanged: _ => { })));

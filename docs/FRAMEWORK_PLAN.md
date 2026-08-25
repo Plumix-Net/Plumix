@@ -74,9 +74,10 @@ Exit criteria:
 
 Status: `in_progress` (opened 2026-08-16). Work list and per-file status: `docs/CUPERTINO_TODO.md`.
 
-Order of work: foundation first (`colors`/`theme`/`text_theme` done, then `localizations`, `route`,
-`page_scaffold`, `app`), then controls smallest-first, then the "partial ports to tighten" table
-(now empty — only the `global_cupertino_localizations` foundation row is left).
+Order of work: foundation first (`colors`/`theme`/`text_theme`, `localizations`, `route`,
+`page_scaffold`, `app`), then controls smallest-first, then the "partial ports to tighten" table.
+`docs/CUPERTINO_TODO.md` is now empty: what remains for M6 is the sample/adaptive exit criteria
+below.
 `Plumix.Cupertino` may depend only on `Plumix`; anything Cupertino that currently lives in
 `Plumix.Material` moves down, never the other way (`docs/ai/INVARIANTS.md` > Package Boundaries).
 
@@ -92,7 +93,7 @@ Exit criteria:
 
 ## Backlog Candidates (After M5–M6)
 
-- Shared localization loading (`GlobalMaterialLocalizations`/`GlobalCupertinoLocalizations`, arb → C#).
+- `GlobalMaterialLocalizations` over the shared localization machinery (`docs/ai/BACKLOG.md`).
 - Native accessibility bridges per host (see `docs/ai/BACKLOG.md`).
 - Performance instrumentation and frame diagnostics tooling.
 - Expanded documentation for migration recipes from Flutter (Dart) widgets to C#.

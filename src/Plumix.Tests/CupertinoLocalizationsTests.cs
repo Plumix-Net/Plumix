@@ -1,5 +1,6 @@
 using Plumix.Cupertino;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -153,6 +154,29 @@ public sealed class CupertinoLocalizationsTests : IDisposable
 
         Assert.Same(DefaultCupertinoLocalizations.Instance, resolved);
         localizedRoot.Unmount();
+    }
+
+    [Fact]
+    public void GlobalDelegatesResolveBothResourcesInAWidgetTree()
+    {
+        CupertinoLocalizations? cupertino = null;
+        WidgetsLocalizations? widgets = null;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Localizations(
+            locale: new Locale("ar"),
+            delegates: GlobalCupertinoLocalizations.Delegates,
+            child: new Builder(context =>
+            {
+                cupertino = CupertinoLocalizations.Of(context);
+                widgets = WidgetsLocalizations.Of(context);
+                return new SizedBox();
+            })));
+
+        MountAndFlush(root, owner);
+
+        Assert.IsType<CupertinoLocalizationAr>(cupertino);
+        Assert.Equal(TextDirection.Rtl, Assert.IsType<WidgetsLocalizationAr>(widgets).TextDirection);
+        root.Unmount();
     }
 
     private static void MountAndFlush(TestRootElement root, BuildOwner owner)

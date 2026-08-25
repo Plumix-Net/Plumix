@@ -41,6 +41,7 @@ import 'demos/cupertino/checkbox_demo_page.dart';
 import 'demos/cupertino/app_demo_page.dart';
 import 'demos/cupertino/cupertino_icons_demo_page.dart';
 import 'demos/cupertino/cupertino_focus_halo_demo_page.dart';
+import 'demos/cupertino/cupertino_localizations_demo_page.dart';
 import 'demos/cupertino/cupertino_magnifier_demo_page.dart';
 import 'demos/cupertino/cupertino_tab_bar_demo_page.dart';
 import 'demos/cupertino/cupertino_list_section_demo_page.dart';
@@ -488,6 +489,14 @@ class SampleGalleryScreen extends StatelessWidget {
           'rectangular, rounded-rectangle, and rounded-superellipse '
           'descendant focus outlines',
       builder: () => const CupertinoFocusHaloDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoLocalizations,
+      title: 'Localizations',
+      subtitle:
+          'global delegates: translated strings + locale date formats + '
+          'text direction',
+      builder: () => const CupertinoLocalizationsDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.cupertinoTabBar,

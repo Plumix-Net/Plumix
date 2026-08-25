@@ -102,6 +102,7 @@ internal static class SampleRoutes
     public const string CupertinoApp = "/cupertino-app";
     public const string CupertinoIcons = "/cupertino-icons";
     public const string CupertinoFocusHalo = "/cupertino-focus-halo";
+    public const string CupertinoLocalizations = "/cupertino-localizations";
     public const string CupertinoTabBar = "/cupertino-tab-bar";
     public const string CupertinoListSection = "/cupertino-list-section";
     public const string CupertinoExpansionTile = "/cupertino-expansion-tile";
@@ -279,6 +280,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Focus halo",
             "rectangular, rounded-rectangle, and rounded-superellipse descendant focus outlines",
             () => new CupertinoFocusHaloDemoPage()),
+        new(
+            SampleRoutes.CupertinoLocalizations,
+            "Localizations",
+            "global delegates: translated strings + locale date formats + text direction",
+            () => new CupertinoLocalizationsDemoPage()),
         new(
             SampleRoutes.CupertinoTabBar,
             "Tab scaffold + bar",

@@ -41,12 +41,13 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `cupertino_ui/expansion_tile.dart` | `src/Plumix.Cupertino/CupertinoExpansionTile.cs` | `src/Plumix.Tests/CupertinoExpansionTileTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_expansion_tile_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoExpansionTileDemoPage.cs` |
 | `cupertino_ui/form_row.dart` | `src/Plumix.Cupertino/CupertinoFormRow.cs` | `src/Plumix.Tests/CupertinoFormRowTests.cs` | — |
 | `cupertino_ui/form_section.dart` | `src/Plumix.Cupertino/CupertinoFormSection.cs` | `src/Plumix.Tests/CupertinoFormSectionTests.cs` | — |
+| `cupertino_ui/global_cupertino_localizations.dart` | `src/Plumix.Cupertino/GlobalCupertinoLocalizations.cs` | `src/Plumix.Tests/GlobalCupertinoLocalizationsTests.cs` | — |
 | `cupertino_ui/icon_theme_data.dart` | `src/Plumix.Cupertino/CupertinoIconThemeData.cs` | — | — |
 | `cupertino_ui/icons.dart` | `src/Plumix.Cupertino/CupertinoIcons.cs` | `src/Plumix.Tests/CupertinoIconsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_icons_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoIconsDemoPage.cs` |
 | `cupertino_ui/interface_level.dart` | `src/Plumix.Cupertino/CupertinoUserInterfaceLevel.cs` | — | — |
 | `cupertino_ui/list_section.dart` | `src/Plumix.Cupertino/CupertinoListSection.cs` | `src/Plumix.Tests/CupertinoListSectionTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_list_section_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoListSectionDemoPage.cs` |
 | `cupertino_ui/list_tile.dart` | `src/Plumix.Cupertino/CupertinoListTile.cs` | `src/Plumix.Tests/CupertinoListTileTests.cs` | — |
-| `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs` | — |
+| `cupertino_ui/localizations.dart` | `src/Plumix.Cupertino/CupertinoLocalizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs`<br>`src/Plumix.Tests/GlobalCupertinoLocalizationsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_localizations_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoLocalizationsDemoPage.cs` |
 | `cupertino_ui/magnifier.dart` | `src/Plumix.Cupertino/CupertinoMagnifier.cs` | `src/Plumix.Tests/CupertinoMagnifierTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_magnifier_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoMagnifierDemoPage.cs` |
 | `cupertino_ui/menu_anchor.dart` | `src/Plumix.Cupertino/CupertinoMenuAnchor.cs` | `src/Plumix.Tests/CupertinoMenuAnchorTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_menu_anchor_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoMenuAnchorDemoPage.cs` |
 | `cupertino_ui/nav_bar.dart` | `src/Plumix.Cupertino/CupertinoNavigationBar.Components.cs`<br>`src/Plumix.Cupertino/CupertinoNavigationBar.Transition.cs`<br>`src/Plumix.Cupertino/CupertinoNavigationBar.cs`<br>`src/Plumix.Cupertino/CupertinoSliverNavigationBar.cs` | `src/Plumix.Tests/CupertinoNavigationBarTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_navigation_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoNavigationBarDemoPage.cs` |
@@ -433,7 +434,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/keyboard_listener.dart` | `src/Plumix/Widgets/KeyboardListener.cs` | `src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `widgets/layout_builder.dart` | `src/Plumix/Widgets/LayoutBuilder.cs` | `src/Plumix.Tests/LayoutBuilderTests.cs` | `dart_sample/lib/demos/general/layout_builder_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/LayoutBuilderDemoPage.cs` |
 | `widgets/list_wheel_scroll_view.dart` | `src/Plumix/Widgets/ListWheelScrollView.cs` | `src/Plumix.Tests/ListWheelScrollViewTests.cs` | `dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs` |
-| `widgets/localizations.dart` | `src/Plumix/Widgets/Localizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs` | — |
+| `widgets/localizations.dart` | `src/Plumix/Widgets/Localizations.cs` | `src/Plumix.Tests/CupertinoLocalizationsTests.cs`<br>`src/Plumix.Tests/GlobalCupertinoLocalizationsTests.cs`<br>`src/Plumix.Tests/GlobalWidgetsLocalizationsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_localizations_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoLocalizationsDemoPage.cs` |
 | `widgets/lookup_boundary.dart` | `src/Plumix/Widgets/LookupBoundary.cs` | `src/Plumix.Tests/StatefulBuilderLookupBoundaryTests.cs` | `dart_sample/lib/demos/general/stateful_builder_lookup_boundary_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/StatefulBuilderLookupBoundaryDemoPage.cs` |
 | `widgets/magnifier.dart` | `src/Plumix/Rendering/Magnifier.cs`<br>`src/Plumix/Widgets/Magnifier.cs` | `src/Plumix.Tests/CupertinoMagnifierTests.cs`<br>`src/Plumix.Tests/MagnifierTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_magnifier_demo_page.dart`<br>`dart_sample/lib/demos/material/magnifier_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoMagnifierDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/MagnifierDemoPage.cs` |
 | `widgets/media_query.dart` | `src/Plumix/Widgets/MediaQuery.cs` | — | — |
@@ -512,6 +513,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/viewport.dart` | `src/Plumix/Widgets/Viewport.cs` | `src/Plumix.Tests/ViewportPortTests.cs`<br>`src/Plumix.Tests/ViewportRevealTests.cs` | `dart_sample/lib/demos/general/center_viewport_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CenterViewportDemoPage.cs` |
 | `widgets/widget_span.dart` | `src/Plumix/Widgets/WidgetSpan.cs` | — | — |
 | `widgets/widget_state.dart` | `src/Plumix/Widgets/RawRadio.cs`<br>`src/Plumix/Widgets/WidgetState.cs` | `src/Plumix.Tests/RadioGroupRawRadioTests.cs` | — |
+| `packages/flutter_localizations/widgets_localizations.dart` | `src/Plumix/Widgets/GlobalWidgetsLocalizations.cs` | `src/Plumix.Tests/GlobalWidgetsLocalizationsTests.cs` | — |
 
 ## Gaps
 
@@ -521,6 +523,12 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 
 - `src/Plumix/AndroidLifecycleChannel.cs`
 - `src/Plumix/AssemblyInfo.cs`
+- `src/Plumix/Foundation/Intl/DartDateTime.cs`
+- `src/Plumix/Foundation/Intl/DateFormat.cs`
+- `src/Plumix/Foundation/Intl/DateSymbols.cs`
+- `src/Plumix/Foundation/Intl/Intl.cs`
+- `src/Plumix/Foundation/Intl/NumberFormat.cs`
+- `src/Plumix/Foundation/Intl/PluralRules.cs`
 - `src/Plumix/Foundation/TypedData.cs`
 - `src/Plumix/Gestures/GestureTimer.cs`
 - `src/Plumix/HostKeyboardMap.cs`
@@ -622,9 +630,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 490
-- C# files carrying a marker: 629
-- C# files without a marker: 22
+- Flutter files mapped: 492
+- C# files carrying a marker: 631
+- C# files without a marker: 28
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 71
 
