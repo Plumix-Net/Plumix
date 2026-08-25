@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: re-ported `CupertinoSlider` strictly — dynamic colors, drag recognizer, track animation (`slider.dart`).
 - Ported `CupertinoActionSheet`/`CupertinoActionSheetAction` with cancel button and slide-to-select (`dialog.dart`).
 - Breaking: re-ported `CupertinoButton` strictly — size styles, tinted/filled, focus ring, tap-move slop (`button.dart`).
 - Breaking: re-ported `CupertinoRadio` strictly — `RawRadio`-backed, painter-drawn, no `isDark`/`tapTargetSize` (`radio.dart`).

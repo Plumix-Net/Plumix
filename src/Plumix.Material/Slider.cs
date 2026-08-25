@@ -276,8 +276,10 @@ public sealed class Slider : StatefulWidget
                         min: CurrentWidget.Min,
                         max: CurrentWidget.Max,
                         divisions: CurrentWidget.Divisions,
-                        activeColor: CurrentWidget.ActiveColor,
-                        thumbColor: CurrentWidget.ThumbColor));
+                        activeColor: CurrentWidget.ActiveColor is { } adaptiveActive ? adaptiveActive : null,
+                        thumbColor: CurrentWidget.ThumbColor is { } adaptiveThumb
+                            ? adaptiveThumb
+                            : CupertinoColors.White));
             }
 
             var sliderTheme = SliderTheme.Of(context);

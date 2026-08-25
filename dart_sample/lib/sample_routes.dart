@@ -114,6 +114,7 @@ class SampleRoutes {
       '/cupertino-activity-indicator';
   static const String cupertinoButton = '/cupertino-button';
   static const String cupertinoRadio = '/cupertino-radio';
+  static const String cupertinoSlider = '/cupertino-slider';
   static const String cupertinoRefresh = '/cupertino-refresh';
   static const String cupertinoRoute = '/cupertino-route';
   static const String cupertinoActionSheet = '/cupertino-action-sheet';

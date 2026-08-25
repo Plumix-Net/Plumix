@@ -168,7 +168,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
     delegates to the Cupertino-owned implementation)
 - Then per target control: `src/Plumix.Cupertino/Cupertino<Control>.cs` + `src/Plumix.Tests/Cupertino<Control>Tests.cs`
   + demo pages (`src/Sample/Plumix.Sample/Demos/Cupertino/*`, `dart_sample/lib/demos/cupertino/*`).
-- Existing controls (`CupertinoButton`, `CupertinoSlider`, `CupertinoScrollbar`, `CupertinoMagnifier`) were
+- Existing controls (`CupertinoScrollbar`, `CupertinoMagnifier`, the selection toolbars) were
   written to serve Material adaptive controls; several carry `(reference)`/`(adapted)` markers — diff against
   Dart before extending them.
 - Cupertino tab bars enter through `src/Plumix.Cupertino/CupertinoTabBar.cs`; the shared

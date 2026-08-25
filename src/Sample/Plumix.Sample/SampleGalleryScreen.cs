@@ -118,6 +118,7 @@ internal static class SampleRoutes
     public const string CupertinoActivityIndicator = "/cupertino-activity-indicator";
     public const string CupertinoButton = "/cupertino-button";
     public const string CupertinoRadio = "/cupertino-radio";
+    public const string CupertinoSlider = "/cupertino-slider";
     public const string CupertinoRefresh = "/cupertino-refresh";
     public const string CupertinoRoute = "/cupertino-route";
     public const string CupertinoActionSheet = "/cupertino-action-sheet";
@@ -329,6 +330,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Radio (Cupertino)",
             "RadioGroup selection + toggleable + checkmark style + dark-mode painting",
             () => new CupertinoRadioDemoPage()),
+        new(
+            SampleRoutes.CupertinoSlider,
+            "Slider (Cupertino)",
+            "continuous/discrete values + min-max ranges + active/thumb colors + LTR/RTL drag",
+            () => new CupertinoSliderDemoPage()),
         new(
             SampleRoutes.CupertinoTheme,
             "Theme + dynamic colors",

@@ -1,16 +1,29 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using MouseCursor = Plumix.Widgets.MouseCursor;
 
 namespace Plumix.Cupertino;
 
 // Dart parity source: cupertino_ui/lib/src/slider.dart
 
+/// <summary>Dart's private <c>_SliderValueChanged</c>: the drag-aware form of <c>ValueChanged</c>.</summary>
+internal delegate void CupertinoSliderValueChanged(double value, bool isFastDrag);
+
+/// <summary>An iOS-style slider, used to select from a range of values.</summary>
 public sealed class CupertinoSlider : StatefulWidget
 {
+    /// <summary>
+    /// Defines the threshold for determining a "fast" slider drag, measured in slider extent per
+    /// second. Estimated on a physical iPhone 15 Pro running iOS 18.
+    /// </summary>
+    internal const double VelocityThreshold = 1.0;
+
+    /// <summary>Creates an iOS-style slider.</summary>
     public CupertinoSlider(
         double value,
         Action<double>? onChanged,
@@ -19,21 +32,16 @@ public sealed class CupertinoSlider : StatefulWidget
         double min = 0.0,
         double max = 1.0,
         int? divisions = null,
-        Color? activeColor = null,
-        Color? thumbColor = null,
+        CupertinoDynamicColor? activeColor = null,
+        CupertinoDynamicColor? thumbColor = null,
         Key? key = null) : base(key)
     {
-        if (!double.IsFinite(value) || !double.IsFinite(min) || !double.IsFinite(max))
-        {
-            throw new ArgumentOutOfRangeException(nameof(value), "Slider values must be finite.");
-        }
-
-        if (max < min || value < min || value > max)
+        if (!(value >= min && value <= max))
         {
             throw new ArgumentOutOfRangeException(nameof(value), "Slider value must be between min and max.");
         }
 
-        if (divisions.HasValue && divisions.Value <= 0)
+        if (divisions is not null and <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(divisions), "Slider divisions must be greater than zero.");
         }
@@ -46,101 +54,122 @@ public sealed class CupertinoSlider : StatefulWidget
         Max = max;
         Divisions = divisions;
         ActiveColor = activeColor;
-        ThumbColor = thumbColor ?? Colors.White;
+        ThumbColor = thumbColor ?? CupertinoColors.White;
     }
 
+    /// <summary>The currently selected value for this slider.</summary>
     public double Value { get; }
 
+    /// <summary>Called when the user selects a new value; null displays the slider as disabled.</summary>
     public Action<double>? OnChanged { get; }
 
+    /// <summary>Called when the user starts selecting a new value for the slider.</summary>
     public Action<double>? OnChangeStart { get; }
 
+    /// <summary>Called when the user is done selecting a new value for the slider.</summary>
     public Action<double>? OnChangeEnd { get; }
 
+    /// <summary>The minimum value the user can select. Defaults to 0.0.</summary>
     public double Min { get; }
 
+    /// <summary>The maximum value the user can select. Defaults to 1.0.</summary>
     public double Max { get; }
 
+    /// <summary>The number of discrete divisions, or null for a continuous slider.</summary>
     public int? Divisions { get; }
 
-    public Color? ActiveColor { get; }
+    /// <summary>
+    /// The color of the selected portion of the track. Defaults to the <see cref="CupertinoTheme"/>'s
+    /// primary color.
+    /// </summary>
+    public CupertinoDynamicColor? ActiveColor { get; }
 
-    public Color ThumbColor { get; }
+    /// <summary>The color of the thumb. Defaults to <see cref="CupertinoColors.White"/>.</summary>
+    public CupertinoDynamicColor ThumbColor { get; }
 
     public override State CreateState() => new CupertinoSliderState();
 
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("value", Value));
+        properties.Add(new DoubleProperty("min", Min));
+        properties.Add(new DoubleProperty("max", Max));
+    }
+
     private sealed class CupertinoSliderState : State
     {
-        private static readonly Color DefaultActiveColor = Color.FromRgb(0, 122, 255);
-
         private CupertinoSlider CurrentWidget => (CupertinoSlider)StateWidget;
 
         public override Widget Build(BuildContext context)
         {
-            PlatformBrightness brightness = MediaQuery.MaybeOf(context)?.PlatformBrightness
-                                            ?? PlatformBrightness.Light;
-            Color trackColor = brightness == PlatformBrightness.Dark
-                ? Color.FromArgb(76, 255, 255, 255)
-                : Color.FromArgb(51, 0, 0, 0);
-            double range = CurrentWidget.Max - CurrentWidget.Min;
-            double normalizedValue = range > 0.0
-                ? (CurrentWidget.Value - CurrentWidget.Min) / range
-                : 0.0;
-
             return new CupertinoSliderRenderWidget(
-                value: normalizedValue,
+                value: (CurrentWidget.Value - CurrentWidget.Min) / (CurrentWidget.Max - CurrentWidget.Min),
                 divisions: CurrentWidget.Divisions,
-                activeColor: CurrentWidget.ActiveColor ?? DefaultActiveColor,
+                activeColor: CupertinoDynamicColor.Resolve(
+                    CurrentWidget.ActiveColor ?? CupertinoTheme.Of(context).PrimaryColor,
+                    context),
                 thumbColor: CurrentWidget.ThumbColor,
-                trackColor: trackColor,
-                textDirection: Directionality.Of(context),
                 onChanged: CurrentWidget.OnChanged is null ? null : HandleChanged,
-                onChangeStart: CurrentWidget.OnChangeStart is null ? null : HandleChangeStart,
-                onChangeEnd: CurrentWidget.OnChangeEnd is null ? null : HandleChangeEnd);
+                onChangeStart: CurrentWidget.OnChangeStart is null ? null : HandleDragStart,
+                onChangeEnd: CurrentWidget.OnChangeEnd is null ? null : HandleDragEnd,
+                vsync: this);
         }
 
-        private void HandleChanged(double normalizedValue, bool isFastDrag)
+        private void HandleChanged(double value, bool isFastDrag)
         {
-            double value = Denormalize(normalizedValue);
-            if (Math.Abs(value - CurrentWidget.Value) <= 0.0001)
+            double lerpValue = Lerp(CurrentWidget.Min, CurrentWidget.Max, value);
+            bool isAtEdge = lerpValue == CurrentWidget.Max || lerpValue == CurrentWidget.Min;
+
+            if (lerpValue != CurrentWidget.Value)
             {
-                return;
-            }
+                if (isAtEdge)
+                {
+                    EmitHapticFeedback(isFastDrag);
+                }
 
-            if (Math.Abs(value - CurrentWidget.Min) <= 0.0001
-                || Math.Abs(value - CurrentWidget.Max) <= 0.0001)
+                CurrentWidget.OnChanged!(lerpValue);
+            }
+        }
+
+        private void HandleDragStart(double value)
+        {
+            CurrentWidget.OnChangeStart!(Lerp(CurrentWidget.Min, CurrentWidget.Max, value));
+        }
+
+        private void HandleDragEnd(double value)
+        {
+            CurrentWidget.OnChangeEnd!(Lerp(CurrentWidget.Min, CurrentWidget.Max, value));
+        }
+
+        private static void EmitHapticFeedback(bool isFastDrag)
+        {
+            switch (PlatformDefaults.TargetPlatform)
             {
-                if (isFastDrag)
-                {
-                    HapticFeedback.MediumImpact();
-                }
-                else
-                {
-                    HapticFeedback.SelectionClick();
-                }
+                case TargetPlatform.IOS:
+                    // The values are estimated using a physical iPhone 15 Pro running iOS 18.
+                    if (isFastDrag)
+                    {
+                        _ = HapticFeedback.MediumImpact();
+                    }
+                    else
+                    {
+                        _ = HapticFeedback.SelectionClick();
+                    }
+
+                    break;
+                case TargetPlatform.Android:
+                case TargetPlatform.Fuchsia:
+                case TargetPlatform.Linux:
+                case TargetPlatform.MacOS:
+                case TargetPlatform.Windows:
+                    break;
             }
-
-            CurrentWidget.OnChanged?.Invoke(value);
         }
 
-        private void HandleChangeStart(double normalizedValue)
-        {
-            CurrentWidget.OnChangeStart?.Invoke(Denormalize(normalizedValue));
-        }
-
-        private void HandleChangeEnd(double normalizedValue)
-        {
-            CurrentWidget.OnChangeEnd?.Invoke(Denormalize(normalizedValue));
-        }
-
-        private double Denormalize(double normalizedValue)
-        {
-            return CurrentWidget.Min + (normalizedValue * (CurrentWidget.Max - CurrentWidget.Min));
-        }
+        private static double Lerp(double a, double b, double t) => a + ((b - a) * t);
     }
 }
-
-internal delegate void CupertinoSliderValueChanged(double value, bool isFastDrag);
 
 internal sealed class CupertinoSliderRenderWidget : LeafRenderObjectWidget
 {
@@ -148,82 +177,91 @@ internal sealed class CupertinoSliderRenderWidget : LeafRenderObjectWidget
         double value,
         int? divisions,
         Color activeColor,
-        Color thumbColor,
-        Color trackColor,
-        TextDirection textDirection,
+        CupertinoDynamicColor thumbColor,
         CupertinoSliderValueChanged? onChanged,
         Action<double>? onChangeStart,
         Action<double>? onChangeEnd,
+        ITickerProvider vsync,
         Key? key = null) : base(key)
     {
         Value = value;
         Divisions = divisions;
         ActiveColor = activeColor;
         ThumbColor = thumbColor;
-        TrackColor = trackColor;
-        TextDirection = textDirection;
         OnChanged = onChanged;
         OnChangeStart = onChangeStart;
         OnChangeEnd = onChangeEnd;
+        Vsync = vsync;
     }
 
     public double Value { get; }
     public int? Divisions { get; }
     public Color ActiveColor { get; }
-    public Color ThumbColor { get; }
-    public Color TrackColor { get; }
-    public TextDirection TextDirection { get; }
+    public CupertinoDynamicColor ThumbColor { get; }
     public CupertinoSliderValueChanged? OnChanged { get; }
     public Action<double>? OnChangeStart { get; }
     public Action<double>? OnChangeEnd { get; }
+    public ITickerProvider Vsync { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCupertinoSlider(
-            Value,
-            Divisions,
-            ActiveColor,
-            ThumbColor,
-            TrackColor,
-            TextDirection,
-            OnChanged,
-            OnChangeStart,
-            OnChangeEnd);
+            value: Value,
+            divisions: Divisions,
+            activeColor: ActiveColor,
+            thumbColor: CupertinoDynamicColor.Resolve(ThumbColor, context),
+            trackColor: CupertinoDynamicColor.Resolve(CupertinoColors.SystemFill, context),
+            onChanged: OnChanged,
+            onChangeStart: OnChangeStart,
+            onChangeEnd: OnChangeEnd,
+            vsync: Vsync,
+            textDirection: Directionality.Of(context),
+            cursor: PlatformDefaults.IsWeb ? SystemMouseCursors.Click : MouseCursor.Defer);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var slider = (RenderCupertinoSlider)renderObject;
-        slider.Divisions = Divisions;
+        // The assignment order matches Dart: `value` is applied while `divisions` still holds the
+        // previous value, which is what decides between an animated and an immediate move.
         slider.Value = Value;
+        slider.Divisions = Divisions;
         slider.ActiveColor = ActiveColor;
-        slider.ThumbColor = ThumbColor;
-        slider.TrackColor = TrackColor;
-        slider.TextDirection = TextDirection;
+        slider.ThumbColor = CupertinoDynamicColor.Resolve(ThumbColor, context);
+        slider.TrackColor = CupertinoDynamicColor.Resolve(CupertinoColors.SystemFill, context);
         slider.OnChanged = OnChanged;
         slider.OnChangeStart = OnChangeStart;
         slider.OnChangeEnd = OnChangeEnd;
+        slider.TextDirection = Directionality.Of(context);
+        // Ticker provider cannot change since there's a 1:1 relationship between the
+        // CupertinoSliderRenderWidget object and the CupertinoSliderState object.
     }
 }
 
-internal sealed class RenderCupertinoSlider : RenderBox
+internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
 {
     private const double Padding = 8.0;
-    private const double ThumbRadius = 14.0;
-    private const double PreferredWidth = 176.0;
-    private const double PreferredHeight = 44.0;
-    private const double Epsilon = 0.0001;
+    private const double SliderHeight = 2.0 * (CupertinoThumbPainter.Radius + Padding);
+    private const double SliderWidth = 176.0; // Matches Material Design slider.
+    private const double AdjustmentUnit = 0.1; // Matches iOS implementation of material slider.
+    private static readonly TimeSpan DiscreteTransitionDuration = TimeSpan.FromMilliseconds(500.0);
+
+    private static readonly BoxConstraints AdditionalConstraints =
+        BoxConstraints.TightFor(width: SliderWidth, height: SliderHeight);
+
+    private readonly AnimationController _position;
+    private readonly HorizontalDragGestureRecognizer _drag;
 
     private double _value;
     private int? _divisions;
     private Color _activeColor;
     private Color _thumbColor;
     private Color _trackColor;
-    private TextDirection _textDirection;
     private CupertinoSliderValueChanged? _onChanged;
-    private int? _activePointer;
-    private double _dragValue;
-    private DateTimeOffset? _lastUpdateTimestamp;
+    private TextDirection _textDirection;
+    private MouseCursor _cursor;
+    private double _currentDragValue;
+    private DateTime? _lastUpdateTimestamp;
 
     public RenderCupertinoSlider(
         double value,
@@ -231,20 +269,41 @@ internal sealed class RenderCupertinoSlider : RenderBox
         Color activeColor,
         Color thumbColor,
         Color trackColor,
-        TextDirection textDirection,
         CupertinoSliderValueChanged? onChanged,
         Action<double>? onChangeStart,
-        Action<double>? onChangeEnd)
+        Action<double>? onChangeEnd,
+        ITickerProvider vsync,
+        TextDirection textDirection,
+        MouseCursor? cursor = null)
     {
+        if (!(value >= 0.0 && value <= 1.0))
+        {
+            throw new ArgumentOutOfRangeException(nameof(value), "The normalized slider value must be in [0, 1].");
+        }
+
         _value = value;
         _divisions = divisions;
         _activeColor = activeColor;
         _thumbColor = thumbColor;
         _trackColor = trackColor;
-        _textDirection = textDirection;
         _onChanged = onChanged;
         OnChangeStart = onChangeStart;
         OnChangeEnd = onChangeEnd;
+        _textDirection = textDirection;
+        _cursor = cursor ?? MouseCursor.Defer;
+        _drag = new HorizontalDragGestureRecognizer
+        {
+            OnStart = HandleDragStart,
+            OnUpdate = HandleDragUpdate,
+            OnEnd = HandleDragEnd,
+        };
+        // The ticker this controller runs on belongs to the hosting state, which disposes it when
+        // the state is disposed; Plumix's `RenderObject` has no `dispose` hook of its own.
+        _position = new AnimationController(
+            value: value,
+            duration: DiscreteTransitionDuration,
+            vsync: vsync);
+        _position.AddListener(MarkNeedsPaint);
     }
 
     public double Value
@@ -252,14 +311,26 @@ internal sealed class RenderCupertinoSlider : RenderBox
         get => _value;
         set
         {
-            double next = ClampNormalized(value);
-            if (Math.Abs(next - _value) <= Epsilon)
+            if (!(value >= 0.0 && value <= 1.0))
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "The normalized slider value must be in [0, 1].");
+            }
+
+            if (value == _value)
             {
                 return;
             }
 
-            _value = next;
-            MarkNeedsPaint();
+            _value = value;
+            if (Divisions is not null)
+            {
+                _position.AnimateTo(value, curve: Curves.FastOutSlowIn);
+            }
+            else
+            {
+                _position.SetValue(value);
+            }
+
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -269,14 +340,13 @@ internal sealed class RenderCupertinoSlider : RenderBox
         get => _divisions;
         set
         {
-            if (_divisions == value)
+            if (value == _divisions)
             {
                 return;
             }
 
             _divisions = value;
             MarkNeedsPaint();
-            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -285,7 +355,7 @@ internal sealed class RenderCupertinoSlider : RenderBox
         get => _activeColor;
         set
         {
-            if (_activeColor == value)
+            if (value == _activeColor)
             {
                 return;
             }
@@ -300,7 +370,7 @@ internal sealed class RenderCupertinoSlider : RenderBox
         get => _thumbColor;
         set
         {
-            if (_thumbColor == value)
+            if (value == _thumbColor)
             {
                 return;
             }
@@ -315,7 +385,7 @@ internal sealed class RenderCupertinoSlider : RenderBox
         get => _trackColor;
         set
         {
-            if (_trackColor == value)
+            if (value == _trackColor)
             {
                 return;
             }
@@ -324,6 +394,29 @@ internal sealed class RenderCupertinoSlider : RenderBox
             MarkNeedsPaint();
         }
     }
+
+    public CupertinoSliderValueChanged? OnChanged
+    {
+        get => _onChanged;
+        set
+        {
+            if (value == _onChanged)
+            {
+                return;
+            }
+
+            bool wasInteractive = IsInteractive;
+            _onChanged = value;
+            if (wasInteractive != IsInteractive)
+            {
+                MarkNeedsSemanticsUpdate();
+            }
+        }
+    }
+
+    public Action<double>? OnChangeStart { get; set; }
+
+    public Action<double>? OnChangeEnd { get; set; }
 
     public TextDirection TextDirection
     {
@@ -340,101 +433,159 @@ internal sealed class RenderCupertinoSlider : RenderBox
         }
     }
 
-    public CupertinoSliderValueChanged? OnChanged
+    /// <summary>The animated track split; only <see cref="Value"/> positions the thumb.</summary>
+    internal double PositionValue => _position.Value;
+
+    public MouseCursor Cursor
     {
-        get => _onChanged;
+        get => _cursor;
         set
         {
-            bool wasInteractive = IsInteractive;
-            _onChanged = value;
-            if (wasInteractive != IsInteractive)
+            if (_cursor == value)
             {
-                MarkNeedsSemanticsUpdate();
+                return;
             }
+
+            _cursor = value;
+            // A repaint is needed in order to trigger a device update of the mouse tracker so that
+            // this new value can be found.
+            MarkNeedsPaint();
         }
     }
 
-    public Action<double>? OnChangeStart { get; set; }
-    public Action<double>? OnChangeEnd { get; set; }
+    public PointerEnterEventListener? OnEnter { get; set; }
 
-    private bool IsInteractive => OnChanged is not null;
+    public PointerHoverEventListener? OnHover { get; set; }
+
+    public PointerExitEventListener? OnExit { get; set; }
+
+    public bool ValidForMouseTracker => false;
+
+    public bool IsInteractive => OnChanged is not null;
+
+    private double DiscretizedCurrentDragValue
+    {
+        get
+        {
+            double dragValue = Math.Clamp(_currentDragValue, 0.0, 1.0);
+            if (Divisions is { } divisions)
+            {
+                dragValue = Math.Round(dragValue * divisions, MidpointRounding.AwayFromZero) / divisions;
+            }
+
+            return dragValue;
+        }
+    }
+
+    private double TrackLeft => Padding;
+
+    private double TrackRight => Size.Width - Padding;
+
+    private double ThumbCenter
+    {
+        get
+        {
+            double visualPosition = TextDirection == TextDirection.Rtl ? 1.0 - _value : _value;
+            return Lerp(
+                TrackLeft + CupertinoThumbPainter.Radius,
+                TrackRight - CupertinoThumbPainter.Radius,
+                visualPosition);
+        }
+    }
+
+    private double SemanticActionUnit => Divisions is { } divisions ? 1.0 / divisions : AdjustmentUnit;
 
     protected override bool HitTestSelf(Point position)
     {
-        return IsInteractive && Math.Abs(position.X - ResolveThumbCenterX()) < ThumbRadius + Padding;
+        return Math.Abs(position.X - ThumbCenter) < CupertinoThumbPainter.Radius + Padding;
     }
 
+    // Dart derives the render object from `RenderConstrainedBox`, whose childless layout is exactly
+    // `additionalConstraints.enforce(constraints).constrain(Size.zero)`; Plumix's
+    // `RenderConstrainedBox` is sealed, so the same formula is applied here directly.
     protected override void PerformLayout()
     {
-        Size = Constraints.Constrain(new Size(PreferredWidth, PreferredHeight));
+        Size = AdditionalConstraints.Enforce(Constraints).Constrain(new Size());
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        return AdditionalConstraints.Enforce(constraints).Smallest;
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height) => AdditionalConstraints.MinWidth;
+
+    protected override double ComputeMaxIntrinsicWidth(double height) => AdditionalConstraints.MinWidth;
+
+    protected override double ComputeMinIntrinsicHeight(double width) => AdditionalConstraints.MinHeight;
+
+    protected override double ComputeMaxIntrinsicHeight(double width) => AdditionalConstraints.MinHeight;
+
+    public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
+    {
+        if (@event is PointerDownEvent downEvent && IsInteractive)
+        {
+            _drag.AddPointer(downEvent);
+        }
     }
 
     public override void Paint(PaintingContext context, Point offset)
     {
-        if (Size.Width <= 0.0 || Size.Height <= 0.0)
+        double visualPosition;
+        Color leftColor;
+        Color rightColor;
+        if (TextDirection == TextDirection.Rtl)
         {
-            return;
+            visualPosition = 1.0 - _position.Value;
+            leftColor = _activeColor;
+            rightColor = TrackColor;
+        }
+        else
+        {
+            visualPosition = _position.Value;
+            leftColor = TrackColor;
+            rightColor = _activeColor;
         }
 
-        double centerY = offset.Y + (Size.Height / 2.0);
-        double trackLeft = offset.X + Padding;
-        double trackRight = offset.X + Size.Width - Padding;
-        double thumbCenterX = offset.X + ResolveThumbCenterX();
-        Color leftColor = TextDirection == TextDirection.Ltr ? ActiveColor : TrackColor;
-        Color rightColor = TextDirection == TextDirection.Ltr ? TrackColor : ActiveColor;
+        double trackCenter = offset.Y + (Size.Height / 2.0);
+        double trackLeft = offset.X + TrackLeft;
+        double trackTop = trackCenter - 1.0;
+        double trackBottom = trackCenter + 1.0;
+        double trackRight = offset.X + TrackRight;
+        double trackActive = offset.X + ThumbCenter;
 
-        if (thumbCenterX > trackLeft)
+        if (visualPosition > 0.0)
         {
-            context.DrawRectangle(
-                new SolidColorBrush(leftColor),
-                null,
-                new Rect(trackLeft, centerY - 1.0, thumbCenterX - trackLeft, 2.0),
-                1.0,
-                1.0);
-        }
-
-        if (thumbCenterX < trackRight)
-        {
-            context.DrawRectangle(
+            // Use RRect instead of RSuperellipse here since the radius is too small to make enough
+            // visual difference.
+            context.DrawRRect(
+                RRect.FromLTRBXY(trackLeft, trackTop, trackActive, trackBottom, 1.0, 1.0),
                 new SolidColorBrush(rightColor),
-                null,
-                new Rect(thumbCenterX, centerY - 1.0, trackRight - thumbCenterX, 2.0),
-                1.0,
-                1.0);
+                null);
         }
 
-        context.DrawCircle(
-            new SolidColorBrush(ThumbColor),
-            null,
-            new Point(thumbCenterX, centerY),
-            ThumbRadius);
-    }
-
-    public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
-    {
-        switch (@event)
+        if (visualPosition < 1.0)
         {
-            case PointerDownEvent downEvent when IsInteractive && IsPrimaryButton(downEvent.Buttons):
-                _activePointer = downEvent.Pointer;
-                _dragValue = Value;
-                _lastUpdateTimestamp = downEvent.TimestampUtc;
-                OnChangeStart?.Invoke(Discretize(_dragValue));
-                OnChanged?.Invoke(Discretize(_dragValue), false);
-                break;
-            case PointerMoveEvent moveEvent when _activePointer == moveEvent.Pointer:
-                HandlePointerMove(moveEvent);
-                break;
-            case PointerUpEvent upEvent when _activePointer == upEvent.Pointer:
-                EndInteraction();
-                break;
-            case PointerCancelEvent cancelEvent when _activePointer == cancelEvent.Pointer:
-                EndInteraction();
-                break;
+            context.DrawRRect(
+                RRect.FromLTRBXY(trackActive, trackTop, trackRight, trackBottom, 1.0, 1.0),
+                new SolidColorBrush(leftColor),
+                null);
         }
+
+        var thumbCenter = new Point(trackActive, trackCenter);
+        new CupertinoThumbPainter(color: ThumbColor).Paint(
+            context,
+            new Rect(
+                thumbCenter.X - CupertinoThumbPainter.Radius,
+                thumbCenter.Y - CupertinoThumbPainter.Radius,
+                2.0 * CupertinoThumbPainter.Radius,
+                2.0 * CupertinoThumbPainter.Radius));
     }
 
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
+        base.DescribeSemanticsConfiguration(configuration);
+
         configuration.IsSemanticBoundary = IsInteractive;
         configuration.Flags |= SemanticsFlags.IsSlider;
         if (!IsInteractive)
@@ -442,66 +593,89 @@ internal sealed class RenderCupertinoSlider : RenderBox
             return;
         }
 
-        configuration.Flags |= SemanticsFlags.IsEnabled;
-        double unit = Divisions.HasValue ? 1.0 / Divisions.Value : 0.1;
-        configuration.Value = $"{Math.Round(Value * 100.0):0}%";
-        configuration.IncreasedValue = $"{Math.Round(Math.Clamp(Value + unit, 0.0, 1.0) * 100.0):0}%";
-        configuration.DecreasedValue = $"{Math.Round(Math.Clamp(Value - unit, 0.0, 1.0) * 100.0):0}%";
-        configuration.AddActionHandler(
-            SemanticsActions.Increase,
-            () => OnChanged?.Invoke(Discretize(Math.Clamp(Value + unit, 0.0, 1.0)), false));
-        configuration.AddActionHandler(
-            SemanticsActions.Decrease,
-            () => OnChanged?.Invoke(Discretize(Math.Clamp(Value - unit, 0.0, 1.0)), false));
+        configuration.TextDirection = TextDirection;
+        configuration.AddActionHandler(SemanticsActions.Increase, IncreaseAction);
+        configuration.AddActionHandler(SemanticsActions.Decrease, DecreaseAction);
+        configuration.Value = Percent(Value);
+        configuration.IncreasedValue = Percent(Math.Clamp(Value + SemanticActionUnit, 0.0, 1.0));
+        configuration.DecreasedValue = Percent(Math.Clamp(Value - SemanticActionUnit, 0.0, 1.0));
     }
 
-    private void HandlePointerMove(PointerMoveEvent @event)
+    private void HandleDragStart(DragStartDetails details) => StartInteraction(details);
+
+    private void HandleDragUpdate(DragUpdateDetails details)
     {
-        double extent = Math.Max(Padding, Size.Width - (2.0 * (Padding + ThumbRadius)));
-        double delta = @event.Delta.X / extent;
-        _dragValue = ClampNormalized(_dragValue + (TextDirection == TextDirection.Rtl ? -delta : delta));
-        bool isFastDrag = false;
-        if (_lastUpdateTimestamp.HasValue)
+        if (!IsInteractive)
         {
-            double seconds = (@event.TimestampUtc - _lastUpdateTimestamp.Value).TotalSeconds;
-            isFastDrag = seconds > 0.0 && Math.Abs(delta) / seconds > 1.0;
+            return;
         }
 
-        _lastUpdateTimestamp = @event.TimestampUtc;
-        OnChanged?.Invoke(Discretize(_dragValue), isFastDrag);
+        double extent = Math.Max(
+            Padding,
+            Size.Width - (2.0 * (Padding + CupertinoThumbPainter.Radius)));
+        double valueDelta = details.PrimaryDelta / extent;
+        _currentDragValue += TextDirection == TextDirection.Rtl ? -valueDelta : valueDelta;
+
+        // Default to false if no source timestamp is available.
+        bool isFast = false;
+        DateTime? currentTimestamp = details.SourceTimeStampUtc;
+        if (currentTimestamp is { } current && _lastUpdateTimestamp is { } last)
+        {
+            double timeDelta = (long)(current - last).TotalMilliseconds;
+            double velocity = Math.Abs(valueDelta) * 1000.0 / timeDelta;
+            // Velocity is in units of slider extent per second. A value of 0.5 means the user is
+            // dragging at 50% of the slider extent per second.
+            isFast = velocity > CupertinoSlider.VelocityThreshold;
+        }
+
+        _lastUpdateTimestamp = currentTimestamp;
+        OnChanged!(DiscretizedCurrentDragValue, isFast);
+    }
+
+    private void HandleDragEnd(DragEndDetails details) => EndInteraction();
+
+    private void StartInteraction(DragStartDetails details)
+    {
+        if (!IsInteractive)
+        {
+            return;
+        }
+
+        // Dart reports the *previous* drag accumulator here, before it is seeded with the current
+        // value; `EndInteraction` resets it to 0, so a second drag starts from 0 as well.
+        OnChangeStart?.Invoke(DiscretizedCurrentDragValue);
+        _currentDragValue = _value;
+        _lastUpdateTimestamp = details.SourceTimeStampUtc;
+        OnChanged!(DiscretizedCurrentDragValue, false);
     }
 
     private void EndInteraction()
     {
-        OnChangeEnd?.Invoke(Discretize(_dragValue));
-        _activePointer = null;
-        _dragValue = 0.0;
+        OnChangeEnd?.Invoke(DiscretizedCurrentDragValue);
+        _currentDragValue = 0.0;
         _lastUpdateTimestamp = null;
     }
 
-    private double ResolveThumbCenterX()
+    private void IncreaseAction()
     {
-        double visualValue = TextDirection == TextDirection.Rtl ? 1.0 - Value : Value;
-        double left = Padding + ThumbRadius;
-        double right = Math.Max(left, Size.Width - Padding - ThumbRadius);
-        return left + ((right - left) * visualValue);
+        if (IsInteractive)
+        {
+            OnChanged!(Math.Clamp(Value + SemanticActionUnit, 0.0, 1.0), false);
+        }
     }
 
-    private double Discretize(double value)
+    private void DecreaseAction()
     {
-        double clamped = ClampNormalized(value);
-        return Divisions.HasValue
-            ? Math.Round(clamped * Divisions.Value) / Divisions.Value
-            : clamped;
+        if (IsInteractive)
+        {
+            OnChanged!(Math.Clamp(Value - SemanticActionUnit, 0.0, 1.0), false);
+        }
     }
 
-    private static bool IsPrimaryButton(PointerButtons buttons)
+    private static string Percent(double value)
     {
-        return buttons == PointerButtons.None || buttons.HasFlag(PointerButtons.Primary);
+        return $"{Math.Round(value * 100.0, MidpointRounding.AwayFromZero)}%";
     }
 
-    private static double ClampNormalized(double value)
-    {
-        return double.IsFinite(value) ? Math.Clamp(value, 0.0, 1.0) : 0.0;
-    }
+    private static double Lerp(double a, double b, double t) => a + ((b - a) * t);
 }

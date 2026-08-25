@@ -56,6 +56,7 @@ import 'demos/cupertino/picker_demo_page.dart';
 import 'demos/cupertino/cupertino_activity_indicator_demo_page.dart';
 import 'demos/cupertino/cupertino_button_demo_page.dart';
 import 'demos/cupertino/cupertino_radio_demo_page.dart';
+import 'demos/cupertino/cupertino_slider_demo_page.dart';
 import 'demos/cupertino/refresh_demo_page.dart';
 import 'counter_screen.dart';
 import 'demos/general/container_demo_page.dart';
@@ -573,6 +574,14 @@ class SampleGalleryScreen extends StatelessWidget {
       builder: () => const CupertinoRadioDemoPage(),
     ),
     SampleRouteDefinition(
+      routeName: SampleRoutes.cupertinoSlider,
+      title: 'Slider (Cupertino)',
+      subtitle:
+          'continuous/discrete values + min-max ranges + '
+          'active/thumb colors + LTR/RTL drag',
+      builder: () => const CupertinoSliderDemoPage(),
+    ),
+    SampleRouteDefinition(
       routeName: SampleRoutes.cupertinoTheme,
       title: 'Theme + dynamic colors',
       subtitle:
@@ -589,7 +598,8 @@ class SampleGalleryScreen extends StatelessWidget {
     SampleRouteDefinition(
       routeName: SampleRoutes.cupertinoNavBar,
       title: 'Navigation bars',
-      subtitle: 'large-title sliver + search + auto back labels + hero transitions',
+      subtitle:
+          'large-title sliver + search + auto back labels + hero transitions',
       builder: () => const CupertinoNavigationBarDemoPage(),
     ),
     SampleRouteDefinition(
