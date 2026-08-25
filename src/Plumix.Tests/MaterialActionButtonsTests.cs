@@ -417,7 +417,7 @@ public sealed class MaterialActionButtonsTests
         public override string BackButtonTooltip => "Retour";
         public override string CloseButtonTooltip => "Fermer";
         public override string OpenAppDrawerTooltip => "Ouvrir le menu";
-        public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex + 1}/{tabCount}";
+        public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex}/{tabCount}";
     }
 
     private sealed class CaptureScaffoldState : StatelessWidget

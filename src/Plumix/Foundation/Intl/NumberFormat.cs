@@ -70,11 +70,16 @@ public sealed class NumberFormat
     private readonly int finalGroupingSize;
     private readonly int minimumIntegerDigits;
 
-    private NumberFormat(string locale, NumberSymbols symbols)
+    /// <summary>
+    /// Dart's <c>NumberFormat([newPattern, locale])</c>; a null pattern uses the locale's own
+    /// decimal pattern, as <see cref="DecimalPattern"/> does.
+    /// </summary>
+    public NumberFormat(string? newPattern = null, string? locale = null)
     {
-        Locale = locale;
-        Symbols = symbols;
-        (groupingSize, finalGroupingSize, minimumIntegerDigits) = ParsePattern(symbols.DecimalPattern);
+        Locale = Intl.VerifiedLocale(locale, LocaleExists, null)!;
+        Symbols = SymbolsFor(Locale);
+        (groupingSize, finalGroupingSize, minimumIntegerDigits) =
+            ParsePattern(newPattern ?? Symbols.DecimalPattern);
     }
 
     /// The locale whose symbols this format uses.
@@ -84,11 +89,7 @@ public sealed class NumberFormat
     public NumberSymbols Symbols { get; }
 
     /// <summary>Dart's <c>NumberFormat.decimalPattern([locale])</c>.</summary>
-    public static NumberFormat DecimalPattern(string? locale = null)
-    {
-        string verified = Intl.VerifiedLocale(locale, LocaleExists, null)!;
-        return new NumberFormat(verified, SymbolsFor(verified));
-    }
+    public static NumberFormat DecimalPattern(string? locale = null) => new(null, locale);
 
     /// <summary>Whether number symbols are available for <paramref name="locale"/>.</summary>
     public static bool LocaleExists(string? locale) =>

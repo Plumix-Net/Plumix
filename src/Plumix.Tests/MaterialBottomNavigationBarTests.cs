@@ -944,7 +944,7 @@ public sealed class MaterialBottomNavigationBarTests
     {
         public override string TabLabel(int tabIndex, int tabCount)
         {
-            return $"Section {tabIndex + 1} / {tabCount}";
+            return $"Section {tabIndex} / {tabCount}";
         }
     }
 

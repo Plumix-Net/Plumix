@@ -440,7 +440,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         Assert.Equal(2, FindWidgets<TextFormField>(harness).Count);
 
         semantics = harness.PumpAndGetSemantics(ViewSize);
-        toggle = FindTappableUnderTooltip(semantics, "Switch to clock mode");
+        toggle = FindTappableUnderTooltip(semantics, "Switch to dial picker mode");
         Assert.NotNull(toggle);
         Assert.True(toggle!.PerformAction(SemanticsActions.Tap));
         harness.Pump(ViewSize);

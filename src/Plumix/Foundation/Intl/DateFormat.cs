@@ -1,6 +1,6 @@
-// Port of `package:intl` 0.20.3 `lib/src/intl/date_format.dart` and `date_format_field.dart`,
-// restricted to formatting (parsing is not ported). Skeletons resolve against the pinned CLDR
-// pattern table in `IntlData.g.cs`, the same data `flutter_localizations` installs into intl.
+// Port of `package:intl` 0.20.3 `lib/src/intl/date_format.dart` and `date_format_field.dart`.
+// Skeletons resolve against the pinned CLDR pattern table in `IntlData.g.cs`, the same data
+// `flutter_localizations` installs into intl. Loose parsing (`parseLoose`) is not ported.
 
 using System.Globalization;
 using System.Text;
@@ -26,6 +26,7 @@ public sealed class DateFormat
 
     private List<Field>? formatFields;
     private bool? useNativeDigits;
+    private bool? dateOnly;
 
     /// <summary>Dart's <c>DateFormat([newPattern, locale])</c>.</summary>
     /// <exception cref="ArgumentException">The locale has no date data and no usable fallback.</exception>
@@ -59,6 +60,7 @@ public sealed class DateFormat
     public DateFormat AddPattern(string? inputPattern, string separator = " ")
     {
         formatFields = null;
+        dateOnly = null;
         if (inputPattern == null)
         {
             return this;
@@ -85,9 +87,59 @@ public sealed class DateFormat
     /// <summary>Dart's <c>DateFormat.format</c>, for a <see cref="DateTime"/>.</summary>
     public string Format(DateTime date) => Format(DartDateTime.FromDateTime(date));
 
+    /// <summary>Dart's <c>DateFormat.parse</c>: reads the fields this pattern names, in order.</summary>
+    /// <exception cref="FormatException">The input does not match the pattern.</exception>
+    public DartDateTime Parse(string inputString) => ParseCore(inputString, strict: false);
+
+    /// <summary>
+    /// Dart's <c>DateFormat.parseStrict</c>: <see cref="Parse"/>, but the whole input must be
+    /// consumed and every field must round-trip through the resulting date.
+    /// </summary>
+    /// <exception cref="FormatException">The input does not match the pattern.</exception>
+    public DartDateTime ParseStrict(string inputString) => ParseCore(inputString, strict: true);
+
+    /// <summary>Dart's <c>DateFormat.tryParseStrict</c>.</summary>
+    public DartDateTime? TryParseStrict(string inputString)
+    {
+        try
+        {
+            return ParseStrict(inputString);
+        }
+        catch (FormatException)
+        {
+            return null;
+        }
+    }
+
     public override string ToString() => Pattern ?? string.Empty;
 
+    /// <summary>Dart's <c>DateFormat.dateOnly</c>: no field of this pattern carries a time.</summary>
+    public bool DateOnly => dateOnly ??= FormatFields.TrueForAll(each => each.ForDate);
+
     private List<Field> FormatFields => formatFields ??= ParsePattern(Pattern ?? string.Empty);
+
+    /// Dart's `DateFormat._parse`.
+    private DartDateTime ParseCore(string inputString, bool strict)
+    {
+        var dateFields = new DateBuilder(Locale) { DateOnly = DateOnly };
+        var stack = new StringStack(inputString);
+        foreach (Field field in FormatFields)
+        {
+            field.Parse(stack, dateFields);
+        }
+
+        if (strict && !stack.AtEnd)
+        {
+            throw new FormatException($"Characters remaining after date parsing in {inputString}");
+        }
+
+        if (strict)
+        {
+            dateFields.Verify(inputString);
+        }
+
+        return dateFields.AsDate();
+    }
 
     private void AppendPattern(string inputPattern, string separator)
     {
@@ -192,10 +244,20 @@ public sealed class DateFormat
     private static string PatchQuotes(string pattern) =>
         pattern == "''" ? "'" : pattern[1..^1].Replace("''", "'", StringComparison.Ordinal);
 
+    /// Dart's `DateFormat.localeZeroCodeUnit`: the locale's digit zero, or ASCII zero.
+    private char LocaleZero
+    {
+        get
+        {
+            string zeroDigit = UseNativeDigits ? DateSymbols.ZeroDigit ?? "0" : "0";
+            return zeroDigit[0];
+        }
+    }
+
     private string LocalizeDigits(string text)
     {
-        string zeroDigit = UseNativeDigits ? DateSymbols.ZeroDigit ?? "0" : "0";
-        if (zeroDigit[0] == '0')
+        char zeroDigit = LocaleZero;
+        if (zeroDigit == '0')
         {
             return text;
         }
@@ -203,7 +265,7 @@ public sealed class DateFormat
         char[] digits = text.ToCharArray();
         for (int i = 0; i < digits.Length; i++)
         {
-            digits[i] = (char)(digits[i] + zeroDigit[0] - '0');
+            digits[i] = (char)(digits[i] + zeroDigit - '0');
         }
 
         return new string(digits);
@@ -229,7 +291,228 @@ public sealed class DateFormat
 
         public static Field Pattern(string text, DateFormat parent) => new(text, parent);
 
+        /// Dart's `_DateFormatField.forDate`: literals count as date-only.
+        public bool ForDate => parent == null
+                               || "cdDEGLMQvyZz".Contains(pattern[0], StringComparison.Ordinal);
+
         public string Format(DartDateTime date) => parent == null ? pattern : FormatField(date);
+
+        /// <summary>Dart's <c>_DateFormatField.parse</c>.</summary>
+        public void Parse(StringStack input, DateBuilder builder)
+        {
+            if (parent == null)
+            {
+                ParseLiteral(input);
+                return;
+            }
+
+            try
+            {
+                ParseField(input, builder);
+            }
+            catch (Exception exception) when (exception is FormatException or ArgumentOutOfRangeException
+                                                  or IndexOutOfRangeException or OverflowException)
+            {
+                throw FormatError(input);
+            }
+        }
+
+        /// Dart's `_DateFormatField.parseLiteral`.
+        private void ParseLiteral(StringStack input)
+        {
+            string found = input.Read(Width);
+            if (!string.Equals(found, pattern, StringComparison.Ordinal))
+            {
+                throw FormatError(input);
+            }
+        }
+
+        /// Dart's `_DateFormatPatternField.parseField`.
+        private void ParseField(StringStack input, DateBuilder builder)
+        {
+            switch (pattern[0])
+            {
+                case 'a':
+                    ParseAmPm(input, builder);
+                    break;
+                case 'c':
+                    ParseStandaloneDay(input);
+                    break;
+                case 'd':
+                    HandleNumericField(input, builder.SetDay);
+                    break;
+                case 'D':
+                    HandleNumericField(input, builder.SetDayOfYear);
+                    break;
+                case 'E':
+                    ParseEnumeratedString(input, Width >= 4 ? Symbols.Weekdays : Symbols.ShortWeekdays);
+                    break;
+                case 'G':
+                    ParseEnumeratedString(input, Width >= 4 ? Symbols.EraNames : Symbols.Eras);
+                    break;
+                case 'h':
+                    HandleNumericField(input, builder.SetHour);
+                    if (builder.Hour == 12)
+                    {
+                        builder.Hour = 0;
+                    }
+
+                    break;
+                case 'H':
+                case 'K':
+                    HandleNumericField(input, builder.SetHour);
+                    break;
+                case 'k':
+                    HandleNumericField(input, builder.SetHour, -1);
+                    break;
+                case 'L':
+                    ParseStandaloneMonth(input, builder);
+                    break;
+                case 'M':
+                    ParseMonth(input, builder);
+                    break;
+                case 'm':
+                    HandleNumericField(input, builder.SetMinute);
+                    break;
+                case 'S':
+                    HandleNumericField(input, builder.SetFractionalSecond);
+                    break;
+                case 's':
+                    HandleNumericField(input, builder.SetSecond);
+                    break;
+                case 'y':
+                    HandleNumericField(input, builder.SetYear);
+                    builder.SetHasAmbiguousCentury(Width == 2);
+                    break;
+                default:
+                    // 'Q' (quarter), 'v'/'z'/'Z' (time zones): Dart reads nothing for these.
+                    break;
+            }
+        }
+
+        private void ParseMonth(StringStack input, DateBuilder builder)
+        {
+            IReadOnlyList<string>? possibilities = Width switch
+            {
+                5 => Symbols.NarrowMonths,
+                4 => Symbols.Months,
+                3 => Symbols.ShortMonths,
+                _ => null,
+            };
+            if (possibilities == null)
+            {
+                HandleNumericField(input, builder.SetMonth);
+                return;
+            }
+
+            builder.Month = ParseEnumeratedString(input, possibilities) + 1;
+        }
+
+        private void ParseStandaloneMonth(StringStack input, DateBuilder builder)
+        {
+            IReadOnlyList<string>? possibilities = Width switch
+            {
+                5 => Symbols.StandaloneNarrowMonths,
+                4 => Symbols.StandaloneMonths,
+                3 => Symbols.StandaloneShortMonths,
+                _ => null,
+            };
+            if (possibilities == null)
+            {
+                HandleNumericField(input, builder.SetMonth);
+                return;
+            }
+
+            builder.Month = ParseEnumeratedString(input, possibilities) + 1;
+        }
+
+        private void ParseStandaloneDay(StringStack input)
+        {
+            IReadOnlyList<string>? possibilities = Width switch
+            {
+                5 => Symbols.StandaloneNarrowWeekdays,
+                4 => Symbols.StandaloneWeekdays,
+                3 => Symbols.StandaloneShortWeekdays,
+                _ => null,
+            };
+            if (possibilities == null)
+            {
+                HandleNumericField(input, _ => { });
+                return;
+            }
+
+            ParseEnumeratedString(input, possibilities);
+        }
+
+        private void ParseAmPm(StringStack input, DateBuilder builder)
+        {
+            if (ParseEnumeratedString(input, Symbols.AmPms) == 1)
+            {
+                builder.Pm = true;
+            }
+        }
+
+        /// Dart's `_DateFormatPatternField.parseEnumeratedString`: the longest match wins.
+        private int ParseEnumeratedString(StringStack input, IReadOnlyList<string> possibilities)
+        {
+            int longest = -1;
+            for (int i = 0; i < possibilities.Count; i++)
+            {
+                if (!string.Equals(input.Peek(possibilities[i].Length), possibilities[i],
+                        StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                if (longest < 0 || possibilities[i].Length >= possibilities[longest].Length)
+                {
+                    longest = i;
+                }
+            }
+
+            if (longest < 0)
+            {
+                throw FormatError(input);
+            }
+
+            input.Pop(possibilities[longest].Length);
+            return longest;
+        }
+
+        /// Dart's `_DateFormatPatternField.handleNumericField`.
+        private void HandleNumericField(StringStack input, Action<int> setter, int offset = 0)
+        {
+            setter(NextInteger(input) + offset);
+        }
+
+        /// Dart's `_DateFormatPatternField._nextInteger`, over the locale's own digits.
+        private int NextInteger(StringStack input)
+        {
+            char zero = parent!.LocaleZero;
+            string rest = input.PeekAll();
+            int length = 0;
+            while (length < rest.Length && rest[length] >= zero && rest[length] <= (char)(zero + 9))
+            {
+                length++;
+            }
+
+            if (length == 0)
+            {
+                throw FormatError(input);
+            }
+
+            input.Pop(length);
+            int result = 0;
+            for (int i = 0; i < length; i++)
+            {
+                result = checked(result * 10 + (rest[i] - zero));
+            }
+
+            return result;
+        }
+
+        private FormatException FormatError(StringStack input) =>
+            new($"Trying to read {pattern} from {input}");
 
         private string FormatField(DartDateTime date) => pattern[0] switch
         {

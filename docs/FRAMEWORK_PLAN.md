@@ -93,7 +93,6 @@ Exit criteria:
 
 ## Backlog Candidates (After M5–M6)
 
-- `GlobalMaterialLocalizations` over the shared localization machinery (`docs/ai/BACKLOG.md`).
 - Native accessibility bridges per host (see `docs/ai/BACKLOG.md`).
 - Performance instrumentation and frame diagnostics tooling.
 - Expanded documentation for migration recipes from Flutter (Dart) widgets to C#.

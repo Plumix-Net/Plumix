@@ -99,6 +99,7 @@ internal static class SampleRoutes
     public const string AppBarIconTheme = "/appbar-icon-theme";
     public const string AppBarTextStyles = "/appbar-text-styles";
     public const string ColorPalette = "/color-palette";
+    public const string MaterialLocalizations = "/material-localizations";
     public const string CupertinoApp = "/cupertino-app";
     public const string CupertinoIcons = "/cupertino-icons";
     public const string CupertinoFocusHalo = "/cupertino-focus-halo";
@@ -261,6 +262,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Colors + primarySwatch",
             "MaterialColor shades + fromSwatch M2 scheme + swatch-derived theme colors",
             () => new ColorPaletteDemoPage()),
+        new(
+            SampleRoutes.MaterialLocalizations,
+            "Localizations",
+            "global delegates: translated strings + locale date/time/number formats",
+            () => new MaterialLocalizationsDemoPage()),
     ];
 
     private static readonly IReadOnlyList<SampleRouteDefinition> CupertinoDemoPages =

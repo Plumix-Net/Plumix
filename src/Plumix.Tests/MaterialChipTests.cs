@@ -1072,7 +1072,7 @@ public sealed class MaterialChipTests : IDisposable
     {
         public override string DeleteButtonTooltip => deleteTooltip;
 
-        public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex + 1}/{tabCount}";
+        public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex}/{tabCount}";
     }
 
     /// <summary>

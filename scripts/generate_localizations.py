@@ -10,10 +10,11 @@ the locale fallbacks and every translated string match Flutter's exactly.
 Outputs:
     src/Plumix/Widgets/GlobalWidgetsLocalizations.g.cs
     src/Plumix.Cupertino/GlobalCupertinoLocalizations.g.cs
+    src/Plumix.Material/GlobalMaterialLocalizations.g.cs
 
 Usage:
-    scripts/generate_localizations.py            # rewrite both generated files
-    scripts/generate_localizations.py --check    # exit 1 when either file is out of date
+    scripts/generate_localizations.py            # rewrite every generated file
+    scripts/generate_localizations.py --check    # exit 1 when any file is out of date
 """
 
 from __future__ import annotations
@@ -26,8 +27,10 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 
 CUPERTINO_DART = REPO / "cupertino-ui-src/lib/src/l10n/generated_cupertino_localizations.dart"
+MATERIAL_DART = REPO / "material-ui-src/lib/src/l10n/generated_material_localizations.dart"
 WIDGETS_DART = REPO / "flutter-src/packages/flutter_localizations/lib/src/l10n/generated_widgets_localizations.dart"
 CUPERTINO_OUT = REPO / "src/Plumix.Cupertino/GlobalCupertinoLocalizations.g.cs"
+MATERIAL_OUT = REPO / "src/Plumix.Material/GlobalMaterialLocalizations.g.cs"
 WIDGETS_OUT = REPO / "src/Plumix/Widgets/GlobalWidgetsLocalizations.g.cs"
 
 # Members `GlobalCupertinoLocalizations` declares protected (Dart's `@protected`) and nullable.
@@ -52,10 +55,47 @@ CUPERTINO_FORMATS = [
     ("NumberFormat", "decimalFormat"),
 ]
 
+# The same, for `GlobalMaterialLocalizations`.
+MATERIAL_PLURAL_BASES = [
+    "selectedRowCountTitle", "licensesPackageDetailText", "remainingTextFieldCharacterCount",
+]
+MATERIAL_PROTECTED_NULLABLE = {base + suffix for base in MATERIAL_PLURAL_BASES
+                               for suffix in PLURAL_SUFFIXES if suffix != "Other"}
+MATERIAL_PROTECTED_REQUIRED = (
+    {base + "Other" for base in MATERIAL_PLURAL_BASES}
+    | {"dateRangeStartDateSemanticLabelRaw", "dateRangeEndDateSemanticLabelRaw", "scrimOnTapHintRaw",
+       "aboutListTileTitleRaw", "pageRowsInfoTitleApproximateRaw", "pageRowsInfoTitleRaw",
+       "tabLabelRaw", "timeOfDayFormatRaw"})
+
+MATERIAL_FORMATS = [
+    ("DateFormat", "fullYearFormat"),
+    ("DateFormat", "compactDateFormat"),
+    ("DateFormat", "shortDateFormat"),
+    ("DateFormat", "mediumDateFormat"),
+    ("DateFormat", "longDateFormat"),
+    ("DateFormat", "yearMonthFormat"),
+    ("DateFormat", "shortMonthDayFormat"),
+    ("NumberFormat", "decimalFormat"),
+    ("NumberFormat", "twoDigitZeroPaddedFormat"),
+]
+
+# Dart's enum members, spelled the way the C# enums do. `TimeOfDayFormat` collides with
+# `MaterialLocalizations.TimeOfDayFormat(bool)`, so it is always fully qualified.
+ENUM_VALUES = {
+    "ScriptCategory": ("ScriptCategory", {
+        "englishLike": "EnglishLike", "dense": "Dense", "tall": "Tall",
+    }),
+    "TimeOfDayFormat": ("global::Plumix.Material.TimeOfDayFormat", {
+        "HH_colon_mm": "HHColonMm", "HH_dot_mm": "HHDotMm", "frenchCanadian": "FrenchCanadian",
+        "H_colon_mm": "HColonMm", "h_colon_mm_space_a": "HColonMmSpaceA",
+        "a_space_h_colon_mm": "ASpaceHColonMm",
+    }),
+}
+
 
 class DartClass:
     def __init__(self, name: str, parent: str, doc: str, locale_name: str | None,
-                 text_direction: str | None, getters: list[tuple[str, str, bool]]):
+                 text_direction: str | None, getters: list[tuple[str, str, bool, str]]):
         self.name = name
         self.parent = parent
         self.doc = doc
@@ -106,13 +146,14 @@ def parse_classes(source: str) -> list[DartClass]:
         if direction_match:
             text_direction = direction_match.group(1)
 
-        getters: list[tuple[str, str, bool]] = []
+        getters: list[tuple[str, str, bool, str]] = []
         for getter in re.finditer(
-                r"@override\n  String(\??)\s+get\s+(\w+)\s*=>\s*(null|r?'(?:[^'\\]|\\.)*'"
-                r"|r?\"(?:[^\"\\]|\\.)*\");", body):
-            nullable = getter.group(1) == "?"
-            value = getter.group(3)
-            getters.append((getter.group(2), value, nullable))
+                r"@override\n  (\w+)(\??)\s+get\s+(\w+)\s*=>\s*(null|r?'(?:[^'\\]|\\.)*'"
+                r"|r?\"(?:[^\"\\]|\\.)*\"|[\w]+\.[\w]+);", body):
+            kind = getter.group(1)
+            nullable = getter.group(2) == "?"
+            value = getter.group(4)
+            getters.append((getter.group(3), value, nullable, kind))
         classes.append(DartClass(name, parent, doc.strip(), locale_name, text_direction, getters))
     return classes
 
@@ -226,7 +267,7 @@ def render_cupertino() -> str:
             lines.append(f"        : base({', '.join(name for _, name in CUPERTINO_FORMATS)}, "
                          "localeName)")
         lines += ["    {", "    }", ""]
-        for name, value, nullable in entry.getters:
+        for name, value, nullable, _ in entry.getters:
             declaration = "protected override" if name in PROTECTED_NULLABLE | PROTECTED_REQUIRED \
                 else "public override"
             kind = "string?" if name in PROTECTED_NULLABLE else "string"
@@ -272,6 +313,100 @@ def render_cupertino() -> str:
     return "\n".join(lines)
 
 
+def material_getter(name: str, value: str, kind: str) -> str:
+    """One `@override` getter of a generated Material bundle, as its C# override."""
+    if kind in ENUM_VALUES:
+        csharp_type, members = ENUM_VALUES[kind]
+        dart_member = value.split(".", 1)[1]
+        if dart_member not in members:
+            sys.exit(f"unknown {kind} value {value!r}")
+        text = f"{csharp_type}.{members[dart_member]}"
+    else:
+        csharp_type = "string"
+        text = "null" if value == "null" else csharp_string(dart_string(value))
+
+    if name in MATERIAL_PROTECTED_NULLABLE:
+        return f"    protected override string? {member(name)} => {text};"
+    if name in MATERIAL_PROTECTED_REQUIRED:
+        return f"    protected override {csharp_type} {member(name)} => {text};"
+    return f"    public override {csharp_type} {member(name)} => {text};"
+
+
+def render_material() -> str:
+    source = MATERIAL_DART.read_text(encoding="utf-8")
+    classes = parse_classes(source)
+    languages = parse_supported_languages(source, "kMaterialSupportedLanguages")
+    arguments = ", ".join(name for _, name in MATERIAL_FORMATS)
+
+    lines = [
+        "// Generated by scripts/generate_localizations.py from",
+        "// material_ui/lib/src/l10n/generated_material_localizations.dart. Do not edit by hand.",
+        "",
+        "#nullable enable",
+        "",
+        "using Plumix.Foundation.Intl;",
+        "using Plumix.Widgets;",
+        "",
+        "namespace Plumix.Material;",
+        "",
+    ]
+    for entry in classes:
+        base_arguments = ", ".join(["localeName"] + [name for _, name in MATERIAL_FORMATS])
+        lines += [
+            f"/// {entry.doc}",
+            f"public class {entry.name} : {entry.parent}",
+            "{",
+            f"    /// Creates an instance of the translation bundle for {subject(entry.doc)}",
+            f"    public {entry.name}(",
+        ]
+        lines += [f"        {kind} {name}," for kind, name in MATERIAL_FORMATS]
+        lines.append(f"        string localeName = {csharp_string(entry.locale_name)})")
+        if entry.parent == "GlobalMaterialLocalizations":
+            lines.append(f"        : base({base_arguments})")
+        else:
+            lines.append(f"        : base({arguments}, localeName)")
+        lines += ["    {", "    }", ""]
+        for name, value, _, kind in entry.getters:
+            lines.append(material_getter(name, value, kind))
+            lines.append("")
+        if lines[-1] == "":
+            lines.pop()
+        lines += ["}", ""]
+
+    lines += [
+        "public abstract partial class GlobalMaterialLocalizations",
+        "{",
+        "    /// The languages `GlobalMaterialLocalizations.Delegate` supports.",
+        "    public static IReadOnlySet<string> MaterialSupportedLanguages { get; } =",
+        "        new HashSet<string>(StringComparer.Ordinal)",
+        "        {",
+    ]
+    lines += [f"            {csharp_string(language)}," for language in languages]
+    lines += [
+        "        };",
+        "",
+        "    /// <summary>",
+        "    /// The translation bundle for <paramref name=\"locale\"/>, or null when it has none.",
+        "    /// </summary>",
+        "    public static GlobalMaterialLocalizations? GetMaterialTranslation(",
+        "        Locale locale,",
+    ]
+    lines += [f"        {kind} {name}," for kind, name in MATERIAL_FORMATS[:-1]]
+    lines += [
+        f"        {MATERIAL_FORMATS[-1][0]} {MATERIAL_FORMATS[-1][1]})",
+        "    {",
+    ]
+    lines += parse_switch(source, "GlobalMaterialLocalizations? getMaterialTranslation", arguments)
+    lines += [
+        "",
+        "        return null;",
+        "    }",
+        "}",
+        "",
+    ]
+    return "\n".join(lines)
+
+
 def render_widgets() -> str:
     source = WIDGETS_DART.read_text(encoding="utf-8")
     classes = parse_classes(source)
@@ -303,7 +438,7 @@ def render_widgets() -> str:
             lines += ["    {", "    }", ""]
         else:
             lines += [f"    public {entry.name}()", "    {", "    }", ""]
-        for name, value, _ in entry.getters:
+        for name, value, _, _ in entry.getters:
             text = "null" if value == "null" else csharp_string(dart_string(value))
             lines.append(f"    public override string {member(name)} => {text};")
             lines.append("")
@@ -345,7 +480,9 @@ def main() -> int:
     parser.add_argument("--check", action="store_true")
     args = parser.parse_args()
 
-    for path, rendered in ((CUPERTINO_OUT, render_cupertino()), (WIDGETS_OUT, render_widgets())):
+    for path, rendered in ((CUPERTINO_OUT, render_cupertino()),
+                           (MATERIAL_OUT, render_material()),
+                           (WIDGETS_OUT, render_widgets())):
         if args.check:
             current = path.read_text(encoding="utf-8") if path.is_file() else ""
             if current != rendered:

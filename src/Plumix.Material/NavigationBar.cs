@@ -152,7 +152,7 @@ public sealed class NavigationBar : StatelessWidget
             var destination = Destinations[index];
             int capturedIndex = index;
             Action onTap = OnDestinationSelected is null ? () => { } : () => OnDestinationSelected(capturedIndex);
-            string indexLabel = MaterialLocalizations.Of(context).TabLabel(index, Destinations.Count);
+            string indexLabel = MaterialLocalizations.Of(context).TabLabel(index + 1, Destinations.Count);
             Widget tile = destination is NavigationDestination navigationDestination
                 ? new NavigationBarDestinationTile(
                     destination: navigationDestination,

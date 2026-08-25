@@ -10,7 +10,7 @@ namespace Plumix.Foundation.Intl;
 /// A calendar date/time with Dart's <c>DateTime</c> normalization: out-of-range components roll
 /// over into neighbouring fields, and years outside <see cref="DateTime"/>'s range are allowed.
 /// </summary>
-public readonly struct DartDateTime : IEquatable<DartDateTime>
+public readonly struct DartDateTime : IEquatable<DartDateTime>, IComparable<DartDateTime>
 {
     private DartDateTime(int year, int month, int day, int hour, int minute, int second, int millisecond, int days)
     {
@@ -94,6 +94,22 @@ public readonly struct DartDateTime : IEquatable<DartDateTime>
         value.Millisecond);
 
     public static implicit operator DartDateTime(DateTime value) => FromDateTime(value);
+
+    /// <summary>
+    /// Converts to a <see cref="DateTime"/>, or returns null when the year is outside its range.
+    /// </summary>
+    public DateTime? ToDateTime() => Year is < 1 or > 9999
+        ? null
+        : new DateTime(Year, Month, Day, Hour, Minute, Second, Millisecond, DateTimeKind.Utc);
+
+    /// <summary>Dart's <c>DateTime.compareTo</c>.</summary>
+    public int CompareTo(DartDateTime other)
+    {
+        int days = DaysSinceEpoch.CompareTo(other.DaysSinceEpoch);
+        return days != 0 ? days : MillisecondsOfDay.CompareTo(other.MillisecondsOfDay);
+    }
+
+    private int MillisecondsOfDay => ((Hour * 60 + Minute) * 60 + Second) * 1000 + Millisecond;
 
     public bool Equals(DartDateTime other) =>
         DaysSinceEpoch == other.DaysSinceEpoch

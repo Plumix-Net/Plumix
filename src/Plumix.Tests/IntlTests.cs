@@ -239,6 +239,112 @@ public sealed class IntlTests
         Assert.Null(Intl.ToBeginningOfSentenceCase(null));
     }
 
+    [Fact]
+    public void DateFormatParseStrictReadsNumericFields()
+    {
+        var american = new DateFormat("yMd", "en");
+        DartDateTime parsed = american.ParseStrict("7/23/2015");
+        Assert.Equal(2015, parsed.Year);
+        Assert.Equal(7, parsed.Month);
+        Assert.Equal(23, parsed.Day);
+
+        // The pattern's own separators and field order are what is read.
+        var german = new DateFormat("yMd", "de");
+        Assert.Equal("23.7.2015", german.Format(new DateTime(2015, 7, 23)));
+        Assert.Equal(new DateTime(2015, 7, 23), german.ParseStrict("23.7.2015").ToDateTime());
+
+        var hungarian = new DateFormat("yMd", "hu");
+        Assert.Equal("2015. 07. 23.", hungarian.Format(new DateTime(2015, 7, 23)));
+        Assert.Equal(new DateTime(2015, 7, 23), hungarian.ParseStrict("2015. 07. 23.").ToDateTime());
+    }
+
+    [Fact]
+    public void DateFormatParseStrictReadsTextFields()
+    {
+        var format = new DateFormat("yMMMd", "en");
+        Assert.Equal("Jul 23, 2015", format.Format(new DateTime(2015, 7, 23)));
+        Assert.Equal(new DateTime(2015, 7, 23), format.ParseStrict("Jul 23, 2015").ToDateTime());
+
+        // The longest matching name wins, so `MMMM` and `MMM` both resolve.
+        var full = new DateFormat("MMMM d, y", "en");
+        Assert.Equal(new DateTime(2015, 7, 23), full.ParseStrict("July 23, 2015").ToDateTime());
+    }
+
+    [Fact]
+    public void DateFormatParseStrictReadsTimeFields()
+    {
+        var format = new DateFormat("h:mm a", "en");
+        DartDateTime parsed = format.ParseStrict("9:32 PM");
+        Assert.Equal(21, parsed.Hour);
+        Assert.Equal(32, parsed.Minute);
+
+        Assert.Equal(9, format.ParseStrict("9:32 AM").Hour);
+        Assert.Equal(0, format.ParseStrict("12:32 AM").Hour);
+        Assert.Equal(12, format.ParseStrict("12:32 PM").Hour);
+    }
+
+    [Fact]
+    public void DateFormatParseStrictReadsTheLocalesOwnDigits()
+    {
+        var persian = new DateFormat("yMd", "fa");
+        string formatted = persian.Format(new DateTime(2015, 7, 23));
+        Assert.Equal(new DateTime(2015, 7, 23), persian.ParseStrict(formatted).ToDateTime());
+        Assert.DoesNotContain("7", formatted, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void DateFormatParseStrictRejectsWhatDartRejects()
+    {
+        var format = new DateFormat("yMd", "en");
+
+        // Characters left over after the pattern is consumed.
+        Assert.Throws<FormatException>(() => format.ParseStrict("7/23/2015666777889"));
+
+        // A day that does not exist in that month rolls over, which strict parsing refuses.
+        Assert.Throws<FormatException>(() => format.ParseStrict("2/30/2015"));
+
+        // An out-of-range month, a missing field and a non-date all fail.
+        Assert.Throws<FormatException>(() => format.ParseStrict("13/1/2015"));
+        Assert.Throws<FormatException>(() => format.ParseStrict("7/23"));
+        Assert.Throws<FormatException>(() => format.ParseStrict("not a date"));
+        Assert.Throws<FormatException>(() => format.ParseStrict(string.Empty));
+
+        // The separators must match the pattern's.
+        Assert.Throws<FormatException>(() => format.ParseStrict("7-23-2015"));
+    }
+
+    [Fact]
+    public void DateFormatParseIsLenientAboutTrailingText()
+    {
+        var format = new DateFormat("yMd", "en");
+
+        // `parse` stops once the pattern is consumed; only `parseStrict` demands the whole input.
+        Assert.Equal(new DateTime(2015, 7, 23), format.Parse("7/23/2015 and more").ToDateTime());
+        Assert.Null(format.TryParseStrict("7/23/2015 and more"));
+        Assert.Equal(new DateTime(2015, 7, 23), format.TryParseStrict("7/23/2015")?.ToDateTime());
+    }
+
+    [Fact]
+    public void DateFormatDateOnlyFollowsTheFieldsOfThePattern()
+    {
+        Assert.True(new DateFormat("yMd", "en").DateOnly);
+        Assert.False(new DateFormat("h:mm a", "en").DateOnly);
+    }
+
+    [Fact]
+    public void NumberFormatAcceptsAnExplicitPattern()
+    {
+        Assert.Equal("05", new NumberFormat("00", "en").Format(5));
+        Assert.Equal("42", new NumberFormat("00", "en").Format(42));
+        Assert.Equal("123", new NumberFormat("00", "en").Format(123));
+        Assert.Equal("۰۵", new NumberFormat("00", "fa").Format(5));
+
+        // A null pattern is `NumberFormat.decimalPattern`.
+        Assert.Equal(
+            NumberFormat.DecimalPattern("de").Format(10000),
+            new NumberFormat(null, "de").Format(10000));
+    }
+
     private static string? Plural(int howMany, string locale) => Intl.PluralLogic(
         howMany,
         zero: "zero",

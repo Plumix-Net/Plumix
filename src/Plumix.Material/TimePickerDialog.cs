@@ -946,7 +946,7 @@ internal sealed class TimePickerInputState : State
                                 : new Widget[]
                                 {
                                     new ExcludeSemantics(new Text(
-                                        Current.HourLabelText ?? localizations.HourLabel,
+                                        Current.HourLabelText ?? localizations.TimePickerHourLabel,
                                         style: theme.TextTheme.BodySmall,
                                         maxLines: 1,
                                         overflow: TextOverflow.Ellipsis)),
@@ -973,7 +973,7 @@ internal sealed class TimePickerInputState : State
                                 : new Widget[]
                                 {
                                     new ExcludeSemantics(new Text(
-                                        Current.MinuteLabelText ?? localizations.MinuteLabel,
+                                        Current.MinuteLabelText ?? localizations.TimePickerMinuteLabel,
                                         style: theme.TextTheme.BodySmall,
                                         maxLines: 1,
                                         overflow: TextOverflow.Ellipsis)),
@@ -1052,7 +1052,7 @@ internal sealed class HourTextField : StatelessWidget
         autofocus: Autofocus,
         inputAction: InputAction,
         style: Style,
-        semanticHintText: HourLabelText ?? MaterialLocalizations.Of(context).HourLabel,
+        semanticHintText: HourLabelText ?? MaterialLocalizations.Of(context).TimePickerHourLabel,
         validator: Validator,
         onSavedSubmitted: OnSavedSubmitted,
         onChanged: OnChanged,
@@ -1097,7 +1097,7 @@ internal sealed class MinuteTextField : StatelessWidget
         autofocus: Autofocus,
         inputAction: InputAction,
         style: Style,
-        semanticHintText: MinuteLabelText ?? MaterialLocalizations.Of(context).MinuteLabel,
+        semanticHintText: MinuteLabelText ?? MaterialLocalizations.Of(context).TimePickerMinuteLabel,
         validator: Validator,
         onSavedSubmitted: OnSavedSubmitted,
         emptyInitialTime: EmptyInitialTime);

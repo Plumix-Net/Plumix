@@ -145,7 +145,7 @@ public sealed class TabPageSelector : StatefulWidget
 
                     return new Semantics(
                         label: MaterialLocalizations.Of(builderContext).TabLabel(
-                            controller.Index,
+                            controller.Index + 1,
                             controller.Length),
                         child: new Row(mainAxisSize: MainAxisSize.Min, children: children));
                 });

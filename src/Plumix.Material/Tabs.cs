@@ -1689,7 +1689,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
                         child,
                         new Semantics(
                             selected: tabIndex == _currentIndex,
-                            label: localizations.TabLabel(tabIndex, Current.Tabs.Count)),
+                            label: localizations.TabLabel(tabIndex + 1, Current.Tabs.Count)),
                     ]));
                 child = new InkWell(
                     mouseCursor: effectiveMouseCursor,

@@ -828,6 +828,6 @@ public sealed class BottomNavigationBar : StatefulWidget
 
     private static string CreateIndexSemanticsLabel(BuildContext context, int index, int count)
     {
-        return MaterialLocalizations.Of(context).TabLabel(index, count);
+        return MaterialLocalizations.Of(context).TabLabel(index + 1, count);
     }
 }

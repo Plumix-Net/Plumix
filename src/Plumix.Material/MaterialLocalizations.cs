@@ -1,54 +1,156 @@
 using System.Globalization;
+using System.Text;
 using Plumix.Foundation;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): material_ui/lib/src/material_localizations.dart (baseline subset)
+// Dart parity source: material_ui/lib/src/material_localizations.dart
 
+/// <summary>
+/// Defines the localized resource values used by the Material widgets.
+/// </summary>
+/// <remarks>
+/// Dart declares most members abstract on <c>MaterialLocalizations</c> and implements them on
+/// <c>DefaultMaterialLocalizations</c>; Plumix declares them <c>virtual</c> here carrying the very
+/// same US English values, the way <see cref="WidgetsLocalizations"/> does (see
+/// <c>docs/ai/DIVERGENCES.md</c>).
+/// </remarks>
 public abstract class MaterialLocalizations
 {
-    public virtual ScriptCategory ScriptCategory => ScriptCategory.EnglishLike;
+    private static readonly IReadOnlyList<string> DefaultShortWeekdays =
+        ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
-    public abstract string TabLabel(int tabIndex, int tabCount);
+    private static readonly IReadOnlyList<string> DefaultWeekdays =
+        ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+    private static readonly IReadOnlyList<string> DefaultNarrowWeekdays =
+        ["S", "M", "T", "W", "T", "F", "S"];
+
+    private static readonly IReadOnlyList<string> DefaultShortMonths =
+        ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    private static readonly IReadOnlyList<string> DefaultMonths =
+    [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+    ];
+
+    public virtual string OpenAppDrawerTooltip => "Open navigation menu";
+
+    public virtual string BackButtonTooltip => "Back";
+
+    public virtual string ClearButtonTooltip => "Clear text";
+
+    public virtual string CloseButtonTooltip => "Close";
 
     public virtual string DeleteButtonTooltip => "Delete";
 
-    public virtual string CutButtonLabel => "Cut";
+    public virtual string MoreButtonTooltip => "More";
+
+    public virtual string NextMonthTooltip => "Next month";
+
+    public virtual string PreviousMonthTooltip => "Previous month";
+
+    public virtual string FirstPageTooltip => "First page";
+
+    public virtual string LastPageTooltip => "Last page";
+
+    public virtual string NextPageTooltip => "Next page";
+
+    public virtual string PreviousPageTooltip => "Previous page";
+
+    public virtual string ShowMenuTooltip => "Show menu";
+
+    public virtual string AboutListTileTitle(string applicationName) => $"About {applicationName}";
+
+    public virtual string LicensesPageTitle => "Licenses";
+
+    public virtual string LicensesPackageDetailText(int licenseCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(licenseCount);
+        return licenseCount switch
+        {
+            0 => "No licenses.",
+            1 => "1 license.",
+            _ => $"{licenseCount} licenses.",
+        };
+    }
+
+    public virtual string PageRowsInfoTitle(int firstRow, int lastRow, int rowCount, bool rowCountIsApproximate) =>
+        rowCountIsApproximate
+            ? $"{firstRow}–{lastRow} of about {rowCount}"
+            : $"{firstRow}–{lastRow} of {rowCount}";
+
+    public virtual string RowsPerPageTitle => "Rows per page:";
+
+    public virtual string TabLabel(int tabIndex, int tabCount)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(tabIndex, 1);
+        ArgumentOutOfRangeException.ThrowIfLessThan(tabCount, 1);
+        return $"Tab {tabIndex} of {tabCount}";
+    }
+
+    public virtual string SelectedRowCountTitle(int selectedRowCount) => selectedRowCount switch
+    {
+        0 => "No items selected",
+        1 => "1 item selected",
+        _ => $"{selectedRowCount} items selected",
+    };
+
+    public virtual string CancelButtonLabel => "Cancel";
+
+    public virtual string CloseButtonLabel => "Close";
+
+    public virtual string ContinueButtonLabel => "Continue";
 
     public virtual string CopyButtonLabel => "Copy";
+
+    public virtual string CutButtonLabel => "Cut";
+
+    public virtual string ScanTextButtonLabel => "Scan text";
+
+    public virtual string OkButtonLabel => "OK";
 
     public virtual string PasteButtonLabel => "Paste";
 
     public virtual string SelectAllButtonLabel => "Select all";
 
-    public virtual string LookUpButtonLabel => "Look up";
+    public virtual string LookUpButtonLabel => "Look Up";
 
-    public virtual string SearchWebButtonLabel => "Search web";
+    public virtual string SearchWebButtonLabel => "Search Web";
 
     public virtual string ShareButtonLabel => "Share";
 
-    public virtual string ScanTextButtonLabel => "Scan text";
+    public virtual string ViewLicensesButtonLabel => "View licenses";
 
-    public virtual string BackButtonTooltip => "Back";
+    public virtual string AnteMeridiemAbbreviation => "AM";
 
-    public virtual string MoreButtonTooltip => "More";
+    public virtual string PostMeridiemAbbreviation => "PM";
 
-    public virtual string CloseButtonTooltip => "Close";
+    public virtual string TimePickerHourModeAnnouncement => "Select hours";
 
-    public virtual string OpenAppDrawerTooltip => "Open navigation menu";
+    public virtual string TimePickerMinuteModeAnnouncement => "Select minutes";
 
-    public virtual string SignedInLabel => "Signed in";
+    public virtual string ModalBarrierDismissLabel => "Dismiss";
 
-    public virtual string HideAccountsLabel => "Hide accounts";
+    public virtual string MenuDismissLabel => "Dismiss menu";
 
-    public virtual string ShowAccountsLabel => "Show accounts";
+    public virtual string DrawerLabel => "Navigation menu";
 
-    public virtual string AlertDialogLabel => "Alert";
+    public virtual string PopupMenuLabel => "Popup menu";
+
+    public virtual string MenuBarMenuLabel => "Menu bar menu";
 
     public virtual string DialogLabel => "Dialog";
 
-    public virtual string ModalBarrierDismissLabel => "Dismiss";
+    public virtual string AlertDialogLabel => "Alert";
+
+    public virtual string SearchFieldLabel => "Search";
+
+    public virtual string CurrentDateLabel => "Today";
+
+    public virtual string SelectedDateLabel => "Selected";
 
     public virtual string ScrimLabel => "Scrim";
 
@@ -56,17 +158,206 @@ public abstract class MaterialLocalizations
 
     public virtual string ScrimOnTapHint(string modalRouteContentName) => $"Close {modalRouteContentName}";
 
-    public virtual string DrawerLabel => "Navigation menu";
+    public virtual TimeOfDayFormat TimeOfDayFormat(bool alwaysUse24HourFormat = false) =>
+        alwaysUse24HourFormat
+            ? global::Plumix.Material.TimeOfDayFormat.HHColonMm
+            : global::Plumix.Material.TimeOfDayFormat.HColonMmSpaceA;
 
-    public virtual string ShowMenuTooltip => "Show menu";
+    public virtual ScriptCategory ScriptCategory => ScriptCategory.EnglishLike;
 
-    public virtual string PopupMenuLabel => "Popup menu";
+    public virtual string FormatDecimal(int number)
+    {
+        if (number is > -1000 and < 1000)
+        {
+            return number.ToString(CultureInfo.InvariantCulture);
+        }
 
-    public virtual string MenuDismissLabel => "Dismiss menu";
+        string digits = Math.Abs((long)number).ToString(CultureInfo.InvariantCulture);
+        var result = new StringBuilder(number < 0 ? "-" : string.Empty);
+        int maxDigitIndex = digits.Length - 1;
+        for (int i = 0; i <= maxDigitIndex; i++)
+        {
+            result.Append(digits[i]);
+            if (i < maxDigitIndex && (maxDigitIndex - i) % 3 == 0)
+            {
+                result.Append(',');
+            }
+        }
 
-    public virtual string SearchFieldLabel => "Search";
+        return result.ToString();
+    }
 
-    public virtual string ClearButtonTooltip => "Clear";
+    public virtual string FormatHour(TimeOfDay timeOfDay, bool alwaysUse24HourFormat = false)
+    {
+        TimeOfDayFormat format = TimeOfDayFormat(alwaysUse24HourFormat);
+        return format switch
+        {
+            // `TimeOfDay.HourOfPeriod` already reports 12 where Dart reports 0.
+            global::Plumix.Material.TimeOfDayFormat.HColonMmSpaceA => FormatDecimal(timeOfDay.HourOfPeriod),
+            global::Plumix.Material.TimeOfDayFormat.HHColonMm => FormatTwoDigitZeroPad(timeOfDay.Hour),
+            _ => throw new InvalidOperationException($"{GetType()} does not support {format}."),
+        };
+    }
+
+    public virtual string FormatMinute(TimeOfDay timeOfDay) => FormatTwoDigitZeroPad(timeOfDay.Minute);
+
+    public virtual string FormatTimeOfDay(TimeOfDay timeOfDay, bool alwaysUse24HourFormat = false)
+    {
+        // Not using DateFormat for two reasons:
+        //
+        // - DateFormat supports more formats than our material time picker does, and we want to be
+        //   consistent across time picker format and the string formatting of the time of day.
+        // - DateFormat operates on DateTime, which is sensitive to time eras and time zones, while
+        //   here we want to format hour and minute within one day no matter what date the day falls
+        //   on.
+        var buffer = new StringBuilder();
+        buffer.Append(FormatHour(timeOfDay, alwaysUse24HourFormat))
+            .Append(':')
+            .Append(FormatMinute(timeOfDay));
+        if (alwaysUse24HourFormat)
+        {
+            // There's no AM/PM indicator in 24-hour format.
+            return buffer.ToString();
+        }
+
+        return buffer.Append(' ').Append(FormatDayPeriod(timeOfDay)).ToString();
+    }
+
+    public virtual string FormatYear(DateTime date) => date.Year.ToString(CultureInfo.InvariantCulture);
+
+    public virtual string FormatCompactDate(DateTime date)
+    {
+        // Assumes US mm/dd/yyyy format.
+        string month = FormatTwoDigitZeroPad(date.Month);
+        string day = FormatTwoDigitZeroPad(date.Day);
+        string year = date.Year.ToString(CultureInfo.InvariantCulture).PadLeft(4, '0');
+        return $"{month}/{day}/{year}";
+    }
+
+    public virtual string FormatShortDate(DateTime date) =>
+        $"{DefaultShortMonths[date.Month - 1]} {date.Day}, {date.Year}";
+
+    public virtual string FormatMediumDate(DateTime date) =>
+        $"{DefaultShortWeekdays[DartWeekday(date) - 1]}, {DefaultShortMonths[date.Month - 1]} {date.Day}";
+
+    public virtual string FormatFullDate(DateTime date) =>
+        $"{DefaultWeekdays[DartWeekday(date) - 1]}, {DefaultMonths[date.Month - 1]} {date.Day}, {date.Year}";
+
+    public virtual string FormatMonthYear(DateTime date) =>
+        $"{DefaultMonths[date.Month - 1]} {FormatYear(date)}";
+
+    public virtual string FormatShortMonthDay(DateTime date) =>
+        $"{DefaultShortMonths[date.Month - 1]} {date.Day}";
+
+    public virtual DateTime? ParseCompactDate(string? inputString)
+    {
+        if (inputString is null)
+        {
+            return null;
+        }
+
+        // Assumes US mm/dd/yyyy format.
+        string[] inputParts = inputString.Split('/');
+        if (inputParts.Length != 3)
+        {
+            return null;
+        }
+
+        if (!TryParseDecimal(inputParts[2], out int year) || year < 1 || year > 9999)
+        {
+            return null;
+        }
+
+        if (!TryParseDecimal(inputParts[0], out int month) || month is < 1 or > 12)
+        {
+            return null;
+        }
+
+        if (!TryParseDecimal(inputParts[1], out int day) || day < 1 || day > DaysInMonth(year, month))
+        {
+            return null;
+        }
+
+        return new DateTime(year, month, day);
+    }
+
+    public virtual IReadOnlyList<string> NarrowWeekdays => DefaultNarrowWeekdays;
+
+    public virtual int FirstDayOfWeekIndex => 0; // NarrowWeekdays[0] is 'S' for Sunday.
+
+    public virtual string DateSeparator => "/";
+
+    public virtual string DateHelpText => "mm/dd/yyyy";
+
+    public virtual string SelectYearSemanticsLabel => "Select year";
+
+    public virtual string UnspecifiedDate => "Date";
+
+    public virtual string UnspecifiedDateRange => "Date Range";
+
+    public virtual string DateInputLabel => "Enter Date";
+
+    public virtual string DateRangeStartLabel => "Start Date";
+
+    public virtual string DateRangeEndLabel => "End Date";
+
+    public virtual string DateRangeStartDateSemanticLabel(string formattedDate) => $"Start date {formattedDate}";
+
+    public virtual string DateRangeEndDateSemanticLabel(string formattedDate) => $"End date {formattedDate}";
+
+    public virtual string InvalidDateFormatLabel => "Invalid format.";
+
+    public virtual string InvalidDateRangeLabel => "Invalid range.";
+
+    public virtual string DateOutOfRangeLabel => "Out of range.";
+
+    public virtual string SaveButtonLabel => "Save";
+
+    public virtual string DatePickerHelpText => "Select date";
+
+    public virtual string DateRangePickerHelpText => "Select range";
+
+    public virtual string CalendarModeButtonLabel => "Switch to calendar";
+
+    public virtual string InputDateModeButtonLabel => "Switch to input";
+
+    public virtual string TimePickerDialHelpText => "Select time";
+
+    public virtual string TimePickerInputHelpText => "Enter time";
+
+    public virtual string TimePickerHourLabel => "Hour";
+
+    public virtual string TimePickerMinuteLabel => "Minute";
+
+    public virtual string InvalidTimeLabel => "Enter a valid time";
+
+    public virtual string DialModeButtonLabel => "Switch to dial picker mode";
+
+    public virtual string InputTimeModeButtonLabel => "Switch to text input mode";
+
+    public virtual string SignedInLabel => "Signed in";
+
+    public virtual string HideAccountsLabel => "Hide accounts";
+
+    public virtual string ShowAccountsLabel => "Show accounts";
+
+    /// <summary>Deprecated in Dart: use <see cref="WidgetsLocalizations.ReorderItemToStart"/>.</summary>
+    public virtual string ReorderItemToStart => "Move to the start";
+
+    /// <summary>Deprecated in Dart: use <see cref="WidgetsLocalizations.ReorderItemToEnd"/>.</summary>
+    public virtual string ReorderItemToEnd => "Move to the end";
+
+    /// <summary>Deprecated in Dart: use <see cref="WidgetsLocalizations.ReorderItemUp"/>.</summary>
+    public virtual string ReorderItemUp => "Move up";
+
+    /// <summary>Deprecated in Dart: use <see cref="WidgetsLocalizations.ReorderItemDown"/>.</summary>
+    public virtual string ReorderItemDown => "Move down";
+
+    /// <summary>Deprecated in Dart: use <see cref="WidgetsLocalizations.ReorderItemLeft"/>.</summary>
+    public virtual string ReorderItemLeft => "Move left";
+
+    /// <summary>Deprecated in Dart: use <see cref="WidgetsLocalizations.ReorderItemRight"/>.</summary>
+    public virtual string ReorderItemRight => "Move right";
 
     public virtual string ExpandedIconTapHint => "Collapse";
 
@@ -84,183 +375,16 @@ public abstract class MaterialLocalizations
 
     public virtual string CollapsedHint => "Expanded";
 
-    public virtual string ContinueButtonLabel => "Continue";
-
-    public virtual string CancelButtonLabel => "Cancel";
-
-    public virtual string OkButtonLabel => "OK";
-
-    public virtual string ViewLicensesButtonLabel => "View licenses";
-
-    public virtual string CloseButtonLabel => "Close";
-
-    public virtual string LicensesPageTitle => "Licenses";
+    public virtual string RemainingTextFieldCharacterCount(int remaining) => remaining switch
+    {
+        0 => "No characters remaining",
+        1 => "1 character remaining",
+        _ => $"{remaining} characters remaining",
+    };
 
     public virtual string RefreshIndicatorSemanticLabel => "Refresh";
 
-    public virtual string RowsPerPageTitle => "Rows per page:";
-
-    public virtual string FirstPageTooltip => "First page";
-
-    public virtual string PreviousPageTooltip => "Previous page";
-
-    public virtual string NextPageTooltip => "Next page";
-
-    public virtual string LastPageTooltip => "Last page";
-
-    public virtual IReadOnlyList<string> NarrowWeekdays { get; } = ["S", "M", "T", "W", "T", "F", "S"];
-
-    public virtual int FirstDayOfWeekIndex => 0;
-
-    public virtual string CurrentDateLabel => "Today";
-
-    public virtual string SelectedDateLabel => "Selected";
-
-    public virtual string SelectYearSemanticsLabel => "Select year";
-
-    public virtual string PreviousMonthTooltip => "Previous month";
-
-    public virtual string NextMonthTooltip => "Next month";
-
-    public virtual string DateHelpText => "mm/dd/yyyy";
-
-    public virtual string DateInputLabel => "Enter date";
-
-    public virtual string InvalidDateFormatLabel => "Invalid format.";
-
-    public virtual string DateOutOfRangeLabel => "Out of range.";
-
-    public virtual string DatePickerHelpText => "Select date";
-
-    public virtual string CalendarModeButtonLabel => "Switch to calendar";
-
-    public virtual string InputDateModeButtonLabel => "Switch to input";
-
-    public virtual string DateRangeStartLabel => "Start date";
-
-    public virtual string DateRangeEndLabel => "End date";
-
-    public virtual string DateRangePickerHelpText => "Select range";
-
-    public virtual string InvalidDateRangeLabel => "Invalid range.";
-
-    public virtual string SaveButtonLabel => "Save";
-
-    public virtual string UnspecifiedDateRange => "Date range";
-
-    public virtual string TimePickerDialHelpText => "Select time";
-
-    public virtual string TimePickerInputHelpText => "Enter time";
-
-    public virtual string InputTimeModeButtonLabel => "Switch to text input mode";
-
-    public virtual string DialModeButtonLabel => "Switch to clock mode";
-
-    public virtual string InvalidTimeLabel => "Enter a valid time";
-
-    public virtual string TimePickerHourModeAnnouncement => "Select hours";
-
-    public virtual string TimePickerMinuteModeAnnouncement => "Select minutes";
-
-    public virtual string HourLabel => "Hour";
-
-    public virtual string MinuteLabel => "Minute";
-
-    public virtual string AnteMeridiemAbbreviation => "AM";
-
-    public virtual string PostMeridiemAbbreviation => "PM";
-
-    public virtual TimeOfDayFormat TimeOfDayFormat(bool alwaysUse24HourFormat = false) =>
-        alwaysUse24HourFormat
-            ? global::Plumix.Material.TimeOfDayFormat.HHColonMm
-            : global::Plumix.Material.TimeOfDayFormat.HColonMmSpaceA;
-
-    public virtual string FormatHour(TimeOfDay timeOfDay, bool alwaysUse24HourFormat = false)
-    {
-        var format = TimeOfDayFormat(alwaysUse24HourFormat);
-        int hour = TimeOfDay.HourFormatOf(format) switch
-        {
-            HourFormat.H12 => timeOfDay.HourOfPeriod,
-            _ => timeOfDay.Hour,
-        };
-        return TimeOfDay.HourFormatOf(format) == HourFormat.HH
-            ? hour.ToString("00", CultureInfo.InvariantCulture)
-            : hour.ToString(CultureInfo.InvariantCulture);
-    }
-
-    public virtual string FormatMinute(TimeOfDay timeOfDay) =>
-        timeOfDay.Minute.ToString("00", CultureInfo.InvariantCulture);
-
-    public virtual string FormatTimeOfDay(TimeOfDay timeOfDay, bool alwaysUse24HourFormat = false)
-    {
-        var format = TimeOfDayFormat(alwaysUse24HourFormat);
-        string hour = FormatHour(timeOfDay, alwaysUse24HourFormat);
-        string minute = FormatMinute(timeOfDay);
-        return format switch
-        {
-            global::Plumix.Material.TimeOfDayFormat.HHDotMm => $"{hour}.{minute}",
-            global::Plumix.Material.TimeOfDayFormat.FrenchCanadian => $"{hour} h {minute}",
-            global::Plumix.Material.TimeOfDayFormat.ASpaceHColonMm =>
-                $"{(timeOfDay.Period == DayPeriod.Am ? AnteMeridiemAbbreviation : PostMeridiemAbbreviation)} {hour}:{minute}",
-            global::Plumix.Material.TimeOfDayFormat.HColonMmSpaceA =>
-                $"{hour}:{minute} {(timeOfDay.Period == DayPeriod.Am ? AnteMeridiemAbbreviation : PostMeridiemAbbreviation)}",
-            _ => $"{hour}:{minute}",
-        };
-    }
-
-    public virtual string FormatDecimal(int number) => number.ToString(CultureInfo.InvariantCulture);
-
-    public virtual string FormatYear(DateTime date) => date.Year.ToString(CultureInfo.InvariantCulture);
-
-    public virtual string FormatMonthYear(DateTime date) => date.ToString("MMMM yyyy", EnglishCulture);
-
-    public virtual string FormatMediumDate(DateTime date) => date.ToString("ddd, MMM d", EnglishCulture);
-
-    public virtual string FormatShortMonthDay(DateTime date) => date.ToString("MMM d", EnglishCulture);
-
-    public virtual string FormatShortDate(DateTime date) => date.ToString("MMM d, yyyy", EnglishCulture);
-
-    public virtual string FormatFullDate(DateTime date) => date.ToString("dddd, MMMM d, yyyy", EnglishCulture);
-
-    public virtual string FormatCompactDate(DateTime date) => date.ToString("MM/dd/yyyy", EnglishCulture);
-
-    public virtual DateTime? ParseCompactDate(string? input)
-    {
-        if (input is null) return null;
-        string[] parts = input.Split('/');
-        if (parts.Length != 3
-            || !int.TryParse(parts[0], NumberStyles.None, CultureInfo.InvariantCulture, out int month)
-            || !int.TryParse(parts[1], NumberStyles.None, CultureInfo.InvariantCulture, out int day)
-            || !int.TryParse(parts[2], NumberStyles.None, CultureInfo.InvariantCulture, out int year)
-            || year < 1 || month is < 1 or > 12 || day < 1 || day > DateTime.DaysInMonth(year, month))
-        {
-            return null;
-        }
-        return new DateTime(year, month, day);
-    }
-
-    public virtual string SelectedRowCountTitle(int selectedRowCount) =>
-        selectedRowCount == 1 ? "1 item selected" : $"{selectedRowCount} items selected";
-
-    public virtual string PageRowsInfoTitle(int firstRow, int lastRow, int rowCount, bool rowCountIsApproximate) =>
-        $"{firstRow}–{lastRow} of {(rowCountIsApproximate ? "about " : string.Empty)}{rowCount}";
-
-    public virtual string AboutListTileTitle(string applicationName) => $"About {applicationName}";
-
-    public virtual string LicensesPackageDetailText(int licenseCount)
-    {
-        ArgumentOutOfRangeException.ThrowIfNegative(licenseCount);
-        return licenseCount switch
-        {
-            0 => "No licenses.",
-            1 => "1 license.",
-            _ => $"{licenseCount} licenses.",
-        };
-    }
-
-    // Flutter's `keyboardKey*` getters, used by the menu shortcut labeler. Declared here with the
-    // `DefaultMaterialLocalizations` English strings, matching how the rest of this class carries
-    // its defaults.
+    // Flutter's `keyboardKey*` getters, used by the menu shortcut labeler.
 
     public virtual string KeyboardKeyAlt => "Alt";
 
@@ -362,9 +486,44 @@ public abstract class MaterialLocalizations
                ?? MaterialLocalizationsScope.Of(context);
     }
 
-    private static CultureInfo EnglishCulture { get; } = CultureInfo.GetCultureInfo("en-US");
+    /// Dart's `DateTime.weekday`: Monday is 1, Sunday is 7.
+    private protected static int DartWeekday(DateTime date) =>
+        date.DayOfWeek == DayOfWeek.Sunday ? 7 : (int)date.DayOfWeek;
+
+    private string FormatDayPeriod(TimeOfDay timeOfDay) =>
+        timeOfDay.Period == DayPeriod.Am ? AnteMeridiemAbbreviation : PostMeridiemAbbreviation;
+
+    private static string FormatTwoDigitZeroPad(int number)
+    {
+        ArgumentOutOfRangeException.ThrowIfNegative(number);
+        ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(number, 100);
+        return number < 10 ? $"0{number}" : number.ToString(CultureInfo.InvariantCulture);
+    }
+
+    private static bool TryParseDecimal(string text, out int value) =>
+        int.TryParse(text, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out value);
+
+    /// Dart's `DefaultMaterialLocalizations._getDaysInMonth`.
+    private static int DaysInMonth(int year, int month)
+    {
+        if (month == 2)
+        {
+            bool isLeapYear = (year % 4 == 0 && year % 100 != 0) || year % 400 == 0;
+            return isLeapYear ? 29 : 28;
+        }
+
+        int[] daysInMonth = [31, -1, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        return daysInMonth[month - 1];
+    }
 }
 
+/// <summary>US English strings for the Material widgets; Dart's <c>DefaultMaterialLocalizations</c>.</summary>
+/// <remarks>
+/// Dart's delegate supports only <c>en</c> and always reports
+/// <see cref="Plumix.Material.ScriptCategory.EnglishLike"/>; Plumix's accepts every locale and picks
+/// the script category from the language so that <see cref="Typography"/> stays usable without
+/// <see cref="GlobalMaterialLocalizations"/> (see <c>docs/ai/DIVERGENCES.md</c>).
+/// </remarks>
 public sealed class DefaultMaterialLocalizations : MaterialLocalizations
 {
     private static readonly IReadOnlySet<string> DenseLanguages = new HashSet<string>(StringComparer.Ordinal)
@@ -388,57 +547,6 @@ public sealed class DefaultMaterialLocalizations : MaterialLocalizations
         new DefaultMaterialLocalizationsDelegate();
 
     public override ScriptCategory ScriptCategory { get; }
-
-    public override string DeleteButtonTooltip => "Delete";
-
-    public override string BackButtonTooltip => "Back";
-
-    public override string CloseButtonTooltip => "Close";
-
-    public override string OpenAppDrawerTooltip => "Open navigation menu";
-
-    public override string SignedInLabel => "Signed in";
-
-    public override string HideAccountsLabel => "Hide accounts";
-
-    public override string ShowAccountsLabel => "Show accounts";
-
-    public override string AlertDialogLabel => "Alert";
-
-    public override string DialogLabel => "Dialog";
-
-    public override string ModalBarrierDismissLabel => "Dismiss";
-
-    public override string ScrimLabel => "Scrim";
-
-    public override string BottomSheetLabel => "Bottom Sheet";
-
-    public override string ScrimOnTapHint(string modalRouteContentName) => $"Close {modalRouteContentName}";
-
-    public override string ShowMenuTooltip => "Show menu";
-
-    public override string PopupMenuLabel => "Popup menu";
-
-    public override string SearchFieldLabel => "Search";
-
-    public override string ClearButtonTooltip => "Clear";
-
-    public override string MenuDismissLabel => "Dismiss menu";
-
-    public override string TabLabel(int tabIndex, int tabCount)
-    {
-        if (tabCount < 1)
-        {
-            throw new ArgumentOutOfRangeException(nameof(tabCount), "Tab count must be greater than zero.");
-        }
-
-        if (tabIndex < 0 || tabIndex >= tabCount)
-        {
-            throw new ArgumentOutOfRangeException(nameof(tabIndex), "Tab index must be within tab count bounds.");
-        }
-
-        return $"Tab {tabIndex + 1} of {tabCount}";
-    }
 
     internal static DefaultMaterialLocalizations ForLocale(Locale locale)
     {

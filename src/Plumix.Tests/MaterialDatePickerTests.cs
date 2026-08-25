@@ -558,7 +558,7 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.NotNull(FindSemantics(semantics, node => HasLabelPart(node, "Switch to calendar")));
         Assert.Contains(
             FindDescendants<RenderParagraph>(harness.RenderView),
-            paragraph => paragraph.PlainText == "Enter date");
+            paragraph => paragraph.PlainText == "Enter Date");
     }
 
     [Fact]
@@ -874,7 +874,7 @@ public sealed class MaterialDatePickerTests : IDisposable
     private sealed class MondayFirstLocalizations : MaterialLocalizations
     {
         public override int FirstDayOfWeekIndex => 1;
-        public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex + 1}/{tabCount}";
+        public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex}/{tabCount}";
     }
 
     private sealed class CaptureContext : StatelessWidget

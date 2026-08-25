@@ -266,7 +266,7 @@ internal sealed class NavigationDrawerDestinationTileState : State
                     ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.08)
                     : null);
         string indexLabel = MaterialLocalizations.Of(context).TabLabel(
-            widget.Index,
+            widget.Index + 1,
             widget.TotalDestinations);
         string textLabel = destination.Label is Text text ? $"{text.Data}\n{indexLabel}" : indexLabel;
         var buttonStyle = new ButtonStyle(

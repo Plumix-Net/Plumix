@@ -477,7 +477,7 @@ public sealed class MaterialColorSchemeTests
     {
         public override ScriptCategory ScriptCategory { get; } = scriptCategory;
 
-        public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex + 1}/{tabCount}";
+        public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex}/{tabCount}";
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

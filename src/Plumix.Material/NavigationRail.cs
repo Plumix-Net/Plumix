@@ -249,7 +249,7 @@ internal sealed class NavigationRailState : State
                 destination: destination,
                 selected: selected,
                 onTap: widget.OnDestinationSelected is null ? () => { } : () => widget.OnDestinationSelected(capturedIndex),
-                indexLabel: MaterialLocalizations.Of(context).TabLabel(index, widget.Destinations.Count),
+                indexLabel: MaterialLocalizations.Of(context).TabLabel(index + 1, widget.Destinations.Count),
                 minWidth: minWidth,
                 extendedProgress: extendedProgress,
                 labelType: labelType,
