@@ -1,87 +1,16 @@
 using Plumix.Widgets;
 
+// Dart parity source: material_ui/lib/src/icons.dart
+
 namespace Plumix.Material;
 
-// Dart parity source (reference): material_ui/lib/src/icons.dart (subset used by current framework samples/tests)
-
-public static class Icons
+public static partial class Icons
 {
-    public const string MaterialIconsFontFamily = "avares://Plumix.Material/Assets/Fonts/MaterialIcons-Regular.otf#Material Icons";
-
-    public static IconData ArrowBack { get; } = new(
-        0xe092,
-        FontFamily: MaterialIconsFontFamily,
-        MatchTextDirection: true);
-
-    public static IconData ArrowBackIosNewRounded { get; } = new(
-        0xf570,
-        FontFamily: MaterialIconsFontFamily,
-        MatchTextDirection: true);
-
-    public static IconData ArrowDropDown { get; } = new(0xe098, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData ArrowDropUp { get; } = new(0xe099, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData ArrowUpward { get; } = new(0xe5d8, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData ArrowDownward { get; } = new(0xe5db, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Add { get; } = new(0xe047, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Check { get; } = new(0xe156, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Cancel { get; } = new(0xe139, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Clear { get; } = new(0xe168, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Close { get; } = new(0xe16a, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Done { get; } = new(0xe1f6, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData DragHandle { get; } = new(0xe25d, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Edit { get; } = new(0xe3c9, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData EditOutlined { get; } = new(0xf00d, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData CalendarToday { get; } = new(0xe122, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData KeyboardOutlined { get; } = new(0xf03d, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData AccessTime { get; } = new(0xe03a, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData FirstPage { get; } = new(0xe5dc, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
-
-    public static IconData LastPage { get; } = new(0xe5dd, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
-
-    public static IconData ChevronLeft { get; } = new(0xe5cb, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
-
-    public static IconData ChevronRight { get; } = new(0xe5cc, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
-
-    public static IconData ArrowRight { get; } =
-        new(0xe09e, FontFamily: MaterialIconsFontFamily, MatchTextDirection: true);
-
-    public static IconData ExpandMore { get; } = new(0xe246, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData InfoOutline { get; } = new(0xe33d, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Menu { get; } = new(0xe3dc, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Search { get; } = new(0xe8b6, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Visibility { get; } = new(0xe8f4, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData VisibilityOff { get; } = new(0xe8f5, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Email { get; } = new(0xe0be, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Lock { get; } = new(0xe897, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData MoreHoriz { get; } = new(0xe402, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData MoreVert { get; } = new(0xe404, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData Star { get; } = new(0xe5f9, FontFamily: MaterialIconsFontFamily);
-
-    public static IconData StarOutline { get; } = new(0xe5fd, FontFamily: MaterialIconsFontFamily);
+    static Icons()
+    {
+        IconFontRegistry.Register(
+            package: null,
+            IconFont,
+            "avares://Plumix.Material/Assets/Fonts/MaterialIcons-Regular.otf#Material Icons");
+    }
 }

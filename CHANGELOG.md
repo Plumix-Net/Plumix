@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: full 8,825-icon `Icons` catalog + `Icons.Adaptive` generated from the pin (`icons.dart`).
+- Breaking: Material icons carry Dart's `FontFamily: "MaterialIcons"`; `Icons.MaterialIconsFontFamily` is gone.
+- Breaking: corrected drifted hand-written code points (`Edit`, `Search`, `Visibility`, `ChevronLeft`, ...).
+- `IconFontRegistry.Register` accepts a null package, matching Dart's unqualified `fontPackage` (`icon_data.dart`).
+- Added `scripts/generate_material_icons.py`; it re-vendors the pinned font and checks glyph coverage.
 - Breaking: `Slider` semantics moved onto its render object — value/increase/decrease/focus (`slider.dart`).
 - Breaking: removed the C#-only `Slider.semanticLabel`; the semantics label now comes from `Slider.label`, as in Dart.
 - Breaking: `RangeSlider` drops `focusNode`/`autofocus` for per-thumb focus nodes (`range_slider.dart`).

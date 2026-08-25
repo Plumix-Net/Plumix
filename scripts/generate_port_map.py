@@ -139,9 +139,9 @@ def related(cs_files: list[str]) -> tuple[list[str], list[str]]:
     """Best-effort test and demo files for a control, matched on the C# type name."""
     stems = {Path(f).stem for f in cs_files}
     stems = {s for s in stems if not s.endswith("Theme") and not s.endswith("ThemeData")}
-    # A bare `Icons.cs` stem would also match `CupertinoIconsTests` and the Cupertino icon demo.
-    if stems == {"Icons"}:
-        return [], []
+    # A bare `Icons.cs` stem (only Material's catalog) would also match `CupertinoIconsTests` and
+    # the Cupertino icon demo; its own tests and demos carry the `MaterialIcons` name.
+    stems = {"MaterialIcons" if stem == "Icons" else stem for stem in stems}
 
     tests, demos = set(), set()
     for stem in stems:

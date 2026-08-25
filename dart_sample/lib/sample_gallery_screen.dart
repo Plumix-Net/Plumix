@@ -37,6 +37,7 @@ import 'demos/material/reorderable_list_demo_page.dart';
 import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/material/color_palette_demo_page.dart';
+import 'demos/material/material_icons_demo_page.dart';
 import 'demos/material/material_localizations_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
 import 'demos/cupertino/app_demo_page.dart';
@@ -457,6 +458,14 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'AppBar text styles',
       subtitle: 'title/toolbar text style precedence runtime probe',
       builder: () => const AppBarTextStylesDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.materialIcons,
+      title: 'Icons',
+      subtitle:
+          'full catalog: base/outlined/rounded/sharp variants + adaptive + '
+          'directional glyphs',
+      builder: () => const MaterialIconsDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.colorPalette,

@@ -20,9 +20,14 @@ internal static class IconFontRegistry
     private static readonly ConcurrentDictionary<(string Package, string Family), FontFamily> RegisteredFonts =
         new();
 
-    public static void Register(string package, string family, string resourceUri)
+    /// <summary>
+    /// Maps an icon font to the resource that carries its glyphs. Dart resolves `fontPackage: null`
+    /// against the application's own asset bundle (Material's own icons); a null package here means
+    /// the same unqualified registration.
+    /// </summary>
+    public static void Register(string? package, string family, string resourceUri)
     {
-        RegisteredFonts[(package, family)] = new FontFamily(resourceUri);
+        RegisteredFonts[(package ?? string.Empty, family)] = new FontFamily(resourceUri);
     }
 
     public static FontFamily Resolve(IconData iconData)
@@ -32,8 +37,8 @@ internal static class IconFontRegistry
             return FontFamily.Default;
         }
 
-        if (!string.IsNullOrWhiteSpace(iconData.FontPackage)
-            && RegisteredFonts.TryGetValue((iconData.FontPackage, iconData.FontFamily), out FontFamily? fontFamily))
+        (string Package, string Family) key = (iconData.FontPackage ?? string.Empty, iconData.FontFamily);
+        if (RegisteredFonts.TryGetValue(key, out FontFamily? fontFamily))
         {
             return fontFamily;
         }

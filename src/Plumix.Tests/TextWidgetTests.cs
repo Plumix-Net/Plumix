@@ -411,15 +411,14 @@ public sealed class TextWidgetTests
     }
 
     [Fact]
-    public void MaterialArrowBackIcon_UsesPlumixCodePointAndMatchTextDirection()
+    public void MaterialArrowBackIcon_UsesFlutterCodePointAndMatchTextDirection()
     {
         var icon = Plumix.Material.Icons.ArrowBack;
 
         Assert.Equal(0xe092, icon.CodePoint);
         Assert.True(icon.MatchTextDirection);
-        Assert.Equal(
-            "avares://Plumix.Material/Assets/Fonts/MaterialIcons-Regular.otf#Material Icons",
-            icon.FontFamily);
+        Assert.Equal("MaterialIcons", icon.FontFamily);
+        Assert.Null(icon.FontPackage);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

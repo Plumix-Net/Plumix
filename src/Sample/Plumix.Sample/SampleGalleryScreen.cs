@@ -99,6 +99,7 @@ internal static class SampleRoutes
     public const string AppBarIconTheme = "/appbar-icon-theme";
     public const string AppBarTextStyles = "/appbar-text-styles";
     public const string ColorPalette = "/color-palette";
+    public const string MaterialIcons = "/material-icons";
     public const string MaterialLocalizations = "/material-localizations";
     public const string CupertinoApp = "/cupertino-app";
     public const string CupertinoIcons = "/cupertino-icons";
@@ -257,6 +258,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.AppBarActionsPadding, "AppBar actionsPadding theme", "theme fallback + widget override runtime probe", () => new AppBarActionsPaddingDemoPage()),
         new(SampleRoutes.AppBarIconTheme, "AppBar icon themes", "iconTheme/actionsIconTheme precedence runtime probe", () => new AppBarIconThemeDemoPage()),
         new(SampleRoutes.AppBarTextStyles, "AppBar text styles", "title/toolbar text style precedence runtime probe", () => new AppBarTextStylesDemoPage()),
+        new(
+            SampleRoutes.MaterialIcons,
+            "Icons",
+            "full catalog: base/outlined/rounded/sharp variants + adaptive + directional glyphs",
+            () => new MaterialIconsDemoPage()),
         new(
             SampleRoutes.ColorPalette,
             "Colors + primarySwatch",
