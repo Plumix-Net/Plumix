@@ -6,22 +6,29 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/scaffold.dart
 
-public sealed class ScaffoldFeatureController<TFeature, TClosedReason>
+public class ScaffoldFeatureController<TFeature, TClosedReason>
     where TFeature : Widget
 {
     private readonly Action _close;
     private readonly TaskCompletionSource<TClosedReason> _closed =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    internal ScaffoldFeatureController(TFeature feature, Action close)
+    internal ScaffoldFeatureController(TFeature feature, Action close, StateSetter? setState = null)
     {
         Feature = feature;
         _close = close;
+        SetState = setState;
     }
 
     public TFeature Feature { get; }
+
+    /// <summary>Completes when the feature controlled by this object is no longer visible.</summary>
     public Task<TClosedReason> Closed => _closed.Task;
 
+    /// <summary>Marks the feature (a bottom sheet or a snack bar) as needing to rebuild.</summary>
+    public StateSetter? SetState { get; }
+
+    /// <summary>Removes the feature from the scaffold.</summary>
     public void Close() => _close();
 
     internal void Complete(TClosedReason reason) => _closed.TrySetResult(reason);

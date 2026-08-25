@@ -257,30 +257,40 @@ public sealed class MaterialAppBarTests
     }
 
     [Fact]
-    public void AppBar_ScrolledUnder_StaysPutWhileADrawerIsOpen()
+    public void AppBar_ScrolledUnder_DropsItsScrollListenerWhileADrawerIsOpen()
     {
-        // Dart's `_AppBarState.didChangeDependencies` detaches the scroll listener while a drawer is
-        // open, so scrolling inside the drawer cannot flip the app bar's scrolled-under state.
+        // Dart's `_AppBarState.didChangeDependencies` removes the scroll listener and returns early
+        // without re-adding it while a drawer is open, so the last resolved scrolled-under state
+        // survives every later scroll until the drawer closes and a dependency changes again.
+        // `Scaffold.maybeOf` is `findAncestorStateOfType`, so opening the drawer does not itself
+        // notify the app bar; a real dependency change (here the ambient `Theme`) is what re-runs
+        // `didChangeDependencies`.
         var background = WidgetStateColor.ResolveWith(
             states => states.Contains(WidgetState.ScrolledUnder) ? Colors.DarkGreen : Colors.Goldenrod);
         BuildContext? emitter = null;
         ScaffoldState? scaffold = null;
+        StateSetter? rebuildTheme = null;
+        bool dark = false;
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Directionality(
                 textDirection: TextDirection.Ltr,
                 child: new MediaQuery(
                     data: new MediaQueryData(),
-                    child: new Theme(
-                        data: ThemeData.Light,
-                        child: new Scaffold(
-                            appBar: new AppBar(title: new Text("Title"), backgroundColor: background),
-                            drawer: new Drawer(child: new SizedBox()),
-                            body: new Builder(context =>
-                            {
-                                scaffold = Scaffold.Of(context);
-                                return new CaptureBuildContextWidget(inner => emitter = inner);
-                            }))))));
+                    child: new StatefulBuilder((_, setState) =>
+                    {
+                        rebuildTheme = setState;
+                        return new Theme(
+                            data: dark ? ThemeData.Dark : ThemeData.Light,
+                            child: new Scaffold(
+                                appBar: new AppBar(title: new Text("Title"), backgroundColor: background),
+                                drawer: new Drawer(child: new SizedBox()),
+                                body: new Builder(context =>
+                                {
+                                    scaffold = Scaffold.Of(context);
+                                    return new CaptureBuildContextWidget(inner => emitter = inner);
+                                })));
+                    }))));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -288,7 +298,7 @@ public sealed class MaterialAppBarTests
 
         Dispatch(emitter!.Value, AxisDirection.Down, pixels: 12);
         owner.FlushBuild();
-        Assert.Equal(Colors.DarkGreen, MaterialColor(root));
+        Assert.Equal(Colors.DarkGreen, AppBarMaterialColor(root));
 
         scaffold!.OpenDrawer();
         owner.FlushBuild();
@@ -296,10 +306,27 @@ public sealed class MaterialAppBarTests
         owner.FlushBuild();
         Assert.True(scaffold.IsDrawerOpen);
 
-        // A scroll back to the top while the drawer is open must not restore the default color.
+        // A dependency change while the drawer is open detaches the listener for good.
+        rebuildTheme!(() => dark = true);
+        owner.FlushBuild();
+
         Dispatch(emitter!.Value, AxisDirection.Down, pixels: 0);
         owner.FlushBuild();
-        Assert.Equal(Colors.DarkGreen, MaterialColor(root));
+        Assert.Equal(Colors.DarkGreen, AppBarMaterialColor(root));
+
+        // Closing the drawer and changing a dependency again re-attaches it.
+        scaffold.CloseDrawer();
+        owner.FlushBuild();
+        AnimationPump.Advance(0.5);
+        owner.FlushBuild();
+        Assert.False(scaffold.IsDrawerOpen);
+
+        rebuildTheme!(() => dark = false);
+        owner.FlushBuild();
+
+        Dispatch(emitter!.Value, AxisDirection.Down, pixels: 0);
+        owner.FlushBuild();
+        Assert.Equal(Colors.Goldenrod, AppBarMaterialColor(root));
     }
 
     // ---------------------------------------------------------------- implied slots and themes
@@ -555,6 +582,32 @@ public sealed class MaterialAppBarTests
     private static Color MaterialColor(TestRootElement root)
     {
         return FindWidgets<MaterialWidget>(root.ChildElement)[0].Color!.Value;
+    }
+
+    // A `Scaffold` roots itself in a `Material`, so inside one the app bar's own Material has to be
+    // looked up through the AppBar element rather than as the first Material in the tree.
+    private static Color AppBarMaterialColor(TestRootElement root)
+    {
+        Element? appBar = FindElement(root.ChildElement, element => element.Widget is AppBar);
+        Assert.NotNull(appBar);
+        return FindWidgets<MaterialWidget>(appBar)[0].Color!.Value;
+    }
+
+    private static Element? FindElement(Element? element, Func<Element, bool> predicate)
+    {
+        if (element is null)
+        {
+            return null;
+        }
+
+        if (predicate(element))
+        {
+            return element;
+        }
+
+        Element? found = null;
+        element.VisitChildren(child => found ??= FindElement(child, predicate));
+        return found;
     }
 
     private static SystemUiOverlayStyle OverlayStyleFor(Color background, bool useMaterial3)

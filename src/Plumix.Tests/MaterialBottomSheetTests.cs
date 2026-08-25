@@ -949,6 +949,185 @@ public sealed class MaterialBottomSheetTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "Sheet content"));
     }
 
+[Fact]
+    public void StaticBottomSheet_ReplacedThenRemoved_KeepsTheDismissedSheetUntilItsExitAnimationEnds()
+    {
+        // Dart: `scaffold_test.dart` "can rebuild and remove bottomSheet at the same time"
+        // (flutter#117004). `_dismissedBottomSheets` holds sheets that are still animating out, so a
+        // rebuild issued while one is leaving neither drops it early nor throws.
+        Widget? sheet = new SizedBox(height: 100, child: new Text("First"));
+        StateSetter? rebuild = null;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new StatefulBuilder((_, setState) =>
+            {
+                rebuild = setState;
+                return new Scaffold(body: new Text("Body"), bottomSheet: sheet);
+            })))));
+        harness.Pump(new Size(500, 400));
+        Assert.NotNull(FindParagraph(harness.RenderView, "First"));
+
+        // Replacing the sheet goes through _updatePersistentBottomSheet: the host StatefulBuilder is kept
+        // and only its content is swapped.
+        rebuild!(() => sheet = new SizedBox(height: 100, child: new Text("Second")));
+        harness.Pump(new Size(500, 400));
+        Assert.Null(FindParagraph(harness.RenderView, "First"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Second"));
+
+        // Removing it starts the 200 ms exit animation; the sheet stays mounted meanwhile.
+        rebuild!(() => sheet = null);
+        harness.Pump(new Size(500, 400));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Second"));
+
+        // An unrelated rebuild while the sheet is animating out must not throw or drop it.
+        rebuild!(() => { });
+        harness.Pump(new Size(500, 400));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Second"));
+
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.Null(FindParagraph(harness.RenderView, "Second"));
+    }
+
+    [Fact]
+    public void StaticBottomSheet_ReinstatedWhileTheOldOneAnimatesOut_UnmountsTheDismissedSheetImmediately()
+    {
+        // Dart's `_maybeBuildPersistentBottomSheet` resets every controller in `_dismissedBottomSheets`
+        // before building the new sheet, otherwise a sub-tree carrying a GlobalKey would be mounted twice.
+        // Source comment: "Stop the animation and unmount the dismissed sheets from the tree immediately".
+        Widget? sheet = new SizedBox(height: 100, child: new Text("Sheet"));
+        StateSetter? rebuild = null;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new StatefulBuilder((_, setState) =>
+            {
+                rebuild = setState;
+                return new Scaffold(body: new Text("Body"), bottomSheet: sheet);
+            })))));
+        harness.Pump(new Size(500, 400));
+
+        rebuild!(() => sheet = null);
+        harness.Pump(new Size(500, 400));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Sheet"));
+
+        rebuild!(() => sheet = new SizedBox(height: 100, child: new Text("Sheet")));
+        harness.Pump(new Size(500, 400));
+
+        // Exactly one sheet is mounted: the dismissed one was reset and unmounted in the same frame.
+        Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView)
+            .Where(paragraph => paragraph.PlainText == "Sheet"));
+    }
+
+    [Fact]
+    public void StaticBottomSheet_UpdatedInPlace_KeepsItsRenderObject()
+    {
+        // Dart: `persistent_bottom_sheet_test.dart` "Scaffold.bottomSheet should be updated without
+        // creating a new RO when the new widget has the same key and type." (flutter#71435).
+        Widget sheet = new SizedBox(height: 100, child: new Text("First"));
+        StateSetter? rebuild = null;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new StatefulBuilder((_, setState) =>
+            {
+                rebuild = setState;
+                return new Scaffold(body: new Text("Body"), bottomSheet: sheet);
+            })))));
+        harness.Pump(new Size(500, 400));
+        RenderParagraph? before = FindParagraph(harness.RenderView, "First");
+        Assert.NotNull(before);
+
+        rebuild!(() => sheet = new SizedBox(height: 100, child: new Text("Second")));
+        harness.Pump(new Size(500, 400));
+
+        Assert.Same(before, FindParagraph(harness.RenderView, "Second"));
+    }
+
+    [Fact]
+    public void ShowBottomSheet_WhileScaffoldBottomSheetIsSet_Throws()
+    {
+        // Dart: `scaffold_test.dart` "showBottomSheet() while Scaffold has bottom sheet".
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new Scaffold(
+                body: new CaptureContext(value => captured = value, new Text("Body")),
+                bottomSheet: new SizedBox(height: 100, child: new Text("Sheet")))))));
+        harness.Pump(new Size(500, 400));
+
+        var error = Assert.Throws<InvalidOperationException>(
+            () => MaterialBottomSheets.ShowBottomSheet(captured, _ => new Text("Shown")));
+        Assert.Contains("Rebuild the Scaffold with a null bottomSheet", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Scaffold_GivenABottomSheetWhileAShownSheetIsVisible_Throws()
+    {
+        // Dart: `scaffold_test.dart` "didUpdate bottomSheet while a previous bottom sheet is still
+        // displayed" — the `didUpdateWidget` assert, whose hint names PersistentBottomSheetController.
+        BuildContext captured = default;
+        Widget? sheet = null;
+        StateSetter? rebuild = null;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new StatefulBuilder((_, setState) =>
+            {
+                rebuild = setState;
+                return new Scaffold(
+                    body: new CaptureContext(value => captured = value, new Text("Body")),
+                    bottomSheet: sheet);
+            })))));
+        harness.Pump(new Size(500, 400));
+
+        MaterialBottomSheets.ShowBottomSheet(captured, _ => new SizedBox(height: 100, child: new Text("Shown")));
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+
+        rebuild!(() => sheet = new SizedBox(height: 100, child: new Text("Static")));
+        var error = Assert.Throws<InvalidOperationException>(() => harness.Pump(new Size(500, 400)));
+        Assert.Contains("PersistentBottomSheetController", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ShowBottomSheet_ReleasesItsLocalHistoryEntryAsSoonAsTheControllerCloses()
+    {
+        // Dart: `bottom_sheet_test.dart` "The old route entry should be removed when a new sheet popup"
+        // (flutter#99627): the entry goes away on `close()`, before the exit animation ends.
+        BuildContext captured = default;
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            new Navigator(new BuilderPageRoute(_ => new Scaffold(
+                body: new CaptureContext(value => captured = value, new Text("Body")))))));
+        harness.Pump(new Size(500, 400));
+        var route = ModalRoute.Of(captured);
+        Assert.False(route.WillHandlePopInternally);
+
+        PersistentBottomSheetController first = MaterialBottomSheets.ShowBottomSheet(
+            captured,
+            _ => new SizedBox(height: 100, child: new Text("A")));
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.True(route.WillHandlePopInternally);
+
+        PersistentBottomSheetController second = MaterialBottomSheets.ShowBottomSheet(
+            captured,
+            _ => new SizedBox(height: 100, child: new Text("B")));
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.True(route.WillHandlePopInternally);
+
+        second.Close();
+        Assert.False(route.WillHandlePopInternally);
+
+        // Closing the controller of a sheet that a later sheet already replaced is a no-op, not a crash
+        // (Dart: "Calling PersistentBottomSheetController.close does not crash when it is not the current
+        // bottom sheet", flutter#93717).
+        first.Close();
+        PumpAnimation();
+        harness.Pump(new Size(500, 400));
+        Assert.Null(FindParagraph(harness.RenderView, "A"));
+        Assert.Null(FindParagraph(harness.RenderView, "B"));
+    }
+
     private static bool IsScrimBox(RenderConstrainedBox box) =>
         box.AdditionalConstraints.MinWidth == double.PositiveInfinity
         && box.AdditionalConstraints.MinHeight == double.PositiveInfinity

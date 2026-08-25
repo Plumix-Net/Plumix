@@ -201,7 +201,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `material_ui/range_slider_parts.dart` | `src/Plumix.Material/SliderShapes.cs` | — | — |
 | `material_ui/refresh_indicator.dart` | `src/Plumix.Material/RefreshIndicator.cs` | `src/Plumix.Tests/MaterialRefreshIndicatorTests.cs` | `dart_sample/lib/demos/material/refresh_indicator_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/RefreshIndicatorDemoPage.cs` |
 | `material_ui/reorderable_list.dart` | `src/Plumix.Material/ReorderableListView.cs` | — | — |
-| `material_ui/scaffold.dart` | `src/Plumix.Material/Scaffold.cs` _(reference)_<br>`src/Plumix.Material/ScaffoldGeometry.cs`<br>`src/Plumix.Material/ScaffoldLayout.cs`<br>`src/Plumix.Material/ScaffoldMessenger.cs`<br>`src/Plumix/Widgets/HitTestableAtOrigin.cs` | `src/Plumix.Tests/CupertinoPageScaffoldTests.cs`<br>`src/Plumix.Tests/CupertinoTabScaffoldTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldTests.cs` | `dart_sample/lib/demos/cupertino/page_scaffold_demo_page.dart`<br>`dart_sample/lib/demos/material/scaffold_slots_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/PageScaffoldDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/ScaffoldSlotsDemoPage.cs` |
+| `material_ui/scaffold.dart` | `src/Plumix.Material/Scaffold.cs`<br>`src/Plumix.Material/ScaffoldGeometry.cs`<br>`src/Plumix.Material/ScaffoldLayout.cs`<br>`src/Plumix.Material/ScaffoldMessenger.cs`<br>`src/Plumix/Widgets/HitTestableAtOrigin.cs` | `src/Plumix.Tests/CupertinoPageScaffoldTests.cs`<br>`src/Plumix.Tests/CupertinoTabScaffoldTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldGeometryTests.cs`<br>`src/Plumix.Tests/MaterialScaffoldTests.cs` | `dart_sample/lib/demos/cupertino/page_scaffold_demo_page.dart`<br>`dart_sample/lib/demos/material/scaffold_slots_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/PageScaffoldDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/ScaffoldSlotsDemoPage.cs` |
 | `material_ui/scrollbar.dart` | `src/Plumix.Material/Scrollbar.cs` | `src/Plumix.Tests/CupertinoScrollbarTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `material_ui/scrollbar_theme.dart` | `src/Plumix.Material/ScrollbarTheme.cs` | — | — |
 | `material_ui/search.dart` | `src/Plumix.Material/SearchDelegate.cs` | — | — |
@@ -566,7 +566,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix.Material/Buttons.cs` — (reference, approximate)
 - `src/Plumix.Material/Icons.cs` — (reference) (subset used by current framework samples/tests)
 - `src/Plumix.Material/ListTileControls.cs` — (reference)
-- `src/Plumix.Material/Scaffold.cs` — (reference)
 - `src/Plumix.Material/ThemeData.cs` — (reference) (approximate)
 - `src/Plumix/FlutterExtensions.cs` — (reference) (host integration, adapted)
 - `src/Plumix/FlutterHost.cs` — (reference) (host integration, adapted)
@@ -636,5 +635,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 632
 - C# files without a marker: 30
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 70
+- C# files with a qualified (non-strict) marker: 69
 

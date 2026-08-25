@@ -28,11 +28,14 @@ internal sealed class ScaffoldSlotsDemoPageState : State
 
     private static readonly string[] FooterAlignmentLabels = ["start", "center", "end"];
 
+    private static readonly string[] BottomSheetLabels = ["off", "A", "B"];
+
     private bool _showFooter = true;
     private int _footerAlignmentIndex = 2;
     private bool _useFooterDecoration;
     private bool _extendBody;
     private bool _extendBodyBehindAppBar;
+    private int _bottomSheetIndex;
 
     public override Widget Build(BuildContext context)
     {
@@ -81,13 +84,20 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                             onTap: () => SetState(() => _extendBodyBehindAppBar = !_extendBodyBehindAppBar),
                             width: 132,
                             background: Color.Parse("#FFF3E8D8")),
+                        BuildControlButton(
+                            label: $"bottomSheet {BottomSheetLabels[_bottomSheetIndex]}",
+                            onTap: () => SetState(() =>
+                                _bottomSheetIndex = (_bottomSheetIndex + 1) % BottomSheetLabels.Length),
+                            width: 132,
+                            background: Color.Parse("#FFEDE7F6")),
                     ]),
                 new Text(
                     $"footer={(_showFooter ? "true" : "false")}, "
                     + $"alignment={FooterAlignmentLabels[_footerAlignmentIndex]}, "
                     + $"decoration={(_useFooterDecoration ? "true" : "false")}, "
                     + $"extendBody={(_extendBody ? "true" : "false")}, "
-                    + $"extendBodyBehindAppBar={(_extendBodyBehindAppBar ? "true" : "false")}",
+                    + $"extendBodyBehindAppBar={(_extendBodyBehindAppBar ? "true" : "false")}, "
+                    + $"bottomSheet={BottomSheetLabels[_bottomSheetIndex]}",
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 new Expanded(
@@ -103,6 +113,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                             extendBodyBehindAppBar: _extendBodyBehindAppBar,
                             drawer: BuildDrawerPanel(isStartDrawer: true),
                             endDrawer: BuildDrawerPanel(isStartDrawer: false),
+                            bottomSheet: BuildPersistentBottomSheet(),
                             persistentFooterAlignment: FooterAlignments[_footerAlignmentIndex],
                             persistentFooterDecoration: _useFooterDecoration
                                 ? new BoxDecoration(Color: Color.Parse("#FFEFF4FF"))
@@ -124,6 +135,27 @@ internal sealed class ScaffoldSlotsDemoPageState : State
                                         color: Color.Parse("#FF30404D")))),
                             body: new ContextBuilder(BuildPreviewBody)))),
             ]);
+    }
+
+    /// <summary>
+    /// Cycles `Scaffold.bottomSheet` off -> A -> B: swapping A for B updates the mounted sheet in place,
+    /// while switching back to "off" keeps the sheet on screen until its exit animation finishes.
+    /// </summary>
+    private Widget? BuildPersistentBottomSheet()
+    {
+        if (_bottomSheetIndex == 0)
+        {
+            return null;
+        }
+
+        return new Container(
+            color: _bottomSheetIndex == 1 ? Color.Parse("#FFE8DEF8") : Color.Parse("#FFD7E9DE"),
+            height: 56,
+            child: new Center(
+                child: new Text(
+                    $"Scaffold.bottomSheet {BottomSheetLabels[_bottomSheetIndex]}",
+                    fontSize: 12,
+                    color: Color.Parse("#FF30404D"))));
     }
 
     private Widget BuildPreviewBody(BuildContext context)
@@ -232,6 +264,7 @@ internal sealed class ScaffoldSlotsDemoPageState : State
             _useFooterDecoration = false;
             _extendBody = false;
             _extendBodyBehindAppBar = false;
+            _bottomSheetIndex = 0;
         });
     }
 }

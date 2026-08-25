@@ -21,11 +21,14 @@ class _ScaffoldSlotsDemoPageState extends State<ScaffoldSlotsDemoPage> {
     'end',
   ];
 
+  static const List<String> _bottomSheetLabels = <String>['off', 'A', 'B'];
+
   bool _showFooter = true;
   int _footerAlignmentIndex = 2;
   bool _useFooterDecoration = false;
   bool _extendBody = false;
   bool _extendBodyBehindAppBar = false;
+  int _bottomSheetIndex = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -87,6 +90,15 @@ class _ScaffoldSlotsDemoPageState extends State<ScaffoldSlotsDemoPage> {
               width: 132,
               background: const Color(0xFFF3E8D8),
             ),
+            _buildControlButton(
+              label: 'bottomSheet ${_bottomSheetLabels[_bottomSheetIndex]}',
+              onTap: () => setState(
+                () => _bottomSheetIndex =
+                    (_bottomSheetIndex + 1) % _bottomSheetLabels.length,
+              ),
+              width: 132,
+              background: const Color(0xFFEDE7F6),
+            ),
           ],
         ),
         Text(
@@ -94,7 +106,8 @@ class _ScaffoldSlotsDemoPageState extends State<ScaffoldSlotsDemoPage> {
           'alignment=${_footerAlignmentLabels[_footerAlignmentIndex]}, '
           'decoration=${_useFooterDecoration ? "true" : "false"}, '
           'extendBody=${_extendBody ? "true" : "false"}, '
-          'extendBodyBehindAppBar=${_extendBodyBehindAppBar ? "true" : "false"}',
+          'extendBodyBehindAppBar=${_extendBodyBehindAppBar ? "true" : "false"}, '
+          'bottomSheet=${_bottomSheetLabels[_bottomSheetIndex]}',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Expanded(
@@ -110,6 +123,7 @@ class _ScaffoldSlotsDemoPageState extends State<ScaffoldSlotsDemoPage> {
               extendBodyBehindAppBar: _extendBodyBehindAppBar,
               drawer: _buildDrawerPanel(isStartDrawer: true),
               endDrawer: _buildDrawerPanel(isStartDrawer: false),
+              bottomSheet: _buildPersistentBottomSheet(),
               persistentFooterAlignment:
                   _footerAlignments[_footerAlignmentIndex],
               persistentFooterDecoration: _useFooterDecoration
@@ -252,6 +266,28 @@ class _ScaffoldSlotsDemoPageState extends State<ScaffoldSlotsDemoPage> {
     );
   }
 
+  /// Cycles [Scaffold.bottomSheet] off -> A -> B: swapping A for B updates the mounted sheet
+  /// in place, while switching back to 'off' keeps the sheet on screen until its exit
+  /// animation finishes.
+  Widget? _buildPersistentBottomSheet() {
+    if (_bottomSheetIndex == 0) {
+      return null;
+    }
+
+    return Container(
+      color: _bottomSheetIndex == 1
+          ? const Color(0xFFE8DEF8)
+          : const Color(0xFFD7E9DE),
+      height: 56,
+      child: Center(
+        child: Text(
+          'Scaffold.bottomSheet ${_bottomSheetLabels[_bottomSheetIndex]}',
+          style: const TextStyle(fontSize: 12, color: Color(0xFF30404D)),
+        ),
+      ),
+    );
+  }
+
   void _reset() {
     setState(() {
       _showFooter = true;
@@ -259,6 +295,7 @@ class _ScaffoldSlotsDemoPageState extends State<ScaffoldSlotsDemoPage> {
       _useFooterDecoration = false;
       _extendBody = false;
       _extendBodyBehindAppBar = false;
+      _bottomSheetIndex = 0;
     });
   }
 }

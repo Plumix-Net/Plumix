@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: strict `Scaffold` port — `Material` root, `restorationId`, dismissed-sheet stack (`scaffold.dart`).
+- Breaking: `Scaffold.Of`/`MaybeOf` no longer register a dependency; `_ScaffoldScope` carries only `hasDrawer`.
+- Breaking: `PersistentBottomSheetController` extends `ScaffoldFeatureController`; `StandardBottomSheet` is public.
 - Breaking: strict `AppBar` port in its own `AppBar.cs` — toolbar container, title box, M2/M3 defaults (`app_bar.dart`).
 - Breaking: `AppBar` drops the non-Dart `titleText`/`padding`; `bottom` is `IPreferredSizeWidget?`; `Bottom`/`SliverAppBar.Bottom` follow.
 - Breaking: `Scaffold.body` is optional and `Scaffold.appBar` takes any `IPreferredSizeWidget` (`scaffold.dart`).

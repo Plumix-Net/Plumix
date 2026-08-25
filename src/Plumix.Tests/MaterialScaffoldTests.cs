@@ -52,7 +52,10 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var background = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        // Dart's `ScaffoldState.build` roots the scaffold in `Material(color: ...)`, so the background is
+        // the first Material descendant's color (`scaffold_test.dart`, "Scaffold background color
+        // defaults to ColorScheme.surface").
+        MaterialWidget background = FindWidgets<MaterialWidget>(root.ChildElement)[0];
         Assert.Equal(Colors.Beige, background.Color);
     }
 
@@ -74,7 +77,7 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var background = RequireRenderObject<RenderColoredBox>(root.ChildElement);
+        MaterialWidget background = FindWidgets<MaterialWidget>(root.ChildElement)[0];
         Assert.Equal(Colors.Crimson, background.Color);
     }
 
@@ -364,6 +367,118 @@ public sealed class MaterialScaffoldTests
         var menuParagraph = FindParagraphByText(root.ChildElement?.RenderObject, menuGlyph);
         Assert.Null(menuParagraph);
     }
+
+
+    // ---------------------------------------------------------------- state restoration
+
+    [Fact]
+    public void Scaffold_RestoresBothDrawerFlagsThroughItsRestorationId()
+    {
+        // Dart: `drawer_test.dart` "Scaffold.drawer state restoration test", "Scaffold.endDrawer state
+        // restoration test" and "Both drawer and endDrawer state restoration test". `ScaffoldState` mixes
+        // in `RestorationMixin` and registers `_drawerOpened`/`_endDrawerOpened` as `drawer_open` and
+        // `end_drawer_open`; the restored values feed `DrawerController.isDrawerOpen` back.
+        var manager = new MockRestorationManager();
+        var rawData = RawRestorationData.Build();
+        Dictionary<object, object?>? snapshot;
+
+        {
+            var owner = new BuildOwner();
+            BuildContext? scaffoldContext = null;
+            var root = new TestRootElement(new UnmanagedRestorationScope(
+                bucket: RestorationBucket.Root(manager, rawData),
+                child: RestorableScaffold(context => scaffoldContext = context, restorationId: "scaffold")));
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            var state = Scaffold.Of(scaffoldContext!.Value);
+            Assert.False(state.IsDrawerOpen);
+            Assert.False(state.IsEndDrawerOpen);
+
+            state.OpenEndDrawer();
+            SettleDrawerAnimation(owner);
+            Assert.True(state.IsEndDrawerOpen);
+
+            manager.DoSerialization();
+            snapshot = RestorationSerialization.CopyRestorationData(rawData);
+            root.Unmount();
+        }
+
+        Dictionary<object, object?> values = RawRestorationData.Values(
+            RawRestorationData.Child(snapshot!, "scaffold")!)!;
+        Assert.Equal(false, values["drawer_open"]);
+        Assert.Equal(true, values["end_drawer_open"]);
+
+        var restartOwner = new BuildOwner();
+        BuildContext? restoredContext = null;
+        var restarted = new TestRootElement(new UnmanagedRestorationScope(
+            bucket: RestorationBucket.Root(manager, snapshot),
+            child: RestorableScaffold(context => restoredContext = context, restorationId: "scaffold")));
+        restarted.Attach(restartOwner);
+        restarted.Mount(parent: null, newSlot: null);
+        restartOwner.FlushBuild();
+
+        var restored = Scaffold.Of(restoredContext!.Value);
+        Assert.False(restored.IsDrawerOpen);
+        Assert.True(restored.IsEndDrawerOpen);
+        Assert.NotNull(FindParagraphByText(restarted.ChildElement?.RenderObject, "End drawer panel"));
+        restarted.Unmount();
+    }
+
+    [Fact]
+    public void Scaffold_WithoutARestorationId_DoesNotPersistItsDrawerFlags()
+    {
+        // Dart: `drawer_test.dart` "Scaffold.drawer - null restorationId" / "Scaffold.endDrawer - null
+        // restorationId": with no id the state object claims no bucket, so a restart loses the open drawer.
+        var manager = new MockRestorationManager();
+        var rawData = RawRestorationData.Build();
+        Dictionary<object, object?>? snapshot;
+
+        {
+            var owner = new BuildOwner();
+            BuildContext? scaffoldContext = null;
+            var root = new TestRootElement(new UnmanagedRestorationScope(
+                bucket: RestorationBucket.Root(manager, rawData),
+                child: RestorableScaffold(context => scaffoldContext = context, restorationId: null)));
+            root.Attach(owner);
+            root.Mount(parent: null, newSlot: null);
+            owner.FlushBuild();
+
+            Scaffold.Of(scaffoldContext!.Value).OpenDrawer();
+            SettleDrawerAnimation(owner);
+            Assert.True(Scaffold.Of(scaffoldContext!.Value).IsDrawerOpen);
+
+            manager.DoSerialization();
+            snapshot = RestorationSerialization.CopyRestorationData(rawData);
+            root.Unmount();
+        }
+
+        Assert.Null(RawRestorationData.Child(snapshot!, "scaffold"));
+
+        var restartOwner = new BuildOwner();
+        BuildContext? restoredContext = null;
+        var restarted = new TestRootElement(new UnmanagedRestorationScope(
+            bucket: RestorationBucket.Root(manager, snapshot),
+            child: RestorableScaffold(context => restoredContext = context, restorationId: null)));
+        restarted.Attach(restartOwner);
+        restarted.Mount(parent: null, newSlot: null);
+        restartOwner.FlushBuild();
+
+        Assert.False(Scaffold.Of(restoredContext!.Value).IsDrawerOpen);
+        Assert.Null(FindParagraphByText(restarted.ChildElement?.RenderObject, "Drawer panel"));
+        restarted.Unmount();
+    }
+
+    private static Widget RestorableScaffold(Action<BuildContext> capture, string? restorationId) => new Theme(
+        data: ThemeData.Light,
+        child: new Scaffold(
+            drawer: new Drawer(child: new Text("Drawer panel")),
+            endDrawer: new Drawer(child: new Text("End drawer panel")),
+            restorationId: restorationId,
+            body: new CaptureBuildContextWidget(
+                capture: capture,
+                child: new SizedBox(width: 24, height: 12))));
 
     [Fact]
     public void ScaffoldState_OpenDrawer_AndCloseDrawer_TogglesDrawerVisibility()
@@ -1952,8 +2067,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var scaffoldBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldBackground);
+        RenderObject scaffoldRoot = RequireRenderObject(root.ChildElement);
+        var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldRoot);
         Assert.NotNull(scaffoldLayout);
         Assert.Contains(
             FindWidgets<MaterialWidget>(root.ChildElement),
@@ -1986,8 +2101,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var scaffoldBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldBackground);
+        RenderObject scaffoldRoot = RequireRenderObject(root.ChildElement);
+        var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldRoot);
         Assert.NotNull(scaffoldLayout);
         Assert.Contains(
             FindWidgets<MaterialWidget>(root.ChildElement),
@@ -2023,8 +2138,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var scaffoldBackground = RequireRenderObject<RenderColoredBox>(root.ChildElement);
-        var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldBackground);
+        RenderObject scaffoldRoot = RequireRenderObject(root.ChildElement);
+        var scaffoldLayout = FindDescendant<RenderCustomMultiChildLayoutBox>(scaffoldRoot);
         Assert.NotNull(scaffoldLayout);
         Assert.Contains(
             FindWidgets<MaterialWidget>(root.ChildElement),
