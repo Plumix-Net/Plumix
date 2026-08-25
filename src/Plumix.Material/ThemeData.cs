@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Cupertino;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -410,6 +411,7 @@ public sealed record ThemeData
         InteractiveInkFeatureFactory? splashFactory = null,
         PageTransitionsTheme? pageTransitionsTheme = null,
         bool? applyElevationOverlayColor = null,
+        NoDefaultCupertinoThemeData? cupertinoOverrideTheme = null,
         IEnumerable<ThemeExtension>? extensions = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
@@ -630,6 +632,7 @@ public sealed record ThemeData
         _menuTheme = menuTheme;
         _textSelectionTheme = textSelectionTheme;
         _pageTransitionsTheme = pageTransitionsTheme;
+        CupertinoOverrideTheme = cupertinoOverrideTheme?.NoDefault();
         Extensions = CreateExtensionMap(extensions);
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
@@ -643,6 +646,12 @@ public sealed record ThemeData
     public Typography Typography { get; init; }
 
     public bool ApplyElevationOverlayColor { get; init; }
+
+    /// <summary>
+    /// Components of the <see cref="CupertinoThemeData"/> to override from the Material theme
+    /// adaptation. Null (the default) lets every Cupertino attribute cascade from this theme.
+    /// </summary>
+    public NoDefaultCupertinoThemeData? CupertinoOverrideTheme { get; init; }
 
     public TextTheme TextTheme { get; init; }
 
@@ -1455,4 +1464,140 @@ public sealed record ThemeData
         ThemeData BaseTheme,
         TextTheme LocalTextGeometry,
         ThemeData Theme);
+}
+
+/// <summary>
+/// A <see cref="CupertinoThemeData"/> that defers unspecified theme attributes to an upstream
+/// Material <see cref="ThemeData"/>. Used by the Material <see cref="Theme"/> to harmonize the
+/// <see cref="CupertinoTheme"/> with the Material theme's colors and text styles.
+/// </summary>
+// This class subclasses CupertinoThemeData rather than composes one because it _is_ a
+// CupertinoThemeData with partially altered behavior. e.g. its textTheme is from the superclass and
+// based on the primaryColor but the primaryColor comes from the Material theme unless overridden.
+public class MaterialBasedCupertinoThemeData : CupertinoThemeData
+{
+    private readonly ThemeData _materialTheme;
+    private readonly NoDefaultCupertinoThemeData _cupertinoOverrideTheme;
+
+    /// <summary>
+    /// Creates a <see cref="MaterialBasedCupertinoThemeData"/> based on a Material
+    /// <see cref="ThemeData"/> and its <see cref="ThemeData.CupertinoOverrideTheme"/>.
+    /// </summary>
+    public MaterialBasedCupertinoThemeData(ThemeData materialTheme)
+        : this(
+            materialTheme ?? throw new ArgumentNullException(nameof(materialTheme)),
+            (materialTheme.CupertinoOverrideTheme ?? new CupertinoThemeData()).NoDefault())
+    {
+    }
+
+    // Pass all values to the superclass so Material-agnostic properties like barBackgroundColor can
+    // still behave like a normal CupertinoThemeData.
+    private MaterialBasedCupertinoThemeData(
+        ThemeData materialTheme,
+        NoDefaultCupertinoThemeData cupertinoOverrideTheme)
+        : base(
+            cupertinoOverrideTheme.Brightness,
+            cupertinoOverrideTheme.PrimaryColor,
+            cupertinoOverrideTheme.PrimaryContrastingColor,
+            cupertinoOverrideTheme.TextTheme,
+            cupertinoOverrideTheme.BarBackgroundColor,
+            cupertinoOverrideTheme.ScaffoldBackgroundColor,
+            cupertinoOverrideTheme.SelectionHandleColor
+            ?? AsDynamic(materialTheme.TextSelectionTheme.SelectionHandleColor),
+            cupertinoOverrideTheme.ApplyThemeToAll)
+    {
+        _materialTheme = materialTheme;
+        _cupertinoOverrideTheme = cupertinoOverrideTheme;
+    }
+
+    public override PlatformBrightness? Brightness =>
+        _cupertinoOverrideTheme.Brightness ?? ToPlatformBrightness(_materialTheme.Brightness);
+
+    public override CupertinoDynamicColor PrimaryColor =>
+        _cupertinoOverrideTheme.PrimaryColor ?? _materialTheme.ColorScheme.Primary;
+
+    public override CupertinoDynamicColor PrimaryContrastingColor =>
+        _cupertinoOverrideTheme.PrimaryContrastingColor ?? _materialTheme.ColorScheme.OnPrimary;
+
+    public override CupertinoDynamicColor ScaffoldBackgroundColor =>
+        _cupertinoOverrideTheme.ScaffoldBackgroundColor ?? _materialTheme.ScaffoldBackgroundColor;
+
+    /// <summary>
+    /// Copies the <see cref="ThemeData.CupertinoOverrideTheme"/>. Only its specified override
+    /// attributes and the newly specified parameters are in the returned theme; no attribute derived
+    /// from iOS defaults or cascaded from the Material theme is copied. This cannot change the base
+    /// Material theme — create a new Material <see cref="Theme"/> for that.
+    /// </summary>
+    public override MaterialBasedCupertinoThemeData CopyWith(
+        PlatformBrightness? brightness = null,
+        CupertinoDynamicColor? primaryColor = null,
+        CupertinoDynamicColor? primaryContrastingColor = null,
+        CupertinoTextThemeData? textTheme = null,
+        CupertinoDynamicColor? barBackgroundColor = null,
+        CupertinoDynamicColor? scaffoldBackgroundColor = null,
+        CupertinoDynamicColor? selectionHandleColor = null,
+        bool? applyThemeToAll = null)
+    {
+        return new MaterialBasedCupertinoThemeData(
+            _materialTheme,
+            _cupertinoOverrideTheme.CopyWith(
+                brightness: brightness,
+                primaryColor: primaryColor,
+                primaryContrastingColor: primaryContrastingColor,
+                textTheme: textTheme,
+                barBackgroundColor: barBackgroundColor,
+                scaffoldBackgroundColor: scaffoldBackgroundColor,
+                selectionHandleColor: selectionHandleColor,
+                applyThemeToAll: applyThemeToAll));
+    }
+
+    public override CupertinoThemeData ResolveFrom(BuildContext context)
+    {
+        // Only the Cupertino override theme is resolved, as well as the default text theme. A color
+        // that comes from the Material theme is not resolved.
+        NoDefaultCupertinoThemeData cupertinoOverrideThemeWithTextTheme =
+            _cupertinoOverrideTheme.CopyWith(textTheme: TextTheme);
+        return new MaterialBasedCupertinoThemeData(
+            _materialTheme,
+            cupertinoOverrideThemeWithTextTheme.ResolveFrom(context));
+    }
+
+    private static CupertinoDynamicColor? AsDynamic(Color? color) =>
+        color is { } value ? (CupertinoDynamicColor)value : null;
+
+    // `Brightness` names this type's own property here, so the Material enum needs qualifying.
+    private static PlatformBrightness ToPlatformBrightness(Plumix.Material.Brightness brightness) =>
+        brightness == Plumix.Material.Brightness.Dark
+            ? PlatformBrightness.Dark
+            : PlatformBrightness.Light;
+}
+
+/// <summary>
+/// Creates a Material theme whose color scheme is based off the colors from a
+/// <see cref="CupertinoThemeData"/>. Intended only for the case where a Material widget cannot find
+/// a Material theme in the tree but can find a Cupertino one — most often a Material widget used
+/// inside a <c>CupertinoApp</c>. Besides the colors, every default comes from <see cref="ThemeData"/>,
+/// so further customization is best done by adding a Material <see cref="Theme"/> above the app.
+/// </summary>
+public class CupertinoBasedMaterialThemeData
+{
+    /// <summary>
+    /// Creates a Material theme with a color scheme based off of the colors from a
+    /// <see cref="CupertinoThemeData"/>.
+    /// </summary>
+    public CupertinoBasedMaterialThemeData(CupertinoThemeData themeData)
+    {
+        ArgumentNullException.ThrowIfNull(themeData);
+        MaterialTheme = new ThemeData(
+            colorScheme: ColorScheme.FromSeed(
+                seedColor: themeData.PrimaryColor,
+                brightness: themeData.Brightness == PlatformBrightness.Dark
+                    ? Brightness.Dark
+                    : Brightness.Light,
+                primary: themeData.PrimaryColor,
+                onPrimary: themeData.PrimaryContrastingColor));
+    }
+
+    /// <summary>The Material theme data with colors based on an existing Cupertino theme.</summary>
+    public ThemeData MaterialTheme { get; }
 }

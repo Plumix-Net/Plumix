@@ -38,6 +38,7 @@ internal sealed class CupertinoThemeDemoPageState : State
     private bool _dark;
     private bool _highContrast;
     private bool _elevated;
+    private bool _cupertinoOverride;
 
     public override Widget Build(BuildContext context)
     {
@@ -76,7 +77,73 @@ internal sealed class CupertinoThemeDemoPageState : State
                     fontSize: 12,
                     color: Color.Parse("#FF607D8B")),
                 BuildProbe(context),
+                new Text("MaterialBasedCupertinoThemeData", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "A Material Theme installs a CupertinoTheme that defers to the Material ThemeData; "
+                    + "ThemeData.cupertinoOverrideTheme preempts individual attributes.",
+                    fontSize: 14,
+                    color: Color.Parse("#8A000000")),
+                BuildControlButton(
+                    label: _cupertinoOverride ? "Override: systemPink" : "Override: none (cascaded)",
+                    onTap: ToggleCupertinoOverride,
+                    width: 232,
+                    background: Color.Parse("#FFFDE7F3")),
+                BuildBridgeProbe(),
             ]);
+    }
+
+    private Widget BuildBridgeProbe()
+    {
+        NoDefaultCupertinoThemeData? overrideTheme = _cupertinoOverride
+            ? new CupertinoThemeData(primaryColor: CupertinoColors.SystemPink)
+            : null;
+        return new Row(
+            spacing: 8,
+            children:
+            [
+                new Expanded(BuildBridgeCard(
+                    "ThemeData.light()",
+                    new ThemeData(
+                        colorScheme: ColorScheme.Light(primary: Color.Parse("#FF2E7D32")),
+                        cupertinoOverrideTheme: overrideTheme))),
+                new Expanded(BuildBridgeCard(
+                    "ThemeData.dark()",
+                    new ThemeData(
+                        colorScheme: ColorScheme.Dark(primary: Color.Parse("#FF80CBC4")),
+                        cupertinoOverrideTheme: overrideTheme))),
+            ]);
+    }
+
+    private static Widget BuildBridgeCard(string label, ThemeData data)
+    {
+        return new Theme(
+            data,
+            new Builder(context =>
+            {
+                CupertinoThemeData theme = CupertinoTheme.Of(context);
+                return new Container(
+                    padding: new Thickness(12),
+                    decoration: new BoxDecoration(
+                        Color: theme.ScaffoldBackgroundColor,
+                        BorderRadius: BorderRadius.Circular(12),
+                        Border: Border.FromBorderSide(new BorderSide(Color.Parse("#33000000"), 1))),
+                    child: new Column(
+                        crossAxisAlignment: CrossAxisAlignment.Stretch,
+                        spacing: 6,
+                        children:
+                        [
+                            new Text(
+                                label,
+                                style: theme.TextTheme.NavTitleTextStyle.CopyWith(fontSize: 14)),
+                            new Text(
+                                $"brightness: {CupertinoTheme.BrightnessOf(context)}",
+                                style: theme.TextTheme.TextStyle.CopyWith(fontSize: 12)),
+                            new Text(
+                                "actionTextStyle follows primaryColor",
+                                style: theme.TextTheme.ActionTextStyle.CopyWith(fontSize: 12)),
+                            new CupertinoSwitch(value: true, onChanged: _ => { }),
+                        ]));
+            }));
     }
 
     private Widget BuildProbe(BuildContext context)
@@ -184,5 +251,10 @@ internal sealed class CupertinoThemeDemoPageState : State
     private void ToggleElevation()
     {
         SetState(() => _elevated = !_elevated);
+    }
+
+    private void ToggleCupertinoOverride()
+    {
+        SetState(() => _cupertinoOverride = !_cupertinoOverride);
     }
 }

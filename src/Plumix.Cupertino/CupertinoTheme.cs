@@ -100,6 +100,9 @@ public class CupertinoThemeData : NoDefaultCupertinoThemeData
 {
     private readonly CupertinoThemeDefaults _defaults;
 
+    // Dart's `CupertinoThemeData.raw` is the same constructor with positional parameters, kept
+    // separate only because Dart's default constructor is named-only; C# cannot declare both, so a
+    // subclass reaches Dart's `raw` behavior by calling this one positionally.
     public CupertinoThemeData(
         PlatformBrightness? brightness = null,
         CupertinoDynamicColor? primaryColor = null,
@@ -289,7 +292,7 @@ public class NoDefaultCupertinoThemeData
     }
 
     /// <summary>The brightness descendants should assume, or null to defer to the platform.</summary>
-    public PlatformBrightness? Brightness => _brightness;
+    public virtual PlatformBrightness? Brightness => _brightness;
 
     public virtual CupertinoDynamicColor? PrimaryColor => _primaryColor;
 

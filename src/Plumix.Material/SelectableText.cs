@@ -146,7 +146,7 @@ internal sealed class SelectableTextState : State
         // `CupertinoTheme`, every other platform against the color scheme. `TextSelectionTheme` is
         // not read here — it arrives as the `DefaultSelectionStyle` the theme widgets insert.
         Color primaryColor = theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
-            ? Cupertino.CupertinoTheme.Of(context).NoDefault().PrimaryColor ?? theme.ColorScheme.Primary
+            ? Cupertino.CupertinoTheme.Of(context).PrimaryColor.Value
             : theme.ColorScheme.Primary;
         Color cursorColor = Current.CursorColor
                             ?? selectionStyle.CursorColor

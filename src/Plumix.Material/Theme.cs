@@ -1,3 +1,4 @@
+using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Widgets;
 
@@ -21,6 +22,9 @@ public sealed class ThemeDataTween : Tween<ThemeData>
 
 public sealed class Theme : InheritedTheme
 {
+    // Dart's `Theme._kFallbackTheme`: `ThemeData.fallback()`, which is `ThemeData.light()`.
+    private static readonly ThemeData KFallbackTheme = ThemeData.Light;
+
     public Theme(
         ThemeData data,
         Widget child,
@@ -37,7 +41,20 @@ public sealed class Theme : InheritedTheme
     public override Widget Build(BuildContext context)
     {
         ThemeData localized = Localize(Data, context);
-        return WrapsWidgetThemes(context, localized, Child);
+        return new CupertinoTheme(
+            // If a CupertinoThemeData doesn't exist, we're using a MaterialBasedCupertinoThemeData
+            // here instead of a CupertinoThemeData because it defers some properties to the
+            // Material ThemeData.
+            data: InheritedCupertinoThemeData(context, localized),
+            child: WrapsWidgetThemes(context, localized, Child));
+    }
+
+    // Dart's `Theme._inheritedCupertinoThemeData`.
+    private static CupertinoThemeData InheritedCupertinoThemeData(BuildContext context, ThemeData data)
+    {
+        InheritedCupertinoTheme? inheritedTheme = context.DependOnInherited<InheritedCupertinoTheme>();
+        return (inheritedTheme?.Theme.Data ?? new MaterialBasedCupertinoThemeData(data))
+            .ResolveFrom(context);
     }
 
     // Dart's `Theme._wrapsWidgetThemes`: the inherited themes in the widgets library cannot infer
@@ -68,7 +85,14 @@ public sealed class Theme : InheritedTheme
 
     public static ThemeData Of(BuildContext context)
     {
-        ThemeData data = context.DependOnInherited<Theme>()?.Data ?? ThemeData.Light;
+        Theme? inheritedTheme = context.DependOnInherited<Theme>();
+        InheritedCupertinoTheme? inheritedCupertinoTheme =
+            context.DependOnInherited<InheritedCupertinoTheme>();
+        ThemeData data = inheritedTheme?.Data
+                         ?? (inheritedCupertinoTheme is not null
+                             ? new CupertinoBasedMaterialThemeData(
+                                 inheritedCupertinoTheme.Theme.Data).MaterialTheme
+                             : KFallbackTheme);
         return Localize(data, context);
     }
 

@@ -494,9 +494,9 @@ public sealed class TextField : StatefulWidget
         {
             // Dart reaches the Cupertino primary through the `MaterialBasedCupertinoThemeData` that
             // `Theme` installs, which defers to `colorScheme.primary` when no Cupertino override is
-            // present; Plumix has no bridge yet, so the fallback is applied here (`DIVERGENCES.md`).
+            // present.
             return theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS
-                ? CupertinoTheme.Of(context).NoDefault().PrimaryColor ?? theme.ColorScheme.Primary
+                ? CupertinoTheme.Of(context).PrimaryColor.Value
                 : theme.ColorScheme.Primary;
         }
 

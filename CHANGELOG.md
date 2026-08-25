@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: Material `Theme` installs a `MaterialBasedCupertinoThemeData`; added `ThemeData.CupertinoOverrideTheme`.
+- Material `Theme.Of` falls back to `CupertinoBasedMaterialThemeData` under a bare `CupertinoTheme` (`theme.dart`).
 - Ported `GlobalCupertinoLocalizations` with all 116 generated locale bundles (`global_cupertino_localizations.dart`).
 - Ported `GlobalWidgetsLocalizations` and its locale bundles (`flutter_localizations/widgets_localizations.dart`).
 - Added a pinned `package:intl` subset (`DateFormat`, `NumberFormat`, plural rules, CLDR data) under `Foundation/Intl`.

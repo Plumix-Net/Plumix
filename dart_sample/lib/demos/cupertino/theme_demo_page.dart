@@ -26,6 +26,7 @@ class _CupertinoThemeDemoPageState extends State<CupertinoThemeDemoPage> {
   bool _dark = false;
   bool _highContrast = false;
   bool _elevated = false;
+  bool _cupertinoOverride = false;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +73,100 @@ class _CupertinoThemeDemoPageState extends State<CupertinoThemeDemoPage> {
           style: const TextStyle(fontSize: 12, color: Color(0xFF607D8B)),
         ),
         _buildProbe(context),
+        const Text(
+          'MaterialBasedCupertinoThemeData',
+          style: TextStyle(fontSize: 20, color: Colors.black),
+        ),
+        const Text(
+          'A Material Theme installs a CupertinoTheme that defers to the '
+          'Material ThemeData; ThemeData.cupertinoOverrideTheme preempts '
+          'individual attributes.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        _buildControlButton(
+          label: _cupertinoOverride
+              ? 'Override: systemPink'
+              : 'Override: none (cascaded)',
+          onTap: _toggleCupertinoOverride,
+          width: 232,
+          background: const Color(0xFFFDE7F3),
+        ),
+        _buildBridgeProbe(),
       ],
+    );
+  }
+
+  Widget _buildBridgeProbe() {
+    return Row(
+      spacing: 8,
+      children: <Widget>[
+        Expanded(
+          child: _buildBridgeCard(
+            'ThemeData.light()',
+            ThemeData(
+              colorScheme: const ColorScheme.light(primary: Color(0xFF2E7D32)),
+              cupertinoOverrideTheme: _cupertinoOverride
+                  ? const CupertinoThemeData(
+                      primaryColor: CupertinoColors.systemPink,
+                    )
+                  : null,
+            ),
+          ),
+        ),
+        Expanded(
+          child: _buildBridgeCard(
+            'ThemeData.dark()',
+            ThemeData(
+              colorScheme: const ColorScheme.dark(primary: Color(0xFF80CBC4)),
+              cupertinoOverrideTheme: _cupertinoOverride
+                  ? const CupertinoThemeData(
+                      primaryColor: CupertinoColors.systemPink,
+                    )
+                  : null,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  static Widget _buildBridgeCard(String label, ThemeData data) {
+    return Theme(
+      data: data,
+      child: Builder(
+        builder: (BuildContext context) {
+          final CupertinoThemeData theme = CupertinoTheme.of(context);
+          return Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: theme.scaffoldBackgroundColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0x33000000)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              spacing: 6,
+              children: <Widget>[
+                Text(
+                  label,
+                  style: theme.textTheme.navTitleTextStyle.copyWith(
+                    fontSize: 14,
+                  ),
+                ),
+                Text(
+                  'brightness: ${CupertinoTheme.brightnessOf(context).name}',
+                  style: theme.textTheme.textStyle.copyWith(fontSize: 12),
+                ),
+                Text(
+                  'actionTextStyle follows primaryColor',
+                  style: theme.textTheme.actionTextStyle.copyWith(fontSize: 12),
+                ),
+                CupertinoSwitch(value: true, onChanged: (bool _) {}),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -198,5 +292,9 @@ class _CupertinoThemeDemoPageState extends State<CupertinoThemeDemoPage> {
 
   void _toggleElevation() {
     setState(() => _elevated = !_elevated);
+  }
+
+  void _toggleCupertinoOverride() {
+    setState(() => _cupertinoOverride = !_cupertinoOverride);
   }
 }
