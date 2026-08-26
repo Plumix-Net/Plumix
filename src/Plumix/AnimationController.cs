@@ -641,15 +641,22 @@ public sealed class ColorTween : Tween<Color>
     }
 }
 
-public sealed class RectTween : Tween<Rect>
+public class RectTween : Tween<Rect>
 {
     public RectTween(Rect? begin = null, Rect? end = null)
     {
-        Begin = begin;
-        End = end;
+        if (begin.HasValue)
+        {
+            SetBeginValue(begin.Value);
+        }
+
+        if (end.HasValue)
+        {
+            SetEndValue(end.Value);
+        }
     }
 
-    public new Rect? Begin
+    public new virtual Rect? Begin
     {
         get => HasBeginValue ? GetBeginValue() : null;
         set
@@ -665,7 +672,7 @@ public sealed class RectTween : Tween<Rect>
         }
     }
 
-    public new Rect? End
+    public new virtual Rect? End
     {
         get => HasEndValue ? GetEndValue() : null;
         set
@@ -688,6 +695,90 @@ public sealed class RectTween : Tween<Rect>
         double width = a.Width + ((b.Width - a.Width) * t);
         double height = a.Height + ((b.Height - a.Height) * t);
         return new Rect(x, y, Math.Max(0, width), Math.Max(0, height));
+    }
+}
+
+/// <summary>
+/// Dart's `ReverseTween`: a tween that evaluates <see cref="Parent"/> in reverse.
+/// </summary>
+public sealed class ReverseTween<T> : Tween<T>
+{
+    public ReverseTween(Tween<T> parent)
+    {
+        Parent = parent ?? throw new ArgumentNullException(nameof(parent));
+        if (parent.HasEndValue)
+        {
+            SetBeginValue(parent.GetEndValue());
+        }
+
+        if (parent.HasBeginValue)
+        {
+            SetEndValue(parent.GetBeginValue());
+        }
+    }
+
+    public Tween<T> Parent { get; }
+
+    public override T Lerp(T a, T b, double t) => Parent.Lerp(b, a, t);
+
+    public override T Evaluate(double t) => Parent.Evaluate(1.0 - t);
+}
+
+/// <summary>Dart's `EdgeInsetsTween`, over Plumix's <see cref="Thickness"/> stand-in for `EdgeInsets`.</summary>
+public sealed class EdgeInsetsTween : Tween<Thickness>
+{
+    public EdgeInsetsTween(Thickness? begin = null, Thickness? end = null)
+    {
+        if (begin.HasValue)
+        {
+            SetBeginValue(begin.Value);
+        }
+
+        if (end.HasValue)
+        {
+            SetEndValue(end.Value);
+        }
+    }
+
+    public new Thickness? Begin
+    {
+        get => HasBeginValue ? GetBeginValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetBeginValue(value.Value);
+            }
+            else
+            {
+                ClearBeginValue();
+            }
+        }
+    }
+
+    public new Thickness? End
+    {
+        get => HasEndValue ? GetEndValue() : null;
+        set
+        {
+            if (value.HasValue)
+            {
+                SetEndValue(value.Value);
+            }
+            else
+            {
+                ClearEndValue();
+            }
+        }
+    }
+
+    public override Thickness Lerp(Thickness a, Thickness b, double t)
+    {
+        return new Thickness(
+            a.Left + ((b.Left - a.Left) * t),
+            a.Top + ((b.Top - a.Top) * t),
+            a.Right + ((b.Right - a.Right) * t),
+            a.Bottom + ((b.Bottom - a.Bottom) * t));
     }
 }
 

@@ -14,6 +14,7 @@ class SampleRoutes {
   static const String counter = '/counter';
   static const String blocCounter = '/bloc-counter';
   static const String navigator = '/navigator';
+  static const String hero = '/hero';
   static const String navigatorDetails = '/navigator/details';
   static const String navigatorPages = '/navigator-pages';
   static const String router = '/router';

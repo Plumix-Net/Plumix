@@ -750,12 +750,18 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(afterStart + 0.60));
         harness.Pump(viewportSize);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.001));
+        harness.Pump(viewportSize);
     }
 
+    /// <summary>
+    /// Runs the two frames a flight needs: the destination route builds (offstage, because its animation
+    /// value is still 0), and the post-frame callback `HeroController` scheduled then measures both heroes
+    /// and inserts the flight's overlay entry.
+    /// </summary>
     private static void PumpHeroTransitionFrame(WidgetRenderHarness harness, Size viewportSize)
     {
-        // The flight controller is created by the build this frame runs, so it takes its start
-        // timestamp from the priming frame and only advances on the one after it.
+        harness.Pump(viewportSize);
         AnimationPump.Prime();
         harness.Pump(viewportSize);
         double now = Scheduler.CurrentSeconds;
@@ -787,7 +793,11 @@ public sealed class CupertinoNavigationBarTests : IDisposable
                 ],
                 child: new Directionality(
                     textDirection,
-                    new CupertinoTheme(new CupertinoThemeData(), child))));
+                    new CupertinoTheme(
+                        new CupertinoThemeData(),
+                        // Stands in for CupertinoApp, which is where the HeroController a Navigator picks
+                        // up through HeroControllerScope is installed.
+                        new HeroControllerScope(controller: new HeroController(), child: child)))));
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)

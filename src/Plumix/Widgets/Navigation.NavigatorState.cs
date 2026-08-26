@@ -9,50 +9,32 @@ namespace Plumix.Widgets;
 
 public sealed partial class NavigatorState : RestorationState
 {
-    private const double HeroTransitionDurationMilliseconds = 300;
-
     private readonly List<RouteEntry> _history = [];
     private readonly HashSet<RouteEntry> _entriesWaitingForSubtreeDisposal = [];
-    private readonly HashSet<Route> _heroDeferredRoutes = [];
     private readonly List<NavigatorObservation> _observedRouteAdditions = [];
     private readonly Queue<NavigatorObservation> _observedRouteDeletions = new();
     private readonly HistoryProperty _serializableHistory = new();
     private readonly RestorableInt _rawNextPagelessRestorationScopeId = new(0);
     private readonly List<NavigatorObserver> _observers = [];
     private readonly Func<bool> _backButtonHandler;
-    private readonly HeroTransitionController _heroTransitionController = new();
-    private readonly Plumix.AnimationController _heroFlightController;
-    private readonly Plumix.CurvedAnimation _heroFlightAnimation;
+
+    private readonly List<NavigatorObserver> _effectiveObservers = [];
 
     private GlobalKey<OverlayState> _overlayKey;
-    private OverlayEntry? _heroFlightEntry;
+    private HeroController? _heroControllerFromScope;
     private int _userGestureCount;
-    private HeroTransitionSession? _heroTransitionSession;
     private RouteEntry? _lastTopmostRoute;
     private string? _lastAnnouncedRouteName;
     private bool? _lastCanHandlePop;
     private bool _navigationNotificationPending;
     private bool _flushingHistory;
     private bool _updatingPage;
-    private (Route? From, Route To)? _pendingHeroPush;
-    private (Route From, Route? To)? _pendingHeroPop;
 
     public NavigatorState()
     {
         // Identity-based key: a label-based GlobalKey is a record and would collide across navigators.
         _overlayKey = new GlobalObjectKey<OverlayState>(this);
         _backButtonHandler = HandleBackButton;
-        _heroFlightController = new Plumix.AnimationController(
-            duration: TimeSpan.FromMilliseconds(HeroTransitionDurationMilliseconds))
-        {
-            Curve = Plumix.Curves.EaseInOut,
-        };
-        _heroFlightController.Changed += HandleHeroFlightTick;
-        _heroFlightController.Completed += HandleHeroFlightCompleted;
-        _heroFlightController.Dismissed += HandleHeroFlightCompleted;
-        // The shuttle sees the curved flight progress; unwrapping `CurvedAnimation.Parent` yields the
-        // raw controller, the way Flutter's shuttle unwraps to the route animation.
-        _heroFlightAnimation = new Plumix.CurvedAnimation(_heroFlightController, Plumix.Curves.EaseInOut);
     }
 
     /// <summary>The focus node the navigator installs above its overlay; routes focus its enclosing scope.</summary>
@@ -103,14 +85,17 @@ public sealed partial class NavigatorState : RestorationState
     /// <summary>Notifies while a user-driven route gesture is in progress.</summary>
     public ValueNotifier<bool> UserGestureInProgressNotifier { get; } = new(false);
 
-    internal HeroTransitionController HeroTransitionController => _heroTransitionController;
-
     internal IReadOnlyList<RouteEntry> HistoryEntries => _history;
 
     public override void InitState()
     {
         base.InitState();
         SyncObservers(Array.Empty<NavigatorObserver>(), CurrentWidget.Observers);
+        // Dart reads the inherited widget directly here because the context is not fully initialized
+        // yet; the dependency itself is registered from DidChangeDependencies.
+        var scope = Context.GetElementForInheritedWidgetOfExactType<HeroControllerScope>()?.Widget
+            as HeroControllerScope;
+        UpdateHeroController(scope?.Controller);
         ValidatePagesApi();
         NavigatorBackButtonDispatcher.AddHandler(_backButtonHandler);
     }
@@ -142,14 +127,35 @@ public sealed partial class NavigatorState : RestorationState
         }
     }
 
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        UpdateHeroController(HeroControllerScope.MaybeOf(Context));
+    }
+
     public override void Activate()
     {
         base.Activate();
+        UpdateEffectiveObservers();
+        foreach (NavigatorObserver observer in _effectiveObservers)
+        {
+            observer.Navigator = this;
+        }
+
         NavigatorBackButtonDispatcher.AddHandler(_backButtonHandler);
     }
 
     public override void Deactivate()
     {
+        foreach (NavigatorObserver observer in _effectiveObservers)
+        {
+            if (ReferenceEquals(observer.Navigator, this))
+            {
+                observer.Navigator = null;
+            }
+        }
+
+        _effectiveObservers.Clear();
         NavigatorBackButtonDispatcher.RemoveHandler(_backButtonHandler);
         base.Deactivate();
     }
@@ -158,12 +164,7 @@ public sealed partial class NavigatorState : RestorationState
     {
         NavigatorBackButtonDispatcher.RemoveHandler(_backButtonHandler);
         StopUserGesture();
-        CancelHeroTransition(disposeDetachedRoute: true);
-        _heroFlightController.Changed -= HandleHeroFlightTick;
-        _heroFlightController.Completed -= HandleHeroFlightCompleted;
-        _heroFlightController.Dismissed -= HandleHeroFlightCompleted;
-        _heroFlightAnimation.Dispose();
-        _heroFlightController.Dispose();
+        UpdateHeroController(null);
         FocusNode.Dispose();
 
         ForcedDisposeAllRouteEntries();
@@ -179,6 +180,7 @@ public sealed partial class NavigatorState : RestorationState
         }
 
         _observers.Clear();
+        _effectiveObservers.Clear();
         base.Dispose();
     }
 
@@ -186,7 +188,9 @@ public sealed partial class NavigatorState : RestorationState
     {
         bool routeBlocksPop = !CanPop && CurrentRoute?.PopDisposition == RoutePopDisposition.DoNotPop;
         ScheduleNavigationNotification(CanPop || routeBlocksPop);
-        return new NavigatorScope(
+        // Hides the HeroControllerScope for the widget subtree so that a nested navigator underneath
+        // does not pick up the hero controller above this level.
+        return HeroControllerScope.None(new NavigatorScope(
             this,
             new FocusTraversalGroup(
                 policy: FocusTraversalGroup.MaybeOf(context),
@@ -199,7 +203,7 @@ public sealed partial class NavigatorState : RestorationState
                         child: new Overlay(
                             initialEntries: Overlay is null ? AllRouteOverlayEntries() : [],
                             clipBehavior: CurrentWidget.ClipBehavior,
-                            key: _overlayKey)))));
+                            key: _overlayKey))))));
     }
 
     // -------------------------------------------------------------------------------------------------
@@ -966,11 +970,6 @@ public sealed partial class NavigatorState : RestorationState
                 case RouteLifecycle.PushReplace:
                 case RouteLifecycle.Replace:
                     Route? previousPresentForPush = GetRouteBefore(index - 1, RouteEntry.IsPresentPredicate)?.Route;
-                    if (entry.CurrentState == RouteLifecycle.Push)
-                    {
-                        _pendingHeroPush = (previousPresentForPush, entry.Route);
-                    }
-
                     entry.HandlePush(
                         this,
                         isNewFirst: next is null,
@@ -1004,19 +1003,8 @@ public sealed partial class NavigatorState : RestorationState
 
                 case RouteLifecycle.Pop:
                     Route? previousPresentForPop = GetRouteBefore(index, RouteEntry.WillBePresentPredicate)?.Route;
-                    bool willFlyHeroes = !seenTopActiveRoute
-                                         && previousPresentForPop is not null
-                                         && _heroTransitionController.HasHeroes(entry.Route);
-                    if (willFlyHeroes)
-                    {
-                        // Registered before the route pops, because a zero-duration route finalizes itself
-                        // from inside `HandlePop`.
-                        _heroDeferredRoutes.Add(entry.Route);
-                    }
-
                     if (!entry.HandlePop(this, previousPresentForPop))
                     {
-                        _heroDeferredRoutes.Remove(entry.Route);
                         advance = false;
                         break;
                     }
@@ -1029,7 +1017,6 @@ public sealed partial class NavigatorState : RestorationState
                         }
 
                         poppedRoute = entry.Route;
-                        _pendingHeroPop = (entry.Route, previousPresentForPop);
                     }
 
                     _observedRouteDeletions.Enqueue(
@@ -1103,7 +1090,7 @@ public sealed partial class NavigatorState : RestorationState
         RouteEntry? lastEntry = LastRouteEntryWhereOrNull(RouteEntry.IsPresentPredicate);
         if (lastEntry is not null && !ReferenceEquals(_lastTopmostRoute, lastEntry))
         {
-            foreach (var observer in _observers.ToArray())
+            foreach (var observer in _effectiveObservers.ToArray())
             {
                 observer.DidChangeTop(lastEntry.Route, _lastTopmostRoute?.Route);
             }
@@ -1137,13 +1124,12 @@ public sealed partial class NavigatorState : RestorationState
         }
 
         _flushingHistory = false;
-        ResolvePendingHeroTransitions();
     }
 
     /// <summary>Flutter's <c>_flushObserverNotifications</c>: additions drain LIFO, deletions FIFO.</summary>
     private void FlushObserverNotifications()
     {
-        if (_observers.Count == 0)
+        if (_effectiveObservers.Count == 0)
         {
             _observedRouteDeletions.Clear();
             _observedRouteAdditions.Clear();
@@ -1154,7 +1140,7 @@ public sealed partial class NavigatorState : RestorationState
         {
             NavigatorObservation observation = _observedRouteAdditions[^1];
             _observedRouteAdditions.RemoveAt(_observedRouteAdditions.Count - 1);
-            foreach (var observer in _observers.ToArray())
+            foreach (var observer in _effectiveObservers.ToArray())
             {
                 observation.Notify(observer);
             }
@@ -1163,7 +1149,7 @@ public sealed partial class NavigatorState : RestorationState
         while (_observedRouteDeletions.Count > 0)
         {
             NavigatorObservation observation = _observedRouteDeletions.Dequeue();
-            foreach (var observer in _observers.ToArray())
+            foreach (var observer in _effectiveObservers.ToArray())
             {
                 observation.Notify(observer);
             }
@@ -1314,12 +1300,6 @@ public sealed partial class NavigatorState : RestorationState
         RouteEntry? entry = _history.FirstOrDefault(candidate => ReferenceEquals(candidate.Route, route));
         if (entry is null || entry.CurrentState >= RouteLifecycle.Dispose)
         {
-            return;
-        }
-
-        if (_heroDeferredRoutes.Contains(route))
-        {
-            // A hero flight still paints this route's shuttle; disposal waits for the flight to finish.
             return;
         }
 
@@ -1579,6 +1559,40 @@ public sealed partial class NavigatorState : RestorationState
         });
     }
 
+    /// <summary>Dart's `NavigatorState._updateHeroController`.</summary>
+    private void UpdateHeroController(HeroController? newHeroController)
+    {
+        if (ReferenceEquals(_heroControllerFromScope, newHeroController))
+        {
+            return;
+        }
+
+        if (newHeroController is not null)
+        {
+            newHeroController.Navigator = this;
+        }
+
+        // Only unsubscribe the hero controller when it is currently subscribed to this navigator.
+        if (ReferenceEquals(_heroControllerFromScope?.Navigator, this))
+        {
+            _heroControllerFromScope.Navigator = null;
+        }
+
+        _heroControllerFromScope = newHeroController;
+        UpdateEffectiveObservers();
+    }
+
+    /// <summary>Dart's `NavigatorState._updateEffectiveObservers`.</summary>
+    private void UpdateEffectiveObservers()
+    {
+        _effectiveObservers.Clear();
+        _effectiveObservers.AddRange(_observers);
+        if (_heroControllerFromScope is not null)
+        {
+            _effectiveObservers.Add(_heroControllerFromScope);
+        }
+    }
+
     private void SyncObservers(
         IReadOnlyList<NavigatorObserver> oldObservers,
         IReadOnlyList<NavigatorObserver> newObservers)
@@ -1606,11 +1620,13 @@ public sealed partial class NavigatorState : RestorationState
 
             observer.Navigator = this;
         }
+
+        UpdateEffectiveObservers();
     }
 
     private void NotifyObserversStartUserGesture(Route route, Route? previousRoute)
     {
-        foreach (var observer in _observers.ToArray())
+        foreach (var observer in _effectiveObservers.ToArray())
         {
             observer.DidStartUserGesture(route, previousRoute);
         }
@@ -1618,7 +1634,7 @@ public sealed partial class NavigatorState : RestorationState
 
     private void NotifyObserversStopUserGesture()
     {
-        foreach (var observer in _observers.ToArray())
+        foreach (var observer in _effectiveObservers.ToArray())
         {
             observer.DidStopUserGesture();
         }

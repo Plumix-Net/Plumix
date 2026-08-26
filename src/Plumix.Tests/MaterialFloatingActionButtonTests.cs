@@ -107,7 +107,7 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var constrainedBox = FindDescendant<RenderConstrainedBox>(renderRoot);
+        var constrainedBox = FindSizingConstrainedBox(renderRoot);
         var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
 
         Assert.NotNull(constrainedBox);
@@ -515,7 +515,7 @@ public sealed class MaterialFloatingActionButtonTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var constrainedBox = FindSizingConstrainedBox(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
         Assert.Equal(40, constrainedBox!.AdditionalConstraints.MinWidth);
         Assert.Equal(40, constrainedBox.AdditionalConstraints.MaxWidth);
@@ -539,7 +539,7 @@ public sealed class MaterialFloatingActionButtonTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var constrainedBox = FindSizingConstrainedBox(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(constrainedBox);
         Assert.Equal(96, constrainedBox!.AdditionalConstraints.MinWidth);
         Assert.Equal(96, constrainedBox.AdditionalConstraints.MaxWidth);
@@ -566,7 +566,7 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var constrainedBox = FindDescendant<RenderConstrainedBox>(renderRoot);
+        var constrainedBox = FindSizingConstrainedBox(renderRoot);
         var paddings = FindDescendants<RenderPadding>(renderRoot);
         bool hasExpectedPadding = paddings.Any(p => p.Padding == new Thickness(16, 0, 20, 0));
         var label = FindDescendants<RenderParagraph>(renderRoot).FirstOrDefault(p => p.PlainText == "Create");
@@ -623,7 +623,7 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var constrainedBox = FindDescendant<RenderConstrainedBox>(renderRoot);
+        var constrainedBox = FindSizingConstrainedBox(renderRoot);
         var decorated = FindDescendant<RenderDecoratedBox>(renderRoot);
 
         Assert.NotNull(constrainedBox);
@@ -995,6 +995,29 @@ public sealed class MaterialFloatingActionButtonTests
             result = FindDescendant<T>(child);
         });
         return result;
+    }
+
+    /// <summary>
+    /// The FAB's <c>Hero</c> wraps its child in <c>SizedBox(width: null, height: null)</c>, exactly like
+    /// Dart's <c>_HeroState.build</c>, so the first <see cref="RenderConstrainedBox"/> in the subtree is
+    /// that unconstrained pass-through box. This skips it and returns the FAB's own sizing box.
+    /// </summary>
+    private static RenderConstrainedBox? FindSizingConstrainedBox(RenderObject? root)
+    {
+        foreach (RenderConstrainedBox candidate in FindDescendants<RenderConstrainedBox>(root))
+        {
+            BoxConstraints constraints = candidate.AdditionalConstraints;
+            bool unconstrained = constraints.MinWidth == 0
+                                 && constraints.MinHeight == 0
+                                 && double.IsInfinity(constraints.MaxWidth)
+                                 && double.IsInfinity(constraints.MaxHeight);
+            if (!unconstrained)
+            {
+                return candidate;
+            }
+        }
+
+        return null;
     }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject

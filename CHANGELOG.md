@@ -8,6 +8,15 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: strict `Hero` port — `HeroController` observer, `_HeroFlight` per tag, overlay entries (`heroes.dart`).
+- Breaking: flights ride the route's own animation; the C#-only navigator flight engine and its controller are gone.
+- Breaking: `HeroControllerScope` carries a `HeroController`; `Navigator` picks it up and wraps its subtree in `.None`.
+- Breaking: `MaterialApp`/`CupertinoApp` install the controller through that scope; Material's arcs heroes (`app.dart`).
+- Breaking: `Hero` gains Dart's `curve`/`reverseCurve`; its placeholder is `SizedBox` + `Offstage` + `TickerMode`.
+- Breaking: duplicate hero tags now throw when a flight forms, not when the route subtree builds (`Hero._allHeroesFor`).
+- Breaking: removed `TransitionRoute.Suspend`/`RestoreEntryOpacityForFlight` and the navigator's deferred-disposal set.
+- Added `MaterialPointArcTween`/`MaterialRectArcTween`/`MaterialRectCenterArcTween` (`arc.dart`).
+- Added `ReverseTween<T>`, `EdgeInsetsTween`, `ModalRoute.SubtreeContext`; `RectTween` unsealed with virtual endpoints.
 - Breaking: strict `ButtonStyleButton` port — `Material` + `InkWell`, `_InputPadding` (`button_style_button.dart`).
 - Breaking: the four Material buttons extend it, with Dart's constructors, `.icon`/`.tonal` factories and defaults.
 - Breaking: they drop the C#-only `foregroundColor`/`backgroundColor`/`padding`/`borderRadius`/`min*` shortcuts.

@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
@@ -407,11 +408,32 @@ public sealed class MaterialApp : StatefulWidget
 
     public AnimationStyle? ThemeAnimationStyle { get; }
 
+    /// <summary>Dart's `MaterialApp.createMaterialHeroController`.</summary>
+    public static HeroController CreateMaterialHeroController()
+    {
+        return new HeroController(
+            createRectTween: (Rect begin, Rect end) => new MaterialRectArcTween(begin: begin, end: end));
+    }
+
     public override State CreateState() => new MaterialAppState();
 
     private sealed class MaterialAppState : State
     {
+        private HeroController _heroController = null!;
+
         private MaterialApp CurrentWidget => (MaterialApp)StateWidget;
+
+        public override void InitState()
+        {
+            base.InitState();
+            _heroController = CreateMaterialHeroController();
+        }
+
+        public override void Dispose()
+        {
+            _heroController.Dispose();
+            base.Dispose();
+        }
 
         public override Widget Build(BuildContext context)
         {
@@ -491,7 +513,7 @@ public sealed class MaterialApp : StatefulWidget
 
             return new ScrollConfiguration(
                 behavior: CurrentWidget.ScrollBehavior ?? new MaterialScrollBehavior(),
-                child: result);
+                child: new HeroControllerScope(controller: _heroController, child: result));
         }
 
         private Widget BuildMaterialShell(BuildContext context, Widget? child)

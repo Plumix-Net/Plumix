@@ -669,6 +669,9 @@ public abstract class TransitionRoute : OverlayRoute
 
     private protected bool HasController => _controller is not null;
 
+    /// <summary>Whether <see cref="Animation"/> is available, i.e. the route has been installed.</summary>
+    internal bool HasAnimation => _controller is not null;
+
     private protected Animation<double> RawSecondaryAnimation => _secondaryAnimation;
 
     protected override void Uninstall()
@@ -847,14 +850,6 @@ public abstract class TransitionRoute : OverlayRoute
         OverlayEntries[0].Opaque = opaque;
     }
 
-    /// <summary>
-    /// Keeps the route below onstage while a hero flight runs across a zero-length transition, where the
-    /// controller never reports <see cref="AnimationStatus.Forward"/> or <see cref="AnimationStatus.Reverse"/>.
-    /// </summary>
-    internal void SuspendEntryOpacityForFlight() => SetPrimaryEntryOpaque(false);
-
-    internal void RestoreEntryOpacityAfterFlight() => SetPrimaryEntryOpaque(EffectiveOpaque);
-
     protected void StartPopGesture(double progress)
     {
         Controller.SetValueForUserGesture(progress);
@@ -951,6 +946,12 @@ public abstract class ModalRoute : TransitionRoute
     internal PageStorageBucket StorageBucket => _storageBucket;
 
     internal GlobalKey SubtreeKey => _subtreeKey;
+
+    /// <summary>
+    /// Dart's `ModalRoute.subtreeContext`: the context of the route's page subtree, used by hero flights
+    /// to find the heroes on this route and to measure them in the route's own coordinate space.
+    /// </summary>
+    public BuildContext? SubtreeContext => _subtreeKey.CurrentContext;
 
     /// <summary>The filter applied to the modal barrier through a <see cref="BackdropFilter"/>.</summary>
     public ImageFilter? Filter { get; }
@@ -2277,18 +2278,15 @@ internal sealed class ModalScopeState : State
             actions: actions,
             child: new PrimaryScrollController(
                 controller: _primaryScrollController,
-                child: new HeroControllerScope(
-                    controller: route.Navigator!.HeroTransitionController,
-                    route: route,
-                    child: FocusScope.WithExternalFocusNode(
-                        focusScopeNode: FocusScopeNode,
-                        child: new RepaintBoundary(
-                            child: new ListenableBuilder(
-                                listenable: _listenable,
-                                builder: BuildFlexibleTransitions,
-                                child: _page ??= new RepaintBoundary(
-                                    key: route.SubtreeKey,
-                                    child: new Builder(route.BuildPage))))))));
+                child: FocusScope.WithExternalFocusNode(
+                    focusScopeNode: FocusScopeNode,
+                    child: new RepaintBoundary(
+                        child: new ListenableBuilder(
+                            listenable: _listenable,
+                            builder: BuildFlexibleTransitions,
+                            child: _page ??= new RepaintBoundary(
+                                key: route.SubtreeKey,
+                                child: new Builder(route.BuildPage)))))));
     }
 
     private Widget BuildFlexibleTransitions(BuildContext context, Widget? child)

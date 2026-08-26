@@ -344,7 +344,9 @@ public sealed class CupertinoApp : StatefulWidget
             Color primaryColor = effectiveTheme.PrimaryColor.Value;
             return new ScrollConfiguration(
                 behavior: CurrentWidget.ScrollBehavior ?? new CupertinoScrollBehavior(),
-                child: new CupertinoUserInterfaceLevel(
+                child: new HeroControllerScope(
+                    controller: _heroController,
+                    child: new CupertinoUserInterfaceLevel(
                     data: CupertinoUserInterfaceLevelData.Base,
                     child: new CupertinoTheme(
                         data: effectiveTheme,
@@ -355,7 +357,7 @@ public sealed class CupertinoApp : StatefulWidget
                                 builder: appContext => BuildWidgetsApp(
                                     appContext,
                                     effectiveTheme,
-                                    delegates))))));
+                                    delegates)))))));
         }
 
         private Widget BuildWidgetsApp(
@@ -393,14 +395,10 @@ public sealed class CupertinoApp : StatefulWidget
                     key: null);
             }
 
-            var observers = new List<NavigatorObserver>(CurrentWidget.NavigatorObservers)
-            {
-                _heroController,
-            };
             return new WidgetsApp(
                 color: color,
                 navigatorKey: CurrentWidget.NavigatorKey,
-                navigatorObservers: observers,
+                navigatorObservers: CurrentWidget.NavigatorObservers,
                 pageRouteBuilder: (settings, builder) => new CupertinoPageRoute<object?>(
                     builder: builder,
                     settings: settings),

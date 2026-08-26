@@ -23,6 +23,7 @@ internal static class SampleRoutes
     public const string Counter = "/counter";
     public const string BlocCounter = "/bloc-counter";
     public const string Navigator = "/navigator";
+    public const string Hero = "/hero";
     public const string NavigatorPages = "/navigator-pages";
     public const string Router = "/router";
     public const string NavigatorDetails = "/navigator/details";
@@ -417,6 +418,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(SampleRoutes.Counter, "Counter", "existing sample", () => new CounterScreen()),
         new(SampleRoutes.BlocCounter, "Bloc counter", "BlocProvider + BlocBuilder + BlocListener + BlocSelector", () => new BlocCounterDemoPage()),
         new(SampleRoutes.Navigator, "Navigator", "named routes + RouteData + stack APIs", () => new NavigatorDemoPage()),
+        new(
+            SampleRoutes.Hero,
+            "Hero",
+            "shared-element flight + shuttle/placeholder builders + HeroMode",
+            () => new HeroDemoPage()),
         new(
             SampleRoutes.NavigatorPages,
             "Navigator.Pages",

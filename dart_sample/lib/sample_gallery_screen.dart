@@ -110,6 +110,7 @@ import 'demos/material/navigation_surfaces_demo_page.dart';
 import 'demos/material/navigation_drawer_demo_page.dart';
 import 'demos/material/segmented_buttons_demo_page.dart';
 import 'demos/material/chips_demo_page.dart';
+import 'demos/general/hero_demo_page.dart';
 import 'demos/general/navigator_demo_page.dart';
 import 'demos/general/navigator_pages_demo_page.dart';
 import 'demos/general/router_demo_page.dart';
@@ -703,6 +704,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Navigator',
       subtitle: 'named routes + RouteData + stack APIs',
       builder: () => const NavigatorDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.hero,
+      title: 'Hero',
+      subtitle: 'shared-element flight + shuttle/placeholder builders + HeroMode',
+      builder: () => const HeroDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.navigatorPages,
