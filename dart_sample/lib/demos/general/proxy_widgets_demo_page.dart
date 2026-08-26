@@ -257,7 +257,47 @@ class _ProxyWidgetsDemoPageState extends State<ProxyWidgetsDemoPage> {
             ),
           ],
         ),
+        const Text(
+          'ColoredBox edge anti-aliasing',
+          style: TextStyle(fontSize: 14, color: Colors.black),
+        ),
+        Row(
+          spacing: 24,
+          children: <Widget>[
+            _buildColoredBoxEdgeProbe(label: 'smooth', isAntiAlias: true),
+            _buildColoredBoxEdgeProbe(label: 'crisp', isAntiAlias: false),
+          ],
+        ),
       ],
+    );
+  }
+
+  Widget _buildColoredBoxEdgeProbe({
+    required String label,
+    required bool isAntiAlias,
+  }) {
+    return SizedBox(
+      width: 88,
+      height: 88,
+      child: Center(
+        child: Transform.rotate(
+          angle: 0.12,
+          child: SizedBox(
+            width: 62,
+            height: 62,
+            child: ColoredBox(
+              color: const Color(0xFF6750A4),
+              isAntiAlias: isAntiAlias,
+              child: Center(
+                child: Text(
+                  label,
+                  style: const TextStyle(fontSize: 12, color: Colors.white),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

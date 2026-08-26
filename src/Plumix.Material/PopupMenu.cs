@@ -926,7 +926,7 @@ internal sealed class PopupMenuPanel<T> : StatelessWidget
             Widget item = _items[i];
             if (_initialValue is not null && _items[i].Represents(_initialValue))
             {
-                item = new ColoredBox(theme.HighlightColor, item);
+                item = new ColoredBox(theme.HighlightColor, child: item);
                 if (!selectedItemWrapped)
                 {
                     item = new PopupMenuEnsureVisible(item);

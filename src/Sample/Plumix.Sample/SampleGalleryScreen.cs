@@ -499,7 +499,7 @@ internal sealed class SampleGalleryScreen : StatelessWidget
         new(
             SampleRoutes.ProxyWidgets,
             "Proxy widgets",
-            "Opacity + fractional/layout transforms + custom clips",
+            "Opacity + transforms + clips + ColoredBox edge modes",
             () => new ProxyWidgetsDemoPage()),
         new(
             SampleRoutes.Align,

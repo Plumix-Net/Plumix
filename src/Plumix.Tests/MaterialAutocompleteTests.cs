@@ -405,7 +405,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
                     optionsBuilder: value => Options,
                     optionsViewBuilder: (context, onSelected, options) => new ColoredBox(
                         Theme.Of(context).CanvasColor,
-                        new Text(options.First())),
+                        child: new Text(options.First())),
                     fieldViewBuilder: (_, textController, node, onSubmitted) => new TextField(
                         controller: textController,
                         focusNode: node))));
@@ -621,7 +621,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
                             height: 64,
                             child: new GestureDetector(
                                 onTap: () => underlyingTaps += 1,
-                                child: new ColoredBox(Colors.Orange, new Text("underlying")))),
+                                child: new ColoredBox(Colors.Orange, child: new Text("underlying")))),
                         new Positioned(
                             left: 0,
                             top: 0,

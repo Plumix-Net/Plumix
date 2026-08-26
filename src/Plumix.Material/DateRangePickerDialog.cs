@@ -163,7 +163,7 @@ internal sealed class DateRangePickerDialogState : State
 
         Widget header = new ColoredBox(
             background ?? Colors.Transparent,
-            new SafeArea(
+            child: new SafeArea(
                 bottom: false,
                 child: new SizedBox(
                     height: 120,

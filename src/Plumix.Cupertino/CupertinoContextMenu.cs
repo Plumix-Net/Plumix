@@ -700,7 +700,7 @@ public sealed class CupertinoContextMenu : StatefulWidget
                         borderRadius: BorderRadius.Circular(13.0),
                         child: new ColoredBox(
                             CupertinoDynamicColor.Resolve(BackgroundColor, context),
-                            scrollView))));
+                            child: scrollView))));
         }
 
         public override void Dispose()

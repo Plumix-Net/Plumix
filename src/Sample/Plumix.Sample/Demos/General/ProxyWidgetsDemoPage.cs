@@ -143,7 +143,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                             child: new ClipOval(
                                 child: new ColoredBox(
                                     Color.Parse("#FF6750A4"),
-                                    new Center(new Text("Oval", fontSize: 13, color: Colors.White))))),
+                                    child: new Center(new Text("Oval", fontSize: 13, color: Colors.White))))),
                         new SizedBox(
                             width: 96,
                             height: 72,
@@ -151,7 +151,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                     clipper: new TrianglePathClipper(),
                                     child: new ColoredBox(
                                         Color.Parse("#FF386A20"),
-                                        new Center(new Text("Path", fontSize: 13, color: Colors.White))))),
+                                        child: new Center(new Text("Path", fontSize: 13, color: Colors.White))))),
                         new SizedBox(
                             width: 96,
                             height: 72,
@@ -164,7 +164,33 @@ internal sealed class ProxyWidgetsDemoPageState : State
                                 child: new Center(
                                     new Text("Physical", fontSize: 13, color: Colors.White)))),
                     ]),
+                new Text("ColoredBox edge anti-aliasing", fontSize: 14, color: Colors.Black),
+                new Row(
+                    spacing: 24,
+                    children:
+                    [
+                        BuildColoredBoxEdgeProbe("smooth", isAntiAlias: true),
+                        BuildColoredBoxEdgeProbe("crisp", isAntiAlias: false),
+                    ]),
             ]);
+    }
+
+    private static Widget BuildColoredBoxEdgeProbe(string label, bool isAntiAlias)
+    {
+        return new SizedBox(
+            width: 88,
+            height: 88,
+            child: new Center(
+                Plumix.Widgets.Transform.Rotate(
+                    angle: 0.12,
+                    child: new SizedBox(
+                        width: 62,
+                        height: 62,
+                        child: new ColoredBox(
+                            color: Color.Parse("#FF6750A4"),
+                            isAntiAlias: isAntiAlias,
+                            child: new Center(
+                                new Text(label, fontSize: 12, color: Colors.White)))))));
     }
 
     private Widget BuildButton(string label, Action onTap, double width, string colorHex)

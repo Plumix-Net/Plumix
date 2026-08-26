@@ -54,7 +54,7 @@ public sealed class CarouselDemoPage : StatelessWidget
         {
             items.Add(new ColoredBox(
                 colors[index],
-                new Center(new Text($"Item {index + 1}", fontSize: 18, color: Colors.White))));
+                child: new Center(new Text($"Item {index + 1}", fontSize: 18, color: Colors.White))));
         }
 
         return items;

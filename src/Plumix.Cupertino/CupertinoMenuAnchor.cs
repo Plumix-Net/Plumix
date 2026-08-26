@@ -845,7 +845,7 @@ public sealed class CupertinoMenuDivider : StatelessWidget, CupertinoMenuEntry
 
     public override Widget Build(BuildContext context) => new ColoredBox(
         Color.ResolveFrom(context),
-        new SizedBox(height: 8.0, width: double.PositiveInfinity));
+        child: new SizedBox(height: 8.0, width: double.PositiveInfinity));
 }
 
 internal sealed class CupertinoMenuImplicitDivider : StatelessWidget
@@ -863,7 +863,7 @@ internal sealed class CupertinoMenuImplicitDivider : StatelessWidget
         Color color = dark ? Color.FromArgb(64, 255, 255, 255) : Color.FromArgb(64, 0, 0, 0);
         return new ColoredBox(
             color,
-            new SizedBox(height: 1.0 / Math.Max(DevicePixelRatio, double.Epsilon)));
+            child: new SizedBox(height: 1.0 / Math.Max(DevicePixelRatio, double.Epsilon)));
     }
 }
 

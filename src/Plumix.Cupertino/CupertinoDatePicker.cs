@@ -1667,7 +1667,7 @@ internal sealed class CupertinoTimerPickerState : State
         {
             contents = new ColoredBox(
                 CupertinoDynamicColor.Resolve(Current.BackgroundColor, context),
-                contents);
+                child: contents);
         }
 
         contents = new Align(alignment: Current.Alignment, child: contents);

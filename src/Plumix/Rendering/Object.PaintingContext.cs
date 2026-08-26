@@ -60,12 +60,17 @@ public sealed class PaintingContext
         Rect rect,
         double radiusX = 0,
         double radiusY = 0,
-        BoxShadows boxShadows = default)
+        BoxShadows boxShadows = default,
+        bool isAntiAlias = true)
     {
         var pictureLayer = EnsurePictureLayer();
         pictureLayer.AddDrawCommand((drawingContext, sceneOffset) =>
         {
             var translatedRect = new Rect(rect.Position + sceneOffset, rect.Size);
+            using var renderOptions = drawingContext.PushRenderOptions(new RenderOptions
+            {
+                EdgeMode = isAntiAlias ? EdgeMode.Antialias : EdgeMode.Aliased,
+            });
             drawingContext.DrawRectangle(brush, pen, new RoundedRect(translatedRect, radiusX, radiusY), boxShadows);
         });
     }

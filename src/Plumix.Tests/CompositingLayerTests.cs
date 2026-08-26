@@ -353,7 +353,7 @@ public sealed class CompositingLayerTests
     public void RenderColoredBox_NoOpColorUpdate_DoesNotRepaintChild()
     {
         var leaf = new TestLeafRenderBox();
-        var coloredBox = new RenderColoredBox(Colors.CadetBlue, leaf);
+        var coloredBox = new RenderColoredBox(Colors.CadetBlue, child: leaf);
         var root = new RenderView
         {
             Child = coloredBox

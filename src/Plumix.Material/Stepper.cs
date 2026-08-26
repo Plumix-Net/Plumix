@@ -615,7 +615,7 @@ public sealed class Stepper : StatefulWidget
 
         private Widget BuildVerticalLine(bool visible, bool active) => new ColoredBox(
             ResolveConnectorColor(active),
-            new SizedBox(width: visible ? CurrentWidget.ConnectorThickness ?? 1 : 0, height: 16));
+            child: new SizedBox(width: visible ? CurrentWidget.ConnectorThickness ?? 1 : 0, height: 16));
 
         private Widget ClipContent(Widget content) => new ClipRect(
             clipBehavior: CurrentWidget.ClipBehavior,

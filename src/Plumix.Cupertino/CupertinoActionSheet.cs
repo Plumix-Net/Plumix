@@ -175,7 +175,7 @@ internal sealed class CupertinoActionSheetState : State
                 CupertinoDialogConstants.ActionSheetContentTextColor, context));
         return new ColoredBox(
             CupertinoDynamicColor.Resolve(CupertinoDialogConstants.ActionSheetBackgroundColor, context),
-            new CupertinoAlertContentSection(
+            child: new CupertinoAlertContentSection(
                 title: Current.Title,
                 message: Current.Message,
                 scrollController: EffectiveMessageScrollController,
@@ -537,7 +537,7 @@ internal sealed class ActionSheetButtonBackgroundState : State, ISlideTarget
                         ? CupertinoDialogConstants.ActionSheetPressedColor
                         : CupertinoDialogConstants.ActionSheetBackgroundColor,
                     context),
-                Current.Child);
+                child: Current.Child);
         }
         else
         {

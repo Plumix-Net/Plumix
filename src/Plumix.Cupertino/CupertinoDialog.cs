@@ -290,7 +290,7 @@ internal sealed class CupertinoAlertDialogState : State
         double effectiveTextScale = MediaQuery.TextScalerOf(context).Scale(14.0) / 14.0;
         return new ColoredBox(
             dialogColor,
-            new CupertinoAlertContentSection(
+            child: new CupertinoAlertContentSection(
                 title: Current.Title,
                 message: Current.Content,
                 scrollController: EffectiveScrollController,
@@ -510,7 +510,8 @@ public sealed class CupertinoPopupSurface : StatelessWidget
         if (IsSurfacePainted)
         {
             contents = new ColoredBox(
-                CupertinoDialogConstants.DialogColor.ResolveFrom(context), contents);
+                CupertinoDialogConstants.DialogColor.ResolveFrom(context),
+                child: contents);
         }
 
         if (filter is not null)
@@ -734,7 +735,7 @@ internal sealed class AlertDialogButtonBackgroundState : State, ISlideTarget
             : Current.IdleColor.ResolveFrom(context);
         return new MetaData(
             metaData: this,
-            child: new MergeSemantics(new ColoredBox(color, Current.Child)));
+            child: new MergeSemantics(new ColoredBox(color, child: Current.Child)));
     }
 }
 
@@ -901,7 +902,7 @@ internal sealed class CupertinoDialogDivider : StatelessWidget
                 new BoxConstraints(
                     MinWidth: CupertinoDialogConstants.DividerThickness,
                     MinHeight: CupertinoDialogConstants.DividerThickness),
-                new ColoredBox(Hidden ? HiddenColor : DividerColor, new SizedBox())));
+                new ColoredBox(Hidden ? HiddenColor : DividerColor, child: new SizedBox())));
     }
 }
 
@@ -937,8 +938,8 @@ internal sealed class OverscrollBackgroundState : State
             crossAxisAlignment: CrossAxisAlignment.Stretch,
             children:
             [
-                new ColoredBox(Current.Color, new SizedBox(height: _topOverscroll)),
-                new ColoredBox(Current.Color, new SizedBox(height: _bottomOverscroll)),
+                new ColoredBox(Current.Color, child: new SizedBox(height: _topOverscroll)),
+                new ColoredBox(Current.Color, child: new SizedBox(height: _bottomOverscroll)),
             ]);
         return new Stack(children:
         [

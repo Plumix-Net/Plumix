@@ -170,8 +170,8 @@ public abstract class RenderProxyBoxWithHitTestBehavior : RenderProxyBox
         if (!HasSize
             || position.X < 0
             || position.Y < 0
-            || position.X > Size.Width
-            || position.Y > Size.Height)
+            || position.X >= Size.Width
+            || position.Y >= Size.Height)
         {
             return false;
         }
@@ -1900,38 +1900,6 @@ public sealed class RenderFittedBox : RenderProxyBox
             UpdatePaintData();
             return _hasVisualOverflow;
         }
-    }
-}
-
-public sealed class RenderColoredBox : RenderProxyBox
-{
-    private Color _color;
-
-    public RenderColoredBox(Color color, RenderBox? child = null)
-    {
-        _color = color;
-        Child = child;
-    }
-
-    public Color Color
-    {
-        get => _color;
-        set
-        {
-            if (_color == value)
-            {
-                return;
-            }
-
-            _color = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public override void Paint(PaintingContext ctx, Point offset)
-    {
-        ctx.DrawRectangle(new SolidColorBrush(Color), null, new Rect(offset, Size));
-        base.Paint(ctx, offset);
     }
 }
 

@@ -511,7 +511,7 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
                 toolbarBuilder: (context, anchorAbove, anchorBelow, child) =>
                 {
                     builderCalls++;
-                    return new ColoredBox(Colors.Red, child);
+                    return new ColoredBox(Colors.Red, child: child);
                 }));
         harness.Pump(new Size(800.0, 600.0));
 

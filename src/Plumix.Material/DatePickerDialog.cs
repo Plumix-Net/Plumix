@@ -346,7 +346,7 @@ internal sealed class DatePickerDialogState : State
                 width: 152,
                 child: new ColoredBox(
                     background,
-                    new Column(
+                    child: new Column(
                         crossAxisAlignment: CrossAxisAlignment.Start,
                         children:
                         [
@@ -367,7 +367,7 @@ internal sealed class DatePickerDialogState : State
                 height: 120,
                 child: new ColoredBox(
                     background,
-                    new Padding(
+                    child: new Padding(
                         new Thickness(24, 0, 12, 12),
                         new Column(
                             crossAxisAlignment: CrossAxisAlignment.Start,

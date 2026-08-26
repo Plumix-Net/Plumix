@@ -100,7 +100,7 @@ public sealed class CupertinoTextSelectionToolbar : StatelessWidget
             shadowColor: CupertinoTheme.BrightnessOf(context) == PlatformBrightness.Light
                 ? Color.FromArgb(0x33, 0x00, 0x00, 0x00)
                 : null,
-            child: new ColoredBox(ToolbarBackgroundColor.ResolveFrom(context), child));
+            child: new ColoredBox(ToolbarBackgroundColor.ResolveFrom(context), child: child));
     }
 
     public override Widget Build(BuildContext context)

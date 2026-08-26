@@ -144,7 +144,7 @@ internal sealed class TabsDemoPageState : State
 
     private static Widget Page(string title, string subtitle, Color color) => new ColoredBox(
         color,
-        new Center(
+        child: new Center(
             child: new Column(
                 mainAxisSize: MainAxisSize.Min,
                 spacing: 8,

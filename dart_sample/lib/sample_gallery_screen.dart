@@ -836,7 +836,7 @@ class SampleGalleryScreen extends StatelessWidget {
     SampleRouteDefinition(
       routeName: SampleRoutes.proxyWidgets,
       title: 'Proxy widgets',
-      subtitle: 'Opacity + fractional/layout transforms + custom clips',
+      subtitle: 'Opacity + transforms + clips + ColoredBox edge modes',
       builder: () => const ProxyWidgetsDemoPage(),
     ),
     SampleRouteDefinition(

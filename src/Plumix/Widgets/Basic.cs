@@ -393,26 +393,6 @@ public sealed class Padding : SingleChildRenderObjectWidget
     }
 }
 
-public sealed class ColoredBox : SingleChildRenderObjectWidget
-{
-    public ColoredBox(Color color, Widget? child = null, Key? key = null) : base(child, key)
-    {
-        Color = color;
-    }
-
-    public Color Color { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderColoredBox(Color);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        ((RenderColoredBox)renderObject).Color = Color;
-    }
-}
-
 public sealed class DecoratedBox : SingleChildRenderObjectWidget
 {
     public DecoratedBox(
@@ -1109,7 +1089,7 @@ public sealed class Container : StatelessWidget
         }
         else if (Color.HasValue)
         {
-            current = new ColoredBox(Color.Value, current);
+            current = new ColoredBox(Color.Value, child: current);
         }
 
         if (ForegroundDecoration != null)

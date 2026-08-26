@@ -944,7 +944,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             color: Colors.Orange,
             child: new RenderColoredBox(
                 Colors.Green,
-                new RenderConstrainedBox(BoxConstraints.TightFor(width: 40, height: 24))),
+                child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 40, height: 24))),
             shape: BoxShape.Circle,
             clipBehavior: Clip.AntiAlias,
             elevation: 4,

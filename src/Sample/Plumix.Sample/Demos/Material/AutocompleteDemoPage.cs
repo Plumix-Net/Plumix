@@ -139,7 +139,7 @@ internal sealed class AutocompleteDemoPageState : State
                         Widget content = new Padding(new Thickness(16, 12), new Text(option));
                         if (index == highlightedIndex)
                         {
-                            content = new ColoredBox(theme.FocusColor, content);
+                            content = new ColoredBox(theme.FocusColor, child: content);
                         }
 
                         return (Widget)new InkWell(onTap: () => onSelected(option), child: content);
