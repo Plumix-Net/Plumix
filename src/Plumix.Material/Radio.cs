@@ -364,7 +364,10 @@ public sealed class Radio<T> : StatefulWidget
                 reactionColor: activeReactionColor,
                 inactiveReactionColor: inactiveReactionColor,
                 hoverColor: hoverColor,
-                focusColor: focusColor);
+                focusColor: focusColor,
+                downPosition: state.PressPosition,
+                isFocused: state.States.Contains(WidgetState.Focused),
+                isHovered: state.States.Contains(WidgetState.Hovered));
 
             MaterialTapTargetSize tapTargetSize = CurrentWidget.MaterialTapTargetSize
                                                   ?? radioTheme.MaterialTapTargetSize
@@ -660,14 +663,11 @@ internal sealed class RadioPainter : ToggleablePainter
 {
     private const double OuterRadius = 8.0;
 
-    private Color _activeColor;
-    private Color _inactiveColor;
     private Color _activeBackgroundColor;
     private Color _inactiveBackgroundColor;
     private BorderSide _activeSide;
     private BorderSide _inactiveSide;
     private double _innerRadius;
-    private Color _inactiveReactionColor;
 
     public RadioPainter(
         Animation<double> position,
@@ -677,10 +677,6 @@ internal sealed class RadioPainter : ToggleablePainter
         : base(position, reaction, reactionHoverFade, reactionFocusFade)
     {
     }
-
-    internal Color ActiveColor => _activeColor;
-
-    internal Color InactiveColor => _inactiveColor;
 
     internal Color ActiveBackgroundColor => _activeBackgroundColor;
 
@@ -694,14 +690,6 @@ internal sealed class RadioPainter : ToggleablePainter
 
     internal Color ActiveReactionColor => ReactionColor;
 
-    internal Color InactiveReactionColor => _inactiveReactionColor;
-
-    internal Color ResolvedHoverColor => HoverColor;
-
-    internal Color ResolvedFocusColor => FocusColor;
-
-    internal double ResolvedSplashRadius => SplashRadius;
-
     internal void Configure(
         Color activeColor,
         Color inactiveColor,
@@ -714,10 +702,13 @@ internal sealed class RadioPainter : ToggleablePainter
         Color reactionColor,
         Color inactiveReactionColor,
         Color hoverColor,
-        Color focusColor)
+        Color focusColor,
+        Point? downPosition,
+        bool isFocused,
+        bool isHovered)
     {
-        _activeColor = activeColor;
-        _inactiveColor = inactiveColor;
+        ActiveColor = activeColor;
+        InactiveColor = inactiveColor;
         _activeBackgroundColor = activeBackgroundColor;
         _inactiveBackgroundColor = inactiveBackgroundColor;
         _activeSide = activeSide;
@@ -725,16 +716,19 @@ internal sealed class RadioPainter : ToggleablePainter
         _innerRadius = innerRadius;
         SplashRadius = splashRadius;
         ReactionColor = reactionColor;
-        _inactiveReactionColor = inactiveReactionColor;
+        InactiveReactionColor = inactiveReactionColor;
         HoverColor = hoverColor;
         FocusColor = focusColor;
+        DownPosition = downPosition;
+        IsFocused = isFocused;
+        IsHovered = isHovered;
         NotifyPainterChanged();
     }
 
     public override void Paint(PaintingContext context, Size size)
     {
         Point origin = new(size.Width / 2.0, size.Height / 2.0);
-        PaintRadialReaction(context, origin, _inactiveReactionColor);
+        PaintRadialReaction(context, origin);
 
         Color backgroundColor = LerpColor(
             _inactiveBackgroundColor,
@@ -764,7 +758,7 @@ internal sealed class RadioPainter : ToggleablePainter
             return;
         }
 
-        Color innerColor = LerpColor(_inactiveColor, _activeColor, Position.Value);
+        Color innerColor = LerpColor(InactiveColor, ActiveColor, Position.Value);
         context.DrawCircle(
             new SolidColorBrush(innerColor),
             null,

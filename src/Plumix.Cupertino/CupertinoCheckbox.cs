@@ -339,15 +339,9 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
     internal static readonly IReadOnlyList<double> KDarkGradientOpacities = [0.14, 0.29];
     internal static readonly IReadOnlyList<double> KDisabledDarkGradientOpacities = [0.08, 0.14];
 
-    private Point? _downPosition;
-    private bool _isFocused;
-    private bool _isHovered;
-    private Color _activeColor;
-    private Color _inactiveColor;
     private Color _checkColor;
     private bool? _value;
     private bool? _previousValue;
-    private bool _isActive;
     private OutlinedBorder _shape = new RoundedRectangleBorder(
         borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0));
     private BorderSide _side;
@@ -362,23 +356,11 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
     {
     }
 
-    internal Point? DownPosition => _downPosition;
-
-    internal bool Focused => _isFocused;
-
-    internal bool Hovered => _isHovered;
-
-    internal Color ActiveColor => _activeColor;
-
-    internal Color InactiveColor => _inactiveColor;
-
     internal Color CheckColor => _checkColor;
 
     internal bool? Value => _value;
 
     internal bool? PreviousValue => _previousValue;
-
-    internal bool IsActive => _isActive;
 
     internal OutlinedBorder Shape => _shape;
 
@@ -404,15 +386,15 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         PlatformBrightness? brightness)
     {
         FocusColor = focusColor;
-        _downPosition = downPosition;
-        _isFocused = isFocused;
-        _isHovered = isHovered;
-        _activeColor = activeColor;
-        _inactiveColor = inactiveColor;
+        DownPosition = downPosition;
+        IsFocused = isFocused;
+        IsHovered = isHovered;
+        ActiveColor = activeColor;
+        InactiveColor = inactiveColor;
         _checkColor = checkColor;
         _value = value;
         _previousValue = previousValue;
-        _isActive = isActive;
+        IsActive = isActive;
         _shape = shape;
         _side = side;
         _brightness = brightness;
@@ -427,7 +409,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
     // The checkbox's border color if value == false, or its fill color when value == true or null.
     private Color ColorAt(bool value)
     {
-        return value && _isActive ? _activeColor : _inactiveColor;
+        return value && IsActive ? ActiveColor : InactiveColor;
     }
 
     // White stroke used to paint the check and dash.
@@ -455,17 +437,17 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         bool value)
     {
         // Draw a gradient in dark mode except when the checkbox is enabled and checked.
-        if (_brightness == PlatformBrightness.Dark && !(_isActive && value))
+        if (_brightness == PlatformBrightness.Dark && !(IsActive && value))
         {
             DrawFillGradient(
                 context,
                 outer,
                 WithOpacity(
                     paintColor,
-                    _isActive ? KDarkGradientOpacities[0] : KDisabledDarkGradientOpacities[0]),
+                    IsActive ? KDarkGradientOpacities[0] : KDisabledDarkGradientOpacities[0]),
                 WithOpacity(
                     paintColor,
-                    _isActive ? KDarkGradientOpacities[1] : KDisabledDarkGradientOpacities[1]));
+                    IsActive ? KDarkGradientOpacities[1] : KDisabledDarkGradientOpacities[1]));
         }
         else if (strokeWidth is null)
         {
@@ -563,7 +545,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         }
 
         // The checkbox's opacity changes when pressed.
-        if (_downPosition is not null)
+        if (DownPosition is not null)
         {
             Color pressedColor = _brightness == PlatformBrightness.Light
                 ? WithOpacity(CupertinoColors.Black, KPressedOverlayOpacity)
@@ -571,7 +553,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
             DrawShape(context, outer, new SolidColorBrush(pressedColor), pen: null);
         }
 
-        if (_isFocused)
+        if (IsFocused)
         {
             Rect focusOuter = outer.Inflate(1);
             DrawBox(context, focusOuter, FocusColor, strokeWidth: 3.5, _side, _value ?? true);

@@ -77,6 +77,7 @@ import 'demos/general/drag_target_demo_page.dart';
 import 'demos/material/drawer_demo_page.dart';
 import 'demos/material/drawer_headers_demo_page.dart';
 import 'demos/material/divider_demo_page.dart';
+import 'demos/material/material_switch_demo_page.dart';
 import 'demos/general/autofill_group_demo_page.dart';
 import 'demos/general/editable_text_demo_page.dart';
 import 'demos/general/fitted_box_demo_page.dart';
@@ -205,6 +206,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Divider',
       subtitle: 'horizontal/vertical divider + theme/widget precedence probes',
       builder: () => const DividerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.materialSwitch,
+      title: 'Switch',
+      subtitle: 'M2/M3 tokens + thumb icons + track outline + Switch.adaptive',
+      builder: () => const MaterialSwitchDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.badgeTooltip,

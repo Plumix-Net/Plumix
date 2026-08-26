@@ -43,6 +43,7 @@ class SampleRoutes {
   static const String scaffoldSlots = '/scaffold-slots';
   static const String drawerHeaders = '/drawer-headers';
   static const String divider = '/divider';
+  static const String materialSwitch = '/material-switch';
   static const String badgeTooltip = '/badge-tooltip';
   static const String magnifier = '/magnifier';
   static const String selectionHandles = '/selection-handles';

@@ -220,7 +220,7 @@ public sealed class CupertinoSwitchTests
             harness.Pump(ViewSize);
             CupertinoSwitchPainter painter = Painter(harness);
 
-            Assert.True(painter.Focused);
+            Assert.True(painter.IsFocused);
             Assert.Equal(focus, painter.EffectiveFocusColor);
             Assert.Contains(true, changes);
         }

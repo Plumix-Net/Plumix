@@ -30,6 +30,11 @@ public static class AnimationStatusExtensions
     {
         return status == AnimationStatus.Completed;
     }
+
+    public static bool IsDismissed(this AnimationStatus status)
+    {
+        return status == AnimationStatus.Dismissed;
+    }
 }
 
 public abstract class Animation<T> : IValueListenable<T>

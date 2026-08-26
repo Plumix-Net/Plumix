@@ -393,7 +393,7 @@ public sealed class CupertinoRadioTests
             harness.Pump(ViewSize);
 
             CupertinoRadioPainter painter = Painter(harness);
-            Assert.True(painter.Focused);
+            Assert.True(painter.IsFocused);
             // The focus highlight also drops the border, exactly like the selected state.
             Assert.Equal(CupertinoColors.Transparent, painter.BorderColor);
             Color expected = HSLColor

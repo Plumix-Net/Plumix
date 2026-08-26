@@ -470,7 +470,6 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     private ImageErrorListener? _cachedThumbImageError;
     private bool _isPainting;
     private TextDirection _textDirection;
-    private bool _focused;
     private Color _activeTrackColor;
     private Color _inactiveTrackColor;
     private Color _activeThumbColor;
@@ -512,8 +511,6 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
     internal Color InactiveTrackColor => _inactiveTrackColor;
 
     internal Color ActiveThumbColor => _activeThumbColor;
-
-    internal bool Focused => _focused;
 
     internal Color EffectiveFocusColor => FocusColor;
 
@@ -561,7 +558,7 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         ImageConfiguration imageConfiguration)
     {
         _textDirection = textDirection;
-        _focused = focused;
+        IsFocused = focused;
         _activeTrackColor = activeTrackColor;
         _inactiveTrackColor = inactiveTrackColor;
         _activeThumbColor = activeThumbColor;
@@ -630,7 +627,7 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
                 null,
                 new Pen(new SolidColorBrush(outlineColor.Value), outlineWidth ?? 2.0));
         }
-        if (_focused)
+        if (IsFocused)
         {
             context.DrawRRect(
                 RRect.FromRectAndRadius(trackRect.Inflate(1.75), TrackRadius + 1.75),

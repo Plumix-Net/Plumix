@@ -329,7 +329,10 @@ public sealed class Checkbox : StatefulWidget
                 reactionColor: activeReactionColor,
                 inactiveReactionColor: inactiveReactionColor,
                 hoverColor: hoverColor,
-                focusColor: focusColor);
+                focusColor: focusColor,
+                downPosition: DownPosition,
+                isFocused: IsFocused,
+                isHovered: IsHovered);
 
             MaterialTapTargetSize tapTargetSize = CurrentWidget.MaterialTapTargetSize
                                                   ?? checkboxTheme.MaterialTapTargetSize
@@ -722,13 +725,10 @@ internal sealed class CheckboxPainter : ToggleablePainter
 
     private bool? _value;
     private bool? _previousValue;
-    private Color _activeColor;
-    private Color _inactiveColor;
     private Color _checkColor;
     private BorderSide? _activeSide;
     private BorderSide? _inactiveSide;
     private ShapeBorder _shape = new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(2.0));
-    private Color _inactiveReactionColor;
 
     public CheckboxPainter(
         Animation<double> position,
@@ -743,10 +743,6 @@ internal sealed class CheckboxPainter : ToggleablePainter
 
     internal bool? PreviousValue => _previousValue;
 
-    internal Color ActiveColor => _activeColor;
-
-    internal Color InactiveColor => _inactiveColor;
-
     internal Color CheckColor => _checkColor;
 
     internal BorderSide? ActiveSide => _activeSide;
@@ -756,14 +752,6 @@ internal sealed class CheckboxPainter : ToggleablePainter
     internal ShapeBorder Shape => _shape;
 
     internal Color ActiveReactionColor => ReactionColor;
-
-    internal Color InactiveReactionColor => _inactiveReactionColor;
-
-    internal Color ResolvedHoverColor => HoverColor;
-
-    internal Color ResolvedFocusColor => FocusColor;
-
-    internal double ResolvedSplashRadius => SplashRadius;
 
     internal void Configure(
         bool? value,
@@ -778,28 +766,34 @@ internal sealed class CheckboxPainter : ToggleablePainter
         Color reactionColor,
         Color inactiveReactionColor,
         Color hoverColor,
-        Color focusColor)
+        Color focusColor,
+        Point? downPosition,
+        bool isFocused,
+        bool isHovered)
     {
         _value = value;
         _previousValue = previousValue;
-        _activeColor = activeColor;
-        _inactiveColor = inactiveColor;
+        ActiveColor = activeColor;
+        InactiveColor = inactiveColor;
         _checkColor = checkColor;
         _activeSide = activeSide;
         _inactiveSide = inactiveSide;
         _shape = shape;
         SplashRadius = splashRadius;
         ReactionColor = reactionColor;
-        _inactiveReactionColor = inactiveReactionColor;
+        InactiveReactionColor = inactiveReactionColor;
         HoverColor = hoverColor;
         FocusColor = focusColor;
+        DownPosition = downPosition;
+        IsFocused = isFocused;
+        IsHovered = isHovered;
         NotifyPainterChanged();
     }
 
     public override void Paint(PaintingContext context, Size size)
     {
         var center = new Point(size.Width / 2.0, size.Height / 2.0);
-        PaintRadialReaction(context, center, _inactiveReactionColor);
+        PaintRadialReaction(context, center);
 
         var origin = new Point(
             center.X - (EdgeSize / 2.0),
@@ -902,8 +896,8 @@ internal sealed class CheckboxPainter : ToggleablePainter
     private Color ColorAt(double t)
     {
         return t >= 0.25
-            ? _activeColor
-            : LerpColor(_inactiveColor, _activeColor, t * 4.0);
+            ? ActiveColor
+            : LerpColor(InactiveColor, ActiveColor, t * 4.0);
     }
 
     private void DrawCheck(PaintingContext context, Point origin, double t)

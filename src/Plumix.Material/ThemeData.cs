@@ -248,6 +248,8 @@ public sealed record ThemeData
     private static readonly Color LightOnErrorColor = Colors.White;
     private static readonly IReadOnlyDictionary<Type, ThemeExtension> EmptyExtensions =
         new ThemeExtensionMap([]);
+    private static readonly IReadOnlyDictionary<Type, Adaptation> EmptyAdaptations =
+        new Dictionary<Type, Adaptation>();
     private static readonly object LocalizedThemeCacheLock = new();
     private static readonly List<LocalizedThemeEntry> LocalizedThemeCache = [];
 
@@ -412,7 +414,8 @@ public sealed record ThemeData
         PageTransitionsTheme? pageTransitionsTheme = null,
         bool? applyElevationOverlayColor = null,
         NoDefaultCupertinoThemeData? cupertinoOverrideTheme = null,
-        IEnumerable<ThemeExtension>? extensions = null)
+        IEnumerable<ThemeExtension>? extensions = null,
+        IEnumerable<Adaptation>? adaptations = null)
     {
         Platform = platform ?? ResolveDefaultPlatform();
         if (brightness.HasValue
@@ -634,6 +637,7 @@ public sealed record ThemeData
         _pageTransitionsTheme = pageTransitionsTheme;
         CupertinoOverrideTheme = cupertinoOverrideTheme?.NoDefault();
         Extensions = CreateExtensionMap(extensions);
+        Adaptations = CreateAdaptationMap(adaptations);
         VisualDensity = visualDensity ?? VisualDensity.Standard;
     }
 
@@ -1058,6 +1062,16 @@ public sealed record ThemeData
             : null;
     }
 
+    public IReadOnlyDictionary<Type, Adaptation> Adaptations { get; init; }
+
+    /// Dart's `ThemeData.getAdaptation<T>()`.
+    public Adaptation<T>? GetAdaptation<T>()
+    {
+        return Adaptations.TryGetValue(typeof(T), out Adaptation? adaptation)
+            ? (Adaptation<T>)adaptation
+            : null;
+    }
+
     private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
         (byte)Math.Round(color.A * Math.Clamp(opacity, 0, 1)),
         color.R,
@@ -1276,6 +1290,7 @@ public sealed record ThemeData
             ButtonBarTheme = ButtonBarThemeData.Lerp(a.ButtonBarTheme, b.ButtonBarTheme, t)
                 ?? new ButtonBarThemeData(),
             Extensions = LerpExtensions(a.Extensions, b.Extensions, t),
+            Adaptations = t < 0.5 ? a.Adaptations : b.Adaptations,
         };
     }
 
@@ -1345,6 +1360,29 @@ public sealed record ThemeData
         }
 
         return TargetPlatform.Android;
+    }
+
+    private static IReadOnlyDictionary<Type, Adaptation> CreateAdaptationMap(
+        IEnumerable<Adaptation>? adaptations)
+    {
+        if (adaptations is null)
+        {
+            return EmptyAdaptations;
+        }
+
+        var result = new Dictionary<Type, Adaptation>();
+        foreach (Adaptation adaptation in adaptations)
+        {
+            ArgumentNullException.ThrowIfNull(adaptation);
+            if (!result.TryAdd(adaptation.Type, adaptation))
+            {
+                throw new ArgumentException(
+                    $"Only one Adaptation with type {adaptation.Type.Name} may be provided.",
+                    nameof(adaptations));
+            }
+        }
+
+        return result.Count == 0 ? EmptyAdaptations : result;
     }
 
     private static IReadOnlyDictionary<Type, ThemeExtension> CreateExtensionMap(

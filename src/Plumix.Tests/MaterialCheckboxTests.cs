@@ -746,7 +746,7 @@ public sealed class MaterialCheckboxTests
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
-        Assert.Equal(7, painter.ResolvedSplashRadius);
+        Assert.Equal(7, painter.SplashRadius);
     }
 
     [Fact]
@@ -974,8 +974,8 @@ public sealed class MaterialCheckboxTests
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
         Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.10), painter.ActiveReactionColor);
         Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.Primary, 0.10), painter.InactiveReactionColor);
-        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.Primary, 0.08), painter.ResolvedHoverColor);
-        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.Primary, 0.10), painter.ResolvedFocusColor);
+        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.Primary, 0.08), painter.HoverColor);
+        Assert.Equal(ApplyOpacity(ThemeData.Light.ColorScheme.Primary, 0.10), painter.FocusColor);
     }
 
     [Fact]

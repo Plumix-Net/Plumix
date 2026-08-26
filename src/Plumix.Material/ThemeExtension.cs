@@ -20,3 +20,19 @@ public abstract class ThemeExtension<T> : ThemeExtension where T : ThemeExtensio
         return Lerp(other as T, t);
     }
 }
+
+/// Dart's `Adaptation<T>`: a per-platform override hook for a component theme, looked up by
+/// <see cref="ThemeData.GetAdaptation{T}"/> and applied by the `.adaptive` constructors.
+public abstract class Adaptation
+{
+    public abstract Type Type { get; }
+}
+
+public abstract class Adaptation<T> : Adaptation
+{
+    public sealed override Type Type => typeof(T);
+
+    /// Returns the theme data to use on <paramref name="theme"/>'s platform. The default
+    /// implementation returns <paramref name="defaultValue"/> unchanged.
+    public abstract T Adapt(ThemeData theme, T defaultValue);
+}

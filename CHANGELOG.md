@@ -8,6 +8,14 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: strict `Switch` port — stateless `Switch` over `_MaterialSwitch` + `_SwitchPainter` (`switch.dart`).
+- Breaking: `Switch.adaptive` no longer builds a `CupertinoSwitch`; it keeps the Material stack with Cupertino config.
+- Breaking: M2/M3/Cupertino `_SwitchConfig` + defaults replace the C#-only `SwitchConfig` record and colour helpers.
+- Removed `MaterialButtonCore`; the `Switch` was its last consumer (`toggleable.dart` drives the switch now).
+- Added `Adaptation<T>` and `ThemeData.Adaptations`/`GetAdaptation<T>()` (`theme_data.dart`).
+- Breaking: `ToggleablePainter` owns Dart's colour/state properties; the five painters stop redeclaring them.
+- Breaking: `ToggleablePainter.PaintRadialReaction` follows Dart: dismissed-animation early-out, flag-driven radius.
+- Added `AnimationStatus.IsDismissed()` (`animation.dart`).
 - Breaking: `RawMaterialButton` builds Dart's `Semantics`/`_InputPadding`/`Material`/`InkWell` stack (`button.dart`).
 - Breaking: `RawMaterialButton.shape` is a `ShapeBorder`, defaulting to `RoundedRectangleBorder()`, not a radius.
 - Added `MaterialStateMixin` as an abstract `State` base, since C# has no mixins (`material_state_mixin.dart`).

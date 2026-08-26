@@ -52,6 +52,7 @@ internal static class SampleRoutes
     public const string ScaffoldSlots = "/scaffold-slots";
     public const string DrawerHeaders = "/drawer-headers";
     public const string Divider = "/divider";
+    public const string MaterialSwitch = "/material-switch";
     public const string BadgeTooltip = "/badge-tooltip";
     public const string Magnifier = "/magnifier";
     public const string SelectionHandles = "/selection-handles";
@@ -197,6 +198,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new ScaffoldSlotsDemoPage()),
         new(SampleRoutes.DrawerHeaders, "Drawer headers", "DrawerHeader + UserAccountsDrawerHeader", () => new DrawerHeadersDemoPage()),
         new(SampleRoutes.Divider, "Divider", "horizontal/vertical divider + theme/widget precedence probes", () => new DividerDemoPage()),
+        new(
+            SampleRoutes.MaterialSwitch,
+            "Switch",
+            "M2/M3 tokens + thumb icons + track outline + Switch.adaptive",
+            () => new MaterialSwitchDemoPage()),
         new(SampleRoutes.BadgeTooltip, "Badge + Tooltip", "count/small badges + hover/long-press tooltip theming", () => new BadgeTooltipDemoPage()),
         new(
             SampleRoutes.Magnifier,

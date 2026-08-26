@@ -336,7 +336,7 @@ public sealed class CupertinoCheckboxTests
         harness.Pump(ViewSize);
 
         CupertinoCheckboxPainter painter = Painter(harness);
-        Assert.True(painter.Hovered);
+        Assert.True(painter.IsHovered);
         Assert.Equal(hoveredFill, painter.ActiveColor);
     }
 
@@ -407,7 +407,7 @@ public sealed class CupertinoCheckboxTests
             harness.Pump(ViewSize);
 
             CupertinoCheckboxPainter painter = Painter(harness);
-            Assert.True(painter.Focused);
+            Assert.True(painter.IsFocused);
             Color expected = HSLColor
                 .FromColor(CupertinoCheckboxPainter.WithOpacity(
                     Color.FromUInt32(0xFF007AFF),

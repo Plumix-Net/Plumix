@@ -381,6 +381,17 @@ public abstract class ToggleableState : State
 public abstract class ToggleablePainter : CustomPainter
 {
     private readonly MergedListenable _mergedRepaint;
+    private Color _activeColor;
+    private Color _inactiveColor;
+    private Color _inactiveReactionColor;
+    private Color _reactionColor;
+    private Color _hoverColor;
+    private Color _focusColor;
+    private double _splashRadius;
+    private Point? _downPosition;
+    private bool _isFocused;
+    private bool _isHovered;
+    private bool _isActive;
 
     protected ToggleablePainter(
         Animation<double> position,
@@ -414,21 +425,79 @@ public abstract class ToggleablePainter : CustomPainter
         ReactionFocusFade = reactionFocusFade;
     }
 
-    protected Animation<double> Position { get; }
+    public Animation<double> Position { get; }
 
-    protected Animation<double> Reaction { get; }
+    public Animation<double> Reaction { get; }
 
-    protected Animation<double> ReactionHoverFade { get; }
+    public Animation<double> ReactionHoverFade { get; }
 
-    protected Animation<double> ReactionFocusFade { get; }
+    public Animation<double> ReactionFocusFade { get; }
 
-    protected Color ReactionColor { get; set; }
+    public Color ActiveColor
+    {
+        get => _activeColor;
+        set => SetField(ref _activeColor, value);
+    }
 
-    protected Color HoverColor { get; set; }
+    public Color InactiveColor
+    {
+        get => _inactiveColor;
+        set => SetField(ref _inactiveColor, value);
+    }
 
-    protected Color FocusColor { get; set; }
+    public Color InactiveReactionColor
+    {
+        get => _inactiveReactionColor;
+        set => SetField(ref _inactiveReactionColor, value);
+    }
 
-    protected double SplashRadius { get; set; }
+    public Color ReactionColor
+    {
+        get => _reactionColor;
+        set => SetField(ref _reactionColor, value);
+    }
+
+    public Color HoverColor
+    {
+        get => _hoverColor;
+        set => SetField(ref _hoverColor, value);
+    }
+
+    public Color FocusColor
+    {
+        get => _focusColor;
+        set => SetField(ref _focusColor, value);
+    }
+
+    public double SplashRadius
+    {
+        get => _splashRadius;
+        set => SetField(ref _splashRadius, value);
+    }
+
+    public Point? DownPosition
+    {
+        get => _downPosition;
+        set => SetField(ref _downPosition, value);
+    }
+
+    public bool IsFocused
+    {
+        get => _isFocused;
+        set => SetField(ref _isFocused, value);
+    }
+
+    public bool IsHovered
+    {
+        get => _isHovered;
+        set => SetField(ref _isHovered, value);
+    }
+
+    public bool IsActive
+    {
+        get => _isActive;
+        set => SetField(ref _isActive, value);
+    }
 
     protected void NotifyPainterChanged()
     {
@@ -438,23 +507,42 @@ public abstract class ToggleablePainter : CustomPainter
     protected void PaintRadialReaction(
         PaintingContext context,
         Point origin,
-        Color? inactiveReactionColor = null)
+        Point offset = default)
     {
-        Color color = LerpColor(
-            inactiveReactionColor ?? Colors.Transparent,
-            ReactionColor,
-            Position.Value);
-        color = LerpColor(color, HoverColor, ReactionHoverFade.Value);
-        color = LerpColor(color, FocusColor, ReactionFocusFade.Value);
-        double radius = ReactionHoverFade.Value > 0.0 || ReactionFocusFade.Value > 0.0
-            ? SplashRadius
-            : SplashRadius * Reaction.Value;
-        if (radius <= 0.0 || color.A == 0)
+        if (Reaction.Status.IsDismissed()
+            && ReactionFocusFade.Status.IsDismissed()
+            && ReactionHoverFade.Status.IsDismissed())
         {
             return;
         }
 
-        context.DrawCircle(new SolidColorBrush(color), null, origin, radius);
+        Color color = LerpColor(InactiveReactionColor, ReactionColor, Position.Value);
+        color = LerpColor(color, HoverColor, ReactionHoverFade.Value);
+        color = LerpColor(color, FocusColor, ReactionFocusFade.Value);
+        double reactionRadius = IsFocused || IsHovered
+            ? SplashRadius
+            : SplashRadius * Reaction.Value;
+        if (reactionRadius <= 0.0)
+        {
+            return;
+        }
+
+        context.DrawCircle(
+            new SolidColorBrush(color),
+            null,
+            new Point(origin.X + offset.X, origin.Y + offset.Y),
+            reactionRadius);
+    }
+
+    private void SetField<T>(ref T field, T value)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+        {
+            return;
+        }
+
+        field = value;
+        NotifyPainterChanged();
     }
 
     protected static Color LerpColor(Color from, Color to, double t)

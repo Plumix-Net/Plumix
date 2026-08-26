@@ -395,11 +395,6 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
     internal static readonly IReadOnlyList<double> KDarkGradientOpacities = [0.14, 0.29];
     internal static readonly IReadOnlyList<double> KDisabledDarkGradientOpacities = [0.08, 0.14];
 
-    private Point? _downPosition;
-    private bool _isFocused;
-    private Color _activeColor;
-    private Color _inactiveColor;
-    private bool _isActive;
     private bool? _value;
     private Color _fillColor;
     private bool _checkmarkStyle;
@@ -414,16 +409,6 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         : base(position, reaction, reactionHoverFade, reactionFocusFade)
     {
     }
-
-    internal Point? DownPosition => _downPosition;
-
-    internal bool Focused => _isFocused;
-
-    internal Color ActiveColor => _activeColor;
-
-    internal Color InactiveColor => _inactiveColor;
-
-    internal bool IsActive => _isActive;
 
     internal bool? Value => _value;
 
@@ -451,14 +436,14 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         PlatformBrightness? brightness)
     {
         FocusColor = focusColor;
-        _downPosition = downPosition;
-        _isFocused = isFocused;
-        _activeColor = activeColor;
-        _inactiveColor = inactiveColor;
+        DownPosition = downPosition;
+        IsFocused = isFocused;
+        ActiveColor = activeColor;
+        InactiveColor = inactiveColor;
         _fillColor = fillColor;
         _value = value;
         _checkmarkStyle = checkmarkStyle;
-        _isActive = isActive;
+        IsActive = isActive;
         _borderColor = borderColor;
         _brightness = brightness;
         NotifyPainterChanged();
@@ -504,7 +489,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
             {
                 var path = new Plumix.UI.Path();
                 var checkPen = new Pen(
-                    new SolidColorBrush(_activeColor),
+                    new SolidColorBrush(ActiveColor),
                     KCheckmarkStrokeWidth,
                     lineCap: PenLineCap.Round);
                 double width = KSize.Width;
@@ -522,9 +507,9 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         }
         else if (_value ?? false)
         {
-            Color outerColor = _activeColor;
+            Color outerColor = ActiveColor;
             // Draw a gradient in dark mode if the radio is disabled.
-            if (_brightness == PlatformBrightness.Dark && !_isActive)
+            if (_brightness == PlatformBrightness.Dark && !IsActive)
             {
                 DrawFillGradient(
                     context,
@@ -532,30 +517,30 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
                     KOuterRadius,
                     WithOpacity(
                         outerColor,
-                        _isActive ? KDarkGradientOpacities[0] : KDisabledDarkGradientOpacities[0]),
+                        IsActive ? KDarkGradientOpacities[0] : KDisabledDarkGradientOpacities[0]),
                     WithOpacity(
                         outerColor,
-                        _isActive ? KDarkGradientOpacities[1] : KDisabledDarkGradientOpacities[1]));
+                        IsActive ? KDarkGradientOpacities[1] : KDisabledDarkGradientOpacities[1]));
             }
             else
             {
                 context.DrawCircle(new SolidColorBrush(outerColor), pen: null, center, KOuterRadius);
             }
             // The outer circle's opacity changes when the radio is pressed.
-            if (_downPosition is not null)
+            if (DownPosition is not null)
             {
                 DrawPressedOverlay(context, center, KOuterRadius);
             }
             context.DrawCircle(new SolidColorBrush(_fillColor), pen: null, center, KInnerRadius);
             // Draw an outer border if the radio is disabled and selected.
-            if (!_isActive)
+            if (!IsActive)
             {
                 DrawOuterBorder(context, center);
             }
         }
         else
         {
-            Color paintColor = _isActive ? _inactiveColor : KDisabledOuterColor;
+            Color paintColor = IsActive ? InactiveColor : KDisabledOuterColor;
             if (_brightness == PlatformBrightness.Dark)
             {
                 DrawFillGradient(
@@ -564,24 +549,24 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
                     KOuterRadius,
                     WithOpacity(
                         paintColor,
-                        _isActive ? KDarkGradientOpacities[0] : KDisabledDarkGradientOpacities[0]),
+                        IsActive ? KDarkGradientOpacities[0] : KDisabledDarkGradientOpacities[0]),
                     WithOpacity(
                         paintColor,
-                        _isActive ? KDarkGradientOpacities[1] : KDisabledDarkGradientOpacities[1]));
+                        IsActive ? KDarkGradientOpacities[1] : KDisabledDarkGradientOpacities[1]));
             }
             else
             {
                 context.DrawCircle(new SolidColorBrush(paintColor), pen: null, center, KOuterRadius);
             }
             // The entire circle's opacity changes when the radio is pressed.
-            if (_downPosition is not null)
+            if (DownPosition is not null)
             {
                 DrawPressedOverlay(context, center, KOuterRadius);
             }
             DrawOuterBorder(context, center);
         }
 
-        if (_isFocused)
+        if (IsFocused)
         {
             var focusPen = new Pen(new SolidColorBrush(FocusColor), KFocusOutlineStrokeWidth);
             context.DrawOval(

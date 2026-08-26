@@ -423,7 +423,7 @@ public sealed class MaterialInkResponseTests : IDisposable
     }
 
     [Fact]
-    public void MaterialButtonCore_UsesButtonStyleSplashFactory()
+    public void ButtonStyleButton_UsesButtonStyleSplashFactory()
     {
         ButtonStyle style = TextButton.StyleFrom(
             foregroundColor: Colors.Blue,
