@@ -108,7 +108,7 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
         harness.Pump(viewport);
 
         var translation = Assert.Single(FindDescendants<RenderFractionalTranslation>(harness.RenderView));
-        Assert.Equal(0.57, translation.Translation.X, precision: 6);
+        Assert.Equal(0.75, translation.Translation.X, precision: 6);
         Assert.Equal(0.0, translation.Translation.Y);
         Assert.Contains(updates, details =>
             details.Direction == DismissDirection.StartToEnd
@@ -301,7 +301,7 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
                 PointerButtons.None,
                 start.AddMilliseconds(100)));
 
-            Assert.Equal(new Point(28, 10), startPosition);
+            Assert.Equal(new Point(10, 10), startPosition);
             Assert.NotNull(velocity);
 
             // considerFling projects onto the recognizer's axis: the cross-axis component of the

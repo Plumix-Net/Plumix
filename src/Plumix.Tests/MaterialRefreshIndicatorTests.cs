@@ -358,13 +358,17 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
             991, PointerDeviceKind.Mouse, new Point(160, 140), PointerButtons.Primary, true, now.AddMilliseconds(16)));
         binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
             991, PointerDeviceKind.Mouse, new Point(160, 260), PointerButtons.Primary, true, now.AddMilliseconds(32)));
+        // The drag runs against `BouncingScrollPhysics`, so every further pixel of overscroll is
+        // damped by the friction factor: arming the indicator takes more than one long move.
+        binding.HandlePointerEvent(harness.RenderView, new PointerMoveEvent(
+            991, PointerDeviceKind.Mouse, new Point(160, 340), PointerButtons.Primary, true, now.AddMilliseconds(48)));
         harness.Pump(Viewport);
 
         Assert.Equal(RefreshIndicatorStatus.Armed, state.Status);
         Assert.True(state.PositionValue >= 1.0 / 1.5);
 
         binding.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
-            991, PointerDeviceKind.Mouse, new Point(160, 260), PointerButtons.None, now.AddMilliseconds(48)));
+            991, PointerDeviceKind.Mouse, new Point(160, 340), PointerButtons.None, now.AddMilliseconds(64)));
     }
 
     private static void BeginDrag(NotificationEmitterState emitter)

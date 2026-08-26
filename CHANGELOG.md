@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: a drag starts as soon as it wins the arena; `OnlyAcceptDragOnThreshold` gates the slop (`monodrag.dart`).
+- Breaking: `GestureDetector.Behavior` is nullable, defaulting to translucent without a child (`gesture_detector.dart`).
+- Breaking: the bottom sheet drags through a threshold-gated `RawGestureDetector` (`bottom_sheet.dart`).
 - Breaking: `ColoredBox` is opaque-hit-testable and adds `isAntiAlias`; zero-size paint matches Dart (`basic.dart`).
 - Breaking: `Switch` drops the C#-only `semanticLabel`; label it with `Semantics`, as Dart does (`switch.dart`).
 - Added ancestor-aware `RenderObject.SendSemanticsEvent`; merged toggle events use their owning node (`object.dart`).

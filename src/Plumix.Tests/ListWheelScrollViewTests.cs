@@ -1078,7 +1078,10 @@ public sealed class ListWheelScrollViewTests
             Fling(harness, new Point(400, 300), new Vector(0.0, -567.0), 678.0);
             harness.Pump(Screen);
             Assert.Equal(46, controller.SelectedItem);
-            Assert.Equal((40 * 100.0) + 567.0, controller.Offset, 5.0);
+            // Dart's literal: iOS flings ease in, so `ScrollDragController` damps the first update
+            // down to `dragStartDistanceMotionThreshold / 3` and the drag lands short of 567.
+            Assert.Equal((40 * 100.0) + 556.826666666673, scrolledPositions[^1], 0.2);
+            Assert.Equal((40 * 100.0) + 556.826666666673, controller.Offset, 0.2);
 
             Settle(harness);
             // The friction simulation is tuned to land exactly on an item.
@@ -1451,8 +1454,6 @@ public sealed class ListWheelScrollViewTests
         const int moveCount = 50;
         int pointer = ++_pointer;
         DateTime now = DateTime.UtcNow;
-        // Same slop compensation as Gesture: Plumix's recognizer swallows the first 18 px.
-        offset = offset + new Vector(0.0, Math.Sign(offset.Y) * 18.0);
         double stepMilliseconds = 1000.0 * offset.Length / (moveCount * speed);
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             pointer, PointerDeviceKind.Touch, start, PointerButtons.Primary, now));
@@ -1535,19 +1536,9 @@ public sealed class ListWheelScrollViewTests
     /// <c>TestGesture</c>.</summary>
     private sealed class Gesture
     {
-        /// <summary>
-        /// Plumix's drag recognizer consumes the touch slop before it starts a drag even when the arena
-        /// resolved in its favour at pointer down (Flutter's sole-member arena starts the drag at the
-        /// down event, so a Flutter test gesture loses nothing). The first move therefore carries the
-        /// extra slop, so the numbers Flutter's tests assert stay literal.
-        /// </summary>
-        private const double TouchSlop = 18.0;
-
         private readonly WidgetRenderHarness _harness;
         private readonly int _pointerId = ++_pointer;
         private Point _logicalPosition;
-        private Vector _slopShift;
-        private bool _slopConsumed;
         private DateTime _time = DateTime.UtcNow;
 
         /// <summary>
@@ -1566,18 +1557,11 @@ public sealed class ListWheelScrollViewTests
 
         public void MoveTo(Point position)
         {
-            if (!_slopConsumed)
-            {
-                _slopConsumed = true;
-                Vector delta = position - _logicalPosition;
-                _slopShift = new Vector(0.0, Math.Sign(delta.Y) * TouchSlop);
-            }
-
             _logicalPosition = position;
             GestureBinding.Instance.HandlePointerEvent(_harness.RenderView, new PointerMoveEvent(
                 _pointerId,
                 PointerDeviceKind.Touch,
-                _logicalPosition + _slopShift,
+                _logicalPosition,
                 PointerButtons.Primary,
                 true,
                 _time));
@@ -1586,7 +1570,7 @@ public sealed class ListWheelScrollViewTests
         public void Up()
         {
             GestureBinding.Instance.HandlePointerEvent(_harness.RenderView, new PointerUpEvent(
-                _pointerId, PointerDeviceKind.Touch, _logicalPosition + _slopShift, PointerButtons.None, _time));
+                _pointerId, PointerDeviceKind.Touch, _logicalPosition, PointerButtons.None, _time));
         }
     }
 

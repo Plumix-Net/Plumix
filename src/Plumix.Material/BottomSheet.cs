@@ -382,11 +382,21 @@ internal sealed class BottomSheetGestureDetector : StatelessWidget
     public Action<DragUpdateDetails> OnVerticalDragUpdate { get; }
     public Action<DragEndDetails> OnVerticalDragEnd { get; }
 
-    public override Widget Build(BuildContext context) => new GestureDetector(
+    public override Widget Build(BuildContext context) => new RawGestureDetector(
         excludeFromSemantics: true,
-        onVerticalDragStart: OnVerticalDragStart,
-        onVerticalDragUpdate: OnVerticalDragUpdate,
-        onVerticalDragEnd: OnVerticalDragEnd,
+        gestures: new Dictionary<Type, IGestureRecognizerFactory>
+        {
+            [typeof(VerticalDragGestureRecognizer)] =
+                new GestureRecognizerFactoryWithHandlers<VerticalDragGestureRecognizer>(
+                    () => new VerticalDragGestureRecognizer(),
+                    recognizer =>
+                    {
+                        recognizer.OnStart = OnVerticalDragStart;
+                        recognizer.OnUpdate = OnVerticalDragUpdate;
+                        recognizer.OnEnd = OnVerticalDragEnd;
+                        recognizer.OnlyAcceptDragOnThreshold = true;
+                    }),
+        },
         child: Child);
 }
 

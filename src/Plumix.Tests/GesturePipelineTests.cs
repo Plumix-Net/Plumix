@@ -336,6 +336,124 @@ public sealed class GesturePipelineTests
     }
 
     [Fact]
+    public void GestureBinding_DragRecognizer_StartsAtDownWhenItWinsTheArenaImmediately()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        var log = new List<string>();
+        Point? startPosition = null;
+        double totalDelta = 0.0;
+        var recognizer = new VerticalDragGestureRecognizer
+        {
+            OnStart = details =>
+            {
+                log.Add("start");
+                startPosition = details.GlobalPosition;
+            },
+            OnUpdate = details => totalDelta += details.PrimaryDelta,
+            OnEnd = _ => log.Add("end"),
+        };
+
+        try
+        {
+            var listener = new RenderPointerListener(
+                onPointerDown: recognizer.AddPointer,
+                behavior: HitTestBehavior.Opaque,
+                child: new FixedHitTestBox(new Size(160, 80), hitSelf: true));
+            var pipeline = BuildPipeline(listener);
+            DateTime start = new(2026, 8, 26, 8, 0, 0, DateTimeKind.Utc);
+
+            binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
+                10,
+                PointerDeviceKind.Touch,
+                new Point(20, 20),
+                PointerButtons.Primary,
+                start));
+            binding.HandlePointerEvent(pipeline.Root, new PointerMoveEvent(
+                10,
+                PointerDeviceKind.Touch,
+                new Point(20, 25),
+                PointerButtons.Primary,
+                true,
+                start.AddMilliseconds(20)));
+            binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
+                10,
+                PointerDeviceKind.Touch,
+                new Point(20, 25),
+                PointerButtons.None,
+                start.AddMilliseconds(40)));
+
+            Assert.False(recognizer.OnlyAcceptDragOnThreshold);
+            Assert.Equal(new Point(20, 20), startPosition);
+            Assert.Equal(5.0, totalDelta);
+            Assert.Equal(["start", "end"], log);
+        }
+        finally
+        {
+            recognizer.Dispose();
+            binding.ResetForTests();
+        }
+    }
+
+    [Theory]
+    [InlineData(DragStartBehavior.Start, 45.0, 0.0)]
+    [InlineData(DragStartBehavior.Down, 20.0, 25.0)]
+    public void GestureBinding_DragRecognizer_ThresholdModeBuffersAccordingToDragStartBehavior(
+        DragStartBehavior dragStartBehavior,
+        double expectedStartY,
+        double expectedInitialDelta)
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+
+        Point? startPosition = null;
+        var deltas = new List<double>();
+        var recognizer = new VerticalDragGestureRecognizer
+        {
+            OnlyAcceptDragOnThreshold = true,
+            DragStartBehavior = dragStartBehavior,
+            OnStart = details => startPosition = details.GlobalPosition,
+            OnUpdate = details => deltas.Add(details.PrimaryDelta),
+        };
+
+        try
+        {
+            var listener = new RenderPointerListener(
+                onPointerDown: recognizer.AddPointer,
+                behavior: HitTestBehavior.Opaque,
+                child: new FixedHitTestBox(new Size(160, 80), hitSelf: true));
+            var pipeline = BuildPipeline(listener);
+            DateTime start = new(2026, 8, 26, 8, 0, 0, DateTimeKind.Utc);
+
+            binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
+                11,
+                PointerDeviceKind.Touch,
+                new Point(20, 20),
+                PointerButtons.Primary,
+                start));
+
+            Assert.Null(startPosition);
+
+            binding.HandlePointerEvent(pipeline.Root, new PointerMoveEvent(
+                11,
+                PointerDeviceKind.Touch,
+                new Point(20, 45),
+                PointerButtons.Primary,
+                true,
+                start.AddMilliseconds(20)));
+
+            Assert.Equal(new Point(20, expectedStartY), startPosition);
+            Assert.Equal(expectedInitialDelta, deltas.Sum());
+        }
+        finally
+        {
+            recognizer.Dispose();
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void GestureBinding_HorizontalDragRecognizer_ReportsPrimaryVelocityInPixelsPerSecond()
     {
         var binding = GestureBinding.Instance;
@@ -487,7 +605,7 @@ public sealed class GesturePipelineTests
     }
 
     [Fact]
-    public void GestureBinding_DragRecognizer_ReportsCancelWhenThePointerNeverDrags()
+    public void GestureBinding_ThresholdOnlyDragRecognizer_ReportsCancelWhenThePointerNeverDrags()
     {
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
@@ -495,6 +613,7 @@ public sealed class GesturePipelineTests
         var log = new List<string>();
         var recognizer = new VerticalDragGestureRecognizer
         {
+            OnlyAcceptDragOnThreshold = true,
             OnDown = _ => log.Add("down"),
             OnStart = _ => log.Add("start"),
             OnEnd = _ => log.Add("end"),
@@ -588,7 +707,22 @@ public sealed class GesturePipelineTests
 
             binding.HandlePointerEvent(
                 pipeline.Root,
-                new PointerUpEvent(3, PointerDeviceKind.Mouse, new Point(90, 12), PointerButtons.None, DateTime.UtcNow));
+                new PointerMoveEvent(
+                    3,
+                    PointerDeviceKind.Mouse,
+                    new Point(100, 12),
+                    PointerButtons.Primary,
+                    down: true,
+                    DateTime.UtcNow));
+
+            binding.HandlePointerEvent(
+                pipeline.Root,
+                new PointerUpEvent(
+                    3,
+                    PointerDeviceKind.Mouse,
+                    new Point(100, 12),
+                    PointerButtons.None,
+                    DateTime.UtcNow));
 
             Assert.Equal(0, taps);
             Assert.True(dragUpdates > 0);

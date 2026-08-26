@@ -86,7 +86,7 @@ public sealed class RawGestureDetector : StatefulWidget
     public RawGestureDetector(
         Widget? child = null,
         IReadOnlyDictionary<Type, IGestureRecognizerFactory>? gestures = null,
-        HitTestBehavior behavior = HitTestBehavior.DeferToChild,
+        HitTestBehavior? behavior = null,
         Action<PointerDownEvent>? onPointerDown = null,
         Action<PointerMoveEvent>? onPointerMove = null,
         Action<PointerUpEvent>? onPointerUp = null,
@@ -180,7 +180,15 @@ public sealed class RawGestureDetector : StatefulWidget
     /// </summary>
     public IReadOnlyDictionary<Type, IGestureRecognizerFactory>? Gestures { get; }
 
-    public HitTestBehavior Behavior { get; }
+    /// <summary>
+    /// How this detector participates in hit testing. Null falls back to
+    /// <see cref="DefaultBehavior"/>, exactly as Dart's `behavior ?? _defaultBehavior`.
+    /// </summary>
+    public HitTestBehavior? Behavior { get; }
+
+    /// <summary>Dart's `_RawGestureDetectorState._defaultBehavior`.</summary>
+    public HitTestBehavior DefaultBehavior =>
+        Child == null ? HitTestBehavior.Translucent : HitTestBehavior.DeferToChild;
 
     public Action<PointerDownEvent>? OnPointerDown { get; }
 
@@ -332,7 +340,7 @@ public sealed class RawGestureDetector : StatefulWidget
             var widget = CurrentWidget;
             Widget result = new Listener(
                 child: widget.Child,
-                behavior: widget.Behavior,
+                behavior: widget.Behavior ?? widget.DefaultBehavior,
                 onPointerDown: HandlePointerDown,
                 onPointerMove: widget.OnPointerMove,
                 onPointerUp: widget.OnPointerUp,
@@ -710,7 +718,7 @@ public sealed class GestureDetector : StatelessWidget
 {
     public GestureDetector(
         Widget? child = null,
-        HitTestBehavior behavior = HitTestBehavior.DeferToChild,
+        HitTestBehavior? behavior = null,
         Action? onTap = null,
         Action? onDoubleTap = null,
         Action<PointerDownEvent>? onTapDown = null,
@@ -772,7 +780,11 @@ public sealed class GestureDetector : StatelessWidget
     /// <summary>Whether the detector's gestures are hidden from the semantics tree.</summary>
     public bool ExcludeFromSemantics { get; }
 
-    public HitTestBehavior Behavior { get; }
+    /// <summary>
+    /// How this detector participates in hit testing. Null defers to
+    /// <see cref="RawGestureDetector.DefaultBehavior"/>.
+    /// </summary>
+    public HitTestBehavior? Behavior { get; }
 
     public Action? OnTap { get; }
     public Action? OnDoubleTap { get; }

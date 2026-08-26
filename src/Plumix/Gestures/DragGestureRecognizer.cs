@@ -33,6 +33,11 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
 
     public DragStartBehavior DragStartBehavior { get; set; } = DragStartBehavior.Start;
 
+    /// <summary>
+    /// Whether this recognizer waits for the drag threshold after winning the gesture arena.
+    /// </summary>
+    public bool OnlyAcceptDragOnThreshold { get; set; }
+
     public GestureVelocityTrackerBuilder VelocityTrackerBuilder { get; set; } =
         DefaultVelocityTrackerBuilder;
 
@@ -80,19 +85,12 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
         }
 
         tracker.Accepted = true;
-        if (DragStartBehavior == DragStartBehavior.Start && tracker.PendingPosition is null)
+        if (OnlyAcceptDragOnThreshold && !tracker.HasDragThresholdBeenMet)
         {
             return;
         }
 
-        Point startPosition = DragStartBehavior == DragStartBehavior.Down
-            ? tracker.InitialPosition
-            : ResolveStartPosition(
-                tracker.InitialPosition,
-                tracker.PendingPosition ?? tracker.LastPosition);
-        tracker.LastPosition = startPosition;
-        tracker.Started = true;
-        OnStart?.Invoke(CreateStartDetails(tracker, startPosition));
+        CheckDrag(tracker);
     }
 
     public void RejectGesture(int pointer)
@@ -131,6 +129,8 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                     if (primary > TouchSlop && primary > cross)
                     {
                         tracker.PendingPosition = @event.Position;
+                        tracker.PendingTimestampUtc = @event.TimestampUtc;
+                        tracker.HasDragThresholdBeenMet = true;
                         tracker.Entry.Resolve(GestureDisposition.Accepted);
                     }
                     else if (RejectsCrossAxisDrags && cross > TouchSlop && cross > primary)
@@ -153,12 +153,10 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
                             break;
                         }
 
-                        tracker.Started = true;
-                        Point startPosition = ResolveStartPosition(
-                            tracker.InitialPosition,
-                            @event.Position);
-                        tracker.LastPosition = startPosition;
-                        OnStart?.Invoke(CreateStartDetails(tracker, startPosition));
+                        tracker.PendingPosition = @event.Position;
+                        tracker.PendingTimestampUtc = @event.TimestampUtc;
+                        tracker.HasDragThresholdBeenMet = true;
+                        CheckDrag(tracker);
                     }
 
                     var delta = @event.Position - tracker.LastPosition;
@@ -273,11 +271,19 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
     /// <summary>The primary delta reported to listeners; free-axis recognizers report no primary axis.</summary>
     protected virtual double GetReportedPrimaryDelta(Point delta) => GetPrimaryValue(delta);
 
-    protected virtual Point ResolveStartPosition(Point initialPosition, Point currentPosition)
+    private void CheckDrag(DragTracker tracker)
     {
-        Point delta = currentPosition - initialPosition;
-        double primaryDelta = GetPrimaryValue(delta);
-        return initialPosition + GetPrimaryOffset(Math.Sign(primaryDelta) * TouchSlop);
+        if (tracker.Started)
+        {
+            return;
+        }
+
+        Point startPosition = DragStartBehavior == DragStartBehavior.Down
+            ? tracker.InitialPosition
+            : tracker.PendingPosition ?? tracker.LastPosition;
+        tracker.LastPosition = startPosition;
+        tracker.Started = true;
+        OnStart?.Invoke(CreateStartDetails(tracker, startPosition));
     }
 
     private DragStartDetails CreateStartDetails(DragTracker tracker, Point globalPosition)
@@ -286,7 +292,7 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
         return new DragStartDetails(
             GlobalPosition: globalPosition,
             LocalPosition: localPosition,
-            SourceTimeStampUtc: tracker.LastTimestampUtc,
+            SourceTimeStampUtc: tracker.PendingTimestampUtc ?? tracker.LastTimestampUtc,
             Kind: tracker.Kind);
     }
 
@@ -321,6 +327,10 @@ public abstract class DragGestureRecognizer : GestureRecognizer, IGestureArenaMe
         public bool Accepted { get; set; }
 
         public Point? PendingPosition { get; set; }
+
+        public DateTime? PendingTimestampUtc { get; set; }
+
+        public bool HasDragThresholdBeenMet { get; set; }
 
         public bool Started { get; set; }
 
@@ -392,11 +402,6 @@ public sealed class PanGestureRecognizer : DragGestureRecognizer
     protected override Point GetPrimaryOffset(double value) => default;
 
     protected override double GetReportedPrimaryDelta(Point delta) => 0.0;
-
-    protected override Point ResolveStartPosition(Point initialPosition, Point currentPosition)
-    {
-        return currentPosition;
-    }
 
     protected override bool IsFlingGesture(VelocityEstimate estimate, PointerDeviceKind kind)
     {

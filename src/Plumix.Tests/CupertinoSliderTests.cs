@@ -20,7 +20,6 @@ public sealed class CupertinoSliderTests : IDisposable
     private const double SliderWidth = 176.0;
     private const double SliderHeight = 44.0;
     private const double Unit = CupertinoThumbPainter.Radius;
-    private const double TouchSlop = 18.0;
 
     /// <summary>The drag extent Dart divides the primary delta by: `width - 2 * (padding + radius)`.</summary>
     private const double Extent = SliderWidth - (2.0 * (8.0 + CupertinoThumbPainter.Radius));
@@ -119,8 +118,7 @@ public sealed class CupertinoSliderTests : IDisposable
         Assert.Equal(0.0, value);
         Drag(harness, ThumbCenter(0.0, TextDirection.Ltr), 3.0 * Unit);
 
-        // The recognizer swallows the touch slop before it reports the first primary delta.
-        double expected = ((3.0 * Unit) - TouchSlop) / Extent;
+        double expected = (3.0 * Unit) / Extent;
         Assert.Equal(0.0, startValue);
         Assert.Equal(expected, value, 10);
         Assert.Equal(expected, endValue, 10);
@@ -144,7 +142,7 @@ public sealed class CupertinoSliderTests : IDisposable
         Assert.Equal(0.0, value);
         Drag(harness, ThumbCenter(0.0, TextDirection.Rtl), -3.0 * Unit);
 
-        double expected = ((3.0 * Unit) - TouchSlop) / Extent;
+        double expected = (3.0 * Unit) / Extent;
         Assert.Equal(0.0, startValue);
         Assert.Equal(expected, value, 10);
         Assert.Equal(expected, endValue, 10);
@@ -182,7 +180,7 @@ public sealed class CupertinoSliderTests : IDisposable
         harness.Pump(ViewSize);
 
         // A drag long enough to land between the third and fourth division snaps to 0.6.
-        Drag(harness, ThumbCenter(0.0, TextDirection.Ltr), TouchSlop + (0.58 * Extent));
+        Drag(harness, ThumbCenter(0.0, TextDirection.Ltr), 0.58 * Extent);
         Assert.Equal(0.6, value, 10);
     }
 
@@ -211,7 +209,7 @@ public sealed class CupertinoSliderTests : IDisposable
         Assert.Equal("HapticFeedbackType.mediumImpact", platform.Log[0].Arguments);
 
         // Moving slowly all the way back to the start: a selection click.
-        Drag(harness, ThumbCenter(1.0, TextDirection.Ltr), -(Extent + TouchSlop), moveMilliseconds: 1100.0);
+        Drag(harness, ThumbCenter(1.0, TextDirection.Ltr), -Extent, moveMilliseconds: 1100.0);
         Assert.Equal(0.0, value);
         Assert.Equal(2, platform.Log.Count);
         Assert.Equal("HapticFeedbackType.selectionClick", platform.Log[1].Arguments);

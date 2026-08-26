@@ -403,6 +403,9 @@ public sealed class MaterialBottomSheetTests : IDisposable
         var binding = GestureBinding.Instance;
         var start = DateTime.UtcNow;
         DispatchDown(binding, harness.RenderView, 41, new Point(120, 20), start);
+        // The sheet's recognizer sets `onlyAcceptDragOnThreshold`, so the slop-crossing move is
+        // absorbed into the drag start exactly as Dart's `WidgetTester.drag` splits it off.
+        DispatchMove(binding, harness.RenderView, 41, new Point(120, 38.5), start.AddMilliseconds(150));
         DispatchMove(binding, harness.RenderView, 41, new Point(120, 145), start.AddMilliseconds(300));
         DispatchUp(binding, harness.RenderView, 41, new Point(120, 145), start.AddMilliseconds(600));
 
@@ -430,6 +433,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         var binding = GestureBinding.Instance;
         var start = DateTime.UtcNow;
         DispatchDown(binding, harness.RenderView, 42, new Point(120, 20), start);
+        DispatchMove(binding, harness.RenderView, 42, new Point(120, 38.5), start.AddMilliseconds(150));
         DispatchMove(binding, harness.RenderView, 42, new Point(120, 50), start.AddMilliseconds(300));
         DispatchUp(binding, harness.RenderView, 42, new Point(120, 50), start.AddMilliseconds(600));
 
