@@ -143,10 +143,12 @@ internal sealed class RefreshIndicatorDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                minHeight: 36,
-                padding: new Thickness(10, 8),
-                backgroundColor: Color.Parse("#FFE9F0FF"),
-                foregroundColor: Colors.Black,
-                borderRadius: BorderRadius.Circular(8),
-                child: new Text(label, fontSize: 12)));
+                child: new Text(label, fontSize: 12),
+                style: TextButton.StyleFrom(
+                    foregroundColor: Colors.Black,
+                    backgroundColor: Color.Parse("#FFE9F0FF"),
+                    padding: new Thickness(10, 8),
+                    minimumSize: new Size(64, 36),
+                    shape: new RoundedRectangleBorder(
+                        borderRadius: BorderRadius.Circular(8)))));
 }

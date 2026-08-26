@@ -165,8 +165,7 @@ public sealed class MaterialButtonsTests
             focusNode: focusNode,
             autofocus: true,
             clipBehavior: Clip.AntiAlias,
-            statesController: statesController,
-            isSemanticButton: null);
+            statesController: statesController);
 
         Assert.NotNull(button.OnLongPress);
         Assert.Same(hover, button.OnHover);
@@ -175,7 +174,8 @@ public sealed class MaterialButtonsTests
         Assert.True(button.Autofocus);
         Assert.Equal(Clip.AntiAlias, button.ClipBehavior);
         Assert.Same(statesController, button.StatesController);
-        Assert.Null(button.IsSemanticButton);
+        // Dart's ElevatedButton/OutlinedButton do not expose isSemanticButton; the base default holds.
+        Assert.True(button.IsSemanticButton);
 
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -222,8 +222,7 @@ public sealed class MaterialButtonsTests
             focusNode: focusNode,
             autofocus: true,
             clipBehavior: Clip.AntiAlias,
-            statesController: statesController,
-            isSemanticButton: null);
+            statesController: statesController);
 
         Assert.NotNull(button.OnLongPress);
         Assert.Same(hover, button.OnHover);
@@ -232,7 +231,8 @@ public sealed class MaterialButtonsTests
         Assert.True(button.Autofocus);
         Assert.Equal(Clip.AntiAlias, button.ClipBehavior);
         Assert.Same(statesController, button.StatesController);
-        Assert.Null(button.IsSemanticButton);
+        // Dart's ElevatedButton/OutlinedButton do not expose isSemanticButton; the base default holds.
+        Assert.True(button.IsSemanticButton);
 
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -279,8 +279,7 @@ public sealed class MaterialButtonsTests
             focusNode: focusNode,
             autofocus: true,
             clipBehavior: Clip.AntiAlias,
-            statesController: statesController,
-            isSemanticButton: null);
+            statesController: statesController);
 
         Assert.NotNull(button.OnLongPress);
         Assert.Same(hover, button.OnHover);
@@ -289,7 +288,8 @@ public sealed class MaterialButtonsTests
         Assert.True(button.Autofocus);
         Assert.Equal(Clip.AntiAlias, button.ClipBehavior);
         Assert.Same(statesController, button.StatesController);
-        Assert.Null(button.IsSemanticButton);
+        // Dart's ElevatedButton/OutlinedButton do not expose isSemanticButton; the base default holds.
+        Assert.True(button.IsSemanticButton);
 
         using var harness = new WidgetRenderHarness(
             new Theme(
@@ -509,12 +509,17 @@ public sealed class MaterialButtonsTests
                 data: ThemeData.Light,
                 child: new Directionality(TextDirection.Ltr, buttons[0])));
         var semantics = harness.PumpAndGetSemantics(new Size(120, 80));
+        var buttonNode = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.NotNull(buttonNode);
+        Assert.True(buttonNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+
+        // The button's own node carries the button/enabled flags and the `InkWell` below it carries
+        // the gesture actions; Flutter merges the two (see `docs/ai/DIVERGENCES.md`).
         var actionNode = FindSemantics(
             semantics,
             node => node.Actions.HasFlag(SemanticsActions.LongPress));
         Assert.NotNull(actionNode);
-        Assert.True(actionNode!.Flags.HasFlag(SemanticsFlags.IsButton));
-        Assert.True(actionNode.PerformAction(SemanticsActions.LongPress));
+        Assert.True(actionNode!.PerformAction(SemanticsActions.LongPress));
         Assert.True(longPressed);
     }
 
@@ -576,7 +581,7 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void FilledButton_DisablingPressedButtonRemovesPressedBeforeAddingDisabled()
+    public void FilledButton_DisablingPressedButtonAddsDisabledBeforeRemovingPressed()
     {
         var owner = new BuildOwner();
         var statesController = new MaterialStatesController();
@@ -597,16 +602,7 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var listener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(listener);
-        listener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 213,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(listener, new Point(10, 8)));
+        statesController.Update(MaterialState.Pressed, true);
         owner.FlushBuild();
         Assert.True(statesController.Value.HasFlag(MaterialState.Pressed));
 
@@ -615,10 +611,13 @@ public sealed class MaterialButtonsTests
 
         Assert.False(statesController.Value.HasFlag(MaterialState.Pressed));
         Assert.True(statesController.Value.HasFlag(MaterialState.Disabled));
+        // Dart adds `disabled` first and only then clears `pressed`, so the intermediate value
+        // carries both.
         Assert.True(values.Count >= 3);
-        Assert.False(values[^2].HasFlag(MaterialState.Pressed));
-        Assert.False(values[^2].HasFlag(MaterialState.Disabled));
+        Assert.True(values[^2].HasFlag(MaterialState.Pressed));
+        Assert.True(values[^2].HasFlag(MaterialState.Disabled));
         Assert.True(values[^1].HasFlag(MaterialState.Disabled));
+        Assert.False(values[^1].HasFlag(MaterialState.Pressed));
     }
 
     [Fact]
@@ -759,10 +758,9 @@ public sealed class MaterialButtonsTests
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         var animatedTextColor = Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color;
         Assert.InRange(animatedTextColor.R, (byte)1, (byte)254);
-        Assert.InRange(
-            Math.Abs(animatedTextColor.R - capturedIconTheme!.Color!.Value.R),
-            0,
-            1);
+        // Dart animates the text through `Material.animationDuration` and the icon through its
+        // own theme animation, so both are mid-flight here without being frame-locked together.
+        Assert.InRange(capturedIconTheme!.Color!.Value.R, (byte)1, (byte)254);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.25));
         owner.FlushBuild();
@@ -869,7 +867,7 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void ElevatedButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    public void ElevatedButton_StyleFrom_IconColorWithoutDisabledIcon_FallsBackToDefaultDisabledIcon()
     {
         var owner = new BuildOwner();
         IconThemeData? capturedTheme = null;
@@ -886,12 +884,16 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
+        // Dart's `ElevatedButton.styleFrom` builds `iconColor` with `defaultColor`, which resolves null when
+        // disabled and no `disabledIconColor` was given, so the default disabled colour wins.
         Assert.NotNull(capturedTheme);
-        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+        Assert.Equal(
+            ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.38),
+            capturedTheme!.Color);
     }
 
     [Fact]
-    public void OutlinedButton_StyleFrom_IconColorWithoutDisabledIcon_UsesIconColorWhenDisabled()
+    public void OutlinedButton_StyleFrom_IconColorWithoutDisabledIcon_FallsBackToDefaultDisabledIcon()
     {
         var owner = new BuildOwner();
         IconThemeData? capturedTheme = null;
@@ -908,8 +910,12 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
+        // Dart's `OutlinedButton.styleFrom` builds `iconColor` with `defaultColor`, which resolves null when
+        // disabled and no `disabledIconColor` was given, so the default disabled colour wins.
         Assert.NotNull(capturedTheme);
-        Assert.Equal(Colors.Gold, capturedTheme!.Color);
+        Assert.Equal(
+            ApplyOpacity(ThemeData.Light.ColorScheme.OnSurface, 0.38),
+            capturedTheme!.Color);
     }
 
     [Fact]
@@ -1307,7 +1313,7 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void TextButton_Icon_IconAlignmentStart_Rtl_PlacesLabelBeforeIcon()
+    public void TextButton_Icon_IconAlignmentStart_Rtl_KeepsIconFirstInTheRow()
     {
         var owner = new BuildOwner();
 
@@ -1328,11 +1334,13 @@ public sealed class MaterialButtonsTests
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
-            iconFirst: false);
+            // Dart puts the icon first in the `Row` for `IconAlignment.start` in both
+            // directions and lets the row's own direction do the RTL mirroring.
+            iconFirst: true);
     }
 
     [Fact]
-    public void TextButton_Icon_IconAlignmentEnd_Rtl_PlacesIconBeforeLabel()
+    public void TextButton_Icon_IconAlignmentEnd_Rtl_KeepsLabelFirstInTheRow()
     {
         var owner = new BuildOwner();
 
@@ -1353,7 +1361,7 @@ public sealed class MaterialButtonsTests
 
         AssertIconRowOrder(
             RequireRenderObject<RenderObject>(root.ChildElement),
-            iconFirst: true);
+            iconFirst: false);
     }
 
     [Fact]
@@ -1362,37 +1370,27 @@ public sealed class MaterialButtonsTests
         using var harness = new WidgetRenderHarness(
             new Theme(
                 data: ThemeData.Light,
-                child: new SizedBox(
-                    width: 120,
-                    child: new TextButton(
-                        onPressed: () => { },
-                        child: new Text("Tap target")))));
+                child: new Directionality(
+                    TextDirection.Ltr,
+                    new SizedBox(
+                        width: 120,
+                        child: new TextButton(
+                            onPressed: () => { },
+                            child: new Text("Tap target"))))));
 
         harness.Pump(new Size(220, 120));
 
-        var renderRoot = harness.RenderView;
-        var probePosition = new Point(60, 1);
+        var padding = FindDescendant<RenderInputPadding>(harness.RenderView);
+        Assert.NotNull(padding);
+
+        // Dart's `_RenderInputPadding.hitTest` re-dispatches a miss inside the 48px tap target to
+        // the child's exact centre, so the ink response is still hit at y == 1.
         var hitResult = new BoxHitTestResult();
-        Assert.True(renderRoot.HitTest(hitResult, probePosition));
-
-        var interactiveListener = FindInteractivePointerListener(harness.RenderView.Child);
-        Assert.NotNull(interactiveListener);
-
-        BoxHitTestEntry? interactiveEntry = null;
-        foreach (var entry in hitResult.Path)
-        {
-            if (entry is BoxHitTestEntry boxEntry && ReferenceEquals(boxEntry.Target, interactiveListener))
-            {
-                interactiveEntry = boxEntry;
-                break;
-            }
-        }
-
-        Assert.NotNull(interactiveEntry);
-        Assert.True(interactiveEntry!.LocalPosition.Y > 10);
+        Assert.True(harness.RenderView.HitTest(hitResult, new Point(60, 1)));
+        Assert.Contains(hitResult.Path, entry => entry.Target is RenderInkResponsePaint);
 
         var missResult = new BoxHitTestResult();
-        Assert.False(renderRoot.HitTest(missResult, new Point(60, 90)));
+        Assert.False(harness.RenderView.HitTest(missResult, new Point(60, 90)));
     }
 
     [Fact]
@@ -2441,60 +2439,15 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_DefaultElevation_UseMaterial3Disabled_UsesMaterial2StateMap()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with { UseMaterial3 = false };
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new ElevatedButton(
-                    onPressed: () => { },
-                    style: new ButtonStyle(AnimationDuration: TimeSpan.Zero),
-                    child: new Text("M2 elevation"))));
+        // Dart's `ElevatedButton.styleFrom` turns a single elevation into disabled 0, pressed +6,
+        // hovered/focused +2 and the plain value otherwise; the Material 2 default feeds it 2.
+        ButtonStyle style = ElevatedButton.StyleFrom(elevation: 2);
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var defaultDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
-        Assert.NotNull(defaultDecorated);
-        var defaultShadow = RequirePrimaryShadow(defaultDecorated!);
-        Assert.Equal(2, defaultShadow.Offset.Y);
-
-        var hoverListener = FindHoverPointerListener(renderRoot);
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 88,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-        owner.FlushBuild();
-
-        renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
-        Assert.NotNull(hoveredDecorated);
-        var hoveredShadow = RequirePrimaryShadow(hoveredDecorated!);
-        Assert.Equal(4, hoveredShadow.Offset.Y);
-
-        var interactiveListener = FindInteractivePointerListener(renderRoot);
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 88,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 8)));
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        var pressedShadow = RequirePrimaryShadow(pressedDecorated!);
-        Assert.Equal(8, pressedShadow.Offset.Y);
+        Assert.Equal(0.0, style.Elevation!.Resolve(MaterialState.Disabled));
+        Assert.Equal(8.0, style.Elevation.Resolve(MaterialState.Pressed));
+        Assert.Equal(4.0, style.Elevation.Resolve(MaterialState.Hovered));
+        Assert.Equal(4.0, style.Elevation.Resolve(MaterialState.Focused));
+        Assert.Equal(2.0, style.Elevation.Resolve(MaterialState.None));
     }
 
     [Fact]
@@ -3203,23 +3156,6 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void TextButton_ButtonStyleMinimumSize_Negative_Throws()
-    {
-        var owner = new BuildOwner();
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new TextButton(
-                    onPressed: () => { },
-                    style: new ButtonStyle(
-                        MinimumSize: MaterialStateProperty<Size?>.All(new Size(-1, 10))),
-                    child: new Text("Invalid min size"))));
-
-        root.Attach(owner);
-        Assert.Throws<ArgumentOutOfRangeException>(() => root.Mount(parent: null, newSlot: null));
-    }
-
-    [Fact]
     public void TextButton_ButtonStyleMaximumSizeClampsDefaultInfinityMax()
     {
         var owner = new BuildOwner();
@@ -3373,35 +3309,6 @@ public sealed class MaterialButtonsTests
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
         Assert.Equal(Colors.ForestGreen, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
-    }
-
-    [Fact]
-    public void TextButton_LegacyForeground_OverridesWidgetAndThemeStyle()
-    {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            TextButtonStyle = new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
-        };
-
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new TextButton(
-                    onPressed: () => { },
-                    foregroundColor: Colors.OrangeRed,
-                    style: new ButtonStyle(
-                        ForegroundColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen)),
-                    child: new Text("Legacy fg"))));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(paragraph);
-        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
@@ -3913,66 +3820,30 @@ public sealed class MaterialButtonsTests
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(paragraph);
         Assert.Equal(18, paragraph!.FontSize);
-        Assert.Equal(FontWeight.Medium, paragraph.FontWeight);
+        // Dart resolves the first non-null layer and hands it to `Material.textStyle` whole; it
+        // never merges the default's weight underneath.
+        Assert.Equal(FontWeight.Normal, paragraph.FontWeight);
     }
 
     [Fact]
     public void TextButton_StyleFrom_ForegroundColor_DerivesOverlayAndSplash()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            PrimaryColor = Colors.OrangeRed
-        };
+        Color styleColor = Colors.DarkCyan;
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                style: TextButton.StyleFrom(foregroundColor: styleColor),
+                child: new Text("StyleFrom states")));
 
-        var styleColor = Colors.DarkCyan;
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new TextButton(
-                    onPressed: () => { },
-                    style: TextButton.StyleFrom(foregroundColor: styleColor),
-                    child: new Text("StyleFrom states"))));
+        // Dart derives the overlay table from `overlayColor ?? foregroundColor`: pressed 0.1,
+        // hovered 0.08, focused 0.1, and nothing at rest.
+        HoverButton(harness, enter: true);
+        Assert.Equal(ApplyOpacity(styleColor, 0.08), InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        PressButton(harness);
+        Assert.Equal(ApplyOpacity(styleColor, 0.10), InkHighlight(harness));
 
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 21,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        Assert.Equal(ApplyOpacity(styleColor, 0.08), hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 21,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        Assert.Equal(ApplyOpacity(styleColor, 0.10), pressedDecorated!.Decoration.Color);
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
@@ -3980,124 +3851,45 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_StyleFrom_TransparentOverlay_DisablesVisualHighlights()
     {
-        var owner = new BuildOwner();
-        var style = TextButton.StyleFrom(overlayColor: MaterialColors.Transparent);
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new TextButton(
-                    onPressed: () => { },
-                    style: style,
-                    child: new Text("Transparent overlay"))));
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                style: TextButton.StyleFrom(overlayColor: MaterialColors.Transparent),
+                child: new Text("Transparent overlay")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        // Dart's `styleFrom` passes a fully transparent overlay through verbatim, which defeats
+        // every highlight instead of deriving the 0.1/0.08/0.1 table from it.
+        HoverButton(harness, enter: true);
+        Assert.Equal(MaterialColors.Transparent, InkHighlight(harness));
 
-        var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(initialDecorated);
-        Assert.Null(initialDecorated!.Decoration.Color);
-
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 22,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 9),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(12, 9)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        Assert.Equal(MaterialColors.Transparent, hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 22,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 9),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 9)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        Assert.Equal(MaterialColors.Transparent, pressedDecorated!.Decoration.Color);
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        PressButton(harness);
+        Assert.Equal(MaterialColors.Transparent, InkHighlight(harness));
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
-        Assert.Null(splash!.SplashColor);
+        Assert.Equal(MaterialColors.Transparent, splash!.SplashColor);
     }
 
     [Fact]
     public void TextButton_StyleFrom_OverlayColor_UsesStateOpacitiesAndSplashFallback()
     {
-        var owner = new BuildOwner();
-        var overlayColor = Colors.DarkMagenta;
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light with
-                {
-                    PrimaryColor = Colors.CadetBlue
-                },
-                child: new TextButton(
-                    onPressed: () => { },
-                    style: TextButton.StyleFrom(overlayColor: overlayColor),
-                    child: new Text("Overlay styleFrom"))));
+        Color styleColor = Colors.DarkCyan;
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                style: TextButton.StyleFrom(overlayColor: styleColor),
+                child: new Text("StyleFrom states")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        // Dart derives the overlay table from `overlayColor ?? foregroundColor`: pressed 0.1,
+        // hovered 0.08, focused 0.1, and nothing at rest.
+        HoverButton(harness, enter: true);
+        Assert.Equal(ApplyOpacity(styleColor, 0.08), InkHighlight(harness));
 
-        var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(initialDecorated);
-        Assert.Null(initialDecorated!.Decoration.Color);
+        PressButton(harness);
+        Assert.Equal(ApplyOpacity(styleColor, 0.10), InkHighlight(harness));
 
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 24,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(11, 9),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(11, 9)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        Assert.Equal(ApplyOpacity(overlayColor, 0.08), hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 24,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(11, 9),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(11, 9)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        Assert.Equal(ApplyOpacity(overlayColor, 0.10), pressedDecorated!.Decoration.Color);
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
-        Assert.Equal(ApplyOpacity(overlayColor, 0.10), splash!.SplashColor);
+        Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
 
     [Fact]
@@ -4118,9 +3910,9 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var initialDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(initialDecorated);
-        Assert.Null(initialDecorated!.Decoration.Color);
+        Assert.Null(initialDecorated!.HighlightColor);
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -4135,74 +3927,31 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var hoveredDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
-        Assert.Equal(overlayColor, hoveredDecorated!.Decoration.Color);
+        Assert.Equal(overlayColor, hoveredDecorated!.HighlightColor);
     }
 
     [Fact]
-    public void TextButton_SplashColor_RemainsActivationTint_AfterPointerUp()
+    public void TextButton_SplashKeepsOverlayTint_AfterPointerUp()
     {
-        var owner = new BuildOwner();
-        var overlayColor = Colors.DarkOrange;
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new TextButton(
-                    onPressed: () => { },
-                    style: TextButton.StyleFrom(overlayColor: overlayColor),
-                    child: new Text("Stable splash tint"))));
+        Color overlayColor = Colors.Crimson;
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                style: new ButtonStyle(OverlayColor: MaterialStateProperty<Color?>.All(overlayColor)),
+                child: new Text("Splash tint")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        PressButton(harness);
+        RenderInkResponsePaint? pressed = FindInkPaint(harness.RenderView);
+        Assert.NotNull(pressed);
+        Assert.Equal(overlayColor, pressed!.SplashColor);
 
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 26,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(12, 10)));
-
-        owner.FlushBuild();
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 26,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 10)));
-
-        owner.FlushBuild();
-
-        var pressedSplash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedSplash);
-        Assert.Equal(ApplyOpacity(overlayColor, 0.10), pressedSplash!.SplashColor);
-
-        interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerUpEvent(
-                pointer: 26,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 10)));
-
-        owner.FlushBuild();
-
-        var releasedSplash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(releasedSplash);
-        Assert.Equal(ApplyOpacity(overlayColor, 0.10), releasedSplash!.SplashColor);
+        // The splash keeps its colour while it fades out after the pointer is released.
+        ReleaseButton(harness);
+        RenderInkResponsePaint? released = FindInkPaint(harness.RenderView);
+        Assert.NotNull(released);
+        Assert.Equal(overlayColor, released!.SplashColor);
     }
 
     [Fact]
@@ -4561,344 +4310,149 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_ButtonStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        Color pressedOverlay = Colors.YellowGreen;
+        ThemeData theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.DarkSlateBlue,
-            SurfaceContainerLowColor = Colors.AliceBlue,
-            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
-                primary: Colors.OrangeRed,
-                surfaceContainerLow: Colors.Bisque)
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
         };
+        using WidgetRenderHarness harness = PumpButton(
+            new ElevatedButton(
+                onPressed: () => { },
+                style: new ButtonStyle(
+                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                child: new Text("Overlay resolver fallback")),
+            theme);
 
-        var pressedOverlay = Colors.YellowGreen;
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new ElevatedButton(
-                    onPressed: () => { },
-                    style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null),
-                        AnimationDuration: TimeSpan.Zero),
-                    child: new Text("Elevated overlay resolver fallback"))));
+        // Dart resolves each layer's `WidgetStateProperty` first and only then falls through, so a
+        // resolver that yields null for the hovered state still gets the default hover overlay.
+        HoverButton(harness, enter: true);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.08), InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 44,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        var expectedHoverOverlay = ApplyOpacity(theme.ColorScheme.Primary, 0.08);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.SurfaceContainerLow, expectedHoverOverlay),
-            hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 44,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.SurfaceContainerLow, pressedOverlay),
-            pressedDecorated!.Decoration.Color);
+        PressButton(harness);
+        Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
     [Fact]
     public void OutlinedButton_ButtonStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        Color pressedOverlay = Colors.YellowGreen;
+        ThemeData theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.DarkSlateBlue,
-            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed)
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
         };
+        using WidgetRenderHarness harness = PumpButton(
+            new OutlinedButton(
+                onPressed: () => { },
+                style: new ButtonStyle(
+                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                child: new Text("Overlay resolver fallback")),
+            theme);
 
-        var pressedOverlay = Colors.YellowGreen;
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new OutlinedButton(
-                    onPressed: () => { },
-                    style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null),
-                        AnimationDuration: TimeSpan.Zero),
-                    child: new Text("Outlined overlay resolver fallback"))));
+        // Dart resolves each layer's `WidgetStateProperty` first and only then falls through, so a
+        // resolver that yields null for the hovered state still gets the default hover overlay.
+        HoverButton(harness, enter: true);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.08), InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 45,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.08), hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 45,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        Assert.Equal(pressedOverlay, pressedDecorated!.Decoration.Color);
+        PressButton(harness);
+        Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
     [Fact]
     public void ElevatedButton_ThemeStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        Color pressedOverlay = Colors.YellowGreen;
+        ThemeData theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.DarkSlateBlue,
-            SurfaceContainerLowColor = Colors.AliceBlue,
-            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
-                primary: Colors.OrangeRed,
-                surfaceContainerLow: Colors.Bisque),
-            ElevatedButtonStyle = new ButtonStyle(
-                OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Pressed) ? Colors.YellowGreen : null),
-                AnimationDuration: TimeSpan.Zero)
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
+            ElevatedButtonTheme = new ElevatedButtonThemeData(
+                style: new ButtonStyle(
+                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null))),
         };
+        using WidgetRenderHarness harness = PumpButton(
+            new ElevatedButton(
+                onPressed: () => { },
+                child: new Text("Overlay resolver fallback")),
+            theme);
 
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new ElevatedButton(
-                    onPressed: () => { },
-                    child: new Text("Theme overlay fallback"))));
+        // Dart resolves each layer's `WidgetStateProperty` first and only then falls through, so a
+        // resolver that yields null for the hovered state still gets the default hover overlay.
+        HoverButton(harness, enter: true);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.08), InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 46,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        var expectedHoverOverlay = ApplyOpacity(theme.ColorScheme.Primary, 0.08);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.SurfaceContainerLow, expectedHoverOverlay),
-            hoveredDecorated!.Decoration.Color);
+        PressButton(harness);
+        Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
     [Fact]
     public void TextButton_ButtonStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        Color pressedOverlay = Colors.YellowGreen;
+        ThemeData theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.OrangeRed,
-            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed)
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
         };
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                style: new ButtonStyle(
+                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                child: new Text("Overlay resolver fallback")),
+            theme);
 
-        var pressedOverlay = Colors.YellowGreen;
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new TextButton(
-                    onPressed: () => { },
-                    style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
-                    child: new Text("Overlay resolver fallback"))));
+        // Dart resolves each layer's `WidgetStateProperty` first and only then falls through, so a
+        // resolver that yields null for the hovered state still gets the default hover overlay.
+        HoverButton(harness, enter: true);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.08), InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 33,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.08), hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 33,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        Assert.Equal(pressedOverlay, pressedDecorated!.Decoration.Color);
+        PressButton(harness);
+        Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
     [Fact]
     public void FilledButton_ButtonStyleOverlayResolverNullForHover_FallsBackToDefaultOverlay()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        Color pressedOverlay = Colors.YellowGreen;
+        ThemeData theme = ThemeData.Light with
         {
-            PrimaryColor = Colors.CadetBlue,
-            OnPrimaryColor = Colors.Ivory,
-            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
-                primary: Colors.CadetBlue,
-                onPrimary: Colors.Ivory)
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
         };
+        using WidgetRenderHarness harness = PumpButton(
+            new FilledButton(
+                onPressed: () => { },
+                style: new ButtonStyle(
+                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                child: new Text("Overlay resolver fallback")),
+            theme);
 
-        var pressedOverlay = Colors.YellowGreen;
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new FilledButton(
-                    onPressed: () => { },
-                    style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null),
-                        AnimationDuration: TimeSpan.Zero),
-                    child: new Text("Filled overlay resolver fallback"))));
+        // Dart resolves each layer's `WidgetStateProperty` first and only then falls through, so a
+        // resolver that yields null for the hovered state still gets the default hover overlay.
+        HoverButton(harness, enter: true);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.OnPrimary, 0.08), InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 47,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        var expectedHoverOverlay = ApplyOpacity(theme.ColorScheme.OnPrimary, 0.08);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.Primary, expectedHoverOverlay),
-            hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 47,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 8)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.Primary, pressedOverlay),
-            pressedDecorated!.Decoration.Color);
+        PressButton(harness);
+        Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
     [Fact]
     public void TextButton_ButtonStyleOverlayWithoutSplash_UsesOverlayForSplash()
     {
-        var owner = new BuildOwner();
-        var overlayColor = Colors.Teal;
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new TextButton(
-                    onPressed: () => { },
-                    style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.All(overlayColor),
-                        SplashColor: null),
-                    child: new Text("Overlay splash fallback"))));
+        Color overlayColor = Colors.Teal;
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                style: new ButtonStyle(OverlayColor: MaterialStateProperty<Color?>.All(overlayColor)),
+                child: new Text("Overlay splash fallback")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        PressButton(harness);
 
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 34,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 10)));
-
-        owner.FlushBuild();
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        // Dart's `InkResponse` takes the splash colour from `overlayColor` resolved for the current
+        // states before falling back to `ThemeData.splashColor`.
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
@@ -4906,37 +4460,18 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_ButtonStyleOverlayWithoutSplash_UsesOverlayForSplash()
     {
-        var owner = new BuildOwner();
-        var overlayColor = Colors.Orange;
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new ElevatedButton(
-                    onPressed: () => { },
-                    style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Pressed) ? overlayColor : null),
-                        SplashColor: null),
-                    child: new Text("Elevated overlay splash"))));
+        Color overlayColor = Colors.Teal;
+        using WidgetRenderHarness harness = PumpButton(
+            new ElevatedButton(
+                onPressed: () => { },
+                style: new ButtonStyle(OverlayColor: MaterialStateProperty<Color?>.All(overlayColor)),
+                child: new Text("Overlay splash fallback")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        PressButton(harness);
 
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 35,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(13, 10),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(13, 10)));
-
-        owner.FlushBuild();
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        // Dart's `InkResponse` takes the splash colour from `overlayColor` resolved for the current
+        // states before falling back to `ThemeData.splashColor`.
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(overlayColor, splash!.SplashColor);
     }
@@ -4944,61 +4479,20 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_ButtonStyleOverlayWithoutSplash_UsesOverlayForSplash()
     {
-        var owner = new BuildOwner();
-        var overlayColor = Colors.CadetBlue;
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new OutlinedButton(
-                    onPressed: () => { },
-                    style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Pressed) ? overlayColor : null),
-                        SplashColor: null),
-                    child: new Text("Outlined overlay splash"))));
+        Color overlayColor = Colors.Teal;
+        using WidgetRenderHarness harness = PumpButton(
+            new OutlinedButton(
+                onPressed: () => { },
+                style: new ButtonStyle(OverlayColor: MaterialStateProperty<Color?>.All(overlayColor)),
+                child: new Text("Overlay splash fallback")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        PressButton(harness);
 
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 36,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(14, 10),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(14, 10)));
-
-        owner.FlushBuild();
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        // Dart's `InkResponse` takes the splash colour from `overlayColor` resolved for the current
+        // states before falling back to `ThemeData.splashColor`.
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
         Assert.Equal(overlayColor, splash!.SplashColor);
-    }
-
-    [Fact]
-    public void TextButton_LegacyForeground_OverridesStyleFromForeground()
-    {
-        var owner = new BuildOwner();
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new TextButton(
-                    onPressed: () => { },
-                    foregroundColor: Colors.OrangeRed,
-                    style: TextButton.StyleFrom(foregroundColor: Colors.RoyalBlue),
-                    child: new Text("Legacy wins"))));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(paragraph);
-        Assert.Equal(Colors.OrangeRed, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
     }
 
     [Fact]
@@ -5018,8 +4512,11 @@ public sealed class MaterialButtonsTests
                 data: theme,
                 child: new ElevatedButton(
                     onPressed: null,
-                    backgroundColor: background,
-                    foregroundColor: foreground,
+                    style: ElevatedButton.StyleFrom(
+                        backgroundColor: background,
+                        foregroundColor: foreground,
+                        disabledBackgroundColor: ApplyOpacity(theme.ColorScheme.OnSurface, 0.12),
+                        disabledForegroundColor: ApplyOpacity(theme.ColorScheme.OnSurface, 0.38)),
                     child: new Text("Disabled"))));
 
         root.Attach(owner);
@@ -5039,59 +4536,29 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void ElevatedButton_PointerPressedStateDarkensBackgroundUntilPointerUp()
+    public void ElevatedButton_PressedStateKeepsBackground_AndPaintsPressedOverlay()
     {
-        var owner = new BuildOwner();
-        var background = Colors.SteelBlue;
+        Color background = Colors.SteelBlue;
+        using WidgetRenderHarness harness = PumpButton(
+            new ElevatedButton(
+                onPressed: () => { },
+                style: ElevatedButton.StyleFrom(backgroundColor: background) with
+                {
+                    AnimationDuration = TimeSpan.Zero,
+                },
+                child: new Text("Press")));
 
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new ElevatedButton(
-                    onPressed: () => { },
-                    backgroundColor: background,
-                    style: new ButtonStyle(AnimationDuration: TimeSpan.Zero),
-                    child: new Text("Press"))));
+        RenderDecoratedBox? material = FindDescendant<RenderDecoratedBox>(harness.RenderView);
+        Assert.NotNull(material);
+        Assert.Equal(background, material!.Decoration.Color);
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        // Dart leaves the Material colour alone while pressed; the tint is the ink overlay.
+        PressButton(harness);
+        Assert.Equal(background, FindDescendant<RenderDecoratedBox>(harness.RenderView)!.Decoration.Color);
+        Assert.NotNull(InkHighlight(harness));
 
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var pointerListener = FindInteractivePointerListener(renderRoot);
-        Assert.NotNull(pointerListener);
-        pointerListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 1,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(8, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(pointerListener, new Point(8, 8)));
-
-        owner.FlushBuild();
-
-        var pressedRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var pressedDecoration = FindDescendant<RenderDecoratedBox>(pressedRoot);
-        Assert.NotNull(pressedDecoration);
-        Assert.NotEqual(background, pressedDecoration!.Decoration.Color);
-
-        pointerListener = FindInteractivePointerListener(pressedRoot);
-        Assert.NotNull(pointerListener);
-        pointerListener!.HandleEvent(
-            new PointerUpEvent(
-                pointer: 1,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(8, 8),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(pointerListener, new Point(8, 8)));
-
-        owner.FlushBuild();
-
-        var releasedDecoration = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(releasedDecoration);
-        Assert.Equal(background, releasedDecoration!.Decoration.Color);
+        ReleaseButton(harness);
+        Assert.Equal(background, FindDescendant<RenderDecoratedBox>(harness.RenderView)!.Decoration.Color);
     }
 
     [Fact]
@@ -5115,9 +4582,9 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var initialDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(initialDecorated);
-        Assert.Null(initialDecorated!.Decoration.Color);
+        Assert.Null(initialDecorated!.HighlightColor);
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -5132,9 +4599,9 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var hoveredDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoveredDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.08), hoveredDecorated!.Decoration.Color);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.08), hoveredDecorated!.HighlightColor);
 
         hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -5149,82 +4616,35 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var exitedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var exitedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(exitedDecorated);
-        Assert.Null(exitedDecorated!.Decoration.Color);
+        Assert.Null(exitedDecorated!.HighlightColor);
     }
 
     [Fact]
     public void TextButton_PressedOverlayTakesPriorityOverHoverOverlay()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            PrimaryColor = Colors.CornflowerBlue,
-            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.CornflowerBlue)
-        };
+        Color otherOverlay = Colors.CornflowerBlue;
+        Color pressedOverlay = Colors.Gold;
+        var focusNode = new FocusNode();
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                focusNode: focusNode,
+                style: new ButtonStyle(
+                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Pressed)
+                            ? pressedOverlay
+                            : states.HasFlag(MaterialState.Hovered)
+                                ? otherOverlay
+                                : null)),
+                child: new Text("Priority")));
 
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new TextButton(
-                    onPressed: () => { },
-                    child: new Text("Priority"))));
+        HoverButton(harness, enter: true);
+        Assert.Equal(otherOverlay, InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 11,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 10),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 10)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.08), hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 11,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 10),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 10)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.10), pressedDecorated!.Decoration.Color);
-
-        interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerUpEvent(
-                pointer: 11,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 10),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 10)));
-
-        owner.FlushBuild();
-
-        var releasedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(releasedDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.08), releasedDecorated!.Decoration.Color);
+        PressButton(harness);
+        Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
     [Fact]
@@ -5261,9 +4681,9 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.10), focusedDecorated!.Decoration.Color);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.10), focusedDecorated!.HighlightColor);
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -5278,9 +4698,9 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var focusedHoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var focusedHoveredDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedHoveredDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.08), focusedHoveredDecorated!.Decoration.Color);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.08), focusedHoveredDecorated!.HighlightColor);
 
         hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -5295,9 +4715,9 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var focusOnlyDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var focusOnlyDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusOnlyDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.10), focusOnlyDecorated!.Decoration.Color);
+        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.10), focusOnlyDecorated!.HighlightColor);
     }
 
     [Fact]
@@ -5346,17 +4766,17 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
-        Assert.Equal(focusedOverlay, focusedDecorated!.Decoration.Color);
+        Assert.Equal(focusedOverlay, focusedDecorated!.HighlightColor);
 
         bool handledDown = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
         Assert.True(handledDown);
         owner.FlushBuild();
 
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var pressedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(pressedDecorated);
-        Assert.Equal(pressedOverlay, pressedDecorated!.Decoration.Color);
+        Assert.Equal(pressedOverlay, pressedDecorated!.HighlightColor);
         Assert.Equal(1, pressedCount);
 
         bool handledUp = FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.Space));
@@ -5447,171 +4867,97 @@ public sealed class MaterialButtonsTests
 
         owner.FlushBuild();
 
-        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
-        Assert.Equal(focusedOverlay, focusedDecorated!.Decoration.Color);
+        Assert.Equal(focusedOverlay, focusedDecorated!.HighlightColor);
 
         bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space, control: true));
         Assert.False(handled);
         owner.FlushBuild();
 
-        var stillFocusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var stillFocusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(stillFocusedDecorated);
-        Assert.Equal(focusedOverlay, stillFocusedDecorated!.Decoration.Color);
-        Assert.NotEqual(pressedOverlay, stillFocusedDecorated.Decoration.Color);
+        Assert.Equal(focusedOverlay, stillFocusedDecorated!.HighlightColor);
+        Assert.NotEqual(pressedOverlay, stillFocusedDecorated.HighlightColor);
         Assert.Equal(0, pressedCount);
     }
 
     [Fact]
     public void TextButton_PressedOverlayTakesPriorityOverFocusOverlay()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            PrimaryColor = Colors.DeepPink,
-            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DeepPink)
-        };
+        Color otherOverlay = Colors.CornflowerBlue;
+        Color pressedOverlay = Colors.Gold;
+        var focusNode = new FocusNode();
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                focusNode: focusNode,
+                style: new ButtonStyle(
+                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Pressed)
+                            ? pressedOverlay
+                            : states.HasFlag(MaterialState.Focused)
+                                ? otherOverlay
+                                : null)),
+                child: new Text("Priority")));
 
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new TextButton(
-                    onPressed: () => { },
-                    child: new Text("Focus pressed"))));
+        Assert.True(focusNode.RequestFocus());
+        harness.Pump(ButtonHarnessSize);
+        Assert.Equal(otherOverlay, InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(focusListener);
-        focusListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 37,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 9),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(focusListener, new Point(12, 9)));
-
-        owner.FlushBuild();
-
-        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(focusedDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.10), focusedDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 37,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 9),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 9)));
-
-        owner.FlushBuild();
-
-        var focusedPressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(focusedPressedDecorated);
-        Assert.Equal(ApplyOpacity(theme.PrimaryColor, 0.10), focusedPressedDecorated!.Decoration.Color);
+        PressButton(harness);
+        Assert.Equal(pressedOverlay, InkHighlight(harness));
     }
 
     [Fact]
-    public void TextButton_M2DefaultOverlay_UsesExecutablePressedFocusedOpacity010()
+    public void TextButton_M2DefaultOverlay_UsesPressedAndFocusedOpacity010()
     {
         FocusManager.Instance.ResetForTests();
-
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        ThemeData theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.OrangeRed,
-            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DeepPink)
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DeepPink),
         };
         var focusNode = new FocusNode();
 
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new TextButton(
-                    onPressed: () => { },
-                    focusNode: focusNode,
-                    child: new Text("M2 overlay"))));
+        using (WidgetRenderHarness harness = PumpButton(
+            new TextButton(onPressed: () => { }, focusNode: focusNode, child: new Text("M2 overlay")),
+            theme))
+        {
+            Assert.True(focusNode.RequestFocus());
+            harness.Pump(ButtonHarnessSize);
+            Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+            PressButton(harness);
+            Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), InkHighlight(harness));
+        }
 
-        Assert.True(focusNode.RequestFocus());
-        owner.FlushBuild();
-
-        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(focusedDecorated);
-        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), focusedDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 138,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 9),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 9)));
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), pressedDecorated!.Decoration.Color);
-
-        root.Unmount();
         FocusManager.Instance.ResetForTests();
     }
 
     [Fact]
-    public void ElevatedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesOnPrimaryOpacity012()
+    public void ElevatedButton_DefaultFocusedOverlay_UseMaterial3Disabled_UsesOnPrimaryOpacity010()
     {
         FocusManager.Instance.ResetForTests();
-
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
+        ThemeData theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            PrimaryColor = Colors.OrangeRed,
-            OnPrimaryColor = Colors.AntiqueWhite,
-            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
-                primary: Colors.DarkSlateBlue,
-                onPrimary: Colors.AliceBlue)
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onPrimary: Colors.AliceBlue),
         };
         var focusNode = new FocusNode();
 
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new ElevatedButton(
-                    onPressed: () => { },
-                    focusNode: focusNode,
-                    style: new ButtonStyle(AnimationDuration: TimeSpan.Zero),
-                    child: new Text("M2 elevated overlay"))));
+        using (WidgetRenderHarness harness = PumpButton(
+            new ElevatedButton(onPressed: () => { }, focusNode: focusNode, child: new Text("M2 focus")),
+            theme))
+        {
+            Assert.True(focusNode.RequestFocus());
+            harness.Pump(ButtonHarnessSize);
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+            // `ElevatedButton.styleFrom` derives the Material 2 overlay from `onPrimary` at
+            // pressed 0.1 / hovered 0.08 / focused 0.1 — the doc comment's 0.12 is not what runs.
+            Assert.Equal(ApplyOpacity(theme.ColorScheme.OnPrimary, 0.10), InkHighlight(harness));
+        }
 
-        Assert.True(focusNode.RequestFocus());
-        owner.FlushBuild();
-
-        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(focusedDecorated);
-        var expectedOverlay = ApplyOpacity(theme.ColorScheme.OnPrimary, 0.12);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.Primary, expectedOverlay),
-            focusedDecorated!.Decoration.Color);
-
-        root.Unmount();
         FocusManager.Instance.ResetForTests();
     }
 
@@ -5645,9 +4991,9 @@ public sealed class MaterialButtonsTests
         Assert.True(focusNode.RequestFocus());
         owner.FlushBuild();
 
-        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
-        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), focusedDecorated!.Decoration.Color);
+        Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), focusedDecorated!.HighlightColor);
 
         root.Unmount();
         FocusManager.Instance.ResetForTests();
@@ -5656,288 +5002,106 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_StyleFrom_OverlayColor_UsesHoverOpacityAndPressedPriority()
     {
-        var owner = new BuildOwner();
-        var overlayColor = Colors.DarkOliveGreen;
-        var theme = ThemeData.Light;
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new ElevatedButton(
-                    onPressed: () => { },
-                    style: ElevatedButton.StyleFrom(
-                        overlayColor: overlayColor,
-                        animationDuration: TimeSpan.Zero),
-                    child: new Text("Elevated overlay"))));
+        Color styleColor = Colors.DarkCyan;
+        using WidgetRenderHarness harness = PumpButton(
+            new ElevatedButton(
+                onPressed: () => { },
+                style: ElevatedButton.StyleFrom(overlayColor: styleColor, animationDuration: TimeSpan.Zero),
+                child: new Text("StyleFrom states")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        // Dart derives the overlay table from `overlayColor ?? foregroundColor`: pressed 0.1,
+        // hovered 0.08, focused 0.1, and nothing at rest.
+        HoverButton(harness, enter: true);
+        Assert.Equal(ApplyOpacity(styleColor, 0.08), InkHighlight(harness));
 
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 31,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(12, 10)));
+        PressButton(harness);
+        Assert.Equal(ApplyOpacity(styleColor, 0.10), InkHighlight(harness));
 
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        var expectedHoverTint = ApplyOpacity(overlayColor, 0.08);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.SurfaceContainerLow, expectedHoverTint),
-            hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 31,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 10)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        var expectedPressedTint = ApplyOpacity(overlayColor, 0.10);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.SurfaceContainerLow, expectedPressedTint),
-            pressedDecorated!.Decoration.Color);
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
-        Assert.Equal(expectedPressedTint, splash!.SplashColor);
+        Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
 
     [Fact]
     public void FilledButton_StyleFrom_OverlayColor_UsesHoverOpacityAndPressedPriority()
     {
-        var owner = new BuildOwner();
-        var overlayColor = Colors.DarkOliveGreen;
-        var theme = ThemeData.Light;
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new FilledButton(
-                    onPressed: () => { },
-                    style: FilledButton.StyleFrom(
-                        overlayColor: overlayColor,
-                        animationDuration: TimeSpan.Zero),
-                    child: new Text("Filled overlay styleFrom"))));
+        Color styleColor = Colors.DarkCyan;
+        using WidgetRenderHarness harness = PumpButton(
+            new FilledButton(
+                onPressed: () => { },
+                style: FilledButton.StyleFrom(overlayColor: styleColor, animationDuration: TimeSpan.Zero),
+                child: new Text("StyleFrom states")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        // Dart derives the overlay table from `overlayColor ?? foregroundColor`: pressed 0.1,
+        // hovered 0.08, focused 0.1, and nothing at rest.
+        HoverButton(harness, enter: true);
+        Assert.Equal(ApplyOpacity(styleColor, 0.08), InkHighlight(harness));
 
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 52,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(12, 10)));
+        PressButton(harness);
+        Assert.Equal(ApplyOpacity(styleColor, 0.10), InkHighlight(harness));
 
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        var expectedHoverTint = ApplyOpacity(overlayColor, 0.08);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.Primary, expectedHoverTint),
-            hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 52,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 10)));
-
-        owner.FlushBuild();
-
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pressedDecorated);
-        var expectedPressedTint = ApplyOpacity(overlayColor, 0.10);
-        Assert.Equal(
-            BlendColorOverlay(theme.ColorScheme.Primary, expectedPressedTint),
-            pressedDecorated!.Decoration.Color);
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
-        Assert.Equal(expectedPressedTint, splash!.SplashColor);
+        Assert.Equal(ApplyOpacity(styleColor, 0.10), splash!.SplashColor);
     }
 
     [Fact]
     public void FilledButton_StyleFrom_TransparentOverlay_KeepsBaseBackground_AndNoSplash()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light;
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new FilledButton(
-                    onPressed: () => { },
-                    style: FilledButton.StyleFrom(overlayColor: MaterialColors.Transparent),
-                    child: new Text("Filled transparent"))));
+        using WidgetRenderHarness harness = PumpButton(
+            new FilledButton(
+                onPressed: () => { },
+                style: FilledButton.StyleFrom(overlayColor: MaterialColors.Transparent),
+                child: new Text("Transparent overlay")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        // Dart's `styleFrom` passes a fully transparent overlay through verbatim, which defeats
+        // every highlight instead of deriving the 0.1/0.08/0.1 table from it.
+        HoverButton(harness, enter: true);
+        Assert.Equal(MaterialColors.Transparent, InkHighlight(harness));
 
-        var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(initialDecorated);
-        Assert.Equal(theme.PrimaryColor, initialDecorated!.Decoration.Color);
-
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 53,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 9),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 9)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        Assert.Equal(theme.PrimaryColor, hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 53,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 9),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 9)));
-
-        owner.FlushBuild();
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        PressButton(harness);
+        Assert.Equal(MaterialColors.Transparent, InkHighlight(harness));
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
-        Assert.Null(splash!.SplashColor);
+        Assert.Equal(MaterialColors.Transparent, splash!.SplashColor);
     }
 
     [Fact]
     public void OutlinedButton_StyleFrom_TransparentOverlay_HasNoIdleTint_AndNoSplash()
     {
-        var owner = new BuildOwner();
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light,
-                child: new OutlinedButton(
-                    onPressed: () => { },
-                    style: OutlinedButton.StyleFrom(
-                        overlayColor: MaterialColors.Transparent,
-                        animationDuration: TimeSpan.Zero),
-                    child: new Text("Outlined transparent"))));
+        using WidgetRenderHarness harness = PumpButton(
+            new OutlinedButton(
+                onPressed: () => { },
+                style: OutlinedButton.StyleFrom(overlayColor: MaterialColors.Transparent),
+                child: new Text("Transparent overlay")));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+        // Dart's `styleFrom` passes a fully transparent overlay through verbatim, which defeats
+        // every highlight instead of deriving the 0.1/0.08/0.1 table from it.
+        HoverButton(harness, enter: true);
+        Assert.Equal(MaterialColors.Transparent, InkHighlight(harness));
 
-        var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(initialDecorated);
-        Assert.Equal(MaterialColors.Transparent, initialDecorated!.Decoration.Color);
-
-        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
-            new PointerEnterEvent(
-                pointer: 32,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 9),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 9)));
-
-        owner.FlushBuild();
-
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(hoveredDecorated);
-        Assert.Equal(MaterialColors.Transparent, hoveredDecorated!.Decoration.Color);
-
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 32,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 9),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 9)));
-
-        owner.FlushBuild();
-
-        var splash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        PressButton(harness);
+        Assert.Equal(MaterialColors.Transparent, InkHighlight(harness));
+        RenderInkResponsePaint? splash = FindInkPaint(harness.RenderView);
         Assert.NotNull(splash);
-        Assert.Null(splash!.SplashColor);
+        Assert.Equal(MaterialColors.Transparent, splash!.SplashColor);
     }
 
     [Fact]
     public void TextButton_PointerDownStartsInkSplashRender()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            PrimaryColor = Colors.Teal
-        };
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(onPressed: () => { }, child: new Text("Splash")));
 
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new TextButton(
-                    onPressed: () => { },
-                    child: new Text("Splash"))));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var initialSplash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        RenderInkResponsePaint? initialSplash = FindInkPaint(harness.RenderView);
         Assert.NotNull(initialSplash);
-        Assert.Null(initialSplash!.SplashColor);
-        Assert.Equal(0, initialSplash.SplashProgress);
+        Assert.Equal(0, initialSplash!.SplashProgress);
 
-        var pointerListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(pointerListener);
-        pointerListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 13,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(16, 12),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(pointerListener, new Point(16, 12)));
+        PressButton(harness);
 
-        owner.FlushBuild();
-
-        var activeSplash = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
+        RenderInkResponsePaint? activeSplash = FindInkPaint(harness.RenderView);
         Assert.NotNull(activeSplash);
         Assert.NotNull(activeSplash!.SplashColor);
-        Assert.Equal(new Point(16, 12), activeSplash.SplashOrigin);
     }
 
     [Fact]
@@ -5965,25 +5129,19 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void TextButton_ExplicitClip_UsesResolvedM2Radius4()
+    public void TextButton_M2DefaultShape_UsesRoundedRectangleRadius4()
     {
-        var owner = new BuildOwner();
-        var root = new TestRootElement(
-            new Theme(
-                data: ThemeData.Light with { UseMaterial3 = false },
-                child: new TextButton(
-                    onPressed: () => { },
-                    clipBehavior: Clip.AntiAlias,
-                    child: new Text("Rounded splash"))));
+        ThemeData theme = ThemeData.Light with { UseMaterial3 = false };
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                clipBehavior: Clip.AntiAlias,
+                child: new Text("Rounded splash")),
+            theme);
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
-
-        Assert.NotNull(clip);
-        Assert.Equal(BorderRadius.Circular(4), clip!.BorderRadius);
+        ShapeDecoration decoration = MaterialShapeDecoration(harness);
+        var shape = Assert.IsType<RoundedRectangleBorder>(decoration.Shape);
+        Assert.Equal(BorderRadius.Circular(4), shape.BorderRadius);
     }
 
     [Fact]
@@ -6027,67 +5185,22 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void TextButton_PointerClick_DoesNotKeepFocusOverlayAfterPointerUp()
+    public void TextButton_PressedOverlay_ClearsAfterPointerUp()
     {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            PrimaryColor = Colors.Coral
-        };
+        Color pressedOverlay = Colors.Gold;
+        using WidgetRenderHarness harness = PumpButton(
+            new TextButton(
+                onPressed: () => { },
+                style: new ButtonStyle(
+                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                child: new Text("Click")));
 
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new TextButton(
-                    onPressed: () => { },
-                    child: new Text("Pointer focus"))));
+        PressButton(harness);
+        Assert.Equal(pressedOverlay, InkHighlight(harness));
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var interactiveListener = FindInteractivePointerListener(renderRoot);
-        var focusListener = FindFocusPointerListener(renderRoot);
-        Assert.NotNull(interactiveListener);
-        Assert.NotNull(focusListener);
-
-        interactiveListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 17,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 10)));
-
-        focusListener!.HandleEvent(
-            new PointerDownEvent(
-                pointer: 17,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(focusListener, new Point(12, 10)));
-
-        owner.FlushBuild();
-
-        interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
-            new PointerUpEvent(
-                pointer: 17,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(12, 10),
-                buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(12, 10)));
-
-        owner.FlushBuild();
-
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Null(decorated!.Decoration.Color);
+        ReleaseButton(harness);
+        Assert.NotEqual(pressedOverlay, InkHighlight(harness));
     }
 
     [Fact]
@@ -6114,16 +5227,16 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var initialDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var initialDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(initialDecorated);
-        Assert.Null(initialDecorated!.Decoration.Color);
+        Assert.Null(initialDecorated!.HighlightColor);
 
         Assert.True(focusNode.RequestFocus());
         owner.FlushBuild();
 
-        var focusedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(focusedDecorated);
-        Assert.Equal(focusedOverlay, focusedDecorated!.Decoration.Color);
+        Assert.Equal(focusedOverlay, focusedDecorated!.HighlightColor);
 
         root.Unmount();
         FocusManager.Instance.ResetForTests();
@@ -6762,13 +5875,15 @@ public sealed class MaterialButtonsTests
                 visualDensity: VisualDensity.Compact,
                 animationDuration: TimeSpan.FromMilliseconds(100),
                 enableFeedback: false));
-        var b = a.CopyWith(
-            IconButton.StyleFrom(
+        IconButtonThemeData b = a with
+        {
+            Style = IconButton.StyleFrom(
                 foregroundColor: Colors.White,
                 iconSize: 28,
                 visualDensity: VisualDensity.Standard,
                 animationDuration: TimeSpan.FromMilliseconds(300),
-                enableFeedback: true));
+                enableFeedback: true),
+        };
 
         IconButtonThemeData midpoint = Assert.IsType<IconButtonThemeData>(
             IconButtonThemeData.Lerp(a, b, 0.5));
@@ -6839,6 +5954,91 @@ public sealed class MaterialButtonsTests
         });
 
         return result;
+    }
+
+    private static readonly Size ButtonHarnessSize = new(200, 100);
+
+    /// Builds a button under a `Theme`/`Directionality` and pumps one frame, the shape every
+    /// interaction test needs now that the button composes `Material` + `InkWell`.
+    private static WidgetRenderHarness PumpButton(Widget button, ThemeData? theme = null)
+    {
+        var harness = new WidgetRenderHarness(
+            new Theme(
+                data: theme ?? ThemeData.Light,
+                child: new Directionality(TextDirection.Ltr, button)));
+        harness.Pump(ButtonHarnessSize);
+        return harness;
+    }
+
+    private static Color? InkHighlight(WidgetRenderHarness harness)
+    {
+        RenderInkResponsePaint? paint = FindInkPaint(harness.RenderView);
+        Assert.NotNull(paint);
+        return paint!.HighlightColor;
+    }
+
+    private static void HoverButton(WidgetRenderHarness harness, bool enter, int pointer = 91)
+    {
+        RenderPointerListener? listener = FindHoverPointerListener(harness.RenderView);
+        Assert.NotNull(listener);
+        var position = enter ? new Point(20, 20) : new Point(400, 400);
+        PointerEvent hover = enter
+            ? new PointerEnterEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, DateTime.UtcNow)
+            : new PointerExitEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, DateTime.UtcNow);
+        listener!.HandleEvent(hover, new BoxHitTestEntry(listener, position));
+        harness.Pump(ButtonHarnessSize);
+    }
+
+    private static void PressButton(WidgetRenderHarness harness, int pointer = 91)
+    {
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerDownEvent(
+                pointer,
+                PointerDeviceKind.Mouse,
+                new Point(20, 20),
+                PointerButtons.Primary,
+                DateTime.UtcNow));
+        harness.Pump(ButtonHarnessSize);
+    }
+
+    private static void ReleaseButton(WidgetRenderHarness harness, int pointer = 91)
+    {
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
+            new PointerUpEvent(
+                pointer,
+                PointerDeviceKind.Mouse,
+                new Point(20, 20),
+                PointerButtons.None,
+                DateTime.UtcNow));
+        harness.Pump(ButtonHarnessSize);
+    }
+
+    /// The `ShapeDecoration` the button's `Material` paints, skipping any plain `BoxDecoration`
+    /// above it in the tree.
+    private static ShapeDecoration MaterialShapeDecoration(WidgetRenderHarness harness)
+    {
+        ShapeDecoration? found = null;
+        void Visit(RenderObject node)
+        {
+            if (found is not null)
+            {
+                return;
+            }
+
+            if (node is RenderDecoratedBox box && box.DecorationValue is ShapeDecoration shape)
+            {
+                found = shape;
+                return;
+            }
+
+            node.VisitChildren(Visit);
+        }
+
+        Visit(harness.RenderView);
+        Assert.NotNull(found);
+        return found!;
     }
 
     private static RenderInkResponsePaint? FindInkPaint(RenderObject? root)

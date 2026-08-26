@@ -585,7 +585,7 @@ public sealed class Stepper : StatefulWidget
                     states.HasFlag(MaterialState.Disabled) || theme.Brightness == Brightness.Dark
                         ? null
                         : theme.ColorScheme.Primary),
-                Padding: MaterialStateProperty<Thickness?>.All(new Thickness(16, 0)),
+                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(new Thickness(16, 0)),
                 Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     BorderRadius.Circular(2))));
             return new Padding(
@@ -608,7 +608,8 @@ public sealed class Stepper : StatefulWidget
                                     style: TextButton.StyleFrom(
                                         foregroundColor: cancelColor,
                                         padding: new Thickness(16, 0),
-                                        shape: BorderRadius.Circular(2)))),
+                                        shape: new RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.Circular(2))))),
                         ])));
         }
 

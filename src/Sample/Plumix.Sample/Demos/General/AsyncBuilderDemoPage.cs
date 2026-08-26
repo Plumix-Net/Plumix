@@ -125,8 +125,9 @@ internal sealed class AsyncBuilderDemoPageState : State
     {
         return new TextButton(
             onPressed: onPressed,
-            backgroundColor: Color.Parse("#FFDCE3ED"),
-            child: new Text(label));
+            child: new Text(label),
+            style: TextButton.StyleFrom(
+                backgroundColor: Color.Parse("#FFDCE3ED")));
     }
 
     private void RestartFuture()

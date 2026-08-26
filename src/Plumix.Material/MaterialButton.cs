@@ -332,7 +332,7 @@ public sealed class RawMaterialButton : StatefulWidget
                     if (states.HasFlag(MaterialState.Focused)) return widget.FocusElevation;
                     return widget.Elevation;
                 }),
-                Padding: MaterialStateProperty<Thickness?>.All(resolvedPadding),
+                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(resolvedPadding),
                 Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     widget.Shape)),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(

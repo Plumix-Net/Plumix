@@ -185,9 +185,10 @@ internal sealed class ChipsDemoPageState : State
     {
         return new TextButton(
             onPressed: onPressed,
-            backgroundColor: Color.Parse("#FFEADDFF"),
-            foregroundColor: Color.Parse("#FF21005D"),
-            minHeight: 36,
-            child: new Text(label, fontSize: 12));
+            child: new Text(label, fontSize: 12),
+            style: TextButton.StyleFrom(
+                foregroundColor: Color.Parse("#FF21005D"),
+                backgroundColor: Color.Parse("#FFEADDFF"),
+                minimumSize: new Size(64, 36)));
     }
 }

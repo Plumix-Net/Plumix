@@ -465,7 +465,7 @@ public sealed class FloatingActionButton : StatelessWidget
                 disabledElevation: disabledElevation),
             IconSize: MaterialStateProperty<double?>.All(iconSize),
             Side: MaterialStateProperty<BorderSide?>.All(ShapeBorderGeometry.SideOrNull(shape)),
-            Padding: MaterialStateProperty<Thickness?>.All(default),
+            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
             Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                 ShapeBorderGeometry.ResolveRadius(shape))),
             MinimumSize: MaterialStateProperty<Size?>.All(

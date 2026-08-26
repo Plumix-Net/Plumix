@@ -219,8 +219,10 @@ type Ui private () =
         ElevatedButton(
             child,
             action onPressed,
-            foregroundColor = nul foregroundColor,
-            backgroundColor = nul backgroundColor,
+            style =
+                ElevatedButton.StyleFrom(
+                    foregroundColor = nul foregroundColor,
+                    backgroundColor = nul backgroundColor),
             key = obj' key)
 
     static member textButton
@@ -234,8 +236,10 @@ type Ui private () =
         TextButton(
             child,
             action onPressed,
-            foregroundColor = nul foregroundColor,
-            backgroundColor = nul backgroundColor,
+            style =
+                TextButton.StyleFrom(
+                    foregroundColor = nul foregroundColor,
+                    backgroundColor = nul backgroundColor),
             key = obj' key)
 
     static member outlinedButton
@@ -249,8 +253,12 @@ type Ui private () =
         OutlinedButton(
             child,
             action onPressed,
-            foregroundColor = nul foregroundColor,
-            borderColor = nul borderColor,
+            style =
+                OutlinedButton.StyleFrom(
+                    foregroundColor = nul foregroundColor,
+                    side = (match borderColor with
+                            | Some color -> Nullable(BorderSide(color))
+                            | None -> Nullable())),
             key = obj' key)
 
     static member floatingActionButton

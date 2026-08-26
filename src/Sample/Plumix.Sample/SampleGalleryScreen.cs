@@ -764,12 +764,13 @@ internal sealed class SampleMenuPage : StatefulWidget
         {
             return new OutlinedButton(
                 onPressed: () => Navigator.Of(context).PushNamed(page.RouteName),
-                backgroundColor: Color.Parse("#FFDCE3ED"),
-                borderColor: Color.Parse("#FFB8C4D4"),
-                foregroundColor: Colors.Black,
-                minHeight: 44,
-                padding: new Thickness(10, 8),
-                child: new Text($"{page.Title}  |  {page.Subtitle}", fontSize: 12));
+                child: new Text($"{page.Title}  |  {page.Subtitle}", fontSize: 12),
+                style: OutlinedButton.StyleFrom(
+                    foregroundColor: Colors.Black,
+                    backgroundColor: Color.Parse("#FFDCE3ED"),
+                    padding: new Thickness(10, 8),
+                    minimumSize: new Size(64, 44),
+                    side: new BorderSide(Color.Parse("#FFB8C4D4"))));
         }
     }
 }

@@ -73,12 +73,14 @@ internal sealed class BlocCounterDemoPageState : State
         return new Expanded(
             child: new TextButton(
                 onPressed: onPressed,
-                backgroundColor: background,
-                foregroundColor: Colors.Black,
-                minHeight: 38,
-                padding: new Thickness(10, 8),
-                borderRadius: BorderRadius.Circular(8),
-                child: new Text(label, fontSize: 12, textAlign: TextAlign.Center)));
+                child: new Text(label, fontSize: 12, textAlign: TextAlign.Center),
+                style: TextButton.StyleFrom(
+                    foregroundColor: Colors.Black,
+                    backgroundColor: background,
+                    padding: new Thickness(10, 8),
+                    minimumSize: new Size(64, 38),
+                    shape: new RoundedRectangleBorder(
+                        borderRadius: BorderRadius.Circular(8)))));
     }
 }
 

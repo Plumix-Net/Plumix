@@ -417,9 +417,16 @@ public sealed class MaterialSnackBarTests : IDisposable
             Colors.Green,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
 
+        double now = Scheduler.CurrentSeconds;
         Tap(harness.RenderView, new Point(100, 30), 901);
         harness.Pump(new Size(200, 60));
         Tap(harness.RenderView, new Point(100, 30), 902);
+        harness.Pump(new Size(200, 60));
+
+        // The disabled colour arrives through `Material.animationDuration`, so let the default
+        // 200 ms text-style animation finish before reading the paragraph.
+        AnimationPump.Prime();
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
         harness.Pump(new Size(200, 60));
 
         Assert.Equal(1, calls);
@@ -448,7 +455,11 @@ public sealed class MaterialSnackBarTests : IDisposable
             Colors.Green,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "UNDO")!.Foreground).Color);
 
+        double now = Scheduler.CurrentSeconds;
         Tap(harness.RenderView, new Point(100, 30), 903);
+        harness.Pump(new Size(200, 60));
+        AnimationPump.Prime();
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.5));
         harness.Pump(new Size(200, 60));
         Assert.Equal(
             Colors.Red,

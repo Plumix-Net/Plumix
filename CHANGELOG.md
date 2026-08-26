@@ -8,6 +8,17 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: strict `ButtonStyleButton` port — `Material` + `InkWell`, `_InputPadding` (`button_style_button.dart`).
+- Breaking: the four Material buttons extend it, with Dart's constructors, `.icon`/`.tonal` factories and defaults.
+- Breaking: they drop the C#-only `foregroundColor`/`backgroundColor`/`padding`/`borderRadius`/`min*` shortcuts.
+- Breaking: `ButtonStyle` takes Dart's field order; `Padding` is now an `EdgeInsetsGeometry` (`button_style.dart`).
+- Breaking: `ButtonStyle.Lerp` no longer clamps `t`; `Side` fades through Dart's `WidgetStateBorderSide.lerp`.
+- Breaking: `styleFrom(shape:)` takes an `OutlinedBorder`; `styleFrom` matches Dart's overlay/elevation tables.
+- Breaking: Elevated/Filled/Outlined `styleFrom(iconColor:)` resolves null when disabled, so the default wins.
+- Breaking: a resolved `ButtonStyle.textStyle` reaches `Material` whole; the default's weight is not merged in.
+- Breaking: disabling a pressed button adds `disabled` before clearing `pressed`, as `_ButtonStyleState` does.
+- Added `ButtonStyle.CopyWith`/`DebugFillProperties` and the five `*ButtonThemeData.DebugFillProperties`.
+- Split `Buttons.cs`/`ButtonThemes.cs` per Dart file; `MaterialButtonCore` is flagged C#-only infrastructure.
 - Breaking: full 8,825-icon `Icons` catalog + `Icons.Adaptive` generated from the pin (`icons.dart`).
 - Breaking: Material icons carry Dart's `FontFamily: "MaterialIcons"`; `Icons.MaterialIconsFontFamily` is gone.
 - Breaking: corrected drifted hand-written code points (`Edit`, `Search`, `Visibility`, `ChevronLeft`, ...).

@@ -485,7 +485,7 @@ internal sealed class NavigationBarDestinationTileState : State
             IconColor: MaterialStateProperty<Color?>.ResolveWith(states => widget.IconTheme.Resolve(states)?.Color),
             IconSize: MaterialStateProperty<double?>.ResolveWith(states => widget.IconTheme.Resolve(states)?.Size),
             TextStyle: widget.LabelTextStyle,
-            Padding: MaterialStateProperty<Thickness?>.All(default),
+            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
             Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                 ShapeBorderGeometry.ResolveRadius(widget.IndicatorShape))),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, widget.Height)),
@@ -574,7 +574,7 @@ internal sealed class NavigationBarCustomDestinationTile : StatelessWidget
                 BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 OverlayColor: OverlayColor,
                 SplashColor: OverlayColor,
-                Padding: MaterialStateProperty<Thickness?>.All(default),
+                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, Height)),
                 TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
                 Alignment: Alignment.Center),

@@ -143,7 +143,7 @@ public sealed class SegmentedButton<T> : StatefulWidget
                 : null,
             IconSize: iconSize.HasValue ? MaterialStateProperty<double?>.All(iconSize) : null,
             Side: side.HasValue ? MaterialStateProperty<BorderSide?>.All(side) : null,
-            Padding: padding.HasValue ? MaterialStateProperty<Thickness?>.All(padding) : null,
+            Padding: padding.HasValue ? MaterialStateProperty<EdgeInsetsGeometry?>.All(padding) : null,
             Shape: shape is not null ? MaterialStateProperty<OutlinedBorder?>.All(shape) : null,
             MinimumSize: minimumSize.HasValue ? MaterialStateProperty<Size?>.All(minimumSize) : null,
             FixedSize: fixedSize.HasValue ? MaterialStateProperty<Size?>.All(fixedSize) : null,
@@ -298,15 +298,14 @@ public sealed class SegmentedButtonState<T> : State
                     ? segment.Icon
                     : null;
             T capturedValue = segment.Value;
-            Widget button = TextButton.Segment(
+            Widget button = TextButton.Icon(
                 label: label,
                 icon: icon,
                 onPressed: enabled ? () => HandlePressed(capturedValue) : null,
                 style: widgetSegmentStyle,
                 onHover: HandleHover,
                 onFocusChange: HandleFocus,
-                statesController: controller,
-                isSelected: selected);
+                statesController: controller);
             if (segment.Tooltip is not null)
             {
                 button = new Tooltip(message: segment.Tooltip, child: button);
@@ -472,12 +471,13 @@ public sealed class SegmentedButtonState<T> : State
                                 ?? segmentedThemeStyle?.VisualDensity
                                 ?? theme.VisualDensity;
         Vector densityAdjustment = density.BaseSizeAdjustment;
-        Thickness padding = ResolveValue(
+        EdgeInsetsGeometry paddingGeometry = ResolveValue(
             static style => style.Padding,
             states,
             widget.Style,
             segmentedThemeStyle,
             defaults) ?? default;
+        Thickness padding = paddingGeometry.Resolve(TextDirection.Ltr);
         TextStyle? textStyle = ResolveValue(
             static style => style.TextStyle,
             states,

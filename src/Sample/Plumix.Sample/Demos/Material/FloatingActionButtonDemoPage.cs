@@ -198,14 +198,16 @@ internal sealed class FloatingActionButtonDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                backgroundColor: background,
-                foregroundColor: Colors.Black,
-                minHeight: 36,
-                padding: new Thickness(10, 8),
-                borderRadius: BorderRadius.Circular(8),
                 child: new Text(
                     label,
-                    fontSize: 12)));
+                    fontSize: 12),
+                style: TextButton.StyleFrom(
+                    foregroundColor: Colors.Black,
+                    backgroundColor: background,
+                    padding: new Thickness(10, 8),
+                    minimumSize: new Size(64, 36),
+                    shape: new RoundedRectangleBorder(
+                        borderRadius: BorderRadius.Circular(8)))));
     }
 
     private static BoxConstraints TightConstraints(double width, double height)

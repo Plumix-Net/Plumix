@@ -1243,7 +1243,7 @@ internal static class MenuButtonDefaults
 
                 return Colors.Transparent;
             }),
-            Padding: MaterialStateProperty<Thickness?>.All(ScaledPadding(context)),
+            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(ScaledPadding(context)),
             Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder()),
             SplashFactory: theme.SplashFactory,
             TapTargetSize: theme.MaterialTapTargetSize,

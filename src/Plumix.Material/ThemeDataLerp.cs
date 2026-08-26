@@ -27,58 +27,6 @@ public sealed partial record ActionIconThemeData
     }
 }
 
-public sealed partial record TextButtonThemeData
-{
-    public static TextButtonThemeData? Lerp(TextButtonThemeData? a, TextButtonThemeData? b, double t)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return a;
-        }
-
-        return new TextButtonThemeData(ButtonStyle.Lerp(a?.Style, b?.Style, t));
-    }
-}
-
-public sealed partial record ElevatedButtonThemeData
-{
-    public static ElevatedButtonThemeData? Lerp(ElevatedButtonThemeData? a, ElevatedButtonThemeData? b, double t)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return a;
-        }
-
-        return new ElevatedButtonThemeData(ButtonStyle.Lerp(a?.Style, b?.Style, t));
-    }
-}
-
-public sealed partial record OutlinedButtonThemeData
-{
-    public static OutlinedButtonThemeData? Lerp(OutlinedButtonThemeData? a, OutlinedButtonThemeData? b, double t)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return a;
-        }
-
-        return new OutlinedButtonThemeData(ButtonStyle.Lerp(a?.Style, b?.Style, t));
-    }
-}
-
-public sealed partial record FilledButtonThemeData
-{
-    public static FilledButtonThemeData? Lerp(FilledButtonThemeData? a, FilledButtonThemeData? b, double t)
-    {
-        if (ReferenceEquals(a, b))
-        {
-            return a;
-        }
-
-        return new FilledButtonThemeData(ButtonStyle.Lerp(a?.Style, b?.Style, t));
-    }
-}
-
 public sealed partial record CarouselViewThemeData
 {
     public static CarouselViewThemeData Lerp(CarouselViewThemeData? a, CarouselViewThemeData? b, double t)

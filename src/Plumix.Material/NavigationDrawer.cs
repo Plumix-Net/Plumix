@@ -277,7 +277,7 @@ internal sealed class NavigationDrawerDestinationTileState : State
             IconColor: MaterialStateProperty<Color?>.All(iconTheme.Color),
             IconSize: MaterialStateProperty<double?>.All(iconTheme.Size),
             TextStyle: MaterialStateProperty<TextStyle?>.All(labelStyle),
-            Padding: MaterialStateProperty<Thickness?>.All(default),
+            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
             Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                 ShapeBorderGeometry.ResolveRadius(indicatorShape))),
             MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, tileHeight)),

@@ -132,15 +132,17 @@ internal sealed class MaterialButtonsDemoPageState : State
                         new Expanded(
                             child: new ElevatedButton(
                                 onPressed: _enabled ? OnElevatedButtonTap : null,
-                                backgroundColor: Color.Parse("#FF6A994E"),
-                                foregroundColor: Colors.White,
-                                child: new Text("Custom elevated"))),
+                                child: new Text("Custom elevated"),
+                                style: ElevatedButton.StyleFrom(
+                                    foregroundColor: Colors.White,
+                                    backgroundColor: Color.Parse("#FF6A994E")))),
                         new Expanded(
                             child: new OutlinedButton(
                                 onPressed: _enabled ? OnOutlinedButtonTap : null,
-                                borderColor: Color.Parse("#FF7B2CBF"),
-                                foregroundColor: Color.Parse("#FF7B2CBF"),
-                                child: new Text("Custom outlined"))),
+                                child: new Text("Custom outlined"),
+                                style: OutlinedButton.StyleFrom(
+                                    foregroundColor: Color.Parse("#FF7B2CBF"),
+                                    side: new BorderSide(Color.Parse("#FF7B2CBF"))))),
                     ]),
                 new Row(
                     spacing: 8,
@@ -149,15 +151,17 @@ internal sealed class MaterialButtonsDemoPageState : State
                         new Expanded(
                             child: new FilledButton(
                                 onPressed: _enabled ? OnFilledButtonTap : null,
-                                foregroundColor: Colors.White,
-                                backgroundColor: Color.Parse("#FF005E7A"),
-                                child: new Text("Custom filled"))),
+                                child: new Text("Custom filled"),
+                                style: FilledButton.StyleFrom(
+                                    foregroundColor: Colors.White,
+                                    backgroundColor: Color.Parse("#FF005E7A")))),
                         new Expanded(
                             child: FilledButton.Tonal(
                                 onPressed: _enabled ? OnFilledTonalButtonTap : null,
-                                foregroundColor: Color.Parse("#FF42275A"),
-                                backgroundColor: Color.Parse("#FFD8CFF8"),
-                                child: new Text("Custom tonal"))),
+                                child: new Text("Custom tonal"),
+                                style: FilledButton.StyleFrom(
+                                    foregroundColor: Color.Parse("#FF42275A"),
+                                    backgroundColor: Color.Parse("#FFD8CFF8")))),
                     ]),
             ]);
     }
@@ -305,14 +309,16 @@ internal sealed class MaterialButtonsDemoPageState : State
             width: width,
             child: new TextButton(
                 onPressed: onTap,
-                backgroundColor: background,
-                foregroundColor: Colors.Black,
-                minHeight: 36,
-                padding: new Thickness(10, 8),
-                borderRadius: BorderRadius.Circular(8),
                 child: new Text(
                     label,
-                    fontSize: 12)));
+                    fontSize: 12),
+                style: TextButton.StyleFrom(
+                    foregroundColor: Colors.Black,
+                    backgroundColor: background,
+                    padding: new Thickness(10, 8),
+                    minimumSize: new Size(0, 36),
+                    shape: new RoundedRectangleBorder(
+                        borderRadius: BorderRadius.Circular(8)))));
     }
 
     private Widget BuildIconButtonProbe(BuildContext context)

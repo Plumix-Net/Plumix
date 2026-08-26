@@ -539,7 +539,7 @@ internal sealed class NavigationRailDestinationTileState : State
                         ? hoverColor
                         : null),
             SplashColor: MaterialStateProperty<Color?>.All(splashColor),
-            Padding: MaterialStateProperty<Thickness?>.All(default),
+            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
             Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: 
                 ShapeBorderGeometry.ResolveRadiusOrNull(widget.IndicatorShape)
                 ?? Plumix.Rendering.BorderRadius.Circular(widget.MinWidth / 2))),

@@ -835,7 +835,7 @@ public sealed class RawChip : StatefulWidget
                 IconSize: MaterialStateProperty<double?>.All(effectiveIconTheme?.Size ?? 18),
                 Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
                     ResolveSide(states, widget, chipTheme, defaults)),
-                Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0)),
+                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(new Thickness(0)),
                 Shape: MaterialStateProperty<OutlinedBorder?>.ResolveWith(states =>
                     ResolveShape(states, widget, chipTheme, defaults) as OutlinedBorder),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, 0)),

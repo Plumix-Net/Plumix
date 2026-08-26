@@ -110,7 +110,7 @@ public sealed class DesktopTextSelectionToolbarButton : StatelessWidget
         ButtonStyle style = TextButton.StyleFrom(
             alignment: Alignment.CenterLeft,
             foregroundColor: foregroundColor,
-            shape: BorderRadius.Zero,
+            shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Zero),
             minimumSize: new Size(48.0, 36.0),
             padding: ToolbarButtonPadding) with
         {

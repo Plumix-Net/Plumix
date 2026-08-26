@@ -478,7 +478,8 @@ public sealed class DropdownMenuState<T> : State
                 .DirectionalOnly(start: padding, end: DropdownMenu<T>.DefaultHorizontalPadding)
                 .Resolve(textDirection);
             var effectiveStyle = entry.Style
-                                 ?? new ButtonStyle(Padding: MaterialStateProperty<Thickness?>.All(itemPadding));
+                                 ?? new ButtonStyle(
+                                     Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(itemPadding));
 
             var themeStyle = MenuButtonTheme.Of(Context).Style;
             var effectiveForegroundColor = entry.Style?.ForegroundColor ?? themeStyle?.ForegroundColor;

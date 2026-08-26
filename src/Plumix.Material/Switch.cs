@@ -577,7 +577,7 @@ public sealed class Switch : StatefulWidget
                 IconColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 IconSize: MaterialStateProperty<double?>.All(config.IconSize),
                 Side: MaterialStateProperty<BorderSide?>.All(null),
-                Padding: MaterialStateProperty<Thickness?>.All(new Thickness(0)),
+                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(new Thickness(0)),
                 Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     BorderRadius.Circular(totalHeight / 2))),
                 MinimumSize: MaterialStateProperty<Size?>.All(new Size(totalWidth, totalHeight)),

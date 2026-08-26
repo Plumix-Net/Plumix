@@ -125,10 +125,12 @@ internal sealed class BarControlsDemoPageState : State
         width: width,
         child: new TextButton(
             onPressed: () => SetState(update),
-            minHeight: 36,
-            padding: new Thickness(8, 6),
-            backgroundColor: Color.Parse("#FFE9F0FF"),
-            foregroundColor: Colors.Black,
-            borderRadius: BorderRadius.Circular(8),
-            child: new Text(label, fontSize: 11)));
+            child: new Text(label, fontSize: 11),
+            style: TextButton.StyleFrom(
+                foregroundColor: Colors.Black,
+                backgroundColor: Color.Parse("#FFE9F0FF"),
+                padding: new Thickness(8, 6),
+                minimumSize: new Size(64, 36),
+                shape: new RoundedRectangleBorder(
+                    borderRadius: BorderRadius.Circular(8)))));
 }

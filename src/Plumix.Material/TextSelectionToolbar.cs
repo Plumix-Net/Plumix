@@ -167,7 +167,7 @@ public sealed class TextSelectionToolbarTextButton : StatelessWidget
         ButtonStyle style = TextButton.StyleFrom(
             backgroundColor: Colors.Transparent,
             foregroundColor: foregroundColor,
-            shape: BorderRadius.Zero,
+            shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Zero),
             minimumSize: new Size(48.0, 48.0),
             padding: Padding,
             alignment: Alignment,
