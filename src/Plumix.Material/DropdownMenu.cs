@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -503,9 +504,7 @@ public sealed class DropdownMenuState<T> : State
                 Color focusedOverlayColor =
                     (effectiveOverlayColor ?? defaultStyle.OverlayColor!).Resolve(MaterialState.Focused)!.Value;
                 Color focusedBackgroundColor = effectiveBackgroundColor?.Resolve(MaterialState.Focused)
-                                               ?? MaterialButtonCore.ApplyOpacity(
-                                                   Theme.Of(Context).ColorScheme.OnSurface,
-                                                   0.12);
+                                               ?? Theme.Of(Context).ColorScheme.OnSurface.WithOpacity(0.12);
                 effectiveStyle = effectiveStyle with
                 {
                     BackgroundColor = MaterialStateProperty<Color?>.All(focusedBackgroundColor),

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Physics;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -564,17 +565,17 @@ public sealed class CarouselViewState : State
         {
             if (states.HasFlag(MaterialState.Pressed))
             {
-                return MaterialButtonCore.ApplyOpacity(onSurface, 0.1);
+                return onSurface.WithOpacity(0.1);
             }
 
             if (states.HasFlag(MaterialState.Hovered))
             {
-                return MaterialButtonCore.ApplyOpacity(onSurface, 0.08);
+                return onSurface.WithOpacity(0.08);
             }
 
             if (states.HasFlag(MaterialState.Focused))
             {
-                return MaterialButtonCore.ApplyOpacity(onSurface, 0.1);
+                return onSurface.WithOpacity(0.1);
             }
 
             return null;

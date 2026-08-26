@@ -241,11 +241,20 @@ public sealed class MaterialNavigationSurfacesTests
 
         var root = harness.PumpAndGetSemantics(new Size(320, 160));
 
-        var selected = FindSemantics(root, node => node.Label?.Contains("Two, Tab 2 of 2", StringComparison.Ordinal) == true);
+        // Dart's destination is `Semantics(enabled, button)` over a `Stack` holding the ink well and
+        // a sibling `Semantics(label: tabLabel)`; the ink well keeps its own node in Plumix (see the
+        // `InkResponse`/`Focus` row in `docs/ai/DIVERGENCES.md`).
+        var selected = FindSemantics(
+            root,
+            node => node.Label?.Contains("Tab 2 of 2", StringComparison.Ordinal) == true);
         Assert.NotNull(selected);
         Assert.True(selected!.Flags.HasFlag(SemanticsFlags.IsSelected));
         Assert.True(selected.Flags.HasFlag(SemanticsFlags.IsEnabled));
-        Assert.True(selected.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.True(selected.Flags.HasFlag(SemanticsFlags.IsButton));
+
+        var tappable = FindSemantics(selected, node => node.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(tappable);
+        Assert.Contains("Two", tappable!.Label, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -299,8 +308,10 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.Decoration.Color == Colors.DarkGreen
                    && box.Decoration.BorderRadius?.Radius == 9999);
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == Colors.Yellow);
+        // Dart paints a destination's `backgroundColor` with `Ink`, so it lands on the drawer's
+        // material as an ink decoration rather than as a `DecoratedBox`.
+        Assert.Contains(FindDescendants<RenderInkDecoration>(harness.RenderView),
+            ink => (ink.Decoration as BoxDecoration)?.Color == Colors.Yellow);
         Assert.Equal(Colors.CadetBlue,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color);
         Assert.Equal(Colors.Gold,
@@ -416,8 +427,10 @@ public sealed class MaterialNavigationSurfacesTests
 
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.Decoration.Color == Colors.DarkBlue);
-        Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView),
-            box => box.Decoration.Color == Colors.Yellow);
+        // Dart paints a destination's `backgroundColor` with `Ink`, so it lands on the drawer's
+        // material as an ink decoration rather than as a `DecoratedBox`.
+        Assert.Contains(FindDescendants<RenderInkDecoration>(harness.RenderView),
+            ink => (ink.Decoration as BoxDecoration)?.Color == Colors.Yellow);
         Assert.Equal(Colors.CadetBlue,
             Assert.IsType<SolidColorBrush>(FindParagraph(harness.RenderView, "Home")!.Foreground).Color);
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),

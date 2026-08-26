@@ -32,7 +32,7 @@ public sealed class MaterialLegacyButtonTests
         Assert.Equal(default, button.Padding);
         Assert.Equal(VisualDensity.Standard, button.VisualDensity);
         Assert.Equal(new BoxConstraints(MinWidth: 88, MinHeight: 36), button.Constraints);
-        Assert.Equal(BorderRadius.Zero, button.Shape);
+        Assert.Equal(new RoundedRectangleBorder(), button.Shape);
         Assert.Equal(TimeSpan.FromMilliseconds(200), button.AnimationDuration);
         Assert.Equal(Clip.None, button.ClipBehavior);
         Assert.Equal(MaterialTapTargetSize.Padded, button.MaterialTapTargetSize);
@@ -86,13 +86,13 @@ public sealed class MaterialLegacyButtonTests
                 child: new Text("Legacy"))));
 
         var raw = tree.FindWidget<RawMaterialButton>();
-        var core = tree.FindWidget<MaterialButtonCore>();
+        var tapTarget = tree.FindWidget<InputPadding>();
 
         Assert.NotNull(raw);
         Assert.True(raw!.Enabled);
         Assert.Equal(EdgeInsetsGeometry.Symmetric(horizontal: 16), raw.Padding);
         Assert.Equal(new BoxConstraints(MinWidth: 88, MinHeight: 36), raw.Constraints);
-        Assert.Equal(2, raw.Shape.Radius);
+        Assert.Equal(2, ShapeBorderGeometry.ResolveRadius(raw.Shape).TopLeft);
         Assert.Equal(2, raw.Elevation);
         Assert.Equal(4, raw.FocusElevation);
         Assert.Equal(4, raw.HoverElevation);
@@ -101,8 +101,8 @@ public sealed class MaterialLegacyButtonTests
         Assert.Equal(Color.FromArgb(0xDE, 0, 0, 0), raw.TextStyle?.Color);
         Assert.Equal(ThemeData.Light.HighlightColor, raw.HighlightColor);
         Assert.Equal(ThemeData.Light.SplashColor, raw.SplashColor);
-        Assert.NotNull(core);
-        Assert.Equal(new Size(48, 48), core!.TapTargetMinimumSize);
+        Assert.NotNull(tapTarget);
+        Assert.Equal(new Size(48, 48), tapTarget!.MinSize);
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public sealed class MaterialLegacyButtonTests
         Assert.Equal(120, raw.Constraints.MinWidth);
         Assert.Equal(52, raw.Constraints.MinHeight);
         Assert.Equal(EdgeInsetsGeometry.Symmetric(horizontal: 19, vertical: 3), raw.Padding);
-        Assert.Equal(9, raw.Shape.Radius);
+        Assert.Equal(9, ShapeBorderGeometry.ResolveRadius(raw.Shape).TopLeft);
         Assert.Equal(Colors.Crimson, raw.TextStyle?.Color);
         Assert.Equal(Colors.DarkOrange, raw.FocusColor);
         Assert.Equal(Colors.HotPink, raw.HoverColor);
@@ -165,10 +165,9 @@ public sealed class MaterialLegacyButtonTests
 
         var raw = Assert.IsType<RawMaterialButton>(tree.FindWidget<RawMaterialButton>());
         Assert.Equal(EdgeInsetsGeometry.DirectionalOnly(start: 14, end: 6), raw.Padding);
-        var core = Assert.IsType<MaterialButtonCore>(tree.FindWidget<MaterialButtonCore>());
         Assert.Equal(
             new Thickness(expectedLeft, 0, expectedRight, 0),
-            core.Style.ResolvePadding(MaterialState.None));
+            FindButtonContentPadding(tree.RenderRoot));
     }
 
     [Fact]
@@ -221,24 +220,86 @@ public sealed class MaterialLegacyButtonTests
                 padding: new Thickness(10, 8),
                 visualDensity: VisualDensity.Compact,
                 constraints: new BoxConstraints(MinWidth: 88, MinHeight: 36),
-                shape: BorderRadius.Circular(7),
+                shape: new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(7)),
                 child: new Text("Raw"))));
 
-        var core = Assert.IsType<MaterialButtonCore>(tree.FindWidget<MaterialButtonCore>());
-        Assert.Equal(2, core.Style.ResolveElevation(MaterialState.None));
-        Assert.Equal(4, core.Style.ResolveElevation(MaterialState.Focused));
-        Assert.Equal(4, core.Style.ResolveElevation(MaterialState.Hovered));
-        Assert.Equal(8, core.Style.ResolveElevation(MaterialState.Pressed));
-        Assert.Equal(0, core.Style.ResolveElevation(MaterialState.Disabled));
-        Assert.Equal(Colors.Gold, core.Style.ResolveOverlayColor(MaterialState.Focused));
-        Assert.Equal(Colors.Green, core.Style.ResolveOverlayColor(MaterialState.Hovered));
-        Assert.Equal(Colors.Crimson, core.Style.ResolveOverlayColor(MaterialState.Pressed));
-        Assert.Equal(Colors.Blue, core.Style.ResolveSplashColor(MaterialState.Pressed));
-        Assert.Equal(new Thickness(2, 0), core.Style.ResolvePadding(MaterialState.None));
-        Assert.Equal(new Size(80, 28), EffectiveMinimum(core));
-        Assert.Equal(new Size(40, 40), core.TapTargetMinimumSize);
-        Assert.Equal(7, ShapeBorderGeometry.ResolveRadius(core.Style.ResolveShape(MaterialState.None)).Radius);
-        Assert.Equal(Colors.Navy, core.Style.ResolveForegroundColor(MaterialState.None));
+        var material = Assert.IsType<Plumix.Material.Material>(tree.FindWidget<Plumix.Material.Material>());
+        var ink = Assert.IsType<InkWell>(tree.FindWidget<InkWell>());
+        var constrained = Assert.IsType<ConstrainedBox>(tree.FindWidget<ConstrainedBox>());
+        var tapTarget = Assert.IsType<InputPadding>(tree.FindWidget<InputPadding>());
+
+        Assert.Equal(2, material.Elevation);
+        Assert.Equal(Colors.Beige, material.Color);
+        Assert.Equal(MaterialType.Button, material.Type);
+        Assert.Equal(Colors.Navy, material.TextStyle?.Color);
+        Assert.Equal(7, ShapeBorderGeometry.ResolveRadius(material.Shape).TopLeft);
+        Assert.Equal(Colors.Gold, ink.FocusColor);
+        Assert.Equal(Colors.Green, ink.HoverColor);
+        Assert.Equal(Colors.Crimson, ink.HighlightColor);
+        Assert.Equal(Colors.Blue, ink.SplashColor);
+        Assert.Same(material.Shape, ink.CustomBorder);
+        Assert.Equal(new Thickness(2, 0), FindButtonContentPadding(tree.RenderRoot));
+        Assert.Equal(80, constrained.Constraints.MinWidth);
+        Assert.Equal(28, constrained.Constraints.MinHeight);
+        Assert.Equal(new Size(40, 40), tapTarget.MinSize);
+    }
+
+    [Theory]
+    [InlineData(true, 8.0)]
+    [InlineData(false, 2.0)]
+    public void RawMaterialButton_EffectiveElevationFollowsThePressedState(bool pressed, double expected)
+    {
+        using var tree = Build(new Theme(
+            data: ThemeData.Light,
+            child: new RawMaterialButton(
+                onPressed: () => { },
+                fillColor: Colors.Beige,
+                child: new Text("Press"))));
+
+        if (pressed)
+        {
+            PressAndHold(tree, pointer: 91, DateTime.UtcNow);
+        }
+        else
+        {
+            tree.Pump(HarnessSize);
+        }
+
+        var material = Assert.IsType<Plumix.Material.Material>(tree.FindWidget<Plumix.Material.Material>());
+        Assert.Equal(expected, material.Elevation);
+    }
+
+    [Fact]
+    public void RawMaterialButton_DisabledUsesDisabledElevationAndTransparentMaterial()
+    {
+        using var tree = Build(new Theme(
+            data: ThemeData.Light,
+            child: new RawMaterialButton(
+                onPressed: null,
+                disabledElevation: 3,
+                child: new Text("Off"))));
+
+        var material = Assert.IsType<Plumix.Material.Material>(tree.FindWidget<Plumix.Material.Material>());
+        var ink = Assert.IsType<InkWell>(tree.FindWidget<InkWell>());
+        Assert.Equal(3, material.Elevation);
+        Assert.Equal(MaterialType.Transparency, material.Type);
+        Assert.Null(material.Color);
+        Assert.False(ink.CanRequestFocus);
+        Assert.Null(ink.OnTap);
+    }
+
+    [Fact]
+    public void RawMaterialButton_ShrinkWrapTapTargetRemovesTheInputPadding()
+    {
+        using var tree = Build(new Theme(
+            data: ThemeData.Light,
+            child: new RawMaterialButton(
+                onPressed: () => { },
+                materialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
+                child: new Text("Tight"))));
+
+        var tapTarget = Assert.IsType<InputPadding>(tree.FindWidget<InputPadding>());
+        Assert.Equal(default, tapTarget.MinSize);
     }
 
     [Fact]
@@ -252,12 +313,12 @@ public sealed class MaterialLegacyButtonTests
                 child: new Text("Hold"))));
 
         var raw = Assert.IsType<RawMaterialButton>(tree.FindWidget<RawMaterialButton>());
-        var core = Assert.IsType<MaterialButtonCore>(tree.FindWidget<MaterialButtonCore>());
+        var ink = Assert.IsType<InkWell>(tree.FindWidget<InkWell>());
         Assert.True(raw.Enabled);
-        Assert.True(core.Enabled);
-        Assert.Null(core.OnPressed);
-        Assert.NotNull(core.OnLongPress);
-        Assert.NotNull(FindInteractivePointerListener(tree.RenderRoot));
+        Assert.True(ink.CanRequestFocus);
+        Assert.Null(ink.OnTap);
+        Assert.NotNull(ink.OnLongPress);
+        Assert.NotNull(FindInteractiveGestureListener(tree.RenderRoot));
     }
 
     [Fact]
@@ -272,55 +333,90 @@ public sealed class MaterialLegacyButtonTests
                 highlightColor: Colors.DarkOrange,
                 child: new Text("Press"))));
 
-        var listener = Assert.IsType<RenderPointerListener>(
-            FindInteractivePointerListener(tree.RenderRoot));
-        var entry = new BoxHitTestEntry(listener, new Point(12, 10));
-        var now = DateTime.UtcNow;
-        listener.HandleEvent(new PointerDownEvent(
-            pointer: 71,
-            kind: PointerDeviceKind.Mouse,
-            position: new Point(12, 10),
-            buttons: PointerButtons.Primary,
-            timestampUtc: now), entry);
-        tree.FlushBuild();
+        DateTime now = DateTime.UtcNow;
+        PressAndHold(tree, pointer: 71, now);
 
-        var core = Assert.IsType<MaterialButtonCore>(tree.FindWidget<MaterialButtonCore>());
-        Assert.Equal(Colors.DarkOrange, core.Style.ResolveOverlayColor(MaterialState.Pressed));
+        var pressedMaterial = Assert.IsType<Plumix.Material.Material>(tree.FindWidget<Plumix.Material.Material>());
+        var pressedInk = Assert.IsType<InkWell>(tree.FindWidget<InkWell>());
+        Assert.Equal(Colors.DarkOrange, pressedInk.HighlightColor);
+        Assert.Equal(8, pressedMaterial.Elevation);
 
-        listener.HandleEvent(new PointerUpEvent(
-            pointer: 71,
-            kind: PointerDeviceKind.Mouse,
-            position: new Point(12, 10),
-            buttons: PointerButtons.None,
-            timestampUtc: now.AddMilliseconds(20)), entry);
-        tree.FlushBuild();
+        Release(tree, pointer: 71, now.AddMilliseconds(20));
 
         Assert.Equal([true, false], highlights);
+        // The mouse is still over the button after the release, so Dart's precedence order lands on
+        // `hoverElevation`, not on the resting `elevation`.
+        var releasedMaterial = Assert.IsType<Plumix.Material.Material>(tree.FindWidget<Plumix.Material.Material>());
+        Assert.Equal(4, releasedMaterial.Elevation);
     }
 
-    private static Size EffectiveMinimum(MaterialButtonCore core)
+    /// The resolved insets of the `Padding` Dart's `RawMaterialButton` puts between its `InkWell`
+    /// and its child — the deepest `RenderPadding` under the button's material.
+    private static Thickness FindButtonContentPadding(RenderObject? root)
     {
-        var minimum = core.Style.ResolveMinimumSize(MaterialState.None)!.Value;
-        var adjustment = core.Style.VisualDensity!.Value.BaseSizeAdjustment;
-        return new Size(
-            Math.Max(0, minimum.Width + adjustment.X),
-            Math.Max(0, minimum.Height + adjustment.Y));
+        RenderPadding? deepest = null;
+        Collect(root);
+        Assert.NotNull(deepest);
+        return deepest!.Padding;
+
+        void Collect(RenderObject? node)
+        {
+            if (node is null)
+            {
+                return;
+            }
+
+            if (node is RenderPadding padding)
+            {
+                deepest = padding;
+            }
+
+            node.VisitChildren(Collect);
+        }
+    }
+
+    private static readonly Size HarnessSize = new(200, 100);
+
+    private static void PressAndHold(WidgetTree tree, int pointer, DateTime now)
+    {
+        tree.Pump(HarnessSize);
+        GestureBinding.Instance.HandlePointerEvent(
+            tree.RenderView,
+            new PointerDownEvent(
+                pointer,
+                PointerDeviceKind.Mouse,
+                new Point(60, 40),
+                PointerButtons.Primary,
+                now));
+        tree.Pump(HarnessSize);
+    }
+
+    private static void Release(WidgetTree tree, int pointer, DateTime now)
+    {
+        GestureBinding.Instance.HandlePointerEvent(
+            tree.RenderView,
+            new PointerUpEvent(
+                pointer,
+                PointerDeviceKind.Mouse,
+                new Point(60, 40),
+                PointerButtons.None,
+                now));
+        tree.Pump(HarnessSize);
     }
 
     private static WidgetTree Build(Widget widget) => new(widget);
 
-    private static RenderPointerListener? FindInteractivePointerListener(RenderObject? root)
+    /// The pointer surface Dart's `InkWell` installs through its `GestureDetector`.
+    private static RenderPointerListener? FindInteractiveGestureListener(RenderObject? root)
     {
         if (root is null) return null;
-        if (root is RenderPointerListener listener
-            && listener.OnPointerDown is not null
-            && listener.OnPointerUp is not null)
+        if (root is RenderPointerListener listener && listener.OnPointerDown is not null)
         {
             return listener;
         }
 
         RenderPointerListener? result = null;
-        root.VisitChildren(child => result ??= FindInteractivePointerListener(child));
+        root.VisitChildren(child => result ??= FindInteractiveGestureListener(child));
         return result;
     }
 
@@ -328,20 +424,35 @@ public sealed class MaterialLegacyButtonTests
     {
         private readonly BuildOwner _owner = new();
         private readonly RootElement _root;
+        private readonly PipelineOwner _pipeline;
 
         public WidgetTree(Widget widget)
         {
-            _root = new RootElement(widget);
+            RenderView = new RenderView();
+            _pipeline = new PipelineOwner(RenderView);
+            _pipeline.Attach(RenderView);
+            _root = new RootElement(RenderView, widget);
             _root.Attach(_owner);
             _root.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();
         }
+
+        public RenderView RenderView { get; }
 
         public RenderObject? RenderRoot => _root.Child?.RenderObject;
 
         public T? FindWidget<T>() where T : Widget => FindWidget<T>(_root.Child);
 
         public void FlushBuild() => _owner.FlushBuild();
+
+        public void Pump(Size size)
+        {
+            _owner.FlushBuild();
+            _pipeline.RequestLayout();
+            _pipeline.FlushLayout(size);
+            _pipeline.FlushCompositingBits();
+            _pipeline.FlushPaint();
+        }
 
         public void Dispose() => _root.Unmount();
 
@@ -358,7 +469,9 @@ public sealed class MaterialLegacyButtonTests
 
     private sealed class RootElement : Element, IRenderObjectHost
     {
-        public RootElement(Widget widget) : base(widget) { }
+        private readonly RenderView _renderView;
+
+        public RootElement(RenderView renderView, Widget widget) : base(widget) => _renderView = renderView;
 
         public Element? Child { get; private set; }
         public override RenderObject? RenderObject => Child?.RenderObject;
@@ -403,8 +516,17 @@ public sealed class MaterialLegacyButtonTests
             base.Unmount();
         }
 
-        public void InsertRenderObjectChild(RenderObject child, object? slot) { }
+        public void InsertRenderObjectChild(RenderObject child, object? slot) =>
+            _renderView.Child = (RenderBox)child;
+
         public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot) { }
-        public void RemoveRenderObjectChild(RenderObject child, object? slot) { }
+
+        public void RemoveRenderObjectChild(RenderObject child, object? slot)
+        {
+            if (ReferenceEquals(_renderView.Child, child))
+            {
+                _renderView.Child = null;
+            }
+        }
     }
 }

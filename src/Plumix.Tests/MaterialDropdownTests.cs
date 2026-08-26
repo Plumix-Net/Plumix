@@ -4,6 +4,7 @@ using Plumix;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -1742,7 +1743,7 @@ public sealed class MaterialDropdownTests : IDisposable
                 new Overlay(initialEntries: [new OverlayEntry(_ => child)]))));
 
     private static Color Opacity(Color color, double opacity) =>
-        MaterialButtonCore.ApplyOpacity(color, opacity);
+        color.WithOpacity(opacity);
 
     private static ButtonStyle CaptureMenuButtonDefaults(ThemeData theme, double textScaleFactor = 1.0)
     {

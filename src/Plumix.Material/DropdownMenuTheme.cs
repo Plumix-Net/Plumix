@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -60,6 +61,6 @@ public sealed class DropdownMenuTheme : InheritedTheme
                 maximumSize: MaterialStateProperty<Size?>.All(
                     new Size(double.PositiveInfinity, double.PositiveInfinity)),
                 visualDensity: VisualDensity.Standard),
-            DisabledColor: MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38));
+            DisabledColor: theme.ColorScheme.OnSurface.WithOpacity(0.38));
     }
 }

@@ -154,7 +154,7 @@ public sealed class MaterialButton : StatelessWidget
             padding: buttonTheme.GetPadding(this),
             visualDensity: VisualDensity ?? theme.VisualDensity,
             constraints: constraints,
-            shape: buttonTheme.GetShape(this),
+            shape: new RoundedRectangleBorder(borderRadius: buttonTheme.GetShape(this)),
             animationDuration: buttonTheme.GetAnimationDuration(this),
             clipBehavior: ClipBehavior,
             focusNode: FocusNode,
@@ -202,7 +202,7 @@ public sealed class RawMaterialButton : StatefulWidget
         EdgeInsetsGeometry padding = default,
         VisualDensity? visualDensity = null,
         BoxConstraints? constraints = null,
-        BorderRadius? shape = null,
+        ShapeBorder? shape = null,
         TimeSpan? animationDuration = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
@@ -241,8 +241,8 @@ public sealed class RawMaterialButton : StatefulWidget
             throw new ArgumentException("RawMaterialButton constraints must be normalized.", nameof(constraints));
         }
 
-        Shape = shape ?? BorderRadius.Zero;
-        AnimationDuration = animationDuration ?? TimeSpan.FromMilliseconds(200);
+        Shape = shape ?? new RoundedRectangleBorder();
+        AnimationDuration = animationDuration ?? ButtonStyleState.ThemeChangeDuration;
         ClipBehavior = clipBehavior;
         FocusNode = focusNode;
         Autofocus = autofocus;
@@ -268,7 +268,7 @@ public sealed class RawMaterialButton : StatefulWidget
     public EdgeInsetsGeometry Padding { get; }
     public VisualDensity VisualDensity { get; }
     public BoxConstraints Constraints { get; }
-    public BorderRadius Shape { get; }
+    public ShapeBorder Shape { get; }
     public TimeSpan AnimationDuration { get; }
     public Widget? Child { get; }
     public bool Enabled => OnPressed is not null || OnLongPress is not null;
@@ -288,14 +288,71 @@ public sealed class RawMaterialButton : StatefulWidget
         }
     }
 
-    private sealed class RawMaterialButtonState : State
+    private sealed class RawMaterialButtonState : MaterialStateMixin
     {
         private RawMaterialButton CurrentWidget => (RawMaterialButton)StateWidget;
 
+        public override void InitState()
+        {
+            base.InitState();
+            SetMaterialState(MaterialState.Disabled, !CurrentWidget.Enabled);
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            base.DidUpdateWidget(oldWidget);
+            SetMaterialState(MaterialState.Disabled, !CurrentWidget.Enabled);
+            // If the button is disabled while a press gesture is currently ongoing, InkWell makes a
+            // call to handleHighlightChanged. This causes an exception because it calls setState in
+            // the middle of a build. To preempt this, manually clear pressed when that happens.
+            if (IsDisabled && IsPressed)
+            {
+                RemoveMaterialState(MaterialState.Pressed);
+            }
+        }
+
+        private double EffectiveElevation
+        {
+            get
+            {
+                // These conditionals are in order of precedence, so be careful about reorganizing them.
+                RawMaterialButton widget = CurrentWidget;
+                if (IsDisabled)
+                {
+                    return widget.DisabledElevation;
+                }
+
+                if (IsPressed)
+                {
+                    return widget.HighlightElevation;
+                }
+
+                if (IsHovered)
+                {
+                    return widget.HoverElevation;
+                }
+
+                if (IsFocused)
+                {
+                    return widget.FocusElevation;
+                }
+
+                return widget.Elevation;
+            }
+        }
+
         public override Widget Build(BuildContext context)
         {
-            var widget = CurrentWidget;
-            var densityAdjustment = widget.VisualDensity.BaseSizeAdjustment;
+            RawMaterialButton widget = CurrentWidget;
+            ThemeData theme = Theme.Of(context);
+
+            // `WidgetStateProperty.resolveAs` is a no-op for these two in C#: neither `Color` nor
+            // `ShapeBorder` can subclass `WidgetStateProperty` (`docs/ai/DIVERGENCES.md`).
+            Color? effectiveTextColor = widget.TextStyle?.Color;
+            ShapeBorder effectiveShape = widget.Shape;
+            Vector densityAdjustment = widget.VisualDensity.BaseSizeAdjustment;
+            BoxConstraints effectiveConstraints = widget.VisualDensity.EffectiveConstraints(widget.Constraints);
+            MouseCursor effectiveMouseCursor = ResolveMouseCursor(widget.MouseCursor);
             EdgeInsetsGeometry padding = widget.Padding
                 .Add(EdgeInsetsGeometry.Only(
                     left: densityAdjustment.X,
@@ -303,73 +360,69 @@ public sealed class RawMaterialButton : StatefulWidget
                     right: densityAdjustment.X,
                     bottom: densityAdjustment.Y))
                 .Clamp(EdgeInsetsGeometry.Zero, EdgeInsetsGeometry.Infinity);
-            Thickness resolvedPadding = padding.Resolve(Directionality.Of(context));
-            var foreground = widget.TextStyle?.Color;
 
-            var style = new ButtonStyle(
-                ForegroundColor: foreground.HasValue
-                    ? MaterialStateProperty<Color?>.All(foreground.Value)
-                    : null,
-                BackgroundColor: widget.FillColor.HasValue
-                    ? MaterialStateProperty<Color?>.All(widget.FillColor.Value)
-                    : null,
-                OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                {
-                    if (states.HasFlag(MaterialState.Disabled)) return null;
-                    if (states.HasFlag(MaterialState.Pressed)) return widget.HighlightColor;
-                    if (states.HasFlag(MaterialState.Hovered)) return widget.HoverColor;
-                    if (states.HasFlag(MaterialState.Focused)) return widget.FocusColor;
-                    return null;
-                }),
-                SplashColor: widget.SplashColor.HasValue
-                    ? MaterialButtonCore.CreateExplicitSplashResolver(widget.SplashColor.Value)
-                    : null,
-                Elevation: MaterialStateProperty<double?>.ResolveWith(states =>
-                {
-                    if (states.HasFlag(MaterialState.Disabled)) return widget.DisabledElevation;
-                    if (states.HasFlag(MaterialState.Pressed)) return widget.HighlightElevation;
-                    if (states.HasFlag(MaterialState.Hovered)) return widget.HoverElevation;
-                    if (states.HasFlag(MaterialState.Focused)) return widget.FocusElevation;
-                    return widget.Elevation;
-                }),
-                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(resolvedPadding),
-                Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                    widget.Shape)),
-                MinimumSize: MaterialStateProperty<Size?>.All(new Size(
-                    widget.Constraints.MinWidth,
-                    widget.Constraints.MinHeight)),
-                MaximumSize: MaterialStateProperty<Size?>.All(new Size(
-                    widget.Constraints.MaxWidth,
-                    widget.Constraints.MaxHeight)),
-                Alignment: Alignment.Center,
-                TapTargetSize: widget.MaterialTapTargetSize,
-                TextStyle: widget.TextStyle is null
-                    ? null
-                    : MaterialStateProperty<TextStyle?>.All(widget.TextStyle),
-                VisualDensity: widget.VisualDensity,
-                AnimationDuration: widget.AnimationDuration,
-                EnableFeedback: widget.EnableFeedback);
+            Widget result = new ConstrainedBox(
+                constraints: effectiveConstraints,
+                child: new global::Plumix.Material.Material(
+                    elevation: EffectiveElevation,
+                    textStyle: widget.TextStyle is null
+                        ? null
+                        : widget.TextStyle with { Color = effectiveTextColor },
+                    shape: effectiveShape,
+                    color: widget.FillColor,
+                    // For compatibility during the M3 migration the default shadow needs to be passed.
+                    shadowColor: theme.UseMaterial3 ? theme.ShadowColor : null,
+                    type: widget.FillColor is null ? MaterialType.Transparency : MaterialType.Button,
+                    animationDuration: widget.AnimationDuration,
+                    clipBehavior: widget.ClipBehavior,
+                    child: new InkWell(
+                        focusNode: widget.FocusNode,
+                        canRequestFocus: widget.Enabled,
+                        onFocusChange: UpdateMaterialState(MaterialState.Focused),
+                        autofocus: widget.Autofocus,
+                        onHighlightChanged: UpdateMaterialState(
+                            MaterialState.Pressed,
+                            onChanged: widget.OnHighlightChanged),
+                        splashColor: widget.SplashColor,
+                        highlightColor: widget.HighlightColor,
+                        focusColor: widget.FocusColor,
+                        hoverColor: widget.HoverColor,
+                        onHover: UpdateMaterialState(MaterialState.Hovered),
+                        onTap: widget.OnPressed,
+                        onLongPress: widget.OnLongPress,
+                        enableFeedback: widget.EnableFeedback,
+                        customBorder: effectiveShape,
+                        mouseCursor: effectiveMouseCursor,
+                        child: IconTheme.Merge(
+                            data: new IconThemeData(Color: effectiveTextColor),
+                            child: new Padding(
+                                insets: padding,
+                                child: new Center(
+                                    widthFactor: 1.0,
+                                    heightFactor: 1.0,
+                                    child: widget.Child))))));
 
-            var tapTargetMinimum = widget.MaterialTapTargetSize == MaterialTapTargetSize.Padded
-                ? new Size(
-                    Math.Max(0, 48 + densityAdjustment.X),
-                    Math.Max(0, 48 + densityAdjustment.Y))
-                : new Size(0, 0);
+            Size minSize = widget.MaterialTapTargetSize switch
+            {
+                MaterialTapTargetSize.Padded => new Size(
+                    WidgetConstants.MinInteractiveDimension + densityAdjustment.X,
+                    WidgetConstants.MinInteractiveDimension + densityAdjustment.Y),
+                _ => default
+            };
 
-            return new MaterialButtonCore(
-                child: widget.Child ?? new SizedBox(),
-                onPressed: widget.OnPressed,
-                onLongPress: widget.OnLongPress,
-                onHighlightChanged: widget.OnHighlightChanged,
-                style: style,
-                focusNode: widget.FocusNode,
-                mouseCursor: widget.MouseCursor,
-                clipBehavior: widget.ClipBehavior,
-                enableFeedback: widget.EnableFeedback,
-                autofocus: widget.Autofocus,
-                tapTargetMinimumSize: tapTargetMinimum,
+            return new Semantics(
+                container: true,
+                flags: SemanticsFlags.IsButton,
                 enabled: widget.Enabled,
-                semanticEnabled: widget.Enabled);
+                child: new InputPadding(minSize: minSize, child: result));
+        }
+
+        private MouseCursor ResolveMouseCursor(MouseCursor? cursor)
+        {
+            MouseCursor source = cursor ?? WidgetStateMouseCursor.AdaptiveClickable;
+            return source is WidgetStateMouseCursor stateful
+                ? stateful.Resolve(MaterialStateSet.Of(MaterialStates)) ?? SystemMouseCursors.Basic
+                : source;
         }
     }
 }

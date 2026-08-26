@@ -530,32 +530,27 @@ internal sealed class NavigationRailDestinationTileState : State
         Color hoverColor = primaryAlphaModified
             ? primary
             : NavigationSurfaceUtilities.WithOpacity(primary, 0.04);
-        var style = new ButtonStyle(
-            BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Pressed)
-                    ? splashColor
-                    : states.HasFlag(MaterialState.Hovered)
-                        ? hoverColor
-                        : null),
-            SplashColor: MaterialStateProperty<Color?>.All(splashColor),
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: 
-                ShapeBorderGeometry.ResolveRadiusOrNull(widget.IndicatorShape)
-                ?? Plumix.Rendering.BorderRadius.Circular(widget.MinWidth / 2))),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(widget.MinWidth, 0)),
-            TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
-            Alignment: Alignment.Center);
-
-        return new MergeSemantics(
-            new MaterialButtonCore(
-                child: content,
-                onPressed: destination.Disabled ? null : widget.OnTap,
-                style: style,
-                isSelected: widget.Selected,
-                isSemanticButton: true,
-                semanticLabel: widget.IndexLabel,
-                clipBehavior: Clip.None));
+        return new Semantics(
+            container: true,
+            selected: widget.Selected,
+            child: new Stack(
+                children:
+                [
+                    new global::Plumix.Material.Material(
+                        type: MaterialType.Transparency,
+                        child: new InkResponse(
+                            onTap: destination.Disabled ? null : widget.OnTap,
+                            containedInkWell: true,
+                            highlightShape: BoxShape.Rectangle,
+                            borderRadius: widget.UseMaterial3
+                                ? null
+                                : Plumix.Rendering.BorderRadius.Circular(widget.MinWidth / 2),
+                            customBorder: widget.UseMaterial3 ? widget.IndicatorShape : null,
+                            splashColor: splashColor,
+                            hoverColor: hoverColor,
+                            child: content)),
+                    new Semantics(label: widget.IndexLabel)
+                ]));
     }
 
     private void HandleSelectionChanged() => SetState(() => { });

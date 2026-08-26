@@ -169,7 +169,6 @@ public sealed class ToggleButtons : StatelessWidget
                 ForegroundColor: MaterialStateProperty<Color?>.All(foreground),
                 BackgroundColor: MaterialStateProperty<Color?>.All(background),
                 OverlayColor: overlay,
-                SplashColor: overlay,
                 Elevation: MaterialStateProperty<double?>.All(0.0),
                 IconColor: MaterialStateProperty<Color?>.All(foreground),
                 IconSize: MaterialStateProperty<double?>.All(24.0),
@@ -184,23 +183,19 @@ public sealed class ToggleButtons : StatelessWidget
                 TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
                 TextStyle: MaterialStateProperty<TextStyle?>.All(
                     effectiveTextStyle.CopyWith(color: foreground)),
+                MouseCursor: MouseCursor is null
+                    ? null
+                    : MaterialStateProperty<MouseCursor?>.All(MouseCursor),
                 VisualDensity: VisualDensity.Standard,
-                AnimationDuration: TimeSpan.FromMilliseconds(200.0),
+                AnimationDuration: ButtonStyleState.ThemeChangeDuration,
                 EnableFeedback: true,
                 SplashFactory: InkRipple.SplashFactory);
 
-            Widget button = new MaterialButtonCore(
-                child: Children[index],
-                onPressed: enabled ? () => OnPressed!(capturedIndex) : null,
-                style: style,
+            Widget button = new TextButton(
                 focusNode: FocusNodes?[index],
-                isSelected: selected,
-                includeSemanticSelected: false,
-                isSemanticButton: true,
-                mouseCursor: MouseCursor,
-                clipBehavior: Clip.None,
-                tapTargetMinimumSize: new Size(),
-                semanticEnabled: enabled);
+                style: style,
+                onPressed: enabled ? () => OnPressed!(capturedIndex) : null,
+                child: Children[index]);
             button = new ClipRRect(clipRadius, button);
             button = new SelectToggleButton(
                 leadingBorderSide: leadingSide,

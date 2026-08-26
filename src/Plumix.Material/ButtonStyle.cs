@@ -197,9 +197,7 @@ internal sealed class MaterialStatePropertyResolver<T> : MaterialStateProperty<T
 
 /// <summary>
 /// Dart parity: `ButtonStyle`. Field order, `CopyWith`, `Merge`, `Lerp`, `==`/`GetHashCode` and
-/// `DebugFillProperties` follow `material_ui/lib/src/button_style.dart` exactly. `SplashColor` is
-/// the one Plumix-only field (see `docs/ai/DIVERGENCES.md`); it is declared last so the Dart-ordered
-/// prefix stays intact.
+/// `DebugFillProperties` follow `material_ui/lib/src/button_style.dart` exactly.
 /// </summary>
 public sealed record ButtonStyle(
     MaterialStateProperty<TextStyle?>? TextStyle = null,
@@ -226,8 +224,7 @@ public sealed record ButtonStyle(
     AlignmentGeometry? Alignment = null,
     InteractiveInkFeatureFactory? SplashFactory = null,
     ButtonLayerBuilder? BackgroundBuilder = null,
-    ButtonLayerBuilder? ForegroundBuilder = null,
-    MaterialStateProperty<Color?>? SplashColor = null) : IDiagnosticable
+    ButtonLayerBuilder? ForegroundBuilder = null) : IDiagnosticable
 {
     /// Dart's `ButtonStyle.copyWith`: a null argument keeps the current value, it never clears one.
     public ButtonStyle CopyWith(
@@ -255,8 +252,7 @@ public sealed record ButtonStyle(
         AlignmentGeometry? alignment = null,
         InteractiveInkFeatureFactory? splashFactory = null,
         ButtonLayerBuilder? backgroundBuilder = null,
-        ButtonLayerBuilder? foregroundBuilder = null,
-        MaterialStateProperty<Color?>? splashColor = null)
+        ButtonLayerBuilder? foregroundBuilder = null)
     {
         return new ButtonStyle(
             TextStyle: textStyle ?? TextStyle,
@@ -283,8 +279,7 @@ public sealed record ButtonStyle(
             Alignment: alignment ?? Alignment,
             SplashFactory: splashFactory ?? SplashFactory,
             BackgroundBuilder: backgroundBuilder ?? BackgroundBuilder,
-            ForegroundBuilder: foregroundBuilder ?? ForegroundBuilder,
-            SplashColor: splashColor ?? SplashColor);
+            ForegroundBuilder: foregroundBuilder ?? ForegroundBuilder);
     }
 
     /// Dart's `ButtonStyle.merge`: this style wins on every field, `style` only fills its nulls.
@@ -321,8 +316,7 @@ public sealed record ButtonStyle(
             alignment: Alignment ?? style.Alignment,
             splashFactory: SplashFactory ?? style.SplashFactory,
             backgroundBuilder: BackgroundBuilder ?? style.BackgroundBuilder,
-            foregroundBuilder: ForegroundBuilder ?? style.ForegroundBuilder,
-            splashColor: SplashColor ?? style.SplashColor);
+            foregroundBuilder: ForegroundBuilder ?? style.ForegroundBuilder);
     }
 
     /// Dart's `ButtonStyle.lerp`. `t` is not clamped, and `identical(a, b)` returns `a` — including
@@ -371,8 +365,7 @@ public sealed record ButtonStyle(
             Alignment: AlignmentGeometry.Lerp(a?.Alignment, b?.Alignment, t),
             SplashFactory: t < 0.5 ? a?.SplashFactory : b?.SplashFactory,
             BackgroundBuilder: t < 0.5 ? a?.BackgroundBuilder : b?.BackgroundBuilder,
-            ForegroundBuilder: t < 0.5 ? a?.ForegroundBuilder : b?.ForegroundBuilder,
-            SplashColor: LerpColor(a?.SplashColor, b?.SplashColor, t));
+            ForegroundBuilder: t < 0.5 ? a?.ForegroundBuilder : b?.ForegroundBuilder);
     }
 
     public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
@@ -475,12 +468,6 @@ public sealed record ButtonStyle(
             "foregroundBuilder",
             ForegroundBuilder,
             defaultValue: nullDefault));
-
-        // Plumix-only field, appended after the Dart-ordered prefix.
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Color?>?>(
-            "splashColor",
-            SplashColor,
-            defaultValue: nullDefault));
     }
 
     internal Color? ResolveForegroundColor(MaterialState states) => ForegroundColor?.Resolve(states);
@@ -492,8 +479,6 @@ public sealed record ButtonStyle(
     internal Color? ResolveShadowColor(MaterialState states) => ShadowColor?.Resolve(states);
 
     internal Color? ResolveSurfaceTintColor(MaterialState states) => SurfaceTintColor?.Resolve(states);
-
-    internal Color? ResolveSplashColor(MaterialState states) => SplashColor?.Resolve(states);
 
     internal double? ResolveElevation(MaterialState states) => Elevation?.Resolve(states);
 

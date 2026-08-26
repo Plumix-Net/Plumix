@@ -700,11 +700,23 @@ public sealed class RawChip : StatefulWidget
         private double _deleteProgress;
         private AnimationController? _enableController;
         private double _enableProgress;
+        private readonly MaterialStatesController _statesController = new();
+        private bool _isTapping;
 
         private RawChip CurrentWidget => (RawChip)StateWidget;
 
+        /// Dart's `_RawChipState.canTap`.
+        private bool CanTap => CurrentWidget.CanTapBody;
+
+        /// Dart's `_RawChipState.isTapping`.
+        private bool IsTapping => CanTap && _isTapping;
+
         public override void InitState()
         {
+            _statesController.Update(MaterialState.Disabled, !CurrentWidget.IsEnabled);
+            _statesController.Update(MaterialState.Selected, CurrentWidget.Selected);
+            _statesController.AddListener(HandleStatesChanged);
+
             _selectionController = CreateController(
                 CurrentWidget.ChipAnimationStyle?.SelectAnimation,
                 TimeSpan.FromMilliseconds(195));
@@ -735,6 +747,8 @@ public sealed class RawChip : StatefulWidget
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
             var oldChip = (RawChip)oldWidget;
+            _statesController.Update(MaterialState.Disabled, !CurrentWidget.IsEnabled);
+            _statesController.Update(MaterialState.Selected, CurrentWidget.Selected);
             if (oldChip.IsEnabled != CurrentWidget.IsEnabled)
             {
                 if (CurrentWidget.IsEnabled)
@@ -794,15 +808,17 @@ public sealed class RawChip : StatefulWidget
             var padding = widget.Padding ?? chipTheme.Padding ?? defaults.Padding ?? new Thickness(4);
             var baseLabelStyle = chipTheme.LabelStyle ?? defaults.LabelStyle ?? theme.TextTheme.BodyLarge;
             var labelStyle = MergeTextStyles(baseLabelStyle, widget.LabelStyle);
-            double textScale = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
-                context,
-                labelStyle.FontSize ?? 14);
-            var defaultLabelPadding = MaterialButtonCore.ScalePadding(
-                new Thickness(8, 0),
-                new Thickness(4, 0),
-                new Thickness(4, 0),
-                textScale);
-            var labelPadding = widget.LabelPadding ?? chipTheme.LabelPadding ?? defaults.LabelPadding ?? defaultLabelPadding;
+            // Dart: the chip starts at 8px on each side and interpolates to 4px as text scaling
+            // approaches 2, staying at 4px beyond that.
+            double effectiveTextScale = ButtonStyleButton.EffectiveTextScale(context, labelStyle.FontSize ?? 14);
+            EdgeInsetsGeometry defaultLabelPadding = EdgeInsetsGeometry.Lerp(
+                EdgeInsetsGeometry.Symmetric(horizontal: 8.0),
+                EdgeInsetsGeometry.Symmetric(horizontal: 4.0),
+                Math.Clamp(effectiveTextScale - 1.0, 0.0, 1.0))!.Value;
+            Thickness labelPadding = widget.LabelPadding
+                                     ?? chipTheme.LabelPadding
+                                     ?? defaults.LabelPadding
+                                     ?? defaultLabelPadding.Resolve(Directionality.Of(context));
             var density = widget.VisualDensity ?? theme.VisualDensity;
             var tapTargetSize = widget.MaterialTapTargetSize ?? theme.MaterialTapTargetSize;
             var effectiveIconTheme = widget.IconTheme ?? chipTheme.IconTheme ?? defaults.IconTheme;
@@ -812,38 +828,29 @@ public sealed class RawChip : StatefulWidget
                                    ?? defaults.CheckmarkColor
                                    ?? ResolveDefaultCheckmarkColor(theme.Brightness, widget.Avatar is not null);
 
-            var style = new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    ResolveLabelColor(states, widget, chipTheme, defaults, labelStyle, theme)),
-                BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    ResolveBackground(states, widget, chipTheme, defaults)),
-                ShadowColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Selected)
-                        ? widget.SelectedShadowColor ?? chipTheme.SelectedShadowColor ?? defaults.SelectedShadowColor
-                        : widget.ShadowColor ?? chipTheme.ShadowColor ?? defaults.ShadowColor ?? theme.ShadowColor),
-                SurfaceTintColor: MaterialStateProperty<Color?>.All(
-                    widget.SurfaceTintColor ?? chipTheme.SurfaceTintColor ?? defaults.SurfaceTintColor),
-                OverlayColor: MaterialButtonCore.CreateDefaultOverlayResolver(theme.OnSurfaceColor),
-                SplashColor: MaterialButtonCore.CreateDefaultSplashResolver(theme.OnSurfaceColor),
-                Elevation: MaterialStateProperty<double?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Pressed)
-                        ? widget.PressElevation ?? chipTheme.PressElevation ?? defaults.PressElevation ?? 0
-                        : widget.Elevation ?? chipTheme.Elevation ?? defaults.Elevation ?? 0),
-                IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    effectiveIconTheme?.Color
-                    ?? ResolveLabelColor(states, widget, chipTheme, defaults, labelStyle, theme)),
-                IconSize: MaterialStateProperty<double?>.All(effectiveIconTheme?.Size ?? 18),
-                Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
-                    ResolveSide(states, widget, chipTheme, defaults)),
-                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(new Thickness(0)),
-                Shape: MaterialStateProperty<OutlinedBorder?>.ResolveWith(states =>
-                    ResolveShape(states, widget, chipTheme, defaults) as OutlinedBorder),
-                MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, 0)),
-                VisualDensity: Plumix.Material.VisualDensity.Standard,
-                TapTargetSize: tapTargetSize,
-                TextStyle: MaterialStateProperty<TextStyle?>.All(labelStyle));
+            MaterialState states = _statesController.Value;
+            ShapeBorder resolvedShape = ResolveShape(states, widget, chipTheme, defaults);
+            double elevation = widget.Elevation ?? chipTheme.Elevation ?? defaults.Elevation ?? 0;
+            double pressElevation = widget.PressElevation ?? chipTheme.PressElevation ?? defaults.PressElevation ?? 0;
+            Color? shadowColor = widget.ShadowColor ?? chipTheme.ShadowColor ?? defaults.ShadowColor;
+            Color? selectedShadowColor = widget.SelectedShadowColor
+                                         ?? chipTheme.SelectedShadowColor
+                                         ?? defaults.SelectedShadowColor;
+            Color? surfaceTintColor = widget.SurfaceTintColor
+                                      ?? chipTheme.SurfaceTintColor
+                                      ?? defaults.SurfaceTintColor;
+            TextStyle resolvedLabelStyle = labelStyle with
+            {
+                Color = ResolveLabelColor(states, widget, chipTheme, defaults, labelStyle, theme)
+            };
 
-            Widget label = widget.Label;
+            Widget label = new DefaultTextStyle(
+                style: resolvedLabelStyle,
+                overflow: TextOverflow.Fade,
+                textAlign: TextAlign.Start,
+                maxLines: 1,
+                softWrap: false,
+                child: widget.Label);
             Widget? leading = BuildAvatar(widget, effectiveIconTheme);
             var delete = BuildDelete(
                 context,
@@ -873,46 +880,105 @@ public sealed class RawChip : StatefulWidget
                 deleteDrawerProgress: _deleteProgress,
                 enableProgress: _enableProgress);
 
-            Action? onTap = widget.CanTapBody
-                ? () =>
-                {
-                    widget.OnSelected?.Invoke(!widget.Selected);
-                    widget.OnPressed?.Invoke();
-                }
-                : null;
-            Widget result = new MaterialButtonCore(
-                child: content,
-                onPressed: onTap,
-                style: style,
-                focusNode: widget.FocusNode,
-                autofocus: widget.Autofocus,
-                isSelected: widget.Selected,
-                includeSemanticSelected: true,
-                isSemanticButton: widget.TapEnabled,
-                isSemanticChecked: widget.DefaultsKind is ChipDefaultsKind.Choice or ChipDefaultsKind.Filter
-                                   || widget.OnSelected is not null
-                    ? widget.Selected
-                    : null,
-                mouseCursor: widget.MouseCursor,
-                clipBehavior: widget.ClipBehavior,
-                enabled: widget.IsEnabled,
-                semanticEnabled: widget.CanTapBody,
-                tapTargetMinimumSize: tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
-                    ? new Size(
-                        Math.Max(0, 48 + density.BaseSizeAdjustment.X),
-                        Math.Max(0, 48 + density.BaseSizeAdjustment.Y))
-                    : new Size(0, 0));
-
             if (!string.IsNullOrEmpty(widget.Tooltip) && widget.CanTapBody)
             {
-                result = new Tooltip(message: widget.Tooltip!, child: result);
+                content = new Tooltip(message: widget.Tooltip!, child: content);
             }
 
-            return result;
+            Widget result = new global::Plumix.Material.Material(
+                elevation: IsTapping ? pressElevation : elevation,
+                shadowColor: widget.Selected ? selectedShadowColor : shadowColor,
+                surfaceTintColor: surfaceTintColor,
+                animationDuration: PressedAnimationDuration,
+                shape: resolvedShape,
+                clipBehavior: widget.ClipBehavior,
+                child: new InkWell(
+                    onFocusChange: value => _statesController.Update(MaterialState.Focused, value),
+                    focusNode: widget.FocusNode,
+                    autofocus: widget.Autofocus,
+                    canRequestFocus: widget.IsEnabled,
+                    onTap: CanTap ? HandleTap : null,
+                    onTapDown: CanTap ? _ => HandleTapDown() : null,
+                    onTapCancel: CanTap ? HandleTapCancel : null,
+                    onHover: CanTap
+                        ? value => _statesController.Update(MaterialState.Hovered, value)
+                        : null,
+                    mouseCursor: widget.MouseCursor,
+                    hoverColor: (widget.Color ?? chipTheme.Color) is null ? null : Colors.Transparent,
+                    customBorder: resolvedShape,
+                    child: new Ink(
+                        decoration: new ShapeDecoration(
+                            Shape: resolvedShape,
+                            Color: ResolveBackground(states, widget, chipTheme, defaults)),
+                        child: content)));
+
+            Vector densityAdjustment = density.BaseSizeAdjustment;
+            BoxConstraints constraints = tapTargetSize == Plumix.Material.MaterialTapTargetSize.Padded
+                ? new BoxConstraints(
+                    MinWidth: WidgetConstants.MinInteractiveDimension + densityAdjustment.X,
+                    MinHeight: WidgetConstants.MinInteractiveDimension + densityAdjustment.Y)
+                : new BoxConstraints();
+            result = new ChipRedirectingHitDetectionWidget(
+                constraints: constraints,
+                child: new Center(widthFactor: 1.0, heightFactor: 1.0, child: result));
+
+            return new Semantics(
+                flags: widget.TapEnabled ? SemanticsFlags.IsButton : SemanticsFlags.None,
+                container: true,
+                selected: widget.Selected,
+                enabled: widget.TapEnabled ? widget.CanTapBody : null,
+                child: result);
+        }
+
+        /// Dart's `_kPressedAnimationDuration`.
+        private static readonly TimeSpan PressedAnimationDuration = TimeSpan.FromMilliseconds(75);
+
+        private void HandleStatesChanged() => SetState(() => { });
+
+        /// Dart's `_RawChipState._handleTapDown`.
+        private void HandleTapDown()
+        {
+            if (!CanTap)
+            {
+                return;
+            }
+
+            _statesController.Update(MaterialState.Pressed, true);
+            SetState(() => _isTapping = true);
+        }
+
+        /// Dart's `_RawChipState._handleTapCancel`.
+        private void HandleTapCancel()
+        {
+            if (!CanTap)
+            {
+                return;
+            }
+
+            _statesController.Update(MaterialState.Pressed, false);
+            SetState(() => _isTapping = false);
+        }
+
+        /// Dart's `_RawChipState._handleTap`.
+        private void HandleTap()
+        {
+            if (!CanTap)
+            {
+                return;
+            }
+
+            _statesController.Update(MaterialState.Pressed, false);
+            SetState(() => _isTapping = false);
+            RawChip widget = CurrentWidget;
+            // Only one of these can be set, so only one will be called.
+            widget.OnSelected?.Invoke(!widget.Selected);
+            widget.OnPressed?.Invoke();
         }
 
         public override void Dispose()
         {
+            _statesController.RemoveListener(HandleStatesChanged);
+            _statesController.Dispose();
             DisposeSelectionController();
             DisposeAvatarDrawerController();
             DisposeDeleteController();
@@ -1423,5 +1489,53 @@ public sealed class RawChip : StatefulWidget
         {
             return Avalonia.Media.Color.FromArgb(alpha, color.R, color.G, color.B);
         }
+    }
+}
+
+/// <summary>Dart parity: `_ChipRedirectingHitDetectionWidget`.</summary>
+internal sealed class ChipRedirectingHitDetectionWidget : SingleChildRenderObjectWidget
+{
+    public ChipRedirectingHitDetectionWidget(BoxConstraints constraints, Widget child, Key? key = null)
+        : base(child, key)
+    {
+        Constraints = constraints;
+    }
+
+    public BoxConstraints Constraints { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderChipRedirectingHitDetection(Constraints);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderChipRedirectingHitDetection)renderObject).AdditionalConstraints = Constraints;
+    }
+}
+
+/// <summary>Dart parity: `_RenderChipRedirectingHitDetection`.</summary>
+internal sealed class RenderChipRedirectingHitDetection : RenderConstrainedBox
+{
+    public RenderChipRedirectingHitDetection(BoxConstraints additionalConstraints)
+        : base(additionalConstraints)
+    {
+    }
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        if (position.X < 0 || position.Y < 0 || position.X >= Size.Width || position.Y >= Size.Height)
+        {
+            return false;
+        }
+
+        // Only redirects hit detection which occurs above and below the render object. In order to
+        // make this assumption true, the minimum width constraint is dropped, since any reasonable
+        // chip would be at least that wide.
+        var offset = new Point(position.X, Size.Height / 2.0);
+        return result.AddWithRawTransform(
+            MatrixUtils.ForceToPoint(offset),
+            position,
+            (BoxHitTestResult nested, Point _) => Child!.HitTest(nested, offset));
     }
 }

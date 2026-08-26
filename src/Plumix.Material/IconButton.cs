@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
@@ -383,7 +384,6 @@ public class IconButton : StatelessWidget
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
         Color? overlayColor = null,
-        Color? splashColor = null,
         InteractiveInkFeatureFactory? splashFactory = null,
         double? elevation = null,
         Size? minimumSize = null,
@@ -424,9 +424,6 @@ public class IconButton : StatelessWidget
                 focusColor,
                 hoverColor,
                 highlightColor),
-            SplashColor: splashColor.HasValue
-                ? MaterialButtonCore.CreateExplicitSplashResolver(splashColor.Value)
-                : null,
             SplashFactory: splashFactory,
             Elevation: elevation.HasValue
                 ? MaterialStateProperty<double?>.All(elevation.Value)
@@ -472,8 +469,6 @@ public class IconButton : StatelessWidget
 
     private Widget BuildMaterial3(BuildContext context, ThemeData theme)
     {
-        var iconThemeData = Plumix.Widgets.IconTheme.Of(context);
-        bool canToggle = IsSelected.HasValue;
         bool isSelected = IsSelected ?? false;
         Size? minimumSize = Constraints is not BoxConstraints explicitConstraints
             ? null
@@ -510,39 +505,22 @@ public class IconButton : StatelessWidget
             ? adjustedStyle
             : Style.Merge(adjustedStyle);
 
-        var themeStyle = ResolveThemeStyle(context, iconThemeData);
-
-        var mergedStyle = MaterialButtonCore.ComposeStyles(
-            defaults: CreateDefaultStyle(theme, canToggle, Variant),
-            themeStyle: themeStyle,
-            widgetStyle: effectiveWidgetStyle,
-            legacyOverrides: null);
-
         var effectiveIcon = isSelected && SelectedIcon is not null
             ? SelectedIcon
             : Icon;
 
-        Widget result = new MaterialButtonCore(
-            child: effectiveIcon,
+        return new SelectableIconButton(
+            style: effectiveWidgetStyle,
             onPressed: OnPressed,
+            onHover: OnHover,
             onLongPress: OnPressed is null ? null : OnLongPress,
-            onHoverChanged: OnHover,
-            style: mergedStyle,
+            autofocus: Autofocus,
             focusNode: FocusNode,
+            isSelected: IsSelected,
+            variant: Variant,
+            tooltip: Tooltip,
             statesController: StatesController,
-            isSelected: isSelected,
-            includeSemanticSelected: IsSelected.HasValue,
-            clipBehavior: Plumix.UI.Clip.None,
-            autofocus: Autofocus);
-
-        if (Tooltip is not null)
-        {
-            result = new Tooltip(
-                message: Tooltip,
-                child: result);
-        }
-
-        return result;
+            child: effectiveIcon);
     }
 
     private Widget BuildMaterial2(BuildContext context, ThemeData theme)
@@ -618,7 +596,7 @@ public class IconButton : StatelessWidget
             child: result);
     }
 
-    private static ButtonStyle ResolveThemeStyle(
+    internal static ButtonStyle ResolveThemeStyle(
         BuildContext context,
         IconThemeData iconTheme)
     {
@@ -636,7 +614,7 @@ public class IconButton : StatelessWidget
         return iconButtonThemeStyle?.Merge(iconThemeStyle) ?? iconThemeStyle;
     }
 
-    private static ButtonStyle CreateDefaultStyle(
+    internal static ButtonStyle CreateDefaultStyle(
         ThemeData theme,
         bool isToggleable,
         IconButtonVariant variant)
@@ -650,7 +628,6 @@ public class IconButton : StatelessWidget
             SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
             OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                 ResolveDefaultOverlayColor(theme, variant, isToggleable, states)),
-            SplashColor: null,
             Elevation: MaterialStateProperty<double?>.All(0),
             IconSize: MaterialStateProperty<double?>.All(24),
             Side: variant == IconButtonVariant.Outlined
@@ -680,7 +657,7 @@ public class IconButton : StatelessWidget
     {
         if (states.HasFlag(MaterialState.Disabled))
         {
-            return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38);
+            return theme.ColorScheme.OnSurface.WithOpacity(0.38);
         }
 
         bool isSelected = states.HasFlag(MaterialState.Selected);
@@ -717,14 +694,14 @@ public class IconButton : StatelessWidget
         return variant switch
         {
             IconButtonVariant.Filled => isDisabled
-                ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12)
+                ? theme.ColorScheme.OnSurface.WithOpacity(0.12)
                 : isSelected
                     ? theme.ColorScheme.Primary
                     : isToggleable
                         ? theme.ColorScheme.SurfaceContainerHighest
                         : theme.ColorScheme.Primary,
             IconButtonVariant.FilledTonal => isDisabled
-                ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12)
+                ? theme.ColorScheme.OnSurface.WithOpacity(0.12)
                 : isSelected
                     ? theme.ColorScheme.SecondaryContainer
                     : isToggleable
@@ -732,7 +709,7 @@ public class IconButton : StatelessWidget
                         : theme.ColorScheme.SecondaryContainer,
             IconButtonVariant.Outlined => isDisabled
                 ? isSelected
-                    ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12)
+                    ? theme.ColorScheme.OnSurface.WithOpacity(0.12)
                     : Colors.Transparent
                 : isSelected
                     ? theme.ColorScheme.InverseSurface
@@ -770,17 +747,17 @@ public class IconButton : StatelessWidget
         {
             if (states.HasFlag(MaterialState.Pressed))
             {
-                return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.10);
+                return theme.ColorScheme.OnSurface.WithOpacity(0.10);
             }
 
             if (states.HasFlag(MaterialState.Hovered))
             {
-                return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurfaceVariant, 0.08);
+                return theme.ColorScheme.OnSurfaceVariant.WithOpacity(0.08);
             }
 
             if (states.HasFlag(MaterialState.Focused))
             {
-                return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurfaceVariant, 0.08);
+                return theme.ColorScheme.OnSurfaceVariant.WithOpacity(0.08);
             }
 
             return Colors.Transparent;
@@ -810,7 +787,7 @@ public class IconButton : StatelessWidget
         if (states.HasFlag(MaterialState.Disabled))
         {
             return new BorderSide(
-                MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12),
+                theme.ColorScheme.OnSurface.WithOpacity(0.12),
                 1);
         }
 
@@ -824,17 +801,17 @@ public class IconButton : StatelessWidget
     {
         if (states.HasFlag(MaterialState.Pressed))
         {
-            return MaterialButtonCore.ApplyOpacity(baseColor, 0.10);
+            return baseColor.WithOpacity(0.10);
         }
 
         if (states.HasFlag(MaterialState.Hovered))
         {
-            return MaterialButtonCore.ApplyOpacity(baseColor, 0.08);
+            return baseColor.WithOpacity(0.08);
         }
 
         if (states.HasFlag(MaterialState.Focused))
         {
-            return MaterialButtonCore.ApplyOpacity(baseColor, focusedOpacity);
+            return baseColor.WithOpacity(focusedOpacity);
         }
 
         return Colors.Transparent;
@@ -891,7 +868,7 @@ public class IconButton : StatelessWidget
                 }
 
                 return overlayFallback.HasValue
-                    ? MaterialButtonCore.ApplyOpacity(overlayFallback.Value, 0.10)
+                    ? overlayFallback.Value.WithOpacity(0.10)
                     : null;
             }
 
@@ -903,7 +880,7 @@ public class IconButton : StatelessWidget
                 }
 
                 return overlayFallback.HasValue
-                    ? MaterialButtonCore.ApplyOpacity(overlayFallback.Value, 0.08)
+                    ? overlayFallback.Value.WithOpacity(0.08)
                     : null;
             }
 
@@ -915,7 +892,7 @@ public class IconButton : StatelessWidget
                 }
 
                 return overlayFallback.HasValue
-                    ? MaterialButtonCore.ApplyOpacity(overlayFallback.Value, 0.10)
+                    ? overlayFallback.Value.WithOpacity(0.10)
                     : null;
             }
 
@@ -943,5 +920,184 @@ public class IconButton : StatelessWidget
         return enabled && OperatingSystem.IsBrowser()
             ? SystemMouseCursors.Click
             : SystemMouseCursors.Basic;
+    }
+}
+
+/// <summary>
+/// Dart parity: `_SelectableIconButton`. Owns the states controller so the selected state reaches
+/// <see cref="IconButtonM3"/>'s style resolution.
+/// </summary>
+internal sealed class SelectableIconButton : StatefulWidget
+{
+    public SelectableIconButton(
+        Widget child,
+        IconButtonVariant variant,
+        bool autofocus,
+        Action? onPressed,
+        bool? isSelected = null,
+        ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        Action? onLongPress = null,
+        Action<bool>? onHover = null,
+        MaterialStatesController? statesController = null,
+        string? tooltip = null,
+        Key? key = null) : base(key)
+    {
+        Child = child;
+        Variant = variant;
+        Autofocus = autofocus;
+        OnPressed = onPressed;
+        IsSelected = isSelected;
+        Style = style;
+        FocusNode = focusNode;
+        OnLongPress = onLongPress;
+        OnHover = onHover;
+        StatesController = statesController;
+        Tooltip = tooltip;
+    }
+
+    public Widget Child { get; }
+    public IconButtonVariant Variant { get; }
+    public bool Autofocus { get; }
+    public Action? OnPressed { get; }
+    public bool? IsSelected { get; }
+    public ButtonStyle? Style { get; }
+    public FocusNode? FocusNode { get; }
+    public Action? OnLongPress { get; }
+    public Action<bool>? OnHover { get; }
+    public MaterialStatesController? StatesController { get; }
+    public string? Tooltip { get; }
+
+    public override State CreateState() => new SelectableIconButtonState();
+
+    private sealed class SelectableIconButtonState : State
+    {
+        private MaterialStatesController? _internalStatesController;
+
+        private SelectableIconButton CurrentWidget => (SelectableIconButton)StateWidget;
+
+        private MaterialStatesController StatesController =>
+            CurrentWidget.StatesController ?? _internalStatesController!;
+
+        private bool IsSelected => CurrentWidget.IsSelected ?? false;
+
+        public override void InitState()
+        {
+            base.InitState();
+            if (CurrentWidget.StatesController is null)
+            {
+                _internalStatesController = new MaterialStatesController();
+            }
+
+            StatesController.Update(MaterialState.Selected, IsSelected);
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            base.DidUpdateWidget(oldWidget);
+            var old = (SelectableIconButton)oldWidget;
+            if (!ReferenceEquals(old.StatesController, CurrentWidget.StatesController))
+            {
+                if (CurrentWidget.StatesController is not null)
+                {
+                    _internalStatesController?.Dispose();
+                    _internalStatesController = null;
+                }
+
+                InitStatesController();
+            }
+
+            if (old.IsSelected != CurrentWidget.IsSelected)
+            {
+                StatesController.Update(MaterialState.Selected, IsSelected);
+            }
+        }
+
+        public override void Dispose()
+        {
+            _internalStatesController?.Dispose();
+            base.Dispose();
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            SelectableIconButton widget = CurrentWidget;
+            bool toggleable = widget.IsSelected is not null;
+
+            return new IconButtonM3(
+                statesController: StatesController,
+                style: widget.Style,
+                autofocus: widget.Autofocus,
+                focusNode: widget.FocusNode,
+                onPressed: widget.OnPressed,
+                onHover: widget.OnHover,
+                onLongPress: widget.OnPressed is null ? null : widget.OnLongPress,
+                variant: widget.Variant,
+                toggleable: toggleable,
+                tooltip: widget.Tooltip,
+                child: new Semantics(selected: widget.IsSelected, child: widget.Child));
+        }
+
+        private void InitStatesController()
+        {
+            if (CurrentWidget.StatesController is null)
+            {
+                _internalStatesController = new MaterialStatesController();
+            }
+
+            StatesController.Update(MaterialState.Selected, IsSelected);
+        }
+    }
+}
+
+/// <summary>Dart parity: `_IconButtonM3`.</summary>
+internal sealed class IconButtonM3 : ButtonStyleButton
+{
+    public IconButtonM3(
+        Widget child,
+        Action? onPressed,
+        IconButtonVariant variant,
+        bool toggleable,
+        ButtonStyle? style = null,
+        FocusNode? focusNode = null,
+        Action<bool>? onHover = null,
+        Action? onLongPress = null,
+        bool autofocus = false,
+        MaterialStatesController? statesController = null,
+        string? tooltip = null,
+        Key? key = null) : base(
+            onPressed: onPressed,
+            onLongPress: onLongPress,
+            onHover: onHover,
+            onFocusChange: null,
+            style: style,
+            focusNode: focusNode,
+            autofocus: autofocus,
+            clipBehavior: Plumix.UI.Clip.None,
+            child: child,
+            statesController: statesController,
+            tooltip: tooltip,
+            key: key)
+    {
+        Variant = variant;
+        Toggleable = toggleable;
+    }
+
+    private IconButtonVariant Variant { get; }
+
+    private bool Toggleable { get; }
+
+    protected internal override ButtonStyle DefaultStyleOf(BuildContext context)
+    {
+        return IconButton.CreateDefaultStyle(Theme.Of(context), Toggleable, Variant);
+    }
+
+    /// <summary>
+    /// Dart's `_IconButtonM3.themeStyleOf`: the `IconButtonTheme` style, backfilled from the ambient
+    /// `IconTheme` for the colour and size it does not set itself.
+    /// </summary>
+    protected internal override ButtonStyle? ThemeStyleOf(BuildContext context)
+    {
+        return IconButton.ResolveThemeStyle(context, Plumix.Widgets.IconTheme.Of(context));
     }
 }

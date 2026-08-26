@@ -4,6 +4,7 @@ using Plumix;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Gestures;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -572,7 +573,6 @@ public sealed class Switch : StatefulWidget
                 ShadowColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states => ResolveOverlayColor(theme, switchTheme, states, isCupertinoAdaptive: false)),
-                SplashColor: null,
                 Elevation: MaterialStateProperty<double?>.All(0),
                 IconColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
                 IconSize: MaterialStateProperty<double?>.All(config.IconSize),
@@ -1150,7 +1150,7 @@ public sealed class Switch : StatefulWidget
             {
                 if (states.HasFlag(MaterialState.Disabled))
                 {
-                    return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38);
+                    return theme.ColorScheme.OnSurface.WithOpacity(0.38);
                 }
 
                 return theme.ColorScheme.OnPrimaryContainer;
@@ -1164,8 +1164,8 @@ public sealed class Switch : StatefulWidget
             if (states.HasFlag(MaterialState.Disabled))
             {
                 return states.HasFlag(MaterialState.Selected)
-                    ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38)
-                    : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.SurfaceContainerHighest, 0.38);
+                    ? theme.ColorScheme.OnSurface.WithOpacity(0.38)
+                    : theme.ColorScheme.SurfaceContainerHighest.WithOpacity(0.38);
             }
 
             return states.HasFlag(MaterialState.Selected)
@@ -1353,7 +1353,7 @@ public sealed class Switch : StatefulWidget
                 {
                     return states.HasFlag(MaterialState.Selected)
                         ? theme.ColorScheme.Surface
-                        : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38);
+                        : theme.ColorScheme.OnSurface.WithOpacity(0.38);
                 }
 
                 if (states.HasFlag(MaterialState.Selected))
@@ -1402,8 +1402,8 @@ public sealed class Switch : StatefulWidget
                 if (states.HasFlag(MaterialState.Disabled))
                 {
                     return states.HasFlag(MaterialState.Selected)
-                        ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12)
-                        : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.SurfaceContainerHighest, 0.12);
+                        ? theme.ColorScheme.OnSurface.WithOpacity(0.12)
+                        : theme.ColorScheme.SurfaceContainerHighest.WithOpacity(0.12);
                 }
 
                 return states.HasFlag(MaterialState.Selected)
@@ -1419,7 +1419,7 @@ public sealed class Switch : StatefulWidget
             }
 
             return states.HasFlag(MaterialState.Selected)
-                ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.Secondary, 0.50)
+                ? theme.ColorScheme.Secondary.WithOpacity(0.50)
                 : theme.Brightness == Brightness.Dark
                     ? Color.FromArgb(0x4D, 0xFF, 0xFF, 0xFF)
                     : Color.FromArgb(0x52, 0x00, 0x00, 0x00);
@@ -1444,7 +1444,7 @@ public sealed class Switch : StatefulWidget
 
             if (states.HasFlag(MaterialState.Disabled))
             {
-                return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12);
+                return theme.ColorScheme.OnSurface.WithOpacity(0.12);
             }
 
             return theme.ColorScheme.Outline;
@@ -1481,12 +1481,12 @@ public sealed class Switch : StatefulWidget
                 {
                     if (states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused))
                     {
-                        return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.Primary, 0.10);
+                        return theme.ColorScheme.Primary.WithOpacity(0.10);
                     }
 
                     if (states.HasFlag(MaterialState.Hovered))
                     {
-                        return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.Primary, 0.08);
+                        return theme.ColorScheme.Primary.WithOpacity(0.08);
                     }
 
                     return null;
@@ -1494,12 +1494,12 @@ public sealed class Switch : StatefulWidget
 
                 if (states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused))
                 {
-                    return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.10);
+                    return theme.ColorScheme.OnSurface.WithOpacity(0.10);
                 }
 
                 if (states.HasFlag(MaterialState.Hovered))
                 {
-                    return MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.08);
+                    return theme.ColorScheme.OnSurface.WithOpacity(0.08);
                 }
 
                 return null;

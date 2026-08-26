@@ -5,6 +5,7 @@ using Plumix;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -136,7 +137,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         Assert.Equal(16.0, captured!.TextStyle!.FontSize);
         Assert.Equal(1.5, captured.TextStyle.Height);
         Assert.IsType<OutlineInputBorder>(captured.InputDecorationTheme!.Border);
-        Assert.Equal(MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38), captured.DisabledColor);
+        Assert.Equal(theme.ColorScheme.OnSurface.WithOpacity(0.38), captured.DisabledColor);
 
         var menuStyle = captured.MenuStyle!;
         Assert.Equal(new Size(112, 0), menuStyle.MinimumSize!.Resolve(MaterialState.None));
@@ -210,7 +211,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         Assert.Equal("Item 1", TextControllerOf(harness).Text);
         Assert.Equal(1, HighlightOf(state));
         var highlighted = Assert.Single(FindDescendants<RenderDecoratedBox>(harness.RenderView)
-            .Where(box => box.Decoration.Color == MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12))
+            .Where(box => box.Decoration.Color == theme.ColorScheme.OnSurface.WithOpacity(0.12))
             .ToList());
         Assert.NotNull(highlighted);
     }
@@ -255,7 +256,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         Assert.False(textField.Enabled);
         Assert.Null(textField.OnTap);
         Assert.Equal(
-            MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38),
+            theme.ColorScheme.OnSurface.WithOpacity(0.38),
             textField.Style!.Color);
         Assert.Null(FindWidgets<IconButton>(harness.RootElement)[0].OnPressed);
     }

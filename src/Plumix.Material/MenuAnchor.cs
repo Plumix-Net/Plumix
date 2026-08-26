@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -1174,7 +1175,7 @@ internal static class MenuButtonDefaults
             {
                 if (states.HasFlag(MaterialState.Disabled))
                 {
-                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.38);
+                    return colors.OnSurface.WithOpacity(0.38);
                 }
 
                 if (states.HasFlag(MaterialState.Pressed))
@@ -1198,7 +1199,7 @@ internal static class MenuButtonDefaults
             {
                 if (states.HasFlag(MaterialState.Disabled))
                 {
-                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.38);
+                    return colors.OnSurface.WithOpacity(0.38);
                 }
 
                 if (states.HasFlag(MaterialState.Pressed))
@@ -1228,17 +1229,17 @@ internal static class MenuButtonDefaults
             {
                 if (states.HasFlag(MaterialState.Pressed))
                 {
-                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.1);
+                    return colors.OnSurface.WithOpacity(0.1);
                 }
 
                 if (states.HasFlag(MaterialState.Hovered))
                 {
-                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.08);
+                    return colors.OnSurface.WithOpacity(0.08);
                 }
 
                 if (states.HasFlag(MaterialState.Focused))
                 {
-                    return MaterialButtonCore.ApplyOpacity(colors.OnSurface, 0.1);
+                    return colors.OnSurface.WithOpacity(0.1);
                 }
 
                 return Colors.Transparent;
@@ -1264,17 +1265,17 @@ internal static class MenuButtonDefaults
             density = new VisualDensity(Vertical: density.Vertical);
         }
 
-        double fontSizeRatio = MaterialButtonCore.ResolvePaddingFontSizeMultiplier(
+        double fontSizeRatio = ButtonStyleButton.EffectiveTextScale(
             context,
             theme.TextTheme.LabelLarge.FontSize);
         double densityDx = density.BaseSizeAdjustment.X;
-        return MaterialButtonCore.ScalePadding(
+        return ButtonStyleButton.ScaledPadding(
             new Thickness(
                 Math.Max(MenuConstants.MenuViewPadding, MenuConstants.LabelItemDefaultSpacing + densityDx),
                 0.0),
             new Thickness(Math.Max(MenuConstants.MenuViewPadding, 8.0 + densityDx), 0.0),
             new Thickness(MenuConstants.MenuViewPadding, 0.0),
-            fontSizeRatio);
+            fontSizeRatio).Resolve(Directionality.Of(context));
     }
 }
 
@@ -1388,7 +1389,7 @@ public sealed class MenuItemButtonState : State
 
     public override Widget Build(BuildContext context)
     {
-        ButtonStyle mergedStyle = MaterialButtonCore.ComposeStyles(
+        ButtonStyle mergedStyle = MenuButtonStyleComposer.ComposeStyles(
             defaults: Current.DefaultStyleOf(context),
             themeStyle: Current.ThemeStyleOf(context),
             widgetStyle: Current.Style,
@@ -1920,7 +1921,7 @@ public sealed class SubmenuButtonState : State
                              ?? MenuTheme.Of(context).SubmenuIcon?.Resolve(states)
                              ?? new Icon(Icons.ArrowRight, size: MenuConstants.DefaultSubmenuIconSize);
 
-        ButtonStyle mergedStyle = MaterialButtonCore.ComposeStyles(
+        ButtonStyle mergedStyle = MenuButtonStyleComposer.ComposeStyles(
             defaults: Current.DefaultStyleOf(context),
             themeStyle: Current.ThemeStyleOf(context),
             widgetStyle: Current.Style,
@@ -2554,5 +2555,200 @@ internal sealed class MenuLayout : SingleChildLayoutDelegate
             top,
             Math.Max(0.0, rect.Right - insets.Right - left),
             Math.Max(0.0, rect.Bottom - insets.Bottom - top));
+    }
+}
+
+/// <summary>
+/// The per-state style layering `ButtonStyleButton` does internally. Plumix's `MenuItemButton` and
+/// `SubmenuButton` compose a `TextButton` instead of extending `ButtonStyleButton` the way Dart's do
+/// (`docs/ai/DIVERGENCES.md`), so they layer the three style sources themselves.
+/// </summary>
+internal static class MenuButtonStyleComposer
+{
+    public static ButtonStyle ComposeStyles(
+        ButtonStyle? defaults,
+        ButtonStyle? themeStyle,
+        ButtonStyle? widgetStyle,
+        ButtonStyle? legacyOverrides)
+    {
+        return new ButtonStyle(
+            ForegroundColor: ComposeStateProperty<Color?>(
+                legacyOverrides?.ForegroundColor,
+                widgetStyle?.ForegroundColor,
+                themeStyle?.ForegroundColor,
+                defaults?.ForegroundColor),
+            BackgroundColor: ComposeStateProperty<Color?>(
+                legacyOverrides?.BackgroundColor,
+                widgetStyle?.BackgroundColor,
+                themeStyle?.BackgroundColor,
+                defaults?.BackgroundColor),
+            ShadowColor: ComposeStateProperty<Color?>(
+                legacyOverrides?.ShadowColor,
+                widgetStyle?.ShadowColor,
+                themeStyle?.ShadowColor,
+                defaults?.ShadowColor),
+            SurfaceTintColor: ComposeStateProperty<Color?>(
+                legacyOverrides?.SurfaceTintColor,
+                widgetStyle?.SurfaceTintColor,
+                themeStyle?.SurfaceTintColor,
+                defaults?.SurfaceTintColor),
+            OverlayColor: ComposeStateProperty<Color?>(
+                legacyOverrides?.OverlayColor,
+                widgetStyle?.OverlayColor,
+                themeStyle?.OverlayColor,
+                defaults?.OverlayColor),
+            IconColor: ComposeIconColorProperty(
+                legacyOverrides,
+                widgetStyle,
+                themeStyle,
+                defaults),
+            IconSize: ComposeStateProperty<double?>(
+                legacyOverrides?.IconSize,
+                widgetStyle?.IconSize,
+                themeStyle?.IconSize,
+                defaults?.IconSize),
+            Elevation: ComposeStateProperty<double?>(
+                legacyOverrides?.Elevation,
+                widgetStyle?.Elevation,
+                themeStyle?.Elevation,
+                defaults?.Elevation),
+            Side: ComposeStateProperty<BorderSide?>(
+                legacyOverrides?.Side,
+                widgetStyle?.Side,
+                themeStyle?.Side,
+                defaults?.Side),
+            Padding: ComposeStateProperty<EdgeInsetsGeometry?>(
+                legacyOverrides?.Padding,
+                widgetStyle?.Padding,
+                themeStyle?.Padding,
+                defaults?.Padding),
+            Shape: ComposeStateProperty<OutlinedBorder?>(
+                legacyOverrides?.Shape,
+                widgetStyle?.Shape,
+                themeStyle?.Shape,
+                defaults?.Shape),
+            MinimumSize: ComposeStateProperty<Size?>(
+                legacyOverrides?.MinimumSize,
+                widgetStyle?.MinimumSize,
+                themeStyle?.MinimumSize,
+                defaults?.MinimumSize),
+            FixedSize: ComposeStateProperty<Size?>(
+                legacyOverrides?.FixedSize,
+                widgetStyle?.FixedSize,
+                themeStyle?.FixedSize,
+                defaults?.FixedSize),
+            MaximumSize: ComposeStateProperty<Size?>(
+                legacyOverrides?.MaximumSize,
+                widgetStyle?.MaximumSize,
+                themeStyle?.MaximumSize,
+                defaults?.MaximumSize),
+            Alignment: legacyOverrides?.Alignment
+                       ?? widgetStyle?.Alignment
+                       ?? themeStyle?.Alignment
+                       ?? defaults?.Alignment,
+            IconAlignment: legacyOverrides?.IconAlignment
+                           ?? widgetStyle?.IconAlignment
+                           ?? themeStyle?.IconAlignment
+                           ?? defaults?.IconAlignment,
+            TapTargetSize: legacyOverrides?.TapTargetSize
+                           ?? widgetStyle?.TapTargetSize
+                           ?? themeStyle?.TapTargetSize
+                           ?? defaults?.TapTargetSize,
+            TextStyle: ComposeStateProperty<TextStyle?>(
+                legacyOverrides?.TextStyle,
+                widgetStyle?.TextStyle,
+                themeStyle?.TextStyle,
+                defaults?.TextStyle),
+            MouseCursor: ComposeStateProperty<MouseCursor?>(
+                legacyOverrides?.MouseCursor,
+                widgetStyle?.MouseCursor,
+                themeStyle?.MouseCursor,
+                defaults?.MouseCursor),
+            VisualDensity: legacyOverrides?.VisualDensity
+                           ?? widgetStyle?.VisualDensity
+                           ?? themeStyle?.VisualDensity
+                           ?? defaults?.VisualDensity,
+            AnimationDuration: legacyOverrides?.AnimationDuration
+                               ?? widgetStyle?.AnimationDuration
+                               ?? themeStyle?.AnimationDuration
+                               ?? defaults?.AnimationDuration,
+            EnableFeedback: legacyOverrides?.EnableFeedback
+                            ?? widgetStyle?.EnableFeedback
+                            ?? themeStyle?.EnableFeedback
+                            ?? defaults?.EnableFeedback,
+            SplashFactory: legacyOverrides?.SplashFactory
+                           ?? widgetStyle?.SplashFactory
+                           ?? themeStyle?.SplashFactory
+                           ?? defaults?.SplashFactory,
+            BackgroundBuilder: legacyOverrides?.BackgroundBuilder
+                               ?? widgetStyle?.BackgroundBuilder
+                               ?? themeStyle?.BackgroundBuilder
+                               ?? defaults?.BackgroundBuilder,
+            ForegroundBuilder: legacyOverrides?.ForegroundBuilder
+                               ?? widgetStyle?.ForegroundBuilder
+                               ?? themeStyle?.ForegroundBuilder
+                               ?? defaults?.ForegroundBuilder);
+    }
+
+    private static MaterialStateProperty<T>? ComposeStateProperty<T>(
+        params MaterialStateProperty<T>?[] layers)
+    {
+        bool hasAny = false;
+        foreach (var layer in layers)
+        {
+            if (layer is not null)
+            {
+                hasAny = true;
+                break;
+            }
+        }
+
+        if (!hasAny)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<T>.ResolveWith(states =>
+        {
+            foreach (var layer in layers)
+            {
+                if (layer is null)
+                {
+                    continue;
+                }
+
+                var resolved = layer.Resolve(states);
+                if (resolved is not null)
+                {
+                    return resolved;
+                }
+            }
+
+            return default!;
+        });
+    }
+
+    private static MaterialStateProperty<Color?>? ComposeIconColorProperty(params ButtonStyle?[] layers)
+    {
+        bool hasAny = layers.Any(style => style?.IconColor is not null || style?.ForegroundColor is not null);
+        if (!hasAny)
+        {
+            return null;
+        }
+
+        return MaterialStateProperty<Color?>.ResolveWith(states =>
+        {
+            foreach (ButtonStyle? style in layers)
+            {
+                Color? resolved = style?.IconColor?.Resolve(states)
+                                  ?? style?.ForegroundColor?.Resolve(states);
+                if (resolved.HasValue)
+                {
+                    return resolved;
+                }
+            }
+
+            return null;
+        });
     }
 }

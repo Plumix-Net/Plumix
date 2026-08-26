@@ -151,8 +151,9 @@ public sealed class MaterialActionButtonsTests
         Assert.NotNull(FindSemantics(semantics, node => node.Tooltip == "Ouvrir le menu"));
         var buttons = FindAllSemantics(
             semantics,
-            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
-                    && node.Actions.HasFlag(SemanticsActions.Tap));
+            // `ButtonStyleButton` keeps the tap action on the ink node below the button node
+            // (`docs/ai/DIVERGENCES.md`).
+            node => node.Actions.HasFlag(SemanticsActions.Tap));
 
         Assert.Equal(2, buttons.Count);
         Assert.True(buttons[0].PerformAction(SemanticsActions.Tap));
@@ -178,8 +179,9 @@ public sealed class MaterialActionButtonsTests
         var semantics = harness.PumpAndGetSemantics(new Size(320, 180));
         var buttons = FindAllSemantics(
             semantics,
-            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
-                    && node.Actions.HasFlag(SemanticsActions.Tap));
+            // `ButtonStyleButton` keeps the tap action on the ink node below the button node
+            // (`docs/ai/DIVERGENCES.md`).
+            node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.Equal(2, buttons.Count);
 
         Assert.True(buttons[0].PerformAction(SemanticsActions.Tap));
@@ -192,8 +194,9 @@ public sealed class MaterialActionButtonsTests
         semantics = harness.PumpAndGetSemantics(new Size(320, 180));
         buttons = FindAllSemantics(
             semantics,
-            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
-                    && node.Actions.HasFlag(SemanticsActions.Tap));
+            // `ButtonStyleButton` keeps the tap action on the ink node below the button node
+            // (`docs/ai/DIVERGENCES.md`).
+            node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.True(buttons[1].PerformAction(SemanticsActions.Tap));
         harness.Pump(new Size(320, 180));
         Assert.False(scaffold.IsDrawerOpen);
@@ -224,8 +227,9 @@ public sealed class MaterialActionButtonsTests
         Assert.NotNull(close);
         var buttons = FindAllSemantics(
             semantics,
-            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
-                    && node.Actions.HasFlag(SemanticsActions.Tap));
+            // `ButtonStyleButton` keeps the tap action on the ink node below the button node
+            // (`docs/ai/DIVERGENCES.md`).
+            node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.Equal(2, buttons.Count);
         Assert.True(buttons[0].PerformAction(SemanticsActions.Tap));
         Assert.True(buttons[1].PerformAction(SemanticsActions.Tap));
@@ -260,8 +264,9 @@ public sealed class MaterialActionButtonsTests
         Assert.NotNull(action);
         var button = FindSemantics(
             semantics,
-            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
-                    && node.Actions.HasFlag(SemanticsActions.Tap));
+            // `ButtonStyleButton` keeps the tap action on the ink node below the button node
+            // (`docs/ai/DIVERGENCES.md`).
+            node => node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(button);
         Assert.True(button!.PerformAction(SemanticsActions.Tap));
         harness.Pump(new Size(180, 80));

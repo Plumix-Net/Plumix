@@ -8,6 +8,21 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `RawMaterialButton` builds Dart's `Semantics`/`_InputPadding`/`Material`/`InkWell` stack (`button.dart`).
+- Breaking: `RawMaterialButton.shape` is a `ShapeBorder`, defaulting to `RoundedRectangleBorder()`, not a radius.
+- Added `MaterialStateMixin` as an abstract `State` base, since C# has no mixins (`material_state_mixin.dart`).
+- Breaking: `FloatingActionButton` composes `RawMaterialButton` and merges `iconSize` into its icon theme.
+- Breaking: M3 `IconButton` builds `_SelectableIconButton` over `_IconButtonM3 : ButtonStyleButton` (`icon_button`).
+- Breaking: `IconButton.styleFrom` drops the C#-only `splashColor`, which Dart's signature does not have.
+- Breaking: `RawChip` builds `Material` + `InkWell` + `Ink` + `_ChipRedirectingHitDetectionWidget` (`chip.dart`).
+- Breaking: a chip reports selection through `Semantics.selected`, never `checked`, as Dart does off the web.
+- Breaking: `NavigationBar` puts its destinations in a `Material` over `_IndicatorInkWell` (`navigation_bar.dart`).
+- Breaking: `NavigationDrawer`/`NavigationRail` destinations build `InkWell`/`InkResponse` (`navigation_rail.dart`).
+- Breaking: a `NavigationDrawerDestination.backgroundColor` paints through `Ink`, not a `DecoratedBox`.
+- Breaking: `ToggleButtons` builds Dart's `TextButton` per button (`toggle_buttons.dart`).
+- Breaking: removed the C#-only `ButtonStyle.splashColor`; `InkResponse` derives the splash from `overlayColor`.
+- Removed `RenderButtonTapTargetPadding`; the remaining consumer uses `_InputPadding` (`button_style_button.dart`).
+- Added `Color.WithOpacity` in `Plumix.Painting`; `MaterialButtonCore`'s colour/padding/style helpers are gone.
 - Breaking: strict `Hero` port — `HeroController` observer, `_HeroFlight` per tag, overlay entries (`heroes.dart`).
 - Breaking: flights ride the route's own animation; the C#-only navigator flight engine and its controller are gone.
 - Breaking: `HeroControllerScope` carries a `HeroController`; `Navigator` picks it up and wraps its subtree in `.None`.

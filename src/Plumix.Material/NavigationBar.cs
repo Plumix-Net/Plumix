@@ -177,30 +177,32 @@ public sealed class NavigationBar : StatelessWidget
                     height: effectiveHeight,
                     overlayColor: ComposeColorProperty(OverlayColor, navigationTheme.OverlayColor, defaults.OverlayColor),
                     key: destination.Key ?? new ValueKey<int>(index));
-            children.Add(new Expanded(child: tile));
+            children.Add(new Expanded(
+                child: new MergeSemantics(
+                    new Semantics(
+                        selected: index == SelectedIndex,
+                        child: tile))));
         }
 
         Widget content = new SizedBox(
             height: effectiveHeight,
-            child: new Semantics(
-                container: true,
-                explicitChildNodes: true,
-                child: new Row(children: children)));
+            child: new Row(children: children));
 
         content = new SafeArea(
             left: false,
             top: false,
             right: false,
             maintainBottomViewPadding: MaintainBottomViewPadding,
-            child: content);
+            child: new Semantics(
+                explicitChildNodes: true,
+                container: true,
+                child: content));
 
-        return new DecoratedBox(
-            decoration: NavigationSurfaceUtilities.CreateDecoration(
-                effectiveBackground,
-                effectiveElevation,
-                effectiveShadow,
-                effectiveSurfaceTint,
-                theme.UseMaterial3),
+        return new global::Plumix.Material.Material(
+            color: effectiveBackground,
+            elevation: effectiveElevation,
+            shadowColor: effectiveShadow,
+            surfaceTintColor: effectiveSurfaceTint,
             child: content);
     }
 
@@ -446,6 +448,10 @@ internal sealed class NavigationBarDestinationTileState : State
         var icon = widget.Selected && destination.SelectedIcon is not null
             ? destination.SelectedIcon
             : destination.Icon;
+        MaterialState states = destination.Enabled
+            ? widget.Selected ? MaterialState.Selected : MaterialState.None
+            : MaterialState.Disabled;
+        IconThemeData? iconTheme = widget.IconTheme.Resolve(states);
 
         Widget iconWithIndicator = new Stack(
             alignment: Alignment.Center,
@@ -455,7 +461,7 @@ internal sealed class NavigationBarDestinationTileState : State
                     animationValue: progress,
                     color: widget.IndicatorColor,
                     shape: widget.IndicatorShape),
-                icon
+                iconTheme is null ? icon : IconTheme.Merge(data: iconTheme, child: icon)
             ]);
 
         Widget content;
@@ -470,49 +476,47 @@ internal sealed class NavigationBarDestinationTileState : State
                 opacity: labelOpacity,
                 child: new Padding(
                     insets: widget.LabelPadding,
-                    child: new Text(destination.Label, softWrap: false, maxLines: 1, overflow: TextOverflow.Ellipsis)));
+                    child: new Text(
+                        destination.Label,
+                        style: widget.LabelTextStyle.Resolve(states),
+                        softWrap: false,
+                        maxLines: 1,
+                        overflow: TextOverflow.Ellipsis)));
             content = new Column(
                 mainAxisSize: MainAxisSize.Min,
                 mainAxisAlignment: MainAxisAlignment.Center,
                 children: [iconWithIndicator, label]);
         }
 
-        var buttonStyle = new ButtonStyle(
-            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states => widget.LabelTextStyle.Resolve(states)?.Color),
-            BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            OverlayColor: widget.OverlayColor,
-            SplashColor: widget.OverlayColor,
-            IconColor: MaterialStateProperty<Color?>.ResolveWith(states => widget.IconTheme.Resolve(states)?.Color),
-            IconSize: MaterialStateProperty<double?>.ResolveWith(states => widget.IconTheme.Resolve(states)?.Size),
-            TextStyle: widget.LabelTextStyle,
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                ShapeBorderGeometry.ResolveRadius(widget.IndicatorShape))),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, widget.Height)),
-            TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
-            Alignment: Alignment.Center);
+        // Dart parity: `_IndicatorInkWell`, without the `getRectCallback` override that clips the
+        // ripple to the icon box (`docs/ai/DIVERGENCES.md`).
+        Widget result = new InkResponse(
+            containedInkWell: true,
+            highlightColor: Colors.Transparent,
+            overlayColor: widget.OverlayColor,
+            customBorder: widget.IndicatorShape,
+            onTap: destination.Enabled ? widget.OnTap : null,
+            child: new Row(children: [new Expanded(child: content)]));
 
-        Widget result = new MaterialButtonCore(
-            child: content,
-            onPressed: destination.Enabled ? widget.OnTap : null,
-            style: buttonStyle,
-            isSelected: widget.Selected,
-            isSemanticButton: true,
-            semanticLabel: $"{destination.Label}, {widget.IndexLabel}",
-            clipBehavior: Clip.None);
+        // Dart parity: `_NavigationBarDestinationTooltip`.
+        result = new Tooltip(
+            message: destination.Tooltip ?? destination.Label,
+            verticalOffset: 42,
+            preferBelow: false,
+            excludeFromSemantics: true,
+            child: result);
 
-        string tooltipMessage = destination.Tooltip ?? destination.Label;
-        if (tooltipMessage.Length > 0)
-        {
-            result = new Tooltip(
-                message: tooltipMessage,
-                verticalOffset: 42,
-                preferBelow: false,
-                excludeFromSemantics: true,
-                child: result);
-        }
-
-        return new MergeSemantics(result);
+        // Dart parity: `_NavigationBarDestinationSemantics`.
+        return new Semantics(
+            enabled: destination.Enabled,
+            flags: SemanticsFlags.IsButton,
+            child: new Stack(
+                alignment: Alignment.Center,
+                children:
+                [
+                    result,
+                    new Semantics(label: widget.IndexLabel)
+                ]));
     }
 
     private void CreateController(double value)
@@ -567,21 +571,23 @@ internal sealed class NavigationBarCustomDestinationTile : StatelessWidget
 
     public override Widget Build(BuildContext context)
     {
-        return new MaterialButtonCore(
-            child: Child,
-            onPressed: OnTap,
-            style: new ButtonStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                OverlayColor: OverlayColor,
-                SplashColor: OverlayColor,
-                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
-                MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, Height)),
-                TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
-                Alignment: Alignment.Center),
-            isSelected: Selected,
-            isSemanticButton: true,
-            semanticLabel: IndexLabel,
-            clipBehavior: Clip.None);
+        Widget result = new InkResponse(
+            containedInkWell: true,
+            highlightColor: Colors.Transparent,
+            overlayColor: OverlayColor,
+            onTap: OnTap,
+            child: new Row(children: [new Expanded(child: Child)]));
+
+        return new Semantics(
+            enabled: true,
+            flags: SemanticsFlags.IsButton,
+            child: new Stack(
+                alignment: Alignment.Center,
+                children:
+                [
+                    result,
+                    new Semantics(label: IndexLabel)
+                ]));
     }
 }
 

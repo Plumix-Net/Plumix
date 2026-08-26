@@ -236,10 +236,10 @@ public sealed class MaterialChipTests : IDisposable
         harness.Pump(new Size(320, 120));
 
         var decoration = FindChipDecoration(harness.RenderView);
-        Assert.Equal(MaterialColors.Transparent, decoration.Decoration.Color);
-        Assert.Equal(8, decoration.Decoration.BorderRadius!.Value.Radius);
-        Assert.Equal(Colors.CadetBlue, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
-        Assert.Equal(1, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Width);
+        Assert.Equal(MaterialColors.Transparent, decoration.Color);
+        Assert.Equal(8, ChipRadius(decoration));
+        Assert.Equal(Colors.CadetBlue, ChipSide(decoration).Color);
+        Assert.Equal(1, ChipSide(decoration).Width);
         Assert.Equal(Colors.DarkSlateBlue, ForegroundColor(Paragraph(harness.RenderView, "Action")));
         RenderChip renderChip = FindChipRender(harness.RenderView);
         Assert.True(renderChip.Size.Height >= 32);
@@ -261,10 +261,12 @@ public sealed class MaterialChipTests : IDisposable
         harness.Pump(new Size(320, 120));
 
         var decoration = FindChipDecoration(harness.RenderView);
-        Assert.Equal(Colors.MediumPurple, decoration.Decoration.Color);
-        Assert.Equal(MaterialColors.Transparent, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
-        Assert.NotNull(decoration.Decoration.BoxShadows);
-        Assert.True(decoration.Decoration.BoxShadows!.Count > 0);
+        Assert.Equal(Colors.MediumPurple, decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, ChipSide(decoration).Color);
+        // The elevation shadow is painted by the chip's `Material`, not by its `Ink` decoration.
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.BoxShadows is { Count: > 0 });
     }
 
     [Fact]
@@ -281,14 +283,15 @@ public sealed class MaterialChipTests : IDisposable
 
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
 
-        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Color);
         Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Selected")));
         Assert.Equal(1.0, FindChipRender(harness.RenderView).CheckmarkProgress);
-        var selected = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsChecked));
+        // Off the web Dart reports the chip's selection through `selected`, never `checked`.
+        var selected = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
         Assert.NotNull(selected);
-        Assert.True(selected!.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.False(selected!.Flags.HasFlag(SemanticsFlags.IsChecked));
         Assert.True(selected.Flags.HasFlag(SemanticsFlags.IsEnabled));
-        Assert.True(selected.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.NotNull(FindSemantics(selected, node => node.Actions.HasFlag(SemanticsActions.Tap)));
     }
 
     [Fact]
@@ -301,13 +304,13 @@ public sealed class MaterialChipTests : IDisposable
 
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
 
-        Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(harness.RenderView).Color);
         Assert.Equal(Colors.Crimson, ForegroundColor(Paragraph(harness.RenderView, "Disabled")));
         Assert.Equal(0.0, FindChipRender(harness.RenderView).EnableProgress);
-        var selected = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsChecked));
+        var selected = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
         Assert.NotNull(selected);
         Assert.False(selected!.Flags.HasFlag(SemanticsFlags.IsEnabled));
-        Assert.False(selected.Actions.HasFlag(SemanticsActions.Tap));
+        Assert.Null(FindSemantics(selected, node => node.Actions.HasFlag(SemanticsActions.Tap)));
     }
 
     [Fact]
@@ -326,8 +329,8 @@ public sealed class MaterialChipTests : IDisposable
         themedHarness.Pump(new Size(320, 120));
 
         var themed = FindChipDecoration(themedHarness.RenderView);
-        Assert.Equal(Colors.Purple, themed.Decoration.Color);
-        Assert.Equal(13, themed.Decoration.BorderRadius!.Value.Radius);
+        Assert.Equal(Colors.Purple, themed.Color);
+        Assert.Equal(13, ChipRadius(themed));
         Assert.Equal(Colors.Orange, ForegroundColor(Paragraph(themedHarness.RenderView, "Themed")));
 
         using var widgetHarness = new WidgetRenderHarness(Root(
@@ -344,8 +347,8 @@ public sealed class MaterialChipTests : IDisposable
         widgetHarness.Pump(new Size(320, 120));
 
         var widget = FindChipDecoration(widgetHarness.RenderView);
-        Assert.Equal(Colors.Gold, widget.Decoration.Color);
-        Assert.Equal(3, widget.Decoration.BorderRadius!.Value.Radius);
+        Assert.Equal(Colors.Gold, widget.Color);
+        Assert.Equal(3, ChipRadius(widget));
         Assert.Equal(Colors.Navy, ForegroundColor(Paragraph(widgetHarness.RenderView, "Widget")));
     }
 
@@ -370,7 +373,7 @@ public sealed class MaterialChipTests : IDisposable
 
         harness.Pump(new Size(320, 120));
 
-        Assert.Equal(Colors.Crimson, FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(Colors.Crimson, FindChipDecoration(harness.RenderView).Color);
     }
 
     [Fact]
@@ -398,19 +401,19 @@ public sealed class MaterialChipTests : IDisposable
                 selectedColor: Colors.DarkGreen,
                 chipAnimationStyle: animation)));
         harness.Pump(new Size(320, 120));
-        var start = FindChipDecoration(harness.RenderView).Decoration.Color;
+        var start = FindChipDecoration(harness.RenderView).Color;
 
         double now = Scheduler.CurrentSeconds;
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1));
         harness.Pump(new Size(320, 120));
-        var middle = FindChipDecoration(harness.RenderView).Decoration.Color;
+        var middle = FindChipDecoration(harness.RenderView).Color;
         Assert.NotEqual(start, middle);
         Assert.NotEqual(Colors.DarkGreen, middle);
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 11));
         harness.Pump(new Size(320, 120));
-        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Color);
     }
 
     [Fact]
@@ -447,11 +450,11 @@ public sealed class MaterialChipTests : IDisposable
 
         harness.Pump(new Size(320, 120));
 
-        Assert.Equal(WithOpacity(theme.PrimaryColor, 0x3d / 255.0), FindChipDecoration(harness.RenderView).Decoration.Color);
-        Assert.Equal(10_000, FindChipDecoration(harness.RenderView).Decoration.BorderRadius!.Value.Radius);
+        Assert.Equal(WithOpacity(theme.PrimaryColor, 0x3d / 255.0), FindChipDecoration(harness.RenderView).Color);
+        Assert.Equal(10_000, ChipRadius(FindChipDecoration(harness.RenderView)));
         Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView));
-        Assert.Contains(FindDescendants<RenderButtonTapTargetPadding>(harness.RenderView),
-            box => box.MinSize == new Size(40, 40));
+        Assert.Contains(FindDescendants<RenderChipRedirectingHitDetection>(harness.RenderView),
+            box => box.AdditionalConstraints.MinWidth == 40 && box.AdditionalConstraints.MinHeight == 40);
     }
 
     [Fact]
@@ -490,7 +493,7 @@ public sealed class MaterialChipTests : IDisposable
 
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
 
-        Assert.Equal(MaterialColors.Transparent, FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(MaterialColors.Transparent, FindChipDecoration(harness.RenderView).Color);
         RenderParagraph clear = FindDescendants<RenderParagraph>(harness.RenderView)
             .Single(paragraph => paragraph.PlainText == IconText(Icons.Clear));
         Assert.Equal(Colors.Purple, ForegroundColor(clear));
@@ -524,7 +527,7 @@ public sealed class MaterialChipTests : IDisposable
 
         harness.Pump(new Size(320, 120));
 
-        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Color);
         Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Filter")));
         Assert.Equal(1.0, FindChipRender(harness.RenderView).CheckmarkProgress);
         Assert.Contains(FindDescendants<RenderParagraph>(harness.RenderView),
@@ -543,8 +546,10 @@ public sealed class MaterialChipTests : IDisposable
             theme,
             FilterChip.Elevated(new Text("Enabled"), _ => { })));
         enabled.Pump(new Size(320, 120));
-        Assert.Equal(Colors.MediumPurple, FindChipDecoration(enabled.RenderView).Decoration.Color);
-        Assert.NotNull(FindChipDecoration(enabled.RenderView).Decoration.BoxShadows);
+        Assert.Equal(Colors.MediumPurple, FindChipDecoration(enabled.RenderView).Color);
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(enabled.RenderView),
+            box => box.Decoration.BoxShadows is { Count: > 0 });
 
         using var disabled = new WidgetRenderHarness(Root(
             theme,
@@ -554,7 +559,7 @@ public sealed class MaterialChipTests : IDisposable
                 selected: true,
                 onDeleted: () => { })));
         var semantics = disabled.PumpAndGetSemantics(new Size(320, 120));
-        Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(disabled.RenderView).Decoration.Color);
+        Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(disabled.RenderView).Color);
         var delete = FindSemantics(
             semantics,
             node => HasLabelPart(node, "Delete") && node.Flags.HasFlag(SemanticsFlags.IsButton));
@@ -575,7 +580,7 @@ public sealed class MaterialChipTests : IDisposable
                 selected: true,
                 onDeleted: () => { })));
         filter.Pump(new Size(320, 120));
-        Assert.Equal(WithOpacity(Colors.Black, 0x3d / 255.0), FindChipDecoration(filter.RenderView).Decoration.Color);
+        Assert.Equal(WithOpacity(Colors.Black, 0x3d / 255.0), FindChipDecoration(filter.RenderView).Color);
         Assert.Contains(FindDescendants<RenderParagraph>(filter.RenderView),
             paragraph => paragraph.PlainText == IconText(Icons.Cancel));
         Assert.DoesNotContain(FindDescendants<RenderParagraph>(filter.RenderView),
@@ -589,7 +594,7 @@ public sealed class MaterialChipTests : IDisposable
                 onSelected: _ => { },
                 onDeleted: () => { })));
         input.Pump(new Size(320, 120));
-        Assert.Equal(WithOpacity(Colors.Black, 0x3d / 255.0), FindChipDecoration(input.RenderView).Decoration.Color);
+        Assert.Equal(WithOpacity(Colors.Black, 0x3d / 255.0), FindChipDecoration(input.RenderView).Color);
         Assert.Contains(FindDescendants<RenderParagraph>(input.RenderView),
             paragraph => paragraph.PlainText == IconText(Icons.Cancel));
         Assert.DoesNotContain(FindDescendants<RenderParagraph>(input.RenderView),
@@ -613,7 +618,6 @@ public sealed class MaterialChipTests : IDisposable
         var body = FindSemantics(
             semantics,
             node => node.Label != "Remove filter"
-                    && node.Flags.HasFlag(SemanticsFlags.IsButton)
                     && node.Actions.HasFlag(SemanticsActions.Tap));
         var delete = FindSemantics(semantics, node => HasLabelPart(node, "Remove filter"));
         Assert.NotNull(body);
@@ -651,8 +655,8 @@ public sealed class MaterialChipTests : IDisposable
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
 
         var decoration = FindChipDecoration(harness.RenderView);
-        Assert.Equal(Colors.CadetBlue, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
-        Assert.Equal(MaterialColors.Transparent, decoration.Decoration.Color);
+        Assert.Equal(Colors.CadetBlue, ChipSide(decoration).Color);
+        Assert.Equal(MaterialColors.Transparent, decoration.Color);
         var body = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
         Assert.Null(body);
         var delete = FindSemantics(
@@ -679,7 +683,7 @@ public sealed class MaterialChipTests : IDisposable
 
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
 
-        Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(WithOpacity(Colors.Crimson, 0.12), FindChipDecoration(harness.RenderView).Color);
         var selected = FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsSelected));
         Assert.NotNull(selected);
         Assert.False(selected!.Flags.HasFlag(SemanticsFlags.IsEnabled));
@@ -711,7 +715,7 @@ public sealed class MaterialChipTests : IDisposable
 
         harness.Pump(new Size(320, 120));
 
-        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Decoration.Color);
+        Assert.Equal(Colors.DarkGreen, FindChipDecoration(harness.RenderView).Color);
         Assert.Equal(Colors.Gold, ForegroundColor(Paragraph(harness.RenderView, "Selected input")));
         RenderChip renderChip = FindChipRender(harness.RenderView);
         var clear = FindDescendants<RenderParagraph>(harness.RenderView)
@@ -732,8 +736,7 @@ public sealed class MaterialChipTests : IDisposable
         var semantics = harness.PumpAndGetSemantics(new Size(320, 120));
         var body = FindSemantics(
             semantics,
-            node => node.Flags.HasFlag(SemanticsFlags.IsButton)
-                    && node.Flags.HasFlag(SemanticsFlags.IsEnabled)
+            node => node.Flags.HasFlag(SemanticsFlags.IsEnabled)
                     && node.Actions.HasFlag(SemanticsActions.Tap));
         Assert.NotNull(body);
         Assert.True(body!.PerformAction(SemanticsActions.Tap));
@@ -884,10 +887,10 @@ public sealed class MaterialChipTests : IDisposable
 
         harness.Pump(new Size(320, 120));
 
-        RenderDecoratedBox decoration = FindChipDecoration(harness.RenderView);
-        Assert.Equal(13, decoration.Decoration.BorderRadius!.Value.Radius);
-        Assert.Equal(Colors.Crimson, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Color);
-        Assert.Equal(2, ((Plumix.Rendering.Border)decoration.Decoration.Border!).Top.Width);
+        ShapeDecoration decoration = FindChipDecoration(harness.RenderView);
+        Assert.Equal(13, ChipRadius(decoration));
+        Assert.Equal(Colors.Crimson, ChipSide(decoration).Color);
+        Assert.Equal(2, ChipSide(decoration).Width);
     }
 
     [Fact]
@@ -929,11 +932,23 @@ public sealed class MaterialChipTests : IDisposable
 
     private static string IconText(IconData icon) => char.ConvertFromUtf32(icon.CodePoint);
 
-    private static RenderDecoratedBox FindChipDecoration(RenderObject root)
+    /// <summary>
+    /// The chip's own background: Dart paints it with `Ink`, so it lands on the chip's material as
+    /// an ink decoration rather than as a `DecoratedBox`.
+    /// </summary>
+    private static ShapeDecoration FindChipDecoration(RenderObject root)
     {
-        return FindDescendants<RenderDecoratedBox>(root)
-            .First(box => box.Decoration.BorderRadius.HasValue);
+        return FindDescendants<RenderInkDecoration>(root)
+            .Select(ink => ink.Decoration)
+            .OfType<ShapeDecoration>()
+            .First();
     }
+
+    private static double ChipRadius(ShapeDecoration decoration) =>
+        ShapeBorderGeometry.ResolveRadius(decoration.Shape).TopLeft;
+
+    private static BorderSide ChipSide(ShapeDecoration decoration) =>
+        ShapeBorderGeometry.SideOrNone(decoration.Shape);
 
     private static RenderChip FindChipRender(RenderObject root)
     {

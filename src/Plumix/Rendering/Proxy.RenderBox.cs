@@ -365,7 +365,7 @@ public sealed class RenderBlockSemantics : RenderProxyBox
     }
 }
 
-public sealed class RenderConstrainedBox : RenderProxyBox
+public class RenderConstrainedBox : RenderProxyBox
 {
     private BoxConstraints _additionalConstraints;
 

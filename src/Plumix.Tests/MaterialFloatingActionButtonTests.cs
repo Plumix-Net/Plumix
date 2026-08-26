@@ -1,6 +1,7 @@
 using System.Linq;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -78,17 +79,14 @@ public sealed class MaterialFloatingActionButtonTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        MaterialButtonCore button = RequireBuiltButton(capturedBuiltWidget);
-        Assert.Equal(secondary, button.Style.ResolveBackgroundColor(MaterialState.None));
-        Assert.Equal(onSecondary, button.Style.ResolveForegroundColor(MaterialState.None));
-        Assert.Equal(focus, button.Style.ResolveOverlayColor(MaterialState.Focused));
-        Assert.Equal(hover, button.Style.ResolveOverlayColor(MaterialState.Hovered));
-        Assert.Equal(splash, button.Style.ResolveOverlayColor(MaterialState.Pressed));
-        Assert.Equal(splash, button.Style.ResolveSplashColor(MaterialState.Pressed));
-        Assert.Equal(
-            new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(9999)),
-            button.Style.ResolveShape(MaterialState.None));
-        Assert.Equal(12, button.Style.ResolveElevation(MaterialState.Pressed));
+        RawMaterialButton button = RequireBuiltButton(capturedBuiltWidget);
+        Assert.Equal(secondary, button.FillColor);
+        Assert.Equal(onSecondary, button.TextStyle?.Color);
+        Assert.Equal(focus, button.FocusColor);
+        Assert.Equal(hover, button.HoverColor);
+        Assert.Equal(splash, button.SplashColor);
+        Assert.Equal(new CircleBorder(), button.Shape);
+        Assert.Equal(12, button.HighlightElevation);
     }
 
     [Fact]
@@ -136,7 +134,7 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        Assert.Null(FindDescendant<RenderClipRRect>(renderRoot));
+        Assert.Null(FindDescendant<RenderClipPath>(renderRoot));
     }
 
     [Fact]
@@ -156,7 +154,7 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        Assert.NotNull(FindDescendant<RenderClipRRect>(renderRoot));
+        Assert.NotNull(FindDescendant<RenderClipPath>(renderRoot));
     }
 
     [Fact]
@@ -247,7 +245,7 @@ public sealed class MaterialFloatingActionButtonTests
         owner.FlushBuild();
 
         var mergeSemantics = Assert.IsType<MergeSemantics>(capturedBuiltWidget);
-        Assert.IsType<MaterialButtonCore>(mergeSemantics.Child);
+        Assert.IsType<RawMaterialButton>(mergeSemantics.Child);
     }
 
     [Fact]
@@ -722,13 +720,11 @@ public sealed class MaterialFloatingActionButtonTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        MaterialButtonCore button = RequireBuiltButton(capturedBuiltWidget);
-        Assert.Equal(
-            new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(9999)),
-            button.Style.ResolveShape(MaterialState.None));
-        Assert.Equal(new BorderSide(Colors.Red, 2), button.Style.ResolveSide(MaterialState.None));
-        Assert.Equal(enabledCursor, button.Style.ResolveMouseCursor(MaterialState.None));
-        Assert.Equal(disabledCursor, button.Style.ResolveMouseCursor(MaterialState.Disabled));
+        RawMaterialButton button = RequireBuiltButton(capturedBuiltWidget);
+        Assert.Equal(new StadiumBorder(new BorderSide(Colors.Red, 2)), button.Shape);
+        var cursor = Assert.IsAssignableFrom<WidgetStateMouseCursor>(button.MouseCursor);
+        Assert.Equal(enabledCursor, cursor.Resolve(MaterialStateSet.Of(MaterialState.None)));
+        Assert.Equal(disabledCursor, cursor.Resolve(MaterialStateSet.Of(MaterialState.Disabled)));
     }
 
     [Fact]
@@ -766,27 +762,25 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_HoverAndPressed_UseConfiguredElevations()
     {
-        var owner = new BuildOwner();
-        var root = new TestRootElement(
+        using var harness = new FabRenderHarness(
             new Theme(
                 data: ThemeData.Light with { ShadowColor = Colors.Black },
-                child: new FloatingActionButton(
-                    child: new Icon(Icons.Add),
-                    onPressed: () => { },
-                    elevation: 2,
-                    hoverElevation: 4,
-                    highlightElevation: 7)));
+                child: new Directionality(
+                    TextDirection.Ltr,
+                    new FloatingActionButton(
+                        child: new Icon(Icons.Add),
+                        onPressed: () => { },
+                        elevation: 2,
+                        hoverElevation: 4,
+                        highlightElevation: 7))));
+        var size = new Size(200, 120);
+        harness.Pump(size);
 
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
-        var defaultDecorated = FindDescendant<RenderDecoratedBox>(renderRoot);
+        var defaultDecorated = FindDescendant<RenderDecoratedBox>(harness.RenderView);
         Assert.NotNull(defaultDecorated);
         Assert.Equal(2, RequirePrimaryShadow(defaultDecorated!).Offset.Y);
 
-        var hoverListener = FindHoverPointerListener(renderRoot);
+        var hoverListener = FindHoverPointerListener(harness.RenderView);
         Assert.NotNull(hoverListener);
         hoverListener!.HandleEvent(
             new PointerEnterEvent(
@@ -796,25 +790,25 @@ public sealed class MaterialFloatingActionButtonTests
                 buttons: PointerButtons.None,
                 timestampUtc: DateTime.UtcNow),
             new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-        owner.FlushBuild();
+        // Dart's `Material` animates elevation over `animationDuration`, so the shadow only reaches
+        // `hoverElevation` once the implicit animation has settled.
+        harness.Settle(size, TimeSpan.FromSeconds(1));
 
-        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var hoveredDecorated = FindDescendant<RenderDecoratedBox>(harness.RenderView);
         Assert.NotNull(hoveredDecorated);
         Assert.Equal(4, RequirePrimaryShadow(hoveredDecorated!).Offset.Y);
 
-        var interactiveListener = FindInteractivePointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(interactiveListener);
-        interactiveListener!.HandleEvent(
+        GestureBinding.Instance.HandlePointerEvent(
+            harness.RenderView,
             new PointerDownEvent(
-                pointer: 700,
-                kind: PointerDeviceKind.Mouse,
-                position: new Point(10, 8),
-                buttons: PointerButtons.Primary,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(interactiveListener, new Point(10, 8)));
-        owner.FlushBuild();
+                700,
+                PointerDeviceKind.Mouse,
+                new Point(28, 28),
+                PointerButtons.Primary,
+                DateTime.UtcNow));
+        harness.Settle(size, TimeSpan.FromSeconds(3));
 
-        var pressedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
+        var pressedDecorated = FindDescendant<RenderDecoratedBox>(harness.RenderView);
         Assert.NotNull(pressedDecorated);
         Assert.Equal(7, RequirePrimaryShadow(pressedDecorated!).Offset.Y);
     }
@@ -944,7 +938,19 @@ public sealed class MaterialFloatingActionButtonTests
         }
     }
 
-    private static MaterialButtonCore RequireBuiltButton(Widget? builtWidget)
+    /// Runs Dart's `Material` elevation animation to completion.
+    private static void SettleMaterialAnimation(BuildOwner owner, TimeSpan timestamp)
+    {
+        owner.FlushBuild();
+        // The first pump establishes the ticker's start time; the second one runs the 200 ms
+        // `kThemeChangeDuration` to completion.
+        Scheduler.PumpFrameForTests(timestamp);
+        owner.FlushBuild();
+        Scheduler.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
+        owner.FlushBuild();
+    }
+
+    private static RawMaterialButton RequireBuiltButton(Widget? builtWidget)
     {
         var mergeSemantics = Assert.IsType<MergeSemantics>(builtWidget);
         Widget child = mergeSemantics.Child;
@@ -953,7 +959,7 @@ public sealed class MaterialFloatingActionButtonTests
             child = hero.Child;
         }
 
-        return Assert.IsType<MaterialButtonCore>(child);
+        return Assert.IsType<RawMaterialButton>(child);
     }
 
     private static BoxConstraints TightConstraints(double width, double height)
@@ -1194,6 +1200,123 @@ public sealed class MaterialFloatingActionButtonTests
             var built = _floatingActionButton.Build(context);
             _onBuilt(built);
             return built;
+        }
+    }
+
+    /// A render-attached harness: the pressed state needs `GestureBinding` hit testing, which needs
+    /// a laid-out `RenderView`.
+    private sealed class FabRenderHarness : IDisposable
+    {
+        private readonly BuildOwner _owner = new();
+        private readonly HarnessRootElement _rootElement;
+        private readonly PipelineOwner _pipeline;
+
+        public FabRenderHarness(Widget rootWidget)
+        {
+            RenderView = new RenderView();
+            _pipeline = new PipelineOwner(RenderView);
+            _pipeline.Attach(RenderView);
+            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement.Attach(_owner);
+            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.FlushBuild();
+        }
+
+        public RenderView RenderView { get; }
+
+        public void Pump(Size size)
+        {
+            _owner.FlushBuild();
+            _pipeline.RequestLayout();
+            _pipeline.FlushLayout(size);
+            _pipeline.FlushCompositingBits();
+            _pipeline.FlushPaint();
+        }
+
+        /// Runs Dart's `Material` elevation animation to completion: the first frame establishes the
+        /// ticker's start time, the second one covers the 200 ms `kThemeChangeDuration`.
+        public void Settle(Size size, TimeSpan timestamp)
+        {
+            Pump(size);
+            Scheduler.PumpFrameForTests(timestamp);
+            Pump(size);
+            Scheduler.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
+            Pump(size);
+        }
+
+        public void Dispose() => _rootElement.Unmount();
+
+        private sealed class HarnessRootElement : Element, IRenderObjectHost
+        {
+            private readonly RenderView _renderView;
+            private Element? _child;
+
+            public HarnessRootElement(RenderView renderView, Widget widget) : base(widget) =>
+                _renderView = renderView;
+
+            public override RenderObject? RenderObject => _child?.RenderObject;
+
+            internal override Element? RenderObjectAttachingChild => _child;
+
+            protected override void OnMount()
+            {
+                base.OnMount();
+                Rebuild();
+            }
+
+            internal override void Rebuild()
+            {
+                Dirty = false;
+                _child = UpdateChild(_child, Widget, Slot);
+            }
+
+            internal override void Update(Widget newWidget)
+            {
+                base.Update(newWidget);
+                Rebuild();
+            }
+
+            internal override void ForgetChild(Element child)
+            {
+                if (ReferenceEquals(_child, child))
+                {
+                    _child = null;
+                }
+            }
+
+            internal override void VisitChildren(Action<Element> visitor)
+            {
+                if (_child is not null)
+                {
+                    visitor(_child);
+                }
+            }
+
+            public void InsertRenderObjectChild(RenderObject child, object? slot) =>
+                _renderView.Child = (RenderBox)child;
+
+            public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
+            {
+            }
+
+            public void RemoveRenderObjectChild(RenderObject child, object? slot)
+            {
+                if (ReferenceEquals(_renderView.Child, child))
+                {
+                    _renderView.Child = null;
+                }
+            }
+
+            internal override void Unmount()
+            {
+                if (_child is not null)
+                {
+                    UnmountChild(_child);
+                    _child = null;
+                }
+
+                base.Unmount();
+            }
         }
     }
 

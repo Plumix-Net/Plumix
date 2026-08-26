@@ -121,7 +121,8 @@ internal sealed class MaterialButtonsDemoPageState : State
                                 hoverColor: Color.Parse("#1F005E7A"),
                                 highlightColor: Color.Parse("#33005E7A"),
                                 splashColor: Color.Parse("#33005E7A"),
-                                shape: BorderRadius.Circular(6),
+                                shape: new RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.Circular(6)),
                                 child: new Text($"Raw: {_rawMaterialButtonTaps}"))),
                     ]),
                 BuildIconButtonProbe(context),

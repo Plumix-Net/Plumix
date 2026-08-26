@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -771,7 +772,7 @@ public sealed class BottomNavigationBar : StatefulWidget
 
         return theme.UseMaterial3
             ? theme.ColorScheme.OnSurfaceVariant
-            : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.60);
+            : theme.ColorScheme.OnSurface.WithOpacity(0.60);
     }
 
     private static IReadOnlyList<BoxShadow>? BuildBoxShadows(Color shadowColor, double elevation)
@@ -782,12 +783,12 @@ public sealed class BottomNavigationBar : StatefulWidget
         }
 
         var keyShadow = new BoxShadow(
-            color: MaterialButtonCore.ApplyOpacity(shadowColor, 0.20),
+            color: shadowColor.WithOpacity(0.20),
             offset: new Point(0, Math.Max(1, Math.Round(elevation * 0.5))),
             blurRadius: Math.Max(2, elevation * 2.4));
 
         var ambientShadow = new BoxShadow(
-            color: MaterialButtonCore.ApplyOpacity(shadowColor, 0.14),
+            color: shadowColor.WithOpacity(0.14),
             offset: new Point(0, Math.Max(1, Math.Round(elevation * 0.5))),
             blurRadius: Math.Max(3, elevation * 3.2));
 

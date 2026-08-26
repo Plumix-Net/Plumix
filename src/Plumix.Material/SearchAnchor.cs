@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -1457,12 +1458,12 @@ internal static class SearchBarDefaultsM3
             {
                 if (states.HasFlag(MaterialState.Pressed))
                 {
-                    return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.1);
+                    return theme.OnSurfaceColor.WithOpacity(0.1);
                 }
 
                 if (states.HasFlag(MaterialState.Hovered))
                 {
-                    return MaterialButtonCore.ApplyOpacity(theme.OnSurfaceColor, 0.08);
+                    return theme.OnSurfaceColor.WithOpacity(0.08);
                 }
 
                 if (states.HasFlag(MaterialState.Focused))

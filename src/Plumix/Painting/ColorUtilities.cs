@@ -23,6 +23,16 @@ public static class ColorUtilities
                + (0.0722 * Linearize(color.B));
     }
 
+    /// <summary>
+    /// Dart's <c>Color.withValues(alpha:)</c> (spelled <c>Color.withOpacity</c> before 3.27): the
+    /// same color at the given alpha.
+    /// </summary>
+    public static Color WithOpacity(this Color color, double opacity)
+    {
+        byte alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
+        return Color.FromArgb(alpha, color.R, color.G, color.B);
+    }
+
     public static Color AlphaBlend(Color foreground, Color background)
     {
         double foregroundAlpha = foreground.A / 255.0;

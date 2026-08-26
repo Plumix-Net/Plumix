@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -237,8 +238,8 @@ public sealed class RangeSlider : StatefulWidget
                 && !sliderTheme.ValueIndicatorColor.HasValue)
             {
                 valueIndicatorColor = AlphaBlend(
-                    MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.60),
-                    MaterialButtonCore.ApplyOpacity(theme.ColorScheme.Surface, 0.90));
+                    theme.ColorScheme.OnSurface.WithOpacity(0.60),
+                    theme.ColorScheme.Surface.WithOpacity(0.90));
             }
 
             var effectiveSliderTheme = new SliderThemeData(
@@ -482,7 +483,7 @@ public sealed class RangeSlider : StatefulWidget
                    ?? sliderTheme.InactiveTrackColor
                    ?? (theme.UseMaterial3 && !year2023
                        ? theme.ColorScheme.SecondaryContainer
-                       : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.Primary, 0.24));
+                       : theme.ColorScheme.Primary.WithOpacity(0.24));
         }
 
         private Color ResolveThumbColor(ThemeData theme, SliderThemeData sliderTheme)
@@ -497,13 +498,13 @@ public sealed class RangeSlider : StatefulWidget
             bool useLatest = theme.UseMaterial3
                              && !(CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
             return sliderTheme.DisabledActiveTrackColor
-                   ?? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, useLatest ? 0.38 : 0.32);
+                   ?? theme.ColorScheme.OnSurface.WithOpacity(useLatest ? 0.38 : 0.32);
         }
 
         private Color ResolveDisabledInactiveTrackColor(ThemeData theme, SliderThemeData sliderTheme)
         {
             return sliderTheme.DisabledInactiveTrackColor
-                   ?? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12);
+                   ?? theme.ColorScheme.OnSurface.WithOpacity(0.12);
         }
 
         private Color ResolveDisabledThumbColor(ThemeData theme, SliderThemeData sliderTheme)
@@ -512,9 +513,9 @@ public sealed class RangeSlider : StatefulWidget
                              && !(CurrentWidget.Year2023 ?? sliderTheme.Year2023 ?? true);
             return sliderTheme.DisabledThumbColor
                    ?? (useLatest
-                       ? MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38)
+                       ? theme.ColorScheme.OnSurface.WithOpacity(0.38)
                        : AlphaBlend(
-                           MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.38),
+                           theme.ColorScheme.OnSurface.WithOpacity(0.38),
                            theme.ColorScheme.Surface));
         }
 
@@ -525,13 +526,13 @@ public sealed class RangeSlider : StatefulWidget
         {
             Color fallback = theme.UseMaterial3 && !year2023
                 ? theme.ColorScheme.OnPrimary
-                : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimary, 0.54);
+                : theme.ColorScheme.OnPrimary.WithOpacity(0.54);
             return IsInteractive
                 ? sliderTheme.ActiveTickMarkColor ?? fallback
                 : sliderTheme.DisabledActiveTickMarkColor
                   ?? (theme.UseMaterial3 && !year2023
                       ? theme.ColorScheme.OnInverseSurface
-                      : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimary, 0.12));
+                      : theme.ColorScheme.OnPrimary.WithOpacity(0.12));
         }
 
         private Color ResolveInactiveTickMarkColor(
@@ -541,13 +542,13 @@ public sealed class RangeSlider : StatefulWidget
         {
             Color fallback = theme.UseMaterial3 && !year2023
                 ? theme.ColorScheme.OnSecondaryContainer
-                : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.Primary, 0.54);
+                : theme.ColorScheme.Primary.WithOpacity(0.54);
             return IsInteractive
                 ? sliderTheme.InactiveTickMarkColor ?? fallback
                 : sliderTheme.DisabledInactiveTickMarkColor
                   ?? (theme.UseMaterial3 && !year2023
                       ? theme.ColorScheme.OnSurface
-                      : MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnSurface, 0.12));
+                      : theme.ColorScheme.OnSurface.WithOpacity(0.12));
         }
 
         private Color? ResolveOverlayColor(
@@ -565,7 +566,7 @@ public sealed class RangeSlider : StatefulWidget
             {
                 return states.Contains(WidgetState.Disabled)
                     ? null
-                    : MaterialButtonCore.ApplyOpacity(CurrentWidget.ActiveColor.Value, 0.12);
+                    : CurrentWidget.ActiveColor.Value.WithOpacity(0.12);
             }
 
             var themeOverlay = sliderTheme.OverlayColor?.Resolve(states);
@@ -580,22 +581,22 @@ public sealed class RangeSlider : StatefulWidget
             {
                 return states.Contains(WidgetState.Disabled)
                     ? null
-                    : MaterialButtonCore.ApplyOpacity(baseColor, 0.12);
+                    : baseColor.WithOpacity(0.12);
             }
 
             if (states.Contains(WidgetState.Dragged))
             {
-                return MaterialButtonCore.ApplyOpacity(baseColor, 0.10);
+                return baseColor.WithOpacity(0.10);
             }
 
             if (states.Contains(WidgetState.Hovered))
             {
-                return MaterialButtonCore.ApplyOpacity(baseColor, 0.08);
+                return baseColor.WithOpacity(0.08);
             }
 
             if (states.Contains(WidgetState.Focused))
             {
-                return MaterialButtonCore.ApplyOpacity(baseColor, 0.10);
+                return baseColor.WithOpacity(0.10);
             }
 
             return null;

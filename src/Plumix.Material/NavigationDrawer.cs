@@ -250,61 +250,44 @@ internal sealed class NavigationDrawerDestinationTileState : State
                     children:
                     [
                         new SizedBox(width: 16),
-                        new IconTheme(iconTheme, icon),
+                        IconTheme.Merge(data: iconTheme, child: icon),
                         new SizedBox(width: 12),
-                        new Expanded(
-                            child: new DefaultTextStyle(
-                                style: labelStyle,
-                                child: destination.Label))
+                        new DefaultTextStyle(
+                            style: labelStyle,
+                            child: destination.Label)
                     ])
             ]);
 
-        var overlayColor = MaterialStateProperty<Color?>.ResolveWith(buttonStates =>
-            buttonStates.HasFlag(MaterialState.Pressed) || buttonStates.HasFlag(MaterialState.Focused)
-                ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.10)
-                : buttonStates.HasFlag(MaterialState.Hovered)
-                    ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.08)
-                    : null);
         string indexLabel = MaterialLocalizations.Of(context).TabLabel(
             widget.Index + 1,
             widget.TotalDestinations);
-        string textLabel = destination.Label is Text text ? $"{text.Data}\n{indexLabel}" : indexLabel;
-        var buttonStyle = new ButtonStyle(
-            ForegroundColor: MaterialStateProperty<Color?>.All(labelStyle.Color),
-            BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            OverlayColor: overlayColor,
-            SplashColor: overlayColor,
-            IconColor: MaterialStateProperty<Color?>.All(iconTheme.Color),
-            IconSize: MaterialStateProperty<double?>.All(iconTheme.Size),
-            TextStyle: MaterialStateProperty<TextStyle?>.All(labelStyle),
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                ShapeBorderGeometry.ResolveRadius(indicatorShape))),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, tileHeight)),
-            TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
-            Alignment: Alignment.Center);
+
+        Widget inkWell = new InkWell(
+            highlightColor: Colors.Transparent,
+            onTap: destination.Enabled ? widget.OnTap : null,
+            customBorder: indicatorShape,
+            child: content);
 
         Widget result = new Padding(
             widget.TilePadding,
-            new SizedBox(
-                height: tileHeight,
-                child: new MaterialButtonCore(
-                    child: content,
-                    onPressed: destination.Enabled ? widget.OnTap : null,
-                    style: buttonStyle,
-                    isSelected: widget.Selected,
-                    isSemanticButton: true,
-                    semanticLabel: textLabel,
-                    clipBehavior: Clip.None)));
+            // Dart parity: `_NavigationDestinationSemantics`.
+            new Semantics(
+                selected: widget.Selected,
+                container: true,
+                child: new Stack(
+                    alignment: Alignment.Center,
+                    children:
+                    [
+                        new SizedBox(height: tileHeight, child: inkWell),
+                        new Semantics(label: indexLabel)
+                    ])));
 
         if (destination.BackgroundColor.HasValue)
         {
-            result = new DecoratedBox(
-                new BoxDecoration(Color: destination.BackgroundColor.Value),
-                result);
+            result = new Ink(color: destination.BackgroundColor.Value, child: result);
         }
 
-        return new MergeSemantics(result);
+        return result;
     }
 
     public override void Dispose()

@@ -86,7 +86,7 @@ public sealed class MaterialExpandIconTests : IDisposable
         harness.Pump(new Size(80, 80));
 
         Color expected = useMaterial3
-            ? MaterialButtonCore.ApplyOpacity(onSurface, 0.38)
+            ? ButtonStyleButton.WithOpacity(onSurface, 0.38)
             : brightness == Brightness.Light ? Black38 : White38;
         Assert.Equal(expected, LastIconColor(harness));
     }
@@ -110,7 +110,7 @@ public sealed class MaterialExpandIconTests : IDisposable
             isExpanded: true,
             color: collapsed,
             expandedColor: expanded)));
-        harness.Pump(new Size(80, 80));
+        SettleIconTheme(harness, TimeSpan.FromSeconds(1));
         Assert.Equal(expanded, LastIconColor(harness));
 
         harness.Update(BuildThemed(new ExpandIcon(
@@ -119,7 +119,7 @@ public sealed class MaterialExpandIconTests : IDisposable
             color: collapsed,
             expandedColor: expanded,
             disabledColor: disabled)));
-        harness.Pump(new Size(80, 80));
+        SettleIconTheme(harness, TimeSpan.FromSeconds(3));
         Assert.Equal(disabled, LastIconColor(harness));
     }
 
@@ -245,18 +245,20 @@ public sealed class MaterialExpandIconTests : IDisposable
             transform => transform.Size == default);
     }
 
+    /// Dart's `ButtonStyleButton` animates the icon theme over `ButtonStyle.animationDuration`, so
+    /// the colour only reaches its target after the implicit animation has run.
+    private static void SettleIconTheme(WidgetRenderHarness harness, TimeSpan timestamp)
+    {
+        var size = new Size(80, 80);
+        harness.Pump(size);
+        Scheduler.PumpFrameForTests(timestamp);
+        harness.Pump(size);
+        Scheduler.PumpFrameForTests(timestamp + TimeSpan.FromMilliseconds(400));
+        harness.Pump(size);
+    }
+
     private static Color LastIconColor(WidgetRenderHarness harness)
     {
-        IReadOnlyList<MaterialButtonCore> materialButtons = harness.FindWidgets<MaterialButtonCore>();
-        if (materialButtons.Count > 0)
-        {
-            MaterialButtonCore button = materialButtons[^1];
-            MaterialState states = button.OnPressed is null
-                ? MaterialState.Disabled
-                : MaterialState.None;
-            return button.Style.ResolveIconColor(states)!.Value;
-        }
-
         return harness.FindWidgets<IconTheme>()
             .Select(iconTheme => iconTheme.Data.Color)
             .Last(color => color.HasValue)!.Value;

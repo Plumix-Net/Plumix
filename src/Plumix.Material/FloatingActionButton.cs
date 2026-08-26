@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -451,40 +452,29 @@ public sealed class FloatingActionButton : StatelessWidget
                               ?? defaults.EnableFeedback;
         BoxConstraints sizeConstraints = ResolveSizeConstraints(floatingActionButtonTheme, defaults);
 
-        var style = new ButtonStyle(
-            ForegroundColor: MaterialStateProperty<Color?>.All(foregroundColor),
-            BackgroundColor: MaterialStateProperty<Color?>.All(backgroundColor),
-            ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
-            OverlayColor: CreateOverlayResolver(focusColor, hoverColor, splashColor),
-            SplashColor: MaterialButtonCore.CreateExplicitSplashResolver(splashColor),
-            Elevation: CreateElevationResolver(
-                elevation: elevation,
-                focusElevation: focusElevation,
-                hoverElevation: hoverElevation,
-                highlightElevation: highlightElevation,
-                disabledElevation: disabledElevation),
-            IconSize: MaterialStateProperty<double?>.All(iconSize),
-            Side: MaterialStateProperty<BorderSide?>.All(ShapeBorderGeometry.SideOrNull(shape)),
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
-                ShapeBorderGeometry.ResolveRadius(shape))),
-            MinimumSize: MaterialStateProperty<Size?>.All(
-                new Size(sizeConstraints.MinWidth, sizeConstraints.MinHeight)),
-            MaximumSize: MaterialStateProperty<Size?>.All(
-                new Size(sizeConstraints.MaxWidth, sizeConstraints.MaxHeight)),
-            TapTargetSize: tapTargetSize,
-            TextStyle: MaterialStateProperty<TextStyle?>.All(extendedTextStyle),
-            MouseCursor: CreateMouseCursorResolver(MouseCursor, floatingActionButtonTheme.MouseCursor),
-            Alignment: Plumix.Rendering.Alignment.Center);
-
-        Widget result = new MaterialButtonCore(
-            child: ResolveChild(context, floatingActionButtonTheme, defaults),
+        Widget result = new RawMaterialButton(
             onPressed: OnPressed,
-            style: style,
-            focusNode: FocusNode,
+            mouseCursor: new FloatingActionButtonEffectiveMouseCursor(
+                MouseCursor,
+                floatingActionButtonTheme.MouseCursor),
+            elevation: elevation,
+            focusElevation: focusElevation,
+            hoverElevation: hoverElevation,
+            highlightElevation: highlightElevation,
+            disabledElevation: disabledElevation,
+            constraints: sizeConstraints,
+            materialTapTargetSize: tapTargetSize,
+            fillColor: backgroundColor,
+            focusColor: focusColor,
+            hoverColor: hoverColor,
+            splashColor: splashColor,
+            textStyle: extendedTextStyle,
+            shape: shape,
             clipBehavior: ClipBehavior,
+            focusNode: FocusNode,
+            autofocus: Autofocus,
             enableFeedback: enableFeedback,
-            autofocus: Autofocus);
+            child: ResolveChild(context, floatingActionButtonTheme, defaults, iconSize));
 
         if (Tooltip is not null)
         {
@@ -503,14 +493,17 @@ public sealed class FloatingActionButton : StatelessWidget
         return new MergeSemantics(child: result);
     }
 
-    private Widget ResolveChild(
+    private Widget? ResolveChild(
         BuildContext context,
         FloatingActionButtonThemeData floatingActionButtonTheme,
-        FloatingActionButtonDefaults defaults)
+        FloatingActionButtonDefaults defaults,
+        double iconSize)
     {
         if (Type != FloatingActionButtonType.Extended)
         {
-            return Child ?? new SizedBox();
+            return Child is null
+                ? null
+                : IconTheme.Merge(data: new IconThemeData(Size: iconSize), child: Child);
         }
 
         double spacing = ExtendedIconLabelSpacing
@@ -566,88 +559,6 @@ public sealed class FloatingActionButton : StatelessWidget
         };
     }
 
-    private static MaterialStateProperty<Color?> CreateOverlayResolver(
-        Color focusColor,
-        Color hoverColor,
-        Color splashColor)
-    {
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
-        {
-            if (states.HasFlag(MaterialState.Disabled))
-            {
-                return null;
-            }
-
-            if (states.HasFlag(MaterialState.Pressed))
-            {
-                return splashColor;
-            }
-
-            if (states.HasFlag(MaterialState.Hovered))
-            {
-                return hoverColor;
-            }
-
-            if (states.HasFlag(MaterialState.Focused))
-            {
-                return focusColor;
-            }
-
-            return null;
-        });
-    }
-
-    private static MaterialStateProperty<MouseCursor?> CreateMouseCursorResolver(
-        MouseCursor? widgetCursor,
-        MaterialStateProperty<MouseCursor?>? themeCursor)
-    {
-        return MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
-        {
-            MouseCursor? resolvedCursor = widgetCursor ?? themeCursor?.Resolve(states);
-            if (resolvedCursor is not null)
-            {
-                return resolvedCursor;
-            }
-
-            return states.HasFlag(MaterialState.Disabled) || !OperatingSystem.IsBrowser()
-                ? SystemMouseCursors.Basic
-                : SystemMouseCursors.Click;
-        });
-    }
-
-    private static MaterialStateProperty<double?> CreateElevationResolver(
-        double elevation,
-        double focusElevation,
-        double hoverElevation,
-        double highlightElevation,
-        double disabledElevation)
-    {
-        return MaterialStateProperty<double?>.ResolveWith(states =>
-        {
-            if (states.HasFlag(MaterialState.Disabled))
-            {
-                return disabledElevation;
-            }
-
-            if (states.HasFlag(MaterialState.Pressed))
-            {
-                return highlightElevation;
-            }
-
-            if (states.HasFlag(MaterialState.Hovered))
-            {
-                return hoverElevation;
-            }
-
-            if (states.HasFlag(MaterialState.Focused))
-            {
-                return focusElevation;
-            }
-
-            return elevation;
-        });
-    }
-
     private static void ValidateElevation(string name, double? value)
     {
         if (!value.HasValue)
@@ -659,6 +570,25 @@ public sealed class FloatingActionButton : StatelessWidget
         {
             throw new ArgumentOutOfRangeException(name, "Elevation must be finite and non-negative.");
         }
+    }
+}
+
+/// <summary>
+/// Dart parity: `_EffectiveMouseCursor`. Resolved by `RawMaterialButton` against the button's
+/// current states.
+/// </summary>
+internal sealed record FloatingActionButtonEffectiveMouseCursor(
+    MouseCursor? WidgetCursor,
+    MaterialStateProperty<MouseCursor?>? ThemeCursor) : WidgetStateMouseCursor
+{
+    public override MouseCursor? Resolve(IReadOnlySet<WidgetState> states)
+    {
+        MouseCursor? widgetCursor = WidgetCursor is WidgetStateMouseCursor stateful
+            ? stateful.Resolve(states)
+            : WidgetCursor;
+        return widgetCursor
+               ?? ThemeCursor?.Resolve(states)
+               ?? AdaptiveClickable.Resolve(states);
     }
 }
 
@@ -764,7 +694,7 @@ internal sealed record FloatingActionButtonDefaults(
                 MinHeight: 48,
                 MaxHeight: 48),
             ExtendedIconLabelSpacing: 8,
-            ExtendedPadding: MaterialButtonCore.ResolveDirectionalPadding(
+            ExtendedPadding: ResolveDirectionalPadding(
                 context,
                 start: hasChild && type == FloatingActionButtonType.Extended ? 16 : 20,
                 top: 0,
@@ -783,9 +713,9 @@ internal sealed record FloatingActionButtonDefaults(
         return new FloatingActionButtonDefaults(
             ForegroundColor: theme.ColorScheme.OnPrimaryContainer,
             BackgroundColor: theme.ColorScheme.PrimaryContainer,
-            FocusColor: MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimaryContainer, 0.10),
-            HoverColor: MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimaryContainer, 0.08),
-            SplashColor: MaterialButtonCore.ApplyOpacity(theme.ColorScheme.OnPrimaryContainer, 0.10),
+            FocusColor: theme.ColorScheme.OnPrimaryContainer.WithOpacity(0.10),
+            HoverColor: theme.ColorScheme.OnPrimaryContainer.WithOpacity(0.08),
+            SplashColor: theme.ColorScheme.OnPrimaryContainer.WithOpacity(0.10),
             Elevation: 6,
             FocusElevation: 6,
             HoverElevation: 8,
@@ -802,7 +732,7 @@ internal sealed record FloatingActionButtonDefaults(
                 MinHeight: 56,
                 MaxHeight: 56),
             ExtendedIconLabelSpacing: 8,
-            ExtendedPadding: MaterialButtonCore.ResolveDirectionalPadding(
+            ExtendedPadding: ResolveDirectionalPadding(
                 context,
                 start: hasChild && type == FloatingActionButtonType.Extended ? 16 : 20,
                 top: 0,
@@ -810,6 +740,21 @@ internal sealed record FloatingActionButtonDefaults(
                 bottom: 0),
             ExtendedTextStyle: theme.TextTheme.LabelLarge,
             EnableFeedback: true);
+    }
+
+    /// <summary>
+    /// Dart's `EdgeInsetsDirectional` extended padding, resolved against the ambient direction.
+    /// </summary>
+    private static Thickness ResolveDirectionalPadding(
+        BuildContext context,
+        double start,
+        double top,
+        double end,
+        double bottom)
+    {
+        return Directionality.Of(context) == TextDirection.Ltr
+            ? new Thickness(start, top, end, bottom)
+            : new Thickness(end, top, start, bottom);
     }
 
     private static ShapeBorder ResolveM2Shape(FloatingActionButtonType type)
