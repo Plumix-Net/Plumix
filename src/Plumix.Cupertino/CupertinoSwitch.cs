@@ -369,9 +369,9 @@ public sealed class CupertinoSwitch : StatefulWidget
             EmitHapticFeedback();
         }
 
-        private void HandleTapDown(PointerDownEvent details)
+        private void HandleTapDown(TapDownDetails details)
         {
-            _dragStartPosition = details.Position;
+            _dragStartPosition = details.GlobalPosition;
         }
 
         private void HandleDragStart(DragStartDetails details)

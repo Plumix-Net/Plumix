@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -98,7 +99,7 @@ public sealed record DataCell
         bool showEditIcon = false,
         Action? onTap = null,
         Action? onLongPress = null,
-        Action<PointerDownEvent>? onTapDown = null,
+        Action<TapDownDetails>? onTapDown = null,
         Action? onDoubleTap = null,
         Action? onTapCancel = null)
     {
@@ -119,7 +120,7 @@ public sealed record DataCell
     public Action? OnTap { get; }
     public Action? OnDoubleTap { get; }
     public Action? OnLongPress { get; }
-    public Action<PointerDownEvent>? OnTapDown { get; }
+    public Action<TapDownDetails>? OnTapDown { get; }
     public Action? OnTapCancel { get; }
     internal bool IsInteractive => OnTap is not null || OnDoubleTap is not null || OnLongPress is not null || OnTapDown is not null || OnTapCancel is not null;
 }

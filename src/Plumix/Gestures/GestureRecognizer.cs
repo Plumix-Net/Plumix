@@ -240,8 +240,12 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
     /// <summary>Called when the recognizer stops tracking its last pointer.</summary>
     protected abstract void DidStopTrackingLastPointer(int pointer);
 
-    /// <summary>Resolves every pointer this recognizer is competing for.</summary>
-    protected void Resolve(GestureDisposition disposition)
+    /// <summary>
+    /// Resolves every pointer this recognizer is competing for. Dart marks this `@protected`, but
+    /// that is advisory and Flutter's own Cupertino context menu calls it from outside; C# keeps it
+    /// public to allow the same call sites.
+    /// </summary>
+    public virtual void Resolve(GestureDisposition disposition)
     {
         var localEntries = _entries.Values.ToList();
         _entries.Clear();
@@ -294,15 +298,207 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
     }
 }
 
+/// <summary>The lifecycle of a <see cref="PrimaryPointerGestureRecognizer"/>.</summary>
+public enum GestureRecognizerState
+{
+    /// <summary>The recognizer is ready to start recognizing a gesture.</summary>
+    Ready,
+
+    /// <summary>The sequence of pointer events seen so far is consistent with the gesture.</summary>
+    Possible,
+
+    /// <summary>The gesture was rejected; the recognizer waits for the pointer sequence to end.</summary>
+    Defunct
+}
+
 /// <summary>
-/// Details for <see cref="TapGestureRecognizer.OnTapMove"/>: where a pointer that is still part of
-/// a tap sequence has moved to. Ports Dart's `TapMoveDetails` (`gestures/tap.dart`).
+/// A recognizer that considers events only from the first pointer that went down while it was
+/// ready. Ports Dart's `PrimaryPointerGestureRecognizer` (`gestures/recognizer.dart`).
 /// </summary>
-public readonly record struct TapMoveDetails(
-    Point GlobalPosition,
-    Point LocalPosition,
-    Point Delta,
-    PointerDeviceKind Kind);
+public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecognizer
+{
+    /// <summary>
+    /// Dart's `_unsetTouchSlop`: distinguishes "not specified" (fall back to the device touch slop)
+    /// from an explicit null (never reject on move).
+    /// </summary>
+    private protected const double UnsetTouchSlop = -1.0;
+
+    private readonly double? _preAcceptSlopTolerance;
+    private readonly double? _postAcceptSlopTolerance;
+    private bool _gestureAccepted;
+    private GestureTimer? _timer;
+
+    protected PrimaryPointerGestureRecognizer(
+        TimeSpan? deadline = null,
+        double? preAcceptSlopTolerance = UnsetTouchSlop,
+        double? postAcceptSlopTolerance = UnsetTouchSlop,
+        GestureBinding? binding = null) : base(binding)
+    {
+        if (preAcceptSlopTolerance is { } pre && pre != UnsetTouchSlop && pre < 0.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(preAcceptSlopTolerance),
+                "The preAcceptSlopTolerance must be unspecified, positive, or null.");
+        }
+
+        if (postAcceptSlopTolerance is { } post && post != UnsetTouchSlop && post < 0.0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(postAcceptSlopTolerance),
+                "The postAcceptSlopTolerance must be unspecified, positive, or null.");
+        }
+
+        Deadline = deadline;
+        _preAcceptSlopTolerance = preAcceptSlopTolerance;
+        _postAcceptSlopTolerance = postAcceptSlopTolerance;
+    }
+
+    /// <summary>If non-null, <see cref="DidExceedDeadline"/> fires this long after the down.</summary>
+    public TimeSpan? Deadline { get; }
+
+    /// <summary>
+    /// The distance the primary pointer may travel before acceptance without the gesture being
+    /// rejected. Null means it is never rejected for moving before acceptance. Resolved lazily
+    /// against <see cref="GestureRecognizer.GestureSettings"/>, exactly like Dart.
+    /// </summary>
+    public double? PreAcceptSlopTolerance =>
+        _preAcceptSlopTolerance == UnsetTouchSlop ? DefaultTouchSlop : _preAcceptSlopTolerance;
+
+    /// <summary>
+    /// The distance the primary pointer may travel after acceptance before the gesture is rejected.
+    /// Null means it is never rejected for moving after acceptance.
+    /// </summary>
+    public double? PostAcceptSlopTolerance =>
+        _postAcceptSlopTolerance == UnsetTouchSlop ? DefaultTouchSlop : _postAcceptSlopTolerance;
+
+    private double DefaultTouchSlop => GestureSettings?.TouchSlop ?? GestureConstants.TouchSlop;
+
+    /// <summary>The current lifecycle state of the recognizer.</summary>
+    public GestureRecognizerState State { get; private set; } = GestureRecognizerState.Ready;
+
+    /// <summary>
+    /// The most recently tracked primary pointer; deliberately retained after tracking stops.
+    /// </summary>
+    public int? PrimaryPointer { get; private set; }
+
+    /// <summary>Where the primary pointer went down; non-null only while tracking.</summary>
+    public OffsetPair? InitialPosition { get; private set; }
+
+    protected override void AddAllowedPointer(PointerDownEvent @event)
+    {
+        base.AddAllowedPointer(@event);
+        if (State == GestureRecognizerState.Ready)
+        {
+            State = GestureRecognizerState.Possible;
+            PrimaryPointer = @event.Pointer;
+            InitialPosition = new OffsetPair(Local: @event.LocalPosition, Global: @event.Position);
+            if (Deadline is { } deadline)
+            {
+                _timer = GestureTimer.Start(deadline, () => DidExceedDeadlineWithEvent(@event));
+            }
+        }
+    }
+
+    protected override void HandleNonAllowedPointer(PointerDownEvent @event)
+    {
+        // A disallowed extra pointer must not reject a gesture that has already been accepted.
+        if (!_gestureAccepted)
+        {
+            base.HandleNonAllowedPointer(@event);
+        }
+    }
+
+    protected override void HandleEvent(PointerEvent @event)
+    {
+        if (State == GestureRecognizerState.Possible && @event.Pointer == PrimaryPointer)
+        {
+            bool isPreAcceptSlopPastTolerance = !_gestureAccepted
+                && PreAcceptSlopTolerance is { } preTolerance
+                && GetGlobalDistance(@event) > preTolerance;
+            bool isPostAcceptSlopPastTolerance = _gestureAccepted
+                && PostAcceptSlopTolerance is { } postTolerance
+                && GetGlobalDistance(@event) > postTolerance;
+
+            if (@event is PointerMoveEvent && (isPreAcceptSlopPastTolerance || isPostAcceptSlopPastTolerance))
+            {
+                Resolve(GestureDisposition.Rejected);
+                StopTrackingPointer(PrimaryPointer!.Value);
+            }
+            else
+            {
+                HandlePrimaryPointer(@event);
+            }
+        }
+
+        StopTrackingIfPointerNoLongerDown(@event);
+    }
+
+    /// <summary>Override to handle events for the primary pointer while the gesture is possible.</summary>
+    protected abstract void HandlePrimaryPointer(PointerEvent @event);
+
+    /// <summary>
+    /// Fires when <see cref="Deadline"/> elapses before the gesture resolves. Subclasses that
+    /// supply a deadline must override this or <see cref="DidExceedDeadlineWithEvent"/>.
+    /// </summary>
+    protected virtual void DidExceedDeadline()
+    {
+        if (Deadline is not null)
+        {
+            throw new InvalidOperationException(
+                $"{DebugDescription} supplies a deadline but overrides neither DidExceedDeadline() "
+                + "nor DidExceedDeadlineWithEvent().");
+        }
+    }
+
+    /// <summary>Same as <see cref="DidExceedDeadline"/>, carrying the original down event.</summary>
+    protected virtual void DidExceedDeadlineWithEvent(PointerDownEvent @event)
+    {
+        DidExceedDeadline();
+    }
+
+    public override void AcceptGesture(int pointer)
+    {
+        if (pointer == PrimaryPointer)
+        {
+            StopTimer();
+            _gestureAccepted = true;
+        }
+    }
+
+    public override void RejectGesture(int pointer)
+    {
+        if (pointer == PrimaryPointer && State == GestureRecognizerState.Possible)
+        {
+            StopTimer();
+            State = GestureRecognizerState.Defunct;
+        }
+    }
+
+    protected override void DidStopTrackingLastPointer(int pointer)
+    {
+        StopTimer();
+        State = GestureRecognizerState.Ready;
+        InitialPosition = null;
+        _gestureAccepted = false;
+    }
+
+    public override void Dispose()
+    {
+        StopTimer();
+        base.Dispose();
+    }
+
+    private void StopTimer()
+    {
+        _timer?.Cancel();
+        _timer = null;
+    }
+
+    private double GetGlobalDistance(PointerEvent @event)
+    {
+        return (@event.Position - InitialPosition!.Value.Global).Distance();
+    }
+}
 
 public readonly record struct DragDownDetails(
     Point GlobalPosition,

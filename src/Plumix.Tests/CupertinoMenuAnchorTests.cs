@@ -160,6 +160,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
     public void Item_PressUpdatesDecorationInvokesCallbackAndRequestsMenuClose()
     {
         int pressed = 0;
+        using var timers = new FakeGestureTimers();
         var controller = new MenuController();
         Widget menu = BuildAnchor(
             controller,
@@ -176,6 +177,9 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
                 position,
                 PointerButtons.Primary,
                 DateTime.UtcNow));
+        // The pressed decoration follows the tap-down, which competing recognizers defer to the
+        // kPressTimeout deadline, exactly like Flutter.
+        timers.Elapse(GestureConstants.PressTimeout);
         harness.Pump(ViewSize);
         Assert.Contains(
             harness.FindWidgets<DecoratedBox>(),

@@ -1237,31 +1237,31 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
         ShowToolbar();
     }
 
-    private void HandleRightClickDown(PointerDownEvent @event)
+    private void HandleRightClickDown(TapDownDetails details)
     {
         Point? previousSecondaryTapDownPosition = _lastSecondaryTapDownPosition;
         bool toolbarIsVisible = ContextMenuIsVisible;
-        _lastSecondaryTapDownPosition = @event.Position;
+        _lastSecondaryTapDownPosition = details.GlobalPosition;
         FocusNode.RequestFocus();
         switch (PlatformDefaults.TargetPlatform)
         {
             case TargetPlatform.Android:
             case TargetPlatform.Fuchsia:
             case TargetPlatform.Windows:
-                if (PositionIsOnActiveSelection(@event.Position))
+                if (PositionIsOnActiveSelection(details.GlobalPosition))
                 {
                     // `ContextMenuAnchors` consumes the recorded position, so it is set again here.
-                    _lastSecondaryTapDownPosition = @event.Position;
+                    _lastSecondaryTapDownPosition = details.GlobalPosition;
                     ShowHandles();
                     ShowToolbar(_lastSecondaryTapDownPosition);
                     UpdateSelectedContentIfNeeded();
                     return;
                 }
 
-                CollapseSelectionAt(@event.Position);
+                CollapseSelectionAt(details.GlobalPosition);
                 break;
             case TargetPlatform.IOS:
-                SelectWordAt(@event.Position);
+                SelectWordAt(details.GlobalPosition);
                 break;
             case TargetPlatform.MacOS:
                 if (previousSecondaryTapDownPosition == _lastSecondaryTapDownPosition && toolbarIsVisible)
@@ -1270,7 +1270,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
                     return;
                 }
 
-                SelectWordAt(@event.Position);
+                SelectWordAt(details.GlobalPosition);
                 break;
             case TargetPlatform.Linux:
                 if (toolbarIsVisible)
@@ -1279,9 +1279,9 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
                     return;
                 }
 
-                if (!PositionIsOnActiveSelection(@event.Position))
+                if (!PositionIsOnActiveSelection(details.GlobalPosition))
                 {
-                    CollapseSelectionAt(@event.Position);
+                    CollapseSelectionAt(details.GlobalPosition);
                 }
 
                 break;
@@ -1289,7 +1289,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
 
         _selectionStatusNotifier.Value = SelectableRegionSelectionStatus.Changing;
         FinalizeSelectableRegionStatus();
-        _lastSecondaryTapDownPosition = @event.Position;
+        _lastSecondaryTapDownPosition = details.GlobalPosition;
         ShowHandles();
         ShowToolbar(_lastSecondaryTapDownPosition);
         UpdateSelectedContentIfNeeded();

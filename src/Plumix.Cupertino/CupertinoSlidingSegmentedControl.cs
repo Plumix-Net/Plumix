@@ -311,7 +311,7 @@ internal sealed class CupertinoSlidingSegmentedControlState<T> : State where T :
         _longPress!.AddPointer(@event);
     }
 
-    private void HandleTapUp(PointerUpEvent details)
+    private void HandleTapUp(TapUpDetails details)
     {
         if (IsThumbDragging)
         {

@@ -1763,7 +1763,7 @@ internal sealed class DialState : State
             onPanStart: HandlePanStart,
             onPanUpdate: HandlePanUpdate,
             onPanEnd: _ => HandlePanEnd(),
-            onTapUp: details => HandleTapUp(details.Position),
+            onTapUp: details => HandleTapUp(details.GlobalPosition),
             child: new CustomPaint(
                 painter: new TimeDialPainter(
                     primaryLabels: primaryLabels,

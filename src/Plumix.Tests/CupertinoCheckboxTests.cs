@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Gestures;
 using Plumix;
 using Plumix.Cupertino;
 using Plumix.Painting;
@@ -445,12 +446,9 @@ public sealed class CupertinoCheckboxTests
         GestureDetector detector = Assert.Single(
             harness.FindWidgets<GestureDetector>(),
             candidate => candidate.OnTapDown is not null);
-        detector.OnTapDown!(new PointerDownEvent(
-            1,
-            PointerDeviceKind.Touch,
-            new Point(7.0, 7.0),
-            PointerButtons.Primary,
-            DateTime.UtcNow));
+        detector.OnTapDown!(new TapDownDetails(
+            globalPosition: new Point(7.0, 7.0),
+            kind: PointerDeviceKind.Touch));
         harness.Pump(ViewSize);
 
         CupertinoCheckboxPainter painter = Painter(harness);

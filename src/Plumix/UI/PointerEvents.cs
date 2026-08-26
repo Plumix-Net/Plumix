@@ -62,11 +62,19 @@ public abstract class PointerEvent
 
     public Point LocalDelta { get; private set; }
 
+    /// <summary>
+    /// The untransformed event this event was derived from, or null when this is the original
+    /// event. Dart's `PointerEvent.original`; the <see cref="Plumix.Gestures.PointerSignalResolver"/>
+    /// uses it to identify transformed copies of one signal event.
+    /// </summary>
+    public PointerEvent? Original { get; private set; }
+
     internal PointerEvent WithDelta(Point delta)
     {
         var clone = (PointerEvent)MemberwiseClone();
         clone.Delta = delta;
         clone.LocalDelta = delta;
+        clone.Original = Original ?? this;
         return clone;
     }
 
@@ -75,6 +83,7 @@ public abstract class PointerEvent
         var clone = (PointerEvent)MemberwiseClone();
         clone.LocalPosition = localPosition;
         clone.LocalDelta = localDelta;
+        clone.Original = Original ?? this;
         return clone;
     }
 }
@@ -182,6 +191,14 @@ public abstract class PointerSignalEvent : PointerEvent
         : base(pointer, kind, position, buttons, down: false, timestampUtc)
     {
     }
+
+    /// <summary>
+    /// Dart's `respond`: lets the framework tell the platform whether its default action (for
+    /// example native scrolling on the web) should still run for this signal.
+    /// </summary>
+    public virtual void Respond(bool allowPlatformDefault)
+    {
+    }
 }
 
 public sealed class PointerScrollEvent : PointerSignalEvent
@@ -204,8 +221,25 @@ public sealed class PointerScrollEvent : PointerSignalEvent
 
     public Point ScrollDelta { get; }
 
-    public void Respond(bool allowPlatformDefault)
+    public override void Respond(bool allowPlatformDefault)
     {
         _onRespond?.Invoke(allowPlatformDefault);
+    }
+}
+
+/// <summary>
+/// The pointer issued a scroll-inertia cancel event: the platform stopped the inertia of an
+/// earlier scroll. Ports Dart's `PointerScrollInertiaCancelEvent` (`gestures/events.dart`).
+/// </summary>
+public sealed class PointerScrollInertiaCancelEvent : PointerSignalEvent
+{
+    public PointerScrollInertiaCancelEvent(
+        int pointer,
+        PointerDeviceKind kind,
+        Point position,
+        PointerButtons buttons,
+        DateTime timestampUtc)
+        : base(pointer, kind, position, buttons, timestampUtc)
+    {
     }
 }

@@ -268,15 +268,18 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `gestures/constants.dart` | `src/Plumix/Gestures/Constants.cs` | — | — |
 | `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragTargetTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapAndDragGestureTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs` |
 | `gestures/events.dart` | `src/Plumix/Gestures/Events.cs`<br>`src/Plumix/UI/PointerEvents.cs` _(reference) (approximate)_ | — | — |
+| `gestures/gesture_details.dart` | `src/Plumix/Gestures/GestureDetails.cs` | — | — |
 | `gestures/gesture_settings.dart` | `src/Plumix/Gestures/DeviceGestureSettings.cs` | — | — |
 | `gestures/hit_test.dart` | `src/Plumix/Rendering/HitTestTarget.cs` | — | — |
 | `gestures/long_press.dart` | `src/Plumix/Gestures/LongPressGestureRecognizer.cs` _(reference) (approximate)_ | — | — |
 | `gestures/lsq_solver.dart` | `src/Plumix/Gestures/LeastSquaresSolver.cs` | — | — |
 | `gestures/monodrag.dart` | `src/Plumix/Gestures/DragGestureRecognizer.cs` _(reference) (approximate)_ | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs` | — |
 | `gestures/multidrag.dart` | `src/Plumix/Gestures/MultiDragGestureRecognizer.cs` | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs` | — |
+| `gestures/multitap.dart` | `src/Plumix/Gestures/Multitap.cs` | `src/Plumix.Tests/MultitapGestureTests.cs` | — |
 | `gestures/pointer_router.dart` | `src/Plumix/Gestures/PointerRouter.cs` _(reference) (approximate)_ | — | — |
-| `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs` _(reference) (approximate)_<br>`src/Plumix/UI/DragStartBehavior.cs` | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs` | — |
-| `gestures/tap.dart` | `src/Plumix/Gestures/TapGestureRecognizer.cs` _(reference) (approximate)_ | — | — |
+| `gestures/pointer_signal_resolver.dart` | `src/Plumix/Gestures/PointerSignalResolver.cs` | `src/Plumix.Tests/PointerSignalResolverTests.cs` | — |
+| `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs` _(reference) (approximate)_<br>`src/Plumix/UI/DragStartBehavior.cs` | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapGestureRecognizerTests.cs` | — |
+| `gestures/tap.dart` | `src/Plumix/Gestures/TapGestureRecognizer.cs` | `src/Plumix.Tests/TapGestureRecognizerTests.cs` | — |
 | `gestures/tap_and_drag.dart` | `src/Plumix/Gestures/TapAndDrag.cs` | `src/Plumix.Tests/TapAndDragGestureTests.cs` | — |
 | `gestures/team.dart` | `src/Plumix/Gestures/GestureArenaTeam.cs` | — | — |
 | `gestures/velocity_tracker.dart` | `src/Plumix/Gestures/VelocityTracker.cs` | — | — |
@@ -576,7 +579,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Gestures/GestureRecognizer.cs` — (reference) (approximate)
 - `src/Plumix/Gestures/LongPressGestureRecognizer.cs` — (reference) (approximate)
 - `src/Plumix/Gestures/PointerRouter.cs` — (reference) (approximate)
-- `src/Plumix/Gestures/TapGestureRecognizer.cs` — (reference) (approximate)
 - `src/Plumix/HotReload.cs` — (reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)
 - `src/Plumix/Painting/BasicTypes.cs` — (reference) (approximate)
 - `src/Plumix/PipelineOwner.cs` — (reference) (approximate)
@@ -627,9 +629,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 495
-- C# files carrying a marker: 634
+- Flutter files mapped: 498
+- C# files carrying a marker: 637
 - C# files without a marker: 30
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 63
+- C# files with a qualified (non-strict) marker: 62
 

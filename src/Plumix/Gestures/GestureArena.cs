@@ -68,20 +68,50 @@ public sealed class GestureArenaManager
             return;
         }
 
-        if (arena.Winner != null)
+        if (arena.IsHeld)
         {
-            var winner = arena.Winner;
-            ResolveInFavor(pointer, arena, winner);
-            return;
-        }
-
-        if (arena.Members.Count > 0)
-        {
-            ResolveInFavor(pointer, arena, arena.Members[0]);
+            // A long-lived member (double tap) is holding the arena open past the up event.
+            arena.HasPendingSweep = true;
             return;
         }
 
         _arenas.Remove(pointer);
+        if (arena.Members.Count == 0)
+        {
+            return;
+        }
+
+        // First member wins (accepted before the losers hear the bad news, matching Dart's sweep).
+        var snapshot = arena.Members.ToArray();
+        snapshot[0].AcceptGesture(pointer);
+        for (int i = 1; i < snapshot.Length; i++)
+        {
+            snapshot[i].RejectGesture(pointer);
+        }
+    }
+
+    /// <summary>Dart's `hold`: prevents the arena from being swept until <see cref="Release"/>.</summary>
+    public void Hold(int pointer)
+    {
+        if (_arenas.TryGetValue(pointer, out var arena))
+        {
+            arena.IsHeld = true;
+        }
+    }
+
+    /// <summary>Dart's `release`: lifts a hold; a sweep attempted while held runs now.</summary>
+    public void Release(int pointer)
+    {
+        if (!_arenas.TryGetValue(pointer, out var arena))
+        {
+            return;
+        }
+
+        arena.IsHeld = false;
+        if (arena.HasPendingSweep)
+        {
+            Sweep(pointer);
+        }
     }
 
     internal void Resolve(int pointer, IGestureArenaMember member, GestureDisposition disposition)
@@ -98,8 +128,12 @@ public sealed class GestureArenaManager
 
         if (disposition == GestureDisposition.Accepted)
         {
-            arena.Winner = member;
-            if (!arena.IsOpen)
+            if (arena.IsOpen)
+            {
+                // Dart's `eagerWinner ??=`: the first member to accept while open wins at close.
+                arena.EagerWinner ??= member;
+            }
+            else
             {
                 ResolveInFavor(pointer, arena, member);
             }
@@ -116,25 +150,30 @@ public sealed class GestureArenaManager
             return;
         }
 
-        TryResolve(pointer, arena);
+        if (!arena.IsOpen)
+        {
+            TryResolve(pointer, arena);
+        }
     }
 
     private void TryResolve(int pointer, GestureArena arena)
     {
-        if (arena.IsOpen)
-        {
-            return;
-        }
-
-        if (arena.Winner != null)
-        {
-            ResolveInFavor(pointer, arena, arena.Winner);
-            return;
-        }
-
         if (arena.Members.Count == 1)
         {
+            // Dart defers this to a microtask (`_resolveByDefault`); Plumix resolves synchronously.
             ResolveInFavor(pointer, arena, arena.Members[0]);
+            return;
+        }
+
+        if (arena.Members.Count == 0)
+        {
+            _arenas.Remove(pointer);
+            return;
+        }
+
+        if (arena.EagerWinner != null)
+        {
+            ResolveInFavor(pointer, arena, arena.EagerWinner);
         }
     }
 
@@ -165,6 +204,8 @@ public sealed class GestureArenaManager
     {
         public List<IGestureArenaMember> Members { get; } = [];
         public bool IsOpen { get; set; } = true;
-        public IGestureArenaMember? Winner { get; set; }
+        public bool IsHeld { get; set; }
+        public bool HasPendingSweep { get; set; }
+        public IGestureArenaMember? EagerWinner { get; set; }
     }
 }

@@ -1,341 +1,485 @@
 using Avalonia;
-using Avalonia.Threading;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/gestures/tap.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/gestures/tap.dart
 
 namespace Plumix.Gestures;
 
-public class TapGestureRecognizer : GestureRecognizer, IGestureArenaMember
+/// <summary>Details for `GestureTapDownCallback`, such as the position of the tap.</summary>
+public sealed class TapDownDetails : IPositionedGestureDetails
 {
+    public TapDownDetails(
+        Point globalPosition = default,
+        Point? localPosition = null,
+        PointerDeviceKind? kind = null)
+    {
+        GlobalPosition = globalPosition;
+        LocalPosition = localPosition ?? globalPosition;
+        Kind = kind;
+    }
+
+    public Point GlobalPosition { get; }
+
+    public Point LocalPosition { get; }
+
+    /// <summary>The kind of the device that initiated the event.</summary>
+    public PointerDeviceKind? Kind { get; }
+}
+
+/// <summary>Details for `GestureTapUpCallback`, such as the position of the tap.</summary>
+public sealed class TapUpDetails : IPositionedGestureDetails
+{
+    public TapUpDetails(
+        PointerDeviceKind kind,
+        Point globalPosition = default,
+        Point? localPosition = null)
+    {
+        Kind = kind;
+        GlobalPosition = globalPosition;
+        LocalPosition = localPosition ?? globalPosition;
+    }
+
+    public Point GlobalPosition { get; }
+
+    public Point LocalPosition { get; }
+
+    /// <summary>The kind of the device that initiated the event. Required and non-null in Dart.</summary>
+    public PointerDeviceKind Kind { get; }
+}
+
+/// <summary>Details for `GestureTapMoveCallback`, such as the new position of the pointer.</summary>
+public sealed class TapMoveDetails
+{
+    public TapMoveDetails(
+        PointerDeviceKind kind,
+        Point globalPosition = default,
+        Point delta = default,
+        Point? localPosition = null)
+    {
+        Kind = kind;
+        GlobalPosition = globalPosition;
+        Delta = delta;
+        LocalPosition = localPosition ?? globalPosition;
+    }
+
+    public Point GlobalPosition { get; }
+
+    public Point LocalPosition { get; }
+
+    /// <summary>The kind of the device that initiated the event.</summary>
+    public PointerDeviceKind Kind { get; }
+
     /// <summary>
-    /// Dart's `_unsetTouchSlop` (`gestures/recognizer.dart`): the sentinel that distinguishes "not
-    /// specified" (fall back to the device touch slop) from an explicit null (never reject on move).
+    /// The amount the pointer has moved in the coordinate space of the event receiver since the
+    /// previous update.
     /// </summary>
-    private const double UnsetTouchSlop = -1.0;
+    public Point Delta { get; }
+}
 
-    private static readonly TimeSpan DoubleTapTimeout = TimeSpan.FromMilliseconds(300);
-    private readonly Dictionary<int, TapTracker> _trackers = [];
-    private readonly object _doubleTapGate = new();
-    private readonly double? _preAcceptSlopTolerance;
-    private readonly double? _postAcceptSlopTolerance;
-    private Timer? _singleTapTimer;
-    private DateTime? _lastTapAt;
-    private Point _lastTapPosition;
+/// <summary>
+/// A base class for gesture recognizers that recognize taps.
+/// Ports Dart's `BaseTapGestureRecognizer`.
+/// </summary>
+public abstract class BaseTapGestureRecognizer : PrimaryPointerGestureRecognizer
+{
+    private bool _sentTapDown;
+    private bool _wonArenaForPrimaryPointer;
+    private PointerDownEvent? _down;
+    private PointerUpEvent? _up;
 
-    public TapGestureRecognizer(
-        GestureBinding? binding = null,
+    protected BaseTapGestureRecognizer(
         double? preAcceptSlopTolerance = UnsetTouchSlop,
-        double? postAcceptSlopTolerance = UnsetTouchSlop) : base(binding)
+        double? postAcceptSlopTolerance = UnsetTouchSlop,
+        GestureBinding? binding = null) : base(
+        deadline: GestureConstants.PressTimeout,
+        preAcceptSlopTolerance: preAcceptSlopTolerance,
+        postAcceptSlopTolerance: postAcceptSlopTolerance,
+        binding: binding)
     {
-        if (preAcceptSlopTolerance is { } pre && pre != UnsetTouchSlop && pre < 0.0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(preAcceptSlopTolerance),
-                "The preAcceptSlopTolerance must be unspecified, positive, or null.");
-        }
+    }
 
-        if (postAcceptSlopTolerance is { } post && post != UnsetTouchSlop && post < 0.0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(postAcceptSlopTolerance),
-                "The postAcceptSlopTolerance must be unspecified, positive, or null.");
-        }
+    /// <summary>A pointer has contacted the screen, which might be the start of a tap.</summary>
+    protected abstract void HandleTapDown(PointerDownEvent down);
 
-        _preAcceptSlopTolerance = preAcceptSlopTolerance;
-        _postAcceptSlopTolerance = postAcceptSlopTolerance;
+    /// <summary>A pointer has stopped contacting the screen, ending a tap.</summary>
+    protected abstract void HandleTapUp(PointerDownEvent down, PointerUpEvent up);
+
+    /// <summary>A pointer in a tap sequence has moved. Empty by default, exactly like Dart.</summary>
+    protected virtual void HandleTapMove(PointerMoveEvent move)
+    {
     }
 
     /// <summary>
-    /// The distance a pointer may travel before the gesture is accepted without the tap being
-    /// rejected. Null means the tap is never rejected for moving before acceptance.
+    /// A pointer that previously triggered <see cref="HandleTapDown"/> will not complete a tap.
+    /// <paramref name="reason"/> is Dart's `reason`: <c>""</c> for a pointer cancel event,
+    /// <c>"spontaneous"</c> for a self-rejection after winning, <c>"forced"</c> when another
+    /// arena member won.
     /// </summary>
-    public double? PreAcceptSlopTolerance =>
-        _preAcceptSlopTolerance == UnsetTouchSlop ? DefaultTouchSlop : _preAcceptSlopTolerance;
+    protected abstract void HandleTapCancel(PointerDownEvent down, PointerCancelEvent? cancel, string reason);
 
-    /// <summary>
-    /// The distance a pointer may travel after the gesture is accepted before the tap is rejected.
-    /// Null means the tap is never rejected for moving after acceptance, which is what
-    /// <c>CupertinoButton</c> relies on to keep tracking a finger that leaves the button.
-    /// </summary>
-    public double? PostAcceptSlopTolerance =>
-        _postAcceptSlopTolerance == UnsetTouchSlop ? DefaultTouchSlop : _postAcceptSlopTolerance;
-
-    private double DefaultTouchSlop => GestureSettings?.TouchSlop ?? GestureConstants.TouchSlop;
-
-    public Action? OnTap { get; set; }
-    public Action? OnDoubleTap { get; set; }
-    public Action<PointerDownEvent>? OnTapDown { get; set; }
-    public Action<PointerUpEvent>? OnTapUp { get; set; }
-    public Action? OnTapCancel { get; set; }
-
-    /// <summary>A pointer that triggered a tap has moved without the tap being rejected.</summary>
-    public Action<TapMoveDetails>? OnTapMove { get; set; }
-    public Action? OnSecondaryTap { get; set; }
-    public Action<PointerDownEvent>? OnSecondaryTapDown { get; set; }
-    public Action<PointerUpEvent>? OnSecondaryTapUp { get; set; }
-    public Action? OnSecondaryTapCancel { get; set; }
-
-    /// <summary>
-    /// Resolves every active pointer in the gesture arena, matching Flutter's public
-    /// <c>GestureRecognizer.resolve</c> surface.
-    /// </summary>
-    public void Resolve(GestureDisposition disposition)
+    protected override void AddAllowedPointer(PointerDownEvent @event)
     {
-        foreach (TapTracker tracker in _trackers.Values.ToArray())
+        if (State == GestureRecognizerState.Ready)
         {
-            tracker.Entry.Resolve(disposition);
-        }
-    }
-
-    public override void AddPointer(PointerDownEvent @event)
-    {
-        if (_trackers.ContainsKey(@event.Pointer) || !IsPointerAllowed(@event))
-        {
-            return;
-        }
-
-        GestureArenaEntry arenaEntry = AddPointerToArena(@event.Pointer, this);
-        bool isSecondary = (@event.Buttons & PointerButtons.Secondary) != 0;
-        _trackers[@event.Pointer] = new TapTracker(@event.Position, arenaEntry, isSecondary);
-        if (isSecondary)
-        {
-            OnSecondaryTapDown?.Invoke(@event);
-        }
-        else
-        {
-            OnTapDown?.Invoke(@event);
-        }
-        StartTrackingPointer(@event.Pointer);
-    }
-
-    /// <summary>
-    /// Only competes for a button that has at least one callback, so a recognizer configured for
-    /// secondary taps alone never claims a primary-button gesture.
-    /// </summary>
-    protected override bool IsPointerAllowed(PointerDownEvent @event)
-    {
-        if (!base.IsPointerAllowed(@event))
-        {
-            return false;
-        }
-
-        if ((@event.Buttons & PointerButtons.Secondary) != 0)
-        {
-            return OnSecondaryTap is not null
-                   || OnSecondaryTapDown is not null
-                   || OnSecondaryTapUp is not null
-                   || OnSecondaryTapCancel is not null;
-        }
-
-        return OnTap is not null
-               || OnDoubleTap is not null
-               || OnTapDown is not null
-               || OnTapUp is not null
-               || OnTapCancel is not null
-               || OnTapMove is not null;
-    }
-
-    public void AcceptGesture(int pointer)
-    {
-        if (!_trackers.TryGetValue(pointer, out var tracker))
-        {
-            return;
-        }
-
-        tracker.Accepted = true;
-        TryFire(pointer, tracker);
-    }
-
-    public void RejectGesture(int pointer)
-    {
-        if (_trackers.TryGetValue(pointer, out var tracker))
-        {
-            if (tracker.IsSecondary)
+            // If the recognizer is ready but a down and an up are still stored, the previous arena
+            // was never resolved: a new pointer restarts the recognizer.
+            if (_down is not null && _up is not null)
             {
-                OnSecondaryTapCancel?.Invoke();
+                Reset();
             }
-            else
-            {
-                OnTapCancel?.Invoke();
-            }
+
+            // `_down` must be assigned here instead of `HandlePrimaryPointer`, because
+            // `AcceptGesture` can be called before any events are routed and needs the down event.
+            _down = @event;
         }
-        Cleanup(pointer);
+
+        if (_down is not null)
+        {
+            // A pointer that arrives while the recognizer is rejected-but-tracking is ignored.
+            base.AddAllowedPointer(@event);
+        }
     }
 
-    protected override void HandleEvent(PointerEvent @event)
+    protected override void StartTrackingPointer(int pointer)
     {
-        if (!_trackers.TryGetValue(@event.Pointer, out var tracker))
+        // The recognizer should never track any pointers when `_down` is null, because calling
+        // `_checkDown` in that situation will throw.
+        if (_down is null)
         {
-            return;
+            throw new InvalidOperationException(
+                "A tap recognizer cannot start tracking a pointer before it stores the down event.");
         }
 
+        base.StartTrackingPointer(pointer);
+    }
+
+    protected override void HandlePrimaryPointer(PointerEvent @event)
+    {
         switch (@event)
         {
-            case PointerMoveEvent move:
-            {
-                double? tolerance = tracker.Accepted ? PostAcceptSlopTolerance : PreAcceptSlopTolerance;
-                if (tolerance is { } limit && Distance(tracker.InitialPosition, move.Position) > limit)
+            case PointerUpEvent up:
+                _up = up;
+                CheckUp();
+                break;
+            case PointerCancelEvent cancel:
+                Resolve(GestureDisposition.Rejected);
+                if (_sentTapDown)
                 {
-                    tracker.Entry.Resolve(GestureDisposition.Rejected);
-                    Cleanup(move.Pointer);
-                    break;
+                    CheckCancel(cancel, "");
                 }
 
-                if (OnTapMove is not null && move.Buttons == PointerButtons.Primary)
+                Reset();
+                break;
+            default:
+                if (@event.Buttons != _down!.Buttons)
                 {
-                    OnTapMove(new TapMoveDetails(
-                        move.Position,
-                        move.LocalPosition,
-                        move.Delta,
-                        move.Kind));
+                    Resolve(GestureDisposition.Rejected);
+                    StopTrackingPointer(PrimaryPointer!.Value);
+                }
+                else if (@event is PointerMoveEvent move)
+                {
+                    CheckMove(move);
                 }
 
                 break;
-            }
-            case PointerUpEvent:
-            {
-                tracker.UpEvent = (PointerUpEvent)@event;
-                tracker.UpSeen = true;
-                tracker.Entry.Resolve(GestureDisposition.Accepted);
-                TryFire(@event.Pointer, tracker);
-                break;
-            }
-            case PointerCancelEvent:
-            {
-                tracker.Entry.Resolve(GestureDisposition.Rejected);
-                Cleanup(@event.Pointer);
-                break;
-            }
         }
     }
 
-    private void TryFire(int pointer, TapTracker tracker)
+    public override void Resolve(GestureDisposition disposition)
     {
-        if (!tracker.Accepted || !tracker.UpSeen || tracker.Fired)
+        if (_wonArenaForPrimaryPointer && disposition == GestureDisposition.Rejected)
+        {
+            // This can happen when the gesture has been canceled. For example, when the pointer
+            // has exceeded the touch slop, the buttons have been changed, or if the recognizer is
+            // disposed.
+            CheckCancel(null, "spontaneous");
+            Reset();
+        }
+
+        base.Resolve(disposition);
+    }
+
+    protected override void DidExceedDeadline()
+    {
+        CheckDown();
+    }
+
+    public override void AcceptGesture(int pointer)
+    {
+        base.AcceptGesture(pointer);
+        if (pointer == PrimaryPointer)
+        {
+            CheckDown();
+            _wonArenaForPrimaryPointer = true;
+            CheckUp();
+        }
+    }
+
+    public override void RejectGesture(int pointer)
+    {
+        base.RejectGesture(pointer);
+        if (pointer == PrimaryPointer)
+        {
+            if (_sentTapDown)
+            {
+                CheckCancel(null, "forced");
+            }
+
+            Reset();
+        }
+    }
+
+    private void CheckDown()
+    {
+        if (_sentTapDown)
         {
             return;
         }
 
-        tracker.Fired = true;
-        if (tracker.UpEvent is not null)
-        {
-            if (tracker.IsSecondary)
-            {
-                OnSecondaryTapUp?.Invoke(tracker.UpEvent);
-            }
-            else
-            {
-                OnTapUp?.Invoke(tracker.UpEvent);
-            }
-        }
-
-        if (tracker.IsSecondary)
-        {
-            OnSecondaryTap?.Invoke();
-        }
-        else
-        {
-            FireTap(tracker.InitialPosition);
-        }
-        Cleanup(pointer);
+        HandleTapDown(down: _down!);
+        _sentTapDown = true;
     }
 
-    private void FireTap(Point position)
+    private void CheckUp()
     {
-        if (OnDoubleTap is null)
+        if (!_wonArenaForPrimaryPointer || _up is null)
         {
-            OnTap?.Invoke();
             return;
         }
 
-        Action? doubleTap = null;
-        lock (_doubleTapGate)
+        HandleTapUp(down: _down!, up: _up);
+        Reset();
+    }
+
+    private void CheckCancel(PointerCancelEvent? @event, string note)
+    {
+        HandleTapCancel(down: _down!, cancel: @event, reason: note);
+    }
+
+    private void CheckMove(PointerMoveEvent @event)
+    {
+        HandleTapMove(move: @event);
+    }
+
+    private void Reset()
+    {
+        _sentTapDown = false;
+        _wonArenaForPrimaryPointer = false;
+        _up = null;
+        _down = null;
+    }
+
+    public override string DebugDescription => "base tap";
+}
+
+/// <summary>
+/// Recognizes taps: pointer events that come into and go out of contact with the screen without
+/// moving. Ports Dart's `TapGestureRecognizer`.
+/// </summary>
+public class TapGestureRecognizer : BaseTapGestureRecognizer
+{
+    public TapGestureRecognizer(
+        double? preAcceptSlopTolerance = UnsetTouchSlop,
+        double? postAcceptSlopTolerance = UnsetTouchSlop,
+        GestureBinding? binding = null) : base(
+        preAcceptSlopTolerance: preAcceptSlopTolerance,
+        postAcceptSlopTolerance: postAcceptSlopTolerance,
+        binding: binding)
+    {
+    }
+
+    /// <summary>A pointer that might cause a tap with a primary button has contacted the screen.</summary>
+    public Action<TapDownDetails>? OnTapDown { get; set; }
+
+    /// <summary>A pointer that will trigger a tap with a primary button has stopped contacting the screen.</summary>
+    public Action<TapUpDetails>? OnTapUp { get; set; }
+
+    /// <summary>A tap with a primary button has occurred.</summary>
+    public Action? OnTap { get; set; }
+
+    /// <summary>A pointer that triggered a tap with a primary button has moved.</summary>
+    public Action<TapMoveDetails>? OnTapMove { get; set; }
+
+    /// <summary>The pointer that previously triggered <see cref="OnTapDown"/> will not end up causing a tap.</summary>
+    public Action? OnTapCancel { get; set; }
+
+    /// <summary>A tap with a secondary button has occurred.</summary>
+    public Action? OnSecondaryTap { get; set; }
+
+    /// <summary>A pointer that might cause a tap with a secondary button has contacted the screen.</summary>
+    public Action<TapDownDetails>? OnSecondaryTapDown { get; set; }
+
+    /// <summary>A pointer that will trigger a tap with a secondary button has stopped contacting the screen.</summary>
+    public Action<TapUpDetails>? OnSecondaryTapUp { get; set; }
+
+    /// <summary>The pointer that previously triggered <see cref="OnSecondaryTapDown"/> will not cause a tap.</summary>
+    public Action? OnSecondaryTapCancel { get; set; }
+
+    /// <summary>A pointer that might cause a tap with a tertiary button has contacted the screen.</summary>
+    public Action<TapDownDetails>? OnTertiaryTapDown { get; set; }
+
+    /// <summary>A pointer that will trigger a tap with a tertiary button has stopped contacting the screen.</summary>
+    public Action<TapUpDetails>? OnTertiaryTapUp { get; set; }
+
+    /// <summary>The pointer that previously triggered <see cref="OnTertiaryTapDown"/> will not cause a tap.</summary>
+    public Action? OnTertiaryTapCancel { get; set; }
+
+    protected override bool IsPointerAllowed(PointerDownEvent @event)
+    {
+        switch (@event.Buttons)
         {
-            var now = DateTime.UtcNow;
-            if (_lastTapAt.HasValue
-                && now - _lastTapAt.Value <= DoubleTapTimeout
-                && Distance(_lastTapPosition, position) <= GestureConstants.DoubleTapTouchSlop)
-            {
-                _singleTapTimer?.Dispose();
-                _singleTapTimer = null;
-                _lastTapAt = null;
-                doubleTap = OnDoubleTap;
-            }
-            else
-            {
-                _singleTapTimer?.Dispose();
-                _lastTapAt = now;
-                _lastTapPosition = position;
-                _singleTapTimer = new Timer(_ =>
+            case PointerButtons.Primary:
+                if (OnTapDown is null
+                    && OnTap is null
+                    && OnTapUp is null
+                    && OnTapCancel is null
+                    && OnTapMove is null)
                 {
-                    Action? callback;
-                    lock (_doubleTapGate)
-                    {
-                        callback = OnTap;
-                        _lastTapAt = null;
-                        _singleTapTimer?.Dispose();
-                        _singleTapTimer = null;
-                    }
-                    if (callback is not null) Dispatcher.UIThread.Post(callback);
-                }, null, DoubleTapTimeout, Timeout.InfiniteTimeSpan);
-            }
+                    return false;
+                }
+
+                break;
+            case PointerButtons.Secondary:
+                if (OnSecondaryTap is null
+                    && OnSecondaryTapDown is null
+                    && OnSecondaryTapUp is null
+                    && OnSecondaryTapCancel is null)
+                {
+                    return false;
+                }
+
+                break;
+            case PointerButtons.Middle:
+                if (OnTertiaryTapDown is null
+                    && OnTertiaryTapUp is null
+                    && OnTertiaryTapCancel is null)
+                {
+                    return false;
+                }
+
+                break;
+            default:
+                return false;
         }
-        doubleTap?.Invoke();
+
+        return base.IsPointerAllowed(@event);
     }
 
-    public override void Dispose()
+    protected override void HandleTapDown(PointerDownEvent down)
     {
-        foreach ((int pointer, TapTracker tracker) in _trackers.ToArray())
+        var details = new TapDownDetails(
+            globalPosition: down.Position,
+            localPosition: down.LocalPosition,
+            kind: GetKindForPointer(down.Pointer));
+        switch (down.Buttons)
         {
-            GestureArenaEntry entry = tracker.Entry;
-            Cleanup(pointer);
-            entry.Resolve(GestureDisposition.Rejected);
-        }
+            case PointerButtons.Primary:
+                if (OnTapDown is { } onTapDown)
+                {
+                    InvokeCallback("onTapDown", () => onTapDown(details));
+                }
 
-        lock (_doubleTapGate)
+                break;
+            case PointerButtons.Secondary:
+                if (OnSecondaryTapDown is { } onSecondaryTapDown)
+                {
+                    InvokeCallback("onSecondaryTapDown", () => onSecondaryTapDown(details));
+                }
+
+                break;
+            case PointerButtons.Middle:
+                if (OnTertiaryTapDown is { } onTertiaryTapDown)
+                {
+                    InvokeCallback("onTertiaryTapDown", () => onTertiaryTapDown(details));
+                }
+
+                break;
+        }
+    }
+
+    protected override void HandleTapUp(PointerDownEvent down, PointerUpEvent up)
+    {
+        var details = new TapUpDetails(
+            kind: up.Kind,
+            globalPosition: up.Position,
+            localPosition: up.LocalPosition);
+        switch (down.Buttons)
         {
-            _singleTapTimer?.Dispose();
-            _singleTapTimer = null;
-            _lastTapAt = null;
+            case PointerButtons.Primary:
+                if (OnTapUp is { } onTapUp)
+                {
+                    InvokeCallback("onTapUp", () => onTapUp(details));
+                }
+
+                if (OnTap is { } onTap)
+                {
+                    InvokeCallback("onTap", onTap);
+                }
+
+                break;
+            case PointerButtons.Secondary:
+                if (OnSecondaryTapUp is { } onSecondaryTapUp)
+                {
+                    InvokeCallback("onSecondaryTapUp", () => onSecondaryTapUp(details));
+                }
+
+                if (OnSecondaryTap is { } onSecondaryTap)
+                {
+                    InvokeCallback("onSecondaryTap", onSecondaryTap);
+                }
+
+                break;
+            case PointerButtons.Middle:
+                if (OnTertiaryTapUp is { } onTertiaryTapUp)
+                {
+                    InvokeCallback("onTertiaryTapUp", () => onTertiaryTapUp(details));
+                }
+
+                break;
         }
-        base.Dispose();
     }
 
-    private void Cleanup(int pointer)
+    protected override void HandleTapMove(PointerMoveEvent move)
     {
-        StopTrackingPointer(pointer);
-        _trackers.Remove(pointer);
-    }
-
-    private static double Distance(Point a, Point b)
-    {
-        double dx = a.X - b.X;
-        double dy = a.Y - b.Y;
-        return Math.Sqrt(dx * dx + dy * dy);
-    }
-
-    private sealed class TapTracker
-    {
-        public TapTracker(Point initialPosition, GestureArenaEntry entry, bool isSecondary)
+        if (OnTapMove is { } onTapMove && move.Buttons == PointerButtons.Primary)
         {
-            InitialPosition = initialPosition;
-            Entry = entry;
-            IsSecondary = isSecondary;
+            var details = new TapMoveDetails(
+                globalPosition: move.Position,
+                localPosition: move.LocalPosition,
+                kind: GetKindForPointer(move.Pointer),
+                delta: move.Delta);
+            InvokeCallback("onTapMove", () => onTapMove(details));
         }
-
-        public Point InitialPosition { get; }
-
-        public GestureArenaEntry Entry { get; }
-
-        public bool IsSecondary { get; }
-
-        public PointerUpEvent? UpEvent { get; set; }
-
-        public bool Accepted { get; set; }
-
-        public bool UpSeen { get; set; }
-
-        public bool Fired { get; set; }
     }
+
+    protected override void HandleTapCancel(PointerDownEvent down, PointerCancelEvent? cancel, string reason)
+    {
+        string note = reason == "" ? reason : reason + " ";
+        switch (down.Buttons)
+        {
+            case PointerButtons.Primary:
+                if (OnTapCancel is { } onTapCancel)
+                {
+                    InvokeCallback(note + "onTapCancel", onTapCancel);
+                }
+
+                break;
+            case PointerButtons.Secondary:
+                if (OnSecondaryTapCancel is { } onSecondaryTapCancel)
+                {
+                    InvokeCallback(note + "onSecondaryTapCancel", onSecondaryTapCancel);
+                }
+
+                break;
+            case PointerButtons.Middle:
+                if (OnTertiaryTapCancel is { } onTertiaryTapCancel)
+                {
+                    InvokeCallback(note + "onTertiaryTapCancel", onTertiaryTapCancel);
+                }
+
+                break;
+        }
+    }
+
+    public override string DebugDescription => "tap";
 }

@@ -1397,32 +1397,54 @@ public class Scrollable : StatefulWidget
 
         private void HandlePointerSignal(PointerSignalEvent @event)
         {
-            if (@event is not PointerScrollEvent scroll)
+            // Dart's `Scrollable._receivedPointerSignal`: interest is expressed through the pointer
+            // signal resolver, so only the innermost hit-tested scrollable actually scrolls.
+            switch (@event)
             {
-                return;
-            }
+                case PointerScrollEvent scroll:
+                {
+                    if (!_effectivePhysics.ShouldAcceptUserOffset(_position))
+                    {
+                        return;
+                    }
 
-            if (!_effectivePhysics.ShouldAcceptUserOffset(_position))
-            {
-                return;
-            }
+                    double delta = PointerSignalEventDelta(scroll);
+                    double targetScrollOffset = Math.Clamp(
+                        _position.Pixels + delta,
+                        _position.MinScrollExtent,
+                        _position.MaxScrollExtent);
+                    // Only express interest in the event if it would actually result in a scroll.
+                    if (delta != 0.0 && targetScrollOffset != _position.Pixels)
+                    {
+                        GestureBinding.Instance.PointerSignalResolver.Register(scroll, HandlePointerScroll);
+                    }
 
+                    break;
+                }
+                case PointerScrollInertiaCancelEvent:
+                    _position.ApplyPointerScrollDelta(0.0);
+                    // Don't use the pointer signal resolver, all hit-tested scrollables should stop.
+                    break;
+            }
+        }
+
+        private void HandlePointerScroll(PointerSignalEvent @event)
+        {
+            var scroll = (PointerScrollEvent)@event;
             double delta = PointerSignalEventDelta(scroll);
-            double targetPixels = Math.Clamp(
+            double targetScrollOffset = Math.Clamp(
                 _position.Pixels + delta,
                 _position.MinScrollExtent,
                 _position.MaxScrollExtent);
-            if (Math.Abs(delta) <= double.Epsilon
-                || Math.Abs(targetPixels - _position.Pixels) <= double.Epsilon)
+            if (delta != 0.0 && targetScrollOffset != _position.Pixels)
             {
-                scroll.Respond(allowPlatformDefault: true);
-                return;
+                // The start/update/end notifications are dispatched by the position itself, exactly
+                // like Flutter's `ScrollPositionWithSingleContext.pointerScroll`.
+                _position.ApplyPointerScrollDelta(delta);
+                // Tell the host this scrollable handled the event, so the platform default (for
+                // example native page scrolling on the web) does not also run.
+                scroll.Respond(allowPlatformDefault: false);
             }
-
-            // The start/update/end notifications are dispatched by the position itself, exactly like
-            // Flutter's `ScrollPositionWithSingleContext.pointerScroll`.
-            _position.ApplyPointerScrollDelta(delta);
-            scroll.Respond(allowPlatformDefault: false);
         }
 
         private double PointerSignalEventDelta(PointerScrollEvent @event)

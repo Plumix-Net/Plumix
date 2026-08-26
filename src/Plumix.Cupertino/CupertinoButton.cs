@@ -614,7 +614,7 @@ public sealed class CupertinoButton : StatefulWidget
             _opacityTween.End = Current.PressedOpacity ?? 1.0;
         }
 
-        private void HandleTapDown(PointerDownEvent @event)
+        private void HandleTapDown(TapDownDetails @event)
         {
             SetState(() => _tapInProgress = true);
             if (!_buttonHeldDown)
@@ -624,7 +624,7 @@ public sealed class CupertinoButton : StatefulWidget
             }
         }
 
-        private void HandleTapUp(PointerUpEvent @event)
+        private void HandleTapUp(TapUpDetails @event)
         {
             SetState(() => _tapInProgress = false);
             if (_buttonHeldDown)
@@ -638,7 +638,7 @@ public sealed class CupertinoButton : StatefulWidget
                 return;
             }
 
-            Point localPosition = renderObject.GlobalToLocal(@event.Position);
+            Point localPosition = renderObject.GlobalToLocal(@event.GlobalPosition);
             if (Contains(renderObject.PaintBounds.Inflate(TapMoveSlop()), localPosition))
             {
                 HandleTap();

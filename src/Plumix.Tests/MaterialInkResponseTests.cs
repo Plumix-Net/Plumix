@@ -173,6 +173,7 @@ public sealed class MaterialInkResponseTests : IDisposable
     [Fact]
     public void NestedInkWells_CreateOnlyTheInnerSplash()
     {
+        using var timers = new FakeGestureTimers();
         using var harness = CreateHarness(new Plumix.Material.Material(
             child: new InkWell(
                 onTap: () => { },
@@ -189,6 +190,9 @@ public sealed class MaterialInkResponseTests : IDisposable
                 new Point(20.0, 20.0),
                 PointerButtons.Primary,
                 DateTime.UtcNow));
+        // With two competing recognizers the tap-down (and with it the splash) fires at the
+        // kPressTimeout deadline, exactly like Flutter.
+        timers.Elapse(GestureConstants.PressTimeout);
         harness.Pump(new Size(120.0, 80.0));
 
         List<RenderInkResponsePaint> responses = FindDescendants<RenderInkResponsePaint>(harness.RenderView);

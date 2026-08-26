@@ -182,7 +182,7 @@ public sealed class CupertinoScrollbar : RawScrollbar
             }
         }
 
-        protected override void HandleTrackTapDown(PointerDownEvent details)
+        protected override void HandleTrackTapDown(TapDownDetails details)
         {
             // On iOS, tapping the track does not page towards the position of the tap.
             if (ScrollConfiguration.Of(Context).GetPlatform(Context) != TargetPlatform.IOS)

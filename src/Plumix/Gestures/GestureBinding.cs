@@ -20,6 +20,12 @@ public sealed class GestureBinding
 
     public GestureArenaManager GestureArena { get; } = new();
 
+    /// <summary>
+    /// Dart's `pointerSignalResolver`: the resolver used for determining which widget handles a
+    /// pointer signal event.
+    /// </summary>
+    public PointerSignalResolver PointerSignalResolver { get; } = new();
+
     public void HandlePointerEvent(RenderView root, PointerEvent @event)
     {
         PointerEventReceived?.Invoke(@event);
@@ -60,6 +66,13 @@ public sealed class GestureBinding
         }
 
         DispatchEvent(eventWithDelta, hitTestResult);
+
+        if (eventWithDelta is PointerSignalEvent signalEvent)
+        {
+            // Dart's GestureBinding.handleEvent: signals resolve to their first registered
+            // handler once the framework has finished dispatching the event.
+            PointerSignalResolver.Resolve(signalEvent);
+        }
 
         if (@event is PointerDownEvent)
         {

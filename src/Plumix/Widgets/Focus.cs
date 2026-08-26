@@ -1676,6 +1676,14 @@ public sealed class Focus : StatefulWidget
             DetachNode(disposeOwned: true);
         }
 
+        /// <summary>
+        /// The identity of the last pointer-down press a <see cref="Focus"/> claimed. Click-to-focus
+        /// is a C#-only host adaptation (Flutter leaves it to the embedder), and hit-test dispatch
+        /// runs deepest-first, so without this guard a shallower ancestor Focus would steal the
+        /// focus its descendant just took for the same press.
+        /// </summary>
+        private static PointerEvent? _lastClaimedPointerDown;
+
         private void HandlePointerDown(PointerDownEvent @event)
         {
             if (_focusNode == null || !_focusNode.CanRequestFocus)
@@ -1683,6 +1691,13 @@ public sealed class Focus : StatefulWidget
                 return;
             }
 
+            PointerEvent identity = @event.Original ?? @event;
+            if (ReferenceEquals(_lastClaimedPointerDown, identity))
+            {
+                return;
+            }
+
+            _lastClaimedPointerDown = identity;
             _focusNode.RequestFocus();
         }
 

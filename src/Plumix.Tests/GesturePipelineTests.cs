@@ -147,24 +147,32 @@ public sealed class GesturePipelineTests
     }
 
     [Fact]
-    public async Task GestureBinding_TapRecognizer_DistinguishesDoubleTapAndReportsTapDown()
+    public void GestureBinding_DoubleTapRecognizer_BeatsCompetingTapOnSecondTap()
     {
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
+        using var timers = new FakeGestureTimers();
         int taps = 0;
         int doubleTaps = 0;
-        int tapDowns = 0;
-        var recognizer = new TapGestureRecognizer
+        int tapCancels = 0;
+        var tap = new TapGestureRecognizer
         {
             OnTap = () => taps += 1,
+            OnTapCancel = () => tapCancels += 1,
+        };
+        var doubleTap = new DoubleTapGestureRecognizer
+        {
             OnDoubleTap = () => doubleTaps += 1,
-            OnTapDown = _ => tapDowns += 1,
         };
 
         try
         {
             var listener = new RenderPointerListener(
-                onPointerDown: recognizer.AddPointer,
+                onPointerDown: @event =>
+                {
+                    tap.AddPointer(@event);
+                    doubleTap.AddPointer(@event);
+                },
                 behavior: HitTestBehavior.Opaque,
                 child: new FixedHitTestBox(new Size(80, 80), hitSelf: true));
             var pipeline = BuildPipeline(listener);
@@ -175,17 +183,66 @@ public sealed class GesturePipelineTests
                     pointer, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
                 binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
                     pointer, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
+                // Past kDoubleTapMinTime (40 ms), well inside kDoubleTapTimeout (300 ms).
+                timers.Elapse(TimeSpan.FromMilliseconds(80));
                 now = now.AddMilliseconds(80);
             }
 
-            await Task.Delay(350);
-            Assert.Equal(2, tapDowns);
             Assert.Equal(1, doubleTaps);
             Assert.Equal(0, taps);
         }
         finally
         {
-            recognizer.Dispose();
+            tap.Dispose();
+            doubleTap.Dispose();
+            binding.ResetForTests();
+        }
+    }
+
+    [Fact]
+    public void GestureBinding_DoubleTapRecognizer_TimeoutReleasesHeldArenaToTheTap()
+    {
+        var binding = GestureBinding.Instance;
+        binding.ResetForTests();
+        using var timers = new FakeGestureTimers();
+        int taps = 0;
+        int doubleTaps = 0;
+        var tap = new TapGestureRecognizer
+        {
+            OnTap = () => taps += 1,
+        };
+        var doubleTap = new DoubleTapGestureRecognizer
+        {
+            OnDoubleTap = () => doubleTaps += 1,
+        };
+
+        try
+        {
+            var listener = new RenderPointerListener(
+                onPointerDown: @event =>
+                {
+                    tap.AddPointer(@event);
+                    doubleTap.AddPointer(@event);
+                },
+                behavior: HitTestBehavior.Opaque,
+                child: new FixedHitTestBox(new Size(80, 80), hitSelf: true));
+            var pipeline = BuildPipeline(listener);
+            var now = DateTime.UtcNow;
+            binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
+                31, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
+            binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
+                31, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(20)));
+
+            // The double tap holds the arena past the up; the tap fires only after the timeout.
+            Assert.Equal(0, taps);
+            timers.Elapse(GestureConstants.DoubleTapTimeout + TimeSpan.FromMilliseconds(1));
+            Assert.Equal(1, taps);
+            Assert.Equal(0, doubleTaps);
+        }
+        finally
+        {
+            tap.Dispose();
+            doubleTap.Dispose();
             binding.ResetForTests();
         }
     }

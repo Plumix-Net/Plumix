@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Gestures;
 using Plumix;
 using Plumix.Cupertino;
 using Plumix.Painting;
@@ -363,12 +364,9 @@ public sealed class CupertinoRadioTests
         GestureDetector detector = Assert.Single(
             harness.FindWidgets<GestureDetector>(),
             candidate => candidate.OnTapDown is not null);
-        detector.OnTapDown!(new PointerDownEvent(
-            1,
-            PointerDeviceKind.Touch,
-            new Point(9.0, 9.0),
-            PointerButtons.Primary,
-            DateTime.UtcNow));
+        detector.OnTapDown!(new TapDownDetails(
+            globalPosition: new Point(9.0, 9.0),
+            kind: PointerDeviceKind.Touch));
         harness.Pump(ViewSize);
 
         CupertinoRadioPainter painter = Painter(harness);

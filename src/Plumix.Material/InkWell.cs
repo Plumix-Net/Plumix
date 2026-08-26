@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -14,15 +15,15 @@ public class InkResponse : StatefulWidget
     public InkResponse(
         Widget? child = null,
         Action? onTap = null,
-        Action<PointerDownEvent>? onTapDown = null,
-        Action<PointerUpEvent>? onTapUp = null,
+        Action<TapDownDetails>? onTapDown = null,
+        Action<TapUpDetails>? onTapUp = null,
         Action? onTapCancel = null,
         Action? onDoubleTap = null,
         Action? onLongPress = null,
         Action? onLongPressUp = null,
         Action? onSecondaryTap = null,
-        Action<PointerUpEvent>? onSecondaryTapUp = null,
-        Action<PointerDownEvent>? onSecondaryTapDown = null,
+        Action<TapUpDetails>? onSecondaryTapUp = null,
+        Action<TapDownDetails>? onSecondaryTapDown = null,
         Action? onSecondaryTapCancel = null,
         Action<bool>? onHighlightChanged = null,
         Action<bool>? onHover = null,
@@ -96,15 +97,15 @@ public class InkResponse : StatefulWidget
 
     public Widget? Child { get; }
     public Action? OnTap { get; }
-    public Action<PointerDownEvent>? OnTapDown { get; }
-    public Action<PointerUpEvent>? OnTapUp { get; }
+    public Action<TapDownDetails>? OnTapDown { get; }
+    public Action<TapUpDetails>? OnTapUp { get; }
     public Action? OnTapCancel { get; }
     public Action? OnDoubleTap { get; }
     public Action? OnLongPress { get; }
     public Action? OnLongPressUp { get; }
     public Action? OnSecondaryTap { get; }
-    public Action<PointerUpEvent>? OnSecondaryTapUp { get; }
-    public Action<PointerDownEvent>? OnSecondaryTapDown { get; }
+    public Action<TapUpDetails>? OnSecondaryTapUp { get; }
+    public Action<TapDownDetails>? OnSecondaryTapDown { get; }
     public Action? OnSecondaryTapCancel { get; }
     public Action<bool>? OnHighlightChanged { get; }
     public Action<bool>? OnHover { get; }
@@ -406,13 +407,13 @@ public class InkResponse : StatefulWidget
             };
         }
 
-        private void HandleTapDown(PointerDownEvent details)
+        private void HandleTapDown(TapDownDetails details)
         {
             StartSplash(details.LocalPosition);
             CurrentWidget.OnTapDown?.Invoke(details);
         }
 
-        private void HandleTapUp(PointerUpEvent details) => CurrentWidget.OnTapUp?.Invoke(details);
+        private void HandleTapUp(TapUpDetails details) => CurrentWidget.OnTapUp?.Invoke(details);
 
         private void HandleTap()
         {
@@ -449,13 +450,13 @@ public class InkResponse : StatefulWidget
             CurrentWidget.OnLongPressUp?.Invoke();
         }
 
-        private void HandleSecondaryTapDown(PointerDownEvent details)
+        private void HandleSecondaryTapDown(TapDownDetails details)
         {
             StartSplash(details.LocalPosition);
             CurrentWidget.OnSecondaryTapDown?.Invoke(details);
         }
 
-        private void HandleSecondaryTapUp(PointerUpEvent details) => CurrentWidget.OnSecondaryTapUp?.Invoke(details);
+        private void HandleSecondaryTapUp(TapUpDetails details) => CurrentWidget.OnSecondaryTapUp?.Invoke(details);
 
         private void HandleSecondaryTap()
         {
@@ -988,7 +989,7 @@ public sealed class InkWell : InkResponse
         Widget? child = null,
         Action? onTap = null,
         Action? onDoubleTap = null,
-        Action<PointerDownEvent>? onTapDown = null,
+        Action<TapDownDetails>? onTapDown = null,
         Action? onTapCancel = null,
         Action? onLongPress = null,
         Action<bool>? onHover = null,
@@ -1006,10 +1007,10 @@ public sealed class InkWell : InkResponse
         bool excludeFromSemantics = false,
         Key? key = null,
         Action? onLongPressUp = null,
-        Action<PointerUpEvent>? onTapUp = null,
+        Action<TapUpDetails>? onTapUp = null,
         Action? onSecondaryTap = null,
-        Action<PointerUpEvent>? onSecondaryTapUp = null,
-        Action<PointerDownEvent>? onSecondaryTapDown = null,
+        Action<TapUpDetails>? onSecondaryTapUp = null,
+        Action<TapDownDetails>? onSecondaryTapDown = null,
         Action? onSecondaryTapCancel = null,
         Action<bool>? onHighlightChanged = null,
         MaterialStateProperty<Color?>? overlayColor = null,
@@ -1070,7 +1071,7 @@ public sealed class TableRowInkWell : InkResponse
         Action<bool>? onHighlightChanged = null,
         Action<bool>? onHover = null,
         Action? onSecondaryTap = null,
-        Action<PointerDownEvent>? onSecondaryTapDown = null,
+        Action<TapDownDetails>? onSecondaryTapDown = null,
         MaterialStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null,
         Key? key = null)

@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -309,13 +310,13 @@ public abstract class ToggleableState : State
             child: result);
     }
 
-    private void HandleTapDown(PointerDownEvent details)
+    private void HandleTapDown(TapDownDetails details)
     {
-        SetState(() => _downPosition = details.Position);
+        SetState(() => _downPosition = details.LocalPosition);
         _reactionController?.Forward();
     }
 
-    private void HandleTapUp(PointerUpEvent details)
+    private void HandleTapUp(TapUpDetails details)
     {
         _ = details;
         SetState(() => _downPosition = null);

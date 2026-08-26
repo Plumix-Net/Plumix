@@ -770,14 +770,14 @@ public sealed class CupertinoButtonTests : IDisposable
         Scheduler.PumpFrameForTests(Scheduler.CurrentFrameTimeStamp + TimeSpan.FromMilliseconds(400));
     }
 
-    private static PointerDownEvent Down(Point position) =>
-        new(0, PointerDeviceKind.Touch, position, PointerButtons.Primary, DateTime.UnixEpoch);
+    private static TapDownDetails Down(Point position) =>
+        new(globalPosition: position, kind: PointerDeviceKind.Touch);
 
-    private static PointerUpEvent Up(Point position) =>
-        new(0, PointerDeviceKind.Touch, position, PointerButtons.Primary, DateTime.UnixEpoch);
+    private static TapUpDetails Up(Point position) =>
+        new(kind: PointerDeviceKind.Touch, globalPosition: position);
 
     private static TapMoveDetails Move(Point position) =>
-        new(position, position, default, PointerDeviceKind.Touch);
+        new(kind: PointerDeviceKind.Touch, globalPosition: position);
 
     private static Widget Box(double width, double height) =>
         new SizedBox(width: width, height: height);

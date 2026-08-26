@@ -93,15 +93,21 @@ public sealed class RawGestureDetector : StatefulWidget
         Action<PointerCancelEvent>? onPointerCancel = null,
         Action? onTap = null,
         Action? onDoubleTap = null,
-        Action<PointerDownEvent>? onTapDown = null,
-        Action<PointerUpEvent>? onTapUp = null,
+        Action<TapDownDetails>? onDoubleTapDown = null,
+        Action? onDoubleTapCancel = null,
+        Action<TapDownDetails>? onTapDown = null,
+        Action<TapUpDetails>? onTapUp = null,
         Action? onTapCancel = null,
+        Action<TapMoveDetails>? onTapMove = null,
         Action? onLongPress = null,
         Action? onLongPressUp = null,
         Action? onSecondaryTap = null,
-        Action<PointerDownEvent>? onSecondaryTapDown = null,
-        Action<PointerUpEvent>? onSecondaryTapUp = null,
+        Action<TapDownDetails>? onSecondaryTapDown = null,
+        Action<TapUpDetails>? onSecondaryTapUp = null,
         Action? onSecondaryTapCancel = null,
+        Action<TapDownDetails>? onTertiaryTapDown = null,
+        Action<TapUpDetails>? onTertiaryTapUp = null,
+        Action? onTertiaryTapCancel = null,
         Action<DragDownDetails>? onHorizontalDragDown = null,
         Action<DragStartDetails>? onHorizontalDragStart = null,
         Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
@@ -138,15 +144,21 @@ public sealed class RawGestureDetector : StatefulWidget
         OnPointerCancel = onPointerCancel;
         OnTap = onTap;
         OnDoubleTap = onDoubleTap;
+        OnDoubleTapDown = onDoubleTapDown;
+        OnDoubleTapCancel = onDoubleTapCancel;
         OnTapDown = onTapDown;
         OnTapUp = onTapUp;
         OnTapCancel = onTapCancel;
+        OnTapMove = onTapMove;
         OnLongPress = onLongPress;
         OnLongPressUp = onLongPressUp;
         OnSecondaryTap = onSecondaryTap;
         OnSecondaryTapDown = onSecondaryTapDown;
         OnSecondaryTapUp = onSecondaryTapUp;
         OnSecondaryTapCancel = onSecondaryTapCancel;
+        OnTertiaryTapDown = onTertiaryTapDown;
+        OnTertiaryTapUp = onTertiaryTapUp;
+        OnTertiaryTapCancel = onTertiaryTapCancel;
         OnHorizontalDragDown = onHorizontalDragDown;
         OnHorizontalDragStart = onHorizontalDragStart;
         OnHorizontalDragUpdate = onHorizontalDragUpdate;
@@ -200,16 +212,28 @@ public sealed class RawGestureDetector : StatefulWidget
 
     public Action? OnTap { get; }
     public Action? OnDoubleTap { get; }
-    public Action<PointerDownEvent>? OnTapDown { get; }
-    public Action<PointerUpEvent>? OnTapUp { get; }
+    public Action<TapDownDetails>? OnDoubleTapDown { get; }
+    public Action? OnDoubleTapCancel { get; }
+    public Action<TapDownDetails>? OnTapDown { get; }
+    public Action<TapUpDetails>? OnTapUp { get; }
     public Action? OnTapCancel { get; }
+
+    /// <summary>
+    /// Accepted but not wired to the recognizer: Dart's `GestureDetector.build` neither gates on
+    /// nor assigns `onTapMove` at Flutter 3.47.0, so a detector configured only with it creates no
+    /// tap recognizer. Use <see cref="TapGestureRecognizer.OnTapMove"/> directly instead.
+    /// </summary>
+    public Action<TapMoveDetails>? OnTapMove { get; }
 
     public Action? OnLongPress { get; }
     public Action? OnLongPressUp { get; }
     public Action? OnSecondaryTap { get; }
-    public Action<PointerDownEvent>? OnSecondaryTapDown { get; }
-    public Action<PointerUpEvent>? OnSecondaryTapUp { get; }
+    public Action<TapDownDetails>? OnSecondaryTapDown { get; }
+    public Action<TapUpDetails>? OnSecondaryTapUp { get; }
     public Action? OnSecondaryTapCancel { get; }
+    public Action<TapDownDetails>? OnTertiaryTapDown { get; }
+    public Action<TapUpDetails>? OnTertiaryTapUp { get; }
+    public Action? OnTertiaryTapCancel { get; }
 
     public Action<DragDownDetails>? OnHorizontalDragDown { get; }
 
@@ -277,6 +301,7 @@ public sealed class RawGestureDetector : StatefulWidget
         private RenderSemanticsGestureHandler? _semanticsGestureHandler;
 
         private TapGestureRecognizer? _tap;
+        private DoubleTapGestureRecognizer? _doubleTap;
         private LongPressGestureRecognizer? _longPress;
         private HorizontalDragGestureRecognizer? _horizontalDrag;
         private VerticalDragGestureRecognizer? _verticalDrag;
@@ -323,6 +348,7 @@ public sealed class RawGestureDetector : StatefulWidget
         public override void Dispose()
         {
             DisposeRecognizer(ref _tap);
+            DisposeRecognizer(ref _doubleTap);
             DisposeRecognizer(ref _longPress);
             DisposeRecognizer(ref _horizontalDrag);
             DisposeRecognizer(ref _verticalDrag);
@@ -363,7 +389,7 @@ public sealed class RawGestureDetector : StatefulWidget
         {
             _semanticsGestureHandler = renderObject;
             renderObject.OnTap = GetTapHandler(renderObject);
-            renderObject.OnLongPress = GetLongPressHandler();
+            renderObject.OnLongPress = GetLongPressHandler(renderObject);
             renderObject.OnHorizontalDragUpdate = GetDragUpdateHandler(renderObject, horizontal: true);
             renderObject.OnVerticalDragUpdate = GetDragUpdateHandler(renderObject, horizontal: false);
             renderObject.ValidActions = _validActions;
@@ -377,11 +403,8 @@ public sealed class RawGestureDetector : StatefulWidget
         }
 
         /// <summary>
-        /// Replays the whole down/up/tap sequence, exactly as Flutter's
-        /// <c>_DefaultSemanticsGestureDelegate._getTapHandler</c> does. Plumix's
-        /// <c>TapGestureRecognizer.OnTapDown</c>/<c>OnTapUp</c> take real pointer events, which a
-        /// semantic tap has none of, so they are synthesized at the render object's center rather
-        /// than at Dart's origin — a button whose bounds exclude the origin still activates.
+        /// Replays the down/up/tap sequence at the render object's center, exactly as Flutter's
+        /// <c>_DefaultSemanticsGestureDelegate._getTapHandler</c> does at pin 3.47.0.
         /// </summary>
         private Action? GetTapHandler(RenderObject renderObject)
         {
@@ -392,25 +415,25 @@ public sealed class RawGestureDetector : StatefulWidget
 
             return () =>
             {
-                Point globalCenter = renderObject.LocalToGlobal(LocalCenterOf(renderObject));
-                DateTime timestamp = DateTime.UtcNow;
-                tap.OnTapDown?.Invoke(new PointerDownEvent(
-                    0,
-                    PointerDeviceKind.Unknown,
-                    globalCenter,
-                    PointerButtons.Primary,
-                    timestamp));
-                tap.OnTapUp?.Invoke(new PointerUpEvent(
-                    0,
-                    PointerDeviceKind.Unknown,
-                    globalCenter,
-                    PointerButtons.Primary,
-                    timestamp));
+                Point localCenter = LocalCenterOf(renderObject);
+                Point globalCenter = renderObject.LocalToGlobal(localCenter);
+                tap.OnTapDown?.Invoke(new TapDownDetails(
+                    globalPosition: globalCenter,
+                    localPosition: localCenter,
+                    kind: PointerDeviceKind.Unknown));
+                tap.OnTapUp?.Invoke(new TapUpDetails(
+                    kind: PointerDeviceKind.Unknown,
+                    globalPosition: globalCenter,
+                    localPosition: localCenter));
                 tap.OnTap?.Invoke();
             };
         }
 
-        private Action? GetLongPressHandler()
+        /// <summary>
+        /// Replays the long-press sequence at the render object's center, following Dart's
+        /// <c>_getLongPressHandler</c> order for the callbacks Plumix's recognizer exposes.
+        /// </summary>
+        private Action? GetLongPressHandler(RenderObject renderObject)
         {
             if (ResolveRecognizer(_longPress) is not { } longPress)
             {
@@ -419,7 +442,15 @@ public sealed class RawGestureDetector : StatefulWidget
 
             return () =>
             {
+                Point localCenter = LocalCenterOf(renderObject);
+                Point globalCenter = renderObject.LocalToGlobal(localCenter);
+                longPress.OnLongPressStart?.Invoke(new LongPressStartDetails(
+                    GlobalPosition: globalCenter,
+                    LocalPosition: localCenter));
                 longPress.OnLongPress?.Invoke();
+                longPress.OnLongPressEnd?.Invoke(new LongPressEndDetails(
+                    GlobalPosition: globalCenter,
+                    LocalPosition: localCenter));
                 longPress.OnLongPressUp?.Invoke();
             };
         }
@@ -530,6 +561,7 @@ public sealed class RawGestureDetector : StatefulWidget
             }
 
             _tap?.AddPointer(@event);
+            _doubleTap?.AddPointer(@event);
             _longPress?.AddPointer(@event);
             _horizontalDrag?.AddPointer(@event);
             _verticalDrag?.AddPointer(@event);
@@ -544,6 +576,7 @@ public sealed class RawGestureDetector : StatefulWidget
             {
                 // The explicit recognizer map replaces the fixed callback set entirely.
                 DisposeRecognizer(ref _tap);
+                DisposeRecognizer(ref _doubleTap);
                 DisposeRecognizer(ref _longPress);
                 DisposeRecognizer(ref _horizontalDrag);
                 DisposeRecognizer(ref _verticalDrag);
@@ -562,24 +595,47 @@ public sealed class RawGestureDetector : StatefulWidget
                 _customRecognizers.Clear();
             }
 
-            if (widget.OnTap != null || widget.OnDoubleTap != null || widget.OnTapDown != null
-                || widget.OnTapUp != null || widget.OnSecondaryTap != null
-                || widget.OnSecondaryTapDown != null || widget.OnSecondaryTapUp != null)
+            // Dart's `GestureDetector.build` gates the tap recognizer on these eleven callbacks;
+            // `onTapMove` is deliberately absent from both the gate and the cascade at pin 3.47.0.
+            if (widget.OnTapDown != null || widget.OnTapUp != null || widget.OnTap != null
+                || widget.OnTapCancel != null || widget.OnSecondaryTap != null
+                || widget.OnSecondaryTapDown != null || widget.OnSecondaryTapUp != null
+                || widget.OnSecondaryTapCancel != null || widget.OnTertiaryTapDown != null
+                || widget.OnTertiaryTapUp != null || widget.OnTertiaryTapCancel != null)
             {
                 _tap ??= new TapGestureRecognizer();
-                _tap.OnTap = widget.OnTap;
-                _tap.OnDoubleTap = widget.OnDoubleTap;
                 _tap.OnTapDown = widget.OnTapDown;
                 _tap.OnTapUp = widget.OnTapUp;
+                _tap.OnTap = widget.OnTap;
                 _tap.OnTapCancel = widget.OnTapCancel;
                 _tap.OnSecondaryTap = widget.OnSecondaryTap;
                 _tap.OnSecondaryTapDown = widget.OnSecondaryTapDown;
                 _tap.OnSecondaryTapUp = widget.OnSecondaryTapUp;
                 _tap.OnSecondaryTapCancel = widget.OnSecondaryTapCancel;
+                _tap.OnTertiaryTapDown = widget.OnTertiaryTapDown;
+                _tap.OnTertiaryTapUp = widget.OnTertiaryTapUp;
+                _tap.OnTertiaryTapCancel = widget.OnTertiaryTapCancel;
+                _tap.GestureSettings = widget.GestureSettings;
+                _tap.SupportedDevices = widget.SupportedDevices;
             }
             else
             {
                 DisposeRecognizer(ref _tap);
+            }
+
+            if (widget.OnDoubleTap != null || widget.OnDoubleTapDown != null
+                || widget.OnDoubleTapCancel != null)
+            {
+                _doubleTap ??= new DoubleTapGestureRecognizer();
+                _doubleTap.OnDoubleTapDown = widget.OnDoubleTapDown;
+                _doubleTap.OnDoubleTap = widget.OnDoubleTap;
+                _doubleTap.OnDoubleTapCancel = widget.OnDoubleTapCancel;
+                _doubleTap.GestureSettings = widget.GestureSettings;
+                _doubleTap.SupportedDevices = widget.SupportedDevices;
+            }
+            else
+            {
+                DisposeRecognizer(ref _doubleTap);
             }
 
             if (widget.OnLongPress != null || widget.OnLongPressUp != null)
@@ -721,15 +777,21 @@ public sealed class GestureDetector : StatelessWidget
         HitTestBehavior? behavior = null,
         Action? onTap = null,
         Action? onDoubleTap = null,
-        Action<PointerDownEvent>? onTapDown = null,
-        Action<PointerUpEvent>? onTapUp = null,
+        Action<TapDownDetails>? onDoubleTapDown = null,
+        Action? onDoubleTapCancel = null,
+        Action<TapDownDetails>? onTapDown = null,
+        Action<TapUpDetails>? onTapUp = null,
         Action? onTapCancel = null,
+        Action<TapMoveDetails>? onTapMove = null,
         Action? onLongPress = null,
         Action? onLongPressUp = null,
         Action? onSecondaryTap = null,
-        Action<PointerDownEvent>? onSecondaryTapDown = null,
-        Action<PointerUpEvent>? onSecondaryTapUp = null,
+        Action<TapDownDetails>? onSecondaryTapDown = null,
+        Action<TapUpDetails>? onSecondaryTapUp = null,
         Action? onSecondaryTapCancel = null,
+        Action<TapDownDetails>? onTertiaryTapDown = null,
+        Action<TapUpDetails>? onTertiaryTapUp = null,
+        Action? onTertiaryTapCancel = null,
         Action<DragStartDetails>? onHorizontalDragStart = null,
         Action<DragUpdateDetails>? onHorizontalDragUpdate = null,
         Action<DragEndDetails>? onHorizontalDragEnd = null,
@@ -751,15 +813,21 @@ public sealed class GestureDetector : StatelessWidget
         Behavior = behavior;
         OnTap = onTap;
         OnDoubleTap = onDoubleTap;
+        OnDoubleTapDown = onDoubleTapDown;
+        OnDoubleTapCancel = onDoubleTapCancel;
         OnTapDown = onTapDown;
         OnTapUp = onTapUp;
         OnTapCancel = onTapCancel;
+        OnTapMove = onTapMove;
         OnLongPress = onLongPress;
         OnLongPressUp = onLongPressUp;
         OnSecondaryTap = onSecondaryTap;
         OnSecondaryTapDown = onSecondaryTapDown;
         OnSecondaryTapUp = onSecondaryTapUp;
         OnSecondaryTapCancel = onSecondaryTapCancel;
+        OnTertiaryTapDown = onTertiaryTapDown;
+        OnTertiaryTapUp = onTertiaryTapUp;
+        OnTertiaryTapCancel = onTertiaryTapCancel;
         OnHorizontalDragStart = onHorizontalDragStart;
         OnHorizontalDragUpdate = onHorizontalDragUpdate;
         OnHorizontalDragEnd = onHorizontalDragEnd;
@@ -788,16 +856,27 @@ public sealed class GestureDetector : StatelessWidget
 
     public Action? OnTap { get; }
     public Action? OnDoubleTap { get; }
-    public Action<PointerDownEvent>? OnTapDown { get; }
-    public Action<PointerUpEvent>? OnTapUp { get; }
+    public Action<TapDownDetails>? OnDoubleTapDown { get; }
+    public Action? OnDoubleTapCancel { get; }
+    public Action<TapDownDetails>? OnTapDown { get; }
+    public Action<TapUpDetails>? OnTapUp { get; }
     public Action? OnTapCancel { get; }
+
+    /// <summary>
+    /// Accepted but not wired: Dart's `GestureDetector.build` omits `onTapMove` from both the
+    /// recognizer gate and the cascade at Flutter 3.47.0.
+    /// </summary>
+    public Action<TapMoveDetails>? OnTapMove { get; }
 
     public Action? OnLongPress { get; }
     public Action? OnLongPressUp { get; }
     public Action? OnSecondaryTap { get; }
-    public Action<PointerDownEvent>? OnSecondaryTapDown { get; }
-    public Action<PointerUpEvent>? OnSecondaryTapUp { get; }
+    public Action<TapDownDetails>? OnSecondaryTapDown { get; }
+    public Action<TapUpDetails>? OnSecondaryTapUp { get; }
     public Action? OnSecondaryTapCancel { get; }
+    public Action<TapDownDetails>? OnTertiaryTapDown { get; }
+    public Action<TapUpDetails>? OnTertiaryTapUp { get; }
+    public Action? OnTertiaryTapCancel { get; }
 
     public Action<DragStartDetails>? OnHorizontalDragStart { get; }
 
@@ -833,15 +912,21 @@ public sealed class GestureDetector : StatelessWidget
             behavior: Behavior,
             onTap: OnTap,
             onDoubleTap: OnDoubleTap,
+            onDoubleTapDown: OnDoubleTapDown,
+            onDoubleTapCancel: OnDoubleTapCancel,
             onTapDown: OnTapDown,
             onTapUp: OnTapUp,
             onTapCancel: OnTapCancel,
+            onTapMove: OnTapMove,
             onLongPress: OnLongPress,
             onLongPressUp: OnLongPressUp,
             onSecondaryTap: OnSecondaryTap,
             onSecondaryTapDown: OnSecondaryTapDown,
             onSecondaryTapUp: OnSecondaryTapUp,
             onSecondaryTapCancel: OnSecondaryTapCancel,
+            onTertiaryTapDown: OnTertiaryTapDown,
+            onTertiaryTapUp: OnTertiaryTapUp,
+            onTertiaryTapCancel: OnTertiaryTapCancel,
             onHorizontalDragStart: OnHorizontalDragStart,
             onHorizontalDragUpdate: OnHorizontalDragUpdate,
             onHorizontalDragEnd: OnHorizontalDragEnd,

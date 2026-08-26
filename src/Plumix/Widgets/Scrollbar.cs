@@ -1376,12 +1376,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
     /// <summary>
     /// Handler called when the track is tapped in order to page in the tapped direction.
     /// </summary>
-    /// <remarks>
-    /// Flutter hands this a `TapDownDetails`; Plumix's <see cref="TapGestureRecognizer"/> reports the
-    /// originating <see cref="PointerDownEvent"/> instead (see `docs/ai/DIVERGENCES.md`), whose
-    /// <see cref="PointerEvent.LocalPosition"/> is the value Dart reads.
-    /// </remarks>
-    protected virtual void HandleTrackTapDown(PointerDownEvent details)
+    protected virtual void HandleTrackTapDown(TapDownDetails details)
     {
         // The Scrollbar should page towards the position of the tap on the track.
         CheckHasValidScrollPosition();
@@ -1716,6 +1711,17 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
             position.MaxScrollExtent);
     }
 
+    private void HandlePointerScroll(PointerSignalEvent @event)
+    {
+        _cachedController = EffectiveScrollController;
+        double delta = PointerSignalEventDelta((PointerScrollEvent)@event);
+        double targetScrollOffset = TargetScrollOffsetForPointerScroll(delta);
+        if (delta != 0.0 && targetScrollOffset != _cachedController!.Position.Pixels)
+        {
+            _cachedController.Position.ApplyPointerScrollDelta(delta);
+        }
+    }
+
     private void ReceivedPointerSignal(PointerSignalEvent @event)
     {
         _cachedController = EffectiveScrollController;
@@ -1724,20 +1730,31 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
         if ((ScrollbarPainter.HitTest(@event.LocalPosition) ?? false) &&
             _cachedController is not null &&
             _cachedController.HasClients &&
-            _thumbDrag is null &&
-            @event is PointerScrollEvent scroll)
+            (_thumbDrag is null || PlatformDefaults.IsWeb))
         {
             ScrollPosition position = _cachedController.Position;
-            if (!position.Physics.ShouldAcceptUserOffset(position))
+            switch (@event)
             {
-                return;
-            }
+                case PointerScrollEvent scroll:
+                {
+                    if (!position.Physics.ShouldAcceptUserOffset(position))
+                    {
+                        return;
+                    }
 
-            double delta = PointerSignalEventDelta(scroll);
-            double targetScrollOffset = TargetScrollOffsetForPointerScroll(delta);
-            if (delta != 0.0 && targetScrollOffset != position.Pixels)
-            {
-                position.ApplyPointerScrollDelta(delta);
+                    double delta = PointerSignalEventDelta(scroll);
+                    double targetScrollOffset = TargetScrollOffsetForPointerScroll(delta);
+                    if (delta != 0.0 && targetScrollOffset != position.Pixels)
+                    {
+                        GestureBinding.Instance.PointerSignalResolver.Register(scroll, HandlePointerScroll);
+                    }
+
+                    break;
+                }
+                case PointerScrollInertiaCancelEvent:
+                    position.JumpTo(position.Pixels);
+                    // Don't use the pointer signal resolver, all hit-tested scrollables should stop.
+                    break;
             }
         }
     }
