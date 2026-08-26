@@ -346,7 +346,6 @@ public sealed class RawRadioState<T> : ToggleableState, RadioClient<T>
         {
             _registry.OnChanged(default);
         }
-        SemanticsService.SendEvent(
-            new TapSemanticEvent(Context.FindRenderObject()?.SemanticsNodeId));
+        Context.FindRenderObject()?.SendSemanticsEvent(new TapSemanticEvent());
     }
 }

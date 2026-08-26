@@ -52,7 +52,6 @@ public sealed class Switch : StatelessWidget
         Action<bool>? onFocusChange = null,
         bool autofocus = false,
         Thickness? padding = null,
-        string? semanticLabel = null,
         Key? key = null) : this(
             switchType: SwitchType.Material,
             applyCupertinoTheme: false,
@@ -83,7 +82,6 @@ public sealed class Switch : StatelessWidget
             onFocusChange: onFocusChange,
             autofocus: autofocus,
             padding: padding,
-            semanticLabel: semanticLabel,
             key: key)
     {
     }
@@ -118,7 +116,6 @@ public sealed class Switch : StatelessWidget
         Action<bool>? onFocusChange,
         bool autofocus,
         Thickness? padding,
-        string? semanticLabel,
         Key? key) : base(key)
     {
         if (activeThumbImage is null && onActiveThumbImageError is not null)
@@ -164,7 +161,6 @@ public sealed class Switch : StatelessWidget
         OnFocusChange = onFocusChange;
         Autofocus = autofocus;
         Padding = padding;
-        SemanticLabel = semanticLabel;
     }
 
     /// Creates a `Switch` that follows the ambient `ThemeData.platform`: Apple platforms get the
@@ -199,7 +195,6 @@ public sealed class Switch : StatelessWidget
         bool autofocus = false,
         Thickness? padding = null,
         bool? applyCupertinoTheme = null,
-        string? semanticLabel = null,
         Key? key = null)
     {
         return new Switch(
@@ -232,7 +227,6 @@ public sealed class Switch : StatelessWidget
             onFocusChange: onFocusChange,
             autofocus: autofocus,
             padding: padding,
-            semanticLabel: semanticLabel,
             key: key);
     }
 
@@ -291,10 +285,6 @@ public sealed class Switch : StatelessWidget
 
     public Thickness? Padding { get; }
 
-    /// Plumix addition: forwarded to the `Semantics` node wrapping the switch. Flutter's `Switch`
-    /// has no equivalent; leaving it null reproduces Flutter's semantics exactly.
-    public string? SemanticLabel { get; }
-
     public bool? ApplyCupertinoTheme { get; }
 
     public override Widget Build(BuildContext context)
@@ -327,7 +317,7 @@ public sealed class Switch : StatelessWidget
                 break;
         }
 
-        Widget result = new MaterialSwitch(
+        return new MaterialSwitch(
             value: Value,
             onChanged: OnChanged,
             size: GetSwitchSize(context),
@@ -357,13 +347,6 @@ public sealed class Switch : StatelessWidget
             onFocusChange: OnFocusChange,
             autofocus: Autofocus,
             applyCupertinoTheme: ApplyCupertinoTheme);
-
-        if (SemanticLabel is not null)
-        {
-            result = new Semantics(label: SemanticLabel, child: result);
-        }
-
-        return result;
     }
 
     private Size GetSwitchSize(BuildContext context)
@@ -866,8 +849,7 @@ internal sealed class MaterialSwitchState : ToggleableState
         }
 
         CurrentWidget.OnChanged?.Invoke(!CurrentWidget.Value);
-        SemanticsService.SendEvent(
-            new TapSemanticEvent(Context.FindRenderObject()?.SemanticsNodeId));
+        Context.FindRenderObject()?.SendSemanticsEvent(new TapSemanticEvent());
     }
 
     private void HandleDragStart(DragStartDetails details)

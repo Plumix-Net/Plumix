@@ -29,6 +29,27 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
 
     public int? SemanticsNodeId => SemanticsNode?.Id;
 
+    /// <summary>Sends an event from this object's unmerged semantics node or its first such ancestor.</summary>
+    /// <remarks>Flutter's <c>RenderObject.sendSemanticsEvent</c>.</remarks>
+    public void SendSemanticsEvent(SemanticsEvent semanticsEvent)
+    {
+        ArgumentNullException.ThrowIfNull(semanticsEvent);
+        if (Owner?.HasSemanticsOwner != true)
+        {
+            return;
+        }
+
+        SemanticsNode? node = _semantics.CachedSemanticsNode;
+        if (node is not null && !node.IsMergedIntoParent)
+        {
+            SemanticsService.SendEvent(semanticsEvent with { NodeId = node.Id });
+        }
+        else
+        {
+            Parent?.SendSemanticsEvent(semanticsEvent);
+        }
+    }
+
     protected RenderObject()
     {
         _semantics = new RenderObjectSemantics(this);

@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `Switch` drops the C#-only `semanticLabel`; label it with `Semantics`, as Dart does (`switch.dart`).
+- Added ancestor-aware `RenderObject.SendSemanticsEvent`; merged toggle events use their owning node (`object.dart`).
 - Breaking: strict `Switch` port — stateless `Switch` over `_MaterialSwitch` + `_SwitchPainter` (`switch.dart`).
 - Breaking: `Switch.adaptive` no longer builds a `CupertinoSwitch`; it keeps the Material stack with Cupertino config.
 - Breaking: M2/M3/Cupertino `_SwitchConfig` + defaults replace the C#-only `SwitchConfig` record and colour helpers.

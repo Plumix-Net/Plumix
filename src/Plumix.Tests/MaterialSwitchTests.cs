@@ -447,6 +447,13 @@ public sealed class MaterialSwitchTests
         Assert.Equal(DragStartBehavior.Down, materialSwitch.DragStartBehavior);
         Assert.Equal(cursor, materialSwitch.MouseCursor);
         Assert.True(adaptiveSwitch.ApplyCupertinoTheme);
+        Assert.Null(typeof(Switch).GetProperty("SemanticLabel"));
+        Assert.DoesNotContain(
+            typeof(Switch).GetConstructors().SelectMany(constructor => constructor.GetParameters()),
+            parameter => parameter.Name == "semanticLabel");
+        Assert.DoesNotContain(
+            typeof(Switch).GetMethod(nameof(Switch.Adaptive))!.GetParameters(),
+            parameter => parameter.Name == "semanticLabel");
         Assert.Throws<ArgumentException>(() => new Switch(
             value: false,
             onChanged: _ => { },
@@ -666,12 +673,14 @@ public sealed class MaterialSwitchTests
     }
 
     [Fact]
-    public void Switch_Semantics_ExposesToggledStateAndTapAction()
+    public void Switch_Semantics_ExposesToggledStateTapActionAndExternalLabel()
     {
         using var harness = new WidgetRenderHarness(
             new Theme(
                 data: ThemeData.Light,
-                child: new Switch(value: true, onChanged: _ => { }, semanticLabel: "Wi-Fi")));
+                child: new Semantics(
+                    label: "Wi-Fi",
+                    child: new Switch(value: true, onChanged: _ => { }))));
         SemanticsNode? rootNode = harness.PumpAndGetSemantics(new Size(200.0, 200.0));
 
         Assert.NotNull(rootNode);
@@ -690,6 +699,40 @@ public sealed class MaterialSwitchTests
             rootNode!,
             node => node.Label == "Wi-Fi");
         Assert.NotNull(labelled);
+    }
+
+    [Fact]
+    public void Switch_MergeSemantics_EmitsTapEventFromTheLabelledParent()
+    {
+        SemanticsEvent? received = null;
+        void HandleEvent(SemanticsEvent semanticsEvent) => received = semanticsEvent;
+        SemanticsService.SemanticsEventRequested += HandleEvent;
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new MergeSemantics(
+                        child: new Semantics(
+                            label: "Wi-Fi",
+                            child: new Switch(value: false, onChanged: _ => { })))));
+            SemanticsNode? rootNode = harness.PumpAndGetSemantics(new Size(200.0, 200.0));
+            SemanticsNode? merged = FindFirstSemanticsNode(rootNode!, node => node.Label == "Wi-Fi");
+
+            Assert.NotNull(merged);
+            Assert.True(merged!.Actions.HasFlag(SemanticsActions.Tap));
+
+            GestureBinding binding = GestureBinding.Instance;
+            DispatchPointerDown(binding, harness.RenderView, 912, new Point(30.0, 24.0));
+            DispatchPointerUp(binding, harness.RenderView, 912, new Point(30.0, 24.0));
+
+            TapSemanticEvent tapEvent = Assert.IsType<TapSemanticEvent>(received);
+            Assert.Equal(merged.Id, tapEvent.NodeId);
+        }
+        finally
+        {
+            SemanticsService.SemanticsEventRequested -= HandleEvent;
+        }
     }
 
     [Fact]
