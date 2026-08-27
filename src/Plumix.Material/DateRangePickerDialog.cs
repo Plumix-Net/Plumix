@@ -609,7 +609,7 @@ internal sealed class CalendarDateRangePickerState : State
                     painter: new DateRangeHighlightPainter(
                         color: dateTheme.RangeSelectionBackgroundColor
                                ?? defaults.RangeSelectionBackgroundColor
-                               ?? theme.SecondaryContainerColor,
+                               ?? theme.ColorScheme.SecondaryContainer,
                         isStart: Current.CalendarDelegate.IsSameDay(date, _start),
                         isEnd: Current.CalendarDelegate.IsSameDay(date, _end),
                         textDirection: Directionality.Of(Context)),

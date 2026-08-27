@@ -21,6 +21,19 @@ public static class PlatformDefaults
         set => DebugOverride.Value = value;
     }
 
+    /// <summary>
+    /// The process-wide platform used when <see cref="DebugTargetPlatformOverride"/> is unset;
+    /// null (the default) falls through to host detection.
+    /// </summary>
+    /// <remarks>
+    /// C#-only seam. Dart's `debugDefaultTargetPlatformOverride` is a single global that
+    /// `TestWidgetsFlutterBinding` assigns once so widget tests see the mobile defaults on every
+    /// host. <see cref="DebugTargetPlatformOverride"/> is <see cref="AsyncLocal{T}"/> so that a
+    /// per-test override cannot leak across contexts, which means it cannot also carry a
+    /// process-wide default — this property does that half.
+    /// </remarks>
+    public static TargetPlatform? DebugDefaultTargetPlatform { get; set; }
+
     public static TargetPlatform TargetPlatform
     {
         get
@@ -28,6 +41,11 @@ public static class PlatformDefaults
             if (DebugTargetPlatformOverride is TargetPlatform debugOverride)
             {
                 return debugOverride;
+            }
+
+            if (DebugDefaultTargetPlatform is TargetPlatform processDefault)
+            {
+                return processDefault;
             }
 
             if (OperatingSystem.IsIOS())

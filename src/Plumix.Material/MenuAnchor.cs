@@ -1262,7 +1262,7 @@ internal static class MenuButtonDefaults
         VisualDensity density = theme.VisualDensity;
         if (density.Horizontal > 0)
         {
-            density = new VisualDensity(Vertical: density.Vertical);
+            density = new VisualDensity(vertical: density.Vertical);
         }
 
         double fontSizeRatio = ButtonStyleButton.EffectiveTextScale(

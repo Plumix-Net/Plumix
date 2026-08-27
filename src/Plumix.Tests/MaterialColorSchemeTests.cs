@@ -143,13 +143,13 @@ public sealed class MaterialColorSchemeTests
         Assert.Equal(scheme, theme.ColorScheme);
         Assert.Equal(scheme.Brightness, theme.Brightness);
         Assert.Equal(scheme.Surface, theme.PrimaryColor);
-        Assert.Equal(scheme.Secondary, theme.SecondaryColor);
-        Assert.Equal(scheme.PrimaryContainer, theme.PrimaryContainerColor);
-        Assert.Equal(scheme.OnPrimaryContainer, theme.OnPrimaryContainerColor);
-        Assert.Equal(scheme.SurfaceContainer, theme.SurfaceContainerColor);
-        Assert.Equal(scheme.OnSurface, theme.OnSurfaceColor);
+        Assert.Equal(scheme.Secondary, theme.ColorScheme.Secondary);
+        Assert.Equal(scheme.PrimaryContainer, theme.ColorScheme.PrimaryContainer);
+        Assert.Equal(scheme.OnPrimaryContainer, theme.ColorScheme.OnPrimaryContainer);
+        Assert.Equal(scheme.SurfaceContainer, theme.ColorScheme.SurfaceContainer);
+        Assert.Equal(scheme.OnSurface, theme.ColorScheme.OnSurface);
         Assert.Equal(scheme.Outline, theme.DividerColor);
-        Assert.Equal(scheme.Error, theme.ErrorColor);
+        Assert.Equal(scheme.Error, theme.ColorScheme.Error);
     }
 
     [Fact]

@@ -677,11 +677,8 @@ public sealed class MaterialCheckboxTests
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Theme(
-                data: ThemeData.Light with
-                {
-                    Platform = TargetPlatform.IOS,
-                    Brightness = Brightness.Dark
-                },
+                data: (ThemeData.Light with { Platform = TargetPlatform.IOS })
+                    .CopyWith(brightness: Brightness.Dark),
                 child: new CupertinoTheme(
                     data: new CupertinoThemeData(brightness: PlatformBrightness.Dark),
                     child: Checkbox.Adaptive(
@@ -705,11 +702,8 @@ public sealed class MaterialCheckboxTests
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Theme(
-                data: ThemeData.Light with
-                {
-                    Platform = TargetPlatform.IOS,
-                    Brightness = Brightness.Dark
-                },
+                data: (ThemeData.Light with { Platform = TargetPlatform.IOS })
+                    .CopyWith(brightness: Brightness.Dark),
                 child: new CupertinoTheme(
                     data: new CupertinoThemeData(brightness: PlatformBrightness.Dark),
                     child: Checkbox.Adaptive(

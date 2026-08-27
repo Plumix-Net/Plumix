@@ -585,7 +585,7 @@ public sealed class MaterialListTileTests
         var themedSelected = Color.Parse("#FF006C4C");
         var theme = ThemeData.Light with
         {
-            SecondaryColor = Color.Parse("#FF735C00"),
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(secondary: Color.Parse("#FF735C00")),
             CheckboxTheme = new CheckboxThemeData(
                 FillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
                     states.HasFlag(MaterialState.Selected) ? themedSelected : null))

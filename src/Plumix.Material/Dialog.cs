@@ -180,7 +180,7 @@ public class Dialog : StatelessWidget
         if (fullscreen && theme.UseMaterial3)
         {
             return new DialogThemeData(
-                BackgroundColor: theme.SurfaceColor,
+                BackgroundColor: theme.ColorScheme.Surface,
                 ClipBehavior: Clip.None);
         }
 
@@ -200,13 +200,13 @@ public class Dialog : StatelessWidget
         }
 
         return new DialogThemeData(
-            BackgroundColor: theme.SurfaceContainerHighColor,
+            BackgroundColor: theme.ColorScheme.SurfaceContainerHigh,
             Elevation: 6,
             ShadowColor: Colors.Transparent,
             SurfaceTintColor: Colors.Transparent,
             Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(28)),
             Alignment: Plumix.Rendering.Alignment.Center,
-            IconColor: theme.SecondaryColor,
+            IconColor: theme.ColorScheme.Secondary,
             TitleTextStyle: theme.TextTheme.HeadlineSmall,
             ContentTextStyle: theme.TextTheme.BodyMedium,
             ActionsPadding: EdgeInsetsGeometry.Only(left: 24, right: 24, bottom: 24),

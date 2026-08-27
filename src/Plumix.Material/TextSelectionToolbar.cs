@@ -76,10 +76,10 @@ public sealed class TextSelectionToolbar : StatelessWidget
     {
         ThemeData theme = Theme.Of(context);
         Color defaultSurface = theme.Brightness == Brightness.Dark
-            ? ThemeData.Dark.SurfaceColor
-            : ThemeData.Light.SurfaceColor;
-        Color color = theme.SurfaceColor != defaultSurface
-            ? theme.SurfaceColor
+            ? ThemeData.Dark.ColorScheme.Surface
+            : ThemeData.Light.ColorScheme.Surface;
+        Color color = theme.ColorScheme.Surface != defaultSurface
+            ? theme.ColorScheme.Surface
             : theme.Brightness == Brightness.Dark
                 ? Color.Parse("#FF424242")
                 : Colors.White;
@@ -157,10 +157,10 @@ public sealed class TextSelectionToolbarTextButton : StatelessWidget
     {
         ThemeData theme = Theme.Of(context);
         Color defaultOnSurface = theme.Brightness == Brightness.Dark
-            ? ThemeData.Dark.OnSurfaceColor
-            : ThemeData.Light.OnSurfaceColor;
-        Color foregroundColor = theme.OnSurfaceColor != defaultOnSurface
-            ? theme.OnSurfaceColor
+            ? ThemeData.Dark.ColorScheme.OnSurface
+            : ThemeData.Light.ColorScheme.OnSurface;
+        Color foregroundColor = theme.ColorScheme.OnSurface != defaultOnSurface
+            ? theme.ColorScheme.OnSurface
             : theme.Brightness == Brightness.Dark
                 ? Colors.White
                 : Colors.Black;

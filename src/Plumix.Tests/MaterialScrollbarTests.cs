@@ -695,7 +695,6 @@ public sealed class MaterialScrollbarTests
         ColorScheme scheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.Magenta);
         var data = new ThemeData(
             colorScheme: scheme,
-            onSurfaceColor: Colors.Green,
             platform: TargetPlatform.Windows,
             useMaterial3: useMaterial3);
         using var harness = new WidgetRenderHarness(new Theme(

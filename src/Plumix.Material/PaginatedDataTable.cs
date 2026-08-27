@@ -211,10 +211,10 @@ public sealed class PaginatedDataTableState : State
         if (headerWidgets.Count > 0)
         {
             var headerStyle = (_selectedRowCount > 0 ? theme.TextTheme.TitleMedium : theme.TextTheme.TitleLarge)
-                .CopyWith(color: _selectedRowCount > 0 ? theme.SecondaryColor : null);
+                .CopyWith(color: _selectedRowCount > 0 ? theme.ColorScheme.Secondary : null);
             Widget header = new Container(
                 height: 64,
-                color: _selectedRowCount > 0 ? WithOpacity(theme.SecondaryColor, 0.12) : null,
+                color: _selectedRowCount > 0 ? WithOpacity(theme.ColorScheme.Secondary, 0.12) : null,
                 padding: new Thickness(24, 0, 14, 0),
                 child: new DefaultTextStyle(
                     headerStyle,

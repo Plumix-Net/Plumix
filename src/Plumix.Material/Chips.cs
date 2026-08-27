@@ -1002,7 +1002,7 @@ public sealed class RawChip : StatefulWidget
                         ?? chipTheme.IconTheme?.Color
                         ?? defaults.DeleteIconColor
                         ?? iconTheme?.Color
-                        ?? Theme.Of(context).OnSurfaceVariantColor;
+                        ?? Theme.Of(context).ColorScheme.OnSurfaceVariant;
             Widget icon = new IconTheme(
                 new IconThemeData(Color: color, Size: iconTheme?.Size ?? 18),
                 widget.DeleteIcon);
@@ -1086,39 +1086,39 @@ public sealed class RawChip : StatefulWidget
                     ShadowColor = elevated ? theme.ShadowColor : Colors.Transparent,
                     LabelStyle = theme.TextTheme.LabelLarge.CopyWith(color:
                         enabled
-                            ? selected ? theme.OnSecondaryContainerColor : theme.OnSurfaceVariantColor
-                            : theme.OnSurfaceColor),
+                            ? selected ? theme.ColorScheme.OnSecondaryContainer : theme.ColorScheme.OnSurfaceVariant
+                            : theme.ColorScheme.OnSurface),
                     Color = MaterialStateProperty<Color?>.ResolveWith(states =>
                     {
                         if (states.HasFlag(MaterialState.Selected) && states.HasFlag(MaterialState.Disabled))
                         {
-                            return WithOpacity(theme.OnSurfaceColor, 0.12);
+                            return WithOpacity(theme.ColorScheme.OnSurface, 0.12);
                         }
                         if (states.HasFlag(MaterialState.Disabled))
                         {
-                            return elevated ? WithOpacity(theme.OnSurfaceColor, 0.12) : null;
+                            return elevated ? WithOpacity(theme.ColorScheme.OnSurface, 0.12) : null;
                         }
                         if (states.HasFlag(MaterialState.Selected))
                         {
-                            return theme.SecondaryContainerColor;
+                            return theme.ColorScheme.SecondaryContainer;
                         }
-                        return elevated ? theme.SurfaceContainerLowColor : null;
+                        return elevated ? theme.ColorScheme.SurfaceContainerLow : null;
                     }),
                     CheckmarkColor = enabled
-                        ? selected ? theme.OnSecondaryContainerColor : theme.PrimaryColor
-                        : theme.OnSurfaceColor,
+                        ? selected ? theme.ColorScheme.OnSecondaryContainer : theme.PrimaryColor
+                        : theme.ColorScheme.OnSurface,
                     DeleteIconColor = enabled
-                        ? selected ? theme.OnSecondaryContainerColor : theme.OnSurfaceVariantColor
-                        : theme.OnSurfaceColor,
+                        ? selected ? theme.ColorScheme.OnSecondaryContainer : theme.ColorScheme.OnSurfaceVariant
+                        : theme.ColorScheme.OnSurface,
                     Side = !elevated && !selected
                         ? new BorderSide(enabled
-                            ? theme.OutlineVariantColor
-                            : WithOpacity(theme.OnSurfaceColor, 0.12))
+                            ? theme.ColorScheme.OutlineVariant
+                            : WithOpacity(theme.ColorScheme.OnSurface, 0.12))
                         : new BorderSide(Colors.Transparent, 0),
                     IconTheme = new IconThemeData(
                         Color: enabled
-                            ? selected ? theme.OnSecondaryContainerColor : theme.PrimaryColor
-                            : theme.OnSurfaceColor,
+                            ? selected ? theme.ColorScheme.OnSecondaryContainer : theme.PrimaryColor
+                            : theme.ColorScheme.OnSurface,
                         Size: 18),
                 };
             }
@@ -1131,34 +1131,34 @@ public sealed class RawChip : StatefulWidget
                     ShadowColor = Colors.Transparent,
                     LabelStyle = theme.TextTheme.LabelLarge.CopyWith(color:
                         enabled
-                            ? selected ? theme.OnSecondaryContainerColor : theme.OnSurfaceVariantColor
-                            : theme.OnSurfaceColor),
+                            ? selected ? theme.ColorScheme.OnSecondaryContainer : theme.ColorScheme.OnSurfaceVariant
+                            : theme.ColorScheme.OnSurface),
                     Color = MaterialStateProperty<Color?>.ResolveWith(states =>
                     {
                         if (states.HasFlag(MaterialState.Selected) && states.HasFlag(MaterialState.Disabled))
                         {
-                            return WithOpacity(theme.OnSurfaceColor, 0.12);
+                            return WithOpacity(theme.ColorScheme.OnSurface, 0.12);
                         }
                         if (states.HasFlag(MaterialState.Disabled)) return null;
                         return states.HasFlag(MaterialState.Selected)
-                            ? theme.SecondaryContainerColor
+                            ? theme.ColorScheme.SecondaryContainer
                             : null;
                     }),
                     CheckmarkColor = enabled
-                        ? selected ? theme.PrimaryColor : theme.OnSurfaceVariantColor
-                        : theme.OnSurfaceColor,
+                        ? selected ? theme.PrimaryColor : theme.ColorScheme.OnSurfaceVariant
+                        : theme.ColorScheme.OnSurface,
                     DeleteIconColor = enabled
-                        ? selected ? theme.OnSecondaryContainerColor : theme.OnSurfaceVariantColor
-                        : theme.OnSurfaceColor,
+                        ? selected ? theme.ColorScheme.OnSecondaryContainer : theme.ColorScheme.OnSurfaceVariant
+                        : theme.ColorScheme.OnSurface,
                     Side = !selected
                         ? new BorderSide(enabled
-                            ? theme.OutlineVariantColor
-                            : WithOpacity(theme.OnSurfaceColor, 0.12))
+                            ? theme.ColorScheme.OutlineVariant
+                            : WithOpacity(theme.ColorScheme.OnSurface, 0.12))
                         : new BorderSide(Colors.Transparent, 0),
                     IconTheme = new IconThemeData(
                         Color: enabled
-                            ? selected ? theme.PrimaryColor : theme.OnSurfaceVariantColor
-                            : theme.OnSurfaceColor,
+                            ? selected ? theme.PrimaryColor : theme.ColorScheme.OnSurfaceVariant
+                            : theme.ColorScheme.OnSurface,
                         Size: 18),
                 };
             }
@@ -1169,18 +1169,18 @@ public sealed class RawChip : StatefulWidget
                 {
                     Elevation = elevated && enabled ? 1 : 0,
                     ShadowColor = elevated ? theme.ShadowColor : Colors.Transparent,
-                    LabelStyle = theme.TextTheme.LabelLarge.CopyWith(color: theme.OnSurfaceColor),
+                    LabelStyle = theme.TextTheme.LabelLarge.CopyWith(color: theme.ColorScheme.OnSurface),
                     Color = MaterialStateProperty<Color?>.ResolveWith(states =>
                         states.HasFlag(MaterialState.Disabled)
-                            ? elevated ? WithOpacity(theme.OnSurfaceColor, 0.12) : null
-                            : elevated ? theme.SurfaceContainerLowColor : null),
+                            ? elevated ? WithOpacity(theme.ColorScheme.OnSurface, 0.12) : null
+                            : elevated ? theme.ColorScheme.SurfaceContainerLow : null),
                     Side = !elevated
                         ? new BorderSide(enabled
-                            ? theme.OutlineVariantColor
-                            : WithOpacity(theme.OnSurfaceColor, 0.12))
+                            ? theme.ColorScheme.OutlineVariant
+                            : WithOpacity(theme.ColorScheme.OnSurface, 0.12))
                         : new BorderSide(Colors.Transparent, 0),
                     IconTheme = new IconThemeData(
-                        Color: enabled ? theme.PrimaryColor : theme.OnSurfaceColor,
+                        Color: enabled ? theme.PrimaryColor : theme.ColorScheme.OnSurface,
                         Size: 18),
                 };
             }
@@ -1190,12 +1190,12 @@ public sealed class RawChip : StatefulWidget
                 Elevation = 0,
                 ShadowColor = Colors.Transparent,
                 LabelStyle = theme.TextTheme.LabelLarge.CopyWith(
-                    color: enabled ? theme.OnSurfaceVariantColor : theme.OnSurfaceColor),
+                    color: enabled ? theme.ColorScheme.OnSurfaceVariant : theme.ColorScheme.OnSurface),
                 Side = new BorderSide(enabled
-                    ? theme.OutlineVariantColor
-                    : WithOpacity(theme.OnSurfaceColor, 0.12)),
+                    ? theme.ColorScheme.OutlineVariant
+                    : WithOpacity(theme.ColorScheme.OnSurface, 0.12)),
                 IconTheme = new IconThemeData(
-                    Color: enabled ? theme.PrimaryColor : theme.OnSurfaceColor,
+                    Color: enabled ? theme.PrimaryColor : theme.ColorScheme.OnSurface,
                     Size: 18),
             };
         }
@@ -1269,7 +1269,9 @@ public sealed class RawChip : StatefulWidget
             {
                 resolved = labelStyle.Color
                            ?? defaults.LabelStyle?.Color
-                           ?? (states.HasFlag(MaterialState.Disabled) ? theme.OnSurfaceColor : theme.OnSurfaceVariantColor);
+                           ?? (states.HasFlag(MaterialState.Disabled)
+                               ? theme.ColorScheme.OnSurface
+                               : theme.ColorScheme.OnSurfaceVariant);
             }
 
             return resolved;

@@ -2119,7 +2119,6 @@ public sealed class MaterialScaffoldTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            Brightness = Brightness.Dark,
             // Pinned: on iOS/macOS the scaffold also installs a status-bar slot.
             Platform = TargetPlatform.Android,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
@@ -2217,7 +2216,6 @@ public sealed class MaterialScaffoldTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            Brightness = Brightness.Dark,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 brightness: Brightness.Dark,
                 surface: Colors.DarkSlateBlue,
@@ -2323,7 +2321,7 @@ public sealed class MaterialScaffoldTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnPrimaryColor = Colors.Bisque,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onPrimary: Colors.Bisque),
             AppBarTheme = new AppBarThemeData(ForegroundColor: Colors.Goldenrod),
         };
 

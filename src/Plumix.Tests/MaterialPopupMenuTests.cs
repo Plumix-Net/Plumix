@@ -168,7 +168,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             ThemeData.Localize(ThemeData.Light, Typography.EnglishLike2021).TextTheme.LabelLarge.FontSize,
             FindParagraph(m3.RenderView, "M3 item")!.FontSize);
         Assert.Equal(
-            ThemeData.Light.OnSurfaceColor,
+            ThemeData.Light.ColorScheme.OnSurface,
             Assert.IsType<SolidColorBrush>(FindParagraph(m3.RenderView, "M3 item")!.Foreground).Color);
         Assert.NotNull(FindSemantics(m3Semantics, node =>
             node.Flags.HasFlag(SemanticsFlags.IsButton)
@@ -216,7 +216,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Equal(40, ((BoxParentData)layout.Child!.parentData!).offset.X, precision: 3);
         Assert.Equal(30, ((BoxParentData)layout.Child.parentData!).offset.Y, precision: 3);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == ThemeData.Light.SurfaceContainerColor
+            box.Decoration.Color == ThemeData.Light.ColorScheme.SurfaceContainer
             && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(4)
             && box.Decoration.BoxShadows is not null);
         var viewport = Assert.Single(FindDescendants<RenderSingleChildViewport>(harness.RenderView));

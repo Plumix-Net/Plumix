@@ -26,8 +26,6 @@ public sealed class MaterialBadgeTests
     {
         var theme = ThemeData.Light with
         {
-            ErrorColor = Colors.OrangeRed,
-            OnErrorColor = Colors.MidnightBlue,
             ColorScheme = ThemeData.Light.ColorScheme with
             {
                 Error = Colors.Crimson,

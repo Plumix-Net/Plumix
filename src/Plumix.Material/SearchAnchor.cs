@@ -1331,7 +1331,7 @@ public sealed class SearchBar : StatefulWidget
             if (CurrentWidget.Leading is not null)
             {
                 children.Add(IconTheme.Merge(
-                    data: customIconTheme ?? new IconThemeData(Color: theme.OnSurfaceColor),
+                    data: customIconTheme ?? new IconThemeData(Color: theme.ColorScheme.OnSurface),
                     child: CurrentWidget.Leading));
             }
 
@@ -1372,7 +1372,7 @@ public sealed class SearchBar : StatefulWidget
                 foreach (Widget trailing in CurrentWidget.Trailing)
                 {
                     children.Add(IconTheme.Merge(
-                        data: customIconTheme ?? new IconThemeData(Color: theme.OnSurfaceVariantColor),
+                        data: customIconTheme ?? new IconThemeData(Color: theme.ColorScheme.OnSurfaceVariant),
                         child: trailing));
                 }
             }
@@ -1451,19 +1451,19 @@ internal static class SearchBarDefaultsM3
     {
         return new SearchBarThemeData(
             Elevation: MaterialStateProperty<double?>.All(6.0),
-            BackgroundColor: MaterialStateProperty<Color?>.All(theme.SurfaceContainerHighColor),
+            BackgroundColor: MaterialStateProperty<Color?>.All(theme.ColorScheme.SurfaceContainerHigh),
             ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
             SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
             OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
             {
                 if (states.HasFlag(MaterialState.Pressed))
                 {
-                    return theme.OnSurfaceColor.WithOpacity(0.1);
+                    return theme.ColorScheme.OnSurface.WithOpacity(0.1);
                 }
 
                 if (states.HasFlag(MaterialState.Hovered))
                 {
-                    return theme.OnSurfaceColor.WithOpacity(0.08);
+                    return theme.ColorScheme.OnSurface.WithOpacity(0.08);
                 }
 
                 if (states.HasFlag(MaterialState.Focused))
@@ -1476,9 +1476,9 @@ internal static class SearchBarDefaultsM3
             Shape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
             Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(EdgeInsetsGeometry.Symmetric(horizontal: 8.0)),
             TextStyle: MaterialStateProperty<TextStyle?>.All(
-                theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceColor)),
+                theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurface)),
             HintStyle: MaterialStateProperty<TextStyle?>.All(
-                theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceVariantColor)),
+                theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurfaceVariant)),
             Constraints: new BoxConstraints(MinWidth: 360.0, MaxWidth: 800.0, MinHeight: 56.0),
             TextCapitalization: TextCapitalization.None);
     }
@@ -1491,17 +1491,17 @@ internal static class SearchViewDefaultsM3
     public static SearchViewThemeData Resolve(ThemeData theme, bool isFullScreen)
     {
         return new SearchViewThemeData(
-            BackgroundColor: theme.SurfaceContainerHighColor,
+            BackgroundColor: theme.ColorScheme.SurfaceContainerHigh,
             Elevation: 6.0,
             SurfaceTintColor: Colors.Transparent,
             Shape: isFullScreen
                 ? new RoundedRectangleBorder()
                 : new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(28.0)),
-            HeaderTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceColor),
-            HeaderHintStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.OnSurfaceVariantColor),
+            HeaderTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurface),
+            HeaderHintStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurfaceVariant),
             Constraints: new BoxConstraints(MinWidth: 360.0, MinHeight: 240.0),
             BarPadding: EdgeInsetsGeometry.Symmetric(horizontal: 8.0),
             ShrinkWrap: false,
-            DividerColor: theme.OutlineColor);
+            DividerColor: theme.ColorScheme.Outline);
     }
 }

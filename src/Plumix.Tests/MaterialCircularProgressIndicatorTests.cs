@@ -274,7 +274,7 @@ public sealed class MaterialCircularProgressIndicatorTests
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.Orange,
-            SecondaryContainerColor = Colors.SkyBlue,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(secondaryContainer: Colors.SkyBlue),
             ProgressIndicatorTheme = new ProgressIndicatorThemeData(
                 Color: Colors.Green,
                 CircularTrackColor: Colors.MediumPurple,

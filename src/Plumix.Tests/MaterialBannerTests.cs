@@ -135,8 +135,6 @@ public sealed class MaterialBannerTests
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 surfaceContainerLow: m3Surface,
                 outlineVariant: m3Outline),
-            SurfaceContainerLowColor = Colors.Red,
-            OutlineVariantColor = Colors.Blue,
         };
         using var m3 = new WidgetRenderHarness(Wrap(m3Theme, Banner()));
         m3.Pump(new Size(360, 180));
@@ -156,7 +154,6 @@ public sealed class MaterialBannerTests
         {
             UseMaterial3 = false,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surface: m2Surface),
-            SurfaceColor = Colors.Green,
         };
         using var m2 = new WidgetRenderHarness(Wrap(m2Theme, Banner()));
         m2.Pump(new Size(360, 180));
@@ -177,7 +174,7 @@ public sealed class MaterialBannerTests
         var decoration = Assert.Single(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.Decoration.Color.HasValue);
-        Assert.Equal(ThemeData.Light.SurfaceContainerLowColor, decoration.Decoration.Color);
+        Assert.Equal(ThemeData.Light.ColorScheme.SurfaceContainerLow, decoration.Decoration.Color);
         Assert.Null(decoration.Decoration.BoxShadows);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView),
             padding => padding.Padding == new Thickness(16, 2, 0, 0));

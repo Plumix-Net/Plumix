@@ -45,8 +45,6 @@ public sealed class MaterialCircleAvatarTests : IDisposable
         var theme = ThemeData.Light with
         {
             ColorScheme = colorScheme,
-            PrimaryContainerColor = Colors.Red,
-            OnPrimaryContainerColor = Colors.Blue,
             TextTheme = new MaterialTextTheme(titleMedium: titleMedium),
         };
         using var harness = new WidgetRenderHarness(BuildRoot(

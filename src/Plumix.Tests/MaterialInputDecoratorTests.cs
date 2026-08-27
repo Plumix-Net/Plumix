@@ -394,7 +394,7 @@ public sealed class MaterialInputDecoratorTests
         List<RenderParagraph> paragraphs = DecoratorHarness.FindAll<RenderParagraph>(harness.RenderView);
         Assert.Contains(paragraphs, value => value.PlainText == "Invalid");
         Assert.DoesNotContain(paragraphs, value => value.PlainText == "Helper");
-        Assert.Equal(theme.ErrorColor, Painter(harness).Border.BorderSide.Color);
+        Assert.Equal(theme.ColorScheme.Error, Painter(harness).Border.BorderSide.Color);
     }
 
     [Fact]
@@ -415,26 +415,26 @@ public sealed class MaterialInputDecoratorTests
 
         InputBorderPainter enabledPainter = Resolve();
         Assert.IsType<UnderlineInputBorder>(enabledPainter.Border);
-        Assert.Equal(theme.OnSurfaceVariantColor, enabledPainter.Border.BorderSide.Color);
+        Assert.Equal(theme.ColorScheme.OnSurfaceVariant, enabledPainter.Border.BorderSide.Color);
         Assert.Equal(1.0, enabledPainter.Border.BorderSide.Width, precision: 6);
-        Assert.Equal(theme.SurfaceContainerHighestColor, enabledPainter.FillColor);
+        Assert.Equal(theme.ColorScheme.SurfaceContainerHighest, enabledPainter.FillColor);
 
         InputBorderPainter focusedPainter = Resolve(focused: true);
         Assert.Equal(theme.PrimaryColor, focusedPainter.Border.BorderSide.Color);
         Assert.Equal(2.0, focusedPainter.Border.BorderSide.Width, precision: 6);
 
         InputBorderPainter hoveredPainter = Resolve(hovering: true);
-        Assert.Equal(theme.OnSurfaceColor, hoveredPainter.Border.BorderSide.Color);
+        Assert.Equal(theme.ColorScheme.OnSurface, hoveredPainter.Border.BorderSide.Color);
         Assert.Equal(
-            InputDecoratorDefaults.AlphaBlend(theme.HoverColor, theme.SurfaceContainerHighestColor),
+            InputDecoratorDefaults.AlphaBlend(theme.HoverColor, theme.ColorScheme.SurfaceContainerHighest),
             hoveredPainter.BlendedColor);
 
         InputBorderPainter disabledPainter = Resolve(enabled: false, hovering: true);
         Assert.Equal(
-            InputDecoratorDefaults.WithOpacity(theme.OnSurfaceColor, 0.38),
+            InputDecoratorDefaults.WithOpacity(theme.ColorScheme.OnSurface, 0.38),
             disabledPainter.Border.BorderSide.Color);
         Assert.Equal(
-            InputDecoratorDefaults.WithOpacity(theme.OnSurfaceColor, 0.04),
+            InputDecoratorDefaults.WithOpacity(theme.ColorScheme.OnSurface, 0.04),
             disabledPainter.FillColor);
     }
 
@@ -447,7 +447,7 @@ public sealed class MaterialInputDecoratorTests
         harness.Pump();
         InputBorderPainter painter = Painter(harness);
         Assert.IsType<OutlineInputBorder>(painter.Border);
-        Assert.Equal(theme.OutlineColor, painter.Border.BorderSide.Color);
+        Assert.Equal(theme.ColorScheme.Outline, painter.Border.BorderSide.Color);
         Assert.Equal(1.0, painter.Border.BorderSide.Width, precision: 6);
         Assert.Equal(MaterialColors.Transparent, painter.FillColor);
     }

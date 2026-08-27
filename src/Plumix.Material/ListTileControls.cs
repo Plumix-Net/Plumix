@@ -385,7 +385,7 @@ public sealed class CheckboxListTile : StatelessWidget
         var selectedStates = Selected ? MaterialState.Selected : MaterialState.None;
         var selectedColor = ActiveColor
                             ?? CheckboxTheme.Of(context).FillColor?.Resolve(selectedStates)
-                            ?? Theme.Of(context).SecondaryColor;
+                            ?? Theme.Of(context).ColorScheme.Secondary;
 
         bool tileEnabled = Enabled ?? OnChanged is not null;
         var tile = new ListTile(
@@ -793,7 +793,7 @@ public sealed class SwitchListTile : StatelessWidget
         var selectedColor = ActiveThumbColor
                             ?? ActiveColor
                             ?? SwitchTheme.Of(context).ThumbColor?.Resolve(selectedStates)
-                            ?? Theme.Of(context).SecondaryColor;
+                            ?? Theme.Of(context).ColorScheme.Secondary;
 
         var tile = new ListTile(
                 selectedColor: selectedColor,

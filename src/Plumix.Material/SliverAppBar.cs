@@ -410,8 +410,10 @@ internal sealed class SliverAppBarState : State
         return new FlexibleSpaceBar(
             title: new DefaultTextStyle(
                 widget.Variant == SliverAppBarVariant.Large
-                    ? theme.TextTheme.HeadlineMedium.CopyWith(color: widget.ForegroundColor ?? theme.OnSurfaceColor)
-                    : theme.TextTheme.HeadlineSmall.CopyWith(color: widget.ForegroundColor ?? theme.OnSurfaceColor),
+                    ? theme.TextTheme.HeadlineMedium.CopyWith(
+                        color: widget.ForegroundColor ?? theme.ColorScheme.OnSurface)
+                    : theme.TextTheme.HeadlineSmall.CopyWith(
+                        color: widget.ForegroundColor ?? theme.ColorScheme.OnSurface),
                 widget.Title),
             titlePadding: widget.Variant == SliverAppBarVariant.Large
                 ? new Thickness(16, 0, 16, 28)

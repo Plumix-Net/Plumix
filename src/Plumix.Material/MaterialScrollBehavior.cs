@@ -55,7 +55,7 @@ public class MaterialScrollBehavior : ScrollBehavior
             TargetPlatform.Android or TargetPlatform.Fuchsia =>
                 new GlowingOverscrollIndicator(
                     axisDirection: details.Direction,
-                    color: theme.SecondaryColor,
+                    color: theme.ColorScheme.Secondary,
                     child: child),
             _ => child,
         };

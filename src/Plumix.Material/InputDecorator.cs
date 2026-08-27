@@ -968,7 +968,7 @@ public sealed class InputDecorator : StatefulWidget
 
             if (HasError)
             {
-                return themeData.ErrorColor;
+                return themeData.ColorScheme.Error;
             }
 
             if (Current.IsFocused)
@@ -981,7 +981,7 @@ public sealed class InputDecorator : StatefulWidget
                 return themeData.HintColor;
             }
 
-            Color enabledColor = InputDecoratorDefaults.WithOpacity(themeData.OnSurfaceColor, 0.38);
+            Color enabledColor = InputDecoratorDefaults.WithOpacity(themeData.ColorScheme.OnSurface, 0.38);
             if (IsHovering)
             {
                 Color hover = InputDecoratorDefaults.WithOpacity(

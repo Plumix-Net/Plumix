@@ -82,8 +82,9 @@ public sealed class MaterialElevationOverlayTests : IDisposable
             brightness: Brightness.Dark,
             useMaterial3: false,
             applyElevationOverlayColor: true,
-            surfaceColor: surface,
-            onSurfaceColor: onSurface);
+            colorScheme: ThemeData.Dark.ColorScheme.CopyWith(
+                surface: surface,
+                onSurface: onSurface));
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Theme(
@@ -111,8 +112,9 @@ public sealed class MaterialElevationOverlayTests : IDisposable
             brightness: Brightness.Dark,
             useMaterial3: false,
             applyElevationOverlayColor: true,
-            surfaceColor: surface,
-            onSurfaceColor: overlay);
+            colorScheme: ThemeData.Dark.ColorScheme.CopyWith(
+                surface: surface,
+                onSurface: overlay));
 
         Assert.Equal(surface, ElevationOverlay.ApplyOverlay(enabled, surface, 0.0));
         Assert.Equal(
@@ -127,7 +129,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
         Assert.Equal(
             surface,
             ElevationOverlay.ApplyOverlay(
-                enabled with { Brightness = Brightness.Light },
+                enabled.CopyWith(brightness: Brightness.Light),
                 surface,
                 8.0));
 
@@ -167,8 +169,9 @@ public sealed class MaterialElevationOverlayTests : IDisposable
             useMaterial3: false,
             applyElevationOverlayColor: true,
             canvasColor: surface,
-            surfaceColor: surface,
-            onSurfaceColor: onSurface);
+            colorScheme: ThemeData.Dark.ColorScheme.CopyWith(
+                surface: surface,
+                onSurface: onSurface));
         var m3Theme = m2Theme with { UseMaterial3 = true };
 
         Assert.Equal(

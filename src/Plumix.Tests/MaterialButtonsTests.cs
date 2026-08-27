@@ -27,8 +27,8 @@ public sealed class MaterialButtonsTests
         Assert.Equal(Color.Parse("#FFFEF7FF"), theme.ScaffoldBackgroundColor);
         Assert.Equal(Color.Parse("#FFFEF7FF"), theme.CanvasColor);
         Assert.Equal(Color.Parse("#FF6750A4"), theme.PrimaryColor);
-        Assert.Equal(Color.Parse("#FF1D1B20"), theme.OnSurfaceColor);
-        Assert.Equal(Color.Parse("#FF4A4458"), theme.OnSecondaryContainerColor);
+        Assert.Equal(Color.Parse("#FF1D1B20"), theme.ColorScheme.OnSurface);
+        Assert.Equal(Color.Parse("#FF4A4458"), theme.ColorScheme.OnSecondaryContainer);
         Assert.Equal(Colors.Black, theme.ShadowColor);
     }
 
@@ -100,7 +100,6 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = useMaterial3,
-            OnSurfaceColor = Colors.DarkSlateGray,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
         };
         var root = new TestRootElement(
@@ -334,8 +333,6 @@ public sealed class MaterialButtonsTests
         {
             UseMaterial3 = useMaterial3,
             PrimaryColor = Colors.OrangeRed,
-            OnPrimaryColor = Colors.Gold,
-            OnSurfaceColor = Colors.DarkSlateGray,
             ShadowColor = Colors.Black,
             ColorScheme = colorScheme
         };
@@ -417,8 +414,6 @@ public sealed class MaterialButtonsTests
             onSecondaryContainer: Colors.DarkSlateBlue);
         var theme = ThemeData.Light with
         {
-            SecondaryContainerColor = Colors.OrangeRed,
-            OnSecondaryContainerColor = Colors.Gold,
             ColorScheme = colorScheme
         };
         var root = new TestRootElement(
@@ -639,7 +634,7 @@ public sealed class MaterialButtonsTests
     {
         var enabledCursor = new SystemMouseCursor("filled-enabled");
         var disabledCursor = new SystemMouseCursor("filled-disabled");
-        var density = new VisualDensity(Horizontal: -2, Vertical: 1);
+        var density = new VisualDensity(horizontal: -2, vertical: 1);
         TimeSpan duration = TimeSpan.FromMilliseconds(350);
         ButtonLayerBuilder backgroundBuilder = (_, _, child) => child!;
         ButtonLayerBuilder foregroundBuilder = (_, _, child) => child!;
@@ -775,7 +770,7 @@ public sealed class MaterialButtonsTests
     {
         var enabledCursor = new SystemMouseCursor("outlined-enabled");
         var disabledCursor = new SystemMouseCursor("outlined-disabled");
-        var density = new VisualDensity(Horizontal: -2, Vertical: 1);
+        var density = new VisualDensity(horizontal: -2, vertical: 1);
         TimeSpan duration = TimeSpan.FromMilliseconds(350);
         ButtonStyle style = OutlinedButton.StyleFrom(
             enabledMouseCursor: enabledCursor,
@@ -2181,7 +2176,6 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
-            SurfaceContainerLowColor = Colors.Bisque,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 primary: Colors.DarkSlateBlue,
                 surfaceContainerLow: Colors.LightCyan,
@@ -2218,7 +2212,6 @@ public sealed class MaterialButtonsTests
         {
             UseMaterial3 = false,
             PrimaryColor = Colors.OrangeRed,
-            OnPrimaryColor = Colors.AliceBlue,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 primary: Colors.DarkSlateBlue,
                 onPrimary: Colors.LightCyan)
@@ -2296,7 +2289,9 @@ public sealed class MaterialButtonsTests
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(decorated);
-        Assert.Equal(ApplySurfaceTint(theme.SurfaceContainerLowColor, Colors.Red, 1), decorated!.Decoration.Color);
+        Assert.Equal(
+            ApplySurfaceTint(theme.ColorScheme.SurfaceContainerLow, Colors.Red, 1),
+            decorated!.Decoration.Color);
     }
 
     [Fact]
@@ -2657,7 +2652,6 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.OrangeRed,
-            OutlineColor = Colors.Bisque,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 primary: Colors.MediumVioletRed,
                 outline: Colors.CadetBlue)
@@ -2706,8 +2700,6 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            OnSurfaceColor = Colors.DarkSlateBlue,
-            OutlineColor = Colors.CadetBlue,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
         };
 
@@ -2737,9 +2729,7 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             UseMaterial3 = false,
-            OnSurfaceColor = Colors.DarkSlateBlue,
             PrimaryColor = Colors.OrangeRed,
-            OutlineColor = Colors.CadetBlue,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 primary: Colors.MediumPurple,
                 onSurface: Colors.MidnightBlue)
@@ -2775,7 +2765,6 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.MediumVioletRed,
-            OutlineColor = Colors.CadetBlue,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.DarkCyan)
         };
 
@@ -2884,7 +2873,6 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.DarkSlateBlue,
-            OnPrimaryColor = Colors.AliceBlue,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 primary: Colors.DarkSlateBlue,
                 onPrimary: Colors.AliceBlue)
@@ -2919,8 +2907,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            SecondaryContainerColor = Colors.Bisque,
-            OnSecondaryContainerColor = Colors.DarkSlateBlue,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 secondaryContainer: Colors.Bisque,
                 onSecondaryContainer: Colors.DarkSlateBlue)
@@ -2955,7 +2941,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.DarkOliveGreen,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.DarkOliveGreen)
         };
 
@@ -2988,7 +2973,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.DarkSlateGray,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.DarkSlateGray)
         };
 
@@ -3263,9 +3247,9 @@ public sealed class MaterialButtonsTests
         {
             PrimaryColor = Colors.OrangeRed,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
-            TextButtonStyle = new ButtonStyle(
+            TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3289,9 +3273,9 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            TextButtonStyle = new ButtonStyle(
+            TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3317,10 +3301,10 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            SurfaceContainerLowColor = Colors.Bisque,
-            ElevatedButtonStyle = new ButtonStyle(
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surfaceContainerLow: Colors.Bisque),
+            ElevatedButtonTheme = new ElevatedButtonThemeData(style: new ButtonStyle(
                 BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3344,10 +3328,10 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OutlineColor = Colors.CadetBlue,
-            OutlinedButtonStyle = new ButtonStyle(
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outline: Colors.CadetBlue),
+            OutlinedButtonTheme = new OutlinedButtonThemeData(style: new ButtonStyle(
                 Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Colors.Goldenrod, 3)))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3367,123 +3351,6 @@ public sealed class MaterialButtonsTests
     }
 
     [Fact]
-    public void TextButton_ThemeDataButtonTheme_OverridesLegacyThemeStyleProperty()
-    {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            TextButtonStyle = new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan)),
-            TextButtonTheme = new TextButtonThemeData(
-                style: new ButtonStyle(
-                    ForegroundColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen)))
-        };
-
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new TextButton(
-                    onPressed: () => { },
-                    child: new Text("ThemeData text button theme"))));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(paragraph);
-        Assert.Equal(Colors.ForestGreen, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
-    }
-
-    [Fact]
-    public void ElevatedButton_ThemeDataButtonTheme_OverridesLegacyThemeStyleProperty()
-    {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            ElevatedButtonStyle = new ButtonStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple)),
-            ElevatedButtonTheme = new ElevatedButtonThemeData(
-                style: new ButtonStyle(
-                    BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Gold)))
-        };
-
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new ElevatedButton(
-                    onPressed: () => { },
-                    child: new Text("ThemeData elevated theme"))));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
-    }
-
-    [Fact]
-    public void OutlinedButton_ThemeDataButtonTheme_OverridesLegacyThemeStyleProperty()
-    {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            OutlinedButtonStyle = new ButtonStyle(
-                Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Colors.Goldenrod, 3))),
-            OutlinedButtonTheme = new OutlinedButtonThemeData(
-                style: new ButtonStyle(
-                    Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Colors.Crimson, 4))))
-        };
-
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new OutlinedButton(
-                    onPressed: () => { },
-                    child: new Text("ThemeData outlined theme"))));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
-            new BorderSide(Colors.Crimson, 4)), decorated!.Decoration.Border);
-    }
-
-    [Fact]
-    public void FilledButton_ThemeDataButtonTheme_OverridesLegacyThemeStyleProperty()
-    {
-        var owner = new BuildOwner();
-        var theme = ThemeData.Light with
-        {
-            FilledButtonStyle = new ButtonStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple)),
-            FilledButtonTheme = new FilledButtonThemeData(
-                style: new ButtonStyle(
-                    BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Gold)))
-        };
-
-        var root = new TestRootElement(
-            new Theme(
-                data: theme,
-                child: new FilledButton(
-                    onPressed: () => { },
-                    child: new Text("ThemeData filled theme"))));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
-
-        var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
-        Assert.NotNull(decorated);
-        Assert.Equal(Colors.Gold, decorated!.Decoration.Color);
-    }
-
-    [Fact]
     public void TextButton_LocalThemeStyleForegroundOverridesThemeDataStyle()
     {
         var owner = new BuildOwner();
@@ -3491,9 +3358,9 @@ public sealed class MaterialButtonsTests
         {
             PrimaryColor = Colors.OrangeRed,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
-            TextButtonStyle = new ButtonStyle(
+            TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3521,9 +3388,9 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            TextButtonStyle = new ButtonStyle(
+            TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3555,9 +3422,9 @@ public sealed class MaterialButtonsTests
         {
             PrimaryColor = Colors.OrangeRed,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
-            TextButtonStyle = new ButtonStyle(
+            TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
                 ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3583,10 +3450,10 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            SurfaceContainerLowColor = Colors.Bisque,
-            ElevatedButtonStyle = new ButtonStyle(
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surfaceContainerLow: Colors.Bisque),
+            ElevatedButtonTheme = new ElevatedButtonThemeData(style: new ButtonStyle(
                 BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3614,10 +3481,10 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OutlineColor = Colors.CadetBlue,
-            OutlinedButtonStyle = new ButtonStyle(
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outline: Colors.CadetBlue),
+            OutlinedButtonTheme = new OutlinedButtonThemeData(style: new ButtonStyle(
                 Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Colors.Goldenrod, 3)))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3646,9 +3513,9 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            FilledButtonStyle = new ButtonStyle(
+            FilledButtonTheme = new FilledButtonThemeData(style: new ButtonStyle(
                 BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
-        };
+        )};
 
         var root = new TestRootElement(
             new Theme(
@@ -3989,7 +3856,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.DarkSlateGray,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
         };
 
@@ -4018,7 +3884,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.DarkSlateGray,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
         };
 
@@ -4072,7 +3937,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            SurfaceContainerLowColor = Colors.BurlyWood,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surfaceContainerLow: Colors.LightCyan)
         };
 
@@ -4188,7 +4052,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnPrimaryColor = Colors.DarkGoldenrod,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onPrimary: Colors.DarkGoldenrod)
         };
 
@@ -4219,7 +4082,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.DarkSlateGray,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
         };
 
@@ -4248,7 +4110,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OutlineColor = Colors.Bisque,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outline: Colors.CadetBlue)
         };
 
@@ -4280,7 +4141,6 @@ public sealed class MaterialButtonsTests
         var owner = new BuildOwner();
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.OrangeRed,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.DarkOliveGreen)
         };
 
@@ -4503,7 +4363,6 @@ public sealed class MaterialButtonsTests
         var foreground = Colors.White;
         var theme = ThemeData.Light with
         {
-            OnSurfaceColor = Colors.Black,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.MidnightBlue)
         };
 
@@ -5379,14 +5238,6 @@ public sealed class MaterialButtonsTests
         {
             ColorScheme = scheme,
             PrimaryColor = Colors.Red,
-            OnPrimaryColor = Colors.Red,
-            SecondaryContainerColor = Colors.Red,
-            OnSecondaryContainerColor = Colors.Red,
-            SurfaceContainerHighestColor = Colors.Red,
-            OnSurfaceVariantColor = Colors.Red,
-            InverseSurfaceColor = Colors.Red,
-            OnInverseSurfaceColor = Colors.Red,
-            OutlineColor = Colors.Red,
         };
 
         AssertVariant(
@@ -5649,7 +5500,7 @@ public sealed class MaterialButtonsTests
         var unselectedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(unselectedDecorated);
         Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
-            new BorderSide(ThemeData.Light.OutlineColor, 1)), unselectedDecorated!.Decoration.Border);
+            new BorderSide(ThemeData.Light.ColorScheme.Outline, 1)), unselectedDecorated!.Decoration.Border);
 
         root.Update(
             new Theme(

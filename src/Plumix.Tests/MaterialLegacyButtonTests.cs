@@ -120,7 +120,6 @@ public sealed class MaterialLegacyButtonTests
         using var tree = Build(new Theme(
             data: ThemeData.Light with
             {
-                SecondaryColor = Colors.Gold,
                 MaterialTapTargetSize = MaterialTapTargetSize.ShrinkWrap,
             },
             child: new ButtonTheme(

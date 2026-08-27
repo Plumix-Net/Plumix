@@ -33,7 +33,7 @@ public sealed class MaterialCardTests
 
         var material = FindMaterialDecoration(harness.RenderView);
         Assert.NotNull(material);
-        Assert.Equal(theme.SurfaceContainerLowColor, material!.Decoration.Color);
+        Assert.Equal(theme.ColorScheme.SurfaceContainerLow, material!.Decoration.Color);
         Assert.Equal(12, material.Decoration.EffectiveBorderRadius.Radius);
         Assert.NotNull(material.Decoration.BoxShadows);
         Assert.Equal(172, material.Size.Width, 3);
@@ -54,7 +54,7 @@ public sealed class MaterialCardTests
 
         var filled = FindMaterialDecoration(filledHarness.RenderView);
         Assert.NotNull(filled);
-        Assert.Equal(theme.SurfaceContainerHighestColor, filled!.Decoration.Color);
+        Assert.Equal(theme.ColorScheme.SurfaceContainerHighest, filled!.Decoration.Color);
         Assert.Null(filled.Decoration.BoxShadows);
 
         using var outlinedHarness = new WidgetRenderHarness(
@@ -66,11 +66,11 @@ public sealed class MaterialCardTests
             .FirstOrDefault(box => box.Decoration.Border is not null);
 
         Assert.NotNull(outlinedBackground);
-        Assert.Equal(theme.SurfaceColor, outlinedBackground!.Decoration.Color);
+        Assert.Equal(theme.ColorScheme.Surface, outlinedBackground!.Decoration.Color);
         Assert.Null(outlinedBackground.Decoration.BoxShadows);
         Assert.NotNull(outlinedBorder);
         Assert.Equal(
-            theme.OutlineVariantColor,
+            theme.ColorScheme.OutlineVariant,
             ((Plumix.Rendering.Border)outlinedBorder!.Decoration.Border!).Top.Color);
         Assert.Equal(12, outlinedBorder.Decoration.EffectiveBorderRadius.Radius);
     }
@@ -92,10 +92,6 @@ public sealed class MaterialCardTests
         var theme = ThemeData.Light with
         {
             ColorScheme = scheme,
-            SurfaceContainerLowColor = Colors.Red,
-            SurfaceContainerHighestColor = Colors.Green,
-            SurfaceColor = Colors.Blue,
-            OutlineVariantColor = Colors.Yellow,
             ShadowColor = Colors.Purple,
         };
 

@@ -161,7 +161,10 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     public void DesktopToolbarButton_CustomOnSurfaceColorOverridesPlatformFallback()
     {
         using var harness = CreateHarness(
-            ThemeData.Light with { OnSurfaceColor = Colors.DarkOrange },
+            ThemeData.Light with
+            {
+                ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.DarkOrange),
+            },
             new Builder(context => DesktopTextSelectionToolbarButton.Text(context, () => { }, "Custom")));
 
         harness.Pump(new Size(222, 60));

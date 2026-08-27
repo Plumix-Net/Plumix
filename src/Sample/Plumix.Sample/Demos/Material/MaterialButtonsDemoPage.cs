@@ -208,7 +208,6 @@ internal sealed class MaterialButtonsDemoPageState : State
         ThemeData probeTheme = inherited with
         {
             PrimaryColor = Colors.OrangeRed,
-            SurfaceContainerLowColor = Colors.Bisque,
             ColorScheme = scheme
         };
 
@@ -239,7 +238,6 @@ internal sealed class MaterialButtonsDemoPageState : State
         ThemeData probeTheme = inherited with
         {
             PrimaryColor = Colors.OrangeRed,
-            OutlineColor = Colors.MediumPurple,
             ColorScheme = scheme
         };
 
@@ -273,9 +271,6 @@ internal sealed class MaterialButtonsDemoPageState : State
         ThemeData probeTheme = inherited with
         {
             PrimaryColor = Colors.OrangeRed,
-            OnPrimaryColor = Colors.Gold,
-            SecondaryContainerColor = Colors.Bisque,
-            OnSecondaryContainerColor = Colors.DarkSlateBlue,
             ColorScheme = scheme
         };
 

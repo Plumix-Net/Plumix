@@ -97,7 +97,6 @@ public sealed class MaterialDrawerTests
         {
             UseMaterial3 = true,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surfaceContainerLow: directSurface),
-            SurfaceContainerLowColor = Colors.Red,
         };
         using var m3Harness = new WidgetRenderHarness(Root(m3Theme, new Drawer()));
         MaterialSurface m3Material = Assert.Single(m3Harness.FindWidgets<MaterialSurface>());

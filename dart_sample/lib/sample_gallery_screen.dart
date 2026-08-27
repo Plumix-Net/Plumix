@@ -38,6 +38,7 @@ import 'demos/material/reorderable_list_demo_page.dart';
 import 'demos/material/circular_progress_indicator_demo_page.dart';
 import 'demos/material/circle_avatar_demo_page.dart';
 import 'demos/material/color_palette_demo_page.dart';
+import 'demos/material/visual_density_demo_page.dart';
 import 'demos/material/material_icons_demo_page.dart';
 import 'demos/material/material_localizations_demo_page.dart';
 import 'demos/cupertino/checkbox_demo_page.dart';
@@ -488,6 +489,13 @@ class SampleGalleryScreen extends StatelessWidget {
       subtitle:
           'MaterialColor shades + fromSwatch M2 scheme + swatch-derived theme colors',
       builder: () => const ColorPaletteDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.visualDensity,
+      title: 'VisualDensity',
+      subtitle:
+          'density profiles + per-platform ThemeData defaults + constraint arithmetic',
+      builder: () => const VisualDensityDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.materialLocalizations,

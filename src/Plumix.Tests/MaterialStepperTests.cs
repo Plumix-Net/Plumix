@@ -317,8 +317,6 @@ public sealed class MaterialStepperTests : IDisposable
         {
             UseMaterial3 = useMaterial3,
             PrimaryColor = Colors.Orange,
-            OnPrimaryColor = Colors.Purple,
-            OnSurfaceColor = Colors.Yellow,
             ColorScheme = baseTheme.ColorScheme with
             {
                 Primary = primary,

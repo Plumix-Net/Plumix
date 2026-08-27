@@ -267,7 +267,7 @@ public sealed class TextField : StatefulWidget
             Color selectionColor = selectionStyle.SelectionColor ?? ApplyOpacity(primaryColor, 0.40);
             var baseStyle = Current.Style ?? (theme.UseMaterial3 ? theme.TextTheme.BodyLarge : theme.TextTheme.TitleMedium);
             if (!enabled && Current.Style?.Color is null)
-                baseStyle = baseStyle.CopyWith(color: ApplyOpacity(theme.OnSurfaceColor, 0.38));
+                baseStyle = baseStyle.CopyWith(color: ApplyOpacity(theme.ColorScheme.OnSurface, 0.38));
             bool multiline = Current.MaxLines != 1;
             int? positiveMaxLength = Current.MaxLength is > 0 ? Current.MaxLength : null;
             SpellCheckConfiguration spellCheckConfiguration = InferAndroidSpellCheckConfiguration(
@@ -283,7 +283,7 @@ public sealed class TextField : StatefulWidget
                 enabled: enabled,
                 multiline: multiline,
                 fontSize: baseStyle.FontSize ?? 16,
-                textColor: baseStyle.Color ?? theme.OnSurfaceColor,
+                textColor: baseStyle.Color ?? theme.ColorScheme.OnSurface,
                 backgroundColor: Colors.Transparent,
                 focusedBackgroundColor: Colors.Transparent,
                 cursorColor: cursorColor,

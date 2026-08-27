@@ -30,7 +30,6 @@ public sealed class MaterialBarControlsTests
             UseMaterial3 = true,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
                 surfaceContainer: Colors.MistyRose),
-            SurfaceContainerColor = Colors.Gold,
         };
         using var m3 = new WidgetRenderHarness(Wrap(
             new BottomAppBar(child: new SizedBox(height: 20)),
@@ -114,8 +113,9 @@ public sealed class MaterialBarControlsTests
             brightness: Brightness.Dark,
             useMaterial3: false,
             applyElevationOverlayColor: true,
-            surfaceColor: surface,
-            onSurfaceColor: onSurface);
+            colorScheme: ThemeData.Dark.ColorScheme.CopyWith(
+                surface: surface,
+                onSurface: onSurface));
         using var harness = new WidgetRenderHarness(Wrap(
             new BottomAppBar(
                 color: surface,

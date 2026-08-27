@@ -128,11 +128,11 @@ public sealed class DesktopTextSelectionToolbarButton : StatelessWidget
     private static Color ResolveForegroundColor(ThemeData theme)
     {
         Color defaultOnSurface = theme.Brightness == Brightness.Dark
-            ? ThemeData.Dark.OnSurfaceColor
-            : ThemeData.Light.OnSurfaceColor;
-        if (theme.OnSurfaceColor != defaultOnSurface)
+            ? ThemeData.Dark.ColorScheme.OnSurface
+            : ThemeData.Light.ColorScheme.OnSurface;
+        if (theme.ColorScheme.OnSurface != defaultOnSurface)
         {
-            return theme.OnSurfaceColor;
+            return theme.ColorScheme.OnSurface;
         }
 
         return theme.Brightness == Brightness.Dark

@@ -287,9 +287,6 @@ public sealed class MaterialDatePickerTests : IDisposable
         var material3Theme = new ThemeData(colorScheme: scheme, useMaterial3: true) with
         {
             PrimaryColor = Colors.Crimson,
-            OnPrimaryColor = Colors.Cyan,
-            SurfaceColor = Colors.Gold,
-            OnSurfaceColor = Colors.Green,
         };
         DatePickerThemeData? material3 = null;
         using (var harness = CreateHarness(
@@ -326,8 +323,6 @@ public sealed class MaterialDatePickerTests : IDisposable
         var material2Theme = new ThemeData(colorScheme: scheme, useMaterial3: false) with
         {
             PrimaryColor = Colors.Crimson,
-            OnPrimaryColor = Colors.Cyan,
-            SurfaceColor = Colors.Gold,
         };
         DatePickerThemeData? material2 = null;
         using (var harness = CreateHarness(

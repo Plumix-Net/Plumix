@@ -143,8 +143,8 @@ public class PopupMenuItemState<T> : State
                     ?? popupTheme.LabelTextStyle?.Resolve(states)
                     ?? theme.TextTheme.LabelLarge.CopyWith(
                         color: widget.Enabled
-                            ? theme.OnSurfaceColor
-                            : ApplyOpacity(theme.OnSurfaceColor, 0.38));
+                            ? theme.ColorScheme.OnSurface
+                            : ApplyOpacity(theme.ColorScheme.OnSurface, 0.38));
         }
         else
         {
@@ -310,7 +310,8 @@ internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
         TextStyle effectiveLabelTextStyle = CheckedWidget.LabelTextStyle?.Resolve(states)
                                             ?? popupTheme.LabelTextStyle?.Resolve(states)
                                             ?? (theme.UseMaterial3
-                                                ? theme.TextTheme.LabelLarge.CopyWith(color: theme.OnSurfaceColor)
+                                                ? theme.TextTheme.LabelLarge.CopyWith(
+                                                    color: theme.ColorScheme.OnSurface)
                                                 : theme.TextTheme.TitleMedium);
         Widget leading = new Opacity(
             _opacity,
@@ -907,7 +908,7 @@ internal sealed class PopupMenuPanel<T> : StatelessWidget
         double elevation = _route.Elevation ?? popupTheme.Elevation ?? (useM3 ? 3 : 8);
         Color? color = _route.Color
                        ?? popupTheme.Color
-                       ?? (useM3 ? theme.SurfaceContainerColor : null);
+                       ?? (useM3 ? theme.ColorScheme.SurfaceContainer : null);
         Color? surfaceTint = _route.SurfaceTintColor
                              ?? popupTheme.SurfaceTintColor
                              ?? (useM3 ? Colors.Transparent : null);

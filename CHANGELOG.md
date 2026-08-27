@@ -8,6 +8,18 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: strict `ThemeData` port; the marker drops `(reference) (approximate)` (`theme_data.dart`).
+- Breaking: `visualDensity`/`materialTapTargetSize` default per platform — compact + shrinkWrap on desktop.
+- Breaking: `VisualDensity.Comfortable` is `(-1, -1)`, not `(0, -1)`; densities outside [-4, 4] now throw.
+- Breaking: `VisualDensity.Lerp` no longer clamps `t`; ctor args are lowercase (`horizontal:`/`vertical:`).
+- Added `VisualDensity.MinimumDensity`/`MaximumDensity`/`AdaptivePlatformDensity`/`DefaultDensityForPlatform`.
+- Breaking: `ThemeData.Brightness` is derived from `ColorScheme`, not stored; use `CopyWith(brightness:)` to change it.
+- Breaking: dropped the 20 C#-only `ThemeData` colour mirrors and the five `*ButtonStyle` slots; read `ColorScheme`.
+- Added `ThemeData.SecondaryHeaderColor`, `DialogBackgroundColor`, `IndicatorColor` and the `buttonTheme` default.
+- Added `ThemeData.From`, `ThemeData.Fallback` and `ThemeData.CopyWith` (`theme_data.dart`).
+- Breaking: component themes resolve eagerly, so an explicitly-default component theme now equals an implicit one.
+- `ThemeData.Localize` uses Dart's size-5 FIFO cache keyed on input identity (`_FifoCache`).
+- `ThemeData.Platform` honours `PlatformDefaults.DebugTargetPlatformOverride`; added `DebugDefaultTargetPlatform`.
 - Breaking: strict `BottomNavigationBar` port over Dart's tile/label/bar/painter split (`bottom_navigation_bar.dart`).
 - Breaking: `BottomNavigationBar` gains `fixedColor`, `mouseCursor`, `enableFeedback`, `landscapeLayout`,
   `useLegacyColorScheme`.

@@ -226,8 +226,9 @@ public sealed class MaterialChipTests : IDisposable
     {
         var theme = ThemeData.Light with
         {
-            OutlineVariantColor = Colors.CadetBlue,
-            OnSurfaceColor = Colors.DarkSlateBlue,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                outlineVariant: Colors.CadetBlue,
+                onSurface: Colors.DarkSlateBlue),
         };
         using var harness = new WidgetRenderHarness(Root(
             theme,
@@ -251,7 +252,8 @@ public sealed class MaterialChipTests : IDisposable
     {
         var theme = ThemeData.Light with
         {
-            SurfaceContainerLowColor = Colors.MediumPurple,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                surfaceContainerLow: Colors.MediumPurple),
             ShadowColor = Colors.DarkGreen,
         };
         using var harness = new WidgetRenderHarness(Root(
@@ -274,8 +276,9 @@ public sealed class MaterialChipTests : IDisposable
     {
         var theme = ThemeData.Light with
         {
-            SecondaryContainerColor = Colors.DarkGreen,
-            OnSecondaryContainerColor = Colors.Gold,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                secondaryContainer: Colors.DarkGreen,
+                onSecondaryContainer: Colors.Gold),
         };
         using var harness = new WidgetRenderHarness(Root(
             theme,
@@ -297,7 +300,10 @@ public sealed class MaterialChipTests : IDisposable
     [Fact]
     public void ChoiceChip_DisabledSelectedUsesDisabledSelectedTokenAndNoTapAction()
     {
-        var theme = ThemeData.Light with { OnSurfaceColor = Colors.Crimson };
+        var theme = ThemeData.Light with
+        {
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.Crimson),
+        };
         using var harness = new WidgetRenderHarness(Root(
             theme,
             new ChoiceChip(new Text("Disabled"), true, onSelected: null)));
@@ -379,7 +385,10 @@ public sealed class MaterialChipTests : IDisposable
     [Fact]
     public void RawChip_LegacySelectedColorAnimatesOverConfiguredSelectDuration()
     {
-        var theme = ThemeData.Light with { SecondaryContainerColor = Colors.DarkGreen };
+        var theme = ThemeData.Light with
+        {
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(secondaryContainer: Colors.DarkGreen),
+        };
         var animation = new ChipAnimationStyle(
             SelectAnimation: new AnimationStyle(Duration: TimeSpan.FromSeconds(10)));
         using var harness = new WidgetRenderHarness(Root(
@@ -514,8 +523,9 @@ public sealed class MaterialChipTests : IDisposable
     {
         var theme = ThemeData.Light with
         {
-            SecondaryContainerColor = Colors.DarkGreen,
-            OnSecondaryContainerColor = Colors.Gold,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                secondaryContainer: Colors.DarkGreen,
+                onSecondaryContainer: Colors.Gold),
         };
         using var harness = new WidgetRenderHarness(Root(
             theme,
@@ -539,8 +549,9 @@ public sealed class MaterialChipTests : IDisposable
     {
         var theme = ThemeData.Light with
         {
-            SurfaceContainerLowColor = Colors.MediumPurple,
-            OnSurfaceColor = Colors.Crimson,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                surfaceContainerLow: Colors.MediumPurple,
+                onSurface: Colors.Crimson),
         };
         using var enabled = new WidgetRenderHarness(Root(
             theme,
@@ -642,8 +653,9 @@ public sealed class MaterialChipTests : IDisposable
         int deleted = 0;
         var theme = ThemeData.Light with
         {
-            OutlineVariantColor = Colors.CadetBlue,
-            OnSurfaceColor = Colors.Crimson,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                outlineVariant: Colors.CadetBlue,
+                onSurface: Colors.Crimson),
         };
         using var harness = new WidgetRenderHarness(Root(
             theme,
@@ -671,7 +683,10 @@ public sealed class MaterialChipTests : IDisposable
     [Fact]
     public void InputChip_ExplicitDisabledStateDisablesBodyAndDelete()
     {
-        var theme = ThemeData.Light with { OnSurfaceColor = Colors.Crimson };
+        var theme = ThemeData.Light with
+        {
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(onSurface: Colors.Crimson),
+        };
         using var harness = new WidgetRenderHarness(Root(
             theme,
             new InputChip(
@@ -702,8 +717,9 @@ public sealed class MaterialChipTests : IDisposable
         var theme = ThemeData.Light with
         {
             PrimaryColor = Colors.CadetBlue,
-            SecondaryContainerColor = Colors.DarkGreen,
-            OnSecondaryContainerColor = Colors.Gold,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(
+                secondaryContainer: Colors.DarkGreen,
+                onSecondaryContainer: Colors.Gold),
         };
         using var harness = new WidgetRenderHarness(Root(
             theme,
@@ -906,7 +922,7 @@ public sealed class MaterialChipTests : IDisposable
             ThemeData.Light,
             new RawChip(
                 label: new Text("Density"),
-                visualDensity: new VisualDensity(Horizontal: 4, Vertical: 0))));
+                visualDensity: new VisualDensity(horizontal: 4, vertical: 0))));
         horizontalHarness.Pump(new Size(320, 120));
         double horizontalWidth = FindChipRender(horizontalHarness.RenderView).Size.Width;
 

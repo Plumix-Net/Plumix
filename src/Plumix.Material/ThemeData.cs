@@ -1,13 +1,15 @@
+using System.Runtime.CompilerServices;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): material_ui/lib/src/theme_data.dart (approximate)
+// Dart parity source: material_ui/lib/src/theme_data.dart
 
 public enum Brightness
 {
@@ -21,16 +23,109 @@ public enum MaterialTapTargetSize
     ShrinkWrap,
 }
 
-public readonly record struct VisualDensity(double Horizontal = 0, double Vertical = 0)
+/// <summary>
+/// Defines the visual density of user interface components, as an offset in logical pixels per
+/// axis from the base component size.
+/// </summary>
+/// <remarks>
+/// Density, in the context of a UI, is the vertical and horizontal "compactness" of the
+/// components in the UI. It is unitless, since it means different things to different UI
+/// components. Density values must lie between <see cref="MinimumDensity"/> and
+/// <see cref="MaximumDensity"/>, inclusive.
+/// </remarks>
+public readonly record struct VisualDensity
 {
+    /// <summary>The minimum allowed density.</summary>
+    public const double MinimumDensity = -4.0;
+
+    /// <summary>The maximum allowed density.</summary>
+    public const double MaximumDensity = 4.0;
+
+    /// <summary>
+    /// Creates a visual density that is adjusted by the given horizontal and vertical density
+    /// values, each of which must lie within [<see cref="MinimumDensity"/>,
+    /// <see cref="MaximumDensity"/>].
+    /// </summary>
+    public VisualDensity(double horizontal = 0.0, double vertical = 0.0)
+    {
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(vertical, MaximumDensity);
+        ArgumentOutOfRangeException.ThrowIfLessThan(vertical, MinimumDensity);
+        ArgumentOutOfRangeException.ThrowIfGreaterThan(horizontal, MaximumDensity);
+        ArgumentOutOfRangeException.ThrowIfLessThan(horizontal, MinimumDensity);
+        Horizontal = horizontal;
+        Vertical = vertical;
+    }
+
+    /// <summary>The default profile: no adjustment on either axis.</summary>
     public static VisualDensity Standard => new();
 
-    public static VisualDensity Comfortable => new(0, -1);
+    /// <summary>A profile that is slightly denser than <see cref="Standard"/>.</summary>
+    public static VisualDensity Comfortable => new(horizontal: -1.0, vertical: -1.0);
 
-    public static VisualDensity Compact => new(-2, -2);
+    /// <summary>The densest profile, appropriate for desktop.</summary>
+    public static VisualDensity Compact => new(horizontal: -2.0, vertical: -2.0);
 
-    public Vector BaseSizeAdjustment => new(Horizontal * 4, Vertical * 4);
+    /// <summary>
+    /// Dart's `VisualDensity.adaptivePlatformDensity`: the density for the host platform.
+    /// </summary>
+    public static VisualDensity AdaptivePlatformDensity =>
+        DefaultDensityForPlatform(PlatformDefaults.TargetPlatform);
 
+    /// <summary>Returns the default visual density for <paramref name="platform"/>.</summary>
+    public static VisualDensity DefaultDensityForPlatform(TargetPlatform platform)
+    {
+        return platform switch
+        {
+            TargetPlatform.Android or TargetPlatform.IOS or TargetPlatform.Fuchsia => Standard,
+            TargetPlatform.Linux or TargetPlatform.MacOS or TargetPlatform.Windows => Compact,
+            _ => Standard,
+        };
+    }
+
+    /// <summary>Copies this density, replacing the given axes.</summary>
+    public VisualDensity CopyWith(double? horizontal = null, double? vertical = null)
+    {
+        return new VisualDensity(
+            horizontal: horizontal ?? Horizontal,
+            vertical: vertical ?? Vertical);
+    }
+
+    /// <summary>The horizontal density adjustment.</summary>
+    public double Horizontal { get; }
+
+    /// <summary>The vertical density adjustment.</summary>
+    public double Vertical { get; }
+
+    /// <summary>
+    /// The number of logical pixels this density adds to (or removes from) a component's base
+    /// size on each axis: one density unit is four logical pixels.
+    /// </summary>
+    public Vector BaseSizeAdjustment
+    {
+        get
+        {
+            const double interval = 4.0;
+            return new Vector(Horizontal * interval, Vertical * interval);
+        }
+    }
+
+    /// <summary>Linearly interpolates between two densities. <paramref name="t"/> is unclamped.</summary>
+    public static VisualDensity Lerp(VisualDensity a, VisualDensity b, double t)
+    {
+        if (a == b)
+        {
+            return a;
+        }
+
+        return new VisualDensity(
+            horizontal: a.Horizontal + ((b.Horizontal - a.Horizontal) * t),
+            vertical: a.Vertical + ((b.Vertical - a.Vertical) * t));
+    }
+
+    /// <summary>
+    /// Applies this density to <paramref name="constraints"/>, adjusting only the minimums and
+    /// clamping each into [0, corresponding maximum].
+    /// </summary>
     public BoxConstraints EffectiveConstraints(BoxConstraints constraints)
     {
         Vector adjustment = BaseSizeAdjustment;
@@ -47,13 +142,10 @@ public readonly record struct VisualDensity(double Horizontal = 0, double Vertic
         };
     }
 
-    public static VisualDensity Lerp(VisualDensity a, VisualDensity b, double t)
-    {
-        double clampedT = Math.Clamp(t, 0.0, 1.0);
-        return new VisualDensity(
-            Horizontal: a.Horizontal + ((b.Horizontal - a.Horizontal) * clampedT),
-            Vertical: a.Vertical + ((b.Vertical - a.Vertical) * clampedT));
-    }
+    /// <summary>Dart's `toStringShort`.</summary>
+    public override string ToString() =>
+        $"VisualDensity(h: {DoubleProperty.FormatDouble(Horizontal)}, " +
+        $"v: {DoubleProperty.FormatDouble(Vertical)})";
 }
 
 public sealed record AppBarThemeData(
@@ -227,82 +319,14 @@ public sealed record AppBarThemeData(
 public sealed record ThemeData
 {
     private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
-    private static readonly Color LightSecondaryColor = Color.Parse("#FF625B71");
-    private static readonly Color LightPrimaryContainerColor = Color.Parse("#FFEADDFF");
-    private static readonly Color LightOnPrimaryContainerColor = Color.Parse("#FF21005D");
-    private static readonly Color LightSurfaceColor = Color.Parse("#FFFEF7FF");
-    private static readonly Color LightOnSurfaceColor = Color.Parse("#FF1D1B20");
-    private static readonly Color LightOnSurfaceVariantColor = Color.Parse("#FF49454F");
-    private static readonly Color LightOutlineColor = Color.Parse("#FF79747E");
-    private static readonly Color LightOutlineVariantColor = Color.Parse("#FFCAC4D0");
-    private static readonly Color LightSurfaceContainerLowColor = Color.Parse("#FFF7F2FA");
-    private static readonly Color LightSurfaceContainerColor = Color.Parse("#FFF3EDF7");
-    private static readonly Color LightSurfaceContainerHighColor = Color.Parse("#FFECE6F0");
-    private static readonly Color LightSurfaceContainerHighestColor = Color.Parse("#FFE6E0E9");
-    private static readonly Color LightSecondaryContainerColor = Color.Parse("#FFE8DEF8");
-    private static readonly Color LightOnSecondaryContainerColor = Color.Parse("#FF4A4458");
-    private static readonly Color LightInverseSurfaceColor = Color.Parse("#FF322F35");
-    private static readonly Color LightOnInverseSurfaceColor = Color.Parse("#FFF5EFF7");
-    private static readonly Color LightInversePrimaryColor = Color.Parse("#FFD0BCFF");
-    private static readonly Color LightErrorColor = Color.Parse("#FFB3261E");
-    private static readonly Color LightOnErrorColor = Colors.White;
     private static readonly IReadOnlyDictionary<Type, ThemeExtension> EmptyExtensions =
         new ThemeExtensionMap([]);
     private static readonly IReadOnlyDictionary<Type, Adaptation> EmptyAdaptations =
         new Dictionary<Type, Adaptation>();
-    private static readonly object LocalizedThemeCacheLock = new();
-    private static readonly List<LocalizedThemeEntry> LocalizedThemeCache = [];
+    private const int LocalizedThemeDataCacheSize = 5;
+    private static readonly FifoCache<IdentityThemeDataCacheKey, ThemeData> LocalizedThemeCache =
+        new(LocalizedThemeDataCacheSize);
 
-    private AppBarThemeData? _appBarTheme;
-    private TextButtonThemeData? _textButtonTheme;
-    private ElevatedButtonThemeData? _elevatedButtonTheme;
-    private OutlinedButtonThemeData? _outlinedButtonTheme;
-    private FilledButtonThemeData? _filledButtonTheme;
-    private IconButtonThemeData? _iconButtonTheme;
-    private CardThemeData? _cardTheme;
-    private ListTileThemeData? _listTileTheme;
-    private DrawerThemeData? _drawerTheme;
-    private FloatingActionButtonThemeData? _floatingActionButtonTheme;
-    private BottomNavigationBarThemeData? _bottomNavigationBarTheme;
-    private DividerThemeData? _dividerTheme;
-    private ProgressIndicatorThemeData? _progressIndicatorTheme;
-    private CheckboxThemeData? _checkboxTheme;
-    private SwitchThemeData? _switchTheme;
-    private RadioThemeData? _radioTheme;
-    private SliderThemeData? _sliderTheme;
-    private ExpansionTileThemeData? _expansionTileTheme;
-    private BadgeThemeData? _badgeTheme;
-    private TooltipThemeData? _tooltipTheme;
-    private NavigationBarThemeData? _navigationBarTheme;
-    private NavigationRailThemeData? _navigationRailTheme;
-    private NavigationDrawerThemeData? _navigationDrawerTheme;
-    private ToggleButtonsThemeData? _toggleButtonsTheme;
-    private SegmentedButtonThemeData? _segmentedButtonTheme;
-    private ChipThemeData? _chipTheme;
-    private ActionIconThemeData? _actionIconTheme;
-    private MaterialBannerThemeData? _bannerTheme;
-    private SnackBarThemeData? _snackBarTheme;
-    private DialogThemeData? _dialogTheme;
-    private PopupMenuThemeData? _popupMenuTheme;
-    private ButtonThemeData? _buttonTheme;
-    private ButtonBarThemeData? _buttonBarTheme;
-    private BottomAppBarThemeData? _bottomAppBarTheme;
-    private DataTableThemeData? _dataTableTheme;
-    private ScrollbarThemeData? _scrollbarTheme;
-    private TabBarThemeData? _tabBarTheme;
-    private BottomSheetThemeData? _bottomSheetTheme;
-    private InputDecorationThemeData? _inputDecorationTheme;
-    private DatePickerThemeData? _datePickerTheme;
-    private TimePickerThemeData? _timePickerTheme;
-    private DropdownMenuThemeData? _dropdownMenuTheme;
-    private SearchBarThemeData? _searchBarTheme;
-    private SearchViewThemeData? _searchViewTheme;
-    private CarouselViewThemeData? _carouselViewTheme;
-    private MenuBarThemeData? _menuBarTheme;
-    private MenuButtonThemeData? _menuButtonTheme;
-    private MenuThemeData? _menuTheme;
-    private TextSelectionThemeData? _textSelectionTheme;
-    private PageTransitionsTheme? _pageTransitionsTheme;
 
     public ThemeData(
         TargetPlatform? platform = null,
@@ -315,37 +339,16 @@ public sealed record ThemeData
         IReadOnlyList<string>? fontFamilyFallback = null,
         string? package = null,
         Color? scaffoldBackgroundColor = null,
+        Color? secondaryHeaderColor = null,
         Color? canvasColor = null,
         Color? primaryColor = null,
         MaterialColor? primarySwatch = null,
-        Color? secondaryColor = null,
-        Color? onPrimaryColor = null,
-        Color? primaryContainerColor = null,
-        Color? onPrimaryContainerColor = null,
         bool? useMaterial3 = null,
         AppBarThemeData? appBarTheme = null,
         Color? shadowColor = null,
-        Color? surfaceColor = null,
-        Color? onSurfaceColor = null,
-        Color? onSurfaceVariantColor = null,
-        Color? outlineColor = null,
-        Color? outlineVariantColor = null,
         Color? dividerColor = null,
         Color? cardColor = null,
-        Color? surfaceContainerLowColor = null,
-        Color? surfaceContainerHighestColor = null,
-        Color? secondaryContainerColor = null,
-        Color? onSecondaryContainerColor = null,
-        Color? inverseSurfaceColor = null,
-        Color? onInverseSurfaceColor = null,
-        Color? errorColor = null,
-        Color? onErrorColor = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
-        ButtonStyle? textButtonStyle = null,
-        ButtonStyle? elevatedButtonStyle = null,
-        ButtonStyle? outlinedButtonStyle = null,
-        ButtonStyle? filledButtonStyle = null,
-        ButtonStyle? iconButtonStyle = null,
         TextButtonThemeData? textButtonTheme = null,
         ElevatedButtonThemeData? elevatedButtonTheme = null,
         OutlinedButtonThemeData? outlinedButtonTheme = null,
@@ -370,7 +373,6 @@ public sealed record ThemeData
         TextTheme? primaryTextTheme = null,
         IconThemeData? iconTheme = null,
         IconThemeData? primaryIconTheme = null,
-        Color? surfaceContainerColor = null,
         NavigationBarThemeData? navigationBarTheme = null,
         NavigationRailThemeData? navigationRailTheme = null,
         ChipThemeData? chipTheme = null,
@@ -381,11 +383,11 @@ public sealed record ThemeData
         SegmentedButtonThemeData? segmentedButtonTheme = null,
         MaterialBannerThemeData? bannerTheme = null,
         SnackBarThemeData? snackBarTheme = null,
-        Color? inversePrimaryColor = null,
         DialogThemeData? dialogTheme = null,
-        Color? surfaceContainerHighColor = null,
         PopupMenuThemeData? popupMenuTheme = null,
         ButtonThemeData? buttonTheme = null,
+        Color? dialogBackgroundColor = null,
+        Color? indicatorColor = null,
         ButtonBarThemeData? buttonBarTheme = null,
         BottomAppBarThemeData? bottomAppBarTheme = null,
         DataTableThemeData? dataTableTheme = null,
@@ -417,7 +419,7 @@ public sealed record ThemeData
         IEnumerable<ThemeExtension>? extensions = null,
         IEnumerable<Adaptation>? adaptations = null)
     {
-        Platform = platform ?? ResolveDefaultPlatform();
+        Platform = platform ?? PlatformDefaults.TargetPlatform;
         if (brightness.HasValue
             && colorScheme is not null
             && brightness.Value != colorScheme.Brightness)
@@ -441,21 +443,23 @@ public sealed record ThemeData
                 "Only one of colorSchemeSeed and primarySwatch may be specified.");
         }
 
-        Brightness = brightness ?? colorScheme?.Brightness ?? Brightness.Light;
-        bool isDark = Brightness == Brightness.Dark;
+        Brightness effectiveBrightness = brightness ?? colorScheme?.Brightness ?? Brightness.Light;
+        bool isDark = effectiveBrightness == Brightness.Dark;
         UseMaterial3 = useMaterial3 ?? true;
 
         // Mirrors Flutter's derivation order: the Material 3 branch resolves the scheme-backed
         // colors first, then the shared Material 2 fallbacks fill in whatever is still unset, and
         // the Material 2 scheme itself is derived from `primarySwatch` last.
         ColorScheme? scheme = colorSchemeSeed.HasValue
-            ? ColorScheme.FromSeed(colorSchemeSeed.Value, Brightness)
+            ? ColorScheme.FromSeed(colorSchemeSeed.Value, effectiveBrightness)
             : colorScheme;
         Color? resolvedPrimaryColor = primaryColor;
         Color? resolvedCanvasColor = canvasColor;
         Color? resolvedScaffoldBackgroundColor = scaffoldBackgroundColor;
         Color? resolvedCardColor = cardColor;
         Color? resolvedDividerColor = dividerColor;
+        Color? resolvedDialogBackgroundColor = dialogBackgroundColor;
+        Color? resolvedIndicatorColor = indicatorColor;
         if (colorSchemeSeed.HasValue || UseMaterial3)
         {
             scheme ??= isDark ? ColorScheme.Material3Dark : ColorScheme.Material3Light;
@@ -464,6 +468,8 @@ public sealed record ThemeData
             resolvedScaffoldBackgroundColor ??= scheme.Surface;
             resolvedCardColor ??= scheme.Surface;
             resolvedDividerColor ??= scheme.Outline;
+            resolvedDialogBackgroundColor ??= scheme.Surface;
+            resolvedIndicatorColor ??= isDark ? scheme.OnSurface : scheme.OnPrimary;
         }
 
         MaterialColor swatch = primarySwatch ?? Colors.Blue;
@@ -482,12 +488,20 @@ public sealed record ThemeData
             cardColor: resolvedCardColor,
             backgroundColor: isDark ? Colors.Grey.Shade700 : swatch.Shade200,
             errorColor: Colors.Red.Shade700,
-            brightness: Brightness);
+            brightness: effectiveBrightness);
+        SecondaryHeaderColor = secondaryHeaderColor
+                               ?? (isDark ? Colors.Grey.Shade700 : swatch.Shade50);
+        resolvedDialogBackgroundColor ??= isDark ? Colors.Grey.Shade800 : Colors.White;
         CanvasColor = resolvedCanvasColor.Value;
         ScaffoldBackgroundColor = resolvedScaffoldBackgroundColor.Value;
         PrimaryColor = resolvedPrimaryColor.Value;
         CardColor = resolvedCardColor.Value;
         DividerColor = resolvedDividerColor.Value;
+        DialogBackgroundColor = resolvedDialogBackgroundColor.Value;
+        IndicatorColor = resolvedIndicatorColor
+                         ?? (ColorScheme.Secondary == PrimaryColor
+                             ? Colors.White
+                             : ColorScheme.Secondary);
 
         Typography = typography
                      ?? (UseMaterial3
@@ -498,7 +512,7 @@ public sealed record ThemeData
         ApplyElevationOverlayColor = applyElevationOverlayColor
                                      ?? ((colorSchemeSeed.HasValue || UseMaterial3)
                                          && brightness == Brightness.Dark);
-        TextTheme defaultTextTheme = Brightness == Brightness.Dark
+        TextTheme defaultTextTheme = effectiveBrightness == Brightness.Dark
             ? Typography.White
             : Typography.Black;
         if (fontFamily is not null)
@@ -532,7 +546,7 @@ public sealed record ThemeData
         PrimaryTextTheme = defaultPrimaryTextTheme.Merge(primaryTextTheme);
         IconTheme = iconTheme
                     ?? new IconThemeData(
-                        Color: Brightness == Brightness.Dark
+                        Color: effectiveBrightness == Brightness.Dark
                             ? Colors.White
                             : Color.FromArgb(0xDD, 0x00, 0x00, 0x00));
         PrimaryIconTheme = primaryIconTheme
@@ -540,110 +554,101 @@ public sealed record ThemeData
                                Color: EstimateBrightnessForColor(PrimaryColor) == Brightness.Dark
                                    ? Colors.White
                                    : Colors.Black);
-        SecondaryColor = secondaryColor ?? ColorScheme.Secondary;
-        OnPrimaryColor = onPrimaryColor ?? ColorScheme.OnPrimary;
-        PrimaryContainerColor = primaryContainerColor ?? ColorScheme.PrimaryContainer;
-        OnPrimaryContainerColor = onPrimaryContainerColor ?? ColorScheme.OnPrimaryContainer;
-        _appBarTheme = appBarTheme;
+        AppBarTheme = appBarTheme ?? new AppBarThemeData();
         ShadowColor = shadowColor ?? Colors.Black;
-        SurfaceColor = surfaceColor ?? ColorScheme.Surface;
-        OnSurfaceColor = onSurfaceColor ?? ColorScheme.OnSurface;
-        OnSurfaceVariantColor = onSurfaceVariantColor ?? ColorScheme.OnSurfaceVariant;
-        OutlineColor = outlineColor ?? ColorScheme.Outline;
-        OutlineVariantColor = outlineVariantColor ?? ColorScheme.OutlineVariant;
-        SurfaceContainerLowColor = surfaceContainerLowColor ?? ColorScheme.SurfaceContainerLow;
-        SurfaceContainerColor = surfaceContainerColor ?? ColorScheme.SurfaceContainer;
-        SurfaceContainerHighColor = surfaceContainerHighColor ?? ColorScheme.SurfaceContainerHigh;
-        SurfaceContainerHighestColor = surfaceContainerHighestColor ?? ColorScheme.SurfaceContainerHighest;
-        SecondaryContainerColor = secondaryContainerColor ?? ColorScheme.SecondaryContainer;
-        OnSecondaryContainerColor = onSecondaryContainerColor ?? ColorScheme.OnSecondaryContainer;
-        InverseSurfaceColor = inverseSurfaceColor ?? ColorScheme.InverseSurface;
-        OnInverseSurfaceColor = onInverseSurfaceColor ?? ColorScheme.OnInverseSurface;
-        InversePrimaryColor = inversePrimaryColor ?? ColorScheme.InversePrimary;
-        ErrorColor = errorColor ?? ColorScheme.Error;
-        OnErrorColor = onErrorColor ?? ColorScheme.OnError;
         DisabledColor = disabledColor ?? (isDark ? Colors.White38 : Colors.Black38);
         UnselectedWidgetColor = unselectedWidgetColor
                                 ?? (isDark ? Colors.White70 : Colors.Black54);
         HintColor = hintColor
                     ?? (isDark ? Colors.White60 : ApplyOpacity(Colors.Black, 0.60));
         FocusColor = focusColor ?? ApplyOpacity(
-            Brightness == Brightness.Dark ? Colors.White : Colors.Black,
+            effectiveBrightness == Brightness.Dark ? Colors.White : Colors.Black,
             0.12);
         HoverColor = hoverColor ?? ApplyOpacity(
-            Brightness == Brightness.Dark ? Colors.White : Colors.Black,
+            effectiveBrightness == Brightness.Dark ? Colors.White : Colors.Black,
             0.04);
-        HighlightColor = highlightColor ?? (Brightness == Brightness.Dark
+        HighlightColor = highlightColor ?? (effectiveBrightness == Brightness.Dark
             ? Color.FromArgb(0x40, 0xCC, 0xCC, 0xCC)
             : Color.FromArgb(0x66, 0xBC, 0xBC, 0xBC));
-        SplashColor = splashColor ?? (Brightness == Brightness.Dark
+        SplashColor = splashColor ?? (effectiveBrightness == Brightness.Dark
             ? Color.FromArgb(0x40, 0xCC, 0xCC, 0xCC)
             : Color.FromArgb(0x66, 0xC8, 0xC8, 0xC8));
         SplashFactory = splashFactory ?? ResolveDefaultSplashFactory(UseMaterial3, Platform);
-        MaterialTapTargetSize = materialTapTargetSize ?? MaterialTapTargetSize.Padded;
-        TextButtonStyle = textButtonStyle;
-        ElevatedButtonStyle = elevatedButtonStyle;
-        OutlinedButtonStyle = outlinedButtonStyle;
-        FilledButtonStyle = filledButtonStyle;
-        IconButtonStyle = iconButtonStyle;
-        _textButtonTheme = textButtonTheme;
-        _elevatedButtonTheme = elevatedButtonTheme;
-        _outlinedButtonTheme = outlinedButtonTheme;
-        _filledButtonTheme = filledButtonTheme;
-        _iconButtonTheme = iconButtonTheme;
-        _cardTheme = cardTheme;
-        _listTileTheme = listTileTheme;
-        _drawerTheme = drawerTheme;
-        _floatingActionButtonTheme = floatingActionButtonTheme;
-        _bottomNavigationBarTheme = bottomNavigationBarTheme;
-        _dividerTheme = dividerTheme;
-        _progressIndicatorTheme = progressIndicatorTheme;
-        _checkboxTheme = checkboxTheme;
-        _switchTheme = switchTheme;
-        _radioTheme = radioTheme;
-        _sliderTheme = sliderTheme;
-        _expansionTileTheme = expansionTileTheme;
-        _badgeTheme = badgeTheme;
-        _tooltipTheme = tooltipTheme;
-        _navigationBarTheme = navigationBarTheme;
-        _navigationRailTheme = navigationRailTheme;
-        _navigationDrawerTheme = navigationDrawerTheme;
-        _toggleButtonsTheme = toggleButtonsTheme;
-        _segmentedButtonTheme = segmentedButtonTheme;
-        _chipTheme = chipTheme;
-        _actionIconTheme = actionIconTheme;
-        _bannerTheme = bannerTheme;
-        _snackBarTheme = snackBarTheme;
-        _dialogTheme = dialogTheme;
-        _popupMenuTheme = popupMenuTheme;
-        _buttonTheme = buttonTheme;
-        _buttonBarTheme = buttonBarTheme;
-        _bottomAppBarTheme = bottomAppBarTheme;
-        _dataTableTheme = dataTableTheme;
-        _scrollbarTheme = scrollbarTheme;
-        _tabBarTheme = tabBarTheme;
-        _bottomSheetTheme = bottomSheetTheme;
-        _inputDecorationTheme = inputDecorationTheme;
-        _datePickerTheme = datePickerTheme;
-        _timePickerTheme = timePickerTheme;
-        _dropdownMenuTheme = dropdownMenuTheme;
-        _searchBarTheme = searchBarTheme;
-        _searchViewTheme = searchViewTheme;
-        _carouselViewTheme = carouselViewTheme;
-        _menuBarTheme = menuBarTheme;
-        _menuButtonTheme = menuButtonTheme;
-        _menuTheme = menuTheme;
-        _textSelectionTheme = textSelectionTheme;
-        _pageTransitionsTheme = pageTransitionsTheme;
+        MaterialTapTargetSize = materialTapTargetSize ?? Platform switch
+        {
+            TargetPlatform.Android or TargetPlatform.Fuchsia or TargetPlatform.IOS =>
+                MaterialTapTargetSize.Padded,
+            _ => MaterialTapTargetSize.ShrinkWrap,
+        };
+        TextButtonTheme = textButtonTheme ?? new TextButtonThemeData();
+        ElevatedButtonTheme = elevatedButtonTheme ?? new ElevatedButtonThemeData();
+        OutlinedButtonTheme = outlinedButtonTheme ?? new OutlinedButtonThemeData();
+        FilledButtonTheme = filledButtonTheme ?? new FilledButtonThemeData();
+        IconButtonTheme = iconButtonTheme ?? new IconButtonThemeData();
+        CardTheme = cardTheme ?? new CardThemeData();
+        ListTileTheme = listTileTheme ?? new ListTileThemeData();
+        DrawerTheme = drawerTheme ?? new DrawerThemeData();
+        FloatingActionButtonTheme = floatingActionButtonTheme ?? new FloatingActionButtonThemeData();
+        BottomNavigationBarTheme = bottomNavigationBarTheme ?? new BottomNavigationBarThemeData();
+        DividerTheme = dividerTheme ?? new DividerThemeData();
+        ProgressIndicatorTheme = progressIndicatorTheme ?? new ProgressIndicatorThemeData();
+        CheckboxTheme = checkboxTheme ?? new CheckboxThemeData();
+        SwitchTheme = switchTheme ?? new SwitchThemeData();
+        RadioTheme = radioTheme ?? new RadioThemeData();
+        SliderTheme = sliderTheme ?? new SliderThemeData();
+        ExpansionTileTheme = expansionTileTheme ?? new ExpansionTileThemeData();
+        BadgeTheme = badgeTheme ?? new BadgeThemeData();
+        TooltipTheme = tooltipTheme ?? new TooltipThemeData();
+        NavigationBarTheme = navigationBarTheme ?? new NavigationBarThemeData();
+        NavigationRailTheme = navigationRailTheme ?? new NavigationRailThemeData();
+        NavigationDrawerTheme = navigationDrawerTheme ?? new NavigationDrawerThemeData();
+        ToggleButtonsTheme = toggleButtonsTheme ?? new ToggleButtonsThemeData();
+        SegmentedButtonTheme = segmentedButtonTheme ?? new SegmentedButtonThemeData();
+        ChipTheme = chipTheme ?? new ChipThemeData();
+        ActionIconTheme = actionIconTheme;
+        BannerTheme = bannerTheme ?? new MaterialBannerThemeData();
+        SnackBarTheme = snackBarTheme ?? new SnackBarThemeData();
+        DialogTheme = dialogTheme ?? new DialogThemeData();
+        PopupMenuTheme = popupMenuTheme ?? new PopupMenuThemeData();
+        ButtonTheme = buttonTheme ?? new ButtonThemeData(
+            ButtonColor: isDark ? swatch.Shade600 : Colors.Grey.Shade300,
+            DisabledColor: disabledColor,
+            FocusColor: focusColor,
+            HoverColor: hoverColor,
+            HighlightColor: highlightColor,
+            SplashColor: splashColor,
+            MaterialTapTargetSize: MaterialTapTargetSize);
+        ButtonBarTheme = buttonBarTheme ?? new ButtonBarThemeData();
+        BottomAppBarTheme = bottomAppBarTheme ?? new BottomAppBarThemeData();
+        DataTableTheme = dataTableTheme ?? new DataTableThemeData();
+        ScrollbarTheme = scrollbarTheme ?? new ScrollbarThemeData();
+        TabBarTheme = tabBarTheme ?? new TabBarThemeData();
+        BottomSheetTheme = bottomSheetTheme ?? new BottomSheetThemeData();
+        InputDecorationTheme = inputDecorationTheme ?? new InputDecorationThemeData();
+        DatePickerTheme = datePickerTheme ?? new DatePickerThemeData();
+        TimePickerTheme = timePickerTheme ?? new TimePickerThemeData();
+        DropdownMenuTheme = dropdownMenuTheme ?? new DropdownMenuThemeData();
+        SearchBarTheme = searchBarTheme ?? new SearchBarThemeData();
+        SearchViewTheme = searchViewTheme ?? new SearchViewThemeData();
+        CarouselViewTheme = carouselViewTheme ?? new CarouselViewThemeData();
+        MenuBarTheme = menuBarTheme ?? new MenuBarThemeData();
+        MenuButtonTheme = menuButtonTheme ?? new MenuButtonThemeData();
+        MenuTheme = menuTheme ?? new MenuThemeData();
+        TextSelectionTheme = textSelectionTheme ?? new TextSelectionThemeData();
+        PageTransitionsTheme = pageTransitionsTheme ?? new PageTransitionsTheme();
         CupertinoOverrideTheme = cupertinoOverrideTheme?.NoDefault();
         Extensions = CreateExtensionMap(extensions);
         Adaptations = CreateAdaptationMap(adaptations);
-        VisualDensity = visualDensity ?? VisualDensity.Standard;
+        VisualDensity = visualDensity ?? VisualDensity.DefaultDensityForPlatform(Platform);
     }
 
     public TargetPlatform Platform { get; init; }
 
-    public Brightness Brightness { get; init; }
+    /// <summary>
+    /// The overall theme brightness. Dart derives this from <see cref="ColorScheme"/> rather than
+    /// storing it, so it is not part of equality or `CopyWith` except through the scheme.
+    /// </summary>
+    public Brightness Brightness => ColorScheme.Brightness;
 
     public ColorScheme ColorScheme { get; init; }
 
@@ -661,6 +666,12 @@ public sealed record ThemeData
 
     public Color ScaffoldBackgroundColor { get; init; }
 
+    /// <summary>
+    /// The color of the header of a data table, and of `PaginatedDataTable`'s selected-row
+    /// overlay. Dart's `secondaryHeaderColor`.
+    /// </summary>
+    public Color SecondaryHeaderColor { get; init; }
+
     public Color CanvasColor { get; init; }
 
     public Color PrimaryColor { get; init; }
@@ -675,59 +686,26 @@ public sealed record ThemeData
 
     public IconThemeData PrimaryIconTheme { get; init; }
 
-    public Color SecondaryColor { get; init; }
-
-    public Color OnPrimaryColor { get; init; }
-
-    public Color PrimaryContainerColor { get; init; }
-
-    public Color OnPrimaryContainerColor { get; init; }
 
     public bool UseMaterial3 { get; init; }
 
-    public AppBarThemeData AppBarTheme
-    {
-        get => _appBarTheme ?? new AppBarThemeData();
-        init => _appBarTheme = value;
-    }
+    public AppBarThemeData AppBarTheme { get; init; }
 
     public Color ShadowColor { get; init; }
 
-    public Color SurfaceColor { get; init; }
-
-    public Color OnSurfaceColor { get; init; }
-
-    public Color OnSurfaceVariantColor { get; init; }
-
-    public Color OutlineColor { get; init; }
-
-    public Color OutlineVariantColor { get; init; }
 
     public Color DividerColor { get; init; }
 
+    /// <summary>The background color of `Dialog` elements.</summary>
+    [Obsolete("Use DialogThemeData.BackgroundColor instead. Deprecated in Flutter after v3.27.0-0.1.pre.")]
+    public Color DialogBackgroundColor { get; init; }
+
+    /// <summary>The color of the selected tab indicator in a tab bar.</summary>
+    [Obsolete("Use TabBarThemeData.IndicatorColor instead. Deprecated in Flutter after v3.28.0-1.0.pre.")]
+    public Color IndicatorColor { get; init; }
+
     public Color CardColor { get; init; }
 
-    public Color SurfaceContainerLowColor { get; init; }
-
-    public Color SurfaceContainerColor { get; init; }
-
-    public Color SurfaceContainerHighColor { get; init; }
-
-    public Color SurfaceContainerHighestColor { get; init; }
-
-    public Color SecondaryContainerColor { get; init; }
-
-    public Color OnSecondaryContainerColor { get; init; }
-
-    public Color InverseSurfaceColor { get; init; }
-
-    public Color OnInverseSurfaceColor { get; init; }
-
-    public Color InversePrimaryColor { get; init; }
-
-    public Color ErrorColor { get; init; }
-
-    public Color OnErrorColor { get; init; }
 
     public Color DisabledColor { get; init; }
 
@@ -749,309 +727,104 @@ public sealed record ThemeData
 
     public VisualDensity VisualDensity { get; init; }
 
-    public DataTableThemeData DataTableTheme
-    {
-        get => _dataTableTheme ?? new DataTableThemeData();
-        init => _dataTableTheme = value;
-    }
+    public DataTableThemeData DataTableTheme { get; init; }
 
-    public ButtonStyle? TextButtonStyle { get; init; }
 
-    public ButtonStyle? ElevatedButtonStyle { get; init; }
+    public TextButtonThemeData TextButtonTheme { get; init; }
 
-    public ButtonStyle? OutlinedButtonStyle { get; init; }
+    public ElevatedButtonThemeData ElevatedButtonTheme { get; init; }
 
-    public ButtonStyle? FilledButtonStyle { get; init; }
+    public OutlinedButtonThemeData OutlinedButtonTheme { get; init; }
 
-    public ButtonStyle? IconButtonStyle { get; init; }
+    public FilledButtonThemeData FilledButtonTheme { get; init; }
 
-    public TextButtonThemeData TextButtonTheme
-    {
-        get => _textButtonTheme ?? new TextButtonThemeData(style: TextButtonStyle);
-        init => _textButtonTheme = value;
-    }
+    public IconButtonThemeData IconButtonTheme { get; init; }
 
-    public ElevatedButtonThemeData ElevatedButtonTheme
-    {
-        get => _elevatedButtonTheme ?? new ElevatedButtonThemeData(style: ElevatedButtonStyle);
-        init => _elevatedButtonTheme = value;
-    }
+    public CardThemeData CardTheme { get; init; }
 
-    public OutlinedButtonThemeData OutlinedButtonTheme
-    {
-        get => _outlinedButtonTheme ?? new OutlinedButtonThemeData(style: OutlinedButtonStyle);
-        init => _outlinedButtonTheme = value;
-    }
+    public ListTileThemeData ListTileTheme { get; init; }
 
-    public FilledButtonThemeData FilledButtonTheme
-    {
-        get => _filledButtonTheme ?? new FilledButtonThemeData(style: FilledButtonStyle);
-        init => _filledButtonTheme = value;
-    }
+    public DrawerThemeData DrawerTheme { get; init; }
 
-    public IconButtonThemeData IconButtonTheme
-    {
-        get => _iconButtonTheme ?? new IconButtonThemeData(style: IconButtonStyle);
-        init => _iconButtonTheme = value;
-    }
+    public FloatingActionButtonThemeData FloatingActionButtonTheme { get; init; }
 
-    public CardThemeData CardTheme
-    {
-        get => _cardTheme ?? new CardThemeData();
-        init => _cardTheme = value;
-    }
+    public BottomNavigationBarThemeData BottomNavigationBarTheme { get; init; }
 
-    public ListTileThemeData ListTileTheme
-    {
-        get => _listTileTheme ?? new ListTileThemeData();
-        init => _listTileTheme = value;
-    }
+    public DividerThemeData DividerTheme { get; init; }
 
-    public DrawerThemeData DrawerTheme
-    {
-        get => _drawerTheme ?? new DrawerThemeData();
-        init => _drawerTheme = value;
-    }
+    public ProgressIndicatorThemeData ProgressIndicatorTheme { get; init; }
 
-    public FloatingActionButtonThemeData FloatingActionButtonTheme
-    {
-        get => _floatingActionButtonTheme ?? new FloatingActionButtonThemeData();
-        init => _floatingActionButtonTheme = value;
-    }
+    public CheckboxThemeData CheckboxTheme { get; init; }
 
-    public BottomNavigationBarThemeData BottomNavigationBarTheme
-    {
-        get => _bottomNavigationBarTheme ?? new BottomNavigationBarThemeData();
-        init => _bottomNavigationBarTheme = value;
-    }
+    public SwitchThemeData SwitchTheme { get; init; }
 
-    public DividerThemeData DividerTheme
-    {
-        get => _dividerTheme ?? new DividerThemeData();
-        init => _dividerTheme = value;
-    }
+    public RadioThemeData RadioTheme { get; init; }
 
-    public ProgressIndicatorThemeData ProgressIndicatorTheme
-    {
-        get => _progressIndicatorTheme ?? new ProgressIndicatorThemeData();
-        init => _progressIndicatorTheme = value;
-    }
+    public SliderThemeData SliderTheme { get; init; }
 
-    public CheckboxThemeData CheckboxTheme
-    {
-        get => _checkboxTheme ?? new CheckboxThemeData();
-        init => _checkboxTheme = value;
-    }
+    public ExpansionTileThemeData ExpansionTileTheme { get; init; }
 
-    public SwitchThemeData SwitchTheme
-    {
-        get => _switchTheme ?? new SwitchThemeData();
-        init => _switchTheme = value;
-    }
+    public BadgeThemeData BadgeTheme { get; init; }
 
-    public RadioThemeData RadioTheme
-    {
-        get => _radioTheme ?? new RadioThemeData();
-        init => _radioTheme = value;
-    }
+    public TooltipThemeData TooltipTheme { get; init; }
 
-    public SliderThemeData SliderTheme
-    {
-        get => _sliderTheme ?? new SliderThemeData();
-        init => _sliderTheme = value;
-    }
+    public NavigationBarThemeData NavigationBarTheme { get; init; }
 
-    public ExpansionTileThemeData ExpansionTileTheme
-    {
-        get => _expansionTileTheme ?? new ExpansionTileThemeData();
-        init => _expansionTileTheme = value;
-    }
+    public NavigationRailThemeData NavigationRailTheme { get; init; }
 
-    public BadgeThemeData BadgeTheme
-    {
-        get => _badgeTheme ?? new BadgeThemeData();
-        init => _badgeTheme = value;
-    }
+    public NavigationDrawerThemeData NavigationDrawerTheme { get; init; }
 
-    public TooltipThemeData TooltipTheme
-    {
-        get => _tooltipTheme ?? new TooltipThemeData();
-        init => _tooltipTheme = value;
-    }
+    public ToggleButtonsThemeData ToggleButtonsTheme { get; init; }
 
-    public NavigationBarThemeData NavigationBarTheme
-    {
-        get => _navigationBarTheme ?? new NavigationBarThemeData();
-        init => _navigationBarTheme = value;
-    }
+    public SegmentedButtonThemeData SegmentedButtonTheme { get; init; }
 
-    public NavigationRailThemeData NavigationRailTheme
-    {
-        get => _navigationRailTheme ?? new NavigationRailThemeData();
-        init => _navigationRailTheme = value;
-    }
+    public ChipThemeData ChipTheme { get; init; }
 
-    public NavigationDrawerThemeData NavigationDrawerTheme
-    {
-        get => _navigationDrawerTheme ?? new NavigationDrawerThemeData();
-        init => _navigationDrawerTheme = value;
-    }
+    public ActionIconThemeData? ActionIconTheme { get; init; }
 
-    public ToggleButtonsThemeData ToggleButtonsTheme
-    {
-        get => _toggleButtonsTheme ?? new ToggleButtonsThemeData();
-        init => _toggleButtonsTheme = value;
-    }
+    public MaterialBannerThemeData BannerTheme { get; init; }
 
-    public SegmentedButtonThemeData SegmentedButtonTheme
-    {
-        get => _segmentedButtonTheme ?? new SegmentedButtonThemeData();
-        init => _segmentedButtonTheme = value;
-    }
+    public SnackBarThemeData SnackBarTheme { get; init; }
 
-    public ChipThemeData ChipTheme
-    {
-        get => _chipTheme ?? new ChipThemeData();
-        init => _chipTheme = value;
-    }
+    public DialogThemeData DialogTheme { get; init; }
 
-    public ActionIconThemeData? ActionIconTheme
-    {
-        get => _actionIconTheme;
-        init => _actionIconTheme = value;
-    }
+    public PopupMenuThemeData PopupMenuTheme { get; init; }
 
-    public MaterialBannerThemeData BannerTheme
-    {
-        get => _bannerTheme ?? new MaterialBannerThemeData();
-        init => _bannerTheme = value;
-    }
+    public ButtonThemeData ButtonTheme { get; init; }
 
-    public SnackBarThemeData SnackBarTheme
-    {
-        get => _snackBarTheme ?? new SnackBarThemeData();
-        init => _snackBarTheme = value;
-    }
+    public ScrollbarThemeData ScrollbarTheme { get; init; }
 
-    public DialogThemeData DialogTheme
-    {
-        get => _dialogTheme ?? new DialogThemeData();
-        init => _dialogTheme = value;
-    }
+    public TabBarThemeData TabBarTheme { get; init; }
 
-    public PopupMenuThemeData PopupMenuTheme
-    {
-        get => _popupMenuTheme ?? new PopupMenuThemeData();
-        init => _popupMenuTheme = value;
-    }
+    public BottomSheetThemeData BottomSheetTheme { get; init; }
 
-    public ButtonThemeData ButtonTheme
-    {
-        get => _buttonTheme ?? new ButtonThemeData();
-        init => _buttonTheme = value;
-    }
+    public InputDecorationThemeData InputDecorationTheme { get; init; }
 
-    public ScrollbarThemeData ScrollbarTheme
-    {
-        get => _scrollbarTheme ?? new ScrollbarThemeData();
-        init => _scrollbarTheme = value;
-    }
+    public DatePickerThemeData DatePickerTheme { get; init; }
 
-    public TabBarThemeData TabBarTheme
-    {
-        get => _tabBarTheme ?? new TabBarThemeData();
-        init => _tabBarTheme = value;
-    }
+    public TimePickerThemeData TimePickerTheme { get; init; }
 
-    public BottomSheetThemeData BottomSheetTheme
-    {
-        get => _bottomSheetTheme ?? new BottomSheetThemeData();
-        init => _bottomSheetTheme = value;
-    }
+    public DropdownMenuThemeData DropdownMenuTheme { get; init; }
 
-    public InputDecorationThemeData InputDecorationTheme
-    {
-        get => _inputDecorationTheme ?? new InputDecorationThemeData();
-        init => _inputDecorationTheme = value;
-    }
+    public SearchBarThemeData SearchBarTheme { get; init; }
 
-    public DatePickerThemeData DatePickerTheme
-    {
-        get => _datePickerTheme ?? new DatePickerThemeData();
-        init => _datePickerTheme = value;
-    }
+    public SearchViewThemeData SearchViewTheme { get; init; }
 
-    public TimePickerThemeData TimePickerTheme
-    {
-        get => _timePickerTheme ?? new TimePickerThemeData();
-        init => _timePickerTheme = value;
-    }
+    public CarouselViewThemeData CarouselViewTheme { get; init; }
 
-    public DropdownMenuThemeData DropdownMenuTheme
-    {
-        get => _dropdownMenuTheme ?? new DropdownMenuThemeData();
-        init => _dropdownMenuTheme = value;
-    }
+    public MenuBarThemeData MenuBarTheme { get; init; }
 
-    public SearchBarThemeData SearchBarTheme
-    {
-        get => _searchBarTheme ?? new SearchBarThemeData();
-        init => _searchBarTheme = value;
-    }
+    public MenuButtonThemeData MenuButtonTheme { get; init; }
 
-    public SearchViewThemeData SearchViewTheme
-    {
-        get => _searchViewTheme ?? new SearchViewThemeData();
-        init => _searchViewTheme = value;
-    }
+    public MenuThemeData MenuTheme { get; init; }
 
-    public CarouselViewThemeData CarouselViewTheme
-    {
-        get => _carouselViewTheme ?? new CarouselViewThemeData();
-        init => _carouselViewTheme = value;
-    }
+    public TextSelectionThemeData TextSelectionTheme { get; init; }
 
-    public MenuBarThemeData MenuBarTheme
-    {
-        get => _menuBarTheme ?? new MenuBarThemeData();
-        init => _menuBarTheme = value;
-    }
+    public PageTransitionsTheme PageTransitionsTheme { get; init; }
 
-    public MenuButtonThemeData MenuButtonTheme
-    {
-        get => _menuButtonTheme ?? new MenuButtonThemeData();
-        init => _menuButtonTheme = value;
-    }
+    public ButtonBarThemeData ButtonBarTheme { get; init; }
 
-    public MenuThemeData MenuTheme
-    {
-        get => _menuTheme ?? new MenuThemeData();
-        init => _menuTheme = value;
-    }
-
-    public TextSelectionThemeData TextSelectionTheme
-    {
-        get => _textSelectionTheme ?? new TextSelectionThemeData();
-        init => _textSelectionTheme = value;
-    }
-
-    public PageTransitionsTheme PageTransitionsTheme
-    {
-        get => _pageTransitionsTheme ?? new PageTransitionsTheme();
-        init => _pageTransitionsTheme = value;
-    }
-
-    public ButtonBarThemeData ButtonBarTheme
-    {
-        get => _buttonBarTheme ?? new ButtonBarThemeData();
-        init => _buttonBarTheme = value;
-    }
-
-    public BottomAppBarThemeData BottomAppBarTheme
-    {
-        get => _bottomAppBarTheme ?? new BottomAppBarThemeData();
-        init => _bottomAppBarTheme = value;
-    }
+    public BottomAppBarThemeData BottomAppBarTheme { get; init; }
 
     public IReadOnlyDictionary<Type, ThemeExtension> Extensions { get; init; }
 
@@ -1078,36 +851,87 @@ public sealed record ThemeData
         color.G,
         color.B);
 
+    /// <summary>
+    /// Dart's `ThemeData.copyWith` for the parameters whose semantics a C# `with` expression
+    /// cannot express: <paramref name="brightness"/> is applied to <see cref="ColorScheme"/>
+    /// rather than stored, the extension/adaptation iterables are re-keyed into their maps, and
+    /// <paramref name="cupertinoOverrideTheme"/> is stripped of its defaults. Every plain field
+    /// is replaced with a `with` expression, as elsewhere in this library.
+    /// </summary>
+    public ThemeData CopyWith(
+        Brightness? brightness = null,
+        ColorScheme? colorScheme = null,
+        NoDefaultCupertinoThemeData? cupertinoOverrideTheme = null,
+        IEnumerable<ThemeExtension>? extensions = null,
+        IEnumerable<Adaptation>? adaptations = null)
+    {
+        ColorScheme resolvedScheme = colorScheme ?? ColorScheme;
+        if (brightness is Brightness value)
+        {
+            resolvedScheme = resolvedScheme.CopyWith(brightness: value);
+        }
+
+        return this with
+        {
+            ColorScheme = resolvedScheme,
+            CupertinoOverrideTheme = cupertinoOverrideTheme is null
+                ? CupertinoOverrideTheme
+                : cupertinoOverrideTheme.NoDefault(),
+            Extensions = extensions is null ? Extensions : CreateExtensionMap(extensions),
+            Adaptations = adaptations is null ? Adaptations : CreateAdaptationMap(adaptations),
+        };
+    }
+
     public static ThemeData Light { get; } = new();
 
     public static ThemeData Dark { get; } = new(brightness: Brightness.Dark);
+
+    /// <summary>
+    /// A default theme without text geometry, expected to be localized through
+    /// <see cref="Localize"/>. Dart's `ThemeData.fallback`, which is `ThemeData.light`.
+    /// </summary>
+    public static ThemeData Fallback { get; } = new();
+
+    /// <summary>
+    /// Creates a theme from <paramref name="colorScheme"/>. Dart's `ThemeData.from`: the scheme
+    /// drives brightness and the surface-backed colors, and dark schemes turn on
+    /// <see cref="ApplyElevationOverlayColor"/>.
+    /// </summary>
+    public static ThemeData From(
+        ColorScheme colorScheme,
+        TextTheme? textTheme = null,
+        bool? useMaterial3 = null)
+    {
+        ArgumentNullException.ThrowIfNull(colorScheme);
+        bool isDark = colorScheme.Brightness == Brightness.Dark;
+        Color primarySurfaceColor = isDark ? colorScheme.Surface : colorScheme.Primary;
+        Color onPrimarySurfaceColor = isDark ? colorScheme.OnSurface : colorScheme.OnPrimary;
+        return new ThemeData(
+            colorScheme: colorScheme,
+            brightness: colorScheme.Brightness,
+            primaryColor: primarySurfaceColor,
+            canvasColor: colorScheme.Surface,
+            scaffoldBackgroundColor: colorScheme.Surface,
+            cardColor: colorScheme.Surface,
+            dividerColor: ApplyOpacity(colorScheme.OnSurface, 0.12),
+            dialogBackgroundColor: colorScheme.Surface,
+            indicatorColor: onPrimarySurfaceColor,
+            textTheme: textTheme,
+            applyElevationOverlayColor: isDark,
+            useMaterial3: useMaterial3);
+    }
 
     public static ThemeData Localize(ThemeData baseTheme, TextTheme localTextGeometry)
     {
         ArgumentNullException.ThrowIfNull(baseTheme);
         ArgumentNullException.ThrowIfNull(localTextGeometry);
-        lock (LocalizedThemeCacheLock)
-        {
-            LocalizedThemeEntry? cached = LocalizedThemeCache.FirstOrDefault(
-                entry => ReferenceEquals(entry.BaseTheme, baseTheme)
-                         && ReferenceEquals(entry.LocalTextGeometry, localTextGeometry));
-            if (cached is not null)
-            {
-                return cached.Theme;
-            }
-
-            ThemeData localized = baseTheme with
+        return LocalizedThemeCache.PutIfAbsent(
+            new IdentityThemeDataCacheKey(baseTheme, localTextGeometry),
+            () => baseTheme with
             {
                 PrimaryTextTheme = localTextGeometry.Merge(baseTheme.PrimaryTextTheme),
                 TextTheme = localTextGeometry.Merge(baseTheme.TextTheme),
-            };
-            if (LocalizedThemeCache.Count == 5)
-            {
-                LocalizedThemeCache.RemoveAt(0);
-            }
-            LocalizedThemeCache.Add(new LocalizedThemeEntry(baseTheme, localTextGeometry, localized));
-            return localized;
-        }
+            });
     }
 
     public static ThemeData Lerp(ThemeData a, ThemeData b, double t)
@@ -1134,47 +958,12 @@ public sealed record ThemeData
             PrimaryColor = LerpColor(a.PrimaryColor, b.PrimaryColor, t),
             PrimaryColorLight = LerpColor(a.PrimaryColorLight, b.PrimaryColorLight, t),
             PrimaryColorDark = LerpColor(a.PrimaryColorDark, b.PrimaryColorDark, t),
-            SecondaryColor = LerpColor(a.SecondaryColor, b.SecondaryColor, t),
-            OnPrimaryColor = LerpColor(a.OnPrimaryColor, b.OnPrimaryColor, t),
-            PrimaryContainerColor = LerpColor(a.PrimaryContainerColor, b.PrimaryContainerColor, t),
-            OnPrimaryContainerColor = LerpColor(
-                a.OnPrimaryContainerColor,
-                b.OnPrimaryContainerColor,
-                t),
             ShadowColor = LerpColor(a.ShadowColor, b.ShadowColor, t),
-            SurfaceColor = LerpColor(a.SurfaceColor, b.SurfaceColor, t),
-            OnSurfaceColor = LerpColor(a.OnSurfaceColor, b.OnSurfaceColor, t),
-            OnSurfaceVariantColor = LerpColor(a.OnSurfaceVariantColor, b.OnSurfaceVariantColor, t),
-            OutlineColor = LerpColor(a.OutlineColor, b.OutlineColor, t),
-            OutlineVariantColor = LerpColor(a.OutlineVariantColor, b.OutlineVariantColor, t),
             DividerColor = LerpColor(a.DividerColor, b.DividerColor, t),
+            SecondaryHeaderColor = LerpColor(a.SecondaryHeaderColor, b.SecondaryHeaderColor, t),
+            DialogBackgroundColor = LerpColor(a.DialogBackgroundColor, b.DialogBackgroundColor, t),
+            IndicatorColor = LerpColor(a.IndicatorColor, b.IndicatorColor, t),
             CardColor = LerpColor(a.CardColor, b.CardColor, t),
-            SurfaceContainerLowColor = LerpColor(
-                a.SurfaceContainerLowColor,
-                b.SurfaceContainerLowColor,
-                t),
-            SurfaceContainerColor = LerpColor(a.SurfaceContainerColor, b.SurfaceContainerColor, t),
-            SurfaceContainerHighColor = LerpColor(
-                a.SurfaceContainerHighColor,
-                b.SurfaceContainerHighColor,
-                t),
-            SurfaceContainerHighestColor = LerpColor(
-                a.SurfaceContainerHighestColor,
-                b.SurfaceContainerHighestColor,
-                t),
-            SecondaryContainerColor = LerpColor(
-                a.SecondaryContainerColor,
-                b.SecondaryContainerColor,
-                t),
-            OnSecondaryContainerColor = LerpColor(
-                a.OnSecondaryContainerColor,
-                b.OnSecondaryContainerColor,
-                t),
-            InverseSurfaceColor = LerpColor(a.InverseSurfaceColor, b.InverseSurfaceColor, t),
-            OnInverseSurfaceColor = LerpColor(a.OnInverseSurfaceColor, b.OnInverseSurfaceColor, t),
-            InversePrimaryColor = LerpColor(a.InversePrimaryColor, b.InversePrimaryColor, t),
-            ErrorColor = LerpColor(a.ErrorColor, b.ErrorColor, t),
-            OnErrorColor = LerpColor(a.OnErrorColor, b.OnErrorColor, t),
             DisabledColor = LerpColor(a.DisabledColor, b.DisabledColor, t),
             UnselectedWidgetColor = LerpColor(
                 a.UnselectedWidgetColor,
@@ -1185,11 +974,6 @@ public sealed record ThemeData
             HoverColor = LerpColor(a.HoverColor, b.HoverColor, t),
             HighlightColor = LerpColor(a.HighlightColor, b.HighlightColor, t),
             SplashColor = LerpColor(a.SplashColor, b.SplashColor, t),
-            TextButtonStyle = ButtonStyle.Lerp(a.TextButtonStyle, b.TextButtonStyle, t),
-            ElevatedButtonStyle = ButtonStyle.Lerp(a.ElevatedButtonStyle, b.ElevatedButtonStyle, t),
-            OutlinedButtonStyle = ButtonStyle.Lerp(a.OutlinedButtonStyle, b.OutlinedButtonStyle, t),
-            FilledButtonStyle = ButtonStyle.Lerp(a.FilledButtonStyle, b.FilledButtonStyle, t),
-            IconButtonStyle = ButtonStyle.Lerp(a.IconButtonStyle, b.IconButtonStyle, t),
             ActionIconTheme = ActionIconThemeData.Lerp(a.ActionIconTheme, b.ActionIconTheme, t),
             AppBarTheme = AppBarThemeData.Lerp(a.AppBarTheme, b.AppBarTheme, t),
             BadgeTheme = BadgeThemeData.Lerp(a.BadgeTheme, b.BadgeTheme, t),
@@ -1332,36 +1116,6 @@ public sealed record ThemeData
             : Brightness.Dark;
     }
 
-    private static TargetPlatform ResolveDefaultPlatform()
-    {
-        if (OperatingSystem.IsIOS())
-        {
-            return TargetPlatform.IOS;
-        }
-
-        if (OperatingSystem.IsMacOS())
-        {
-            return TargetPlatform.MacOS;
-        }
-
-        if (OperatingSystem.IsAndroid())
-        {
-            return TargetPlatform.Android;
-        }
-
-        if (OperatingSystem.IsWindows())
-        {
-            return TargetPlatform.Windows;
-        }
-
-        if (OperatingSystem.IsLinux())
-        {
-            return TargetPlatform.Linux;
-        }
-
-        return TargetPlatform.Android;
-    }
-
     private static IReadOnlyDictionary<Type, Adaptation> CreateAdaptationMap(
         IEnumerable<Adaptation>? adaptations)
     {
@@ -1498,10 +1252,54 @@ public sealed record ThemeData
             : InkRipple.SplashFactory;
     }
 
-    private sealed record LocalizedThemeEntry(
-        ThemeData BaseTheme,
-        TextTheme LocalTextGeometry,
-        ThemeData Theme);
+    /// <summary>
+    /// Dart's `_IdentityThemeDataCacheKey`: keys the localized-theme cache on the *identity* of
+    /// its two inputs, so a rebuilt-but-equal theme is a cache miss rather than a stale hit.
+    /// </summary>
+    private sealed class IdentityThemeDataCacheKey(ThemeData baseTheme, TextTheme localTextGeometry)
+    {
+        private readonly ThemeData _baseTheme = baseTheme;
+        private readonly TextTheme _localTextGeometry = localTextGeometry;
+
+        public override int GetHashCode() =>
+            RuntimeHelpers.GetHashCode(_baseTheme) ^ RuntimeHelpers.GetHashCode(_localTextGeometry);
+
+        public override bool Equals(object? obj) =>
+            obj is IdentityThemeDataCacheKey other
+            && ReferenceEquals(other._baseTheme, _baseTheme)
+            && ReferenceEquals(other._localTextGeometry, _localTextGeometry);
+    }
+
+    /// <summary>Dart's `_FifoCache`: bounded, evicting the least recently *inserted* entry.</summary>
+    private sealed class FifoCache<TKey, TValue>(int maximumSize)
+        where TKey : notnull
+        where TValue : class
+    {
+        private readonly Dictionary<TKey, TValue> _cache = [];
+        private readonly Queue<TKey> _order = new();
+        private readonly Lock _gate = new();
+
+        public TValue PutIfAbsent(TKey key, Func<TValue> loader)
+        {
+            lock (_gate)
+            {
+                if (_cache.TryGetValue(key, out TValue? existing))
+                {
+                    return existing;
+                }
+
+                if (_cache.Count == maximumSize)
+                {
+                    _cache.Remove(_order.Dequeue());
+                }
+
+                TValue created = loader();
+                _cache[key] = created;
+                _order.Enqueue(key);
+                return created;
+            }
+        }
+    }
 }
 
 /// <summary>

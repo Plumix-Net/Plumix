@@ -197,7 +197,7 @@ public sealed class MaterialSliderTests
         Assert.Equal(7, ReadProperty<double>(render, "TrackGap"));
         Assert.Equal(new Size(4, 44), ReadProperty<Size>(render, "ThumbSize"));
         Assert.Equal(16, ReadProperty<double>(render, "TrackHeight"));
-        Assert.Equal(theme.SecondaryContainerColor, ReadProperty<Color>(render, "InactiveTrackColor"));
+        Assert.Equal(theme.ColorScheme.SecondaryContainer, ReadProperty<Color>(render, "InactiveTrackColor"));
     }
 
     [Fact]
@@ -207,7 +207,6 @@ public sealed class MaterialSliderTests
         {
             UseMaterial3 = true,
             PrimaryColor = Colors.Coral,
-            SurfaceContainerHighestColor = Colors.PowderBlue,
             ColorScheme = ThemeData.Light.ColorScheme with
             {
                 Primary = Colors.Coral,

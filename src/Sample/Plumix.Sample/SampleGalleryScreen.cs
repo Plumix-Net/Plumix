@@ -102,6 +102,7 @@ internal static class SampleRoutes
     public const string AppBarIconTheme = "/appbar-icon-theme";
     public const string AppBarTextStyles = "/appbar-text-styles";
     public const string ColorPalette = "/color-palette";
+    public const string VisualDensity = "/visual-density";
     public const string MaterialIcons = "/material-icons";
     public const string MaterialLocalizations = "/material-localizations";
     public const string CupertinoApp = "/cupertino-app";
@@ -281,6 +282,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Colors + primarySwatch",
             "MaterialColor shades + fromSwatch M2 scheme + swatch-derived theme colors",
             () => new ColorPaletteDemoPage()),
+        new(
+            SampleRoutes.VisualDensity,
+            "VisualDensity",
+            "density profiles + per-platform ThemeData defaults + constraint arithmetic",
+            () => new VisualDensityDemoPage()),
         new(
             SampleRoutes.MaterialLocalizations,
             "Localizations",

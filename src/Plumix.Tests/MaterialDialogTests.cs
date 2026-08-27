@@ -61,7 +61,7 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView), box =>
             box.AdditionalConstraints.MinWidth == 280);
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
-            box.Decoration.Color == ThemeData.Light.SurfaceContainerHighColor
+            box.Decoration.Color == ThemeData.Light.ColorScheme.SurfaceContainerHigh
             && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(28));
         Assert.NotNull(FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsDialog)));
     }

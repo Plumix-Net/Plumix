@@ -270,7 +270,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
         {
             Platform = TargetPlatform.Android,
             UseMaterial3 = true,
-            SecondaryColor = Colors.Orange,
+            ColorScheme = ThemeData.Light.ColorScheme.CopyWith(secondary: Colors.Orange),
         };
 
         using var harness = new WidgetRenderHarness(Wrap(

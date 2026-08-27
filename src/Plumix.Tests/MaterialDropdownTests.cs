@@ -1114,7 +1114,8 @@ public sealed class MaterialDropdownTests : IDisposable
     [InlineData(0.0, 12.0)]
     [InlineData(-2.0, 8.0)]
     [InlineData(2.0, 16.0)]
-    [InlineData(-8.0, 4.0)]
+    // `VisualDensity.minimumDensity` is the lowest legal density, and it lands exactly on the floor.
+    [InlineData(-4.0, 4.0)]
     public void MenuItemLabel_SpacesTheLeadingIconByTheSourceDensityFormula(
         double horizontalDensity,
         double expectedSpacing)

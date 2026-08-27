@@ -39,7 +39,7 @@ public static class ElevationOverlay
 
     public static Color OverlayColor(BuildContext context, double elevation)
     {
-        return WithOpacity(Theme.Of(context).OnSurfaceColor, OverlayOpacity(elevation));
+        return WithOpacity(Theme.Of(context).ColorScheme.OnSurface, OverlayOpacity(elevation));
     }
 
     public static Color ColorWithOverlay(Color surface, Color overlay, double elevation)
@@ -53,9 +53,9 @@ public static class ElevationOverlay
         if (elevation > 0.0
             && theme.ApplyElevationOverlayColor
             && theme.Brightness == Brightness.Dark
-            && HasSameOpaqueColor(color, theme.SurfaceColor))
+            && HasSameOpaqueColor(color, theme.ColorScheme.Surface))
         {
-            return ColorWithOverlay(color, theme.OnSurfaceColor, elevation);
+            return ColorWithOverlay(color, theme.ColorScheme.OnSurface, elevation);
         }
 
         return color;

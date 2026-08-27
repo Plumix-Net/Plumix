@@ -88,10 +88,10 @@ public sealed record ButtonThemeData
     public ButtonTextTheme GetTextTheme(MaterialButton button) => button.TextTheme ?? TextTheme;
 
     public Color GetDisabledTextColor(MaterialButton button, ThemeData theme) =>
-        button.TextColor ?? button.DisabledTextColor ?? ApplyOpacity(theme.OnSurfaceColor, 0.38);
+        button.TextColor ?? button.DisabledTextColor ?? ApplyOpacity(theme.ColorScheme.OnSurface, 0.38);
 
     public Color GetDisabledFillColor(MaterialButton button, ThemeData theme) =>
-        button.DisabledColor ?? DisabledColor ?? ApplyOpacity(theme.OnSurfaceColor, 0.38);
+        button.DisabledColor ?? DisabledColor ?? ApplyOpacity(theme.ColorScheme.OnSurface, 0.38);
 
     public Color? GetFillColor(MaterialButton button, ThemeData theme)
     {
@@ -119,7 +119,7 @@ public sealed record ButtonThemeData
 
         return GetTextTheme(button) switch
         {
-            ButtonTextTheme.Accent => theme.SecondaryColor,
+            ButtonTextTheme.Accent => theme.ColorScheme.Secondary,
             ButtonTextTheme.Primary => ResolvePrimaryTextColor(button, theme),
             _ => (button.ColorBrightness ?? theme.Brightness) == Brightness.Dark
                 ? Colors.White

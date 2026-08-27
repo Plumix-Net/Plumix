@@ -131,7 +131,7 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains(FindDescendants<RenderConstrainedBox>(railHarness.RenderView),
             box => box.AdditionalConstraints.MinWidth == 72);
         Assert.DoesNotContain(FindDescendants<RenderDecoratedBox>(railHarness.RenderView),
-            box => box.Decoration.Color == theme.SecondaryContainerColor);
+            box => box.Decoration.Color == theme.ColorScheme.SecondaryContainer);
     }
 
     [Fact]

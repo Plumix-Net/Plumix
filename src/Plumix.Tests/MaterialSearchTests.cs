@@ -13,6 +13,11 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class MaterialSearchTests : IDisposable
 {
+    // `SearchAnchor` picks the full-screen view on mobile and the anchored view on desktop, off
+    // `ThemeData.platform`. Tests that assert the anchored geometry pin a desktop platform so the
+    // branch is chosen by the test rather than inherited from the host OS.
+    private static ThemeData DesktopTheme { get; } = new(platform: TargetPlatform.MacOS);
+
     public MaterialSearchTests()
     {
         Scheduler.ResetForTests();
@@ -74,7 +79,7 @@ public sealed class MaterialSearchTests : IDisposable
 
         Plumix.Material.Material surface = Assert.Single(harness.FindWidgets<Plumix.Material.Material>());
         Assert.Equal(6.0, surface.Elevation);
-        Assert.Equal(theme.SurfaceContainerHighColor, surface.Color);
+        Assert.Equal(theme.ColorScheme.SurfaceContainerHigh, surface.Color);
         Assert.Equal(theme.ShadowColor, surface.ShadowColor);
         Assert.Equal(MaterialColors.Transparent, surface.SurfaceTintColor);
         Assert.IsType<StadiumBorder>(surface.Shape);
@@ -90,8 +95,8 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(EdgeInsetsGeometry.Zero, field.Decoration?.ContentPadding);
         Assert.True(field.Decoration?.IsDense);
         Assert.NotEqual(true, field.Decoration?.IsCollapsed);
-        Assert.Equal(theme.OnSurfaceVariantColor, field.Decoration?.HintStyle?.DefaultValue.Color);
-        Assert.Equal(theme.OnSurfaceColor, field.Style?.Color);
+        Assert.Equal(theme.ColorScheme.OnSurfaceVariant, field.Decoration?.HintStyle?.DefaultValue.Color);
+        Assert.Equal(theme.ColorScheme.OnSurface, field.Style?.Color);
         Assert.Contains(
             harness.FindWidgets<Semantics>(),
             semantics => semantics.InputType == SemanticsInputType.Search);
@@ -253,7 +258,7 @@ public sealed class MaterialSearchTests : IDisposable
         var controller = new SearchController();
         var size = new Size(700, 500);
         using var harness = new WidgetRenderHarness(Wrap(
-            ThemeData.Light,
+            DesktopTheme,
             new Navigator(new BuilderPageRoute(_ => SearchAnchor.Bar(
                 searchController: controller,
                 suggestionsBuilder: Sync(_ => new Widget[] { new Text("suggestion") }))))));
@@ -266,7 +271,7 @@ public sealed class MaterialSearchTests : IDisposable
             harness.FindWidgets<Plumix.Material.Material>(),
             material => material.ClipBehavior == Clip.AntiAlias);
         Assert.Equal(6.0, view.Elevation);
-        Assert.Equal(ThemeData.Light.SurfaceContainerHighColor, view.Color);
+        Assert.Equal(ThemeData.Light.ColorScheme.SurfaceContainerHigh, view.Color);
         Assert.Equal(MaterialColors.Transparent, view.SurfaceTintColor);
         Assert.Equal(
             new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(28.0)),
@@ -299,7 +304,7 @@ public sealed class MaterialSearchTests : IDisposable
                 ? Alignment.BottomRight
                 : Alignment.BottomLeft;
             using var harness = new WidgetRenderHarness(Wrap(
-                ThemeData.Light,
+                DesktopTheme,
                 new Navigator(new BuilderPageRoute(_ => new Align(
                     alignment: anchorAlignment,
                     child: new SearchAnchor(
@@ -568,7 +573,7 @@ public sealed class MaterialSearchTests : IDisposable
         var suggestions = new List<Widget>();
         var size = new Size(640, 420);
         using var harness = new WidgetRenderHarness(Wrap(
-            ThemeData.Light,
+            DesktopTheme,
             new Navigator(new BuilderPageRoute(_ => new SearchAnchor(
                 searchController: controller,
                 shrinkWrap: true,
