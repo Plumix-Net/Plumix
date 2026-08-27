@@ -1,10 +1,11 @@
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.UI;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): material_ui/lib/src/bottom_navigation_bar_theme.dart (approximate)
+// Dart parity source: material_ui/lib/src/bottom_navigation_bar_theme.dart
 
 public sealed record BottomNavigationBarThemeData(
     Color? BackgroundColor = null,
@@ -17,7 +18,10 @@ public sealed record BottomNavigationBarThemeData(
     TextStyle? UnselectedLabelStyle = null,
     bool? ShowSelectedLabels = null,
     bool? ShowUnselectedLabels = null,
-    BottomNavigationBarType? Type = null)
+    BottomNavigationBarType? Type = null,
+    bool? EnableFeedback = null,
+    BottomNavigationBarLandscapeLayout? LandscapeLayout = null,
+    WidgetStateProperty<MouseCursor?>? MouseCursor = null)
 {
     public BottomNavigationBarThemeData CopyWith(
         Color? backgroundColor = null,
@@ -30,7 +34,10 @@ public sealed record BottomNavigationBarThemeData(
         TextStyle? unselectedLabelStyle = null,
         bool? showSelectedLabels = null,
         bool? showUnselectedLabels = null,
-        BottomNavigationBarType? type = null)
+        BottomNavigationBarType? type = null,
+        bool? enableFeedback = null,
+        BottomNavigationBarLandscapeLayout? landscapeLayout = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null)
     {
         return new BottomNavigationBarThemeData(
             BackgroundColor: backgroundColor ?? BackgroundColor,
@@ -43,7 +50,10 @@ public sealed record BottomNavigationBarThemeData(
             UnselectedLabelStyle: unselectedLabelStyle ?? UnselectedLabelStyle,
             ShowSelectedLabels: showSelectedLabels ?? ShowSelectedLabels,
             ShowUnselectedLabels: showUnselectedLabels ?? ShowUnselectedLabels,
-            Type: type ?? Type);
+            Type: type ?? Type,
+            EnableFeedback: enableFeedback ?? EnableFeedback,
+            LandscapeLayout: landscapeLayout ?? LandscapeLayout,
+            MouseCursor: mouseCursor ?? MouseCursor);
     }
 
     public static BottomNavigationBarThemeData Lerp(
@@ -91,7 +101,60 @@ public sealed record BottomNavigationBarThemeData(
             ShowUnselectedLabels: clampedT < 0.5
                 ? a?.ShowUnselectedLabels
                 : b?.ShowUnselectedLabels,
-            Type: clampedT < 0.5 ? a?.Type : b?.Type);
+            Type: clampedT < 0.5 ? a?.Type : b?.Type,
+            EnableFeedback: clampedT < 0.5 ? a?.EnableFeedback : b?.EnableFeedback,
+            LandscapeLayout: clampedT < 0.5 ? a?.LandscapeLayout : b?.LandscapeLayout,
+            MouseCursor: clampedT < 0.5 ? a?.MouseCursor : b?.MouseCursor);
+    }
+
+    public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        properties.Add(new DiagnosticsProperty<Color?>("backgroundColor", BackgroundColor, defaultValue: nullDefault));
+        properties.Add(new DoubleProperty("elevation", Elevation, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<IconThemeData?>(
+            "selectedIconTheme",
+            SelectedIconTheme,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<IconThemeData?>(
+            "unselectedIconTheme",
+            UnselectedIconTheme,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<Color?>(
+            "selectedItemColor",
+            SelectedItemColor,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<Color?>(
+            "unselectedItemColor",
+            UnselectedItemColor,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
+            "selectedLabelStyle",
+            SelectedLabelStyle,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<TextStyle?>(
+            "unselectedLabelStyle",
+            UnselectedLabelStyle,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<bool?>(
+            "showSelectedLabels",
+            ShowSelectedLabels,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<bool?>(
+            "showUnselectedLabels",
+            ShowUnselectedLabels,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<BottomNavigationBarType?>("type", Type, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<bool?>("enableFeedback", EnableFeedback, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<BottomNavigationBarLandscapeLayout?>(
+            "landscapeLayout",
+            LandscapeLayout,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<MouseCursor?>?>(
+            "mouseCursor",
+            MouseCursor,
+            defaultValue: nullDefault));
     }
 }
 

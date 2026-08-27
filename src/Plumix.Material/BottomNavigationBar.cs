@@ -6,47 +6,63 @@ using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
-using BoxShadow = Plumix.Rendering.BoxShadow;
+using Transform = Plumix.Widgets.Transform;
 
 namespace Plumix.Material;
 
-// Dart parity source (reference): material_ui/lib/src/bottom_navigation_bar.dart
+// Dart parity source: material_ui/lib/src/bottom_navigation_bar.dart
 
+/// <summary>Dart's `BottomNavigationBarType`.</summary>
 public enum BottomNavigationBarType
 {
+    /// <summary>The items have fixed width.</summary>
     Fixed,
+
+    /// <summary>The location and size of the items animate and the labels fade in on tap.</summary>
     Shifting,
+}
+
+/// <summary>Dart's `BottomNavigationBarLandscapeLayout`.</summary>
+public enum BottomNavigationBarLandscapeLayout
+{
+    /// <summary>Items are spread out over the whole available width.</summary>
+    Spread,
+
+    /// <summary>Items are horizontally centered within a portrait-width box.</summary>
+    Centered,
+
+    /// <summary>Each item's icon and label sit side by side in a row.</summary>
+    Linear,
 }
 
 public sealed class BottomNavigationBar : StatefulWidget
 {
-    private const double DefaultHeight = 56.0;
-    private const double DefaultIconSize = 24.0;
-
     public BottomNavigationBar(
         IReadOnlyList<BottomNavigationBarItem> items,
         Action<int>? onTap = null,
         int currentIndex = 0,
+        double? elevation = null,
         BottomNavigationBarType? type = null,
+        Color? fixedColor = null,
         Color? backgroundColor = null,
+        double iconSize = 24.0,
         Color? selectedItemColor = null,
         Color? unselectedItemColor = null,
         IconThemeData? selectedIconTheme = null,
         IconThemeData? unselectedIconTheme = null,
-        double? elevation = null,
-        double iconSize = DefaultIconSize,
         double selectedFontSize = 14.0,
         double unselectedFontSize = 12.0,
         TextStyle? selectedLabelStyle = null,
         TextStyle? unselectedLabelStyle = null,
         bool? showSelectedLabels = null,
         bool? showUnselectedLabels = null,
+        MouseCursor? mouseCursor = null,
+        bool? enableFeedback = null,
+        BottomNavigationBarLandscapeLayout? landscapeLayout = null,
+        bool useLegacyColorScheme = true,
         Key? key = null) : base(key)
     {
-        if (items is null)
-        {
-            throw new ArgumentNullException(nameof(items));
-        }
+        ArgumentNullException.ThrowIfNull(items);
 
         if (items.Count < 2)
         {
@@ -55,7 +71,7 @@ public sealed class BottomNavigationBar : StatefulWidget
 
         if (items.Any(item => item.Label is null))
         {
-            throw new ArgumentException("BottomNavigationBar items require non-null labels.", nameof(items));
+            throw new ArgumentException("Every item must have a non-null label", nameof(items));
         }
 
         if (currentIndex < 0 || currentIndex >= items.Count)
@@ -63,51 +79,58 @@ public sealed class BottomNavigationBar : StatefulWidget
             throw new ArgumentOutOfRangeException(nameof(currentIndex), "Current index must be within item range.");
         }
 
-        if (!double.IsFinite(iconSize) || iconSize < 0)
+        if (elevation is < 0.0)
         {
-            throw new ArgumentOutOfRangeException(nameof(iconSize), "Icon size must be finite and non-negative.");
+            throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be non-negative.");
         }
 
-        if (!double.IsFinite(selectedFontSize) || selectedFontSize < 0)
+        if (iconSize < 0.0)
         {
-            throw new ArgumentOutOfRangeException(nameof(selectedFontSize), "Selected font size must be finite and non-negative.");
+            throw new ArgumentOutOfRangeException(nameof(iconSize), "Icon size must be non-negative.");
         }
 
-        if (!double.IsFinite(unselectedFontSize) || unselectedFontSize < 0)
+        if (selectedItemColor is not null && fixedColor is not null)
         {
-            throw new ArgumentOutOfRangeException(nameof(unselectedFontSize), "Unselected font size must be finite and non-negative.");
+            throw new ArgumentException(
+                "Either selectedItemColor or fixedColor can be specified, but not both",
+                nameof(selectedItemColor));
         }
 
-        if (elevation.HasValue && (!double.IsFinite(elevation.Value) || elevation.Value < 0))
+        if (selectedFontSize < 0.0)
         {
-            throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be finite and non-negative.");
+            throw new ArgumentOutOfRangeException(
+                nameof(selectedFontSize),
+                "Selected font size must be non-negative.");
         }
 
-        if ((selectedIconTheme is null) != (unselectedIconTheme is null))
+        if (unselectedFontSize < 0.0)
         {
-            throw new ArgumentException("Both selectedIconTheme and unselectedIconTheme must be provided together.");
+            throw new ArgumentOutOfRangeException(
+                nameof(unselectedFontSize),
+                "Unselected font size must be non-negative.");
         }
-
-        ValidateIconTheme(nameof(selectedIconTheme), selectedIconTheme);
-        ValidateIconTheme(nameof(unselectedIconTheme), unselectedIconTheme);
 
         Items = items;
         OnTap = onTap;
         CurrentIndex = currentIndex;
+        Elevation = elevation;
         Type = type;
         BackgroundColor = backgroundColor;
-        SelectedItemColor = selectedItemColor;
+        IconSize = iconSize;
+        SelectedItemColor = selectedItemColor ?? fixedColor;
         UnselectedItemColor = unselectedItemColor;
         SelectedIconTheme = selectedIconTheme;
         UnselectedIconTheme = unselectedIconTheme;
-        Elevation = elevation;
-        IconSize = iconSize;
         SelectedFontSize = selectedFontSize;
         UnselectedFontSize = unselectedFontSize;
         SelectedLabelStyle = selectedLabelStyle;
         UnselectedLabelStyle = unselectedLabelStyle;
         ShowSelectedLabels = showSelectedLabels;
         ShowUnselectedLabels = showUnselectedLabels;
+        MouseCursor = mouseCursor;
+        EnableFeedback = enableFeedback;
+        LandscapeLayout = landscapeLayout;
+        UseLegacyColorScheme = useLegacyColorScheme;
     }
 
     public IReadOnlyList<BottomNavigationBarItem> Items { get; }
@@ -116,9 +139,16 @@ public sealed class BottomNavigationBar : StatefulWidget
 
     public int CurrentIndex { get; }
 
+    public double? Elevation { get; }
+
     public BottomNavigationBarType? Type { get; }
 
+    /// <summary>Dart's `BottomNavigationBar.fixedColor` getter — an alias of `selectedItemColor`.</summary>
+    public Color? FixedColor => SelectedItemColor;
+
     public Color? BackgroundColor { get; }
+
+    public double IconSize { get; }
 
     public Color? SelectedItemColor { get; }
 
@@ -127,10 +157,6 @@ public sealed class BottomNavigationBar : StatefulWidget
     public IconThemeData? SelectedIconTheme { get; }
 
     public IconThemeData? UnselectedIconTheme { get; }
-
-    public double? Elevation { get; }
-
-    public double IconSize { get; }
 
     public double SelectedFontSize { get; }
 
@@ -144,691 +170,957 @@ public sealed class BottomNavigationBar : StatefulWidget
 
     public bool? ShowUnselectedLabels { get; }
 
-    public override State CreateState()
+    public MouseCursor? MouseCursor { get; }
+
+    public bool? EnableFeedback { get; }
+
+    public BottomNavigationBarLandscapeLayout? LandscapeLayout { get; }
+
+    public bool UseLegacyColorScheme { get; }
+
+    public override State CreateState() => new BottomNavigationBarState();
+}
+
+/// <summary>Dart's private `_BottomNavigationTile`.</summary>
+internal sealed class BottomNavigationTile : StatelessWidget
+{
+    internal BottomNavigationTile(
+        BottomNavigationBarType type,
+        BottomNavigationBarItem item,
+        Animation<double> animation,
+        double iconSize,
+        Action? onTap = null,
+        ColorTween? labelColorTween = null,
+        ColorTween? iconColorTween = null,
+        double? flex = null,
+        bool selected = false,
+        IconThemeData? selectedIconTheme = null,
+        IconThemeData? unselectedIconTheme = null,
+        bool showSelectedLabels = true,
+        bool showUnselectedLabels = true,
+        string? indexLabel = null,
+        MouseCursor? mouseCursor = null,
+        bool enableFeedback = true,
+        BottomNavigationBarLandscapeLayout layout = BottomNavigationBarLandscapeLayout.Spread,
+        TextStyle? selectedLabelStyle = null,
+        TextStyle? unselectedLabelStyle = null,
+        Key? key = null) : base(key)
     {
-        return new BottomNavigationBarState();
+        Type = type;
+        Item = item;
+        Animation = animation;
+        IconSize = iconSize;
+        OnTap = onTap;
+        LabelColorTween = labelColorTween;
+        IconColorTween = iconColorTween;
+        Flex = flex;
+        Selected = selected;
+        SelectedIconTheme = selectedIconTheme;
+        UnselectedIconTheme = unselectedIconTheme;
+        ShowSelectedLabels = showSelectedLabels;
+        ShowUnselectedLabels = showUnselectedLabels;
+        IndexLabel = indexLabel;
+        MouseCursor = mouseCursor;
+        EnableFeedback = enableFeedback;
+        Layout = layout;
+        SelectedLabelStyle = selectedLabelStyle;
+        UnselectedLabelStyle = unselectedLabelStyle;
     }
 
-    private sealed class BottomNavigationBarState : State
+    internal BottomNavigationBarType Type { get; }
+
+    internal BottomNavigationBarItem Item { get; }
+
+    internal Animation<double> Animation { get; }
+
+    internal double IconSize { get; }
+
+    internal Action? OnTap { get; }
+
+    internal ColorTween? LabelColorTween { get; }
+
+    internal ColorTween? IconColorTween { get; }
+
+    internal double? Flex { get; }
+
+    internal bool Selected { get; }
+
+    internal IconThemeData? SelectedIconTheme { get; }
+
+    internal IconThemeData? UnselectedIconTheme { get; }
+
+    internal TextStyle? SelectedLabelStyle { get; }
+
+    internal TextStyle? UnselectedLabelStyle { get; }
+
+    internal string? IndexLabel { get; }
+
+    internal bool ShowSelectedLabels { get; }
+
+    internal bool ShowUnselectedLabels { get; }
+
+    internal MouseCursor? MouseCursor { get; }
+
+    internal bool EnableFeedback { get; }
+
+    internal BottomNavigationBarLandscapeLayout Layout { get; }
+
+    public override Widget Build(BuildContext context)
     {
-        private const int FlexScale = 1000;
-        private const double SelectedFlexBonus = 0.5;
-        private static readonly TimeSpan SelectionTransitionDuration = TimeSpan.FromMilliseconds(250);
-        private static readonly TimeSpan BackgroundTransitionDuration = TimeSpan.FromMilliseconds(300);
-
-        private readonly ColorTween _colorTween = new();
-
-        private List<AnimationController> _selectionControllers = [];
-        private AnimationController? _backgroundController;
-
-        private bool _backgroundInitialized;
-        private Color _backgroundFromColor;
-        private Color _backgroundToColor;
-        private int _backgroundOriginIndex;
-        private int? _pendingTapIndex;
-
-        private BottomNavigationBar CurrentWidget => (BottomNavigationBar)StateWidget;
-
-        public override void InitState()
+        // In order to use the flex container to grow the tile during animation, we need to divide the
+        // changes in flex allotment into smaller pieces to avoid overanimating.
+        int size = Type switch
         {
-            InitializeSelectionControllers(CurrentWidget.Items.Count, CurrentWidget.CurrentIndex);
+            BottomNavigationBarType.Fixed => 1,
+            _ => (int)Math.Round((Flex ?? 1.0) * 1000.0),
+        };
 
-            _backgroundController = new AnimationController(duration: BackgroundTransitionDuration, vsync: this)
-            {
-                Curve = Curves.EaseOut,
-            };
-            _backgroundController.Changed += HandleAnimationTick;
-            _backgroundController.Completed += HandleBackgroundCompleted;
-            _backgroundOriginIndex = CurrentWidget.CurrentIndex;
+        double selectedFontSize = SelectedLabelStyle?.FontSize ?? 0.0;
+
+        double selectedIconSize = SelectedIconTheme?.Size ?? IconSize;
+        double unselectedIconSize = UnselectedIconTheme?.Size ?? IconSize;
+
+        // The amount that the selected icon is bigger than the unselected icons,
+        // (or zero if the selected icon is not bigger than the unselected icons).
+        double selectedIconDiff = Math.Max(selectedIconSize - unselectedIconSize, 0);
+
+        // The amount that the unselected icons are bigger than the selected icon,
+        // (or zero if the unselected icons are not any bigger than the selected icon).
+        double unselectedIconDiff = Math.Max(unselectedIconSize - selectedIconSize, 0);
+
+        // The effective title is the smaller of the two font sizes; the padding is
+        // driven by the difference between the two icon sizes so that the icons stay
+        // vertically centered while they resize.
+        double bottomPadding;
+        double topPadding;
+        if (ShowSelectedLabels && !ShowUnselectedLabels)
+        {
+            bottomPadding = new DoubleTween(
+                begin: selectedIconDiff / 2.0,
+                end: (selectedFontSize / 2.0) - (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
+            topPadding = new DoubleTween(
+                begin: selectedFontSize + (selectedIconDiff / 2.0),
+                end: (selectedFontSize / 2.0) - (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
+        }
+        else if (!ShowSelectedLabels && !ShowUnselectedLabels)
+        {
+            bottomPadding = new DoubleTween(
+                begin: selectedIconDiff / 2.0,
+                end: unselectedIconDiff / 2.0).Evaluate(Animation.Value);
+            topPadding = new DoubleTween(
+                begin: selectedFontSize + (selectedIconDiff / 2.0),
+                end: selectedFontSize + (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
+        }
+        else
+        {
+            bottomPadding = new DoubleTween(
+                begin: (selectedFontSize / 2.0) + (selectedIconDiff / 2.0),
+                end: (selectedFontSize / 2.0) + (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
+            topPadding = new DoubleTween(
+                begin: (selectedFontSize / 2.0) + (selectedIconDiff / 2.0),
+                end: (selectedFontSize / 2.0) + (unselectedIconDiff / 2.0)).Evaluate(Animation.Value);
         }
 
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
-        {
-            var oldBar = (BottomNavigationBar)oldWidget;
+        string? effectiveTooltip = Item.Tooltip == string.Empty ? null : Item.Tooltip;
 
-            if (oldBar.Items.Count != CurrentWidget.Items.Count)
-            {
-                InitializeSelectionControllers(CurrentWidget.Items.Count, CurrentWidget.CurrentIndex);
-                if (_pendingTapIndex.HasValue && _pendingTapIndex.Value >= CurrentWidget.Items.Count)
-                {
-                    _pendingTapIndex = null;
-                }
-            }
-            else if (oldBar.CurrentIndex != CurrentWidget.CurrentIndex)
-            {
-                StartSelectionAnimation(oldBar.CurrentIndex, CurrentWidget.CurrentIndex);
-            }
+        Widget result = new InkResponse(
+            onTap: OnTap,
+            mouseCursor: MouseCursor,
+            enableFeedback: EnableFeedback,
+            child: new Padding(
+                insets: new Thickness(0, topPadding, 0, bottomPadding),
+                child: new BottomNavigationTileContent(
+                    layout: Layout,
+                    icon: new BottomNavigationTileIcon(
+                        colorTween: IconColorTween,
+                        animation: Animation,
+                        iconSize: IconSize,
+                        selected: Selected,
+                        item: Item,
+                        selectedIconTheme: SelectedIconTheme,
+                        unselectedIconTheme: UnselectedIconTheme),
+                    label: new BottomNavigationTileLabel(
+                        colorTween: LabelColorTween,
+                        animation: Animation,
+                        item: Item,
+                        selectedLabelStyle: SelectedLabelStyle,
+                        unselectedLabelStyle: UnselectedLabelStyle,
+                        showSelectedLabels: ShowSelectedLabels,
+                        showUnselectedLabels: ShowUnselectedLabels))));
+
+        if (effectiveTooltip is not null)
+        {
+            result = new Tooltip(
+                message: effectiveTooltip,
+                preferBelow: false,
+                verticalOffset: selectedIconSize + selectedFontSize,
+                excludeFromSemantics: true,
+                child: result);
         }
 
-        public override void Dispose()
-        {
-            foreach (var controller in _selectionControllers)
-            {
-                controller.Changed -= HandleAnimationTick;
-                controller.Dispose();
-            }
-
-            _selectionControllers.Clear();
-
-            if (_backgroundController is not null)
-            {
-                _backgroundController.Changed -= HandleAnimationTick;
-                _backgroundController.Completed -= HandleBackgroundCompleted;
-                _backgroundController.Dispose();
-                _backgroundController = null;
-            }
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            var theme = Theme.Of(context);
-            var bottomTheme = BottomNavigationBarTheme.Of(context);
-            var effectiveType = CurrentWidget.ResolveEffectiveType(bottomTheme);
-            var effectiveBackground = CurrentWidget.ResolveBackgroundColor(theme, bottomTheme, effectiveType);
-
-            EnsureBackgroundTransition(effectiveType, effectiveBackground);
-
-            var effectiveSelectedColor = CurrentWidget.SelectedItemColor
-                                         ?? bottomTheme.SelectedItemColor
-                                         ?? ResolveDefaultSelectedColor(theme, effectiveType);
-            var effectiveUnselectedColor = CurrentWidget.UnselectedItemColor
-                                           ?? bottomTheme.UnselectedItemColor
-                                           ?? ResolveDefaultUnselectedColor(theme, effectiveType);
-
-            var effectiveSelectedIconTheme = ResolveIconTheme(
-                CurrentWidget.SelectedIconTheme ?? bottomTheme.SelectedIconTheme,
-                effectiveSelectedColor,
-                CurrentWidget.IconSize);
-            var effectiveUnselectedIconTheme = ResolveIconTheme(
-                CurrentWidget.UnselectedIconTheme ?? bottomTheme.UnselectedIconTheme,
-                effectiveUnselectedColor,
-                CurrentWidget.IconSize);
-
-            var labelBaseStyle = theme.TextTheme.BodyMedium with
-            {
-                FontSize = CurrentWidget.SelectedFontSize,
-            };
-            var effectiveSelectedLabelStyle = ResolveLabelStyle(
-                labelBaseStyle,
-                CurrentWidget.SelectedLabelStyle ?? bottomTheme.SelectedLabelStyle,
-                CurrentWidget.SelectedFontSize,
-                effectiveSelectedColor);
-            var effectiveUnselectedLabelStyle = ResolveLabelStyle(
-                labelBaseStyle,
-                CurrentWidget.UnselectedLabelStyle ?? bottomTheme.UnselectedLabelStyle,
-                CurrentWidget.UnselectedFontSize,
-                effectiveUnselectedColor);
-
-            bool effectiveShowSelectedLabels = CurrentWidget.ShowSelectedLabels
-                                               ?? bottomTheme.ShowSelectedLabels
-                                               ?? true;
-            bool effectiveShowUnselectedLabels = CurrentWidget.ShowUnselectedLabels
-                                                 ?? bottomTheme.ShowUnselectedLabels
-                                                 ?? (effectiveType == BottomNavigationBarType.Fixed);
-            double effectiveElevation = CurrentWidget.Elevation ?? bottomTheme.Elevation ?? 8.0;
-
-            var tiles = new List<Widget>(CurrentWidget.Items.Count);
-            for (int index = 0; index < CurrentWidget.Items.Count; index++)
-            {
-                int itemIndex = index;
-                var item = CurrentWidget.Items[itemIndex];
-                double selectionValue = ResolveSelectionValue(index);
-                var iconFromColor = effectiveUnselectedIconTheme.Color ?? effectiveUnselectedColor;
-                var iconToColor = effectiveSelectedIconTheme.Color ?? effectiveSelectedColor;
-                double iconFromSize = effectiveUnselectedIconTheme.Size ?? CurrentWidget.IconSize;
-                double iconToSize = effectiveSelectedIconTheme.Size ?? CurrentWidget.IconSize;
-                double iconFromOpacity = effectiveUnselectedIconTheme.Opacity ?? 1.0;
-                double iconToOpacity = effectiveSelectedIconTheme.Opacity ?? 1.0;
-                var iconColor = _colorTween.Evaluate(
-                    selectionValue,
-                    iconFromColor,
-                    iconToColor);
-                double iconSize = Lerp(
-                    iconFromSize,
-                    iconToSize,
-                    selectionValue);
-                var iconTheme = new IconThemeData(
-                    Color: iconColor,
-                    Size: iconSize,
-                    Opacity: Lerp(iconFromOpacity, iconToOpacity, selectionValue));
-
-                bool selectedVisual = selectionValue >= 0.5;
-                var icon = selectedVisual ? item.ActiveIcon : item.Icon;
-                var labelStyle = selectedVisual ? effectiveSelectedLabelStyle : effectiveUnselectedLabelStyle;
-                double labelOpacity = ResolveLabelOpacity(
-                    selectionValue,
-                    effectiveShowSelectedLabels,
-                    effectiveShowUnselectedLabels);
-                int tileFlex = ResolveTileFlex(selectionValue, effectiveType);
-
-                var tileChildren = new List<Widget>
-                {
-                    new IconTheme(
-                        data: iconTheme,
-                        child: icon),
-                };
-
-                if (labelOpacity > 0)
-                {
-                    tileChildren.Add(new Opacity(
-                        labelOpacity,
-                        child: CreateLabel(item.Label!, labelStyle)));
-                }
-
-                var tileBody = new SizedBox(
-                    height: DefaultHeight,
-                    child: new Center(
-                        child: new Column(
-                            mainAxisSize: MainAxisSize.Min,
-                            crossAxisAlignment: CrossAxisAlignment.Center,
-                            spacing: 4,
-                            children: tileChildren)));
-
-                Action? onTileTap = CurrentWidget.OnTap is null
-                    ? null
-                    : () => HandleTileTap(itemIndex);
-
-                var semanticsChildren = new List<Widget>
-                {
-                    tileBody,
-                    new Semantics(label: CreateIndexSemanticsLabel(context, itemIndex, CurrentWidget.Items.Count)),
-                };
-
-                bool tileNeedsSemanticLabel = !(effectiveShowSelectedLabels && effectiveShowUnselectedLabels);
-                string? tileSemanticsLabel = tileNeedsSemanticLabel ? item.Label : null;
-
-                Widget tileContent = new Semantics(
-                    label: tileSemanticsLabel,
-                    flags: ResolveTileSemanticsFlags(selectedVisual, onTileTap is not null),
-                    onTap: onTileTap,
-                    child: new Stack(children: semanticsChildren));
-
-                tileContent = new GestureDetector(
-                    excludeFromSemantics: true,
-                    behavior: HitTestBehavior.Opaque,
-                    onTap: onTileTap,
-                    child: tileContent);
-
-                if (!string.IsNullOrWhiteSpace(item.Tooltip))
-                {
-                    tileContent = new Tooltip(
-                        message: item.Tooltip!,
-                        preferBelow: false,
-                        verticalOffset: CurrentWidget.IconSize + CurrentWidget.SelectedFontSize,
-                        excludeFromSemantics: true,
-                        child: tileContent);
-                }
-
-                tiles.Add(new Expanded(
-                    key: item.Key,
-                    flex: tileFlex,
-                    child: tileContent));
-            }
-
-            var row = new Row(
-                mainAxisAlignment: MainAxisAlignment.SpaceBetween,
-                spacing: 0,
-                children: tiles);
-
-            double barWidth = ResolveBarWidth(context);
-            var overlay = BuildRadialBackgroundOverlay(barWidth, effectiveType);
-            Widget rowWithOverlay = row;
-            if (overlay is not null)
-            {
-                rowWithOverlay = new ClipRect(
-                    clipRect: new Rect(0, 0, barWidth, DefaultHeight),
-                    child: new Stack(
-                        children:
-                        [
-                            overlay,
-                            row,
-                        ]));
-            }
-
-            var containerColor = ResolveContainerBackground(effectiveType, effectiveBackground);
-            var content = new SafeArea(
-                top: false,
-                child: new SizedBox(
-                    height: DefaultHeight,
-                    child: rowWithOverlay));
-
-            if (effectiveElevation > 0)
-            {
-                return new Container(
-                    decoration: new BoxDecoration(
-                        Color: containerColor,
-                        BoxShadows: BuildBoxShadows(theme.ColorScheme.Shadow, effectiveElevation)),
-                    child: content);
-            }
-
-            return new Container(
-                color: containerColor,
-                child: content);
-        }
-
-        private void InitializeSelectionControllers(int count, int selectedIndex)
-        {
-            foreach (var controller in _selectionControllers)
-            {
-                controller.Changed -= HandleAnimationTick;
-                controller.Dispose();
-            }
-
-            _selectionControllers = new List<AnimationController>(count);
-            for (int index = 0; index < count; index++)
-            {
-                var controller = new AnimationController(duration: SelectionTransitionDuration, vsync: this)
-                {
-                    Curve = Curves.EaseOut,
-                };
-                controller.Changed += HandleAnimationTick;
-                SetControllerValue(controller, index == selectedIndex ? 1.0 : 0.0);
-                _selectionControllers.Add(controller);
-            }
-        }
-
-        private void StartSelectionAnimation(int fromIndex, int toIndex)
-        {
-            if (fromIndex == toIndex)
-            {
-                return;
-            }
-
-            for (int index = 0; index < _selectionControllers.Count; index++)
-            {
-                var controller = _selectionControllers[index];
-                double target = index == toIndex ? 1.0 : 0.0;
-                double value = controller.Value;
-
-                if (target > value)
-                {
-                    controller.Forward(from: value);
-                }
-                else if (target < value)
-                {
-                    controller.Reverse(from: value);
-                }
-            }
-        }
-
-        private void EnsureBackgroundTransition(BottomNavigationBarType effectiveType, Color targetBackground)
-        {
-            if (!_backgroundInitialized)
-            {
-                _backgroundInitialized = true;
-                _backgroundFromColor = targetBackground;
-                _backgroundToColor = targetBackground;
-                _backgroundOriginIndex = CurrentWidget.CurrentIndex;
-                return;
-            }
-
-            if (effectiveType != BottomNavigationBarType.Shifting)
-            {
-                _backgroundFromColor = targetBackground;
-                _backgroundToColor = targetBackground;
-                _backgroundController?.Stop();
-                return;
-            }
-
-            if (_backgroundToColor == targetBackground)
-            {
-                return;
-            }
-
-            _backgroundFromColor = ResolveCurrentAnimatedBackgroundColor();
-            _backgroundToColor = targetBackground;
-            _backgroundOriginIndex = ResolveBackgroundOriginIndex();
-            _pendingTapIndex = null;
-            _backgroundController?.Forward(from: 0);
-        }
-
-        private Color ResolveContainerBackground(BottomNavigationBarType effectiveType, Color fallback)
-        {
-            if (!_backgroundInitialized)
-            {
-                return fallback;
-            }
-
-            if (effectiveType != BottomNavigationBarType.Shifting)
-            {
-                return _backgroundToColor;
-            }
-
-            if (_backgroundController?.IsAnimating == true)
-            {
-                return _backgroundFromColor;
-            }
-
-            return _backgroundToColor;
-        }
-
-        private Widget? BuildRadialBackgroundOverlay(double barWidth, BottomNavigationBarType effectiveType)
-        {
-            if (effectiveType != BottomNavigationBarType.Shifting
-                || !_backgroundInitialized
-                || _backgroundController is null
-                || !_backgroundController.IsAnimating
-                || _backgroundFromColor == _backgroundToColor)
-            {
-                return null;
-            }
-
-            double progress = _backgroundController.Evaluate();
-            double maxRadius = Math.Sqrt((barWidth * barWidth) + (DefaultHeight * DefaultHeight));
-            double radius = maxRadius * progress;
-            if (radius <= 0)
-            {
-                return null;
-            }
-
-            double centerX = ResolveBackgroundCenterX(barWidth, effectiveType);
-            double centerY = DefaultHeight / 2.0;
-
-            return new Positioned(
-                left: centerX - radius,
-                top: centerY - radius,
-                width: radius * 2.0,
-                height: radius * 2.0,
-                child: new DecoratedBox(
-                    decoration: new BoxDecoration(
-                        Color: _backgroundToColor,
-                        BorderRadius: BorderRadius.Circular(radius))));
-        }
-
-        private int ResolveTileFlex(double selectionValue, BottomNavigationBarType type)
-        {
-            if (type != BottomNavigationBarType.Shifting)
-            {
-                return 1;
-            }
-
-            double weight = ResolveTileWeight(selectionValue, type);
-            return Math.Max(1, (int)Math.Round(weight * FlexScale));
-        }
-
-        private static double ResolveTileWeight(double selectionValue, BottomNavigationBarType type)
-        {
-            if (type != BottomNavigationBarType.Shifting)
-            {
-                return 1.0;
-            }
-
-            return 1.0 + (SelectedFlexBonus * selectionValue);
-        }
-
-        private static double ResolveLabelOpacity(double selectionValue, bool showSelectedLabels, bool showUnselectedLabels)
-        {
-            if (showSelectedLabels && showUnselectedLabels)
-            {
-                return 1.0;
-            }
-
-            if (showSelectedLabels && !showUnselectedLabels)
-            {
-                return selectionValue;
-            }
-
-            if (!showSelectedLabels && showUnselectedLabels)
-            {
-                return 1.0 - selectionValue;
-            }
-
-            return 0.0;
-        }
-
-        private double ResolveSelectionValue(int index)
-        {
-            if (index >= 0 && index < _selectionControllers.Count)
-            {
-                return _selectionControllers[index].Evaluate();
-            }
-
-            return index == CurrentWidget.CurrentIndex ? 1.0 : 0.0;
-        }
-
-        private double ResolveBackgroundCenterX(double barWidth, BottomNavigationBarType type)
-        {
-            int itemCount = CurrentWidget.Items.Count;
-            if (itemCount <= 0)
-            {
-                return barWidth / 2.0;
-            }
-
-            int originIndex = Math.Clamp(_backgroundOriginIndex, 0, itemCount - 1);
-            double totalWeight = 0.0;
-            for (int i = 0; i < itemCount; i++)
-            {
-                totalWeight += ResolveTileWeight(ResolveSelectionValue(i), type);
-            }
-
-            if (totalWeight <= 0)
-            {
-                return barWidth / 2.0;
-            }
-
-            double leadingWeight = 0.0;
-            for (int i = 0; i < originIndex; i++)
-            {
-                leadingWeight += ResolveTileWeight(ResolveSelectionValue(i), type);
-            }
-
-            double originWeight = ResolveTileWeight(ResolveSelectionValue(originIndex), type);
-            double centerFraction = (leadingWeight + (originWeight / 2.0)) / totalWeight;
-            return centerFraction * barWidth;
-        }
-
-        private double ResolveBarWidth(BuildContext context)
-        {
-            var mediaSize = MediaQuery.MaybeOf(context)?.Size;
-            if (mediaSize.HasValue && mediaSize.Value.Width > 0)
-            {
-                return mediaSize.Value.Width;
-            }
-
-            return CurrentWidget.Items.Count * 96.0;
-        }
-
-        private Color ResolveCurrentAnimatedBackgroundColor()
-        {
-            if (_backgroundController is null)
-            {
-                return _backgroundToColor;
-            }
-
-            double t = _backgroundController.Evaluate();
-            return _colorTween.Evaluate(t, _backgroundFromColor, _backgroundToColor);
-        }
-
-        private int ResolveBackgroundOriginIndex()
-        {
-            if (_pendingTapIndex.HasValue
-                && _pendingTapIndex.Value >= 0
-                && _pendingTapIndex.Value < CurrentWidget.Items.Count)
-            {
-                return _pendingTapIndex.Value;
-            }
-
-            return Math.Clamp(CurrentWidget.CurrentIndex, 0, CurrentWidget.Items.Count - 1);
-        }
-
-        private void HandleTileTap(int index)
-        {
-            _pendingTapIndex = index;
-            CurrentWidget.OnTap?.Invoke(index);
-        }
-
-        private void HandleAnimationTick()
-        {
-            SetState(() => { });
-        }
-
-        private void HandleBackgroundCompleted()
-        {
-            SetState(() =>
-            {
-                _backgroundFromColor = _backgroundToColor;
-            });
-        }
-
-        private static void SetControllerValue(AnimationController controller, double target)
-        {
-            controller.Forward(from: target);
-            controller.Stop();
-        }
-
-        private static double Lerp(double from, double to, double t)
-        {
-            return from + ((to - from) * Math.Clamp(t, 0, 1));
-        }
+        return new Expanded(
+            flex: size,
+            child: new Semantics(
+                selected: Selected,
+                flags: SemanticsFlags.IsButton,
+                container: true,
+                child: new Stack(
+                    children:
+                    [
+                        result,
+                        new Semantics(label: IndexLabel),
+                    ])));
+    }
+}
+
+/// <summary>Dart's private `_Tile` — the icon/label pair, laid out per landscape layout.</summary>
+internal sealed class BottomNavigationTileContent : StatelessWidget
+{
+    internal BottomNavigationTileContent(
+        BottomNavigationBarLandscapeLayout layout,
+        Widget icon,
+        Widget label,
+        Key? key = null) : base(key)
+    {
+        Layout = layout;
+        Icon = icon;
+        Label = label;
     }
 
-    private BottomNavigationBarType ResolveEffectiveType(BottomNavigationBarThemeData bottomTheme)
+    internal BottomNavigationBarLandscapeLayout Layout { get; }
+
+    internal Widget Icon { get; }
+
+    internal Widget Label { get; }
+
+    public override Widget Build(BuildContext context)
     {
-        return Type
+        if (MediaQuery.OrientationOf(context) == Orientation.Landscape
+            && Layout == BottomNavigationBarLandscapeLayout.Linear)
+        {
+            return new Align(
+                heightFactor: 1,
+                child: new Row(
+                    mainAxisSize: MainAxisSize.Min,
+                    spacing: 8,
+                    children:
+                    [
+                        Icon,
+                        new Flexible(child: new IntrinsicWidth(child: Label)),
+                    ]));
+        }
+
+        return new Column(
+            mainAxisAlignment: MainAxisAlignment.SpaceBetween,
+            mainAxisSize: MainAxisSize.Min,
+            children: [Icon, Label]);
+    }
+}
+
+/// <summary>Dart's private `_TileIcon`.</summary>
+internal sealed class BottomNavigationTileIcon : StatelessWidget
+{
+    internal BottomNavigationTileIcon(
+        ColorTween? colorTween,
+        Animation<double> animation,
+        double iconSize,
+        bool selected,
+        BottomNavigationBarItem item,
+        IconThemeData? selectedIconTheme,
+        IconThemeData? unselectedIconTheme,
+        Key? key = null) : base(key)
+    {
+        ColorTween = colorTween;
+        Animation = animation;
+        IconSize = iconSize;
+        Selected = selected;
+        Item = item;
+        SelectedIconTheme = selectedIconTheme;
+        UnselectedIconTheme = unselectedIconTheme;
+    }
+
+    internal ColorTween? ColorTween { get; }
+
+    internal Animation<double> Animation { get; }
+
+    internal double IconSize { get; }
+
+    internal bool Selected { get; }
+
+    internal BottomNavigationBarItem Item { get; }
+
+    internal IconThemeData? SelectedIconTheme { get; }
+
+    internal IconThemeData? UnselectedIconTheme { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        Color? iconColor = ColorTween?.Evaluate(Animation.Value);
+        var defaultIconTheme = new IconThemeData(Color: iconColor, Size: IconSize);
+        IconThemeData iconThemeData = IconThemeData.Lerp(
+            defaultIconTheme.Merge(UnselectedIconTheme),
+            defaultIconTheme.Merge(SelectedIconTheme),
+            Animation.Value);
+
+        return new Align(
+            alignment: Alignment.TopCenter,
+            heightFactor: 1.0,
+            child: new IconTheme(
+                data: iconThemeData,
+                child: Selected ? Item.ActiveIcon : Item.Icon));
+    }
+}
+
+/// <summary>Dart's private `_Label`.</summary>
+internal sealed class BottomNavigationTileLabel : StatelessWidget
+{
+    internal BottomNavigationTileLabel(
+        ColorTween? colorTween,
+        Animation<double> animation,
+        BottomNavigationBarItem item,
+        TextStyle? selectedLabelStyle,
+        TextStyle? unselectedLabelStyle,
+        bool showSelectedLabels,
+        bool showUnselectedLabels,
+        Key? key = null) : base(key)
+    {
+        ColorTween = colorTween;
+        Animation = animation;
+        Item = item;
+        SelectedLabelStyle = selectedLabelStyle;
+        UnselectedLabelStyle = unselectedLabelStyle;
+        ShowSelectedLabels = showSelectedLabels;
+        ShowUnselectedLabels = showUnselectedLabels;
+    }
+
+    internal ColorTween? ColorTween { get; }
+
+    internal Animation<double> Animation { get; }
+
+    internal BottomNavigationBarItem Item { get; }
+
+    internal TextStyle? SelectedLabelStyle { get; }
+
+    internal TextStyle? UnselectedLabelStyle { get; }
+
+    internal bool ShowSelectedLabels { get; }
+
+    internal bool ShowUnselectedLabels { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        double? selectedFontSize = SelectedLabelStyle?.FontSize;
+        double? unselectedFontSize = UnselectedLabelStyle?.FontSize;
+
+        TextStyle customStyle = TextStyle.Lerp(
+            UnselectedLabelStyle ?? new TextStyle(),
+            SelectedLabelStyle ?? new TextStyle(),
+            Animation.Value);
+
+        double scale = new DoubleTween(
+            begin: (unselectedFontSize ?? 0.0) / (selectedFontSize ?? 1.0),
+            end: 1.0).Evaluate(Animation.Value);
+
+        Widget text = DefaultTextStyle.Merge(
+            style: customStyle.CopyWith(
+                fontSize: selectedFontSize,
+                color: ColorTween?.Evaluate(Animation.Value)),
+            child: new Transform(
+                transform: Matrix4.Diagonal3Values(scale, scale, scale),
+                alignment: Alignment.BottomCenter,
+                child: new Text(Item.Label!, semanticsLabel: Item.SemanticsLabel)));
+
+        if (!ShowUnselectedLabels && !ShowSelectedLabels)
+        {
+            text = Visibility.Maintain(visible: false, child: text);
+        }
+        else if (!ShowUnselectedLabels)
+        {
+            text = new FadeTransition(
+                alwaysIncludeSemantics: true,
+                opacity: Animation,
+                child: text);
+        }
+        else if (!ShowSelectedLabels)
+        {
+            text = new FadeTransition(
+                alwaysIncludeSemantics: true,
+                opacity: new DoubleTween(begin: 1.0, end: 0.0).Animate(Animation),
+                child: text);
+        }
+
+        text = new Align(alignment: Alignment.BottomCenter, heightFactor: 1.0, child: text);
+
+        if (Item.Label is not null)
+        {
+            // Do not grow text in bottom navigation bar when we can add more anyway.
+            text = MediaQuery.WithClampedTextScaling(context, text, maxScaleFactor: 1.0);
+        }
+
+        return text;
+    }
+}
+
+internal sealed class BottomNavigationBarState : State
+{
+    private static readonly DoubleTween FlexTween = new(begin: 1.0, end: 1.5);
+
+    private readonly Queue<BottomNavigationBarCircle> _circles = new();
+
+    private List<AnimationController> _controllers = [];
+    private List<CurvedAnimation> _animations = [];
+
+    /// <summary>
+    /// A queue of color splashes currently being animated.
+    /// </summary>
+    private Color? _backgroundColor;
+
+    internal IReadOnlyList<CurvedAnimation> Animations => _animations;
+
+    private BottomNavigationBar Widget => (BottomNavigationBar)StateWidget;
+
+    private BottomNavigationBarType EffectiveType(BottomNavigationBarThemeData bottomTheme)
+    {
+        return Widget.Type
                ?? bottomTheme.Type
-               ?? (Items.Count <= 3
+               ?? (Widget.Items.Count <= 3
                    ? BottomNavigationBarType.Fixed
                    : BottomNavigationBarType.Shifting);
     }
 
-    private Color ResolveBackgroundColor(
-        ThemeData theme,
-        BottomNavigationBarThemeData bottomTheme,
-        BottomNavigationBarType effectiveType)
+    private bool DefaultShowUnselected(BottomNavigationBarType type)
     {
-        if (effectiveType == BottomNavigationBarType.Shifting)
+        return type switch
         {
-            var shiftingBackground = Items[CurrentIndex].BackgroundColor;
-            if (shiftingBackground.HasValue)
-            {
-                return shiftingBackground.Value;
-            }
+            BottomNavigationBarType.Shifting => false,
+            _ => true,
+        };
+    }
+
+    public override void InitState()
+    {
+        base.InitState();
+        ResetState();
+    }
+
+    public override void DidUpdateWidget(StatefulWidget oldWidget)
+    {
+        base.DidUpdateWidget(oldWidget);
+        var old = (BottomNavigationBar)oldWidget;
+
+        // No animated segue if the length of the items list changes.
+        if (Widget.Items.Count != old.Items.Count)
+        {
+            ResetState();
+            return;
         }
 
-        return BackgroundColor
-               ?? bottomTheme.BackgroundColor
-               ?? theme.ColorScheme.Surface;
+        if (Widget.CurrentIndex != old.CurrentIndex)
+        {
+            var bottomTheme = BottomNavigationBarTheme.Of(Context);
+            if (EffectiveType(bottomTheme) == BottomNavigationBarType.Shifting)
+            {
+                PushCircle(Widget.CurrentIndex);
+            }
+
+            _controllers[old.CurrentIndex].Reverse();
+            _controllers[Widget.CurrentIndex].Forward();
+        }
+        else
+        {
+            if (_backgroundColor != Widget.Items[Widget.CurrentIndex].BackgroundColor)
+            {
+                _backgroundColor = Widget.Items[Widget.CurrentIndex].BackgroundColor;
+            }
+        }
     }
 
-    private static TextStyle ResolveLabelStyle(
-        TextStyle baseStyle,
-        TextStyle? overrideStyle,
-        double fallbackFontSize,
-        Color fallbackColor)
+    public override void Dispose()
     {
-        overrideStyle ??= new TextStyle();
-        return new TextStyle(
-            FontFamily: overrideStyle.FontFamily ?? baseStyle.FontFamily,
-            FontSize: overrideStyle.FontSize ?? fallbackFontSize,
-            Color: overrideStyle.Color ?? fallbackColor,
-            FontWeight: overrideStyle.FontWeight ?? baseStyle.FontWeight,
-            FontStyle: overrideStyle.FontStyle ?? baseStyle.FontStyle,
-            Height: overrideStyle.Height ?? baseStyle.Height,
-            LetterSpacing: overrideStyle.LetterSpacing ?? baseStyle.LetterSpacing);
+        foreach (AnimationController controller in _controllers)
+        {
+            controller.Dispose();
+        }
+
+        foreach (BottomNavigationBarCircle circle in _circles)
+        {
+            circle.Dispose();
+        }
+
+        foreach (CurvedAnimation animation in _animations)
+        {
+            animation.Dispose();
+        }
+
+        base.Dispose();
     }
 
-    private static IconThemeData ResolveIconTheme(
-        IconThemeData? iconTheme,
-        Color fallbackColor,
-        double fallbackSize)
+    public override Widget Build(BuildContext context)
     {
-        return new IconThemeData(
-            Color: iconTheme?.Color ?? fallbackColor,
-            Size: iconTheme?.Size ?? fallbackSize,
-            Opacity: iconTheme?.Opacity);
+        var bottomTheme = BottomNavigationBarTheme.Of(context);
+        BottomNavigationBarType type = EffectiveType(bottomTheme);
+        BottomNavigationBarLandscapeLayout layout = Widget.LandscapeLayout
+                                                    ?? bottomTheme.LandscapeLayout
+                                                    ?? BottomNavigationBarLandscapeLayout.Spread;
+        double additionalBottomPadding = MediaQuery.ViewPaddingOf(context).Bottom;
+
+        Color? backgroundColor = type switch
+        {
+            BottomNavigationBarType.Fixed => Widget.BackgroundColor ?? bottomTheme.BackgroundColor,
+            _ => _backgroundColor,
+        };
+
+        return new Semantics(
+            explicitChildNodes: true,
+            child: new BottomNavigationBarSurface(
+                layout: layout,
+                elevation: Widget.Elevation ?? bottomTheme.Elevation ?? 8.0,
+                color: backgroundColor,
+                child: new ConstrainedBox(
+                    constraints: new BoxConstraints(
+                        MinHeight: MaterialConstants.BottomNavigationBarHeight + additionalBottomPadding),
+                    child: new CustomPaint(
+                        painter: new BottomNavigationBarRadialPainter(
+                            circles: [.. _circles],
+                            textDirection: Directionality.Of(context)),
+                        child: new Material(
+                            // Splashes.
+                            type: MaterialType.Transparency,
+                            child: new Padding(
+                                insets: new Thickness(0, 0, 0, additionalBottomPadding),
+                                child: MediaQuery.RemovePadding(
+                                    context: context,
+                                    removeBottom: true,
+                                    child: DefaultTextStyle.Merge(
+                                        overflow: TextOverflow.Ellipsis,
+                                        child: new Row(
+                                            mainAxisAlignment: MainAxisAlignment.SpaceBetween,
+                                            children: CreateTiles(context, bottomTheme, type, layout))))))))));
     }
 
-    private static void ValidateIconTheme(string paramName, IconThemeData? iconTheme)
+    private void ResetState()
     {
-        if (iconTheme?.Size is not double size)
+        foreach (AnimationController controller in _controllers)
+        {
+            controller.Dispose();
+        }
+
+        foreach (BottomNavigationBarCircle circle in _circles)
+        {
+            circle.Dispose();
+        }
+
+        foreach (CurvedAnimation animation in _animations)
+        {
+            animation.Dispose();
+        }
+
+        _circles.Clear();
+
+        _controllers = new List<AnimationController>(Widget.Items.Count);
+        _animations = new List<CurvedAnimation>(Widget.Items.Count);
+        for (int index = 0; index < Widget.Items.Count; index++)
+        {
+            var controller = new AnimationController(
+                duration: MaterialConstants.ThemeAnimationDuration,
+                vsync: this);
+            controller.AddListener(Rebuild);
+            _controllers.Add(controller);
+        }
+
+        for (int index = 0; index < Widget.Items.Count; index++)
+        {
+            _animations.Add(new CurvedAnimation(
+                parent: _controllers[index],
+                curve: Curves.FastOutSlowIn,
+                reverseCurve: Curves.Flipped(Curves.FastOutSlowIn)));
+        }
+
+        _controllers[Widget.CurrentIndex].SetValue(1.0);
+        _backgroundColor = Widget.Items[Widget.CurrentIndex].BackgroundColor;
+    }
+
+    private void Rebuild()
+    {
+        SetState(() =>
+        {
+            // Rebuilding when any of the controllers tick, i.e. when the items are
+            // animated.
+        });
+    }
+
+    private void PushCircle(int index)
+    {
+        if (Widget.Items[index].BackgroundColor is not { } color)
         {
             return;
         }
 
-        if (!double.IsFinite(size) || size < 0)
+        var circle = new BottomNavigationBarCircle(
+            state: this,
+            index: index,
+            color: color,
+            vsync: this);
+        circle.Controller.AddStatusListener(status =>
         {
-            throw new ArgumentOutOfRangeException(paramName, "Icon theme size must be finite and non-negative.");
+            if (!status.IsCompleted())
+            {
+                return;
+            }
+
+            SetState(() =>
+            {
+                BottomNavigationBarCircle removed = _circles.Dequeue();
+                _backgroundColor = removed.Color;
+                removed.Dispose();
+            });
+        });
+        _circles.Enqueue(circle);
+    }
+
+    internal double EvaluateFlex(Animation<double> animation) => FlexTween.Evaluate(animation.Value);
+
+    private List<Widget> CreateTiles(
+        BuildContext context,
+        BottomNavigationBarThemeData bottomTheme,
+        BottomNavigationBarType type,
+        BottomNavigationBarLandscapeLayout layout)
+    {
+        MaterialLocalizations localizations = MaterialLocalizations.Of(context);
+        ThemeData themeData = Theme.Of(context);
+
+        Color themeColor = themeData.Brightness switch
+        {
+            Brightness.Light => themeData.ColorScheme.Primary,
+            _ => themeData.ColorScheme.Secondary,
+        };
+
+        ColorTween colorTween;
+        ColorTween labelColorTween;
+        ColorTween iconColorTween;
+
+        TextStyle effectiveSelectedLabelStyle = EffectiveTextStyle(
+            Widget.SelectedLabelStyle ?? bottomTheme.SelectedLabelStyle,
+            Widget.SelectedFontSize);
+        TextStyle effectiveUnselectedLabelStyle = EffectiveTextStyle(
+            Widget.UnselectedLabelStyle ?? bottomTheme.UnselectedLabelStyle,
+            Widget.UnselectedFontSize);
+
+        IconThemeData effectiveSelectedIconTheme = EffectiveIconTheme(
+            Widget.SelectedIconTheme ?? bottomTheme.SelectedIconTheme,
+            Widget.SelectedItemColor ?? bottomTheme.SelectedItemColor ?? themeColor);
+        IconThemeData effectiveUnselectedIconTheme = EffectiveIconTheme(
+            Widget.UnselectedIconTheme ?? bottomTheme.UnselectedIconTheme,
+            Widget.UnselectedItemColor ?? bottomTheme.UnselectedItemColor ?? themeData.UnselectedWidgetColor);
+
+        switch (type)
+        {
+            case BottomNavigationBarType.Fixed:
+                colorTween = new ColorTween(
+                    begin: Widget.UnselectedItemColor
+                           ?? bottomTheme.UnselectedItemColor
+                           ?? themeData.UnselectedWidgetColor,
+                    end: Widget.SelectedItemColor
+                         ?? bottomTheme.SelectedItemColor
+                         ?? Widget.FixedColor
+                         ?? themeColor);
+                labelColorTween = new ColorTween(
+                    begin: effectiveUnselectedLabelStyle.Color
+                           ?? Widget.UnselectedItemColor
+                           ?? bottomTheme.UnselectedItemColor
+                           ?? themeData.UnselectedWidgetColor,
+                    end: effectiveSelectedLabelStyle.Color
+                         ?? Widget.SelectedItemColor
+                         ?? bottomTheme.SelectedItemColor
+                         ?? Widget.FixedColor
+                         ?? themeColor);
+
+                // Dart reads the *selected* icon theme for `begin` and the *unselected* one for `end`
+                // here; reproduced verbatim (`bottom_navigation_bar.dart`, fixed `iconColorTween`).
+                iconColorTween = new ColorTween(
+                    begin: effectiveSelectedIconTheme.Color
+                           ?? Widget.UnselectedItemColor
+                           ?? bottomTheme.UnselectedItemColor
+                           ?? themeData.UnselectedWidgetColor,
+                    end: effectiveUnselectedIconTheme.Color
+                         ?? Widget.SelectedItemColor
+                         ?? bottomTheme.SelectedItemColor
+                         ?? Widget.FixedColor
+                         ?? themeColor);
+                break;
+            default:
+                colorTween = new ColorTween(
+                    begin: Widget.UnselectedItemColor
+                           ?? bottomTheme.UnselectedItemColor
+                           ?? themeData.ColorScheme.Surface,
+                    end: Widget.SelectedItemColor
+                         ?? bottomTheme.SelectedItemColor
+                         ?? themeData.ColorScheme.Surface);
+                labelColorTween = new ColorTween(
+                    begin: effectiveUnselectedLabelStyle.Color
+                           ?? Widget.UnselectedItemColor
+                           ?? bottomTheme.UnselectedItemColor
+                           ?? themeData.ColorScheme.Surface,
+                    end: effectiveSelectedLabelStyle.Color
+                         ?? Widget.SelectedItemColor
+                         ?? bottomTheme.SelectedItemColor
+                         ?? themeColor);
+                iconColorTween = new ColorTween(
+                    begin: effectiveUnselectedIconTheme.Color
+                           ?? Widget.UnselectedItemColor
+                           ?? bottomTheme.UnselectedItemColor
+                           ?? themeData.ColorScheme.Surface,
+                    end: effectiveSelectedIconTheme.Color
+                         ?? Widget.SelectedItemColor
+                         ?? bottomTheme.SelectedItemColor
+                         ?? themeColor);
+                break;
+        }
+
+        bool showSelectedLabels = Widget.ShowSelectedLabels ?? bottomTheme.ShowSelectedLabels ?? true;
+        bool showUnselectedLabels = Widget.ShowUnselectedLabels
+                                    ?? bottomTheme.ShowUnselectedLabels
+                                    ?? DefaultShowUnselected(type);
+
+        var tiles = new List<Widget>(Widget.Items.Count);
+        for (int index = 0; index < Widget.Items.Count; index++)
+        {
+            int itemIndex = index;
+            var states = new HashSet<WidgetState>();
+            if (itemIndex == Widget.CurrentIndex)
+            {
+                states.Add(WidgetState.Selected);
+            }
+
+            // Dart's `WidgetStateProperty.resolveAs<MouseCursor?>`: in Dart a `WidgetStateMouseCursor`
+            // *is* a `WidgetStateProperty`, so a stateful widget-level cursor resolves here too.
+            MouseCursor? widgetCursor = Widget.MouseCursor is WidgetStateMouseCursor stateCursor
+                ? stateCursor.Resolve(states)
+                : Widget.MouseCursor;
+            MouseCursor? effectiveMouseCursor = widgetCursor
+                                                ?? bottomTheme.MouseCursor?.Resolve(states)
+                                                ?? WidgetStateMouseCursor.Clickable.Resolve(states);
+
+            tiles.Add(new BottomNavigationTile(
+                key: Widget.Items[itemIndex].Key,
+                type: type,
+                item: Widget.Items[itemIndex],
+                animation: _animations[itemIndex],
+                iconSize: Widget.IconSize,
+                selectedIconTheme: Widget.UseLegacyColorScheme
+                    ? Widget.SelectedIconTheme ?? bottomTheme.SelectedIconTheme
+                    : effectiveSelectedIconTheme,
+                unselectedIconTheme: Widget.UseLegacyColorScheme
+                    ? Widget.UnselectedIconTheme ?? bottomTheme.UnselectedIconTheme
+                    : effectiveUnselectedIconTheme,
+                selectedLabelStyle: effectiveSelectedLabelStyle,
+                unselectedLabelStyle: effectiveUnselectedLabelStyle,
+                enableFeedback: Widget.EnableFeedback ?? bottomTheme.EnableFeedback ?? true,
+                onTap: () => Widget.OnTap?.Invoke(itemIndex),
+                labelColorTween: Widget.UseLegacyColorScheme ? colorTween : labelColorTween,
+                iconColorTween: Widget.UseLegacyColorScheme ? colorTween : iconColorTween,
+                flex: EvaluateFlex(_animations[itemIndex]),
+                selected: itemIndex == Widget.CurrentIndex,
+                showSelectedLabels: showSelectedLabels,
+                showUnselectedLabels: showUnselectedLabels,
+                indexLabel: localizations.TabLabel(tabIndex: itemIndex + 1, tabCount: Widget.Items.Count),
+                mouseCursor: effectiveMouseCursor,
+                layout: layout));
+        }
+
+        return tiles;
+    }
+
+    private static TextStyle EffectiveTextStyle(TextStyle? textStyle, double fontSize)
+    {
+        textStyle ??= new TextStyle();
+
+        // Prefer the font size on textStyle if present.
+        return textStyle.FontSize is null ? textStyle.CopyWith(fontSize: fontSize) : textStyle;
+    }
+
+    private static IconThemeData EffectiveIconTheme(IconThemeData? iconTheme, Color? itemColor)
+    {
+        // Prefer the iconTheme over itemColor if present.
+        return iconTheme ?? new IconThemeData(Color: itemColor);
+    }
+}
+
+/// <summary>Dart's private `_Bar` — the bar's `Material` surface and its landscape alignment.</summary>
+internal sealed class BottomNavigationBarSurface : StatelessWidget
+{
+    internal BottomNavigationBarSurface(
+        Widget child,
+        BottomNavigationBarLandscapeLayout layout,
+        double elevation,
+        Color? color = null,
+        Key? key = null) : base(key)
+    {
+        Child = child;
+        Layout = layout;
+        Elevation = elevation;
+        Color = color;
+    }
+
+    internal Widget Child { get; }
+
+    internal BottomNavigationBarLandscapeLayout Layout { get; }
+
+    internal double Elevation { get; }
+
+    internal Color? Color { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        Widget alignedChild = Child;
+        if (MediaQuery.OrientationOf(context) == Orientation.Landscape
+            && Layout == BottomNavigationBarLandscapeLayout.Centered)
+        {
+            alignedChild = new Align(
+                alignment: Alignment.BottomCenter,
+                heightFactor: 1,
+                child: new SizedBox(width: MediaQuery.HeightOf(context), child: Child));
+        }
+
+        return new Material(elevation: Elevation, color: Color, child: alignedChild);
+    }
+}
+
+/// <summary>
+/// Dart's private `_Circle` — a splash of the newly selected item's background color, expanding
+/// from that item's horizontal center.
+/// </summary>
+internal sealed class BottomNavigationBarCircle
+{
+    internal BottomNavigationBarCircle(
+        BottomNavigationBarState state,
+        int index,
+        Color color,
+        ITickerProvider vsync)
+    {
+        State = state;
+        Index = index;
+        Color = color;
+        Controller = new AnimationController(
+            duration: MaterialConstants.ThemeAnimationDuration,
+            vsync: vsync);
+        Animation = new CurvedAnimation(parent: Controller, curve: Curves.FastOutSlowIn);
+        Controller.Forward();
+    }
+
+    internal BottomNavigationBarState State { get; }
+
+    internal int Index { get; }
+
+    internal Color Color { get; }
+
+    internal AnimationController Controller { get; }
+
+    internal CurvedAnimation Animation { get; }
+
+    /// <summary>
+    /// The fraction of the bar's width at which this circle's center sits, computed from the flex
+    /// weights of the tiles that lead it.
+    /// </summary>
+    internal double HorizontalLeadingOffset
+    {
+        get
+        {
+            double WeightSum(IEnumerable<CurvedAnimation> animations) =>
+                animations.Sum(State.EvaluateFlex);
+
+            double allWeights = WeightSum(State.Animations);
+
+            // These weights sum to the start edge of the indexed item.
+            double leadingWeights = WeightSum(State.Animations.Take(Index));
+
+            // Add half of its flex value in order to get to the center.
+            return (leadingWeights + (State.EvaluateFlex(State.Animations[Index]) / 2.0)) / allWeights;
         }
     }
 
-    private static Color ResolveDefaultSelectedColor(ThemeData theme, BottomNavigationBarType type)
+    internal void Dispose()
     {
-        if (type == BottomNavigationBarType.Shifting)
-        {
-            return theme.ColorScheme.Surface;
-        }
+        Controller.Dispose();
+        Animation.Dispose();
+    }
+}
 
-        return theme.ColorScheme.Brightness == Brightness.Light
-            ? theme.ColorScheme.Primary
-            : theme.ColorScheme.Secondary;
+/// <summary>Dart's private `_RadialPainter` — paints the background color splashes.</summary>
+internal sealed class BottomNavigationBarRadialPainter : CustomPainter
+{
+    internal BottomNavigationBarRadialPainter(
+        IReadOnlyList<BottomNavigationBarCircle> circles,
+        TextDirection textDirection)
+    {
+        Circles = circles;
+        TextDirection = textDirection;
     }
 
-    private static Color ResolveDefaultUnselectedColor(ThemeData theme, BottomNavigationBarType type)
-    {
-        if (type == BottomNavigationBarType.Shifting)
-        {
-            return theme.ColorScheme.Surface;
-        }
+    internal IReadOnlyList<BottomNavigationBarCircle> Circles { get; }
 
-        return theme.UseMaterial3
-            ? theme.ColorScheme.OnSurfaceVariant
-            : theme.ColorScheme.OnSurface.WithOpacity(0.60);
+    internal TextDirection TextDirection { get; }
+
+    // Computes the maximum radius attainable such that at least one of the bounding
+    // rectangle's corners touches the edge of the circle. Drawing a circle larger than this radius
+    // is not needed, since there is no perceivable difference within the cropped rectangle.
+    private static double MaxRadius(Point center, Size size)
+    {
+        double maxX = Math.Max(center.X, size.Width - center.X);
+        double maxY = Math.Max(center.Y, size.Height - center.Y);
+        return Math.Sqrt((maxX * maxX) + (maxY * maxY));
     }
 
-    private static IReadOnlyList<BoxShadow>? BuildBoxShadows(Color shadowColor, double elevation)
+    public override bool ShouldRepaint(CustomPainter oldDelegate)
     {
-        if (elevation <= 0 || shadowColor.A == 0)
+        if (oldDelegate is not BottomNavigationBarRadialPainter oldPainter)
         {
-            return null;
+            return true;
         }
 
-        var keyShadow = new BoxShadow(
-            color: shadowColor.WithOpacity(0.20),
-            offset: new Point(0, Math.Max(1, Math.Round(elevation * 0.5))),
-            blurRadius: Math.Max(2, elevation * 2.4));
-
-        var ambientShadow = new BoxShadow(
-            color: shadowColor.WithOpacity(0.14),
-            offset: new Point(0, Math.Max(1, Math.Round(elevation * 0.5))),
-            blurRadius: Math.Max(3, elevation * 3.2));
-
-        return [keyShadow, ambientShadow];
-    }
-
-    private static Widget CreateLabel(string label, TextStyle style)
-    {
-        return new Text(
-            label,
-            fontFamily: style.FontFamily,
-            fontSize: style.FontSize,
-            color: style.Color,
-            fontWeight: style.FontWeight,
-            fontStyle: style.FontStyle,
-            height: style.Height,
-            letterSpacing: style.LetterSpacing,
-            softWrap: false,
-            maxLines: 1,
-            overflow: TextOverflow.Clip);
-    }
-
-    private static SemanticsFlags ResolveTileSemanticsFlags(bool selected, bool enabled)
-    {
-        var flags = SemanticsFlags.IsButton;
-        if (selected)
+        if (TextDirection != oldPainter.TextDirection)
         {
-            flags |= SemanticsFlags.IsSelected;
+            return true;
         }
 
-        if (enabled)
+        if (ReferenceEquals(Circles, oldPainter.Circles))
         {
-            flags |= SemanticsFlags.IsEnabled;
+            return false;
         }
 
-        return flags;
+        if (Circles.Count != oldPainter.Circles.Count)
+        {
+            return true;
+        }
+
+        for (int index = 0; index < Circles.Count; index++)
+        {
+            if (!ReferenceEquals(Circles[index], oldPainter.Circles[index]))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
-    private static string CreateIndexSemanticsLabel(BuildContext context, int index, int count)
+    public override void Paint(PaintingContext context, Size size)
     {
-        return MaterialLocalizations.Of(context).TabLabel(index + 1, count);
+        foreach (BottomNavigationBarCircle circle in Circles)
+        {
+            var brush = new SolidColorBrush(circle.Color);
+            var rect = new Rect(0.0, 0.0, size.Width, size.Height);
+            double leftFraction = TextDirection switch
+            {
+                TextDirection.Rtl => 1.0 - circle.HorizontalLeadingOffset,
+                _ => circle.HorizontalLeadingOffset,
+            };
+            var center = new Point(leftFraction * size.Width, size.Height / 2.0);
+            double radius = new DoubleTween(begin: 0.0, end: MaxRadius(center, size))
+                .Evaluate(circle.Animation.Value);
+            context.PushClipRect(
+                rect,
+                clipped => clipped.DrawCircle(brush, null, center, radius));
+        }
     }
 }

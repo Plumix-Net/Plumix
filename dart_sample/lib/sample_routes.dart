@@ -54,6 +54,7 @@ class SampleRoutes {
   static const String banner = '/banner';
   static const String snackBar = '/snack-bar';
   static const String bottomSheet = '/bottom-sheet';
+  static const String bottomNavigationBar = '/bottom-navigation-bar';
   static const String sliverAppBar = '/sliver-app-bar';
   static const String textField = '/text-field';
   static const String dialog = '/dialog';

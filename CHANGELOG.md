@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: strict `BottomNavigationBar` port over Dart's tile/label/bar/painter split (`bottom_navigation_bar.dart`).
+- Breaking: `BottomNavigationBar` gains `fixedColor`, `mouseCursor`, `enableFeedback`, `landscapeLayout`,
+  `useLegacyColorScheme`.
+- Breaking: `BottomNavigationBarThemeData` gains feedback/landscape/cursor fields (`bottom_navigation_bar_theme.dart`).
+- Added `MaterialConstants.BottomNavigationBarHeight` (`constants.dart`).
 - Breaking: strict tap port — `BaseTap` over `PrimaryPointerGestureRecognizer`, deferred tap-down (`tap.dart`).
 - Added `DoubleTap`/`MultiTap`/`SerialTap` recognizers (`multitap.dart`) and arena `Hold`/`Release` (`arena.dart`).
 - Added `PointerSignalResolver` + inertia-cancel event; wheels resolve to the innermost scrollable (`scrollable.dart`).
