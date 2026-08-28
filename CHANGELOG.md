@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `SemanticsOwner` drains an incremental dirty set into a `SemanticsUpdate` (`semantics/semantics.dart`).
+- Added semantics traversal grafting via `traversalParentIdentifier`/`traversalChildIdentifier` (`semantics/semantics.dart`).
+- Added `PlumixHost.SemanticsUpdateProduced`, the per-frame changed-node feed for accessibility bridges.
 - Breaking: `SemanticsActions.CustomAction` carries custom actions; `CustomSemanticsAction` gained the id registry.
 - Breaking: custom-action dispatch walks merged descendants by action id (`semantics/semantics.dart`).
 - Added `SemanticsOwner.GetSemanticsNode`/`PerformActionAt`/`GetRectOfSemanticsNode` and action listeners.

@@ -985,7 +985,7 @@ internal sealed class RenderObjectSemantics : DiagnosticableTree, ISemanticsFrag
         _semanticsNodes.Clear();
         _producedSiblingNodesAndOwners.Clear();
 
-        SemanticsNode node = CachedSemanticsNode ??= owner.CreateNodeFor(RenderObject);
+        SemanticsNode node = CachedSemanticsNode ??= owner.CreateNodeFor(RenderObject, IsRoot);
         node.IsMergedIntoParent = ParentData?.MergeIntoParent ?? false;
         node.ReplaceTags(ParentData?.TagsForChildren);
         UpdateSemanticsNodeGeometry();

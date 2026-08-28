@@ -51,6 +51,17 @@ public class PlumixHost : Control
 
     public event Action<SemanticsNode?>? SemanticsUpdated;
 
+    /// <summary>
+    /// Raised with the nodes that changed in the frame just flushed, before
+    /// <see cref="SemanticsUpdated"/>.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>PipelineOwner.onSemanticsUpdate</c>: the incremental feed a platform
+    /// accessibility bridge consumes, as opposed to the whole tree <see cref="SemanticsUpdated"/>
+    /// republishes.
+    /// </remarks>
+    public event Action<SemanticsUpdate>? SemanticsUpdateProduced;
+
     public bool StartPredictiveBack(PredictiveBackEvent backEvent)
     {
         return WidgetsBinding.Instance.HandleStartBackGesture(backEvent);
@@ -75,6 +86,7 @@ public class PlumixHost : Control
     {
         _pipeline = new PipelineOwner(_root);
         _pipeline.OnNeedVisualUpdate = ScheduleVisualUpdate;
+        _pipeline.SemanticsOwner.OnSemanticsUpdate = update => SemanticsUpdateProduced?.Invoke(update);
         _pipeline.Attach(_root);
         _textInputClient = new PlumixTextInputMethodClient(this);
         _ownerThread = Thread.CurrentThread;

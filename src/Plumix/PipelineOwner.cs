@@ -587,7 +587,7 @@ public sealed class PipelineOwner : DiagnosticableTree
             }
         }
 
-        _semanticsOwner.UpdateRoot(Root.Semantics.CachedSemanticsNode);
+        _semanticsOwner.SendSemanticsUpdate();
         _needsSemantics = _nodesNeedingSemantics.Count > 0
                           || _nodesNeedingSemanticsGeometryUpdate.Count > 0;
     }

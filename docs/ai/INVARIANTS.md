@@ -89,4 +89,4 @@ Allowed dependency direction (mirrors Flutter's `widgets <- cupertino <- materia
 - Gestures: `src/Plumix.Tests/GesturePipelineTests.cs`
 - Navigation: `src/Plumix.Tests/NavigationTests.cs`
 - Scroll: `src/Plumix.Tests/ScrollPipelineTests.cs`, `src/Plumix.Tests/ScrollInfrastructureTests.cs`
-- Semantics: `src/Plumix.Tests/SemanticsTreeTests.cs`
+- Semantics: `src/Plumix.Tests/SemanticsTreeTests.cs`, `src/Plumix.Tests/SemanticsDirtyPipelineTests.cs`

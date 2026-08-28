@@ -3288,6 +3288,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private TextDirection? _textDirection;
     private SemanticsTag? _tagForChildren;
     private AccessibilityFocusBlockType _accessibilityFocusBlockType;
+    private object? _traversalParentIdentifier;
+    private object? _traversalChildIdentifier;
 
     public RenderSemanticsAnnotations(
         string? label = null,
@@ -3319,8 +3321,12 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         bool mergeDescendants = false,
         SemanticsTag? tagForChildren = null,
         AccessibilityFocusBlockType accessibilityFocusBlockType = AccessibilityFocusBlockType.None,
+        object? traversalParentIdentifier = null,
+        object? traversalChildIdentifier = null,
         RenderBox? child = null)
     {
+        _traversalParentIdentifier = traversalParentIdentifier;
+        _traversalChildIdentifier = traversalChildIdentifier;
         _accessibilityFocusBlockType = accessibilityFocusBlockType;
         _label = label;
         _hint = hint;
@@ -3351,6 +3357,38 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _mergeDescendants = mergeDescendants;
         _tagForChildren = tagForChildren;
         Child = child;
+    }
+
+    /// <remarks>Flutter's <c>RenderSemanticsAnnotations.traversalParentIdentifier</c>.</remarks>
+    public object? TraversalParentIdentifier
+    {
+        get => _traversalParentIdentifier;
+        set
+        {
+            if (Equals(_traversalParentIdentifier, value))
+            {
+                return;
+            }
+
+            _traversalParentIdentifier = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    /// <remarks>Flutter's <c>RenderSemanticsAnnotations.traversalChildIdentifier</c>.</remarks>
+    public object? TraversalChildIdentifier
+    {
+        get => _traversalChildIdentifier;
+        set
+        {
+            if (Equals(_traversalChildIdentifier, value))
+            {
+                return;
+            }
+
+            _traversalChildIdentifier = value;
+            MarkNeedsSemanticsUpdate();
+        }
     }
 
     public string? Label
@@ -3786,6 +3824,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _textDirection is null
             && _tagForChildren is null
             && _accessibilityFocusBlockType == AccessibilityFocusBlockType.None
+            && _traversalParentIdentifier is null
+            && _traversalChildIdentifier is null
             && !_mergeDescendants)
         {
             return;
@@ -3804,6 +3844,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         configuration.ExplicitChildNodes = _explicitChildNodes;
         configuration.SortKey = _sortKey;
         configuration.TextDirection = _textDirection;
+        configuration.TraversalParentIdentifier = _traversalParentIdentifier;
+        configuration.TraversalChildIdentifier = _traversalChildIdentifier;
         if (_mergeDescendants)
         {
             configuration.IsMergingSemanticsOfDescendants = true;

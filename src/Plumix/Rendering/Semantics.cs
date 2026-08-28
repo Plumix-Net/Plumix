@@ -1,5 +1,7 @@
 using Avalonia;
+using System.Diagnostics;
 using System.Text;
+using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -393,6 +395,48 @@ public sealed class SemanticsConfiguration
     public SemanticsActions Actions { get; set; } = SemanticsActions.None;
     public int? IndexInParent { get; set; }
     public SemanticsSortKey? SortKey { get; set; }
+
+    /// <summary>
+    /// Identifies this node as the traversal parent other nodes graft onto; must be unique across
+    /// the whole semantics tree.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.traversalParentIdentifier</c>.</remarks>
+    public object? TraversalParentIdentifier
+    {
+        get => _traversalParentIdentifier;
+        set
+        {
+            if (Equals(_traversalParentIdentifier, value))
+            {
+                return;
+            }
+
+            _traversalParentIdentifier = value;
+        }
+    }
+
+    private object? _traversalParentIdentifier;
+
+    /// <summary>
+    /// Names the <see cref="TraversalParentIdentifier"/> this node is traversed under, wherever it
+    /// sits in paint order; many nodes may share one value.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.traversalChildIdentifier</c>.</remarks>
+    public object? TraversalChildIdentifier
+    {
+        get => _traversalChildIdentifier;
+        set
+        {
+            if (Equals(_traversalChildIdentifier, value))
+            {
+                return;
+            }
+
+            _traversalChildIdentifier = value;
+        }
+    }
+
+    private object? _traversalChildIdentifier;
 
     /// <summary>
     /// The reading direction for the text in <see cref="Label"/>, <see cref="Value"/>,
@@ -789,7 +833,9 @@ public sealed class SemanticsConfiguration
             _onScrollUp = _onScrollUp,
             _onScrollDown = _onScrollDown,
             _onScrollToOffset = _onScrollToOffset,
-            _onShowOnScreen = _onShowOnScreen
+            _onShowOnScreen = _onShowOnScreen,
+            _traversalParentIdentifier = _traversalParentIdentifier,
+            _traversalChildIdentifier = _traversalChildIdentifier
         };
 
         if (_tagsForChildren is { Count: > 0 })
@@ -850,11 +896,24 @@ public sealed class SemanticsConfiguration
         || ScrollChildCount.HasValue
         || ScrollIndex.HasValue
         || HasActionHandlers
-        || HasCustomActionHandlers;
+        || HasCustomActionHandlers
+        || TraversalParentIdentifier is not null
+        || TraversalChildIdentifier is not null;
 
     internal bool IsCompatibleWith(SemanticsConfiguration? other)
     {
-        if (other == null || !other.HasBeenAnnotated || !HasBeenAnnotated)
+        if (other == null || !other.HasBeenAnnotated)
+        {
+            return true;
+        }
+
+        // A parent rejects a child grafted elsewhere even when the parent itself is unannotated.
+        if (!Equals(_traversalChildIdentifier, other._traversalChildIdentifier))
+        {
+            return false;
+        }
+
+        if (!HasBeenAnnotated)
         {
             return true;
         }
@@ -916,6 +975,13 @@ public sealed class SemanticsConfiguration
         Flags |= child.Flags;
         Actions |= child.Actions;
         AccessibilityFocusBlockType = _accessibilityFocusBlockType.Merge(child.AccessibilityFocusBlockType);
+        if (_traversalChildIdentifier is null)
+        {
+            // A node can never end up carrying both identifiers.
+            _traversalParentIdentifier ??= child._traversalParentIdentifier;
+        }
+
+        _traversalChildIdentifier ??= child._traversalChildIdentifier;
         TextDirection ??= child.TextDirection;
         IndexInParent ??= child.IndexInParent;
         SortKey ??= child.SortKey;
@@ -992,23 +1058,56 @@ public sealed class SemanticsConfiguration
     }
 }
 
-public sealed class SemanticsNode
+public sealed partial class SemanticsNode
 {
+    /// <remarks>Flutter's private <c>SemanticsNode._maxFrameworkAccessibilityIdentifier</c>.</remarks>
+    private const int MaxFrameworkAccessibilityIdentifier = (1 << 16) - 1;
+
+    private static int _lastIdentifier;
+
     private readonly List<SemanticsNode> _children = [];
     private readonly Dictionary<SemanticsActions, SemanticsActionHandler> _actionHandlers = [];
     private readonly Dictionary<CustomSemanticsAction, Action> _customActionHandlers = [];
 
-    internal SemanticsNode(int id, string? debugOwner = null)
+    /// <remarks>
+    /// Flutter's <c>SemanticsNode</c> default constructor. The id is drawn from a process-global
+    /// counter that wraps at 16 bits, because the engine reserves the upper bits for its own ids.
+    /// </remarks>
+    internal SemanticsNode(string? debugOwner = null, Action? showOnScreen = null)
     {
-        Id = id;
+        Id = GenerateNewId();
         DebugOwner = debugOwner;
+        ShowOnScreenRequest = showOnScreen;
     }
+
+    /// <summary>Creates the root node, which always carries id <c>0</c>, and attaches it.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.root</c>.</remarks>
+    internal static SemanticsNode Root(
+        SemanticsOwner owner,
+        string? debugOwner = null,
+        Action? showOnScreen = null)
+    {
+        var node = new SemanticsNode(debugOwner, showOnScreen) { Id = 0 };
+        node.Attach(owner);
+        return node;
+    }
+
+    /// <remarks>Flutter's private <c>SemanticsNode._generateNewId</c>.</remarks>
+    private static int GenerateNewId()
+    {
+        _lastIdentifier = (_lastIdentifier + 1) % MaxFrameworkAccessibilityIdentifier;
+        return _lastIdentifier;
+    }
+
+    /// <summary>Resets the process-global id counter so ids are reproducible across tests.</summary>
+    /// <remarks>Flutter's top-level <c>debugResetSemanticsIdCounter</c>.</remarks>
+    public static void DebugResetSemanticsIdCounter() => _lastIdentifier = 0;
 
     /// <summary>The name of the render object that produced this node, for diagnostics.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.debugOwner</c>.</remarks>
     public string? DebugOwner { get; }
 
-    public int Id { get; }
+    public int Id { get; private set; }
 
     /// <summary>
     /// Scrolls this node into view when nothing registered an explicit
@@ -1022,7 +1121,24 @@ public sealed class SemanticsNode
     /// Flutter's <c>SemanticsNode.rect</c>. Use <see cref="Transform"/> to map it into the parent
     /// node's coordinates, or <see cref="GlobalRect"/> to resolve it all the way to the root.
     /// </remarks>
-    public Rect Rect { get; set; }
+    public Rect Rect
+    {
+        get => _rect;
+        set
+        {
+            Debug.Assert(
+                double.IsFinite(value.X) && double.IsFinite(value.Y)
+                && double.IsFinite(value.Width) && double.IsFinite(value.Height),
+                $"{this} (with {Owner}) tried to set a non-finite rect.");
+            if (_rect != value)
+            {
+                _rect = value;
+                MarkDirty();
+            }
+        }
+    }
+
+    private Rect _rect;
 
     /// <summary>
     /// The transform from this node's coordinate system to its parent's, or <c>null</c> for the
@@ -1032,7 +1148,16 @@ public sealed class SemanticsNode
     public Matrix4? Transform
     {
         get => _transform;
-        set => _transform = value is null || MatrixUtils.IsIdentity(value) ? null : value;
+        set
+        {
+            if (MatrixUtils.MatrixEquals(_transform, value))
+            {
+                return;
+            }
+
+            _transform = value is null || MatrixUtils.IsIdentity(value) ? null : value;
+            MarkDirty();
+        }
     }
 
     private Matrix4? _transform;
@@ -1045,7 +1170,23 @@ public sealed class SemanticsNode
 
     /// <summary>Whether this node merges its information into an ancestor node.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.isMergedIntoParent</c>.</remarks>
-    public bool IsMergedIntoParent { get; internal set; }
+    public bool IsMergedIntoParent
+    {
+        get => _isMergedIntoParent;
+        internal set
+        {
+            if (_isMergedIntoParent == value)
+            {
+                return;
+            }
+
+            _isMergedIntoParent = value;
+            // Flutter dirties the parent here, not this node: the parent is what serializes it.
+            Parent?.MarkDirty();
+        }
+    }
+
+    private bool _isMergedIntoParent;
 
     /// <summary>Whether every descendant of this node folds its information into this node.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.mergeAllDescendantsIntoThisNode</c>.</remarks>
@@ -1199,6 +1340,13 @@ public sealed class SemanticsNode
         // A null configuration resets the node to Flutter's shared `_kEmptyConfig`, which is how the
         // two-pane scroll split strips the outer node of everything it handed to the inner one.
         config ??= SemanticsConfiguration.Empty;
+        if (IsDifferentFromCurrentSemanticAnnotation(config))
+        {
+            MarkDirty();
+        }
+
+        bool mergeAllDescendantsIntoThisNodeValueChanged =
+            MergeAllDescendantsIntoThisNode != config.IsMergingSemanticsOfDescendants;
         Label = config.Label;
         Hint = config.Hint;
         OnTapHint = config.OnTapHint;
@@ -1226,26 +1374,84 @@ public sealed class SemanticsNode
         TextDirection = config.TextDirection;
         IsSemanticBoundary = config.IsSemanticBoundary;
         MergeAllDescendantsIntoThisNode = config.IsMergingSemanticsOfDescendants;
+        TraversalParentIdentifierValue = config.TraversalParentIdentifier;
+        TraversalChildIdentifierValue = config.TraversalChildIdentifier;
         ReplaceChildren(childrenInInversePaintOrder ?? []);
+        if (mergeAllDescendantsIntoThisNodeValueChanged)
+        {
+            UpdateChildrenMergeFlags();
+        }
+
         SetActionHandlers(AreUserActionsBlocked ? EmptyActionHandlers : config.ActionHandlers);
         SetCustomActionHandlers(AreUserActionsBlocked ? EmptyCustomActionHandlers : config.CustomActionHandlers);
     }
 
-    internal void ReplaceChildren(IReadOnlyList<SemanticsNode> children)
+    /// <remarks>Flutter's private <c>SemanticsNode._replaceChildren</c>.</remarks>
+    internal void ReplaceChildren(IReadOnlyList<SemanticsNode> newChildren)
     {
+        Debug.Assert(!newChildren.Any(child => ReferenceEquals(child, this)));
+        Debug.Assert(
+            newChildren.Distinct().Count() == newChildren.Count,
+            "A SemanticsNode cannot appear twice in one child list.");
+
         foreach (SemanticsNode child in _children)
+        {
+            child._dead = true;
+        }
+
+        foreach (SemanticsNode child in newChildren)
+        {
+            child._dead = false;
+        }
+
+        bool sawChange = false;
+        foreach (SemanticsNode child in _children)
+        {
+            if (!child._dead)
+            {
+                continue;
+            }
+
+            if (ReferenceEquals(child.Parent, this))
+            {
+                DropChild(child);
+            }
+
+            // Set even when the child was already stolen by its new parent.
+            sawChange = true;
+        }
+
+        foreach (SemanticsNode child in newChildren)
         {
             if (ReferenceEquals(child.Parent, this))
             {
-                child.Parent = null;
+                continue;
+            }
+
+            // The tree is rebuilt bottom-up, so a child may still be parented to its old node.
+            child.Parent?.DropChild(child);
+            Debug.Assert(!child.Attached);
+            AdoptChild(child);
+            sawChange = true;
+        }
+
+        if (!sawChange && _children.Count == newChildren.Count)
+        {
+            for (int i = 0; i < _children.Count; i++)
+            {
+                if (_children[i].Id != newChildren[i].Id)
+                {
+                    sawChange = true;
+                    break;
+                }
             }
         }
 
         _children.Clear();
-        _children.AddRange(children);
-        foreach (SemanticsNode child in _children)
+        _children.AddRange(newChildren);
+        if (sawChange)
         {
-            child.Parent = this;
+            MarkDirty();
         }
     }
 
@@ -1257,14 +1463,30 @@ public sealed class SemanticsNode
     /// geometry-driven default sort (when a text direction is inherited), then the sort keys are
     /// applied within groups of comparable keys.
     /// </remarks>
-    public IReadOnlyList<SemanticsNode> ChildrenInTraversalOrder => SemanticsTraversal.Sort(this);
+    public IReadOnlyList<SemanticsNode> ChildrenInTraversalOrder =>
+        SemanticsTraversal.Sort(this, UpdateChildrenInTraversalOrder());
 
     /// <summary>The reading direction for this node's text, and the direction siblings are sorted in.</summary>
     public TextDirection? TextDirection { get; internal set; }
 
     /// <summary>Whether an ancestor asked this node to stop exposing its user actions.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.areUserActionsBlocked</c>.</remarks>
-    public bool AreUserActionsBlocked { get; private set; }
+    public bool AreUserActionsBlocked
+    {
+        get => _areUserActionsBlocked;
+        private set
+        {
+            if (_areUserActionsBlocked == value)
+            {
+                return;
+            }
+
+            _areUserActionsBlocked = value;
+            MarkDirty();
+        }
+    }
+
+    private bool _areUserActionsBlocked;
 
     private static readonly IReadOnlyDictionary<SemanticsActions, SemanticsActionHandler> EmptyActionHandlers =
         new Dictionary<SemanticsActions, SemanticsActionHandler>();
@@ -1397,22 +1619,17 @@ public sealed class SemanticsNode
     }
 }
 
-public sealed class SemanticsOwner
+public sealed partial class SemanticsOwner : ChangeNotifier
 {
-    private int _nextNodeId;
-    private readonly Dictionary<int, SemanticsNode> _index = [];
-
-    public SemanticsNode? RootNode { get; private set; }
-
-    /// <summary>Creates or reuses the node a render object owns.</summary>
-    internal SemanticsNode CreateNodeFor(RenderObject renderObject)
+    /// <summary>Creates the node a render object owns, attaching it when it is the tree root.</summary>
+    /// <remarks>Flutter's private <c>_RenderObjectSemantics._createSemanticsNode</c>.</remarks>
+    internal SemanticsNode CreateNodeFor(RenderObject renderObject, bool isRoot)
     {
         // Every node backed by a render object can be asked to scroll itself into view, even when
         // nothing registered an explicit handler.
-        return new SemanticsNode(++_nextNodeId, renderObject.GetType().Name)
-        {
-            ShowOnScreenRequest = () => renderObject.ShowOnScreen()
-        };
+        return isRoot
+            ? SemanticsNode.Root(this, renderObject.GetType().Name, () => renderObject.ShowOnScreen())
+            : new SemanticsNode(renderObject.GetType().Name, () => renderObject.ShowOnScreen());
     }
 
     /// <summary>
@@ -1420,23 +1637,10 @@ public sealed class SemanticsOwner
     /// </summary>
     internal SemanticsNode CreateDetachedNode(RenderObject? showOnScreenSource = null)
     {
-        return new SemanticsNode(++_nextNodeId, showOnScreenSource?.GetType().Name)
-        {
-            ShowOnScreenRequest = showOnScreenSource is { } renderObject
-                ? () => renderObject.ShowOnScreen()
-                : null
-        };
+        return new SemanticsNode(
+            showOnScreenSource?.GetType().Name,
+            showOnScreenSource is { } renderObject ? () => renderObject.ShowOnScreen() : null);
     }
-
-    internal void UpdateRoot(SemanticsNode? root)
-    {
-        RootNode = root;
-        RebuildIndex();
-    }
-
-    /// <summary>The node with the given <paramref name="id"/>, or <c>null</c> when unknown.</summary>
-    /// <remarks>Flutter's <c>SemanticsOwner.getSemanticsNode</c>.</remarks>
-    public SemanticsNode? GetSemanticsNode(int id) => _index.GetValueOrDefault(id);
 
     /// <summary>
     /// The box of the node with the given <paramref name="nodeId"/> in the view's coordinate space,
@@ -1654,26 +1858,6 @@ public sealed class SemanticsOwner
         var builder = new StringBuilder();
         WriteNode(builder, RootNode, depth: 0);
         return builder.ToString().TrimEnd();
-    }
-
-    private void RebuildIndex()
-    {
-        _index.Clear();
-        if (RootNode == null)
-        {
-            return;
-        }
-
-        VisitNode(RootNode, node => _index[node.Id] = node);
-    }
-
-    private static void VisitNode(SemanticsNode node, Action<SemanticsNode> visitor)
-    {
-        visitor(node);
-        foreach (var child in node.Children)
-        {
-            VisitNode(child, visitor);
-        }
     }
 
     private static void WriteNode(StringBuilder builder, SemanticsNode node, int depth)

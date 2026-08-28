@@ -17,9 +17,10 @@ namespace Plumix.Rendering;
 internal static class SemanticsTraversal
 {
     /// <summary>Sorts <paramref name="node"/>'s children into traversal order.</summary>
-    public static IReadOnlyList<SemanticsNode> Sort(SemanticsNode node)
+    public static IReadOnlyList<SemanticsNode> Sort(
+        SemanticsNode node,
+        IReadOnlyList<SemanticsNode> children)
     {
-        IReadOnlyList<SemanticsNode> children = node.Children;
         if (children.Count < 2)
         {
             return children;
@@ -264,7 +265,10 @@ internal static class SemanticsTraversal
     /// <summary>Converts <paramref name="point"/> into the node's parent's coordinate system.</summary>
     private static Point PointInParentCoordinates(SemanticsNode node, Point point)
     {
-        return node.Transform is { } transform ? MatrixUtils.TransformPoint(transform, point) : point;
+        // The traversal transform, so a grafted child sorts in its traversal parent's coordinates.
+        return node.TraversalTransform is { } transform
+            ? MatrixUtils.TransformPoint(transform, point)
+            : point;
     }
 
     private static Point Center(Rect rect) => new(rect.X + rect.Width / 2.0, rect.Y + rect.Height / 2.0);

@@ -64,6 +64,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool? enabled = null,
         bool? focusable = null,
         SemanticsSortKey? sortKey = null,
+        object? traversalParentIdentifier = null,
+        object? traversalChildIdentifier = null,
         TextDirection? textDirection = null,
         SemanticsTag? tagForChildren = null,
         Key? key = null,
@@ -122,6 +124,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         Enabled = enabled;
         Focusable = focusable;
         SortKey = sortKey;
+        TraversalParentIdentifier = traversalParentIdentifier;
+        TraversalChildIdentifier = traversalChildIdentifier;
         TextDirection = textDirection;
         MergeDescendants = mergeDescendants;
     }
@@ -199,6 +203,25 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public SemanticsSortKey? SortKey { get; }
 
     /// <summary>
+    /// Identifies this node as the traversal parent that nodes carrying the matching
+    /// <see cref="TraversalChildIdentifier"/> are traversed under, wherever they sit in paint order.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsProperties.traversalParentIdentifier</c>. The value must be unique
+    /// across the whole semantics tree.
+    /// </remarks>
+    public object? TraversalParentIdentifier { get; }
+
+    /// <summary>
+    /// Names the <see cref="TraversalParentIdentifier"/> this subtree is traversed under.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsProperties.traversalChildIdentifier</c>. Several nodes may share one
+    /// value; they all graft onto the same traversal parent, in paint order.
+    /// </remarks>
+    public object? TraversalChildIdentifier { get; }
+
+    /// <summary>
     /// The reading direction for this subtree's semantics, and the direction the default traversal
     /// sort walks siblings in.
     /// </summary>
@@ -243,6 +266,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             container: Container,
             explicitChildNodes: ExplicitChildNodes,
             sortKey: SortKey,
+            traversalParentIdentifier: TraversalParentIdentifier,
+            traversalChildIdentifier: TraversalChildIdentifier,
             textDirection: TextDirection,
             mergeDescendants: MergeDescendants,
             tagForChildren: TagForChildren,
@@ -280,6 +305,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.Container = Container;
         semantics.ExplicitChildNodes = ExplicitChildNodes;
         semantics.SortKey = SortKey;
+        semantics.TraversalParentIdentifier = TraversalParentIdentifier;
+        semantics.TraversalChildIdentifier = TraversalChildIdentifier;
         semantics.MergeDescendants = MergeDescendants;
         semantics.TagForChildren = TagForChildren;
         semantics.AccessibilityFocusBlockType = AccessibilityFocusBlockType;
