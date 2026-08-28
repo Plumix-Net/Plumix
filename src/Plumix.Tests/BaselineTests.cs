@@ -143,7 +143,8 @@ public sealed class BaselineTests
             direction: Axis.Horizontal,
             mainAxisSize: MainAxisSize.Min,
             crossAxisAlignment: CrossAxisAlignment.Baseline,
-            textBaseline: TextBaseline.Alphabetic);
+            textBaseline: TextBaseline.Alphabetic,
+            textDirection: TextDirection.Ltr);
 
         flex.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 100));
 

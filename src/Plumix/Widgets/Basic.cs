@@ -1202,8 +1202,17 @@ public class Flex : MultiChildRenderObjectWidget
         Key? key = null,
         TextDirection? textDirection = null,
         VerticalDirection verticalDirection = VerticalDirection.Down,
-        TextBaseline? textBaseline = null) : base(children, key)
+        TextBaseline? textBaseline = null,
+        Clip clipBehavior = Clip.None) : base(children, key)
     {
+        if (crossAxisAlignment == CrossAxisAlignment.Baseline && textBaseline == null)
+        {
+            throw new ArgumentException(
+                "textBaseline is required if you specify the crossAxisAlignment with "
+                + "CrossAxisAlignment.Baseline",
+                nameof(textBaseline));
+        }
+
         Direction = direction;
         MainAxisSize = mainAxisSize;
         MainAxisAlignment = mainAxisAlignment;
@@ -1212,6 +1221,7 @@ public class Flex : MultiChildRenderObjectWidget
         TextDirection = textDirection;
         VerticalDirection = verticalDirection;
         TextBaseline = textBaseline;
+        ClipBehavior = clipBehavior;
     }
 
     public Axis Direction { get; }
@@ -1230,18 +1240,39 @@ public class Flex : MultiChildRenderObjectWidget
 
     public TextBaseline? TextBaseline { get; }
 
+    public Clip ClipBehavior { get; }
+
+    private bool NeedTextDirection => Direction switch
+    {
+        // Because it affects the layout order.
+        Axis.Horizontal => true,
+        Axis.Vertical => CrossAxisAlignment is CrossAxisAlignment.Start or CrossAxisAlignment.End,
+
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    /// The value to pass to [RenderFlex.TextDirection].
+    ///
+    /// This value is derived from the [TextDirection] property and the ambient
+    /// [Directionality]. The value is null if there is no need to specify the
+    /// text direction.
+    protected TextDirection? GetEffectiveTextDirection(BuildContext context)
+    {
+        return TextDirection ?? (NeedTextDirection ? Directionality.MaybeOf(context) : null);
+    }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        TextDirection? effectiveTextDirection = TextDirection ?? Directionality.MaybeOf(context);
         return new RenderFlex(
             children: null,
             direction: Direction,
             mainAxisSize: MainAxisSize,
             mainAxisAlignment: MainAxisAlignment,
             crossAxisAlignment: CrossAxisAlignment,
-            textDirection: effectiveTextDirection,
+            textDirection: GetEffectiveTextDirection(context),
             verticalDirection: VerticalDirection,
             textBaseline: TextBaseline,
+            clipBehavior: ClipBehavior,
             spacing: Spacing);
     }
 
@@ -1249,13 +1280,34 @@ public class Flex : MultiChildRenderObjectWidget
     {
         var flex = (RenderFlex)renderObject;
         flex.Direction = Direction;
-        flex.MainAxisSize = MainAxisSize;
         flex.MainAxisAlignment = MainAxisAlignment;
+        flex.MainAxisSize = MainAxisSize;
         flex.CrossAxisAlignment = CrossAxisAlignment;
-        flex.TextDirection = TextDirection ?? Directionality.MaybeOf(context);
+        flex.TextDirection = GetEffectiveTextDirection(context);
         flex.VerticalDirection = VerticalDirection;
         flex.TextBaseline = TextBaseline;
+        flex.ClipBehavior = ClipBehavior;
         flex.Spacing = Spacing;
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<Axis>("direction", Direction));
+        properties.Add(new EnumProperty<MainAxisAlignment>("mainAxisAlignment", MainAxisAlignment));
+        properties.Add(new EnumProperty<MainAxisSize>(
+            "mainAxisSize",
+            MainAxisSize,
+            defaultValue: MainAxisSize.Max));
+        properties.Add(new EnumProperty<CrossAxisAlignment>("crossAxisAlignment", CrossAxisAlignment));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
+        properties.Add(new EnumProperty<VerticalDirection>(
+            "verticalDirection",
+            VerticalDirection,
+            defaultValue: VerticalDirection.Down));
+        properties.Add(new EnumProperty<TextBaseline>("textBaseline", TextBaseline, defaultValue: null));
+        properties.Add(new EnumProperty<Clip>("clipBehavior", ClipBehavior, defaultValue: Clip.None));
+        properties.Add(new DoubleProperty("spacing", Spacing, defaultValue: 0.0));
     }
 }
 
@@ -1298,6 +1350,12 @@ public class Flexible : ParentDataWidget<FlexParentData>
         {
             renderObject.Parent?.MarkNeedsLayout();
         }
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new IntProperty("flex", Flex));
     }
 }
 

@@ -1146,7 +1146,7 @@ public sealed class MaterialBottomNavigationBarTests
     private static MountedScope Mount(Widget widget)
     {
         var owner = new BuildOwner();
-        var root = new TestRootElement(widget);
+        var root = new TestRootElement(new Directionality(TextDirection.Ltr, child: widget));
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
@@ -1579,7 +1579,9 @@ public sealed class MaterialBottomNavigationBarTests
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
 
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement = new HarnessRootElement(
+                RenderView,
+                new Directionality(TextDirection.Ltr, child: rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();
@@ -1598,7 +1600,7 @@ public sealed class MaterialBottomNavigationBarTests
 
         public void UpdateRootWidget(Widget rootWidget)
         {
-            _rootElement.Update(rootWidget);
+            _rootElement.Update(new Directionality(TextDirection.Ltr, child: rootWidget));
             _owner.FlushBuild();
         }
 

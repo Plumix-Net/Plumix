@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.UI;
 using System.Collections;
 using System.Reflection;
 using Xunit;
@@ -112,7 +113,10 @@ public sealed class RenderingParityTests
     [Fact]
     public void RenderFlex_IgnoresNoOpDirectionUpdate()
     {
-        var flex = new RenderFlex(children: [new CountingRenderBox()], direction: Axis.Horizontal);
+        var flex = new RenderFlex(
+            children: [new CountingRenderBox()],
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var parent = new ParentUsesSizeRenderBox(flex);
         var root = new RenderView
         {
@@ -134,7 +138,10 @@ public sealed class RenderingParityTests
     [Fact]
     public void RenderFlex_IgnoresNoOpMainAxisSizeUpdate()
     {
-        var flex = new RenderFlex(children: [new CountingRenderBox()], mainAxisSize: MainAxisSize.Max);
+        var flex = new RenderFlex(
+            children: [new CountingRenderBox()],
+            mainAxisSize: MainAxisSize.Max,
+            textDirection: TextDirection.Ltr);
         var parent = new ParentUsesSizeRenderBox(flex);
         var root = new RenderView
         {
@@ -156,7 +163,10 @@ public sealed class RenderingParityTests
     [Fact]
     public void RenderFlex_IgnoresNoOpMainAxisAlignmentUpdate()
     {
-        var flex = new RenderFlex(children: [new CountingRenderBox()], mainAxisAlignment: MainAxisAlignment.Start);
+        var flex = new RenderFlex(
+            children: [new CountingRenderBox()],
+            mainAxisAlignment: MainAxisAlignment.Start,
+            textDirection: TextDirection.Ltr);
         var parent = new ParentUsesSizeRenderBox(flex);
         var root = new RenderView
         {
@@ -178,7 +188,10 @@ public sealed class RenderingParityTests
     [Fact]
     public void RenderFlex_IgnoresNoOpCrossAxisAlignmentUpdate()
     {
-        var flex = new RenderFlex(children: [new CountingRenderBox()], crossAxisAlignment: CrossAxisAlignment.Center);
+        var flex = new RenderFlex(
+            children: [new CountingRenderBox()],
+            crossAxisAlignment: CrossAxisAlignment.Center,
+            textDirection: TextDirection.Ltr);
         var parent = new ParentUsesSizeRenderBox(flex);
         var root = new RenderView
         {
@@ -420,7 +433,8 @@ public sealed class RenderingParityTests
                 new PaintedFixedSizeRenderBox(80, 72),
                 new PaintedFixedSizeRenderBox(80, 72),
                 new PaintedFixedSizeRenderBox(80, 72),
-            ]);
+            ],
+            textDirection: TextDirection.Ltr);
 
         var root = new RenderView
         {

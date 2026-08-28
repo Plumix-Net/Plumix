@@ -430,7 +430,9 @@ public sealed class MaterialExpansionPanelTests : IDisposable
             RenderView = new RenderView();
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement = new HarnessRootElement(
+                RenderView,
+                new Directionality(TextDirection.Ltr, child: rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();

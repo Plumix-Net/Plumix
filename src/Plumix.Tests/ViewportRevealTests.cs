@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -869,7 +870,9 @@ public sealed class ViewportRevealTests
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
 
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            _rootElement = new HarnessRootElement(
+                RenderView,
+                new Directionality(TextDirection.Ltr, child: rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();

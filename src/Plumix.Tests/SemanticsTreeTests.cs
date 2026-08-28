@@ -25,7 +25,8 @@ public sealed class SemanticsTreeTests
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var row = new RenderFlex(
             children: [later, earlier],
-            direction: Axis.Horizontal);
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var renderView = new RenderView { Child = row };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
@@ -248,7 +249,8 @@ public sealed class SemanticsTreeTests
                     new RenderParagraph("One"),
                     new RenderParagraph("Two"),
                 ],
-                direction: Axis.Horizontal));
+                direction: Axis.Horizontal,
+                textDirection: TextDirection.Ltr));
 
         var renderView = new RenderView
         {
@@ -278,7 +280,8 @@ public sealed class SemanticsTreeTests
         var merge = new MergeSemanticsRenderBox(
             new RenderFlex(
                 children: [first, second],
-                direction: Axis.Horizontal));
+                direction: Axis.Horizontal,
+                textDirection: TextDirection.Ltr));
 
         var renderView = new RenderView
         {
@@ -319,7 +322,8 @@ public sealed class SemanticsTreeTests
         var merge = new MergeSemanticsRenderBox(
             new RenderFlex(
                 children: [first, second],
-                direction: Axis.Horizontal));
+                direction: Axis.Horizontal,
+                textDirection: TextDirection.Ltr));
 
         var renderView = new RenderView
         {
@@ -487,7 +491,8 @@ public sealed class SemanticsTreeTests
         var front = new FixedSemanticBox("Front", new Size(20, 10), blocksPreviousNodes: true);
         var row = new RenderFlex(
             children: [back, front],
-            direction: Axis.Horizontal);
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
 
         var renderView = new RenderView
         {
@@ -513,7 +518,8 @@ public sealed class SemanticsTreeTests
         var front = new MutableBlockingSemanticBox("Front", new Size(20, 10), blocksPreviousNodes: true);
         var row = new RenderFlex(
             children: [back, front],
-            direction: Axis.Horizontal);
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
 
         var renderView = new RenderView
         {
@@ -547,7 +553,8 @@ public sealed class SemanticsTreeTests
         var front = new MutableBlockingSemanticBox("Front", new Size(20, 10), blocksPreviousNodes: true);
         var row = new RenderFlex(
             children: [back, front],
-            direction: Axis.Horizontal);
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
 
         var renderView = new RenderView
         {
@@ -915,7 +922,8 @@ public sealed class SemanticsTreeTests
                 new FixedSemanticBox("One", new Size(12, 8)),
                 new FixedSemanticBox("Two", new Size(12, 8))
             ],
-            direction: Axis.Horizontal);
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", row, static childConfigurations =>
             new ChildSemanticsConfigurationsResult(
                 new List<SemanticsConfiguration>(childConfigurations),
@@ -947,7 +955,8 @@ public sealed class SemanticsTreeTests
                 new FixedSemanticBox("One", new Size(12, 8)),
                 new FixedSemanticBox("Two", new Size(12, 8))
             ],
-            direction: Axis.Horizontal);
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", row, static childConfigurations =>
             new ChildSemanticsConfigurationsResult(
                 new List<SemanticsConfiguration>(),
@@ -986,7 +995,8 @@ public sealed class SemanticsTreeTests
         var second = new ActionSemanticBox("Second", new Size(12, 8), () => secondTapCount += 1);
         var row = new RenderFlex(
             children: [first, second],
-            direction: Axis.Horizontal);
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", row, static childConfigurations =>
             new ChildSemanticsConfigurationsResult(
                 new List<SemanticsConfiguration>(),
@@ -1323,7 +1333,10 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void ChildConfigurationsDelegate_WithExplicitChildNodes_ThrowsInvalidOperation()
     {
-        var row = new RenderFlex(children: [new FixedSemanticBox("One", new Size(12, 8))], direction: Axis.Horizontal);
+        var row = new RenderFlex(
+            children: [new FixedSemanticBox("One", new Size(12, 8))],
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var delegated = new ChildDelegateSemanticBoundaryRenderBox(
             label: "Parent",
             child: row,
@@ -1600,7 +1613,8 @@ public sealed class SemanticsTreeTests
             child: new FixedSemanticBox("Tagged", new Size(12, 8)));
         var row = new RenderFlex(
             children: [tagged, new FixedSemanticBox("Plain", new Size(12, 8))],
-            direction: Axis.Horizontal);
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var delegated = new ChildDelegateSemanticBoundaryRenderBox("Parent", row, childConfigurations =>
         {
             var builder = new ChildSemanticsConfigurationsResultBuilder();
@@ -1980,7 +1994,10 @@ public sealed class SemanticsTreeTests
         private bool _includeSecondInSemantics = true;
 
         public SelectiveSemanticsFlex(RenderBox first, RenderBox second)
-            : base(children: [first, second], direction: Axis.Horizontal)
+            : base(
+                children: [first, second],
+                direction: Axis.Horizontal,
+                textDirection: UI.TextDirection.Ltr)
         {
         }
 

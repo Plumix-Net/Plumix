@@ -662,7 +662,10 @@ public sealed class TableTests
     {
         RenderSemanticsAnnotations left = SemanticsCell("Left", SemanticsRole.Cell, new Size(20, 10));
         RenderSemanticsAnnotations right = SemanticsCell("Right", SemanticsRole.Cell, new Size(20, 10));
-        var pair = new RenderFlex(children: [left, right], direction: Axis.Horizontal);
+        var pair = new RenderFlex(
+            children: [left, right],
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var table = new RenderTable(textDirection: TextDirection.Ltr);
         table.SetFlatChildren(2, [pair, SemanticsCell("Other", SemanticsRole.Cell)]);
 

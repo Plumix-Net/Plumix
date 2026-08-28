@@ -451,6 +451,14 @@ public sealed class PaintingContext
         Action<PaintingContext> painter,
         Clip clipBehavior = Clip.HardEdge)
     {
+        // Dart's `PaintingContext.pushClipRect` paints directly when there is
+        // nothing to clip, rather than pushing a no-op clip layer.
+        if (clipBehavior == Clip.None)
+        {
+            painter(this);
+            return;
+        }
+
         StopRecordingIfNeeded();
 
         var layer = new ClipRectLayer

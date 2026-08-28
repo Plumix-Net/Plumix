@@ -102,7 +102,10 @@ public sealed class SemanticsTraversalTests
 
     private static SemanticsNode CompileRow(RenderBox first, RenderBox second, TextDirection? textDirection)
     {
-        var row = new RenderFlex(children: [first, second], direction: Axis.Horizontal);
+        var row = new RenderFlex(
+            children: [first, second],
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         if (textDirection is not { } direction)
         {
             return Compile(row, new Size(220, 120));
@@ -119,7 +122,7 @@ public sealed class SemanticsTraversalTests
         List<PositionedLabelBox> children,
         TextDirection textDirection)
     {
-        var row = new RenderFlex(children: [.. children], direction: Axis.Horizontal);
+        var row = new RenderFlex(children: [.. children], direction: Axis.Horizontal, textDirection: TextDirection.Ltr);
         var root = new RenderSemanticsAnnotations(
             textDirection: textDirection,
             explicitChildNodes: true,

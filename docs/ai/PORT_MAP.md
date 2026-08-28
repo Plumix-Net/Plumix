@@ -330,7 +330,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/debug_overflow_indicator.dart` | `src/Plumix/Rendering/DebugOverflowIndicator.cs` | — | — |
 | `rendering/decorated_sliver.dart` | `src/Plumix/Rendering/DecoratedSliver.cs` | — | — |
 | `rendering/editable.dart` | `src/Plumix/Rendering/Editable.cs` | — | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/EditableTextDemoPage.cs` |
-| `rendering/flex.dart` | `src/Plumix/Rendering/Flex.RenderFlex.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/Flex.cs` _(reference) (approximate)_ | — | — |
+| `rendering/flex.dart` | `src/Plumix/Rendering/Flex.RenderFlex.cs`<br>`src/Plumix/Rendering/Flex.cs` | `src/Plumix.Tests/RenderFlexTests.cs` | `dart_sample/lib/demos/general/flex_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FlexDemoPage.cs` |
 | `rendering/flow.dart` | `src/Plumix/Rendering/Flow.cs` | `src/Plumix.Tests/FlowRepaintBoundaryTests.cs` | `dart_sample/lib/demos/general/flow_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_box_demo_page.dart`<br>`dart_sample/lib/demos/general/overflow_indicator_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FlowDemoPage.cs` |
 | `rendering/image.dart` | `src/Plumix/Rendering/Image.cs` | `src/Plumix.Tests/ImageProviderDecorationTests.cs`<br>`src/Plumix.Tests/ImageWidgetTests.cs` | `dart_sample/lib/demos/general/image_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ImageDemoPage.cs` |
 | `rendering/image_filter_config.dart` | `src/Plumix/Rendering/ImageFilterConfig.cs` | — | — |
@@ -586,8 +586,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Rendering/Box.RenderBox.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Box.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/BoxFit.cs` — (reference) (approximate)
-- `src/Plumix/Rendering/Flex.RenderFlex.cs` — (reference) (approximate)
-- `src/Plumix/Rendering/Flex.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Layer.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/LayoutHelper.cs` — (reference) (adapted helper logic)
 - `src/Plumix/Rendering/Object.HitTest.cs` — (reference) (approximate)
@@ -630,5 +628,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 637
 - C# files without a marker: 30
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 59
+- C# files with a qualified (non-strict) marker: 57
 

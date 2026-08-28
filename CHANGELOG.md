@@ -8,6 +8,16 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: strict `RenderFlex` port; the marker drops `(reference) (approximate)` (`rendering/flex.dart`).
+- Breaking: `RenderFlex` asserts Flutter's `textDirection` requirements; a `Row` needs an ambient `Directionality`.
+- Breaking: `RenderFlex` throws Flutter's unbounded-flex error from layout and dry layout, not only dry layout.
+- Breaking: `CrossAxisAlignment.Stretch` tightens the cross axis even under unbounded cross constraints.
+- Added `RenderFlex.ClipBehavior`/`Flex.ClipBehavior`, `DescribeApproximatePaintClip` and the baseline overrides.
+- Breaking: `MainAxisAlignment`/`CrossAxisAlignment` members follow Dart's declaration order.
+- Breaking: `Flex` resolves the ambient `Directionality` only when Dart's `_needTextDirection` is true.
+- Breaking: `Flex` throws when `CrossAxisAlignment.Baseline` is used without a `textBaseline`.
+- `PaintingContext.PushClipRect` paints directly for `Clip.None` instead of pushing a no-op clip layer.
+- Added `RenderBoxContainerDefaultsMixin.DefaultComputeDistanceToFirst/HighestActualBaseline` (`rendering/box.dart`).
 - Breaking: strict `ThemeData` port; the marker drops `(reference) (approximate)` (`theme_data.dart`).
 - Breaking: `visualDensity`/`materialTapTargetSize` default per platform — compact + shrinkWrap on desktop.
 - Breaking: `VisualDensity.Comfortable` is `(-1, -1)`, not `(0, -1)`; densities outside [-4, 4] now throw.

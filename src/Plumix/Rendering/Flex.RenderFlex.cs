@@ -1,12 +1,10 @@
 using System.Diagnostics;
 using Avalonia;
-using Avalonia.Media;
-using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/flex.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/flex.dart
 
 namespace Plumix.Rendering;
 
@@ -16,30 +14,9 @@ namespace Plumix.Rendering;
 public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox, FlexParentData>, IRenderObjectContainer
 {
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, FlexParentData> _mixin1;
-    private static readonly Color OverflowBlackColor = Color.FromArgb(0xBF, 0x00, 0x00, 0x00);
-    private static readonly Color OverflowYellowColor = Color.FromArgb(0xBF, 0xFF, 0xFF, 0x00);
-    private static readonly IBrush OverflowLabelBackgroundBrush = new SolidColorBrush(Colors.White);
-    private static readonly IBrush OverflowLabelForegroundBrush = new SolidColorBrush(Color.Parse("#FF900000"));
-    private const double OverflowIndicatorFraction = 0.1;
-    private const double OverflowIndicatorTileSize = 10.0;
-    private const double OverflowIndicatorLabelFontSize = 7.5;
-    private const double OverflowIndicatorLabelPadding = 1.0;
-    private static readonly IBrush OverflowIndicatorBrush = new LinearGradientBrush
-    {
-        StartPoint = new RelativePoint(0, 0, RelativeUnit.Absolute),
-        EndPoint = new RelativePoint(OverflowIndicatorTileSize, OverflowIndicatorTileSize, RelativeUnit.Absolute),
-        SpreadMethod = GradientSpreadMethod.Repeat,
-        GradientStops = new GradientStops
-        {
-            new GradientStop(OverflowBlackColor, 0.25),
-            new GradientStop(OverflowYellowColor, 0.25),
-            new GradientStop(OverflowYellowColor, 0.75),
-            new GradientStop(OverflowBlackColor, 0.75),
-        }
-    };
 
     public RenderFlex(
-        List<RenderBox>? children,
+        List<RenderBox>? children = null,
         Axis direction = Axis.Horizontal,
         MainAxisSize mainAxisSize = MainAxisSize.Max,
         MainAxisAlignment mainAxisAlignment = MainAxisAlignment.Start,
@@ -47,8 +24,11 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         TextDirection? textDirection = null,
         VerticalDirection verticalDirection = VerticalDirection.Down,
         TextBaseline? textBaseline = null,
+        Clip clipBehavior = Clip.None,
         double spacing = 0.0)
     {
+        ArgumentOutOfRangeException.ThrowIfNegative(spacing);
+
         _direction = direction;
         _mainAxisSize = mainAxisSize;
         _mainAxisAlignment = mainAxisAlignment;
@@ -56,16 +36,14 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         _textDirection = textDirection;
         _verticalDirection = verticalDirection;
         _textBaseline = textBaseline;
+        _clipBehavior = clipBehavior;
         _spacing = spacing;
-
-        Debug.Assert(spacing >= 0.0);
 
         _mixin1 = new RenderBoxContainerDefaultsMixin<RenderBox, FlexParentData>(this);
 
         if (children != null)
             AddAll(children);
     }
-
 
     #region Properties
 
@@ -87,25 +65,9 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
-    private MainAxisSize _mainAxisSize;
-
-    public MainAxisSize MainAxisSize
-    {
-        get => _mainAxisSize;
-        set
-        {
-            if (_mainAxisSize == value)
-            {
-                return;
-            }
-
-            _mainAxisSize = value;
-            MarkNeedsLayout();
-        }
-    }
-
     private MainAxisAlignment _mainAxisAlignment;
 
+    /// How the children should be placed along the main axis.
     public MainAxisAlignment MainAxisAlignment
     {
         get => _mainAxisAlignment;
@@ -121,8 +83,27 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
+    private MainAxisSize _mainAxisSize;
+
+    /// How much space should be occupied in the main axis.
+    public MainAxisSize MainAxisSize
+    {
+        get => _mainAxisSize;
+        set
+        {
+            if (_mainAxisSize == value)
+            {
+                return;
+            }
+
+            _mainAxisSize = value;
+            MarkNeedsLayout();
+        }
+    }
+
     private CrossAxisAlignment _crossAxisAlignment;
 
+    /// How the children should be placed along the cross axis.
     public CrossAxisAlignment CrossAxisAlignment
     {
         get => _crossAxisAlignment;
@@ -138,29 +119,10 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
-    private TextBaseline? _textBaseline;
-
-    /// If aligning items according to their baseline, which baseline to use.
-    ///
-    /// Must not be null if [crossAxisAlignment] is [CrossAxisAlignment.baseline].
-    public TextBaseline? TextBaseline
-    {
-        get => _textBaseline;
-        set
-        {
-            Debug.Assert(_crossAxisAlignment != CrossAxisAlignment.Baseline || value != null);
-
-            if (_textBaseline != value)
-            {
-                _textBaseline = value;
-
-                MarkNeedsLayout();
-            }
-        }
-    }
-
     private TextDirection? _textDirection;
 
+    /// Determines the order to lay children out horizontally and how to interpret
+    /// `start` and `end` in the horizontal direction.
     public TextDirection? TextDirection
     {
         get => _textDirection;
@@ -176,6 +138,8 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
     private VerticalDirection _verticalDirection;
 
+    /// Determines the order to lay children out vertically and how to interpret
+    /// `start` and `end` in the vertical direction.
     public VerticalDirection VerticalDirection
     {
         get => _verticalDirection;
@@ -189,17 +153,48 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
+    private TextBaseline? _textBaseline;
 
-    // Set during layout if overflow occurred on the main axis.
-    private double _overflow = 0;
+    /// If aligning items according to their baseline, which baseline to use.
+    ///
+    /// Must not be null if [CrossAxisAlignment] is [CrossAxisAlignment.Baseline].
+    public TextBaseline? TextBaseline
+    {
+        get => _textBaseline;
+        set
+        {
+            Debug.Assert(_crossAxisAlignment != CrossAxisAlignment.Baseline || value != null);
 
-    // Check whether any meaningful overflow is present. Values below an epsilon
-    // are treated as not overflowing.
-    public bool _hasOverflow => _overflow > Constants.PrecisionErrorTolerance;
+            if (_textBaseline != value)
+            {
+                _textBaseline = value;
+                MarkNeedsLayout();
+            }
+        }
+    }
 
+    private Clip _clipBehavior = Clip.None;
+
+    /// Defaults to [Clip.None].
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (value == _clipBehavior)
+            {
+                return;
+            }
+
+            _clipBehavior = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
+        }
+    }
 
     private double _spacing;
 
+    /// How much space to place between children in the main axis.
     public double Spacing
     {
         get => _spacing;
@@ -215,30 +210,73 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
-    private bool IsBaselineAligned
+    // Set during layout if overflow occurred on the main axis.
+    private double _overflow;
+
+    // Check whether any meaningful overflow is present. Values below an epsilon
+    // are treated as not overflowing.
+    public bool _hasOverflow => _overflow > Constants.PrecisionErrorTolerance;
+
+    private bool IsBaselineAligned => CrossAxisAlignment switch
     {
-        get
+        CrossAxisAlignment.Baseline => Direction switch
         {
-            return CrossAxisAlignment switch
-            {
-                CrossAxisAlignment.Baseline => Direction switch
-                {
-                    Axis.Horizontal => true,
-                    Axis.Vertical => false,
-                    _ => throw new ArgumentOutOfRangeException()
-                },
+            Axis.Horizontal => true,
+            Axis.Vertical => false,
 
-                CrossAxisAlignment.Start => false,
-                CrossAxisAlignment.Center => false,
-                CrossAxisAlignment.End => false,
-                CrossAxisAlignment.Stretch => false,
+            _ => throw new ArgumentOutOfRangeException()
+        },
 
-                _ => throw new ArgumentOutOfRangeException()
-            };
-        }
-    }
+        CrossAxisAlignment.Start => false,
+        CrossAxisAlignment.End => false,
+        CrossAxisAlignment.Center => false,
+        CrossAxisAlignment.Stretch => false,
+
+        _ => throw new ArgumentOutOfRangeException()
+    };
 
     #endregion
+
+    /// Dart's `_debugHasNecessaryDirections`. Reports the resolution failures that
+    /// Flutter raises through `assert`s before laying children out.
+    private void DebugCheckNecessaryDirections()
+    {
+        if (DebugCheckingIntrinsics)
+        {
+            return;
+        }
+
+        if (FirstChild != null && !ReferenceEquals(LastChild, FirstChild))
+        {
+            // i.e. there's more than one child
+            if (Direction == Axis.Horizontal && TextDirection == null)
+            {
+                throw new InvalidOperationException(
+                    $"Horizontal {GetType().Name} with multiple children has a null textDirection, "
+                    + "so the layout order is undefined.");
+            }
+        }
+
+        if (MainAxisAlignment is MainAxisAlignment.Start or MainAxisAlignment.End)
+        {
+            if (Direction == Axis.Horizontal && TextDirection == null)
+            {
+                throw new InvalidOperationException(
+                    $"Horizontal {GetType().Name} with {MainAxisAlignment} has a null textDirection, "
+                    + "so the alignment cannot be resolved.");
+            }
+        }
+
+        if (CrossAxisAlignment is CrossAxisAlignment.Start or CrossAxisAlignment.End)
+        {
+            if (Direction == Axis.Vertical && TextDirection == null)
+            {
+                throw new InvalidOperationException(
+                    $"Vertical {GetType().Name} with {CrossAxisAlignment} has a null textDirection, "
+                    + "so the alignment cannot be resolved.");
+            }
+        }
+    }
 
     public override void SetupParentData(RenderObject child)
     {
@@ -246,6 +284,156 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         {
             child.parentData = new FlexParentData();
         }
+    }
+
+    private static int _getFlex(RenderBox child)
+    {
+        var childParentData = (FlexParentData)child.parentData!;
+
+        return childParentData.flex ?? 0;
+    }
+
+    private static FlexFit _getFit(RenderBox child)
+    {
+        var childParentData = (FlexParentData)child.parentData!;
+
+        return childParentData.fit ?? FlexFit.Tight;
+    }
+
+    private double _getCrossSize(Size size) => _direction switch
+    {
+        Axis.Horizontal => size.Height,
+        Axis.Vertical => size.Width,
+
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    private double _getMainSize(Size size) => _direction switch
+    {
+        Axis.Horizontal => size.Width,
+        Axis.Vertical => size.Height,
+
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    // flipMainAxis is used to decide whether to lay out
+    // left-to-right/top-to-bottom (false), or right-to-left/bottom-to-top
+    // (true). Returns false in cases when the layout direction does not matter
+    // (for instance, there is no child).
+    private bool _flipMainAxis =>
+        FirstChild != null &&
+        Direction switch
+        {
+            Axis.Horizontal => TextDirection switch
+            {
+                null => false,
+                UI.TextDirection.Ltr => false,
+                UI.TextDirection.Rtl => true,
+
+                _ => throw new ArgumentOutOfRangeException()
+            },
+            Axis.Vertical => VerticalDirection switch
+            {
+                VerticalDirection.Down => false,
+                VerticalDirection.Up => true,
+
+                _ => throw new ArgumentOutOfRangeException()
+            },
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+    private bool _flipCrossAxis =>
+        FirstChild != null &&
+        Direction switch
+        {
+            Axis.Vertical => TextDirection switch
+            {
+                null => false,
+                UI.TextDirection.Ltr => false,
+                UI.TextDirection.Rtl => true,
+
+                _ => throw new ArgumentOutOfRangeException()
+            },
+            Axis.Horizontal => VerticalDirection switch
+            {
+                VerticalDirection.Down => false,
+                VerticalDirection.Up => true,
+
+                _ => throw new ArgumentOutOfRangeException()
+            },
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+    private BoxConstraints _constraintsForNonFlexChild(BoxConstraints constraints)
+    {
+        bool fillCrossAxis = CrossAxisAlignment switch
+        {
+            CrossAxisAlignment.Stretch => true,
+            CrossAxisAlignment.Start => false,
+            CrossAxisAlignment.Center => false,
+            CrossAxisAlignment.End => false,
+            CrossAxisAlignment.Baseline => false,
+
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        return _direction switch
+        {
+            Axis.Horizontal =>
+                fillCrossAxis
+                    ? BoxConstraints.TightFor(height: constraints.MaxHeight)
+                    : new BoxConstraints(MaxHeight: constraints.MaxHeight),
+            Axis.Vertical =>
+                fillCrossAxis
+                    ? BoxConstraints.TightFor(width: constraints.MaxWidth)
+                    : new BoxConstraints(MaxWidth: constraints.MaxWidth),
+
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
+
+    private BoxConstraints _constraintsForFlexChild(
+        RenderBox child,
+        BoxConstraints constraints,
+        double maxChildExtent)
+    {
+        Debug.Assert(_getFlex(child) > 0.0);
+        Debug.Assert(maxChildExtent >= 0.0);
+
+        double minChildExtent = _getFit(child) switch
+        {
+            FlexFit.Tight => maxChildExtent,
+            FlexFit.Loose => 0.0,
+
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        bool fillCrossAxis = CrossAxisAlignment switch
+        {
+            CrossAxisAlignment.Stretch => true,
+            CrossAxisAlignment.Start => false,
+            CrossAxisAlignment.Center => false,
+            CrossAxisAlignment.End => false,
+            CrossAxisAlignment.Baseline => false,
+
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        return _direction switch
+        {
+            Axis.Horizontal => new BoxConstraints(
+                MinWidth: minChildExtent,
+                MaxWidth: maxChildExtent,
+                MinHeight: fillCrossAxis ? constraints.MaxHeight : 0.0,
+                MaxHeight: constraints.MaxHeight),
+            Axis.Vertical => new BoxConstraints(
+                MinWidth: fillCrossAxis ? constraints.MaxWidth : 0.0,
+                MaxWidth: constraints.MaxWidth,
+                MinHeight: minChildExtent,
+                MaxHeight: maxChildExtent),
+
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 
     protected override double ComputeMinIntrinsicWidth(double height)
@@ -280,9 +468,89 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             static (child, extent) => child.GetMaxIntrinsicHeight(extent));
     }
 
+    private double GetIntrinsicSize(
+        Axis sizingDirection,
+        double extent,
+        Func<RenderBox, double, double> childSize)
+    {
+        if (Direction == sizingDirection)
+        {
+            // INTRINSIC MAIN SIZE
+            // Intrinsic main size is the smallest size the flex container can take
+            // while maintaining the min/max-content contributions of its flex items.
+            double totalFlex = 0.0;
+            double inflexibleSpace = Spacing * (ChildCount - 1);
+            double maxFlexFractionSoFar = 0.0;
+            foreach (RenderBox child in EnumerateChildren())
+            {
+                int flex = _getFlex(child);
+                totalFlex += flex;
+                if (flex > 0)
+                {
+                    double flexFraction = childSize(child, extent) / flex;
+                    maxFlexFractionSoFar = Math.Max(maxFlexFractionSoFar, flexFraction);
+                }
+                else
+                {
+                    inflexibleSpace += childSize(child, extent);
+                }
+            }
+
+            return maxFlexFractionSoFar * totalFlex + inflexibleSpace;
+        }
+
+        // INTRINSIC CROSS SIZE
+        // Intrinsic cross size is the max of the intrinsic cross sizes of the
+        // children, after the flexible children are fit into the main axis extent.
+        bool isHorizontal = Direction == Axis.Horizontal;
+
+        Size LayoutChild(RenderBox child, BoxConstraints childConstraints)
+        {
+            double mainAxisSizeFromConstraints = isHorizontal
+                ? childConstraints.MaxWidth
+                : childConstraints.MaxHeight;
+
+            // A infinite mainAxisSizeFromConstraints means the child is flexible
+            // (or the given `extent` is infinite).
+            double maxMainAxisSize = double.IsFinite(mainAxisSizeFromConstraints)
+                ? mainAxisSizeFromConstraints
+                : isHorizontal
+                    ? child.GetMaxIntrinsicWidth(double.PositiveInfinity)
+                    : child.GetMaxIntrinsicHeight(double.PositiveInfinity);
+
+            return isHorizontal
+                ? new Size(maxMainAxisSize, childSize(child, maxMainAxisSize))
+                : new Size(childSize(child, maxMainAxisSize), maxMainAxisSize);
+        }
+
+        BoxConstraints constraints = isHorizontal
+            ? new BoxConstraints(MaxWidth: extent)
+            : new BoxConstraints(MaxHeight: extent);
+
+        return _computeSizes(
+            constraints,
+            LayoutChild,
+            ChildLayoutHelper.GetDryBaseline).axisSize.crossAxisExtent;
+    }
+
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) => _direction switch
+    {
+        Axis.Horizontal => _mixin1.DefaultComputeDistanceToHighestActualBaseline(baseline),
+        Axis.Vertical => _mixin1.DefaultComputeDistanceToFirstActualBaseline(baseline),
+
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
     protected override Size ComputeDryLayout(BoxConstraints constraints)
     {
-        EnsureDryLayoutIsSupported(constraints);
+        InvalidOperationException? constraintsError =
+            DebugCheckConstraints(constraints, reportParentConstraints: false);
+        if (constraintsError != null)
+        {
+            DebugCannotComputeDryLayout(constraintsError.Message);
+            return new Size();
+        }
+
         return _computeSizes(
             constraints,
             ChildLayoutHelper.DryLayoutChild,
@@ -291,43 +559,34 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
     protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
     {
-        EnsureDryLayoutIsSupported(constraints);
         _LayoutSizes sizes = _computeSizes(
             constraints,
             ChildLayoutHelper.DryLayoutChild,
             ChildLayoutHelper.GetDryBaseline);
+
         if (IsBaselineAligned)
         {
             return sizes.baselineOffset;
         }
 
-        BoxConstraints nonFlexConstraints = _constraintsForNonFlexChild(constraints);
-        Dictionary<RenderBox, double> mainPositions = GetDryMainAxisPositions(
-            constraints,
-            sizes,
-            nonFlexConstraints);
-
-        if (Direction == Axis.Vertical)
+        return Direction switch
         {
-            for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
-            {
-                BoxConstraints childConstraints = GetDryChildConstraints(
-                    child,
-                    constraints,
-                    sizes,
-                    nonFlexConstraints);
-                double? childBaseline = child.GetDryBaseline(childConstraints, baseline);
-                if (childBaseline.HasValue)
-                {
-                    return mainPositions[child] + childBaseline.Value;
-                }
-            }
+            Axis.Horizontal => ComputeDryDistanceToHighestBaseline(constraints, baseline, sizes),
+            Axis.Vertical => ComputeDryDistanceToFirstBaseline(constraints, baseline, sizes),
 
-            return null;
-        }
+            _ => throw new ArgumentOutOfRangeException()
+        };
+    }
 
-        double? result = null;
+    private double? ComputeDryDistanceToHighestBaseline(
+        BoxConstraints constraints,
+        TextBaseline baseline,
+        _LayoutSizes sizes)
+    {
+        BoxConstraints nonFlexConstraints = _constraintsForNonFlexChild(constraints);
         bool flipCrossAxis = _flipCrossAxis;
+        double? minBaseline = null;
+
         foreach (RenderBox child in EnumerateChildren())
         {
             BoxConstraints childConstraints = GetDryChildConstraints(
@@ -335,101 +594,30 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
                 constraints,
                 sizes,
                 nonFlexConstraints);
-            Size childSize = child.GetDryLayout(childConstraints);
             double? childBaseline = child.GetDryBaseline(childConstraints, baseline);
-            if (!childBaseline.HasValue)
+            if (childBaseline == null)
             {
                 continue;
             }
 
-            double crossPosition = _getChildCrossAxisOffset(
+            Size childSize = child.GetDryLayout(childConstraints);
+            double childCrossPosition = _getChildCrossAxisOffset(
                 CrossAxisAlignment,
                 sizes.axisSize.crossAxisExtent - _getCrossSize(childSize),
                 flipCrossAxis);
-            double candidate = crossPosition + childBaseline.Value;
-            result = result.HasValue ? Math.Min(result.Value, candidate) : candidate;
+            double candidate = childBaseline.Value + childCrossPosition;
+            minBaseline = minBaseline == null ? candidate : Math.Min(minBaseline.Value, candidate);
         }
 
-        return result;
+        return minBaseline;
     }
 
-    private double GetIntrinsicSize(
-        Axis sizingDirection,
-        double extent,
-        Func<RenderBox, double, double> childSize)
-    {
-        if (Direction == sizingDirection)
-        {
-            double totalFlex = 0.0;
-            double inflexibleSpace = Spacing * (ChildCount - 1);
-            double maxFlexFraction = 0.0;
-            foreach (RenderBox child in EnumerateChildren())
-            {
-                int flex = _getFlex(child);
-                totalFlex += flex;
-                if (flex > 0)
-                {
-                    maxFlexFraction = Math.Max(maxFlexFraction, childSize(child, extent) / flex);
-                }
-                else
-                {
-                    inflexibleSpace += childSize(child, extent);
-                }
-            }
-
-            return maxFlexFraction * totalFlex + inflexibleSpace;
-        }
-
-        BoxConstraints constraints = Direction == Axis.Horizontal
-            ? new BoxConstraints(MaxWidth: extent)
-            : new BoxConstraints(MaxHeight: extent);
-        Size DryLayoutChild(RenderBox child, BoxConstraints childConstraints)
-        {
-            double mainExtent = Direction == Axis.Horizontal
-                ? childConstraints.MaxWidth
-                : childConstraints.MaxHeight;
-            if (!double.IsFinite(mainExtent))
-            {
-                mainExtent = Direction == Axis.Horizontal
-                    ? child.GetMaxIntrinsicWidth(double.PositiveInfinity)
-                    : child.GetMaxIntrinsicHeight(double.PositiveInfinity);
-            }
-
-            double crossExtent = childSize(child, mainExtent);
-            return _AxisSize.Create(mainExtent, crossExtent).ToSize(Direction);
-        }
-
-        _LayoutSizes sizes = _computeSizes(
-            constraints,
-            DryLayoutChild,
-            ChildLayoutHelper.GetDryBaseline);
-        return sizes.axisSize.crossAxisExtent;
-    }
-
-    private void EnsureDryLayoutIsSupported(BoxConstraints constraints)
-    {
-        double maxMainExtent = _getMainSize(constraints.Biggest);
-        if (double.IsFinite(maxMainExtent))
-        {
-            return;
-        }
-
-        foreach (RenderBox child in EnumerateChildren())
-        {
-            if (_getFlex(child) > 0
-                && (MainAxisSize == MainAxisSize.Max || _getFit(child) == FlexFit.Tight))
-            {
-                DebugCannotComputeDryLayout(
-                    "RenderFlex cannot compute dry layout with flex children under unbounded main-axis constraints.");
-            }
-        }
-    }
-
-    private Dictionary<RenderBox, double> GetDryMainAxisPositions(
+    private double? ComputeDryDistanceToFirstBaseline(
         BoxConstraints constraints,
-        _LayoutSizes sizes,
-        BoxConstraints nonFlexConstraints)
+        TextBaseline baseline,
+        _LayoutSizes sizes)
     {
+        BoxConstraints nonFlexConstraints = _constraintsForNonFlexChild(constraints);
         double remainingSpace = Math.Max(0.0, sizes.mainAxisFreeSpace);
         bool flipMainAxis = _flipMainAxis;
         (double leadingSpace, double betweenSpace) = _distributeSpace(
@@ -438,24 +626,35 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             ChildCount,
             flipMainAxis,
             Spacing);
-        var positions = new Dictionary<RenderBox, double>();
-        double childMainPosition = leadingSpace;
-        RenderBox? child = flipMainAxis ? LastChild : FirstChild;
-        Func<RenderBox, RenderBox?> nextChild = flipMainAxis ? ChildBefore : ChildAfter;
-        while (child != null)
+
+        var mainPositions = new Dictionary<RenderBox, double>();
+        RenderBox? startChild = flipMainAxis ? LastChild : FirstChild;
+        Func<RenderBox, RenderBox?> nextChildPaintOrder = flipMainAxis ? ChildBefore : ChildAfter;
+        double position = leadingSpace;
+        for (RenderBox? child = startChild; child != null; child = nextChildPaintOrder(child))
         {
-            positions[child] = childMainPosition;
+            mainPositions[child] = position;
+            Size childSize = child.GetDryLayout(
+                GetDryChildConstraints(child, constraints, sizes, nonFlexConstraints));
+            position += _getMainSize(childSize) + betweenSpace;
+        }
+
+        foreach (RenderBox child in EnumerateChildren())
+        {
             BoxConstraints childConstraints = GetDryChildConstraints(
                 child,
                 constraints,
                 sizes,
                 nonFlexConstraints);
-            Size childSize = child.GetDryLayout(childConstraints);
-            childMainPosition += _getMainSize(childSize) + betweenSpace;
-            child = nextChild(child);
+            double? childBaseline = child.GetDryBaseline(childConstraints, baseline);
+            if (childBaseline != null)
+            {
+                return childBaseline.Value
+                       + (mainPositions.TryGetValue(child, out double mainPosition) ? mainPosition : leadingSpace);
+            }
         }
 
-        return positions;
+        return null;
     }
 
     private BoxConstraints GetDryChildConstraints(
@@ -465,7 +664,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         BoxConstraints nonFlexConstraints)
     {
         int flex = _getFlex(child);
-        return flex > 0 && sizes.spacePerFlex.HasValue
+        return sizes.spacePerFlex.HasValue && flex > 0
             ? _constraintsForFlexChild(child, constraints, sizes.spacePerFlex.Value * flex)
             : nonFlexConstraints;
     }
@@ -478,294 +677,31 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         }
     }
 
-    protected override void PerformLayout()
-    {
-        var constraints = Constraints;
-
-        var sizes = _computeSizes(
-            constraints: constraints,
-            layoutChild: ChildLayoutHelper.LayoutChild,
-            getBaseline: ChildLayoutHelper.GetBaseline
-        );
-
-        double crossAxisExtent = sizes.axisSize.crossAxisExtent;
-
-        Size = sizes.axisSize.ToSize(Direction);
-
-        _overflow = Math.Max(0.0, -sizes.mainAxisFreeSpace);
-
-        double remainingSpace = Math.Max(0.0, sizes.mainAxisFreeSpace);
-        bool flipMainAxis = _flipMainAxis;
-        bool flipCrossAxis = _flipCrossAxis;
-
-        (double leadingSpace, double betweenSpace) = _distributeSpace(
-            MainAxisAlignment,
-            remainingSpace,
-            ChildCount,
-            flipMainAxis,
-            Spacing
-        );
-
-        Func<RenderBox, RenderBox?> nextChild = flipMainAxis ? ChildBefore : ChildAfter;
-        RenderBox? topLeftChild = flipMainAxis ? LastChild : FirstChild;
-
-        double? baselineOffset = sizes.baselineOffset;
-
-        Debug.Assert(
-            baselineOffset == null ||
-            (CrossAxisAlignment == CrossAxisAlignment.Baseline && Direction == Axis.Horizontal)
-        );
-
-        // Position all children in visual order: starting from the top-left child and
-        // work towards the child that's farthest away from the origin.
-        double childMainPosition = leadingSpace;
-
-        for (RenderBox? child = topLeftChild; child != null; child = nextChild(child))
-        {
-            double? childBaselineOffset = null;
-
-            bool baselineAlign =
-                baselineOffset != null &&
-                (childBaselineOffset = child.GetDistanceToBaseline(TextBaseline!.Value, onlyReal: true)) !=
-                null;
-
-            double childCrossPosition = baselineAlign
-                ? baselineOffset!.Value - childBaselineOffset!.Value
-                : _getChildCrossAxisOffset(CrossAxisAlignment,
-                    crossAxisExtent - _getCrossSize(child.Size),
-                    flipCrossAxis
-                );
-
-            var childParentData = (FlexParentData)child.parentData!;
-
-            childParentData.offset = Direction switch
-            {
-                Axis.Horizontal => new Point(childMainPosition, childCrossPosition),
-                Axis.Vertical => new Point(childCrossPosition, childMainPosition),
-
-                _ => throw new ArgumentOutOfRangeException()
-            };
-
-            childMainPosition += _getMainSize(child.Size) + betweenSpace;
-        }
-    }
-
-    public override void Paint(PaintingContext ctx, Point offset)
-    {
-        if (!_hasOverflow)
-        {
-            DefaultPaint(ctx, offset);
-            return;
-        }
-
-        // There's no point in drawing the children if we're empty.
-        if (Size.IsEmpty)
-        {
-            return;
-        }
-
-        var clipRect = new Rect(offset, Size);
-        ctx.PushClipRect(clipRect, clippedContext => DefaultPaint(clippedContext, offset));
-        PaintOverflowIndicator(ctx, offset);
-    }
-
-    public override void VisitChildren(Action<RenderObject> visitor)
-    {
-        for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
-        {
-            visitor(child);
-        }
-    }
-
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
-    {
-        for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
-        {
-            var childParentData = (FlexParentData)child.parentData!;
-            visitor(child);
-        }
-    }
-
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
-    {
-        return DefaultHitTestChildren(result, position);
-    }
-
-    private static int _getFlex(RenderBox child)
-    {
-        var childParentData = (FlexParentData)child.parentData!;
-
-        return childParentData.flex ?? 0;
-    }
-
-    private static FlexFit _getFit(RenderBox child)
-    {
-        var childParentData = (FlexParentData)child.parentData!;
-
-        return childParentData.fit ?? FlexFit.Tight;
-    }
-
-    private BoxConstraints _constraintsForNonFlexChild(BoxConstraints constraints)
-    {
-        bool fillCrossAxis = CrossAxisAlignment switch
-        {
-            CrossAxisAlignment.Stretch => Direction == Axis.Horizontal
-                ? constraints.HasBoundedHeight
-                : constraints.HasBoundedWidth,
-            _ => false,
-        };
-
-        return _direction switch
-        {
-            Axis.Horizontal =>
-                fillCrossAxis
-                    ? BoxConstraints.TightFor(height: constraints.MaxHeight)
-                    : new BoxConstraints(MaxHeight: constraints.MaxHeight),
-            Axis.Vertical =>
-                fillCrossAxis
-                    ? BoxConstraints.TightFor(width: constraints.MaxWidth)
-                    : new BoxConstraints(MaxWidth: constraints.MaxWidth),
-
-            _ => throw new ArgumentOutOfRangeException()
-        };
-    }
-
-    private double _getCrossSize(Size size) => _direction switch
-    {
-        Axis.Horizontal => size.Height,
-        Axis.Vertical => size.Width,
-
-        _ => throw new ArgumentOutOfRangeException()
-    };
-
-
-    private double _getMainSize(Size size) => _direction switch
-    {
-        Axis.Horizontal => size.Width,
-        Axis.Vertical => size.Height,
-
-        _ => throw new ArgumentOutOfRangeException()
-    };
-
-    // flipMainAxis is used to decide whether to lay out
-    // left-to-right/top-to-bottom (false), or right-to-left/bottom-to-top
-    // (true). Returns false in cases when the layout direction does not matter
-    // (for instance, there is no child).
-    private bool _flipMainAxis =>
-        FirstChild != null &&
-        Direction switch
-        {
-            Axis.Horizontal => TextDirection switch
-            {
-                null => false,
-                UI.TextDirection.Ltr => false,
-                UI.TextDirection.Rtl => true,
-
-                _ => throw new ArgumentOutOfRangeException()
-            },
-            Axis.Vertical => VerticalDirection switch
-            {
-                VerticalDirection.Down => false,
-                VerticalDirection.Up => true,
-                _ => throw new ArgumentOutOfRangeException()
-            },
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
-    private bool _flipCrossAxis =>
-        FirstChild != null &&
-        Direction switch
-        {
-            Axis.Vertical => TextDirection switch
-            {
-                null => false,
-                UI.TextDirection.Ltr => false,
-                UI.TextDirection.Rtl => true,
-                _ => throw new ArgumentOutOfRangeException()
-            },
-            Axis.Horizontal => VerticalDirection switch
-            {
-                VerticalDirection.Down => false,
-                VerticalDirection.Up => true,
-
-                _ => throw new ArgumentOutOfRangeException()
-            },
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
-    private BoxConstraints _constraintsForFlexChild(
-        RenderBox child,
-        BoxConstraints constraints,
-        double maxChildExtent
-    )
-    {
-        Debug.Assert(_getFlex(child) > 0.0);
-        Debug.Assert(maxChildExtent >= 0.0);
-
-        double minChildExtent = _getFit(child) switch
-        {
-            FlexFit.Tight => maxChildExtent,
-            FlexFit.Loose => 0.0,
-
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
-        bool fillCrossAxis = CrossAxisAlignment switch
-        {
-            CrossAxisAlignment.Stretch => true,
-            CrossAxisAlignment.Start => false,
-            CrossAxisAlignment.Center => false,
-            CrossAxisAlignment.End => false,
-            CrossAxisAlignment.Baseline => false,
-
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
-        return _direction switch
-        {
-            Axis.Horizontal => new BoxConstraints(
-                MinWidth: minChildExtent,
-                MaxWidth: maxChildExtent,
-                MinHeight: fillCrossAxis ? constraints.MaxHeight : 0.0,
-                MaxHeight: constraints.MaxHeight
-            ),
-            Axis.Vertical => new BoxConstraints(
-                MinWidth: fillCrossAxis ? constraints.MaxWidth : 0.0,
-                MaxWidth: constraints.MaxWidth,
-                MinHeight: minChildExtent,
-                MaxHeight: maxChildExtent
-            ),
-
-            _ => throw new ArgumentOutOfRangeException()
-        };
-    }
-
     private _LayoutSizes _computeSizes(
         BoxConstraints constraints,
         Func<RenderBox, BoxConstraints, Size> layoutChild,
         Func<RenderBox, BoxConstraints, TextBaseline, double?> getBaseline)
     {
-        //assert(_debugHasNecessaryDirections);
+        DebugCheckNecessaryDirections();
 
         // Determine used flex factor, size inflexible items, calculate free space.
         double maxMainSize = _getMainSize(constraints.Biggest);
         bool canFlex = double.IsFinite(maxMainSize);
 
-        var nonFlexChildConstraints = _constraintsForNonFlexChild(constraints);
+        BoxConstraints nonFlexChildConstraints = _constraintsForNonFlexChild(constraints);
 
         // Null indicates the children are not baseline aligned.
         TextBaseline? textBaseline = IsBaselineAligned
-            ? TextBaseline ??
-              throw new Exception(
-                  "To use CrossAxisAlignment.baseline, you must also specify which baseline to use using the \"textBaseline\" argument."
-              )
+            ? TextBaseline ?? throw new InvalidOperationException(
+                "To use CrossAxisAlignment.baseline, you must also specify which baseline to use "
+                + "using the \"textBaseline\" argument.")
             : null;
 
         // The first pass lays out non-flex children and computes total flex.
         int totalFlex = 0;
         RenderBox? firstFlexChild = null;
 
-        var accumulatedAscentDescent = _AscentDescent.None;
+        _AscentDescent accumulatedAscentDescent = _AscentDescent.None;
 
         // Initially, accumulatedSize is the sum of the spaces between children in the main axis.
         _AxisSize accumulatedSize = new(new Size(Spacing * (ChildCount - 1), 0.0));
@@ -783,8 +719,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             {
                 var childSize = _AxisSize.FromSize(
                     size: layoutChild(child, nonFlexChildConstraints),
-                    direction: Direction
-                );
+                    direction: Direction);
 
                 accumulatedSize += childSize;
 
@@ -795,15 +730,14 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
                 accumulatedAscentDescent += _AscentDescent.Create(
                     baselineOffset: baselineOffset,
-                    crossSize: childSize.crossAxisExtent
-                );
+                    crossSize: childSize.crossAxisExtent);
             }
         }
 
         Debug.Assert((totalFlex == 0) == (firstFlexChild == null));
-        Debug.Assert(
-            firstFlexChild == null || canFlex
-        ); // If we are given infinite space there's no need for this extra step.
+
+        // If we are given infinite space there's no need for this extra step.
+        Debug.Assert(firstFlexChild == null || canFlex);
 
         // The second pass distributes free space to flexible children.
         double flexSpace = Math.Max(0.0, maxMainSize - accumulatedSize.mainAxisExtent);
@@ -811,8 +745,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         for (
             RenderBox? child = firstFlexChild;
             child != null && totalFlex > 0;
-            child = ChildAfter(child)
-        )
+            child = ChildAfter(child))
         {
             int flex = _getFlex(child);
             if (flex == 0)
@@ -830,13 +763,11 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             BoxConstraints childConstraints = _constraintsForFlexChild(
                 child,
                 constraints,
-                maxChildExtent
-            );
+                maxChildExtent);
 
             var childSize = _AxisSize.FromSize(
                 size: layoutChild(child, childConstraints),
-                direction: Direction
-            );
+                direction: Direction);
 
             accumulatedSize += childSize;
             double? baselineOffset = textBaseline == null
@@ -845,8 +776,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
             accumulatedAscentDescent += _AscentDescent.Create(
                 baselineOffset: baselineOffset,
-                crossSize: childSize.crossAxisExtent
-            );
+                crossSize: childSize.crossAxisExtent);
         }
 
         Debug.Assert(totalFlex == 0);
@@ -857,8 +787,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             null => _AxisSize.Empty,
             var (ascent, descent) => _AxisSize.Create(
                 mainAxisExtent: 0,
-                crossAxisExtent: ascent + descent
-            )
+                crossAxisExtent: ascent + descent)
         };
 
         double idealMainSize = MainAxisSize switch
@@ -871,15 +800,241 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
         var constrainedSize = _AxisSize.Create(
             mainAxisExtent: idealMainSize,
-            crossAxisExtent: accumulatedSize.crossAxisExtent
-        ).ApplyConstraints(constraints, Direction);
+            crossAxisExtent: accumulatedSize.crossAxisExtent).ApplyConstraints(constraints, Direction);
 
         return new _LayoutSizes(
             axisSize: constrainedSize,
             mainAxisFreeSpace: constrainedSize.mainAxisExtent - accumulatedSize.mainAxisExtent,
             baselineOffset: accumulatedAscentDescent.BaselineOffset,
-            spacePerFlex: firstFlexChild == null ? null : spacePerFlex
-        );
+            spacePerFlex: firstFlexChild == null ? null : spacePerFlex);
+    }
+
+    protected override void PerformLayout()
+    {
+        BoxConstraints constraints = Constraints;
+
+        InvalidOperationException? constraintsError =
+            DebugCheckConstraints(constraints, reportParentConstraints: true);
+        if (constraintsError != null)
+        {
+            throw constraintsError;
+        }
+
+        _LayoutSizes sizes = _computeSizes(
+            constraints: constraints,
+            layoutChild: ChildLayoutHelper.LayoutChild,
+            getBaseline: ChildLayoutHelper.GetBaseline);
+
+        double crossAxisExtent = sizes.axisSize.crossAxisExtent;
+
+        Size = sizes.axisSize.ToSize(Direction);
+
+        _overflow = Math.Max(0.0, -sizes.mainAxisFreeSpace);
+
+        double remainingSpace = Math.Max(0.0, sizes.mainAxisFreeSpace);
+        bool flipMainAxis = _flipMainAxis;
+        bool flipCrossAxis = _flipCrossAxis;
+
+        (double leadingSpace, double betweenSpace) = _distributeSpace(
+            MainAxisAlignment,
+            remainingSpace,
+            ChildCount,
+            flipMainAxis,
+            Spacing);
+
+        Func<RenderBox, RenderBox?> nextChild = flipMainAxis ? ChildBefore : ChildAfter;
+        RenderBox? topLeftChild = flipMainAxis ? LastChild : FirstChild;
+
+        double? baselineOffset = sizes.baselineOffset;
+
+        Debug.Assert(
+            baselineOffset == null ||
+            (CrossAxisAlignment == CrossAxisAlignment.Baseline && Direction == Axis.Horizontal));
+
+        // Position all children in visual order: starting from the top-left child and
+        // work towards the child that's farthest away from the origin.
+        double childMainPosition = leadingSpace;
+
+        for (RenderBox? child = topLeftChild; child != null; child = nextChild(child))
+        {
+            double? childBaselineOffset = baselineOffset == null
+                ? null
+                : child.GetDistanceToBaseline(TextBaseline!.Value, onlyReal: true);
+            bool baselineAlign = baselineOffset != null && childBaselineOffset != null;
+
+            double childCrossPosition;
+            if (baselineAlign)
+            {
+                childCrossPosition = baselineOffset!.Value - childBaselineOffset!.Value;
+            }
+            else if (CrossAxisAlignment == CrossAxisAlignment.Baseline && Direction == Axis.Horizontal)
+            {
+                // Children who report no baseline are top-aligned, regardless of
+                // `VerticalDirection`: `flipCrossAxis` is intentionally ignored here.
+                childCrossPosition = _getChildCrossAxisOffset(
+                    CrossAxisAlignment.Start,
+                    crossAxisExtent - _getCrossSize(child.Size),
+                    flipped: false);
+            }
+            else
+            {
+                childCrossPosition = _getChildCrossAxisOffset(
+                    CrossAxisAlignment,
+                    crossAxisExtent - _getCrossSize(child.Size),
+                    flipCrossAxis);
+            }
+
+            var childParentData = (FlexParentData)child.parentData!;
+
+            childParentData.offset = Direction switch
+            {
+                Axis.Horizontal => new Point(childMainPosition, childCrossPosition),
+                Axis.Vertical => new Point(childCrossPosition, childMainPosition),
+
+                _ => throw new ArgumentOutOfRangeException()
+            };
+
+            childMainPosition += _getMainSize(child.Size) + betweenSpace;
+        }
+    }
+
+    /// Dart's `_debugCheckConstraints`: returns the error a flex child with a
+    /// non-zero flex factor causes under unbounded main-axis constraints, or null.
+    private InvalidOperationException? DebugCheckConstraints(
+        BoxConstraints constraints,
+        bool reportParentConstraints)
+    {
+        double maxMainSize = _direction == Axis.Horizontal ? constraints.MaxWidth : constraints.MaxHeight;
+        bool canFlex = double.IsFinite(maxMainSize);
+        foreach (RenderBox child in EnumerateChildren())
+        {
+            int flex = _getFlex(child);
+            if (flex <= 0)
+            {
+                continue;
+            }
+
+            if (canFlex || (MainAxisSize != MainAxisSize.Max && _getFit(child) != FlexFit.Tight))
+            {
+                continue;
+            }
+
+            string identity = _direction == Axis.Horizontal ? "row" : "column";
+            string axis = _direction == Axis.Horizontal ? "horizontal" : "vertical";
+            string dimension = _direction == Axis.Horizontal ? "width" : "height";
+
+            var message = new System.Text.StringBuilder();
+            message.Append($"RenderFlex children have non-zero flex but incoming {dimension} ");
+            message.AppendLine("constraints are unbounded.");
+            message.AppendLine(
+                $"When a {identity} is in a parent that does not provide a finite {dimension} constraint, "
+                + $"for example if it is in a {axis} scrollable, it will try to shrink-wrap its children "
+                + $"along the {axis} axis. Setting a flex on a child (e.g. using Expanded) indicates that "
+                + $"the child is to expand to fill the remaining space in the {axis} direction.");
+            message.AppendLine(
+                "These two directives are mutually exclusive. If a parent is to shrink-wrap its child, "
+                + "the child cannot simultaneously expand to fit its parent.");
+            message.AppendLine(
+                "Consider setting mainAxisSize to MainAxisSize.Min and using FlexFit.Loose fits for the "
+                + "flexible children (using Flexible rather than Expanded). This will allow the flexible "
+                + "children to size themselves to less than the infinite remaining space they would "
+                + "otherwise be forced to take, and then will cause the RenderFlex to shrink-wrap the "
+                + "children rather than expanding to fit the maximum constraints provided by the parent.");
+            message.AppendLine($"The affected RenderFlex is: {GetType().Name}");
+            message.Append(DescribeUnboundedAncestor(reportParentConstraints));
+            message.AppendLine("See also: https://flutter.dev/unbounded-constraints");
+
+            return new InvalidOperationException(message.ToString());
+        }
+
+        return null;
+    }
+
+    private string DescribeUnboundedAncestor(bool reportParentConstraints)
+    {
+        if (!reportParentConstraints)
+        {
+            return string.Empty;
+        }
+
+        RenderBox? node = this;
+        while (!HasBoundedMainAxis(node) && node.Parent is RenderBox parentBox)
+        {
+            node = parentBox;
+        }
+
+        if (!HasBoundedMainAxis(node))
+        {
+            return string.Empty;
+        }
+
+        return "The nearest ancestor providing an unbounded width constraint is: "
+               + $"{node.GetType().Name}{Environment.NewLine}";
+    }
+
+    private bool HasBoundedMainAxis(RenderBox node)
+    {
+        if (!node.HasBoxConstraints)
+        {
+            return false;
+        }
+
+        BoxConstraints nodeConstraints = node.CurrentBoxConstraints;
+        return _direction == Axis.Horizontal
+            ? nodeConstraints.HasBoundedWidth
+            : nodeConstraints.HasBoundedHeight;
+    }
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (!_hasOverflow)
+        {
+            DefaultPaint(ctx, offset);
+            return;
+        }
+
+        // There's no point in drawing the children if we're empty.
+        if (Size.IsEmpty)
+        {
+            return;
+        }
+
+        ctx.PushClipRect(
+            new Rect(offset, Size),
+            clippedContext => DefaultPaint(clippedContext, offset),
+            ClipBehavior);
+
+        Rect overflowChildRect = Direction switch
+        {
+            Axis.Horizontal => new Rect(0.0, 0.0, Size.Width + _overflow, 0.0),
+            Axis.Vertical => new Rect(0.0, 0.0, 0.0, Size.Height + _overflow),
+
+            _ => throw new ArgumentOutOfRangeException()
+        };
+
+        DebugOverflowIndicator.Paint(ctx, offset, new Rect(new Point(), Size), overflowChildRect);
+    }
+
+    protected override Rect? DescribeApproximatePaintClip(RenderObject? child) => ClipBehavior switch
+    {
+        Clip.None => null,
+        Clip.HardEdge or Clip.AntiAlias or Clip.AntiAliasWithSaveLayer =>
+            _hasOverflow ? new Rect(new Point(), Size) : null,
+
+        _ => throw new ArgumentOutOfRangeException()
+    };
+
+    public override void VisitChildren(Action<RenderObject> visitor)
+    {
+        for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
+        {
+            visitor(child);
+        }
+    }
+
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        return DefaultHitTestChildren(result, position);
     }
 
     private static (double leadingSpace, double betweenSpace) _distributeSpace(
@@ -887,8 +1042,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         double freeSpace,
         int itemCount,
         bool flipped,
-        double spacing
-    )
+        double spacing)
     {
         Debug.Assert(itemCount >= 0);
 
@@ -901,30 +1055,26 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
                 freeSpace,
                 itemCount,
                 !flipped,
-                spacing
-            ),
+                spacing),
             MainAxisAlignment.SpaceBetween when itemCount < 2 => _distributeSpace(
                 MainAxisAlignment.Start,
                 freeSpace,
                 itemCount,
                 flipped,
-                spacing
-            ),
+                spacing),
             MainAxisAlignment.SpaceAround when itemCount == 0 => _distributeSpace(
                 MainAxisAlignment.Start,
                 freeSpace,
                 itemCount,
                 flipped,
-                spacing
-            ),
+                spacing),
 
             MainAxisAlignment.Center => (freeSpace / 2.0, spacing),
             MainAxisAlignment.SpaceBetween => (0.0, freeSpace / (itemCount - 1) + spacing),
             MainAxisAlignment.SpaceAround => (freeSpace / itemCount / 2, freeSpace / itemCount + spacing),
             MainAxisAlignment.SpaceEvenly => (
                 freeSpace / (itemCount + 1),
-                freeSpace / (itemCount + 1) + spacing
-            ),
+                freeSpace / (itemCount + 1) + spacing),
 
             _ => throw new ArgumentOutOfRangeException(nameof(mainAxisAlignment), mainAxisAlignment, null)
         };
@@ -942,144 +1092,16 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             CrossAxisAlignment.Baseline => 0.0,
             CrossAxisAlignment.Start => flipped ? freeSpace : 0.0,
             CrossAxisAlignment.Center => freeSpace / 2,
-            CrossAxisAlignment.End => _getChildCrossAxisOffset(CrossAxisAlignment.Start,
+            CrossAxisAlignment.End => _getChildCrossAxisOffset(
+                CrossAxisAlignment.Start,
                 freeSpace,
-                !flipped
-            ),
+                !flipped),
 
             _ => throw new ArgumentOutOfRangeException(nameof(crossAxisAlignment), crossAxisAlignment, null)
         };
     }
 
-    private void PaintOverflowIndicator(PaintingContext context, Point offset)
-    {
-        var containerRect = new Rect(offset, Size);
-        var overflowChildRect = Direction switch
-        {
-            Axis.Horizontal => new Rect(containerRect.X, containerRect.Y, containerRect.Width + _overflow, 0),
-            Axis.Vertical => new Rect(containerRect.X, containerRect.Y, 0, containerRect.Height + _overflow),
-            _ => throw new ArgumentOutOfRangeException()
-        };
-
-        double overflowRight = Math.Max(0, overflowChildRect.Right - containerRect.Right);
-        double overflowBottom = Math.Max(0, overflowChildRect.Bottom - containerRect.Bottom);
-
-        if (overflowRight <= Constants.PrecisionErrorTolerance
-            && overflowBottom <= Constants.PrecisionErrorTolerance)
-        {
-            return;
-        }
-
-        if (overflowRight > Constants.PrecisionErrorTolerance)
-        {
-            var markerRect = new Rect(
-                x: containerRect.X + containerRect.Width * (1.0 - OverflowIndicatorFraction),
-                y: containerRect.Y,
-                width: containerRect.Width * OverflowIndicatorFraction,
-                height: containerRect.Height);
-            PaintStripedMarker(context, markerRect);
-            PaintOverflowLabel(
-                context,
-                label: $"RIGHT OVERFLOWED BY {FormatOverflowPixels(overflowRight)} PIXELS",
-                labelOffset: new Point(
-                    markerRect.Right - (OverflowIndicatorLabelFontSize + OverflowIndicatorLabelPadding),
-                    markerRect.Y + markerRect.Height / 2),
-                rotation: -Math.PI / 2.0);
-        }
-
-        if (overflowBottom > Constants.PrecisionErrorTolerance)
-        {
-            var markerRect = new Rect(
-                x: containerRect.X,
-                y: containerRect.Y + containerRect.Height * (1.0 - OverflowIndicatorFraction),
-                width: containerRect.Width,
-                height: containerRect.Height * OverflowIndicatorFraction);
-            PaintStripedMarker(context, markerRect);
-            PaintOverflowLabel(
-                context,
-                label: $"BOTTOM OVERFLOWED BY {FormatOverflowPixels(overflowBottom)} PIXELS",
-                labelOffset: new Point(
-                    markerRect.X + markerRect.Width / 2,
-                    markerRect.Bottom - (OverflowIndicatorLabelFontSize + OverflowIndicatorLabelPadding)),
-                rotation: 0);
-        }
-    }
-
-    private static void PaintStripedMarker(PaintingContext context, Rect markerRect)
-    {
-        if (markerRect.Width <= 0 || markerRect.Height <= 0)
-        {
-            return;
-        }
-
-        context.DrawRectangle(OverflowIndicatorBrush, null, markerRect);
-    }
-
-    private static void PaintOverflowLabel(PaintingContext context, string label, Point labelOffset, double rotation)
-    {
-        if (string.IsNullOrEmpty(label))
-        {
-            return;
-        }
-
-        try
-        {
-            var labelLayout = new TextLayout(
-                text: label,
-                typeface: new Typeface(FontFamily.Default, FontStyle.Normal, FontWeight.ExtraBold, FontStretch.Normal),
-                fontSize: OverflowIndicatorLabelFontSize,
-                foreground: OverflowLabelForegroundBrush);
-
-            var labelOrigin = new Point(-labelLayout.Width / 2.0, 0);
-            var backgroundRect = new Rect(
-                x: labelOrigin.X,
-                y: labelOrigin.Y,
-                width: labelLayout.Width,
-                height: labelLayout.Height);
-
-            context.PushTransform(
-                Matrix4.TranslationValues(labelOffset.X, labelOffset.Y, 0.0),
-                translatedContext =>
-            {
-                if (Math.Abs(rotation) > Constants.PrecisionErrorTolerance)
-                {
-                    translatedContext.PushTransform(CreateRotationMatrix(rotation), rotatedContext =>
-                    {
-                        rotatedContext.DrawRectangle(OverflowLabelBackgroundBrush, null, backgroundRect);
-                        rotatedContext.DrawTextLayout(labelLayout, labelOrigin);
-                    });
-                    return;
-                }
-
-                translatedContext.DrawRectangle(OverflowLabelBackgroundBrush, null, backgroundRect);
-                translatedContext.DrawTextLayout(labelLayout, labelOrigin);
-            });
-        }
-        catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
-        {
-            // In host-less test environments label text layout may be unavailable.
-        }
-    }
-
-    private static Matrix4 CreateRotationMatrix(double angle) => Matrix4.RotationZ(angle);
-
-    private static string FormatOverflowPixels(double value)
-    {
-        if (value > 10.0)
-        {
-            return value.ToString("0");
-        }
-
-        if (value > 1.0)
-        {
-            return value.ToString("0.0");
-        }
-
-        return value.ToString("0.###");
-    }
-
-
-    private struct _AxisSize(Size size)
+    private readonly struct _AxisSize(Size size)
     {
         private readonly Size _size = size;
 
@@ -1103,7 +1125,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
         public _AxisSize ApplyConstraints(BoxConstraints constraints, Axis direction)
         {
-            var effectiveConstraints = direction switch
+            BoxConstraints effectiveConstraints = direction switch
             {
                 Axis.Horizontal => constraints,
                 Axis.Vertical => constraints.Flipped,
@@ -1130,27 +1152,22 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             return new _AxisSize(
                 new Size(
                     a._size.Width + b._size.Width,
-                    Math.Max(a._size.Height, b._size.Height)
-                ));
+                    Math.Max(a._size.Height, b._size.Height)));
         }
     }
 
-    private struct _AscentDescent
+    private readonly struct _AscentDescent
     {
-        private readonly (double ascent, double descent)? _ascentDescent;
-
         private _AscentDescent((double ascent, double descent)? ascentDescent)
         {
-            _ascentDescent = ascentDescent;
+            AscentDescent = ascentDescent;
         }
 
         public double? BaselineOffset => AscentDescent?.ascent;
 
+        public (double ascent, double descent)? AscentDescent { get; }
 
-        public (double ascent, double descent)? AscentDescent => _ascentDescent;
-
-
-        public static readonly _AscentDescent None = new _AscentDescent(null);
+        public static readonly _AscentDescent None = new(null);
 
         public static _AscentDescent Create(double? baselineOffset, double crossSize)
         {
@@ -1161,30 +1178,29 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
         public static _AscentDescent operator +(_AscentDescent a, _AscentDescent b)
         {
-            if (a.AscentDescent is not null)
+            if (a.AscentDescent is null)
             {
-                if (b.AscentDescent is not null)
-                {
-                    return new _AscentDescent((
-                        Math.Max(a.AscentDescent.Value.ascent, b.AscentDescent.Value.ascent),
-                        Math.Max(a.AscentDescent.Value.descent, b.AscentDescent.Value.descent)));
-                }
+                return b;
+            }
 
+            if (b.AscentDescent is null)
+            {
                 return a;
             }
 
-            return b;
+            return new _AscentDescent((
+                Math.Max(a.AscentDescent.Value.ascent, b.AscentDescent.Value.ascent),
+                Math.Max(a.AscentDescent.Value.descent, b.AscentDescent.Value.descent)));
         }
     }
 
-    private struct _LayoutSizes
+    private readonly struct _LayoutSizes
     {
         public _LayoutSizes(
             _AxisSize axisSize,
             double mainAxisFreeSpace,
             double? baselineOffset,
-            double? spacePerFlex
-        )
+            double? spacePerFlex)
         {
             this.axisSize = axisSize;
             this.mainAxisFreeSpace = mainAxisFreeSpace;
@@ -1194,22 +1210,21 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             Debug.Assert(!spacePerFlex.HasValue || double.IsFinite(spacePerFlex.Value));
         }
 
-        // The  constrained _AxisSize of the RenderFlex.
-        public _AxisSize axisSize;
+        // The constrained _AxisSize of the RenderFlex.
+        public readonly _AxisSize axisSize;
 
         // The free space along the main axis. If the value is positive, the free space
         // will be distributed according to the [MainAxisAlignment] specified. A
         // negative value indicates the RenderFlex overflows along the main axis.
-        public double mainAxisFreeSpace;
+        public readonly double mainAxisFreeSpace;
 
         // Null if the RenderFlex is not baseline aligned, or none of its children has
         // a valid baseline of the given [TextBaseline] type.
-        public double? baselineOffset;
+        public readonly double? baselineOffset;
 
         // The allocated space for flex children.
-        public double? spacePerFlex;
+        public readonly double? spacePerFlex;
     }
-
 
     #region Mixins
 

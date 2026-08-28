@@ -31,6 +31,7 @@ import 'demos/material/autocomplete_demo_page.dart';
 import 'demos/material/selection_demo_page.dart';
 import 'demos/material/desktop_text_selection_toolbar_demo_page.dart';
 import 'demos/general/aspect_ratio_demo_page.dart';
+import 'demos/general/flex_demo_page.dart';
 import 'demos/general/bloc_counter_demo_page.dart';
 import 'demos/material/card_demo_page.dart';
 import 'demos/material/carousel_demo_page.dart';
@@ -730,7 +731,8 @@ class SampleGalleryScreen extends StatelessWidget {
     SampleRouteDefinition(
       routeName: SampleRoutes.hero,
       title: 'Hero',
-      subtitle: 'shared-element flight + shuttle/placeholder builders + HeroMode',
+      subtitle:
+          'shared-element flight + shuttle/placeholder builders + HeroMode',
       builder: () => const HeroDemoPage(),
     ),
     SampleRouteDefinition(
@@ -896,6 +898,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'AspectRatio + Spacer',
       subtitle: 'tight ratio layout + flex gap',
       builder: () => const AspectRatioDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.flex,
+      title: 'Flex / Row / Column',
+      subtitle: 'main+cross alignment, spacing, RTL, overflow clip',
+      builder: () => const FlexDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.fractionallySizedBox,

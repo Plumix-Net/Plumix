@@ -135,6 +135,7 @@ class SampleRoutes {
   static const String shapeBorders = '/shape-borders';
   static const String container = '/container';
   static const String aspectRatio = '/aspect-ratio';
+  static const String flex = '/flex';
   static const String fractionallySizedBox = '/fractionally-sized-box';
   static const String fittedBox = '/fitted-box';
   static const String unconstrainedLimitedBox = '/unconstrained-limited-box';

@@ -139,6 +139,7 @@ internal static class SampleRoutes
     public const string ShapeBorders = "/shape-borders";
     public const string Container = "/container";
     public const string AspectRatio = "/aspect-ratio";
+    public const string Flex = "/flex";
     public const string FractionallySizedBox = "/fractionally-sized-box";
     public const string FittedBox = "/fitted-box";
     public const string UnconstrainedLimitedBox = "/unconstrained-limited-box";
@@ -532,6 +533,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new ShapeBordersDemoPage()),
         new(SampleRoutes.Container, "Container", "alignment + margin + constraints + transform", () => new ContainerDemoPage()),
         new(SampleRoutes.AspectRatio, "AspectRatio + Spacer", "tight ratio layout + flex gap", () => new AspectRatioDemoPage()),
+        new(
+            SampleRoutes.Flex,
+            "Flex / Row / Column",
+            "main+cross alignment, spacing, RTL, overflow clip",
+            () => new FlexDemoPage()),
         new(SampleRoutes.FractionallySizedBox, "FractionallySizedBox", "fractional constraints + alignment", () => new FractionallySizedBoxDemoPage()),
         new(SampleRoutes.FittedBox, "FittedBox", "box-fit scaling + alignment", () => new FittedBoxDemoPage()),
         new(

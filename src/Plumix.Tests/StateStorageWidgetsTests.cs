@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -284,7 +285,9 @@ public sealed class StateStorageWidgetsTests
             var renderView = new RenderView();
             _pipeline = new PipelineOwner(renderView);
             _pipeline.Attach(renderView);
-            _root = new HarnessRootElement(renderView, widget);
+            _root = new HarnessRootElement(
+                renderView,
+                new Directionality(TextDirection.Ltr, child: widget));
             _root.Attach(_owner);
             _root.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();
@@ -292,7 +295,7 @@ public sealed class StateStorageWidgetsTests
 
         public void Update(Widget widget)
         {
-            _root.UpdateWidget(widget);
+            _root.UpdateWidget(new Directionality(TextDirection.Ltr, child: widget));
             _owner.FlushBuild();
         }
 

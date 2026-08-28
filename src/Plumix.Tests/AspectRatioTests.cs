@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -110,7 +111,8 @@ public sealed class AspectRatioTests
 
         var row = new RenderFlex(
             children: [left, primarySpacer, middle, secondarySpacer, right],
-            direction: Axis.Horizontal);
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var primaryParentData = (FlexParentData)primarySpacer.parentData!;
         primaryParentData.flex = 3;
         primaryParentData.fit = FlexFit.Tight;

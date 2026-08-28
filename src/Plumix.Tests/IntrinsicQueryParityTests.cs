@@ -122,7 +122,8 @@ public sealed class IntrinsicQueryParityTests
             children: [first, second],
             direction: Axis.Horizontal,
             mainAxisSize: MainAxisSize.Min,
-            spacing: 12.0);
+            spacing: 12.0,
+            textDirection: TextDirection.Ltr);
 
         Assert.Equal(212.0, row.GetMinIntrinsicWidth(100.0));
         Assert.Equal(212.0, row.GetMaxIntrinsicWidth(100.0));
@@ -139,7 +140,8 @@ public sealed class IntrinsicQueryParityTests
             direction: Axis.Horizontal,
             mainAxisSize: MainAxisSize.Min,
             crossAxisAlignment: CrossAxisAlignment.Baseline,
-            textBaseline: TextBaseline.Alphabetic);
+            textBaseline: TextBaseline.Alphabetic,
+            textDirection: TextDirection.Ltr);
         BoxConstraints baselineConstraints = new(MaxWidth: 200, MaxHeight: 100);
 
         Assert.Equal(new Size(200, 30), baselineRow.GetDryLayout(baselineConstraints));

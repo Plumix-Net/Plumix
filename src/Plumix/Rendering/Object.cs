@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
 
@@ -325,5 +326,48 @@ public class RenderBoxContainerDefaultsMixin<TChild, TParentData>(RenderObject o
         }
 
         return false;
+    }
+
+    /// Returns the baseline of the first child that has one, offset by that
+    /// child's position along the vertical axis.
+    public double? DefaultComputeDistanceToFirstActualBaseline(TextBaseline baseline)
+    {
+        var child = FirstChild;
+        while (child != null)
+        {
+            var childParentData = (TParentData)child.parentData!;
+            double? result = child.GetDistanceToBaseline(baseline, onlyReal: true);
+            if (result != null)
+            {
+                return result.Value + childParentData.offset.Y;
+            }
+
+            child = childParentData.nextSibling;
+        }
+
+        return null;
+    }
+
+    /// Returns the smallest offset baseline among the children that have one.
+    public double? DefaultComputeDistanceToHighestActualBaseline(TextBaseline baseline)
+    {
+        double? minBaseline = null;
+        var child = FirstChild;
+        while (child != null)
+        {
+            var childParentData = (TParentData)child.parentData!;
+            double? candidate = child.GetDistanceToBaseline(baseline, onlyReal: true);
+            if (candidate != null)
+            {
+                double offsetCandidate = candidate.Value + childParentData.offset.Y;
+                minBaseline = minBaseline == null
+                    ? offsetCandidate
+                    : Math.Min(minBaseline.Value, offsetCandidate);
+            }
+
+            child = childParentData.nextSibling;
+        }
+
+        return minBaseline;
     }
 }

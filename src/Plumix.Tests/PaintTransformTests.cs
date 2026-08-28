@@ -71,7 +71,10 @@ public sealed class PaintTransformTests
     {
         var first = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
         var second = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
-        var row = new RenderFlex(children: [first, second], direction: Axis.Horizontal);
+        var row = new RenderFlex(
+            children: [first, second],
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr);
         var renderView = new RenderView { Child = row };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);

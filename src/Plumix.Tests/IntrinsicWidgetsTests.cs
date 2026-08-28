@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -92,7 +93,8 @@ public sealed class IntrinsicWidgetsTests
         var row = new RenderFlex(
             children: [shortChild, tallChild],
             direction: Axis.Horizontal,
-            crossAxisAlignment: CrossAxisAlignment.Stretch);
+            crossAxisAlignment: CrossAxisAlignment.Stretch,
+            textDirection: TextDirection.Ltr);
         var intrinsic = new RenderIntrinsicHeight(row);
 
         intrinsic.Layout(new BoxConstraints(MaxWidth: 200.0, MaxHeight: 100.0));
