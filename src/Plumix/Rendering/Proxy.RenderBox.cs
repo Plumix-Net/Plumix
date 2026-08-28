@@ -2269,15 +2269,18 @@ public class RenderOpacity : RenderProxyBox
                 return;
             }
 
+            bool didNeedCompositing = AlwaysNeedsCompositing;
             bool semanticsVisibilityChanged = (_opacity == 0.0) != (clamped == 0.0);
             _opacity = clamped;
-            if (Child != null)
+            if (didNeedCompositing != AlwaysNeedsCompositing)
             {
-                MarkNeedsCompositedLayerUpdate();
-                if (semanticsVisibilityChanged)
-                {
-                    MarkNeedsSemanticsUpdate();
-                }
+                MarkNeedsCompositingBitsUpdate();
+            }
+
+            MarkNeedsCompositedLayerUpdate();
+            if (semanticsVisibilityChanged && !AlwaysIncludeSemantics)
+            {
+                MarkNeedsSemanticsUpdate();
             }
         }
     }
@@ -2297,8 +2300,8 @@ public class RenderOpacity : RenderProxyBox
         }
     }
 
-    public override bool IsRepaintBoundary => Child != null;
-    protected override bool AlwaysNeedsCompositing => Child != null && Opacity < 1.0;
+    public override bool IsRepaintBoundary => AlwaysNeedsCompositing;
+    protected override bool AlwaysNeedsCompositing => Child != null && Opacity > 0.0;
 
     protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
     {

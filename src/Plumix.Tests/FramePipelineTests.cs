@@ -156,7 +156,7 @@ public sealed class FramePipelineTests
     }
 
     [Fact]
-    public void PipelineOwner_FlushLayout_TriggersCompositingAndSemanticsPhases()
+    public void PipelineOwner_FlushLayout_SkipsCompositingAndTriggersSemantics()
     {
         var renderView = new RenderView();
         var child = new ProbeRenderBox();
@@ -176,7 +176,7 @@ public sealed class FramePipelineTests
         pipeline.FlushSemantics();
 
         Assert.Equal(1, child.LayoutCount);
-        Assert.Equal(1, child.CompositingUpdateCount);
+        Assert.Equal(0, child.CompositingUpdateCount);
         Assert.Equal(1, child.SemanticsUpdateCount);
     }
 

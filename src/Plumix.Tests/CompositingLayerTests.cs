@@ -257,6 +257,59 @@ public sealed class CompositingLayerTests
     }
 
     [Fact]
+    public void RenderOpacity_CompositingTracksVisibilityWithoutAnotherLayout()
+    {
+        var opacity = new RenderOpacity(opacity: 1.0, child: new TestLeafRenderBox());
+        var root = new RenderView
+        {
+            Child = opacity
+        };
+
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+        pipeline.FlushLayout(new Size(300, 200));
+        pipeline.FlushCompositingBits();
+
+        Assert.True(opacity.NeedsCompositing);
+
+        opacity.Opacity = 0.0;
+        Assert.True(opacity.NeedsCompositingBitsUpdate);
+        pipeline.FlushCompositingBits();
+
+        Assert.False(opacity.NeedsCompositing);
+
+        opacity.Opacity = 0.5;
+        Assert.True(opacity.NeedsCompositingBitsUpdate);
+        pipeline.FlushCompositingBits();
+
+        Assert.True(opacity.NeedsCompositing);
+    }
+
+    [Fact]
+    public void InitialAttach_InitializesAlwaysNeedsCompositingWithoutLayoutInvalidation()
+    {
+        var child = new AlwaysCompositingRenderBox();
+        var root = new RenderView
+        {
+            Child = child
+        };
+
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+        pipeline.FlushLayout(new Size(300, 200));
+        pipeline.FlushCompositingBits();
+
+        Assert.True(child.NeedsCompositing);
+        Assert.False(child.NeedsCompositingBitsUpdate);
+
+        child.MarkNeedsLayout();
+        pipeline.FlushLayout(new Size(300, 200));
+
+        Assert.False(child.NeedsCompositingBitsUpdate);
+        Assert.False(root.NeedsCompositingBitsUpdate);
+    }
+
+    [Fact]
     public void RenderTransform_UpdatesLayerTransform_WithoutRepaintingChild()
     {
         var leaf = new TestLeafRenderBox();
@@ -481,6 +534,20 @@ public sealed class CompositingLayerTests
         {
             PaintCount += 1;
             ctx.DrawRectangle(Brushes.CadetBlue, null, new Rect(offset, Size));
+        }
+    }
+
+    private sealed class AlwaysCompositingRenderBox : RenderBox
+    {
+        protected override bool AlwaysNeedsCompositing => true;
+
+        protected override void PerformLayout()
+        {
+            Size = Constraints.Constrain(new Size(32, 32));
+        }
+
+        public override void Paint(PaintingContext ctx, Point offset)
+        {
         }
     }
 

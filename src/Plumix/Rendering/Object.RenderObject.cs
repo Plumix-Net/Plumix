@@ -22,6 +22,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     private readonly RenderObjectSemantics _semantics;
     private bool _needsCompositingBitsUpdate;
     private bool _needsCompositedLayerUpdate;
+    private bool _didInitializeCompositing;
     internal RenderObjectSemantics Semantics => _semantics;
 
     /// <summary>The semantics node this render object produced, or <c>null</c> when it merged up.</summary>
@@ -216,6 +217,14 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     public void Attach(PipelineOwner owner)
     {
         Owner = owner;
+        if (!_didInitializeCompositing)
+        {
+            // Dart initializes this in RenderObject's constructor. C# waits until first attach so
+            // subclass fields are initialized before the virtual getters run.
+            NeedsCompositing = IsRepaintBoundary || AlwaysNeedsCompositing;
+            _didInitializeCompositing = true;
+        }
+
         OnAttach();
 
         // If the node was dirtied in some way while unattached, make sure to add
@@ -330,10 +339,6 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         _needsLayout = false;
         _descendantNeedsLayout = false;
 
-        // Divergence from Flutter's `layout`, which never dirties compositing bits: Plumix's
-        // property setters do not all call `markNeedsCompositingBitsUpdate`, so layout refreshes
-        // them wholesale (see `docs/ai/DIVERGENCES.md`).
-        MarkNeedsCompositingBitsUpdate();
         MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
     }

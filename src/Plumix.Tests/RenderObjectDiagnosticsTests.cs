@@ -43,10 +43,8 @@ public sealed class RenderObjectDiagnosticsTests
         var parent = new LooseParent { Child = child };
         Layout(parent, new BoxConstraints(MinWidth: 100, MaxWidth: 100, MinHeight: 100, MaxHeight: 100));
 
-        // Flutter's golden is `SizedBox#00000 relayoutBoundary=up1 NEEDS-PAINT`; Plumix's `layout`
-        // additionally dirties the compositing bits (`docs/ai/DIVERGENCES.md`).
         Assert.Equal(
-            "SizedBox#00000 relayoutBoundary=up1 NEEDS-PAINT NEEDS-COMPOSITING-BITS-UPDATE",
+            "SizedBox#00000 relayoutBoundary=up1 NEEDS-PAINT",
             Normalize(child.ToStringShort()));
     }
 
