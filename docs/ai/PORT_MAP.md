@@ -266,22 +266,23 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/print.dart` | `src/Plumix/Foundation/Print.cs` | `src/Plumix.Tests/PrintTests.cs` | — |
 | `foundation/serialization.dart` | `src/Plumix/Foundation/Serialization.cs` | — | — |
 | `foundation/stack_frame.dart` | `src/Plumix/Foundation/StackFrame.cs` | `src/Plumix.Tests/StackFrameTests.cs` | — |
-| `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` _(reference) (approximate)_ | — | — |
+| `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` | — | — |
 | `gestures/binding.dart` | `src/Plumix/Gestures/GestureBinding.cs` _(reference) (approximate)_ | — | — |
 | `gestures/constants.dart` | `src/Plumix/Gestures/Constants.cs` | — | — |
-| `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragTargetTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapAndDragGestureTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs` |
+| `gestures/debug.dart` | `src/Plumix/Gestures/Debug.cs` | `src/Plumix.Tests/DebugPaintingWidgetsTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs` |
+| `gestures/drag.dart` | `src/Plumix/Gestures/Drag.cs` | `src/Plumix.Tests/DragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/DragTargetTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapAndDragGestureTests.cs` | `dart_sample/lib/demos/general/drag_target_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DragTargetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs` |
 | `gestures/events.dart` | `src/Plumix/Gestures/Events.cs`<br>`src/Plumix/UI/PointerEvents.cs` _(reference) (approximate)_ | — | — |
 | `gestures/gesture_details.dart` | `src/Plumix/Gestures/GestureDetails.cs` | — | — |
 | `gestures/gesture_settings.dart` | `src/Plumix/Gestures/DeviceGestureSettings.cs` | — | — |
 | `gestures/hit_test.dart` | `src/Plumix/Rendering/HitTestTarget.cs` | — | — |
-| `gestures/long_press.dart` | `src/Plumix/Gestures/LongPressGestureRecognizer.cs` _(reference) (approximate)_ | — | — |
+| `gestures/long_press.dart` | `src/Plumix/Gestures/LongPressGestureRecognizer.cs` | `src/Plumix.Tests/LongPressGestureRecognizerTests.cs` | — |
 | `gestures/lsq_solver.dart` | `src/Plumix/Gestures/LeastSquaresSolver.cs` | — | — |
-| `gestures/monodrag.dart` | `src/Plumix/Gestures/DragGestureRecognizer.cs` _(reference) (approximate)_ | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs` | — |
+| `gestures/monodrag.dart` | `src/Plumix/Gestures/DragGestureRecognizer.cs` | `src/Plumix.Tests/DragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs` | — |
 | `gestures/multidrag.dart` | `src/Plumix/Gestures/MultiDragGestureRecognizer.cs` | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs` | — |
 | `gestures/multitap.dart` | `src/Plumix/Gestures/Multitap.cs` | `src/Plumix.Tests/MultitapGestureTests.cs` | — |
-| `gestures/pointer_router.dart` | `src/Plumix/Gestures/PointerRouter.cs` _(reference) (approximate)_ | — | — |
+| `gestures/pointer_router.dart` | `src/Plumix/Gestures/PointerRouter.cs` | `src/Plumix.Tests/PointerRouterTests.cs` | — |
 | `gestures/pointer_signal_resolver.dart` | `src/Plumix/Gestures/PointerSignalResolver.cs` | `src/Plumix.Tests/PointerSignalResolverTests.cs` | — |
-| `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs` _(reference) (approximate)_<br>`src/Plumix/UI/DragStartBehavior.cs` | `src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapGestureRecognizerTests.cs` | — |
+| `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs` _(reference)_<br>`src/Plumix/UI/DragStartBehavior.cs` | `src/Plumix.Tests/DragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/LongPressGestureRecognizerTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapGestureRecognizerTests.cs` | `dart_sample/lib/demos/general/gesture_recognizer_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/GestureRecognizerDemoPage.cs` |
 | `gestures/tap.dart` | `src/Plumix/Gestures/TapGestureRecognizer.cs` | `src/Plumix.Tests/TapGestureRecognizerTests.cs` | — |
 | `gestures/tap_and_drag.dart` | `src/Plumix/Gestures/TapAndDrag.cs` | `src/Plumix.Tests/TapAndDragGestureTests.cs` | — |
 | `gestures/team.dart` | `src/Plumix/Gestures/GestureArenaTeam.cs` | — | — |
@@ -473,7 +474,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/repeating_animation_builder.dart` | `src/Plumix/Widgets/RepeatingAnimationBuilder.cs` | — | — |
 | `widgets/restoration.dart` | `src/Plumix/Widgets/Restoration.cs` | `src/Plumix.Tests/RestorationBucketTests.cs`<br>`src/Plumix.Tests/RestorationManagerTests.cs`<br>`src/Plumix.Tests/RestorationPropertiesTests.cs`<br>`src/Plumix.Tests/RestorationWidgetsTests.cs` | — |
 | `widgets/restoration_properties.dart` | `src/Plumix/Widgets/RestorationProperties.cs` | `src/Plumix.Tests/RestorationPropertiesTests.cs` | — |
-| `widgets/router.dart` | `src/Plumix/Widgets/Router.cs` | `src/Plumix.Tests/RouterTests.cs` | `dart_sample/lib/demos/general/router_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/RouterDemoPage.cs` |
+| `widgets/router.dart` | `src/Plumix/Widgets/Router.cs` | `src/Plumix.Tests/PointerRouterTests.cs`<br>`src/Plumix.Tests/RouterTests.cs` | `dart_sample/lib/demos/general/router_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/RouterDemoPage.cs` |
 | `widgets/routes.dart` | `src/Plumix/Widgets/Navigation.cs`<br>`src/Plumix/Widgets/RawDialogRoute.cs` | `src/Plumix.Tests/CupertinoNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialBottomNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialNavigationSurfacesTests.cs`<br>`src/Plumix.Tests/NavigationTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_navigation_bar_demo_page.dart`<br>`dart_sample/lib/demos/general/navigation_pop_demo_page.dart`<br>`dart_sample/lib/demos/material/bottom_navigation_bar_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_surfaces_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoNavigationBarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NavigationPopDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/BottomNavigationBarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationSurfacesDemoPage.cs` |
 | `widgets/safe_area.dart` | `src/Plumix/Widgets/SafeArea.cs` _(reference) (approximate)_ | `src/Plumix.Tests/SafeAreaTests.cs` | — |
 | `widgets/scroll_activity.dart` | `src/Plumix/Rendering/Scroll.cs` _(reference) (adapted)_ | `src/Plumix.Tests/CupertinoScrollbarTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollMetricsTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
@@ -572,12 +573,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/FlutterHost.cs` — (reference) (host integration, adapted)
 - `src/Plumix/Foundation/Key.cs` — (reference) (approximate)
 - `src/Plumix/Foundation/Listenable.cs` — (reference) (approximate)
-- `src/Plumix/Gestures/DragGestureRecognizer.cs` — (reference) (approximate)
-- `src/Plumix/Gestures/GestureArena.cs` — (reference) (approximate)
 - `src/Plumix/Gestures/GestureBinding.cs` — (reference) (approximate)
-- `src/Plumix/Gestures/GestureRecognizer.cs` — (reference) (approximate)
-- `src/Plumix/Gestures/LongPressGestureRecognizer.cs` — (reference) (approximate)
-- `src/Plumix/Gestures/PointerRouter.cs` — (reference) (approximate)
+- `src/Plumix/Gestures/GestureRecognizer.cs` — (reference)
 - `src/Plumix/HotReload.cs` — (reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)
 - `src/Plumix/Painting/BasicTypes.cs` — (reference) (approximate)
 - `src/Plumix/PipelineOwner.cs` — (reference) (approximate)
@@ -626,9 +623,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 501
-- C# files carrying a marker: 644
+- Flutter files mapped: 502
+- C# files carrying a marker: 645
 - C# files without a marker: 30
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 56
+- C# files with a qualified (non-strict) marker: 52
 

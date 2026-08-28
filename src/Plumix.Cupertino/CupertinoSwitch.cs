@@ -387,7 +387,7 @@ public sealed class CupertinoSwitch : StatefulWidget
 
         private void HandleDragUpdate(DragUpdateDetails details)
         {
-            AddDragDelta(details.PrimaryDelta);
+            AddDragDelta(details.PrimaryDelta ?? 0.0);
         }
 
         private void AddDragDelta(double delta)

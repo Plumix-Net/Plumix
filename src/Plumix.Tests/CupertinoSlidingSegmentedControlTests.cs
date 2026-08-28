@@ -297,7 +297,12 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         Rect initial = Assert.IsType<Rect>(render.CurrentThumbRect);
 
         PointerDown(harness.RenderView, new Point(30.0, 14.0), pointer: 40);
+        // The move that carries the drag past the touch slop only wins the arena and reports
+        // `onStart`; with `DragStartBehavior.Start` the first `onUpdate` arrives on the next move.
         Move(harness.RenderView, new Point(110.0, 14.0), pointer: 40);
+        harness.Pump(ViewSize);
+        Assert.Equal(0, render.HighlightedIndex);
+        Move(harness.RenderView, new Point(112.0, 14.0), pointer: 40);
         harness.Pump(ViewSize);
         Assert.Equal(1, render.HighlightedIndex);
         Assert.Null(reported);

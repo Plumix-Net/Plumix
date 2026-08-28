@@ -613,7 +613,7 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
         double extent = Math.Max(
             Padding,
             Size.Width - (2.0 * (Padding + CupertinoThumbPainter.Radius)));
-        double valueDelta = details.PrimaryDelta / extent;
+        double valueDelta = (details.PrimaryDelta ?? 0.0) / extent;
         _currentDragValue += TextDirection == TextDirection.Rtl ? -valueDelta : valueDelta;
 
         // Default to false if no source timestamp is available.

@@ -295,9 +295,9 @@ public sealed class GesturePipelineTests
         var binding = GestureBinding.Instance;
         binding.ResetForTests();
         var events = new List<string>();
-        var recognizer = new LongPressGestureRecognizer
+        using var timers = new FakeGestureTimers();
+        var recognizer = new LongPressGestureRecognizer(duration: TimeSpan.FromMilliseconds(500))
         {
-            Deadline = TimeSpan.Zero,
             OnLongPress = () => events.Add("long-press"),
             OnLongPressUp = () => events.Add("long-press-up"),
         };
@@ -312,8 +312,9 @@ public sealed class GesturePipelineTests
             var now = DateTime.UtcNow;
             binding.HandlePointerEvent(pipeline.Root, new PointerDownEvent(
                 25, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.Primary, now));
+            timers.Elapse(TimeSpan.FromMilliseconds(500));
             binding.HandlePointerEvent(pipeline.Root, new PointerUpEvent(
-                25, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(60)));
+                25, PointerDeviceKind.Mouse, new Point(12, 12), PointerButtons.None, now.AddMilliseconds(560)));
 
             Assert.Equal(["long-press", "long-press-up"], events);
         }
@@ -333,7 +334,7 @@ public sealed class GesturePipelineTests
         var deltas = new List<double>();
         var recognizer = new HorizontalDragGestureRecognizer
         {
-            OnUpdate = details => deltas.Add(details.PrimaryDelta)
+            OnUpdate = details => deltas.Add(details.PrimaryDelta ?? 0.0)
         };
 
         try
@@ -408,7 +409,7 @@ public sealed class GesturePipelineTests
                 log.Add("start");
                 startPosition = details.GlobalPosition;
             },
-            OnUpdate = details => totalDelta += details.PrimaryDelta,
+            OnUpdate = details => totalDelta += details.PrimaryDelta ?? 0.0,
             OnEnd = _ => log.Add("end"),
         };
 
@@ -471,7 +472,7 @@ public sealed class GesturePipelineTests
             OnlyAcceptDragOnThreshold = true,
             DragStartBehavior = dragStartBehavior,
             OnStart = details => startPosition = details.GlobalPosition,
-            OnUpdate = details => deltas.Add(details.PrimaryDelta),
+            OnUpdate = details => deltas.Add(details.PrimaryDelta ?? 0.0),
         };
 
         try

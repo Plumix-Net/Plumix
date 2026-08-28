@@ -480,8 +480,24 @@ public sealed class MaterialBottomSheetTests : IDisposable
         var binding = GestureBinding.Instance;
         var start = DateTime.UtcNow;
         DispatchDown(binding, harness.RenderView, 44, new Point(120, 20), start);
-        Assert.Throws<InvalidOperationException>(() =>
-            DispatchMove(binding, harness.RenderView, 44, new Point(120, 120), start.AddMilliseconds(200)));
+
+        // Dart's `invokeCallback` reports a throwing gesture callback through `FlutterError.onError`
+        // instead of unwinding the pointer dispatch, so the failure surfaces here, not as a throw.
+        var reported = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previousOnError = FlutterError.OnError;
+        FlutterError.OnError = reported.Add;
+        try
+        {
+            DispatchMove(binding, harness.RenderView, 44, new Point(120, 120), start.AddMilliseconds(200));
+        }
+        finally
+        {
+            FlutterError.OnError = previousOnError;
+        }
+
+        FlutterErrorDetails details = Assert.Single(reported);
+        Assert.IsType<InvalidOperationException>(details.Exception);
+        Assert.Equal("gesture", details.Library);
     }
 
     [Fact]

@@ -373,7 +373,7 @@ public sealed class ScrollDragController : IDrag, IDisposable
     /// </summary>
     public double Update(DragUpdateDetails details)
     {
-        double offset = details.PrimaryDelta;
+        double offset = details.PrimaryDelta ?? 0.0;
         if (offset != 0.0)
         {
             _lastNonStationaryTimestampUtc = details.SourceTimeStampUtc;
@@ -403,7 +403,7 @@ public sealed class ScrollDragController : IDrag, IDisposable
     {
         // We negate the velocity here because if the touch is moving downwards, the scroll has to
         // move upwards. It's the same reason that update is negated.
-        double velocity = -details.PrimaryVelocity;
+        double velocity = -(details.PrimaryVelocity ?? 0.0);
         if (Reversed)
         {
             velocity = -velocity;

@@ -77,6 +77,7 @@ import 'demos/general/gradients_demo_page.dart';
 import 'demos/general/shape_borders_demo_page.dart';
 import 'demos/general/debug_painting_demo_page.dart';
 import 'demos/general/drag_target_demo_page.dart';
+import 'demos/general/gesture_recognizer_demo_page.dart';
 import 'demos/material/drawer_demo_page.dart';
 import 'demos/material/drawer_headers_demo_page.dart';
 import 'demos/material/divider_demo_page.dart';
@@ -1044,6 +1045,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Draggable + DragTarget',
       subtitle: 'overlay feedback + accepted/rejected target lifecycle',
       builder: () => const DragTargetDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.gestureRecognizers,
+      title: 'Drag + long press recognizers',
+      subtitle: 'hit slop, DragStartBehavior, per-button long press callbacks',
+      builder: () => const GestureRecognizerDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.lifecycleUtilities,

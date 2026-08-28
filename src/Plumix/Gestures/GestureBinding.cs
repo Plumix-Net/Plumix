@@ -90,6 +90,10 @@ public sealed class GestureBinding
         {
             _hoverHitTests.Remove(@event.Pointer);
         }
+
+        // Dart's `_resolveByDefault` runs in a microtask, i.e. after the whole event has been
+        // dispatched; draining here reproduces that ordering.
+        GestureArena.FlushDefaultResolutions();
     }
 
     public void DispatchEvent(PointerEvent @event, HitTestResult? hitTestResult)

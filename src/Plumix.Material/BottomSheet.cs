@@ -262,7 +262,7 @@ public sealed class BottomSheet : StatefulWidget
             double childHeight = ChildHeight;
             if (childHeight <= 0.0) return;
             controller.Stop();
-            controller.SetValue(controller.Value - (details.PrimaryDelta / childHeight));
+            controller.SetValue(controller.Value - ((details.PrimaryDelta ?? 0.0) / childHeight));
         }
 
         private void HandleDragEnd(DragEndDetails details)

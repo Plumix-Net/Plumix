@@ -614,8 +614,8 @@ internal sealed class CupertinoSheetScrollableState : State
         return new RawGestureDetector(
             behavior: HitTestBehavior.Translucent,
             onVerticalDragStart: _ => StartDrag(),
-            onVerticalDragUpdate: details => UpdateDrag(details.PrimaryDelta / SheetHeight),
-            onVerticalDragEnd: details => EndDrag(details.PrimaryVelocity / SheetHeight),
+            onVerticalDragUpdate: details => UpdateDrag((details.PrimaryDelta ?? 0.0) / SheetHeight),
+            onVerticalDragEnd: details => EndDrag((details.PrimaryVelocity ?? 0.0) / SheetHeight),
             onVerticalDragCancel: () => EndDrag(0.0),
             velocityTrackerBuilder: @event => new IOSScrollViewFlingVelocityTracker(@event.Kind),
             child: child);

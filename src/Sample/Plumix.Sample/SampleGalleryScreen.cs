@@ -163,6 +163,8 @@ internal static class SampleRoutes
     public const string AsyncBuilders = "/async-builders";
     public const string StatefulBuilderLookupBoundary = "/stateful-builder-lookup-boundary";
     public const string DragTarget = "/drag-target";
+
+    public const string GestureRecognizers = "/gesture-recognizers";
     public const string LifecycleUtilities = "/lifecycle-utilities";
 }
 
@@ -637,6 +639,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Draggable + DragTarget",
             "overlay feedback + accepted/rejected target lifecycle",
             () => new DragTargetDemoPage()),
+        new(
+            SampleRoutes.GestureRecognizers,
+            "Drag + long press recognizers",
+            "hit slop, DragStartBehavior, per-button long press callbacks",
+            () => new GestureRecognizerDemoPage()),
         new(
             SampleRoutes.LifecycleUtilities,
             "Lifecycle listener controls",

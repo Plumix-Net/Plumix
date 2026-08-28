@@ -1007,7 +1007,7 @@ internal sealed class CupertinoBackGestureDetector : StatefulWidget
                 return;
             }
 
-            double delta = details.PrimaryDelta / _pageWidth;
+            double delta = (details.PrimaryDelta ?? 0.0) / _pageWidth;
             if (_textDirection == TextDirection.Rtl)
             {
                 delta = -delta;
@@ -1019,7 +1019,7 @@ internal sealed class CupertinoBackGestureDetector : StatefulWidget
 
         private void HandleDragEnd(DragEndDetails details)
         {
-            double velocity = _pageWidth <= 0.0 ? 0.0 : details.PrimaryVelocity / _pageWidth;
+            double velocity = _pageWidth <= 0.0 ? 0.0 : (details.PrimaryVelocity ?? 0.0) / _pageWidth;
             if (_textDirection == TextDirection.Rtl)
             {
                 velocity = -velocity;

@@ -57,7 +57,15 @@ public sealed class TapGestureRecognizerTests : IDisposable
             pointer, PointerDeviceKind.Touch, position, PointerButtons.None, DateTime.UnixEpoch);
     }
 
-    private void Route(PointerEvent @event) => _binding.PointerRouter.Route(@event);
+    /// <summary>
+    /// Mirrors Flutter's `GestureTester.route`, which routes the event and then flushes microtasks
+    /// so the arena's deferred single-member resolution runs before the assertions.
+    /// </summary>
+    private void Route(PointerEvent @event)
+    {
+        _binding.PointerRouter.Route(@event);
+        _binding.GestureArena.FlushDefaultResolutions();
+    }
 
     private sealed class PassiveArenaMember : IGestureArenaMember
     {
@@ -87,9 +95,10 @@ public sealed class TapGestureRecognizerTests : IDisposable
             var down = Down(1, new Point(10.0, 10.0));
             tap.AddPointer(down);
             _binding.GestureArena.Close(1);
-            // Sole member: the arena resolves at close, so tap-down has already fired.
-            Assert.Equal(["down"], events);
+            // Dart resolves the sole remaining member in a microtask, so nothing has fired yet.
+            Assert.Empty(events);
             Route(down);
+            Assert.Equal(["down"], events);
             Route(Up(1, new Point(11.0, 9.0)));
             Assert.Equal(["down", "up", "tap"], events);
             _binding.GestureArena.Sweep(1);
@@ -360,6 +369,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
             Assert.Empty(events);
 
             entry.Resolve(GestureDisposition.Rejected);
+            _binding.GestureArena.FlushDefaultResolutions();
             Assert.Equal(["down", "up", "tap"], events);
         }
         finally
@@ -498,9 +508,11 @@ public sealed class TapGestureRecognizerTests : IDisposable
             primary.AddPointer(down);
             secondary.AddPointer(down);
             _binding.GestureArena.Close(1);
-            // The secondary recognizer refused the pointer, so the primary one wins at close.
-            Assert.Equal(["primaryDown"], events);
+            // The secondary recognizer refused the pointer, so the primary one wins by default —
+            // in the microtask Dart schedules, which the next `Route` flushes.
+            Assert.Empty(events);
             Route(down);
+            Assert.Equal(["primaryDown"], events);
             Route(Up(1, new Point(10.0, 10.0)));
             _binding.GestureArena.Sweep(1);
             Assert.Equal(["primaryDown", "primaryUp"], events);

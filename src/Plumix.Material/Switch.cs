@@ -871,7 +871,7 @@ internal sealed class MaterialSwitchState : ToggleableState
         PositionAnimation.Curve = Curves.Linear;
         PositionAnimation.ReverseCurve = null;
         SwitchConfig config = ResolveConfigForDrag();
-        double delta = details.PrimaryDelta / TrackInnerLength(config);
+        double delta = (details.PrimaryDelta ?? 0.0) / TrackInnerLength(config);
         PositionController.SetValue(PositionController.Value + (
             Directionality.Of(Context) == TextDirection.Rtl ? -delta : delta));
     }

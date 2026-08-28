@@ -140,7 +140,7 @@ public abstract class BaseTapGestureRecognizer : PrimaryPointerGestureRecognizer
         }
     }
 
-    protected override void StartTrackingPointer(int pointer)
+    protected override void StartTrackingPointer(int pointer, Matrix4? transform = null)
     {
         // The recognizer should never track any pointers when `_down` is null, because calling
         // `_checkDown` in that situation will throw.
@@ -150,7 +150,7 @@ public abstract class BaseTapGestureRecognizer : PrimaryPointerGestureRecognizer
                 "A tap recognizer cannot start tracking a pointer before it stores the down event.");
         }
 
-        base.StartTrackingPointer(pointer);
+        base.StartTrackingPointer(pointer, transform);
     }
 
     protected override void HandlePrimaryPointer(PointerEvent @event)

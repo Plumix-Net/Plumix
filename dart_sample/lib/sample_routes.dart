@@ -161,6 +161,7 @@ class SampleRoutes {
   static const String statefulBuilderLookupBoundary =
       '/stateful-builder-lookup-boundary';
   static const String dragTarget = '/drag-target';
+  static const String gestureRecognizers = '/gesture-recognizers';
   static const String lifecycleUtilities = '/lifecycle-utilities';
 }
 

@@ -257,7 +257,7 @@ internal sealed class CupertinoTextSelectionToolbarContent : StatefulWidget
 
         private void HandleHorizontalDragEnd(DragEndDetails details)
         {
-            double velocity = details.PrimaryVelocity;
+            double velocity = details.PrimaryVelocity ?? 0.0;
             if (velocity == 0.0)
             {
                 return;

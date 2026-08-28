@@ -266,7 +266,8 @@ public sealed class DrawerControllerState : State
         double drawerWidth = ResolveDrawerWidth(Context);
         TextDirection textDirection = Directionality.Of(Context);
         double directionFactor = IsOnLeft(CurrentWidget.Alignment, textDirection) ? 1.0 : -1.0;
-        _controller.SetValue(_controller.Value + (details.PrimaryDelta / drawerWidth * directionFactor));
+        _controller.SetValue(
+            _controller.Value + ((details.PrimaryDelta ?? 0.0) / drawerWidth * directionFactor));
 
         bool opened = _controller.Value > 0.5;
         if (opened != _previouslyOpened)
@@ -288,7 +289,7 @@ public sealed class DrawerControllerState : State
         double drawerWidth = ResolveDrawerWidth(Context);
         TextDirection textDirection = Directionality.Of(Context);
         double directionFactor = IsOnLeft(CurrentWidget.Alignment, textDirection) ? 1.0 : -1.0;
-        double velocity = details.PrimaryVelocity * directionFactor;
+        double velocity = (details.PrimaryVelocity ?? 0.0) * directionFactor;
         if (Math.Abs(velocity) >= MinFlingVelocityPixelsPerSecond)
         {
             double visualVelocity = velocity / drawerWidth;

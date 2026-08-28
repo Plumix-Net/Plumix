@@ -69,6 +69,57 @@ public abstract class PointerEvent
     /// </summary>
     public PointerEvent? Original { get; private set; }
 
+    /// <summary>
+    /// Whether the framework generated this event rather than the platform reporting it. Dart's
+    /// `PointerEvent.synthesized`; synthesized moves are excluded from velocity tracking.
+    /// </summary>
+    public bool Synthesized { get; init; }
+
+    /// <summary>
+    /// The transform that maps this event's global coordinates into the local space of the object
+    /// that received it, or null when no transform has been applied. Dart's `PointerEvent.transform`.
+    /// </summary>
+    public Matrix4? Transform { get; private set; }
+
+    /// <summary>
+    /// Returns a copy of this event whose local coordinates are this event's global coordinates
+    /// mapped through <paramref name="transform"/>. Ports Dart's `PointerEvent.transformed`: a null
+    /// transform, or the transform this event already carries, returns the event untouched.
+    /// </summary>
+    public PointerEvent Transformed(Matrix4? transform)
+    {
+        if (transform is null || ReferenceEquals(transform, Transform))
+        {
+            return this;
+        }
+
+        var clone = (PointerEvent)MemberwiseClone();
+        clone.Original = Original ?? this;
+        clone.Transform = transform;
+        clone.LocalPosition = TransformPosition(transform, Position);
+        clone.LocalDelta = Plumix.Gestures.PointerEventUtils.TransformDeltaViaPositions(
+            untransformedEndPosition: Position,
+            untransformedDelta: Delta,
+            transform: transform,
+            transformedEndPosition: clone.LocalPosition);
+        return clone;
+    }
+
+    /// <summary>
+    /// Maps <paramref name="position"/> through <paramref name="transform"/> after removing the
+    /// perspective row and column. Dart's static `PointerEvent.transformPosition`.
+    /// </summary>
+    public static Point TransformPosition(Matrix4? transform, Point position)
+    {
+        if (transform is null)
+        {
+            return position;
+        }
+
+        Matrix4 flattened = Plumix.Gestures.PointerEventUtils.RemovePerspectiveTransform(transform);
+        return Plumix.Rendering.MatrixUtils.TransformPoint(flattened, position);
+    }
+
     internal PointerEvent WithDelta(Point delta)
     {
         var clone = (PointerEvent)MemberwiseClone();

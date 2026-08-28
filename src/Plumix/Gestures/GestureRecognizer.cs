@@ -1,14 +1,42 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/gestures/recognizer.dart (approximate)
+// Dart parity source (reference): flutter/packages/flutter/lib/src/gestures/recognizer.dart
+// Structure delta (see docs/ai/DIVERGENCES.md): Dart keeps `_entries`, `_trackedPointers`, `team`,
+// `startTrackingPointer`, `stopTrackingPointer` and `_addPointerToArena` on
+// `OneSequenceGestureRecognizer` and lets `MultiDragGestureRecognizer`, `DoubleTapGestureRecognizer`,
+// `MultiTapGestureRecognizer` and `SerialTapGestureRecognizer` hand-roll the same routing. Plumix
+// hoists them to `GestureRecognizer` so those four share one implementation; behavior is identical.
 
 namespace Plumix.Gestures;
 
 /// <summary>Dart's `AllowedButtonsFilter`: decides whether a button combination competes.</summary>
 public delegate bool AllowedButtonsFilter(PointerButtons buttons);
 
-public abstract class GestureRecognizer : IDisposable
+/// <summary>
+/// How a drag recognizer combines the offsets of several simultaneously active pointers.
+/// Ports Dart's `MultitouchDragStrategy` (`gestures/recognizer.dart`).
+/// </summary>
+public enum MultitouchDragStrategy
+{
+    /// <summary>
+    /// Only the latest active pointer is tracked; when it goes up the recognizer falls back to the
+    /// first of the remaining accepted pointers. This is the Android behavior and the default.
+    /// </summary>
+    LatestPointer,
+
+    /// <summary>
+    /// Every pointer is tracked and the reported delta is the sum of the maximum delta in each
+    /// direction; a pan reports the average of all pointer offsets. This is the iOS behavior.
+    /// </summary>
+    AverageBoundaryPointers,
+
+    /// <summary>Every pointer is tracked and the reported delta is the plain sum of their offsets.</summary>
+    SumAllPointers
+}
+
+public abstract class GestureRecognizer : Diagnosticable, IDisposable
 {
     private readonly HashSet<int> _trackedPointers = [];
     private readonly Dictionary<int, (PointerDeviceKind Kind, PointerButtons Buttons)> _pointerToEventData = [];
@@ -99,29 +127,65 @@ public abstract class GestureRecognizer : IDisposable
         return _pointerToEventData.TryGetValue(pointer, out var data) ? data.Buttons : PointerButtons.None;
     }
 
-    /// <summary>Dart's `invokeCallback`: runs a user callback, naming it if it throws.</summary>
-    protected T? InvokeCallback<T>(string name, Func<T> callback)
+    /// <summary>
+    /// Dart's `invokeCallback`: runs a user callback and, if it throws, reports the error through
+    /// <see cref="FlutterError.ReportError"/> and returns the default value instead of propagating.
+    /// A recognizer must keep processing the rest of the pointer sequence after a bad callback.
+    /// </summary>
+    protected T? InvokeCallback<T>(string name, Func<T> callback, Func<string>? debugReport = null)
     {
+        T? result = default;
         try
         {
-            return callback();
+            if (GestureDebug.PrintRecognizerCallbacksTrace)
+            {
+                string? report = debugReport?.Invoke();
+                string prefix = GestureDebug.PrintGestureArenaDiagnostics
+                    ? new string(' ', 19) + "\u2759 "
+                    : string.Empty;
+                string suffix = string.IsNullOrEmpty(report) ? string.Empty : $" {report}";
+                GestureDebug.Log($"{prefix}{this} calling {name} callback.{suffix}");
+            }
+
+            result = callback();
         }
-        catch (Exception error)
+        catch (Exception exception)
         {
-            throw new InvalidOperationException(
-                $"Error while routing a pointer event to '{name}' of {DebugDescription}.",
-                error);
+            FlutterError.ReportError(new FlutterErrorDetails(
+                exception: exception,
+                library: "gesture",
+                context: new ErrorDescription("while handling a gesture"),
+                informationCollector: () =>
+                [
+                    new StringProperty("Handler", name),
+                    new DiagnosticsProperty<GestureRecognizer>(
+                        "Recognizer",
+                        this,
+                        style: DiagnosticsTreeStyle.ErrorProperty)
+                ]));
         }
+
+        return result;
     }
 
     /// <summary>Dart's `invokeCallback` for callbacks with no return value.</summary>
-    protected void InvokeCallback(string name, Action callback)
+    protected void InvokeCallback(string name, Action callback, Func<string>? debugReport = null)
     {
-        InvokeCallback<object?>(name, () =>
-        {
-            callback();
-            return null;
-        });
+        InvokeCallback<object?>(
+            name,
+            () =>
+            {
+                callback();
+                return null;
+            },
+            debugReport);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<object>("debugOwner", DebugOwner, defaultValue: null));
     }
 
     public virtual void Dispose()
@@ -135,11 +199,11 @@ public abstract class GestureRecognizer : IDisposable
         _pointerToEventData.Clear();
     }
 
-    protected virtual void StartTrackingPointer(int pointer)
+    protected virtual void StartTrackingPointer(int pointer, Matrix4? transform = null)
     {
         if (_trackedPointers.Add(pointer))
         {
-            PointerRouter.AddRoute(pointer, _route);
+            PointerRouter.AddRoute(pointer, _route, transform);
         }
     }
 
@@ -223,9 +287,15 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
     {
     }
 
-    public abstract void AcceptGesture(int pointer);
+    /// <summary>Called when this recognizer wins the arena for the given pointer.</summary>
+    public virtual void AcceptGesture(int pointer)
+    {
+    }
 
-    public abstract void RejectGesture(int pointer);
+    /// <summary>Called when this recognizer loses the arena for the given pointer.</summary>
+    public virtual void RejectGesture(int pointer)
+    {
+    }
 
     protected override void AddAllowedPointer(PointerDownEvent @event)
     {
@@ -264,9 +334,9 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
         }
     }
 
-    protected override void StartTrackingPointer(int pointer)
+    protected override void StartTrackingPointer(int pointer, Matrix4? transform = null)
     {
-        base.StartTrackingPointer(pointer);
+        base.StartTrackingPointer(pointer, transform);
         // A reused pointer id starts a fresh arena, so the entry is always replaced.
         _entries[pointer] = AddPointerToArena(pointer, this);
     }
@@ -488,6 +558,13 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
         base.Dispose();
     }
 
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<GestureRecognizerState>("state", State));
+    }
+
     private void StopTimer()
     {
         _timer?.Cancel();
@@ -502,21 +579,25 @@ public abstract class PrimaryPointerGestureRecognizer : OneSequenceGestureRecogn
 
 public readonly record struct DragDownDetails(
     Point GlobalPosition,
-    Point LocalPosition = default);
+    Point LocalPosition = default) : IPositionedGestureDetails;
 
 public readonly record struct DragStartDetails(
     Point GlobalPosition,
     Point LocalPosition = default,
     DateTime? SourceTimeStampUtc = null,
-    PointerDeviceKind? Kind = null);
+    PointerDeviceKind? Kind = null) : IPositionedGestureDetails;
 
+/// <summary>
+/// Details for `GestureDragUpdateCallback`. <paramref name="PrimaryDelta"/> is null when the
+/// recognizer has no primary axis (`PanGestureRecognizer`), matching Dart.
+/// </summary>
 public readonly record struct DragUpdateDetails(
     Point GlobalPosition,
     Point LocalPosition,
     Point Delta,
-    double PrimaryDelta,
+    double? PrimaryDelta,
     DateTime? SourceTimeStampUtc = null,
-    PointerDeviceKind? Kind = null);
+    PointerDeviceKind? Kind = null) : IPositionedGestureDetails;
 
 public readonly record struct Velocity(Vector PixelsPerSecond)
 {
@@ -557,7 +638,7 @@ public readonly record struct Velocity(Vector PixelsPerSecond)
     }
 }
 
-public readonly record struct DragEndDetails
+public readonly record struct DragEndDetails : IPositionedGestureDetails
 {
     public DragEndDetails(double primaryVelocity) : this(
         velocity: new Velocity(new Vector(primaryVelocity, 0)),
@@ -567,7 +648,7 @@ public readonly record struct DragEndDetails
 
     public DragEndDetails(
         Velocity velocity,
-        double primaryVelocity,
+        double? primaryVelocity,
         Point globalPosition = default,
         Point localPosition = default)
     {
@@ -579,7 +660,12 @@ public readonly record struct DragEndDetails
 
     public Velocity Velocity { get; }
 
-    public double PrimaryVelocity { get; }
+    /// <summary>
+    /// The velocity along the recognizer's primary axis, or null when the recognizer has no primary
+    /// axis (`PanGestureRecognizer`). Dart asserts it matches one component of
+    /// <see cref="Velocity"/> with the other exactly zero.
+    /// </summary>
+    public double? PrimaryVelocity { get; }
 
     /// <summary>The global position the pointer was at when it stopped contacting the screen.</summary>
     public Point GlobalPosition { get; }

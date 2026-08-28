@@ -370,7 +370,7 @@ public sealed class Dismissible : StatefulWidget
                 return;
             }
 
-            double delta = details.PrimaryDelta;
+            double delta = details.PrimaryDelta ?? 0.0;
             double oldDragExtent = _dragExtent;
             switch (CurrentWidget.Direction)
             {

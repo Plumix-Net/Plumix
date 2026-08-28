@@ -659,6 +659,9 @@ public sealed class MaterialSwitchTests
         GestureBinding binding = GestureBinding.Instance;
         // Dragging an "off" switch further left never crosses the midpoint, so nothing is reported.
         DispatchPointerDown(binding, harness.RenderView, 910, new Point(60.0, 24.0));
+        // The first move only carries the drag past the mouse hit slop and wins the arena; with
+        // `DragStartBehavior.Start` the drag starts there and updates begin with the next move.
+        DispatchPointerMove(binding, harness.RenderView, 910, new Point(56.0, 24.0));
         DispatchPointerMove(binding, harness.RenderView, 910, new Point(20.0, 24.0));
         DispatchPointerUp(binding, harness.RenderView, 910, new Point(20.0, 24.0));
         harness.Pump(new Size(200.0, 200.0));
@@ -666,6 +669,7 @@ public sealed class MaterialSwitchTests
 
         // Dragging right past the midpoint reports the flipped value.
         DispatchPointerDown(binding, harness.RenderView, 911, new Point(20.0, 24.0));
+        DispatchPointerMove(binding, harness.RenderView, 911, new Point(24.0, 24.0));
         DispatchPointerMove(binding, harness.RenderView, 911, new Point(60.0, 24.0));
         DispatchPointerUp(binding, harness.RenderView, 911, new Point(60.0, 24.0));
         harness.Pump(new Size(200.0, 200.0));

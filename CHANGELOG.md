@@ -8,6 +8,17 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `DragGestureRecognizer` is a strict `OneSequenceGestureRecognizer` port (`gestures/monodrag.dart`).
+- Breaking: drags accept on accumulated global distance vs `computeHitSlop`/`computePanSlop`, not one 18 px slop.
+- Added `MultitouchDragStrategy` with the latest-pointer, sum-all and average-boundary strategies (`monodrag.dart`).
+- Breaking: `DragUpdateDetails.PrimaryDelta`/`DragEndDetails.PrimaryVelocity` are `double?`; a pan reports null.
+- Breaking: `LongPressGestureRecognizer` is a strict `PrimaryPointerGestureRecognizer` port (`long_press.dart`).
+- Added the secondary/tertiary long-press callback sets plus `LongPressDownDetails` and cancel (`long_press.dart`).
+- Breaking: `GestureRecognizer.InvokeCallback` reports a throwing callback via `FlutterError` instead of rethrowing.
+- Breaking: the gesture arena defers the last-member-standing win the way Dart's microtask does (`gestures/arena.dart`).
+- Added `PointerRouter` per-route transforms, reentrancy rules and error reporting (`gestures/pointer_router.dart`).
+- Added `PointerEvent.Transform`/`Transformed`/`Synthesized` and `GestureDebug` flags (`events.dart`, `debug.dart`).
+- Added a drag/long-press recognizer demo page to both samples.
 - Breaking: `SemanticsOwner` drains an incremental dirty set into a `SemanticsUpdate` (`semantics/semantics.dart`).
 - Added semantics traversal grafting via `traversalParentIdentifier`/`traversalChildIdentifier` (`semantics/semantics.dart`).
 - Added `PlumixHost.SemanticsUpdateProduced`, the per-frame changed-node feed for accessibility bridges.
