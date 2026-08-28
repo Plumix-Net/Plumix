@@ -3287,6 +3287,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private SemanticsSortKey? _sortKey;
     private TextDirection? _textDirection;
     private SemanticsTag? _tagForChildren;
+    private AccessibilityFocusBlockType _accessibilityFocusBlockType;
 
     public RenderSemanticsAnnotations(
         string? label = null,
@@ -3317,8 +3318,10 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         TextDirection? textDirection = null,
         bool mergeDescendants = false,
         SemanticsTag? tagForChildren = null,
+        AccessibilityFocusBlockType accessibilityFocusBlockType = AccessibilityFocusBlockType.None,
         RenderBox? child = null)
     {
+        _accessibilityFocusBlockType = accessibilityFocusBlockType;
         _label = label;
         _hint = hint;
         _onTapHint = onTapHint;
@@ -3732,6 +3735,26 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    /// <summary>
+    /// Whether assistive technologies may move accessibility focus onto this node, its subtree, or
+    /// both.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsAnnotationsMixin.accessibilityFocusBlockType</c>.</remarks>
+    public AccessibilityFocusBlockType AccessibilityFocusBlockType
+    {
+        get => _accessibilityFocusBlockType;
+        set
+        {
+            if (_accessibilityFocusBlockType == value)
+            {
+                return;
+            }
+
+            _accessibilityFocusBlockType = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         if (string.IsNullOrWhiteSpace(_label)
@@ -3762,6 +3785,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _sortKey is null
             && _textDirection is null
             && _tagForChildren is null
+            && _accessibilityFocusBlockType == AccessibilityFocusBlockType.None
             && !_mergeDescendants)
         {
             return;
@@ -3773,6 +3797,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
 
         configuration.IsSemanticBoundary = _container;
+        configuration.AccessibilityFocusBlockType = _accessibilityFocusBlockType;
         configuration.Role = _role;
         configuration.InputType = _inputType;
         configuration.HitTestBehavior = _hitTestBehavior;

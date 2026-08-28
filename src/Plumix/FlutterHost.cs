@@ -501,6 +501,26 @@ public class PlumixHost : Control
         return _pipeline.SemanticsOwner.PerformAction(nodeId, action);
     }
 
+    /// <summary>
+    /// The box of the semantics node <paramref name="nodeId"/> in the coordinate space of the view
+    /// <paramref name="viewId"/>, in logical pixels, or <c>null</c> when either is unknown.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RendererBinding.getRectOfSemanticsNodeInViewCoordinates</c>. Flutter asserts on
+    /// each of the three lookups and returns <c>null</c> in release; Plumix returns <c>null</c>
+    /// throughout, because a host is asked this in response to a platform action that may already be
+    /// stale.
+    /// </remarks>
+    public Rect? GetRectOfSemanticsNodeInViewCoordinates(int viewId, int nodeId)
+    {
+        if (viewId != GetMediaQueryData().ViewId)
+        {
+            return null;
+        }
+
+        return _pipeline.SemanticsOwner.GetRectOfSemanticsNode(nodeId);
+    }
+
     public bool PerformCustomSemanticsAction(int nodeId, CustomSemanticsAction action)
     {
         return _pipeline.SemanticsOwner.PerformCustomAction(nodeId, action);

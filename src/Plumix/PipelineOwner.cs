@@ -620,4 +620,14 @@ public sealed class PipelineOwner : DiagnosticableTree
     /// the dump is returned instead of printed (see <c>docs/ai/DIVERGENCES.md</c>).
     /// </remarks>
     public string DebugDumpRenderTree() => Root.ToStringDeep();
+
+    /// <summary>
+    /// A deep dump of the semantics-fragment tree the compiler builds behind the render tree, one
+    /// entry per render object that contributes to semantics.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's top-level <c>debugDumpRenderObjectSemanticsTree()</c>, which joins the dump of
+    /// every render view's <c>_semantics</c>. Plumix owns exactly one root per pipeline.
+    /// </remarks>
+    public string DebugDumpRenderObjectSemanticsTree() => Root.Semantics.ToStringDeep();
 }

@@ -24,6 +24,111 @@ public sealed class RenderTapRegionSurface : RenderProxyBoxWithHitTestBehavior
 
     public int RegisteredRegionCount => _registeredRegions.Count;
 
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        Owner?.SemanticsOwner.AddSemanticsActionListener(HandleSemanticsAction);
+    }
+
+    protected override void OnDetach()
+    {
+        Owner?.SemanticsOwner.RemoveSemanticsActionListener(HandleSemanticsAction);
+        base.OnDetach();
+    }
+
+    /// <summary>
+    /// Reports taps that arrive over the accessibility channel instead of the pointer channel.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's private <c>RenderTapRegionSurface._handleSemanticsAction</c>. Tap regions are
+    /// tracked as render objects, not semantics nodes, so the only way to learn which region a
+    /// semantics tap landed in is to hit-test the render tree at the acting node's centre.
+    /// Flutter's <c>consumeOutsideTaps</c> cannot stop a semantics action from propagating, and
+    /// neither can this.
+    /// </remarks>
+    private void HandleSemanticsAction(SemanticsActionEvent actionEvent)
+    {
+        if (actionEvent.Type != SemanticsActions.Tap && actionEvent.Type != SemanticsActions.LongPress)
+        {
+            return;
+        }
+
+        if (_registeredRegions.Count == 0 || Owner is not { } owner)
+        {
+            return;
+        }
+
+        if (owner.SemanticsOwner.GetRectOfSemanticsNode(actionEvent.NodeId) is not { } globalRect)
+        {
+            return;
+        }
+
+        Point globalCenter = globalRect.Center;
+        Point localPosition = GlobalToLocal(globalCenter);
+
+        var hitResult = new BoxHitTestResult();
+        if (!HitTest(hitResult, localPosition))
+        {
+            return;
+        }
+
+        (HashSet<RenderTapRegion> inside, RenderTapRegion[] outside) = ClassifyRegions(hitResult);
+
+        var syntheticEvent = new PointerDownEvent(
+            pointer: 0,
+            kind: PointerDeviceKind.Touch,
+            position: globalCenter,
+            buttons: PointerButtons.Primary,
+            timestampUtc: DateTime.UtcNow);
+
+        foreach (RenderTapRegion region in outside)
+        {
+            region.OnTapOutside?.Invoke(syntheticEvent);
+        }
+
+        foreach (RenderTapRegion region in inside)
+        {
+            region.OnTapInside?.Invoke(syntheticEvent);
+        }
+    }
+
+    /// <summary>
+    /// Splits the registered regions into the ones the hit path reached and the ones it did not.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's private <c>RenderTapRegionSurface._classifyRegions</c>. Grouped regions count as one
+    /// unit: hitting any member puts the whole group inside. The outside list is materialized so a
+    /// callback that unregisters a region mid-iteration cannot disturb the walk.
+    /// </remarks>
+    private (HashSet<RenderTapRegion> Inside, RenderTapRegion[] Outside) ClassifyRegions(
+        BoxHitTestResult result)
+    {
+        var hitRegions = result.Path
+            .Select(hitEntry => hitEntry.Target)
+            .OfType<RenderTapRegion>()
+            .Where(_registeredRegions.Contains)
+            .ToHashSet();
+        var insideRegions = new HashSet<RenderTapRegion>();
+        foreach (RenderTapRegion region in hitRegions)
+        {
+            if (region.GroupId is null)
+            {
+                insideRegions.Add(region);
+                continue;
+            }
+
+            if (_groupIdToRegions.TryGetValue(region.GroupId, out var groupedRegions))
+            {
+                insideRegions.UnionWith(groupedRegions);
+            }
+        }
+
+        RenderTapRegion[] outsideRegions = _registeredRegions
+            .Where(region => !insideRegions.Contains(region))
+            .ToArray();
+        return (insideRegions, outsideRegions);
+    }
+
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
         if (!HasSize
@@ -59,29 +164,7 @@ public sealed class RenderTapRegionSurface : RenderProxyBoxWithHitTestBehavior
             return;
         }
 
-        var hitRegions = result.Path
-            .Select(hitEntry => hitEntry.Target)
-            .OfType<RenderTapRegion>()
-            .Where(_registeredRegions.Contains)
-            .ToHashSet();
-        var insideRegions = new HashSet<RenderTapRegion>();
-        foreach (RenderTapRegion region in hitRegions)
-        {
-            if (region.GroupId is null)
-            {
-                insideRegions.Add(region);
-                continue;
-            }
-
-            if (_groupIdToRegions.TryGetValue(region.GroupId, out var groupedRegions))
-            {
-                insideRegions.UnionWith(groupedRegions);
-            }
-        }
-
-        var outsideRegions = _registeredRegions
-            .Where(region => !insideRegions.Contains(region))
-            .ToArray();
+        (HashSet<RenderTapRegion> insideRegions, RenderTapRegion[] outsideRegions) = ClassifyRegions(result);
         bool consumeOutsideTaps = false;
         foreach (RenderTapRegion region in outsideRegions)
         {

@@ -68,8 +68,10 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         SemanticsTag? tagForChildren = null,
         Key? key = null,
         bool mergeDescendants = false,
+        AccessibilityFocusBlockType accessibilityFocusBlockType = AccessibilityFocusBlockType.None,
         bool? toggled = null) : base(child, key)
     {
+        AccessibilityFocusBlockType = accessibilityFocusBlockType;
         TagForChildren = tagForChildren;
         Label = label;
         Hint = hint;
@@ -207,6 +209,12 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public bool MergeDescendants { get; }
 
+    /// <summary>
+    /// Whether assistive technologies may move accessibility focus onto this node, its subtree, or
+    /// both. Blocking focus also stops the node reporting itself as keyboard focusable.
+    /// </summary>
+    public AccessibilityFocusBlockType AccessibilityFocusBlockType { get; }
+
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         var semantics = new RenderSemanticsAnnotations(
@@ -237,7 +245,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             sortKey: SortKey,
             textDirection: TextDirection,
             mergeDescendants: MergeDescendants,
-            tagForChildren: TagForChildren);
+            tagForChildren: TagForChildren,
+            accessibilityFocusBlockType: AccessibilityFocusBlockType);
         semantics.OnFocus = OnFocus;
         return semantics;
     }
@@ -273,6 +282,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.SortKey = SortKey;
         semantics.MergeDescendants = MergeDescendants;
         semantics.TagForChildren = TagForChildren;
+        semantics.AccessibilityFocusBlockType = AccessibilityFocusBlockType;
     }
 
     private static SemanticsFlags RoleFlags(SemanticsRole role) => role switch

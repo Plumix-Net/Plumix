@@ -8,6 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `SemanticsActions.CustomAction` carries custom actions; `CustomSemanticsAction` gained the id registry.
+- Breaking: custom-action dispatch walks merged descendants by action id (`semantics/semantics.dart`).
+- Added `SemanticsOwner.GetSemanticsNode`/`PerformActionAt`/`GetRectOfSemanticsNode` and action listeners.
+- Added `AccessibilityFocusBlockType` on `Semantics`, with subtree propagation and focus clearing (`object.dart`).
+- Added `RenderTapRegionSurface` semantics tap/long-press handling and `GetRectOfSemanticsNodeInViewCoordinates`.
+- Added `RenderObjectSemantics` diagnostics and `PipelineOwner.DebugDumpRenderObjectSemanticsTree` (`object.dart`).
 - Closed build-time dropdown route disposal and overlay timing (`navigator.dart`, `overlay.dart`, `dropdown.dart`).
 - Breaking: `WidgetsLocalizations` labels are abstract; the default is US-English LTR (`widgets/localizations.dart`).
 - Added complete `ThemeData` diagnostics and compact debug strings (`theme_data.dart`).

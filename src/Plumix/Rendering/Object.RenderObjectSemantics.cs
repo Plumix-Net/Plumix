@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart
@@ -13,7 +14,8 @@ internal sealed record SemanticsParentData(
     bool MergeIntoParent,
     bool BlocksUserActions,
     bool ExplicitChildNodes,
-    IReadOnlySet<SemanticsTag>? TagsForChildren)
+    IReadOnlySet<SemanticsTag>? TagsForChildren,
+    AccessibilityFocusBlockType? AccessibilityFocusBlockType = null)
 {
     public bool Equals(SemanticsParentData? other)
     {
@@ -25,12 +27,18 @@ internal sealed record SemanticsParentData(
         return MergeIntoParent == other.MergeIntoParent
                && BlocksUserActions == other.BlocksUserActions
                && ExplicitChildNodes == other.ExplicitChildNodes
+               && AccessibilityFocusBlockType == other.AccessibilityFocusBlockType
                && TagSetsEqual(TagsForChildren, other.TagsForChildren);
     }
 
     public override int GetHashCode()
     {
-        return HashCode.Combine(MergeIntoParent, BlocksUserActions, ExplicitChildNodes, TagsForChildren?.Count ?? 0);
+        return HashCode.Combine(
+            MergeIntoParent,
+            BlocksUserActions,
+            ExplicitChildNodes,
+            AccessibilityFocusBlockType,
+            TagsForChildren?.Count ?? 0);
     }
 
     private static bool TagSetsEqual(IReadOnlySet<SemanticsTag>? left, IReadOnlySet<SemanticsTag>? right)
@@ -232,7 +240,7 @@ internal sealed class IncompleteSemanticsFragment(
 /// <item>produce the semantics nodes (<see cref="EnsureSemanticsNode"/>).</item>
 /// </list>
 /// </remarks>
-internal sealed class RenderObjectSemantics : ISemanticsFragment
+internal sealed class RenderObjectSemantics : DiagnosticableTree, ISemanticsFragment
 {
     private readonly List<RenderObjectSemantics> _children = [];
     private readonly List<ISemanticsFragment> _mergeUp = [];
@@ -476,6 +484,13 @@ internal sealed class RenderObjectSemantics : ISemanticsFragment
         bool blocksUserAction = (ParentData?.BlocksUserActions ?? false)
                                 || ConfigProvider.Effective.IsBlockingUserActions;
 
+        // Only `BlockSubtree` is inherited: it overrides whatever the child declared, while
+        // `BlockNode` stops at the node that declared it.
+        AccessibilityFocusBlockType accessibilityFocusBlockType =
+            ParentData?.AccessibilityFocusBlockType == Rendering.AccessibilityFocusBlockType.BlockSubtree
+                ? Rendering.AccessibilityFocusBlockType.BlockSubtree
+                : ConfigProvider.Effective.AccessibilityFocusBlockType;
+
         _siblingMergeGroups.Clear();
         _mergeUp.Clear();
         var childParentData = new SemanticsParentData(
@@ -483,7 +498,8 @@ internal sealed class RenderObjectSemantics : ISemanticsFragment
                              || ConfigProvider.Effective.IsMergingSemanticsOfDescendants,
             BlocksUserActions: blocksUserAction,
             ExplicitChildNodes: explicitChildNodesForChildren,
-            TagsForChildren: tagsForChildren);
+            TagsForChildren: tagsForChildren,
+            AccessibilityFocusBlockType: accessibilityFocusBlockType);
 
         (List<ISemanticsFragment> mergeUp, List<List<ISemanticsFragment>> siblingMergeGroups) result =
             CollectChildMergeUpAndSiblingGroup(childParentData);
@@ -569,9 +585,22 @@ internal sealed class RenderObjectSemantics : ISemanticsFragment
             });
         }
 
+        if (accessibilityFocusBlockType != ConfigProvider.Effective.AccessibilityFocusBlockType)
+        {
+            ConfigProvider.UpdateConfig(
+                configuration => configuration.AccessibilityFocusBlockType = accessibilityFocusBlockType);
+        }
+
         if (blocksUserAction != ConfigProvider.Effective.IsBlockingUserActions)
         {
             ConfigProvider.UpdateConfig(configuration => configuration.IsBlockingUserActions = blocksUserAction);
+        }
+
+        // A node whose accessibility focus is blocked must not report itself as keyboard focusable
+        // either, so Flutter clears the tri-state `isFocused` outright.
+        if (accessibilityFocusBlockType != Rendering.AccessibilityFocusBlockType.None)
+        {
+            ConfigProvider.UpdateConfig(configuration => configuration.IsFocused = null);
         }
     }
 
@@ -1230,6 +1259,57 @@ internal sealed class RenderObjectSemantics : ISemanticsFragment
             throw new InvalidOperationException(
                 "SemanticsConfiguration with ExplicitChildNodes=true cannot have a non-null "
                 + "ChildConfigurationsDelegate.");
+        }
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() =>
+        [.. _children.Select(static child => child.ToDiagnosticsNode())];
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new StringProperty("owner", Diagnostics.DescribeIdentity(RenderObject)));
+        properties.Add(new FlagProperty("noParentData", value: ParentDataDirty, ifTrue: "NO PARENT DATA"));
+        properties.Add(new FlagProperty("geometry", value: GeometryDirty, ifTrue: "NO GEOMETRY"));
+        properties.Add(new FlagProperty(
+            "semanticsBlock",
+            value: ConfigProvider.Effective.IsBlockingSemanticsOfPreviouslyPaintedNodes,
+            ifTrue: "BLOCK PREVIOUS"));
+        if (!ParentDataDirty && ContributesToSemanticsTree)
+        {
+            string semanticsNodeStatus;
+            if (Built)
+            {
+                semanticsNodeStatus = $"formed {CachedSemanticsNode?.Id}";
+            }
+            else if (ShouldFormSemanticsNode)
+            {
+                semanticsNodeStatus = "needs build";
+            }
+            else
+            {
+                semanticsNodeStatus = "no semantics node";
+            }
+
+            properties.Add(new StringProperty("formedSemanticsNode", semanticsNodeStatus, quoted: false));
+        }
+
+        properties.Add(new FlagProperty(
+            "isSemanticBoundary",
+            value: ConfigProvider.Effective.IsSemanticBoundary,
+            ifTrue: "semantic boundary"));
+        properties.Add(new FlagProperty(
+            "blocksSemantics",
+            value: IsBlockingPreviousSibling,
+            ifTrue: "BLOCKS SEMANTICS"));
+        if (ContributesToSemanticsTree && _siblingMergeGroups.Count > 0)
+        {
+            properties.Add(new StringProperty(
+                "Sibling group",
+                $"[{string.Join(", ", _siblingMergeGroups.Select(static group => $"[{group.Count}]"))}]",
+                quoted: false));
         }
     }
 }

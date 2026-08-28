@@ -94,6 +94,57 @@ public enum SemanticsFlags
     HasImplicitScrolling = 1 << 25,
     HasToggledState = 1 << 26,
     IsToggled = 1 << 27,
+
+    /// <summary>
+    /// Whether assistive technologies must not move accessibility focus onto this node.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsFlags.isAccessibilityFocusBlocked</c>, derived from
+    /// <see cref="AccessibilityFocusBlockType"/>. Unlike every other flag it conflicts on
+    /// <em>inequality</em>, so a blocked node never merges with an unblocked one.
+    /// </remarks>
+    IsAccessibilityFocusBlocked = 1 << 28,
+}
+
+/// <summary>
+/// Controls how accessibility focus is blocked for a semantics node and its subtree.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>AccessibilityFocusBlockType</c>. Setting this also blocks the reporting of keyboard
+/// focusability for the node, but it does not affect the actual keyboard focus handled by
+/// <c>FocusNode</c>.
+/// </remarks>
+public enum AccessibilityFocusBlockType
+{
+    /// <summary>Accessibility focus is not blocked.</summary>
+    None,
+
+    /// <summary>Blocks accessibility focus for the entire subtree.</summary>
+    BlockSubtree,
+
+    /// <summary>Blocks accessibility focus for the current node only.</summary>
+    BlockNode,
+}
+
+/// <remarks>Flutter's <c>AccessibilityFocusBlockType._merge</c>.</remarks>
+internal static class AccessibilityFocusBlockTypeExtensions
+{
+    public static AccessibilityFocusBlockType Merge(
+        this AccessibilityFocusBlockType self,
+        AccessibilityFocusBlockType other)
+    {
+        if (self == AccessibilityFocusBlockType.BlockSubtree || other == AccessibilityFocusBlockType.BlockSubtree)
+        {
+            return AccessibilityFocusBlockType.BlockSubtree;
+        }
+
+        if (self == AccessibilityFocusBlockType.BlockNode || other == AccessibilityFocusBlockType.BlockNode)
+        {
+            return AccessibilityFocusBlockType.BlockNode;
+        }
+
+        return AccessibilityFocusBlockType.None;
+    }
 }
 
 [Flags]
@@ -122,6 +173,13 @@ public enum SemanticsActions
 
     /// <summary>Collapse an expanded node (Flutter's <c>SemanticsAction.collapse</c>).</summary>
     Collapse = 1 << 13,
+
+    /// <summary>
+    /// Run one of the node's <see cref="CustomSemanticsAction"/>s. The action argument is the
+    /// <see cref="CustomSemanticsAction.GetIdentifier"/> of the action to run.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsAction.customAction</c>.</remarks>
+    CustomAction = 1 << 14,
 }
 
 /// <summary>
@@ -132,13 +190,32 @@ public enum SemanticsActions
 public delegate void SemanticsActionHandler(object? args);
 
 /// <summary>
+/// One semantics action the platform asked the framework to perform.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>ui.SemanticsActionEvent</c>, minus <c>viewId</c>: a Plumix
+/// <see cref="SemanticsOwner"/> already belongs to exactly one view.
+/// </remarks>
+public sealed record SemanticsActionEvent(int NodeId, SemanticsActions Type, object? Arguments);
+
+/// <summary>
 /// Signature for <see cref="SemanticsConfiguration.OnScrollToOffset"/>.
 /// </summary>
 /// <remarks>Flutter's <c>ScrollToOffsetHandler</c>.</remarks>
 public delegate void ScrollToOffsetHandler(Point targetOffset);
 
-public sealed record CustomSemanticsAction
+/// <summary>
+/// An action a widget exposes to assistive technologies in addition to the standard
+/// <see cref="SemanticsActions"/>.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>CustomSemanticsAction</c>. Instances are compared by value, and
+/// <see cref="GetIdentifier"/> hands out the process-global integer id the platform channel uses to
+/// name one in a <see cref="SemanticsActions.CustomAction"/> payload.
+/// </remarks>
+public sealed class CustomSemanticsAction
 {
+    /// <summary>Creates an action the platform announces with <paramref name="label"/>.</summary>
     public CustomSemanticsAction(string label)
     {
         if (string.IsNullOrWhiteSpace(label))
@@ -147,9 +224,87 @@ public sealed record CustomSemanticsAction
         }
 
         Label = label;
+        Hint = null;
+        Action = null;
     }
 
-    public string Label { get; }
+    private CustomSemanticsAction(string hint, SemanticsActions action)
+    {
+        if (string.IsNullOrWhiteSpace(hint))
+        {
+            throw new ArgumentException("A custom semantics action hint cannot be empty.", nameof(hint));
+        }
+
+        Label = null;
+        Hint = hint;
+        Action = action;
+    }
+
+    /// <summary>
+    /// Creates an action that overrides the hint the platform reads for a standard
+    /// <paramref name="action"/>, instead of adding a new action.
+    /// </summary>
+    /// <remarks>Flutter's <c>CustomSemanticsAction.overridingAction</c>.</remarks>
+    public static CustomSemanticsAction OverridingAction(string hint, SemanticsActions action) =>
+        new(hint, action);
+
+    /// <summary>The label announced for a standalone custom action, <c>null</c> for an override.</summary>
+    public string? Label { get; }
+
+    /// <summary>The hint announced for the overridden action, <c>null</c> for a standalone action.</summary>
+    public string? Hint { get; }
+
+    /// <summary>The standard action whose hint this overrides, <c>null</c> for a standalone action.</summary>
+    public SemanticsActions? Action { get; }
+
+    public override int GetHashCode() => HashCode.Combine(Label, Hint, Action);
+
+    public override bool Equals(object? obj) =>
+        obj is CustomSemanticsAction other
+        && other.Label == Label
+        && other.Hint == Hint
+        && other.Action == Action;
+
+    public override string ToString()
+    {
+        int? id = _ids.TryGetValue(this, out int existing) ? existing : null;
+        return $"CustomSemanticsAction({id?.ToString() ?? "null"}, label:{Label}, hint:{Hint}, action:{Action})";
+    }
+
+    private static int _nextId;
+    private static readonly Dictionary<int, CustomSemanticsAction> Actions = [];
+    private static readonly Dictionary<CustomSemanticsAction, int> _ids = [];
+
+    /// <summary>
+    /// The process-global id for <paramref name="action"/>, allocating one on first use.
+    /// </summary>
+    /// <remarks>Flutter's <c>CustomSemanticsAction.getIdentifier</c>.</remarks>
+    public static int GetIdentifier(CustomSemanticsAction action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        if (_ids.TryGetValue(action, out int result))
+        {
+            return result;
+        }
+
+        result = _nextId++;
+        _ids[action] = result;
+        Actions[result] = action;
+        return result;
+    }
+
+    /// <summary>The action a previously allocated id names, or <c>null</c> for an unknown id.</summary>
+    /// <remarks>Flutter's <c>CustomSemanticsAction.getAction</c>.</remarks>
+    public static CustomSemanticsAction? GetAction(int id) => Actions.GetValueOrDefault(id);
+
+    /// <summary>Clears the id registry so ids restart at zero.</summary>
+    /// <remarks>Flutter's <c>CustomSemanticsAction.resetForTests</c>.</remarks>
+    public static void ResetForTests()
+    {
+        Actions.Clear();
+        _ids.Clear();
+        _nextId = 0;
+    }
 }
 
 /// A tag for a [SemanticsNode].
@@ -319,6 +474,29 @@ public sealed class SemanticsConfiguration
                 : Flags & ~SemanticsFlags.IsFocused;
         }
     }
+
+    /// <summary>
+    /// Whether assistive technologies may move accessibility focus onto this node, its subtree, or
+    /// both.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsConfiguration.accessibilityFocusBlockType</c>. Assigning it keeps
+    /// <see cref="SemanticsFlags.IsAccessibilityFocusBlocked"/> in sync; the enum itself never
+    /// reaches the platform, only the derived flag does.
+    /// </remarks>
+    public AccessibilityFocusBlockType AccessibilityFocusBlockType
+    {
+        get => _accessibilityFocusBlockType;
+        set
+        {
+            _accessibilityFocusBlockType = value;
+            Flags = value != AccessibilityFocusBlockType.None
+                ? Flags | SemanticsFlags.IsAccessibilityFocusBlocked
+                : Flags & ~SemanticsFlags.IsAccessibilityFocusBlocked;
+        }
+    }
+
+    private AccessibilityFocusBlockType _accessibilityFocusBlockType = AccessibilityFocusBlockType.None;
 
     private HashSet<SemanticsTag>? _tagsForChildren;
 
@@ -557,6 +735,10 @@ public sealed class SemanticsConfiguration
         ArgumentNullException.ThrowIfNull(handler);
         _customActionHandlers ??= [];
         _customActionHandlers[action] = handler;
+        // Flutter's `customSemanticsActions` setter ORs the shared `customAction` bit into
+        // `_actionsAsBits`, which is what makes two configurations that both carry any custom action
+        // conflict in `IsCompatibleWith`.
+        Actions |= SemanticsActions.CustomAction;
     }
 
     internal void ReplaceActionHandlers(Dictionary<SemanticsActions, SemanticsActionHandler> handlers)
@@ -578,6 +760,7 @@ public sealed class SemanticsConfiguration
             ExplicitChildNodes = ExplicitChildNodes,
             IsBlockingSemanticsOfPreviouslyPaintedNodes = IsBlockingSemanticsOfPreviouslyPaintedNodes,
             IsBlockingUserActions = IsBlockingUserActions,
+            _accessibilityFocusBlockType = _accessibilityFocusBlockType,
             ChildConfigurationsDelegate = ChildConfigurationsDelegate,
             Label = Label,
             Hint = Hint,
@@ -681,12 +864,16 @@ public sealed class SemanticsConfiguration
             return false;
         }
 
-        if (CustomActionHandlers.Keys.Any(other.CustomActionHandlers.ContainsKey))
+        // Flutter's `hasConflictingFlags` conflicts on `&&` for every flag except
+        // `isAccessibilityFocusBlocked`, which conflicts on inequality so that a blocked node never
+        // merges with an unblocked one in either direction.
+        if (((Flags & other.Flags) & ~SemanticsFlags.IsAccessibilityFocusBlocked) != SemanticsFlags.None)
         {
             return false;
         }
 
-        if ((Flags & other.Flags) != SemanticsFlags.None)
+        if (Flags.HasFlag(SemanticsFlags.IsAccessibilityFocusBlocked)
+            != other.Flags.HasFlag(SemanticsFlags.IsAccessibilityFocusBlocked))
         {
             return false;
         }
@@ -728,6 +915,7 @@ public sealed class SemanticsConfiguration
 
         Flags |= child.Flags;
         Actions |= child.Actions;
+        AccessibilityFocusBlockType = _accessibilityFocusBlockType.Merge(child.AccessibilityFocusBlockType);
         TextDirection ??= child.TextDirection;
         IndexInParent ??= child.IndexInParent;
         SortKey ??= child.SortKey;
@@ -858,6 +1046,32 @@ public sealed class SemanticsNode
     /// <summary>Whether this node merges its information into an ancestor node.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.isMergedIntoParent</c>.</remarks>
     public bool IsMergedIntoParent { get; internal set; }
+
+    /// <summary>Whether every descendant of this node folds its information into this node.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.mergeAllDescendantsIntoThisNode</c>.</remarks>
+    public bool MergeAllDescendantsIntoThisNode { get; internal set; }
+
+    /// <summary>Whether this node takes part in a merge, as the merge root or as a merged child.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.isPartOfNodeMerging</c>.</remarks>
+    public bool IsPartOfNodeMerging => MergeAllDescendantsIntoThisNode || IsMergedIntoParent;
+
+    /// <summary>
+    /// Walks the descendants in pre-order paint order, stopping as soon as
+    /// <paramref name="visitor"/> returns <c>false</c>.
+    /// </summary>
+    /// <remarks>Flutter's private <c>SemanticsNode._visitDescendants</c>.</remarks>
+    internal bool VisitDescendants(Func<SemanticsNode, bool> visitor)
+    {
+        foreach (SemanticsNode child in _children)
+        {
+            if (!visitor(child) || !child.VisitDescendants(visitor))
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     /// <summary>The parent of this node in the semantics tree, or <c>null</c> for the root.</summary>
     public SemanticsNode? Parent { get; private set; }
@@ -1011,6 +1225,7 @@ public sealed class SemanticsNode
         ScrollIndex = config.ScrollIndex;
         TextDirection = config.TextDirection;
         IsSemanticBoundary = config.IsSemanticBoundary;
+        MergeAllDescendantsIntoThisNode = config.IsMergingSemanticsOfDescendants;
         ReplaceChildren(childrenInInversePaintOrder ?? []);
         SetActionHandlers(AreUserActionsBlocked ? EmptyActionHandlers : config.ActionHandlers);
         SetCustomActionHandlers(AreUserActionsBlocked ? EmptyCustomActionHandlers : config.CustomActionHandlers);
@@ -1091,9 +1306,57 @@ public sealed class SemanticsNode
         }
     }
 
+    /// <summary>Whether this node can run <paramref name="action"/> with <paramref name="args"/>.</summary>
+    /// <remarks>
+    /// Flutter's private <c>SemanticsNode._canHandleAction</c>: for
+    /// <see cref="SemanticsActions.CustomAction"/> the payload must be the integer id of a custom
+    /// action this node registered, for everything else the node just needs a handler.
+    /// </remarks>
+    internal bool CanHandleAction(SemanticsActions action, object? args)
+    {
+        if (action == SemanticsActions.CustomAction)
+        {
+            return args is int actionId && CanPerformCustomAction(actionId);
+        }
+
+        return _actionHandlers.ContainsKey(action);
+    }
+
+    /// <remarks>Flutter's private <c>SemanticsNode._canPerformCustomAction</c>.</remarks>
+    private bool CanPerformCustomAction(int actionId)
+    {
+        CustomSemanticsAction? customAction = CustomSemanticsAction.GetAction(actionId);
+        return customAction is not null && _customActionHandlers.ContainsKey(customAction);
+    }
+
+    /// <summary>The handler this node runs for <paramref name="action"/>, if it registered one.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode._actions[action]</c>.</remarks>
+    internal SemanticsActionHandler? GetActionHandler(SemanticsActions action)
+    {
+        if (action == SemanticsActions.CustomAction)
+        {
+            // Flutter installs `SemanticsConfiguration._onCustomSemanticsAction`, a closure over the
+            // configuration's own map, and only when the map is non-empty. Plumix resolves against
+            // the node's copy of that map instead, because a configuration is cloned as it travels
+            // up the fragment tree.
+            return _customActionHandlers.Count > 0 ? InvokeCustomAction : null;
+        }
+
+        return _actionHandlers.GetValueOrDefault(action);
+    }
+
+    /// <summary>
+    /// Runs <paramref name="action"/> on this node alone, without the owner's merged-node lookup.
+    /// </summary>
+    /// <remarks>
+    /// Flutter has no node-level entry point — everything goes through
+    /// <c>SemanticsOwner.performAction</c>. Plumix keeps this one because hosts and tests routinely
+    /// hold a node rather than an id; it applies the same <c>_canHandleAction</c> predicate and the
+    /// same show-on-screen fallback.
+    /// </remarks>
     internal bool PerformAction(SemanticsActions action, object? args = null)
     {
-        if (_actionHandlers.TryGetValue(action, out var handler))
+        if (CanHandleAction(action, args) && GetActionHandler(action) is { } handler)
         {
             handler(args);
             return true;
@@ -1110,15 +1373,27 @@ public sealed class SemanticsNode
         return false;
     }
 
-    internal bool PerformCustomAction(CustomSemanticsAction action)
+    /// <summary>Runs <paramref name="action"/> on this node alone, if it registered a handler.</summary>
+    internal bool PerformCustomAction(CustomSemanticsAction action) =>
+        PerformAction(SemanticsActions.CustomAction, CustomSemanticsAction.GetIdentifier(action));
+
+    private void InvokeCustomAction(object? args)
     {
-        if (_customActionHandlers.TryGetValue(action, out var handler))
+        if (args is not int actionId)
         {
-            handler();
-            return true;
+            return;
         }
 
-        return false;
+        CustomSemanticsAction? customAction = CustomSemanticsAction.GetAction(actionId);
+        if (customAction is null)
+        {
+            return;
+        }
+
+        if (_customActionHandlers.TryGetValue(customAction, out Action? handler))
+        {
+            handler();
+        }
     }
 }
 
@@ -1159,6 +1434,42 @@ public sealed class SemanticsOwner
         RebuildIndex();
     }
 
+    /// <summary>The node with the given <paramref name="id"/>, or <c>null</c> when unknown.</summary>
+    /// <remarks>Flutter's <c>SemanticsOwner.getSemanticsNode</c>.</remarks>
+    public SemanticsNode? GetSemanticsNode(int id) => _index.GetValueOrDefault(id);
+
+    /// <summary>
+    /// The box of the node with the given <paramref name="nodeId"/> in the view's coordinate space,
+    /// in logical pixels, or <c>null</c> when the node is unknown.
+    /// </summary>
+    /// <remarks>
+    /// The per-view half of Flutter's
+    /// <c>RendererBinding.getRectOfSemanticsNodeInViewCoordinates</c>. Flutter undoes the device
+    /// pixel ratio its <c>RenderView</c> bakes into the root transform; Plumix's render tree is
+    /// already in logical pixels, so the ancestor walk alone is the answer.
+    /// </remarks>
+    public Rect? GetRectOfSemanticsNode(int nodeId) => GetSemanticsNode(nodeId)?.GlobalRect;
+
+    /// <summary>
+    /// Runs <paramref name="listener"/> for every semantics action this owner is asked to perform,
+    /// before the action reaches its node.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsBinding.addSemanticsActionListener</c>.</remarks>
+    public void AddSemanticsActionListener(Action<SemanticsActionEvent> listener)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
+        _actionListeners.Add(listener);
+    }
+
+    /// <remarks>Flutter's <c>SemanticsBinding.removeSemanticsActionListener</c>.</remarks>
+    public void RemoveSemanticsActionListener(Action<SemanticsActionEvent> listener)
+    {
+        ArgumentNullException.ThrowIfNull(listener);
+        _actionListeners.Remove(listener);
+    }
+
+    private readonly List<Action<SemanticsActionEvent>> _actionListeners = [];
+
     public bool PerformAction(int nodeId, SemanticsActions action, object? args = null)
     {
         if (action == SemanticsActions.None)
@@ -1166,13 +1477,171 @@ public sealed class SemanticsOwner
             return false;
         }
 
-        return _index.TryGetValue(nodeId, out var node) && node.PerformAction(action, args);
+        NotifyActionListeners(new SemanticsActionEvent(nodeId, action, args));
+
+        SemanticsActionHandler? handler = GetSemanticsActionHandlerForId(nodeId, action, args);
+        if (handler is not null)
+        {
+            handler(args);
+            return true;
+        }
+
+        // Flutter falls back to the node's own show-on-screen closure, so a plain list item needs no
+        // explicit handler to be scrolled into view.
+        if (action == SemanticsActions.ShowOnScreen
+            && GetSemanticsNode(nodeId)?.ShowOnScreenRequest is { } showOnScreen)
+        {
+            showOnScreen();
+            return true;
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Runs <paramref name="action"/> on the deepest node under <paramref name="position"/> that can
+    /// handle it, starting from <see cref="RootNode"/>.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsOwner.performActionAt</c>.</remarks>
+    public bool PerformActionAt(Point position, SemanticsActions action, object? args = null)
+    {
+        if (action == SemanticsActions.None || RootNode is not { } node)
+        {
+            return false;
+        }
+
+        SemanticsActionHandler? handler = GetSemanticsActionHandlerForPosition(node, position, action, args);
+        if (handler is null)
+        {
+            return false;
+        }
+
+        handler(args);
+        return true;
     }
 
     public bool PerformCustomAction(int nodeId, CustomSemanticsAction action)
     {
         ArgumentNullException.ThrowIfNull(action);
-        return _index.TryGetValue(nodeId, out var node) && node.PerformCustomAction(action);
+        return PerformAction(nodeId, SemanticsActions.CustomAction, CustomSemanticsAction.GetIdentifier(action));
+    }
+
+    private void NotifyActionListeners(SemanticsActionEvent actionEvent)
+    {
+        if (_actionListeners.Count == 0)
+        {
+            return;
+        }
+
+        // Listeners may register or unregister while the iteration is in progress, so Flutter walks a
+        // local copy and re-checks membership before each call.
+        Action<SemanticsActionEvent>[] localListeners = [.. _actionListeners];
+        foreach (Action<SemanticsActionEvent> listener in localListeners)
+        {
+            if (_actionListeners.Contains(listener))
+            {
+                listener(actionEvent);
+            }
+        }
+    }
+
+    /// <remarks>Flutter's private <c>SemanticsOwner._getSemanticsActionHandlerForId</c>.</remarks>
+    private SemanticsActionHandler? GetSemanticsActionHandlerForId(
+        int id,
+        SemanticsActions action,
+        object? args)
+    {
+        SemanticsNode? result = GetSemanticsNode(id);
+        if (result is null)
+        {
+            return null;
+        }
+
+        // For merged nodes, walk descendants whenever the merge root itself does not handle this
+        // exact (action, args) pair: without the args check a merge root that owns *some* custom
+        // action would short-circuit the walk and dispatch to the wrong handler.
+        if (result.IsPartOfNodeMerging && !result.CanHandleAction(action, args))
+        {
+            SemanticsNode? found = null;
+            result.VisitDescendants(node =>
+            {
+                if (!node.CanHandleAction(action, args))
+                {
+                    return true;
+                }
+
+                found = node;
+                return false;
+            });
+            result = found;
+        }
+
+        if (result is null || !result.CanHandleAction(action, args))
+        {
+            return null;
+        }
+
+        return result.GetActionHandler(action);
+    }
+
+    /// <remarks>Flutter's private <c>SemanticsOwner._getSemanticsActionHandlerForPosition</c>.</remarks>
+    private static SemanticsActionHandler? GetSemanticsActionHandlerForPosition(
+        SemanticsNode node,
+        Point position,
+        SemanticsActions action,
+        object? args)
+    {
+        if (node.Transform is { } transform)
+        {
+            var inverse = Matrix4.Identity();
+            if (inverse.CopyInverse(transform) == 0.0)
+            {
+                return null;
+            }
+
+            position = MatrixUtils.TransformPoint(inverse, position);
+        }
+
+        if (!node.Rect.Contains(position))
+        {
+            return null;
+        }
+
+        if (node.MergeAllDescendantsIntoThisNode)
+        {
+            if (node.CanHandleAction(action, args))
+            {
+                return node.GetActionHandler(action);
+            }
+
+            SemanticsNode? found = null;
+            node.VisitDescendants(descendant =>
+            {
+                if (!descendant.CanHandleAction(action, args))
+                {
+                    return true;
+                }
+
+                found = descendant;
+                return false;
+            });
+            return found?.GetActionHandler(action);
+        }
+
+        if (node.Children.Count > 0)
+        {
+            for (int index = node.Children.Count - 1; index >= 0; index--)
+            {
+                SemanticsActionHandler? handler =
+                    GetSemanticsActionHandlerForPosition(node.Children[index], position, action, args);
+                if (handler is not null)
+                {
+                    return handler;
+                }
+            }
+        }
+
+        return node.GetActionHandler(action);
     }
 
     public string DebugDumpTree()

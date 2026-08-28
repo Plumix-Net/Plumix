@@ -220,6 +220,83 @@ public sealed class TapRegionTests
         Assert.Equal(0, backgroundOutsideCalls);
     }
 
+    [Fact]
+    public void TapRegion_SemanticsTapReachesInsideAndOutsideRegions()
+    {
+        int insideCalls = 0;
+        int outsideCalls = 0;
+        int targetTaps = 0;
+        using var harness = new WidgetHarness(
+            new TapRegionSurface(
+                child: new Stack(
+                    fit: StackFit.Expand,
+                    children:
+                    [
+                        new Positioned(
+                            left: 0,
+                            top: 0,
+                            width: 40,
+                            height: 40,
+                            child: new TapRegion(
+                                behavior: HitTestBehavior.Opaque,
+                                onTapInside: _ => insideCalls += 1,
+                                child: new Semantics(
+                                    label: "inside",
+                                    container: true,
+                                    onTap: () => targetTaps += 1,
+                                    child: new SizedBox()))),
+                        new Positioned(
+                            left: 80,
+                            top: 0,
+                            width: 40,
+                            height: 40,
+                            child: new TapRegion(
+                                behavior: HitTestBehavior.Opaque,
+                                onTapOutside: _ => outsideCalls += 1,
+                                child: new SizedBox())),
+                    ])));
+
+        SemanticsOwner semantics = harness.PumpSemantics();
+        SemanticsNode? node = FindNode(semantics.RootNode, static candidate => candidate.Label == "inside");
+        Assert.NotNull(node);
+
+        Assert.True(semantics.PerformAction(node!.Id, SemanticsActions.Tap));
+
+        // The accessibility tap hit-tests the surface at the node's centre, so the region that owns
+        // the node counts as inside and every other registered region as outside.
+        Assert.Equal(1, targetTaps);
+        Assert.Equal(1, insideCalls);
+        Assert.Equal(1, outsideCalls);
+
+        // Actions the surface does not care about leave the regions alone.
+        Assert.False(semantics.PerformAction(node.Id, SemanticsActions.Dismiss));
+        Assert.Equal(1, insideCalls);
+        Assert.Equal(1, outsideCalls);
+    }
+
+    private static SemanticsNode? FindNode(SemanticsNode? node, Func<SemanticsNode, bool> predicate)
+    {
+        if (node is null)
+        {
+            return null;
+        }
+
+        if (predicate(node))
+        {
+            return node;
+        }
+
+        foreach (SemanticsNode child in node.Children)
+        {
+            if (FindNode(child, predicate) is { } match)
+            {
+                return match;
+            }
+        }
+
+        return null;
+    }
+
     private sealed class WidgetHarness : IDisposable
     {
         private readonly BuildOwner _owner = new();
@@ -252,6 +329,13 @@ public sealed class TapRegionTests
         {
             _owner.FlushBuild();
             _pipeline.FlushLayout(new Size(240, 120));
+        }
+
+        public SemanticsOwner PumpSemantics()
+        {
+            Pump();
+            _pipeline.FlushSemantics();
+            return _pipeline.SemanticsOwner;
         }
 
         public T FindRenderObject<T>() where T : RenderObject
