@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -316,7 +317,7 @@ public sealed record AppBarThemeData(
     }
 }
 
-public sealed record ThemeData
+public sealed record ThemeData : IDiagnosticable
 {
     private static readonly Color LightPrimaryColor = Color.Parse("#FF6750A4");
     private static readonly IReadOnlyDictionary<Type, ThemeExtension> EmptyExtensions =
@@ -836,6 +837,451 @@ public sealed record ThemeData
     }
 
     public IReadOnlyDictionary<Type, Adaptation> Adaptations { get; init; }
+
+    /// <summary>Dart's `Diagnosticable.toStringShort`.</summary>
+    public string ToStringShort() => Diagnostics.DescribeIdentity(this);
+
+    /// <summary>Returns this theme as a diagnostics node.</summary>
+    public DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null)
+    {
+        return new DiagnosticableNode<IDiagnosticable>(name, this, style);
+    }
+
+    /// <summary>Dart's compact `Diagnosticable.toString` output.</summary>
+    public override string ToString() => ToString(DiagnosticLevel.Info);
+
+    /// <summary>Returns diagnostics at or above <paramref name="minLevel"/>.</summary>
+    public string ToString(DiagnosticLevel minLevel)
+    {
+        return ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine).ToString(null, minLevel);
+    }
+
+    /// <summary>Adds every ThemeData property in Dart declaration order.</summary>
+    public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+
+        var defaultData = new ThemeData();
+        object cupertinoOverrideDefault = defaultData.CupertinoOverrideTheme
+            ?? DiagnosticsDefaults.NullValue;
+
+        properties.Add(new IterableProperty<Adaptation>(
+            "adaptations",
+            Adaptations.Values,
+            defaultValue: defaultData.Adaptations.Values,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<bool>(
+            "applyElevationOverlayColor",
+            ApplyElevationOverlayColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<NoDefaultCupertinoThemeData>(
+            "cupertinoOverrideTheme",
+            CupertinoOverrideTheme,
+            defaultValue: cupertinoOverrideDefault,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new IterableProperty<ThemeExtension>(
+            "extensions",
+            Extensions.Values,
+            defaultValue: defaultData.Extensions.Values,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<InputDecorationThemeData>(
+            "inputDecorationTheme",
+            InputDecorationTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<MaterialTapTargetSize>(
+            "materialTapTargetSize",
+            MaterialTapTargetSize,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<PageTransitionsTheme>(
+            "pageTransitionsTheme",
+            PageTransitionsTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new EnumProperty<TargetPlatform>(
+            "platform",
+            Platform,
+            defaultValue: PlatformDefaults.TargetPlatform,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ScrollbarThemeData>(
+            "scrollbarTheme",
+            ScrollbarTheme,
+            defaultValue: defaultData.ScrollbarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<InteractiveInkFeatureFactory>(
+            "splashFactory",
+            SplashFactory,
+            defaultValue: defaultData.SplashFactory,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<bool>(
+            "useMaterial3",
+            UseMaterial3,
+            defaultValue: defaultData.UseMaterial3,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<VisualDensity>(
+            "visualDensity",
+            VisualDensity,
+            defaultValue: defaultData.VisualDensity,
+            level: DiagnosticLevel.Debug));
+
+        AddColorProperties(properties, defaultData);
+        AddTypographyProperties(properties, defaultData);
+        AddComponentThemeProperties(properties, defaultData);
+    }
+
+    private void AddColorProperties(DiagnosticPropertiesBuilder properties, ThemeData defaultData)
+    {
+        properties.Add(new ColorProperty(
+            "canvasColor",
+            CanvasColor,
+            defaultValue: defaultData.CanvasColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "cardColor",
+            CardColor,
+            defaultValue: defaultData.CardColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ColorScheme>(
+            "colorScheme",
+            ColorScheme,
+            defaultValue: defaultData.ColorScheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "disabledColor",
+            DisabledColor,
+            defaultValue: defaultData.DisabledColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "dividerColor",
+            DividerColor,
+            defaultValue: defaultData.DividerColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "focusColor",
+            FocusColor,
+            defaultValue: defaultData.FocusColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "highlightColor",
+            HighlightColor,
+            defaultValue: defaultData.HighlightColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "hintColor",
+            HintColor,
+            defaultValue: defaultData.HintColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "hoverColor",
+            HoverColor,
+            defaultValue: defaultData.HoverColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "primaryColorDark",
+            PrimaryColorDark,
+            defaultValue: defaultData.PrimaryColorDark,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "primaryColorLight",
+            PrimaryColorLight,
+            defaultValue: defaultData.PrimaryColorLight,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "primaryColor",
+            PrimaryColor,
+            defaultValue: defaultData.PrimaryColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "scaffoldBackgroundColor",
+            ScaffoldBackgroundColor,
+            defaultValue: defaultData.ScaffoldBackgroundColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "secondaryHeaderColor",
+            SecondaryHeaderColor,
+            defaultValue: defaultData.SecondaryHeaderColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "shadowColor",
+            ShadowColor,
+            defaultValue: defaultData.ShadowColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "splashColor",
+            SplashColor,
+            defaultValue: defaultData.SplashColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "unselectedWidgetColor",
+            UnselectedWidgetColor,
+            defaultValue: defaultData.UnselectedWidgetColor,
+            level: DiagnosticLevel.Debug));
+    }
+
+    private void AddTypographyProperties(DiagnosticPropertiesBuilder properties, ThemeData defaultData)
+    {
+        properties.Add(new DiagnosticsProperty<IconThemeData>(
+            "iconTheme",
+            IconTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<IconThemeData>(
+            "primaryIconTheme",
+            PrimaryIconTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<TextTheme>(
+            "primaryTextTheme",
+            PrimaryTextTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<TextTheme>(
+            "textTheme",
+            TextTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<Typography>(
+            "typography",
+            Typography,
+            defaultValue: defaultData.Typography,
+            level: DiagnosticLevel.Debug));
+    }
+
+    private void AddComponentThemeProperties(
+        DiagnosticPropertiesBuilder properties,
+        ThemeData defaultData)
+    {
+        properties.Add(new DiagnosticsProperty<ActionIconThemeData>(
+            "actionIconTheme",
+            ActionIconTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<AppBarThemeData>(
+            "appBarTheme",
+            AppBarTheme,
+            defaultValue: defaultData.AppBarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<BadgeThemeData>(
+            "badgeTheme",
+            BadgeTheme,
+            defaultValue: defaultData.BadgeTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<MaterialBannerThemeData>(
+            "bannerTheme",
+            BannerTheme,
+            defaultValue: defaultData.BannerTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<BottomAppBarThemeData>(
+            "bottomAppBarTheme",
+            BottomAppBarTheme,
+            defaultValue: defaultData.BottomAppBarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<BottomNavigationBarThemeData>(
+            "bottomNavigationBarTheme",
+            BottomNavigationBarTheme,
+            defaultValue: defaultData.BottomNavigationBarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<BottomSheetThemeData>(
+            "bottomSheetTheme",
+            BottomSheetTheme,
+            defaultValue: defaultData.BottomSheetTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ButtonThemeData>(
+            "buttonTheme",
+            ButtonTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<CardThemeData>(
+            "cardTheme",
+            CardTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<CarouselViewThemeData>(
+            "carouselViewTheme",
+            CarouselViewTheme,
+            defaultValue: defaultData.CarouselViewTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<CheckboxThemeData>(
+            "checkboxTheme",
+            CheckboxTheme,
+            defaultValue: defaultData.CheckboxTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ChipThemeData>(
+            "chipTheme",
+            ChipTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<DataTableThemeData>(
+            "dataTableTheme",
+            DataTableTheme,
+            defaultValue: defaultData.DataTableTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<DatePickerThemeData>(
+            "datePickerTheme",
+            DatePickerTheme,
+            defaultValue: defaultData.DatePickerTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<DialogThemeData>(
+            "dialogTheme",
+            DialogTheme,
+            defaultValue: defaultData.DialogTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<DividerThemeData>(
+            "dividerTheme",
+            DividerTheme,
+            defaultValue: defaultData.DividerTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<DrawerThemeData>(
+            "drawerTheme",
+            DrawerTheme,
+            defaultValue: defaultData.DrawerTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<DropdownMenuThemeData>(
+            "dropdownMenuTheme",
+            DropdownMenuTheme,
+            defaultValue: defaultData.DropdownMenuTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ElevatedButtonThemeData>(
+            "elevatedButtonTheme",
+            ElevatedButtonTheme,
+            defaultValue: defaultData.ElevatedButtonTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ExpansionTileThemeData>(
+            "expansionTileTheme",
+            ExpansionTileTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<FilledButtonThemeData>(
+            "filledButtonTheme",
+            FilledButtonTheme,
+            defaultValue: defaultData.FilledButtonTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<FloatingActionButtonThemeData>(
+            "floatingActionButtonTheme",
+            FloatingActionButtonTheme,
+            defaultValue: defaultData.FloatingActionButtonTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<IconButtonThemeData>(
+            "iconButtonTheme",
+            IconButtonTheme,
+            defaultValue: defaultData.IconButtonTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ListTileThemeData>(
+            "listTileTheme",
+            ListTileTheme,
+            defaultValue: defaultData.ListTileTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<MenuBarThemeData>(
+            "menuBarTheme",
+            MenuBarTheme,
+            defaultValue: defaultData.MenuBarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<MenuButtonThemeData>(
+            "menuButtonTheme",
+            MenuButtonTheme,
+            defaultValue: defaultData.MenuButtonTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<MenuThemeData>(
+            "menuTheme",
+            MenuTheme,
+            defaultValue: defaultData.MenuTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<NavigationBarThemeData>(
+            "navigationBarTheme",
+            NavigationBarTheme,
+            defaultValue: defaultData.NavigationBarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<NavigationDrawerThemeData>(
+            "navigationDrawerTheme",
+            NavigationDrawerTheme,
+            defaultValue: defaultData.NavigationDrawerTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<NavigationRailThemeData>(
+            "navigationRailTheme",
+            NavigationRailTheme,
+            defaultValue: defaultData.NavigationRailTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<OutlinedButtonThemeData>(
+            "outlinedButtonTheme",
+            OutlinedButtonTheme,
+            defaultValue: defaultData.OutlinedButtonTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<PopupMenuThemeData>(
+            "popupMenuTheme",
+            PopupMenuTheme,
+            defaultValue: defaultData.PopupMenuTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ProgressIndicatorThemeData>(
+            "progressIndicatorTheme",
+            ProgressIndicatorTheme,
+            defaultValue: defaultData.ProgressIndicatorTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<RadioThemeData>(
+            "radioTheme",
+            RadioTheme,
+            defaultValue: defaultData.RadioTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<SearchBarThemeData>(
+            "searchBarTheme",
+            SearchBarTheme,
+            defaultValue: defaultData.SearchBarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<SearchViewThemeData>(
+            "searchViewTheme",
+            SearchViewTheme,
+            defaultValue: defaultData.SearchViewTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<SegmentedButtonThemeData>(
+            "segmentedButtonTheme",
+            SegmentedButtonTheme,
+            defaultValue: defaultData.SegmentedButtonTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<SliderThemeData>(
+            "sliderTheme",
+            SliderTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<SnackBarThemeData>(
+            "snackBarTheme",
+            SnackBarTheme,
+            defaultValue: defaultData.SnackBarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<SwitchThemeData>(
+            "switchTheme",
+            SwitchTheme,
+            defaultValue: defaultData.SwitchTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<TabBarThemeData>(
+            "tabBarTheme",
+            TabBarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<TextButtonThemeData>(
+            "textButtonTheme",
+            TextButtonTheme,
+            defaultValue: defaultData.TextButtonTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<TextSelectionThemeData>(
+            "textSelectionTheme",
+            TextSelectionTheme,
+            defaultValue: defaultData.TextSelectionTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<TimePickerThemeData>(
+            "timePickerTheme",
+            TimePickerTheme,
+            defaultValue: defaultData.TimePickerTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ToggleButtonsThemeData>(
+            "toggleButtonsTheme",
+            ToggleButtonsTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<TooltipThemeData>(
+            "tooltipTheme",
+            TooltipTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<ButtonBarThemeData>(
+            "buttonBarTheme",
+            ButtonBarTheme,
+            defaultValue: defaultData.ButtonBarTheme,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "dialogBackgroundColor",
+            DialogBackgroundColor,
+            defaultValue: defaultData.DialogBackgroundColor,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new ColorProperty(
+            "indicatorColor",
+            IndicatorColor,
+            defaultValue: defaultData.IndicatorColor,
+            level: DiagnosticLevel.Debug));
+    }
 
     /// Dart's `ThemeData.getAdaptation<T>()`.
     public Adaptation<T>? GetAdaptation<T>()

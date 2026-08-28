@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
@@ -192,6 +194,147 @@ public sealed class MaterialThemeDataTests
         {
             Assert.Equal(VisualDensity.Compact, new ThemeData(platform: platform).VisualDensity);
         }
+    }
+
+    // ---- Diagnostics ------------------------------------------------------------------
+
+    [Fact]
+    public void ThemeData_DiagnosticsIncludeAllPropertiesInDartOrder()
+    {
+        string[] expectedNames =
+        [
+            "adaptations",
+            "applyElevationOverlayColor",
+            "cupertinoOverrideTheme",
+            "extensions",
+            "inputDecorationTheme",
+            "materialTapTargetSize",
+            "pageTransitionsTheme",
+            "platform",
+            "scrollbarTheme",
+            "splashFactory",
+            "useMaterial3",
+            "visualDensity",
+            "canvasColor",
+            "cardColor",
+            "colorScheme",
+            "disabledColor",
+            "dividerColor",
+            "focusColor",
+            "highlightColor",
+            "hintColor",
+            "hoverColor",
+            "primaryColorDark",
+            "primaryColorLight",
+            "primaryColor",
+            "scaffoldBackgroundColor",
+            "secondaryHeaderColor",
+            "shadowColor",
+            "splashColor",
+            "unselectedWidgetColor",
+            "iconTheme",
+            "primaryIconTheme",
+            "primaryTextTheme",
+            "textTheme",
+            "typography",
+            "actionIconTheme",
+            "appBarTheme",
+            "badgeTheme",
+            "bannerTheme",
+            "bottomAppBarTheme",
+            "bottomNavigationBarTheme",
+            "bottomSheetTheme",
+            "buttonTheme",
+            "cardTheme",
+            "carouselViewTheme",
+            "checkboxTheme",
+            "chipTheme",
+            "dataTableTheme",
+            "datePickerTheme",
+            "dialogTheme",
+            "dividerTheme",
+            "drawerTheme",
+            "dropdownMenuTheme",
+            "elevatedButtonTheme",
+            "expansionTileTheme",
+            "filledButtonTheme",
+            "floatingActionButtonTheme",
+            "iconButtonTheme",
+            "listTileTheme",
+            "menuBarTheme",
+            "menuButtonTheme",
+            "menuTheme",
+            "navigationBarTheme",
+            "navigationDrawerTheme",
+            "navigationRailTheme",
+            "outlinedButtonTheme",
+            "popupMenuTheme",
+            "progressIndicatorTheme",
+            "radioTheme",
+            "searchBarTheme",
+            "searchViewTheme",
+            "segmentedButtonTheme",
+            "sliderTheme",
+            "snackBarTheme",
+            "switchTheme",
+            "tabBarTheme",
+            "textButtonTheme",
+            "textSelectionTheme",
+            "timePickerTheme",
+            "toggleButtonsTheme",
+            "tooltipTheme",
+            "buttonBarTheme",
+            "dialogBackgroundColor",
+            "indicatorColor",
+        ];
+        var diagnostics = new DiagnosticPropertiesBuilder();
+
+        new ThemeData().DebugFillProperties(diagnostics);
+
+        Assert.Equal(expectedNames, diagnostics.Properties.Select(property => property.Name));
+        Assert.Equal(expectedNames.Length, expectedNames.Distinct().Count());
+        Assert.IsType<IterableProperty<Adaptation>>(diagnostics.Properties[0]);
+        Assert.IsType<EnumProperty<TargetPlatform>>(diagnostics.Properties[7]);
+        Assert.IsType<ColorProperty>(diagnostics.Properties[12]);
+        Assert.IsType<DiagnosticsProperty<ColorScheme>>(diagnostics.Properties[14]);
+    }
+
+    [Fact]
+    public void ThemeData_DiagnosticsUseFallbackDefaultsAndDebugLevel()
+    {
+        var fallbackDiagnostics = new DiagnosticPropertiesBuilder();
+        new ThemeData().DebugFillProperties(fallbackDiagnostics);
+
+        DiagnosticsNode cupertinoOverride = Assert.Single(
+            fallbackDiagnostics.Properties,
+            property => property.Name == "cupertinoOverrideTheme");
+        DiagnosticsNode useMaterial3 = Assert.Single(
+            fallbackDiagnostics.Properties,
+            property => property.Name == "useMaterial3");
+        DiagnosticsNode applyElevationOverlay = Assert.Single(
+            fallbackDiagnostics.Properties,
+            property => property.Name == "applyElevationOverlayColor");
+        Assert.Equal(DiagnosticLevel.Fine, cupertinoOverride.Level);
+        Assert.Equal(DiagnosticLevel.Fine, useMaterial3.Level);
+        Assert.Equal(DiagnosticLevel.Debug, applyElevationOverlay.Level);
+
+        var changedDiagnostics = new DiagnosticPropertiesBuilder();
+        new ThemeData(useMaterial3: false).DebugFillProperties(changedDiagnostics);
+        DiagnosticsNode changedUseMaterial3 = Assert.Single(
+            changedDiagnostics.Properties,
+            property => property.Name == "useMaterial3");
+        Assert.Equal(DiagnosticLevel.Debug, changedUseMaterial3.Level);
+    }
+
+    [Fact]
+    public void ThemeData_ToStringIsCompactAndSingleLine()
+    {
+        ThemeData light = ThemeData.From(ColorScheme.Light());
+        ThemeData dark = ThemeData.From(ColorScheme.Dark());
+
+        Assert.True(light.ToString().Length < 200);
+        Assert.True(dark.ToString().Length < 200);
+        Assert.DoesNotContain('\n', dark.ToString());
     }
 
     // ---- estimateBrightnessForColor -----------------------------------------------------
