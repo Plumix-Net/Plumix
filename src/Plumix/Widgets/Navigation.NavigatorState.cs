@@ -928,11 +928,7 @@ public sealed partial class NavigatorState : RestorationState
     /// <summary>Flutter's <c>NavigatorState._flushHistoryUpdates</c>.</summary>
     internal void FlushHistoryUpdates(bool rearrangeOverlay = true)
     {
-        // Re-entrancy would leave the outer scan holding a stale index into `_history`: a nested flush
-        // can finalize entries and shrink the list underneath it. Dart never re-enters because route
-        // disposal there is deferred, so dropping the nested request keeps the same net behavior — the
-        // outer scan is still walking down and observes whatever state the nested call would have set.
-        if (_updatingPage || _flushingHistory)
+        if (_updatingPage)
         {
             return;
         }

@@ -733,12 +733,19 @@ public sealed class OverlayState : State
 
     internal void Remove(OverlayEntry entry)
     {
-        if (!_entries.Contains(entry))
+        if (!_entries.Remove(entry))
         {
             return;
         }
 
-        SetState(() => _entries.Remove(entry));
+        if (global::Plumix.Scheduler.Phase == global::Plumix.SchedulerPhase.PersistentCallbacks)
+        {
+            // OverlayEntry.remove is legal during build; Dart defers only the dirty notification.
+            global::Plumix.Scheduler.AddPostFrameCallback(_ => MarkDirty());
+            return;
+        }
+
+        MarkDirty();
     }
 
     internal void MarkDirty()

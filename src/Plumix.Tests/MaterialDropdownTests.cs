@@ -578,12 +578,29 @@ public sealed class MaterialDropdownTests : IDisposable
             .Single(FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView)).LayoutDelegate;
         resize(new Size(300, 500));
         harness.Pump(new Size(300, 500));
-        harness.Pump(new Size(300, 500));
-        PumpAnimation();
-        // The route leaves the navigator history. Its overlay entry only disappears on the next full
-        // frame, because `NavigatorState.RemoveRoute` invoked from inside a build does not finish the
-        // removal lifecycle — see `docs/ai/DIVERGENCES.md`.
         Assert.False(layoutDelegate.Route.IsActive);
+        Assert.Contains(
+            FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView),
+            layout => layout.LayoutDelegate is DropdownMenuRouteLayout<string>);
+        Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.01));
+        harness.Pump(new Size(300, 500));
+        Assert.DoesNotContain(
+            FindDescendants<RenderCustomSingleChildLayoutBox>(harness.RenderView),
+            layout => layout.LayoutDelegate is DropdownMenuRouteLayout<string>);
+    }
+
+    [Fact]
+    public void DropdownRoute_ReportsCompletionFromTheMicrotaskQueue()
+    {
+        DropdownRoute<string> route = BuildRoute(1, 0);
+        DropdownRouteResult<string>? completion = null;
+        route.RouteCompleted += (_, result) => completion = result;
+
+        route.DidComplete(new DropdownRouteResult<string>("one"));
+
+        Assert.Null(completion);
+        Scheduler.FlushMicrotasks();
+        Assert.Equal("one", completion?.Result);
     }
 
     [Fact]
