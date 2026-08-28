@@ -34,12 +34,33 @@ public sealed class RenderFlexTests
     }
 
     [Fact]
-    public void RenderFlex_NegativeSpacing_Throws()
+    public void RenderFlex_NegativeSpacing_IsADebugOnlyAssertion()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new RenderFlex(
+        RenderFlex? flex = null;
+        Exception? error = Record.Exception(() => flex = new RenderFlex(
             children: [Box(100, 100)],
             textDirection: TextDirection.Ltr,
             spacing: -15.0));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(error);
+        }
+        else
+        {
+            Assert.Null(error);
+            Assert.Equal(-15.0, flex!.Spacing);
+        }
+    }
+
+    [Fact]
+    public void RenderFlex_SpacingSetter_AcceptsNegativeValues()
+    {
+        var flex = new RenderFlex();
+
+        flex.Spacing = -15.0;
+
+        Assert.Equal(-15.0, flex.Spacing);
     }
 
     // ---------- Constraint resolution ----------
@@ -59,9 +80,20 @@ public sealed class RenderFlexTests
     {
         var flex = new RenderFlex(children: [Box(10, 10), Box(10, 10)]);
 
-        InvalidOperationException error = Assert.Throws<InvalidOperationException>(
-            () => Layout(flex, BoxConstraints.Loose(new Size(100, 100))));
-        Assert.Contains("textDirection", error.Message, StringComparison.Ordinal);
+        Exception? error = Record.Exception(() => Layout(flex, BoxConstraints.Loose(new Size(100, 100))));
+
+        if (Constants.KDebugMode)
+        {
+            var flutterError = Assert.IsType<FlutterError>(error);
+            Assert.Equal(
+                "Horizontal RenderFlex with multiple children has a null textDirection, "
+                + "so the layout order is undefined.",
+                flutterError.Message);
+        }
+        else
+        {
+            Assert.Null(error);
+        }
     }
 
     [Fact]
@@ -69,8 +101,16 @@ public sealed class RenderFlexTests
     {
         var flex = new RenderFlex(children: [Box(10, 10)], mainAxisAlignment: MainAxisAlignment.Start);
 
-        Assert.Throws<InvalidOperationException>(
-            () => Layout(flex, BoxConstraints.Loose(new Size(100, 100))));
+        Exception? error = Record.Exception(() => Layout(flex, BoxConstraints.Loose(new Size(100, 100))));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<FlutterError>(error);
+        }
+        else
+        {
+            Assert.Null(error);
+        }
     }
 
     [Fact]
@@ -82,8 +122,16 @@ public sealed class RenderFlexTests
             mainAxisAlignment: MainAxisAlignment.Center,
             crossAxisAlignment: CrossAxisAlignment.Start);
 
-        Assert.Throws<InvalidOperationException>(
-            () => Layout(flex, BoxConstraints.Loose(new Size(100, 100))));
+        Exception? error = Record.Exception(() => Layout(flex, BoxConstraints.Loose(new Size(100, 100))));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<FlutterError>(error);
+        }
+        else
+        {
+            Assert.Null(error);
+        }
     }
 
     [Fact]
@@ -108,9 +156,30 @@ public sealed class RenderFlexTests
             mainAxisAlignment: MainAxisAlignment.Center,
             crossAxisAlignment: CrossAxisAlignment.Baseline);
 
-        InvalidOperationException error = Assert.Throws<InvalidOperationException>(
+        FlutterError error = Assert.Throws<FlutterError>(
             () => Layout(flex, BoxConstraints.Loose(new Size(100, 100))));
         Assert.Contains("textBaseline", error.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RenderFlex_TextBaselineSetter_UsesADebugOnlyAssertion()
+    {
+        var flex = new RenderFlex(
+            crossAxisAlignment: CrossAxisAlignment.Baseline,
+            textBaseline: TextBaseline.Alphabetic);
+
+        Exception? error = Record.Exception(() => flex.TextBaseline = null);
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(error);
+            Assert.Equal(TextBaseline.Alphabetic, flex.TextBaseline);
+        }
+        else
+        {
+            Assert.Null(error);
+            Assert.Null(flex.TextBaseline);
+        }
     }
 
     // ---------- Unbounded main axis ----------
@@ -142,11 +211,22 @@ public sealed class RenderFlexTests
             mainAxisSize: MainAxisSize.Min);
         SetFlex(child, 1, FlexFit.Tight);
 
-        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() =>
+        Exception? error = Record.Exception(() =>
             Layout(flex, new BoxConstraints(MaxWidth: double.PositiveInfinity, MaxHeight: 400)));
-        Assert.Contains("non-zero flex but incoming width constraints are unbounded", error.Message,
-            StringComparison.Ordinal);
-        Assert.Contains("\nSee also:", error.Message, StringComparison.Ordinal);
+
+        if (Constants.KDebugMode)
+        {
+            var flutterError = Assert.IsType<FlutterError>(error);
+            Assert.Contains(
+                "non-zero flex but incoming width constraints are unbounded",
+                flutterError.Message,
+                StringComparison.Ordinal);
+            Assert.Contains("\nSee also:", flutterError.Message, StringComparison.Ordinal);
+        }
+        else
+        {
+            Assert.Null(error);
+        }
     }
 
     [Fact]
@@ -159,8 +239,17 @@ public sealed class RenderFlexTests
             mainAxisSize: MainAxisSize.Max);
         SetFlex(child, 1, FlexFit.Loose);
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Exception? error = Record.Exception(() =>
             Layout(flex, new BoxConstraints(MaxWidth: double.PositiveInfinity, MaxHeight: 400)));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<FlutterError>(error);
+        }
+        else
+        {
+            Assert.Null(error);
+        }
     }
 
     [Fact]
@@ -233,6 +322,12 @@ public sealed class RenderFlexTests
         finally
         {
             FlutterError.OnError = previous;
+        }
+
+        if (!Constants.KDebugMode)
+        {
+            Assert.Empty(reported);
+            return;
         }
 
         // Dart reports on the first occurrence only, and never again for the same render object.
@@ -812,11 +907,26 @@ public sealed class RenderFlexTests
     // ---------- Widget layer ----------
 
     [Fact]
-    public void Flex_BaselineWithoutTextBaseline_ThrowsAtConstruction()
+    public void Flex_BaselineWithoutTextBaseline_IsADebugOnlyAssertion()
     {
-        Assert.Throws<ArgumentException>(() => new Flex(
+        Flex? flex = null;
+        Exception? error = Record.Exception(() => flex = new Flex(
             direction: Axis.Horizontal,
             crossAxisAlignment: CrossAxisAlignment.Baseline));
+
+        if (Constants.KDebugMode)
+        {
+            var assertion = Assert.IsType<AssertionError>(error);
+            Assert.Equal(
+                "textBaseline is required if you specify the crossAxisAlignment with "
+                + "CrossAxisAlignment.Baseline",
+                assertion.Message);
+        }
+        else
+        {
+            Assert.Null(error);
+            Assert.NotNull(flex);
+        }
     }
 
     [Fact]
@@ -859,7 +969,16 @@ public sealed class RenderFlexTests
         using var harness = new FlexHarness(
             new Row(children: [new SizedBox(width: 100, height: 100), new SizedBox(width: 100, height: 100)]));
 
-        Assert.Throws<InvalidOperationException>(() => harness.Pump(new Size(800, 600)));
+        Exception? error = Record.Exception(() => harness.Pump(new Size(800, 600)));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<FlutterError>(error);
+        }
+        else
+        {
+            Assert.Null(error);
+        }
     }
 
     [Theory]

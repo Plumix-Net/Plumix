@@ -1205,12 +1205,13 @@ public class Flex : MultiChildRenderObjectWidget
         TextBaseline? textBaseline = null,
         Clip clipBehavior = Clip.None) : base(children, key)
     {
-        if (crossAxisAlignment == CrossAxisAlignment.Baseline && textBaseline == null)
+        if (Constants.KDebugMode
+            && crossAxisAlignment == CrossAxisAlignment.Baseline
+            && textBaseline == null)
         {
-            throw new ArgumentException(
+            throw new AssertionError(
                 "textBaseline is required if you specify the crossAxisAlignment with "
-                + "CrossAxisAlignment.Baseline",
-                nameof(textBaseline));
+                + "CrossAxisAlignment.Baseline");
         }
 
         Direction = direction;

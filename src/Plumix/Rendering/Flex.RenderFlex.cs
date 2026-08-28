@@ -27,7 +27,10 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         Clip clipBehavior = Clip.None,
         double spacing = 0.0)
     {
-        ArgumentOutOfRangeException.ThrowIfNegative(spacing);
+        if (Constants.KDebugMode && !(spacing >= 0.0))
+        {
+            throw new AssertionError();
+        }
 
         _direction = direction;
         _mainAxisSize = mainAxisSize;
@@ -163,7 +166,10 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         get => _textBaseline;
         set
         {
-            Debug.Assert(_crossAxisAlignment != CrossAxisAlignment.Baseline || value != null);
+            if (Constants.KDebugMode && _crossAxisAlignment == CrossAxisAlignment.Baseline && value == null)
+            {
+                throw new AssertionError();
+            }
 
             if (_textBaseline != value)
             {
@@ -244,7 +250,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
     /// Flutter raises through `assert`s before laying children out.
     private void DebugCheckNecessaryDirections()
     {
-        if (DebugCheckingIntrinsics)
+        if (!Constants.KDebugMode || DebugCheckingIntrinsics)
         {
             return;
         }
@@ -254,7 +260,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             // i.e. there's more than one child
             if (Direction == Axis.Horizontal && TextDirection == null)
             {
-                throw new InvalidOperationException(
+                throw new FlutterError(
                     $"Horizontal {GetType().Name} with multiple children has a null textDirection, "
                     + "so the layout order is undefined.");
             }
@@ -264,7 +270,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         {
             if (Direction == Axis.Horizontal && TextDirection == null)
             {
-                throw new InvalidOperationException(
+                throw new FlutterError(
                     $"Horizontal {GetType().Name} with {MainAxisAlignment} has a null textDirection, "
                     + "so the alignment cannot be resolved.");
             }
@@ -274,7 +280,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         {
             if (Direction == Axis.Vertical && TextDirection == null)
             {
-                throw new InvalidOperationException(
+                throw new FlutterError(
                     $"Vertical {GetType().Name} with {CrossAxisAlignment} has a null textDirection, "
                     + "so the alignment cannot be resolved.");
             }
@@ -546,7 +552,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
     protected override Size ComputeDryLayout(BoxConstraints constraints)
     {
-        InvalidOperationException? constraintsError =
+        FlutterError? constraintsError =
             DebugCheckConstraints(constraints, reportParentConstraints: false);
         if (constraintsError != null)
         {
@@ -695,7 +701,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
         // Null indicates the children are not baseline aligned.
         TextBaseline? textBaseline = IsBaselineAligned
-            ? TextBaseline ?? throw new InvalidOperationException(
+            ? TextBaseline ?? throw new FlutterError(
                 "To use CrossAxisAlignment.baseline, you must also specify which baseline to use "
                 + "using the \"textBaseline\" argument.")
             : null;
@@ -816,7 +822,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
     {
         BoxConstraints constraints = Constraints;
 
-        InvalidOperationException? constraintsError =
+        FlutterError? constraintsError =
             DebugCheckConstraints(constraints, reportParentConstraints: true);
         if (constraintsError != null)
         {
@@ -903,10 +909,15 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
 
     /// Dart's `_debugCheckConstraints`: returns the error a flex child with a
     /// non-zero flex factor causes under unbounded main-axis constraints, or null.
-    private InvalidOperationException? DebugCheckConstraints(
+    private FlutterError? DebugCheckConstraints(
         BoxConstraints constraints,
         bool reportParentConstraints)
     {
+        if (!Constants.KDebugMode)
+        {
+            return null;
+        }
+
         double maxMainSize = _direction == Axis.Horizontal ? constraints.MaxWidth : constraints.MaxHeight;
         bool canFlex = double.IsFinite(maxMainSize);
         foreach (RenderBox child in EnumerateChildren())
@@ -947,7 +958,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             message.Append(DescribeUnboundedAncestor(reportParentConstraints));
             message.AppendLine("See also: https://flutter.dev/unbounded-constraints");
 
-            return new InvalidOperationException(message.ToString());
+            return new FlutterError(message.ToString());
         }
 
         return null;
@@ -1304,7 +1315,7 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
     public override string ToStringShort()
     {
         string header = base.ToStringShort();
-        if (_hasOverflow)
+        if (Constants.KDebugMode && _hasOverflow)
         {
             header += " OVERFLOWING";
         }
