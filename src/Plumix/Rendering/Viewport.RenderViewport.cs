@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.UI;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/viewport.dart
 
@@ -824,6 +825,49 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
             }
         }
     }
+
+    /// <summary>The index of the first child, in the labelling scheme this viewport uses.</summary>
+    /// <remarks>Flutter's <c>RenderViewportBase.indexOfFirstChild</c>.</remarks>
+    public abstract int IndexOfFirstChild { get; }
+
+    /// <summary>The debug label for the child at the given index.</summary>
+    /// <remarks>Flutter's <c>RenderViewportBase.labelForChild</c>.</remarks>
+    public abstract string LabelForChildAt(int index);
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<AxisDirection>("axisDirection", AxisDirection));
+        properties.Add(new EnumProperty<AxisDirection>("crossAxisDirection", CrossAxisDirection));
+        properties.Add(new DiagnosticsProperty<ViewportOffset>("offset", Offset));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        var children = new List<DiagnosticsNode>();
+        RenderSliver? child = FirstChild;
+        if (child is null)
+        {
+            return children;
+        }
+
+        int count = IndexOfFirstChild;
+        while (true)
+        {
+            children.Add(child!.ToDiagnosticsNode(name: LabelForChildAt(count)));
+            if (ReferenceEquals(child, LastChild))
+            {
+                break;
+            }
+
+            count += 1;
+            child = ChildAfter(child);
+        }
+
+        return children;
+    }
 }
 
 /// <summary>
@@ -1161,7 +1205,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
     }
 
     /// <summary>The index of the first child relative to <see cref="Center"/>, which is index zero.</summary>
-    public int IndexOfFirstChild
+    public override int IndexOfFirstChild
     {
         get
         {
@@ -1179,6 +1223,16 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
 
     /// <summary>The debug label of the child at the given index relative to <see cref="Center"/>.</summary>
     public static string LabelForChild(int index) => index == 0 ? "center child" : $"child {index}";
+
+    /// <inheritdoc />
+    public override string LabelForChildAt(int index) => LabelForChild(index);
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("anchor", Anchor));
+    }
 }
 
 /// <summary>
@@ -1398,4 +1452,10 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalPare
             _ => Size.Width - parentMainAxisPosition - layoutOffset,
         };
     }
+
+    /// <inheritdoc />
+    public override int IndexOfFirstChild => 0;
+
+    /// <inheritdoc />
+    public override string LabelForChildAt(int index) => $"child {index}";
 }

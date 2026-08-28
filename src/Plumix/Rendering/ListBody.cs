@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.UI;
+using Plumix.Foundation;
 
 namespace Plumix.Rendering;
 
@@ -213,4 +214,14 @@ public class RenderListBody : RenderBox,
                 : new Point(0, mainAxisExtent - parentData.offset.Y - child.Size.Height);
         }
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<AxisDirection>("axisDirection", AxisDirection));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }

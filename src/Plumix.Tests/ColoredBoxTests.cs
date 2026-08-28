@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
+using Plumix.Painting;
 
 namespace Plumix.Tests;
 
@@ -35,7 +36,7 @@ public sealed class ColoredBoxTests
 
         widget.DebugFillProperties(properties);
 
-        var color = Assert.IsType<DiagnosticsProperty<Color>>(properties.Properties[0]);
+        var color = Assert.IsType<ColorProperty>(properties.Properties[0]);
         Assert.Equal(Colors.CornflowerBlue, color.TypedValue);
         var isAntiAlias = Assert.IsType<DiagnosticsProperty<bool>>(properties.Properties[1]);
         Assert.False(isAntiAlias.TypedValue);

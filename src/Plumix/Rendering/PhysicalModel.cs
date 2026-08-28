@@ -2,6 +2,8 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.UI;
 using Path = Plumix.UI.Path;
+using Plumix.Foundation;
+using Plumix.Painting;
 
 namespace Plumix.Rendering;
 
@@ -187,6 +189,17 @@ public sealed class RenderPhysicalModel : RenderProxyBox
             throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be finite and non-negative.");
         }
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder description)
+    {
+        base.DebugFillProperties(description);
+        description.Add(new DoubleProperty("elevation", Elevation));
+        description.Add(new ColorProperty("color", Color));
+        description.Add(new ColorProperty("shadowColor", Color));
+        description.Add(new DiagnosticsProperty<BoxShape>("shape", Shape));
+        description.Add(new DiagnosticsProperty<BorderRadius?>("borderRadius", BorderRadius));
+    }
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderPhysicalShape)
@@ -321,5 +334,15 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
         {
             throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be finite and non-negative.");
         }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder description)
+    {
+        base.DebugFillProperties(description);
+        description.Add(new DoubleProperty("elevation", Elevation));
+        description.Add(new ColorProperty("color", Color));
+        description.Add(new ColorProperty("shadowColor", Color));
+        description.Add(new DiagnosticsProperty<CustomClipper<Path>>("clipper", Clipper));
     }
 }

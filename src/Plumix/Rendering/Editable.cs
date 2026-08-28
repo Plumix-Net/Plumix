@@ -4,6 +4,7 @@ using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
+using Plumix.Painting;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/editable.dart
 
@@ -460,5 +461,18 @@ public sealed class RenderEditable : RenderBox
         if (EqualityComparer<T>.Default.Equals(field, value)) return;
         field = value;
         MarkNeedsPaint();
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new ColorProperty("cursorColor", CursorColor));
+        properties.Add(new DiagnosticsProperty<bool>("showCursor", ShowCursor));
+        properties.Add(new IntProperty("maxLines", MaxLines));
+        properties.Add(new IntProperty("minLines", MinLines));
+        properties.Add(new DiagnosticsProperty<bool>("expands", Expands, defaultValue: false));
+        properties.Add(new ColorProperty("selectionColor", SelectionColor));
+        properties.Add(new DiagnosticsProperty<TextSelection>("selection", Selection));
     }
 }

@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 
 // Dart parity sources:
 // flutter/packages/flutter/lib/src/rendering/sliver_group.dart
@@ -228,6 +229,9 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectCont
                 "SliverCrossAxisGroup ran out of extent before a child could be laid out.");
         }
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }
 
 public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectContainer
@@ -544,4 +548,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
     {
         return Math.Abs(number) < PrecisionErrorTolerance ? 0.0 : number;
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }

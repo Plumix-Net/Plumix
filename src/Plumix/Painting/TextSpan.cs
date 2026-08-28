@@ -3,6 +3,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/text_span.dart
 
@@ -397,7 +398,60 @@ public class TextSpan : InlineSpan, IHitTestTarget, IMouseTrackerAnnotation
         return hash.ToHashCode();
     }
 
-    public override string ToString() => "TextSpan";
+    /// <inheritdoc />
+    public override string ToStringShort() => Diagnostics.ObjectRuntimeType(this);
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        ArgumentNullException.ThrowIfNull(properties);
+
+        properties.Add(new StringProperty(
+            "text",
+            Text,
+            showName: false,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        if (Style is null && Text is null && Children is null)
+        {
+            properties.Add(DiagnosticsNode.Message("(empty)"));
+        }
+
+        properties.Add(new DiagnosticsProperty<GestureRecognizer>(
+            "recognizer",
+            Recognizer,
+            description: Recognizer?.GetType().Name,
+            defaultValue: DiagnosticsDefaults.NullValue));
+
+        properties.Add(new FlagsSummary<Delegate>(
+            "callbacks",
+            [
+                new KeyValuePair<string, Delegate?>("enter", OnEnter),
+                new KeyValuePair<string, Delegate?>("exit", OnExit),
+            ]));
+        properties.Add(new DiagnosticsProperty<MouseCursor>(
+            "mouseCursor",
+            MouseCursor,
+            defaultValue: MouseCursor.Defer));
+
+        if (SemanticsLabel is not null)
+        {
+            properties.Add(new StringProperty("semanticsLabel", SemanticsLabel));
+        }
+
+        if (SemanticsIdentifier is not null)
+        {
+            properties.Add(new StringProperty("semanticsIdentifier", SemanticsIdentifier));
+        }
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        return Children is null
+            ? []
+            : [.. Children.Select(child => child.ToDiagnosticsNode())];
+    }
 
     private static bool ChildrenEqual(IReadOnlyList<InlineSpan>? a, IReadOnlyList<InlineSpan>? b)
     {

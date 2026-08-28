@@ -1400,4 +1400,55 @@ public sealed class RenderTable : RenderBox
 
         return widths;
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<TableBorder>(
+            "border",
+            Border,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<IReadOnlyDictionary<int, TableColumnWidth>>(
+            "specified column widths",
+            _columnWidths,
+            level: _columnWidths.Count == 0 ? DiagnosticLevel.Hidden : DiagnosticLevel.Info));
+        properties.Add(new DiagnosticsProperty<TableColumnWidth>("default column width", DefaultColumnWidth));
+        properties.Add(new MessageProperty("table size", $"{Columns}\u00D7{Rows}"));
+        properties.Add(new IterableProperty<string>(
+            "column offsets",
+            _columnLefts?.Select(value => DoubleProperty.FormatDouble(value)),
+            ifNull: "unknown"));
+        properties.Add(new IterableProperty<string>(
+            "row offsets",
+            _rowTops.Select(value => DoubleProperty.FormatDouble(value)),
+            ifNull: "unknown"));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        if (_children.Count == 0)
+        {
+            return [DiagnosticsNode.Message("table is empty")];
+        }
+
+        var children = new List<DiagnosticsNode>();
+        for (int y = 0; y < Rows; y += 1)
+        {
+            for (int x = 0; x < Columns; x += 1)
+            {
+                RenderBox? child = _children[x + (y * Columns)];
+                children.Add(child is not null
+                    ? child.ToDiagnosticsNode(name: $"child ({x}, {y})")
+                    : new DiagnosticsProperty<object>(
+                        $"child ({x}, {y})",
+                        null,
+                        ifNull: "is null",
+                        showSeparator: false));
+            }
+        }
+
+        return children;
+    }
 }

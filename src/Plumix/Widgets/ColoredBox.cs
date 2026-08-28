@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.Painting;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (ColoredBox)
 
@@ -39,7 +40,7 @@ public sealed class ColoredBox : SingleChildRenderObjectWidget
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Color>("color", Color));
+        properties.Add(new ColorProperty("color", Color));
         properties.Add(new DiagnosticsProperty<bool>("isAntiAlias", IsAntiAlias, defaultValue: true));
     }
 }

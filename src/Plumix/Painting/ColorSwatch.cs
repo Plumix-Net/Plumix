@@ -1,6 +1,7 @@
 // Dart parity source: flutter/packages/flutter/lib/src/painting/colors.dart
 
 using Avalonia.Media;
+using Plumix.Foundation;
 
 namespace Plumix.Painting;
 
@@ -144,4 +145,40 @@ public class ColorSwatch<T> : IEquatable<ColorSwatch<T>>
 
     private static byte LerpChannel(byte a, byte b, double t) =>
         (byte)Math.Clamp((int)(a + ((b - a) * t)), byte.MinValue, byte.MaxValue);
+}
+
+/// <summary>
+/// [DiagnosticsProperty] that has a [Color] as value.
+/// </summary>
+public sealed class ColorProperty : DiagnosticsProperty<Color?>
+{
+    /// Create a diagnostics property for [Color].
+    public ColorProperty(
+        string name,
+        Color? value,
+        bool showName = true,
+        object? defaultValue = null,
+        DiagnosticsTreeStyle style = DiagnosticsTreeStyle.SingleLine,
+        DiagnosticLevel level = DiagnosticLevel.Info)
+        : base(name, value, showName: showName, defaultValue: defaultValue, style: style, level: level)
+    {
+    }
+
+    /// <inheritdoc />
+    public override Dictionary<string, object?> ToJsonMap(DiagnosticsSerializationDelegate serializationDelegate)
+    {
+        Dictionary<string, object?> json = base.ToJsonMap(serializationDelegate);
+        if (TypedValue is { } color)
+        {
+            json["valueProperties"] = new Dictionary<string, object>
+            {
+                ["red"] = color.R,
+                ["green"] = color.G,
+                ["blue"] = color.B,
+                ["alpha"] = color.A,
+            };
+        }
+
+        return json;
+    }
 }

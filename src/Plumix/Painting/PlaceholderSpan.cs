@@ -2,6 +2,7 @@ using System.Text;
 using Avalonia;
 using Plumix.UI;
 using Plumix.Widgets;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/placeholder_span.dart
 
@@ -139,5 +140,20 @@ public abstract class PlaceholderSpan : InlineSpan
     protected internal override void ComputeSemanticsInformation(List<InlineSpanSemanticsInformation> collector)
     {
         collector.Add(InlineSpanSemanticsInformation.Placeholder);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.Add(new EnumProperty<PlaceholderAlignment>(
+            "alignment",
+            Alignment,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<TextBaseline>(
+            "baseline",
+            Baseline,
+            defaultValue: DiagnosticsDefaults.NullValue));
     }
 }

@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 
 namespace Plumix.Rendering;
 
@@ -241,6 +242,18 @@ public sealed class RenderBackdropFilter : RenderProxyBox
             layer,
             childContext => base.Paint(childContext, offset));
         _layer = layer;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<ImageFilterConfig>(
+            "filterConfig",
+            FilterConfig,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<BlendMode>("blendMode", BlendMode));
+        properties.Add(new FlagProperty("enabled", Enabled, ifTrue: "enabled"));
     }
 }
 

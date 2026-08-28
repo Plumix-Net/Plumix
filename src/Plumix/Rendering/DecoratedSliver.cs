@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/decorated_sliver.dart
 
@@ -125,5 +126,13 @@ public sealed class RenderDecoratedSliver : RenderProxySliver
     {
         _painter?.Dispose();
         _painter = null;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(Decoration.ToDiagnosticsNode(name: "decoration"));
+        properties.Add(new DiagnosticsProperty<ImageConfiguration>("configuration", Configuration));
     }
 }

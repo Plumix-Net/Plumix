@@ -1267,4 +1267,42 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         _mixin1.DefaultHitTestChildren(result, position);
 
     #endregion
+
+    /// <inheritdoc />
+    public override string ToStringShort()
+    {
+        string header = base.ToStringShort();
+        if (_hasOverflow)
+        {
+            header += " OVERFLOWING";
+        }
+
+        return header;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<Axis>("direction", Direction));
+        properties.Add(new EnumProperty<MainAxisAlignment>("mainAxisAlignment", MainAxisAlignment));
+        properties.Add(new EnumProperty<MainAxisSize>("mainAxisSize", MainAxisSize));
+        properties.Add(new EnumProperty<CrossAxisAlignment>("crossAxisAlignment", CrossAxisAlignment));
+        properties.Add(new EnumProperty<TextDirection>(
+            "textDirection",
+            TextDirection,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<VerticalDirection>(
+            "verticalDirection",
+            VerticalDirection,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<TextBaseline>(
+            "textBaseline",
+            TextBaseline,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("spacing", Spacing, defaultValue: DiagnosticsDefaults.NullValue));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _mixin1.DebugDescribeChildren();
 }

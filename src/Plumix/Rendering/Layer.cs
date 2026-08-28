@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Gestures;
 using Plumix.UI;
+using Plumix.Foundation;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/layer.dart (approximate)
 
@@ -30,7 +31,7 @@ public sealed class AnnotationResult<T> where T : notnull
     }
 }
 
-public abstract class Layer
+public abstract class Layer : DiagnosticableTree
 {
     [ThreadStatic]
     private static BackdropCapture? _magnifierBackdrop;
@@ -241,6 +242,22 @@ public abstract class Layer
         FindAnnotations(result, localPosition, onlyFirst: false);
         return result;
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<object>(
+            "creator",
+            DebugCreator,
+            defaultValue: DiagnosticsDefaults.NullValue,
+            level: DiagnosticLevel.Debug));
+    }
+
+    /// The object responsible for creating this layer.
+    ///
+    /// Used in debug messages.
+    public object? DebugCreator { get; set; }
 }
 
 public class ContainerLayer : Layer
@@ -330,6 +347,18 @@ public class ContainerLayer : Layer
         }
 
         return false;
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        var children = new List<DiagnosticsNode>();
+        for (int index = 0; index < _children.Count; index++)
+        {
+            children.Add(_children[index].ToDiagnosticsNode(name: $"child {index + 1}"));
+        }
+
+        return children;
     }
 }
 
@@ -449,6 +478,14 @@ public sealed class LeaderLayer : ContainerLayer
     {
         return base.FindAnnotations(result, localPosition - Offset, onlyFirst);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Point>("offset", Offset));
+        properties.Add(new DiagnosticsProperty<LayerLink>("link", Link));
+    }
 }
 
 /// <summary>
@@ -523,6 +560,17 @@ public sealed class FollowerLayer : ContainerLayer
         Point transformedPosition = MatrixUtils.TransformPoint(inverse, localPosition - UnlinkedOffset);
         return base.FindAnnotations(result, transformedPosition, onlyFirst);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<LayerLink>("link", Link));
+        properties.Add(new TransformProperty(
+            "transform",
+            GetLastTransform(),
+            defaultValue: DiagnosticsDefaults.NullValue));
+    }
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart (AnnotatedRegionLayer).
@@ -576,6 +624,16 @@ public sealed class AnnotatedRegionLayer<T> : ContainerLayer where T : notnull
         }
 
         return isAbsorbed;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<T>("value", Value));
+        properties.Add(new DiagnosticsProperty<Size?>("size", Size, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<Point>("offset", Offset, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<bool>("opaque", Opaque, defaultValue: false));
     }
 }
 
@@ -773,6 +831,13 @@ public class OffsetLayer : ContainerLayer
     {
         return base.FindAnnotations(result, localPosition, onlyFirst);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Point>("offset", Offset));
+    }
 }
 
 public sealed class OpacityOffsetLayer : OffsetLayer
@@ -824,6 +889,13 @@ public sealed class ColorFilterLayer : ContainerLayer
         _filteredBitmap = null;
         base.Detach();
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<ColorFilter>("colorFilter", ColorFilter));
+    }
 }
 
 public sealed class ImageFilterLayer : OffsetLayer
@@ -857,6 +929,13 @@ public sealed class ImageFilterLayer : OffsetLayer
         _filteredBitmap?.Dispose();
         _filteredBitmap = null;
         base.Detach();
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<ImageFilter>("imageFilter", ImageFilter));
     }
 }
 
@@ -951,6 +1030,14 @@ public sealed class BackdropFilterLayer : ContainerLayer
         Backdrop = null;
         base.Detach();
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<ImageFilter>("filter", ImageFilter));
+        properties.Add(new EnumProperty<BlendMode>("blendMode", BlendMode));
+    }
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart (ShaderMaskLayer)
@@ -987,6 +1074,15 @@ public sealed class ShaderMaskLayer : ContainerLayer
         _maskedBitmap?.Dispose();
         _maskedBitmap = null;
         base.Detach();
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<IBrush>("shader", Shader));
+        properties.Add(new DiagnosticsProperty<Rect>("maskRect", MaskRect));
+        properties.Add(new EnumProperty<BlendMode>("blendMode", BlendMode));
     }
 }
 
@@ -1030,6 +1126,13 @@ public sealed class TransformOffsetLayer : OffsetLayer
 
         Point transformedPosition = MatrixUtils.TransformPoint(inverse, localPosition - Offset);
         return FindAnnotationsInChildren(result, transformedPosition, onlyFirst);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new TransformProperty("transform", Transform));
     }
 }
 
@@ -1112,6 +1215,14 @@ public sealed class ClipRectLayer : ContainerLayer
         return ContainsRect(ClipRect, localPosition)
             && base.FindAnnotations(result, localPosition, onlyFirst);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Rect>("clipRect", ClipRect));
+        properties.Add(new DiagnosticsProperty<Clip>("clipBehavior", ClipBehavior));
+    }
 }
 
 public sealed class ClipRRectLayer : ContainerLayer
@@ -1136,6 +1247,14 @@ public sealed class ClipRRectLayer : ContainerLayer
     {
         return ContainsRoundedRect(ClipRect, BorderRadius, localPosition)
             && base.FindAnnotations(result, localPosition, onlyFirst);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Rect>("clipRect", ClipRect));
+        properties.Add(new DiagnosticsProperty<BorderRadius>("borderRadius", BorderRadius));
     }
 }
 
@@ -1199,6 +1318,13 @@ public sealed class TransformLayer : ContainerLayer
 
         return base.FindAnnotations(result, MatrixUtils.TransformPoint(inverse, localPosition), onlyFirst);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new TransformProperty("transform", Transform));
+    }
 }
 
 public sealed class OpacityLayer : ContainerLayer
@@ -1217,6 +1343,13 @@ public sealed class OpacityLayer : ContainerLayer
         {
             base.AddToScene(context, offset);
         }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("opacity", Opacity));
     }
 }
 

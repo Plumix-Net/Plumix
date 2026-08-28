@@ -9,6 +9,9 @@ namespace Plumix.Rendering;
 public sealed class MultiChildLayoutParentData : ContainerBoxParentData<RenderBox>
 {
     public object? Id { get; set; }
+
+    /// <inheritdoc />
+    public override string ToString() => $"{base.ToString()}; id={Id}";
 }
 
 /// <summary>Controls the size, constraints, and positions of a custom multi-child layout.</summary>
@@ -291,4 +294,7 @@ public sealed class RenderCustomMultiChildLayoutBox : RenderBox,
     {
         Remove((RenderBox)child);
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }

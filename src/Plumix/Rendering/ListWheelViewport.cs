@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Avalonia;
 using Plumix.Gestures;
 using Plumix.UI;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/list_wheel_viewport.dart
 
@@ -1248,4 +1249,7 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
     public RenderBox? ChildAfter(RenderBox child) => _mixin1.ChildAfter(child);
 
     #endregion
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _mixin1.DebugDescribeChildren();
 }

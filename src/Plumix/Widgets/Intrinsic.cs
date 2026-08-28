@@ -146,6 +146,14 @@ public sealed class RenderIntrinsicWidth : RenderProxyBox
                 "Render intrinsic steps must be positive and finite.");
         }
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("stepWidth", StepWidth));
+        properties.Add(new DoubleProperty("stepHeight", StepHeight));
+    }
 }
 
 public sealed class RenderIntrinsicHeight : RenderProxyBox

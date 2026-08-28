@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Painting;
 using Plumix.UI;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/wrap.dart
 
@@ -415,4 +416,27 @@ public sealed class RenderWrap : RenderBox,
             }
         }
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<Axis>("direction", Direction));
+        properties.Add(new EnumProperty<WrapAlignment>("alignment", Alignment));
+        properties.Add(new DoubleProperty("spacing", Spacing));
+        properties.Add(new EnumProperty<WrapAlignment>("runAlignment", RunAlignment));
+        properties.Add(new DoubleProperty("runSpacing", RunSpacing));
+        properties.Add(new DoubleProperty("crossAxisAlignment", RunSpacing));
+        properties.Add(new EnumProperty<TextDirection>(
+            "textDirection",
+            TextDirection,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<VerticalDirection>(
+            "verticalDirection",
+            VerticalDirection,
+            defaultValue: VerticalDirection.Down));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }

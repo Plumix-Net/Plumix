@@ -327,4 +327,7 @@ public sealed class RenderOverflowBar : RenderBox,
     void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after) => Insert((RenderBox)child, after as RenderBox);
     void IRenderObjectContainer.Move(RenderObject child, RenderObject? after) => Move((RenderBox)child, after as RenderBox);
     void IRenderObjectContainer.Remove(RenderObject child) => Remove((RenderBox)child);
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }

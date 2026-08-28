@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using Plumix.Painting;
 
 namespace Plumix.Material;
 
@@ -101,21 +102,21 @@ public sealed partial record BottomSheetThemeData
     {
         ArgumentNullException.ThrowIfNull(properties);
         object nullDefault = DiagnosticsDefaults.NullValue;
-        properties.Add(new DiagnosticsProperty<Color?>(
+        properties.Add(new ColorProperty(
             "backgroundColor",
             BackgroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<Color?>(
+        properties.Add(new ColorProperty(
             "surfaceTintColor",
             SurfaceTintColor,
             defaultValue: nullDefault));
         properties.Add(new DoubleProperty("elevation", Elevation, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<Color?>(
+        properties.Add(new ColorProperty(
             "modalBackgroundColor",
             ModalBackgroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<Color?>("shadowColor", ShadowColor, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<Color?>(
+        properties.Add(new ColorProperty("shadowColor", ShadowColor, defaultValue: nullDefault));
+        properties.Add(new ColorProperty(
             "modalBarrierColor",
             ModalBarrierColor,
             defaultValue: nullDefault));

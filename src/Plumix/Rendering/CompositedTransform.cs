@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Gestures;
 using Plumix.UI;
+using Plumix.Foundation;
 
 namespace Plumix.Rendering;
 
@@ -88,6 +89,13 @@ public sealed class RenderLeaderLayer : RenderProxyBox
         }
 
         ctx.PushLayer(_leaderLayer, childContext => base.Paint(childContext, default));
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<LayerLink>("link", Link));
     }
 }
 
@@ -313,5 +321,15 @@ public sealed class RenderFollowerLayer : RenderProxyBox
     {
         MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<LayerLink>("link", Link));
+        properties.Add(new DiagnosticsProperty<bool>("showWhenUnlinked", ShowWhenUnlinked));
+        properties.Add(new DiagnosticsProperty<Vector>("offset", Offset));
+        properties.Add(new TransformProperty("current transform matrix", GetCurrentTransform()));
     }
 }

@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Gestures;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart
 
@@ -183,5 +184,38 @@ public class RenderSemanticsGestureHandler : RenderProxyBox
             LocalPosition: localCenter,
             Delta: new Point(0.0, primaryDelta),
             PrimaryDelta: primaryDelta));
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        var gestures = new List<string>();
+        if (OnTap is not null)
+        {
+            gestures.Add("tap");
+        }
+
+        if (OnLongPress is not null)
+        {
+            gestures.Add("long press");
+        }
+
+        if (OnHorizontalDragUpdate is not null)
+        {
+            gestures.Add("horizontal scroll");
+        }
+
+        if (OnVerticalDragUpdate is not null)
+        {
+            gestures.Add("vertical scroll");
+        }
+
+        if (gestures.Count == 0)
+        {
+            gestures.Add("<none>");
+        }
+
+        properties.Add(new IterableProperty<string>("gestures", gestures));
     }
 }

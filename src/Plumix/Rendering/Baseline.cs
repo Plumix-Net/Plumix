@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.UI;
+using Plumix.Foundation;
 
 namespace Plumix.Rendering;
 
@@ -66,6 +67,14 @@ public sealed class RenderBaseline : RenderProxyBox
         double top = _baseline - childBaseline;
         Size = Constraints.Constrain(new Size(Child.Size.Width, top + Child.Size.Height));
         ((BoxParentData)Child.parentData!).offset = new Point(0, top);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("baseline", Baseline));
+        properties.Add(new EnumProperty<TextBaseline>("baselineType", BaselineType));
     }
 }
 

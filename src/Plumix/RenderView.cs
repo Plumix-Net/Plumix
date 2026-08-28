@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.Foundation;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/view.dart (approximate)
 
@@ -114,4 +115,7 @@ public sealed class RenderView : RenderBox
         _layer = rootLayer;
         MarkNeedsPaint();
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
 }

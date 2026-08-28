@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.UI;
+using Plumix.Foundation;
 
 namespace Plumix.Rendering;
 
@@ -463,6 +464,9 @@ internal sealed class RenderOverlayTheater : RenderBox,
                || offset.X + child.Size.Width > Size.Width
                || offset.Y + child.Size.Height > Size.Height;
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }
 
 internal sealed class RenderOverlayPortalLayoutBuilder : RenderProxyBox

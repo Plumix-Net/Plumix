@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.UI;
+using Plumix.Foundation;
 
 namespace Plumix.Rendering;
 
@@ -195,5 +196,31 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
         }
 
         return extent;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
+        properties.Add(new IntProperty("index", Index));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        var children = new List<DiagnosticsNode>();
+        int i = 0;
+        RenderBox? child = _container.FirstChild;
+        while (child is not null)
+        {
+            children.Add(child.ToDiagnosticsNode(
+                name: $"child {i + 1}",
+                style: i != Index ? DiagnosticsTreeStyle.Offstage : null));
+            child = ((IndexedStackParentData)child.parentData!).nextSibling;
+            i += 1;
+        }
+
+        return children;
     }
 }

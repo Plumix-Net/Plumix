@@ -537,4 +537,11 @@ public abstract class RenderBox : RenderObject
     //     public override string eventLabel(RenderBox renderBox)
     //         => '${renderBox.runtimeType}.getDryBaseline';
     // }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Size?>("size", _size, missingIfNull: true));
+    }
 }

@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/matrix_utils.dart
@@ -312,4 +313,48 @@ public static class MatrixUtils
 
     private static Rect FromLtrb(double left, double top, double right, double bottom) =>
         new(new Point(left, top), new Point(right, bottom));
+}
+
+/// <summary>
+/// Property which handles [Matrix4] that represent transforms.
+/// </summary>
+public sealed class TransformProperty : DiagnosticsProperty<Matrix4>
+{
+    /// Create a diagnostics property for [Matrix4] objects.
+    public TransformProperty(
+        string name,
+        Matrix4? value,
+        bool showName = true,
+        object? defaultValue = null,
+        DiagnosticLevel level = DiagnosticLevel.Info)
+        : base(name, value, showName: showName, defaultValue: defaultValue, level: level)
+    {
+    }
+
+    /// <inheritdoc />
+    public override string ValueToString(TextTreeConfiguration? parentConfiguration = null)
+    {
+        Matrix4? value = TypedValue;
+        if (parentConfiguration is not null && !parentConfiguration.LineBreakProperties && value is not null)
+        {
+            // Format the value on a single line to be compatible with the parent's style.
+            string[] values =
+            [
+                RowToString(value, 0),
+                RowToString(value, 1),
+                RowToString(value, 2),
+                RowToString(value, 3),
+            ];
+            return $"[{string.Join("; ", values)}]";
+        }
+
+        return string.Join("\n", MatrixUtils.DebugDescribeTransform(value));
+    }
+
+    private static string RowToString(Matrix4 transform, int row)
+    {
+        return string.Join(
+            ",",
+            Enumerable.Range(0, 4).Select(col => DoubleProperty.FormatDouble(transform.Entry(row, col))));
+    }
 }

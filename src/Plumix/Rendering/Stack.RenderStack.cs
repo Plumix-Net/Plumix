@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.UI;
+using Plumix.Foundation;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/stack.dart (approximate)
 
@@ -29,6 +30,49 @@ public class StackParentData : ContainerBoxParentData<RenderBox>
         || Bottom.HasValue
         || Width.HasValue
         || Height.HasValue;
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        var values = new List<string>();
+        if (Top is not null)
+        {
+            values.Add($"top={DoubleProperty.FormatDouble(Top)}");
+        }
+
+        if (Right is not null)
+        {
+            values.Add($"right={DoubleProperty.FormatDouble(Right)}");
+        }
+
+        if (Bottom is not null)
+        {
+            values.Add($"bottom={DoubleProperty.FormatDouble(Bottom)}");
+        }
+
+        if (Left is not null)
+        {
+            values.Add($"left={DoubleProperty.FormatDouble(Left)}");
+        }
+
+        if (Width is not null)
+        {
+            values.Add($"width={DoubleProperty.FormatDouble(Width)}");
+        }
+
+        if (Height is not null)
+        {
+            values.Add($"height={DoubleProperty.FormatDouble(Height)}");
+        }
+
+        if (values.Count == 0)
+        {
+            values.Add("not positioned");
+        }
+
+        values.Add(base.ToString());
+        return string.Join("; ", values);
+    }
 }
 
 public sealed class RenderStack : RenderBox,
@@ -345,4 +389,16 @@ public sealed class RenderStack : RenderBox,
                || offset.X + child.Size.Width > Size.Width
                || offset.Y + child.Size.Height > Size.Height;
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
+        properties.Add(new EnumProperty<StackFit>("fit", Fit));
+        properties.Add(new EnumProperty<Clip>("clipBehavior", ClipBehavior, defaultValue: Clip.HardEdge));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }

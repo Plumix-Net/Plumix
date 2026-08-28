@@ -2,6 +2,7 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
+using Plumix.Painting;
 
 namespace Plumix.Material;
 
@@ -111,7 +112,7 @@ public sealed record BottomNavigationBarThemeData(
     {
         ArgumentNullException.ThrowIfNull(properties);
         object nullDefault = DiagnosticsDefaults.NullValue;
-        properties.Add(new DiagnosticsProperty<Color?>("backgroundColor", BackgroundColor, defaultValue: nullDefault));
+        properties.Add(new ColorProperty("backgroundColor", BackgroundColor, defaultValue: nullDefault));
         properties.Add(new DoubleProperty("elevation", Elevation, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<IconThemeData?>(
             "selectedIconTheme",
@@ -121,11 +122,11 @@ public sealed record BottomNavigationBarThemeData(
             "unselectedIconTheme",
             UnselectedIconTheme,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<Color?>(
+        properties.Add(new ColorProperty(
             "selectedItemColor",
             SelectedItemColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<Color?>(
+        properties.Add(new ColorProperty(
             "unselectedItemColor",
             UnselectedItemColor,
             defaultValue: nullDefault));

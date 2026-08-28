@@ -272,12 +272,15 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/StatefulBuilderLookupBoundaryTests.cs`
   - `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs`
   - `src/Plumix.Tests/DiagnosticsTests.cs`
+  - `src/Plumix.Tests/RenderObjectDiagnosticsTests.cs`
 
 ### Core Layout/Paint/Compositing
 
 - Goal: box constraints, relayout boundaries, repaint boundaries, layers.
 - Read First:
   - `src/Plumix/Rendering/Object.RenderObject.cs`
+  - `src/Plumix/Rendering/Object.RenderObject.Diagnostics.cs` (render-tree dumps: `ToStringDeep`,
+    `DebugFillProperties`, `DebugDescribeChildren`; `PipelineOwner.DebugDumpRenderTree` prints one)
   - `src/Plumix/Rendering/Box.RenderBox.cs`
   - `src/Plumix/Rendering/Proxy.RenderBox.cs`
   - `src/Plumix/Widgets/Basic.cs`

@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.UI;
+using Plumix.Painting;
 
 namespace Plumix.Rendering;
 
@@ -448,4 +449,40 @@ public sealed class RenderImage : RenderBox
     }
 
     private void HandleOpacityChanged() => MarkNeedsPaint();
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<IImage>("image", Image));
+        properties.Add(new DoubleProperty("width", Width, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("height", Height, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DoubleProperty("scale", Scale, defaultValue: 1.0));
+        properties.Add(new ColorProperty("color", Color, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<IValueListenable<double>>(
+            "opacity",
+            Opacity,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<BitmapBlendingMode>(
+            "colorBlendMode",
+            ColorBlendMode,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<BoxFit>("fit", Fit, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>(
+            "alignment",
+            Alignment,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<ImageRepeat>("repeat", Repeat, defaultValue: ImageRepeat.NoRepeat));
+        properties.Add(new DiagnosticsProperty<Rect?>(
+            "centerSlice",
+            CenterSlice,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new FlagProperty("matchTextDirection", MatchTextDirection, ifTrue: "match text direction"));
+        properties.Add(new EnumProperty<TextDirection>(
+            "textDirection",
+            TextDirection,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<bool>("invertColors", InvertColors));
+        properties.Add(new EnumProperty<FilterQuality>("filterQuality", FilterQuality));
+    }
 }

@@ -1,6 +1,7 @@
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.Painting;
 
 namespace Plumix.Widgets;
 
@@ -218,7 +219,7 @@ public class IconThemeData : Diagnosticable, IEquatable<IconThemeData>
         properties.Add(new DoubleProperty("weight", Weight, defaultValue: nullDefault));
         properties.Add(new DoubleProperty("grade", Grade, defaultValue: nullDefault));
         properties.Add(new DoubleProperty("opticalSize", OpticalSize, defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<Color?>("color", Color, defaultValue: nullDefault));
+        properties.Add(new ColorProperty("color", Color, defaultValue: nullDefault));
         properties.Add(new DoubleProperty("opacity", Opacity, defaultValue: nullDefault));
         properties.Add(new IterableProperty<Shadow>("shadows", Shadows, defaultValue: nullDefault));
         properties.Add(new DiagnosticsProperty<bool?>(

@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Widgets;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/sliver_persistent_header.dart
 
@@ -250,6 +251,16 @@ public abstract class RenderSliverPersistentHeader : RenderSliverSingleBoxAdapte
     }
 
     private static bool Close(double a, double b) => Math.Abs(a - b) <= 0.0001;
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(DoubleProperty.Lazy("maxExtent", () => MaxExtent));
+        properties.Add(DoubleProperty.Lazy(
+            "child position",
+            () => Child is null ? null : ChildMainAxisPosition(Child)));
+    }
 }
 
 /// <summary>A sliver with a <see cref="RenderBox"/> child which scrolls normally.</summary>
@@ -641,6 +652,13 @@ public class RenderSliverFloatingPersistentHeader : RenderSliverPersistentHeader
         _controller.RemoveListener(HandleAnimationTick);
         _controller.Dispose();
         _controller = null;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("effective scroll offset", _effectiveScrollOffset));
     }
 }
 

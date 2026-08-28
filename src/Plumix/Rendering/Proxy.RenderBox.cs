@@ -144,6 +144,9 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
         double? childBaseline = _child.GetDistanceToBaseline(baseline, onlyReal: true);
         return childBaseline + childParentData.offset.Y;
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart
@@ -189,6 +192,16 @@ public abstract class RenderProxyBoxWithHitTestBehavior : RenderProxyBox
     {
         return Behavior == HitTestBehavior.Opaque;
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<HitTestBehavior>(
+            "behavior",
+            Behavior,
+            defaultValue: DiagnosticsDefaults.NullValue));
+    }
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderMetaData)
@@ -203,6 +216,13 @@ public sealed class RenderMetaData : RenderProxyBoxWithHitTestBehavior
     }
 
     public object? MetaData { get; set; }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<object>("metaData", MetaData));
+    }
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderIndexedSemantics)
@@ -237,6 +257,13 @@ public sealed class RenderIndexedSemantics : RenderProxyBox
     {
         base.DescribeSemanticsConfiguration(configuration);
         configuration.IndexInParent = _index;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<int>("index", Index));
     }
 }
 
@@ -331,6 +358,13 @@ public sealed class RenderExcludeSemantics : RenderProxyBox
             base.VisitChildrenForSemantics(visitor);
         }
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("excluding", Excluding));
+    }
 }
 
 public sealed class RenderBlockSemantics : RenderProxyBox
@@ -362,6 +396,13 @@ public sealed class RenderBlockSemantics : RenderProxyBox
     {
         base.DescribeSemanticsConfiguration(configuration);
         configuration.IsBlockingSemanticsOfPreviouslyPaintedNodes = _blocking;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("blocking", Blocking));
     }
 }
 
@@ -455,6 +496,13 @@ public class RenderConstrainedBox : RenderProxyBox
     protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
     {
         return Child?.GetDryBaseline(_additionalConstraints.Enforce(constraints), baseline);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<BoxConstraints>("additionalConstraints", AdditionalConstraints));
     }
 }
 
@@ -728,6 +776,29 @@ public sealed class RenderConstraintsTransformBox : RenderProxyBox
             || child.Right > container.Right + tolerance
             || child.Bottom > container.Bottom + tolerance;
     }
+
+    /// <inheritdoc />
+    public override string ToStringShort()
+    {
+        string header = base.ToStringShort();
+        if (_isOverflowing)
+        {
+            header += " OVERFLOWING";
+        }
+
+        return header;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new EnumProperty<TextDirection>(
+            "textDirection",
+            TextDirection,
+            defaultValue: DiagnosticsDefaults.NullValue));
+    }
 }
 
 public sealed class RenderLimitedBox : RenderProxyBox
@@ -805,6 +876,14 @@ public sealed class RenderLimitedBox : RenderProxyBox
         }
 
         return value;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("maxWidth", MaxWidth, defaultValue: double.PositiveInfinity));
+        properties.Add(new DoubleProperty("maxHeight", MaxHeight, defaultValue: double.PositiveInfinity));
     }
 }
 
@@ -1001,6 +1080,18 @@ public sealed class RenderConstrainedOverflowBox : RenderProxyBox
                 $"{minName} cannot be greater than {maxName}.");
         }
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
+        properties.Add(new DoubleProperty("minWidth", MinWidth, ifNull: "use parent minWidth constraint"));
+        properties.Add(new DoubleProperty("maxWidth", MaxWidth, ifNull: "use parent maxWidth constraint"));
+        properties.Add(new DoubleProperty("minHeight", MinHeight, ifNull: "use parent minHeight constraint"));
+        properties.Add(new DoubleProperty("maxHeight", MaxHeight, ifNull: "use parent maxHeight constraint"));
+        properties.Add(new EnumProperty<OverflowBoxFit>("fit", Fit));
+    }
 }
 
 public sealed class RenderSizedOverflowBox : RenderProxyBox
@@ -1058,6 +1149,13 @@ public sealed class RenderSizedOverflowBox : RenderProxyBox
 
         Child.Layout(Constraints, parentUsesSize: true);
         ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, Child.Size);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
     }
 }
 
@@ -1126,6 +1224,29 @@ public sealed class RenderOffstage : RenderProxyBox
         }
 
         base.VisitChildrenForSemantics(visitor);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("offstage", Offstage));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        if (Child is null)
+        {
+            return [];
+        }
+
+        return
+        [
+            Child.ToDiagnosticsNode(
+                name: "child",
+                style: Offstage ? DiagnosticsTreeStyle.Offstage : DiagnosticsTreeStyle.Sparse),
+        ];
     }
 }
 
@@ -1196,6 +1317,17 @@ public sealed class RenderIgnorePointer : RenderProxyBox
     {
         base.DescribeSemanticsConfiguration(configuration);
         configuration.IsBlockingUserActions = _ignoring && (_ignoringSemantics ?? true);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("ignoring", _ignoring));
+        properties.Add(new DiagnosticsProperty<bool?>(
+            "ignoringSemantics",
+            _ignoringSemantics,
+            description: _ignoringSemantics is null ? null : $"implicitly {_ignoringSemantics}"));
     }
 }
 
@@ -1282,6 +1414,17 @@ public sealed class RenderAbsorbPointer : RenderProxyBox
         base.DescribeSemanticsConfiguration(configuration);
         configuration.IsBlockingUserActions = _absorbing && (_ignoringSemantics ?? true);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("absorbing", Absorbing));
+        properties.Add(new DiagnosticsProperty<bool?>(
+            "ignoringSemantics",
+            IgnoringSemantics,
+            description: IgnoringSemantics is null ? null : $"implicitly {IgnoringSemantics}"));
+    }
 }
 
 public sealed class RenderPadding : RenderProxyBox
@@ -1364,6 +1507,13 @@ public sealed class RenderPadding : RenderProxyBox
     {
         double? childBaseline = Child?.GetDryBaseline(constraints.Deflate(Padding), baseline);
         return childBaseline.HasValue ? childBaseline.Value + Padding.Top : null;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Thickness>("padding", Padding));
     }
 }
 
@@ -1483,6 +1633,15 @@ public sealed class RenderAlign : RenderProxyBox
 
         return value.Value;
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
+        properties.Add(new DoubleProperty("widthFactor", _widthFactor, ifNull: "expand"));
+        properties.Add(new DoubleProperty("heightFactor", _heightFactor, ifNull: "expand"));
+    }
 }
 
 public sealed class RenderAspectRatio : RenderProxyBox
@@ -1581,6 +1740,13 @@ public sealed class RenderAspectRatio : RenderProxyBox
         }
 
         return value;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("aspectRatio", AspectRatio));
     }
 }
 
@@ -1705,6 +1871,15 @@ public sealed class RenderFractionallySizedBox : RenderProxyBox
         }
 
         return value.Value;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
+        properties.Add(new DoubleProperty("widthFactor", _widthFactor, ifNull: "pass-through"));
+        properties.Add(new DoubleProperty("heightFactor", _heightFactor, ifNull: "pass-through"));
     }
 }
 
@@ -1901,6 +2076,14 @@ public sealed class RenderFittedBox : RenderProxyBox
             return _hasVisualOverflow;
         }
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<BoxFit>("fit", Fit));
+        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
+    }
 }
 
 public sealed class RenderDecoratedBox : RenderProxyBox
@@ -2041,6 +2224,14 @@ public sealed class RenderDecoratedBox : RenderProxyBox
         _painter?.Dispose();
         _painter = null;
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(_decoration.ToDiagnosticsNode(name: "decoration"));
+        properties.Add(new DiagnosticsProperty<ImageConfiguration>("configuration", Configuration));
+    }
 }
 
 public class RenderOpacity : RenderProxyBox
@@ -2124,6 +2315,17 @@ public class RenderOpacity : RenderProxyBox
         {
             base.VisitChildrenForSemantics(visitor);
         }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("opacity", Opacity));
+        properties.Add(new FlagProperty(
+            "alwaysIncludeSemantics",
+            AlwaysIncludeSemantics,
+            ifTrue: "alwaysIncludeSemantics"));
     }
 }
 
@@ -2372,6 +2574,16 @@ public sealed class RenderTransform : RenderProxyBox
             position - childParentData.offset,
             (hitResult, hitPosition) => Child.HitTest(hitResult, hitPosition));
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new TransformProperty("transform matrix", _transform));
+        properties.Add(new DiagnosticsProperty<Point?>("origin", Origin));
+        properties.Add(new DiagnosticsProperty<Alignment?>("alignment", Alignment));
+        properties.Add(new DiagnosticsProperty<bool>("transformHitTests", TransformHitTests));
+    }
 }
 
 // Dart parity sources:
@@ -2446,6 +2658,14 @@ public sealed class RenderFractionalTranslation : RenderProxyBox
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
         transform.TranslateByDouble(Translation.X * Size.Width, Translation.Y * Size.Height, 0, 1);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Vector>("translation", Translation));
+        properties.Add(new DiagnosticsProperty<bool>("transformHitTests", TransformHitTests));
     }
 }
 
@@ -3009,6 +3229,23 @@ public class RenderPointerListener : RenderProxyBox
                 OnPointerSignal?.Invoke(signalEvent);
                 break;
         }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new FlagsSummary<Delegate>(
+            "listeners",
+            [
+                new KeyValuePair<string, Delegate?>("down", OnPointerDown),
+                new KeyValuePair<string, Delegate?>("move", OnPointerMove),
+                new KeyValuePair<string, Delegate?>("up", OnPointerUp),
+                new KeyValuePair<string, Delegate?>("hover", OnPointerHover),
+                new KeyValuePair<string, Delegate?>("cancel", OnPointerCancel),
+                new KeyValuePair<string, Delegate?>("signal", OnPointerSignal),
+            ],
+            ifEmpty: "<none>"));
     }
 }
 

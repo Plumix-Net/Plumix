@@ -389,4 +389,7 @@ public sealed class RenderFlow : RenderBox,
             owner.PaintChild(index, transform, opacity);
         }
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }

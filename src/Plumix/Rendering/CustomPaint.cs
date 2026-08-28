@@ -131,4 +131,16 @@ public sealed class RenderCustomPaint : RenderProxyBox
         ForegroundPainter?.Repaint?.RemoveListener(MarkNeedsPaint);
         base.OnDetach();
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new MessageProperty("painter", $"{Painter}"));
+        properties.Add(new MessageProperty(
+            "foregroundPainter",
+            $"{ForegroundPainter}",
+            level: ForegroundPainter is not null ? DiagnosticLevel.Info : DiagnosticLevel.Fine));
+        properties.Add(new DiagnosticsProperty<Size>("preferredSize", PreferredSize, defaultValue: default(Size)));
+        }
 }

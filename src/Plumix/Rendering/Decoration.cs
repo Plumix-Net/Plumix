@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.UI;
+using Plumix.Foundation;
+using Plumix.Painting;
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/box_decoration.dart
 // Dart parity source: flutter/packages/flutter/lib/src/painting/decoration.dart
@@ -29,9 +31,22 @@ public enum BorderStyle
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/decoration.dart
-public abstract record Decoration
+public abstract record Decoration : IDiagnosticable
 {
     public abstract BoxPainter CreateBoxPainter(Action? onChanged = null);
+
+    /// <inheritdoc />
+    public virtual string ToStringShort() => Diagnostics.ObjectRuntimeType(this);
+
+    /// <inheritdoc />
+    public virtual DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null)
+        => new DiagnosticableNode<IDiagnosticable>(name, this, style);
+
+    /// <inheritdoc />
+    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+    }
 
     /// Returns the insets to apply when using this decoration on a box that has contents.
     public virtual EdgeInsetsGeometry Padding => EdgeInsetsGeometry.Zero;
@@ -718,6 +733,29 @@ public sealed record ShapeDecoration(
     {
         return HashCode.Combine(Shape, Color, Gradient, Image, ShadowList.GetHashCode(Shadows));
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.DefaultDiagnosticsTreeStyle = DiagnosticsTreeStyle.Whitespace;
+        properties.Add(new ColorProperty("color", Color, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<Gradient>(
+            "gradient",
+            Gradient,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<DecorationImage>(
+            "image",
+            Image,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new IterableProperty<BoxShadow>(
+            "shadows",
+            Shadows,
+            defaultValue: DiagnosticsDefaults.NullValue,
+            style: DiagnosticsTreeStyle.Whitespace));
+        properties.Add(new DiagnosticsProperty<ShapeBorder>("shape", Shape));
+    }
 }
 
 internal sealed class ShapeDecorationPainter : BoxPainter
@@ -955,6 +993,39 @@ public sealed record BoxDecoration(
     private static BorderRadius? LerpBorderRadius(BorderRadius? a, BorderRadius? b, double t)
     {
         return Plumix.Rendering.BorderRadius.Lerp(a, b, t);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.DefaultDiagnosticsTreeStyle = DiagnosticsTreeStyle.Whitespace;
+        properties.EmptyBodyDescription = "<no decorations specified>";
+
+        properties.Add(new ColorProperty("color", Color, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<DecorationImage>(
+            "image",
+            Image,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<BoxBorder>(
+            "border",
+            Border,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<BorderRadius?>(
+            "borderRadius",
+            BorderRadius,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new IterableProperty<BoxShadow>(
+            "boxShadow",
+            BoxShadows,
+            defaultValue: DiagnosticsDefaults.NullValue,
+            style: DiagnosticsTreeStyle.Whitespace));
+        properties.Add(new DiagnosticsProperty<Gradient>(
+            "gradient",
+            Gradient,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new EnumProperty<BoxShape>("shape", Shape, defaultValue: BoxShape.Rectangle));
     }
 }
 

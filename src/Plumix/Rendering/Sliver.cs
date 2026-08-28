@@ -1,5 +1,7 @@
+using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/sliver.dart (approximate)
@@ -58,13 +60,56 @@ public readonly record struct SliverGeometry(
     bool HasVisualOverflow = false,
     double PaintOrigin = 0,
     double MaxScrollObstructionExtent = 0,
-    double? CrossAxisExtent = null)
+    double? CrossAxisExtent = null) : IDiagnosticable
 {
     /// <summary>
     /// Whether this sliver should be painted. Flutter lets a sliver override the value; Plumix derives
     /// it from <see cref="PaintExtent"/>, which is Flutter's default (<c>visible: paintExtent &gt; 0</c>).
     /// </summary>
     public bool Visible => PaintExtent > 0.0;
+
+    /// <inheritdoc />
+    public string ToStringShort() => Diagnostics.ObjectRuntimeType(this);
+
+    /// <inheritdoc />
+    public DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null)
+        => new DiagnosticableNode<IDiagnosticable>(name, this, style);
+
+    /// <inheritdoc />
+    public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.Add(new DoubleProperty("scrollExtent", ScrollExtent));
+        if (PaintExtent > 0.0)
+        {
+            properties.Add(new DoubleProperty("paintExtent", PaintExtent, unit: Visible ? null : " but not painting"));
+        }
+        else if (PaintExtent == 0.0)
+        {
+            if (Visible)
+            {
+                properties.Add(new DoubleProperty("paintExtent", PaintExtent, unit: Visible ? null : " but visible"));
+            }
+
+            properties.Add(new FlagProperty("visible", Visible, ifFalse: "hidden"));
+        }
+        else
+        {
+            // Negative paintExtent!
+            properties.Add(new DoubleProperty("paintExtent", PaintExtent, tooltip: "!"));
+        }
+
+        properties.Add(new DoubleProperty("paintOrigin", PaintOrigin, defaultValue: 0.0));
+        properties.Add(new DoubleProperty("layoutExtent", LayoutExtent, defaultValue: PaintExtent));
+        properties.Add(new DoubleProperty("maxPaintExtent", MaxPaintExtent));
+        properties.Add(new DiagnosticsProperty<bool>(
+            "hasVisualOverflow",
+            HasVisualOverflow,
+            defaultValue: false));
+        properties.Add(new DoubleProperty("scrollOffsetCorrection", ScrollOffsetCorrection, defaultValue: 0.0));
+        properties.Add(new DoubleProperty("cacheExtent", CacheExtent, defaultValue: 0.0));
+    }
+
 }
 
 /// <summary>
@@ -109,6 +154,20 @@ public readonly record struct SliverGridGeometry(
             MinHeight: CrossAxisExtent,
             MaxHeight: CrossAxisExtent);
     }
+
+    /// <inheritdoc />
+    public override string ToString()
+    {
+        string[] properties =
+        [
+            $"scrollOffset: {ScrollOffset}",
+            $"crossAxisOffset: {CrossAxisOffset}",
+            $"mainAxisExtent: {MainAxisExtent}",
+            $"crossAxisExtent: {CrossAxisExtent}",
+        ];
+        return $"SliverGridGeometry({string.Join(", ", properties)})";
+    }
+
 }
 
 public abstract class SliverGridLayout
@@ -448,6 +507,9 @@ public interface IRenderSliverBoxChildManager
 public sealed class SliverPhysicalParentData : ContainerBoxParentData<RenderSliver>
 {
     public int? CrossAxisFlex { get; set; }
+
+    /// <inheritdoc />
+    public override string ToString() => $"paintOffset={offset}";
 }
 
 /// <summary>
@@ -461,6 +523,12 @@ public sealed class SliverLogicalParentData : ContainerBoxParentData<RenderSlive
     /// before the child has been laid out.
     /// </summary>
     public double? LayoutOffset { get; set; }
+
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"layoutOffset={(LayoutOffset is null
+            ? "None"
+            : LayoutOffset.Value.ToString("F1", CultureInfo.InvariantCulture))}";
 }
 
 public class SliverMultiBoxAdaptorParentData : ContainerBoxParentData<RenderBox>
@@ -469,11 +537,18 @@ public class SliverMultiBoxAdaptorParentData : ContainerBoxParentData<RenderBox>
     public double LayoutOffset { get; set; }
     public bool KeepAlive { get; set; }
     public bool KeptAlive { get; set; }
+
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"index={Index}; {(KeepAlive ? "keepAlive; " : string.Empty)}{base.ToString()}";
 }
 
 public sealed class SliverGridParentData : SliverMultiBoxAdaptorParentData
 {
     public double CrossAxisOffset { get; set; }
+
+    /// <inheritdoc />
+    public override string ToString() => $"crossAxisOffset={CrossAxisOffset}; {base.ToString()}";
 }
 
 public abstract class RenderSliver : RenderBox
@@ -678,6 +753,13 @@ public abstract class RenderSliver : RenderBox
         AxisDirection.Left => AxisDirection.Right,
         _ => direction,
     };
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<SliverGeometry>("geometry", Geometry));
+    }
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_sliver.dart
@@ -787,6 +869,9 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
         ((SliverPhysicalParentData)_child.parentData!).offset = new Point(0, 0);
         Geometry = _child.Geometry;
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
 }
 
 public sealed class RenderSliverIgnorePointer : RenderProxySliver
@@ -854,6 +939,17 @@ public sealed class RenderSliverIgnorePointer : RenderProxySliver
         base.DescribeSemanticsConfiguration(configuration);
         configuration.IsBlockingUserActions = _ignoring && (_ignoringSemantics ?? true);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("ignoring", Ignoring));
+        properties.Add(new DiagnosticsProperty<bool?>(
+            "ignoringSemantics",
+            IgnoringSemantics,
+            description: IgnoringSemantics is null ? null : $"implicitly {IgnoringSemantics}"));
+    }
 }
 
 public sealed class RenderSliverOffstage : RenderProxySliver
@@ -908,6 +1004,29 @@ public sealed class RenderSliverOffstage : RenderProxySliver
         {
             Geometry = default;
         }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("offstage", Offstage));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        if (Child is null)
+        {
+            return [];
+        }
+
+        return
+        [
+            Child.ToDiagnosticsNode(
+                name: "child",
+                style: Offstage ? DiagnosticsTreeStyle.Offstage : DiagnosticsTreeStyle.Sparse),
+        ];
     }
 }
 
@@ -1069,6 +1188,17 @@ public sealed class RenderSliverOpacity : RenderProxySliver
 
         return value;
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("opacity", Opacity));
+        properties.Add(new FlagProperty(
+            "alwaysIncludeSemantics",
+            AlwaysIncludeSemantics,
+            ifTrue: "alwaysIncludeSemantics"));
+    }
 }
 
 public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
@@ -1204,6 +1334,17 @@ public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
     {
         return double.IsNaN(value) ? 0.0 : Math.Clamp(value, 0.0, 1.0);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Animation<double>>("opacity", Opacity));
+        properties.Add(new FlagProperty(
+            "alwaysIncludeSemantics",
+            AlwaysIncludeSemantics,
+            ifTrue: "alwaysIncludeSemantics"));
+    }
 }
 
 public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObjectSingleChildContainer
@@ -1320,6 +1461,9 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
         var childParentData = (BoxParentData)Child.parentData!;
         visitor(Child);
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
 }
 
 public class RenderSliverToBoxAdapter : RenderSliverSingleBoxAdapter
@@ -1661,6 +1805,16 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
         double visibleEnd = Math.Min(to, scrollOffset + remainingPaintExtent);
         return Math.Max(0, visibleEnd - visibleStart);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Thickness>("padding", Padding));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
 }
 
 public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
@@ -1999,6 +2153,51 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
     public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
     {
         return _container.DefaultHitTestChildren(result, position);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(DiagnosticsNode.Message(
+            FirstChild is not null
+                ? $"currently live children: {IndexOf(FirstChild)} to {IndexOf(LastChild!)}"
+                : "no children current live"));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        var children = new List<DiagnosticsNode>();
+        if (FirstChild is not null)
+        {
+            RenderBox? child = FirstChild;
+            while (true)
+            {
+                var childParentData = (SliverMultiBoxAdaptorParentData)child!.parentData!;
+                children.Add(child.ToDiagnosticsNode(name: $"child with index {childParentData.Index}"));
+                if (ReferenceEquals(child, LastChild))
+                {
+                    break;
+                }
+
+                child = childParentData.nextSibling;
+            }
+        }
+
+        if (_keepAliveBucket.Count > 0)
+        {
+            List<int> indices = [.. _keepAliveBucket.Keys];
+            indices.Sort();
+            foreach (int index in indices)
+            {
+                children.Add(_keepAliveBucket[index].ToDiagnosticsNode(
+                    name: $"child with index {index} (kept alive but not laid out)",
+                    style: DiagnosticsTreeStyle.Offstage));
+            }
+        }
+
+        return children;
     }
 }
 

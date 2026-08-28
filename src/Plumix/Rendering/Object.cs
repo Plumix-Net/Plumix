@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
@@ -272,6 +273,35 @@ public class ContainerRenderObjectMixin<TChild, TParentData>(RenderObject owner)
     }
 
     public void AdoptChild(RenderObject child) => owner.AdoptChild(child);
+
+    /// Returns a list of [DiagnosticsNode] objects describing this node's children, named
+    /// `child 1`, `child 2` and so on.
+    ///
+    /// Dart's `ContainerRenderObjectMixin.debugDescribeChildren`; the render object holding this
+    /// mixin forwards its own <see cref="RenderObject.DebugDescribeChildren"/> here.
+    public List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        var children = new List<DiagnosticsNode>();
+        if (_firstChild is not null)
+        {
+            TChild child = _firstChild;
+            int count = 1;
+            while (true)
+            {
+                children.Add(child.ToDiagnosticsNode(name: $"child {count}"));
+                if (ReferenceEquals(child, _lastChild))
+                {
+                    break;
+                }
+
+                count += 1;
+                TParentData childParentData = (TParentData)child.parentData!;
+                child = childParentData.nextSibling!;
+            }
+        }
+
+        return children;
+    }
 }
 
 public interface IRenderBoxContainerDefaultsMixin<TChild, TParentData>

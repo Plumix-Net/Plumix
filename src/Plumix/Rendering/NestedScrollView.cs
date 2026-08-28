@@ -204,6 +204,9 @@ public class RenderSliverOverlapAbsorber : RenderSliver, IRenderObjectSingleChil
             visitor(_child);
         }
     }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
 }
 
 /// <summary>

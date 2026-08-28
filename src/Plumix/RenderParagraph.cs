@@ -6,6 +6,7 @@ using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/paragraph.dart
 
@@ -805,5 +806,32 @@ public sealed partial class RenderParagraph : RenderBox,
             TextOverflow.Ellipsis => TextTrimming.CharacterEllipsis,
             _ => TextTrimming.None
         };
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        return [Text.ToDiagnosticsNode(name: "text", style: DiagnosticsTreeStyle.Transition)];
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<TextAlign>("textAlign", TextAlign));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection));
+        properties.Add(new FlagProperty(
+            "softWrap",
+            SoftWrap,
+            ifTrue: "wrapping at box width",
+            ifFalse: "no wrapping except at line break characters",
+            showName: true));
+        properties.Add(new EnumProperty<TextOverflow>("overflow", Overflow));
+        properties.Add(new DiagnosticsProperty<TextScaler>(
+            "textScaler",
+            TextScaler,
+            defaultValue: TextScaler.NoScaling));
+        properties.Add(new StringProperty("locale", Locale, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new IntProperty("maxLines", MaxLines, ifNull: "unlimited"));
     }
 }

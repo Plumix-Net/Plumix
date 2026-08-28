@@ -3,12 +3,13 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Rendering;
 using Plumix.UI;
+using Plumix.Foundation;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
 
 namespace Plumix;
 
-public sealed class PipelineOwner
+public sealed class PipelineOwner : DiagnosticableTree
 {
     public RenderView Root { get; }
     public Action? OnNeedVisualUpdate { get; set; }
@@ -601,4 +602,22 @@ public sealed class PipelineOwner
         _rootLayer = rootLayer;
         Root.ReplaceRootLayer(rootLayer);
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<RenderObject>(
+            "rootNode",
+            Root,
+            defaultValue: DiagnosticsDefaults.NullValue));
+    }
+
+    /// <summary>A textual representation of the render tree rooted at <see cref="Root"/>.</summary>
+    /// <remarks>
+    /// Flutter's <c>debugDumpRenderTree()</c> prints through <c>debugPrint</c> from
+    /// <c>rendering/binding.dart</c>; Plumix has neither the binding globals nor <c>debugPrint</c>, so
+    /// the dump is returned instead of printed (see <c>docs/ai/DIVERGENCES.md</c>).
+    /// </remarks>
+    public string DebugDumpRenderTree() => Root.ToStringDeep();
 }

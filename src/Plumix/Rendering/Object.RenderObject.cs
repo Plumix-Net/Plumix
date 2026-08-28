@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
@@ -14,12 +15,12 @@ public interface IRenderObject
 /// <summary>
 /// An object in the render tree.
 /// </summary>
-public abstract class RenderObject : IRenderObject, IHitTestTarget
+public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, IHitTestTarget
 {
     internal bool _wasRepaintBoundary;
     internal Layer? _layer;
     private readonly RenderObjectSemantics _semantics;
-    private bool _needsCompositingBitsUpdate = true;
+    private bool _needsCompositingBitsUpdate;
     private bool _needsCompositedLayerUpdate;
     internal RenderObjectSemantics Semantics => _semantics;
 
@@ -315,6 +316,7 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
         }
 
         _isRelayoutBoundary = !parentUsesSize || SizedByParent || constraints.IsTight || Parent == null;
+        _debugCanParentUseSize = parentUsesSize;
 
         _constraints = constraints;
 
@@ -327,6 +329,10 @@ public abstract class RenderObject : IRenderObject, IHitTestTarget
 
         _needsLayout = false;
         _descendantNeedsLayout = false;
+
+        // Divergence from Flutter's `layout`, which never dirties compositing bits: Plumix's
+        // property setters do not all call `markNeedsCompositingBitsUpdate`, so layout refreshes
+        // them wholesale (see `docs/ai/DIVERGENCES.md`).
         MarkNeedsCompositingBitsUpdate();
         MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();

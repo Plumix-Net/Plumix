@@ -1,6 +1,7 @@
 using System.Text;
 using Plumix.Gestures;
 using Plumix.Widgets;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/painting/inline_span.dart
 
@@ -154,7 +155,7 @@ public sealed class InlineSpanSemanticsInformation
 ///  * The subclass [PlaceholderSpan] represents a placeholder that may be
 ///    filled with non-text content.
 ///  * The subclass [WidgetSpan] specifies embedded inline widgets.
-public abstract class InlineSpan : IEquatable<InlineSpan>
+public abstract class InlineSpan : DiagnosticableTree, IEquatable<InlineSpan>
 {
     /// Creates an [InlineSpan] with the given values.
     protected InlineSpan(TextStyle? style = null)
@@ -344,4 +345,12 @@ public abstract class InlineSpan : IEquatable<InlineSpan>
     public override bool Equals(object? obj) => Equals(obj as InlineSpan);
 
     public override int GetHashCode() => Style?.GetHashCode() ?? 0;
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.DefaultDiagnosticsTreeStyle = DiagnosticsTreeStyle.Whitespace;
+    }
 }
