@@ -8,6 +8,25 @@ namespace Plumix.Tests;
 
 public sealed class GlobalWidgetsLocalizationsTests
 {
+    public static TheoryData<string> AbstractWidgetsLabels() =>
+        new()
+        {
+            nameof(WidgetsLocalizations.CopyButtonLabel),
+            nameof(WidgetsLocalizations.CutButtonLabel),
+            nameof(WidgetsLocalizations.PasteButtonLabel),
+            nameof(WidgetsLocalizations.SelectAllButtonLabel),
+            nameof(WidgetsLocalizations.LookUpButtonLabel),
+            nameof(WidgetsLocalizations.SearchWebButtonLabel),
+            nameof(WidgetsLocalizations.ShareButtonLabel),
+            nameof(WidgetsLocalizations.RadioButtonUnselectedLabel),
+            nameof(WidgetsLocalizations.ReorderItemToStart),
+            nameof(WidgetsLocalizations.ReorderItemToEnd),
+            nameof(WidgetsLocalizations.ReorderItemUp),
+            nameof(WidgetsLocalizations.ReorderItemDown),
+            nameof(WidgetsLocalizations.ReorderItemLeft),
+            nameof(WidgetsLocalizations.ReorderItemRight),
+        };
+
     public static TheoryData<string> SupportedLanguages()
     {
         var data = new TheoryData<string>();
@@ -77,8 +96,7 @@ public sealed class GlobalWidgetsLocalizationsTests
     [Fact]
     public void DefaultWidgetsLocalizationsMatchFlutterDefaults()
     {
-        WidgetsLocalizations localizations =
-            DefaultWidgetsLocalizations.Delegate.LoadTyped(new Locale("en"));
+        var localizations = new DefaultWidgetsLocalizations();
 
         Assert.Equal("Move to the start", localizations.ReorderItemToStart);
         Assert.Equal("Move to the end", localizations.ReorderItemToEnd);
@@ -96,6 +114,25 @@ public sealed class GlobalWidgetsLocalizationsTests
         Assert.Equal("Search Web", localizations.SearchWebButtonLabel);
         Assert.Equal("Share", localizations.ShareButtonLabel);
         Assert.Equal("Not selected", localizations.RadioButtonUnselectedLabel);
+        Assert.Equal(TextDirection.Ltr, localizations.TextDirection);
+        Assert.Equal(
+            TextDirection.Ltr,
+            DefaultWidgetsLocalizations.Delegate.LoadTyped(new Locale("ar")).TextDirection);
+        Assert.IsType<DefaultWidgetsLocalizations>(
+            DefaultWidgetsLocalizations.Load(new Locale("de")));
+        Assert.Equal(
+            "DefaultWidgetsLocalizations.delegate(en_US)",
+            DefaultWidgetsLocalizations.Delegate.ToString());
+    }
+
+    [Theory]
+    [MemberData(nameof(AbstractWidgetsLabels))]
+    public void WidgetsLocalizationsRequiresFlutterAbstractLabels(string propertyName)
+    {
+        var property = typeof(WidgetsLocalizations).GetProperty(propertyName);
+
+        Assert.NotNull(property);
+        Assert.True(property.GetMethod!.IsAbstract);
     }
 
     [Fact]

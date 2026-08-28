@@ -86,7 +86,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         MountAndFlush(root, owner);
 
         Assert.Equal("first", value);
-        Assert.Equal(TextDirection.Rtl, direction);
+        Assert.Equal(TextDirection.Ltr, direction);
         root.Unmount();
     }
 
@@ -200,7 +200,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.NotNull(builderChild);
         Assert.True(homeContext.HasValue);
         Assert.Same(navigatorKey.CurrentState, Navigator.Of(homeContext!.Value));
-        Assert.Equal(TextDirection.Rtl, Directionality.Of(homeContext.Value));
+        Assert.Equal(TextDirection.Ltr, Directionality.Of(homeContext.Value));
         Assert.Equal("localized", Localizations.Of<TestStrings>(homeContext.Value).Value);
         Assert.NotNull(SharedAppData.GetValue(homeContext.Value, "key", () => new object()));
         Assert.NotNull(ShortcutRegistry.MaybeOf(homeContext.Value));

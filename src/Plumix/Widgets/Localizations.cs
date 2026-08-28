@@ -129,33 +129,33 @@ public abstract class WidgetsLocalizations
 
     public virtual string NoResultsFound => "No results found";
 
-    public virtual string CopyButtonLabel => "Copy";
+    public abstract string CopyButtonLabel { get; }
 
-    public virtual string CutButtonLabel => "Cut";
+    public abstract string CutButtonLabel { get; }
 
-    public virtual string PasteButtonLabel => "Paste";
+    public abstract string PasteButtonLabel { get; }
 
-    public virtual string SelectAllButtonLabel => "Select all";
+    public abstract string SelectAllButtonLabel { get; }
 
-    public virtual string LookUpButtonLabel => "Look Up";
+    public abstract string LookUpButtonLabel { get; }
 
-    public virtual string SearchWebButtonLabel => "Search Web";
+    public abstract string SearchWebButtonLabel { get; }
 
-    public virtual string ShareButtonLabel => "Share";
+    public abstract string ShareButtonLabel { get; }
 
-    public virtual string RadioButtonUnselectedLabel => "Not selected";
+    public abstract string RadioButtonUnselectedLabel { get; }
 
-    public virtual string ReorderItemToStart => "Move to the start";
+    public abstract string ReorderItemToStart { get; }
 
-    public virtual string ReorderItemToEnd => "Move to the end";
+    public abstract string ReorderItemToEnd { get; }
 
-    public virtual string ReorderItemUp => "Move up";
+    public abstract string ReorderItemUp { get; }
 
-    public virtual string ReorderItemDown => "Move down";
+    public abstract string ReorderItemDown { get; }
 
-    public virtual string ReorderItemLeft => "Move left";
+    public abstract string ReorderItemLeft { get; }
 
-    public virtual string ReorderItemRight => "Move right";
+    public abstract string ReorderItemRight { get; }
 
     public static WidgetsLocalizations Of(BuildContext context)
     {
@@ -165,33 +165,55 @@ public abstract class WidgetsLocalizations
 
 public sealed class DefaultWidgetsLocalizations : WidgetsLocalizations
 {
-    private DefaultWidgetsLocalizations(TextDirection textDirection)
+    public DefaultWidgetsLocalizations()
     {
-        TextDirection = textDirection;
     }
 
     public static LocalizationsDelegate<WidgetsLocalizations> Delegate { get; } =
         new DefaultWidgetsLocalizationsDelegate();
 
-    public override TextDirection TextDirection { get; }
+    public override TextDirection TextDirection => TextDirection.Ltr;
+
+    public override string CopyButtonLabel => "Copy";
+
+    public override string CutButtonLabel => "Cut";
+
+    public override string PasteButtonLabel => "Paste";
+
+    public override string SelectAllButtonLabel => "Select all";
+
+    public override string LookUpButtonLabel => "Look Up";
+
+    public override string SearchWebButtonLabel => "Search Web";
+
+    public override string ShareButtonLabel => "Share";
+
+    public override string RadioButtonUnselectedLabel => "Not selected";
+
+    public override string ReorderItemToStart => "Move to the start";
+
+    public override string ReorderItemToEnd => "Move to the end";
+
+    public override string ReorderItemUp => "Move up";
+
+    public override string ReorderItemDown => "Move down";
+
+    public override string ReorderItemLeft => "Move left";
+
+    public override string ReorderItemRight => "Move right";
+
+    public static WidgetsLocalizations Load(Locale locale) => new DefaultWidgetsLocalizations();
 
     private sealed class DefaultWidgetsLocalizationsDelegate : LocalizationsDelegate<WidgetsLocalizations>
     {
-        private static readonly IReadOnlySet<string> RtlLanguages = new HashSet<string>(
-            ["ar", "fa", "he", "ps", "sd", "ur"],
-            StringComparer.OrdinalIgnoreCase);
-
         public override bool IsSupported(Locale locale) => true;
 
-        public override WidgetsLocalizations LoadTyped(Locale locale)
-        {
-            TextDirection textDirection = RtlLanguages.Contains(locale.LanguageCode)
-                ? TextDirection.Rtl
-                : TextDirection.Ltr;
-            return new DefaultWidgetsLocalizations(textDirection);
-        }
+        public override WidgetsLocalizations LoadTyped(Locale locale) =>
+            DefaultWidgetsLocalizations.Load(locale);
 
         public override bool ShouldReload(LocalizationsDelegate oldDelegate) => false;
+
+        public override string ToString() => "DefaultWidgetsLocalizations.delegate(en_US)";
     }
 }
 
