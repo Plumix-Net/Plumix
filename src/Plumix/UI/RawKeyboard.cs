@@ -391,7 +391,11 @@ public sealed class RawKeyboard
             }
             catch (Exception exception)
             {
-                KeyboardDebug.ReportError(exception, "while processing a raw key listener");
+                RawKeyEvent reported = keyEvent;
+                KeyboardDebug.ReportError(
+                    exception,
+                    "while processing a raw key listener",
+                    () => [new DiagnosticsProperty<RawKeyEvent>("Event", reported)]);
             }
         }
 

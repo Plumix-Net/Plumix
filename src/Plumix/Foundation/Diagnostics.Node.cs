@@ -337,7 +337,9 @@ public abstract class DiagnosticsNode
     /// `parentConfiguration` specifies how the parent is rendered as text art.
     /// For example, if the parent places all properties on one line, the
     /// description of the property should be kept short enough to fit.
-    public string ToString(TextTreeConfiguration? parentConfiguration, DiagnosticLevel minLevel = DiagnosticLevel.Info)
+    public virtual string ToString(
+        TextTreeConfiguration? parentConfiguration,
+        DiagnosticLevel minLevel = DiagnosticLevel.Info)
     {
         if (Style == DiagnosticsTreeStyle.SingleLine)
         {
@@ -456,7 +458,7 @@ public abstract class DiagnosticsNode
 /// [DiagnosticsNode] that exists mainly to provide a container for other
 /// diagnostics that typically lacks a meaningful value of its own.
 /// </summary>
-public sealed class DiagnosticsBlock : DiagnosticsNode
+public class DiagnosticsBlock : DiagnosticsNode
 {
     private readonly List<DiagnosticsNode> _children;
     private readonly List<DiagnosticsNode> _properties;

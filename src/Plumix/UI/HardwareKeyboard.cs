@@ -190,25 +190,17 @@ public sealed class KeyRepeatEvent : KeyEvent
 public delegate bool KeyEventCallback(KeyEvent keyEvent);
 
 /// <summary>
-/// Plumix stand-in for Flutter's `debugPrintKeyboardEvents` flag plus `FlutterError.reportError`.
+/// Flutter's `debugPrintKeyboardEvents` flag plus the services layer's error reporting.
 /// </summary>
 /// <remarks>
-/// Dart parity source: flutter/packages/flutter/lib/src/services/debug.dart. Plumix has no
-/// `FlutterError` reporter or `debugPrint`, so both are exposed as replaceable hooks.
+/// Dart parity source: flutter/packages/flutter/lib/src/services/debug.dart. Dart's logging and
+/// error reporting are inline `debugPrint`/`FlutterError.reportError` calls at each keyboard site;
+/// C# has no top-level functions, so the shared bodies live here.
 /// </remarks>
 public static class KeyboardDebug
 {
     /// <summary>Setting to true will cause extensive logging to occur when key events are received.</summary>
     public static bool DebugPrintKeyboardEvents { get; set; }
-
-    /// <summary>Receives the keyboard debug log lines. Defaults to <see cref="Console.WriteLine(string)"/>.</summary>
-    public static Action<string> DebugPrint { get; set; } = Console.WriteLine;
-
-    /// <summary>
-    /// Receives exceptions thrown by key handlers and raw key listeners, with the Dart
-    /// `ErrorDescription` context string. Flutter routes these through `FlutterError.reportError`.
-    /// </summary>
-    public static Action<Exception, string>? OnError { get; set; }
 
     internal static void Log(Func<string> messageFunc, Func<IEnumerable<string>>? detailsFunc = null)
     {
@@ -217,7 +209,7 @@ public static class KeyboardDebug
             return;
         }
 
-        DebugPrint($"KEYBOARD: {messageFunc()}");
+        Print.DebugPrint($"KEYBOARD: {messageFunc()}");
         if (detailsFunc == null)
         {
             return;
@@ -225,13 +217,21 @@ public static class KeyboardDebug
 
         foreach (string detail in detailsFunc())
         {
-            DebugPrint($"    {detail}");
+            Print.DebugPrint($"    {detail}");
         }
     }
 
-    internal static void ReportError(Exception exception, string context)
+    internal static void ReportError(
+        Exception exception,
+        string context,
+        InformationCollector? informationCollector = null)
     {
-        OnError?.Invoke(exception, context);
+        FlutterError.ReportError(new FlutterErrorDetails(
+            exception: exception,
+            stack: exception.StackTrace,
+            library: "services library",
+            context: new ErrorDescription(context),
+            informationCollector: informationCollector));
     }
 }
 
@@ -449,7 +449,11 @@ public sealed class HardwareKeyboard
             }
             catch (Exception exception)
             {
-                KeyboardDebug.ReportError(exception, "while processing a key handler");
+                KeyEvent reported = keyEvent;
+                KeyboardDebug.ReportError(
+                    exception,
+                    "while processing a key handler",
+                    () => [new DiagnosticsProperty<KeyEvent>("Event", reported)]);
             }
         }
 

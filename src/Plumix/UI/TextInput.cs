@@ -1,6 +1,7 @@
 using System.Collections;
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Widgets;
 
 namespace Plumix.UI;
@@ -350,12 +351,6 @@ public static class TextInput
     private static bool _scribbleInProgress;
     private static bool _initialized;
 
-    /// <summary>Reports a channel failure the way Flutter's <c>FlutterError.reportError</c> does.
-    /// </summary>
-    /// <remarks>Plumix has no <c>FlutterError</c>, so failures are routed to this hook instead.
-    /// </remarks>
-    public static Action<Exception, string>? OnError { get; set; }
-
     internal static TextInputConnection? CurrentConnection { get; private set; }
 
     internal static TextInputConnection? LastConnection { get; private set; }
@@ -574,6 +569,20 @@ public static class TextInput
         }
     }
 
+    /// Dart's file-private `_reportError` from `services/text_input.dart`.
+    internal static void ReportError(
+        Exception exception,
+        string context,
+        InformationCollector? informationCollector = null)
+    {
+        FlutterError.ReportError(new FlutterErrorDetails(
+            exception: exception,
+            stack: exception.StackTrace,
+            library: "services library",
+            context: new ErrorDescription(context),
+            informationCollector: informationCollector));
+    }
+
     private static async Task<object?> LoudlyHandleTextInputInvocation(MethodCall call)
     {
         try
@@ -582,7 +591,13 @@ public static class TextInput
         }
         catch (Exception exception)
         {
-            OnError?.Invoke(exception, $"during method call {call.Method}");
+            ReportError(
+                exception,
+                $"during method call {call.Method}",
+                () => [new DiagnosticsProperty<MethodCall>(
+                    "call",
+                    call,
+                    style: DiagnosticsTreeStyle.ErrorProperty)]);
             throw;
         }
     }
@@ -931,7 +946,7 @@ public static class TextInput
         {
             Task<object?> pending = SystemChannels.TextInput.InvokeMethod<object>(method, arguments);
             _ = pending.ContinueWith(
-                task => OnError?.Invoke(task.Exception!.GetBaseException(), context),
+                task => ReportError(task.Exception!.GetBaseException(), context),
                 CancellationToken.None,
                 TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
                 TaskScheduler.Default);

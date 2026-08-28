@@ -213,6 +213,9 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
     // Set during layout if overflow occurred on the main axis.
     private double _overflow;
 
+    // Dart mixes `DebugOverflowIndicatorMixin` in; C# has no mixins, so its state lives here.
+    private readonly DebugOverflowIndicator _debugOverflowIndicator = new();
+
     // Check whether any meaningful overflow is present. Values below an epsilon
     // are treated as not overflowing.
     public bool _hasOverflow => _overflow > Constants.PrecisionErrorTolerance;
@@ -1012,7 +1015,36 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             _ => throw new ArgumentOutOfRangeException()
         };
 
-        DebugOverflowIndicator.Paint(ctx, offset, new Rect(new Point(), Size), overflowChildRect);
+        if (Constants.KDebugMode)
+        {
+            List<DiagnosticsNode> debugOverflowHints =
+            [
+                new ErrorDescription(
+                    $"The overflowing {Diagnostics.ObjectRuntimeType(this)} has an orientation of {_direction}."),
+                new ErrorDescription(
+                    $"The edge of the {Diagnostics.ObjectRuntimeType(this)} that is overflowing has been marked "
+                    + "in the rendering with a yellow and black striped pattern. This is "
+                    + $"usually caused by the contents being too big for the {Diagnostics.ObjectRuntimeType(this)}."),
+                new ErrorHint(
+                    "Consider applying a flex factor (e.g. using an Expanded widget) to "
+                    + $"force the children of the {Diagnostics.ObjectRuntimeType(this)} to fit within the available "
+                    + "space instead of being sized to their natural size."),
+                new ErrorHint(
+                    "This is considered an error condition because it indicates that there "
+                    + "is content that cannot be seen. If the content is legitimately bigger "
+                    + "than the available space, consider clipping it with a ClipRect widget "
+                    + "before putting it in the flex, or using a scrollable container rather "
+                    + "than a Flex, like a ListView."),
+            ];
+
+            _debugOverflowIndicator.PaintOverflowIndicator(
+                this,
+                ctx,
+                offset,
+                new Rect(new Point(), Size),
+                overflowChildRect,
+                overflowHints: debugOverflowHints);
+        }
     }
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child) => ClipBehavior switch

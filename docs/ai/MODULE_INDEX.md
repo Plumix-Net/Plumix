@@ -264,6 +264,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Foundation/Key.cs`
   - `src/Plumix/Foundation/Diagnosticable.cs` (diagnostics layer entry point; nodes/properties/text
     tree live in `Diagnostics.Node.cs`, `DiagnosticProperties.cs`, `Diagnostics.TextTree.cs`)
+  - `src/Plumix/Foundation/Assertions.cs` (error reporting entry point: `FlutterError`,
+    `FlutterErrorDetails`, `FlutterError.ReportError`/`OnError`; the console sink is `Print.cs` and
+    stack parsing is `StackFrame.cs`; build-mode flags live in `Constants.cs`)
 - Primary Tests:
   - `src/Plumix.Tests/ElementLifecycleTests.cs`
   - `src/Plumix.Tests/InheritedWidgetTests.cs`
@@ -273,6 +276,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs`
   - `src/Plumix.Tests/DiagnosticsTests.cs`
   - `src/Plumix.Tests/RenderObjectDiagnosticsTests.cs`
+  - `src/Plumix.Tests/AssertionsTests.cs`
+  - `src/Plumix.Tests/PrintTests.cs`
+  - `src/Plumix.Tests/StackFrameTests.cs`
 
 ### Core Layout/Paint/Compositing
 

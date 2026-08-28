@@ -255,14 +255,17 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `animation/animation_controller.dart` | `src/Plumix/AnimationController.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs` | — |
 | `animation/animation_style.dart` | `src/Plumix/AnimationStyle.cs` | — | — |
 | `animation/animations.dart` | `src/Plumix/Animation.cs`<br>`src/Plumix/CompoundAnimation.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs`<br>`src/Plumix.Tests/CompoundAnimationTests.cs`<br>`src/Plumix.Tests/ImplicitAnimationsTests.cs`<br>`src/Plumix.Tests/MaterialThemeAnimationTests.cs` | — |
+| `foundation/assertions.dart` | `src/Plumix/Foundation/Assertions.cs` | `src/Plumix.Tests/AssertionsTests.cs` | — |
 | `foundation/binding.dart` | `src/Plumix/HotReload.cs` _(reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)_ | `src/Plumix.Tests/HotReloadTests.cs` | — |
 | `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` _(reference) (approximate)_ | — | — |
-| `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` _(reference) (approximate)_ | — | — |
+| `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` | — | — |
 | `foundation/diagnostics.dart` | `src/Plumix/Foundation/DiagnosticProperties.cs`<br>`src/Plumix/Foundation/Diagnosticable.cs`<br>`src/Plumix/Foundation/Diagnostics.Node.cs`<br>`src/Plumix/Foundation/Diagnostics.TextTree.cs`<br>`src/Plumix/Foundation/Diagnostics.cs` | `src/Plumix.Tests/DiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectDiagnosticsTests.cs` | — |
 | `foundation/key.dart` | `src/Plumix/Foundation/Key.cs` _(reference) (approximate)_ | `src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `foundation/licenses.dart` | `src/Plumix/Foundation/Licenses.cs` | — | — |
 | `foundation/platform.dart` | `src/Plumix/UI/TargetPlatform.cs` | — | — |
+| `foundation/print.dart` | `src/Plumix/Foundation/Print.cs` | `src/Plumix.Tests/PrintTests.cs` | — |
 | `foundation/serialization.dart` | `src/Plumix/Foundation/Serialization.cs` | — | — |
+| `foundation/stack_frame.dart` | `src/Plumix/Foundation/StackFrame.cs` | `src/Plumix.Tests/StackFrameTests.cs` | — |
 | `gestures/arena.dart` | `src/Plumix/Gestures/GestureArena.cs` _(reference) (approximate)_ | — | — |
 | `gestures/binding.dart` | `src/Plumix/Gestures/GestureBinding.cs` _(reference) (approximate)_ | — | — |
 | `gestures/constants.dart` | `src/Plumix/Gestures/Constants.cs` | — | — |
@@ -567,7 +570,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix.Material/ListTileControls.cs` — (reference)
 - `src/Plumix/FlutterExtensions.cs` — (reference) (host integration, adapted)
 - `src/Plumix/FlutterHost.cs` — (reference) (host integration, adapted)
-- `src/Plumix/Foundation/Constants.cs` — (reference) (approximate)
 - `src/Plumix/Foundation/Key.cs` — (reference) (approximate)
 - `src/Plumix/Foundation/Listenable.cs` — (reference) (approximate)
 - `src/Plumix/Gestures/DragGestureRecognizer.cs` — (reference) (approximate)
@@ -624,9 +626,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 498
-- C# files carrying a marker: 638
+- Flutter files mapped: 501
+- C# files carrying a marker: 641
 - C# files without a marker: 30
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 57
+- C# files with a qualified (non-strict) marker: 56
 

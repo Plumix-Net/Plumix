@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -208,6 +209,46 @@ public sealed class RenderFlexTests
         Assert.Equal(200.0, flex.GetMaxIntrinsicHeight(100));
         Assert.Equal(0.0, flex.GetMinIntrinsicWidth(100));
         Assert.Equal(0.0, flex.GetMaxIntrinsicWidth(100));
+    }
+
+    [Fact]
+    public void RenderFlex_Overflow_IsReportedThroughFlutterErrorOncePerRenderObject()
+    {
+        var flex = new RenderFlex(
+            children: [Box(200, 100)],
+            direction: Axis.Vertical,
+            textDirection: TextDirection.Ltr);
+        Layout(flex, BoxConstraints.Tight(new Size(100, 50)));
+        Assert.True(flex._hasOverflow);
+
+        var reported = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = reported.Add;
+        try
+        {
+            flex.UpdateCompositingBits();
+            flex.Paint(new PaintingContext(new ContainerLayer()), default);
+            flex.Paint(new PaintingContext(new ContainerLayer()), default);
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
+
+        // Dart reports on the first occurrence only, and never again for the same render object.
+        FlutterErrorDetails details = Assert.Single(reported);
+        Assert.Equal("rendering library", details.Library);
+        Assert.Equal("during layout", details.Context?.ToString());
+        var error = Assert.IsType<FlutterError>(details.Exception);
+        Assert.Equal("A RenderFlex overflowed by 50 pixels on the bottom.", error.Diagnostics[0].ToString());
+        Assert.Contains(
+            "The overflowing RenderFlex has an orientation of Vertical.",
+            details.InformationCollector!().Select(node => node.ToString()));
+        Assert.Contains(
+            "Consider applying a flex factor (e.g. using an Expanded widget) to "
+            + "force the children of the RenderFlex to fit within the available "
+            + "space instead of being sized to their natural size.",
+            details.InformationCollector!().Select(node => node.ToString()));
     }
 
     [Fact]

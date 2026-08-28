@@ -1278,7 +1278,7 @@ public class DiagnosticableNode<T> : DiagnosticsNode
     public override string? EmptyBodyDescription => Builder.EmptyBodyDescription;
 
     /// The builder holding the value's `debugFillProperties` output.
-    protected DiagnosticPropertiesBuilder Builder
+    protected virtual DiagnosticPropertiesBuilder Builder
     {
         get
         {

@@ -8,6 +8,14 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `FlutterError`/`FlutterErrorDetails`/`ErrorSummary`/`ErrorHint`/`DiagnosticsStackTrace` (`foundation/assertions.dart`).
+- Added `AssertionError`, `StackFrame`, `PartialStackFrame`, `RepetitiveStackFrameFilter` (`foundation/stack_frame.dart`).
+- Added `Print.DebugPrint`/`DebugPrintThrottled`/`DebugPrintSynchronously`/`DebugWordWrap` (`foundation/print.dart`).
+- Added `Constants.KDebugMode`/`KReleaseMode`/`KProfileMode`/`KIsWeb`/`KIsWasm` (`foundation/constants.dart`).
+- Breaking: a flex/constraints-transform overflow reports through `FlutterError.ReportError` once per render object.
+- Breaking: `RenderFlex` paints the overflow indicator only in debug builds, as Dart's `assert`-wrapped call does.
+- Breaking: dropped `TextInput.OnError`, `ServicesDebug.OnError`, `KeyboardDebug.DebugPrint`/`OnError` for `FlutterError`.
+- Breaking: `DiagnosticsBlock` is no longer sealed and `DiagnosticsNode.ToString(config, minLevel)` is virtual.
 - Breaking: `RenderObject` is a `DiagnosticableTree`; the render tree is dumpable (`rendering/object.dart`).
 - Added `debugFillProperties`/`debugDescribeChildren` across `rendering/`: render objects, layers, parent data.
 - Added `RenderFlex`/`RenderConstraintsTransformBox` ` OVERFLOWING` headers and `SliverGeometry` diagnostics.

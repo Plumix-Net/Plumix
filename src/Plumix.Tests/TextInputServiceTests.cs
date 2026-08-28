@@ -19,6 +19,8 @@ public sealed class TextInputServiceTests : IDisposable
     private readonly List<MethodCall> _log = [];
     private readonly List<(Exception Exception, string Context)> _errors = [];
 
+    private readonly FlutterExceptionHandler? _previousOnError;
+
     public TextInputServiceTests()
     {
         UI.TextInput.DebugReset();
@@ -28,12 +30,14 @@ public sealed class TextInputServiceTests : IDisposable
             _log.Add(call);
             return Task.FromResult<object?>(null);
         });
-        UI.TextInput.OnError = (exception, context) => _errors.Add((exception, context));
+        _previousOnError = FlutterError.OnError;
+        FlutterError.OnError = details => _errors.Add(
+            ((Exception)details.Exception, details.Context!.ToString()));
     }
 
     public void Dispose()
     {
-        UI.TextInput.OnError = null;
+        FlutterError.OnError = _previousOnError;
         SystemChannels.TextInput.SetPlatformMethodCallHandler(null);
         UI.TextInput.DebugReset();
         Scheduler.FlushMicrotasks();

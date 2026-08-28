@@ -598,6 +598,9 @@ public sealed class RenderConstraintsTransformBox : RenderProxyBox
     private BoxConstraints? _childConstraints;
     private bool _isOverflowing;
 
+    // Dart mixes `DebugOverflowIndicatorMixin` in; C# has no mixins, so its state lives here.
+    private readonly DebugOverflowIndicator _debugOverflowIndicator = new();
+
     public RenderConstraintsTransformBox(
         AlignmentGeometry alignment,
         TextDirection? textDirection,
@@ -722,7 +725,8 @@ public sealed class RenderConstraintsTransformBox : RenderProxyBox
             if (_isOverflowing && _clipBehavior == Clip.None && Size.Width > 0 && Size.Height > 0)
             {
                 var childParentData = (BoxParentData)Child.parentData!;
-                DebugOverflowIndicator.Paint(
+                _debugOverflowIndicator.PaintOverflowIndicator(
+                    this,
                     context,
                     offset,
                     new Rect(default, Size),

@@ -1,3 +1,5 @@
+using Plumix.Foundation;
+
 // Dart parity source: flutter/packages/flutter/lib/src/services/hardware_keyboard.dart
 
 namespace Plumix.UI;
@@ -123,7 +125,10 @@ public sealed class KeyEventManager
         }
         catch (Exception exception)
         {
-            KeyboardDebug.ReportError(exception, "while processing the key message handler");
+            KeyboardDebug.ReportError(
+                exception,
+                "while processing the key message handler",
+                () => [new DiagnosticsProperty<KeyMessage>("KeyMessage", message)]);
             return false;
         }
     }

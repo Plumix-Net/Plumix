@@ -144,20 +144,20 @@ public class ServicesBinding
     }
 }
 
-/// <summary>Error reporting for the services layer. Dart parity source: <c>FlutterError.reportError</c>.</summary>
+/// <summary>Error reporting for the services layer.</summary>
+/// <remarks>
+/// Dart calls <c>FlutterError.reportError</c> inline at every services-layer catch site; this
+/// helper exists only because C# has no way to spell the `FlutterErrorDetails` literal as tersely.
+/// </remarks>
 public static class ServicesDebug
 {
-    /// <summary>Raised instead of Flutter's <c>FlutterError.reportError</c>.</summary>
-    public static event Action<Exception, string>? OnError;
-
+    /// Reports `exception` to <see cref="FlutterError.ReportError"/> with Dart's context string.
     internal static void ReportError(Exception exception, string context)
     {
-        if (OnError is not null)
-        {
-            OnError.Invoke(exception, context);
-            return;
-        }
-
-        Debug.WriteLine($"Exception {context}: {exception}");
+        FlutterError.ReportError(new FlutterErrorDetails(
+            exception: exception,
+            stack: exception.StackTrace,
+            library: "services library",
+            context: new ErrorDescription(context)));
     }
 }
