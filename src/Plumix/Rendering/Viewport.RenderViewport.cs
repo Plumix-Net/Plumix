@@ -354,10 +354,10 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
     /// <summary>
     /// Lays out a contiguous run of slivers, starting with <paramref name="child"/> and walking with
     /// <paramref name="advance"/>, and returns the scroll offset correction one of them asked for
-    /// (zero when the whole sequence was laid out).
+    /// (null when the whole sequence was laid out).
     /// </summary>
     /// <remarks>Flutter's <c>RenderViewportBase.layoutChildSequence</c>.</remarks>
-    protected double LayoutChildSequence(
+    protected double? LayoutChildSequence(
         RenderSliver? child,
         double scrollOffset,
         double overlap,
@@ -408,9 +408,9 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
             SliverGeometry childLayoutGeometry = child.Geometry;
 
             // If the child overflowed, ask the viewport to relayout at a corrected scroll offset.
-            if (childLayoutGeometry.ScrollOffsetCorrection != 0.0)
+            if (childLayoutGeometry.ScrollOffsetCorrection is double correction)
             {
-                return childLayoutGeometry.ScrollOffsetCorrection;
+                return correction;
             }
 
             double effectiveLayoutOffset = layoutOffset + childLayoutGeometry.PaintOrigin;
@@ -443,7 +443,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
         }
 
         // We made it without a correction, whee!
-        return 0.0;
+        return null;
     }
 
     /// <remarks>Flutter's <c>applyGrowthDirectionToScrollDirection</c>.</remarks>
@@ -1013,13 +1013,13 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
         int count = 0;
         do
         {
-            double correction = AttemptLayout(
+            double? correction = AttemptLayout(
                 mainAxisExtent,
                 crossAxisExtent,
                 Offset.Pixels + centerOffsetAdjustment);
-            if (correction != 0.0)
+            if (correction is double correctionValue)
             {
-                Offset.CorrectBy(correction);
+                Offset.CorrectBy(correctionValue);
             }
             else if (Offset.ApplyContentDimensions(
                          Math.Min(0.0, _minScrollExtent + mainAxisExtent * Anchor),
@@ -1034,7 +1034,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
     }
 
     /// <remarks>Flutter's <c>RenderViewport._attemptLayout</c>.</remarks>
-    private double AttemptLayout(double mainAxisExtent, double crossAxisExtent, double correctedOffset)
+    private double? AttemptLayout(double mainAxisExtent, double crossAxisExtent, double correctedOffset)
     {
         _minScrollExtent = 0.0;
         _maxScrollExtent = 0.0;
@@ -1060,7 +1060,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
         if (leadingNegativeChild != null)
         {
             // The negative scroll offsets.
-            double result = LayoutChildSequence(
+            double? result = LayoutChildSequence(
                 child: leadingNegativeChild,
                 scrollOffset: Math.Max(mainAxisExtent, centerOffset) - mainAxisExtent,
                 overlap: 0.0,
@@ -1072,9 +1072,9 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
                 advance: ChildBefore,
                 remainingCacheExtent: reverseDirectionRemainingCacheExtent,
                 cacheOrigin: Math.Clamp(mainAxisExtent - centerOffset, -calculatedCacheExtent, 0.0));
-            if (result != 0.0)
+            if (result is double correction)
             {
-                return -result;
+                return -correction;
             }
         }
 
@@ -1307,10 +1307,10 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalPare
         double effectiveExtent;
         while (true)
         {
-            double correction = AttemptLayout(mainAxisExtent, crossAxisExtent, Offset.Pixels);
-            if (correction != 0.0)
+            double? correction = AttemptLayout(mainAxisExtent, crossAxisExtent, Offset.Pixels);
+            if (correction is double correctionValue)
             {
-                Offset.CorrectBy(correction);
+                Offset.CorrectBy(correctionValue);
                 continue;
             }
 
@@ -1358,7 +1358,7 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalPare
     }
 
     /// <remarks>Flutter's <c>RenderShrinkWrappingViewport._attemptLayout</c>.</remarks>
-    private double AttemptLayout(double mainAxisExtent, double crossAxisExtent, double correctedOffset)
+    private double? AttemptLayout(double mainAxisExtent, double crossAxisExtent, double correctedOffset)
     {
         _maxScrollExtent = 0.0;
         _shrinkWrapExtent = 0.0;

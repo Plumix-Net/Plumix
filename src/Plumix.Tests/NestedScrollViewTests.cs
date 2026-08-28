@@ -218,7 +218,10 @@ public sealed class NestedScrollViewTests : IDisposable
         var handle = new SliverOverlapAbsorberHandle();
         var absorber = new RenderSliverOverlapAbsorber(
             handle,
-            new StubSliver(new SliverGeometry(MaxScrollObstructionExtent: 10)));
+            new StubSliver(new SliverGeometry(
+                ScrollExtent: 10,
+                MaxPaintExtent: 10,
+                MaxScrollObstructionExtent: 10)));
         Attach(absorber);
         absorber.LayoutWithSliverConstraints(Constraints());
         var injector = new RenderSliverOverlapInjector(handle);

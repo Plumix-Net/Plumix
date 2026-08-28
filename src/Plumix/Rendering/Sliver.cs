@@ -50,26 +50,153 @@ public readonly record struct SliverConstraints(
     }
 }
 
-public readonly record struct SliverGeometry(
-    double ScrollExtent = 0,
-    double PaintExtent = 0,
-    double LayoutExtent = 0,
-    double MaxPaintExtent = 0,
-    double CacheExtent = 0,
-    double ScrollOffsetCorrection = 0,
-    bool HasVisualOverflow = false,
-    double PaintOrigin = 0,
-    double MaxScrollObstructionExtent = 0,
-    double? CrossAxisExtent = null) : IDiagnosticable
+public readonly record struct SliverGeometry : IDiagnosticable
 {
-    /// <summary>
-    /// Whether this sliver should be painted. Flutter lets a sliver override the value; Plumix derives
-    /// it from <see cref="PaintExtent"/>, which is Flutter's default (<c>visible: paintExtent &gt; 0</c>).
-    /// </summary>
-    public bool Visible => PaintExtent > 0.0;
+    public SliverGeometry(
+        double ScrollExtent = 0.0,
+        double PaintExtent = 0.0,
+        double PaintOrigin = 0.0,
+        double? LayoutExtent = null,
+        double MaxPaintExtent = 0.0,
+        double MaxScrollObstructionExtent = 0.0,
+        double? CrossAxisExtent = null,
+        double? HitTestExtent = null,
+        bool? Visible = null,
+        bool HasVisualOverflow = false,
+        double? ScrollOffsetCorrection = null,
+        double? CacheExtent = null)
+    {
+        if (Constants.KDebugMode && ScrollOffsetCorrection == 0.0)
+        {
+            throw new AssertionError();
+        }
+
+        this.ScrollExtent = ScrollExtent;
+        this.PaintExtent = PaintExtent;
+        this.PaintOrigin = PaintOrigin;
+        this.LayoutExtent = LayoutExtent ?? PaintExtent;
+        this.MaxPaintExtent = MaxPaintExtent;
+        this.MaxScrollObstructionExtent = MaxScrollObstructionExtent;
+        this.CrossAxisExtent = CrossAxisExtent;
+        this.HitTestExtent = HitTestExtent ?? PaintExtent;
+        this.Visible = Visible ?? PaintExtent > 0.0;
+        this.HasVisualOverflow = HasVisualOverflow;
+        this.ScrollOffsetCorrection = ScrollOffsetCorrection;
+        this.CacheExtent = CacheExtent ?? this.LayoutExtent;
+    }
+
+    public static SliverGeometry Zero { get; } = new();
+
+    public double ScrollExtent { get; init; }
+
+    public double PaintExtent { get; init; }
+
+    public double PaintOrigin { get; init; }
+
+    public double LayoutExtent { get; init; }
+
+    public double MaxPaintExtent { get; init; }
+
+    public double MaxScrollObstructionExtent { get; init; }
+
+    public double? CrossAxisExtent { get; init; }
+
+    public double HitTestExtent { get; init; }
+
+    public bool Visible { get; init; }
+
+    public bool HasVisualOverflow { get; init; }
+
+    public double? ScrollOffsetCorrection { get; init; }
+
+    public double CacheExtent { get; init; }
+
+    public SliverGeometry CopyWith(
+        double? scrollExtent = null,
+        double? paintExtent = null,
+        double? paintOrigin = null,
+        double? layoutExtent = null,
+        double? maxPaintExtent = null,
+        double? maxScrollObstructionExtent = null,
+        double? crossAxisExtent = null,
+        double? hitTestExtent = null,
+        bool? visible = null,
+        bool? hasVisualOverflow = null,
+        double? cacheExtent = null)
+    {
+        return new SliverGeometry(
+            ScrollExtent: scrollExtent ?? ScrollExtent,
+            PaintExtent: paintExtent ?? PaintExtent,
+            PaintOrigin: paintOrigin ?? PaintOrigin,
+            LayoutExtent: layoutExtent ?? LayoutExtent,
+            MaxPaintExtent: maxPaintExtent ?? MaxPaintExtent,
+            MaxScrollObstructionExtent: maxScrollObstructionExtent ?? MaxScrollObstructionExtent,
+            CrossAxisExtent: crossAxisExtent ?? CrossAxisExtent,
+            HitTestExtent: hitTestExtent ?? HitTestExtent,
+            Visible: visible ?? Visible,
+            HasVisualOverflow: hasVisualOverflow ?? HasVisualOverflow,
+            CacheExtent: cacheExtent ?? CacheExtent);
+    }
+
+    public bool DebugAssertIsValid(InformationCollector? informationCollector = null)
+    {
+        if (!Constants.KDebugMode)
+        {
+            return true;
+        }
+
+        if (ScrollExtent < 0.0)
+        {
+            ThrowInvalid(new ErrorSummary("The \"scrollExtent\" is negative."), informationCollector);
+        }
+        if (PaintExtent < 0.0)
+        {
+            ThrowInvalid(new ErrorSummary("The \"paintExtent\" is negative."), informationCollector);
+        }
+        if (LayoutExtent < 0.0)
+        {
+            ThrowInvalid(new ErrorSummary("The \"layoutExtent\" is negative."), informationCollector);
+        }
+        if (CacheExtent < 0.0)
+        {
+            ThrowInvalid(new ErrorSummary("The \"cacheExtent\" is negative."), informationCollector);
+        }
+        if (LayoutExtent > PaintExtent)
+        {
+            ThrowInvalid(
+                new ErrorSummary("The \"layoutExtent\" exceeds the \"paintExtent\"."),
+                informationCollector,
+                CompareFloats("paintExtent", PaintExtent, "layoutExtent", LayoutExtent));
+        }
+        if (PaintExtent - MaxPaintExtent > Constants.PrecisionErrorTolerance)
+        {
+            ThrowInvalid(
+                new ErrorSummary("The \"maxPaintExtent\" is less than the \"paintExtent\"."),
+                informationCollector,
+                CompareFloats("maxPaintExtent", MaxPaintExtent, "paintExtent", PaintExtent),
+                new ErrorDescription(
+                    "By definition, a sliver can't paint more than the maximum that it can paint!"));
+        }
+        if (HitTestExtent < 0.0)
+        {
+            ThrowInvalid(new ErrorSummary("The \"hitTestExtent\" is negative."), informationCollector);
+        }
+        if (ScrollOffsetCorrection == 0.0)
+        {
+            ThrowInvalid(new ErrorSummary("The \"scrollOffsetCorrection\" is zero."), informationCollector);
+        }
+
+        return true;
+    }
 
     /// <inheritdoc />
     public string ToStringShort() => Diagnostics.ObjectRuntimeType(this);
+
+    /// <inheritdoc />
+    public override string ToString() => ToString(DiagnosticLevel.Info);
+
+    public string ToString(DiagnosticLevel minLevel) =>
+        ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine).ToString(null, minLevel);
 
     /// <inheritdoc />
     public DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null)
@@ -88,7 +215,7 @@ public readonly record struct SliverGeometry(
         {
             if (Visible)
             {
-                properties.Add(new DoubleProperty("paintExtent", PaintExtent, unit: Visible ? null : " but visible"));
+                properties.Add(new DoubleProperty("paintExtent", PaintExtent));
             }
 
             properties.Add(new FlagProperty("visible", Visible, ifFalse: "hidden"));
@@ -102,12 +229,54 @@ public readonly record struct SliverGeometry(
         properties.Add(new DoubleProperty("paintOrigin", PaintOrigin, defaultValue: 0.0));
         properties.Add(new DoubleProperty("layoutExtent", LayoutExtent, defaultValue: PaintExtent));
         properties.Add(new DoubleProperty("maxPaintExtent", MaxPaintExtent));
+        properties.Add(new DoubleProperty("hitTestExtent", HitTestExtent, defaultValue: PaintExtent));
         properties.Add(new DiagnosticsProperty<bool>(
             "hasVisualOverflow",
             HasVisualOverflow,
             defaultValue: false));
-        properties.Add(new DoubleProperty("scrollOffsetCorrection", ScrollOffsetCorrection, defaultValue: 0.0));
+        properties.Add(new DoubleProperty(
+            "scrollOffsetCorrection",
+            ScrollOffsetCorrection,
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new DoubleProperty("cacheExtent", CacheExtent, defaultValue: 0.0));
+    }
+
+    private static ErrorDescription CompareFloats(
+        string labelA,
+        double valueA,
+        string labelB,
+        double valueB)
+    {
+        string roundedA = valueA.ToString("F1", CultureInfo.InvariantCulture);
+        string roundedB = valueB.ToString("F1", CultureInfo.InvariantCulture);
+        if (!string.Equals(roundedA, roundedB, StringComparison.Ordinal))
+        {
+            return new ErrorDescription(
+                $"The {labelA} is {roundedA}, but the {labelB} is {roundedB}.");
+        }
+
+        return new ErrorDescription(
+            $"The {labelA} is {valueA.ToString(CultureInfo.InvariantCulture)}, but the {labelB} is "
+            + $"{valueB.ToString(CultureInfo.InvariantCulture)}. The values may have been affected by "
+            + "floating point rounding errors.");
+    }
+
+    private static void ThrowInvalid(
+        ErrorSummary summary,
+        InformationCollector? informationCollector,
+        params DiagnosticsNode[] details)
+    {
+        List<DiagnosticsNode> diagnostics =
+        [
+            new ErrorSummary($"SliverGeometry is not valid: {summary.MessageParts.Single()}"),
+            .. details,
+        ];
+        if (informationCollector != null)
+        {
+            diagnostics.AddRange(informationCollector());
+        }
+
+        throw new FlutterError(diagnostics);
     }
 
 }
@@ -554,6 +723,7 @@ public sealed class SliverGridParentData : SliverMultiBoxAdaptorParentData
 public abstract class RenderSliver : RenderBox
 {
     private SliverConstraints? _sliverConstraints;
+    private SliverGeometry _geometry;
 
     public SliverConstraints ConstraintsForSliver =>
         _sliverConstraints ?? throw new InvalidOperationException("RenderSliver is not laid out.");
@@ -564,7 +734,21 @@ public abstract class RenderSliver : RenderBox
     /// </summary>
     public bool HasSliverConstraints => _sliverConstraints.HasValue;
 
-    public SliverGeometry Geometry { get; protected set; }
+    public SliverGeometry Geometry
+    {
+        get => _geometry;
+        protected set
+        {
+            value.DebugAssertIsValid(() =>
+            [
+                new DiagnosticsProperty<RenderSliver>(
+                    "The RenderSliver that returned the offending geometry was",
+                    this,
+                    style: DiagnosticsTreeStyle.ErrorProperty),
+            ]);
+            _geometry = value;
+        }
+    }
 
     /// <summary>
     /// Whether this sliver keeps contributing semantics even when it is scrolled entirely outside the
@@ -624,6 +808,33 @@ public abstract class RenderSliver : RenderBox
         Size = constraints.Axis == Axis.Vertical
             ? new Size(constraints.CrossAxisExtent, mainExtent)
             : new Size(mainExtent, constraints.CrossAxisExtent);
+    }
+
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        if (!HasSliverConstraints)
+        {
+            return false;
+        }
+
+        SliverConstraints constraints = ConstraintsForSliver;
+        double mainAxisPosition = constraints.Axis == Axis.Vertical ? position.Y : position.X;
+        double crossAxisPosition = constraints.Axis == Axis.Vertical ? position.X : position.Y;
+        if (mainAxisPosition < 0.0
+            || mainAxisPosition >= Geometry.HitTestExtent
+            || crossAxisPosition < 0.0
+            || crossAxisPosition >= constraints.CrossAxisExtent)
+        {
+            return false;
+        }
+
+        if (HitTestChildren(result, position) || HitTestSelf(position))
+        {
+            result.Add(new BoxHitTestEntry(this, position));
+            return true;
+        }
+
+        return false;
     }
 
     protected abstract void PerformSliverLayout(SliverConstraints constraints);
@@ -826,7 +1037,7 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (_child == null || Geometry.PaintExtent <= 0)
+        if (_child == null || !Geometry.Visible)
         {
             return;
         }
@@ -837,7 +1048,7 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        if (_child == null || Geometry.PaintExtent <= 0)
+        if (_child == null || Geometry.HitTestExtent <= 0.0)
         {
             return false;
         }
@@ -1431,7 +1642,7 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (Child == null || Geometry.PaintExtent <= 0)
+        if (Child == null || !Geometry.Visible)
         {
             return;
         }
@@ -1442,7 +1653,7 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        if (Child == null || Geometry.PaintExtent <= 0)
+        if (Child == null || Geometry.HitTestExtent <= 0.0)
         {
             return false;
         }
@@ -1506,7 +1717,7 @@ public class RenderSliverToBoxAdapter : RenderSliverSingleBoxAdapter
         double remaining = Math.Max(0, childExtent - effectiveScrollOffset);
 
         double paintedExtent = Math.Min(remaining, constraints.RemainingPaintExtent);
-        double layoutExtent = Math.Min(remaining, constraints.ViewportMainAxisExtent);
+        double layoutExtent = paintedExtent;
         double cacheStart = constraints.ScrollOffset + constraints.CacheOrigin;
         double cacheEnd = cacheStart + Math.Max(0, constraints.RemainingCacheExtent);
         double cacheExtent = Math.Max(0, Math.Min(childExtent, cacheEnd) - Math.Max(0, cacheStart));
@@ -1516,6 +1727,7 @@ public class RenderSliverToBoxAdapter : RenderSliverSingleBoxAdapter
             PaintExtent: paintedExtent,
             LayoutExtent: layoutExtent,
             MaxPaintExtent: childExtent,
+            HitTestExtent: paintedExtent,
             CacheExtent: cacheExtent,
             HasVisualOverflow: remaining > constraints.RemainingPaintExtent);
         SetChildParentData(Child, constraints with { ScrollOffset = effectiveScrollOffset }, Geometry);
@@ -1599,7 +1811,7 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (_child == null || Geometry.PaintExtent <= 0)
+        if (_child == null || !_child.Geometry.Visible)
         {
             return;
         }
@@ -1610,7 +1822,7 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        if (_child == null || Geometry.PaintExtent <= 0)
+        if (_child == null || _child.Geometry.HitTestExtent <= 0.0)
         {
             return false;
         }
@@ -1694,9 +1906,9 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
             AxisDirection: constraints.AxisDirection,
             GrowthDirection: constraints.GrowthDirection));
 
-        if (Math.Abs(_child.Geometry.ScrollOffsetCorrection) > 0.0001)
+        if (_child.Geometry.ScrollOffsetCorrection is double correction)
         {
-            Geometry = new SliverGeometry(ScrollOffsetCorrection: _child.Geometry.ScrollOffsetCorrection);
+            Geometry = new SliverGeometry(ScrollOffsetCorrection: correction);
             return;
         }
 
@@ -1710,12 +1922,21 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
 
         double totalScrollExtent = mainStartPadding + _child.Geometry.ScrollExtent + mainEndPadding;
         double maxPaintExtent = mainStartPadding + _child.Geometry.MaxPaintExtent + mainEndPadding;
+        double afterPaddingPaintExtent = CalculatePaintExtent(
+            from: mainStartPadding + _child.Geometry.ScrollExtent,
+            to: totalScrollExtent,
+            scrollOffset: constraints.ScrollOffset,
+            remainingPaintExtent: constraints.RemainingPaintExtent);
+        double mainAxisPaddingPaintExtent = beforePaddingPaintExtent + afterPaddingPaintExtent;
         double paintExtent = CalculatePaintExtent(
             from: 0,
             to: totalScrollExtent,
             scrollOffset: constraints.ScrollOffset,
             remainingPaintExtent: constraints.RemainingPaintExtent);
         double layoutExtent = Math.Min(paintExtent, constraints.ViewportMainAxisExtent);
+        double hitTestExtent = Math.Max(
+            mainAxisPaddingPaintExtent + _child.Geometry.PaintExtent,
+            beforePaddingPaintExtent + _child.Geometry.HitTestExtent);
         double cacheExtent = CalculatePaintExtent(
             from: 0,
             to: totalScrollExtent,
@@ -1728,6 +1949,7 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
             PaintExtent: paintExtent,
             LayoutExtent: layoutExtent,
             MaxPaintExtent: maxPaintExtent,
+            HitTestExtent: hitTestExtent,
             CacheExtent: cacheExtent,
             HasVisualOverflow:
             _child.Geometry.HasVisualOverflow

@@ -188,7 +188,7 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectCont
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
-            if (child.Geometry.PaintExtent <= 0.0)
+            if (!child.Geometry.Visible)
             {
                 continue;
             }
@@ -321,9 +321,9 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
             });
 
             SliverGeometry childGeometry = child.Geometry;
-            if (Math.Abs(childGeometry.ScrollOffsetCorrection) > PrecisionErrorTolerance)
+            if (childGeometry.ScrollOffsetCorrection is double correction)
             {
-                Geometry = new SliverGeometry(ScrollOffsetCorrection: childGeometry.ScrollOffsetCorrection);
+                Geometry = new SliverGeometry(ScrollOffsetCorrection: correction);
                 return;
             }
 
@@ -412,7 +412,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
     {
         for (RenderSliver? child = LastChild; child != null; child = ChildBefore(child))
         {
-            if (child.Geometry.PaintExtent <= 0.0)
+            if (!child.Geometry.Visible)
             {
                 continue;
             }
@@ -440,7 +440,7 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
     {
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
-            if (child.Geometry.PaintExtent <= 0.0 && child.Geometry.CacheExtent <= 0.0)
+            if (!child.Geometry.Visible && child.Geometry.CacheExtent <= 0.0)
             {
                 continue;
             }

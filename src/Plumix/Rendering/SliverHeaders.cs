@@ -123,7 +123,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (_child == null || Geometry.PaintExtent <= 0.0)
+        if (_child == null || !Geometry.Visible)
         {
             return;
         }
@@ -133,7 +133,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        if (_child == null || Geometry.PaintExtent <= 0.0)
+        if (_child == null || Geometry.HitTestExtent <= 0.0)
         {
             return false;
         }
@@ -144,7 +144,7 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        if (_child != null && Geometry.PaintExtent > 0.0)
+        if (_child != null && Geometry.Visible)
         {
             visitor(_child);
         }
