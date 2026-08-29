@@ -34,7 +34,7 @@ public sealed class GestureBinding
 
         switch (@event)
         {
-            case PointerDownEvent:
+            case PointerDownEvent or PointerPanZoomStartEvent:
             {
                 var result = new BoxHitTestResult();
                 root.HitTest(result, @event.Position);
@@ -42,7 +42,10 @@ public sealed class GestureBinding
                 hitTestResult = result;
                 break;
             }
-            case PointerMoveEvent or PointerUpEvent or PointerCancelEvent:
+            // A pan/zoom update carries `Down == false`, so Dart gives it its own arm alongside the
+            // moves; it reuses the path cached when the gesture started.
+            case PointerMoveEvent or PointerUpEvent or PointerCancelEvent
+                or PointerPanZoomUpdateEvent or PointerPanZoomEndEvent:
             {
                 _hitTests.TryGetValue(@event.Pointer, out hitTestResult);
                 break;
@@ -74,12 +77,12 @@ public sealed class GestureBinding
             PointerSignalResolver.Resolve(signalEvent);
         }
 
-        if (@event is PointerDownEvent)
+        if (@event is PointerDownEvent or PointerPanZoomStartEvent)
         {
             GestureArena.Close(@event.Pointer);
         }
 
-        if (@event is PointerUpEvent or PointerCancelEvent)
+        if (@event is PointerUpEvent or PointerCancelEvent or PointerPanZoomEndEvent)
         {
             GestureArena.Sweep(@event.Pointer);
             _hitTests.Remove(@event.Pointer);
@@ -189,7 +192,10 @@ public sealed class GestureBinding
 
     private PointerEvent AttachDelta(PointerEvent @event)
     {
-        if (@event is PointerSignalEvent)
+        // Signals carry their own scroll delta, and a pan/zoom gesture reports movement through
+        // `PanDelta`; Dart leaves `delta` at zero for both.
+        if (@event is PointerSignalEvent
+            or PointerPanZoomStartEvent or PointerPanZoomUpdateEvent or PointerPanZoomEndEvent)
         {
             return @event.WithDelta(default);
         }

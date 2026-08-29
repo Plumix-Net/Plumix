@@ -194,6 +194,23 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
         AddPointerInternal(@event);
     }
 
+    /// <summary>
+    /// Joins a trackpad pan/zoom gesture. Dart's `addAllowedPointerPanZoom` fixes the initial
+    /// buttons to the primary button, because a trackpad gesture carries none of its own and every
+    /// later `buttons` comparison would otherwise reject it.
+    /// </summary>
+    protected override void AddAllowedPointerPanZoom(PointerPanZoomStartEvent @event)
+    {
+        base.AddAllowedPointerPanZoom(@event);
+        StartTrackingPointer(@event.Pointer, @event.Transform);
+        if (_state == DragState.Ready)
+        {
+            _initialButtons = PointerButtons.Primary;
+        }
+
+        AddPointerInternal(@event);
+    }
+
     private void AddPointerInternal(PointerEvent @event)
     {
         _velocityTrackers[@event.Pointer] = VelocityTrackerBuilder(@event);
@@ -224,10 +241,20 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
             throw new InvalidOperationException("A drag recognizer received an event while it was ready.");
         }
 
-        if (!@event.Synthesized && @event is PointerDownEvent or PointerMoveEvent)
+        if (!@event.Synthesized
+            && @event is PointerDownEvent or PointerMoveEvent
+                or PointerPanZoomStartEvent or PointerPanZoomUpdateEvent)
         {
+            // A pan/zoom gesture has a stationary contact position, so its velocity is tracked in
+            // pan space: the start contributes the origin and every update its cumulative pan.
+            Point trackedPosition = @event switch
+            {
+                PointerPanZoomStartEvent => default,
+                PointerPanZoomUpdateEvent panZoomUpdate => panZoomUpdate.Pan,
+                _ => @event.LocalPosition
+            };
             VelocityTracker tracker = _velocityTrackers[@event.Pointer];
-            tracker.AddPosition(@event.TimestampUtc, @event.LocalPosition);
+            tracker.AddPosition(@event.TimestampUtc, trackedPosition);
         }
 
         if (@event is PointerMoveEvent && @event.Buttons != _initialButtons)
@@ -236,12 +263,15 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
             return;
         }
 
-        if (@event is PointerMoveEvent && ShouldTrackMoveEvent(@event.Pointer))
+        if (@event is PointerMoveEvent or PointerPanZoomUpdateEvent && ShouldTrackMoveEvent(@event.Pointer))
         {
-            Point delta = @event.Delta;
-            Point localDelta = @event.LocalDelta;
-            Point position = @event.Position;
-            Point localPosition = @event.LocalPosition;
+            var panZoom = @event as PointerPanZoomUpdateEvent;
+            Point delta = panZoom is null ? @event.Delta : panZoom.PanDelta;
+            Point localDelta = panZoom is null ? @event.LocalDelta : panZoom.LocalPanDelta;
+            Point position = panZoom is null ? @event.Position : @event.Position + panZoom.Pan;
+            Point localPosition = panZoom is null
+                ? @event.LocalPosition
+                : @event.LocalPosition + panZoom.LocalPan;
             _lastPosition = new OffsetPair(Local: localPosition, Global: position);
             Point resolvedDelta = ResolveLocalDeltaForMultitouch(@event.Pointer, localDelta);
 
@@ -291,7 +321,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
             RecordMoveDeltaForMultitouch(@event.Pointer, localDelta);
         }
 
-        if (@event is PointerUpEvent or PointerCancelEvent)
+        if (@event is PointerUpEvent or PointerCancelEvent or PointerPanZoomEndEvent)
         {
             GiveUpPointer(@event.Pointer);
         }

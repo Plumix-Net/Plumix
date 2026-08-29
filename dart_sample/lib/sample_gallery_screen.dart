@@ -125,6 +125,7 @@ import 'demos/general/rich_text_demo_page.dart';
 import 'demos/general/intrinsic_widgets_demo_page.dart';
 import 'demos/general/layout_builder_demo_page.dart';
 import 'demos/general/keyboard_listener_demo_page.dart';
+import 'demos/general/trackpad_pan_zoom_demo_page.dart';
 import 'demos/general/lifecycle_utilities_demo_page.dart';
 import 'demos/general/overflow_box_demo_page.dart';
 import 'demos/general/overflow_indicator_demo_page.dart';
@@ -971,6 +972,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Keyboard listeners + actions',
       subtitle: 'focused key events + Actions/Shortcuts intent dispatch',
       builder: () => const KeyboardListenerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.trackpadPanZoom,
+      title: 'Trackpad pan/zoom',
+      subtitle: 'PointerPanZoom start/update/end through Listener',
+      builder: () => const TrackpadPanZoomDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.debugPainting,

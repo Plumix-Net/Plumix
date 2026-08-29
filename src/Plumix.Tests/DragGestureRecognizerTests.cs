@@ -648,6 +648,238 @@ public sealed class DragGestureRecognizerTests : IDisposable
         Assert.Equal("pan", pan.DebugDescription);
     }
 
+    /// <summary>
+    /// A trackpad pan/zoom sequence, tracking the cumulative pan so each update can report the
+    /// delta since the previous one. Mirrors Flutter's `TestPointer.panZoomStart/Update/End`.
+    /// </summary>
+    private sealed class PanZoomPointer(int pointer)
+    {
+        private Point _pan;
+
+        public PointerPanZoomStartEvent Start(Point position)
+        {
+            _pan = default;
+            return new PointerPanZoomStartEvent(pointer, position, DateTime.UnixEpoch);
+        }
+
+        public PointerPanZoomUpdateEvent Update(
+            Point position,
+            Point pan = default,
+            double scale = 1.0,
+            double rotation = 0.0,
+            double milliseconds = 0.0)
+        {
+            Point panDelta = pan - _pan;
+            _pan = pan;
+            return new PointerPanZoomUpdateEvent(
+                pointer,
+                position,
+                DateTime.UnixEpoch.AddMilliseconds(milliseconds),
+                pan: pan,
+                panDelta: panDelta,
+                scale: scale,
+                rotation: rotation);
+        }
+
+        public PointerPanZoomEndEvent End(Point position, double milliseconds = 0.0)
+        {
+            return new PointerPanZoomEndEvent(
+                pointer, position, DateTime.UnixEpoch.AddMilliseconds(milliseconds));
+        }
+    }
+
+    /// <summary>The pan/zoom counterpart of <see cref="BeginContested"/>.</summary>
+    private PassiveMember BeginContestedPanZoom(GestureRecognizer recognizer, PointerPanZoomStartEvent start)
+    {
+        var competitor = new PassiveMember();
+        recognizer.AddPointerPanZoom(start);
+        _binding.GestureArena.Add(start.Pointer, competitor);
+        _binding.GestureArena.Close(start.Pointer);
+        Route(start);
+        return competitor;
+    }
+
+    [Fact]
+    public void Pan_RecognizesATrackpadPanZoomGestureOncePanSlopIsExceeded()
+    {
+        using var pan = new PanGestureRecognizer();
+        var log = new List<string>();
+        Point? updatedDelta = null;
+        pan.OnStart = _ => log.Add("start");
+        pan.OnUpdate = details =>
+        {
+            log.Add("update");
+            updatedDelta = details.Delta;
+        };
+        pan.OnEnd = _ => log.Add("end");
+
+        var pointer = new PanZoomPointer(2);
+        BeginContestedPanZoom(pan, pointer.Start(new Point(10, 10)));
+        Assert.Empty(log);
+
+        // 28.28 logical pixels of pan: short of the 36-pixel pan slop a trackpad shares with touch.
+        Route(pointer.Update(new Point(10, 10), pan: new Point(20, 20)));
+        Assert.Empty(log);
+
+        // 42.43 pixels clears it; `DragStartBehavior.Start` folds the pending offset into the start
+        // position, so the accepting update reports no delta of its own.
+        Route(pointer.Update(new Point(10, 10), pan: new Point(30, 30)));
+        Assert.Equal(["start"], log);
+        Assert.Null(updatedDelta);
+
+        Route(pointer.Update(new Point(10, 10), pan: new Point(30, 25)));
+        Assert.Equal(["start", "update"], log);
+        Assert.Equal(new Point(0, -5), updatedDelta);
+
+        Route(pointer.End(new Point(10, 10)));
+        Assert.Equal(["start", "update", "end"], log);
+    }
+
+    [Fact]
+    public void Pan_LetsATouchJoinAnAcceptedTrackpadPanZoomDrag()
+    {
+        using var pan = new PanGestureRecognizer();
+        var log = new List<string>();
+        Point? updatedDelta = null;
+        pan.OnStart = _ => log.Add("start");
+        pan.OnUpdate = details =>
+        {
+            log.Add("update");
+            updatedDelta = details.Delta;
+        };
+        pan.OnEnd = _ => log.Add("end");
+
+        var trackpad = new PanZoomPointer(2);
+        BeginContestedPanZoom(pan, trackpad.Start(new Point(10, 10)));
+        Route(trackpad.Update(new Point(10, 10), pan: new Point(30, 30)));
+        Assert.Equal(["start"], log);
+
+        // The touch joins the drag already in progress: no second start, and its move is reported
+        // as an ordinary update.
+        PointerDownEvent down = Down(3, new Point(20, 20));
+        pan.AddPointer(down);
+        _binding.GestureArena.Close(3);
+        Route(down);
+        Assert.Equal(["start"], log);
+
+        Route(Move(3, new Point(25, 25), new Point(5, 5)));
+        Assert.Equal(["start", "update"], log);
+        Assert.Equal(new Point(5, 5), updatedDelta);
+
+        Route(Up(3, new Point(25, 25)));
+        Assert.Equal(["start", "update"], log);
+
+        Route(trackpad.End(new Point(10, 10)));
+        Assert.Equal(["start", "update", "end"], log);
+    }
+
+    [Fact]
+    public void Pan_LetsATrackpadPanZoomJoinAnAcceptedTouchDrag()
+    {
+        using var pan = new PanGestureRecognizer();
+        var log = new List<string>();
+        Point? updatedDelta = null;
+        pan.OnStart = _ => log.Add("start");
+        pan.OnUpdate = details =>
+        {
+            log.Add("update");
+            updatedDelta = details.Delta;
+        };
+        pan.OnEnd = _ => log.Add("end");
+
+        PointerDownEvent down = Down(1, new Point(10, 10));
+        BeginContested(pan, down);
+        Route(Move(1, new Point(60, 60), new Point(50, 50)));
+        Assert.Equal(["start"], log);
+        Route(Move(1, new Point(70, 70), new Point(10, 10)));
+        Assert.Equal(["start", "update"], log);
+        Assert.Equal(new Point(10, 10), updatedDelta);
+
+        var trackpad = new PanZoomPointer(2);
+        pan.AddPointerPanZoom(trackpad.Start(new Point(10, 10)));
+        _binding.GestureArena.Close(2);
+        Route(trackpad.Start(new Point(10, 10)));
+        Assert.Equal(["start", "update"], log);
+
+        // Already accepted, so the first update is reported straight through without re-checking
+        // the pan slop.
+        Route(trackpad.Update(new Point(10, 10), pan: new Point(20, 20)));
+        Assert.Equal(new Point(20, 20), updatedDelta);
+        Route(trackpad.Update(new Point(10, 10), pan: new Point(30, 30)));
+        Assert.Equal(new Point(10, 10), updatedDelta);
+
+        // The touch pointer is still tracked, so the gesture does not end yet.
+        Route(trackpad.End(new Point(10, 10)));
+        Assert.DoesNotContain("end", log);
+
+        Route(Up(1, new Point(70, 70)));
+        Assert.Contains("end", log);
+    }
+
+    [Fact]
+    public void HorizontalDrag_UsesTheTouchSlopNotThePanSlopForATrackpadGesture()
+    {
+        using var horizontal = new HorizontalDragGestureRecognizer();
+        bool started = false;
+        horizontal.OnStart = _ => started = true;
+
+        var pointer = new PanZoomPointer(2);
+        BeginContestedPanZoom(horizontal, pointer.Start(new Point(10, 10)));
+
+        // 17 pixels along the axis: under the 18-pixel hit slop a one-axis recognizer uses.
+        Route(pointer.Update(new Point(10, 10), pan: new Point(17, 0)));
+        Assert.False(started);
+
+        Route(pointer.Update(new Point(10, 10), pan: new Point(19, 0)));
+        Assert.True(started);
+    }
+
+    [Fact]
+    public void PanZoom_IsRejectedWhenTheDeviceKindIsNotSupported()
+    {
+        using var pan = new PanGestureRecognizer
+        {
+            SupportedDevices = new HashSet<PointerDeviceKind> { PointerDeviceKind.Touch }
+        };
+        bool started = false;
+        pan.OnStart = _ => started = true;
+
+        var pointer = new PanZoomPointer(2);
+        // `SupportedDevices` excludes the trackpad, so the gesture is never tracked and its updates
+        // never reach the recognizer.
+        pan.AddPointerPanZoom(pointer.Start(new Point(10, 10)));
+        _binding.GestureArena.Close(2);
+        Route(pointer.Start(new Point(10, 10)));
+        Route(pointer.Update(new Point(10, 10), pan: new Point(50, 50)));
+
+        Assert.False(started);
+    }
+
+    [Fact]
+    public void PanZoom_ReportsAFlingVelocityMeasuredInPanSpace()
+    {
+        using var pan = new PanGestureRecognizer();
+        DragEndDetails? endDetails = null;
+        pan.OnStart = _ => { };
+        pan.OnEnd = details => endDetails = details;
+
+        var pointer = new PanZoomPointer(2);
+        BeginContestedPanZoom(pan, pointer.Start(new Point(10, 10)));
+        for (int i = 1; i <= 10; i++)
+        {
+            Route(pointer.Update(new Point(10, 10), pan: new Point(i * 20, 0), milliseconds: i * 20));
+        }
+
+        Route(pointer.End(new Point(10, 10), milliseconds: 220));
+
+        Assert.True(endDetails.HasValue);
+        DragEndDetails details = endDetails.Value;
+        // 20 logical pixels every 20 ms is 1000 px/s along x, tracked from the pan offsets rather
+        // than from the stationary contact position.
+        Assert.Equal(1000.0, details.Velocity.PixelsPerSecond.X, 1);
+        Assert.Equal(0.0, details.Velocity.PixelsPerSecond.Y, 1);
+    }
+
     private sealed class PassiveMember : IGestureArenaMember
     {
         public bool Accepted { get; private set; }

@@ -33,6 +33,7 @@ public class PlumixHost : Control
     private readonly GestureBinding _gestureBinding = GestureBinding.Instance;
     private readonly PlumixTextInputMethodClient _textInputClient;
     private readonly Thread _ownerThread;
+    private readonly TrackpadPanZoomSynthesizer _panZoom;
     private bool _isSubscribedToScheduler;
     private Size _lastArrangedSize;
     private TopLevel? _attachedTopLevel;
@@ -90,6 +91,10 @@ public class PlumixHost : Control
         _pipeline.Attach(_root);
         _textInputClient = new PlumixTextInputMethodClient(this);
         _ownerThread = Thread.CurrentThread;
+        _panZoom = new TrackpadPanZoomSynthesizer(DispatchPointerEvent);
+
+        AddHandler(PointerTouchPadGestureMagnifyEvent, HandleTouchPadMagnify);
+        AddHandler(PointerTouchPadGestureRotateEvent, HandleTouchPadRotate);
 
         ClipToBounds = true;
         Focusable = true;
@@ -124,6 +129,10 @@ public class PlumixHost : Control
     protected override void OnPointerPressed(PointerPressedEventArgs e)
     {
         base.OnPointerPressed(e);
+
+        // A finger or button going down takes over from any trackpad gesture still in its idle
+        // window; the framework must see that gesture end before the new sequence starts.
+        _panZoom.End();
         Focus();
         e.Pointer.Capture(this);
         DispatchPointerEvent(ToPointerDownEvent(e));
@@ -286,6 +295,26 @@ public class PlumixHost : Control
         }
     }
 
+    /// <summary>
+    /// Turns a trackpad pinch into the zoom component of a synthesized pan/zoom gesture. Avalonia
+    /// forwards <c>NSEvent.magnification</c>, an additive increment on the current zoom, in both
+    /// components of <see cref="PointerDeltaEventArgs.Delta"/>.
+    /// </summary>
+    private void HandleTouchPadMagnify(object? sender, PointerDeltaEventArgs e)
+    {
+        _panZoom.Zoom(e.GetPosition(this), 1.0 + e.Delta.Y, DateTime.UtcNow);
+    }
+
+    /// <summary>
+    /// Turns a trackpad rotation into the rotation component of a synthesized pan/zoom gesture.
+    /// Avalonia forwards <c>NSEvent.rotation</c> in degrees, counterclockwise positive; Flutter
+    /// reports radians the other way round, the same conversion its macOS embedder applies.
+    /// </summary>
+    private void HandleTouchPadRotate(object? sender, PointerDeltaEventArgs e)
+    {
+        _panZoom.Rotate(e.GetPosition(this), -e.Delta.Y * Math.PI / 180.0, DateTime.UtcNow);
+    }
+
     protected override void OnPointerWheelChanged(PointerWheelEventArgs e)
     {
         base.OnPointerWheelChanged(e);
@@ -308,6 +337,8 @@ public class PlumixHost : Control
     protected override void OnPointerCaptureLost(PointerCaptureLostEventArgs e)
     {
         base.OnPointerCaptureLost(e);
+
+        _panZoom.End();
 
         DispatchPointerEvent(new PointerCancelEvent(
             pointer: unchecked((int)e.Pointer.Id),

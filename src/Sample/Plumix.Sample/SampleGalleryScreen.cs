@@ -151,6 +151,8 @@ internal static class SampleRoutes
     public const string IntrinsicWidgets = "/intrinsic-widgets";
     public const string LayoutBuilder = "/layout-builder";
     public const string KeyboardListener = "/keyboard-listener";
+
+    public const string TrackpadPanZoom = "/trackpad-pan-zoom";
     public const string DebugPainting = "/debug-painting";
     public const string Flow = "/flow";
     public const string Transform = "/transform";
@@ -579,6 +581,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Keyboard listeners + actions",
             "focused key events + Actions/Shortcuts intent dispatch",
             () => new KeyboardListenerDemoPage()),
+        new(
+            SampleRoutes.TrackpadPanZoom,
+            "Trackpad pan/zoom",
+            "PointerPanZoom start/update/end through Listener",
+            () => new TrackpadPanZoomDemoPage()),
         new(
             SampleRoutes.DebugPainting,
             "Placeholder + GridPaper",

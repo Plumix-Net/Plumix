@@ -115,6 +115,46 @@ public abstract class GestureRecognizer : Diagnosticable, IDisposable
                && AllowedButtonsFilter(@event.Buttons);
     }
 
+    /// <summary>
+    /// Registers a trackpad pan/zoom gesture with this recognizer, the pan/zoom counterpart of
+    /// <see cref="AddPointer"/>. Ports Dart's `GestureRecognizer.addPointerPanZoom`.
+    /// </summary>
+    public virtual void AddPointerPanZoom(PointerPanZoomStartEvent @event)
+    {
+        _pointerToEventData[@event.Pointer] = (@event.Kind, @event.Buttons);
+        if (IsPointerPanZoomAllowed(@event))
+        {
+            AddAllowedPointerPanZoom(@event);
+            return;
+        }
+
+        HandleNonAllowedPointerPanZoom(@event);
+    }
+
+    /// <summary>Registers a pan/zoom gesture that passed <see cref="IsPointerPanZoomAllowed"/>.</summary>
+    protected virtual void AddAllowedPointerPanZoom(PointerPanZoomStartEvent @event)
+    {
+    }
+
+    /// <summary>Called for a pan/zoom gesture this recognizer refuses to compete for.</summary>
+    /// <remarks>
+    /// Dart's base implementation is a no-op even on `OneSequenceGestureRecognizer`, which does
+    /// resolve rejected for a disallowed pointer *down*; a disallowed pan/zoom is simply ignored.
+    /// </remarks>
+    protected virtual void HandleNonAllowedPointerPanZoom(PointerPanZoomStartEvent @event)
+    {
+    }
+
+    /// <summary>
+    /// Whether this recognizer competes for the given pan/zoom gesture. Unlike
+    /// <see cref="IsPointerAllowed"/> this does not consult <see cref="AllowedButtonsFilter"/>: a
+    /// trackpad gesture reports no buttons.
+    /// </summary>
+    protected virtual bool IsPointerPanZoomAllowed(PointerPanZoomStartEvent @event)
+    {
+        return SupportedDevices is null || SupportedDevices.Contains(@event.Kind);
+    }
+
     /// <summary>The device kind recorded when the given pointer went down.</summary>
     protected PointerDeviceKind GetKindForPointer(int pointer)
     {
@@ -354,7 +394,7 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
     /// <summary>Stops tracking the pointer once its sequence has ended.</summary>
     protected void StopTrackingIfPointerNoLongerDown(PointerEvent @event)
     {
-        if (@event is PointerUpEvent or PointerCancelEvent)
+        if (@event is PointerUpEvent or PointerCancelEvent or PointerPanZoomEndEvent)
         {
             StopTrackingPointer(@event.Pointer);
         }

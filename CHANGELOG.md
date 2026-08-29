@@ -8,6 +8,13 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `PointerPanZoom{Start,Update,End}Event` with pan/scale/rotation and local mapping (`gestures/events.dart`).
+- Added `GestureRecognizer.AddPointerPanZoom`/`AddAllowedPointerPanZoom`/`IsPointerPanZoomAllowed` (`recognizer.dart`).
+- Added the `DragGestureRecognizer` trackpad pan/zoom arms and pan-space velocity tracking (`gestures/monodrag.dart`).
+- Added `Listener`/`RenderPointerListener` pan/zoom callbacks and the binding's routing arms (`gestures/binding.dart`).
+- Breaking: `PointerDown`/`Move`/`Up`/`CancelEvent` reject `PointerDeviceKind.Trackpad`, as Dart does (`events.dart`).
+- Added `TrackpadPanZoomSynthesizer`, which rebuilds the gesture phase Avalonia's trackpad events omit.
+- Added a trackpad pan/zoom demo page to both samples.
 - Breaking: `DragGestureRecognizer` is a strict `OneSequenceGestureRecognizer` port (`gestures/monodrag.dart`).
 - Breaking: drags accept on accumulated global distance vs `computeHitSlop`/`computePanSlop`, not one 18 px slop.
 - Added `MultitouchDragStrategy` with the latest-pointer, sum-all and average-boundary strategies (`monodrag.dart`).

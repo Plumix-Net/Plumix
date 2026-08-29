@@ -19,6 +19,9 @@ public sealed class Listener : SingleChildRenderObjectWidget
         Action<PointerHoverEvent>? onPointerHover = null,
         Action<PointerUpEvent>? onPointerUp = null,
         Action<PointerCancelEvent>? onPointerCancel = null,
+        Action<PointerPanZoomStartEvent>? onPointerPanZoomStart = null,
+        Action<PointerPanZoomUpdateEvent>? onPointerPanZoomUpdate = null,
+        Action<PointerPanZoomEndEvent>? onPointerPanZoomEnd = null,
         Action<PointerSignalEvent>? onPointerSignal = null,
         HitTestBehavior behavior = HitTestBehavior.DeferToChild,
         Key? key = null) : base(child, key)
@@ -30,6 +33,9 @@ public sealed class Listener : SingleChildRenderObjectWidget
         OnPointerHover = onPointerHover;
         OnPointerUp = onPointerUp;
         OnPointerCancel = onPointerCancel;
+        OnPointerPanZoomStart = onPointerPanZoomStart;
+        OnPointerPanZoomUpdate = onPointerPanZoomUpdate;
+        OnPointerPanZoomEnd = onPointerPanZoomEnd;
         OnPointerSignal = onPointerSignal;
         Behavior = behavior;
     }
@@ -48,6 +54,15 @@ public sealed class Listener : SingleChildRenderObjectWidget
 
     public Action<PointerCancelEvent>? OnPointerCancel { get; }
 
+    /// <summary>Called when a trackpad pan/zoom gesture starts over this widget.</summary>
+    public Action<PointerPanZoomStartEvent>? OnPointerPanZoomStart { get; }
+
+    /// <summary>Called when the trackpad pan/zoom gesture in progress reports new values.</summary>
+    public Action<PointerPanZoomUpdateEvent>? OnPointerPanZoomUpdate { get; }
+
+    /// <summary>Called when the trackpad pan/zoom gesture in progress ends.</summary>
+    public Action<PointerPanZoomEndEvent>? OnPointerPanZoomEnd { get; }
+
     public Action<PointerSignalEvent>? OnPointerSignal { get; }
 
     public HitTestBehavior Behavior { get; }
@@ -62,6 +77,9 @@ public sealed class Listener : SingleChildRenderObjectWidget
             onPointerHover: OnPointerHover,
             onPointerUp: OnPointerUp,
             onPointerCancel: OnPointerCancel,
+            onPointerPanZoomStart: OnPointerPanZoomStart,
+            onPointerPanZoomUpdate: OnPointerPanZoomUpdate,
+            onPointerPanZoomEnd: OnPointerPanZoomEnd,
             onPointerSignal: OnPointerSignal,
             behavior: Behavior);
     }
@@ -76,6 +94,9 @@ public sealed class Listener : SingleChildRenderObjectWidget
         listener.OnPointerHover = OnPointerHover;
         listener.OnPointerUp = OnPointerUp;
         listener.OnPointerCancel = OnPointerCancel;
+        listener.OnPointerPanZoomStart = OnPointerPanZoomStart;
+        listener.OnPointerPanZoomUpdate = OnPointerPanZoomUpdate;
+        listener.OnPointerPanZoomEnd = OnPointerPanZoomEnd;
         listener.OnPointerSignal = OnPointerSignal;
         listener.Behavior = Behavior;
     }
@@ -370,7 +391,8 @@ public sealed class RawGestureDetector : StatefulWidget
                 onPointerDown: HandlePointerDown,
                 onPointerMove: widget.OnPointerMove,
                 onPointerUp: widget.OnPointerUp,
-                onPointerCancel: widget.OnPointerCancel);
+                onPointerCancel: widget.OnPointerCancel,
+                onPointerPanZoomStart: HandlePointerPanZoomStart);
 
             if (!widget.ExcludeFromSemantics)
             {
@@ -566,6 +588,37 @@ public sealed class RawGestureDetector : StatefulWidget
             _horizontalDrag?.AddPointer(@event);
             _verticalDrag?.AddPointer(@event);
             _pan?.AddPointer(@event);
+        }
+
+        /// <summary>
+        /// Offers a starting trackpad pan/zoom gesture to every recognizer, the pan/zoom half of
+        /// <see cref="HandlePointerDown"/>. Dart's `_handlePointerPanZoomStart`; the update and end
+        /// events reach the recognizers through the pointer router, not through this listener.
+        /// </summary>
+        private void HandlePointerPanZoomStart(PointerPanZoomStartEvent @event)
+        {
+            var widget = CurrentWidget;
+            if (widget.SupportedDevices != null && !widget.SupportedDevices.Contains(@event.Kind))
+            {
+                return;
+            }
+
+            if (widget.Gestures is not null)
+            {
+                foreach (GestureRecognizer recognizer in _customRecognizers.Values.ToArray())
+                {
+                    recognizer.AddPointerPanZoom(@event);
+                }
+
+                return;
+            }
+
+            _tap?.AddPointerPanZoom(@event);
+            _doubleTap?.AddPointerPanZoom(@event);
+            _longPress?.AddPointerPanZoom(@event);
+            _horizontalDrag?.AddPointerPanZoom(@event);
+            _verticalDrag?.AddPointerPanZoom(@event);
+            _pan?.AddPointerPanZoom(@event);
         }
 
         private void SyncRecognizers()

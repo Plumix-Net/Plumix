@@ -102,7 +102,18 @@ public abstract class PointerEvent
             untransformedDelta: Delta,
             transform: transform,
             transformedEndPosition: clone.LocalPosition);
+        clone.ApplyLocalTransform(transform);
         return clone;
+    }
+
+    /// <summary>
+    /// Maps the local copies of any coordinates a subclass adds on top of position and delta.
+    /// Called on the freshly transformed clone after its <see cref="LocalPosition"/> and
+    /// <see cref="LocalDelta"/> have been computed. Dart gets this for free from its
+    /// `_TransformedPointer*Event` classes, which recompute every local field themselves.
+    /// </summary>
+    protected virtual void ApplyLocalTransform(Matrix4 transform)
+    {
     }
 
     /// <summary>
@@ -118,6 +129,25 @@ public abstract class PointerEvent
 
         Matrix4 flattened = Plumix.Gestures.PointerEventUtils.RemovePerspectiveTransform(transform);
         return Plumix.Rendering.MatrixUtils.TransformPoint(flattened, position);
+    }
+
+    /// <summary>
+    /// Throws when a pointer event type that the platform never reports for a trackpad is built
+    /// with <see cref="PointerDeviceKind.Trackpad"/>. Ports the
+    /// `assert(!identical(kind, PointerDeviceKind.trackpad))` that Dart's `PointerDownEvent`,
+    /// `PointerMoveEvent`, `PointerUpEvent` and `PointerCancelEvent` constructors carry: a trackpad
+    /// reports its gestures as the `PointerPanZoom*` events instead.
+    /// </summary>
+    protected static PointerDeviceKind AssertNotTrackpad(PointerDeviceKind kind)
+    {
+        if (kind == PointerDeviceKind.Trackpad)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(kind),
+                "A trackpad reports its gestures as PointerPanZoom events, not as this event type.");
+        }
+
+        return kind;
     }
 
     internal PointerEvent WithDelta(Point delta)
@@ -147,7 +177,7 @@ public sealed class PointerDownEvent : PointerEvent
         Point position,
         PointerButtons buttons,
         DateTime timestampUtc)
-        : base(pointer, kind, position, buttons, down: true, timestampUtc)
+        : base(pointer, AssertNotTrackpad(kind), position, buttons, down: true, timestampUtc)
     {
     }
 }
@@ -161,7 +191,7 @@ public sealed class PointerMoveEvent : PointerEvent
         PointerButtons buttons,
         bool down,
         DateTime timestampUtc)
-        : base(pointer, kind, position, buttons, down, timestampUtc)
+        : base(pointer, AssertNotTrackpad(kind), position, buttons, down, timestampUtc)
     {
     }
 }
@@ -213,7 +243,7 @@ public sealed class PointerUpEvent : PointerEvent
         Point position,
         PointerButtons buttons,
         DateTime timestampUtc)
-        : base(pointer, kind, position, buttons, down: false, timestampUtc)
+        : base(pointer, AssertNotTrackpad(kind), position, buttons, down: false, timestampUtc)
     {
     }
 }
@@ -226,7 +256,7 @@ public sealed class PointerCancelEvent : PointerEvent
         Point position,
         PointerButtons buttons,
         DateTime timestampUtc)
-        : base(pointer, kind, position, buttons, down: false, timestampUtc)
+        : base(pointer, AssertNotTrackpad(kind), position, buttons, down: false, timestampUtc)
     {
     }
 }
@@ -291,6 +321,96 @@ public sealed class PointerScrollInertiaCancelEvent : PointerSignalEvent
         PointerButtons buttons,
         DateTime timestampUtc)
         : base(pointer, kind, position, buttons, timestampUtc)
+    {
+    }
+}
+
+/// <summary>
+/// A pan/zoom gesture started on a trackpad: the platform put two or more fingers down and will
+/// report the gesture as a stream of <see cref="PointerPanZoomUpdateEvent"/>s until the matching
+/// <see cref="PointerPanZoomEndEvent"/>. Ports Dart's `PointerPanZoomStartEvent`
+/// (`gestures/events.dart`).
+/// </summary>
+/// <remarks>
+/// Like Dart's, the kind is hard-wired to <see cref="PointerDeviceKind.Trackpad"/>: no other device
+/// reports pan/zoom. The event is deliberately not a <see cref="PointerSignalEvent"/> — it opens a
+/// pointer sequence with its own arena and hit-test path, exactly like a pointer going down.
+/// </remarks>
+public sealed class PointerPanZoomStartEvent : PointerEvent
+{
+    public PointerPanZoomStartEvent(int pointer, Point position, DateTime timestampUtc)
+        : base(pointer, PointerDeviceKind.Trackpad, position, PointerButtons.None, down: false, timestampUtc)
+    {
+    }
+}
+
+/// <summary>
+/// The trackpad reported new pan, zoom or rotation values for the pan/zoom gesture in progress.
+/// Ports Dart's `PointerPanZoomUpdateEvent` (`gestures/events.dart`).
+/// </summary>
+public sealed class PointerPanZoomUpdateEvent : PointerEvent
+{
+    public PointerPanZoomUpdateEvent(
+        int pointer,
+        Point position,
+        DateTime timestampUtc,
+        Point pan = default,
+        Point panDelta = default,
+        double scale = 1.0,
+        double rotation = 0.0)
+        : base(pointer, PointerDeviceKind.Trackpad, position, PointerButtons.None, down: false, timestampUtc)
+    {
+        Pan = pan;
+        LocalPan = pan;
+        PanDelta = panDelta;
+        LocalPanDelta = panDelta;
+        Scale = scale;
+        Rotation = rotation;
+    }
+
+    /// <summary>The total pan offset accumulated since the gesture started.</summary>
+    public Point Pan { get; }
+
+    /// <summary><see cref="Pan"/> in the coordinate space of the object that received the event.</summary>
+    public Point LocalPan { get; private set; }
+
+    /// <summary>How much <see cref="Pan"/> changed since the previous update.</summary>
+    public Point PanDelta { get; }
+
+    /// <summary><see cref="PanDelta"/> in the local coordinate space.</summary>
+    public Point LocalPanDelta { get; private set; }
+
+    /// <summary>The zoom factor of the gesture; <c>1.0</c> means no zoom.</summary>
+    public double Scale { get; }
+
+    /// <summary>How far the gesture has rotated, in radians, since it started.</summary>
+    public double Rotation { get; }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Dart's `_TransformedPointerPanZoomUpdateEvent`: `localPan` is the *point* `pan` mapped
+    /// through the transform, while `localPanDelta` is a delta anchored on `pan` rather than on
+    /// `position`. <see cref="Scale"/> and <see cref="Rotation"/> are not transformed.
+    /// </remarks>
+    protected override void ApplyLocalTransform(Matrix4 transform)
+    {
+        LocalPan = TransformPosition(transform, Pan);
+        LocalPanDelta = Plumix.Gestures.PointerEventUtils.TransformDeltaViaPositions(
+            untransformedEndPosition: Pan,
+            untransformedDelta: PanDelta,
+            transform: transform,
+            transformedEndPosition: LocalPan);
+    }
+}
+
+/// <summary>
+/// The pan/zoom gesture in progress ended: the fingers left the trackpad. Ports Dart's
+/// `PointerPanZoomEndEvent` (`gestures/events.dart`).
+/// </summary>
+public sealed class PointerPanZoomEndEvent : PointerEvent
+{
+    public PointerPanZoomEndEvent(int pointer, Point position, DateTime timestampUtc)
+        : base(pointer, PointerDeviceKind.Trackpad, position, PointerButtons.None, down: false, timestampUtc)
     {
     }
 }

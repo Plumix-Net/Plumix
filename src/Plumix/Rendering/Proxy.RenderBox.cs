@@ -3148,6 +3148,9 @@ public class RenderPointerListener : RenderProxyBox
         Action<PointerHoverEvent>? onPointerHover = null,
         Action<PointerUpEvent>? onPointerUp = null,
         Action<PointerCancelEvent>? onPointerCancel = null,
+        Action<PointerPanZoomStartEvent>? onPointerPanZoomStart = null,
+        Action<PointerPanZoomUpdateEvent>? onPointerPanZoomUpdate = null,
+        Action<PointerPanZoomEndEvent>? onPointerPanZoomEnd = null,
         Action<PointerSignalEvent>? onPointerSignal = null,
         HitTestBehavior behavior = HitTestBehavior.DeferToChild,
         RenderBox? child = null)
@@ -3159,6 +3162,9 @@ public class RenderPointerListener : RenderProxyBox
         OnPointerHover = onPointerHover;
         OnPointerUp = onPointerUp;
         OnPointerCancel = onPointerCancel;
+        OnPointerPanZoomStart = onPointerPanZoomStart;
+        OnPointerPanZoomUpdate = onPointerPanZoomUpdate;
+        OnPointerPanZoomEnd = onPointerPanZoomEnd;
         OnPointerSignal = onPointerSignal;
         _behavior = behavior;
         Child = child;
@@ -3177,6 +3183,15 @@ public class RenderPointerListener : RenderProxyBox
     public Action<PointerUpEvent>? OnPointerUp { get; set; }
 
     public Action<PointerCancelEvent>? OnPointerCancel { get; set; }
+
+    /// <summary>Called when a trackpad pan/zoom gesture starts over this render object.</summary>
+    public Action<PointerPanZoomStartEvent>? OnPointerPanZoomStart { get; set; }
+
+    /// <summary>Called when the trackpad pan/zoom gesture in progress reports new values.</summary>
+    public Action<PointerPanZoomUpdateEvent>? OnPointerPanZoomUpdate { get; set; }
+
+    /// <summary>Called when the trackpad pan/zoom gesture in progress ends.</summary>
+    public Action<PointerPanZoomEndEvent>? OnPointerPanZoomEnd { get; set; }
 
     public Action<PointerSignalEvent>? OnPointerSignal { get; set; }
 
@@ -3225,6 +3240,15 @@ public class RenderPointerListener : RenderProxyBox
                 break;
             case PointerHoverEvent hoverEvent:
                 OnPointerHover?.Invoke(hoverEvent);
+                break;
+            case PointerPanZoomStartEvent panZoomStartEvent:
+                OnPointerPanZoomStart?.Invoke(panZoomStartEvent);
+                break;
+            case PointerPanZoomUpdateEvent panZoomUpdateEvent:
+                OnPointerPanZoomUpdate?.Invoke(panZoomUpdateEvent);
+                break;
+            case PointerPanZoomEndEvent panZoomEndEvent:
+                OnPointerPanZoomEnd?.Invoke(panZoomEndEvent);
                 break;
             case PointerUpEvent upEvent:
                 OnPointerUp?.Invoke(upEvent);
