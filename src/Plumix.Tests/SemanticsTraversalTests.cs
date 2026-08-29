@@ -97,7 +97,7 @@ public sealed class SemanticsTraversalTests
         pipeline.Attach(renderView);
         pipeline.FlushLayout(size);
         pipeline.FlushSemantics();
-        return Assert.IsType<SemanticsNode>(pipeline.SemanticsOwner.RootNode);
+        return Assert.IsType<SemanticsNode>(pipeline.SemanticsOwner!.RootNode);
     }
 
     private static SemanticsNode CompileRow(RenderBox first, RenderBox second, TextDirection? textDirection)

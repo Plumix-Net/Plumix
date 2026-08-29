@@ -53,7 +53,7 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         Pump(size);
         _pipeline.RequestSemanticsUpdate();
         _pipeline.FlushSemantics();
-        return _pipeline.SemanticsOwner.RootNode;
+        return _pipeline.SemanticsOwner!.RootNode;
     }
 
     public IReadOnlyList<T> FindWidgets<T>() where T : Widget

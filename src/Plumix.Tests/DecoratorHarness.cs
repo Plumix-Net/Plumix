@@ -59,7 +59,7 @@ internal sealed class DecoratorHarness : IDisposable
         Pump();
         _pipeline.RequestSemanticsUpdate();
         _pipeline.FlushSemantics();
-        return _pipeline.SemanticsOwner.RootNode
+        return _pipeline.SemanticsOwner!.RootNode
                ?? throw new InvalidOperationException("The semantics tree is empty.");
     }
 

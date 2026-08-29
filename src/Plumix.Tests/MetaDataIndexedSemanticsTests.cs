@@ -117,7 +117,7 @@ public sealed class MetaDataIndexedSemanticsTests
         pipeline.FlushLayout(new Size(200, 100));
         pipeline.FlushSemantics();
 
-        var root = Assert.IsType<SemanticsNode>(pipeline.SemanticsOwner.RootNode);
+        var root = Assert.IsType<SemanticsNode>(pipeline.SemanticsOwner!.RootNode);
         var first = Assert.Single(root.Children);
         Assert.Equal("Item", first.Label);
         Assert.Equal(4, first.IndexInParent);
@@ -127,11 +127,11 @@ public sealed class MetaDataIndexedSemanticsTests
         indexed.Index = 9;
         pipeline.FlushSemantics();
 
-        root = Assert.IsType<SemanticsNode>(pipeline.SemanticsOwner.RootNode);
+        root = Assert.IsType<SemanticsNode>(pipeline.SemanticsOwner!.RootNode);
         var updated = Assert.Single(root.Children);
         Assert.Equal(nodeId, updated.Id);
         Assert.Equal(9, updated.IndexInParent);
-        Assert.Contains("indexInParent=9", pipeline.SemanticsOwner.DebugDumpTree());
+        Assert.Contains("indexInParent=9", pipeline.SemanticsOwner!.DebugDumpTree());
     }
 
     [Fact]
@@ -147,7 +147,7 @@ public sealed class MetaDataIndexedSemanticsTests
         pipeline.FlushLayout(new Size(200, 100));
         pipeline.FlushSemantics();
 
-        var root = Assert.IsType<SemanticsNode>(pipeline.SemanticsOwner.RootNode);
+        var root = Assert.IsType<SemanticsNode>(pipeline.SemanticsOwner!.RootNode);
         // An index annotates the configuration, so the render object contributes to the tree and forms
         // its own node under the root's explicit child nodes, even with nothing else to say.
         var indexNode = Assert.Single(root.Children);

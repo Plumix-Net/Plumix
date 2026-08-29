@@ -151,7 +151,7 @@ public sealed class ModalBarrierTests
         pipeline.FlushLayout(new Size(100, 80));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var clipperNode = Assert.Single(root!.Children);
         Assert.Equal(new Rect(10, 5, 70, 60), clipperNode.GlobalRect);
@@ -161,7 +161,7 @@ public sealed class ModalBarrierTests
         notifier.Value = new Thickness(4, 3, 6, 7);
         pipeline.FlushSemantics();
 
-        root = pipeline.SemanticsOwner.RootNode;
+        root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         clipperNode = Assert.Single(root!.Children);
         Assert.Equal(new Rect(4, 3, 90, 70), clipperNode.GlobalRect);
@@ -187,14 +187,14 @@ public sealed class ModalBarrierTests
         pipeline.FlushSemantics();
 
         var labels = new List<string>();
-        Visit(pipeline.SemanticsOwner.RootNode);
+        Visit(pipeline.SemanticsOwner!.RootNode);
         Assert.DoesNotContain("Behind", labels);
         Assert.Contains("Foreground", labels);
 
         block.Blocking = false;
         pipeline.FlushSemantics();
         labels.Clear();
-        Visit(pipeline.SemanticsOwner.RootNode);
+        Visit(pipeline.SemanticsOwner!.RootNode);
         Assert.Contains("Behind", labels);
         Assert.Contains("Foreground", labels);
         return;

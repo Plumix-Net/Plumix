@@ -335,7 +335,7 @@ public sealed class TapRegionTests
         {
             Pump();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner;
+            return _pipeline.SemanticsOwner!;
         }
 
         public T FindRenderObject<T>() where T : RenderObject

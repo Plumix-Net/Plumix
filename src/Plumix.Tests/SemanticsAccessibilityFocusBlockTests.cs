@@ -141,7 +141,7 @@ public sealed class SemanticsAccessibilityFocusBlockTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        SemanticsNode parentNode = Assert.Single(pipeline.SemanticsOwner.RootNode!.Children);
+        SemanticsNode parentNode = Assert.Single(pipeline.SemanticsOwner!.RootNode!.Children);
         SemanticsNode childNode = Assert.Single(parentNode.Children);
         Assert.False(parentNode.Flags.HasFlag(SemanticsFlags.IsAccessibilityFocusBlocked));
         Assert.False(childNode.Flags.HasFlag(SemanticsFlags.IsAccessibilityFocusBlocked));
@@ -150,7 +150,7 @@ public sealed class SemanticsAccessibilityFocusBlockTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        parentNode = Assert.Single(pipeline.SemanticsOwner.RootNode!.Children);
+        parentNode = Assert.Single(pipeline.SemanticsOwner!.RootNode!.Children);
         childNode = Assert.Single(parentNode.Children);
         Assert.True(parentNode.Flags.HasFlag(SemanticsFlags.IsAccessibilityFocusBlocked));
         Assert.True(childNode.Flags.HasFlag(SemanticsFlags.IsAccessibilityFocusBlocked));
@@ -262,7 +262,7 @@ public sealed class SemanticsAccessibilityFocusBlockTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        SemanticsNode? root = pipeline.SemanticsOwner.RootNode;
+        SemanticsNode? root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         return root!;
     }

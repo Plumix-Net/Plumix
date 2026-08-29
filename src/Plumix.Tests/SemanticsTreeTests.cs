@@ -34,7 +34,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(100, 40));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         // Children are stored in paint order; the sort keys apply to the traversal order.
         Assert.Collection(
@@ -59,13 +59,13 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(100, 40));
         pipeline.FlushSemantics();
         // A defer-only annotation is not an annotation at all: it contributes no node of its own.
-        Assert.Equal(SemanticsHitTestBehavior.Defer, pipeline.SemanticsOwner.RootNode!.HitTestBehavior);
-        Assert.Empty(pipeline.SemanticsOwner.RootNode!.Children);
+        Assert.Equal(SemanticsHitTestBehavior.Defer, pipeline.SemanticsOwner!.RootNode!.HitTestBehavior);
+        Assert.Empty(pipeline.SemanticsOwner!.RootNode!.Children);
 
         annotations.HitTestBehavior = SemanticsHitTestBehavior.Opaque;
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var node = Assert.Single(root.Children);
         Assert.Equal(SemanticsHitTestBehavior.Opaque, node.HitTestBehavior);
@@ -119,7 +119,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(200, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var semanticsButton = Assert.Single(root.Children);
 
@@ -150,7 +150,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var firstRoot = pipeline.SemanticsOwner.RootNode;
+        var firstRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(firstRoot);
         var firstNode = Assert.Single(firstRoot.Children);
         int firstId = firstNode.Id;
@@ -158,7 +158,7 @@ public sealed class SemanticsTreeTests
         button.OnPressed = null;
         pipeline.FlushSemantics();
 
-        var updatedRoot = pipeline.SemanticsOwner.RootNode;
+        var updatedRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(updatedRoot);
         var updatedNode = Assert.Single(updatedRoot.Children);
         Assert.Equal(firstId, updatedNode.Id);
@@ -189,21 +189,21 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var buttonNode = Assert.Single(root.Children);
 
-        Assert.True(pipeline.SemanticsOwner.PerformAction(buttonNode.Id, SemanticsActions.Tap));
+        Assert.True(pipeline.SemanticsOwner!.PerformAction(buttonNode.Id, SemanticsActions.Tap));
         Assert.Equal(1, tapCount);
 
         button.OnPressed = null;
         pipeline.FlushSemantics();
 
-        var updatedRoot = pipeline.SemanticsOwner.RootNode;
+        var updatedRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(updatedRoot);
         var disabledNode = Assert.Single(updatedRoot.Children);
 
-        Assert.False(pipeline.SemanticsOwner.PerformAction(disabledNode.Id, SemanticsActions.Tap));
+        Assert.False(pipeline.SemanticsOwner!.PerformAction(disabledNode.Id, SemanticsActions.Tap));
         Assert.Equal(1, tapCount);
     }
 
@@ -227,16 +227,16 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var node = Assert.Single(root.Children);
         Assert.True(node.Actions.HasFlag(SemanticsActions.LongPress));
-        Assert.True(pipeline.SemanticsOwner.PerformAction(node.Id, SemanticsActions.LongPress));
+        Assert.True(pipeline.SemanticsOwner!.PerformAction(node.Id, SemanticsActions.LongPress));
         Assert.Equal(1, longPressCount);
         // Every node backed by a render object accepts ShowOnScreen: with no explicit handler it
         // falls back to the render object's own reveal request, which bubbles to the nearest
         // viewport (there is none here, so nothing moves).
-        Assert.True(pipeline.SemanticsOwner.PerformAction(node.Id, SemanticsActions.ShowOnScreen));
+        Assert.True(pipeline.SemanticsOwner!.PerformAction(node.Id, SemanticsActions.ShowOnScreen));
     }
 
     [Fact]
@@ -263,7 +263,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var mergedNode = Assert.Single(root.Children);
         Assert.Equal("Group\nOne\nTwo", mergedNode.Label);
@@ -294,7 +294,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var mergedNode = Assert.Single(root.Children);
         // Two siblings that both carry the tap action conflict, so neither of them merges up and both
@@ -305,11 +305,11 @@ public sealed class SemanticsTreeTests
         var firstNode = Assert.Single(mergedNode.Children, static node => node.Label == "First");
         var secondNode = Assert.Single(mergedNode.Children, static node => node.Label == "Second");
 
-        Assert.True(pipeline.SemanticsOwner.PerformAction(firstNode.Id, SemanticsActions.Tap));
+        Assert.True(pipeline.SemanticsOwner!.PerformAction(firstNode.Id, SemanticsActions.Tap));
         Assert.Equal(1, firstTapCount);
         Assert.Equal(0, secondTapCount);
 
-        Assert.True(pipeline.SemanticsOwner.PerformAction(secondNode.Id, SemanticsActions.Tap));
+        Assert.True(pipeline.SemanticsOwner!.PerformAction(secondNode.Id, SemanticsActions.Tap));
         Assert.Equal(1, firstTapCount);
         Assert.Equal(1, secondTapCount);
     }
@@ -336,7 +336,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var mergedNode = Assert.Single(root.Children);
         Assert.Empty(mergedNode.Children);
@@ -360,7 +360,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         Assert.Empty(root.Children);
     }
@@ -373,22 +373,22 @@ public sealed class SemanticsTreeTests
             child: new FixedSemanticBox("Ignored", new Size(40, 20)));
         var ignoredPipeline = BuildPipelineForSemantics(ignored);
 
-        Assert.Null(FindNodeByLabel(ignoredPipeline.SemanticsOwner.RootNode, "Ignored"));
+        Assert.Null(FindNodeByLabel(ignoredPipeline.SemanticsOwner!.RootNode, "Ignored"));
 
         ignored.IgnoringSemantics = false;
         ignoredPipeline.FlushSemantics();
-        Assert.NotNull(FindNodeByLabel(ignoredPipeline.SemanticsOwner.RootNode, "Ignored"));
+        Assert.NotNull(FindNodeByLabel(ignoredPipeline.SemanticsOwner!.RootNode, "Ignored"));
 
         var absorbed = new RenderAbsorbPointer(
             ignoringSemantics: true,
             child: new FixedSemanticBox("Absorbed", new Size(40, 20)));
         var absorbedPipeline = BuildPipelineForSemantics(absorbed);
 
-        Assert.Null(FindNodeByLabel(absorbedPipeline.SemanticsOwner.RootNode, "Absorbed"));
+        Assert.Null(FindNodeByLabel(absorbedPipeline.SemanticsOwner!.RootNode, "Absorbed"));
 
         absorbed.IgnoringSemantics = null;
         absorbedPipeline.FlushSemantics();
-        Assert.NotNull(FindNodeByLabel(absorbedPipeline.SemanticsOwner.RootNode, "Absorbed"));
+        Assert.NotNull(FindNodeByLabel(absorbedPipeline.SemanticsOwner!.RootNode, "Absorbed"));
     }
 
     [Fact]
@@ -399,13 +399,13 @@ public sealed class SemanticsTreeTests
             child: new ActionSemanticBox("Ignored action", new Size(40, 20), static () => { }));
         var ignoredPipeline = BuildPipelineForSemantics(ignored);
 
-        var ignoredNode = FindNodeByLabel(ignoredPipeline.SemanticsOwner.RootNode, "Ignored action");
+        var ignoredNode = FindNodeByLabel(ignoredPipeline.SemanticsOwner!.RootNode, "Ignored action");
         Assert.NotNull(ignoredNode);
         Assert.False(ignoredNode!.Actions.HasFlag(SemanticsActions.Tap));
 
         ignored.IgnoringSemantics = false;
         ignoredPipeline.FlushSemantics();
-        ignoredNode = FindNodeByLabel(ignoredPipeline.SemanticsOwner.RootNode, "Ignored action");
+        ignoredNode = FindNodeByLabel(ignoredPipeline.SemanticsOwner!.RootNode, "Ignored action");
         Assert.NotNull(ignoredNode);
         Assert.True(ignoredNode!.Actions.HasFlag(SemanticsActions.Tap));
 
@@ -414,13 +414,13 @@ public sealed class SemanticsTreeTests
             child: new ActionSemanticBox("Absorbed action", new Size(40, 20), static () => { }));
         var absorbedPipeline = BuildPipelineForSemantics(absorbed);
 
-        var absorbedNode = FindNodeByLabel(absorbedPipeline.SemanticsOwner.RootNode, "Absorbed action");
+        var absorbedNode = FindNodeByLabel(absorbedPipeline.SemanticsOwner!.RootNode, "Absorbed action");
         Assert.NotNull(absorbedNode);
         Assert.False(absorbedNode!.Actions.HasFlag(SemanticsActions.Tap));
 
         absorbed.Absorbing = false;
         absorbedPipeline.FlushSemantics();
-        absorbedNode = FindNodeByLabel(absorbedPipeline.SemanticsOwner.RootNode, "Absorbed action");
+        absorbedNode = FindNodeByLabel(absorbedPipeline.SemanticsOwner!.RootNode, "Absorbed action");
         Assert.NotNull(absorbedNode);
         Assert.True(absorbedNode!.Actions.HasFlag(SemanticsActions.Tap));
     }
@@ -446,7 +446,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        string dump = pipeline.SemanticsOwner.DebugDumpTree();
+        string dump = pipeline.SemanticsOwner!.DebugDumpTree();
         Assert.Contains("label=\"Save\"", dump);
         Assert.Contains("actions=Tap", dump);
     }
@@ -477,7 +477,7 @@ public sealed class SemanticsTreeTests
         Assert.Equal(0, boundary.SemanticsUpdateCount);
         Assert.Equal(1, leaf.SemanticsUpdateCount);
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         // The leaf merges into the boundary it sits under, so its label lands on the boundary node.
         var boundaryNode = Assert.Single(root.Children);
@@ -505,7 +505,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var survivingNode = Assert.Single(root.Children);
         Assert.Equal("Front", survivingNode.Label);
@@ -541,7 +541,7 @@ public sealed class SemanticsTreeTests
         Assert.False(back.SemanticsParentDataDirty);
         Assert.False(front.SemanticsParentDataDirty);
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         Assert.Equal(2, root.Children.Count);
     }
@@ -574,14 +574,14 @@ public sealed class SemanticsTreeTests
         // A blocked branch is not repaired in place: it keeps its dirty parent data until the sibling
         // that blocks it stops doing so.
         Assert.True(back.SemanticsParentDataDirty);
-        Assert.Null(FindNodeByLabel(pipeline.SemanticsOwner.RootNode, "Back 2"));
+        Assert.Null(FindNodeByLabel(pipeline.SemanticsOwner!.RootNode, "Back 2"));
 
         front.BlocksPreviousNodes = false;
         pipeline.FlushSemantics();
 
         Assert.False(back.SemanticsParentDataDirty);
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         Assert.Contains(root.Children, node => node.Label == "Back 2");
         Assert.Contains(root.Children, node => node.Label == "Front");
@@ -611,7 +611,7 @@ public sealed class SemanticsTreeTests
         Assert.False(first.SemanticsParentDataDirty);
         Assert.True(second.SemanticsParentDataDirty);
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var onlyNode = Assert.Single(root.Children);
         Assert.Equal("First", onlyNode.Label);
@@ -621,7 +621,7 @@ public sealed class SemanticsTreeTests
 
         Assert.False(second.SemanticsParentDataDirty);
 
-        var updatedRoot = pipeline.SemanticsOwner.RootNode;
+        var updatedRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(updatedRoot);
         Assert.Equal(2, updatedRoot.Children.Count);
     }
@@ -642,7 +642,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var moved = Assert.Single(root.Children);
         Assert.Equal(new Rect(30, 12, 12, 8), moved.GlobalRect);
@@ -664,7 +664,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var firstRoot = pipeline.SemanticsOwner.RootNode;
+        var firstRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(firstRoot);
         var firstNode = Assert.Single(firstRoot.Children);
         int firstId = firstNode.Id;
@@ -673,7 +673,7 @@ public sealed class SemanticsTreeTests
         transform.Transform = Matrix4.TranslationValues(44, 18, 0.0);
         pipeline.FlushSemantics();
 
-        var updatedRoot = pipeline.SemanticsOwner.RootNode;
+        var updatedRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(updatedRoot);
         var updatedNode = Assert.Single(updatedRoot.Children);
         Assert.Equal(firstId, updatedNode.Id);
@@ -701,7 +701,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         Assert.Empty(root.Children);
     }
@@ -727,14 +727,14 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var firstRoot = pipeline.SemanticsOwner.RootNode;
+        var firstRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(firstRoot);
         Assert.Single(firstRoot.Children);
 
         clip.ClipRect = new Rect(0, 0, 8, 8);
         pipeline.FlushSemantics();
 
-        var updatedRoot = pipeline.SemanticsOwner.RootNode;
+        var updatedRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(updatedRoot);
         Assert.Empty(updatedRoot.Children);
     }
@@ -761,7 +761,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var hiddenNode = Assert.Single(root.Children);
         Assert.Equal("HiddenByPaint", hiddenNode.Label);
@@ -790,7 +790,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         Assert.Empty(root.Children);
     }
@@ -939,7 +939,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var parentNode = Assert.Single(root.Children);
         Assert.Equal("Parent\nOne\nTwo", parentNode.Label);
@@ -975,7 +975,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         Assert.Equal(2, root.Children.Count);
 
@@ -1015,7 +1015,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
 
         // Every fragment in the group conflicts, so each of them is marked explicit and the group
@@ -1055,7 +1055,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         var parentNode = Assert.Single(root.Children);
         Assert.Equal("Parent\nSynthetic", parentNode.Label);
@@ -1093,13 +1093,13 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var root = pipeline.SemanticsOwner.RootNode;
+        var root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         Assert.Equal(2, root.Children.Count);
 
         var siblingNode = Assert.Single(root.Children, static node => node.Label == "Child\nSynthetic Action");
         Assert.True(siblingNode.Actions.HasFlag(SemanticsActions.Tap));
-        Assert.True(pipeline.SemanticsOwner.PerformAction(siblingNode.Id, SemanticsActions.Tap));
+        Assert.True(pipeline.SemanticsOwner!.PerformAction(siblingNode.Id, SemanticsActions.Tap));
         Assert.Equal(1, tapCount);
     }
 
@@ -1131,7 +1131,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var firstRoot = pipeline.SemanticsOwner.RootNode;
+        var firstRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(firstRoot);
         var firstNode = FindNodeByLabel(firstRoot, "Child\nStable");
         Assert.NotNull(firstNode);
@@ -1140,7 +1140,7 @@ public sealed class SemanticsTreeTests
         transform.Transform = Matrix4.TranslationValues(6, 0, 0.0);
         pipeline.FlushSemantics();
 
-        var updatedRoot = pipeline.SemanticsOwner.RootNode;
+        var updatedRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(updatedRoot);
         var updatedNode = FindNodeByLabel(updatedRoot, "Child\nStable");
         Assert.NotNull(updatedNode);
@@ -1163,7 +1163,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var firstRoot = pipeline.SemanticsOwner.RootNode;
+        var firstRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(firstRoot);
         var merged = FindNodeByLabel(firstRoot, "Child\nSynthetic A\nSynthetic B");
         Assert.NotNull(merged);
@@ -1175,7 +1175,7 @@ public sealed class SemanticsTreeTests
         delegated.ConflictingActions = true;
         pipeline.FlushSemantics();
 
-        var splitRoot = pipeline.SemanticsOwner.RootNode;
+        var splitRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(splitRoot);
         Assert.Null(FindNodeByLabel(splitRoot, "Synthetic B"));
         var stillMerged = FindNodeByLabel(splitRoot, "Child\nSynthetic A\nSynthetic B");
@@ -1185,7 +1185,7 @@ public sealed class SemanticsTreeTests
         delegated.ConflictingActions = false;
         pipeline.FlushSemantics();
 
-        var mergedAgainRoot = pipeline.SemanticsOwner.RootNode;
+        var mergedAgainRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(mergedAgainRoot);
         var mergedAgain = FindNodeByLabel(mergedAgainRoot, "Child\nSynthetic A\nSynthetic B");
         Assert.NotNull(mergedAgain);
@@ -1210,7 +1210,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var firstRoot = pipeline.SemanticsOwner.RootNode;
+        var firstRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(firstRoot);
         Assert.NotNull(FindNodeByLabel(firstRoot, "Parent\nSynthetic MergeUp"));
         Assert.Null(FindNodeByLabel(firstRoot, "Synthetic MergeUp"));
@@ -1220,7 +1220,7 @@ public sealed class SemanticsTreeTests
         delegated.ParentTapConflict = true;
         pipeline.FlushSemantics();
 
-        var conflictRoot = pipeline.SemanticsOwner.RootNode;
+        var conflictRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(conflictRoot);
         Assert.Null(FindNodeByLabel(conflictRoot, "Synthetic MergeUp"));
         Assert.NotNull(FindNodeByLabel(conflictRoot, "Parent\nSynthetic MergeUp"));
@@ -1228,7 +1228,7 @@ public sealed class SemanticsTreeTests
         delegated.ParentTapConflict = false;
         pipeline.FlushSemantics();
 
-        var mergedAgainRoot = pipeline.SemanticsOwner.RootNode;
+        var mergedAgainRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(mergedAgainRoot);
         Assert.NotNull(FindNodeByLabel(mergedAgainRoot, "Parent\nSynthetic MergeUp"));
         Assert.Null(FindNodeByLabel(mergedAgainRoot, "Synthetic MergeUp"));
@@ -1251,7 +1251,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var firstRoot = pipeline.SemanticsOwner.RootNode;
+        var firstRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(firstRoot);
         var firstNode = FindNodeByLabel(firstRoot, "Synthetic Geo");
         Assert.NotNull(firstNode);
@@ -1261,7 +1261,7 @@ public sealed class SemanticsTreeTests
         transform.Transform = Matrix4.TranslationValues(25, 3, 0.0);
         pipeline.FlushSemantics();
 
-        var updatedRoot = pipeline.SemanticsOwner.RootNode;
+        var updatedRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(updatedRoot);
         var updatedNode = FindNodeByLabel(updatedRoot, "Synthetic Geo");
         Assert.NotNull(updatedNode);
@@ -1291,7 +1291,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        var initialRoot = pipeline.SemanticsOwner.RootNode;
+        var initialRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(initialRoot);
         var initialNode = FindNodeByLabel(initialRoot, "Synthetic Clip");
         Assert.NotNull(initialNode);
@@ -1301,7 +1301,7 @@ public sealed class SemanticsTreeTests
         clip.PaintClipRect = new Rect(0, 0, 10, 10);
         pipeline.FlushSemantics();
 
-        var hiddenRoot = pipeline.SemanticsOwner.RootNode;
+        var hiddenRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(hiddenRoot);
         var hiddenNode = FindNodeByLabel(hiddenRoot, "Synthetic Clip");
         Assert.NotNull(hiddenNode);
@@ -1314,7 +1314,7 @@ public sealed class SemanticsTreeTests
         clip.SemanticsClipRect = new Rect(0, 0, 10, 10);
         pipeline.FlushSemantics();
 
-        var clippedOutRoot = pipeline.SemanticsOwner.RootNode;
+        var clippedOutRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(clippedOutRoot);
         Assert.Null(FindNodeByLabel(clippedOutRoot, "Synthetic Clip"));
 
@@ -1322,7 +1322,7 @@ public sealed class SemanticsTreeTests
         clip.SemanticsClipRect = new Rect(0, 0, 120, 40);
         pipeline.FlushSemantics();
 
-        var restoredRoot = pipeline.SemanticsOwner.RootNode;
+        var restoredRoot = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(restoredRoot);
         var restoredNode = FindNodeByLabel(restoredRoot, "Synthetic Clip");
         Assert.NotNull(restoredNode);
@@ -1646,7 +1646,7 @@ public sealed class SemanticsTreeTests
         pipeline.FlushLayout(new Size(220, 120));
         pipeline.FlushSemantics();
 
-        SemanticsNode? root = pipeline.SemanticsOwner.RootNode;
+        SemanticsNode? root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         Assert.Equal(2, root.Children.Count);
         Assert.Single(root.Children, static node => node.Label == "Parent\nPlain");

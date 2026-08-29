@@ -723,7 +723,7 @@ public sealed partial class RenderParagraph : RenderBox,
                 continue;
             }
 
-            SemanticsNode childNode = Owner!.SemanticsOwner.CreateDetachedNode(this);
+            SemanticsNode childNode = Owner!.SemanticsOwner!.CreateDetachedNode(this);
             var configuration = new SemanticsConfiguration
             {
                 SortKey = new OrdinalSortKey(ordinal),

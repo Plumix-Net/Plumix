@@ -189,7 +189,7 @@ internal sealed class RenderScrollSemantics : RenderProxyBox
             return;
         }
 
-        _innerNode ??= Owner!.SemanticsOwner.CreateDetachedNode();
+        _innerNode ??= Owner!.SemanticsOwner!.CreateDetachedNode();
         _innerNode.Rect = node.Rect;
         _innerNode.ShowOnScreenRequest = () => ShowOnScreen();
 

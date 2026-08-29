@@ -1347,7 +1347,13 @@ public sealed class MaterialBottomSheetTests : IDisposable
         }
         public RenderView RenderView { get; }
         public void Pump(Size size) { _owner.FlushBuild(); _pipeline.RequestLayout(); _pipeline.FlushLayout(size); _pipeline.FlushCompositingBits(); _pipeline.FlushPaint(); }
-        public SemanticsNode? PumpAndGetSemantics(Size size) { Pump(size); _pipeline.RequestSemanticsUpdate(); _pipeline.FlushSemantics(); return _pipeline.SemanticsOwner.RootNode; }
+        public SemanticsNode? PumpAndGetSemantics(Size size)
+        {
+            Pump(size);
+            _pipeline.RequestSemanticsUpdate();
+            _pipeline.FlushSemantics();
+            return _pipeline.SemanticsOwner!.RootNode;
+        }
         public void Dispose() => _root.Unmount();
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

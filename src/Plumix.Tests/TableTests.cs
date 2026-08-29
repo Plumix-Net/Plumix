@@ -773,7 +773,7 @@ public sealed class TableTests
 
     private static SemanticsNode FindNodeWithRole(PipelineOwner pipeline, SemanticsRole role)
     {
-        SemanticsNode? found = FindNode(pipeline.SemanticsOwner.RootNode, node => node.Role == role);
+        SemanticsNode? found = FindNode(pipeline.SemanticsOwner!.RootNode, node => node.Role == role);
         Assert.NotNull(found);
         return found;
     }

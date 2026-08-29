@@ -35,7 +35,7 @@ public sealed class SemanticsDirtyPipelineTests
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         var updates = new List<SemanticsUpdate>();
-        pipeline.SemanticsOwner.OnSemanticsUpdate = updates.Add;
+        pipeline.SemanticsOwner!.OnSemanticsUpdate = updates.Add;
         pipeline.FlushLayout(viewSize);
         pipeline.FlushSemantics();
         return (pipeline, updates);
@@ -50,7 +50,7 @@ public sealed class SemanticsDirtyPipelineTests
         SemanticsUpdate update = Assert.Single(updates);
         Assert.Contains(update.Nodes, node => node.Node.Label == "A");
         Assert.Contains(update.Nodes, node => node.Id == 0);
-        Assert.Equal(0, pipeline.SemanticsOwner.RootNode!.Id);
+        Assert.Equal(0, pipeline.SemanticsOwner!.RootNode!.Id);
     }
 
     [Fact]
@@ -60,7 +60,7 @@ public sealed class SemanticsDirtyPipelineTests
             Pump(Annotated("A", new Size(20, 10)), new Size(100, 40));
         Assert.Single(updates);
 
-        pipeline.SemanticsOwner.SendSemanticsUpdate();
+        pipeline.SemanticsOwner!.SendSemanticsUpdate();
 
         Assert.Single(updates);
     }
@@ -301,7 +301,7 @@ public sealed class SemanticsDirtyPipelineTests
             textDirection: TextDirection.Ltr);
         (PipelineOwner pipeline, _) = Pump(row, new Size(100, 40));
 
-        SemanticsNode root = pipeline.SemanticsOwner.RootNode!;
+        SemanticsNode root = pipeline.SemanticsOwner!.RootNode!;
         Assert.Equal(2, root.Children.Count);
         Assert.Equal(2, root.ChildrenInHitTestOrder.Count);
 
@@ -325,7 +325,7 @@ public sealed class SemanticsDirtyPipelineTests
             textDirection: TextDirection.Ltr);
         (PipelineOwner pipeline, _) = Pump(row, new Size(200, 40));
 
-        SemanticsNode anchorNode = Assert.Single(pipeline.SemanticsOwner.RootNode!.ChildrenInTraversalOrder);
+        SemanticsNode anchorNode = Assert.Single(pipeline.SemanticsOwner!.RootNode!.ChildrenInTraversalOrder);
         Assert.Collection(
             anchorNode.ChildrenInTraversalOrder,
             node => Assert.Equal("first", node.Label),
@@ -339,7 +339,7 @@ public sealed class SemanticsDirtyPipelineTests
             Annotated("orphan", new Size(20, 10), traversalChildIdentifier: "missing");
         (PipelineOwner pipeline, _) = Pump(orphan, new Size(100, 40));
 
-        SemanticsNode root = pipeline.SemanticsOwner.RootNode!;
+        SemanticsNode root = pipeline.SemanticsOwner!.RootNode!;
         Assert.Single(root.Children);
         Assert.Empty(root.ChildrenInTraversalOrder);
         Assert.Empty(root.ChildrenInHitTestOrder);
@@ -375,7 +375,7 @@ public sealed class SemanticsDirtyPipelineTests
             textDirection: TextDirection.Ltr);
         (PipelineOwner pipeline, List<SemanticsUpdate> updates) = Pump(row, new Size(100, 40));
 
-        SemanticsNode anchorNode = Assert.Single(pipeline.SemanticsOwner.RootNode!.ChildrenInTraversalOrder);
+        SemanticsNode anchorNode = Assert.Single(pipeline.SemanticsOwner!.RootNode!.ChildrenInTraversalOrder);
         SemanticsNodeUpdate itemUpdate = Assert.Single(
             updates[0].Nodes,
             node => node.Node.Label == "item");

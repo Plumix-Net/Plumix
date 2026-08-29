@@ -222,7 +222,7 @@ public sealed class ImageWidgetTests : IDisposable
 
         harness.Pump(new Size(80, 80));
         harness.Pipeline.FlushSemantics();
-        var root = Assert.IsType<SemanticsNode>(harness.Pipeline.SemanticsOwner.RootNode);
+        var root = Assert.IsType<SemanticsNode>(harness.Pipeline.SemanticsOwner!.RootNode);
         var imageNode = Assert.Single(Flatten(root), node => node.Flags.HasFlag(SemanticsFlags.IsImage));
         Assert.Equal("Fading image", imageNode.Label);
     }
@@ -332,7 +332,7 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.True(loadingReceivedFrameResult);
         harness.Pump(new Size(100, 100));
         harness.Pipeline.FlushSemantics();
-        var root = Assert.IsType<SemanticsNode>(harness.Pipeline.SemanticsOwner.RootNode);
+        var root = Assert.IsType<SemanticsNode>(harness.Pipeline.SemanticsOwner!.RootNode);
         var imageNode = Assert.Single(Flatten(root), node => node.Flags.HasFlag(SemanticsFlags.IsImage));
         Assert.Equal("Sample image", imageNode.Label);
     }

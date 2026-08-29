@@ -67,11 +67,11 @@ public sealed class RenderObjectSemanticsDiagnosticsTests
         string dump = pipeline.DebugDumpRenderObjectSemanticsTree();
 
         Assert.Contains("BLOCKS SEMANTICS", dump, StringComparison.Ordinal);
-        Assert.Contains("diagnostics blocker", pipeline.SemanticsOwner.DebugDumpTree(), StringComparison.Ordinal);
+        Assert.Contains("diagnostics blocker", pipeline.SemanticsOwner!.DebugDumpTree(), StringComparison.Ordinal);
         // Everything painted before the block is dropped from the semantics tree.
         Assert.DoesNotContain(
             "diagnostics behind",
-            pipeline.SemanticsOwner.DebugDumpTree(),
+            pipeline.SemanticsOwner!.DebugDumpTree(),
             StringComparison.Ordinal);
     }
 

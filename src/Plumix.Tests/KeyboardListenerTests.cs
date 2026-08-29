@@ -247,12 +247,12 @@ public sealed class KeyboardListenerTests : IDisposable
             _pipeline.FlushLayout(size);
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public bool PerformSemanticsAction(int nodeId, SemanticsActions action)
         {
-            return _pipeline.SemanticsOwner.PerformAction(nodeId, action);
+            return _pipeline.SemanticsOwner!.PerformAction(nodeId, action);
         }
 
         public void Dispose()

@@ -232,7 +232,7 @@ public sealed class FormTests : IDisposable
             Pump(size);
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public void Dispose() => _root.Unmount();

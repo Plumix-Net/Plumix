@@ -227,14 +227,14 @@ public sealed class SemanticsCustomActionTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        SemanticsNode? root = pipeline.SemanticsOwner.RootNode;
+        SemanticsNode? root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         SemanticsNode secondNode = Assert.Single(root!.Children, static node => node.Label == "rect second");
 
-        Rect? rect = pipeline.SemanticsOwner.GetRectOfSemanticsNode(secondNode.Id);
+        Rect? rect = pipeline.SemanticsOwner!.GetRectOfSemanticsNode(secondNode.Id);
         Assert.NotNull(rect);
         Assert.Equal(new Rect(20, 0, 30, 10), rect!.Value);
-        Assert.Null(pipeline.SemanticsOwner.GetRectOfSemanticsNode(-1));
+        Assert.Null(pipeline.SemanticsOwner!.GetRectOfSemanticsNode(-1));
     }
 
     [Fact]
@@ -252,7 +252,7 @@ public sealed class SemanticsCustomActionTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        SemanticsNode node = Assert.Single(pipeline.SemanticsOwner.RootNode!.Children);
+        SemanticsNode node = Assert.Single(pipeline.SemanticsOwner!.RootNode!.Children);
         var seen = new List<SemanticsActionEvent>();
         var tapCountWhenNotified = new List<int>();
         void Listener(SemanticsActionEvent actionEvent)
@@ -262,8 +262,8 @@ public sealed class SemanticsCustomActionTests
             seen.Add(actionEvent);
         }
 
-        pipeline.SemanticsOwner.AddSemanticsActionListener(Listener);
-        Assert.True(pipeline.SemanticsOwner.PerformAction(node.Id, SemanticsActions.Tap));
+        pipeline.SemanticsOwner!.AddSemanticsActionListener(Listener);
+        Assert.True(pipeline.SemanticsOwner!.PerformAction(node.Id, SemanticsActions.Tap));
         Assert.Equal(1, tapCount);
         SemanticsActionEvent observed = Assert.Single(seen);
         Assert.Equal(node.Id, observed.NodeId);
@@ -272,11 +272,11 @@ public sealed class SemanticsCustomActionTests
         Assert.Equal([0], tapCountWhenNotified);
 
         // An action nothing handles is still reported.
-        Assert.False(pipeline.SemanticsOwner.PerformAction(-1, SemanticsActions.LongPress));
+        Assert.False(pipeline.SemanticsOwner!.PerformAction(-1, SemanticsActions.LongPress));
         Assert.Equal(2, seen.Count);
 
-        pipeline.SemanticsOwner.RemoveSemanticsActionListener(Listener);
-        Assert.True(pipeline.SemanticsOwner.PerformAction(node.Id, SemanticsActions.Tap));
+        pipeline.SemanticsOwner!.RemoveSemanticsActionListener(Listener);
+        Assert.True(pipeline.SemanticsOwner!.PerformAction(node.Id, SemanticsActions.Tap));
         Assert.Equal(2, seen.Count);
     }
 
@@ -297,7 +297,7 @@ public sealed class SemanticsCustomActionTests
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
-        SemanticsNode? root = pipeline.SemanticsOwner.RootNode;
+        SemanticsNode? root = pipeline.SemanticsOwner!.RootNode;
         Assert.NotNull(root);
         SemanticsNode mergedNode = Assert.Single(root!.Children);
         return (pipeline.SemanticsOwner, mergedNode);

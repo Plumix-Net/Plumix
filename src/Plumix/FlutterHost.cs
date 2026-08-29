@@ -87,7 +87,7 @@ public class PlumixHost : Control
     {
         _pipeline = new PipelineOwner(_root);
         _pipeline.OnNeedVisualUpdate = ScheduleVisualUpdate;
-        _pipeline.SemanticsOwner.OnSemanticsUpdate = update => SemanticsUpdateProduced?.Invoke(update);
+        _pipeline.OnSemanticsUpdate = update => SemanticsUpdateProduced?.Invoke(update);
         _pipeline.Attach(_root);
         _textInputClient = new PlumixTextInputMethodClient(this);
         _ownerThread = Thread.CurrentThread;
@@ -104,7 +104,7 @@ public class PlumixHost : Control
 
     internal RenderBox? RootChild => _root.Child;
 
-    public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner.RootNode;
+    public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner?.RootNode;
 
     public void SetRootChild(RenderBox? child)
     {
@@ -541,7 +541,7 @@ public class PlumixHost : Control
 
     public bool PerformSemanticsAction(int nodeId, SemanticsActions action)
     {
-        return _pipeline.SemanticsOwner.PerformAction(nodeId, action);
+        return _pipeline.SemanticsOwner?.PerformAction(nodeId, action) ?? false;
     }
 
     /// <summary>
@@ -561,12 +561,12 @@ public class PlumixHost : Control
             return null;
         }
 
-        return _pipeline.SemanticsOwner.GetRectOfSemanticsNode(nodeId);
+        return _pipeline.SemanticsOwner?.GetRectOfSemanticsNode(nodeId);
     }
 
     public bool PerformCustomSemanticsAction(int nodeId, CustomSemanticsAction action)
     {
-        return _pipeline.SemanticsOwner.PerformCustomAction(nodeId, action);
+        return _pipeline.SemanticsOwner?.PerformCustomAction(nodeId, action) ?? false;
     }
 
     internal void FlushPipelineForTests(Size? viewport = null)
@@ -1151,7 +1151,7 @@ public class PlumixHost : Control
         _pipeline.FlushSemantics();
         if (hadPendingSemantics)
         {
-            SemanticsUpdated?.Invoke(_pipeline.SemanticsOwner.RootNode);
+            SemanticsUpdated?.Invoke(_pipeline.SemanticsOwner?.RootNode);
         }
     }
 

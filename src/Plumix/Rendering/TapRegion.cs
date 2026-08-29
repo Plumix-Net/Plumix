@@ -27,12 +27,12 @@ public sealed class RenderTapRegionSurface : RenderProxyBoxWithHitTestBehavior
     protected override void OnAttach()
     {
         base.OnAttach();
-        Owner?.SemanticsOwner.AddSemanticsActionListener(HandleSemanticsAction);
+        Owner?.SemanticsOwner?.AddSemanticsActionListener(HandleSemanticsAction);
     }
 
     protected override void OnDetach()
     {
-        Owner?.SemanticsOwner.RemoveSemanticsActionListener(HandleSemanticsAction);
+        Owner?.SemanticsOwner?.RemoveSemanticsActionListener(HandleSemanticsAction);
         base.OnDetach();
     }
 
@@ -58,7 +58,7 @@ public sealed class RenderTapRegionSurface : RenderProxyBoxWithHitTestBehavior
             return;
         }
 
-        if (owner.SemanticsOwner.GetRectOfSemanticsNode(actionEvent.NodeId) is not { } globalRect)
+        if (owner.SemanticsOwner?.GetRectOfSemanticsNode(actionEvent.NodeId) is not { } globalRect)
         {
             return;
         }

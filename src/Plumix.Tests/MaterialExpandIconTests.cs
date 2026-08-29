@@ -333,7 +333,7 @@ public sealed class MaterialExpandIconTests : IDisposable
 
         public RenderView RenderView { get; }
 
-        public string Dump() => _pipeline.SemanticsOwner.DebugDumpTree();
+        public string Dump() => _pipeline.SemanticsOwner!.DebugDumpTree();
 
         public void Update(Widget widget)
         {
@@ -355,12 +355,12 @@ public sealed class MaterialExpandIconTests : IDisposable
             Pump(size);
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public bool PerformSemanticsAction(int id, SemanticsActions action)
         {
-            return _pipeline.SemanticsOwner.PerformAction(id, action);
+            return _pipeline.SemanticsOwner!.PerformAction(id, action);
         }
 
         public IReadOnlyList<T> FindWidgets<T>() where T : Widget

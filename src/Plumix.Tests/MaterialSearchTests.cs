@@ -982,7 +982,7 @@ public sealed class MaterialSearchTests : IDisposable
 
         public RenderView RenderView { get; }
 
-        public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner.RootNode;
+        public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner!.RootNode;
 
         public void Pump(Size size)
         {

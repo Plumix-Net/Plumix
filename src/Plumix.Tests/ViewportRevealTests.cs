@@ -892,12 +892,12 @@ public sealed class ViewportRevealTests
 
         public SemanticsNode? FindSemanticsNode(string label)
         {
-            return FindSemanticsNode(_pipeline.SemanticsOwner.RootNode, label);
+            return FindSemanticsNode(_pipeline.SemanticsOwner!.RootNode, label);
         }
 
         public bool PerformSemanticsAction(int nodeId, SemanticsActions action)
         {
-            return _pipeline.SemanticsOwner.PerformAction(nodeId, action);
+            return _pipeline.SemanticsOwner!.PerformAction(nodeId, action);
         }
 
         private static SemanticsNode? FindSemanticsNode(SemanticsNode? node, string label)

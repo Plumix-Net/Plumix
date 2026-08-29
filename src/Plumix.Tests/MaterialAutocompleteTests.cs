@@ -896,7 +896,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
         public SemanticsNode? GetSemanticsRoot()
         {
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public void Dispose() => _rootElement.Unmount();

@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `PipelineOwner.SemanticsOwner` is nullable and created on demand (`object.dart`).
+- Breaking: every `PipelineOwner` flush phase recurses into child owners after its own nodes (`object.dart`).
+- Added the `PipelineOwner` tree: `AdoptChild`/`DropChild`/`VisitChildren`/`Attach`/`Detach`/`Dispose` (`object.dart`).
+- Added `PipelineManifold`, `HostPipelineManifold` and `PipelineOwner.EnsureSemantics` (`object.dart`).
+- Added `SemanticsHandle` (`semantics/binding.dart`) and `PipelineOwner.RootNode` with Dart's detach/attach setter.
 - Breaking: diagnostics elide their debug bodies in profile/release builds (`diagnostics.dart`, `object.dart`).
 - Added a `Profile` build configuration that defines `PROFILE`, so `Constants.KProfileMode` is reachable.
 - Breaking: `Diagnostics.ObjectRuntimeType` takes Dart's required `optimizedValue` argument (`object.dart`).

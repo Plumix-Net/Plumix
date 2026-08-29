@@ -484,7 +484,7 @@ public sealed class MaterialDrawerHeaderTests
 
         public RenderView RenderView { get; }
 
-        public string SemanticsDump => _pipeline.SemanticsOwner.DebugDumpTree();
+        public string SemanticsDump => _pipeline.SemanticsOwner!.DebugDumpTree();
 
         public void Update(Widget rootWidget)
         {
@@ -506,7 +506,7 @@ public sealed class MaterialDrawerHeaderTests
             Pump(size);
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public void Dispose() => _rootElement.Unmount();

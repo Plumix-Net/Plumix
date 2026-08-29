@@ -479,7 +479,7 @@ public sealed class MaterialActionButtonsTests
             Pump(size);
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public List<T> FindWidgets<T>() where T : Widget

@@ -1000,11 +1000,11 @@ public sealed class MaterialAboutTests : IDisposable
             Pump(size);
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public bool PerformSemanticsAction(int id, SemanticsActions action) =>
-            _pipeline.SemanticsOwner.PerformAction(id, action);
+            _pipeline.SemanticsOwner!.PerformAction(id, action);
 
         public void Dispose() => _rootElement.Unmount();
 

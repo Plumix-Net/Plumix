@@ -1004,12 +1004,12 @@ public sealed class MaterialReorderableListTests
             Pump(size);
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public bool PerformCustomSemanticsAction(int nodeId, CustomSemanticsAction action)
         {
-            return _pipeline.SemanticsOwner.PerformCustomAction(nodeId, action);
+            return _pipeline.SemanticsOwner!.PerformCustomAction(nodeId, action);
         }
 
         public T FindState<T>() where T : State

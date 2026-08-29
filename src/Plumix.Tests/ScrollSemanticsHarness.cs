@@ -55,16 +55,16 @@ internal sealed class ScrollSemanticsHarness
 
     public SemanticsNode? FindSemanticsNode(string label)
     {
-        return FindSemanticsNode(_pipeline.SemanticsOwner.RootNode, label);
+        return FindSemanticsNode(_pipeline.SemanticsOwner!.RootNode, label);
     }
 
-    public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner.RootNode;
+    public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner!.RootNode;
 
-    public string SemanticsDump => _pipeline.SemanticsOwner.DebugDumpTree();
+    public string SemanticsDump => _pipeline.SemanticsOwner!.DebugDumpTree();
 
     public bool PerformSemanticsAction(int nodeId, SemanticsActions action, object? args = null)
     {
-        return _pipeline.SemanticsOwner.PerformAction(nodeId, action, args);
+        return _pipeline.SemanticsOwner!.PerformAction(nodeId, action, args);
     }
 
     private static SemanticsNode? FindSemanticsNode(SemanticsNode? node, string label)

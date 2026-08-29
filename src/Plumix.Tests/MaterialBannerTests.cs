@@ -679,7 +679,7 @@ public sealed class MaterialBannerTests
             Pump(size);
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public T FindState<T>() where T : State

@@ -549,7 +549,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
             Pump(size);
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
-            return _pipeline.SemanticsOwner.RootNode;
+            return _pipeline.SemanticsOwner!.RootNode;
         }
 
         public T FindState<T>() where T : State

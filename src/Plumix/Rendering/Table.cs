@@ -901,7 +901,7 @@ public sealed class RenderTable : RenderBox
 
     private SemanticsNode CreateSynthesizedSemanticsNode()
     {
-        return Owner!.SemanticsOwner.CreateDetachedNode();
+        return Owner!.SemanticsOwner!.CreateDetachedNode();
     }
 
     private readonly record struct CellIndex(int Y, int X);

@@ -2308,8 +2308,8 @@ internal sealed class RenderRangeSlider : RenderBox
         Rect leftRect = ThumbSemanticsRect(_startThumbCenter);
         Rect rightRect = ThumbSemanticsRect(_endThumbCenter);
 
-        _startSemanticsNode ??= Owner!.SemanticsOwner.CreateDetachedNode(this);
-        _endSemanticsNode ??= Owner!.SemanticsOwner.CreateDetachedNode(this);
+        _startSemanticsNode ??= Owner!.SemanticsOwner!.CreateDetachedNode(this);
+        _endSemanticsNode ??= Owner!.SemanticsOwner!.CreateDetachedNode(this);
 
         if (TextDirection == TextDirection.Rtl)
         {
