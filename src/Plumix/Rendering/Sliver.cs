@@ -26,6 +26,18 @@ public readonly record struct SliverConstraints(
 {
     public bool IsTight => false;
 
+    /// <summary>
+    /// The growth direction with respect to the axis direction rather than the scroll offset.
+    /// </summary>
+    /// <remarks>Flutter's <c>SliverConstraints.normalizedGrowthDirection</c>.</remarks>
+    public GrowthDirection NormalizedGrowthDirection => AxisDirection switch
+    {
+        AxisDirection.Down or AxisDirection.Right => GrowthDirection,
+        _ => GrowthDirection == GrowthDirection.Forward
+            ? GrowthDirection.Reverse
+            : GrowthDirection.Forward,
+    };
+
     public bool IsNormalized => ScrollOffset >= 0.0
                                 && CrossAxisExtent >= 0.0
                                 && ViewportMainAxisExtent >= 0.0
@@ -1004,6 +1016,114 @@ public abstract class RenderSliver : RenderBox
         AxisDirection.Left => AxisDirection.Right,
         _ => direction,
     };
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderSliver.debugPaint</c>: a green arrow diagram showing this sliver's paint
+    /// extent and growth direction. Dart strokes it through a
+    /// <c>MaskFilter.blur(BlurStyle.solid, strokeWidth)</c>; Avalonia's drawing backend takes no
+    /// mask filter, so the same stroke is drawn unblurred (see <c>docs/ai/DIVERGENCES.md</c>).
+    /// </remarks>
+    protected override void DebugPaint(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (!RenderingDebug.PaintSizeEnabled || !HasSliverConstraints)
+        {
+            return;
+        }
+
+        double strokeWidth = Math.Min(4.0, Geometry.PaintExtent / 30.0);
+        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF33CC33)), strokeWidth);
+        double arrowExtent = Geometry.PaintExtent;
+        double padding = Math.Max(2.0, strokeWidth);
+        SliverConstraints constraints = ConstraintsForSliver;
+        context.DrawCircle(
+            Brushes.Transparent,
+            pen,
+            new Point(offset.X + padding, offset.Y + padding),
+            padding * 0.5);
+        double cross = constraints.CrossAxisExtent;
+        if (constraints.Axis == Axis.Vertical)
+        {
+            context.DrawLine(pen, offset, new Point(offset.X + cross, offset.Y));
+            DebugDrawArrow(
+                context,
+                pen,
+                new Point(offset.X + (cross * 1.0 / 4.0), offset.Y + padding),
+                new Point(offset.X + (cross * 1.0 / 4.0), offset.Y + arrowExtent - padding),
+                constraints.NormalizedGrowthDirection);
+            DebugDrawArrow(
+                context,
+                pen,
+                new Point(offset.X + (cross * 3.0 / 4.0), offset.Y + padding),
+                new Point(offset.X + (cross * 3.0 / 4.0), offset.Y + arrowExtent - padding),
+                constraints.NormalizedGrowthDirection);
+        }
+        else
+        {
+            context.DrawLine(pen, offset, new Point(offset.X, offset.Y + cross));
+            DebugDrawArrow(
+                context,
+                pen,
+                new Point(offset.X + padding, offset.Y + (cross * 1.0 / 4.0)),
+                new Point(offset.X + arrowExtent - padding, offset.Y + (cross * 1.0 / 4.0)),
+                constraints.NormalizedGrowthDirection);
+            DebugDrawArrow(
+                context,
+                pen,
+                new Point(offset.X + padding, offset.Y + (cross * 3.0 / 4.0)),
+                new Point(offset.X + arrowExtent - padding, offset.Y + (cross * 3.0 / 4.0)),
+                constraints.NormalizedGrowthDirection);
+        }
+    }
+
+    /// <remarks>Flutter's <c>RenderSliver._debugDrawArrow</c>.</remarks>
+    private static void DebugDrawArrow(
+        PaintingContext context,
+        IPen pen,
+        Point p0,
+        Point p1,
+        GrowthDirection direction)
+    {
+        if (p0 == p1)
+        {
+            return;
+        }
+
+        Debug.Assert(p0.X == p1.X || p0.Y == p1.Y, "The arrow must be axis-aligned.");
+        Point delta = p1 - p0;
+        double d = Math.Sqrt((delta.X * delta.X) + (delta.Y * delta.Y)) * 0.2;
+        double dx1;
+        double dx2;
+        double dy1;
+        double dy2;
+        if (direction == GrowthDirection.Forward)
+        {
+            dx1 = dx2 = dy1 = dy2 = d;
+        }
+        else
+        {
+            (p0, p1) = (p1, p0);
+            dx1 = dx2 = dy1 = dy2 = -d;
+        }
+
+        if (p0.X == p1.X)
+        {
+            dx2 = -dx2;
+        }
+        else
+        {
+            dy2 = -dy2;
+        }
+
+        var path = new Plumix.UI.Path();
+        path.MoveTo(p0.X, p0.Y);
+        path.LineTo(p1.X, p1.Y);
+        path.MoveTo(p1.X - dx1, p1.Y - dy1);
+        path.LineTo(p1.X, p1.Y);
+        path.LineTo(p1.X - dx2, p1.Y - dy2);
+        context.DrawPath(path, brush: null, pen: pen);
+    }
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
@@ -2078,6 +2198,32 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
         double visibleStart = Math.Max(from, scrollOffset);
         double visibleEnd = Math.Min(to, scrollOffset + remainingPaintExtent);
         return Math.Max(0, visibleEnd - visibleStart);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderSliverEdgeInsetsPadding.debugPaint</c>. Dart's <c>getAbsoluteSize()</c> is
+    /// Plumix's <see cref="RenderBox.Size"/>, which <c>RenderSliver.PerformLayout</c> already sets
+    /// from the paint extent and the cross axis extent.
+    /// </remarks>
+    protected override void DebugPaint(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        base.DebugPaint(context, offset);
+        if (!RenderingDebug.PaintSizeEnabled)
+        {
+            return;
+        }
+
+        var outerRect = new Rect(offset, Size);
+        Rect? innerRect = null;
+        if (_child is not null)
+        {
+            var childParentData = (SliverPhysicalParentData)_child.parentData!;
+            innerRect = new Rect(offset + childParentData.offset, _child.Size);
+        }
+
+        RenderingDebug.PaintPadding(context, outerRect, innerRect);
     }
 
     /// <inheritdoc />

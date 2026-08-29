@@ -569,6 +569,14 @@ public sealed partial class RenderParagraph : RenderBox,
             return;
         }
 
+        if (Constants.KDebugMode && RenderingDebug.RepaintTextRainbowEnabled)
+        {
+            ctx.DrawRectangle(
+                new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor()),
+                null,
+                new Rect(offset, Size));
+        }
+
         PaintSelectionHighlights(ctx, offset);
         if (_overflow == TextOverflow.Fade && _layout.WidthIncludingTrailingWhitespace > Size.Width + 0.01)
         {
@@ -583,8 +591,41 @@ public sealed partial class RenderParagraph : RenderBox,
             ctx.DrawTextLayout(_layout, offset);
         }
 
+        if (Constants.KDebugMode && RenderingDebug.PaintTextLayoutBoxes)
+        {
+            DebugPaintCharacterLayoutBoxes(ctx, offset);
+        }
+
         RenderInlineChildrenContainerDefaults.PaintInlineChildren(Children, ctx, offset);
         PaintSelectionHandles(ctx, offset);
+    }
+
+    /// <summary>Paints the layout box of every character of this paragraph.</summary>
+    /// <remarks>
+    /// Flutter's <c>TextPainter._debugPaintCharacterLayoutBoxes</c>, driven by
+    /// <see cref="RenderingDebug.PaintTextLayoutBoxes"/>. Dart's <c>TextPainter</c> owns the selection
+    /// boxes and paints them from its own <c>paint</c>; in Plumix the paragraph render object owns
+    /// them, so the same drawing lives here (see <c>docs/ai/DIVERGENCES.md</c>).
+    /// </remarks>
+    private void DebugPaintCharacterLayoutBoxes(PaintingContext ctx, Point offset)
+    {
+        string plain = _source?.PlainText ?? string.Empty;
+        if (plain.Length == 0)
+        {
+            return;
+        }
+
+        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FFFF)), 1.0);
+        IReadOnlyList<TextBox> boxes = GetBoxesForSelection(
+            new TextSelection(BaseOffset: 0, ExtentOffset: plain.Length));
+        foreach (TextBox box in boxes)
+        {
+            Rect rect = box.ToRect();
+            ctx.DrawGeometry(
+                null,
+                pen,
+                new RectangleGeometry(new Rect(rect.Position + offset, rect.Size)));
+        }
     }
 
     protected override bool HitTestSelf(Point position) => true;

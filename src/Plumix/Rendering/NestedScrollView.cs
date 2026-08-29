@@ -1,5 +1,7 @@
 using Avalonia;
+using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -301,6 +303,51 @@ public class RenderSliverOverlapInjector : RenderSliver
     /// <summary>An injector has no content of its own to paint.</summary>
     public override void Paint(PaintingContext ctx, Point offset)
     {
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderSliverOverlapInjector.debugPaint</c>: a zig-zag over the gap.</remarks>
+    protected override void DebugPaint(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        base.DebugPaint(context, offset);
+        if (!RenderingDebug.PaintSizeEnabled || !HasSliverConstraints)
+        {
+            return;
+        }
+
+        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFFCC9933)), 3.0);
+        SliverConstraints constraints = ConstraintsForSliver;
+        Point start;
+        Point end;
+        Point delta;
+        if (constraints.Axis == Axis.Vertical)
+        {
+            double x = offset.X + (constraints.CrossAxisExtent / 2.0);
+            start = new Point(x, offset.Y);
+            end = new Point(x, offset.Y + Geometry.PaintExtent);
+            delta = new Point(constraints.CrossAxisExtent / 5.0, 0.0);
+        }
+        else
+        {
+            double y = offset.Y + (constraints.CrossAxisExtent / 2.0);
+            start = new Point(offset.X, y);
+            end = new Point(offset.Y + Geometry.PaintExtent, y);
+            delta = new Point(0.0, constraints.CrossAxisExtent / 5.0);
+        }
+
+        for (int index = -2; index <= 2; index += 1)
+        {
+            var shift = new Point(delta.X * index, delta.Y * index);
+            PaintUtilities.PaintZigZag(context, pen, start - shift, end - shift, 10, 10.0);
+        }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<SliverOverlapAbsorberHandle>("handle", Handle));
     }
 }
 

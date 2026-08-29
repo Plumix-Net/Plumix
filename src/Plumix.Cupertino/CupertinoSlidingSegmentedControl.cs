@@ -1123,6 +1123,7 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
 
     public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
+        DebugHandleEvent(@event, entry);
         if (@event is PointerDownEvent down && !_state.IsThumbDragging)
         {
             _state.AddPointer(down);

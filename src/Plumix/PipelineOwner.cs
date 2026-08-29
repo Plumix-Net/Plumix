@@ -735,6 +735,8 @@ public sealed class PipelineOwner : DiagnosticableTree
             {
                 ClearBackdropInputs();
             }
+
+            RenderingDebug.AdvanceRepaintColorForFrame();
         }
     }
 

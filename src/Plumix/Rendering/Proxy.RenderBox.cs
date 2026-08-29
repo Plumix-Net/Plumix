@@ -503,6 +503,20 @@ public class RenderConstrainedBox : RenderProxyBox
     }
 
     /// <inheritdoc />
+    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        base.DebugPaintSize(context, offset);
+        if (Child is null || Child.Size.Width <= 0 || Child.Size.Height <= 0)
+        {
+            context.DrawRectangle(
+                new SolidColorBrush(Color.FromUInt32(0x90909090)),
+                null,
+                new Rect(offset, Size));
+        }
+    }
+
+    /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
@@ -1574,6 +1588,18 @@ public sealed class RenderPadding : RenderProxyBox
     {
         double? childBaseline = Child?.GetDryBaseline(constraints.Deflate(Padding), baseline);
         return childBaseline.HasValue ? childBaseline.Value + Padding.Top : null;
+    }
+
+    /// <inheritdoc />
+    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        base.DebugPaintSize(context, offset);
+        var outerRect = new Rect(offset, Size);
+        RenderingDebug.PaintPadding(
+            context,
+            outerRect,
+            Child is null ? null : outerRect.Deflate(Padding));
     }
 
     /// <inheritdoc />
@@ -3090,6 +3116,29 @@ public sealed class RenderClipRect : RenderProxyBox
         MarkNeedsCompositedLayerUpdate();
         MarkNeedsSemanticsUpdate();
     }
+
+    /// <inheritdoc />
+    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is null)
+        {
+            return;
+        }
+
+        base.DebugPaintSize(context, offset);
+        if (_clipBehavior == Clip.None)
+        {
+            return;
+        }
+
+        Rect clip = EffectiveClip;
+        context.DrawGeometry(
+            null,
+            RenderCustomClipDebug.DebugPen,
+            new RectangleGeometry(new Rect(clip.Position + offset, clip.Size)));
+        RenderCustomClipDebug.PaintScissors(context, offset, clip.Width);
+    }
 }
 
 public sealed class RenderClipRRect : RenderProxyBox
@@ -3197,6 +3246,23 @@ public sealed class RenderClipRRect : RenderProxyBox
 
         return base.HitTest(result, position);
     }
+
+    /// <inheritdoc />
+    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is null)
+        {
+            return;
+        }
+
+        base.DebugPaintSize(context, offset);
+        Rect clip = _hasExplicitClipRect ? _clipRect : new Rect(new Point(0, 0), Size);
+        var path = new Plumix.UI.Path();
+        path.AddRRect(RRect.FromRectAndCorners(new Rect(clip.Position + offset, clip.Size), _borderRadius));
+        context.DrawPath(path, brush: null, pen: RenderCustomClipDebug.DebugPen);
+        RenderCustomClipDebug.PaintScissors(context, offset, clip.Width);
+    }
 }
 
 public class RenderPointerListener : RenderProxyBox
@@ -3287,6 +3353,7 @@ public class RenderPointerListener : RenderProxyBox
 
     public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
+        DebugHandleEvent(@event, entry);
         switch (@event)
         {
             case PointerDownEvent downEvent:

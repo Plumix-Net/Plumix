@@ -517,6 +517,26 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
         return base.HitTestChildren(result, position);
     }
 
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>_RenderCupertinoTextSelectionToolbarShape.debugPaintSize</c>.</remarks>
+    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is null)
+        {
+            return;
+        }
+
+        var childParentData = (BoxParentData)Child.parentData!;
+        Plumix.UI.Path clipPath = ClipPath(Child, ShapeRRect(Child));
+        Point shift = offset + childParentData.offset;
+        context.DrawGeometry(
+            null,
+            RenderCustomClipDebug.DebugPen,
+            clipPath.ToGeometry(),
+            geometryOffset: shift);
+    }
+
     /// <summary>Dart's `_shapeRRect`: the rounded body of the toolbar, in child coordinates.</summary>
     internal Plumix.UI.RRect ShapeRRect(RenderBox child)
     {

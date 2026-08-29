@@ -1043,6 +1043,12 @@ public sealed class OpacityOffsetLayer : OffsetLayer
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
+        if (Constants.KDebugMode && RenderingDebug.DisableOpacityLayers)
+        {
+            base.AddToScene(context, offset);
+            return;
+        }
+
         using (context.PushOpacity(Opacity))
         {
             base.AddToScene(context, offset);
@@ -1363,6 +1369,12 @@ public sealed class ClipRectOffsetLayer : OffsetLayer
     internal override void AddToScene(DrawingContext context, Point offset)
     {
         var sceneOffset = offset + Offset;
+        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        {
+            AddChildrenToScene(context, sceneOffset);
+            return;
+        }
+
         var translatedRect = new Rect(ClipRect.Position + sceneOffset, ClipRect.Size);
         using (context.PushClip(translatedRect))
         {
@@ -1390,6 +1402,12 @@ public sealed class ClipRRectOffsetLayer : OffsetLayer
     internal override void AddToScene(DrawingContext context, Point offset)
     {
         var sceneOffset = offset + Offset;
+        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        {
+            AddChildrenToScene(context, sceneOffset);
+            return;
+        }
+
         var translatedRect = new Rect(ClipRect.Position + sceneOffset, ClipRect.Size);
         using (PushRoundedRectClip(context, translatedRect, BorderRadius))
         {
@@ -1416,6 +1434,12 @@ public sealed class ClipRectLayer : ContainerLayer
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
+        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        {
+            base.AddToScene(context, offset);
+            return;
+        }
+
         var translatedRect = new Rect(ClipRect.Position + offset, ClipRect.Size);
         using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
         {
@@ -1453,6 +1477,12 @@ public sealed class ClipRRectLayer : ContainerLayer
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
+        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        {
+            base.AddToScene(context, offset);
+            return;
+        }
+
         var translatedRect = new Rect(ClipRect.Position + offset, ClipRect.Size);
         using (PushRoundedRectClip(context, translatedRect, BorderRadius))
         {
@@ -1488,6 +1518,12 @@ public sealed class ClipGeometryLayer : ContainerLayer
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
+        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        {
+            base.AddToScene(context, offset);
+            return;
+        }
+
         Point clipOffset = offset + GeometryOffset;
         using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
         {
@@ -1559,6 +1595,12 @@ public sealed class OpacityLayer : ContainerLayer
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
+        if (Constants.KDebugMode && RenderingDebug.DisableOpacityLayers)
+        {
+            base.AddToScene(context, offset);
+            return;
+        }
+
         using (context.PushOpacity(Opacity))
         {
             base.AddToScene(context, offset);

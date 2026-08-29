@@ -122,6 +122,11 @@ public class PaintingContext
     public void PaintChild(RenderObject child, Point offset)
     {
         ArgumentNullException.ThrowIfNull(child);
+        if (Constants.KDebugMode)
+        {
+            RenderingDebug.OnProfilePaint?.Invoke(child);
+        }
+
         if (child.IsRepaintBoundary)
         {
             StopRecordingIfNeeded();
@@ -784,7 +789,37 @@ public class PaintingContext
     /// </remarks>
     protected virtual void StopRecordingIfNeeded()
     {
+        if (_currentPictureLayer is null)
+        {
+            return;
+        }
+
+        if (Constants.KDebugMode)
+        {
+            if (RenderingDebug.RepaintRainbowEnabled)
+            {
+                var pen = new Pen(new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor()), 6.0);
+                DrawGeometry(null, pen, new RectangleGeometry(DeflateRect(EstimatedBounds, 3.0)));
+            }
+
+            if (RenderingDebug.PaintLayerBordersEnabled)
+            {
+                var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFFFF9800)), 1.0);
+                DrawGeometry(null, pen, new RectangleGeometry(EstimatedBounds));
+            }
+        }
+
         _currentPictureLayer = null;
+    }
+
+    /// <remarks>Dart's <c>Rect.deflate</c>.</remarks>
+    private static Rect DeflateRect(Rect rect, double delta)
+    {
+        return new Rect(
+            rect.X + delta,
+            rect.Y + delta,
+            Math.Max(0.0, rect.Width - (delta * 2.0)),
+            Math.Max(0.0, rect.Height - (delta * 2.0)));
     }
 
     private static Point PointOnEllipse(Rect rect, double angleRadians)

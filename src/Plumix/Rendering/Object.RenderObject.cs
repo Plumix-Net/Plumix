@@ -477,6 +477,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         _constraints = constraints;
         _debugMutationsLocked = true;
+        if (Constants.KDebugMode && RenderingDebug.PrintLayouts)
+        {
+            string mode = SizedByParent ? "with separate resize" : "with resize allowed";
+            Print.DebugPrint($"Laying out ({mode}) {this}");
+        }
 
         if (SizedByParent)
         {
@@ -540,6 +545,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         DebugDoingThisLayout = true;
         RenderObject? previousActiveLayout = _debugActiveLayout;
         _debugActiveLayout = this;
+        if (Constants.KDebugMode && RenderingDebug.PrintLayouts)
+        {
+            Print.DebugPrint($"Laying out (without resize) {this}");
+        }
+
         try
         {
             PerformLayout();
@@ -752,6 +762,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         if (Owner is { } owner && _isRelayoutBoundary == true)
         {
+            if (Constants.KDebugMode && RenderingDebug.PrintMarkNeedsLayoutStacks)
+            {
+                Assertions.DebugPrintStack(label: $"MarkNeedsLayout() called for {this}");
+            }
+
             owner.RequestLayoutFor(this);
             owner.RequestVisualUpdate();
         }
@@ -1119,6 +1134,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         if (IsRepaintBoundary && _wasRepaintBoundary)
         {
+            if (Constants.KDebugMode && RenderingDebug.PrintMarkNeedsPaintStacks)
+            {
+                Assertions.DebugPrintStack(label: $"MarkNeedsPaint() called for {this}");
+            }
+
             Debug.Assert(_layerHandle.Layer is OffsetLayer);
             if (Owner is { } owner)
             {
@@ -1132,6 +1152,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         }
         else
         {
+            if (Constants.KDebugMode && RenderingDebug.PrintMarkNeedsPaintStacks)
+            {
+                Assertions.DebugPrintStack(label: $"MarkNeedsPaint() called for {this} (root of render tree)");
+            }
+
             // If we are the root of the render tree we aren't added to the dirty list: the root is
             // always told to paint regardless.
             Owner?.RequestVisualUpdate();

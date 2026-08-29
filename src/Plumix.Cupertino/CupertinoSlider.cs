@@ -523,6 +523,7 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
 
     public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
+        DebugHandleEvent(@event, entry);
         if (@event is PointerDownEvent downEvent && IsInteractive)
         {
             _drag.AddPointer(downEvent);

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using Avalonia;
+using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.UI;
 
@@ -15,8 +16,14 @@ public abstract class RenderBox : RenderObject
     [ThreadStatic]
     private static RenderBox? _activeDryCalculation;
 
+    /// <remarks>Flutter's <c>RenderBox._debugDryLayoutCalculationValid</c>.</remarks>
+    private static bool _debugDryLayoutCalculationValid = true;
+
     private readonly LayoutCacheStorage _layoutCacheStorage = new();
     private Size? _size;
+
+    /// <remarks>Flutter's <c>RenderBox._debugActivePointers</c>.</remarks>
+    private int _debugActivePointers;
 
     internal static bool DebugCheckingIntrinsics { get; set; }
 
@@ -190,10 +197,140 @@ public abstract class RenderBox : RenderObject
         }
     }
 
-    protected void DebugCannotComputeDryLayout(string? reason = null)
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderBox.debugAssertDoesMeetConstraints</c>, restricted to the
+    /// <see cref="RenderingDebug.CheckIntrinsicSizes"/> branch: the intrinsic dimension methods are
+    /// exercised for sanity and the dry layout is compared against the size layout produced. The
+    /// unbounded-constraint and <c>constraints.IsSatisfiedBy(size)</c> diagnostics of the same Dart
+    /// method are not ported yet (see <c>docs/ai/BACKLOG.md</c>).
+    /// </remarks>
+    protected override void DebugAssertDoesMeetConstraints()
     {
-        throw new InvalidOperationException(
-            reason ?? $"{GetType().Name} cannot compute a dry layout result for the supplied constraints.");
+        if (!Constants.KDebugMode || !RenderingDebug.CheckIntrinsicSizes)
+        {
+            return;
+        }
+
+        Debug.Assert(!DebugCheckingIntrinsics);
+        DebugCheckingIntrinsics = true;
+        var failures = new List<DiagnosticsNode>();
+        try
+        {
+            TestIntrinsicsForValues(GetMinIntrinsicWidth, GetMaxIntrinsicWidth, "Width", double.PositiveInfinity);
+            TestIntrinsicsForValues(GetMinIntrinsicHeight, GetMaxIntrinsicHeight, "Height", double.PositiveInfinity);
+            if (Constraints.HasBoundedWidth)
+            {
+                TestIntrinsicsForValues(GetMinIntrinsicWidth, GetMaxIntrinsicWidth, "Width", Constraints.MaxHeight);
+            }
+
+            if (Constraints.HasBoundedHeight)
+            {
+                TestIntrinsicsForValues(GetMinIntrinsicHeight, GetMaxIntrinsicHeight, "Height", Constraints.MaxWidth);
+            }
+        }
+        finally
+        {
+            DebugCheckingIntrinsics = false;
+        }
+
+        if (failures.Count > 0)
+        {
+            throw new FlutterError([
+                new ErrorSummary(
+                    $"The intrinsic dimension methods of the {GetType().Name} class returned values that "
+                    + "violate the intrinsic protocol contract."),
+                new ErrorDescription(
+                    $"The following {(failures.Count > 1 ? "failures" : "failure")} was detected:"),
+                .. failures,
+                new ErrorHint(
+                    "If you are not writing your own RenderBox subclass, then this is not\nyour fault. "
+                    + "Contact support: https://github.com/Plumix-Net/Plumix/issues/new"),
+            ]);
+        }
+
+        // Checking that GetDryLayout computes the same size.
+        _debugDryLayoutCalculationValid = true;
+        DebugCheckingIntrinsics = true;
+        Size dryLayoutSize;
+        try
+        {
+            dryLayoutSize = GetDryLayout(Constraints);
+        }
+        finally
+        {
+            DebugCheckingIntrinsics = false;
+        }
+
+        if (_debugDryLayoutCalculationValid && dryLayoutSize != _size)
+        {
+            throw new FlutterError([
+                new ErrorSummary(
+                    $"The size given to the {GetType().Name} class differs from the size computed by "
+                    + "ComputeDryLayout."),
+                new ErrorDescription(
+                    $"The size computed in {(SizedByParent ? "PerformResize" : "PerformLayout")} is {_size}, "
+                    + $"which is different from {dryLayoutSize}, which was computed by ComputeDryLayout."),
+                new ErrorDescription($"The constraints used were {Constraints}."),
+                new ErrorHint(
+                    "If you are not writing your own RenderBox subclass, then this is not\nyour fault. "
+                    + "Contact support: https://github.com/Plumix-Net/Plumix/issues/new"),
+            ]);
+        }
+
+        double TestIntrinsic(Func<double, double> function, string name, double constraint)
+        {
+            double result = function(constraint);
+            if (result < 0)
+            {
+                failures.Add(new ErrorDescription($" * {name}({constraint}) returned a negative value: {result}"));
+            }
+
+            if (!double.IsFinite(result))
+            {
+                failures.Add(new ErrorDescription($" * {name}({constraint}) returned a non-finite value: {result}"));
+            }
+
+            return result;
+        }
+
+        void TestIntrinsicsForValues(
+            Func<double, double> getMin,
+            Func<double, double> getMax,
+            string name,
+            double constraint)
+        {
+            double min = TestIntrinsic(getMin, $"GetMinIntrinsic{name}", constraint);
+            double max = TestIntrinsic(getMax, $"GetMaxIntrinsic{name}", constraint);
+            if (min > max)
+            {
+                failures.Add(new ErrorDescription(
+                    $" * GetMinIntrinsic{name}({constraint}) returned a larger value ({min}) than "
+                    + $"GetMaxIntrinsic{name}({constraint}) ({max})"));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called from <c>ComputeDryLayout</c> or <c>ComputeDryBaseline</c> when this subclass does not
+    /// support calculating a dry layout.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderBox.debugCannotComputeDryLayout</c>: when
+    /// <see cref="DebugCheckingIntrinsics"/> is not set this throws, and otherwise it records that
+    /// the dry calculation currently in flight is not valid, so that
+    /// <see cref="RenderingDebug.CheckIntrinsicSizes"/> skips comparing its result.
+    /// </remarks>
+    protected bool DebugCannotComputeDryLayout(string? reason = null)
+    {
+        if (!DebugCheckingIntrinsics)
+        {
+            throw new InvalidOperationException(
+                reason ?? $"{GetType().Name} cannot compute a dry layout result for the supplied constraints.");
+        }
+
+        _debugDryLayoutCalculationValid = false;
+        return true;
     }
 
     private protected override void InvalidateLayoutCache()
@@ -607,10 +744,212 @@ public abstract class RenderBox : RenderObject
     //         => '${renderBox.runtimeType}.getDryBaseline';
     // }
 
+    /// <summary>Implements the <see cref="RenderingDebug.PaintPointersEnabled"/> debugging feature.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderBox.debugHandleEvent</c>. <see cref="RenderBox"/> subclasses that
+    /// implement <see cref="RenderObject.HandleEvent"/> should call this from it, so that they
+    /// support <see cref="RenderingDebug.PaintPointersEnabled"/>. If it is called for a
+    /// <see cref="PointerDownEvent"/>, it must also be called for the corresponding
+    /// <see cref="PointerUpEvent"/> or <see cref="PointerCancelEvent"/>.
+    /// </remarks>
+    public bool DebugHandleEvent(PointerEvent @event, HitTestEntry entry)
+    {
+        if (!Constants.KDebugMode)
+        {
+            return true;
+        }
+
+        if (RenderingDebug.PaintPointersEnabled)
+        {
+            if (@event is PointerDownEvent)
+            {
+                _debugActivePointers += 1;
+            }
+            else if (@event is PointerUpEvent or PointerCancelEvent)
+            {
+                _debugActivePointers -= 1;
+            }
+
+            MarkNeedsPaint();
+        }
+
+        return true;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderBox.debugPaint</c>.</remarks>
+    protected override void DebugPaint(PaintingContext context, Point offset)
+    {
+        // Only perform the baseline checks after the pipeline owner's layout flush completes: a
+        // baseline may depend on the layout of a child, so the safest point to compare the dry and
+        // the real implementation is once the entire tree has finished laying out. Descendants run
+        // DebugPaint before their ancestors, so an inconsistent implementation is reported on the
+        // render box that actually has it rather than on an ancestor that merely relayed it.
+        if (RenderingDebug.CheckIntrinsicSizes)
+        {
+            DebugVerifyDryBaselines();
+        }
+
+        if (RenderingDebug.PaintSizeEnabled)
+        {
+            DebugPaintSize(context, offset);
+        }
+
+        if (RenderingDebug.PaintBaselinesEnabled)
+        {
+            DebugPaintBaselines(context, offset);
+        }
+
+        if (RenderingDebug.PaintPointersEnabled)
+        {
+            DebugPaintPointers(context, offset);
+        }
+    }
+
+    /// <summary>In debug mode, paints a border around this render box.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderBox.debugPaintSize</c>, called for every <see cref="RenderBox"/> when
+    /// <see cref="RenderingDebug.PaintSizeEnabled"/> is set.
+    /// </remarks>
+    protected internal virtual void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FFFF)), 1.0);
+        context.DrawGeometry(null, pen, new RectangleGeometry(Deflate(new Rect(offset, Size), 0.5)));
+    }
+
+    /// <summary>In debug mode, paints a line for each baseline.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderBox.debugPaintBaselines</c>, called for every <see cref="RenderBox"/> when
+    /// <see cref="RenderingDebug.PaintBaselinesEnabled"/> is set.
+    /// </remarks>
+    protected virtual void DebugPaintBaselines(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        // Ideographic baseline.
+        double? baselineI = GetDistanceToBaseline(TextBaseline.Ideographic, onlyReal: true);
+        if (baselineI is { } ideographic)
+        {
+            var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFFFFD000)), 0.25);
+            context.DrawLine(
+                pen,
+                new Point(offset.X, offset.Y + ideographic),
+                new Point(offset.X + Size.Width, offset.Y + ideographic));
+        }
+
+        // Alphabetic baseline.
+        double? baselineA = GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true);
+        if (baselineA is { } alphabetic)
+        {
+            var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FF00)), 0.25);
+            context.DrawLine(
+                pen,
+                new Point(offset.X, offset.Y + alphabetic),
+                new Point(offset.X + Size.Width, offset.Y + alphabetic));
+        }
+    }
+
+    /// <summary>
+    /// In debug mode, paints a rectangle if this render box has counted more pointer downs than
+    /// pointer up events.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderBox.debugPaintPointers</c>, called for every <see cref="RenderBox"/> when
+    /// <see cref="RenderingDebug.PaintPointersEnabled"/> is set. Events are only counted for classes
+    /// that call <see cref="DebugHandleEvent"/>.
+    /// </remarks>
+    protected virtual void DebugPaintPointers(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (_debugActivePointers <= 0)
+        {
+            return;
+        }
+
+        var color = Color.FromUInt32(0x00BBBBu | (uint)(0x04000000 * Depth & 0xFF000000));
+        context.DrawRectangle(new SolidColorBrush(color), null, new Rect(offset, Size));
+    }
+
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
         properties.Add(new DiagnosticsProperty<Size?>("size", _size, missingIfNull: true));
+    }
+
+    /// <remarks>Flutter's <c>RenderBox._debugVerifyDryBaselines</c>.</remarks>
+    private void DebugVerifyDryBaselines()
+    {
+        foreach (TextBaseline baseline in Enum.GetValues<TextBaseline>())
+        {
+            Debug.Assert(!DebugCheckingIntrinsics);
+            DebugCheckingIntrinsics = true;
+            _debugDryLayoutCalculationValid = true;
+            double? dryBaseline;
+            double? realBaseline;
+            try
+            {
+                dryBaseline = GetDryBaseline(Constraints, baseline);
+                realBaseline = GetDistanceToBaseline(baseline, onlyReal: true);
+            }
+            finally
+            {
+                DebugCheckingIntrinsics = false;
+            }
+
+            if (!_debugDryLayoutCalculationValid || dryBaseline == realBaseline)
+            {
+                continue;
+            }
+
+            string summary =
+                $"The {baseline} location returned by {GetType().Name}.ComputeDistanceToActualBaseline "
+                + "differs from the baseline location computed by ComputeDryBaseline.";
+            if (dryBaseline is null != realBaseline is null)
+            {
+                (string returnedNull, string returnedNonNull) = dryBaseline is null
+                    ? ("ComputeDryBaseline", "ComputeDistanceToActualBaseline")
+                    : ("ComputeDistanceToActualBaseline", "ComputeDryBaseline");
+                throw new FlutterError([
+                    new ErrorSummary(summary),
+                    new ErrorDescription(
+                        $"The {returnedNull} method returned null while the {returnedNonNull} returned a "
+                        + $"non-null {baseline} of {dryBaseline ?? realBaseline}. Did you forget to "
+                        + $"implement {returnedNull} for {GetType().Name}?"),
+                    .. DebugDryBaselineMessages(),
+                ]);
+            }
+
+            throw new FlutterError([
+                new ErrorSummary(summary),
+                new DiagnosticsProperty<RenderObject>("The RenderBox was", this),
+                new ErrorDescription(
+                    $"The ComputeDryBaseline method returned {dryBaseline},\n"
+                    + $"while the ComputeDistanceToActualBaseline method returned {realBaseline}.\n"
+                    + "Consider checking the implementations of the following methods on the "
+                    + $"{GetType().Name} class and make sure they are consistent:\n"
+                    + " * ComputeDistanceToActualBaseline\n * ComputeDryBaseline\n * PerformLayout\n"),
+                .. DebugDryBaselineMessages(),
+            ]);
+        }
+    }
+
+    private List<DiagnosticsNode> DebugDryBaselineMessages() =>
+    [
+        new ErrorDescription($"The constraints used were {Constraints}."),
+        new ErrorHint(
+            "If you are not writing your own RenderBox subclass, then this is not\nyour fault. "
+            + "Contact support: https://github.com/Plumix-Net/Plumix/issues/new"),
+    ];
+
+    /// <remarks>Dart's <c>Rect.deflate</c>.</remarks>
+    private static Rect Deflate(Rect rect, double delta)
+    {
+        return new Rect(
+            rect.X + delta,
+            rect.Y + delta,
+            Math.Max(0.0, rect.Width - (delta * 2.0)),
+            Math.Max(0.0, rect.Height - (delta * 2.0)));
     }
 }

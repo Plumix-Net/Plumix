@@ -84,6 +84,18 @@ public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Mirrors <see cref="PerformLayout"/> so that
+    /// <see cref="Rendering.RenderingDebug.CheckIntrinsicSizes"/> does not report the view itself.
+    /// </remarks>
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        return _child is null
+            ? constraints.Constrain(new Size())
+            : constraints.Constrain(_child.GetDryLayout(constraints));
+    }
+
     public override void Paint(PaintingContext ctx, Point offset)
     {
         if (_child != null)

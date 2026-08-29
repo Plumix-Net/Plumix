@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Media.TextFormatting;
 using Plumix.Foundation;
 using Plumix.UI;
 using Path = Plumix.UI.Path;
@@ -88,6 +89,57 @@ internal sealed class DecorationClipper : CustomClipper<Path>
     {
         return oldClipper is not DecorationClipper oldDecorationClipper
                || oldDecorationClipper.Decoration != Decoration;
+    }
+}
+
+/// <summary>
+/// The scissors marker Flutter's clip render objects paint when
+/// <see cref="RenderingDebug.PaintSizeEnabled"/> is set.
+/// </summary>
+/// <remarks>
+/// Flutter keeps <c>_debugPaint</c> and <c>_debugText</c> as instance fields on the private
+/// <c>_RenderCustomClip</c> mixin base. Plumix's clip render objects do not share one base class
+/// (<see cref="RenderClipRect"/> and <see cref="RenderClipRRect"/> derive straight from
+/// <see cref="RenderProxyBox"/>), so the two lazily created objects live here instead; they are
+/// stateless, so one shared instance is equivalent to Dart's per-object caching.
+/// </remarks>
+internal static class RenderCustomClipDebug
+{
+    private const double FontSize = 14.0;
+
+    private static Pen? _debugPen;
+    private static TextLayout? _debugText;
+
+    /// <remarks>Flutter's <c>_RenderCustomClip._debugPaint</c>.</remarks>
+    internal static Pen DebugPen => _debugPen ??= new Pen(
+        new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0, 0, RelativeUnit.Absolute),
+            EndPoint = new RelativePoint(10, 10, RelativeUnit.Absolute),
+            SpreadMethod = GradientSpreadMethod.Repeat,
+            GradientStops =
+            [
+                new GradientStop(Color.FromUInt32(0x00000000), 0.25),
+                new GradientStop(Color.FromUInt32(0xFFFF00FF), 0.25),
+                new GradientStop(Color.FromUInt32(0xFFFF00FF), 0.75),
+                new GradientStop(Color.FromUInt32(0x00000000), 0.75),
+            ],
+        },
+        2.0);
+
+    /// <remarks>Flutter's <c>_RenderCustomClip._debugText</c>.</remarks>
+    internal static TextLayout DebugText => _debugText ??= new TextLayout(
+        text: "\u2702",
+        typeface: new Typeface(FontFamily.Default),
+        fontSize: FontSize,
+        foreground: new SolidColorBrush(Color.FromUInt32(0xFFFF00FF)));
+
+    /// <remarks>Flutter's <c>_RenderCustomClip.debugPaintSize</c> scissors placement.</remarks>
+    internal static void PaintScissors(PaintingContext context, Point offset, double clipWidth)
+    {
+        context.DrawTextLayout(
+            DebugText,
+            new Point(offset.X + (clipWidth / 8.0), offset.Y - (FontSize * 1.1)));
     }
 }
 
@@ -261,6 +313,29 @@ public sealed class RenderClipOval : RenderCustomClip<Rect>
             clipBehavior: ClipBehavior,
             geometryOffset: offset);
     }
+
+    /// <inheritdoc />
+    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is null)
+        {
+            return;
+        }
+
+        base.DebugPaintSize(context, offset);
+        if (ClipBehavior == Clip.None)
+        {
+            return;
+        }
+
+        Rect clip = EffectiveClip;
+        context.DrawOval(
+            new Rect(clip.Position + offset, clip.Size),
+            brush: null,
+            pen: RenderCustomClipDebug.DebugPen);
+        RenderCustomClipDebug.PaintScissors(context, offset, clip.Width);
+    }
 }
 
 public sealed class RenderClipPath : RenderCustomClip<Path>
@@ -310,5 +385,25 @@ public sealed class RenderClipPath : RenderCustomClip<Path>
             clippedContext => base.Paint(clippedContext, offset),
             clipBehavior: ClipBehavior,
             geometryOffset: offset);
+    }
+
+    /// <inheritdoc />
+    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is null)
+        {
+            return;
+        }
+
+        base.DebugPaintSize(context, offset);
+        if (ClipBehavior == Clip.None)
+        {
+            return;
+        }
+
+        Path clip = EffectiveClip;
+        context.DrawGeometry(null, RenderCustomClipDebug.DebugPen, clip.ToGeometry(), geometryOffset: offset);
+        RenderCustomClipDebug.PaintScissors(context, offset, clip.GetBounds().Width);
     }
 }

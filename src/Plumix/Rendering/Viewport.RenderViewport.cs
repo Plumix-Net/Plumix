@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Media;
 using Plumix.UI;
 using Plumix.Foundation;
 
@@ -513,6 +514,23 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
         }
 
         PaintContents(context, offset);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderViewportBase.debugPaintSize</c>.</remarks>
+    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        base.DebugPaintSize(context, offset);
+        var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FF00)), 1.0);
+        for (RenderSliver? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            Size size = Axis == Axis.Vertical
+                ? new Size(child.ConstraintsForSliver.CrossAxisExtent, child.Geometry.LayoutExtent)
+                : new Size(child.Geometry.LayoutExtent, child.ConstraintsForSliver.CrossAxisExtent);
+            var rect = new Rect(offset + PaintOffsetOf(child), size);
+            context.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5)));
+        }
     }
 
     private void PaintContents(PaintingContext context, Point offset)
@@ -1061,6 +1079,11 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
 
     protected override void PerformLayout()
     {
+        if (Constants.KDebugMode)
+        {
+            RenderingDebug.CheckHasBoundedAxis(Axis, Constraints);
+        }
+
         switch (Axis)
         {
             case Axis.Vertical:

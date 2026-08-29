@@ -1774,6 +1774,7 @@ internal sealed class RenderRangeSlider : RenderBox
 
     public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
+        DebugHandleEvent(@event, entry);
         switch (@event)
         {
             case PointerDownEvent downEvent:

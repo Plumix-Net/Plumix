@@ -291,6 +291,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Proxy.RenderBox.cs`
   - `src/Plumix/Widgets/Basic.cs`
   - `src/Plumix/Widgets/ConstraintsTransformBox.cs`
+  - `src/Plumix/Rendering/Debug.cs` (`RenderingDebug`: the debug paint/print/profile flags and the
+    kill switches the layer and clip render objects read)
   - `src/Plumix/Rendering/DebugOverflowIndicator.cs`
   - `src/Plumix/Rendering/Baseline.cs`
   - `src/Plumix/Widgets/Baseline.cs`

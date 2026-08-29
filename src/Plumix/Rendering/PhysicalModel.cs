@@ -175,6 +175,11 @@ public sealed class RenderPhysicalModel : RenderProxyBox
             return default;
         }
 
+        if (Constants.KDebugMode && RenderingDebug.DisablePhysicalShapeLayers)
+        {
+            return default;
+        }
+
         var shadow = new BoxShadow(
             color: _shadowColor,
             offset: new Point(0.0, _elevation * 0.5),
@@ -300,7 +305,8 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
         }
 
         Geometry geometry = EffectiveClip.ToGeometry();
-        if (_elevation > 0.0 && _shadowColor.A > 0)
+        bool physicalShapesDisabled = Constants.KDebugMode && RenderingDebug.DisablePhysicalShapeLayers;
+        if (_elevation > 0.0 && _shadowColor.A > 0 && !physicalShapesDisabled)
         {
             context.DrawShadow(
                 geometry,

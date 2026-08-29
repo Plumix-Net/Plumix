@@ -76,6 +76,7 @@ import 'demos/general/decorated_box_demo_page.dart';
 import 'demos/general/gradients_demo_page.dart';
 import 'demos/general/shape_borders_demo_page.dart';
 import 'demos/general/debug_painting_demo_page.dart';
+import 'demos/general/rendering_debug_flags_demo_page.dart';
 import 'demos/general/drag_target_demo_page.dart';
 import 'demos/general/gesture_recognizer_demo_page.dart';
 import 'demos/material/drawer_demo_page.dart';
@@ -991,6 +992,14 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Placeholder + GridPaper',
       subtitle: 'unbounded fallback sizing + foreground layout grid',
       builder: () => const DebugPaintingDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.renderingDebugFlags,
+      title: 'Rendering debug flags',
+      subtitle:
+          'debugPaintSize/baselines/pointers/layer borders + clip, opacity, '
+          'shadow kill switches',
+      builder: () => const RenderingDebugFlagsDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.flow,

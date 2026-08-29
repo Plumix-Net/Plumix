@@ -151,6 +151,7 @@ class SampleRoutes {
 
   static const String trackpadPanZoom = '/trackpad-pan-zoom';
   static const String debugPainting = '/debug-painting';
+  static const String renderingDebugFlags = '/rendering-debug-flags';
   static const String flow = '/flow';
   static const String transform = '/transform';
   static const String compositedTransform = '/composited-transform';

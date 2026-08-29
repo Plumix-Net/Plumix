@@ -155,6 +155,7 @@ internal static class SampleRoutes
 
     public const string TrackpadPanZoom = "/trackpad-pan-zoom";
     public const string DebugPainting = "/debug-painting";
+    public const string RenderingDebugFlags = "/rendering-debug-flags";
     public const string Flow = "/flow";
     public const string Transform = "/transform";
     public const string CompositedTransform = "/composited-transform";
@@ -597,6 +598,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Placeholder + GridPaper",
             "unbounded fallback sizing + foreground layout grid",
             () => new DebugPaintingDemoPage()),
+        new(
+            SampleRoutes.RenderingDebugFlags,
+            "Rendering debug flags",
+            "debugPaintSize/baselines/pointers/layer borders + clip, opacity, shadow kill switches",
+            () => new RenderingDebugFlagsDemoPage()),
         new(
             SampleRoutes.Flow,
             "Flow + RepaintBoundary",

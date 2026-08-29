@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `RenderingDebug`, the render-layer debug flag surface, and wired every consumer (`rendering/debug.dart`).
+- Added `RenderBox.DebugPaintSize`/`DebugPaintBaselines`/`DebugPaintPointers`/`DebugHandleEvent` (`box.dart`).
+- Added `RenderRepaintBoundary`'s symmetric/asymmetric paint metrics and usefulness diagnosis (`proxy_box.dart`).
+- Added `HSVColor` (`painting/colors.dart`) and `PaintUtilities.PaintZigZag` (`painting/paint_utilities.dart`).
+- Added `SliverConstraints.NormalizedGrowthDirection` and `RenderView.ComputeDryLayout` (`sliver.dart`, `view.dart`).
 - Breaking: `OverlayPortal`'s overlay child is a deferred-layout box laid out after its anchor (`overlay.dart`).
 - Added `RenderObjectWithLayoutCallbackMixin`'s `ScheduleLayoutCallback`/`RunLayoutCallback` pair (`object.dart`).
 - Breaking: `LayoutBuilder`/`SliverLayoutBuilder` rebuild even when an ancestor skips laying them out.

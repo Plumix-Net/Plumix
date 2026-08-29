@@ -154,6 +154,7 @@ public sealed class RenderTapRegionSurface : RenderProxyBoxWithHitTestBehavior
 
     public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
+        DebugHandleEvent(@event, entry);
         if (@event is not PointerDownEvent && @event is not PointerUpEvent)
         {
             return;
