@@ -446,6 +446,36 @@ public class AssertionsTests
     }
 
     [Fact]
+    public void DefaultStackFilterElidesClrAsyncRuntimeNamespaces()
+    {
+        List<string> filtered = [.. FlutterError.DefaultStackFilter([
+            "   at Plumix.Tests.AssertionsTests.TestBody()",
+            "   at System.Runtime.CompilerServices.AsyncTaskMethodBuilder.Start[TStateMachine]"
+                + "(TStateMachine& stateMachine)",
+            "   at System.Threading.Tasks.Task.Execute()",
+        ])];
+
+        Assert.Equal(
+            [
+                "at Plumix.Tests.AssertionsTests.TestBody()",
+                "(elided 2 frames from dotnet:System/Runtime/CompilerServices "
+                    + "and dotnet:System/Threading/Tasks)",
+            ],
+            filtered);
+    }
+
+    [Fact]
+    public async Task DefaultStackFilterElidesRuntimeFramesFromALiveClrTaskStack()
+    {
+        string stack = await Task.Run(CaptureCurrentStack);
+        List<string> filtered = [.. FlutterError.DefaultStackFilter(stack.Split('\n'))];
+
+        Assert.Contains(filtered, line => line.Contains("CaptureCurrentStack", StringComparison.Ordinal));
+        Assert.DoesNotContain(filtered, line => line.Contains("System.Threading.Tasks", StringComparison.Ordinal));
+        Assert.Contains(filtered, line => line.Contains("dotnet:System/Threading/Tasks", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void DumpErrorToConsoleAbbreviatesRepeatErrors()
     {
         FlutterError.ResetErrorCount();
@@ -465,6 +495,11 @@ public class AssertionsTests
             FlutterError.ResetErrorCount();
         }
     }
+
+    [System.Runtime.CompilerServices.MethodImpl(
+        System.Runtime.CompilerServices.MethodImplOptions.NoInlining
+        | System.Runtime.CompilerServices.MethodImplOptions.NoOptimization)]
+    private static string CaptureCurrentStack() => new System.Diagnostics.StackTrace(true).ToString();
 
     [Fact]
     public void DumpErrorToConsoleForceReportRendersTheFullBlockAgain()

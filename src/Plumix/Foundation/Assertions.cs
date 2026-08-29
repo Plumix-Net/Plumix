@@ -801,6 +801,9 @@ public class FlutterError : AssertionError, IDiagnosticableTree
             ["class _FrameCallbackEntry"] = 0,
             ["class _Timer"] = 0,
             ["class _RawReceivePortImpl"] = 0,
+            // CLR frames keep the root namespace in Package and the remainder in PackagePath.
+            ["dotnet:System/Runtime/CompilerServices"] = 0,
+            ["dotnet:System/Threading/Tasks"] = 0,
         };
         int skipped = 0;
 
@@ -811,17 +814,18 @@ public class FlutterError : AssertionError, IDiagnosticableTree
             StackFrame frame = parsedFrames[index];
             string className = $"class {frame.ClassName}";
             string package = $"{frame.PackageScheme}:{frame.Package}";
-            if (removedPackagesAndClasses.ContainsKey(className))
+            string framePackagePath = $"{package}/{frame.PackagePath}";
+            string? removalKey = removedPackagesAndClasses.ContainsKey(className)
+                ? className
+                : removedPackagesAndClasses.ContainsKey(package)
+                    ? package
+                    : removedPackagesAndClasses.Keys.FirstOrDefault(key =>
+                        key.StartsWith("dotnet:", StringComparison.Ordinal)
+                        && framePackagePath.StartsWith($"{key}/", StringComparison.Ordinal));
+            if (removalKey is not null)
             {
                 skipped += 1;
-                removedPackagesAndClasses[className] += 1;
-                parsedFrames.RemoveAt(index);
-                index -= 1;
-            }
-            else if (removedPackagesAndClasses.ContainsKey(package))
-            {
-                skipped += 1;
-                removedPackagesAndClasses[package] += 1;
+                removedPackagesAndClasses[removalKey] += 1;
                 parsedFrames.RemoveAt(index);
                 index -= 1;
             }
