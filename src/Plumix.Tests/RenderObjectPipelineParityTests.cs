@@ -43,6 +43,29 @@ public class RenderObjectPipelineParityTests
     }
 
     [Fact]
+    public void Attach_RejectsAChildThatIsAlreadyAttached()
+    {
+        var child = new SizeRenderBox(new Size(10, 10));
+        var owner = new PipelineOwner(new RenderView());
+        child.Attach(owner);
+        var parent = new ToggleVisitingRenderBox(child) { VisitsChild = true };
+
+        Assert.Throws<AssertionError>(() => parent.Attach(owner));
+    }
+
+    [Fact]
+    public void Detach_RejectsAChildThatIsAlreadyDetached()
+    {
+        var child = new SizeRenderBox(new Size(10, 10));
+        var owner = new PipelineOwner(new RenderView());
+        var parent = new ToggleVisitingRenderBox(child);
+        parent.Attach(owner);
+        parent.VisitsChild = true;
+
+        Assert.Throws<AssertionError>(parent.Detach);
+    }
+
+    [Fact]
     public void DropChild_ClearsParentDataAndTheRelayoutBoundaryState()
     {
         var child = new SizeRenderBox(new Size(10, 10));
@@ -241,6 +264,28 @@ public class RenderObjectPipelineParityTests
         public PassThroughRenderBox(RenderBox? child) => Child = child;
 
         public bool HasRelayoutBoundaryStateForTest => HasRelayoutBoundaryState;
+    }
+
+    private sealed class ToggleVisitingRenderBox(RenderObject child) : RenderBox
+    {
+        public bool VisitsChild { get; set; }
+
+        public override void VisitChildren(Action<RenderObject> visitor)
+        {
+            if (VisitsChild)
+            {
+                visitor(child);
+            }
+        }
+
+        protected override void PerformLayout()
+        {
+            Size = Constraints.Smallest;
+        }
+
+        public override void Paint(PaintingContext ctx, Point offset)
+        {
+        }
     }
 
     private sealed class CountingRepaintBoundary : PassThroughRenderBox

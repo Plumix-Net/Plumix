@@ -990,24 +990,6 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
         }
     }
 
-    protected override void OnAttach()
-    {
-        base.OnAttach();
-        foreach (RenderBox child in _slottedChildren.Values)
-        {
-            child.Attach(Owner!);
-        }
-    }
-
-    protected override void OnDetach()
-    {
-        base.OnDetach();
-        foreach (RenderBox child in _slottedChildren.Values)
-        {
-            child.Detach();
-        }
-    }
-
     protected override void RedepthChildren()
     {
         VisitChildren(child => RedepthChild(child));

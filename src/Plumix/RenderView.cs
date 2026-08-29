@@ -2,12 +2,13 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Foundation;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/view.dart (approximate)
 
 namespace Plumix;
 
-public sealed class RenderView : RenderBox
+public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
 {
     private RenderBox? _child;
 
@@ -37,6 +38,12 @@ public sealed class RenderView : RenderBox
 
             MarkNeedsLayout();
         }
+    }
+
+    RenderObject? IRenderObjectSingleChildContainer.Child
+    {
+        get => Child;
+        set => Child = (RenderBox?)value;
     }
 
     public override void SetupParentData(RenderObject child)

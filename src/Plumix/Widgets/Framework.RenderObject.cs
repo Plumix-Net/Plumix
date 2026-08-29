@@ -29,6 +29,10 @@ public abstract class RenderObjectWidget(Key? key = null) : Widget(key)
     internal virtual void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
     }
+
+    internal virtual void DidUnmountRenderObject(RenderObject renderObject)
+    {
+    }
 }
 
 public abstract class LeafRenderObjectWidget(Key? key = null) : RenderObjectWidget(key)
@@ -95,16 +99,17 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         AttachRenderObject(Slot);
     }
 
-    protected override void OnActivate()
-    {
-        base.OnActivate();
-        AttachRenderObject(Slot);
-    }
-
     protected override void OnDeactivate()
     {
-        DetachRenderObject();
         base.OnDeactivate();
+        if (RequireRenderObject().Attached)
+        {
+            throw new AssertionError(
+                $"{GetType().Name} must be detached before it is deactivated; "
+                + $"{RequireRenderObject().GetType().Name} is still attached to "
+                + $"{RequireRenderObject().Parent?.GetType().Name ?? "no render parent"} via "
+                + $"{_ancestorRenderObjectHost?.GetType().Name ?? "no element host"}.");
+        }
     }
 
     internal override void Update(Widget newWidget)
@@ -146,8 +151,14 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         return _renderObject ?? throw new InvalidOperationException("RenderObjectElement is not mounted.");
     }
 
-    private void AttachRenderObject(object? newSlot)
+    internal override void AttachRenderObject(object? newSlot)
     {
+        if (_ancestorRenderObjectHost != null)
+        {
+            throw new AssertionError("A RenderObjectElement cannot attach its render object twice.");
+        }
+
+        base.UpdateSlot(newSlot);
         (_ancestorRenderObjectHost, _ancestorRenderObjectHostElement) = FindAncestorRenderObjectHost();
         if (_ancestorRenderObjectHost == null)
         {
@@ -184,7 +195,7 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         }
     }
 
-    private void DetachRenderObject()
+    internal override void DetachRenderObject()
     {
         if (_ancestorRenderObjectHost != null)
         {
@@ -193,19 +204,47 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
 
         _ancestorRenderObjectHost = null;
         _ancestorRenderObjectHostElement = null;
+        base.UpdateSlot(null);
     }
 
     internal override void Unmount()
     {
-        DetachRenderObject();
-        if (_renderObject?.Attached == true)
+        if (_renderObject is null)
         {
-            _renderObject.Detach();
+            base.Unmount();
+            return;
         }
 
-        _renderObject?.Dispose();
-        _renderObject = null;
+        RenderObject renderObject = _renderObject;
+        RenderObjectWidget oldWidget = RenderObjectWidget;
         base.Unmount();
+        if (renderObject.Attached)
+        {
+            // Root adapters must normally detach from their PipelineOwner in DetachRenderObject. Keep
+            // direct test/host adapters safe when they attach the render root outside IRenderObjectHost.
+            if (renderObject.Parent is IRenderObjectSingleChildContainer singleChildContainer
+                && ReferenceEquals(singleChildContainer.Child, renderObject))
+            {
+                singleChildContainer.Child = null;
+            }
+            else if (renderObject.Parent is IRenderObjectContainer container)
+            {
+                container.Remove(renderObject);
+            }
+            else
+            {
+                renderObject.Detach();
+            }
+        }
+
+        if (renderObject.Attached)
+        {
+            throw new AssertionError("A RenderObjectElement cannot dispose an attached render object.");
+        }
+
+        oldWidget.DidUnmountRenderObject(renderObject);
+        renderObject.Dispose();
+        _renderObject = null;
     }
 
     public abstract void InsertRenderObjectChild(RenderObject child, object? slot);

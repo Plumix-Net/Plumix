@@ -219,6 +219,12 @@ public abstract class Element
 
     internal void ActivateWithParent(Element parent, object? newSlot)
     {
+        ActivateRecursively(parent, newSlot);
+        AttachRenderObject(newSlot);
+    }
+
+    private void ActivateRecursively(Element parent, object? newSlot)
+    {
         if (_lifecycleState != ElementLifecycleState.Inactive)
         {
             throw new InvalidOperationException($"Cannot activate element in state {_lifecycleState}.");
@@ -227,18 +233,6 @@ public abstract class Element
         bool hadDependencies = (_dependencies?.Count > 0) || _hadUnsatisfiedDependencies;
 
         Parent = parent;
-        Slot = newSlot;
-
-        // Dart's `Element.attachRenderObject` hands the new slot down to every element between this one and
-        // the render object it attaches, so a subtree reparented through a global key re-inserts that render
-        // object at its new position instead of at the slot it held under the old parent.
-        for (Element? descendant = RenderObjectAttachingChild;
-             descendant is not null;
-             descendant = descendant.RenderObjectAttachingChild)
-        {
-            descendant.Slot = newSlot;
-        }
-
         Depth = parent.Depth + 1;
         _lifecycleState = ElementLifecycleState.Active;
         _dependencies?.Clear();
@@ -246,7 +240,7 @@ public abstract class Element
 
         OnActivate();
 
-        VisitChildren(child => child.ActivateWithParent(this, child.Slot));
+        VisitChildren(child => child.ActivateRecursively(this, child.Slot));
 
         if (hadDependencies)
         {
@@ -291,6 +285,23 @@ public abstract class Element
 
     internal virtual void VisitChildren(Action<Element> visitor)
     {
+    }
+
+    internal virtual void AttachRenderObject(object? newSlot)
+    {
+        if (Slot is not null)
+        {
+            throw new AssertionError("An Element with a slot cannot attach its render object again.");
+        }
+
+        VisitChildren(child => child.AttachRenderObject(newSlot));
+        Slot = newSlot;
+    }
+
+    internal virtual void DetachRenderObject()
+    {
+        VisitChildren(static child => child.DetachRenderObject());
+        Slot = null;
     }
 
     internal void DeactivateRecursively(bool isRoot = true)
@@ -422,6 +433,8 @@ public abstract class Element
     internal virtual void DeactivateChild(Element child)
     {
         ForgetChild(child);
+        child.Parent = null;
+        child.DetachRenderObject();
 
         if (Owner == null)
         {
@@ -435,6 +448,16 @@ public abstract class Element
     internal virtual void UnmountChild(Element child)
     {
         ForgetChild(child);
+        if (child.IsActive)
+        {
+            child.Parent = null;
+            child.DetachRenderObject();
+            if (child.RenderObject?.Attached != true)
+            {
+                child.DeactivateRecursively();
+            }
+        }
+
         child.Unmount();
     }
 

@@ -174,6 +174,37 @@ public sealed class RenderObjectLifecycleTests
         root.Unmount();
 
         Assert.True(renderObject.DebugDisposed);
+        Assert.True(widget.DidUnmountCalled);
+        Assert.False(widget.WasDisposedDuringDidUnmount);
+    }
+
+    [Fact]
+    public void RenderObjectElement_Deactivation_KeepsTheDetachedRenderTreeIntact()
+    {
+        var innerWidget = new TrackingProxyRenderObjectWidget();
+        var outerWidget = new TrackingProxyRenderObjectWidget(innerWidget);
+        var owner = new BuildOwner();
+        var root = new TestRootElement(outerWidget);
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        TrackingRenderBox outer = Assert.IsType<TrackingRenderBox>(outerWidget.CreatedRenderObject);
+        TrackingRenderBox inner = Assert.IsType<TrackingRenderBox>(innerWidget.CreatedRenderObject);
+        Assert.True(outer.Attached);
+        Assert.True(inner.Attached);
+        Assert.Same(outer, inner.Parent);
+
+        root.Update(new SizedBox(width: 1, height: 1));
+
+        Assert.False(outer.Attached);
+        Assert.False(inner.Attached);
+        Assert.Same(outer, inner.Parent);
+        Assert.Same(inner, outer.Child);
+
+        owner.FlushBuild();
+        Assert.True(outer.DebugDisposed);
+        Assert.True(inner.DebugDisposed);
     }
 
     private sealed class TestRenderBox : RenderBox
@@ -203,17 +234,51 @@ public sealed class RenderObjectLifecycleTests
     private sealed class TrackingRenderObjectWidget : LeafRenderObjectWidget
     {
         public RenderObject? CreatedRenderObject { get; private set; }
+        public bool DidUnmountCalled { get; private set; }
+        public bool WasDisposedDuringDidUnmount { get; private set; }
 
         internal override RenderObject CreateRenderObject(BuildContext context)
         {
             CreatedRenderObject = new TestRenderBox();
             return CreatedRenderObject;
         }
+
+        internal override void DidUnmountRenderObject(RenderObject renderObject)
+        {
+            DidUnmountCalled = true;
+            WasDisposedDuringDidUnmount = renderObject.DebugDisposed;
+        }
     }
 
-    private sealed class TestRootElement(Widget childWidget) : Element(childWidget), IRenderObjectHost
+    private sealed class TrackingProxyRenderObjectWidget : SingleChildRenderObjectWidget
+    {
+        public TrackingProxyRenderObjectWidget(Widget? child = null) : base(child)
+        {
+        }
+
+        public RenderObject? CreatedRenderObject { get; private set; }
+
+        internal override RenderObject CreateRenderObject(BuildContext context)
+        {
+            CreatedRenderObject = new TrackingRenderBox();
+            return CreatedRenderObject;
+        }
+    }
+
+    private sealed class TrackingRenderBox : RenderProxyBox
+    {
+    }
+
+    private sealed class TestRootElement : Element, IRenderObjectHost
     {
         private Element? _child;
+        private readonly RenderView _renderView = new();
+
+        public TestRootElement(Widget childWidget) : base(childWidget)
+        {
+            var pipelineOwner = new PipelineOwner(_renderView);
+            pipelineOwner.Attach(_renderView);
+        }
 
         protected override void OnMount()
         {
@@ -227,6 +292,20 @@ public sealed class RenderObjectLifecycleTests
             _child = UpdateChild(_child, Widget, null);
         }
 
+        internal override void Update(Widget newWidget)
+        {
+            base.Update(newWidget);
+            Rebuild();
+        }
+
+        internal override void ForgetChild(Element child)
+        {
+            if (ReferenceEquals(child, _child))
+            {
+                _child = null;
+            }
+        }
+
         internal override void VisitChildren(Action<Element> visitor)
         {
             if (_child != null)
@@ -237,6 +316,12 @@ public sealed class RenderObjectLifecycleTests
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {
+            if (slot is not null)
+            {
+                throw new InvalidOperationException("TestRootElement expects a null slot.");
+            }
+
+            _renderView.Child = (RenderBox)child;
         }
 
         public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
@@ -245,6 +330,10 @@ public sealed class RenderObjectLifecycleTests
 
         public void RemoveRenderObjectChild(RenderObject child, object? slot)
         {
+            if (ReferenceEquals(_renderView.Child, child))
+            {
+                _renderView.Child = null;
+            }
         }
 
         internal override void Unmount()

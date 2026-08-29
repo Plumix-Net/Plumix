@@ -678,28 +678,15 @@ public sealed class RenderTable : RenderBox
         return new Rect(0.0, _rowTops[row], Size.Width, _rowTops[row + 1] - _rowTops[row]);
     }
 
-    protected override void OnAttach()
-    {
-        base.OnAttach();
-        foreach (RenderBox? child in _children)
-        {
-            child?.Attach(Owner!);
-        }
-    }
-
     protected override void OnDetach()
     {
-        base.OnDetach();
         if (_rowDecorationPainters is not null)
         {
             DisposeRowDecorationPainters();
             _rowDecorationPainters = [.. Enumerable.Repeat<BoxPainter?>(null, _rowDecorations!.Count)];
         }
 
-        foreach (RenderBox? child in _children)
-        {
-            child?.Detach();
-        }
+        base.OnDetach();
     }
 
     public override void VisitChildren(Action<RenderObject> visitor)

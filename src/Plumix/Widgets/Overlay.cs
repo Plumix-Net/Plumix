@@ -1142,7 +1142,12 @@ internal sealed class OverlayPortalRenderWidget : RenderObjectWidget
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderOverlayPortalSurrogate();
+        return new RenderOverlayPortalSurrogate(Location);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderOverlayPortalSurrogate)renderObject).Location = Location;
     }
 }
 
@@ -1309,6 +1314,14 @@ internal sealed class OverlayPortalElement : RenderObjectElement
 internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
 {
     private RenderBox? _portalChild;
+    private bool _didDetachPortalChild;
+
+    public RenderOverlayPortalSurrogate(OverlayPortalLocation? location)
+    {
+        Location = location;
+    }
+
+    internal OverlayPortalLocation? Location { get; set; }
 
     internal RenderBox? PortalChild
     {
@@ -1332,6 +1345,52 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
         {
             visitor(_portalChild);
         }
+    }
+
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        if (!_didDetachPortalChild)
+        {
+            return;
+        }
+
+        _didDetachPortalChild = false;
+        OverlayPortalLocation location = Location
+            ?? throw new InvalidOperationException("A visible overlay child requires a portal location.");
+        RenderBox child = _portalChild
+            ?? throw new InvalidOperationException("A detached portal child cannot be reattached after removal.");
+        location.Theater.InsertPortal(child, FindAnchor(location.Theater), location.ZOrder);
+    }
+
+    protected override void OnDetach()
+    {
+        if (_portalChild is { Attached: true } child
+            && Location is { } location
+            && location.Theater.Attached)
+        {
+            location.Theater.RemovePortal(child);
+            _didDetachPortalChild = true;
+        }
+
+        base.OnDetach();
+    }
+
+    private RenderBox FindAnchor(RenderOverlayTheater theater)
+    {
+        RenderObject? candidate = this;
+        while (candidate?.Parent is not null && !ReferenceEquals(candidate.Parent, theater))
+        {
+            candidate = candidate.Parent;
+        }
+
+        if (candidate is not RenderBox anchor || !ReferenceEquals(anchor.Parent, theater))
+        {
+            throw new InvalidOperationException(
+                "An OverlayPortal can only target an ancestor Overlay.");
+        }
+
+        return anchor;
     }
 
     /// <summary>

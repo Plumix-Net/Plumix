@@ -273,6 +273,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     {
         EnsureNotDisposedMutation();
         Debug.Assert(ReferenceEquals(child.Parent, this));
+        Debug.Assert(child.Attached == Attached);
         Debug.Assert(child.parentData is not null);
         if (!ReferenceEquals(child.Parent, this))
         {
@@ -320,7 +321,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             throw new AssertionError("A disposed RenderObject cannot be attached.");
         }
 
-        Debug.Assert(Owner is null);
+        if (Owner is not null)
+        {
+            throw new AssertionError("An attached RenderObject cannot be attached again.");
+        }
+
         Owner = owner;
 
         // If the node was dirtied in some way while unattached, make sure to add it to the
@@ -353,15 +358,9 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         OnAttach();
 
-        // Dart recurses from each child-holding mixin's `attach` override; C# has no mixins, so the
-        // walk lives on the base class and reaches every child through `VisitChildren`.
-        VisitChildren(child =>
-        {
-            if (!child.Attached)
-            {
-                child.Attach(owner);
-            }
-        });
+        // Dart recurses from each child-holding mixin's `attach` override. C# centralizes the same
+        // parent-first walk through `VisitChildren`, but preserves Dart's strict attachment assertions.
+        VisitChildren(child => child.Attach(owner));
     }
 
     /// <summary>
@@ -377,15 +376,10 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         OnDetach();
         ClearOwnSemantics();
         Owner = null;
+        Debug.Assert(Parent is null || Attached == Parent.Attached);
 
         // The mirror of the recursion in `Attach`; Dart spells it out per child-holding mixin.
-        VisitChildren(static child =>
-        {
-            if (child.Attached)
-            {
-                child.Detach();
-            }
-        });
+        VisitChildren(static child => child.Detach());
     }
 
     /// <summary>Releases resources owned by this render object.</summary>

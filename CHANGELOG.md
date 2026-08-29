@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: element deactivation preserves its render subtree and enforces strict attachment (`framework.dart`).
 - Breaking: `RenderObject.Layout` reports a `PerformResize`/`PerformLayout` failure instead of throwing (`object.dart`).
 - Breaking: `PipelineOwner` relayouts only dirty relayout boundaries; the descendant dirty channel is gone.
 - Breaking: `MarkNeedsPaint`/`MarkNeedsCompositedLayerUpdate` are public and skip the parentless non-boundary root.
