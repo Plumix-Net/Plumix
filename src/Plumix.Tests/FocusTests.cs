@@ -207,8 +207,13 @@ public sealed class FocusTests : IDisposable
         Assert.Same(leftSecond, manager.PrimaryFocus);
     }
 
+    /// <summary>
+    /// Dart's directional traversal is purely geometric: every candidate is filtered by
+    /// <c>node.rect != target</c>, so nodes that have no render geometry are all filtered out and
+    /// the arrow keys move nothing. Tab traversal, which is ordinal, still works on the same nodes.
+    /// </summary>
     [Fact]
-    public void FocusManager_DirectionalKeys_FollowTraversalOrder()
+    public void FocusManager_DirectionalKeys_DoNothingWithoutGeometry()
     {
         var manager = new FocusManager();
         var first = new FocusNode();
@@ -220,19 +225,10 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(third);
         manager.RequestFocus(first);
 
-        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
-        Assert.Same(second, manager.PrimaryFocus);
-
-        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
-        Assert.Same(third, manager.PrimaryFocus);
-
-        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
-        Assert.Same(second, manager.PrimaryFocus);
-
-        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp)));
+        Assert.False(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Same(first, manager.PrimaryFocus);
 
-        Assert.False(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
+        Assert.False(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         Assert.Same(first, manager.PrimaryFocus);
     }
 
@@ -279,11 +275,11 @@ public sealed class FocusTests : IDisposable
     [Fact]
     public void FocusManager_DirectionalKeys_ResolveTraversalRectsThroughRenderTransforms()
     {
-        var owner = new BuildOwner();
         var source = new FocusNode();
         var right = new FocusNode();
         var transformedDown = new FocusNode();
-        var root = new TestRootElement(
+        using var harness = new FocusLayoutHarness(new Directionality(
+            TextDirection.Ltr,
             new Row(children:
             [
                 new Focus(
@@ -300,11 +296,8 @@ public sealed class FocusTests : IDisposable
                     child: new Focus(
                         focusNode: transformedDown,
                         child: new SizedBox(width: 20, height: 20))),
-            ]));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+            ])));
+        harness.Layout(new Size(400, 400));
 
         Assert.Same(source, FocusManager.Instance.PrimaryFocus);
 
@@ -400,13 +393,13 @@ public sealed class FocusTests : IDisposable
     [Fact]
     public void FocusScopeWidget_TabTraversal_DoesNotEscapeScopeBoundaries()
     {
-        var owner = new BuildOwner();
         var leadingSibling = new FocusNode();
         var firstInScope = new FocusNode();
         var secondInScope = new FocusNode();
         var trailingSibling = new FocusNode();
 
-        var root = new TestRootElement(
+        using var harness = new FocusLayoutHarness(new Directionality(
+            TextDirection.Ltr,
             new Row(children:
             [
                 new Focus(focusNode: leadingSibling, child: new SizedBox(width: 12, height: 12)),
@@ -417,11 +410,8 @@ public sealed class FocusTests : IDisposable
                         new Focus(focusNode: secondInScope, child: new SizedBox(width: 12, height: 12))
                     ])),
                 new Focus(focusNode: trailingSibling, child: new SizedBox(width: 12, height: 12))
-            ]));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+            ])));
+        harness.Layout(new Size(400, 400));
 
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
@@ -445,13 +435,13 @@ public sealed class FocusTests : IDisposable
     [Fact]
     public void FocusScopeWidget_DirectionalTraversal_DoesNotEscapeScopeBoundaries()
     {
-        var owner = new BuildOwner();
         var leadingSibling = new FocusNode();
         var firstInScope = new FocusNode();
         var secondInScope = new FocusNode();
         var trailingSibling = new FocusNode();
 
-        var root = new TestRootElement(
+        using var harness = new FocusLayoutHarness(new Directionality(
+            TextDirection.Ltr,
             new Row(children:
             [
                 new Focus(focusNode: leadingSibling, child: new SizedBox(width: 12, height: 12)),
@@ -462,11 +452,8 @@ public sealed class FocusTests : IDisposable
                         new Focus(focusNode: secondInScope, child: new SizedBox(width: 12, height: 12))
                     ])),
                 new Focus(focusNode: trailingSibling, child: new SizedBox(width: 12, height: 12))
-            ]));
-
-        root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
-        owner.FlushBuild();
+            ])));
+        harness.Layout(new Size(400, 400));
 
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
@@ -483,6 +470,269 @@ public sealed class FocusTests : IDisposable
         Assert.False(movedAfterScopeEnd);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(trailingSibling.HasFocus);
+    }
+
+    [Fact]
+    public void FocusNode_TreeAccessorsFollowTheAttachedWidgetHierarchy()
+    {
+        var scopeNode = new FocusScopeNode(debugLabel: "scope");
+        var parent = new FocusNode(debugLabel: "parent");
+        var child = new FocusNode(debugLabel: "child");
+        using var harness = new FocusLayoutHarness(new Directionality(
+            TextDirection.Ltr,
+            FocusScope.WithExternalFocusNode(
+                scopeNode,
+                new Focus(
+                    focusNode: parent,
+                    child: new Focus(focusNode: child, child: new SizedBox(width: 20, height: 20))))));
+        harness.Layout(new Size(200, 200));
+
+        Assert.Same(parent, child.Parent);
+        Assert.Same(scopeNode, parent.Parent);
+        Assert.Equal([parent, scopeNode, FocusManager.Instance.RootScope], child.Ancestors);
+        Assert.Contains(child, parent.Descendants);
+        Assert.Same(scopeNode, child.EnclosingScope);
+        Assert.Same(scopeNode, child.NearestScope);
+        Assert.Same(scopeNode, scopeNode.NearestScope);
+        Assert.Contains(child, scopeNode.TraversalDescendants);
+    }
+
+    [Fact]
+    public void FocusNode_DescendantsAreFocusableBlocksTheWholeSubtree()
+    {
+        var blocker = new FocusNode(debugLabel: "blocker");
+        var blocked = new FocusNode(debugLabel: "blocked");
+        using var harness = new FocusLayoutHarness(new Directionality(
+            TextDirection.Ltr,
+            new Focus(
+                focusNode: blocker,
+                descendantsAreFocusable: false,
+                child: new Focus(focusNode: blocked, child: new SizedBox(width: 20, height: 20)))));
+        harness.Layout(new Size(200, 200));
+
+        Assert.False(blocked.CanRequestFocus);
+        Assert.False(blocked.RequestFocus());
+        Assert.Empty(blocker.TraversalDescendants);
+    }
+
+    [Fact]
+    public void FocusNode_UnfocusScopeDispositionForgetsTheScopesFocusedChildren()
+    {
+        var scopeNode = new FocusScopeNode(debugLabel: "scope");
+        var node = new FocusNode(debugLabel: "node");
+        using var harness = new FocusLayoutHarness(new Directionality(
+            TextDirection.Ltr,
+            FocusScope.WithExternalFocusNode(
+                scopeNode,
+                new Focus(focusNode: node, autofocus: true, child: new SizedBox(width: 20, height: 20)))));
+        harness.Layout(new Size(200, 200));
+
+        Assert.Same(node, scopeNode.FocusedChild);
+        node.Unfocus();
+
+        Assert.Null(scopeNode.FocusedChild);
+        Assert.Same(scopeNode, FocusManager.Instance.PrimaryFocus);
+    }
+
+    [Fact]
+    public void FocusNode_UnfocusPreviouslyFocusedChildKeepsTheRestOfTheScopeHistory()
+    {
+        var scopeNode = new FocusScopeNode(debugLabel: "scope");
+        var first = new FocusNode(debugLabel: "first");
+        var second = new FocusNode(debugLabel: "second");
+        using var harness = new FocusLayoutHarness(new Directionality(
+            TextDirection.Ltr,
+            FocusScope.WithExternalFocusNode(
+                scopeNode,
+                new Row(children:
+                [
+                    new Focus(focusNode: first, autofocus: true, child: new SizedBox(width: 20, height: 20)),
+                    new Focus(focusNode: second, child: new SizedBox(width: 20, height: 20)),
+                ]))));
+        harness.Layout(new Size(200, 200));
+
+        Assert.True(second.RequestFocus());
+        second.Unfocus(UnfocusDisposition.PreviouslyFocusedChild);
+
+        Assert.Same(first, FocusManager.Instance.PrimaryFocus);
+        Assert.Same(first, scopeNode.FocusedChild);
+    }
+
+    [Fact]
+    public void FocusNode_RequestFocusOnAnUnparentedNodeIsAppliedWhenItIsReparented()
+    {
+        var manager = new FocusManager();
+        var node = new FocusNode(debugLabel: "node");
+
+        Assert.False(node.RequestFocus());
+        Assert.Null(manager.PrimaryFocus);
+
+        manager.RegisterNode(node);
+
+        Assert.True(node.HasPrimaryFocus);
+    }
+
+    [Fact]
+    public void FocusAttachment_DetachRemovesTheNodeFromTheTreeAndDropsItsFocus()
+    {
+        var manager = new FocusManager();
+        var node = new FocusNode(debugLabel: "node");
+        FocusAttachment attachment = node.Attach(context: null);
+        manager.RootScope.Reparent(node);
+
+        Assert.True(node.RequestFocus());
+        Assert.True(attachment.IsAttached);
+
+        attachment.Detach();
+
+        Assert.False(attachment.IsAttached);
+        Assert.Null(node.Parent);
+        Assert.False(node.HasPrimaryFocus);
+    }
+
+    [Fact]
+    public void FocusScopeNode_AutofocusOnlyAppliesWhileTheScopeHasNoFocusedChild()
+    {
+        var manager = new FocusManager();
+        var scopeNode = new FocusScopeNode(debugLabel: "scope");
+        var taken = new FocusNode(debugLabel: "taken");
+        var late = new FocusNode(debugLabel: "late");
+        manager.RegisterNode(scopeNode);
+        manager.RegisterNode(taken, scopeNode);
+        manager.RegisterNode(late, scopeNode);
+
+        Assert.True(taken.RequestFocus());
+        scopeNode.Autofocus(late);
+
+        Assert.Same(taken, manager.PrimaryFocus);
+    }
+
+    [Fact]
+    public void FocusManager_EarlyAndLateKeyEventHandlersBracketTheFocusTree()
+    {
+        var manager = new FocusManager();
+        var node = new FocusNode(debugLabel: "node");
+        manager.RegisterNode(node);
+        manager.RequestFocus(node);
+
+        var order = new List<string>();
+        node.OnKeyEvent = (_, _) =>
+        {
+            order.Add("node");
+            return KeyEventResult.Ignored;
+        };
+        manager.AddEarlyKeyEventHandler(_ =>
+        {
+            order.Add("early");
+            return KeyEventResult.Ignored;
+        });
+        manager.AddLateKeyEventHandler(_ =>
+        {
+            order.Add("late");
+            return KeyEventResult.Handled;
+        });
+
+        Assert.True(manager.RouteKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA)));
+        Assert.Equal(["early", "node", "late"], order);
+    }
+
+    [Fact]
+    public void FocusManager_EarlyKeyEventHandlerCanSwallowTheEventBeforeTheFocusTree()
+    {
+        var manager = new FocusManager();
+        var node = new FocusNode(debugLabel: "node");
+        manager.RegisterNode(node);
+        manager.RequestFocus(node);
+
+        bool nodeSaw = false;
+        node.OnKeyEvent = (_, _) =>
+        {
+            nodeSaw = true;
+            return KeyEventResult.Handled;
+        };
+        manager.AddEarlyKeyEventHandler(_ => KeyEventResult.Handled);
+
+        Assert.True(manager.RouteKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA)));
+        Assert.False(nodeSaw);
+    }
+
+    [Fact]
+    public void KeyEventResults_CombinePrefersHandledThenSkipRemainingHandlers()
+    {
+        Assert.Equal(KeyEventResult.Ignored, KeyEventResults.Combine([]));
+        Assert.Equal(
+            KeyEventResult.Ignored,
+            KeyEventResults.Combine([KeyEventResult.Ignored, KeyEventResult.Ignored]));
+        Assert.Equal(
+            KeyEventResult.SkipRemainingHandlers,
+            KeyEventResults.Combine([KeyEventResult.Ignored, KeyEventResult.SkipRemainingHandlers]));
+        Assert.Equal(
+            KeyEventResult.Handled,
+            KeyEventResults.Combine([KeyEventResult.SkipRemainingHandlers, KeyEventResult.Handled]));
+    }
+
+    [Fact]
+    public void FocusManager_SuspendsAndRestoresTheFocusAcrossAnAppLifecyclePause()
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.MacOS;
+        try
+        {
+            var manager = new FocusManager();
+            manager.ListenToApplicationLifecycleChangesIfSupported();
+            var node = new FocusNode(debugLabel: "node");
+            manager.RegisterNode(node);
+            Assert.True(node.RequestFocus());
+
+            WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Inactive);
+            Assert.Same(manager.RootScope, manager.PrimaryFocus);
+
+            WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+            Assert.Same(node, manager.PrimaryFocus);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = null;
+            WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+        }
+    }
+
+    [Fact]
+    public void FocusManager_DoesNotRestoreASuspendedNodeWhenSomethingElseTookTheFocus()
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.MacOS;
+        try
+        {
+            var manager = new FocusManager();
+            manager.ListenToApplicationLifecycleChangesIfSupported();
+            var suspended = new FocusNode(debugLabel: "suspended");
+            var other = new FocusNode(debugLabel: "other");
+            manager.RegisterNode(suspended);
+            manager.RegisterNode(other);
+            Assert.True(suspended.RequestFocus());
+
+            WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Inactive);
+            Assert.True(other.RequestFocus());
+            WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+
+            Assert.Same(other, manager.PrimaryFocus);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = null;
+            WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+        }
+    }
+
+    [Fact]
+    public void FocusManager_HighlightStrategyOverridesTheInteractionDrivenMode()
+    {
+        var manager = new FocusManager();
+
+        manager.HighlightStrategy = FocusHighlightStrategy.AlwaysTouch;
+        Assert.Equal(FocusHighlightMode.Touch, manager.HighlightMode);
+
+        manager.HighlightStrategy = FocusHighlightStrategy.AlwaysTraditional;
+        Assert.Equal(FocusHighlightMode.Traditional, manager.HighlightMode);
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

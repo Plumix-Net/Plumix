@@ -394,9 +394,9 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         }
     }
 
-    private sealed class ReverseTraversalPolicy : FocusTraversalPolicy
+    private sealed class ReverseTraversalPolicy : DirectionalFocusTraversalPolicy
     {
-        public override IReadOnlyList<FocusNode> SortDescendants(
+        public override IEnumerable<FocusNode> SortDescendants(
             IEnumerable<FocusNode> descendants,
             FocusNode currentNode)
         {

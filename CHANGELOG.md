@@ -8,6 +8,14 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `FocusNode` is a real parent/child tree with `FocusAttachment` and ancestors (`focus_manager.dart`).
+- Breaking: `FocusManager` gained `_markedForFocus`/dirty-node batching, autofocus queue, early/late key handlers.
+- Breaking: `FocusNode.Unfocus` takes an `UnfocusDisposition` and hands focus to the enclosing scope, not to null.
+- Breaking: `Focus`/`FocusScope` are the Dart widget pair (`ParentNode`, nullable config, `_FocusInheritedScope`).
+- Breaking: `ExcludeFocus` is a `StatelessWidget` over `Focus`, and `FocusScopeMarker`/`FocusDescendantsScope` are gone.
+- Added `DirectionalFocusTraversalPolicy`, `OrderedTraversalPolicy`, `FocusOrder` and `FocusTraversalOrder`.
+- Breaking: traversal moved out of `FocusManager` into `FocusTraversalPolicy` (`focus_traversal.dart`).
+- Added `FocusManager`'s app-lifecycle focus suspension and `Scrollable.MaybeOf(context, axis)` (`focus_manager.dart`).
 - Breaking: `AnimationStyle` gains `CopyWith`/`Merge`/`Lerp`; `NoAnimation` drops its curves (`animation_style.dart`).
 - Breaking: `IndexedStack` wraps children in `VisibilityScope` + `ExcludeFocus` (`indexed_stack.dart`).
 - Breaking: added `AnimatedCrossFade.ClipBehavior`, default `Clip.HardEdge` (`animated_cross_fade.dart`).

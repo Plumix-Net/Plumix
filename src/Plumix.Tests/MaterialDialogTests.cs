@@ -521,7 +521,8 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.True(FocusManager.Instance.FocusNext());
         // At the loop edge the focus leaves the view instead of wrapping.
         Assert.False(FocusManager.Instance.FocusNext());
-        Assert.Null(FocusManager.Instance.PrimaryFocus);
+        // Dart's `unfocus()` hands the focus back to the enclosing scope rather than clearing it.
+        Assert.IsType<FocusScopeNode>(FocusManager.Instance.PrimaryFocus);
         Navigator.Of(captured).Pop();
         PumpAnimation();
         harness.Pump(new Size(600, 400));

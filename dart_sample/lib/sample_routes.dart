@@ -147,6 +147,7 @@ class SampleRoutes {
   static const String intrinsicWidgets = '/intrinsic-widgets';
   static const String layoutBuilder = '/layout-builder';
   static const String keyboardListener = '/keyboard-listener';
+  static const String focusTraversal = '/focus-traversal';
 
   static const String trackpadPanZoom = '/trackpad-pan-zoom';
   static const String debugPainting = '/debug-painting';

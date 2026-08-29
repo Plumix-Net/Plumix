@@ -191,7 +191,8 @@ public sealed class FocusableActionDetectorTests : IDisposable
         Assert.True(first.RequestFocus());
         Assert.True(FocusManager.Instance.FocusNext());
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
-        Assert.False(excluded.SkipTraversal);
+        // Dart's `skipTraversal` getter reports true as soon as an ancestor is untraversable.
+        Assert.True(excluded.SkipTraversal);
     }
 
     [Fact]
@@ -230,7 +231,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
         skipped.Unfocus();
         Assert.True(FocusManager.Instance.FocusNext());
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
-        Assert.False(skipped.SkipTraversal);
+        Assert.True(skipped.SkipTraversal);
     }
 
     private static FocusableActionDetector BuildDetector(

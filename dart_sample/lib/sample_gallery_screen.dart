@@ -124,6 +124,7 @@ import 'demos/general/baseline_demo_page.dart';
 import 'demos/general/rich_text_demo_page.dart';
 import 'demos/general/intrinsic_widgets_demo_page.dart';
 import 'demos/general/layout_builder_demo_page.dart';
+import 'demos/general/focus_traversal_demo_page.dart';
 import 'demos/general/keyboard_listener_demo_page.dart';
 import 'demos/general/trackpad_pan_zoom_demo_page.dart';
 import 'demos/general/lifecycle_utilities_demo_page.dart';
@@ -972,6 +973,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Keyboard listeners + actions',
       subtitle: 'focused key events + Actions/Shortcuts intent dispatch',
       builder: () => const KeyboardListenerDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.focusTraversal,
+      title: 'Focus traversal policies',
+      subtitle: 'FocusTraversalGroup + reading/widget/numeric order + directional keys',
+      builder: () => const FocusTraversalDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.trackpadPanZoom,

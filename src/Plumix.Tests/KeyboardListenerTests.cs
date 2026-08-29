@@ -181,7 +181,10 @@ public sealed class KeyboardListenerTests : IDisposable
             onKey: _ => eventCount += 1,
             child: new SizedBox(width: 20, height: 12)));
         Assert.False(firstNode.HasFocus);
-        Assert.True(secondNode.HasFocus);
+        // Dart re-runs autofocus only when the `autofocus` flag itself changes, so swapping the node
+        // leaves the new one unfocused; the listener has to ask for focus explicitly.
+        Assert.False(secondNode.HasFocus);
+        Assert.True(secondNode.RequestFocus());
 
         KeySim.DispatchRaw(LogicalKeyboardKey.Space, down: true);
         Assert.Equal(1, eventCount);

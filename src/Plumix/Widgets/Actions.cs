@@ -794,6 +794,15 @@ public sealed class FocusableActionDetector : StatefulWidget
             System.Action? task = null,
             FocusableActionDetector? oldWidget = null)
         {
+            if (!Mounted || !Element.IsActive)
+            {
+                // Plumix applies focus changes synchronously (see docs/ai/DIVERGENCES.md), so a node
+                // notification can reach a detector whose element is already being torn down; Dart's
+                // microtask always runs after the tree has settled.
+                task?.Invoke();
+                return;
+            }
+
             FocusableActionDetector oldTarget = oldWidget ?? Current;
             bool didShowHoverHighlight = ShouldShowHoverHighlight(oldTarget);
             bool didShowFocusHighlight = ShouldShowFocusHighlight(oldTarget);

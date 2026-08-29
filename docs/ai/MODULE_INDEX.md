@@ -200,7 +200,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   exact rounded-superellipse paint and rectangular hit testing stay in its render object, with focused coverage in
   `CupertinoSegmentedControlTests.cs`.
 - Focus halos enter through `src/Plumix.Cupertino/CupertinoFocusHalo.cs`; descendant focus ownership lives in
-  core `Widgets/Focus.cs`, with shape/color primitives in `Rendering/RoundedSuperellipseBorder.cs` and
+  core `Widgets/Focus.cs`/`Widgets/FocusScope.cs`, with shape/color primitives in `Rendering/RoundedSuperellipseBorder.cs` and
   `Painting/HSLColor.cs`. Coverage lives in `CupertinoFocusHaloTests.cs` and `FocusTests.cs`.
 - Primary Tests:
   - `src/Plumix.Tests/CupertinoAppTests.cs`
@@ -426,13 +426,17 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Goal: focus ownership/traversal, host key dispatch, focused keyboard listeners, intent/action routing, shortcuts,
   and focus semantics.
 - Read First:
-  - `src/Plumix/Widgets/Focus.cs`
+  - `src/Plumix/Widgets/Focus.cs` (the `FocusNode` tree, `FocusAttachment`, `FocusManager`)
+  - `src/Plumix/Widgets/FocusScope.cs` (the `Focus`/`FocusScope` widget pair, `ExcludeFocus`)
+  - `src/Plumix/Widgets/FocusTraversal.cs` (policies, `FocusOrder`, `FocusTraversalGroup`, traversal intents)
   - `src/Plumix/Widgets/KeyboardListener.cs`
   - `src/Plumix/Widgets/Actions.cs`
   - `src/Plumix/Widgets/Shortcuts.cs`
   - `src/Plumix/UI/KeyboardEvents.cs`
 - Primary Tests:
   - `src/Plumix.Tests/FocusTests.cs`
+  - `src/Plumix.Tests/FocusScopeTests.cs`
+  - `src/Plumix.Tests/FocusTraversalTests.cs`
   - `src/Plumix.Tests/KeyboardListenerTests.cs`
   - `src/Plumix.Tests/ActionsShortcutsTests.cs`
   - `src/Plumix.Tests/FocusableActionDetectorTests.cs`

@@ -426,9 +426,9 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/expansible.dart` | `src/Plumix/Widgets/Expansible.cs` | — | — |
 | `widgets/fade_in_image.dart` | `src/Plumix/Widgets/FadeInImage.cs` | — | — |
 | `widgets/feedback.dart` | `src/Plumix/UI/Feedback.cs` _(reference) (approximate)_ | — | — |
-| `widgets/focus_manager.dart` | `src/Plumix/Widgets/Focus.cs` _(reference) (adapted)_ | `src/Plumix.Tests/CupertinoFocusHaloTests.cs`<br>`src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs`<br>`src/Plumix.Tests/SemanticsAccessibilityFocusBlockTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs` |
-| `widgets/focus_scope.dart` | `src/Plumix/Widgets/Focus.cs` _(reference) (adapted)_ | `src/Plumix.Tests/CupertinoFocusHaloTests.cs`<br>`src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs`<br>`src/Plumix.Tests/SemanticsAccessibilityFocusBlockTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs` |
-| `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | — |
+| `widgets/focus_manager.dart` | `src/Plumix/Widgets/Focus.cs` | `src/Plumix.Tests/CupertinoFocusHaloTests.cs`<br>`src/Plumix.Tests/FocusScopeTests.cs`<br>`src/Plumix.Tests/FocusTests.cs`<br>`src/Plumix.Tests/FocusTraversalTests.cs`<br>`src/Plumix.Tests/FocusableActionDetectorTests.cs`<br>`src/Plumix.Tests/SemanticsAccessibilityFocusBlockTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_focus_halo_demo_page.dart`<br>`dart_sample/lib/demos/general/focus_traversal_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoFocusHaloDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/FocusTraversalDemoPage.cs` |
+| `widgets/focus_scope.dart` | `src/Plumix/Widgets/FocusScope.cs` | `src/Plumix.Tests/FocusScopeTests.cs` | — |
+| `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | `dart_sample/lib/demos/general/focus_traversal_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FocusTraversalDemoPage.cs` |
 | `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/CupertinoFormRowTests.cs`<br>`src/Plumix.Tests/CupertinoFormSectionTests.cs`<br>`src/Plumix.Tests/CupertinoTextFormFieldRowTests.cs`<br>`src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`dart_sample/lib/demos/general/transform_demo_page.dart` |
 | `widgets/framework.dart` | `src/Plumix/Widgets/Framework.BuildOwner.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Element.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.RenderObject.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Widget.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.cs` _(reference) (approximate)_ | — | — |
 | `widgets/gesture_detector.dart` | `src/Plumix/Widgets/GestureDetector.cs`<br>`src/Plumix/Widgets/GestureRecognizerFactory.cs` | `src/Plumix.Tests/GestureDetectorTests.cs` | — |
@@ -606,7 +606,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Widgets/Basic.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/DefaultTextStyle.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Directionality.cs` — (reference) (Directionality, approximate)
-- `src/Plumix/Widgets/Focus.cs` — (reference) (adapted)
 - `src/Plumix/Widgets/Framework.BuildOwner.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Framework.Element.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Framework.RenderObject.cs` — (reference) (approximate)
@@ -627,5 +626,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 650
 - C# files without a marker: 31
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 48
+- C# files with a qualified (non-strict) marker: 47
 

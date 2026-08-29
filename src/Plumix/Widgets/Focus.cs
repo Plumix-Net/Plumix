@@ -1,11 +1,10 @@
 using Avalonia;
-using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/focus_manager.dart; flutter/packages/flutter/lib/src/widgets/focus_scope.dart (adapted)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/focus_manager.dart
 
 namespace Plumix.Widgets;
 
@@ -29,6 +28,20 @@ public enum FocusHighlightStrategy
     AlwaysTraditional,
 }
 
+/// <summary>Dart parity source: <c>UnfocusDisposition</c>.</summary>
+public enum UnfocusDisposition
+{
+    /// <summary>Focus falls back to the nearest enclosing scope, which forgets its focused children.</summary>
+    Scope,
+
+    /// <summary>Focus falls back to the scope's previously focused child, if there is one.</summary>
+    PreviouslyFocusedChild,
+}
+
+/// <summary>
+/// The IME state a focused node exposes to the host. C#-only: Plumix routes platform text input
+/// through the focus tree instead of Flutter's <c>TextInputConnection</c> channel.
+/// </summary>
 public readonly record struct FocusTextInputState(
     string SurroundingText,
     int SelectionBaseOffset,
@@ -55,48 +68,138 @@ public readonly record struct FocusTextInputState(
 }
 
 public delegate KeyEventResult FocusOnKeyEventCallback(FocusNode node, KeyEvent @event);
+public delegate KeyEventResult OnKeyEventCallback(KeyEvent @event);
 public delegate bool FocusOnTextInputCallback(FocusNode node, string text);
 public delegate bool FocusOnTextCompositionCallback(FocusNode node, string text, bool isCommit);
 public delegate FocusTextInputState? FocusOnTextInputStateCallback(FocusNode node);
 public delegate bool FocusOnTextSelectionChangedCallback(FocusNode node, int baseOffset, int extentOffset);
 
-public class FocusNode : ChangeNotifier
+/// <summary>Dart parity source: <c>combineKeyEventResults</c>.</summary>
+public static class KeyEventResults
 {
-    private readonly List<FocusOnKeyEventCallback> _keyEventHandlers = [];
-    private readonly Dictionary<object, bool> _traversalEligibility = [];
-    private bool _hasFocus;
-    private bool _canRequestFocus = true;
-    private bool _skipTraversal;
-
-    public bool HasFocus => _hasFocus;
-
-    public bool CanRequestFocus
+    public static KeyEventResult Combine(IEnumerable<KeyEventResult> results)
     {
-        get => _canRequestFocus;
-        set
+        bool hasSkipRemainingHandlers = false;
+        foreach (KeyEventResult result in results)
         {
-            if (_canRequestFocus == value)
+            switch (result)
             {
-                return;
-            }
-
-            _canRequestFocus = value;
-
-            if (!_canRequestFocus && _hasFocus)
-            {
-                Unfocus();
+                case KeyEventResult.Handled:
+                    return KeyEventResult.Handled;
+                case KeyEventResult.SkipRemainingHandlers:
+                    hasSkipRemainingHandlers = true;
+                    break;
+                case KeyEventResult.Ignored:
+                default:
+                    break;
             }
         }
+
+        return hasSkipRemainingHandlers ? KeyEventResult.SkipRemainingHandlers : KeyEventResult.Ignored;
+    }
+}
+
+/// <summary>Dart parity source: <c>_Autofocus</c>.</summary>
+internal readonly record struct PendingAutofocus(FocusScopeNode Scope, FocusNode AutofocusNode)
+{
+    internal void ApplyIfValid(FocusManager manager)
+    {
+        bool shouldApply =
+            (Scope.Parent != null || ReferenceEquals(Scope, manager.RootScope))
+            && ReferenceEquals(Scope.Manager, manager)
+            && Scope.FocusedChild == null
+            && AutofocusNode.Ancestors.Contains(Scope);
+        if (shouldApply)
+        {
+            AutofocusNode.DoRequestFocus(findFirstFocus: true);
+        }
+    }
+}
+
+/// <summary>Dart parity source: <c>FocusAttachment</c>.</summary>
+public sealed class FocusAttachment
+{
+    private readonly FocusNode _node;
+
+    internal FocusAttachment(FocusNode node)
+    {
+        _node = node;
     }
 
-    public bool SkipTraversal
+    public bool IsAttached => ReferenceEquals(_node.Attachment, this);
+
+    public void Detach()
     {
-        get => _skipTraversal;
-        set => _skipTraversal = value;
+        if (!IsAttached)
+        {
+            return;
+        }
+
+        if (_node.HasPrimaryFocus
+            || (_node.Manager != null && ReferenceEquals(_node.Manager.MarkedForFocus, _node)))
+        {
+            _node.Unfocus(UnfocusDisposition.PreviouslyFocusedChild);
+        }
+
+        _node.Manager?.MarkDetached(_node);
+        _node.Parent?.RemoveChild(_node);
+        _node.Attachment = null;
     }
+
+    public void Reparent(FocusNode? parent = null)
+    {
+        if (!IsAttached)
+        {
+            return;
+        }
+
+        if (_node.Context is not { } context)
+        {
+            return;
+        }
+
+        parent ??= Focus.MaybeOf(context, scopeOk: true);
+        parent ??= FocusManager.Instance.RootScope;
+        parent.Reparent(_node);
+    }
+}
+
+/// <summary>Dart parity source: <c>FocusNode</c>.</summary>
+public class FocusNode : ChangeNotifier
+{
+    private readonly List<FocusNode> _children = [];
+    private readonly List<FocusOnKeyEventCallback> _keyEventHandlers = [];
+    private List<FocusNode>? _ancestors;
+    private List<FocusNode>? _descendants;
+    private FocusScopeNode? _enclosingScope;
+    private bool _skipTraversal;
+    private bool _canRequestFocus;
+    private bool _descendantsAreFocusable;
+    private bool _descendantsAreTraversable;
+    private bool _hasKeyboardToken;
+    private bool _requestFocusWhenReparented;
+
+    public FocusNode(
+        string? debugLabel = null,
+        FocusOnKeyEventCallback? onKeyEvent = null,
+        bool skipTraversal = false,
+        bool canRequestFocus = true,
+        bool descendantsAreFocusable = true,
+        bool descendantsAreTraversable = true)
+    {
+        _skipTraversal = skipTraversal;
+        _canRequestFocus = canRequestFocus;
+        _descendantsAreFocusable = descendantsAreFocusable;
+        _descendantsAreTraversable = descendantsAreTraversable;
+        OnKeyEvent = onKeyEvent;
+        DebugLabel = debugLabel;
+    }
+
+    public string? DebugLabel { get; set; }
 
     public FocusOnKeyEventCallback? OnKeyEvent { get; set; }
 
+    /// <summary>C#-only: the host's IME text reaches the focused node through these callbacks.</summary>
     public FocusOnTextInputCallback? OnTextInput { get; set; }
 
     public FocusOnTextCompositionCallback? OnTextComposition { get; set; }
@@ -105,95 +208,308 @@ public class FocusNode : ChangeNotifier
 
     public FocusOnTextSelectionChangedCallback? OnTextSelectionChanged { get; set; }
 
+    /// <summary>C#-only override of <see cref="Rect"/> for nodes whose render object is not the focus box.</summary>
     public Rect? TraversalRect { get; set; }
 
     internal FocusManager? Manager { get; private set; }
 
-    internal FocusScopeNode? Scope { get; private set; }
+    internal FocusAttachment? Attachment { get; set; }
 
-    internal Element? AttachmentElement { get; private set; }
+    /// <summary>Dart parity source: <c>FocusNode.context</c>.</summary>
+    public BuildContext? Context { get; private set; }
 
-    internal FocusTraversalGroupNode? TraversalGroup { get; set; }
+    /// <summary>The element <see cref="Context"/> belongs to.</summary>
+    internal Element? AttachmentElement => Context?.Owner;
 
-    internal bool IsTraversalEligible => _traversalEligibility.Values.All(eligible => eligible);
+    /// <summary>Dart parity source: <c>FocusNode.parent</c>.</summary>
+    public FocusNode? Parent { get; private set; }
 
-    public bool RequestFocus()
+    /// <summary>Dart parity source: <c>FocusNode.children</c>.</summary>
+    public IReadOnlyList<FocusNode> Children => _children;
+
+    /// <summary>Dart parity source: <c>FocusNode.skipTraversal</c>.</summary>
+    public bool SkipTraversal
     {
-        return (Manager ?? FocusManager.Instance).RequestFocus(this);
-    }
-
-    /// <summary>Moves focus to the next node in the traversal order.</summary>
-    public bool NextFocus()
-    {
-        return (Manager ?? FocusManager.Instance).FocusNext();
-    }
-
-    /// <summary>Moves focus to the previous node in the traversal order.</summary>
-    public bool PreviousFocus()
-    {
-        return (Manager ?? FocusManager.Instance).FocusPrevious();
-    }
-
-    /// <summary>Moves focus to the closest node in <paramref name="direction"/>.</summary>
-    public bool FocusInDirection(TraversalDirection direction)
-    {
-        return (Manager ?? FocusManager.Instance).FocusInDirection(direction);
-    }
-
-    /// <summary>Whether this node currently holds the primary focus.</summary>
-    public bool HasPrimaryFocus =>
-        ReferenceEquals((Manager ?? FocusManager.Instance).PrimaryFocus, this);
-
-    public void Unfocus()
-    {
-        (Manager ?? FocusManager.Instance).Unfocus(this);
-    }
-
-    internal void AttachManager(FocusManager manager)
-    {
-        Manager = manager;
-    }
-
-    internal void DetachManager(FocusManager manager)
-    {
-        if (ReferenceEquals(Manager, manager))
+        get
         {
-            Manager = null;
+            if (_skipTraversal)
+            {
+                return true;
+            }
+
+            foreach (FocusNode ancestor in Ancestors)
+            {
+                if (!ancestor.DescendantsAreTraversable)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        set
+        {
+            if (value == _skipTraversal)
+            {
+                return;
+            }
+
+            _skipTraversal = value;
+            Manager?.MarkPropertiesChanged(this);
         }
     }
 
-    internal void AttachScope(FocusScopeNode scope)
+    /// <summary>Dart parity source: <c>FocusNode.canRequestFocus</c>.</summary>
+    public bool CanRequestFocus
     {
-        Scope = scope;
-    }
-
-    internal void DetachScope()
-    {
-        Scope = null;
-    }
-
-    internal void AttachElement(Element element)
-    {
-        AttachmentElement = element;
-    }
-
-    internal void DetachElement(Element element)
-    {
-        if (ReferenceEquals(AttachmentElement, element))
+        get => RawCanRequestFocus && Ancestors.All(static ancestor => ancestor.DescendantsAreFocusable);
+        set
         {
-            AttachmentElement = null;
+            if (value == _canRequestFocus)
+            {
+                return;
+            }
+
+            _canRequestFocus = value;
+            if (HasFocus && !value)
+            {
+                Unfocus(UnfocusDisposition.PreviouslyFocusedChild);
+            }
+
+            Manager?.MarkPropertiesChanged(this);
         }
     }
 
-    internal void SetHasFocus(bool value)
+    /// <summary>The node's own flag, before the ancestor chain is consulted.</summary>
+    private protected bool RawCanRequestFocus => _canRequestFocus;
+
+    /// <summary>Dart parity source: <c>FocusNode.descendantsAreFocusable</c>.</summary>
+    public virtual bool DescendantsAreFocusable
     {
-        if (_hasFocus == value)
+        get => _descendantsAreFocusable;
+        set
+        {
+            if (value == _descendantsAreFocusable)
+            {
+                return;
+            }
+
+            _descendantsAreFocusable = value;
+            if (!value && HasFocus)
+            {
+                Unfocus(UnfocusDisposition.PreviouslyFocusedChild);
+            }
+
+            Manager?.MarkPropertiesChanged(this);
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode.descendantsAreTraversable</c>.</summary>
+    public bool DescendantsAreTraversable
+    {
+        get => _descendantsAreTraversable;
+        set
+        {
+            if (value == _descendantsAreTraversable)
+            {
+                return;
+            }
+
+            _descendantsAreTraversable = value;
+            Manager?.MarkPropertiesChanged(this);
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode.traversalChildren</c>.</summary>
+    public virtual IEnumerable<FocusNode> TraversalChildren =>
+        DescendantsAreFocusable
+            ? Children.Where(static node => !node.SkipTraversal && node.CanRequestFocus)
+            : [];
+
+    /// <summary>Dart parity source: <c>FocusNode.descendants</c>.</summary>
+    public IReadOnlyList<FocusNode> Descendants
+    {
+        get
+        {
+            if (_descendants == null)
+            {
+                var result = new List<FocusNode>();
+                foreach (FocusNode child in _children)
+                {
+                    result.AddRange(child.Descendants);
+                    result.Add(child);
+                }
+
+                _descendants = result;
+            }
+
+            return _descendants;
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode.traversalDescendants</c>.</summary>
+    public virtual IEnumerable<FocusNode> TraversalDescendants =>
+        DescendantsAreFocusable
+            ? Descendants.Where(static node => !node.SkipTraversal && node.CanRequestFocus)
+            : [];
+
+    /// <summary>Dart parity source: <c>FocusNode.ancestors</c>.</summary>
+    public IReadOnlyList<FocusNode> Ancestors
+    {
+        get
+        {
+            if (_ancestors == null)
+            {
+                var result = new List<FocusNode>();
+                for (FocusNode? parent = Parent; parent != null; parent = parent.Parent)
+                {
+                    result.Add(parent);
+                }
+
+                _ancestors = result;
+            }
+
+            return _ancestors;
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode.hasFocus</c>.</summary>
+    public bool HasFocus =>
+        HasPrimaryFocus || (Manager?.PrimaryFocus?.Ancestors.Contains(this) ?? false);
+
+    /// <summary>Dart parity source: <c>FocusNode.hasPrimaryFocus</c>.</summary>
+    public bool HasPrimaryFocus => ReferenceEquals(Manager?.PrimaryFocus, this);
+
+    public FocusHighlightMode HighlightMode => FocusManager.Instance.HighlightMode;
+
+    /// <summary>Dart parity source: <c>FocusNode.nearestScope</c>.</summary>
+    public virtual FocusScopeNode? NearestScope => EnclosingScope;
+
+    /// <summary>Dart parity source: <c>FocusNode.enclosingScope</c>.</summary>
+    public FocusScopeNode? EnclosingScope => _enclosingScope ??= Parent?.NearestScope;
+
+    /// <summary>Alias kept for call sites written against the pre-tree model.</summary>
+    internal FocusScopeNode? Scope => EnclosingScope;
+
+    /// <summary>Dart parity source: <c>FocusNode.rect</c>.</summary>
+    public Rect Rect => ResolveTraversalRect() ?? default;
+
+    /// <summary>Dart parity source: <c>FocusNode.size</c>.</summary>
+    public Size Size => Rect.Size;
+
+    /// <summary>Dart parity source: <c>FocusNode.offset</c>.</summary>
+    public Point Offset => Rect.TopLeft;
+
+    /// <summary>Dart parity source: <c>FocusNode.unfocus</c>.</summary>
+    public void Unfocus(UnfocusDisposition disposition = UnfocusDisposition.Scope)
+    {
+        if (!HasFocus && (Manager == null || !ReferenceEquals(Manager.MarkedForFocus, this)))
         {
             return;
         }
 
-        _hasFocus = value;
-        NotifyListeners();
+        FocusScopeNode? scope = EnclosingScope;
+        if (scope == null)
+        {
+            return;
+        }
+
+        switch (disposition)
+        {
+            case UnfocusDisposition.Scope:
+                if (scope.CanRequestFocus)
+                {
+                    scope.ClearFocusedChildren();
+                }
+
+                while (scope != null && !scope.CanRequestFocus)
+                {
+                    scope = scope.EnclosingScope ?? Manager?.RootScope;
+                }
+
+                scope?.DoRequestFocus(findFirstFocus: false);
+                break;
+            case UnfocusDisposition.PreviouslyFocusedChild:
+                if (scope.CanRequestFocus)
+                {
+                    scope.RemoveFocusedChild(this);
+                }
+
+                while (scope != null && !scope.CanRequestFocus)
+                {
+                    scope.EnclosingScope?.RemoveFocusedChild(scope);
+                    scope = scope.EnclosingScope ?? Manager?.RootScope;
+                }
+
+                scope?.DoRequestFocus(findFirstFocus: true);
+                break;
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode.consumeKeyboardToken</c>.</summary>
+    public bool ConsumeKeyboardToken()
+    {
+        if (!_hasKeyboardToken)
+        {
+            return false;
+        }
+
+        _hasKeyboardToken = false;
+        return true;
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode.requestFocus</c>; returns whether the node ended up focused.</summary>
+    public bool RequestFocus()
+    {
+        DoRequestFocus(findFirstFocus: true);
+        return HasFocus;
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode.requestFocus(node)</c>.</summary>
+    public bool RequestFocus(FocusNode node)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        if (node.Parent == null)
+        {
+            Reparent(node);
+        }
+
+        node.DoRequestFocus(findFirstFocus: true);
+        return node.HasFocus;
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode.nextFocus</c>.</summary>
+    public bool NextFocus() => FocusTraversalGroup.PolicyForNode(this).Next(this);
+
+    /// <summary>Dart parity source: <c>FocusNode.previousFocus</c>.</summary>
+    public bool PreviousFocus() => FocusTraversalGroup.PolicyForNode(this).Previous(this);
+
+    /// <summary>Dart parity source: <c>FocusNode.focusInDirection</c>.</summary>
+    public bool FocusInDirection(TraversalDirection direction) =>
+        FocusTraversalGroup.PolicyForNode(this).InDirection(this, direction);
+
+    /// <summary>Dart parity source: <c>FocusNode.attach</c>.</summary>
+    public FocusAttachment Attach(BuildContext? context, FocusOnKeyEventCallback? onKeyEvent = null)
+    {
+        Context = context;
+        OnKeyEvent = onKeyEvent ?? OnKeyEvent;
+        Attachment = new FocusAttachment(this);
+        return Attachment;
+    }
+
+    /// <summary>C#-only: extra key handlers layered under <see cref="OnKeyEvent"/>.</summary>
+    internal void AddKeyEventHandler(FocusOnKeyEventCallback handler)
+    {
+        ArgumentNullException.ThrowIfNull(handler);
+        if (!_keyEventHandlers.Contains(handler))
+        {
+            _keyEventHandlers.Add(handler);
+        }
+    }
+
+    internal void RemoveKeyEventHandler(FocusOnKeyEventCallback handler)
+    {
+        _keyEventHandlers.Remove(handler);
     }
 
     internal KeyEventResult HandleKeyEvent(KeyEvent @event)
@@ -210,51 +526,17 @@ public class FocusNode : ChangeNotifier
         return OnKeyEvent?.Invoke(this, @event) ?? KeyEventResult.Ignored;
     }
 
-    internal void AddKeyEventHandler(FocusOnKeyEventCallback handler)
-    {
-        ArgumentNullException.ThrowIfNull(handler);
-        if (!_keyEventHandlers.Contains(handler))
-        {
-            _keyEventHandlers.Add(handler);
-        }
-    }
+    internal bool HandleTextInput(string text) => OnTextInput?.Invoke(this, text) ?? false;
 
-    internal void RemoveKeyEventHandler(FocusOnKeyEventCallback handler)
-    {
-        _keyEventHandlers.Remove(handler);
-    }
+    internal bool HandleTextComposition(string text, bool isCommit) =>
+        OnTextComposition?.Invoke(this, text, isCommit) ?? false;
 
-    internal void SetTraversalEligibility(object owner, bool eligible)
-    {
-        ArgumentNullException.ThrowIfNull(owner);
-        _traversalEligibility[owner] = eligible;
-    }
+    internal FocusTextInputState? ResolveTextInputState() => OnTextInputState?.Invoke(this);
 
-    internal void RemoveTraversalEligibility(object owner)
-    {
-        _traversalEligibility.Remove(owner);
-    }
+    internal bool HandleTextSelectionChanged(int baseOffset, int extentOffset) =>
+        OnTextSelectionChanged?.Invoke(this, baseOffset, extentOffset) ?? false;
 
-    internal bool HandleTextInput(string text)
-    {
-        return OnTextInput?.Invoke(this, text) ?? false;
-    }
-
-    internal bool HandleTextComposition(string text, bool isCommit)
-    {
-        return OnTextComposition?.Invoke(this, text, isCommit) ?? false;
-    }
-
-    internal FocusTextInputState? ResolveTextInputState()
-    {
-        return OnTextInputState?.Invoke(this);
-    }
-
-    internal bool HandleTextSelectionChanged(int baseOffset, int extentOffset)
-    {
-        return OnTextSelectionChanged?.Invoke(this, baseOffset, extentOffset) ?? false;
-    }
-
+    /// <summary>Dart parity source: <c>FocusNode.rect</c>, resolved through the attached render object.</summary>
     internal Rect? ResolveTraversalRect()
     {
         if (TraversalRect.HasValue)
@@ -268,98 +550,277 @@ public class FocusNode : ChangeNotifier
         }
 
         var localRect = new Rect(new Point(0, 0), renderBox.Size);
-        var transformToRoot = ResolveRenderObjectTransformToRoot(renderBox);
+        Matrix4 transformToRoot = renderBox.ComputePaintTransformToRoot();
         return RenderObject.TransformRect(transformToRoot, localRect);
     }
 
-    private static Matrix4 ResolveRenderObjectTransformToRoot(RenderObject renderObject)
+    /// <summary>Dart parity source: <c>FocusNode._reparent</c>.</summary>
+    internal void Reparent(FocusNode child)
     {
-        return renderObject.ComputePaintTransformToRoot();
+        ArgumentNullException.ThrowIfNull(child);
+        if (ReferenceEquals(child, this))
+        {
+            throw new ArgumentException("Tried to make a child into a parent of itself.", nameof(child));
+        }
+
+        if (ReferenceEquals(child.Parent, this))
+        {
+            return;
+        }
+
+        FocusScopeNode? oldScope = child.EnclosingScope;
+        bool hadFocus = child.HasFocus;
+        child.Parent?.RemoveChild(child, removeScopeFocus: !ReferenceEquals(oldScope, NearestScope));
+        _children.Add(child);
+        child.Parent = this;
+        child.ResetAncestorCache();
+        child.UpdateManager(Manager);
+        foreach (FocusNode ancestor in child.Ancestors)
+        {
+            ancestor._descendants = null;
+        }
+
+        child.ClearEnclosingScopeCache();
+        if (hadFocus)
+        {
+            Manager?.PrimaryFocus?.SetAsFocusedChildForScope();
+        }
+
+        if (oldScope != null && child.Context != null && !ReferenceEquals(child.EnclosingScope, oldScope))
+        {
+            FocusTraversalGroup.MaybeOf(child.Context.Value)?.ChangedScope(child, oldScope);
+        }
+
+        if (child._requestFocusWhenReparented)
+        {
+            child._requestFocusWhenReparented = false;
+            child.DoRequestFocus(findFirstFocus: true);
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode._removeChild</c>.</summary>
+    internal void RemoveChild(FocusNode node, bool removeScopeFocus = true)
+    {
+        if (!_children.Contains(node))
+        {
+            return;
+        }
+
+        if (removeScopeFocus && node.EnclosingScope is { } nodeScope)
+        {
+            nodeScope.RemoveFocusedChild(node);
+            foreach (FocusNode descendant in node.Descendants.ToArray())
+            {
+                if (ReferenceEquals(descendant.EnclosingScope, nodeScope))
+                {
+                    nodeScope.RemoveFocusedChild(descendant);
+                }
+            }
+        }
+
+        node.Parent = null;
+        node.ClearEnclosingScopeCache();
+        node.ResetAncestorCache();
+        _children.Remove(node);
+        foreach (FocusNode ancestor in Ancestors)
+        {
+            ancestor._descendants = null;
+        }
+
+        _descendants = null;
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode._clearEnclosingScopeCache</c>.</summary>
+    private void ClearEnclosingScopeCache()
+    {
+        FocusScopeNode? cachedScope = _enclosingScope;
+        if (cachedScope == null)
+        {
+            return;
+        }
+
+        _enclosingScope = null;
+        foreach (FocusNode child in _children)
+        {
+            if (ReferenceEquals(cachedScope, child._enclosingScope))
+            {
+                child.ClearEnclosingScopeCache();
+            }
+        }
+    }
+
+    /// <summary>Drops the cached ancestor list of this node and of everything below it.</summary>
+    private void ResetAncestorCache()
+    {
+        _ancestors = null;
+        foreach (FocusNode descendant in _children)
+        {
+            descendant.ResetAncestorCache();
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode._updateManager</c>.</summary>
+    internal void UpdateManager(FocusManager? manager)
+    {
+        Manager = manager;
+        foreach (FocusNode descendant in Descendants)
+        {
+            descendant.Manager = manager;
+            descendant._ancestors = null;
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode._markNextFocus</c>.</summary>
+    private protected void MarkNextFocus(FocusNode newFocus)
+    {
+        if (Manager != null)
+        {
+            Manager.MarkNextFocus(this);
+            return;
+        }
+
+        newFocus.SetAsFocusedChildForScope();
+        newFocus.Notify();
+        if (!ReferenceEquals(newFocus, this))
+        {
+            Notify();
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode._notify</c>.</summary>
+    internal void Notify()
+    {
+        if (Parent == null)
+        {
+            return;
+        }
+
+        if (HasPrimaryFocus)
+        {
+            SetAsFocusedChildForScope();
+        }
+
+        NotifyListeners();
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode._doRequestFocus</c>.</summary>
+    internal virtual void DoRequestFocus(bool findFirstFocus)
+    {
+        if (!CanRequestFocus)
+        {
+            return;
+        }
+
+        if (Parent == null)
+        {
+            _requestFocusWhenReparented = true;
+            return;
+        }
+
+        SetAsFocusedChildForScope();
+        if (HasPrimaryFocus
+            && (Manager!.MarkedForFocus == null || ReferenceEquals(Manager.MarkedForFocus, this)))
+        {
+            return;
+        }
+
+        _hasKeyboardToken = true;
+        MarkNextFocus(this);
+    }
+
+    /// <summary>Dart parity source: <c>FocusNode._setAsFocusedChildForScope</c>.</summary>
+    internal void SetAsFocusedChildForScope()
+    {
+        FocusNode scopeFocus = this;
+        foreach (FocusNode ancestor in Ancestors)
+        {
+            if (ancestor is not FocusScopeNode scopeAncestor)
+            {
+                continue;
+            }
+
+            scopeAncestor.RemoveFocusedChild(scopeFocus);
+            scopeAncestor.AddFocusedChild(scopeFocus);
+            scopeFocus = scopeAncestor;
+        }
     }
 
     public override void Dispose()
     {
+        Attachment?.Detach();
         _keyEventHandlers.Clear();
-        _traversalEligibility.Clear();
-        (Manager ?? FocusManager.Instance).UnregisterNode(this);
         base.Dispose();
+    }
+
+    public override string ToString()
+    {
+        string extra = DebugLabel ?? string.Empty;
+        if (HasPrimaryFocus)
+        {
+            extra = extra.Length == 0 ? "[PRIMARY FOCUS]" : extra + " [PRIMARY FOCUS]";
+        }
+        else if (HasFocus)
+        {
+            extra = extra.Length == 0 ? "[IN FOCUS PATH]" : extra + " [IN FOCUS PATH]";
+        }
+
+        return extra.Length == 0 ? GetType().Name : $"{GetType().Name}({extra})";
     }
 }
 
+/// <summary>Dart parity source: <c>FocusScopeNode</c>.</summary>
 public sealed class FocusScopeNode : FocusNode
 {
-    private readonly List<FocusNode> _members = [];
+    private readonly List<FocusNode> _focusedChildren = [];
 
-    public FocusNode? FocusedChild { get; private set; }
+    public FocusScopeNode(
+        string? debugLabel = null,
+        FocusOnKeyEventCallback? onKeyEvent = null,
+        bool skipTraversal = false,
+        bool canRequestFocus = true,
+        TraversalEdgeBehavior traversalEdgeBehavior = TraversalEdgeBehavior.ClosedLoop,
+        TraversalEdgeBehavior directionalTraversalEdgeBehavior = TraversalEdgeBehavior.Stop)
+        : base(
+            debugLabel: debugLabel,
+            onKeyEvent: onKeyEvent,
+            skipTraversal: skipTraversal,
+            canRequestFocus: canRequestFocus,
+            descendantsAreFocusable: true)
+    {
+        TraversalEdgeBehavior = traversalEdgeBehavior;
+        DirectionalTraversalEdgeBehavior = directionalTraversalEdgeBehavior;
+    }
+
+    public override FocusScopeNode? NearestScope => this;
+
+    public override bool DescendantsAreFocusable
+    {
+        get => RawCanRequestFocus && base.DescendantsAreFocusable;
+        set => base.DescendantsAreFocusable = value;
+    }
 
     /// <summary>How Tab/Shift-Tab traversal behaves at the first/last node of this scope.</summary>
-    public TraversalEdgeBehavior TraversalEdgeBehavior { get; set; } = TraversalEdgeBehavior.ClosedLoop;
+    public TraversalEdgeBehavior TraversalEdgeBehavior { get; set; }
 
     /// <summary>How arrow-key traversal behaves at the edge node of this scope.</summary>
-    public TraversalEdgeBehavior DirectionalTraversalEdgeBehavior { get; set; } = TraversalEdgeBehavior.Stop;
+    public TraversalEdgeBehavior DirectionalTraversalEdgeBehavior { get; set; }
 
-    /// <summary>Whether this scope or one of its descendants currently holds the primary focus.</summary>
-    /// <remarks>Matches Flutter's ancestor-inclusive `FocusNode.hasFocus` for scopes.</remarks>
-    public bool HasFocusInScope
-    {
-        get
-        {
-            FocusNode? node = (Manager ?? FocusManager.Instance).PrimaryFocus;
-            while (node is not null)
-            {
-                if (ReferenceEquals(node, this))
-                {
-                    return true;
-                }
+    /// <summary>Dart parity source: <c>FocusScopeNode.isFirstFocus</c>.</summary>
+    public bool IsFirstFocus => ReferenceEquals(EnclosingScope?.FocusedChild, this);
 
-                node = node.Scope;
-            }
+    /// <summary>Dart parity source: <c>FocusScopeNode.focusedChild</c>.</summary>
+    public FocusNode? FocusedChild => _focusedChildren.Count == 0 ? null : _focusedChildren[^1];
 
-            return false;
-        }
-    }
+    /// <summary>Alias kept for call sites written against the pre-tree model.</summary>
+    public bool HasFocusInScope => HasFocus;
 
-    internal IReadOnlyList<FocusNode> Members => _members;
+    public override IEnumerable<FocusNode> TraversalChildren =>
+        CanRequestFocus ? base.TraversalChildren : [];
 
-    internal void AddMember(FocusNode node)
-    {
-        if (_members.Contains(node))
-        {
-            return;
-        }
+    public override IEnumerable<FocusNode> TraversalDescendants =>
+        CanRequestFocus ? base.TraversalDescendants : [];
 
-        _members.Add(node);
-    }
-
-    internal void RemoveMember(FocusNode node)
-    {
-        if (!_members.Remove(node))
-        {
-            return;
-        }
-
-        if (ReferenceEquals(FocusedChild, node))
-        {
-            FocusedChild = null;
-        }
-    }
-
-    internal void SetFocusedChild(FocusNode? node)
-    {
-        if (node != null && !ReferenceEquals(node.Scope, this))
-        {
-            return;
-        }
-
-        FocusedChild = node;
-    }
-
-    /// <summary>
-    /// Flutter's <c>FocusScopeNode.setFirstFocus</c>: makes <paramref name="scope"/> the scope that receives
-    /// focus when this scope is focused. If this scope already has focus, focus moves into
-    /// <paramref name="scope"/> immediately; otherwise the scope is only recorded as the focused child, so it
-    /// receives focus the next time this scope does.
-    /// </summary>
+    /// <summary>Dart parity source: <c>FocusScopeNode.setFirstFocus</c>.</summary>
     public void SetFirstFocus(FocusScopeNode scope)
     {
         ArgumentNullException.ThrowIfNull(scope);
@@ -368,70 +829,104 @@ public sealed class FocusScopeNode : FocusNode
             throw new ArgumentException("Unexpected self-reference in SetFirstFocus.", nameof(scope));
         }
 
-        if (scope.Scope is null)
+        if (scope.Parent == null)
         {
-            (Manager ?? FocusManager.Instance).RegisterNode(scope, this);
+            Reparent(scope);
         }
 
-        if (HasFocusInScope)
+        if (HasFocus)
         {
-            scope.RequestFirstFocus();
+            scope.DoRequestFocus(findFirstFocus: true);
+        }
+        else
+        {
+            scope.SetAsFocusedChildForScope();
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusScopeNode.autofocus</c>.</summary>
+    public void Autofocus(FocusNode node)
+    {
+        ArgumentNullException.ThrowIfNull(node);
+        if (node.Parent == null)
+        {
+            Reparent(node);
+        }
+
+        Manager?.AddPendingAutofocus(new PendingAutofocus(this, node));
+        Manager?.MarkNeedsUpdate();
+    }
+
+    /// <summary>Dart parity source: <c>FocusScopeNode.requestScopeFocus</c>.</summary>
+    public void RequestScopeFocus() => DoRequestFocus(findFirstFocus: false);
+
+    /// <summary>Dart parity source: <c>FocusScopeNode._doRequestFocus(findFirstFocus: true)</c>.</summary>
+    internal bool RequestFirstFocus()
+    {
+        DoRequestFocus(findFirstFocus: true);
+        return HasFocus;
+    }
+
+    internal void AddFocusedChild(FocusNode node) => _focusedChildren.Add(node);
+
+    internal void RemoveFocusedChild(FocusNode node) => _focusedChildren.Remove(node);
+
+    internal void ClearFocusedChildren() => _focusedChildren.Clear();
+
+    internal IReadOnlyList<FocusNode> FocusedChildren => _focusedChildren;
+
+    internal override void DoRequestFocus(bool findFirstFocus)
+    {
+        while (_focusedChildren.Count > 0
+               && (!_focusedChildren[^1].CanRequestFocus || _focusedChildren[^1].EnclosingScope == null))
+        {
+            _focusedChildren.RemoveAt(_focusedChildren.Count - 1);
+        }
+
+        FocusNode? focusedChild = FocusedChild;
+        if (!findFirstFocus || focusedChild == null)
+        {
+            if (CanRequestFocus)
+            {
+                SetAsFocusedChildForScope();
+                MarkNextFocus(this);
+            }
+
             return;
         }
 
-        scope.SetAsFocusedChildForScope();
-    }
-
-    /// <summary>
-    /// Flutter's <c>_doRequestFocus(findFirstFocus: true)</c>: descends the focused-child chain and focuses the
-    /// deepest node that can take focus, falling back to this scope.
-    /// </summary>
-    internal bool RequestFirstFocus()
-    {
-        FocusNode target = this;
-        while (target is FocusScopeNode scope && scope.FocusedChild is { } child)
-        {
-            if (ReferenceEquals(child, target))
-            {
-                break;
-            }
-
-            target = child;
-        }
-
-        return target.CanRequestFocus ? target.RequestFocus() : RequestFocus();
-    }
-
-    /// <summary>
-    /// Flutter's <c>FocusNode._setAsFocusedChildForScope</c>: records this node as the focused child of every
-    /// enclosing scope, so focusing an ancestor scope walks back down to this node.
-    /// </summary>
-    internal void SetAsFocusedChildForScope()
-    {
-        FocusNode node = this;
-        for (FocusScopeNode? ancestor = Scope; ancestor is not null; ancestor = ancestor.Scope)
-        {
-            ancestor.SetFocusedChild(node);
-            node = ancestor;
-        }
-    }
-
-    internal void ResetForTests()
-    {
-        _members.Clear();
-        FocusedChild = null;
+        focusedChild.DoRequestFocus(findFirstFocus: true);
     }
 }
 
-public sealed class FocusManager
+/// <summary>Dart parity source: <c>_AppLifecycleListener</c>.</summary>
+internal sealed class FocusAppLifecycleListener : WidgetsBindingObserver
 {
-    private readonly List<FocusNode> _nodes = [];
-    private readonly List<Action<FocusHighlightMode>> _highlightModeListeners = [];
-    private readonly FocusScopeNode _rootScope = new()
+    private readonly Action<AppLifecycleState> _onLifecycleStateChanged;
+
+    internal FocusAppLifecycleListener(Action<AppLifecycleState> onLifecycleStateChanged)
     {
-        CanRequestFocus = false,
-        SkipTraversal = true
-    };
+        _onLifecycleStateChanged = onLifecycleStateChanged;
+    }
+
+    public void DidChangeAppLifecycleState(AppLifecycleState state) => _onLifecycleStateChanged(state);
+}
+
+/// <summary>Dart parity source: <c>FocusManager</c> (with <c>_HighlightModeManager</c> folded in).</summary>
+public sealed class FocusManager : ChangeNotifier
+{
+    private readonly List<Action<FocusHighlightMode>> _highlightModeListeners = [];
+    private readonly List<OnKeyEventCallback> _earlyKeyEventHandlers = [];
+    private readonly List<OnKeyEventCallback> _lateKeyEventHandlers = [];
+    private readonly HashSet<FocusNode> _dirtyNodes = [];
+    private readonly List<PendingAutofocus> _pendingAutofocuses = [];
+    private FocusScopeNode _rootScope = new(debugLabel: "Root Focus Scope");
+    private FocusHighlightMode? _highlightMode;
+    private FocusHighlightStrategy _highlightStrategy = FocusHighlightStrategy.Automatic;
+    private bool? _lastInteractionRequiresTraditionalHighlights;
+    private bool _applyingFocusChanges;
+    private FocusAppLifecycleListener? _appLifecycleListener;
+    private FocusNode? _suspendedNode;
 
     public FocusManager() : this(registerGlobalHandlers: false)
     {
@@ -439,11 +934,66 @@ public sealed class FocusManager
 
     private FocusManager(bool registerGlobalHandlers)
     {
-        _rootScope.AttachManager(this);
+        _rootScope.UpdateManager(this);
+        if (RespondToLifecycleChange)
+        {
+            _appLifecycleListener = new FocusAppLifecycleListener(HandleAppLifecycleChange);
+            WidgetsBinding.Instance.AddObserver(_appLifecycleListener);
+        }
+
         if (registerGlobalHandlers)
         {
             GestureBinding.PointerEventReceived += HandlePointerEvent;
             RegisterKeyMessageHandler();
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusManager._respondToLifecycleChange</c>.</summary>
+    private static bool RespondToLifecycleChange =>
+        OperatingSystem.IsBrowser()
+        || PlatformDefaults.TargetPlatform switch
+        {
+            TargetPlatform.Android or TargetPlatform.IOS => false,
+            _ => true,
+        };
+
+    /// <summary>Dart parity source: <c>FocusManager._appLifecycleChange</c>.</summary>
+    private void HandleAppLifecycleChange(AppLifecycleState state)
+    {
+        if (state == AppLifecycleState.Resumed)
+        {
+            if (!ReferenceEquals(PrimaryFocus, _rootScope))
+            {
+                _suspendedNode = null;
+            }
+            else if (_suspendedNode != null)
+            {
+                if (MarkedForFocus == null)
+                {
+                    _suspendedNode.RequestFocus();
+                }
+
+                _suspendedNode = null;
+            }
+
+            return;
+        }
+
+        if (!ReferenceEquals(PrimaryFocus, _rootScope))
+        {
+            MarkedForFocus = _rootScope;
+            _suspendedNode = PrimaryFocus;
+            ApplyFocusChangesIfNeeded();
+        }
+    }
+
+    /// <summary>Dart parity source: <c>FocusManager.listenToApplicationLifecycleChangesIfSupported</c>.</summary>
+    internal void ListenToApplicationLifecycleChangesIfSupported()
+    {
+        if (_appLifecycleListener == null && RespondToLifecycleChange)
+        {
+            _appLifecycleListener = new FocusAppLifecycleListener(HandleAppLifecycleChange);
+            WidgetsBinding.Instance.AddObserver(_appLifecycleListener);
         }
     }
 
@@ -453,13 +1003,11 @@ public sealed class FocusManager
 
     internal event Action? PrimaryFocusChanged;
 
-    private FocusHighlightMode _highlightMode = ResolveDefaultHighlightMode();
-    private FocusHighlightStrategy _highlightStrategy = FocusHighlightStrategy.Automatic;
-    private bool? _lastInteractionRequiresTraditionalHighlights;
-
     public FocusScopeNode RootScope => _rootScope;
 
-    public FocusHighlightMode HighlightMode => _highlightMode;
+    internal FocusNode? MarkedForFocus { get; private set; }
+
+    public FocusHighlightMode HighlightMode => _highlightMode ?? DefaultModeForPlatform;
 
     public FocusHighlightStrategy HighlightStrategy
     {
@@ -490,217 +1038,196 @@ public sealed class FocusManager
         _highlightModeListeners.Remove(listener);
     }
 
+    /// <summary>Dart parity source: <c>FocusManager.addEarlyKeyEventHandler</c>.</summary>
+    public void AddEarlyKeyEventHandler(OnKeyEventCallback handler) => _earlyKeyEventHandlers.Add(handler);
+
+    public void RemoveEarlyKeyEventHandler(OnKeyEventCallback handler) => _earlyKeyEventHandlers.Remove(handler);
+
+    public void AddLateKeyEventHandler(OnKeyEventCallback handler) => _lateKeyEventHandlers.Add(handler);
+
+    public void RemoveLateKeyEventHandler(OnKeyEventCallback handler) => _lateKeyEventHandlers.Remove(handler);
+
+    /// <summary>
+    /// C#-only: attaches <paramref name="node"/> under <paramref name="scope"/> without going through a
+    /// <see cref="FocusAttachment"/>, for nodes that have no widget of their own.
+    /// </summary>
     public void RegisterNode(FocusNode node, FocusScopeNode? scope = null)
     {
-        var effectiveScope = scope ?? _rootScope;
-
-        if (node.Manager != null && !ReferenceEquals(node.Manager, this))
+        ArgumentNullException.ThrowIfNull(node);
+        FocusScopeNode effectiveScope = scope ?? _rootScope;
+        if (!ReferenceEquals(effectiveScope, _rootScope) && effectiveScope.Parent == null)
         {
-            node.Manager.UnregisterNode(node);
+            _rootScope.Reparent(effectiveScope);
         }
 
-        if (!ReferenceEquals(effectiveScope.Manager, this))
-        {
-            if (effectiveScope.Manager != null)
-            {
-                effectiveScope.Manager.UnregisterNode(effectiveScope);
-            }
-
-            RegisterNode(effectiveScope, _rootScope);
-        }
-
-        if (_nodes.Contains(node))
-        {
-            MoveNodeToScope(node, effectiveScope);
-            return;
-        }
-
-        _nodes.Add(node);
-        node.AttachManager(this);
-        MoveNodeToScope(node, effectiveScope);
+        effectiveScope.Reparent(node);
     }
 
+    /// <summary>C#-only counterpart of <see cref="RegisterNode"/>.</summary>
     public void UnregisterNode(FocusNode node)
     {
-        if (!_nodes.Remove(node))
+        ArgumentNullException.ThrowIfNull(node);
+        if (node.HasPrimaryFocus || ReferenceEquals(MarkedForFocus, node))
         {
-            return;
+            node.Unfocus(UnfocusDisposition.PreviouslyFocusedChild);
         }
 
-        node.SetHasFocus(false);
-        node.DetachManager(this);
-        node.Scope?.RemoveMember(node);
-        node.DetachScope();
-
-        if (ReferenceEquals(PrimaryFocus, node))
-        {
-            SetPrimaryFocus(null);
-        }
+        MarkDetached(node);
+        node.Parent?.RemoveChild(node);
     }
 
+    /// <summary>C#-only convenience wrapper around <see cref="FocusNode.RequestFocus()"/>.</summary>
     public bool RequestFocus(FocusNode node)
     {
-        if (!node.CanRequestFocus)
+        ArgumentNullException.ThrowIfNull(node);
+        if (node.Parent == null && !ReferenceEquals(node, _rootScope))
         {
-            return false;
+            _rootScope.Reparent(node);
         }
 
-        RegisterNode(node, node.Scope ?? _rootScope);
-
-        if (ReferenceEquals(PrimaryFocus, node))
-        {
-            return true;
-        }
-
-        SetPrimaryFocus(node);
-        return true;
+        node.DoRequestFocus(findFirstFocus: true);
+        return node.HasFocus;
     }
 
+    /// <summary>C#-only convenience wrapper around <see cref="FocusNode.Unfocus"/>.</summary>
     public void Unfocus(FocusNode node)
     {
+        ArgumentNullException.ThrowIfNull(node);
+        node.Unfocus();
+    }
+
+    public bool FocusNext() => TraversalOrigin().NextFocus();
+
+    public bool FocusPrevious() => TraversalOrigin().PreviousFocus();
+
+    public bool FocusInDirection(TraversalDirection direction) =>
+        TraversalOrigin().FocusInDirection(direction);
+
+    private FocusNode TraversalOrigin() => PrimaryFocus ?? _rootScope;
+
+    /// <summary>Dart parity source: <c>FocusManager._markDetached</c>.</summary>
+    internal void MarkDetached(FocusNode node)
+    {
         if (ReferenceEquals(PrimaryFocus, node))
         {
-            SetPrimaryFocus(null);
-        }
-    }
-
-    public bool FocusNext()
-    {
-        return MoveFocusOrdinal(forward: true, directional: false);
-    }
-
-    public bool FocusPrevious()
-    {
-        return MoveFocusOrdinal(forward: false, directional: false);
-    }
-
-    private bool MoveFocusOrdinal(bool forward, bool directional)
-    {
-        var candidates = CollectTraversalCandidates();
-        if (candidates.Count == 0)
-        {
-            return false;
+            PrimaryFocus = null;
         }
 
-        int currentIndex = PrimaryFocus != null ? candidates.IndexOf(PrimaryFocus) : -1;
-        if (forward)
+        if (ReferenceEquals(MarkedForFocus, node))
         {
-            for (int index = currentIndex >= 0 ? currentIndex + 1 : 0; index < candidates.Count; index++)
-            {
-                if (RequestFocus(candidates[index]))
-                {
-                    return true;
-                }
-            }
+            MarkedForFocus = null;
+        }
+
+        if (ReferenceEquals(_suspendedNode, node))
+        {
+            _suspendedNode = null;
+        }
+
+        _dirtyNodes.Remove(node);
+    }
+
+    /// <summary>Dart parity source: <c>FocusManager._markPropertiesChanged</c>.</summary>
+    internal void MarkPropertiesChanged(FocusNode node)
+    {
+        _dirtyNodes.Add(node);
+        MarkNeedsUpdate();
+    }
+
+    /// <summary>Dart parity source: <c>FocusManager._markNextFocus</c>.</summary>
+    internal void MarkNextFocus(FocusNode node)
+    {
+        if (ReferenceEquals(PrimaryFocus, node))
+        {
+            MarkedForFocus = null;
         }
         else
         {
-            for (int index = currentIndex >= 0 ? currentIndex - 1 : candidates.Count - 1; index >= 0; index--)
-            {
-                if (RequestFocus(candidates[index]))
-                {
-                    return true;
-                }
-            }
+            MarkedForFocus = node;
+            MarkNeedsUpdate();
         }
-
-        return currentIndex >= 0 && HandleTraversalEdge(candidates, currentIndex, forward, directional);
     }
+
+    internal void AddPendingAutofocus(PendingAutofocus autofocus) => _pendingAutofocuses.Add(autofocus);
 
     /// <summary>
-    /// Flutter's <c>FocusTraversalPolicy._moveFocus</c> edge handling: what happens after the traversal
-    /// walked past the first/last node of the primary focus's nearest scope without finding a taker.
-    /// Directional moves that fell back to ordinal order consult the directional edge behavior.
+    /// Dart schedules <c>applyFocusChangesIfNeeded</c> on a microtask; Plumix applies focus changes
+    /// synchronously (see <c>docs/ai/DIVERGENCES.md</c>), so this runs the pass straight away and
+    /// guards against re-entering it from a listener.
     /// </summary>
-    private bool HandleTraversalEdge(List<FocusNode> candidates, int currentIndex, bool forward, bool directional)
+    internal void MarkNeedsUpdate()
     {
-        FocusNode? current = PrimaryFocus;
-        FocusScopeNode scope = NearestScopeOf(current);
-        switch (directional ? scope.DirectionalTraversalEdgeBehavior : scope.TraversalEdgeBehavior)
+        if (_applyingFocusChanges)
         {
-            case TraversalEdgeBehavior.LeaveFlutterView:
-                current?.Unfocus();
-                return false;
-            case TraversalEdgeBehavior.Stop:
-                return false;
-            case TraversalEdgeBehavior.ParentScope:
-                FocusScopeNode? parentScope = ((FocusNode)scope).Scope;
-                if (parentScope != null && !ReferenceEquals(parentScope, _rootScope))
-                {
-                    current?.Unfocus();
-                    var parentCandidates = CollectScopeCandidates(parentScope, current ?? parentScope)
-                        .Where(candidate => !IsInsideScope(candidate, scope))
-                        .ToList();
-                    if (parentCandidates.Count == 0)
-                    {
-                        return false;
-                    }
-
-                    foreach (FocusNode candidate in forward ? parentCandidates : Reversed(parentCandidates))
-                    {
-                        if (RequestFocus(candidate))
-                        {
-                            return true;
-                        }
-                    }
-
-                    return false;
-                }
-
-                goto case TraversalEdgeBehavior.ClosedLoop;
-            case TraversalEdgeBehavior.ClosedLoop:
-            default:
-                if (forward)
-                {
-                    for (int index = 0; index <= currentIndex; index++)
-                    {
-                        if (RequestFocus(candidates[index]))
-                        {
-                            return true;
-                        }
-                    }
-                }
-                else
-                {
-                    for (int index = candidates.Count - 1; index >= currentIndex; index--)
-                    {
-                        if (RequestFocus(candidates[index]))
-                        {
-                            return true;
-                        }
-                    }
-                }
-
-                return false;
+            return;
         }
+
+        ApplyFocusChangesIfNeeded();
     }
 
-    /// <summary>Flutter's <c>FocusNode.nearestScope</c>: a scope node is its own nearest scope.</summary>
-    private FocusScopeNode NearestScopeOf(FocusNode? node) => node switch
+    /// <summary>Dart parity source: <c>FocusManager.applyFocusChangesIfNeeded</c>.</summary>
+    public void ApplyFocusChangesIfNeeded()
     {
-        FocusScopeNode scopeNode => scopeNode,
-        { } focusNode => focusNode.Scope ?? _rootScope,
-        null => _rootScope,
-    };
-
-    private static bool IsInsideScope(FocusNode node, FocusScopeNode scope)
-    {
-        for (FocusScopeNode? ancestor = node.Scope; ancestor != null; ancestor = ((FocusNode)ancestor).Scope)
+        if (_applyingFocusChanges)
         {
-            if (ReferenceEquals(ancestor, scope))
+            return;
+        }
+
+        _applyingFocusChanges = true;
+        try
+        {
+            FocusNode? previousFocus = PrimaryFocus;
+
+            foreach (PendingAutofocus autofocus in _pendingAutofocuses.ToArray())
             {
-                return true;
+                autofocus.ApplyIfValid(this);
+            }
+
+            _pendingAutofocuses.Clear();
+
+            if (PrimaryFocus == null && MarkedForFocus == null)
+            {
+                MarkedForFocus = _rootScope;
+            }
+
+            if (MarkedForFocus != null && !ReferenceEquals(MarkedForFocus, PrimaryFocus))
+            {
+                HashSet<FocusNode> previousPath = previousFocus?.Ancestors.ToHashSet() ?? [];
+                HashSet<FocusNode> nextPath = MarkedForFocus.Ancestors.ToHashSet();
+                _dirtyNodes.UnionWith(nextPath.Except(previousPath));
+                _dirtyNodes.UnionWith(previousPath.Except(nextPath));
+
+                PrimaryFocus = MarkedForFocus;
+                MarkedForFocus = null;
+            }
+
+            if (!ReferenceEquals(previousFocus, PrimaryFocus))
+            {
+                if (previousFocus != null)
+                {
+                    _dirtyNodes.Add(previousFocus);
+                }
+
+                if (PrimaryFocus != null)
+                {
+                    _dirtyNodes.Add(PrimaryFocus);
+                }
+            }
+
+            foreach (FocusNode node in _dirtyNodes.ToArray())
+            {
+                node.Notify();
+            }
+
+            _dirtyNodes.Clear();
+            if (!ReferenceEquals(previousFocus, PrimaryFocus))
+            {
+                PrimaryFocusChanged?.Invoke();
+                NotifyListeners();
             }
         }
-
-        return false;
-    }
-
-    private static IEnumerable<FocusNode> Reversed(List<FocusNode> nodes)
-    {
-        for (int index = nodes.Count - 1; index >= 0; index--)
+        finally
         {
-            yield return nodes[index];
+            _applyingFocusChanges = false;
         }
     }
 
@@ -720,64 +1247,97 @@ public sealed class FocusManager
         return RouteKeyEvent(@event);
     }
 
-    /// <summary>Dart's `FocusManager._handleKeyMessage`: focus-tree routing only.</summary>
+    /// <summary>Dart parity source: <c>_HighlightModeManager.handleKeyMessage</c>.</summary>
     internal bool RouteKeyEvent(KeyEvent @event)
     {
         UpdateHighlightModeForKeyEvent();
 
-        if (PrimaryFocus != null)
+        if (_earlyKeyEventHandlers.Count > 0)
         {
-            KeyEventResult result = PrimaryFocus.HandleKeyEvent(@event);
-            if (result != KeyEventResult.Ignored)
+            KeyEventResult early = KeyEventResults.Combine(
+                _earlyKeyEventHandlers.ToArray().Select(callback => callback(@event)).ToList());
+            if (early == KeyEventResult.Handled)
             {
-                return result == KeyEventResult.Handled;
+                return true;
             }
 
-            for (Element? ancestor = PrimaryFocus.AttachmentElement?.Parent;
-                 ancestor != null;
-                 ancestor = ancestor.Parent)
+            if (early == KeyEventResult.SkipRemainingHandlers)
             {
-                FocusNode? ancestorNode = _nodes.FirstOrDefault(
-                    node => !ReferenceEquals(node, PrimaryFocus)
-                            && ReferenceEquals(node.AttachmentElement, ancestor));
-                if (ancestorNode == null)
+                return false;
+            }
+        }
+
+        bool handled = false;
+        if (PrimaryFocus != null)
+        {
+            foreach (FocusNode node in Enumerable.Repeat(PrimaryFocus, 1).Concat(PrimaryFocus.Ancestors))
+            {
+                KeyEventResult result = node.HandleKeyEvent(@event);
+                if (result == KeyEventResult.Ignored)
                 {
                     continue;
                 }
 
-                result = ancestorNode.HandleKeyEvent(@event);
-                if (result != KeyEventResult.Ignored)
-                {
-                    return result == KeyEventResult.Handled;
-                }
+                handled = result == KeyEventResult.Handled;
+                break;
             }
         }
 
+        if (!handled && _lateKeyEventHandlers.Count > 0)
+        {
+            KeyEventResult late = KeyEventResults.Combine(
+                _lateKeyEventHandlers.ToArray().Select(callback => callback(@event)).ToList());
+            if (late == KeyEventResult.Handled)
+            {
+                return true;
+            }
+
+            if (late == KeyEventResult.SkipRemainingHandlers)
+            {
+                return false;
+            }
+        }
+
+        return handled || HandleDefaultTraversalKey(@event);
+    }
+
+    /// <summary>
+    /// C#-only: Flutter routes Tab and the arrow keys through <c>WidgetsApp</c>'s default shortcuts.
+    /// Plumix's hosts deliver key events straight to the manager, so the traversal fallback lives here.
+    /// </summary>
+    private bool HandleDefaultTraversalKey(KeyEvent @event)
+    {
         if (@event is not KeyDownEvent)
         {
             return false;
         }
 
-        if (!@event.LogicalKey.Equals(LogicalKeyboardKey.Tab))
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.Tab))
         {
-            if (IsDirectionalNextKey(@event.LogicalKey))
-            {
-                return FocusInDirection(direction: @event.LogicalKey.Equals(LogicalKeyboardKey.ArrowDown)
-                    ? TraversalDirection.Down
-                    : TraversalDirection.Right);
-            }
-
-            if (IsDirectionalPreviousKey(@event.LogicalKey))
-            {
-                return FocusInDirection(direction: @event.LogicalKey.Equals(LogicalKeyboardKey.ArrowUp)
-                    ? TraversalDirection.Up
-                    : TraversalDirection.Left);
-            }
-
-            return false;
+            return HardwareKeyboard.Instance.IsShiftPressed ? FocusPrevious() : FocusNext();
         }
 
-        return HardwareKeyboard.Instance.IsShiftPressed ? FocusPrevious() : FocusNext();
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowRight))
+        {
+            return FocusInDirection(TraversalDirection.Right);
+        }
+
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowDown))
+        {
+            return FocusInDirection(TraversalDirection.Down);
+        }
+
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowLeft))
+        {
+            return FocusInDirection(TraversalDirection.Left);
+        }
+
+        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowUp))
+        {
+            return FocusInDirection(TraversalDirection.Up);
+        }
+
+        return false;
     }
 
     public bool HandleTextInput(string text)
@@ -792,22 +1352,12 @@ public sealed class FocusManager
 
     public bool HandleTextCompositionUpdate(string text)
     {
-        if (PrimaryFocus == null)
-        {
-            return false;
-        }
-
-        return PrimaryFocus.HandleTextComposition(text ?? string.Empty, isCommit: false);
+        return PrimaryFocus?.HandleTextComposition(text ?? string.Empty, isCommit: false) ?? false;
     }
 
     public bool HandleTextCompositionCommit(string text)
     {
-        if (PrimaryFocus == null)
-        {
-            return false;
-        }
-
-        return PrimaryFocus.HandleTextComposition(text ?? string.Empty, isCommit: true);
+        return PrimaryFocus?.HandleTextComposition(text ?? string.Empty, isCommit: true) ?? false;
     }
 
     public FocusTextInputState? ResolveTextInputState()
@@ -817,37 +1367,27 @@ public sealed class FocusManager
 
     public bool HandleTextSelectionChanged(int baseOffset, int extentOffset)
     {
-        if (PrimaryFocus == null)
-        {
-            return false;
-        }
-
-        return PrimaryFocus.HandleTextSelectionChanged(baseOffset, extentOffset);
+        return PrimaryFocus?.HandleTextSelectionChanged(baseOffset, extentOffset) ?? false;
     }
 
     internal void ResetForTests()
     {
-        SetPrimaryFocus(null);
-
-        foreach (var node in _nodes.ToArray())
+        PrimaryFocus = null;
+        MarkedForFocus = null;
+        _suspendedNode = null;
+        _dirtyNodes.Clear();
+        _pendingAutofocuses.Clear();
+        foreach (FocusNode child in _rootScope.Children.ToArray())
         {
-            node.Scope?.RemoveMember(node);
-            node.DetachManager(this);
-            node.DetachScope();
+            _rootScope.RemoveChild(child);
         }
 
-        foreach (var node in _nodes)
-        {
-            if (node is FocusScopeNode scopeNode)
-            {
-                scopeNode.ResetForTests();
-            }
-        }
-
-        _nodes.Clear();
-        _rootScope.ResetForTests();
+        _rootScope = new FocusScopeNode(debugLabel: "Root Focus Scope");
+        _rootScope.UpdateManager(this);
         _highlightModeListeners.Clear();
-        _highlightMode = ResolveDefaultHighlightMode();
+        _earlyKeyEventHandlers.Clear();
+        _lateKeyEventHandlers.Clear();
+        _highlightMode = null;
         _highlightStrategy = FocusHighlightStrategy.Automatic;
         _lastInteractionRequiresTraditionalHighlights = null;
         HardwareKeyboard.Instance.ClearState();
@@ -879,6 +1419,7 @@ public sealed class FocusManager
 #pragma warning restore CS0618
     }
 
+    /// <summary>Dart parity source: <c>_HighlightModeManager.handlePointerEvent</c>.</summary>
     internal void HandlePointerEvent(PointerEvent @event)
     {
         if (@event.Kind is not (PointerDeviceKind.Touch
@@ -908,961 +1449,46 @@ public sealed class FocusManager
         UpdateHighlightMode();
     }
 
+    /// <summary>Dart parity source: <c>_HighlightModeManager.updateMode</c>.</summary>
     private void UpdateHighlightMode()
     {
-        FocusHighlightMode nextMode = _highlightStrategy switch
+        FocusHighlightMode newMode;
+        switch (_highlightStrategy)
         {
-            FocusHighlightStrategy.AlwaysTouch => FocusHighlightMode.Touch,
-            FocusHighlightStrategy.AlwaysTraditional => FocusHighlightMode.Traditional,
-            _ when _lastInteractionRequiresTraditionalHighlights == true => FocusHighlightMode.Touch,
-            _ => FocusHighlightMode.Traditional,
-        };
-
-        if (_highlightMode == nextMode)
-        {
-            return;
-        }
-
-        _highlightMode = nextMode;
-        foreach (Action<FocusHighlightMode> listener in _highlightModeListeners.ToArray())
-        {
-            listener(_highlightMode);
-        }
-    }
-
-    private static FocusHighlightMode ResolveDefaultHighlightMode()
-    {
-        return OperatingSystem.IsAndroid() || OperatingSystem.IsIOS()
-            ? FocusHighlightMode.Touch
-            : FocusHighlightMode.Traditional;
-    }
-
-    private void SetPrimaryFocus(FocusNode? next)
-    {
-        if (ReferenceEquals(PrimaryFocus, next))
-        {
-            return;
-        }
-
-        var previous = PrimaryFocus;
-        HashSet<FocusNode> previousPath = FocusPath(previous).ToHashSet();
-        HashSet<FocusNode> nextPath = FocusPath(next).ToHashSet();
-        PrimaryFocus = next;
-
-        next?.Scope?.SetFocusedChild(next);
-        foreach (FocusNode node in previousPath.Except(nextPath))
-        {
-            node.SetHasFocus(false);
-        }
-
-        foreach (FocusNode node in nextPath.Except(previousPath))
-        {
-            node.SetHasFocus(true);
-        }
-
-        PrimaryFocusChanged?.Invoke();
-    }
-
-    /// <summary>
-    /// Flutter's <c>FocusNode.hasFocus</c> is true for the primary node and every focus node that
-    /// encloses it in the widget tree. Keeping common ancestors in both paths also avoids a false
-    /// focus-change notification when focus moves between two descendants of the same group.
-    /// </summary>
-    private IEnumerable<FocusNode> FocusPath(FocusNode? node)
-    {
-        if (node is null)
-        {
-            yield break;
-        }
-
-        yield return node;
-        for (Element? ancestor = node.AttachmentElement?.Parent;
-             ancestor is not null;
-             ancestor = ancestor.Parent)
-        {
-            FocusNode? ancestorNode = _nodes.FirstOrDefault(candidate =>
-                !ReferenceEquals(candidate, node)
-                && ReferenceEquals(candidate.AttachmentElement, ancestor));
-            if (ancestorNode is not null)
-            {
-                yield return ancestorNode;
-            }
-        }
-    }
-
-    private void MoveNodeToScope(FocusNode node, FocusScopeNode scope)
-    {
-        if (ReferenceEquals(node.Scope, scope))
-        {
-            return;
-        }
-
-        node.Scope?.RemoveMember(node);
-        node.AttachScope(scope);
-        scope.AddMember(node);
-    }
-
-    private List<FocusNode> CollectTraversalCandidates()
-    {
-        FocusScopeNode scope = NearestScopeOf(PrimaryFocus);
-        FocusNode currentNode = PrimaryFocus ?? scope;
-        return CollectScopeCandidates(scope, currentNode);
-    }
-
-    /// <summary>
-    /// The traversable nodes of <paramref name="scope"/> in reading order. Nested scopes are spliced in at
-    /// their own position, mirroring Flutter's <c>FocusNode.traversalDescendants</c>, which walks the whole
-    /// subtree instead of stopping at scope boundaries.
-    /// </summary>
-    private static List<FocusNode> CollectScopeCandidates(FocusScopeNode scope, FocusNode currentNode)
-    {
-        // A member whose traversal group was declared above this scope (for example the group the navigator
-        // installs around every route) is collected here: the group itself is expanded in the scope that owns
-        // it, so leaving those members out would drop the whole nested scope from traversal.
-        var directMembers = scope.Members
-            .Where(candidate => candidate.TraversalGroup is null || !scope.Members.Contains(candidate.TraversalGroup))
-            .Where(candidate => candidate is FocusScopeNode nested
-                ? nested.CanRequestFocus && !nested.SkipTraversal
-                : IsTraversalCandidate(candidate, currentNode))
-            .ToList();
-        IReadOnlyList<FocusNode> sorted = new ReadingOrderTraversalPolicy()
-            .SortDescendants(directMembers, currentNode);
-        return FlattenTraversalGroups(sorted, scope, currentNode);
-    }
-
-    private static List<FocusNode> FlattenTraversalGroups(
-        IEnumerable<FocusNode> sorted,
-        FocusScopeNode scope,
-        FocusNode currentNode)
-    {
-        var result = new List<FocusNode>();
-        foreach (FocusNode node in sorted)
-        {
-            if (node is FocusScopeNode nestedScope)
-            {
-                result.AddRange(CollectScopeCandidates(nestedScope, currentNode));
-                continue;
-            }
-
-            if (node is not FocusTraversalGroupNode groupNode)
-            {
-                result.Add(node);
-                continue;
-            }
-
-            var directMembers = scope.Members
-                .Where(candidate => ReferenceEquals(candidate.TraversalGroup, groupNode))
-                .Where(candidate => IsTraversalCandidate(candidate, currentNode))
-                .ToList();
-            IReadOnlyList<FocusNode> groupSorted = groupNode.Policy
-                .SortDescendants(directMembers, currentNode);
-            result.AddRange(FlattenTraversalGroups(groupSorted, scope, currentNode));
-        }
-
-        return result;
-    }
-
-    private static bool IsTraversalCandidate(FocusNode candidate, FocusNode currentNode)
-    {
-        if (candidate is FocusTraversalGroupNode)
-        {
-            return true;
-        }
-
-        return ReferenceEquals(candidate, currentNode)
-               || (candidate.CanRequestFocus && !candidate.SkipTraversal && candidate.IsTraversalEligible);
-    }
-
-    /// <summary>
-    /// Moves the primary focus to the closest focusable node in <paramref name="direction"/>, falling
-    /// back to ordinal traversal when no directional candidate exists.
-    /// </summary>
-    public bool FocusInDirection(TraversalDirection direction)
-    {
-        var candidates = CollectTraversalCandidates();
-        if (candidates.Count == 0)
-        {
-            return false;
-        }
-
-        if (PrimaryFocus == null)
-        {
-            return direction switch
-            {
-                TraversalDirection.Left => RequestFocus(candidates[candidates.Count - 1]),
-                TraversalDirection.Up => RequestFocus(candidates[candidates.Count - 1]),
-                _ => RequestFocus(candidates[0])
-            };
-        }
-
-        var sourceRect = PrimaryFocus.ResolveTraversalRect();
-        if (!sourceRect.HasValue)
-        {
-            return MoveFocusOrdinal(
-                forward: direction is TraversalDirection.Right or TraversalDirection.Down,
-                directional: true);
-        }
-
-        FocusNode? bestNode = null;
-        double bestPrimaryDistance = double.PositiveInfinity;
-        double bestSecondaryDistance = double.PositiveInfinity;
-        double bestDistanceSquared = double.PositiveInfinity;
-
-        foreach (var candidate in candidates)
-        {
-            if (ReferenceEquals(candidate, PrimaryFocus))
-            {
-                continue;
-            }
-
-            var candidateRect = candidate.ResolveTraversalRect();
-            if (!candidateRect.HasValue)
-            {
-                continue;
-            }
-
-            double dx = candidateRect.Value.Center.X - sourceRect.Value.Center.X;
-            double dy = candidateRect.Value.Center.Y - sourceRect.Value.Center.Y;
-            if (!TryComputeDirectionalDistance(direction, dx, dy, out double primaryDistance, out double secondaryDistance))
-            {
-                continue;
-            }
-
-            double distanceSquared = (dx * dx) + (dy * dy);
-            if (primaryDistance < bestPrimaryDistance - 0.0001
-                || (Math.Abs(primaryDistance - bestPrimaryDistance) <= 0.0001
-                    && (secondaryDistance < bestSecondaryDistance - 0.0001
-                        || (Math.Abs(secondaryDistance - bestSecondaryDistance) <= 0.0001
-                            && distanceSquared < bestDistanceSquared))))
-            {
-                bestNode = candidate;
-                bestPrimaryDistance = primaryDistance;
-                bestSecondaryDistance = secondaryDistance;
-                bestDistanceSquared = distanceSquared;
-            }
-        }
-
-        if (bestNode != null)
-        {
-            return RequestFocus(bestNode);
-        }
-
-        return HandleDirectionalEdge(candidates, direction);
-    }
-
-    /// <summary>
-    /// Flutter's <c>_onEdgeForDirection</c>: what happens when no candidate exists further in
-    /// <paramref name="direction"/> from the current primary focus.
-    /// </summary>
-    private bool HandleDirectionalEdge(List<FocusNode> candidates, TraversalDirection direction)
-    {
-        FocusNode? current = PrimaryFocus;
-        FocusScopeNode scope = NearestScopeOf(current);
-        switch (scope.DirectionalTraversalEdgeBehavior)
-        {
-            case TraversalEdgeBehavior.LeaveFlutterView:
-                current?.Unfocus();
-                return false;
-            case TraversalEdgeBehavior.ClosedLoop:
-            case TraversalEdgeBehavior.ParentScope:
-                // ParentScope falls back to the closed loop when the enclosing scope has no candidate,
-                // which is always the case in this framework's flattened traversal model.
-                FocusNode? opposite = FindOppositeEdgeCandidate(candidates, direction);
-                return opposite != null && RequestFocus(opposite);
-            case TraversalEdgeBehavior.Stop:
-            default:
-                return false;
-        }
-    }
-
-    /// <summary>The candidate farthest in the opposite direction: the wrap target of a closed loop.</summary>
-    private FocusNode? FindOppositeEdgeCandidate(List<FocusNode> candidates, TraversalDirection direction)
-    {
-        FocusNode? best = null;
-        double bestCoordinate = double.PositiveInfinity;
-        foreach (FocusNode candidate in candidates)
-        {
-            if (ReferenceEquals(candidate, PrimaryFocus))
-            {
-                continue;
-            }
-
-            Rect? rect = candidate.ResolveTraversalRect();
-            if (!rect.HasValue)
-            {
-                continue;
-            }
-
-            double coordinate = direction switch
-            {
-                TraversalDirection.Right => rect.Value.Center.X,
-                TraversalDirection.Left => -rect.Value.Center.X,
-                TraversalDirection.Down => rect.Value.Center.Y,
-                _ => -rect.Value.Center.Y,
-            };
-            if (coordinate < bestCoordinate)
-            {
-                bestCoordinate = coordinate;
-                best = candidate;
-            }
-        }
-
-        return best;
-    }
-
-    private static bool IsDirectionalNextKey(LogicalKeyboardKey key)
-    {
-        return key.Equals(LogicalKeyboardKey.ArrowRight) || key.Equals(LogicalKeyboardKey.ArrowDown);
-    }
-
-    private static bool IsDirectionalPreviousKey(LogicalKeyboardKey key)
-    {
-        return key.Equals(LogicalKeyboardKey.ArrowLeft) || key.Equals(LogicalKeyboardKey.ArrowUp);
-    }
-
-    private static bool TryComputeDirectionalDistance(
-        TraversalDirection direction,
-        double dx,
-        double dy,
-        out double primaryDistance,
-        out double secondaryDistance)
-    {
-        switch (direction)
-        {
-            case TraversalDirection.Right:
-                primaryDistance = dx;
-                secondaryDistance = Math.Abs(dy);
-                return primaryDistance > 0;
-            case TraversalDirection.Left:
-                primaryDistance = -dx;
-                secondaryDistance = Math.Abs(dy);
-                return primaryDistance > 0;
-            case TraversalDirection.Down:
-                primaryDistance = dy;
-                secondaryDistance = Math.Abs(dx);
-                return primaryDistance > 0;
-            case TraversalDirection.Up:
-                primaryDistance = -dy;
-                secondaryDistance = Math.Abs(dx);
-                return primaryDistance > 0;
-            default:
-                primaryDistance = double.PositiveInfinity;
-                secondaryDistance = double.PositiveInfinity;
-                return false;
-        }
-    }
-}
-
-internal sealed class FocusScopeMarker : InheritedWidget
-{
-    public FocusScopeMarker(
-        FocusScopeNode scopeNode,
-        Widget child,
-        Key? key = null) : base(key)
-    {
-        ScopeNode = scopeNode;
-        Child = child;
-    }
-
-    public FocusScopeNode ScopeNode { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
-
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        return !ReferenceEquals(((FocusScopeMarker)oldWidget).ScopeNode, ScopeNode);
-    }
-}
-
-internal sealed class FocusDescendantsScope : InheritedWidget
-{
-    public FocusDescendantsScope(
-        bool descendantsAreFocusable,
-        bool descendantsAreTraversable,
-        Widget child) : base()
-    {
-        DescendantsAreFocusable = descendantsAreFocusable;
-        DescendantsAreTraversable = descendantsAreTraversable;
-        Child = child;
-    }
-
-    public bool DescendantsAreFocusable { get; }
-
-    public bool DescendantsAreTraversable { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        var oldScope = (FocusDescendantsScope)oldWidget;
-        return oldScope.DescendantsAreFocusable != DescendantsAreFocusable
-               || oldScope.DescendantsAreTraversable != DescendantsAreTraversable;
-    }
-
-    internal static (bool Focusable, bool Traversable) Resolve(BuildContext context)
-    {
-        bool focusable = true;
-        bool traversable = true;
-        foreach (FocusDescendantsScope scope in context.DependOnInheritedAncestors<FocusDescendantsScope>())
-        {
-            focusable &= scope.DescendantsAreFocusable;
-            traversable &= scope.DescendantsAreTraversable;
-        }
-
-        return (focusable, traversable);
-    }
-}
-
-public sealed class FocusScope : StatefulWidget
-{
-    public FocusScope(
-        Widget child,
-        FocusScopeNode? focusScopeNode = null,
-        bool autofocus = false,
-        bool canRequestFocus = true,
-        bool skipTraversal = true,
-        Key? key = null) : base(key)
-    {
-        Child = child;
-        FocusScopeNode = focusScopeNode;
-        Autofocus = autofocus;
-        CanRequestFocus = canRequestFocus;
-        SkipTraversal = skipTraversal;
-    }
-
-    private FocusScope(FocusScopeNode focusScopeNode, Widget child, Key? key) : base(key)
-    {
-        Child = child;
-        FocusScopeNode = focusScopeNode;
-        NodeIsAuthoritative = true;
-    }
-
-    /// <summary>
-    /// Flutter's <c>FocusScope.withExternalFocusNode</c>: the supplied node is the source of truth for
-    /// <see cref="Focus.CanRequestFocus"/> and <see cref="Focus.SkipTraversal"/>, so the widget never writes
-    /// them back and imperative changes on the node survive a rebuild.
-    /// </summary>
-    public static FocusScope WithExternalFocusNode(FocusScopeNode focusScopeNode, Widget child, Key? key = null)
-    {
-        ArgumentNullException.ThrowIfNull(focusScopeNode);
-        return new FocusScope(focusScopeNode, child, key);
-    }
-
-    public Widget Child { get; }
-
-    /// <summary>Whether the node carries the configuration instead of this widget.</summary>
-    internal bool NodeIsAuthoritative { get; }
-
-    public FocusScopeNode? FocusScopeNode { get; }
-
-    public bool Autofocus { get; }
-
-    public bool CanRequestFocus { get; }
-
-    public bool SkipTraversal { get; }
-
-    public static FocusScopeNode? MaybeOf(BuildContext context)
-    {
-        return context.DependOnInherited<FocusScopeMarker>()?.ScopeNode;
-    }
-
-    public override State CreateState()
-    {
-        return new FocusScopeState();
-    }
-
-    private sealed class FocusScopeState : State
-    {
-        private FocusScopeNode? _scopeNode;
-        private bool _ownsScopeNode;
-        private bool _autofocusApplied;
-
-        private FocusScope Widget => (FocusScope)Element.Widget;
-
-        public override void InitState()
-        {
-            AttachScopeNode(Widget.FocusScopeNode);
-            ApplyWidgetConfiguration();
-            EnsureScopeRegistration(scope: FocusManager.Instance.RootScope);
-        }
-
-        public override void DidChangeDependencies()
-        {
-            EnsureScopeRegistration(ResolveParentScope());
-            ApplyAutofocusIfNeeded();
-        }
-
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
-        {
-            var oldScopeWidget = (FocusScope)oldWidget;
-            var scopeWidget = Widget;
-
-            if (!ReferenceEquals(oldScopeWidget.FocusScopeNode, scopeWidget.FocusScopeNode))
-            {
-                DetachScopeNode(disposeOwned: true);
-                AttachScopeNode(scopeWidget.FocusScopeNode);
-            }
-
-            ApplyWidgetConfiguration();
-            EnsureScopeRegistration(ResolveParentScope());
-
-            if (!oldScopeWidget.Autofocus && scopeWidget.Autofocus)
-            {
-                _autofocusApplied = false;
-            }
-
-            ApplyAutofocusIfNeeded();
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            return new FocusScopeMarker(
-                scopeNode: _scopeNode!,
-                child: Widget.Child);
-        }
-
-        public override void Dispose()
-        {
-            DetachScopeNode(disposeOwned: true);
-        }
-
-        private FocusScopeNode ResolveParentScope()
-        {
-            return FocusScope.MaybeOf(Context) ?? FocusManager.Instance.RootScope;
-        }
-
-        private void AttachScopeNode(FocusScopeNode? externalNode)
-        {
-            _scopeNode = externalNode ?? new FocusScopeNode();
-            _ownsScopeNode = externalNode is null;
-        }
-
-        private void DetachScopeNode(bool disposeOwned)
-        {
-            if (_scopeNode == null)
-            {
-                return;
-            }
-
-            FocusManager.Instance.UnregisterNode(_scopeNode);
-
-            if (disposeOwned && _ownsScopeNode)
-            {
-                _scopeNode.Dispose();
-            }
-
-            _scopeNode = null;
-            _ownsScopeNode = false;
-            _autofocusApplied = false;
-        }
-
-        private void EnsureScopeRegistration(FocusScopeNode scope)
-        {
-            FocusManager.Instance.RegisterNode(_scopeNode!, scope);
-        }
-
-        private void ApplyWidgetConfiguration()
-        {
-            if (Widget.NodeIsAuthoritative)
-            {
-                return;
-            }
-
-            var node = _scopeNode!;
-            node.CanRequestFocus = Widget.CanRequestFocus;
-            node.SkipTraversal = Widget.SkipTraversal;
-        }
-
-        private void ApplyAutofocusIfNeeded()
-        {
-            if (!Widget.Autofocus || _autofocusApplied)
-            {
-                return;
-            }
-
-            _autofocusApplied = true;
-            _scopeNode!.RequestFocus();
-        }
-    }
-}
-
-public sealed class Focus : StatefulWidget
-{
-    public Focus(
-        Widget child,
-        FocusNode? focusNode = null,
-        bool autofocus = false,
-        bool canRequestFocus = true,
-        bool skipTraversal = false,
-        bool descendantsAreFocusable = true,
-        bool descendantsAreTraversable = true,
-        Action<bool>? onFocusChange = null,
-        FocusOnKeyEventCallback? onKeyEvent = null,
-        FocusOnTextInputCallback? onTextInput = null,
-        FocusOnTextCompositionCallback? onTextComposition = null,
-        FocusOnTextInputStateCallback? onTextInputState = null,
-        FocusOnTextSelectionChangedCallback? onTextSelectionChanged = null,
-        Key? key = null) : this(
-            child: child,
-            includeSemantics: false,
-            focusNode: focusNode,
-            autofocus: autofocus,
-            canRequestFocus: canRequestFocus,
-            skipTraversal: skipTraversal,
-            descendantsAreFocusable: descendantsAreFocusable,
-            descendantsAreTraversable: descendantsAreTraversable,
-            onFocusChange: onFocusChange,
-            onKeyEvent: onKeyEvent,
-            onTextInput: onTextInput,
-            onTextComposition: onTextComposition,
-            onTextInputState: onTextInputState,
-            onTextSelectionChanged: onTextSelectionChanged,
-            key: key)
-    {
-    }
-
-    public Focus(
-        Widget child,
-        bool includeSemantics,
-        FocusNode? focusNode = null,
-        bool autofocus = false,
-        bool canRequestFocus = true,
-        bool skipTraversal = false,
-        bool descendantsAreFocusable = true,
-        bool descendantsAreTraversable = true,
-        Action<bool>? onFocusChange = null,
-        FocusOnKeyEventCallback? onKeyEvent = null,
-        FocusOnTextInputCallback? onTextInput = null,
-        FocusOnTextCompositionCallback? onTextComposition = null,
-        FocusOnTextInputStateCallback? onTextInputState = null,
-        FocusOnTextSelectionChangedCallback? onTextSelectionChanged = null,
-        Key? key = null) : base(key)
-    {
-        Child = child;
-        FocusNode = focusNode;
-        Autofocus = autofocus;
-        CanRequestFocus = canRequestFocus;
-        SkipTraversal = skipTraversal;
-        DescendantsAreFocusable = descendantsAreFocusable;
-        DescendantsAreTraversable = descendantsAreTraversable;
-        OnFocusChange = onFocusChange;
-        IncludeSemantics = includeSemantics;
-        OnKeyEvent = onKeyEvent;
-        OnTextInput = onTextInput;
-        OnTextComposition = onTextComposition;
-        OnTextInputState = onTextInputState;
-        OnTextSelectionChanged = onTextSelectionChanged;
-    }
-
-    public Widget Child { get; }
-
-    public FocusNode? FocusNode { get; }
-
-    public bool Autofocus { get; }
-
-    public bool CanRequestFocus { get; }
-
-    public bool SkipTraversal { get; }
-
-    public bool DescendantsAreFocusable { get; }
-
-    public bool DescendantsAreTraversable { get; }
-
-    public Action<bool>? OnFocusChange { get; }
-
-    public bool IncludeSemantics { get; }
-
-    public FocusOnKeyEventCallback? OnKeyEvent { get; }
-
-    public FocusOnTextInputCallback? OnTextInput { get; }
-
-    public FocusOnTextCompositionCallback? OnTextComposition { get; }
-
-    public FocusOnTextInputStateCallback? OnTextInputState { get; }
-
-    public FocusOnTextSelectionChangedCallback? OnTextSelectionChanged { get; }
-
-    public override State CreateState()
-    {
-        return new FocusState();
-    }
-
-    private sealed class FocusState : State
-    {
-        private FocusNode? _focusNode;
-        private bool _ownsFocusNode;
-        private bool _autofocusApplied;
-        private bool _focused;
-
-        private Focus Widget => (Focus)Element.Widget;
-
-        public override void InitState()
-        {
-            AttachNode(Widget.FocusNode);
-            ApplyWidgetConfiguration();
-            EnsureNodeRegistration(scope: FocusManager.Instance.RootScope);
-        }
-
-        public override void DidChangeDependencies()
-        {
-            EnsureNodeRegistration(ResolveScope());
-            ApplyWidgetConfiguration();
-            ApplyAutofocusIfNeeded();
-        }
-
-        public override void DidUpdateWidget(StatefulWidget oldWidget)
-        {
-            var oldFocusWidget = (Focus)oldWidget;
-            var focusWidget = Widget;
-
-            if (!ReferenceEquals(oldFocusWidget.FocusNode, focusWidget.FocusNode))
-            {
-                DetachNode(disposeOwned: true);
-                AttachNode(focusWidget.FocusNode);
-            }
-
-            ApplyWidgetConfiguration();
-            EnsureNodeRegistration(ResolveScope());
-
-            if (!oldFocusWidget.Autofocus && focusWidget.Autofocus)
-            {
-                _autofocusApplied = false;
-            }
-
-            ApplyAutofocusIfNeeded();
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            Widget child = new FocusDescendantsScope(
-                descendantsAreFocusable: Widget.DescendantsAreFocusable,
-                descendantsAreTraversable: Widget.DescendantsAreTraversable,
-                child: Widget.Child);
-            child = new Listener(
-                child: child,
-                behavior: HitTestBehavior.Translucent,
-                onPointerDown: HandlePointerDown);
-
-            if (Widget.IncludeSemantics)
-            {
-                SemanticsFlags flags = _focusNode!.CanRequestFocus
-                    ? SemanticsFlags.IsFocusable
-                    : SemanticsFlags.None;
-                if (_focusNode.CanRequestFocus && _focusNode.HasFocus)
+            case FocusHighlightStrategy.Automatic:
+                if (_lastInteractionRequiresTraditionalHighlights == null)
                 {
-                    flags |= SemanticsFlags.IsFocused;
+                    return;
                 }
 
-                child = new Semantics(
-                    child: child,
-                    flags: flags)
-                {
-                    OnFocus = _focusNode.CanRequestFocus ? RequestSemanticFocus : null
-                };
-            }
-
-            return child;
+                newMode = _lastInteractionRequiresTraditionalHighlights.Value
+                    ? FocusHighlightMode.Touch
+                    : FocusHighlightMode.Traditional;
+                break;
+            case FocusHighlightStrategy.AlwaysTouch:
+                newMode = FocusHighlightMode.Touch;
+                break;
+            case FocusHighlightStrategy.AlwaysTraditional:
+            default:
+                newMode = FocusHighlightMode.Traditional;
+                break;
         }
 
-        public override void Dispose()
+        FocusHighlightMode oldMode = HighlightMode;
+        _highlightMode = newMode;
+        if (HighlightMode == oldMode)
         {
-            DetachNode(disposeOwned: true);
+            return;
         }
 
-        /// <summary>
-        /// The identity of the last pointer-down press a <see cref="Focus"/> claimed. Click-to-focus
-        /// is a C#-only host adaptation (Flutter leaves it to the embedder), and hit-test dispatch
-        /// runs deepest-first, so without this guard a shallower ancestor Focus would steal the
-        /// focus its descendant just took for the same press.
-        /// </summary>
-        private static PointerEvent? _lastClaimedPointerDown;
-
-        private void HandlePointerDown(PointerDownEvent @event)
+        foreach (Action<FocusHighlightMode> listener in _highlightModeListeners.ToArray())
         {
-            if (_focusNode == null || !_focusNode.CanRequestFocus)
-            {
-                return;
-            }
-
-            PointerEvent identity = @event.Original ?? @event;
-            if (ReferenceEquals(_lastClaimedPointerDown, identity))
-            {
-                return;
-            }
-
-            _lastClaimedPointerDown = identity;
-            _focusNode.RequestFocus();
-        }
-
-        private void AttachNode(FocusNode? externalNode)
-        {
-            _focusNode = externalNode ?? new FocusNode();
-            _ownsFocusNode = externalNode is null;
-            _focusNode.AttachElement(Element);
-            _focusNode.AddListener(HandleFocusChanged);
-        }
-
-        private FocusScopeNode ResolveScope()
-        {
-            return FocusScope.MaybeOf(Context) ?? FocusManager.Instance.RootScope;
-        }
-
-        private void DetachNode(bool disposeOwned)
-        {
-            if (_focusNode == null)
-            {
-                return;
-            }
-
-            _focusNode.RemoveListener(HandleFocusChanged);
-            _focusNode.RemoveTraversalEligibility(this);
-            _focusNode.TraversalGroup = null;
-            FocusManager.Instance.UnregisterNode(_focusNode);
-            _focusNode.DetachElement(Element);
-
-            if (_ownsFocusNode)
-            {
-                _focusNode.OnKeyEvent = null;
-                _focusNode.OnTextInput = null;
-                _focusNode.OnTextComposition = null;
-                _focusNode.OnTextInputState = null;
-                _focusNode.OnTextSelectionChanged = null;
-            }
-
-            if (disposeOwned && _ownsFocusNode)
-            {
-                _focusNode.Dispose();
-            }
-
-            _focusNode = null;
-            _ownsFocusNode = false;
-            _autofocusApplied = false;
-        }
-
-        private void EnsureNodeRegistration(FocusScopeNode scope)
-        {
-            FocusManager.Instance.RegisterNode(_focusNode!, scope);
-        }
-
-        private void ApplyWidgetConfiguration()
-        {
-            var node = _focusNode!;
-            bool includedByExcludeFocus = ExcludeFocus.DescendantsAreFocusableOf(Context);
-            (bool focusable, bool traversable) = FocusDescendantsScope.Resolve(Context);
-            node.CanRequestFocus = Widget.CanRequestFocus && includedByExcludeFocus && focusable;
-            node.SkipTraversal = Widget.SkipTraversal;
-            node.SetTraversalEligibility(
-                this,
-                includedByExcludeFocus && focusable && traversable);
-            node.TraversalGroup = Context.GetInherited<FocusTraversalGroupMarker>()?.GroupNode;
-            node.OnKeyEvent = Widget.OnKeyEvent;
-            node.OnTextInput = Widget.OnTextInput;
-            node.OnTextComposition = Widget.OnTextComposition;
-            node.OnTextInputState = Widget.OnTextInputState;
-            node.OnTextSelectionChanged = Widget.OnTextSelectionChanged;
-        }
-
-        /// <summary>
-        /// Flutter's <c>FocusScopeNode.autofocus</c>: an autofocus request only takes effect while nothing else
-        /// in the enclosing scope holds focus, so a node deeper in the tree keeps the focus it already claimed.
-        /// </summary>
-        private void ApplyAutofocusIfNeeded()
-        {
-            if (!Widget.Autofocus || _autofocusApplied)
-            {
-                return;
-            }
-
-            _autofocusApplied = true;
-            if (_focusNode!.Scope?.FocusedChild is not null)
-            {
-                return;
-            }
-
-            _focusNode.RequestFocus();
-        }
-
-        private void HandleFocusChanged()
-        {
-            bool focused = _focusNode?.HasFocus == true;
-            if (_focused != focused)
-            {
-                _focused = focused;
-                Widget.OnFocusChange?.Invoke(focused);
-            }
-
-            SetState(static () => { });
-        }
-
-        private void RequestSemanticFocus()
-        {
-            _focusNode?.RequestFocus();
+            listener(HighlightMode);
         }
     }
-}
 
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/focus_traversal.dart
-public sealed class ExcludeFocusTraversal : StatelessWidget
-{
-    public ExcludeFocusTraversal(
-        Widget child,
-        bool excluding = true,
-        Key? key = null) : base(key)
-    {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
-        Excluding = excluding;
-    }
-
-    public Widget Child { get; }
-
-    public bool Excluding { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return new Focus(
-            child: Child,
-            canRequestFocus: false,
-            skipTraversal: true,
-            includeSemantics: false,
-            descendantsAreTraversable: !Excluding);
-    }
-}
-
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/focus_scope.dart (ExcludeFocus)
-public sealed class ExcludeFocus : InheritedWidget
-{
-    public ExcludeFocus(
-        Widget child,
-        bool excluding = true,
-        Key? key = null) : base(key)
-    {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
-        Excluding = excluding;
-    }
-
-    public Widget Child { get; }
-
-    public bool Excluding { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
-
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        return ((ExcludeFocus)oldWidget).Excluding != Excluding;
-    }
-
-    internal static bool DescendantsAreFocusableOf(BuildContext context)
-    {
-        return context.DependOnInheritedAncestors<ExcludeFocus>().All(scope => !scope.Excluding);
-    }
+    private static FocusHighlightMode DefaultModeForPlatform =>
+        OperatingSystem.IsAndroid() || OperatingSystem.IsIOS()
+            ? FocusHighlightMode.Touch
+            : FocusHighlightMode.Traditional;
 }

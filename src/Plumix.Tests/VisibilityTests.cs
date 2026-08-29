@@ -454,7 +454,10 @@ public sealed class VisibilityTests
 
         public override Widget Build(BuildContext context)
         {
-            DescendantsAreFocusable = ExcludeFocus.DescendantsAreFocusableOf(context);
+            FocusNode? enclosing = Focus.MaybeOf(context, scopeOk: true);
+            DescendantsAreFocusable = enclosing == null
+                || (enclosing.DescendantsAreFocusable
+                    && enclosing.Ancestors.All(ancestor => ancestor.DescendantsAreFocusable));
             return new SizedBox();
         }
     }

@@ -755,6 +755,32 @@ public class Scrollable : StatefulWidget
         return context.FindAncestorStateOfType<ScrollableState>();
     }
 
+    /// <summary>
+    /// Dart parity source: <c>Scrollable.maybeOf(context, axis: ...)</c>. Skips enclosing scrollables
+    /// whose axis differs from <paramref name="axis"/> and keeps searching outwards.
+    /// </summary>
+    public static ScrollableState? MaybeOf(BuildContext context, Axis? axis)
+    {
+        if (axis == null)
+        {
+            return MaybeOf(context);
+        }
+
+        ScrollableState? found = null;
+        context.VisitAncestorElements(ancestor =>
+        {
+            if (ancestor is StatefulElement { State: ScrollableState scrollable }
+                && axis == ScrollDirectionUtils.AxisDirectionToAxis(scrollable.AxisDirection))
+            {
+                found = scrollable;
+                return false;
+            }
+
+            return true;
+        });
+        return found;
+    }
+
     public static ScrollableState Of(BuildContext context)
     {
         return MaybeOf(context)

@@ -181,7 +181,7 @@ public sealed class RadioGroup<T> : StatefulWidget
                 IReadOnlyList<FocusNode> sorted = ReadingOrderTraversalPolicy.Sort(
                     _radios
                         .Where(radio => radio.Enabled)
-                        .Select(radio => radio.FocusNode));
+                        .Select(radio => radio.FocusNode)).ToList();
                 if (sorted.Count == 0)
                 {
                     return;
@@ -251,11 +251,12 @@ public sealed class RadioGroup<T> : StatefulWidget
                 _groupValue = groupValue;
             }
 
-            public override IReadOnlyList<FocusNode> SortDescendants(
+            public override IEnumerable<FocusNode> SortDescendants(
                 IEnumerable<FocusNode> descendants,
                 FocusNode currentNode)
             {
-                IReadOnlyList<FocusNode> nodesInReadingOrder = base.SortDescendants(descendants, currentNode);
+                List<FocusNode> nodesInReadingOrder =
+                    base.SortDescendants(descendants, currentNode).ToList();
                 RadioClient<T>? selected = _radios.FirstOrDefault(IsSelected);
 
                 if (selected == null)

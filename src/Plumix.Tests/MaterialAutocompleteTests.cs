@@ -123,7 +123,9 @@ public sealed class MaterialAutocompleteTests : IDisposable
         Assert.Same(focusNode, raw.FocusNode);
         Assert.Equal(OptionsViewOpenDirection.Down, raw.OptionsViewOpenDirection);
 
-        focusNode.RequestFocus();
+        // The custom field view never attaches the node, so it needs an explicit parent before it
+        // can take focus (Dart defers `requestFocus()` on an unparented node until it is reparented).
+        FocusManager.Instance.RequestFocus(focusNode);
         harness.Pump(new Size(480, 320));
         Assert.NotNull(FindParagraph(harness.RenderView, "custom-options:6"));
     }

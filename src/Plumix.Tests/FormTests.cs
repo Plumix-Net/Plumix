@@ -105,7 +105,7 @@ public sealed class FormTests : IDisposable
 
         Assert.True(fieldFocus.RequestFocus());
         Assert.Null(fieldState!.ErrorText);
-        Assert.True(nextFocus.RequestFocus());
+        Assert.True(FocusManager.Instance.RequestFocus(nextFocus));
         harness.Pump(new Size(320, 80));
         Assert.Equal("Lost focus", fieldState.ErrorText);
 
