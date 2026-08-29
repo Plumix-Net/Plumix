@@ -988,9 +988,79 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
         base.Remove(child);
     }
 
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderViewport.sizedByParent</c>.</remarks>
+    protected override bool SizedByParent => true;
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderViewport.computeDryLayout</c>.</remarks>
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        if (Constants.KDebugMode)
+        {
+            DebugCheckHasBoundedAxis(Axis, constraints);
+        }
+
+        return constraints.Biggest;
+    }
+
+    /// <summary>
+    /// Ports Flutter's <c>debugCheckHasBoundedAxis</c> from <c>rendering/debug.dart</c>: a viewport
+    /// expands in the scroll direction, so it may not be given unbounded space on either axis.
+    /// </summary>
+    private static void DebugCheckHasBoundedAxis(Axis axis, BoxConstraints constraints)
+    {
+        if (constraints.HasBoundedHeight && constraints.HasBoundedWidth)
+        {
+            return;
+        }
+
+        if (axis == Axis.Vertical)
+        {
+            if (!constraints.HasBoundedHeight)
+            {
+                throw new AssertionError(
+                    "Vertical viewport was given unbounded height. Viewports expand in the scrolling "
+                    + "direction to fill their container. In this case, a vertical viewport was given "
+                    + "an unlimited amount of vertical space in which to expand. This situation "
+                    + "typically happens when a scrollable widget is nested inside another scrollable "
+                    + "widget.");
+            }
+
+            if (!constraints.HasBoundedWidth)
+            {
+                throw new AssertionError(
+                    "Vertical viewport was given unbounded width. Viewports expand in the cross axis "
+                    + "to fill their container and constrain their children to match their extent in "
+                    + "the cross axis. In this case, a vertical viewport was given an unlimited amount "
+                    + "of horizontal space in which to expand.");
+            }
+
+            return;
+        }
+
+        if (!constraints.HasBoundedWidth)
+        {
+            throw new AssertionError(
+                "Horizontal viewport was given unbounded width. Viewports expand in the scrolling "
+                + "direction to fill their container. In this case, a horizontal viewport was given "
+                + "an unlimited amount of horizontal space in which to expand. This situation "
+                + "typically happens when a scrollable widget is nested inside another scrollable "
+                + "widget.");
+        }
+
+        if (!constraints.HasBoundedHeight)
+        {
+            throw new AssertionError(
+                "Horizontal viewport was given unbounded height. Viewports expand in the cross axis "
+                + "to fill their container and constrain their children to match their extent in the "
+                + "cross axis. In this case, a horizontal viewport was given an unlimited amount of "
+                + "vertical space in which to expand.");
+        }
+    }
+
     protected override void PerformLayout()
     {
-        Size = Constraints.Biggest;
         switch (Axis)
         {
             case Axis.Vertical:

@@ -647,8 +647,12 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
         return ChildManager.ChildCount!.Value * _itemExtent;
     }
 
-    /// <summary>Dart's <c>sizedByParent</c>: this viewport always takes its constraints' biggest
-    /// size, which is what its <see cref="ComputeDryLayout"/> reports.</summary>
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderListWheelViewport.sizedByParent</c>.</remarks>
+    protected override bool SizedByParent => true;
+
+    /// <summary>This viewport always takes its constraints' biggest size.</summary>
+    /// <remarks>Flutter's <c>RenderListWheelViewport.computeDryLayout</c>.</remarks>
     protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Biggest;
 
     /// <summary>Gets the index of a child by looking at its <see cref="ListWheelParentData"/>.</summary>
@@ -702,8 +706,6 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
     /// </summary>
     protected override void PerformLayout()
     {
-        // Dart's sizedByParent: performResize sets the size from the constraints alone.
-        Size = Constraints.Biggest;
         Offset.ApplyViewportDimension(ViewportExtent);
         // Apply the content dimensions first if it has a known number of children (i.e. childCount
         // is not null). This is because a computed maxScrollExtent may be less than the current

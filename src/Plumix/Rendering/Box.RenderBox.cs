@@ -38,7 +38,41 @@ public abstract class RenderBox : RenderObject
                        $"RenderBox was not laid out: {GetType()}#{Diagnostics.ShortHash(this)}");
         }
 
-        protected set => _size = value;
+        protected set
+        {
+            if (Constants.KDebugMode)
+            {
+                DebugCheckSizeSetterPhase();
+            }
+
+            _size = value;
+        }
+    }
+
+    /// <summary>
+    /// Ports Dart's <c>RenderBox.size</c> setter assertions: the size may only be written by the
+    /// object itself, from <see cref="PerformResize"/> when <see cref="SizedByParent"/> is
+    /// <c>true</c>, and from <see cref="PerformLayout"/> when it is <c>false</c>.
+    /// </summary>
+    private void DebugCheckSizeSetterPhase()
+    {
+        if (SizedByParent ? DebugDoingThisResize : DebugDoingThisLayout)
+        {
+            return;
+        }
+
+        string violation = DebugDoingThisLayout
+            ? "It appears that the size setter was called from PerformLayout()."
+            : "The size setter was called from outside layout (neither PerformResize() nor "
+              + "PerformLayout() were being run for this object).";
+        string contract = SizedByParent
+            ? "Because this RenderBox has SizedByParent set to true, it must set its size in "
+              + "PerformResize()."
+            : "Because this RenderBox has SizedByParent set to false, it must set its size in "
+              + "PerformLayout().";
+        throw new AssertionError(
+            $"RenderBox size setter called incorrectly.\n{violation}\n{contract}\n"
+            + $"The RenderBox in question is: {GetType().Name}#{Diagnostics.ShortHash(this)}");
     }
 
     public bool HasSize => _size != null;
@@ -125,6 +159,36 @@ public abstract class RenderBox : RenderObject
     protected virtual Size ComputeDryLayout(BoxConstraints constraints) => constraints.Smallest;
 
     protected virtual double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) => null;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderBox.performResize</c>: sets <see cref="Size"/> to the result of
+    /// <see cref="ComputeDryLayout"/> for the current constraints. Override
+    /// <see cref="ComputeDryLayout"/> rather than this method.
+    /// </remarks>
+    protected override void PerformResize()
+    {
+        // Default behavior for subclasses that have SizedByParent = true.
+        Size = ComputeDryLayout(Constraints);
+        if (Constants.KDebugMode && (!double.IsFinite(Size.Width) || !double.IsFinite(Size.Height)))
+        {
+            throw new AssertionError(
+                $"{GetType().Name}.ComputeDryLayout returned the non-finite size {Size} during PerformResize().");
+        }
+    }
+
+    /// <inheritdoc />
+    protected override void PerformLayout()
+    {
+        if (Constants.KDebugMode && !SizedByParent)
+        {
+            throw new AssertionError(
+                $"{GetType().Name} did not implement PerformLayout().\n"
+                + "RenderBox subclasses need to either override PerformLayout() to set a size and lay "
+                + "out any children, or set SizedByParent to true so that PerformResize() sizes the "
+                + "render object.");
+        }
+    }
 
     protected void DebugCannotComputeDryLayout(string? reason = null)
     {

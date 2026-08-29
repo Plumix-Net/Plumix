@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `SizedByParent`/`PerformResize` are overridable; `RenderBox` resizes from `ComputeDryLayout` (`box.dart`).
+- Breaking: viewport, list wheel viewport, offstage, constrained overflow box and both sliders are sized by parent.
+- Added the size/geometry setter phase checks and `MarkNeedsLayoutForSizedByParentChange` (`box.dart`, `sliver.dart`).
+- Breaking: `Element.UpdateChild` is virtual; `ListWheelElement` overrides it (`list_wheel_scroll_view.dart`).
+- Added `RenderOffstage`'s offstage intrinsics/baselines and `PaintsChild`, and the overflow box's dry baseline.
 - Added CLR async-runtime elision to `FlutterError.DefaultStackFilter` (`foundation/assertions.dart`).
 - Breaking: render objects release retained layers on unmount; layers use handle ownership (`object.dart`, `layer.dart`).
 - Breaking: tap/force details use Dart-shaped diagnostic reference classes (`tap.dart`, `force_press.dart`).

@@ -107,6 +107,20 @@ public sealed class ListWheelScrollViewTests
     }
 
     [Fact]
+    public void RenderListWheelViewport_IsSizedByParent_AndTakesTheBiggestConstraint()
+    {
+        var offset = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
+        var viewport = new RenderListWheelViewport(new NoChildManager(), offset, itemExtent: 10);
+
+        Assert.Equal(new Size(100, 80), viewport.GetDryLayout(BoxConstraints.Loose(new Size(100, 80))));
+
+        viewport.Layout(BoxConstraints.Loose(new Size(100, 80)), parentUsesSize: true);
+
+        // PerformResize sized it; PerformLayout must not have touched the size.
+        Assert.Equal(new Size(100, 80), viewport.Size);
+    }
+
+    [Fact]
     public void FixedExtentScrollController_DebugLabelShowsInToString()
     {
         var controller = new FixedExtentScrollController(debugLabel: "MyCustomWidget");

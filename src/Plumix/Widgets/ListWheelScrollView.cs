@@ -955,7 +955,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
         for (int index = firstIndex; index <= lastIndex; ++index)
         {
             _childElements.TryGetValue(index, out Element? current);
-            Element? newChild = UpdateChildWithParentData(current, RetrieveWidget(index), index);
+            Element? newChild = UpdateChild(current, RetrieveWidget(index), index);
             if (newChild != null)
             {
                 _childElements[index] = newChild;
@@ -988,7 +988,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
         bool insertFirst = after == null;
         Debug.Assert(insertFirst || _childElements.ContainsKey(index - 1));
         _childElements.TryGetValue(index, out Element? current);
-        Element? newChild = UpdateChildWithParentData(current, RetrieveWidget(index), index);
+        Element? newChild = UpdateChild(current, RetrieveWidget(index), index);
         if (newChild != null)
         {
             _childElements[index] = newChild;
@@ -1003,7 +1003,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
     {
         int index = TypedRenderObject.IndexOf(child);
         Debug.Assert(_childElements.ContainsKey(index));
-        Element? result = UpdateChildWithParentData(_childElements[index], null, index);
+        Element? result = UpdateChild(_childElements[index], null, index);
         Debug.Assert(result == null);
         _childElements.Remove(index);
         Debug.Assert(!_childElements.ContainsKey(index));
@@ -1011,14 +1011,14 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
 
     /// <summary>Dart's <c>ListWheelElement.updateChild</c> override: keeps the child's previous
     /// layout offset and stamps its index into the parent data.</summary>
-    private Element? UpdateChildWithParentData(Element? child, Widget? newWidget, int newSlot)
+    internal override Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
     {
         var oldParentData = child?.RenderObject?.parentData as ListWheelParentData;
-        Element? newChild = UpdateChild(child, newWidget, newSlot);
+        Element? newChild = base.UpdateChild(child, newWidget, newSlot);
         var newParentData = newChild?.RenderObject?.parentData as ListWheelParentData;
         if (newParentData != null)
         {
-            newParentData.Index = newSlot;
+            newParentData.Index = (int)newSlot!;
             if (oldParentData != null)
             {
                 newParentData.offset = oldParentData.offset;

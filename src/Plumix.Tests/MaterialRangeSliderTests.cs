@@ -75,6 +75,24 @@ public sealed class MaterialRangeSliderTests
     }
 
     [Fact]
+    public void RangeSlider_RenderObject_IsSizedByParent_SoItsDryLayoutMatchesItsSize()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new SizedBox(
+                    width: 220.0,
+                    child: new RangeSlider(values: new RangeValues(0.2, 0.8), onChanged: _ => { }))));
+        harness.Pump(new Size(260.0, 120.0));
+
+        var render = (RenderBox)FindDescendantByTypeName(harness.RenderView, "RenderRangeSlider")!;
+
+        // A sized-by-parent box sizes itself in PerformResize from ComputeDryLayout alone, so the
+        // dry layout for the constraints it was laid out with has to reproduce its size exactly.
+        Assert.Equal(render.Size, render.GetDryLayout(render.Constraints));
+    }
+
+    [Fact]
     public void RangeSlider_Constructor_Throws_OnInvalidArguments()
     {
         Assert.Throws<ArgumentException>(() => new RangeSlider(values: new RangeValues(0.2, 0.8), min: 1, max: 0, onChanged: _ => { }));

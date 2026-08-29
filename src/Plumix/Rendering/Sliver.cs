@@ -739,6 +739,11 @@ public abstract class RenderSliver : RenderBox
         get => _geometry;
         protected set
         {
+            if (Constants.KDebugMode)
+            {
+                DebugCheckGeometrySetterPhase();
+            }
+
             value.DebugAssertIsValid(() =>
             [
                 new DiagnosticsProperty<RenderSliver>(
@@ -748,6 +753,32 @@ public abstract class RenderSliver : RenderBox
             ]);
             _geometry = value;
         }
+    }
+
+    /// <summary>
+    /// Ports Dart's <c>RenderSliver.geometry</c> setter assertions: the geometry may only be written
+    /// by the sliver itself, from <see cref="PerformResize"/> when <see cref="SizedByParent"/> is
+    /// <c>true</c>, and from <c>PerformLayout</c> when it is <c>false</c>.
+    /// </summary>
+    private void DebugCheckGeometrySetterPhase()
+    {
+        if (SizedByParent ? DebugDoingThisResize : DebugDoingThisLayout)
+        {
+            return;
+        }
+
+        string violation = DebugDoingThisLayout
+            ? "It appears that the geometry setter was called from PerformLayout()."
+            : "The geometry setter was called from outside layout (neither PerformResize() nor "
+              + "PerformLayout() were being run for this object).";
+        string contract = SizedByParent
+            ? "Because this RenderSliver has SizedByParent set to true, it must set its geometry in "
+              + "PerformResize()."
+            : "Because this RenderSliver has SizedByParent set to false, it must set its geometry in "
+              + "PerformLayout().";
+        throw new AssertionError(
+            $"RenderSliver geometry setter called incorrectly.\n{violation}\n{contract}\n"
+            + $"The RenderSliver in question is: {GetType().Name}#{Diagnostics.ShortHash(this)}");
     }
 
     /// <summary>

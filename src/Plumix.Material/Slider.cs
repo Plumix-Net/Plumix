@@ -1741,9 +1741,15 @@ internal sealed class RenderSlider : RenderBox
         }
     }
 
-    protected override void PerformLayout()
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>_RenderSlider.sizedByParent</c>.</remarks>
+    protected override bool SizedByParent => true;
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>_RenderSlider.computeDryLayout</c>.</remarks>
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
     {
-        double desiredWidth = Constraints.HasBoundedWidth ? Constraints.MaxWidth : PreferredWidth;
+        double desiredWidth = constraints.HasBoundedWidth ? constraints.MaxWidth : PreferredWidth;
         if (!double.IsFinite(desiredWidth) || desiredWidth <= 0)
         {
             desiredWidth = DefaultTrackWidth;
@@ -1756,7 +1762,7 @@ internal sealed class RenderSlider : RenderBox
             desiredHeight = Math.Max(TrackHeight, ThumbSize.Height);
         }
 
-        Size = Constraints.Constrain(new Size(desiredWidth, desiredHeight));
+        return constraints.Constrain(new Size(desiredWidth, desiredHeight));
     }
 
     public override void Paint(PaintingContext ctx, Point offset)

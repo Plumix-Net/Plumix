@@ -100,6 +100,24 @@ public sealed class MaterialSliderTests
     }
 
     [Fact]
+    public void Slider_RenderObject_IsSizedByParent_SoItsDryLayoutMatchesItsSize()
+    {
+        using var harness = new WidgetRenderHarness(
+            new Theme(
+                data: ThemeData.Light,
+                child: new SizedBox(
+                    width: 220.0,
+                    child: new Slider(value: 0.5, onChanged: _ => { }))));
+        harness.Pump(new Size(260.0, 120.0));
+
+        var render = (RenderBox)FindDescendantByTypeName(harness.RenderView, "RenderSlider")!;
+
+        // A sized-by-parent box sizes itself in PerformResize from ComputeDryLayout alone, so the
+        // dry layout for the constraints it was laid out with has to reproduce its size exactly.
+        Assert.Equal(render.Size, render.GetDryLayout(render.Constraints));
+    }
+
+    [Fact]
     public void Slider_Adaptive_UsesCupertinoOnlyOnApplePlatforms()
     {
         using var iosHarness = new WidgetRenderHarness(

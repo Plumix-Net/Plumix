@@ -460,7 +460,7 @@ public abstract class Element
         return element;
     }
 
-    internal Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
+    internal virtual Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
     {
         if (newWidget == null)
         {

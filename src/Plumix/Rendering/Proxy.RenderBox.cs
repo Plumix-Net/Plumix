@@ -1024,8 +1024,48 @@ public sealed class RenderConstrainedOverflowBox : RenderProxyBox
             }
 
             _fit = value;
-            MarkNeedsLayout();
+            MarkNeedsLayoutForSizedByParentChange();
         }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderConstrainedOverflowBox.sizedByParent</c>: with
+    /// <see cref="OverflowBoxFit.DeferToChild"/> the size is as small as the child when it does not
+    /// overflow, so the box cannot be sized by its parent alone.
+    /// </remarks>
+    protected override bool SizedByParent => _fit switch
+    {
+        OverflowBoxFit.Max => true,
+        OverflowBoxFit.DeferToChild => false,
+        _ => throw new ArgumentOutOfRangeException(nameof(Fit)),
+    };
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) => _fit switch
+    {
+        OverflowBoxFit.Max => constraints.Biggest,
+        OverflowBoxFit.DeferToChild => Child?.GetDryLayout(constraints) ?? constraints.Smallest,
+        _ => throw new ArgumentOutOfRangeException(nameof(Fit)),
+    };
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        RenderBox? child = Child;
+        if (child == null)
+        {
+            return null;
+        }
+
+        BoxConstraints childConstraints = GetInnerConstraints(constraints);
+        double? result = child.GetDryBaseline(childConstraints, baseline);
+        if (result == null)
+        {
+            return null;
+        }
+
+        Size childSize = child.GetDryLayout(childConstraints);
+        Size size = GetDryLayout(constraints);
+        return result + _alignment.AlongOffset(size, childSize).Y;
     }
 
     protected override void PerformLayout()
@@ -1033,22 +1073,19 @@ public sealed class RenderConstrainedOverflowBox : RenderProxyBox
         if (Child != null)
         {
             Child.Layout(GetInnerConstraints(Constraints), parentUsesSize: true);
-            Size = _fit switch
+            if (_fit == OverflowBoxFit.DeferToChild)
             {
-                OverflowBoxFit.Max => Constraints.Biggest,
-                OverflowBoxFit.DeferToChild => Constraints.Constrain(Child.Size),
-                _ => throw new ArgumentOutOfRangeException()
-            };
+                Size = Constraints.Constrain(Child.Size);
+            }
+
             ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, Child.Size);
             return;
         }
 
-        Size = _fit switch
+        if (_fit == OverflowBoxFit.DeferToChild)
         {
-            OverflowBoxFit.Max => Constraints.Biggest,
-            OverflowBoxFit.DeferToChild => Constraints.Smallest,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+            Size = Constraints.Smallest;
+        }
     }
 
     private BoxConstraints GetInnerConstraints(BoxConstraints constraints)
@@ -1188,21 +1225,40 @@ public sealed class RenderOffstage : RenderProxyBox
             }
 
             _offstage = value;
-            MarkNeedsLayout();
+            MarkNeedsLayoutForSizedByParentChange();
         }
     }
+
+    protected override double ComputeMinIntrinsicWidth(double height) =>
+        _offstage ? 0.0 : base.ComputeMinIntrinsicWidth(height);
+
+    protected override double ComputeMaxIntrinsicWidth(double height) =>
+        _offstage ? 0.0 : base.ComputeMaxIntrinsicWidth(height);
+
+    protected override double ComputeMinIntrinsicHeight(double width) =>
+        _offstage ? 0.0 : base.ComputeMinIntrinsicHeight(width);
+
+    protected override double ComputeMaxIntrinsicHeight(double width) =>
+        _offstage ? 0.0 : base.ComputeMaxIntrinsicHeight(width);
+
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) =>
+        _offstage ? null : base.ComputeDistanceToActualBaseline(baseline);
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderOffstage.sizedByParent</c>: an offstage child takes no room.</remarks>
+    protected override bool SizedByParent => _offstage;
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) =>
+        _offstage ? constraints.Smallest : base.ComputeDryLayout(constraints);
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) =>
+        _offstage ? null : base.ComputeDryBaseline(constraints, baseline);
 
     protected override void PerformLayout()
     {
         if (_offstage)
         {
-            if (Child != null)
-            {
-                Child.Layout(Constraints, parentUsesSize: true);
-                ((BoxParentData)Child.parentData!).offset = new Point(0, 0);
-            }
-
-            Size = Constraints.Smallest;
+            Child?.Layout(Constraints);
             return;
         }
 
@@ -1213,6 +1269,9 @@ public sealed class RenderOffstage : RenderProxyBox
     {
         return !_offstage && base.HitTest(result, position);
     }
+
+    /// <inheritdoc />
+    public override bool PaintsChild(RenderObject child) => !_offstage;
 
     public override void Paint(PaintingContext ctx, Point offset)
     {

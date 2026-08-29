@@ -337,6 +337,14 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// Whether [invokeLayoutCallback] for this render object is currently running.
     public bool DebugDoingThisLayoutWithCallback { get; private set; } = false;
 
+    /// <summary>Whether <see cref="PerformResize"/> for this render object is currently running.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugDoingThisResize</c>.</remarks>
+    public bool DebugDoingThisResize { get; private set; }
+
+    /// <summary>Whether <see cref="PerformLayout"/> for this render object is currently running.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugDoingThisLayout</c>.</remarks>
+    public bool DebugDoingThisLayout { get; private set; }
+
     private IConstraints? _constraints;
 
     protected virtual IConstraints Constraints
@@ -365,6 +373,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             throw new InvalidOperationException("RenderObject.layout requires normalized constraints.");
         }
 
+        // Dart recomputes the boundary flag before the early-out, so that a repeat layout with the
+        // same constraints but a different `parentUsesSize` still lands on the right boundary.
+        _isRelayoutBoundary = !parentUsesSize || SizedByParent || constraints.IsTight || Parent == null;
+        _debugCanParentUseSize = parentUsesSize;
+
         if (!_needsLayout
             && !_descendantNeedsLayout
             && _constraints is BoxConstraints previousConstraints
@@ -373,24 +386,31 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             return;
         }
 
-        _isRelayoutBoundary = !parentUsesSize || SizedByParent || constraints.IsTight || Parent == null;
-        _debugCanParentUseSize = parentUsesSize;
-
         _constraints = constraints;
 
-        RenderObject? previousActiveLayout = _debugActiveLayout;
-        _debugActiveLayout = this;
-        try
+        if (SizedByParent)
         {
-            if (SizedByParent)
+            DebugDoingThisResize = true;
+            try
             {
                 PerformResize();
             }
+            finally
+            {
+                DebugDoingThisResize = false;
+            }
+        }
 
+        RenderObject? previousActiveLayout = _debugActiveLayout;
+        _debugActiveLayout = this;
+        DebugDoingThisLayout = true;
+        try
+        {
             PerformLayout();
         }
         finally
         {
+            DebugDoingThisLayout = false;
             _debugActiveLayout = previousActiveLayout;
         }
 
@@ -401,12 +421,29 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         MarkNeedsSemanticsUpdate();
     }
 
-    protected bool SizedByParent { get; private set; } = false;
+    /// <summary>
+    /// Whether the constraints are the only input to the sizing algorithm (in particular, child
+    /// nodes have no impact).
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.sizedByParent</c>. Returning <c>false</c> is always correct, but
+    /// returning <c>true</c> is more efficient because the size does not have to be recomputed when
+    /// the constraints do not change. Subclasses that return <c>true</c> must not change their
+    /// dimensions in <see cref="PerformLayout"/>; that work belongs in <see cref="PerformResize"/>
+    /// or — for <see cref="RenderBox"/> subclasses — in <c>ComputeDryLayout</c>. When the value can
+    /// change, the subclass must call <see cref="MarkNeedsLayoutForSizedByParentChange"/>.
+    /// </remarks>
+    protected virtual bool SizedByParent => false;
 
     /// <summary>
-    /// Updates the render objects size using only the constraints.
+    /// Updates the render object's size using only the constraints.
     /// </summary>
-    protected void PerformResize()
+    /// <remarks>
+    /// Flutter's <c>RenderObject.performResize</c>. Called by <see cref="Layout"/> only when
+    /// <see cref="SizedByParent"/> is <c>true</c>. Subclasses of <see cref="RenderBox"/> should
+    /// override <c>ComputeDryLayout</c> instead of this method.
+    /// </remarks>
+    protected virtual void PerformResize()
     {
     }
 
@@ -473,6 +510,27 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         }
 
         Owner?.RequestLayoutFor(this);
+    }
+
+    /// <summary>
+    /// Marks this render object's layout information as dirty (like <see cref="MarkNeedsLayout"/>)
+    /// and additionally handles the work needed when <see cref="SizedByParent"/> changed value.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.markNeedsLayoutForSizedByParentChange</c>, whose documented
+    /// precondition is a non-null <see cref="Parent"/> (it asserts on one). A parentless render
+    /// object is already its own relayout boundary, so there is nothing left to propagate and
+    /// <see cref="MarkNeedsLayout"/> alone is sufficient.
+    /// </remarks>
+    public void MarkNeedsLayoutForSizedByParentChange()
+    {
+        MarkNeedsLayout();
+        if (Parent == null)
+        {
+            return;
+        }
+
+        MarkParentNeedsLayout();
     }
 
     protected void MarkParentNeedsLayout()
