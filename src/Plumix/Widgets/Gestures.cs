@@ -144,6 +144,11 @@ public sealed class RawGestureDetector : StatefulWidget
         Action<DragUpdateDetails>? onPanUpdate = null,
         Action<DragEndDetails>? onPanEnd = null,
         Action? onPanCancel = null,
+        Action<ScaleStartDetails>? onScaleStart = null,
+        Action<ScaleUpdateDetails>? onScaleUpdate = null,
+        Action<ScaleEndDetails>? onScaleEnd = null,
+        bool trackpadScrollCausesScale = false,
+        Point? trackpadScrollToScaleFactor = null,
         GestureVelocityTrackerBuilder? velocityTrackerBuilder = null,
         IReadOnlySet<PointerDeviceKind>? supportedDevices = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
@@ -195,6 +200,12 @@ public sealed class RawGestureDetector : StatefulWidget
         OnPanUpdate = onPanUpdate;
         OnPanEnd = onPanEnd;
         OnPanCancel = onPanCancel;
+        OnScaleStart = onScaleStart;
+        OnScaleUpdate = onScaleUpdate;
+        OnScaleEnd = onScaleEnd;
+        TrackpadScrollCausesScale = trackpadScrollCausesScale;
+        TrackpadScrollToScaleFactor = trackpadScrollToScaleFactor
+            ?? ScaleGestureRecognizer.KDefaultTrackpadScrollToScaleFactor;
         VelocityTrackerBuilder = velocityTrackerBuilder;
         SupportedDevices = supportedDevices;
         DragStartBehavior = dragStartBehavior;
@@ -286,6 +297,21 @@ public sealed class RawGestureDetector : StatefulWidget
 
     public Action? OnPanCancel { get; }
 
+    /// <summary>The pointers established a focal point and an initial scale of 1.0.</summary>
+    public Action<ScaleStartDetails>? OnScaleStart { get; }
+
+    /// <summary>The pointers indicated a new focal point and/or scale.</summary>
+    public Action<ScaleUpdateDetails>? OnScaleUpdate { get; }
+
+    /// <summary>The pointers are no longer in contact with the screen.</summary>
+    public Action<ScaleEndDetails>? OnScaleEnd { get; }
+
+    /// <summary>Whether scrolling up/down on a trackpad scales instead of panning.</summary>
+    public bool TrackpadScrollCausesScale { get; }
+
+    /// <summary>Controls the direction and magnitude of the scale a trackpad scroll converts to.</summary>
+    public Point TrackpadScrollToScaleFactor { get; }
+
     public GestureVelocityTrackerBuilder? VelocityTrackerBuilder { get; }
 
     public IReadOnlySet<PointerDeviceKind>? SupportedDevices { get; }
@@ -327,6 +353,7 @@ public sealed class RawGestureDetector : StatefulWidget
         private HorizontalDragGestureRecognizer? _horizontalDrag;
         private VerticalDragGestureRecognizer? _verticalDrag;
         private PanGestureRecognizer? _pan;
+        private ScaleGestureRecognizer? _scale;
         private readonly Dictionary<Type, GestureRecognizer> _customRecognizers = [];
         private bool _dragEnabled = true;
 
@@ -374,6 +401,7 @@ public sealed class RawGestureDetector : StatefulWidget
             DisposeRecognizer(ref _horizontalDrag);
             DisposeRecognizer(ref _verticalDrag);
             DisposeRecognizer(ref _pan);
+            DisposeRecognizer(ref _scale);
             foreach (GestureRecognizer recognizer in _customRecognizers.Values)
             {
                 recognizer.Dispose();
@@ -588,6 +616,7 @@ public sealed class RawGestureDetector : StatefulWidget
             _horizontalDrag?.AddPointer(@event);
             _verticalDrag?.AddPointer(@event);
             _pan?.AddPointer(@event);
+            _scale?.AddPointer(@event);
         }
 
         /// <summary>
@@ -619,6 +648,7 @@ public sealed class RawGestureDetector : StatefulWidget
             _horizontalDrag?.AddPointerPanZoom(@event);
             _verticalDrag?.AddPointerPanZoom(@event);
             _pan?.AddPointerPanZoom(@event);
+            _scale?.AddPointerPanZoom(@event);
         }
 
         private void SyncRecognizers()
@@ -634,6 +664,7 @@ public sealed class RawGestureDetector : StatefulWidget
                 DisposeRecognizer(ref _horizontalDrag);
                 DisposeRecognizer(ref _verticalDrag);
                 DisposeRecognizer(ref _pan);
+                DisposeRecognizer(ref _scale);
                 SyncCustomRecognizers(gestures);
                 return;
             }
@@ -782,6 +813,23 @@ public sealed class RawGestureDetector : StatefulWidget
             {
                 DisposeRecognizer(ref _pan);
             }
+
+            if (widget.OnScaleStart != null || widget.OnScaleUpdate != null || widget.OnScaleEnd != null)
+            {
+                _scale ??= new ScaleGestureRecognizer();
+                _scale.OnStart = widget.OnScaleStart;
+                _scale.OnUpdate = widget.OnScaleUpdate;
+                _scale.OnEnd = widget.OnScaleEnd;
+                _scale.DragStartBehavior = widget.DragStartBehavior;
+                _scale.SupportedDevices = widget.SupportedDevices;
+                _scale.GestureSettings = widget.GestureSettings;
+                _scale.TrackpadScrollCausesScale = widget.TrackpadScrollCausesScale;
+                _scale.TrackpadScrollToScaleFactor = widget.TrackpadScrollToScaleFactor;
+            }
+            else
+            {
+                DisposeRecognizer(ref _scale);
+            }
         }
 
         private void SyncCustomRecognizers(IReadOnlyDictionary<Type, IGestureRecognizerFactory> gestures)
@@ -857,10 +905,20 @@ public sealed class GestureDetector : StatelessWidget
         Action<DragUpdateDetails>? onPanUpdate = null,
         Action<DragEndDetails>? onPanEnd = null,
         Action? onPanCancel = null,
+        Action<ScaleStartDetails>? onScaleStart = null,
+        Action<ScaleUpdateDetails>? onScaleUpdate = null,
+        Action<ScaleEndDetails>? onScaleEnd = null,
+        bool trackpadScrollCausesScale = false,
+        Point? trackpadScrollToScaleFactor = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         bool excludeFromSemantics = false,
         Key? key = null) : base(key)
     {
+        AssertRecognizerCombination(
+            onHorizontalDragStart != null || onHorizontalDragUpdate != null || onHorizontalDragEnd != null,
+            onVerticalDragStart != null || onVerticalDragUpdate != null || onVerticalDragEnd != null,
+            onPanStart != null || onPanUpdate != null || onPanEnd != null,
+            onScaleStart != null || onScaleUpdate != null || onScaleEnd != null);
         Child = child;
         ExcludeFromSemantics = excludeFromSemantics;
         Behavior = behavior;
@@ -893,7 +951,47 @@ public sealed class GestureDetector : StatelessWidget
         OnPanUpdate = onPanUpdate;
         OnPanEnd = onPanEnd;
         OnPanCancel = onPanCancel;
+        OnScaleStart = onScaleStart;
+        OnScaleUpdate = onScaleUpdate;
+        OnScaleEnd = onScaleEnd;
+        TrackpadScrollCausesScale = trackpadScrollCausesScale;
+        TrackpadScrollToScaleFactor = trackpadScrollToScaleFactor
+            ?? ScaleGestureRecognizer.KDefaultTrackpadScrollToScaleFactor;
         DragStartBehavior = dragStartBehavior;
+    }
+
+    /// <summary>
+    /// Dart's constructor assert: scale is a superset of pan, so the two are redundant together,
+    /// and either of them is swallowed by having both drag axes.
+    /// </summary>
+    private static void AssertRecognizerCombination(
+        bool haveHorizontalDrag,
+        bool haveVerticalDrag,
+        bool havePan,
+        bool haveScale)
+    {
+        if (!havePan && !haveScale)
+        {
+            return;
+        }
+
+        if (havePan && haveScale)
+        {
+            throw new ArgumentException(
+                "Incorrect GestureDetector arguments. Having both a pan gesture recognizer and a "
+                + "scale gesture recognizer is redundant; scale is a superset of pan. Just use the "
+                + "scale gesture recognizer.");
+        }
+
+        if (haveVerticalDrag && haveHorizontalDrag)
+        {
+            string recognizer = havePan ? "pan" : "scale";
+            throw new ArgumentException(
+                "Incorrect GestureDetector arguments. Simultaneously having a vertical drag gesture "
+                + "recognizer, a horizontal drag gesture recognizer, and a "
+                + $"{recognizer} gesture recognizer will result in the {recognizer} gesture "
+                + "recognizer being ignored, since the other two will catch all drags.");
+        }
     }
 
     public Widget? Child { get; }
@@ -955,6 +1053,21 @@ public sealed class GestureDetector : StatelessWidget
 
     public Action? OnPanCancel { get; }
 
+    /// <summary>The pointers established a focal point and an initial scale of 1.0.</summary>
+    public Action<ScaleStartDetails>? OnScaleStart { get; }
+
+    /// <summary>The pointers indicated a new focal point and/or scale.</summary>
+    public Action<ScaleUpdateDetails>? OnScaleUpdate { get; }
+
+    /// <summary>The pointers are no longer in contact with the screen.</summary>
+    public Action<ScaleEndDetails>? OnScaleEnd { get; }
+
+    /// <summary>Whether scrolling up/down on a trackpad scales instead of panning.</summary>
+    public bool TrackpadScrollCausesScale { get; }
+
+    /// <summary>Controls the direction and magnitude of the scale a trackpad scroll converts to.</summary>
+    public Point TrackpadScrollToScaleFactor { get; }
+
     public DragStartBehavior DragStartBehavior { get; }
 
     public override Widget Build(BuildContext context)
@@ -992,6 +1105,11 @@ public sealed class GestureDetector : StatelessWidget
             onPanUpdate: OnPanUpdate,
             onPanEnd: OnPanEnd,
             onPanCancel: OnPanCancel,
+            onScaleStart: OnScaleStart,
+            onScaleUpdate: OnScaleUpdate,
+            onScaleEnd: OnScaleEnd,
+            trackpadScrollCausesScale: TrackpadScrollCausesScale,
+            trackpadScrollToScaleFactor: TrackpadScrollToScaleFactor,
             dragStartBehavior: DragStartBehavior);
     }
 }

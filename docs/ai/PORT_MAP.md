@@ -282,7 +282,8 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `gestures/multitap.dart` | `src/Plumix/Gestures/Multitap.cs` | `src/Plumix.Tests/MultitapGestureTests.cs` | — |
 | `gestures/pointer_router.dart` | `src/Plumix/Gestures/PointerRouter.cs` | `src/Plumix.Tests/PointerRouterTests.cs` | — |
 | `gestures/pointer_signal_resolver.dart` | `src/Plumix/Gestures/PointerSignalResolver.cs` | `src/Plumix.Tests/PointerSignalResolverTests.cs` | — |
-| `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs` _(reference)_<br>`src/Plumix/UI/DragStartBehavior.cs` | `src/Plumix.Tests/DragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/LongPressGestureRecognizerTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapGestureRecognizerTests.cs` | `dart_sample/lib/demos/general/gesture_recognizer_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/GestureRecognizerDemoPage.cs` |
+| `gestures/recognizer.dart` | `src/Plumix/Gestures/GestureRecognizer.cs` _(reference)_<br>`src/Plumix/UI/DragStartBehavior.cs` | `src/Plumix.Tests/DragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/LongPressGestureRecognizerTests.cs`<br>`src/Plumix.Tests/MultiDragGestureRecognizerTests.cs`<br>`src/Plumix.Tests/ScaleGestureRecognizerTests.cs`<br>`src/Plumix.Tests/TapGestureRecognizerTests.cs` | `dart_sample/lib/demos/general/gesture_recognizer_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/GestureRecognizerDemoPage.cs` |
+| `gestures/scale.dart` | `src/Plumix/Gestures/ScaleGestureRecognizer.cs` | `src/Plumix.Tests/ScaleGestureRecognizerTests.cs` | — |
 | `gestures/tap.dart` | `src/Plumix/Gestures/TapGestureRecognizer.cs` | `src/Plumix.Tests/TapGestureRecognizerTests.cs` | — |
 | `gestures/tap_and_drag.dart` | `src/Plumix/Gestures/TapAndDrag.cs` | `src/Plumix.Tests/TapAndDragGestureTests.cs` | — |
 | `gestures/team.dart` | `src/Plumix/Gestures/GestureArenaTeam.cs` | — | — |
@@ -624,8 +625,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 502
-- C# files carrying a marker: 645
+- Flutter files mapped: 503
+- C# files carrying a marker: 646
 - C# files without a marker: 31
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 52

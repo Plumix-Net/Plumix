@@ -13,9 +13,9 @@ namespace Plumix;
 // Dart parity source: dart_sample/lib/demos/general/gesture_recognizer_demo_page.dart
 
 /// <summary>
-/// Drives <see cref="HorizontalDragGestureRecognizer"/> and <see cref="LongPressGestureRecognizer"/>
-/// through <see cref="RawGestureDetector"/> so the drag-start behavior, the accept threshold and the
-/// per-button long-press callbacks are all visible.
+/// Drives <see cref="HorizontalDragGestureRecognizer"/>, <see cref="LongPressGestureRecognizer"/> and
+/// <see cref="ScaleGestureRecognizer"/> so the drag-start behavior, the accept threshold, the
+/// per-button long-press callbacks and pinch/zoom/rotate are all visible.
 /// </summary>
 public sealed class GestureRecognizerDemoPage : StatefulWidget
 {
@@ -28,9 +28,18 @@ public sealed class GestureRecognizerDemoPageState : State
 
     private readonly List<string> _dragLog = [];
     private readonly List<string> _longPressLog = [];
+    private readonly List<string> _scaleLog = [];
     private DragStartBehavior _dragStartBehavior = DragStartBehavior.Start;
     private bool _onlyAcceptDragOnThreshold;
+    private bool _trackpadScrollCausesScale;
     private double _offset;
+    private double _scale = 1.0;
+    private double _baseScale = 1.0;
+    private double _rotation;
+    private double _baseRotation;
+    private Point _translation;
+    private Point _baseTranslation;
+    private Point _startFocalPoint;
 
     public override Widget Build(BuildContext context)
     {
@@ -39,7 +48,7 @@ public sealed class GestureRecognizerDemoPageState : State
             spacing: 16,
             children:
             [
-                new Text("Drag and long-press recognizers", fontSize: 20, color: Colors.Black),
+                new Text("Drag, long-press and scale recognizers", fontSize: 20, color: Colors.Black),
                 new Text(
                     "A drag accepts once the pointer travels past the device hit slop (18 logical pixels for "
                     + "touch, 1 for a mouse). DragStartBehavior decides whether that travelled distance is "
@@ -64,6 +73,19 @@ public sealed class GestureRecognizerDemoPageState : State
                     color: Colors.DimGray),
                 BuildLongPressSurface(),
                 BuildLog("Long-press events", _longPressLog),
+                new Text(
+                    "The scale recognizer tracks every pointer at once: two fingers pinch and rotate, one "
+                    + "finger pans, and a trackpad pan/zoom gesture counts as two pointers. It wins the arena "
+                    + "once the span moves past the scale slop, the focal point past the pan slop, or the "
+                    + "pan/zoom scale differs by more than 5%.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                BuildSwitchRow(
+                    "TrackpadScrollCausesScale (a trackpad scroll zooms instead of panning)",
+                    _trackpadScrollCausesScale,
+                    value => SetState(() => _trackpadScrollCausesScale = value)),
+                BuildScaleSurface(),
+                BuildLog("Scale events", _scaleLog),
             ]);
     }
 
@@ -158,6 +180,48 @@ public sealed class GestureRecognizerDemoPageState : State
                         "Press and hold with any mouse button",
                         fontSize: 14,
                         color: Color.Parse("#FF31506F")))));
+    }
+
+    private Widget BuildScaleSurface()
+    {
+        return new GestureDetector(
+            behavior: HitTestBehavior.Opaque,
+            trackpadScrollCausesScale: _trackpadScrollCausesScale,
+            onScaleStart: details =>
+            {
+                _baseScale = _scale;
+                _baseRotation = _rotation;
+                _baseTranslation = _translation;
+                _startFocalPoint = details.FocalPoint;
+                Log(_scaleLog, $"start with {details.PointerCount} pointer(s)");
+            },
+            onScaleUpdate: details => SetState(() =>
+            {
+                _scale = Math.Clamp(_baseScale * details.Scale, 0.5, 4.0);
+                _rotation = _baseRotation + details.Rotation;
+                Point moved = details.FocalPoint - _startFocalPoint;
+                _translation = new Point(
+                    Math.Clamp(_baseTranslation.X + moved.X, -96.0, 96.0),
+                    Math.Clamp(_baseTranslation.Y + moved.Y, -40.0, 40.0));
+                AppendLog(
+                    _scaleLog,
+                    $"scale {details.Scale:F2}, rotation {details.Rotation:F2}, {details.PointerCount} pointer(s)");
+            }),
+            onScaleEnd: details => Log(_scaleLog, $"end at {details.ScaleVelocity:F0} px/s"),
+            child: new Container(
+                height: 176,
+                color: Color.Parse("#FFF4F7FA"),
+                child: new Center(
+                    child: Widgets.Transform.Translate(
+                        offset: _translation,
+                        child: Widgets.Transform.Rotate(
+                            angle: _rotation,
+                            child: Widgets.Transform.Scale(
+                                scale: _scale,
+                                child: new Container(
+                                    width: 72,
+                                    height: 72,
+                                    color: Color.Parse("#FF31506F"))))))));
     }
 
     private static Widget BuildLog(string title, List<string> lines)

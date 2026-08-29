@@ -339,7 +339,7 @@ public abstract class OneSequenceGestureRecognizer : GestureRecognizer, IGesture
 
     protected override void AddAllowedPointer(PointerDownEvent @event)
     {
-        StartTrackingPointer(@event.Pointer);
+        StartTrackingPointer(@event.Pointer, @event.Transform);
     }
 
     protected override void HandleNonAllowedPointer(PointerDownEvent @event)

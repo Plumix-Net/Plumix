@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `ScaleGestureRecognizer` with `Scale{Start,Update,End}Details` and pan/zoom aggregation (`gestures/scale.dart`).
+- Added `GestureDetector` `OnScale*` and the trackpad scroll-to-scale options (`widgets/gesture_detector.dart`).
+- Breaking: `OneSequenceGestureRecognizer.AddAllowedPointer` routes with the event's transform (`recognizer.dart`).
+- Added a pinch/zoom/rotate section to the gesture recognizer demo page in both samples.
 - Added `PointerPanZoom{Start,Update,End}Event` with pan/scale/rotation and local mapping (`gestures/events.dart`).
 - Added `GestureRecognizer.AddPointerPanZoom`/`AddAllowedPointerPanZoom`/`IsPointerPanZoomAllowed` (`recognizer.dart`).
 - Added the `DragGestureRecognizer` trackpad pan/zoom arms and pan-space velocity tracking (`gestures/monodrag.dart`).
