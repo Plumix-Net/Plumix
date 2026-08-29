@@ -83,6 +83,29 @@ public static class Scheduler
     }
 
     /// <summary>
+    /// Schedules a frame unless one is already being produced, in which case the frame in flight
+    /// already covers the update.
+    /// </summary>
+    /// <remarks>
+    /// Dart parity source: <c>SchedulerBinding.ensureVisualUpdate</c>, which returns without
+    /// scheduling in the <c>transientCallbacks</c>, <c>midFrameMicrotasks</c> and
+    /// <c>persistentCallbacks</c> phases (Plumix has no separate microtask phase). Its
+    /// <see cref="Phase"/> also reports
+    /// <see cref="SchedulerPhase.PersistentCallbacks"/> for builds driven outside a frame, so the
+    /// check is qualified with <see cref="IsHandlingFrame"/>.
+    /// </remarks>
+    public static void EnsureVisualUpdate()
+    {
+        if (IsHandlingFrame
+            && Phase is SchedulerPhase.TransientCallbacks or SchedulerPhase.PersistentCallbacks)
+        {
+            return;
+        }
+
+        ScheduleFrame();
+    }
+
+    /// <summary>
     /// Schedules a frame even when <see cref="FramesEnabled"/> is false. Dart parity source:
     /// <c>SchedulerBinding.scheduleForcedFrame</c>.
     /// </summary>

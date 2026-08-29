@@ -484,7 +484,7 @@ public class PlumixHost : Control
 
     protected void ScheduleVisualUpdate()
     {
-        Scheduler.ScheduleFrame();
+        Scheduler.EnsureVisualUpdate();
     }
 
     /// Cause the widget and render trees hosted by this control to be fully

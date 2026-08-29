@@ -354,6 +354,206 @@ public sealed class LayoutBuilderTests
         Assert.Throws<ArgumentNullException>(() => new OrientationBuilder(null!));
     }
 
+    [Fact]
+    public void LayoutBuilder_RunsScheduledCallbackWhenAnAncestorSkipsLayingOutTheSubtree()
+    {
+        int builds = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new SkipLayoutHost(
+            new LayoutBuilder((_, _) =>
+            {
+                builds++;
+                return new SizedBox(width: 10, height: 10);
+            })));
+        Mount(root, owner);
+
+        var host = Assert.IsType<RenderSkipLayoutHost>(root.ChildElement!.RenderObject);
+        var renderView = new RenderView { Child = host };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+        pipeline.FlushLayout(new Size(200, 100));
+        Assert.Equal(1, builds);
+
+        // The layout builder is not a relayout boundary here: the host passes loose constraints and
+        // uses the child's size.
+        RenderLayoutBuilder layoutBuilder = FindRenderObject<RenderLayoutBuilder>(renderView);
+        Assert.False(layoutBuilder.IsRelayoutBoundary);
+
+        host.SkipChildLayout = true;
+        pipeline.FlushLayout(new Size(200, 100));
+        Assert.Equal(1, builds);
+
+        // Flutter's `RenderObjectWithLayoutCallbackMixin.scheduleLayoutCallback` registers the node with
+        // the pipeline owner itself, so the callback still runs when the ancestor declines to lay this
+        // subtree out - which is what keeps global keys in the deferred subtree unique.
+        FindElement<LayoutBuilderElement>(root).MarkNeedsBuild();
+        owner.FlushBuild();
+        pipeline.FlushLayout(new Size(200, 100));
+        Assert.Equal(2, builds);
+    }
+
+    [Fact]
+    public void SliverLayoutBuilder_RunsScheduledCallbackWhenAnAncestorSkipsLayingOutTheSubtree()
+    {
+        int builds = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new SkipLayoutHost(
+            new SliverLayoutBuilder((_, _) =>
+            {
+                builds++;
+                return new SliverToBoxAdapter(new SizedBox(height: 10));
+            })));
+        Mount(root, owner);
+
+        var host = Assert.IsType<RenderSkipLayoutHost>(root.ChildElement!.RenderObject);
+        var renderView = new RenderView { Child = host };
+        var pipeline = new PipelineOwner(renderView);
+        pipeline.Attach(renderView);
+
+        RenderSliverLayoutBuilder layoutBuilder = FindRenderObject<RenderSliverLayoutBuilder>(renderView);
+        layoutBuilder.LayoutWithSliverConstraints(new SliverConstraints(
+            Axis: Axis.Vertical,
+            ScrollOffset: 0,
+            RemainingPaintExtent: 100,
+            CrossAxisExtent: 200,
+            ViewportMainAxisExtent: 100,
+            RemainingCacheExtent: 100));
+        Assert.Equal(1, builds);
+
+        host.SkipChildLayout = true;
+        FindElement<SliverLayoutBuilderElement>(root).MarkNeedsBuild();
+        owner.FlushBuild();
+        pipeline.FlushLayout(new Size(200, 100));
+        Assert.Equal(2, builds);
+    }
+
+    [Fact]
+    public void LayoutBuilder_RepeatedScheduleLayoutCallbackBeforeLayoutIsANoOp()
+    {
+        int builds = 0;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new LayoutBuilder((_, _) =>
+        {
+            builds++;
+            return new SizedBox(width: 10, height: 10);
+        }));
+        Mount(root, owner);
+
+        var renderObject = Assert.IsType<RenderLayoutBuilder>(root.ChildElement!.RenderObject);
+        renderObject.Layout(BoxConstraints.Loose(new Size(200, 100)));
+        Assert.Equal(1, builds);
+
+        LayoutBuilderElement element = FindElement<LayoutBuilderElement>(root);
+        element.MarkNeedsBuild();
+        element.MarkNeedsBuild();
+        element.MarkNeedsBuild();
+        Assert.True(renderObject.NeedsLayout);
+
+        renderObject.Layout(BoxConstraints.Loose(new Size(200, 100)));
+        Assert.Equal(2, builds);
+    }
+
+    private static T FindElement<T>(Element root) where T : Element
+    {
+        T? result = null;
+        Visit(root);
+        return Assert.IsType<T>(result);
+
+        void Visit(Element element)
+        {
+            if (result is not null)
+            {
+                return;
+            }
+
+            if (element is T typed)
+            {
+                result = typed;
+                return;
+            }
+
+            element.VisitChildren(Visit);
+        }
+    }
+
+    private static T FindRenderObject<T>(RenderObject root) where T : RenderObject
+    {
+        T? result = null;
+        Visit(root);
+        return Assert.IsType<T>(result);
+
+        void Visit(RenderObject renderObject)
+        {
+            if (result is not null)
+            {
+                return;
+            }
+
+            if (renderObject is T typed)
+            {
+                result = typed;
+                return;
+            }
+
+            renderObject.VisitChildren(Visit);
+        }
+    }
+
+    /// <summary>
+    /// A parent that stops laying its child out, standing in for Flutter's obstructed
+    /// <c>OverlayEntry</c> with <c>maintainState: true</c>.
+    /// </summary>
+    private sealed class SkipLayoutHost : SingleChildRenderObjectWidget
+    {
+        public SkipLayoutHost(Widget child) : base(child)
+        {
+        }
+
+        internal override RenderObject CreateRenderObject(BuildContext context)
+        {
+            return new RenderSkipLayoutHost();
+        }
+    }
+
+    private sealed class RenderSkipLayoutHost : RenderProxyBox
+    {
+        private bool _skipChildLayout;
+
+        public bool SkipChildLayout
+        {
+            get => _skipChildLayout;
+            set
+            {
+                if (_skipChildLayout == value)
+                {
+                    return;
+                }
+
+                _skipChildLayout = value;
+                MarkNeedsLayout();
+            }
+        }
+
+        protected override void PerformLayout()
+        {
+            BoxConstraints constraints = Constraints;
+            if (Child is null)
+            {
+                Size = constraints.Smallest;
+                return;
+            }
+
+            if (_skipChildLayout)
+            {
+                Size = constraints.Constrain(Child.HasSize ? Child.Size : new Size());
+                return;
+            }
+
+            Child.Layout(BoxConstraints.Loose(constraints.Biggest), parentUsesSize: true);
+            Size = constraints.Constrain(Child.Size);
+        }
+    }
+
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);

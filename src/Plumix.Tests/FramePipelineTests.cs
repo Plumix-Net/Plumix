@@ -11,6 +11,55 @@ namespace Plumix.Tests;
 public sealed class FramePipelineTests
 {
     [Fact]
+    public void Scheduler_EnsureVisualUpdateSchedulesOnlyOutsideAFrame()
+    {
+        Scheduler.ResetForTests();
+        try
+        {
+            var phases = new List<(SchedulerPhase Phase, bool Scheduled)>();
+
+            Scheduler.ScheduleFrameCallback(_ =>
+            {
+                Scheduler.EnsureVisualUpdate();
+                phases.Add((Scheduler.Phase, Scheduler.HasScheduledFrame));
+            });
+            Scheduler.DrawFrame += _ =>
+            {
+                Scheduler.EnsureVisualUpdate();
+                phases.Add((Scheduler.Phase, Scheduler.HasScheduledFrame));
+            };
+            Scheduler.AddPostFrameCallback(
+                _ =>
+                {
+                    Scheduler.EnsureVisualUpdate();
+                    phases.Add((Scheduler.Phase, Scheduler.HasScheduledFrame));
+                },
+                scheduleFrame: false);
+
+            Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
+
+            // Dart's `ensureVisualUpdate` leaves the frame in flight to cover the update; only the
+            // post-frame phase asks for another frame.
+            Assert.Equal(
+                [
+                    (SchedulerPhase.TransientCallbacks, false),
+                    (SchedulerPhase.PersistentCallbacks, false),
+                    (SchedulerPhase.PostFrameCallbacks, true),
+                ],
+                phases);
+
+            Scheduler.ResetForTests();
+            Assert.False(Scheduler.HasScheduledFrame);
+            Scheduler.EnsureVisualUpdate();
+            Assert.True(Scheduler.HasScheduledFrame);
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+        }
+    }
+
+    [Fact]
     public void Scheduler_RunsBeginThenDrawThenPostFrame()
     {
         Scheduler.ResetForTests();

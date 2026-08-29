@@ -90,9 +90,10 @@ public sealed class DiagnosticsDebugCreator : DiagnosticsProperty<object>
 /// A render object that runs a callback during its own layout, before laying out its children.
 /// </summary>
 /// <remarks>
-/// Flutter's <c>RenderObjectWithLayoutCallbackMixin</c>. C# has no mixins, so the state and the two
-/// entry points live on the implementer; <see cref="RenderObjectWithLayoutCallback"/> holds the shared
-/// body that Dart puts in the mixin.
+/// Flutter's <c>RenderObjectWithLayoutCallbackMixin</c>. C# has no mixins, so only
+/// <see cref="LayoutCallback"/> lives on the implementer; the shared body Dart puts in the mixin -
+/// the <c>_needsRebuild</c> flag, <c>RenderObject.ScheduleLayoutCallback</c> and
+/// <c>RenderObject.RunLayoutCallback</c> - lives on <see cref="RenderObject"/> behind this interface.
 /// </remarks>
 public interface IRenderObjectWithLayoutCallback : IRenderObject
 {

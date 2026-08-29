@@ -133,7 +133,7 @@ internal sealed class SliverLayoutBuilderElement : RenderObjectElement
 
     internal override void Unmount()
     {
-        LayoutRenderObject.UpdateCallback(null);
+        LayoutRenderObject.ClearCallback();
         if (_child != null)
         {
             UnmountChild(_child);
@@ -144,11 +144,11 @@ internal sealed class SliverLayoutBuilderElement : RenderObjectElement
     }
 }
 
-internal sealed class RenderSliverLayoutBuilder : RenderProxySliver
+internal sealed class RenderSliverLayoutBuilder : RenderProxySliver, IRenderObjectWithLayoutCallback
 {
     private Action<SliverConstraints>? _callback;
 
-    internal void UpdateCallback(Action<SliverConstraints>? callback)
+    internal void UpdateCallback(Action<SliverConstraints> callback)
     {
         if (_callback == callback)
         {
@@ -159,14 +159,15 @@ internal sealed class RenderSliverLayoutBuilder : RenderProxySliver
         ScheduleLayoutCallback();
     }
 
-    internal void ScheduleLayoutCallback() => MarkNeedsLayout();
+    /// <remarks>Flutter's <c>_LayoutBuilderElement.unmount</c> assigns <c>_callback = null</c> directly,
+    /// without scheduling another callback run.</remarks>
+    internal void ClearCallback() => _callback = null;
+
+    void IRenderObjectWithLayoutCallback.LayoutCallback() => _callback!(ConstraintsForSliver);
 
     protected override void PerformSliverLayout(SliverConstraints constraints)
     {
-        if (_callback != null)
-        {
-            InvokeLayoutCallback(_callback, constraints);
-        }
+        RunLayoutCallback();
 
         if (Child == null)
         {

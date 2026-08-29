@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -233,11 +234,7 @@ internal sealed class OverlayPortalState : State
             target.RequireTheater(),
             _zOrderIndex.Value);
         Widget overlayChild = CurrentWidget.LayoutBuilder is { } layoutBuilder
-            ? new OverlayPortalLayoutBuilderWidget(
-                builder: layoutBuilder,
-                infoBuilder: constraints => ResolveLayoutInfo(
-                    location.Theater,
-                    constraints))
+            ? new OverlayPortalLayoutBuilderWidget(layoutBuilder)
             : new Builder(CurrentWidget.OverlayChildBuilder);
         overlayChild = WrapWithOverlayMediaQuery(
             context,
@@ -245,7 +242,7 @@ internal sealed class OverlayPortalState : State
             overlayChild);
         return new OverlayPortalRenderWidget(
             child: CurrentWidget.Child,
-            overlayChild: overlayChild,
+            overlayChild: new DeferredLayout(overlayChild),
             location: location);
     }
 
@@ -289,54 +286,6 @@ internal sealed class OverlayPortalState : State
                 viewInsets: overlayData.ViewInsets,
                 viewPadding: overlayData.ViewPadding),
             child: child);
-    }
-
-    private OverlayChildLayoutInfo ResolveLayoutInfo(
-        RenderOverlayTheater theater,
-        BoxConstraints constraints)
-    {
-        if (Context.FindRenderObject() is not RenderBox portalRenderBox
-            || !portalRenderBox.HasSize)
-        {
-            throw new InvalidOperationException(
-                "OverlayPortal layout information is only available after its regular child is laid out.");
-        }
-
-        Matrix4 transform = ResolveTransformToAncestor(portalRenderBox, theater);
-        Size overlaySize = theater.HasSize
-            ? theater.Size
-            : constraints.Biggest;
-        return new OverlayChildLayoutInfo(
-            portalRenderBox.Size,
-            transform,
-            overlaySize);
-    }
-
-    private static Matrix4 ResolveTransformToAncestor(
-        RenderObject source,
-        RenderObject ancestor)
-    {
-        Matrix4 transform = Matrix4.Identity();
-        var chain = new List<RenderObject>();
-        RenderObject? child = source;
-        while (child?.Parent is not null && !ReferenceEquals(child, ancestor))
-        {
-            chain.Add(child);
-            child = child.Parent;
-        }
-
-        if (!ReferenceEquals(child, ancestor))
-        {
-            throw new InvalidOperationException(
-                "OverlayPortal layout information requires an ancestor target Overlay.");
-        }
-
-        for (int index = chain.Count - 1; index >= 0; index--)
-        {
-            chain[index].Parent!.ApplyPaintTransform(chain[index], transform);
-        }
-
-        return transform;
     }
 }
 
@@ -978,17 +927,12 @@ internal sealed record OverlayPortalLocation(
 
 internal sealed class OverlayPortalLayoutBuilderWidget : RenderObjectWidget
 {
-    public OverlayPortalLayoutBuilderWidget(
-        OverlayChildLayoutBuilder builder,
-        Func<BoxConstraints, OverlayChildLayoutInfo> infoBuilder)
+    public OverlayPortalLayoutBuilderWidget(OverlayChildLayoutBuilder builder)
     {
         Builder = builder;
-        InfoBuilder = infoBuilder;
     }
 
     public OverlayChildLayoutBuilder Builder { get; }
-
-    public Func<BoxConstraints, OverlayChildLayoutInfo> InfoBuilder { get; }
 
     internal override Element CreateElement() => new OverlayPortalLayoutBuilderElement(this);
 
@@ -998,9 +942,39 @@ internal sealed class OverlayPortalLayoutBuilderWidget : RenderObjectWidget
     }
 }
 
+/// <summary>
+/// Wraps an <see cref="OverlayPortal"/>'s overlay child in the render object whose layout the target
+/// overlay defers until both the overlay and the portal itself have been laid out.
+/// </summary>
+/// <remarks>Flutter's <c>_DeferredLayout</c>. This widget must never be given a key: reparenting
+/// between the overlay child and the regular child is not supported.</remarks>
+internal sealed class DeferredLayout : SingleChildRenderObjectWidget
+{
+    public DeferredLayout(Widget child) : base(child)
+    {
+    }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        RenderOverlayPortalSurrogate parent = GetLayoutParent(context);
+        var renderObject = new RenderDeferredLayoutBox(parent);
+        parent.DeferredLayoutChild = renderObject;
+        return renderObject;
+    }
+
+    private static RenderOverlayPortalSurrogate GetLayoutParent(BuildContext context)
+    {
+        return context.FindAncestorRenderObjectOfType<RenderOverlayPortalSurrogate>()
+               ?? throw new InvalidOperationException(
+                   "An OverlayPortal overlay child must be built below its OverlayPortal.");
+    }
+}
+
 internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
 {
     private Element? _child;
+    private OverlayChildLayoutInfo? _previousLayoutInfo;
+    private bool _needsBuild = true;
 
     public OverlayPortalLayoutBuilderElement(
         OverlayPortalLayoutBuilderWidget widget) : base(widget)
@@ -1023,6 +997,7 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
     {
         base.Update(newWidget);
         LayoutRenderObject.UpdateCallback(RebuildDuringLayout);
+        _needsBuild = true;
         LayoutRenderObject.ScheduleLayoutCallback();
     }
 
@@ -1034,12 +1009,14 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
         }
 
         Dirty = false;
+        _needsBuild = true;
         LayoutRenderObject.ScheduleLayoutCallback();
     }
 
     internal override void Rebuild()
     {
         Dirty = false;
+        _needsBuild = true;
         LayoutRenderObject.ScheduleLayoutCallback();
     }
 
@@ -1092,7 +1069,7 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
 
     internal override void Unmount()
     {
-        LayoutRenderObject.UpdateCallback(null);
+        LayoutRenderObject.ClearCallback();
         if (_child is not null)
         {
             UnmountChild(_child);
@@ -1102,16 +1079,18 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
         base.Unmount();
     }
 
-    private void RebuildDuringLayout(BoxConstraints constraints)
+    private void RebuildDuringLayout(OverlayChildLayoutInfo info)
     {
-        OverlayChildLayoutInfo info = LayoutWidget.InfoBuilder(constraints);
-        Widget built = LayoutWidget.Builder(new BuildContext(this), info);
-        _child = UpdateChild(
-            _child,
-            new Stack(
-                fit: StackFit.Expand,
-                children: [built]),
-            null);
+        if (!_needsBuild && Equals(_previousLayoutInfo, info))
+        {
+            return;
+        }
+
+        Widget built = LayoutWidget.Builder(new BuildContext(this), info)
+            ?? throw new InvalidOperationException("OverlayPortal.WithLayoutBuilder must return a widget.");
+        _child = UpdateChild(_child, built, null);
+        _needsBuild = false;
+        _previousLayoutInfo = info;
     }
 }
 
@@ -1225,9 +1204,13 @@ internal sealed class OverlayPortalElement : RenderObjectElement
             throw new InvalidOperationException("OverlayPortal received an invalid overlay child slot.");
         }
 
+        // `DeferredLayoutChild` was assigned by `DeferredLayout.CreateRenderObject`, before the element
+        // got as far as inserting it here.
+        var deferredChild = (RenderDeferredLayoutBox)child;
+        Debug.Assert(ReferenceEquals(PortalRenderObject.DeferredLayoutChild, deferredChild));
         RenderBox anchor = FindAnchor(location.Theater);
-        location.Theater.InsertPortal((RenderBox)child, anchor, location.ZOrder);
-        PortalRenderObject.PortalChild = (RenderBox)child;
+        location.Theater.AddDeferredChild(deferredChild, anchor, location.ZOrder);
+        PortalRenderObject.MarkNeedsSemanticsUpdate();
     }
 
     public override void MoveRenderObjectChild(
@@ -1247,11 +1230,12 @@ internal sealed class OverlayPortalElement : RenderObjectElement
         }
 
         RenderBox anchor = FindAnchor(newLocation.Theater);
-        newLocation.Theater.MovePortal(
-            (RenderBox)child,
+        newLocation.Theater.MoveDeferredChild(
+            (RenderDeferredLayoutBox)child,
             oldLocation.Theater,
             anchor,
             newLocation.ZOrder);
+        PortalRenderObject.MarkNeedsSemanticsUpdate();
     }
 
     public override void RemoveRenderObjectChild(RenderObject child, object? slot)
@@ -1268,11 +1252,11 @@ internal sealed class OverlayPortalElement : RenderObjectElement
 
         if (slot is OverlayPortalLocation location)
         {
-            location.Theater.RemovePortal((RenderBox)child);
-            if (ReferenceEquals(PortalRenderObject.PortalChild, child))
-            {
-                PortalRenderObject.PortalChild = null;
-            }
+            var deferredChild = (RenderDeferredLayoutBox)child;
+            Debug.Assert(ReferenceEquals(PortalRenderObject.DeferredLayoutChild, deferredChild));
+            location.Theater.RemoveDeferredChild(deferredChild);
+            PortalRenderObject.DeferredLayoutChild = null;
+            PortalRenderObject.MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -1311,10 +1295,16 @@ internal sealed class OverlayPortalElement : RenderObjectElement
     }
 }
 
+/// <summary>
+/// The <see cref="OverlayPortal"/>'s own render object: a proxy box that keeps its deferred layout
+/// child deeper than itself, lays that child out once its own layout is done, and keeps the child's
+/// attached state in sync with its own.
+/// </summary>
+/// <remarks>Flutter's <c>_RenderLayoutSurrogateProxyBox</c>.</remarks>
 internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
 {
-    private RenderBox? _portalChild;
-    private bool _didDetachPortalChild;
+    private RenderDeferredLayoutBox? _deferredLayoutChild;
+    private bool _didDetachDeferredChild;
 
     public RenderOverlayPortalSurrogate(OverlayPortalLocation? location)
     {
@@ -1323,17 +1313,22 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
 
     internal OverlayPortalLocation? Location { get; set; }
 
-    internal RenderBox? PortalChild
+    /// <remarks>
+    /// Assigned as soon as <c>DeferredLayout</c> creates the box, and set back to null only when that
+    /// widget leaves the tree - the surrogate needs it in <see cref="OnAttach"/>/<see cref="OnDetach"/>,
+    /// where the element slot is not available.
+    /// </remarks>
+    internal RenderDeferredLayoutBox? DeferredLayoutChild
     {
-        get => _portalChild;
+        get => _deferredLayoutChild;
         set
         {
-            if (ReferenceEquals(_portalChild, value))
+            if (ReferenceEquals(_deferredLayoutChild, value))
             {
                 return;
             }
 
-            _portalChild = value;
+            _deferredLayoutChild = value;
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -1341,39 +1336,97 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         base.VisitChildrenForSemantics(visitor);
-        if (_portalChild is not null)
+        if (_deferredLayoutChild is not null)
         {
-            visitor(_portalChild);
+            visitor(_deferredLayoutChild);
         }
     }
 
+    /// <remarks>Flutter's <c>_RenderDeferredLayoutBox.redepthChildren</c> calls this when the box
+    /// enters the theater before the surrogate has an owner.</remarks>
+    internal void RedepthDeferredChild(RenderDeferredLayoutBox child) => RedepthChild(child);
+
+    /// <remarks>Flutter's <c>_RenderLayoutSurrogateProxyBox.redepthChildren</c>. While the child is not
+    /// attached this is done by its real parent - the theater - once it becomes attached.</remarks>
+    protected override void RedepthChildren()
+    {
+        base.RedepthChildren();
+        if (_deferredLayoutChild is { } child && ReferenceEquals(child.Owner, Owner))
+        {
+            RedepthChild(child);
+        }
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_RenderLayoutSurrogateProxyBox.attach</c>. Reattaching after
+    /// <see cref="OnDetach"/> detached the deferred child is always safe, because the theater must be
+    /// an ancestor of both render objects.
+    /// </remarks>
     protected override void OnAttach()
     {
         base.OnAttach();
-        if (!_didDetachPortalChild)
+        if (!_didDetachDeferredChild)
         {
             return;
         }
 
-        _didDetachPortalChild = false;
+        _didDetachDeferredChild = false;
         OverlayPortalLocation location = Location
             ?? throw new InvalidOperationException("A visible overlay child requires a portal location.");
-        RenderBox child = _portalChild
+        RenderDeferredLayoutBox child = _deferredLayoutChild
             ?? throw new InvalidOperationException("A detached portal child cannot be reattached after removal.");
-        location.Theater.InsertPortal(child, FindAnchor(location.Theater), location.ZOrder);
+        location.Theater.AddDeferredChild(child, FindAnchor(location.Theater), location.ZOrder);
     }
 
+    /// <remarks>
+    /// Flutter's <c>_RenderLayoutSurrogateProxyBox.detach</c>: the deferred child is detached only when
+    /// the theater is not already detached, in which case the theater detaches it.
+    /// </remarks>
     protected override void OnDetach()
     {
-        if (_portalChild is { Attached: true } child
+        if (_deferredLayoutChild is { } child
             && Location is { } location
             && location.Theater.Attached)
         {
-            location.Theater.RemovePortal(child);
-            _didDetachPortalChild = true;
+            location.Theater.RemoveDeferredChild(child);
+            _didDetachDeferredChild = true;
         }
 
         base.OnDetach();
+    }
+
+    /// <remarks>Flutter's <c>_RenderLayoutSurrogateProxyBox.performLayout</c>.</remarks>
+    protected override void PerformLayout()
+    {
+        base.PerformLayout();
+        if (_deferredLayoutChild is not { } deferredChild)
+        {
+            return;
+        }
+
+        // Every ancestor's PerformLayout must have returned by the time the deferred child lays out, so
+        // the child goes on the dirty list rather than being reached through the layout tree walk. It is
+        // guaranteed to be a relayout boundary but may not be in the dirty list yet when it has never
+        // been laid out - `DoLayoutFrom` covers that case.
+        if (deferredChild.Parent is not RenderOverlayTheater theater)
+        {
+            return;
+        }
+
+        // While the theater is laying out its size-determining child its size is unknown. The theater
+        // always lays that child out first and a deferred child can never be size-determining, so
+        // nothing has to happen here: the theater updates the deferred child's constraints itself.
+        if (theater.LayingOutSizeDeterminingChild)
+        {
+            return;
+        }
+
+        BoxConstraints theaterConstraints = theater.Constraints;
+        Size boxSize = double.IsFinite(theaterConstraints.MaxWidth)
+                       && double.IsFinite(theaterConstraints.MaxHeight)
+            ? theaterConstraints.Biggest
+            : theater.Size;
+        deferredChild.DoLayoutFrom(this, BoxConstraints.Tight(boxSize));
     }
 
     private RenderBox FindAnchor(RenderOverlayTheater theater)
@@ -1394,18 +1447,18 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
     }
 
     /// <summary>
-    /// The portal child is laid out under the theater but painted here, so its semantics transform
-    /// is the one that maps its own paint position back into this surrogate's coordinates.
+    /// The overlay child is laid out under the theater but painted here, so its semantics transform is
+    /// the one that maps its own paint position back into this surrogate's coordinates.
     /// </summary>
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
-        if (!ReferenceEquals(child, _portalChild))
+        if (!ReferenceEquals(child, _deferredLayoutChild))
         {
             base.ApplyPaintTransform(child, transform);
             return;
         }
 
-        Matrix4 portalChildToRoot = _portalChild!.ComputePaintTransformToRoot();
+        Matrix4 portalChildToRoot = _deferredLayoutChild!.ComputePaintTransformToRoot();
         Matrix4 rootToSurrogate = ComputePaintTransformToRoot();
         if (rootToSurrogate.Invert() == 0.0)
         {

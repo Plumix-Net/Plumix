@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `OverlayPortal`'s overlay child is a deferred-layout box laid out after its anchor (`overlay.dart`).
+- Added `RenderObjectWithLayoutCallbackMixin`'s `ScheduleLayoutCallback`/`RunLayoutCallback` pair (`object.dart`).
+- Breaking: `LayoutBuilder`/`SliverLayoutBuilder` rebuild even when an ancestor skips laying them out.
+- Added `Scheduler.EnsureVisualUpdate`, so a re-dirty inside a frame no longer asks for another one (`binding.dart`).
 - Breaking: `FocusNode` is a real parent/child tree with `FocusAttachment` and ancestors (`focus_manager.dart`).
 - Breaking: `FocusManager` gained `_markedForFocus`/dirty-node batching, autofocus queue, early/late key handlers.
 - Breaking: `FocusNode.Unfocus` takes an `UnfocusDisposition` and hands focus to the enclosing scope, not to null.

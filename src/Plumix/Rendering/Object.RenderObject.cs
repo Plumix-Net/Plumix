@@ -656,6 +656,80 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         }
     }
 
+    /// <summary>
+    /// Whether the layout callback of this <see cref="IRenderObjectWithLayoutCallback"/> has to run the
+    /// next time this render object is laid out.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObjectWithLayoutCallbackMixin._needsRebuild</c>. The initial value must be
+    /// <see langword="true"/> so the callback is not scheduled before the subtree has ever been laid
+    /// out, when the constraints are still unknown.
+    /// </remarks>
+    private bool _needsLayoutCallbackRebuild = true;
+
+    /// <summary>
+    /// Invokes a callback that is allowed to mutate this render object's child tree during layout,
+    /// without handing it the constraints.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>invokeLayoutCallback</c> is public on <c>RenderObject</c>; this overload is what
+    /// <c>_RenderDeferredLayoutBox._doLayoutFrom</c> asks of its tree-walk parent.
+    /// </remarks>
+    internal void InvokeLayoutCallbackOnTreeWalkParent(Action callback)
+    {
+        InvokeLayoutCallback<IConstraints>(_ => callback(), Constraints);
+    }
+
+    /// <summary>Invokes <see cref="IRenderObjectWithLayoutCallback.LayoutCallback"/>.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObjectWithLayoutCallbackMixin.runLayoutCallback</c>. Must be called from
+    /// <see cref="PerformLayout"/>, as early as possible and before any layout work is done, so that no
+    /// child render object is re-dirtied afterwards.
+    /// </remarks>
+    protected void RunLayoutCallback()
+    {
+        Debug.Assert(this is IRenderObjectWithLayoutCallback);
+        Debug.Assert(DebugDoingThisLayout);
+        InvokeLayoutCallback<IConstraints>(
+            _ => ((IRenderObjectWithLayoutCallback)this).LayoutCallback(),
+            Constraints);
+        _needsLayoutCallbackRebuild = false;
+    }
+
+    /// <summary>
+    /// Informs the framework that the layout callback has been updated and must run again when this
+    /// render object is ready for layout, even when an ancestor chooses to skip laying out this subtree.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderObjectWithLayoutCallbackMixin.scheduleLayoutCallback</c>.</remarks>
+    internal void ScheduleLayoutCallback()
+    {
+        Debug.Assert(this is IRenderObjectWithLayoutCallback);
+        if (_needsLayoutCallbackRebuild)
+        {
+            Debug.Assert(NeedsLayout);
+            return;
+        }
+
+        _needsLayoutCallbackRebuild = true;
+
+        // Registering the node itself is what makes the callback run even when an ancestor declines to
+        // lay this subtree out (an obstructed OverlayEntry with `maintainState: true`, for example), so
+        // that widget-tree integrity - unique global keys above all - is maintained regardless.
+        Owner?.RequestLayoutFor(this);
+
+        // In an active tree the layout boundary still has to learn that this child's size may change.
+        MarkNeedsLayoutFromScheduleCallback();
+    }
+
+    /// <summary>The <see cref="MarkNeedsLayout"/> call made by <see cref="ScheduleLayoutCallback"/>.</summary>
+    /// <remarks>
+    /// Dart's <c>super.markNeedsLayout()</c> inside <c>scheduleLayoutCallback</c> resolves to the class
+    /// the mixin is applied on, so a subclass override of <c>markNeedsLayout</c> - Flutter's
+    /// <c>_RenderDeferredLayoutBox</c> has one - is deliberately bypassed. C# has no <c>super</c>, so the
+    /// bypass is a hook such a subclass overrides with its own <c>base.MarkNeedsLayout()</c>.
+    /// </remarks>
+    private protected virtual void MarkNeedsLayoutFromScheduleCallback() => MarkNeedsLayout();
+
     public virtual void VisitChildren(Action<RenderObject> visitor)
     {
     }

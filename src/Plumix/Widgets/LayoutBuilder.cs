@@ -133,7 +133,7 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
 
     internal override void Unmount()
     {
-        LayoutRenderObject.UpdateCallback(null);
+        LayoutRenderObject.ClearCallback();
         if (_child != null)
         {
             UnmountChild(_child);
@@ -144,11 +144,11 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
     }
 }
 
-internal sealed class RenderLayoutBuilder : RenderProxyBox
+internal sealed class RenderLayoutBuilder : RenderProxyBox, IRenderObjectWithLayoutCallback
 {
     private Action<BoxConstraints>? _callback;
 
-    internal void UpdateCallback(Action<BoxConstraints>? callback)
+    internal void UpdateCallback(Action<BoxConstraints> callback)
     {
         if (_callback == callback)
         {
@@ -159,15 +159,16 @@ internal sealed class RenderLayoutBuilder : RenderProxyBox
         ScheduleLayoutCallback();
     }
 
-    internal void ScheduleLayoutCallback() => MarkNeedsLayout();
+    /// <remarks>Flutter's <c>_LayoutBuilderElement.unmount</c> assigns <c>_callback = null</c> directly,
+    /// without scheduling another callback run.</remarks>
+    internal void ClearCallback() => _callback = null;
+
+    void IRenderObjectWithLayoutCallback.LayoutCallback() => _callback!(Constraints);
 
     protected override void PerformLayout()
     {
         BoxConstraints constraints = Constraints;
-        if (_callback != null)
-        {
-            InvokeLayoutCallback(_callback, constraints);
-        }
+        RunLayoutCallback();
 
         if (Child != null)
         {
