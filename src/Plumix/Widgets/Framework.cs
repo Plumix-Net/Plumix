@@ -188,7 +188,7 @@ public record GlobalObjectKey<T>(object Value) : GlobalKey<T> where T : State
     /// </summary>
     public override string ToString()
     {
-        string selfType = Foundation.Diagnostics.ObjectRuntimeType(this);
+        string selfType = Foundation.Diagnostics.ObjectRuntimeType(this, "GlobalObjectKey");
         const string suffix = "<State>";
         if (selfType.EndsWith(suffix, StringComparison.Ordinal))
         {

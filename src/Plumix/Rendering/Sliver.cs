@@ -191,7 +191,7 @@ public readonly record struct SliverGeometry : IDiagnosticable
     }
 
     /// <inheritdoc />
-    public string ToStringShort() => Diagnostics.ObjectRuntimeType(this);
+    public string ToStringShort() => Diagnostics.ObjectRuntimeType(this, "SliverGeometry");
 
     /// <inheritdoc />
     public override string ToString() => ToString(DiagnosticLevel.Info);

@@ -399,7 +399,7 @@ public class TextSpan : InlineSpan, IHitTestTarget, IMouseTrackerAnnotation
     }
 
     /// <inheritdoc />
-    public override string ToStringShort() => Diagnostics.ObjectRuntimeType(this);
+    public override string ToStringShort() => Diagnostics.ObjectRuntimeType(this, "TextSpan");
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)

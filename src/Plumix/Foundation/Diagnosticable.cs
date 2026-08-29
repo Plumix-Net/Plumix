@@ -56,7 +56,11 @@ public abstract class Diagnosticable : IDiagnosticable
     /// C# cannot add an optional parameter to `Object.ToString`, so Dart's
     /// `toString({DiagnosticLevel minLevel})` is this overload.
     public virtual string ToString(DiagnosticLevel minLevel)
-        => ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine).ToString(null, minLevel);
+    {
+        return Constants.KDebugMode
+            ? ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine).ToString(null, minLevel)
+            : ToStringShort();
+    }
 
     /// Returns a debug representation of the object that is used by debugging
     /// tools.
@@ -82,6 +86,11 @@ public abstract class DiagnosticableTree : Diagnosticable, IDiagnosticableTree
     /// information given by [ToStringDeep], but does not recurse to any children.
     public virtual string ToStringShallow(string joiner = ", ", DiagnosticLevel minLevel = DiagnosticLevel.Debug)
     {
+        if (!Constants.KDebugMode)
+        {
+            return ToString();
+        }
+
         var result = new StringBuilder();
         result.Append(ToString());
         result.Append(joiner);

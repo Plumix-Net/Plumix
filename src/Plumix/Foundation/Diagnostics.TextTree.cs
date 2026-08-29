@@ -812,6 +812,11 @@ public sealed class TextTreeRenderer
         string? prefixOtherLines = null,
         TextTreeConfiguration? parentConfiguration = null)
     {
+        if (Constants.KReleaseMode)
+        {
+            return string.Empty;
+        }
+
         return DebugRender(node, prefixLineOne, prefixOtherLines, parentConfiguration);
     }
 

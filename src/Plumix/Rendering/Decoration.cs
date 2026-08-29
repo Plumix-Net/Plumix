@@ -36,7 +36,7 @@ public abstract record Decoration : IDiagnosticable
     public abstract BoxPainter CreateBoxPainter(Action? onChanged = null);
 
     /// <inheritdoc />
-    public virtual string ToStringShort() => Diagnostics.ObjectRuntimeType(this);
+    public virtual string ToStringShort() => Diagnostics.ObjectRuntimeType(this, "Decoration");
 
     /// <inheritdoc />
     public virtual DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null)

@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: diagnostics elide their debug bodies in profile/release builds (`diagnostics.dart`, `object.dart`).
+- Added a `Profile` build configuration that defines `PROFILE`, so `Constants.KProfileMode` is reachable.
+- Breaking: `Diagnostics.ObjectRuntimeType` takes Dart's required `optimizedValue` argument (`object.dart`).
 - Breaking: element deactivation preserves its render subtree and enforces strict attachment (`framework.dart`).
 - Breaking: `RenderObject.Layout` reports a `PerformResize`/`PerformLayout` failure instead of throwing (`object.dart`).
 - Breaking: `PipelineOwner` relayouts only dirty relayout boundaries; the descendant dirty channel is gone.

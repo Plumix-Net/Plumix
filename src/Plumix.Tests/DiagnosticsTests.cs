@@ -43,6 +43,91 @@ public class DiagnosticsTests
     }
 
     [Fact]
+    public void BuildModeGates_MatchFlutterDiagnosticsContract()
+    {
+        Assert.Equal(1, new[] { Constants.KDebugMode, Constants.KProfileMode, Constants.KReleaseMode }.Count(v => v));
+
+        var value = new BuildModeTree();
+        DiagnosticsNode node = value.ToDiagnosticsNode(style: DiagnosticsTreeStyle.SingleLine);
+        var directNode = new DiagnosticsBlock(
+            description: "direct",
+            style: DiagnosticsTreeStyle.SingleLine,
+            properties: [new StringProperty("property", "value", quoted: false)]);
+        var renderer = new TextTreeRenderer();
+        var builder = new DiagnosticPropertiesBuilder();
+        builder.Add(new StringProperty("property", "value"));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.Equal("BuildModeTree", Diagnostics.ObjectRuntimeType(value, "optimized"));
+            Assert.StartsWith("BuildModeTree#", Diagnostics.DescribeIdentity(value), StringComparison.Ordinal);
+            Assert.Equal(DiagnosticLevel.Info, node.Level);
+            Assert.False(directNode.IsFiltered(DiagnosticLevel.Info));
+            Assert.Single(builder.Properties);
+            Assert.Single(node.GetProperties());
+            Assert.Single(node.GetProperties());
+
+            // The builder is cached, so `debugFillProperties` runs once however often it is read.
+            Assert.Equal(1, value.DebugFillPropertiesCalls);
+            Assert.Equal(DiagnosticsTreeStyle.SingleLine, node.Style);
+            Assert.Equal("BuildModeTree", node.ToDescription());
+            Assert.Contains("property: value", value.ToString(), StringComparison.Ordinal);
+            Assert.Contains("property: value", value.ToStringShallow(), StringComparison.Ordinal);
+            Assert.Contains("property: value", value.ToStringDeep(), StringComparison.Ordinal);
+            Assert.Equal("direct(property: value)", renderer.Render(directNode));
+            Assert.NotEmpty(directNode.ToJsonMap(DiagnosticsSerializationDelegate.Create()));
+            Assert.NotEmpty(directNode.ToJsonMapIterative(DiagnosticsSerializationDelegate.Create()));
+            Dictionary<string, string>? timeline = directNode.ToTimelineArguments();
+            Assert.Equal("value", timeline!["property"]);
+            Assert.Throws<ArgumentException>(() => new StringProperty("name:", "value"));
+            Assert.Throws<ArgumentException>(() => new FlagProperty("flag", true));
+#pragma warning disable CS0618 // Deprecated in Dart too; retained for build-mode parity.
+            Assert.Throws<ArgumentException>(() => Diagnostics.DescribeEnum("not-an-enum"));
+#pragma warning restore CS0618
+            return;
+        }
+
+        Assert.Equal("optimized", Diagnostics.ObjectRuntimeType(value, "optimized"));
+        Assert.StartsWith("<optimized out>#", Diagnostics.DescribeIdentity(value), StringComparison.Ordinal);
+        Assert.Empty(builder.Properties);
+        Assert.Empty(node.GetProperties());
+        Assert.Equal(0, value.DebugFillPropertiesCalls);
+        Assert.Equal(string.Empty, node.EmptyBodyDescription);
+        Assert.Equal(string.Empty, node.ToDescription());
+        Assert.Equal(value.ToStringShort(), value.ToString());
+        Assert.Equal(value.ToString(), value.ToStringShallow());
+        Assert.Equal(string.Empty, value.ToStringDeep());
+        Assert.Empty(directNode.ToJsonMap(DiagnosticsSerializationDelegate.Create()));
+        Assert.Empty(directNode.ToJsonMapIterative(DiagnosticsSerializationDelegate.Create()));
+        _ = new StringProperty("name:", "value");
+        _ = new FlagProperty("flag", true);
+#pragma warning disable CS0618 // Deprecated in Dart too; retained for build-mode parity.
+        Assert.Equal("not-an-enum", Diagnostics.DescribeEnum("not-an-enum"));
+#pragma warning restore CS0618
+
+        Dictionary<string, object?> propertyJson =
+            new StringProperty("property", "value").ToJsonMap(DiagnosticsSerializationDelegate.Create());
+        Assert.DoesNotContain("description", propertyJson);
+        Assert.Equal("String", propertyJson["propertyType"]);
+
+        if (Constants.KProfileMode)
+        {
+            Assert.Equal(DiagnosticsTreeStyle.SingleLine, node.Style);
+            Assert.Equal("direct(property: value)", renderer.Render(directNode));
+            FlutterError error = Assert.Throws<FlutterError>(() => directNode.ToTimelineArguments());
+            Assert.Contains("toTimelineArguments used in non-debug build", error.Message, StringComparison.Ordinal);
+        }
+        else
+        {
+            Assert.Equal(DiagnosticsTreeStyle.None, node.Style);
+            Assert.Equal(DiagnosticLevel.Hidden, node.Level);
+            Assert.Equal(string.Empty, renderer.Render(directNode));
+            Assert.True(directNode.IsFiltered(DiagnosticLevel.Hidden));
+            Assert.Null(directNode.ToTimelineArguments());
+        }
+    }
+
+    [Fact]
     public void ShortHashAndDescribeIdentity_MatchDartFormat()
     {
         object value = new();
@@ -50,7 +135,7 @@ public class DiagnosticsTests
         Assert.Equal(5, hash.Length);
         Assert.Matches("^[0-9a-f]{5}$", hash);
         Assert.Equal($"Object#{hash}", Diagnostics.DescribeIdentity(value));
-        Assert.Equal("Null", Diagnostics.ObjectRuntimeType(null));
+        Assert.Equal("Null", Diagnostics.ObjectRuntimeType(null, "<optimized out>"));
         Assert.Equal("DiagnosticsProperty<String>", Diagnostics.DescribeType(typeof(DiagnosticsProperty<string>)));
     }
 
@@ -1222,6 +1307,19 @@ public class DiagnosticsTests
             {
                 properties.Add(property);
             }
+        }
+    }
+
+    private sealed class BuildModeTree : DiagnosticableTree
+    {
+        internal int DebugFillPropertiesCalls { get; private set; }
+
+        public override string ToStringShort() => "BuildModeTree";
+
+        public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+        {
+            DebugFillPropertiesCalls++;
+            properties.Add(new StringProperty("property", "value", quoted: false));
         }
     }
 

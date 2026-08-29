@@ -905,7 +905,8 @@ public abstract class SemanticsGestureDelegate
     public abstract void AssignSemantics(RenderSemanticsGestureHandler renderObject);
 
     /// <inheritdoc />
-    public override string ToString() => $"{Diagnostics.ObjectRuntimeType(this)}()";
+    public override string ToString() =>
+        $"{Diagnostics.ObjectRuntimeType(this, "SemanticsGestureDelegate")}()";
 }
 
 /// <summary>

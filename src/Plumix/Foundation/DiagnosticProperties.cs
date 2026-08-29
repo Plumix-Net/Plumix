@@ -49,7 +49,10 @@ public sealed class DiagnosticPropertiesBuilder
     {
         ArgumentNullException.ThrowIfNull(property);
 
-        Properties.Add(property);
+        if (Constants.KDebugMode)
+        {
+            Properties.Add(property);
+        }
     }
 }
 
@@ -133,6 +136,16 @@ public class DiagnosticsProperty<T> : DiagnosticsNode
         _value = default;
         _computeValue = computeValue;
         DefaultValue = NormalizeDefaultValue(defaultValue);
+        if (Constants.KDebugMode
+            && DefaultValue is not null
+            && !ReferenceEquals(DefaultValue, DiagnosticsDefaults.NoDefaultValue)
+            && DefaultValue is not T)
+        {
+            throw new ArgumentException(
+                "The default value must have the property's declared type.",
+                nameof(defaultValue));
+        }
+
         IfNull = ifNull ?? (missingIfNull ? "MISSING" : null);
         IfEmpty = ifEmpty;
         Tooltip = tooltip;
@@ -849,7 +862,7 @@ public sealed class FlagProperty : DiagnosticsProperty<bool?>
             defaultValue: defaultValue ?? DiagnosticsDefaults.NullValue,
             level: level)
     {
-        if (ifTrue is null && ifFalse is null)
+        if (Constants.KDebugMode && ifTrue is null && ifFalse is null)
         {
             throw new ArgumentException(
                 "A FlagProperty must be given at least one of ifTrue or ifFalse.",
@@ -1072,7 +1085,7 @@ public sealed class ObjectFlagProperty<T> : DiagnosticsProperty<T>
         DiagnosticLevel level = DiagnosticLevel.Info)
         : base(name, value, showName: showName, ifNull: ifNull, level: level)
     {
-        if (ifPresent is null && ifNull is null)
+        if (Constants.KDebugMode && ifPresent is null && ifNull is null)
         {
             throw new ArgumentException(
                 "An ObjectFlagProperty must be given at least one of ifPresent or ifNull.",
@@ -1272,16 +1285,29 @@ public class DiagnosticableNode<T> : DiagnosticsNode
     public override object? Value => TypedValue;
 
     /// <inheritdoc />
-    public override DiagnosticsTreeStyle? Style => base.Style ?? Builder.DefaultDiagnosticsTreeStyle;
+    public override DiagnosticsTreeStyle? Style => Constants.KReleaseMode
+        ? DiagnosticsTreeStyle.None
+        : base.Style ?? Builder!.DefaultDiagnosticsTreeStyle;
 
     /// <inheritdoc />
-    public override string? EmptyBodyDescription => Builder.EmptyBodyDescription;
+    public override string? EmptyBodyDescription =>
+        Constants.KDebugMode ? Builder!.EmptyBodyDescription : string.Empty;
 
     /// The builder holding the value's `debugFillProperties` output.
-    protected virtual DiagnosticPropertiesBuilder Builder
+    protected virtual DiagnosticPropertiesBuilder? Builder
     {
         get
         {
+            if (Constants.KReleaseMode)
+            {
+                return null;
+            }
+
+            if (!Constants.KDebugMode)
+            {
+                return _cachedBuilder;
+            }
+
             if (_cachedBuilder is null)
             {
                 _cachedBuilder = new DiagnosticPropertiesBuilder();
@@ -1293,14 +1319,14 @@ public class DiagnosticableNode<T> : DiagnosticsNode
     }
 
     /// <inheritdoc />
-    public override List<DiagnosticsNode> GetProperties() => Builder.Properties;
+    public override List<DiagnosticsNode> GetProperties() => Constants.KDebugMode ? Builder!.Properties : [];
 
     /// <inheritdoc />
     public override List<DiagnosticsNode> GetChildren() => [];
 
     /// <inheritdoc />
     public override string ToDescription(TextTreeConfiguration? parentConfiguration = null)
-        => TypedValue.ToStringShort();
+        => Constants.KDebugMode ? TypedValue.ToStringShort() : string.Empty;
 }
 
 /// <summary>

@@ -138,7 +138,7 @@ internal sealed class DebugOverflowIndicator
         double overflowBottom,
         List<DiagnosticsNode>? overflowHints)
     {
-        string runtimeType = Diagnostics.ObjectRuntimeType(self);
+        string runtimeType = Diagnostics.DescribeType(self.GetType());
         overflowHints ??= [];
         if (overflowHints.Count == 0)
         {

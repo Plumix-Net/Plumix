@@ -68,7 +68,7 @@ public abstract class DiagnosticsNode
         bool showSeparator = true,
         string? linePrefix = null)
     {
-        if (name is not null && name.EndsWith(':'))
+        if (Constants.KDebugMode && name is not null && name.EndsWith(':'))
         {
             throw new ArgumentException(
                 $"Names of diagnostic nodes must not end with colons.\nname:\n  \"{name}\"",
@@ -102,7 +102,8 @@ public abstract class DiagnosticsNode
 
     /// Priority level of the diagnostic used to control which diagnostics should
     /// be shown and filtered.
-    public virtual DiagnosticLevel Level => DiagnosticLevel.Info;
+    public virtual DiagnosticLevel Level =>
+        Constants.KReleaseMode ? DiagnosticLevel.Hidden : DiagnosticLevel.Info;
 
     /// Description to show if the node has no displayed properties or children.
     public virtual string? EmptyBodyDescription => null;
@@ -211,7 +212,7 @@ public abstract class DiagnosticsNode
 
     /// Whether the diagnostic should be filtered due to its [Level] being lower
     /// than `minLevel`.
-    public bool IsFiltered(DiagnosticLevel minLevel) => Level < minLevel;
+    public bool IsFiltered(DiagnosticLevel minLevel) => Constants.KReleaseMode || Level < minLevel;
 
     /// Returns a description with a short summary of the node itself not
     /// including children or properties.
@@ -229,12 +230,15 @@ public abstract class DiagnosticsNode
     {
         ArgumentNullException.ThrowIfNull(serializationDelegate);
 
-        bool hasChildren = GetChildren().Count > 0;
-        var result = new Dictionary<string, object?>(StringComparer.Ordinal)
+        var result = new Dictionary<string, object?>(StringComparer.Ordinal);
+        if (!Constants.KDebugMode)
         {
-            ["description"] = ToDescription(),
-            ["type"] = Diagnostics.DescribeType(GetType()),
-        };
+            return result;
+        }
+
+        bool hasChildren = GetChildren().Count > 0;
+        result["description"] = ToDescription();
+        result["type"] = Diagnostics.DescribeType(GetType());
 
         if (Name is not null)
         {
@@ -321,6 +325,11 @@ public abstract class DiagnosticsNode
     {
         ArgumentNullException.ThrowIfNull(serializationDelegate);
 
+        if (!Constants.KDebugMode)
+        {
+            return new Dictionary<string, object?>(StringComparer.Ordinal);
+        }
+
         var childrenToJsonify = new Queue<(DiagnosticsNode Node, Action<Dictionary<string, object?>> Callback)>();
         Dictionary<string, object?> result = ToJson(serializationDelegate, childrenToJsonify);
         JsonifyNextNodesInStack(childrenToJsonify, serializationDelegate);
@@ -341,6 +350,11 @@ public abstract class DiagnosticsNode
         TextTreeConfiguration? parentConfiguration,
         DiagnosticLevel minLevel = DiagnosticLevel.Info)
     {
+        if (!Constants.KDebugMode)
+        {
+            return base.ToString() ?? Diagnostics.DescribeType(GetType());
+        }
+
         if (Style == DiagnosticsTreeStyle.SingleLine)
         {
             return ToStringDeep(parentConfiguration: parentConfiguration, minLevel: minLevel);
@@ -365,14 +379,33 @@ public abstract class DiagnosticsNode
         DiagnosticLevel minLevel = DiagnosticLevel.Debug,
         int wrapWidth = 65)
     {
+        if (!Constants.KDebugMode)
+        {
+            return string.Empty;
+        }
+
         return new TextTreeRenderer(minLevel: minLevel, wrapWidth: wrapWidth)
             .Render(this, prefixLineOne, prefixOtherLines, parentConfiguration);
     }
 
     /// Converts the properties (`getProperties`) of this node to a form useful
     /// for `Timeline` event arguments.
-    public Dictionary<string, string> ToTimelineArguments()
+    public Dictionary<string, string>? ToTimelineArguments()
     {
+        if (Constants.KReleaseMode)
+        {
+            return null;
+        }
+
+        if (Constants.KProfileMode)
+        {
+            throw new FlutterError(
+                "DiagnosticsNode.toTimelineArguments used in non-debug build.\n"
+                + "The DiagnosticsNode.toTimelineArguments API is expensive and causes "
+                + "timeline traces to be non-representative. As such, it should not be used in profile builds. "
+                + "However, this application is compiled in profile mode and yet still invoked the method.");
+        }
+
         var result = new Dictionary<string, string>(StringComparer.Ordinal);
         foreach (DiagnosticsNode property in GetProperties())
         {

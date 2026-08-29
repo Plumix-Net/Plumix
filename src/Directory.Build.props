@@ -21,6 +21,23 @@
     analyzers during `dotnet build`; severities live in .editorconfig (dotnet_diagnostic.IDE*).
     Nullable warnings are errors so that "keep nullability correct" is checkable, not aspirational.
   -->
+  <!--
+    Profile builds.
+
+    Foundation/Constants.cs reads the DEBUG/PROFILE compilation symbols to answer Dart's
+    kDebugMode/kProfileMode/kReleaseMode, so profile mode needs a configuration of its own: an
+    optimized build that defines PROFILE instead of DEBUG. Build or test it with `-c Profile`.
+  -->
+  <PropertyGroup>
+    <Configurations>Debug;Release;Profile</Configurations>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Profile'">
+    <DefineConstants>$(DefineConstants);PROFILE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>portable</DebugType>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.csproj'">
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <WarningsAsErrors>$(WarningsAsErrors);nullable</WarningsAsErrors>

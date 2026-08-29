@@ -1031,14 +1031,14 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             List<DiagnosticsNode> debugOverflowHints =
             [
                 new ErrorDescription(
-                    $"The overflowing {Diagnostics.ObjectRuntimeType(this)} has an orientation of {_direction}."),
+                    $"The overflowing {Diagnostics.DescribeType(GetType())} has an orientation of {_direction}."),
                 new ErrorDescription(
-                    $"The edge of the {Diagnostics.ObjectRuntimeType(this)} that is overflowing has been marked "
+                    $"The edge of the {Diagnostics.DescribeType(GetType())} that is overflowing has been marked "
                     + "in the rendering with a yellow and black striped pattern. This is "
-                    + $"usually caused by the contents being too big for the {Diagnostics.ObjectRuntimeType(this)}."),
+                    + $"usually caused by the contents being too big for the {Diagnostics.DescribeType(GetType())}."),
                 new ErrorHint(
                     "Consider applying a flex factor (e.g. using an Expanded widget) to "
-                    + $"force the children of the {Diagnostics.ObjectRuntimeType(this)} to fit within the available "
+                    + $"force the children of the {Diagnostics.DescribeType(GetType())} to fit within the available "
                     + "space instead of being sized to their natural size."),
                 new ErrorHint(
                     "This is considered an error condition because it indicates that there "

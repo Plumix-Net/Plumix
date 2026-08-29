@@ -27,7 +27,7 @@ public abstract class Widget(Key? key = null) : DiagnosticableTree
     /// A short, textual description of this widget.
     public override string ToStringShort()
     {
-        string type = Diagnostics.ObjectRuntimeType(this);
+        string type = Diagnostics.ObjectRuntimeType(this, "Widget");
         return Key is null ? type : $"{type}-{Key}";
     }
 

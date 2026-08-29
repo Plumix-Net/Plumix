@@ -29,14 +29,22 @@ public static class Diagnostics
     ///    distinguish instances of the same class (hash collisions are
     ///    possible, but rare enough that its use in debug output is useful).
     ///  * [Object.runtimeType], the [Type] of an object.
-    public static string DescribeIdentity(object? obj) => $"{ObjectRuntimeType(obj)}#{ShortHash(obj)}";
+    public static string DescribeIdentity(object? obj)
+        => $"{ObjectRuntimeType(obj, "<optimized out>")}#{ShortHash(obj)}";
 
     /// Framework counterpart of Dart's `objectRuntimeType(object, optimizedValue)`.
     ///
-    /// Dart returns `optimizedValue` in release builds; Plumix has no build-mode concept, so the
-    /// real type name is always returned (see `docs/ai/DIVERGENCES.md`).
-    public static string ObjectRuntimeType(object? obj)
+    /// Dart returns `optimizedValue` outside debug builds so obtaining the runtime type does not
+    /// add diagnostic-only work to profile and release binaries.
+    public static string ObjectRuntimeType(object? obj, string optimizedValue)
     {
+        ArgumentNullException.ThrowIfNull(optimizedValue);
+
+        if (!Constants.KDebugMode)
+        {
+            return optimizedValue;
+        }
+
         return obj is null ? "Null" : DescribeType(obj.GetType());
     }
 
@@ -99,7 +107,7 @@ public static class Diagnostics
 
         string description = enumEntry.ToString() ?? string.Empty;
         int indexOfDot = description.IndexOf('.', StringComparison.Ordinal);
-        if (indexOfDot == -1 || indexOfDot >= description.Length - 1)
+        if (Constants.KDebugMode && (indexOfDot == -1 || indexOfDot >= description.Length - 1))
         {
             throw new ArgumentException(
                 $"The provided object \"{enumEntry}\" is not an enum.",

@@ -237,7 +237,7 @@ public sealed class StackFrame : IEquatable<StackFrame>
 
     /// <inheritdoc />
     public override string ToString() =>
-        $"{Diagnostics.ObjectRuntimeType(this)}(#{Number}, {PackageScheme}:{Package}/{PackagePath}:"
+        $"{Diagnostics.ObjectRuntimeType(this, "StackFrame")}(#{Number}, {PackageScheme}:{Package}/{PackagePath}:"
         + $"{Line}:{Column}, className: {ClassName}, method: {Method})";
 
     /// Parses a single CLR stack-trace line (`at Namespace.Type.Method(args) in file:line N`).

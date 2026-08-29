@@ -488,8 +488,8 @@ public class FlutterErrorDetails : Diagnosticable
             {
                 AssertionError => "assertion",
                 string => "message",
-                System.Exception => Diagnostics.ObjectRuntimeType(thrown),
-                _ => $"{Diagnostics.ObjectRuntimeType(thrown)} object",
+                System.Exception => Diagnostics.DescribeType(thrown.GetType()),
+                _ => $"{Diagnostics.DescribeType(thrown.GetType())} object",
             });
             properties.Add(new ErrorDescription($"The following {errorName} was {verb}:"));
             if (diagnosticable is not null)
@@ -501,7 +501,7 @@ public class FlutterErrorDetails : Diagnosticable
                 // Many exception classes put their type at the head of their message. This is
                 // redundant with the way we display exceptions, so attempt to strip out that header
                 // when we see it.
-                string prefix = $"{Diagnostics.ObjectRuntimeType(Exception)}: ";
+                string prefix = $"{Diagnostics.DescribeType(Exception.GetType())}: ";
                 string message = ExceptionAsString();
                 if (message.StartsWith(prefix, StringComparison.Ordinal))
                 {
@@ -575,7 +575,7 @@ public class FlutterErrorDetails : Diagnosticable
     /// Renders an exception the way Dart's `Error.toString`/`Exception.toString` do: the runtime
     /// type, a colon, and the message — never .NET's stack-trace-carrying `ToString`.
     private static string DescribeException(Exception error) =>
-        $"{Diagnostics.ObjectRuntimeType(error)}: {error.Message}";
+        $"{Diagnostics.DescribeType(error.GetType())}: {error.Message}";
 
     private static bool IsNumber(object value) =>
         value is byte or sbyte or short or ushort or int or uint or long or ulong
@@ -1081,11 +1081,16 @@ internal sealed class FlutterErrorDetailsNode : DiagnosticableNode<FlutterErrorD
     {
     }
 
-    protected override DiagnosticPropertiesBuilder Builder
+    protected override DiagnosticPropertiesBuilder? Builder
     {
         get
         {
-            DiagnosticPropertiesBuilder builder = base.Builder;
+            DiagnosticPropertiesBuilder? builder = base.Builder;
+            if (builder is null)
+            {
+                return null;
+            }
+
             IEnumerable<DiagnosticsNode> properties = builder.Properties;
             foreach (DiagnosticPropertiesTransformer transformer in FlutterErrorDetails.PropertiesTransformers)
             {
