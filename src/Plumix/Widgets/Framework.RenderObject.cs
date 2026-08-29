@@ -198,7 +198,12 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
     internal override void Unmount()
     {
         DetachRenderObject();
-        _renderObject?.Detach();
+        if (_renderObject?.Attached == true)
+        {
+            _renderObject.Detach();
+        }
+
+        _renderObject?.Dispose();
         _renderObject = null;
         base.Unmount();
     }

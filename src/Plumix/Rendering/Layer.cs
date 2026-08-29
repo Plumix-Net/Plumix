@@ -10,6 +10,46 @@ using Plumix.Foundation;
 namespace Plumix.Rendering;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+public sealed class LayerHandle<T> where T : Layer
+{
+    private T? _layer;
+
+    public LayerHandle(T? layer = null)
+    {
+        _layer = layer;
+        if (_layer != null)
+        {
+            _layer.Ref();
+        }
+    }
+
+    public T? Layer
+    {
+        get => _layer;
+        set
+        {
+            if (value?.DebugDisposed == true)
+            {
+                throw new AssertionError($"Attempted to create a handle to an already disposed layer: {value}.");
+            }
+
+            if (ReferenceEquals(_layer, value))
+            {
+                return;
+            }
+
+            _layer?.Unref();
+            _layer = value;
+            _layer?.Ref();
+        }
+    }
+
+    /// <inheritdoc />
+    public override string ToString() =>
+        _layer is null ? "LayerHandle(DISPOSED)" : $"LayerHandle({_layer})";
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
 public sealed record AnnotationEntry<T>(
     T Annotation,
     Point LocalPosition)
@@ -33,6 +73,12 @@ public sealed class AnnotationResult<T> where T : notnull
 
 public abstract class Layer : DiagnosticableTree
 {
+    internal readonly LayerHandle<Layer> _parentHandle = new();
+    private int _refCount;
+    private bool _debugDisposed;
+    private object? _owner;
+    private IDisposable? _engineLayer;
+
     [ThreadStatic]
     private static BackdropCapture? _magnifierBackdrop;
 
@@ -45,7 +91,15 @@ public abstract class Layer : DiagnosticableTree
     [ThreadStatic]
     private static bool _backdropCaptureStopped;
 
-    public ContainerLayer? Parent { get; private set; }
+    public ContainerLayer? Parent { get; internal set; }
+
+    public object? Owner => _owner;
+
+    public bool Attached => _owner != null;
+
+    public bool DebugDisposed => _debugDisposed;
+
+    public int DebugHandleCount => _refCount;
 
     internal virtual bool ContainsMagnifier => false;
 
@@ -201,14 +255,87 @@ public abstract class Layer : DiagnosticableTree
                && position.Y < rect.Bottom;
     }
 
-    internal virtual void Attach(ContainerLayer parent)
+    public virtual void Attach(object owner)
     {
-        Parent = parent;
+        ArgumentNullException.ThrowIfNull(owner);
+        if (_owner != null)
+        {
+            throw new AssertionError("A layer cannot be attached to more than one owner.");
+        }
+
+        _owner = owner;
     }
 
-    internal virtual void Detach()
+    public virtual void Detach()
     {
-        Parent = null;
+        if (_owner == null)
+        {
+            throw new AssertionError("A detached layer cannot be detached again.");
+        }
+
+        _owner = null;
+    }
+
+    public virtual void Remove()
+    {
+        Parent?.Remove(this);
+    }
+
+    protected internal virtual void Dispose()
+    {
+        if (_debugDisposed)
+        {
+            throw new AssertionError(
+                "Layers must only be disposed once. This is typically handled by LayerHandle.");
+        }
+
+        if (_refCount != 0)
+        {
+            throw new AssertionError(
+                $"Do not directly call Dispose on a {GetType().Name}. Instead, use LayerHandle.Layer = null.");
+        }
+
+        EngineLayer = null;
+        _debugDisposed = true;
+    }
+
+    protected internal IDisposable? EngineLayer
+    {
+        get => _engineLayer;
+        set
+        {
+            if (_debugDisposed)
+            {
+                throw new AssertionError("A disposed layer cannot retain an engine layer.");
+            }
+
+            if (ReferenceEquals(_engineLayer, value))
+            {
+                return;
+            }
+
+            _engineLayer?.Dispose();
+            _engineLayer = value;
+        }
+    }
+
+    internal void Ref()
+    {
+        _refCount += 1;
+    }
+
+    internal void Unref()
+    {
+        if (_refCount <= 0)
+        {
+            throw new AssertionError("A layer handle released a layer with no references.");
+        }
+
+        _refCount -= 1;
+        if (_refCount == 0)
+        {
+            Dispose();
+        }
     }
 
     internal abstract void AddToScene(DrawingContext context, Point offset);
@@ -248,10 +375,28 @@ public abstract class Layer : DiagnosticableTree
     {
         base.DebugFillProperties(properties);
         properties.Add(new DiagnosticsProperty<object>(
+            "owner",
+            Owner,
+            defaultValue: DiagnosticsDefaults.NullValue,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<object>(
             "creator",
             DebugCreator,
             defaultValue: DiagnosticsDefaults.NullValue,
             level: DiagnosticLevel.Debug));
+        properties.Add(new DiagnosticsProperty<IDisposable>(
+            "engine layer",
+            EngineLayer,
+            defaultValue: DiagnosticsDefaults.NullValue,
+            level: DiagnosticLevel.Debug));
+        properties.Add(new IntProperty("handles", DebugHandleCount, level: DiagnosticLevel.Debug));
+    }
+
+    /// <inheritdoc />
+    public override string ToStringShort()
+    {
+        string description = base.ToStringShort();
+        return Attached ? description : $"{description} DETACHED";
     }
 
     /// The object responsible for creating this layer.
@@ -272,32 +417,73 @@ public class ContainerLayer : Layer
 
     public void Append(Layer child)
     {
-        if (ReferenceEquals(child.Parent, this))
+        ArgumentNullException.ThrowIfNull(child);
+        if (child.Parent != null || child.Attached)
         {
-            return;
+            throw new AssertionError("A layer must be detached and parentless before it can be appended.");
         }
 
-        child.Parent?.Remove(child);
+        child.Parent = this;
         _children.Add(child);
-        child.Attach(this);
+        child._parentHandle.Layer = child;
+        if (Attached)
+        {
+            child.Attach(Owner!);
+        }
     }
 
     public void Remove(Layer child)
     {
         if (_children.Remove(child))
         {
-            child.Detach();
+            child.Parent = null;
+            if (child.Attached)
+            {
+                child.Detach();
+            }
+
+            child._parentHandle.Layer = null;
         }
     }
 
     public void RemoveAllChildren()
     {
-        foreach (var child in _children)
+        foreach (Layer child in _children)
         {
-            child.Detach();
+            child.Parent = null;
+            if (child.Attached)
+            {
+                child.Detach();
+            }
+
+            child._parentHandle.Layer = null;
         }
 
         _children.Clear();
+    }
+
+    public override void Attach(object owner)
+    {
+        base.Attach(owner);
+        foreach (Layer child in _children)
+        {
+            child.Attach(owner);
+        }
+    }
+
+    public override void Detach()
+    {
+        base.Detach();
+        foreach (Layer child in _children)
+        {
+            child.Detach();
+        }
+    }
+
+    protected internal override void Dispose()
+    {
+        RemoveAllChildren();
+        base.Dispose();
     }
 
     internal override void AddToScene(DrawingContext context, Point offset)
@@ -442,7 +628,7 @@ public sealed class LeaderLayer : ContainerLayer
                 return;
             }
 
-            if (Parent != null)
+            if (Attached)
             {
                 _link.UnregisterLeader(this);
                 value.RegisterLeader(this);
@@ -454,13 +640,13 @@ public sealed class LeaderLayer : ContainerLayer
 
     public Point Offset { get; set; }
 
-    internal override void Attach(ContainerLayer parent)
+    public override void Attach(object owner)
     {
-        base.Attach(parent);
+        base.Attach(owner);
         _link.RegisterLeader(this);
     }
 
-    internal override void Detach()
+    public override void Detach()
     {
         _link.UnregisterLeader(this);
         base.Detach();
@@ -883,11 +1069,18 @@ public sealed class ColorFilterLayer : ContainerLayer
             new Rect(FilterBounds.Position + offset, FilterBounds.Size));
     }
 
-    internal override void Detach()
+    public override void Detach()
     {
         _filteredBitmap?.Dispose();
         _filteredBitmap = null;
         base.Detach();
+    }
+
+    protected internal override void Dispose()
+    {
+        _filteredBitmap?.Dispose();
+        _filteredBitmap = null;
+        base.Dispose();
     }
 
     /// <inheritdoc />
@@ -924,11 +1117,18 @@ public sealed class ImageFilterLayer : OffsetLayer
             FilterBounds);
     }
 
-    internal override void Detach()
+    public override void Detach()
     {
         _filteredBitmap?.Dispose();
         _filteredBitmap = null;
         base.Detach();
+    }
+
+    protected internal override void Dispose()
+    {
+        _filteredBitmap?.Dispose();
+        _filteredBitmap = null;
+        base.Dispose();
     }
 
     /// <inheritdoc />
@@ -1023,12 +1223,20 @@ public sealed class BackdropFilterLayer : ContainerLayer
         AddChildrenToScene(context, offset);
     }
 
-    internal override void Detach()
+    public override void Detach()
     {
         _filteredBitmap?.Dispose();
         _filteredBitmap = null;
         Backdrop = null;
         base.Detach();
+    }
+
+    protected internal override void Dispose()
+    {
+        _filteredBitmap?.Dispose();
+        _filteredBitmap = null;
+        Backdrop = null;
+        base.Dispose();
     }
 
     /// <inheritdoc />
@@ -1069,11 +1277,18 @@ public sealed class ShaderMaskLayer : ContainerLayer
             sceneMaskRect);
     }
 
-    internal override void Detach()
+    public override void Detach()
     {
         _maskedBitmap?.Dispose();
         _maskedBitmap = null;
         base.Detach();
+    }
+
+    protected internal override void Dispose()
+    {
+        _maskedBitmap?.Dispose();
+        _maskedBitmap = null;
+        base.Dispose();
     }
 
     /// <inheritdoc />

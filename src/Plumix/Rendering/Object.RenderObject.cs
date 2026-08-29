@@ -18,12 +18,35 @@ public interface IRenderObject
 public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, IHitTestTarget
 {
     internal bool _wasRepaintBoundary;
-    internal Layer? _layer;
+    private readonly LayerHandle<Layer> _layerHandle = new();
+    internal Layer? _layer
+    {
+        get => _layerHandle.Layer;
+        set => _layerHandle.Layer = value;
+    }
+
     private readonly RenderObjectSemantics _semantics;
     private bool _needsCompositingBitsUpdate;
     private bool _needsCompositedLayerUpdate;
     private bool _didInitializeCompositing;
+    private bool _debugDisposed;
+
+    [ThreadStatic]
+    private static RenderObject? _debugActiveLayout;
+
     internal RenderObjectSemantics Semantics => _semantics;
+
+    /// <summary>Whether this render object has been disposed.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugDisposed</c>.</remarks>
+    public bool DebugDisposed => _debugDisposed;
+
+    /// <summary>The render object currently computing layout, if any.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugActiveLayout</c>.</remarks>
+    public static RenderObject? DebugActiveLayout => _debugActiveLayout;
+
+    /// <summary>The retained compositing layer, exposed for diagnostics and tests.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugLayer</c>.</remarks>
+    public Layer? DebugLayer => _layerHandle.Layer;
 
     /// <summary>The semantics node this render object produced, or <c>null</c> when it merged up.</summary>
     /// <remarks>Flutter's <c>RenderObject.debugSemantics</c>.</remarks>
@@ -75,6 +98,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     ///  * [BindingBase.reassembleApplication]
     public void Reassemble()
     {
+        EnsureNotDisposedMutation();
         MarkNeedsLayout();
         MarkNeedsCompositingBitsUpdate();
         MarkNeedsPaint();
@@ -109,7 +133,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// child is added to the parent's child list.
     public virtual void SetupParentData(RenderObject child)
     {
-        //Debug.Assert(_debugCanPerformMutations);
+        EnsureNotDisposedMutation();
 
         if (child.parentData is null)
         {
@@ -167,6 +191,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// </summary>
     public void AdoptChild(RenderObject child)
     {
+        EnsureNotDisposedMutation();
         SetupParentData(child);
         MarkNeedsLayout();
         MarkNeedsCompositingBitsUpdate();
@@ -183,6 +208,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     public void DropChild(RenderObject child)
     {
+        EnsureNotDisposedMutation();
         if (!ReferenceEquals(child.Parent, this))
         {
             return;
@@ -216,6 +242,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// </summary>
     public void Attach(PipelineOwner owner)
     {
+        if (_debugDisposed)
+        {
+            throw new AssertionError("A disposed RenderObject cannot be attached.");
+        }
+
         Owner = owner;
         if (!_didInitializeCompositing)
         {
@@ -264,10 +295,27 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// </summary>
     public void Detach()
     {
+        if (Owner == null)
+        {
+            throw new AssertionError("A detached RenderObject cannot be detached again.");
+        }
+
         OnDetach();
-        _layer = null;
         ClearOwnSemantics();
         Owner = null;
+    }
+
+    /// <summary>Releases resources owned by this render object.</summary>
+    /// <remarks>Overrides must call <c>base.Dispose()</c> last.</remarks>
+    public virtual void Dispose()
+    {
+        if (_debugDisposed)
+        {
+            throw new AssertionError("RenderObject.Dispose() called more than once.");
+        }
+
+        _layerHandle.Layer = null;
+        _debugDisposed = true;
     }
 
     protected virtual void OnDetach()
@@ -311,6 +359,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// </summary>
     public virtual void Layout(BoxConstraints constraints, bool parentUsesSize = false)
     {
+        EnsureNotDisposedMutation();
         if (!constraints.IsNormalized)
         {
             throw new InvalidOperationException("RenderObject.layout requires normalized constraints.");
@@ -329,12 +378,21 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         _constraints = constraints;
 
-        if (SizedByParent)
+        RenderObject? previousActiveLayout = _debugActiveLayout;
+        _debugActiveLayout = this;
+        try
         {
-            PerformResize();
-        }
+            if (SizedByParent)
+            {
+                PerformResize();
+            }
 
-        PerformLayout();
+            PerformLayout();
+        }
+        finally
+        {
+            _debugActiveLayout = previousActiveLayout;
+        }
 
         _needsLayout = false;
         _descendantNeedsLayout = false;
@@ -392,6 +450,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// </summary>
     public virtual void MarkNeedsLayout()
     {
+        EnsureNotDisposedMutation();
         if (_needsLayout)
         {
             return;
@@ -447,6 +506,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     public void MarkNeedsCompositingBitsUpdate()
     {
+        EnsureNotDisposedMutation();
         if (_needsCompositingBitsUpdate)
         {
             return;
@@ -472,6 +532,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     public void MarkNeedsSemanticsUpdate()
     {
+        EnsureNotDisposedMutation();
         if (!Attached || Owner?.HasSemanticsOwner != true)
         {
             return;
@@ -659,6 +720,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     protected void MarkNeedsPaint()
     {
+        EnsureNotDisposedMutation();
         if (_needsPaint)
         {
             return;
@@ -683,6 +745,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     protected void MarkNeedsCompositedLayerUpdate()
     {
+        EnsureNotDisposedMutation();
         if (_needsCompositedLayerUpdate)
         {
             return;
@@ -969,7 +1032,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     internal void _paintWithContext(PaintingContext context, Point offset)
     {
-        // assert(!_debugDisposed);
+        EnsureNotDisposedMutation();
         // assert(() {
         //   if (_debugDoingThisPaint) {
         //     throw FlutterError.fromParts(<DiagnosticsNode>[
@@ -1109,5 +1172,18 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         // {
         //     FlutterTimeline.finishSync();
         // }
+    }
+
+    private void EnsureNotDisposedMutation()
+    {
+        if (!_debugDisposed)
+        {
+            return;
+        }
+
+        throw new FlutterError([
+            new ErrorSummary("A disposed RenderObject was mutated."),
+            new DiagnosticsProperty<RenderObject>("The disposed RenderObject was", this),
+        ]);
     }
 }

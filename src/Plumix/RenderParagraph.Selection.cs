@@ -99,10 +99,11 @@ public sealed partial class RenderParagraph
     }
 
     /// Releases the fragments this paragraph owns.
-    public void Dispose()
+    public override void Dispose()
     {
         RemoveSelectionRegistrarSubscription();
         DisposeSelectableFragments();
+        base.Dispose();
     }
 
     private void UpdateSelectionRegistrarSubscription()

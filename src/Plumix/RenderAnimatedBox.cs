@@ -77,8 +77,9 @@ public sealed class RenderAnimatedBox : RenderBox, IDisposable
         ctx.DrawRectangle(Brush, null, rect, 16, 16);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
         _controller.Changed -= OnTick;
+        base.Dispose();
     }
 }

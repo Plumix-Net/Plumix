@@ -102,6 +102,11 @@ public sealed class RenderView : RenderBox
 
     internal void ScheduleInitialPaint(OffsetLayer rootLayer)
     {
+        if (!rootLayer.Attached)
+        {
+            rootLayer.Attach(this);
+        }
+
         _layer = rootLayer;
     }
 
@@ -110,6 +115,16 @@ public sealed class RenderView : RenderBox
         if (ReferenceEquals(_layer, rootLayer))
         {
             return;
+        }
+
+        if (_layer is Layer oldRootLayer && oldRootLayer.Attached)
+        {
+            oldRootLayer.Detach();
+        }
+
+        if (!rootLayer.Attached)
+        {
+            rootLayer.Attach(this);
         }
 
         _layer = rootLayer;

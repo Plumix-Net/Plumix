@@ -12,7 +12,6 @@ namespace Plumix.Rendering;
 public sealed class RenderLeaderLayer : RenderProxyBox
 {
     private LayerLink _link;
-    private LeaderLayer? _leaderLayer;
     private Size? _previousLayoutSize;
 
     public RenderLeaderLayer(LayerLink link, RenderBox? child = null)
@@ -60,12 +59,6 @@ public sealed class RenderLeaderLayer : RenderProxyBox
     protected override void OnDetach()
     {
         _link.UnregisterRenderLeader(this);
-        if (_leaderLayer?.Parent != null)
-        {
-            _leaderLayer.Parent.Remove(_leaderLayer);
-        }
-
-        _leaderLayer = null;
         base.OnDetach();
     }
 
@@ -78,17 +71,18 @@ public sealed class RenderLeaderLayer : RenderProxyBox
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (_leaderLayer == null)
+        if (_layer is not LeaderLayer leaderLayer)
         {
-            _leaderLayer = new LeaderLayer(_link, offset);
+            leaderLayer = new LeaderLayer(_link, offset);
+            _layer = leaderLayer;
         }
         else
         {
-            _leaderLayer.Link = _link;
-            _leaderLayer.Offset = offset;
+            leaderLayer.Link = _link;
+            leaderLayer.Offset = offset;
         }
 
-        ctx.PushLayer(_leaderLayer, childContext => base.Paint(childContext, default));
+        ctx.PushLayer(leaderLayer, childContext => base.Paint(childContext, default));
     }
 
     /// <inheritdoc />
@@ -106,7 +100,6 @@ public sealed class RenderFollowerLayer : RenderProxyBox
     private Vector _offset;
     private Alignment _leaderAnchor;
     private Alignment _followerAnchor;
-    private FollowerLayer? _followerLayer;
 
     public RenderFollowerLayer(
         LayerLink link,
@@ -202,19 +195,14 @@ public sealed class RenderFollowerLayer : RenderProxyBox
 
     public Matrix4 GetCurrentTransform()
     {
-        return _followerLayer?.GetLastTransform() ?? Matrix4.Identity();
+        return (_layer as FollowerLayer)?.GetLastTransform() ?? Matrix4.Identity();
     }
 
     protected override bool AlwaysNeedsCompositing => true;
 
     protected override void OnDetach()
     {
-        if (_followerLayer?.Parent != null)
-        {
-            _followerLayer.Parent.Remove(_followerLayer);
-        }
-
-        _followerLayer = null;
+        _layer = null;
         base.OnDetach();
     }
 
@@ -255,23 +243,24 @@ public sealed class RenderFollowerLayer : RenderProxyBox
     public override void Paint(PaintingContext ctx, Point offset)
     {
         Matrix4? linkedTransform = ComputeLinkedTransform();
-        if (_followerLayer == null)
+        if (_layer is not FollowerLayer followerLayer)
         {
-            _followerLayer = new FollowerLayer(
+            followerLayer = new FollowerLayer(
                 _link,
                 _showWhenUnlinked,
                 offset,
                 linkedTransform);
+            _layer = followerLayer;
         }
         else
         {
-            _followerLayer.Link = _link;
-            _followerLayer.ShowWhenUnlinked = _showWhenUnlinked;
-            _followerLayer.UnlinkedOffset = offset;
-            _followerLayer.LinkedTransform = linkedTransform;
+            followerLayer.Link = _link;
+            followerLayer.ShowWhenUnlinked = _showWhenUnlinked;
+            followerLayer.UnlinkedOffset = offset;
+            followerLayer.LinkedTransform = linkedTransform;
         }
 
-        ctx.PushLayer(_followerLayer, childContext => base.Paint(childContext, default));
+        ctx.PushLayer(followerLayer, childContext => base.Paint(childContext, default));
     }
 
     private Matrix4? ComputeLinkedTransform()

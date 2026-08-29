@@ -28,6 +28,10 @@ public abstract partial class RenderObject
     public override string ToStringShort()
     {
         string header = Diagnostics.DescribeIdentity(this);
+        if (DebugDisposed)
+        {
+            return $"{header} DISPOSED";
+        }
 
         int count = 0;
         for (RenderObject? node = this; node is not null && node._isRelayoutBoundary != true; node = node.Parent)
@@ -73,6 +77,25 @@ public abstract partial class RenderObject
     public override string ToString(DiagnosticLevel minLevel) => ToStringShort();
 
     /// <inheritdoc />
+    public override string ToStringDeep(
+        string prefixLineOne = "",
+        string? prefixOtherLines = null,
+        DiagnosticLevel minLevel = DiagnosticLevel.Debug,
+        int wrapWidth = 65)
+    {
+        return WithDebugActiveLayoutCleared(
+            () => base.ToStringDeep(prefixLineOne, prefixOtherLines, minLevel, wrapWidth));
+    }
+
+    /// <inheritdoc />
+    public override string ToStringShallow(
+        string joiner = ", ",
+        DiagnosticLevel minLevel = DiagnosticLevel.Debug)
+    {
+        return WithDebugActiveLayoutCleared(() => base.ToStringShallow(joiner, minLevel));
+    }
+
+    /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
@@ -90,7 +113,10 @@ public abstract partial class RenderObject
         properties.Add(new DiagnosticsProperty<IConstraints>("constraints", _constraints, missingIfNull: true));
 
         // Don't access it via the "Layer" getter since that's only valid when we don't need paint.
-        properties.Add(new DiagnosticsProperty<Layer>("layer", _layer, defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<Layer>(
+            "layer",
+            DebugLayer,
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new DiagnosticsProperty<SemanticsNode>(
             "semantics node",
             SemanticsNode,
@@ -129,5 +155,19 @@ public abstract partial class RenderObject
     private protected static List<DiagnosticsNode> DebugDescribeSingleChild(RenderObject? child)
     {
         return child is null ? [] : [child.ToDiagnosticsNode(name: "child")];
+    }
+
+    private static T WithDebugActiveLayoutCleared<T>(Func<T> callback)
+    {
+        RenderObject? previousActiveLayout = _debugActiveLayout;
+        _debugActiveLayout = null;
+        try
+        {
+            return callback();
+        }
+        finally
+        {
+            _debugActiveLayout = previousActiveLayout;
+        }
     }
 }

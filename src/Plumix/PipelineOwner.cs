@@ -619,8 +619,8 @@ public sealed class PipelineOwner : DiagnosticableTree
 
     internal void ReplaceRootLayer(OffsetLayer rootLayer)
     {
-        _rootLayer = rootLayer;
         Root.ReplaceRootLayer(rootLayer);
+        _rootLayer = rootLayer;
     }
 
     /// <inheritdoc />

@@ -80,7 +80,7 @@ public abstract class DiagnosticableTree : Diagnosticable, IDiagnosticableTree
     ///
     /// This description is often somewhat long. This includes the same
     /// information given by [ToStringDeep], but does not recurse to any children.
-    public string ToStringShallow(string joiner = ", ", DiagnosticLevel minLevel = DiagnosticLevel.Debug)
+    public virtual string ToStringShallow(string joiner = ", ", DiagnosticLevel minLevel = DiagnosticLevel.Debug)
     {
         var result = new StringBuilder();
         result.Append(ToString());
@@ -92,7 +92,7 @@ public abstract class DiagnosticableTree : Diagnosticable, IDiagnosticableTree
     }
 
     /// Returns a string representation of this node and its descendants.
-    public string ToStringDeep(
+    public virtual string ToStringDeep(
         string prefixLineOne = "",
         string? prefixOtherLines = null,
         DiagnosticLevel minLevel = DiagnosticLevel.Debug,

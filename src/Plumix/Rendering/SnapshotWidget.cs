@@ -265,10 +265,16 @@ public sealed class SnapshotOffsetLayer : OffsetLayer
         }
     }
 
-    internal override void Detach()
+    public override void Detach()
     {
         ClearSnapshot();
         base.Detach();
+    }
+
+    protected internal override void Dispose()
+    {
+        ClearSnapshot();
+        base.Dispose();
     }
 
     private RenderTargetBitmap RasterizeChildren()
