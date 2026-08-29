@@ -1107,17 +1107,29 @@ internal sealed class RenderToggleButtonInputPadding : RenderProxyBox
         return childBaseline.Value + ((outerSize.Height - childSize.Height) / 2.0);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    public override bool HitTest(BoxHitTestResult result, Point position)
     {
+        // The base HitTest also checks HitTestChildren. We don't want that in this case because
+        // we've padded around the children per tapTargetSize.
+        if (position.X < 0.0 || position.Y < 0.0 || position.X >= Size.Width || position.Y >= Size.Height)
+        {
+            return false;
+        }
+
         if (Child is null)
         {
             return false;
         }
 
-        var childParentData = (BoxParentData)Child.parentData!;
-        Point transformed = Direction == Axis.Horizontal
-            ? new Point(position.X - childParentData.offset.X, Child.Size.Height / 2.0)
-            : new Point(Child.Size.Width / 2.0, position.Y - childParentData.offset.Y);
-        return Child.HitTest(result, transformed);
+        RenderBox child = Child;
+
+        // Only adjust one axis to ensure the correct button is tapped.
+        Point center = Direction == Axis.Horizontal
+            ? new Point(position.X, child.Size.Height / 2.0)
+            : new Point(child.Size.Width / 2.0, position.Y);
+        return result.AddWithRawTransform(
+            MatrixUtils.ForceToPoint(center),
+            center,
+            (hitResult, _) => child.HitTest(hitResult, center));
     }
 }

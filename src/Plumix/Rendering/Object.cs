@@ -346,8 +346,12 @@ public class RenderBoxContainerDefaultsMixin<TChild, TParentData>(RenderObject o
         while (child != null)
         {
             var childParentData = (TParentData)child.parentData!;
-            var transformedPosition = position - childParentData.offset;
-            if (child.HitTest(result, transformedPosition))
+            RenderBox hitChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                childParentData.offset,
+                position,
+                (hitResult, transformed) => hitChild.HitTest(hitResult, transformed));
+            if (isHit)
             {
                 return true;
             }

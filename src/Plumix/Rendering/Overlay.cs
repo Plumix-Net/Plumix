@@ -192,8 +192,12 @@ internal sealed class RenderOverlayTheater : RenderBox,
         foreach (RenderBox child in ChildrenInHitTestOrder())
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
-            Point transformedPosition = position - parentData.offset;
-            if (child.HitTest(result, transformedPosition))
+            RenderBox localChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                parentData.offset,
+                position,
+                (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
+            if (isHit)
             {
                 return true;
             }

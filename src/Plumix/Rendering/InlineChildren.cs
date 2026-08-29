@@ -149,7 +149,12 @@ public static class RenderInlineChildrenContainerDefaults
                 return false;
             }
 
-            if (child.HitTest(result, position - childOffset.Value))
+            RenderBox localChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                childOffset.Value,
+                position,
+                (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
+            if (isHit)
             {
                 return true;
             }

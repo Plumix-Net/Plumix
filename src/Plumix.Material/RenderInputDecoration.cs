@@ -1155,7 +1155,12 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
     {
         foreach (RenderBox child in Children())
         {
-            if (child.HitTest(result, position - ParentDataOf(child).offset))
+            RenderBox localChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                ParentDataOf(child).offset,
+                position,
+                (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
+            if (isHit)
             {
                 return true;
             }

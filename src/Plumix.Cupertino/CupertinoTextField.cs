@@ -1276,7 +1276,11 @@ internal sealed class RenderCupertinoBaselineAlignedStack : RenderBox,
             return false;
         }
         var parentData = (CupertinoBaselineAlignedStackParentData)editable.parentData!;
-        return editable.HitTest(result, position - (Vector)parentData.offset);
+        RenderBox child = editable;
+        return result.AddWithPaintOffset(
+            parentData.offset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
     public void Insert(RenderBox child, RenderBox? after = null) => _children.Insert(child, after);

@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `HitTestResult`'s transform stack (`PushTransform`/`PushOffset`/`PopTransform`, `Wrap`) (`hit_test.dart`).
+- Breaking: `HitTestEntry.Transform` is filled during hit testing and `GestureBinding` dispatches `Transformed` events.
+- Breaking: `BoxHitTestEntry.LocalPosition` is the hit position; `HitTestEntry.TransformEvent` is gone (`box.dart`).
+- Added `BoxHitTestResult.AddWithOutOfBandPosition`; every `HitTestChildren` now pushes its offset (`box.dart`).
+- Breaking: `ToggleButtons` hit tests through `MatrixUtils.ForceToPoint`, as Dart does (`toggle_buttons.dart`).
 - Added `ScaleGestureRecognizer` with `Scale{Start,Update,End}Details` and pan/zoom aggregation (`gestures/scale.dart`).
 - Added `GestureDetector` `OnScale*` and the trackpad scroll-to-scale options (`widgets/gesture_detector.dart`).
 - Breaking: `OneSequenceGestureRecognizer.AddAllowedPointer` routes with the event's transform (`recognizer.dart`).

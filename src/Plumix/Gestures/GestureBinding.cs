@@ -105,8 +105,7 @@ public sealed class GestureBinding
         {
             foreach (var entry in hitTestResult.Path)
             {
-                var transformedEvent = entry.TransformEvent(@event);
-                entry.Target.HandleEvent(transformedEvent, entry);
+                entry.Target.HandleEvent(@event.Transformed(entry.Transform), entry);
             }
         }
 
@@ -186,8 +185,7 @@ public sealed class GestureBinding
 
     private static void DispatchTransformedEvent(PointerEvent @event, HitTestEntry entry)
     {
-        var transformedEvent = entry.TransformEvent(@event);
-        entry.Target.HandleEvent(transformedEvent, entry);
+        entry.Target.HandleEvent(@event.Transformed(entry.Transform), entry);
     }
 
     private PointerEvent AttachDelta(PointerEvent @event)

@@ -544,7 +544,11 @@ internal sealed class RenderListTile : RenderBox, ISlottedRenderObjectContainer
             return false;
         }
 
-        return child.HitTest(result, position - ParentDataOf(child).offset);
+        RenderBox localChild = child;
+        return result.AddWithPaintOffset(
+            ParentDataOf(child).offset,
+            position,
+            (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
     }
 
     private void SetSlotChild(ref RenderBox? field, RenderBox? value)

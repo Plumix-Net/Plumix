@@ -535,7 +535,12 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
                 continue;
             }
 
-            if (child.HitTest(result, position - PaintOffsetOf(child)))
+            RenderSliver localChild = child;
+            Point paintOffset = PaintOffsetOf(child);
+            bool isHit = result.AddWithOutOfBandPosition(
+                hitResult => localChild.HitTest(hitResult, position - paintOffset),
+                paintOffset: paintOffset);
+            if (isHit)
             {
                 return true;
             }

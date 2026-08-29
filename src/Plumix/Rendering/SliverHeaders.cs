@@ -139,7 +139,11 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
         }
 
         Point childOffset = ((BoxParentData)_child.parentData!).offset;
-        return _child.HitTest(result, position - childOffset);
+        RenderBox child = _child;
+        return result.AddWithPaintOffset(
+            childOffset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)

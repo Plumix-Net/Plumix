@@ -697,7 +697,17 @@ internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
         for (RenderBox? child = LastChild; child is not null; child = ChildBefore(child))
         {
             var parentData = (ToolbarItemsParentData)child.parentData!;
-            if (parentData.ShouldPaint && child.HitTest(result, position - parentData.offset))
+            if (!parentData.ShouldPaint)
+            {
+                continue;
+            }
+
+            RenderBox localChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                parentData.offset,
+                position,
+                (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
+            if (isHit)
             {
                 return true;
             }

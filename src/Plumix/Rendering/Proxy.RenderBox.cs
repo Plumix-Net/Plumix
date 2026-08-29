@@ -130,7 +130,11 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
         }
 
         var childParentData = (BoxParentData)_child.parentData!;
-        return _child.HitTest(result, position - childParentData.offset);
+        RenderBox child = _child;
+        return result.AddWithPaintOffset(
+            childParentData.offset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)

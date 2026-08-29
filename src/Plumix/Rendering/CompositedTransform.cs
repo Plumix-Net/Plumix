@@ -230,21 +230,10 @@ public sealed class RenderFollowerLayer : RenderProxyBox
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        if (Child == null)
-        {
-            return false;
-        }
-
-        Matrix4? inverse =
-            Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(GetCurrentTransform()));
-        if (inverse is null)
-        {
-            return false;
-        }
-
-        var childParentData = (BoxParentData)Child.parentData!;
-        Point transformedPosition = MatrixUtils.TransformPoint(inverse, position) - childParentData.offset;
-        return Child.HitTest(result, transformedPosition);
+        return result.AddWithPaintTransform(
+            GetCurrentTransform(),
+            position,
+            (hitResult, transformed) => base.HitTestChildren(hitResult, transformed));
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)

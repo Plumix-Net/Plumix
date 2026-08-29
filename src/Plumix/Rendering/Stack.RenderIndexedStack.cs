@@ -149,7 +149,10 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
         var child = SelectedChild;
         if (child is null) return false;
         var data = (IndexedStackParentData)child.parentData!;
-        return child.HitTest(result, position - data.offset);
+        return result.AddWithPaintOffset(
+            data.offset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
     public override void VisitChildren(Action<RenderObject> visitor)

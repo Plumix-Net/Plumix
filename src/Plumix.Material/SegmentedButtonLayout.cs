@@ -349,7 +349,12 @@ internal sealed class RenderSegmentedButton : RenderBox,
             {
                 continue;
             }
-            if (child.HitTest(result, position - (Vector)data.offset))
+            RenderBox localChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                data.offset,
+                position,
+                (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
+            if (isHit)
             {
                 return true;
             }

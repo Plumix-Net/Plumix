@@ -1233,7 +1233,11 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
             return false;
         }
 
-        return child.HitTest(result, position - (Vector)childParentData.offset);
+        RenderBox localChild = child;
+        return result.AddWithPaintOffset(
+            childParentData.offset,
+            position,
+            (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
     }
 
     private RenderBox? UpdateChild(

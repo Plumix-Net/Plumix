@@ -368,6 +368,9 @@ internal sealed class RenderScaledInlineWidget : RenderProxyBox
             return false;
         }
 
-        return child.HitTest(result, new Point(position.X / _scale, position.Y / _scale));
+        return result.AddWithPaintTransform(
+            Matrix4.Diagonal3Values(_scale, _scale, 1.0),
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 }

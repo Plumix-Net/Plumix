@@ -203,7 +203,12 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectCont
         for (RenderSliver? child = LastChild; child != null; child = ChildBefore(child))
         {
             var parentData = (SliverPhysicalParentData)child.parentData!;
-            if (child.HitTest(result, position - parentData.offset))
+            RenderSliver localChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                parentData.offset,
+                position,
+                (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
+            if (isHit)
             {
                 return true;
             }
@@ -427,7 +432,12 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
         for (RenderSliver? child = FirstChild; child != null; child = ChildAfter(child))
         {
             var parentData = (SliverPhysicalParentData)child.parentData!;
-            if (child.HitTest(result, position - parentData.offset))
+            RenderSliver localChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                parentData.offset,
+                position,
+                (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
+            if (isHit)
             {
                 return true;
             }

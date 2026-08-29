@@ -1207,7 +1207,12 @@ public sealed class RenderTable : RenderBox
             RenderBox? child = _children[index];
             if (child is null) continue;
             var parentData = (BoxParentData)child.parentData!;
-            if (child.HitTest(result, position - parentData.offset)) return true;
+            RenderBox localChild = child;
+            bool isHit = result.AddWithPaintOffset(
+                parentData.offset,
+                position,
+                (hitResult, transformed) => localChild.HitTest(hitResult, transformed));
+            if (isHit) return true;
         }
 
         return false;

@@ -1054,7 +1054,11 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
         }
 
         var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        return _child.HitTest(result, position - childParentData.offset);
+        RenderSliver child = _child;
+        return result.AddWithPaintOffset(
+            childParentData.offset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -1659,7 +1663,11 @@ public abstract class RenderSliverSingleBoxAdapter : RenderSliver, IRenderObject
         }
 
         var childParentData = (BoxParentData)Child.parentData!;
-        return Child.HitTest(result, position - childParentData.offset);
+        RenderBox child = Child;
+        return result.AddWithPaintOffset(
+            childParentData.offset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -1828,7 +1836,11 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
         }
 
         var childParentData = (SliverPhysicalParentData)_child.parentData!;
-        return _child.HitTest(result, position - childParentData.offset);
+        RenderSliver child = _child;
+        return result.AddWithPaintOffset(
+            childParentData.offset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
