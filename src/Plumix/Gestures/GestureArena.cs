@@ -54,7 +54,12 @@ public sealed class GestureArenaManager
         }
 
         arena.Add(member);
-        DebugLogDiagnostic(pointer, $"Adding: {member}");
+        if (GestureDebug.PrintGestureArenaDiagnostics)
+        {
+            // Dart wraps this in `assert(() { ... }())`, so the member is never stringified unless
+            // the diagnostic is on; C# has to guard it explicitly.
+            DebugLogDiagnostic(pointer, $"Adding: {member}");
+        }
         return new GestureArenaEntry(this, pointer, member);
     }
 

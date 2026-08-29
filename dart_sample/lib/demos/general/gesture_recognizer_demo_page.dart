@@ -170,56 +170,46 @@ class _GestureRecognizerDemoPageState extends State<GestureRecognizerDemoPage> {
   }
 
   Widget _buildLongPressSurface() {
-    return RawGestureDetector(
+    // The long-press matrix straight off [GestureDetector]: it registers a single
+    // [LongPressGestureRecognizer] and wires all 21 primary/secondary/tertiary callbacks.
+    return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      gestures: <Type, GestureRecognizerFactory>{
-        LongPressGestureRecognizer:
-            GestureRecognizerFactoryWithHandlers<
-              LongPressGestureRecognizer
-            >(() => LongPressGestureRecognizer(), (
-              LongPressGestureRecognizer instance,
-            ) {
-              instance.onLongPressDown = (LongPressDownDetails details) {
-                _log(_longPressLog, 'primary down');
-              };
-              instance.onLongPressCancel = () {
-                _log(_longPressLog, 'primary cancel');
-              };
-              instance.onLongPress = () {
-                _log(_longPressLog, 'primary long press');
-              };
-              instance
-                  .onLongPressMoveUpdate = (LongPressMoveUpdateDetails details) {
-                _log(
-                  _longPressLog,
-                  'primary move ${details.offsetFromOrigin.dx.toStringAsFixed(0)}, '
-                  '${details.offsetFromOrigin.dy.toStringAsFixed(0)}',
-                );
-              };
-              instance.onLongPressEnd = (LongPressEndDetails details) {
-                _log(_longPressLog, 'primary end');
-              };
-              instance.onSecondaryLongPressDown =
-                  (LongPressDownDetails details) {
-                    _log(_longPressLog, 'secondary down');
-                  };
-              instance.onSecondaryLongPress = () {
-                _log(_longPressLog, 'secondary long press');
-              };
-              instance.onSecondaryLongPressEnd = (LongPressEndDetails details) {
-                _log(_longPressLog, 'secondary end');
-              };
-              instance.onTertiaryLongPressDown =
-                  (LongPressDownDetails details) {
-                    _log(_longPressLog, 'tertiary down');
-                  };
-              instance.onTertiaryLongPress = () {
-                _log(_longPressLog, 'tertiary long press');
-              };
-              instance.onTertiaryLongPressEnd = (LongPressEndDetails details) {
-                _log(_longPressLog, 'tertiary end');
-              };
-            }),
+      onLongPressDown: (LongPressDownDetails details) {
+        _log(_longPressLog, 'primary down');
+      },
+      onLongPressCancel: () {
+        _log(_longPressLog, 'primary cancel');
+      },
+      onLongPress: () {
+        _log(_longPressLog, 'primary long press');
+      },
+      onLongPressMoveUpdate: (LongPressMoveUpdateDetails details) {
+        _log(
+          _longPressLog,
+          'primary move ${details.offsetFromOrigin.dx.toStringAsFixed(0)}, '
+          '${details.offsetFromOrigin.dy.toStringAsFixed(0)}',
+        );
+      },
+      onLongPressEnd: (LongPressEndDetails details) {
+        _log(_longPressLog, 'primary end');
+      },
+      onSecondaryLongPressDown: (LongPressDownDetails details) {
+        _log(_longPressLog, 'secondary down');
+      },
+      onSecondaryLongPress: () {
+        _log(_longPressLog, 'secondary long press');
+      },
+      onSecondaryLongPressEnd: (LongPressEndDetails details) {
+        _log(_longPressLog, 'secondary end');
+      },
+      onTertiaryLongPressDown: (LongPressDownDetails details) {
+        _log(_longPressLog, 'tertiary down');
+      },
+      onTertiaryLongPress: () {
+        _log(_longPressLog, 'tertiary long press');
+      },
+      onTertiaryLongPressEnd: (LongPressEndDetails details) {
+        _log(_longPressLog, 'tertiary end');
       },
       child: Container(
         height: 96,

@@ -15,7 +15,7 @@ namespace Plumix.Rendering;
 /// these actions merge into the nearest node-forming ancestor — for a scrollable, the node
 /// <c>_RenderScrollSemantics</c> forms.
 /// </remarks>
-public class RenderSemanticsGestureHandler : RenderProxyBox
+public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
 {
     private SemanticsActions? _validActions;
     private Action? _onTap;
@@ -27,9 +27,10 @@ public class RenderSemanticsGestureHandler : RenderProxyBox
     /// <summary>The fraction of the viewport a single semantic scroll action moves.</summary>
     public const double DefaultScrollFactor = 0.8;
 
-    public RenderSemanticsGestureHandler(RenderBox? child = null)
+    public RenderSemanticsGestureHandler(
+        RenderBox? child = null,
+        HitTestBehavior behavior = HitTestBehavior.DeferToChild) : base(behavior, child)
     {
-        Child = child;
     }
 
     /// <summary>

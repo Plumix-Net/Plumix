@@ -82,4 +82,13 @@ public static class PointerEventUtils
     {
         return Math.Sqrt((offset.X * offset.X) + (offset.Y * offset.Y));
     }
+
+    /// <summary>
+    /// The square of <see cref="Distance"/>, Dart's `Offset.distanceSquared`. Cheaper than
+    /// <see cref="Distance"/> when only comparisons against a squared threshold are needed.
+    /// </summary>
+    public static double DistanceSquared(this Point offset)
+    {
+        return (offset.X * offset.X) + (offset.Y * offset.Y);
+    }
 }

@@ -34,6 +34,15 @@ internal sealed class ScrollSemanticsHarness
 
     public RenderView RenderView { get; }
 
+    /// <summary>Rebuilds the tree from a new root widget, the way a `setState` above it would.</summary>
+    public void UpdateRoot(Widget rootWidget)
+    {
+        _rootElement.Update(rootWidget);
+    }
+
+    /// <summary>The element hosting the root widget, for `FindRenderObject`-style lookups.</summary>
+    public Element RootElement => _rootElement;
+
     public void Pump(Size size)
     {
         _owner.FlushBuild();

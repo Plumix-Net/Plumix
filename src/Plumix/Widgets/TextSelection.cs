@@ -1301,14 +1301,27 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
                             child: new RawGestureDetector(
                                 excludeFromSemantics: true,
                                 behavior: HitTestBehavior.Translucent,
-                                supportedDevices: DragDevices,
-                                dragStartBehavior: widget.DragStartBehavior,
-                                gestureSettings: eagerlyAcceptDrag
-                                    ? new DeviceGestureSettings(TouchSlop: 1.0)
-                                    : null,
-                                onPanStart: widget.OnSelectionHandleDragStart,
-                                onPanUpdate: widget.OnSelectionHandleDragUpdate,
-                                onPanEnd: widget.OnSelectionHandleDragEnd,
+                                gestures: new Dictionary<Type, IGestureRecognizerFactory>
+                                {
+                                    [typeof(PanGestureRecognizer)] =
+                                        new GestureRecognizerFactoryWithHandlers<PanGestureRecognizer>(
+                                            // Mouse events select the text and do not drag the cursor.
+                                            () => new PanGestureRecognizer
+                                            {
+                                                DebugOwner = this,
+                                                SupportedDevices = DragDevices,
+                                            },
+                                            instance =>
+                                            {
+                                                instance.DragStartBehavior = widget.DragStartBehavior;
+                                                instance.GestureSettings = eagerlyAcceptDrag
+                                                    ? new DeviceGestureSettings(TouchSlop: 1.0)
+                                                    : null;
+                                                instance.OnStart = widget.OnSelectionHandleDragStart;
+                                                instance.OnUpdate = widget.OnSelectionHandleDragUpdate;
+                                                instance.OnEnd = widget.OnSelectionHandleDragEnd;
+                                            }),
+                                },
                                 child: new Padding(
                                     insets: new Thickness(
                                         padding.Left,

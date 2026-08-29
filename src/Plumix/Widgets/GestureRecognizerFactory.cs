@@ -8,15 +8,27 @@ namespace Plumix.Widgets;
 /// A factory for gesture recognizers, used by <see cref="RawGestureDetector"/> to create and
 /// configure the recognizers it owns without rebuilding them on every frame.
 /// </summary>
+/// <remarks>
+/// Dart's generic `GestureRecognizerFactory&lt;T&gt;` is used as a raw `GestureRecognizerFactory` in
+/// the `Map&lt;Type, GestureRecognizerFactory&gt;` a detector takes; C# generics are invariant, so the
+/// map is typed by this non-generic interface and <see cref="GestureRecognizerFactory{TRecognizer}"/>
+/// carries the typed surface.
+/// </remarks>
 public interface IGestureRecognizerFactory
 {
+    /// <summary>The recognizer type this factory produces; Dart reads it off the type argument.</summary>
+    Type RecognizerType { get; }
+
     /// <summary>Creates a new instance of the recognizer this factory produces.</summary>
     GestureRecognizer ConstructorRaw();
 
     /// <summary>Configures an existing recognizer with the current widget's callbacks.</summary>
     void InitializerRaw(GestureRecognizer instance);
 
-    /// <summary>Whether this factory produces recognizers of the given type.</summary>
+    /// <summary>
+    /// Whether this factory produces recognizers of the given type. Dart's private
+    /// `_debugAssertTypeMatches`, which asserts that a factory is registered under its own type.
+    /// </summary>
     bool HandlesType(Type type);
 }
 
@@ -30,10 +42,16 @@ public abstract class GestureRecognizerFactory<TRecognizer> : IGestureRecognizer
     /// <summary>Configures the recognizer.</summary>
     public abstract void Initializer(TRecognizer instance);
 
+    /// <inheritdoc />
+    public Type RecognizerType => typeof(TRecognizer);
+
+    /// <inheritdoc />
     public GestureRecognizer ConstructorRaw() => Constructor();
 
+    /// <inheritdoc />
     public void InitializerRaw(GestureRecognizer instance) => Initializer((TRecognizer)instance);
 
+    /// <inheritdoc />
     public bool HandlesType(Type type) => type == typeof(TRecognizer);
 }
 

@@ -1758,7 +1758,8 @@ internal sealed class DialState : State
                 break;
         }
 
-        return new RawGestureDetector(
+        // Dart's `_Dial.build` uses a plain GestureDetector for the dial's pan and tap handling.
+        return new GestureDetector(
             excludeFromSemantics: true,
             onPanStart: HandlePanStart,
             onPanUpdate: HandlePanUpdate,

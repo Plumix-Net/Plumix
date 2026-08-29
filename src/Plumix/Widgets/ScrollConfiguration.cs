@@ -13,13 +13,6 @@ public enum AndroidOverscrollIndicator
     Glow,
 }
 
-public enum MultitouchDragStrategy
-{
-    LatestPointer,
-    AverageBoundaryPointers,
-    SumAllPointers,
-}
-
 public enum ScrollViewKeyboardDismissBehavior
 {
     Manual,

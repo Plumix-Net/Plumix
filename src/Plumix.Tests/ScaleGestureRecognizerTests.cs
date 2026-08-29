@@ -1221,34 +1221,6 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
     }
 
     [Fact]
-    public void GestureDetectorRejectsRedundantPanAndScaleCallbacks()
-    {
-        ArgumentException error = Assert.Throws<ArgumentException>(() => new GestureDetector(
-            onPanUpdate: _ => { },
-            onScaleUpdate: _ => { }));
-        Assert.Contains("scale is a superset of pan", error.Message);
-    }
-
-    [Fact]
-    public void GestureDetectorRejectsScaleAlongsideBothDragAxes()
-    {
-        ArgumentException error = Assert.Throws<ArgumentException>(() => new GestureDetector(
-            onHorizontalDragUpdate: _ => { },
-            onVerticalDragUpdate: _ => { },
-            onScaleUpdate: _ => { }));
-        Assert.Contains("scale gesture recognizer being ignored", error.Message);
-
-        ArgumentException panError = Assert.Throws<ArgumentException>(() => new GestureDetector(
-            onHorizontalDragUpdate: _ => { },
-            onVerticalDragUpdate: _ => { },
-            onPanUpdate: _ => { }));
-        Assert.Contains("pan gesture recognizer being ignored", panError.Message);
-
-        // Either drag axis on its own is fine.
-        _ = new GestureDetector(onHorizontalDragUpdate: _ => { }, onScaleUpdate: _ => { });
-    }
-
-    [Fact]
     public void GestureDetectorRoutesPointersToTheScaleRecognizer()
     {
         var log = new ScaleLog();

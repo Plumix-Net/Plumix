@@ -104,7 +104,7 @@ public abstract class ParentDataWidget<T> : ProxyWidget, IParentDataWidget where
     }
 }
 
-public abstract class State : ITickerProvider
+public abstract class State : Diagnosticable, ITickerProvider
 {
     private HashSet<Ticker>? _tickers;
     private IValueListenable<TickerModeData>? _tickerModeNotifier;

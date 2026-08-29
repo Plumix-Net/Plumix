@@ -269,10 +269,8 @@ public sealed class RawTooltipState : State
         Widget result = new Semantics(
             tooltip: CurrentWidget.SemanticsTooltip,
             child: CurrentWidget.Child);
-        result = new RawGestureDetector(
-            excludeFromSemantics: true,
+        result = new Listener(
             behavior: HitTestBehavior.Opaque,
-            supportedDevices: TriggerDeviceKinds,
             onPointerDown: @event =>
             {
                 if (CurrentWidget.TriggerMode != TooltipTriggerMode.Manual)
@@ -282,19 +280,11 @@ public sealed class RawTooltipState : State
             },
             onPointerUp: @event => _triggerPointers.Remove(@event.Pointer),
             onPointerCancel: @event => _triggerPointers.Remove(@event.Pointer),
-            onTap: CurrentWidget.TriggerMode == TooltipTriggerMode.Tap
-                ? HandleTap
-                : null,
-            onTapCancel: CurrentWidget.TriggerMode == TooltipTriggerMode.Tap
-                ? HandleTapToDismiss
-                : null,
-            onLongPress: CurrentWidget.TriggerMode == TooltipTriggerMode.LongPress
-                ? HandleLongPress
-                : null,
-            onLongPressUp: CurrentWidget.TriggerMode == TooltipTriggerMode.LongPress
-                ? HandlePressUp
-                : null,
-            child: result);
+            child: new RawGestureDetector(
+                excludeFromSemantics: true,
+                behavior: HitTestBehavior.Opaque,
+                gestures: BuildTriggerGestures(),
+                child: result));
         result = new ExclusiveMouseRegion(
             onEnter: HandleMouseEnter,
             onExit: HandleMouseExit,
@@ -563,6 +553,42 @@ public sealed class RawTooltipState : State
         AnimationController? timer = _timer;
         _timer = null;
         timer?.Dispose();
+    }
+
+    /// <summary>
+    /// The tap/long-press recognizers the current <see cref="TooltipTriggerMode"/> needs, restricted
+    /// to the pointer kinds a tooltip may be triggered from.
+    /// </summary>
+    private IReadOnlyDictionary<Type, IGestureRecognizerFactory> BuildTriggerGestures()
+    {
+        var gestures = new Dictionary<Type, IGestureRecognizerFactory>();
+        if (CurrentWidget.TriggerMode == TooltipTriggerMode.Tap)
+        {
+            gestures[typeof(TapGestureRecognizer)] =
+                new GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+                    () => new TapGestureRecognizer { SupportedDevices = TriggerDeviceKinds },
+                    instance =>
+                    {
+                        instance.OnTap = HandleTap;
+                        instance.OnTapCancel = HandleTapToDismiss;
+                        instance.SupportedDevices = TriggerDeviceKinds;
+                    });
+        }
+
+        if (CurrentWidget.TriggerMode == TooltipTriggerMode.LongPress)
+        {
+            gestures[typeof(LongPressGestureRecognizer)] =
+                new GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+                    () => new LongPressGestureRecognizer { SupportedDevices = TriggerDeviceKinds },
+                    instance =>
+                    {
+                        instance.OnLongPress = HandleLongPress;
+                        instance.OnLongPressUp = HandlePressUp;
+                        instance.SupportedDevices = TriggerDeviceKinds;
+                    });
+        }
+
+        return gestures;
     }
 
     private static IReadOnlySet<PointerDeviceKind> TriggerDeviceKinds { get; } =

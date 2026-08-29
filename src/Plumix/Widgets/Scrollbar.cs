@@ -940,8 +940,8 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
     private readonly GlobalKey _scrollbarPainterKey =
         new LabeledGlobalKey<State>("RawScrollbar painter");
 
-    private readonly GlobalKey<RawGestureDetector.RawGestureDetectorState> _gestureDetectorKey =
-        new LabeledGlobalKey<RawGestureDetector.RawGestureDetectorState>("RawScrollbar gestures");
+    private readonly GlobalKey<RawGestureDetectorState> _gestureDetectorKey =
+        new LabeledGlobalKey<RawGestureDetectorState>("RawScrollbar gestures");
 
     private Point? _startDragScrollbarAxisOffset;
     private Point? _lastDragUpdateOffset;

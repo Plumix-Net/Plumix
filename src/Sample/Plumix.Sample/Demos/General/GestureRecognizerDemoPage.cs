@@ -146,32 +146,23 @@ public sealed class GestureRecognizerDemoPageState : State
 
     private Widget BuildLongPressSurface()
     {
-        var gestures = new Dictionary<Type, IGestureRecognizerFactory>
-        {
-            [typeof(LongPressGestureRecognizer)] =
-                new GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
-                    () => new LongPressGestureRecognizer(),
-                    instance =>
-                    {
-                        instance.OnLongPressDown = _ => Log(_longPressLog, "primary down");
-                        instance.OnLongPressCancel = () => Log(_longPressLog, "primary cancel");
-                        instance.OnLongPress = () => Log(_longPressLog, "primary long press");
-                        instance.OnLongPressMoveUpdate = details => Log(
-                            _longPressLog,
-                            $"primary move {details.OffsetFromOrigin.X:F0}, {details.OffsetFromOrigin.Y:F0}");
-                        instance.OnLongPressEnd = _ => Log(_longPressLog, "primary end");
-                        instance.OnSecondaryLongPressDown = _ => Log(_longPressLog, "secondary down");
-                        instance.OnSecondaryLongPress = () => Log(_longPressLog, "secondary long press");
-                        instance.OnSecondaryLongPressEnd = _ => Log(_longPressLog, "secondary end");
-                        instance.OnTertiaryLongPressDown = _ => Log(_longPressLog, "tertiary down");
-                        instance.OnTertiaryLongPress = () => Log(_longPressLog, "tertiary long press");
-                        instance.OnTertiaryLongPressEnd = _ => Log(_longPressLog, "tertiary end");
-                    }),
-        };
-
-        return new RawGestureDetector(
+        // The long-press matrix straight off `GestureDetector`: it registers a single
+        // `LongPressGestureRecognizer` and wires all 21 primary/secondary/tertiary callbacks.
+        return new GestureDetector(
             behavior: HitTestBehavior.Opaque,
-            gestures: gestures,
+            onLongPressDown: _ => Log(_longPressLog, "primary down"),
+            onLongPressCancel: () => Log(_longPressLog, "primary cancel"),
+            onLongPress: () => Log(_longPressLog, "primary long press"),
+            onLongPressMoveUpdate: details => Log(
+                _longPressLog,
+                $"primary move {details.OffsetFromOrigin.X:F0}, {details.OffsetFromOrigin.Y:F0}"),
+            onLongPressEnd: _ => Log(_longPressLog, "primary end"),
+            onSecondaryLongPressDown: _ => Log(_longPressLog, "secondary down"),
+            onSecondaryLongPress: () => Log(_longPressLog, "secondary long press"),
+            onSecondaryLongPressEnd: _ => Log(_longPressLog, "secondary end"),
+            onTertiaryLongPressDown: _ => Log(_longPressLog, "tertiary down"),
+            onTertiaryLongPress: () => Log(_longPressLog, "tertiary long press"),
+            onTertiaryLongPressEnd: _ => Log(_longPressLog, "tertiary end"),
             child: new Container(
                 height: 96,
                 color: Color.Parse("#FFE7EDF6"),

@@ -178,4 +178,23 @@ public record LabeledGlobalKey<T>(string? DebugLabel) : GlobalKey<T> where T : S
 /// </summary>
 /// <param name="Value"></param>
 /// <typeparam name="T"></typeparam>
-public record GlobalObjectKey<T>(object Value) : GlobalKey<T> where T : State;
+public record GlobalObjectKey<T>(object Value) : GlobalKey<T> where T : State
+{
+    /// <summary>
+    /// Ports Dart's `GlobalObjectKey.toString`: the key's own type plus the identity of its value,
+    /// never the value's own `toString`. The record-generated printer would render `Value` in full,
+    /// which recurses without bound whenever the value is a <see cref="Foundation.IDiagnosticable"/>
+    /// that dumps the widget tree the key is mounted in.
+    /// </summary>
+    public override string ToString()
+    {
+        string selfType = Foundation.Diagnostics.ObjectRuntimeType(this);
+        const string suffix = "<State>";
+        if (selfType.EndsWith(suffix, StringComparison.Ordinal))
+        {
+            selfType = selfType[..^suffix.Length];
+        }
+
+        return $"[{selfType} {Foundation.Diagnostics.DescribeIdentity(Value)}]";
+    }
+}

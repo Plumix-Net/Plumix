@@ -1,3 +1,4 @@
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;

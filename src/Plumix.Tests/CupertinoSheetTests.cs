@@ -26,6 +26,24 @@ public sealed class CupertinoSheetTests : IDisposable
         SystemChrome.ResetSystemUiOverlayStyleForTests();
     }
 
+    /// <summary>
+    /// The sheet's vertical drag recognizer, built from the `gestures` map the detector registers.
+    /// </summary>
+    private static VerticalDragGestureRecognizer? FindSheetDragRecognizer(Element root)
+    {
+        foreach (RawGestureDetector detector in FindWidgets<RawGestureDetector>(root))
+        {
+            if (detector.Gestures.TryGetValue(typeof(VerticalDragGestureRecognizer), out var factory))
+            {
+                var recognizer = (VerticalDragGestureRecognizer)factory.ConstructorRaw();
+                factory.InitializerRaw(recognizer);
+                return recognizer;
+            }
+        }
+
+        return null;
+    }
+
     [Fact]
     public void Route_ExposesPinnedDefaultsAndValidatesBuildersAndTopGap()
     {
@@ -141,12 +159,11 @@ public sealed class CupertinoSheetTests : IDisposable
         SheetHarness partial = MountSheet(new CupertinoSheetRoute<object?>(builder: _ => new SizedBox()));
         try
         {
-            RawGestureDetector detector = Assert.Single(
-                FindWidgets<RawGestureDetector>(partial.Root),
-                candidate => candidate.OnVerticalDragStart is not null);
-            detector.OnVerticalDragStart!(new DragStartDetails(default));
-            detector.OnVerticalDragUpdate!(new DragUpdateDetails(default, default, new Point(0.0, 200.0), 200.0));
-            detector.OnVerticalDragEnd!(new DragEndDetails(0.0));
+            VerticalDragGestureRecognizer recognizer = Assert.IsType<VerticalDragGestureRecognizer>(
+                FindSheetDragRecognizer(partial.Root));
+            recognizer.OnStart!(new DragStartDetails(default));
+            recognizer.OnUpdate!(new DragUpdateDetails(default, default, new Point(0.0, 200.0), 200.0));
+            recognizer.OnEnd!(new DragEndDetails(0.0));
             Settle(partial.Root.TestOwner);
 
             Assert.Same(partial.SheetRoute, partial.Navigator.CurrentRoute);
@@ -159,12 +176,11 @@ public sealed class CupertinoSheetTests : IDisposable
         SheetHarness longDrag = MountSheet(new CupertinoSheetRoute<object?>(builder: _ => new SizedBox()));
         try
         {
-            RawGestureDetector detector = Assert.Single(
-                FindWidgets<RawGestureDetector>(longDrag.Root),
-                candidate => candidate.OnVerticalDragStart is not null);
-            detector.OnVerticalDragStart!(new DragStartDetails(default));
-            detector.OnVerticalDragUpdate!(new DragUpdateDetails(default, default, new Point(0.0, 400.0), 400.0));
-            detector.OnVerticalDragEnd!(new DragEndDetails(0.0));
+            VerticalDragGestureRecognizer recognizer = Assert.IsType<VerticalDragGestureRecognizer>(
+                FindSheetDragRecognizer(longDrag.Root));
+            recognizer.OnStart!(new DragStartDetails(default));
+            recognizer.OnUpdate!(new DragUpdateDetails(default, default, new Point(0.0, 400.0), 400.0));
+            recognizer.OnEnd!(new DragEndDetails(0.0));
             Settle(longDrag.Root.TestOwner);
 
             Assert.Same(longDrag.RootRoute, longDrag.Navigator.CurrentRoute);
@@ -183,9 +199,7 @@ public sealed class CupertinoSheetTests : IDisposable
             enableDrag: false));
         try
         {
-            Assert.DoesNotContain(
-                FindWidgets<RawGestureDetector>(harness.Root),
-                detector => detector.OnVerticalDragStart is not null);
+            Assert.Null(FindSheetDragRecognizer(harness.Root));
         }
         finally
         {

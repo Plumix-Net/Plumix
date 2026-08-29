@@ -63,6 +63,27 @@ public abstract class PointerEvent
     public Point LocalDelta { get; private set; }
 
     /// <summary>
+    /// The pressure of the touch, normalised against <see cref="PressureMin"/> and
+    /// <see cref="PressureMax"/>. Dart's `PointerEvent.pressure`; devices without a force sensor
+    /// report the default 1.0.
+    /// </summary>
+    public double Pressure { get; init; } = 1.0;
+
+    /// <summary>
+    /// The lowest value <see cref="Pressure"/> can report on this pointer's device. Dart's
+    /// `PointerEvent.pressureMin`.
+    /// </summary>
+    public double PressureMin { get; init; } = 1.0;
+
+    /// <summary>
+    /// The highest value <see cref="Pressure"/> can report on this pointer's device. A device
+    /// without pressure sensing reports 1.0, which is how
+    /// <see cref="Plumix.Gestures.ForcePressGestureRecognizer"/> detects that it must not compete.
+    /// Dart's `PointerEvent.pressureMax`.
+    /// </summary>
+    public double PressureMax { get; init; } = 1.0;
+
+    /// <summary>
     /// The untransformed event this event was derived from, or null when this is the original
     /// event. Dart's `PointerEvent.original`; the <see cref="Plumix.Gestures.PointerSignalResolver"/>
     /// uses it to identify transformed copies of one signal event.

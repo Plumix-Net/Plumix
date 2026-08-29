@@ -8,6 +8,16 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `GestureDetector`/`RawGestureDetector` are a strict port; `RawGestureDetector` takes only `gestures:`.
+- Added `GestureDetector`'s long-press matrix, force press, drag down/cancel and `supportedDevices`.
+- Added `SemanticsGestureDelegate` and `RawGestureDetectorState.ReplaceGestureRecognizers` (`gesture_detector.dart`).
+- Breaking: `ScrollableState.SetCanDrag` swaps a recognizer map through the detector, replacing `SetDragEnabled`.
+- Added `ForcePressGestureRecognizer` with `ForcePressDetails` and pressure interpolation (`gestures/force_press.dart`).
+- Added `PointerEvent.Pressure`/`PressureMin`/`PressureMax` and `Offset.DistanceSquared` (`gestures/events.dart`).
+- Added `RenderSemanticsGestureHandler.Behavior` and `PipelineOwner.DebugDoingLayout` (`proxy_box.dart`, `object.dart`).
+- Breaking: `State` is a `Diagnosticable`; `GlobalObjectKey.ToString` describes its value's identity (`framework.dart`).
+- Breaking: `Listener` moved to `Widgets/Listener.cs` and `MultitouchDragStrategy` is only `Plumix.Gestures`'.
+- Breaking: the long-press demo surface uses `GestureDetector` in both samples.
 - Added `HitTestResult`'s transform stack (`PushTransform`/`PushOffset`/`PopTransform`, `Wrap`) (`hit_test.dart`).
 - Breaking: `HitTestEntry.Transform` is filled during hit testing and `GestureBinding` dispatches `Transformed` events.
 - Breaking: `BoxHitTestEntry.LocalPosition` is the hit position; `HitTestEntry.TransformEvent` is gone (`box.dart`).

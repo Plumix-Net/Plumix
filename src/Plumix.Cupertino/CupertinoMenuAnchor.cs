@@ -1059,9 +1059,7 @@ public sealed class CupertinoMenuItemState : State, CupertinoMenuSwipeTarget
             .Resolve(_states);
         Widget interaction = new RawGestureDetector(
             behavior: Current.Behavior,
-            onTapDown: Enabled ? _ => UpdateState(WidgetState.Pressed, true) : null,
-            onTapUp: Enabled ? _ => HandleTapUp() : null,
-            onTapCancel: Enabled ? () => UpdateState(WidgetState.Pressed, false) : null,
+            gestures: Enabled ? BuildItemGestures(context) : RawGestureDetector.NoGestures,
             child: label);
         interaction = new DecoratedBox(decoration, interaction);
         interaction = new MouseRegion(
@@ -1134,6 +1132,27 @@ public sealed class CupertinoMenuItemState : State, CupertinoMenuSwipeTarget
         {
             HandleActivate();
         }
+    }
+
+    /// <summary>
+    /// The single tap recognizer a menu item registers, rebuilt whenever the ambient
+    /// <see cref="DeviceGestureSettings"/> change. Dart's `_gestures` cache.
+    /// </summary>
+    private IReadOnlyDictionary<Type, IGestureRecognizerFactory> BuildItemGestures(BuildContext context)
+    {
+        DeviceGestureSettings? gestureSettings = MediaQuery.MaybeGestureSettingsOf(context);
+        return new Dictionary<Type, IGestureRecognizerFactory>
+        {
+            [typeof(TapGestureRecognizer)] = new GestureRecognizerFactoryWithHandlers<TapGestureRecognizer>(
+                () => new TapGestureRecognizer { DebugOwner = this },
+                instance =>
+                {
+                    instance.OnTapDown = _ => UpdateState(WidgetState.Pressed, true);
+                    instance.OnTapUp = _ => HandleTapUp();
+                    instance.OnTapCancel = () => UpdateState(WidgetState.Pressed, false);
+                    instance.GestureSettings = gestureSettings;
+                }),
+        };
     }
 
     private Widget BuildLabel(

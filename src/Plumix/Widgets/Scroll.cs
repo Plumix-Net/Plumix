@@ -872,13 +872,16 @@ public class Scrollable : StatefulWidget
         private double _devicePixelRatio = 1.0;
         // Keys are records, so the identity has to come from a per-state sentinel: two scrollables
         // must never share one global key.
-        private readonly GlobalObjectKey<RawGestureDetector.RawGestureDetectorState> _gestureDetectorKey =
+        private readonly GlobalObjectKey<RawGestureDetectorState> _gestureDetectorKey =
             new(new object());
         private readonly GlobalObjectKey<State> _ignorePointerKey = new(new object());
 
         private IScrollHoldController? _hold;
         private ScrollDragController? _drag;
-        private bool _canDrag;
+        private bool _lastCanDrag;
+        private Axis? _lastAxis;
+        private IReadOnlyDictionary<Type, IGestureRecognizerFactory> _gestureRecognizers =
+            RawGestureDetector.NoGestures;
         private bool _shouldIgnorePointer;
 
         private Scrollable CurrentWidget => (Scrollable)Element.Widget;
@@ -1067,33 +1070,13 @@ public class Scrollable : StatefulWidget
                     slivers: ResolveSlivers(widget));
             }
 
-            bool horizontal = widget.Axis == Axis.Horizontal;
-            bool vertical = widget.Axis == Axis.Vertical;
             Widget scrollable = new Listener(
                 behavior: widget.HitTestBehavior,
                 onPointerSignal: HandlePointerSignal,
                 child: new RawGestureDetector(
                     key: _gestureDetectorKey,
                     behavior: widget.HitTestBehavior,
-                    // The physics decide whether the user may drag at all; when they refuse, the
-                    // recognizers are not registered, exactly like Flutter's `setCanDrag(false)`.
-                    dragEnabled: _canDrag,
-                    onHorizontalDragDown: horizontal ? HandleDragDown : null,
-                    onHorizontalDragStart: horizontal ? HandleDragStart : null,
-                    onHorizontalDragUpdate: horizontal ? HandleDragUpdate : null,
-                    onHorizontalDragEnd: horizontal ? HandleDragEnd : null,
-                    onHorizontalDragCancel: horizontal ? HandleDragCancel : null,
-                    onVerticalDragDown: vertical ? HandleDragDown : null,
-                    onVerticalDragStart: vertical ? HandleDragStart : null,
-                    onVerticalDragUpdate: vertical ? HandleDragUpdate : null,
-                    onVerticalDragEnd: vertical ? HandleDragEnd : null,
-                    onVerticalDragCancel: vertical ? HandleDragCancel : null,
-                    velocityTrackerBuilder: _configuration.VelocityTrackerBuilder(context),
-                    supportedDevices: _configuration.DragDevices,
-                    minFlingDistance: _effectivePhysics.MinFlingDistance,
-                    minFlingVelocity: _effectivePhysics.MinFlingVelocity,
-                    maxFlingVelocity: _effectivePhysics.MaxFlingVelocity,
-                    dragStartBehavior: widget.DragStartBehavior,
+                    gestures: _gestureRecognizers,
                     child: new Semantics(
                         explicitChildNodes: !widget.ExcludeFromSemantics,
                         child: new IgnorePointer(
@@ -1237,25 +1220,73 @@ public class Scrollable : StatefulWidget
         }
 
         /// <summary>
-        /// Adds or removes the drag gesture recognizers. Turning dragging off also cancels any hold
-        /// or drag in flight, so a physics change mid-gesture cannot leave the position captured.
+        /// Rebuilds the drag recognizer map and hands it to the detector. Turning dragging off also
+        /// cancels any hold or drag in flight, so a physics change mid-gesture cannot leave the
+        /// position captured.
         /// </summary>
+        /// <remarks>Flutter's <c>ScrollableState.setCanDrag</c>.</remarks>
         public void SetCanDrag(bool value)
         {
-            if (value == _canDrag)
+            if (value == _lastCanDrag && (!value || CurrentWidget.Axis == _lastAxis))
             {
                 return;
             }
 
-            _canDrag = value;
-            if (!value && (_hold != null || _drag != null))
+            if (!value)
             {
+                _gestureRecognizers = RawGestureDetector.NoGestures;
+                // Cancel the active hold/drag (if any) because the recognizers are about to be
+                // disposed by the RawGestureDetector, so no pointer up will arrive to cancel them.
                 HandleDragCancel();
             }
+            else
+            {
+                _gestureRecognizers = CurrentWidget.Axis == Axis.Vertical
+                    ? BuildDragRecognizers(() => new VerticalDragGestureRecognizer())
+                    : BuildDragRecognizers(() => new HorizontalDragGestureRecognizer());
+            }
 
+            _lastCanDrag = value;
+            _lastAxis = CurrentWidget.Axis;
             // Applied straight away rather than through a rebuild: the physics can change their mind
             // during layout, and the next pointer down must already see the new registration.
-            _gestureDetectorKey.CurrentState?.SetDragEnabled(value);
+            _gestureDetectorKey.CurrentState?.ReplaceGestureRecognizers(_gestureRecognizers);
+        }
+
+        /// <summary>
+        /// The one-entry recognizer map a scrollable registers for its drag axis, configured exactly
+        /// as Dart's `setCanDrag` configures it.
+        /// </summary>
+        private IReadOnlyDictionary<Type, IGestureRecognizerFactory> BuildDragRecognizers<TRecognizer>(
+            Func<TRecognizer> constructor)
+            where TRecognizer : DragGestureRecognizer
+        {
+            return new Dictionary<Type, IGestureRecognizerFactory>
+            {
+                [typeof(TRecognizer)] = new GestureRecognizerFactoryWithHandlers<TRecognizer>(
+                    () =>
+                    {
+                        TRecognizer recognizer = constructor();
+                        recognizer.SupportedDevices = _configuration.DragDevices;
+                        return recognizer;
+                    },
+                    instance =>
+                    {
+                        instance.OnDown = HandleDragDown;
+                        instance.OnStart = HandleDragStart;
+                        instance.OnUpdate = HandleDragUpdate;
+                        instance.OnEnd = HandleDragEnd;
+                        instance.OnCancel = HandleDragCancel;
+                        instance.MinFlingDistance = _effectivePhysics.MinFlingDistance;
+                        instance.MinFlingVelocity = _effectivePhysics.MinFlingVelocity;
+                        instance.MaxFlingVelocity = _effectivePhysics.MaxFlingVelocity;
+                        instance.VelocityTrackerBuilder = _configuration.VelocityTrackerBuilder(Context);
+                        instance.DragStartBehavior = CurrentWidget.DragStartBehavior;
+                        instance.MultitouchDragStrategy = _configuration.GetMultitouchDragStrategy(Context);
+                        instance.GestureSettings = MediaQuery.MaybeGestureSettingsOf(Context);
+                        instance.SupportedDevices = _configuration.DragDevices;
+                    }),
+            };
         }
 
         /// <summary>

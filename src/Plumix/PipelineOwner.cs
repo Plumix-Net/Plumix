@@ -131,10 +131,30 @@ public sealed class PipelineOwner : DiagnosticableTree
 
     internal int PendingSemanticsNodeCount => _nodesNeedingSemantics.Count;
 
+    /// <summary>
+    /// Whether this pipeline owner is currently running <see cref="FlushLayout"/>. Ports Flutter's
+    /// <c>PipelineOwner.debugDoingLayout</c>, which gates the layout-phase-only entry points —
+    /// notably <c>RawGestureDetectorState.ReplaceGestureRecognizers</c>.
+    /// </summary>
+    public bool DebugDoingLayout { get; private set; }
+
     public void FlushLayout(Size rootSize)
     {
         if (!_needsLayout) return;
 
+        DebugDoingLayout = true;
+        try
+        {
+            FlushLayoutNodes(rootSize);
+        }
+        finally
+        {
+            DebugDoingLayout = false;
+        }
+    }
+
+    private void FlushLayoutNodes(Size rootSize)
+    {
         var constraints = new BoxConstraints(0, rootSize.Width, 0, rootSize.Height);
         
         while (_nodesNeedingLayout.Count > 0)
