@@ -16,6 +16,7 @@ public sealed class ImageIcon : StatelessWidget
         double? size = null,
         Color? color = null,
         string? semanticLabel = null,
+        bool useOriginalColors = false,
         Key? key = null) : base(key)
     {
         if (size.HasValue && (!double.IsFinite(size.Value) || size.Value < 0.0))
@@ -23,10 +24,19 @@ public sealed class ImageIcon : StatelessWidget
             throw new ArgumentOutOfRangeException(nameof(size), "Image icon size must be finite and non-negative.");
         }
 
+        if (useOriginalColors && color is not null)
+        {
+            throw new ArgumentException(
+                "Cannot provide a color while useOriginalColors is true. To use a specific color, "
+                + "set useOriginalColors to false or omit it.",
+                nameof(color));
+        }
+
         Image = image;
         Size = size;
         Color = color;
         SemanticLabel = semanticLabel;
+        UseOriginalColors = useOriginalColors;
     }
 
     public ImageProvider? Image { get; }
@@ -36,6 +46,10 @@ public sealed class ImageIcon : StatelessWidget
     public Color? Color { get; }
 
     public string? SemanticLabel { get; }
+
+    /// Whether the image is rendered with its original colors instead of being tinted by
+    /// [Color] or the ambient [IconTheme]. If this is true, [Color] must be null.
+    public bool UseOriginalColors { get; }
 
     public override Widget Build(BuildContext context)
     {
@@ -63,7 +77,7 @@ public sealed class ImageIcon : StatelessWidget
                 image: Image,
                 width: iconSize,
                 height: iconSize,
-                color: iconColor,
+                color: UseOriginalColors ? null : iconColor,
                 fit: BoxFit.ScaleDown,
                 excludeFromSemantics: true));
     }

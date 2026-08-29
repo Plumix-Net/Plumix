@@ -121,6 +121,19 @@ internal sealed class RenderSliverResizingHeader : RenderSliver
         }
     }
 
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+
+        // A partially collapsed header must not let its children participate in the scrollable's
+        // implicit scrolling, or the viewport would try to scroll them into view.
+        double childExtent = _child == null ? 0.0 : BoxExtent(_child, ConstraintsForSliver.Axis);
+        if (Geometry.LayoutExtent < childExtent)
+        {
+            configuration.AddTagForChildren(RenderViewport.ExcludeFromScrolling);
+        }
+    }
+
     public override void Paint(PaintingContext ctx, Point offset)
     {
         if (_child == null || !Geometry.Visible)

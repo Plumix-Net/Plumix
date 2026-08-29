@@ -443,7 +443,9 @@ public sealed class Image : StatefulWidget
             return _imageStreamListener ??= new ImageStreamListener(
                 OnImage: HandleImageFrame,
                 OnChunk: CurrentWidget.LoadingBuilder is null ? null : HandleImageChunk,
-                OnError: CurrentWidget.ErrorBuilder is null ? null : HandleImageError);
+                OnError: CurrentWidget.ErrorBuilder is null ? null : HandleImageError,
+                // Only suppress error reporting when errorBuilder is provided.
+                ReportErrors: CurrentWidget.ErrorBuilder is null);
         }
 
         private void HandleImageFrame(ImageInfo imageInfo, bool synchronousCall)

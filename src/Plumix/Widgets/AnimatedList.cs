@@ -232,13 +232,18 @@ public sealed class AnimatedListState : State
         }
 
         int itemIndex = ComputeItemIndex(index);
+
+        // Children animating out from earlier RemoveItem calls still count towards ItemsCount, so
+        // subtract them to recognize the new tail of the visible list while a previous removal is
+        // still in flight.
+        int visibleItemsCount = ItemsCount - OutgoingItemsCount;
         SliverState.RemoveItem(itemIndex, builder, duration);
-        if (ItemsCount <= 1)
+        if (visibleItemsCount <= 1)
         {
             return;
         }
 
-        if (itemIndex == ItemsCount - 1)
+        if (itemIndex == visibleItemsCount - 1)
         {
             SliverState.RemoveItem(
                 itemIndex - 1,
@@ -314,6 +319,8 @@ public sealed class AnimatedListState : State
     }
 
     private int ItemsCount => SliverState.ItemsCount;
+
+    private int OutgoingItemsCount => SliverState.OutgoingItemsCount;
 
     private int ComputeItemIndex(int index)
     {
@@ -396,6 +403,10 @@ public sealed class SliverAnimatedListState : State
     private SliverAnimatedList CurrentWidget => (SliverAnimatedList)StateWidget;
 
     public int ItemsCount => _itemsCount;
+
+    /// The children still animating out from earlier `RemoveItem` calls. They still count towards
+    /// [ItemsCount], so the separated list subtracts them to find the current visible tail.
+    public int OutgoingItemsCount => _outgoingItems.Count;
 
     public override void InitState()
     {

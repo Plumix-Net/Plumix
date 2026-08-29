@@ -383,7 +383,12 @@ internal sealed class StretchingOverscrollIndicatorState : State
             return false;
         }
 
-        if (notification is OverscrollNotification overscrollNotification)
+        if (notification is ScrollStartNotification)
+        {
+            _accepted = true;
+            _totalOverscroll = 0.0;
+        }
+        else if (notification is OverscrollNotification overscrollNotification)
         {
             _lastOverscrollNotification = overscrollNotification;
             if (_lastNotification is not OverscrollNotification)
@@ -421,8 +426,12 @@ internal sealed class StretchingOverscrollIndicatorState : State
                 velocity = -velocity;
             }
 
+            // Since the overscrolling ended, reset the total overscroll amount.
             _totalOverscroll = 0.0;
-            _stretchController.ScrollEnd(velocity);
+            if (_accepted)
+            {
+                _stretchController.ScrollEnd(velocity);
+            }
         }
         else if (notification is ScrollUpdateNotification)
         {

@@ -258,6 +258,57 @@ public sealed class OverscrollIndicatorTests : IDisposable
     }
 
     [Fact]
+    public void Stretch_ResetsAcceptanceOnScrollStartAndSkipsScrollEndWhileDisallowed()
+    {
+        var emitterKey = new LabeledGlobalKey<NotificationEmitterState>("reset-stretch-emitter");
+        bool disallow = true;
+        using var harness = new WidgetRenderHarness(Wrap(
+            new NotificationListener<OverscrollIndicatorNotification>(
+                onNotification: notification =>
+                {
+                    if (disallow)
+                    {
+                        notification.DisallowIndicator();
+                    }
+
+                    return false;
+                },
+                child: new StretchingOverscrollIndicator(
+                    axisDirection: AxisDirection.Down,
+                    child: new NotificationEmitter(key: emitterKey)))));
+        harness.Pump(Viewport);
+        NotificationEmitterState emitter = Assert.IsType<NotificationEmitterState>(emitterKey.CurrentState);
+        var details = new DragUpdateDetails(default, new Point(120, 20), default, 40);
+
+        // A disallowed gesture leaves the controller untouched, and the trailing ScrollEnd must not
+        // start a recede animation for an overscroll that never happened.
+        emitter.Dispatch(new OverscrollNotification(
+            Metrics(viewportDimension: 100),
+            overscroll: -40,
+            dragDetails: details));
+        emitter.Dispatch(new ScrollEndNotification(
+            Metrics(viewportDimension: 100),
+            new DragEndDetails(Velocity.Zero, 0.0)));
+        harness.Pump(Viewport);
+
+        StretchingOverscrollIndicatorState state =
+            harness.FindState<StretchingOverscrollIndicatorState>();
+        Assert.Equal(0.0, state.StretchController.Overscroll);
+
+        // The next gesture starts with acceptance reset, so the confirmation is asked again and the
+        // now-allowed indicator stretches.
+        disallow = false;
+        emitter.Dispatch(new ScrollStartNotification(Metrics(viewportDimension: 100)));
+        emitter.Dispatch(new OverscrollNotification(
+            Metrics(viewportDimension: 100),
+            overscroll: -40,
+            dragDetails: details));
+        harness.Pump(Viewport);
+
+        Assert.True(state.StretchController.Overscroll < 0.0);
+    }
+
+    [Fact]
     public void MaterialScrollBehavior_SelectsStretchGlowAndDesktopPolicies()
     {
         Widget? materialThreeResult = null;

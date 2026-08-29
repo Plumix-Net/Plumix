@@ -193,9 +193,20 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
 
     public bool IsAutoScrolling => _ticker.IsActive;
 
+    /// Starts the auto scroll if `dragTarget` is close to the edge.
+    ///
+    /// If the scrollable's resolved physics refuses user-driven scrolling (for example
+    /// [NeverScrollableScrollPhysics]), no auto scroll is started and any in-flight auto
+    /// scroll is stopped.
     public void StartAutoScrollIfNecessary(Rect dragTarget)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
+        if (!_scrollable.EffectivePhysics.ShouldAcceptUserOffset(_scrollable.Position))
+        {
+            StopAutoScroll();
+            return;
+        }
+
         _dragTarget = dragTarget;
         if (ResolveScrollVelocity() == 0.0)
         {

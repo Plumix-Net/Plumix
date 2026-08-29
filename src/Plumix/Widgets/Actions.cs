@@ -19,13 +19,37 @@ public abstract class FlutterAction
 
     public abstract Type IntentType { get; }
 
+    /// The [FlutterAction] overridden by this action, set while an overridable action
+    /// forwards a call to its override. Dart's `Action._currentCallingAction`.
+    internal FlutterAction? CurrentCallingAction { get; private set; }
+
+    /// Creates an [FlutterAction] that allows itself to be overridden by the default
+    /// [FlutterAction] of the same [Intent] type in the given `context`.
+    ///
+    /// Dart's `Action.overridable` factory constructor.
+    public static FlutterAction<TIntent> Overridable<TIntent>(
+        FlutterAction<TIntent> defaultAction,
+        BuildContext context)
+        where TIntent : Intent
+    {
+        ArgumentNullException.ThrowIfNull(defaultAction);
+        return defaultAction.MakeOverridableAction(context);
+    }
+
     internal abstract bool IsEnabledObject(Intent intent, BuildContext? context);
+
+    internal abstract bool IsActionEnabledObject { get; }
 
     internal abstract bool ConsumesKeyObject(Intent intent);
 
     internal abstract object? InvokeObject(Intent intent, BuildContext? context);
 
-    public void AddActionListener(System.Action<FlutterAction> listener)
+    internal virtual void UpdateCallingAction(FlutterAction? value)
+    {
+        CurrentCallingAction = value;
+    }
+
+    public virtual void AddActionListener(System.Action<FlutterAction> listener)
     {
         ArgumentNullException.ThrowIfNull(listener);
         if (!_listeners.Contains(listener))
@@ -34,12 +58,12 @@ public abstract class FlutterAction
         }
     }
 
-    public void RemoveActionListener(System.Action<FlutterAction> listener)
+    public virtual void RemoveActionListener(System.Action<FlutterAction> listener)
     {
         _listeners.Remove(listener);
     }
 
-    protected void NotifyActionListeners()
+    protected internal virtual void NotifyActionListeners()
     {
         foreach (System.Action<FlutterAction> listener in _listeners.ToArray())
         {
@@ -53,6 +77,10 @@ public abstract class FlutterAction
 public abstract class FlutterAction<TIntent> : FlutterAction where TIntent : Intent
 {
     public override Type IntentType => typeof(TIntent);
+
+    /// The [FlutterAction] overridden by this action, while this action is being invoked
+    /// from an overridable action created by <see cref="FlutterAction.Overridable{TIntent}"/>.
+    public virtual FlutterAction<TIntent>? CallingAction => CurrentCallingAction as FlutterAction<TIntent>;
 
     public virtual bool IsActionEnabled => true;
 
@@ -73,6 +101,8 @@ public abstract class FlutterAction<TIntent> : FlutterAction where TIntent : Int
     {
         return intent is TIntent typedIntent && IsEnabledWithContext(typedIntent, context);
     }
+
+    internal sealed override bool IsActionEnabledObject => IsActionEnabled;
 
     internal override bool ConsumesKeyObject(Intent intent)
     {
@@ -112,6 +142,10 @@ public abstract class FlutterAction<TIntent> : FlutterAction where TIntent : Int
     {
         return Invoke(intent);
     }
+
+    /// Dart's `Action._makeOverridableAction`.
+    protected internal virtual FlutterAction<TIntent> MakeOverridableAction(BuildContext context)
+        => new OverridableAction<TIntent>(this, context);
 }
 
 public abstract class ContextAction<TIntent> : FlutterAction<TIntent> where TIntent : Intent
@@ -137,6 +171,10 @@ public abstract class ContextAction<TIntent> : FlutterAction<TIntent> where TInt
     {
         return Invoke(intent, context);
     }
+
+    /// <inheritdoc />
+    protected internal override FlutterAction<TIntent> MakeOverridableAction(BuildContext context)
+        => new OverridableContextAction<TIntent>(this, context);
 }
 
 public sealed class CallbackAction<TIntent> : FlutterAction<TIntent> where TIntent : Intent
@@ -280,15 +318,55 @@ public sealed class Actions : StatefulWidget
     public static FlutterAction<TIntent> Find<TIntent>(BuildContext context, TIntent? intent = null)
         where TIntent : Intent
     {
-        return MaybeFind(context, intent)
-               ?? throw new InvalidOperationException(
-                   $"Unable to find an action for {(intent?.GetType() ?? typeof(TIntent)).Name}.");
+        FlutterAction<TIntent>? action = MaybeFind(context, intent);
+        if (action is null && Constants.KDebugMode)
+        {
+            Type type = intent?.GetType() ?? typeof(TIntent);
+            throw new FlutterError(
+                $"Unable to find an action for a {type.Name} in an Actions widget in the given "
+                + "context.\n"
+                + "Actions.Find() was called on a context that doesn't contain an Actions widget "
+                + "with a mapping for the given intent type.\n"
+                + $"The context used was:\n  {context}\n"
+                + $"The intent type requested was:\n  {type.Name}");
+        }
+
+        return action!;
     }
 
     public static FlutterAction<TIntent>? MaybeFind<TIntent>(BuildContext context, TIntent? intent = null)
         where TIntent : Intent
     {
-        Type intentType = intent?.GetType() ?? typeof(TIntent);
+        FlutterAction? action = MaybeFindDependingOn(context, intent?.GetType() ?? typeof(TIntent));
+        if (action is null or FlutterAction<TIntent>)
+        {
+            return (FlutterAction<TIntent>?)action;
+        }
+
+        if (Constants.KDebugMode)
+        {
+            throw new FlutterError([
+                new ErrorSummary(
+                    $"An {action.GetType().Name} cannot be cast to a FlutterAction<{typeof(TIntent).Name}>."),
+                new ErrorDescription(
+                    $"A valid action {action} was found but could not be returned by "
+                    + $"Actions.MaybeFind<{typeof(TIntent).Name}>."),
+                new ErrorHint(
+                    "This is a current limitation of the Actions widget, see "
+                    + "https://github.com/flutter/flutter/issues/180871 for more details. As a "
+                    + "workaround, consider using Actions.Invoke or Actions.MaybeInvoke instead, or "
+                    + "explicitly set the type parameter to Intent: "
+                    + "Actions.MaybeFind<Intent>(context, intent)"),
+            ]);
+        }
+
+        return null;
+    }
+
+    /// Dart's `Actions.maybeFind` walk: finds the mapping for `intentType` and registers an
+    /// inherited dependency on the [Actions] widget that carries it.
+    internal static FlutterAction? MaybeFindDependingOn(BuildContext context, Type intentType)
+    {
         foreach ((InheritedElement element, ActionsScope scope) in VisitScopes(context))
         {
             if (!scope.ActionsMap.TryGetValue(intentType, out FlutterAction? action))
@@ -296,14 +374,8 @@ public sealed class Actions : StatefulWidget
                 continue;
             }
 
-            if (action is not FlutterAction<TIntent> typedAction)
-            {
-                throw new InvalidOperationException(
-                    $"{intentType.Name} cannot be handled by {action.GetType().Name}.");
-            }
-
             _ = context.Owner.DependOnInheritedElement(element, aspect: null);
-            return typedAction;
+            return action;
         }
 
         return null;
@@ -311,7 +383,13 @@ public sealed class Actions : StatefulWidget
 
     internal static FlutterAction? MaybeFind(BuildContext context, Intent intent)
     {
-        Type intentType = intent.GetType();
+        return MaybeFindWithoutDependingOn(context, intent.GetType());
+    }
+
+    /// Dart's `Actions._maybeFindWithoutDependingOn`: the same walk as
+    /// <see cref="MaybeFind{TIntent}"/> but without registering an inherited dependency.
+    internal static FlutterAction? MaybeFindWithoutDependingOn(BuildContext context, Type intentType)
+    {
         foreach ((InheritedElement _, ActionsScope scope) in VisitScopes(context))
         {
             if (scope.ActionsMap.TryGetValue(intentType, out FlutterAction? action))
@@ -870,4 +948,206 @@ public sealed class PrioritizedAction : ContextAction<PrioritizedIntents>
 
         return null;
     }
+}
+
+/// The body of Dart's private `_OverridableActionMixin`. C# has no mixins, so the shared
+/// members live on this base class and the two concrete overridable actions derive from it.
+///
+/// An overridable action delegates everything to the enabled override of the same [Intent]
+/// type found from <see cref="LookupContext"/>, falling back to <see cref="DefaultAction"/>.
+internal abstract class OverridableActionBase<TIntent> : ContextAction<TIntent>
+    where TIntent : Intent
+{
+    protected OverridableActionBase(FlutterAction<TIntent> defaultAction, BuildContext lookupContext)
+    {
+        DefaultAction = defaultAction ?? throw new ArgumentNullException(nameof(defaultAction));
+        LookupContext = lookupContext;
+    }
+
+    /// The action to invoke when no enabled override can be found from [LookupContext].
+    protected FlutterAction<TIntent> DefaultAction { get; }
+
+    /// The [BuildContext] used to find the override of this action.
+    protected BuildContext LookupContext { get; }
+
+    public override bool IsActionEnabled
+    {
+        get
+        {
+            FlutterAction? overrideAction = GetOverrideAction(intent: null, declareDependency: true);
+            return overrideAction is not null
+                ? IsOverrideActionEnabled(overrideAction)
+                : DefaultAction.IsActionEnabled;
+        }
+    }
+
+    public override object? Invoke(TIntent intent, BuildContext? context)
+    {
+        FlutterAction? overrideAction = GetOverrideAction(intent);
+        return overrideAction is null
+            ? InvokeDefaultAction(intent, CurrentCallingAction, context)
+            : InvokeOverride(overrideAction, intent, context);
+    }
+
+    public override bool IsEnabled(TIntent intent, BuildContext? context)
+    {
+        FlutterAction? overrideAction = GetOverrideAction(intent);
+        overrideAction?.UpdateCallingAction(DefaultAction);
+        bool returnValue = (overrideAction ?? DefaultAction).IsEnabledObject(intent, context);
+        overrideAction?.UpdateCallingAction(null);
+        return returnValue;
+    }
+
+    public override bool ConsumesKey(TIntent intent)
+    {
+        FlutterAction? overrideAction = GetOverrideAction(intent);
+        overrideAction?.UpdateCallingAction(DefaultAction);
+        bool consumes = (overrideAction ?? DefaultAction).ConsumesKeyObject(intent);
+        overrideAction?.UpdateCallingAction(null);
+        return consumes;
+    }
+
+    internal override void UpdateCallingAction(FlutterAction? value)
+    {
+        base.UpdateCallingAction(value);
+        DefaultAction.UpdateCallingAction(value);
+    }
+
+    /// How to invoke [DefaultAction], given the caller `fromAction`.
+    protected abstract object? InvokeDefaultAction(
+        TIntent intent,
+        FlutterAction? fromAction,
+        BuildContext? context);
+
+    protected virtual object? InvokeOverride(
+        FlutterAction overrideAction,
+        TIntent intent,
+        BuildContext? context)
+    {
+        overrideAction.UpdateCallingAction(DefaultAction);
+        object? returnValue = overrideAction.InvokeObject(intent, context);
+        overrideAction.UpdateCallingAction(null);
+        return returnValue;
+    }
+
+    private FlutterAction? GetOverrideAction(Intent? intent, bool declareDependency = false)
+    {
+        Type intentType = intent?.GetType() ?? typeof(TIntent);
+        FlutterAction? overrideAction = declareDependency
+            ? Actions.MaybeFindDependingOn(LookupContext, intentType)
+            : Actions.MaybeFindWithoutDependingOn(LookupContext, intentType);
+        return ReferenceEquals(overrideAction, this) ? null : overrideAction;
+    }
+
+    private bool IsOverrideActionEnabled(FlutterAction overrideAction)
+    {
+        overrideAction.UpdateCallingAction(DefaultAction);
+        bool isOverrideEnabled = overrideAction.IsActionEnabledObject;
+        overrideAction.UpdateCallingAction(null);
+        return isOverrideEnabled;
+    }
+}
+
+/// Dart's private `_OverridableAction`.
+internal sealed class OverridableAction<TIntent> : OverridableActionBase<TIntent>
+    where TIntent : Intent
+{
+    public OverridableAction(FlutterAction<TIntent> defaultAction, BuildContext lookupContext)
+        : base(defaultAction, lookupContext)
+    {
+    }
+
+    protected override object? InvokeDefaultAction(
+        TIntent intent,
+        FlutterAction? fromAction,
+        BuildContext? context)
+    {
+        return DefaultAction.Invoke(intent);
+    }
+
+    protected internal override FlutterAction<TIntent> MakeOverridableAction(BuildContext context)
+        => new OverridableAction<TIntent>(DefaultAction, context);
+}
+
+/// Dart's private `_OverridableContextAction`.
+internal sealed class OverridableContextAction<TIntent> : OverridableActionBase<TIntent>
+    where TIntent : Intent
+{
+    public OverridableContextAction(ContextAction<TIntent> defaultAction, BuildContext lookupContext)
+        : base(defaultAction, lookupContext)
+    {
+    }
+
+    private ContextAction<TIntent> DefaultContextAction => (ContextAction<TIntent>)DefaultAction;
+
+    protected override object? InvokeOverride(
+        FlutterAction overrideAction,
+        TIntent intent,
+        BuildContext? context)
+    {
+        // Wrap the default action together with the calling context, in case overrideAction is
+        // not a ContextAction and so has no access to the calling BuildContext.
+        var wrappedDefault = new ContextActionToActionAdapter<TIntent>(
+            context ?? throw new ArgumentNullException(nameof(context)),
+            DefaultContextAction);
+        overrideAction.UpdateCallingAction(wrappedDefault);
+        object? returnValue = overrideAction.InvokeObject(intent, context);
+        overrideAction.UpdateCallingAction(null);
+        return returnValue;
+    }
+
+    protected override object? InvokeDefaultAction(
+        TIntent intent,
+        FlutterAction? fromAction,
+        BuildContext? context)
+    {
+        return DefaultContextAction.Invoke(intent, context);
+    }
+
+    protected internal override FlutterAction<TIntent> MakeOverridableAction(BuildContext context)
+        => new OverridableContextAction<TIntent>(DefaultContextAction, context);
+}
+
+/// Dart's private `_ContextActionToActionAdapter`: presents a [ContextAction] bound to one
+/// invocation context as a plain [FlutterAction].
+internal sealed class ContextActionToActionAdapter<TIntent> : FlutterAction<TIntent>
+    where TIntent : Intent
+{
+    private readonly BuildContext _invokeContext;
+    private readonly ContextAction<TIntent> _action;
+
+    public ContextActionToActionAdapter(BuildContext invokeContext, ContextAction<TIntent> action)
+    {
+        _invokeContext = invokeContext;
+        _action = action;
+    }
+
+    public override FlutterAction<TIntent>? CallingAction => _action.CallingAction;
+
+    public override bool IsActionEnabled => _action.IsActionEnabled;
+
+    public override bool IsEnabled(TIntent intent) => _action.IsEnabled(intent, _invokeContext);
+
+    public override bool ConsumesKey(TIntent intent) => _action.ConsumesKey(intent);
+
+    public override object? Invoke(TIntent intent) => _action.Invoke(intent, _invokeContext);
+
+    public override void AddActionListener(System.Action<FlutterAction> listener)
+    {
+        base.AddActionListener(listener);
+        _action.AddActionListener(listener);
+    }
+
+    public override void RemoveActionListener(System.Action<FlutterAction> listener)
+    {
+        base.RemoveActionListener(listener);
+        _action.RemoveActionListener(listener);
+    }
+
+    internal override void UpdateCallingAction(FlutterAction? value)
+    {
+        _action.UpdateCallingAction(value);
+    }
+
+    protected internal override void NotifyActionListeners() => _action.NotifyActionListeners();
 }

@@ -46,6 +46,13 @@ public sealed class TickerMode : StatefulWidget
 
     public static IValueListenable<TickerModeData> GetValuesNotifier(BuildContext context)
     {
+        // Looking an inherited widget up from an unmounted context is illegal, which becomes a
+        // problem when an animation controller is a late field only touched in State.Dispose().
+        if (!context.Mounted)
+        {
+            return ConstantTickerModeDataListenable.Instance;
+        }
+
         EffectiveTickerMode? mode = context.GetInherited<EffectiveTickerMode>();
         return mode is null ? ConstantTickerModeDataListenable.Instance : mode.ValuesNotifier;
     }

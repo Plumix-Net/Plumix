@@ -51,11 +51,10 @@ public abstract record ShapeBorder
             return a;
         }
 
-        ShapeBorder? result = b?.LerpFrom(a, t);
-        if (result is null && a is not null)
-        {
-            result = a.LerpTo(b, t);
-        }
+        ShapeBorder? result = b?.LerpFrom(a, t)
+                              ?? a?.LerpTo(b, t)
+                              ?? b?.LerpTo(a, 1.0 - t)
+                              ?? a?.LerpFrom(b, 1.0 - t);
 
         return result ?? (t < 0.5 ? a : b);
     }
@@ -295,11 +294,10 @@ public abstract record OutlinedBorder : ShapeBorder
             return a;
         }
 
-        ShapeBorder? result = b?.LerpFrom(a, t);
-        if (result is null && a is not null)
-        {
-            result = a.LerpTo(b, t);
-        }
+        ShapeBorder? result = b?.LerpFrom(a, t)
+                              ?? a?.LerpTo(b, t)
+                              ?? b?.LerpTo(a, 1.0 - t)
+                              ?? a?.LerpFrom(b, 1.0 - t);
 
         return (OutlinedBorder?)result ?? (t < 0.5 ? a : b);
     }

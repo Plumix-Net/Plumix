@@ -302,6 +302,7 @@ public sealed class AnimatedCrossFade : StatefulWidget
         TimeSpan? reverseDuration = null,
         AnimatedCrossFadeBuilder? layoutBuilder = null,
         bool excludeBottomFocus = true,
+        Clip clipBehavior = Clip.HardEdge,
         Action? onEnd = null,
         Key? key = null) : base(key)
     {
@@ -325,6 +326,7 @@ public sealed class AnimatedCrossFade : StatefulWidget
         ReverseDuration = reverseDuration;
         LayoutBuilder = layoutBuilder ?? DefaultLayoutBuilder;
         ExcludeBottomFocus = excludeBottomFocus;
+        ClipBehavior = clipBehavior;
         OnEnd = onEnd;
     }
 
@@ -349,6 +351,10 @@ public sealed class AnimatedCrossFade : StatefulWidget
     public AnimatedCrossFadeBuilder LayoutBuilder { get; }
 
     public bool ExcludeBottomFocus { get; }
+
+    /// The clip behavior of the size transition and of the surrounding [ClipRect].
+    /// Defaults to <see cref="Clip.HardEdge"/>.
+    public Clip ClipBehavior { get; }
 
     public Action? OnEnd { get; }
 
@@ -466,11 +472,13 @@ public sealed class AnimatedCrossFade : StatefulWidget
                                 child: topChild)))));
 
             return new ClipRect(
+                clipBehavior: CurrentWidget.ClipBehavior,
                 child: new AnimatedSize(
                     alignment: CurrentWidget.Alignment,
                     duration: CurrentWidget.Duration,
                     reverseDuration: CurrentWidget.ReverseDuration,
                     curve: CurrentWidget.SizeCurve,
+                    clipBehavior: CurrentWidget.ClipBehavior,
                     child: CurrentWidget.LayoutBuilder(topChild, topKey, bottomChild, bottomKey)));
         }
 

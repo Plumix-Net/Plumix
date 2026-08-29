@@ -289,12 +289,16 @@ internal sealed class RawAutocompleteState<T> : State
             ? overlayRectInField.Top
             : overlayRectInField.Bottom - boundingHeight;
 
+        // Exclude the options overlay from the ambient focus traversal tree. Options are navigated
+        // by arrow keys (via the widget's own shortcuts) and selected via Enter or tap, so they do
+        // not participate in TAB traversal; without this, TAB from the field would detour into
+        // focusable items in the overlay instead of advancing to the next form field.
         Widget options = new AutocompleteHighlightedOption(
             _highlightedOptionIndex,
-            new Builder(optionsContext => Current.OptionsViewBuilder(
+            new ExcludeFocus(new Builder(optionsContext => Current.OptionsViewBuilder(
                 optionsContext,
                 Select,
-                _options)));
+                _options))));
         options = new TextFieldTapRegion(options);
         options = new Align(
             child: options,

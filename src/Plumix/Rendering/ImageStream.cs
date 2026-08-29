@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
+using Plumix.Foundation;
 
 namespace Plumix.Rendering;
 
@@ -35,7 +36,8 @@ public sealed record ImageChunkEvent
 public sealed record ImageStreamListener(
     ImageListener OnImage,
     ImageChunkListener? OnChunk = null,
-    ImageErrorListener? OnError = null);
+    ImageErrorListener? OnError = null,
+    bool ReportErrors = true);
 
 public sealed class ImageInfo : IDisposable
 {
@@ -198,6 +200,7 @@ public abstract class ImageStreamCompleter
     private (Exception Exception, StackTrace? Stack)? _currentError;
     private int _keepAliveHandles;
     private bool _disposed;
+    private bool _hadErrorListener;
 
     public static event ImageErrorListener? UnhandledError;
 
@@ -208,6 +211,13 @@ public abstract class ImageStreamCompleter
     public void AddListener(ImageStreamListener listener)
     {
         CheckNotDisposed();
+
+        // Track that a listener opted out of error reporting.
+        if (!listener.ReportErrors)
+        {
+            _hadErrorListener = true;
+        }
+
         _listeners.Add(listener);
         if (_currentImage is not null)
         {
@@ -314,13 +324,33 @@ public abstract class ImageStreamCompleter
             .ToArray();
         _ephemeralErrorListeners.Clear();
 
+        bool handled = false;
         foreach (var listener in errorListeners)
         {
-            listener(exception, stackTrace);
+            try
+            {
+                listener(exception, stackTrace);
+                handled = true;
+            }
+            catch (Exception newException) when (!ReferenceEquals(newException, exception))
+            {
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception: newException,
+                    library: "image resource service",
+                    context: new ErrorDescription("when reporting an error to an image listener"),
+                    stack: newException.StackTrace));
+            }
         }
 
-        if (errorListeners.Length == 0)
+        if (!handled)
         {
+            // If a listener with ReportErrors = false was previously registered, the error was
+            // intended to be handled; skip reporting it after the widget is disposed.
+            if (_hadErrorListener)
+            {
+                return;
+            }
+
             UnhandledError?.Invoke(exception, stackTrace);
         }
     }

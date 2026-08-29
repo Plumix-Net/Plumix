@@ -24,7 +24,10 @@ public sealed class SliverHeaderTests
             resizing.Build(default));
         Assert.Null(resizingRenderWidget.MinExtentPrototype);
         Assert.Null(resizingRenderWidget.MaxExtentPrototype);
-        Assert.IsType<SizedBox>(resizingRenderWidget.Child);
+        var resizingSemantics = Assert.IsType<Semantics>(resizingRenderWidget.Child);
+        Assert.True(resizingSemantics.Container);
+        Assert.True(resizingSemantics.ExplicitChildNodes);
+        Assert.IsType<SizedBox>(resizingSemantics.Child);
 
         var minPrototype = new SizedBox(height: 40);
         var maxPrototype = new SizedBox(height: 120);
@@ -33,7 +36,7 @@ public sealed class SliverHeaderTests
             new SliverResizingHeader(minPrototype, maxPrototype, child).Build(default));
         Assert.Same(minPrototype, Assert.IsType<ExcludeFocus>(resizingRenderWidget.MinExtentPrototype).Child);
         Assert.Same(maxPrototype, Assert.IsType<ExcludeFocus>(resizingRenderWidget.MaxExtentPrototype).Child);
-        Assert.Same(child, resizingRenderWidget.Child);
+        Assert.Same(child, Assert.IsType<Semantics>(resizingRenderWidget.Child).Child);
 
         var floating = new SliverFloatingHeader(child);
         Assert.Same(child, floating.Child);

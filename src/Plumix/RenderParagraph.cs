@@ -51,6 +51,13 @@ public sealed partial class RenderParagraph : RenderBox,
     {
     }
 
+    /// The number of device pixels for each logical pixel.
+    ///
+    /// This is used by some renderers (like Flutter's `WebParagraph` on the web) to regenerate the
+    /// text bitmap when the scale changes. Plumix paints text through Avalonia, which rasterises
+    /// per frame at the surface scale, so changing this only records the value.
+    public double DevicePixelRatio { get; set; } = 1.0;
+
     /// The text to display.
     public InlineSpan Text
     {
@@ -835,5 +842,6 @@ public sealed partial class RenderParagraph : RenderBox,
             defaultValue: TextScaler.NoScaling));
         properties.Add(new StringProperty("locale", Locale, defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new IntProperty("maxLines", MaxLines, ifNull: "unlimited"));
+        properties.Add(new DoubleProperty("devicePixelRatio", DevicePixelRatio, defaultValue: 1.0));
     }
 }

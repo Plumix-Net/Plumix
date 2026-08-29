@@ -31,7 +31,10 @@ public sealed class SliverResizingHeader : StatelessWidget
         return new SliverResizingHeaderRenderObjectWidget(
             minExtentPrototype: ExcludePrototypeFocus(MinExtentPrototype),
             maxExtentPrototype: ExcludePrototypeFocus(MaxExtentPrototype),
-            child: Child ?? new SizedBox());
+            child: new Semantics(
+                container: true,
+                explicitChildNodes: true,
+                child: Child ?? new SizedBox()));
     }
 
     private static Widget? ExcludePrototypeFocus(Widget? prototype)

@@ -238,6 +238,82 @@ public sealed class ActionsShortcutsTests : IDisposable
     }
 
     [Fact]
+    public void OverridableAction_DelegatesToTheOverrideAndExposesItAsCallingAction()
+    {
+        // Dart's `Action.overridable`: the overridable action looks its override up from the
+        // context it was created with, and hands the override the default action as
+        // `callingAction` for the duration of the call.
+        var defaultAction = new RecordingAction("default");
+        var override1 = new RecordingAction("override");
+        BuildContext innerContext = default;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Actions(
+                actions: new Dictionary<Type, FlutterAction>
+                {
+                    [typeof(OverridableIntent)] = override1
+                },
+                child: new Builder(context =>
+                {
+                    innerContext = context;
+                    return new SizedBox(width: 10, height: 10);
+                })));
+        Mount(root, owner);
+
+        var overridable = (ContextAction<OverridableIntent>)FlutterAction.Overridable(
+            defaultAction,
+            innerContext);
+
+        Assert.Equal("override", overridable.Invoke(new OverridableIntent(), innerContext));
+        Assert.Equal(1, override1.Invocations);
+        Assert.Equal(0, defaultAction.Invocations);
+
+        // The override saw a calling action while it ran, and the field is cleared once the call
+        // returns. A ContextAction default is handed over wrapped together with the invoking
+        // context, so the override can reach it without being a ContextAction itself.
+        Assert.NotNull(override1.CallingActionDuringInvoke);
+        Assert.Null(override1.CallingAction);
+        Assert.Equal("default", override1.CallingActionDuringInvoke!.Invoke(new OverridableIntent()));
+        Assert.Equal(1, defaultAction.Invocations);
+
+        // Enablement and key consumption are answered by the override, not the default.
+        override1.Enabled = false;
+        Assert.False(overridable.IsActionEnabled);
+        Assert.False(overridable.IsEnabled(new OverridableIntent(), innerContext));
+        override1.Enabled = true;
+        override1.Consumes = false;
+        Assert.False(overridable.ConsumesKey(new OverridableIntent()));
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void OverridableAction_FallsBackToTheDefaultActionWhenNoOverrideIsFound()
+    {
+        var defaultAction = new RecordingAction("default");
+        BuildContext context = default;
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Builder(builderContext =>
+        {
+            context = builderContext;
+            return new SizedBox(width: 10, height: 10);
+        }));
+        Mount(root, owner);
+
+        var overridable = (ContextAction<OverridableIntent>)FlutterAction.Overridable(
+            defaultAction,
+            context);
+        Assert.Equal("default", overridable.Invoke(new OverridableIntent(), context));
+        Assert.Equal(1, defaultAction.Invocations);
+        Assert.True(overridable.IsActionEnabled);
+
+        defaultAction.Enabled = false;
+        Assert.False(overridable.IsActionEnabled);
+
+        root.Unmount();
+    }
+
+    [Fact]
     public void ContextAction_ReceivesFocusedContextThroughActionsAndDispatcherFallback()
     {
         var action = new ContextProbeAction();
@@ -464,6 +540,39 @@ public sealed class ActionsShortcutsTests : IDisposable
         }
 
         public int Amount { get; }
+    }
+
+    private sealed class OverridableIntent : Intent
+    {
+    }
+
+    private sealed class RecordingAction : ContextAction<OverridableIntent>
+    {
+        private readonly string _result;
+
+        public RecordingAction(string result)
+        {
+            _result = result;
+        }
+
+        public int Invocations { get; private set; }
+
+        public bool Enabled { get; set; } = true;
+
+        public bool Consumes { get; set; } = true;
+
+        public FlutterAction<OverridableIntent>? CallingActionDuringInvoke { get; private set; }
+
+        public override bool IsActionEnabled => Enabled;
+
+        public override bool ConsumesKey(OverridableIntent intent) => Consumes;
+
+        public override object? Invoke(OverridableIntent intent, BuildContext? context)
+        {
+            Invocations++;
+            CallingActionDuringInvoke = CallingAction;
+            return _result;
+        }
     }
 
     private sealed class OuterIntent : Intent

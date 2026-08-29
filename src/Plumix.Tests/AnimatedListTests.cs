@@ -393,6 +393,43 @@ public sealed class AnimatedListTests : IDisposable
     }
 
     [Fact]
+    public void AnimatedList_SeparatedRecognizesTheNewTailWhileAnEarlierRemovalIsStillAnimating()
+    {
+        // Children animating out from an earlier RemoveItem still count towards the sliver's item
+        // count, so the tail check has to subtract them; otherwise removing the new last item picks
+        // the trailing separator instead of the leading one.
+        var key = new LabeledGlobalKey<AnimatedListState>("animated-separated-tail");
+        var removedSeparators = new List<int>();
+        Widget list = AnimatedList.Separated(
+            itemBuilder: (_, _, _) => new SizedBox(height: 24),
+            separatorBuilder: (_, _, _) => new SizedBox(height: 4),
+            removedSeparatorBuilder: (_, index, _) =>
+            {
+                removedSeparators.Add(index);
+                return new SizedBox(height: 4);
+            },
+            initialItemCount: 3,
+            key: key);
+        using WidgetRenderHarness harness = new(new Directionality(
+            Plumix.UI.TextDirection.Ltr,
+            list));
+        harness.Pump(new Size(200, 200));
+
+        // Remove the last item; its leading separator (index 1) goes with it.
+        key.CurrentState!.RemoveItem(2, (_, _) => new SizedBox(height: 24));
+        harness.Pump(new Size(200, 200));
+        Assert.Equal([1], removedSeparators);
+
+        // While that removal is still in flight, item 1 is the new tail, so its leading separator
+        // (index 0) must be the one removed. (Separator 1 keeps rebuilding while it animates out,
+        // so only the presence of 0 distinguishes the two branches.)
+        removedSeparators.Clear();
+        key.CurrentState.RemoveItem(1, (_, _) => new SizedBox(height: 24));
+        harness.Pump(new Size(200, 200));
+        Assert.Contains(0, removedSeparators);
+    }
+
+    [Fact]
     public void SliverAnimatedList_BulkOperationsAnimateEveryItemAndClearAfterReverseCompletes()
     {
         var key = new LabeledGlobalKey<SliverAnimatedListState>("bulk-sliver-animated-list");

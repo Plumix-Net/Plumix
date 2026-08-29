@@ -8,6 +8,16 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `AnimationStyle` gains `CopyWith`/`Merge`/`Lerp`; `NoAnimation` drops its curves (`animation_style.dart`).
+- Breaking: `IndexedStack` wraps children in `VisibilityScope` + `ExcludeFocus` (`indexed_stack.dart`).
+- Breaking: added `AnimatedCrossFade.ClipBehavior`, default `Clip.HardEdge` (`animated_cross_fade.dart`).
+- Added `FlutterAction.Overridable`, `CallingAction` and `SelectableRegion`'s non-override actions (`actions.dart`).
+- Added `ImageStreamListener.ReportErrors` and the completer's error-report suppression (`image_stream.dart`).
+- Added `Scheduler.ScheduleFrameCallback`/`CancelFrameCallbackWithId` and `BuildContext.Mounted` (`binding.dart`).
+- Added `ImageIcon.UseOriginalColors` and `RenderParagraph.DevicePixelRatio`, fed by `RichText` (`image_icon.dart`).
+- Breaking: `ShapeBorder.Lerp`/`OutlinedBorder.Lerp` try the reversed timeline before snapping (`borders.dart`).
+- Fixed `EdgeDraggingAutoScroller`, the stretch indicator's acceptance reset, the separated `AnimatedList` tail check.
+- Fixed `SliverResizingHeader` semantics, `TickerMode.GetValuesNotifier`, `RenderTable`'s row bound, spell-check.
 - Breaking: `PipelineOwner.SemanticsOwner` is nullable and created on demand (`object.dart`).
 - Breaking: every `PipelineOwner` flush phase recurses into child owners after its own nodes (`object.dart`).
 - Added the `PipelineOwner` tree: `AdoptChild`/`DropChild`/`VisitChildren`/`Attach`/`Detach`/`Dispose` (`object.dart`).

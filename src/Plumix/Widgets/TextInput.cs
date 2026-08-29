@@ -1584,16 +1584,62 @@ public sealed class EditableText : StatefulWidget
                 _currentAutofillScope?.Register(EffectiveAutofillClient);
             }
 
-            if (!Widget.EnableInteractiveSelection
-                || oldEditableText.ContextMenuBuilder != Widget.ContextMenuBuilder)
+            // Only a null <-> non-null change of contextMenuBuilder invalidates the overlay. If
+            // only the identity of the closure changed (an inline lambda rebuilt every frame),
+            // the shown toolbar is rebuilt instead so its overlay entry picks up the new closure.
+            bool contextMenuPresenceChanged =
+                (Widget.ContextMenuBuilder is null) != (oldEditableText.ContextMenuBuilder is null);
+            if (!Widget.EnableInteractiveSelection || contextMenuPresenceChanged)
             {
                 HideToolbar();
+            }
+            else if (_selectionOverlay is { ToolbarIsVisible: true }
+                     && oldEditableText.ContextMenuBuilder != Widget.ContextMenuBuilder)
+            {
+                // Deferred to the next frame because ShowToolbar() needs a laid-out render tree,
+                // and DidUpdateWidget runs before layout.
+                Scheduler.AddPostFrameCallback(_ =>
+                {
+                    if (Mounted && _selectionOverlay is { ToolbarIsVisible: true })
+                    {
+                        _selectionOverlay.ShowToolbar();
+                    }
+                });
             }
             if (oldEditableText.CursorOpacityAnimates != Widget.CursorOpacityAnimates
                 || oldEditableText.ShowCursor != Widget.ShowCursor)
             {
                 UpdateCursorTicker();
             }
+
+            // Spell check is re-inferred whenever an input that feeds IsPasswordInput changes.
+            if (oldEditableText.SpellCheckConfiguration != Widget.SpellCheckConfiguration
+                || oldEditableText.ObscureText != Widget.ObscureText
+                || !Equals(oldEditableText.KeyboardType, Widget.KeyboardType)
+                || !AutofillHintsEqual(oldEditableText.AutofillHints, Widget.AutofillHints))
+            {
+                if (SpellCheckEnabled)
+                {
+                    if (!string.IsNullOrEmpty(TextEditingValue.Text))
+                    {
+                        _ = RequestSpellCheckAsync();
+                    }
+                }
+                else
+                {
+                    _spellCheckResults = null;
+                }
+            }
+        }
+
+        private static bool AutofillHintsEqual(IReadOnlyList<string>? a, IReadOnlyList<string>? b)
+        {
+            if (ReferenceEquals(a, b))
+            {
+                return true;
+            }
+
+            return a is not null && b is not null && a.SequenceEqual(b, StringComparer.Ordinal);
         }
 
         public override void Dispose()
@@ -2706,11 +2752,24 @@ public sealed class EditableText : StatefulWidget
             return _selectionOverlay;
         }
 
+        /// Dart's `EditableText._isPasswordInput`: spell check never runs on password input,
+        /// whatever the [SpellCheckConfiguration] says.
+        private bool IsPasswordInput =>
+            Widget.ObscureText
+            || Equals(Widget.KeyboardType, TextInputType.VisiblePassword)
+            || Widget.AutofillHints?.Any(
+                hint => hint is UI.AutofillHints.Password or UI.AutofillHints.NewPassword) == true;
+
+        /// Whether spell check is enabled for this field. Dart resolves this once through
+        /// `EditableText._inferSpellCheckConfiguration`.
+        public bool SpellCheckEnabled =>
+            Widget.SpellCheckConfiguration is { SpellCheckEnabled: true } && !IsPasswordInput;
+
         private async Task RequestSpellCheckAsync()
         {
             SpellCheckConfiguration? configuration = Widget.SpellCheckConfiguration;
-            if (configuration is not { SpellCheckEnabled: true } || string.IsNullOrEmpty(_controller!.Text)) return;
-            ISpellCheckService? service = configuration.SpellCheckService;
+            if (!SpellCheckEnabled || string.IsNullOrEmpty(_controller!.Text)) return;
+            ISpellCheckService? service = configuration!.SpellCheckService;
             if (service is null && DefaultSpellCheckService.PlatformHandler is not null)
             {
                 service = new DefaultSpellCheckService();

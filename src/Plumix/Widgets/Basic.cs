@@ -1555,19 +1555,61 @@ public sealed class Stack : MultiChildRenderObjectWidget
     }
 }
 
-public sealed class IndexedStack : MultiChildRenderObjectWidget
+public sealed class IndexedStack : StatelessWidget
 {
     public IndexedStack(
         IReadOnlyList<Widget>? children = null,
         int? index = 0,
         AlignmentGeometry alignment = default,
-        Key? key = null) : base(children, key)
+        Key? key = null) : base(key)
     {
+        Children = children ?? [];
         if (index.HasValue && (index.Value < 0 || index.Value >= Children.Count))
         {
             throw new ArgumentOutOfRangeException(nameof(index));
         }
 
+        Index = index;
+        Alignment = alignment;
+    }
+
+    public IReadOnlyList<Widget> Children { get; }
+
+    public int? Index { get; }
+
+    public AlignmentGeometry Alignment { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        // Each child is wrapped with VisibilityScope (so Visibility.Of reports the child as hidden
+        // when it is not the selected index) and with ExcludeFocus (so non-selected children cannot
+        // receive focus). Neither introduces a RenderObject between the child and the enclosing
+        // RenderIndexedStack, so ParentDataWidgets such as Positioned still apply their
+        // StackParentData. Painting, hit-testing and semantics for non-selected children are
+        // already handled by RenderIndexedStack.
+        List<Widget> wrappedChildren = new(Children.Count);
+        for (int i = 0; i < Children.Count; i++)
+        {
+            bool isSelected = i == Index;
+            wrappedChildren.Add(new VisibilityScope(
+                isSelected,
+                new ExcludeFocus(Children[i], excluding: !isSelected)));
+        }
+
+        return new RawIndexedStack(wrappedChildren, Index, Alignment);
+    }
+}
+
+/// The render object widget that backs <see cref="IndexedStack"/>. Dart's private
+/// `_RawIndexedStack`.
+internal sealed class RawIndexedStack : MultiChildRenderObjectWidget
+{
+    public RawIndexedStack(
+        IReadOnlyList<Widget>? children = null,
+        int? index = 0,
+        AlignmentGeometry alignment = default,
+        Key? key = null) : base(children, key)
+    {
         Index = index;
         Alignment = alignment;
     }

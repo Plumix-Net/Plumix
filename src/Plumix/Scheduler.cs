@@ -25,6 +25,9 @@ public enum SchedulerPhase
 public static class Scheduler
 {
     private static readonly List<Ticker> _active = [];
+    private static readonly Dictionary<int, Action<TimeSpan>> _transientCallbacks = [];
+    private static readonly HashSet<int> _removedIds = [];
+    private static int _nextFrameCallbackId;
     private static readonly List<Action<TimeSpan>> _persistentFrameCallbacks = [];
     private static readonly Queue<Action<TimeSpan>> _postFrameCallbacks = [];
     private static readonly Queue<Action> _microtasks = [];
@@ -146,7 +149,41 @@ public static class Scheduler
     public static SchedulingStrategy SchedulingStrategy { get; set; } = DefaultSchedulingStrategy;
 
     /// <summary>The number of transient frame callbacks pending, i.e. the number of ticking tickers.</summary>
-    public static int TransientCallbackCount => _active.Count;
+    public static int TransientCallbackCount => _active.Count + _transientCallbacks.Count;
+
+    /// <summary>
+    /// Schedules <paramref name="callback"/> to run once at the beginning of the next frame, in the
+    /// transient-callback phase, and schedules that frame. Returns the id that
+    /// <see cref="CancelFrameCallbackWithId"/> takes. Dart parity source:
+    /// <c>SchedulerBinding.scheduleFrameCallback</c>.
+    /// </summary>
+    /// <param name="rescheduling">
+    /// True when this call comes from inside a frame callback that is rescheduling itself; the frame
+    /// currently being produced already covers it, so no additional frame is requested.
+    /// </param>
+    public static int ScheduleFrameCallback(Action<TimeSpan> callback, bool rescheduling = false)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+
+        _nextFrameCallbackId++;
+        _transientCallbacks[_nextFrameCallbackId] = callback;
+        if (!rescheduling)
+        {
+            ScheduleFrame();
+        }
+
+        return _nextFrameCallbackId;
+    }
+
+    /// <summary>
+    /// Cancels the transient frame callback registered under <paramref name="id"/>. Dart parity
+    /// source: <c>SchedulerBinding.cancelFrameCallbackWithId</c>.
+    /// </summary>
+    public static void CancelFrameCallbackWithId(int id)
+    {
+        _transientCallbacks.Remove(id);
+        _removedIds.Add(id);
+    }
 
     /// <summary>
     /// Dart's `SchedulerBinding.scheduleTask`. Queues <paramref name="task"/> to run between frames in
@@ -230,7 +267,8 @@ public static class Scheduler
     {
         _active.Remove(ticker);
 
-        if (!HasTickingTickers() && !_hasScheduledFrame && _postFrameCallbacks.Count == 0)
+        if (!HasTickingTickers() && !_hasScheduledFrame && _postFrameCallbacks.Count == 0
+            && _transientCallbacks.Count == 0)
         {
             Stop();
         }
@@ -238,7 +276,8 @@ public static class Scheduler
 
     internal static void PumpFrameForTests(TimeSpan? timestamp = null)
     {
-        if (!_hasScheduledFrame && !HasTickingTickers() && _postFrameCallbacks.Count == 0)
+        if (!_hasScheduledFrame && !HasTickingTickers() && _postFrameCallbacks.Count == 0
+            && _transientCallbacks.Count == 0)
         {
             return;
         }
@@ -258,6 +297,9 @@ public static class Scheduler
     {
         Stop();
         _active.Clear();
+        _transientCallbacks.Clear();
+        _removedIds.Clear();
+        _nextFrameCallbackId = 0;
         _persistentFrameCallbacks.Clear();
         _postFrameCallbacks.Clear();
         _taskQueue.Clear();
@@ -325,7 +367,8 @@ public static class Scheduler
 
     private static void Tick()
     {
-        if (!_hasScheduledFrame && !HasTickingTickers() && _postFrameCallbacks.Count == 0)
+        if (!_hasScheduledFrame && !HasTickingTickers() && _postFrameCallbacks.Count == 0
+            && _transientCallbacks.Count == 0)
         {
             Stop();
             return;
@@ -359,6 +402,7 @@ public static class Scheduler
         {
             Phase = SchedulerPhase.TransientCallbacks;
             TickActiveTickers(timestamp);
+            RunTransientFrameCallbacks(timestamp);
             Phase = SchedulerPhase.PersistentCallbacks;
             BeginFrame?.Invoke(timestamp);
             RunPersistentFrameCallbacks(timestamp);
@@ -378,10 +422,32 @@ public static class Scheduler
             _hasScheduledFrame = true;
         }
 
-        if (!_hasScheduledFrame && !HasTickingTickers() && _postFrameCallbacks.Count == 0)
+        if (!_hasScheduledFrame && !HasTickingTickers() && _postFrameCallbacks.Count == 0
+            && _transientCallbacks.Count == 0)
         {
             Stop();
         }
+    }
+
+    private static void RunTransientFrameCallbacks(TimeSpan timestamp)
+    {
+        if (_transientCallbacks.Count == 0)
+        {
+            return;
+        }
+
+        Dictionary<int, Action<TimeSpan>> callbacks = new(_transientCallbacks);
+        _transientCallbacks.Clear();
+        foreach ((int id, Action<TimeSpan> callback) in callbacks)
+        {
+            // A callback cancelled by an earlier callback in this same frame must not run.
+            if (!_removedIds.Contains(id))
+            {
+                callback(timestamp);
+            }
+        }
+
+        _removedIds.Clear();
     }
 
     private static void TickActiveTickers(TimeSpan timestamp)

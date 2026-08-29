@@ -166,6 +166,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
             TextHeightBehavior = TextHeightBehavior,
             SelectionColor = SelectionColor,
             Registrar = SelectionRegistrar,
+            DevicePixelRatio = GetDevicePixelRatio(context),
         };
 
         return paragraph;
@@ -186,6 +187,14 @@ public sealed class RichText : MultiChildRenderObjectWidget
         paragraph.TextHeightBehavior = TextHeightBehavior;
         paragraph.SelectionColor = SelectionColor;
         paragraph.Registrar = SelectionRegistrar;
+        paragraph.DevicePixelRatio = GetDevicePixelRatio(context);
+    }
+
+    private static double GetDevicePixelRatio(BuildContext context)
+    {
+        return MediaQuery.MaybeDevicePixelRatioOf(context)
+               ?? View.MaybeOf(context)?.DevicePixelRatio
+               ?? 1.0;
     }
 
 

@@ -36,6 +36,12 @@ public readonly struct BuildContext
     /// </summary>
     public Size? Size => Owner.RenderObject is RenderBox box ? box.Size : null;
 
+    /// <summary>
+    /// Whether the [Widget] this context is associated with is currently mounted in the widget
+    /// tree. Dart parity: <c>BuildContext.mounted</c>.
+    /// </summary>
+    public bool Mounted => Owner is not null && Owner.IsMounted;
+
     internal IReadOnlyList<T> DependOnInheritedAncestors<T>() where T : InheritedWidget =>
         Owner.DependOnInheritedAncestors<T>();
 

@@ -1408,10 +1408,29 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
         return Actions.Invoke(Context, intent);
     }
 
-    /// Selects every selectable in the region.
-    private sealed class SelectAllAction(SelectableRegionState state) : ContextAction<SelectAllTextIntent>
+    /// An action that does not override any overridable action in the subtree.
+    ///
+    /// If this action is invoked by an action created with <see cref="FlutterAction.Overridable{T}"/>,
+    /// it immediately invokes that action and does nothing else. Otherwise it calls
+    /// <see cref="InvokeAction"/>. Ports Dart's private `_NonOverrideAction`.
+    private abstract class NonOverrideAction<TIntent> : ContextAction<TIntent>
+        where TIntent : Intent
     {
-        public override object? Invoke(SelectAllTextIntent intent, BuildContext? context)
+        protected abstract object? InvokeAction(TIntent intent, BuildContext? context);
+
+        public sealed override object? Invoke(TIntent intent, BuildContext? context)
+        {
+            return CallingAction is { } callingAction
+                ? callingAction.Invoke(intent)
+                : InvokeAction(intent, context);
+        }
+    }
+
+    /// Selects every selectable in the region.
+    private sealed class SelectAllAction(SelectableRegionState state)
+        : NonOverrideAction<SelectAllTextIntent>
+    {
+        protected override object? InvokeAction(SelectAllTextIntent intent, BuildContext? context)
         {
             state.SelectAll(SelectionChangedCause.Keyboard);
             return null;
@@ -1420,9 +1439,9 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
 
     /// Copies the selection without clearing it, unlike the toolbar's copy button.
     private sealed class CopySelectionAction(SelectableRegionState state)
-        : ContextAction<CopySelectionTextIntent>
+        : NonOverrideAction<CopySelectionTextIntent>
     {
-        public override object? Invoke(CopySelectionTextIntent intent, BuildContext? context)
+        protected override object? InvokeAction(CopySelectionTextIntent intent, BuildContext? context)
         {
             state.CopySelection();
             return null;
@@ -1432,10 +1451,10 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     /// Extends the selection by one unit of the given granularity.
     private sealed class GranularlyExtendSelectionAction<TIntent>(
         SelectableRegionState state,
-        TextGranularity granularity) : ContextAction<TIntent>
+        TextGranularity granularity) : NonOverrideAction<TIntent>
         where TIntent : DirectionalTextEditingIntent
     {
-        public override object? Invoke(TIntent intent, BuildContext? context)
+        protected override object? InvokeAction(TIntent intent, BuildContext? context)
         {
             state.GranularlyExtendSelection(granularity, intent.Forward);
             return null;
@@ -1445,10 +1464,10 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     /// The caret-movement variant: a selectable region never collapses the selection.
     private sealed class GranularlyExtendCaretSelectionAction<TIntent>(
         SelectableRegionState state,
-        TextGranularity granularity) : ContextAction<TIntent>
+        TextGranularity granularity) : NonOverrideAction<TIntent>
         where TIntent : DirectionalCaretMovementIntent
     {
-        public override object? Invoke(TIntent intent, BuildContext? context)
+        protected override object? InvokeAction(TIntent intent, BuildContext? context)
         {
             if (intent.CollapseSelection)
             {
@@ -1462,10 +1481,10 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
 
     /// Extends the selection to the adjacent line, keeping the horizontal baseline.
     private sealed class DirectionallyExtendCaretSelectionAction<TIntent>(SelectableRegionState state)
-        : ContextAction<TIntent>
+        : NonOverrideAction<TIntent>
         where TIntent : DirectionalCaretMovementIntent
     {
-        public override object? Invoke(TIntent intent, BuildContext? context)
+        protected override object? InvokeAction(TIntent intent, BuildContext? context)
         {
             if (intent.CollapseSelection)
             {

@@ -758,7 +758,9 @@ public sealed class RenderTable : RenderBox
 
         int FindRowIndex(double top)
         {
-            for (int i = _rowTops.Count - 1; i >= 0; i--)
+            // Iterate over _rows rather than _rowTops.Count because _rowTops carries one extra
+            // entry marking the bottom boundary of the last row.
+            for (int i = _rows - 1; i >= 0; i--)
             {
                 if (_rowTops[i] <= top) return i;
             }

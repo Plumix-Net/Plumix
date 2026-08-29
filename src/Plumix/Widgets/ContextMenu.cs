@@ -74,6 +74,16 @@ public sealed class ContextMenuController
     public bool Show(BuildContext context, Func<BuildContext, Widget> contextMenuBuilder)
     {
         ArgumentNullException.ThrowIfNull(contextMenuBuilder);
+
+        if (IsShown && _route is not null)
+        {
+            // Update the currently-shown menu in place by swapping the builder and rebuilding the
+            // existing entry, so a caller that rebuilds its builder closure every frame does not
+            // tear the menu down and re-show it.
+            _route.UpdateBuilder(contextMenuBuilder);
+            return true;
+        }
+
         RemoveAny();
 
         NavigatorState? navigator = Navigator.MaybeOf(context, rootNavigator: true);
@@ -147,7 +157,7 @@ public sealed class ContextMenuController
 
     private sealed class ContextMenuRoute : PageRoute
     {
-        private readonly Func<BuildContext, Widget> _builder;
+        private Func<BuildContext, Widget> _builder;
         private readonly Action _onDismiss;
         private readonly Action<ContextMenuRoute> _onRemoved;
         private bool _removed;
@@ -163,6 +173,13 @@ public sealed class ContextMenuController
         }
 
         public override bool Opaque => false;
+
+        /// Dart's `_menuOverlayEntry.markNeedsBuild()` after swapping `_contextMenuBuilder`.
+        public void UpdateBuilder(Func<BuildContext, Widget> builder)
+        {
+            _builder = builder;
+            ChangedInternalState();
+        }
 
         public override Widget BuildPage(BuildContext context)
         {
