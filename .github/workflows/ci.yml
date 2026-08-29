@@ -31,8 +31,18 @@ jobs:
       - name: Build
         run: dotnet build src/Plumix.Ci.slnf -c Release
 
-      - name: Test
-        run: dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Release --logger "console;verbosity=normal"
+      # The suite pins debug-mode diagnostics text, so it runs in Debug — diagnostics elide their
+      # debug bodies in profile/release builds, and a full Release run would fail ~120 goldens the
+      # way Flutter's debug-only test suite would. The build-mode contract itself is covered by the
+      # BuildModeGates test, which asserts the profile and release halves when built for those modes.
+      - name: Test (Debug)
+        run: dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Debug --logger "console;verbosity=normal"
+
+      - name: Test (build-mode gates, Profile)
+        run: dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Profile --filter BuildModeGates
+
+      - name: Test (build-mode gates, Release)
+        run: dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Release --filter BuildModeGates
 
       - name: Line length (new/edited lines)
         if: github.event_name == 'pull_request'
