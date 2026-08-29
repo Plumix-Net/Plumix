@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.UI;
 using Xunit;
@@ -414,5 +415,25 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
             pressure: 0.5,
             localPosition: new Point(1.0, 2.0));
         Assert.Equal(new Point(1.0, 2.0), relocated.LocalPosition);
+    }
+
+    [Fact]
+    public void Details_DebugFillPropertiesMatchDartAndUseIdentityEquality()
+    {
+        var details = new ForcePressDetails(globalPosition: default, pressure: 1.0);
+        var properties = new DiagnosticPropertiesBuilder();
+
+        details.DebugFillProperties(properties);
+
+        Assert.Equal(
+            [
+                "globalPosition: Offset(0.0, 0.0)",
+                "localPosition: Offset(0.0, 0.0)",
+                "pressure: 1.0",
+            ],
+            properties.Properties
+                .Where(property => !property.IsFiltered(DiagnosticLevel.Info))
+                .Select(property => property.ToString()));
+        Assert.False(details.Equals(new ForcePressDetails(globalPosition: default, pressure: 1.0)));
     }
 }

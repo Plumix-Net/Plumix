@@ -36,7 +36,7 @@ internal enum ForceState
 /// Details for the callbacks of a <see cref="ForcePressGestureRecognizer"/>.
 /// </summary>
 /// <remarks>Flutter's <c>ForcePressDetails</c>.</remarks>
-public readonly record struct ForcePressDetails : IPositionedGestureDetails
+public sealed class ForcePressDetails : Diagnosticable, IPositionedGestureDetails
 {
     /// <summary>
     /// Creates the details. An omitted <paramref name="localPosition"/> falls back to
@@ -57,6 +57,14 @@ public readonly record struct ForcePressDetails : IPositionedGestureDetails
 
     /// <summary>The pressure of the pointer on the screen.</summary>
     public double Pressure { get; }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(GestureDetailsDiagnostics.OffsetProperty("globalPosition", GlobalPosition));
+        properties.Add(GestureDetailsDiagnostics.OffsetProperty("localPosition", LocalPosition));
+        properties.Add(new DoubleProperty("pressure", Pressure));
+    }
 }
 
 /// <summary>

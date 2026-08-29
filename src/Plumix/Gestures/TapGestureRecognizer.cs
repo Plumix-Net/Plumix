@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.UI;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/tap.dart
@@ -6,7 +7,7 @@ using Plumix.UI;
 namespace Plumix.Gestures;
 
 /// <summary>Details for `GestureTapDownCallback`, such as the position of the tap.</summary>
-public sealed class TapDownDetails : IPositionedGestureDetails
+public sealed class TapDownDetails : Diagnosticable, IPositionedGestureDetails
 {
     public TapDownDetails(
         Point globalPosition = default,
@@ -24,10 +25,18 @@ public sealed class TapDownDetails : IPositionedGestureDetails
 
     /// <summary>The kind of the device that initiated the event.</summary>
     public PointerDeviceKind? Kind { get; }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(GestureDetailsDiagnostics.OffsetProperty("globalPosition", GlobalPosition));
+        properties.Add(GestureDetailsDiagnostics.OffsetProperty("localPosition", LocalPosition));
+        properties.Add(new EnumProperty<PointerDeviceKind>("kind", Kind));
+    }
 }
 
 /// <summary>Details for `GestureTapUpCallback`, such as the position of the tap.</summary>
-public sealed class TapUpDetails : IPositionedGestureDetails
+public sealed class TapUpDetails : Diagnosticable, IPositionedGestureDetails
 {
     public TapUpDetails(
         PointerDeviceKind kind,
@@ -45,6 +54,14 @@ public sealed class TapUpDetails : IPositionedGestureDetails
 
     /// <summary>The kind of the device that initiated the event. Required and non-null in Dart.</summary>
     public PointerDeviceKind Kind { get; }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(GestureDetailsDiagnostics.OffsetProperty("globalPosition", GlobalPosition));
+        properties.Add(GestureDetailsDiagnostics.OffsetProperty("localPosition", LocalPosition));
+        properties.Add(new EnumProperty<PointerDeviceKind>("kind", Kind));
+    }
 }
 
 /// <summary>Details for `GestureTapMoveCallback`, such as the new position of the pointer.</summary>

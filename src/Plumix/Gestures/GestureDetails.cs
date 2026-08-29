@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/gesture_details.dart
 
@@ -19,4 +20,14 @@ public interface IPositionedGestureDetails
     /// interacts with the screen.
     /// </summary>
     Point LocalPosition { get; }
+}
+
+/// <summary>Diagnostics helpers for Dart's <c>Offset</c>-backed gesture detail properties.</summary>
+internal static class GestureDetailsDiagnostics
+{
+    internal static DiagnosticsProperty<Point> OffsetProperty(string name, Point value)
+    {
+        string description = FormattableString.Invariant($"Offset({value.X:0.0}, {value.Y:0.0})");
+        return new DiagnosticsProperty<Point>(name, value, description: description);
+    }
 }

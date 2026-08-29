@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.UI;
 using Xunit;
@@ -23,6 +24,16 @@ public sealed class TapGestureRecognizerTests : IDisposable
     public void Dispose()
     {
         _binding.ResetForTests();
+    }
+
+    private static List<string> DiagnosticStrings(Diagnosticable details)
+    {
+        var properties = new DiagnosticPropertiesBuilder();
+        details.DebugFillProperties(properties);
+        return properties.Properties
+            .Where(property => !property.IsFiltered(DiagnosticLevel.Info))
+            .Select(property => property.ToString())
+            .ToList();
     }
 
     private static PointerDownEvent Down(
@@ -177,6 +188,32 @@ public sealed class TapGestureRecognizerTests : IDisposable
         {
             tap.Dispose();
         }
+    }
+
+    [Fact]
+    public void Details_DebugFillPropertiesMatchDart()
+    {
+        var down = new TapDownDetails(kind: PointerDeviceKind.Unknown);
+        var up = new TapUpDetails(kind: PointerDeviceKind.Unknown);
+
+        Assert.Equal(
+            [
+                "globalPosition: Offset(0.0, 0.0)",
+                "localPosition: Offset(0.0, 0.0)",
+                "kind: unknown",
+            ],
+            DiagnosticStrings(down));
+        Assert.Equal(
+            [
+                "globalPosition: Offset(0.0, 0.0)",
+                "localPosition: Offset(0.0, 0.0)",
+                "kind: unknown",
+            ],
+            DiagnosticStrings(up));
+
+        Assert.False(down.Equals(new TapDownDetails(kind: PointerDeviceKind.Unknown)));
+        Assert.False(up.Equals(new TapUpDetails(kind: PointerDeviceKind.Unknown)));
+        Assert.False((object)new TapMoveDetails(PointerDeviceKind.Unknown) is IDiagnosticable);
     }
 
     [Fact]
