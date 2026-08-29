@@ -403,6 +403,7 @@ public abstract class Layer : DiagnosticableTree
     ///
     /// Used in debug messages.
     public object? DebugCreator { get; set; }
+
 }
 
 public class ContainerLayer : Layer
@@ -410,6 +411,10 @@ public class ContainerLayer : Layer
     private readonly List<Layer> _children = [];
 
     public IReadOnlyList<Layer> Children => _children;
+
+    /// <summary>Whether this layer has any children.</summary>
+    /// <remarks>Flutter's <c>ContainerLayer.hasChildren</c>.</remarks>
+    public bool HasChildren => _children.Count > 0;
 
     internal override bool ContainsMagnifier => _children.Any(static child => child.ContainsMagnifier);
 

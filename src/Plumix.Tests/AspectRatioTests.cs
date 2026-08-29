@@ -35,6 +35,7 @@ public sealed class AspectRatioTests
     [Fact]
     public void RenderAspectRatio_Throws_WhenBothAxesAreUnbounded()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var aspectRatio = new RenderAspectRatio(2.0);
 
         Assert.Throws<InvalidOperationException>(() =>

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -5,7 +6,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Foundation;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
+// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (single-owner subset)
 
 namespace Plumix;
 
@@ -21,6 +22,7 @@ public sealed class PipelineOwner : DiagnosticableTree
     private bool _needsPaint;
     private bool _needsSemantics;
     private readonly HashSet<RenderObject> _nodesNeedingLayout = [];
+    private bool _shouldMergeDirtyNodes;
     private readonly HashSet<RenderObject> _nodesNeedingCompositingBitsUpdate = [];
     private readonly HashSet<RenderObject> _nodesNeedingPaint = [];
     private readonly HashSet<RenderObject> _nodesNeedingSemantics = [];
@@ -36,15 +38,74 @@ public sealed class PipelineOwner : DiagnosticableTree
         Root.ScheduleInitialPaint(_rootLayer);
     }
 
+    /// <summary>The render objects queued for the next layout pass.</summary>
+    /// <remarks>
+    /// Flutter's <c>PipelineOwner.nodesNeedingLayout</c>, a <c>@protected</c> getter subclasses use to
+    /// inspect the dirty list. <see cref="PipelineOwner"/> is sealed here, so it is internal instead.
+    /// </remarks>
+    internal IReadOnlyCollection<RenderObject> NodesNeedingLayoutForTest => _nodesNeedingLayout;
+
+    /// <summary>The render objects queued for the next paint pass.</summary>
+    /// <remarks>Flutter's <c>PipelineOwner.nodesNeedingPaint</c>.</remarks>
+    internal IReadOnlyCollection<RenderObject> NodesNeedingPaintForTest => _nodesNeedingPaint;
+
+    /// <summary>Requests that the host schedule a new frame.</summary>
+    /// <remarks>Flutter's <c>PipelineOwner.requestVisualUpdate</c>.</remarks>
+    public void RequestVisualUpdate()
+    {
+        OnNeedVisualUpdate?.Invoke();
+    }
+
+    /// <summary>
+    /// Whether a render object may currently dirty a subtree that is already dirty.
+    /// </summary>
+    /// <remarks>Flutter's <c>PipelineOwner._debugAllowMutationsToDirtySubtrees</c>.</remarks>
+    internal bool DebugAllowMutationsToDirtySubtrees { get; private set; }
+
+    /// <summary>
+    /// Runs <paramref name="callback"/> with mutations to dirty subtrees temporarily allowed, and
+    /// arranges for the current layout pass to re-sort its dirty list afterwards.
+    /// </summary>
+    /// <remarks>Flutter's <c>PipelineOwner._enableMutationsToDirtySubtrees</c>.</remarks>
+    internal void EnableMutationsToDirtySubtrees(Action callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        bool oldState = DebugAllowMutationsToDirtySubtrees;
+        DebugAllowMutationsToDirtySubtrees = true;
+        try
+        {
+            callback();
+        }
+        finally
+        {
+            _shouldMergeDirtyNodes = true;
+            DebugAllowMutationsToDirtySubtrees = oldState;
+        }
+    }
+
     public void Attach(RenderObject obj)
     {
         obj.Attach(this);
-        
-        obj.VisitChildren(Attach);
+
+        if (ReferenceEquals(obj, Root) && !Root.HasRelayoutBoundaryState)
+        {
+            // Dart's `RenderView.prepareInitialFrame` runs `scheduleInitialLayout` right after the
+            // root is attached; without it the root never enters the owner's dirty list, because
+            // `RenderObject.attach` deliberately skips a node that has never been laid out.
+            Root.ScheduleInitialLayout();
+        }
     }
 
+    /// <summary>Marks the whole render tree as needing layout.</summary>
+    /// <remarks>
+    /// Dart has no equivalent: its root enters the dirty list through <c>scheduleInitialLayout</c> and
+    /// stays there via <c>markNeedsLayout</c>. Hosts and tests use this to force a full pass, so it
+    /// dirties the root itself rather than only enqueueing it — enqueueing alone would be undone by
+    /// the unchanged-constraints early-out in <see cref="RenderObject.Layout"/>.
+    /// </remarks>
     public void RequestLayout()
     {
+        Root.MarkNeedsLayout();
         RequestLayoutFor(Root);
     }
 
@@ -156,18 +217,33 @@ public sealed class PipelineOwner : DiagnosticableTree
     private void FlushLayoutNodes(Size rootSize)
     {
         var constraints = new BoxConstraints(0, rootSize.Width, 0, rootSize.Height);
-        
+        _shouldMergeDirtyNodes = false;
+
         while (_nodesNeedingLayout.Count > 0)
         {
-            var dirtyNodes = _nodesNeedingLayout
-                .OrderBy(static node => node.Depth)
-                .ToArray();
-
+            List<RenderObject> dirtyNodes = [.. _nodesNeedingLayout.OrderBy(static node => node.Depth)];
             _nodesNeedingLayout.Clear();
             _needsLayout = false;
 
-            foreach (var node in dirtyNodes)
+            for (int index = 0; index < dirtyNodes.Count; index += 1)
             {
+                if (_shouldMergeDirtyNodes)
+                {
+                    // A layout callback dirtied nodes mid-pass: fold what is left of this pass back
+                    // into the dirty list so the merged set is re-sorted by depth.
+                    _shouldMergeDirtyNodes = false;
+                    if (_nodesNeedingLayout.Count > 0)
+                    {
+                        for (int rest = index; rest < dirtyNodes.Count; rest += 1)
+                        {
+                            _nodesNeedingLayout.Add(dirtyNodes[rest]);
+                        }
+
+                        break;
+                    }
+                }
+
+                RenderObject node = dirtyNodes[index];
                 if (!node.Attached || !ReferenceEquals(node.Owner, this))
                 {
                     continue;
@@ -179,21 +255,29 @@ public sealed class PipelineOwner : DiagnosticableTree
                     continue;
                 }
 
-                if (!node.NeedsLayoutOrDescendantNeedsLayout)
+                if (!node.NeedsLayout)
                 {
                     continue;
                 }
 
-                if (!node.HasBoxConstraints)
+                if (node.IsRelayoutBoundary || node is IRenderObjectWithLayoutCallback)
+                {
+                    node.LayoutWithoutResize();
+                }
+                else if (node.HasBoxConstraints)
+                {
+                    node.Layout(node.CurrentBoxConstraints);
+                }
+                else
                 {
                     RequestLayout();
-                    continue;
                 }
-
-                node.Layout(node.CurrentBoxConstraints);
             }
+
+            _shouldMergeDirtyNodes = false;
         }
 
+        _shouldMergeDirtyNodes = false;
         _needsLayout = false;
     }
 
@@ -238,6 +322,12 @@ public sealed class PipelineOwner : DiagnosticableTree
     /// <see cref="RenderObject"/> geometry published to descendants.
     /// </summary>
     public bool DebugDoingPaint { get; private set; }
+
+    /// <summary>
+    /// Whether this pipeline owner is currently running <see cref="FlushSemantics"/>.
+    /// </summary>
+    /// <remarks>Flutter's <c>PipelineOwner._debugDoingSemantics</c>.</remarks>
+    public bool DebugDoingSemantics { get; private set; }
 
     public void FlushPaint()
     {
@@ -291,11 +381,18 @@ public sealed class PipelineOwner : DiagnosticableTree
 
     private void FlushPaintNodes()
     {
-        while (_nodesNeedingPaint.Count > 0)
+        while (_nodesNeedingPaint.Count > 0 || Root.NeedsPaint)
         {
-            var dirtyNodes = _nodesNeedingPaint
-                .OrderByDescending(static node => node.Depth)
-                .ToArray();
+            List<RenderObject> dirtyNodes =
+                [.. _nodesNeedingPaint.OrderByDescending(static node => node.Depth)];
+
+            // Flutter's `markNeedsPaint` never enqueues the root — "the root is always told to paint
+            // regardless" — so the root is appended here (last, because the list is deepest-first)
+            // instead of relying on it having registered itself.
+            if (Root.NeedsPaint && !dirtyNodes.Contains(Root))
+            {
+                dirtyNodes.Add(Root);
+            }
 
             _nodesNeedingPaint.Clear();
             _needsPaint = false;
@@ -312,27 +409,22 @@ public sealed class PipelineOwner : DiagnosticableTree
                     continue;
                 }
 
-                if (!node.IsRepaintBoundary
-                    || node._layer is not OffsetLayer layer
-                    || (layer.Parent == null && node.Parent != null))
+                Debug.Assert(node._layer is not null);
+                if (node._layer is { Attached: true })
                 {
-                    node.HandleSkippedPaintingOnDetachedLayer();
-                    continue;
-                }
-
-                if (node.NeedsPaint)
-                {
-                    if (node.NeedsCompositedLayerUpdate)
+                    Debug.Assert(node.IsRepaintBoundary);
+                    if (node.NeedsPaint)
                     {
-                        node.UpdateCompositedLayerProperties();
+                        PaintingContext.RepaintCompositedChild(node);
                     }
-
-                    layer.RemoveAllChildren();
-                    node._paintWithContext(new PaintingContext(layer), new Point(0, 0));
+                    else
+                    {
+                        PaintingContext.UpdateLayerProperties(node);
+                    }
                 }
                 else
                 {
-                    node.UpdateCompositedLayerProperties();
+                    node.HandleSkippedPaintingOnDetachedLayer();
                 }
             }
         }
@@ -468,12 +560,31 @@ public sealed class PipelineOwner : DiagnosticableTree
             return;
         }
 
+        DebugDoingSemantics = true;
+        try
+        {
+            FlushSemanticsNodes();
+        }
+        finally
+        {
+            DebugDoingSemantics = false;
+        }
+    }
+
+    private void FlushSemanticsNodes()
+    {
         // Phase 1 and 2: rebuild the fragment tree top-down, so that one parent change invalidates
         // the subtree once instead of once per descendant.
         RenderObject[] nodesToProcess = _nodesNeedingSemantics
             .Where(node => node.Attached && ReferenceEquals(node.Owner, this) && !node.NeedsLayout)
             .OrderBy(static node => node.Depth)
             .ToArray();
+
+        // Dart clears the whole queue here, including the nodes the filter rejected, and relies on
+        // them re-queueing through `markNeedsSemanticsUpdate` once they are laid out again. Plumix
+        // keeps the rejected nodes queued instead: `MarkNeedsSemanticsUpdate` short-circuits on a
+        // fragment that is already dirty, so a node dropped while its layout was pending would never
+        // come back. See `docs/ai/DIVERGENCES.md`.
         _nodesNeedingSemantics.RemoveWhere(node =>
             node.Attached && ReferenceEquals(node.Owner, this) && !node.NeedsLayout);
 

@@ -300,6 +300,7 @@ public sealed class TableTests
     [Fact]
     public void RenderTable_BaselineAlignmentWithoutTextBaselineThrows()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var cell = new SizingBox(new Size(10, 10), alphabeticBaseline: 5);
         var table = new RenderTable(
             defaultColumnWidth: new FixedColumnWidth(10),
@@ -736,6 +737,8 @@ public sealed class TableTests
         Assert.Null(table.SemanticsNodeId);
 
         // Re-hosting the table must not resurrect nodes whose ids came from the previous owner.
+        // A render object can only have one parent, so it is dropped from the first view first.
+        renderView.Child = null;
         var rehostedView = new RenderView { Child = table };
         var rehostedPipeline = new PipelineOwner(rehostedView);
         rehostedPipeline.Attach(rehostedView);

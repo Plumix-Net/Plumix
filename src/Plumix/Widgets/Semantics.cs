@@ -279,6 +279,11 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var semantics = (RenderSemanticsAnnotations)renderObject;
+
+        // Flutter assigns one `SemanticsProperties` value object and invalidates the semantics once;
+        // Plumix has a setter per property, so the batch keeps the configuration from being
+        // re-collected halfway through, before the callbacks below have been assigned.
+        using RenderSemanticsAnnotations.PropertyBatch batch = semantics.BeginPropertyBatch();
         semantics.Label = Label;
         semantics.Hint = Hint;
         semantics.OnTapHint = OnTapHint;

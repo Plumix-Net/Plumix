@@ -141,7 +141,9 @@ public sealed class RenderWrap : RenderBox,
     public RenderBox? LastChild => _container.LastChild;
     public int ChildCount => _container.ChildCount;
 
-    public void AddAll(List<RenderBox> children) => _container.AddAll(children);
+    public void AddAll(List<RenderBox>? children) => _container.AddAll(children);
+
+    public void RemoveAll() => _container.RemoveAll();
     public RenderBox? ChildBefore(RenderBox child) => _container.ChildBefore(child);
     public RenderBox? ChildAfter(RenderBox child) => _container.ChildAfter(child);
     public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);

@@ -767,7 +767,9 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
         return false;
     }
 
-    public void AddAll(List<RenderBox> children) => _children.AddAll(children);
+    public void AddAll(List<RenderBox>? children) => _children.AddAll(children);
+
+    public void RemoveAll() => _children.RemoveAll();
 
     public RenderBox? ChildBefore(RenderBox child) => _children.ChildBefore(child);
 

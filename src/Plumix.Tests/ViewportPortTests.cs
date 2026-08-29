@@ -370,6 +370,7 @@ public class ViewportPortTests
     [Fact]
     public void RenderShrinkWrappingViewport_RejectsAnUnboundedCrossAxis()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var viewport = new RenderShrinkWrappingViewport(offset: ViewportOffset.Zero());
         viewport.Insert(new FixedSliver(100));
 

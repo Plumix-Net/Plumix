@@ -196,6 +196,11 @@ public abstract class RenderBox : RenderObject
             reason ?? $"{GetType().Name} cannot compute a dry layout result for the supplied constraints.");
     }
 
+    private protected override void InvalidateLayoutCache()
+    {
+        _layoutCacheStorage.Clear();
+    }
+
     public override void MarkNeedsLayout()
     {
         bool hadCachedLayoutData = _layoutCacheStorage.Clear();

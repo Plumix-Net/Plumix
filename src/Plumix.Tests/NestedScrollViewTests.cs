@@ -104,6 +104,7 @@ public sealed class NestedScrollViewTests : IDisposable
     [Fact]
     public void OverlapAbsorber_RejectsAHandleSharedWithAnotherAbsorber()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var handle = new SliverOverlapAbsorberHandle();
         var first = new RenderSliverOverlapAbsorber(handle, new StubSliver(new SliverGeometry()));
         var second = new RenderSliverOverlapAbsorber(handle, new StubSliver(new SliverGeometry()));
@@ -146,6 +147,7 @@ public sealed class NestedScrollViewTests : IDisposable
     [Fact]
     public void OverlapInjector_WithoutAnAbsorberFailsWithFluttersMessage()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var handle = new SliverOverlapAbsorberHandle();
         var injector = new RenderSliverOverlapInjector(handle);
         Attach(injector);

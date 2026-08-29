@@ -99,6 +99,7 @@ public sealed class CustomMultiChildLayoutTests
     [Fact]
     public void RenderCustomMultiChildLayout_EnforcesLayoutIdAndExactlyOnceContracts()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var untaggedChild = new FixedSizeRenderBox(new Size(10, 10));
         var untagged = new RenderCustomMultiChildLayoutBox(new LayOutAllDelegate(), [untaggedChild]);
         Assert.Throws<InvalidOperationException>(() => untagged.Layout(BoxConstraints.Tight(new Size(40, 40))));

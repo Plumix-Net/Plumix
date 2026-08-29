@@ -78,6 +78,7 @@ public sealed class RenderFlexTests
     [Fact]
     public void RenderFlex_HorizontalWithMultipleChildren_RequiresTextDirection()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var flex = new RenderFlex(children: [Box(10, 10), Box(10, 10)]);
 
         Exception? error = Record.Exception(() => Layout(flex, BoxConstraints.Loose(new Size(100, 100))));
@@ -99,6 +100,7 @@ public sealed class RenderFlexTests
     [Fact]
     public void RenderFlex_HorizontalStartAlignment_RequiresTextDirection()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var flex = new RenderFlex(children: [Box(10, 10)], mainAxisAlignment: MainAxisAlignment.Start);
 
         Exception? error = Record.Exception(() => Layout(flex, BoxConstraints.Loose(new Size(100, 100))));
@@ -116,6 +118,7 @@ public sealed class RenderFlexTests
     [Fact]
     public void RenderFlex_VerticalCrossStartAlignment_RequiresTextDirection()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var flex = new RenderFlex(
             children: [Box(10, 10)],
             direction: Axis.Vertical,
@@ -150,6 +153,7 @@ public sealed class RenderFlexTests
     [Fact]
     public void RenderFlex_BaselineWithoutTextBaseline_Throws()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var flex = new RenderFlex(
             children: [Box(10, 10)],
             textDirection: TextDirection.Ltr,
@@ -204,6 +208,7 @@ public sealed class RenderFlexTests
     [Fact]
     public void RenderFlex_MinSizeUnbounded_TightFlexChild_Throws()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         RenderBox child = Box(100, 100);
         var flex = new RenderFlex(
             children: [child],
@@ -232,6 +237,7 @@ public sealed class RenderFlexTests
     [Fact]
     public void RenderFlex_MaxSizeUnbounded_LooseFlexChild_Throws()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         RenderBox child = Box(100, 100);
         var flex = new RenderFlex(
             children: [child],
@@ -966,6 +972,7 @@ public sealed class RenderFlexTests
     [Fact]
     public void Row_WithoutDirectionality_Throws()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         using var harness = new FlexHarness(
             new Row(children: [new SizedBox(width: 100, height: 100), new SizedBox(width: 100, height: 100)]));
 

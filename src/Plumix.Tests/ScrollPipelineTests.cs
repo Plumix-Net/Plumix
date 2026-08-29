@@ -715,6 +715,7 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void RenderSliverVariedExtentList_RejectsInvalidBuilderExtents()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var manager = new TestSliverChildManager(childCount: 1, childExtent: 10);
         var sliver = new RenderSliverVariedExtentList((_, _) => double.NaN, manager);
         manager.AttachOwner(sliver);

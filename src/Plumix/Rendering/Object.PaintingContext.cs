@@ -1,50 +1,135 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Media.TextFormatting;
+using Plumix.Foundation;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
+// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (Canvas-less drawing surface)
 
 namespace Plumix.Rendering;
 
-public sealed class PaintingContext
+public class PaintingContext
 {
     private readonly ContainerLayer _containerLayer;
     private PictureLayer? _currentPictureLayer;
 
-    public PaintingContext(ContainerLayer containerLayer)
+    public PaintingContext(ContainerLayer containerLayer, Rect estimatedBounds = default)
     {
         _containerLayer = containerLayer;
+        EstimatedBounds = estimatedBounds;
+    }
+
+    /// <summary>An estimate of the bounds within which this context's drawing takes place.</summary>
+    /// <remarks>Flutter's <c>PaintingContext.estimatedBounds</c>.</remarks>
+    public Rect EstimatedBounds { get; }
+
+    /// <summary>Repaints the given render object, which must be a repaint boundary.</summary>
+    /// <remarks>Flutter's <c>PaintingContext.repaintCompositedChild</c>.</remarks>
+    public static void RepaintCompositedChild(RenderObject child, bool debugAlsoPaintedParent = false)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        Debug.Assert(child.NeedsPaint);
+        RepaintCompositedChildInternal(child, debugAlsoPaintedParent);
+    }
+
+    /// <remarks>Flutter's <c>PaintingContext._repaintCompositedChild</c>.</remarks>
+    private static void RepaintCompositedChildInternal(
+        RenderObject child,
+        bool debugAlsoPaintedParent = false,
+        PaintingContext? childContext = null)
+    {
+        Debug.Assert(child.IsRepaintBoundary);
+        if (Constants.KDebugMode)
+        {
+            child.DebugRegisterRepaintBoundaryPaint(
+                includedParent: debugAlsoPaintedParent,
+                includedChild: true);
+        }
+
+        var childLayer = child._layer as OffsetLayer;
+        if (childLayer is null)
+        {
+            Debug.Assert(debugAlsoPaintedParent);
+            childLayer = child.UpdateCompositedLayerForRepaint();
+        }
+        else
+        {
+            Debug.Assert(debugAlsoPaintedParent || childLayer.Attached);
+            Point debugOldOffset = childLayer.Offset;
+            childLayer.RemoveAllChildren();
+            OffsetLayer updatedLayer = child.UpdateCompositedLayerForRepaint();
+            if (!ReferenceEquals(updatedLayer, childLayer))
+            {
+                throw new AssertionError(
+                    $"{child} created a new layer instance {updatedLayer} instead of reusing the existing "
+                    + $"layer {childLayer}. See the documentation of RenderObject.UpdateCompositedLayer "
+                    + "for more information on how to correctly implement this method.");
+            }
+
+            Debug.Assert(debugOldOffset == updatedLayer.Offset);
+        }
+
+        if (Constants.KDebugMode)
+        {
+            childLayer.DebugCreator = child.DebugCreator ?? child.GetType();
+        }
+
+        childContext ??= new PaintingContext(childLayer, child.PaintBounds);
+        child._paintWithContext(childContext, new Point(0, 0));
+        Debug.Assert(ReferenceEquals(childLayer, child._layer));
+        childContext.StopRecordingIfNeeded();
+    }
+
+    /// <summary>Re-runs the composited-layer update of a clean repaint boundary.</summary>
+    /// <remarks>Flutter's <c>PaintingContext.updateLayerProperties</c>.</remarks>
+    public static void UpdateLayerProperties(RenderObject child)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        Debug.Assert(child.IsRepaintBoundary && child._wasRepaintBoundary);
+        Debug.Assert(!child.NeedsPaint);
+        Debug.Assert(child._layer is not null);
+
+        var childLayer = (OffsetLayer)child._layer!;
+        Point debugOldOffset = childLayer.Offset;
+        OffsetLayer updatedLayer = child.UpdateCompositedLayerForRepaint();
+        if (!ReferenceEquals(updatedLayer, childLayer))
+        {
+            throw new AssertionError(
+                $"{child} created a new layer instance {updatedLayer} instead of reusing the existing "
+                + $"layer {childLayer}. See the documentation of RenderObject.UpdateCompositedLayer "
+                + "for more information on how to correctly implement this method.");
+        }
+
+        Debug.Assert(debugOldOffset == updatedLayer.Offset);
+    }
+
+    /// <remarks>Flutter's <c>PaintingContext.debugInstrumentRepaintCompositedChild</c>.</remarks>
+    public static void DebugInstrumentRepaintCompositedChild(
+        RenderObject child,
+        PaintingContext customContext,
+        bool debugAlsoPaintedParent = false)
+    {
+        if (!Constants.KDebugMode)
+        {
+            return;
+        }
+
+        RepaintCompositedChildInternal(child, debugAlsoPaintedParent, customContext);
     }
 
     public void PaintChild(RenderObject child, Point offset)
     {
+        ArgumentNullException.ThrowIfNull(child);
         if (child.IsRepaintBoundary)
         {
             StopRecordingIfNeeded();
-
-            var oldLayer = child._layer as OffsetLayer;
-            var layer = child.EnsureCompositedLayer();
-            bool shouldRepaint = child.NeedsPaint || oldLayer == null || !ReferenceEquals(oldLayer, layer);
-            layer.Offset = offset;
-            _containerLayer.Append(layer);
-            child._layer = layer;
-
-            if (shouldRepaint)
-            {
-                child.UpdateCompositedLayerProperties();
-                layer.RemoveAllChildren();
-                var childContext = new PaintingContext(layer);
-                child._paintWithContext(childContext, new Point(0, 0));
-            }
-            else if (child.NeedsCompositedLayerUpdate)
-            {
-                child.UpdateCompositedLayerProperties();
-            }
+            CompositeChild(child, offset);
         }
         else if (child._wasRepaintBoundary)
         {
+            Debug.Assert(child._layer is OffsetLayer);
             child._layer = null;
             child._paintWithContext(this, offset);
         }
@@ -52,6 +137,63 @@ public sealed class PaintingContext
         {
             child._paintWithContext(this, offset);
         }
+    }
+
+    /// <remarks>Flutter's <c>PaintingContext._compositeChild</c>.</remarks>
+    private void CompositeChild(RenderObject child, Point offset)
+    {
+        Debug.Assert(child.IsRepaintBoundary);
+
+        // Create a layer for our child, and paint the child into it.
+        if (child.NeedsPaint || !child._wasRepaintBoundary)
+        {
+            RepaintCompositedChild(child, debugAlsoPaintedParent: true);
+        }
+        else
+        {
+            if (child.NeedsCompositedLayerUpdate)
+            {
+                UpdateLayerProperties(child);
+            }
+
+            if (Constants.KDebugMode)
+            {
+                child.DebugRegisterRepaintBoundaryPaint();
+                if (child._layer is { } childDebugLayer)
+                {
+                    childDebugLayer.DebugCreator = child.DebugCreator ?? child;
+                }
+            }
+        }
+
+        Debug.Assert(child._layer is OffsetLayer);
+        var childOffsetLayer = (OffsetLayer)child._layer!;
+        childOffsetLayer.Offset = offset;
+        AppendLayer(childOffsetLayer);
+    }
+
+    /// <summary>Adds a composited leaf layer to the recording.</summary>
+    /// <remarks>Flutter's <c>PaintingContext.addLayer</c>.</remarks>
+    public void AddLayer(Layer layer)
+    {
+        StopRecordingIfNeeded();
+        AppendLayer(layer);
+    }
+
+    /// <summary>Appends the given layer, detaching it from any previous parent first.</summary>
+    /// <remarks>Flutter's <c>PaintingContext.appendLayer</c>.</remarks>
+    protected virtual void AppendLayer(Layer layer)
+    {
+        ArgumentNullException.ThrowIfNull(layer);
+        layer.Remove();
+        _containerLayer.Append(layer);
+    }
+
+    /// <summary>Creates a painting context for a child layer.</summary>
+    /// <remarks>Flutter's <c>PaintingContext.createChildContext</c>.</remarks>
+    protected virtual PaintingContext CreateChildContext(ContainerLayer childLayer, Rect bounds)
+    {
+        return new PaintingContext(childLayer, bounds);
     }
 
     public void DrawRectangle(
@@ -540,16 +682,25 @@ public sealed class PaintingContext
         childContext.StopRecordingIfNeeded();
     }
 
-    public void PushLayer(ContainerLayer layer, Action<PaintingContext> painter)
+    public void PushLayer(
+        ContainerLayer layer,
+        Action<PaintingContext> painter,
+        Rect? childPaintBounds = null)
     {
         ArgumentNullException.ThrowIfNull(layer);
         ArgumentNullException.ThrowIfNull(painter);
+
+        // If a layer is being reused it may already have children; remove them so `painter` can add
+        // the children that are relevant for this frame.
+        if (layer.HasChildren)
+        {
+            layer.RemoveAllChildren();
+        }
+
         StopRecordingIfNeeded();
+        AppendLayer(layer);
 
-        layer.RemoveAllChildren();
-        _containerLayer.Append(layer);
-
-        var childContext = new PaintingContext(layer);
+        PaintingContext childContext = CreateChildContext(layer, childPaintBounds ?? EstimatedBounds);
         painter(childContext);
         childContext.StopRecordingIfNeeded();
     }
@@ -625,7 +776,13 @@ public sealed class PaintingContext
         return _currentPictureLayer;
     }
 
-    private void StopRecordingIfNeeded()
+    /// <summary>Ends the current picture recording, if one is in progress.</summary>
+    /// <remarks>
+    /// Flutter's <c>PaintingContext.stopRecordingIfNeeded</c>. Plumix's <see cref="PictureLayer"/>
+    /// accumulates draw commands instead of a <c>ui.Picture</c>, so "stopping" only means that the
+    /// next draw call starts a fresh picture layer.
+    /// </remarks>
+    protected virtual void StopRecordingIfNeeded()
     {
         _currentPictureLayer = null;
     }

@@ -228,6 +228,7 @@ public sealed class UnconstrainedLimitedBoxTests
     [Fact]
     public void RenderConstraintsTransformBox_RejectsNonNormalizedChildConstraints()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var transform = new RenderConstraintsTransformBox(
             alignment: Alignment.Center,
             textDirection: TextDirection.Ltr,
@@ -243,6 +244,7 @@ public sealed class UnconstrainedLimitedBoxTests
     [Fact]
     public void RenderConstraintsTransformBox_RequiresDirectionOnlyForDirectionalAlignment()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var physical = new RenderConstraintsTransformBox(
             alignment: Alignment.CenterRight,
             textDirection: null,

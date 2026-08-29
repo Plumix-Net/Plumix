@@ -3345,6 +3345,56 @@ public class RenderPointerListener : RenderProxyBox
 
 public sealed class RenderSemanticsAnnotations : RenderProxyBox
 {
+    private int _propertyBatchDepth;
+    private bool _propertyBatchMarkedDirty;
+
+    /// <summary>
+    /// Suppresses the per-property semantics invalidation until the returned scope is disposed, then
+    /// fires it once if any property changed.
+    /// </summary>
+    /// <remarks>
+    /// Flutter has a single <c>properties</c> setter that assigns a <c>SemanticsProperties</c> value
+    /// object and calls <c>markNeedsSemanticsUpdate()</c> once. Plumix exposes one setter per property,
+    /// so an update that changes several of them would otherwise invalidate — and immediately
+    /// re-collect — the semantics configuration in the middle of the batch, capturing the callbacks
+    /// that had not been assigned yet.
+    /// </remarks>
+    internal PropertyBatch BeginPropertyBatch() => new(this);
+
+    private void MarkNeedsSemanticsUpdateBatched()
+    {
+        if (_propertyBatchDepth > 0)
+        {
+            _propertyBatchMarkedDirty = true;
+            return;
+        }
+
+        MarkNeedsSemanticsUpdate();
+    }
+
+    internal readonly struct PropertyBatch : IDisposable
+    {
+        private readonly RenderSemanticsAnnotations _owner;
+
+        internal PropertyBatch(RenderSemanticsAnnotations owner)
+        {
+            _owner = owner;
+            _owner._propertyBatchDepth += 1;
+        }
+
+        public void Dispose()
+        {
+            _owner._propertyBatchDepth -= 1;
+            if (_owner._propertyBatchDepth > 0 || !_owner._propertyBatchMarkedDirty)
+            {
+                return;
+            }
+
+            _owner._propertyBatchMarkedDirty = false;
+            _owner.MarkNeedsSemanticsUpdate();
+        }
+    }
+
     private string? _label;
     private string? _hint;
     private string? _onTapHint;
@@ -3458,7 +3508,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _traversalParentIdentifier = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3474,7 +3524,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _traversalChildIdentifier = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3489,7 +3539,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _label = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3500,7 +3550,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_hint == value) return;
             _hint = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3515,7 +3565,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _onTapHint = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3530,7 +3580,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _tooltip = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3541,7 +3591,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_value == value) return;
             _value = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3552,7 +3602,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_increasedValue == value) return;
             _increasedValue = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3563,7 +3613,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_decreasedValue == value) return;
             _decreasedValue = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3575,7 +3625,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             if (_onIncrease == value) return;
             bool hadHandler = _onIncrease is not null;
             _onIncrease = value;
-            if (hadHandler != (value is not null)) MarkNeedsSemanticsUpdate();
+            if (hadHandler != (value is not null)) MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3587,7 +3637,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             if (_onDecrease == value) return;
             bool hadHandler = _onDecrease is not null;
             _onDecrease = value;
-            if (hadHandler != (value is not null)) MarkNeedsSemanticsUpdate();
+            if (hadHandler != (value is not null)) MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3598,7 +3648,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_minValue == value) return;
             _minValue = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3609,7 +3659,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_maxValue == value) return;
             _maxValue = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3624,7 +3674,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _flags = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3635,7 +3685,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_role == value) return;
             _role = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3650,7 +3700,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _inputType = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3665,7 +3715,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _hitTestBehavior = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3680,7 +3730,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _onTap = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3691,7 +3741,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (ReferenceEquals(_onDismiss, value)) return;
             _onDismiss = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3702,7 +3752,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (ReferenceEquals(_onExpand, value)) return;
             _onExpand = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3713,7 +3763,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (ReferenceEquals(_onCollapse, value)) return;
             _onCollapse = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3724,7 +3774,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (ReferenceEquals(_onFocus, value)) return;
             _onFocus = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3739,7 +3789,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _customSemanticsActions = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3750,7 +3800,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (ReferenceEquals(_onLongPress, value)) return;
             _onLongPress = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3761,7 +3811,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         {
             if (_liveRegion == value) return;
             _liveRegion = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3776,7 +3826,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _container = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3791,7 +3841,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _explicitChildNodes = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3811,7 +3861,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _textDirection = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3826,7 +3876,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _sortKey = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3841,7 +3891,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _mergeDescendants = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3856,7 +3906,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _tagForChildren = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 
@@ -3876,7 +3926,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             }
 
             _accessibilityFocusBlockType = value;
-            MarkNeedsSemanticsUpdate();
+            MarkNeedsSemanticsUpdateBatched();
         }
     }
 

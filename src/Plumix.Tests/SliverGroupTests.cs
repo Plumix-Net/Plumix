@@ -115,6 +115,7 @@ public sealed class SliverGroupTests
     [Fact]
     public void RenderSliverCrossAxisGroup_RejectsConstrainedChildrenThatExhaustExtent()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var first = new RecordingSliver(scrollExtent: 20, requestedCrossAxisExtent: 100);
         var second = new RecordingSliver(scrollExtent: 20, requestedCrossAxisExtent: 20);
         var group = new RenderSliverCrossAxisGroup();

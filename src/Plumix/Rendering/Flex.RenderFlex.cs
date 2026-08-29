@@ -1298,7 +1298,9 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
         Remove((RenderBox)child);
     }
 
-    public void AddAll(List<RenderBox> children) => _mixin1.AddAll(children);
+    public void AddAll(List<RenderBox>? children) => _mixin1.AddAll(children);
+
+    public void RemoveAll() => _mixin1.RemoveAll();
 
     public RenderBox? ChildBefore(RenderBox child) => _mixin1.ChildBefore(child);
 

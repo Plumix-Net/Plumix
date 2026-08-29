@@ -48,6 +48,7 @@ public sealed class MaterialStepperTests : IDisposable
     [Fact]
     public void Stepper_NestedStepper_ThrowsLikeFlutter()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var nested = new Stepper(
             steps:
             [

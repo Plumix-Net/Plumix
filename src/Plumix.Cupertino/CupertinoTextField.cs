@@ -1230,7 +1230,9 @@ internal sealed class RenderCupertinoBaselineAlignedStack : RenderBox,
     public int ChildCount => _children.ChildCount;
     public RenderBox? ChildBefore(RenderBox child) => _children.ChildBefore(child);
     public RenderBox? ChildAfter(RenderBox child) => _children.ChildAfter(child);
-    public void AddAll(List<RenderBox> children) => _children.AddAll(children);
+    public void AddAll(List<RenderBox>? children) => _children.AddAll(children);
+
+    public void RemoveAll() => _children.RemoveAll();
 
     public override void SetupParentData(RenderObject child)
     {

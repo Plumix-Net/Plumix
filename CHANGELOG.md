@@ -8,6 +8,19 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `RenderObject.Layout` reports a `PerformResize`/`PerformLayout` failure instead of throwing (`object.dart`).
+- Breaking: `PipelineOwner` relayouts only dirty relayout boundaries; the descendant dirty channel is gone.
+- Breaking: `MarkNeedsPaint`/`MarkNeedsCompositedLayerUpdate` are public and skip the parentless non-boundary root.
+- Breaking: `DropChild` detaches and clears the child's parent data and relayout-boundary state (`object.dart`).
+- Breaking: `Attach`/`Detach` recurse into children, and `RedepthChildren` walks them by default (`object.dart`).
+- Breaking: `GetTransformTo` accepts any render object in the tree, resolving through the common ancestor.
+- Added `LayoutWithoutResize`, `ScheduleInitialLayout`, `DebugResetSize` and `DebugAssertDoesMeetConstraints`.
+- Added `RenderObject`'s mutation-during-layout diagnostics, `_reportException` and the `debugNeeds*` getters.
+- Added `PaintingContext.RepaintCompositedChild`/`UpdateLayerProperties`/`AddLayer`/`AppendLayer`/`EstimatedBounds`.
+- Added `BoxConstraints.DebugAssertIsValid`, `ContainerRenderObjectMixin.RemoveAll` and `DiagnosticsDebugCreator`.
+- Added `PipelineOwner.RequestVisualUpdate` and the layout-callback dirty-node merge (`object.dart`).
+- Breaking: `Semantics` pushes its properties as one batch, so callbacks land before the config is re-collected.
+- Fixed `RenderAnimatedSize` re-dirtying itself from its own `PerformLayout` (`animated_size.dart`).
 - Breaking: `SizedByParent`/`PerformResize` are overridable; `RenderBox` resizes from `ComputeDryLayout` (`box.dart`).
 - Breaking: viewport, list wheel viewport, offstage, constrained overflow box and both sliders are sized by parent.
 - Added the size/geometry setter phase checks and `MarkNeedsLayoutForSizedByParentChange` (`box.dart`, `sliver.dart`).

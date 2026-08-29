@@ -151,7 +151,9 @@ public sealed class RenderStack : RenderBox,
     public int ChildCount => _container.ChildCount;
     public RenderBox? FirstChild => _container.FirstChild;
     public RenderBox? LastChild => _container.LastChild;
-    public void AddAll(List<RenderBox> children) => _container.AddAll(children);
+    public void AddAll(List<RenderBox>? children) => _container.AddAll(children);
+
+    public void RemoveAll() => _container.RemoveAll();
     public RenderBox? ChildBefore(RenderBox child) => _container.ChildBefore(child);
     public RenderBox? ChildAfter(RenderBox child) => _container.ChildAfter(child);
 

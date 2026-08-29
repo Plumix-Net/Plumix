@@ -967,7 +967,9 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
 
     public RenderBox? ChildAfter(RenderBox child) => _container.ChildAfter(child);
 
-    public void AddAll(List<RenderBox> children) => _container.AddAll(children);
+    public void AddAll(List<RenderBox>? children) => _container.AddAll(children);
+
+    public void RemoveAll() => _container.RemoveAll();
 
     public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);
 

@@ -4,7 +4,7 @@ using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart
 
 namespace Plumix.Rendering;
 
@@ -17,7 +17,6 @@ public interface IRenderObject
 /// </summary>
 public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, IHitTestTarget
 {
-    internal bool _wasRepaintBoundary;
     private readonly LayerHandle<Layer> _layerHandle = new();
     internal Layer? _layer
     {
@@ -28,11 +27,51 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     private readonly RenderObjectSemantics _semantics;
     private bool _needsCompositingBitsUpdate;
     private bool _needsCompositedLayerUpdate;
+    private bool _needsCompositingStorage;
+    private bool _wasRepaintBoundaryStorage;
     private bool _didInitializeCompositing;
     private bool _debugDisposed;
+    private bool _debugMutationsLocked;
+    private bool _debugDoingThisPaint;
 
     [ThreadStatic]
     private static RenderObject? _debugActiveLayout;
+
+    [ThreadStatic]
+    private static RenderObject? _debugActivePaint;
+
+    /// <summary>
+    /// Dart's <c>RenderObject</c> constructor runs <c>_needsCompositing = isRepaintBoundary ||
+    /// alwaysNeedsCompositing</c> and <c>_wasRepaintBoundary = isRepaintBoundary</c> after every
+    /// subclass initializer list has run. A C# derived constructor body runs *after* the base one, so
+    /// the two virtual reads are deferred to their first use instead of being done eagerly.
+    /// </summary>
+    private void EnsureCompositingInitialized()
+    {
+        if (_didInitializeCompositing)
+        {
+            return;
+        }
+
+        _didInitializeCompositing = true;
+        _needsCompositingStorage = IsRepaintBoundary || AlwaysNeedsCompositing;
+        _wasRepaintBoundaryStorage = IsRepaintBoundary;
+    }
+
+    internal bool _wasRepaintBoundary
+    {
+        get
+        {
+            EnsureCompositingInitialized();
+            return _wasRepaintBoundaryStorage;
+        }
+
+        set
+        {
+            EnsureCompositingInitialized();
+            _wasRepaintBoundaryStorage = value;
+        }
+    }
 
     internal RenderObjectSemantics Semantics => _semantics;
 
@@ -43,6 +82,14 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// <summary>The render object currently computing layout, if any.</summary>
     /// <remarks>Flutter's <c>RenderObject.debugActiveLayout</c>.</remarks>
     public static RenderObject? DebugActiveLayout => _debugActiveLayout;
+
+    /// <summary>The render object that is actively painting, if any.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugActivePaint</c>.</remarks>
+    public static RenderObject? DebugActivePaint => _debugActivePaint;
+
+    /// <summary>Whether <see cref="Paint"/> for this render object is currently running.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugDoingThisPaint</c>.</remarks>
+    public bool DebugDoingThisPaint => _debugDoingThisPaint;
 
     /// <summary>The retained compositing layer, exposed for diagnostics and tests.</summary>
     /// <remarks>Flutter's <c>RenderObject.debugLayer</c>.</remarks>
@@ -133,7 +180,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// child is added to the parent's child list.
     public virtual void SetupParentData(RenderObject child)
     {
-        EnsureNotDisposedMutation();
+        DebugAssertCanPerformMutations();
 
         if (child.parentData is null)
         {
@@ -165,6 +212,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// Only call this method from overrides of [redepthChildren].
     protected void RedepthChild(RenderObject child)
     {
+        Debug.Assert(ReferenceEquals(child.Owner, Owner));
         if (child.Depth <= Depth)
         {
             child.Depth = Depth + 1;
@@ -174,10 +222,15 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     /// Adjust the [depth] of this node's children, if any.
     ///
-    /// Override this method in subclasses with child nodes to call [redepthChild]
-    /// for each child. Do not call this method directly.
+    /// Do not call this method directly.
+    ///
+    /// Dart spells this out per child-holding mixin (`RenderObjectWithChildMixin.redepthChildren`
+    /// visits `child`, `ContainerRenderObjectMixin.redepthChildren` walks the sibling chain). C# has
+    /// no mixins, so the walk lives here and goes through <see cref="VisitChildren"/>, which every
+    /// child-holding render object already implements.
     protected virtual void RedepthChildren()
     {
+        VisitChildren(RedepthChild);
     }
 
 
@@ -192,6 +245,16 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     public void AdoptChild(RenderObject child)
     {
         EnsureNotDisposedMutation();
+        Debug.Assert(child.Parent is null);
+        if (Constants.KDebugMode)
+        {
+            for (RenderObject? node = this; node is not null; node = node.Parent)
+            {
+                // Indicates we are about to create a cycle.
+                Debug.Assert(!ReferenceEquals(node, child));
+            }
+        }
+
         SetupParentData(child);
         MarkNeedsLayout();
         MarkNeedsCompositingBitsUpdate();
@@ -209,11 +272,22 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     public void DropChild(RenderObject child)
     {
         EnsureNotDisposedMutation();
+        Debug.Assert(ReferenceEquals(child.Parent, this));
+        Debug.Assert(child.parentData is not null);
         if (!ReferenceEquals(child.Parent, this))
         {
             return;
         }
 
+        // A child that was not its own relayout boundary has to forget the boundary state it
+        // inherited from this parent, so a later adoption re-derives it from scratch.
+        if (child._isRelayoutBoundary == false)
+        {
+            child._isRelayoutBoundary = null;
+        }
+
+        child.parentData?.Detach();
+        child.parentData = null;
         child.Parent = null;
 
         if (Attached && child.Attached)
@@ -223,7 +297,6 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         MarkNeedsLayout();
         MarkNeedsCompositingBitsUpdate();
-        MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
     }
 
@@ -247,29 +320,16 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             throw new AssertionError("A disposed RenderObject cannot be attached.");
         }
 
+        Debug.Assert(Owner is null);
         Owner = owner;
-        if (!_didInitializeCompositing)
-        {
-            // Dart initializes this in RenderObject's constructor. C# waits until first attach so
-            // subclass fields are initialized before the virtual getters run.
-            NeedsCompositing = IsRepaintBoundary || AlwaysNeedsCompositing;
-            _didInitializeCompositing = true;
-        }
 
-        OnAttach();
-
-        // If the node was dirtied in some way while unattached, make sure to add
-        // it to the appropriate dirty list now that an owner is available
-        if (_needsLayout)
+        // If the node was dirtied in some way while unattached, make sure to add it to the
+        // appropriate dirty list now that an owner is available.
+        if (_needsLayout && _isRelayoutBoundary is not null)
         {
-            if (Parent == null || _isRelayoutBoundary == true)
-            {
-                Owner.RequestLayoutFor(this);
-            }
-            else
-            {
-                Owner.RequestLayout();
-            }
+            // Don't enter this block if we've never laid out at all; ScheduleInitialLayout handles it.
+            _needsLayout = false;
+            MarkNeedsLayout();
         }
 
         if (_needsCompositingBitsUpdate)
@@ -278,9 +338,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             MarkNeedsCompositingBitsUpdate();
         }
 
-        if (_needsPaint)
+        if (_needsPaint && _layerHandle.Layer is not null)
         {
-            Owner.RequestPaint();
+            // Don't enter this block if we've never painted at all.
+            _needsPaint = false;
+            MarkNeedsPaint();
         }
 
         if (_semantics.ConfigProvider.Effective.IsSemanticBoundary
@@ -288,6 +350,18 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         {
             MarkNeedsSemanticsUpdate();
         }
+
+        OnAttach();
+
+        // Dart recurses from each child-holding mixin's `attach` override; C# has no mixins, so the
+        // walk lives on the base class and reaches every child through `VisitChildren`.
+        VisitChildren(child =>
+        {
+            if (!child.Attached)
+            {
+                child.Attach(owner);
+            }
+        });
     }
 
     /// <summary>
@@ -303,6 +377,15 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         OnDetach();
         ClearOwnSemantics();
         Owner = null;
+
+        // The mirror of the recursion in `Attach`; Dart spells it out per child-holding mixin.
+        VisitChildren(static child =>
+        {
+            if (child.Attached)
+            {
+                child.Detach();
+            }
+        });
     }
 
     /// <summary>Releases resources owned by this render object.</summary>
@@ -316,6 +399,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         _layerHandle.Layer = null;
         _debugDisposed = true;
+        _debugCanParentUseSize = null;
     }
 
     protected virtual void OnDetach()
@@ -327,7 +411,6 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     }
 
     private bool _needsLayout = true;
-    private bool _descendantNeedsLayout = true;
 
     /// <summary>
     /// Whether this [RenderObject] is a known relayout boundary.
@@ -368,10 +451,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     public virtual void Layout(BoxConstraints constraints, bool parentUsesSize = false)
     {
         EnsureNotDisposedMutation();
-        if (!constraints.IsNormalized)
-        {
-            throw new InvalidOperationException("RenderObject.layout requires normalized constraints.");
-        }
+        Debug.Assert(!DebugDoingThisResize);
+        Debug.Assert(!DebugDoingThisLayout);
+        Debug.Assert(!_debugMutationsLocked);
+        Debug.Assert(!DebugDoingThisLayoutWithCallback);
+        constraints.DebugAssertIsValid(isAppliedConstraint: true);
 
         // Dart recomputes the boundary flag before the early-out, so that a repeat layout with the
         // same constraints but a different `parentUsesSize` still lands on the right boundary.
@@ -379,14 +463,26 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         _debugCanParentUseSize = parentUsesSize;
 
         if (!_needsLayout
-            && !_descendantNeedsLayout
             && _constraints is BoxConstraints previousConstraints
             && previousConstraints.Equals(constraints))
         {
+            if (Constants.KDebugMode)
+            {
+                DebugDoingThisResize = SizedByParent;
+                DebugDoingThisLayout = !SizedByParent;
+                RenderObject? debugSkippedActiveLayout = _debugActiveLayout;
+                _debugActiveLayout = this;
+                DebugResetSize();
+                _debugActiveLayout = debugSkippedActiveLayout;
+                DebugDoingThisLayout = false;
+                DebugDoingThisResize = false;
+            }
+
             return;
         }
 
         _constraints = constraints;
+        _debugMutationsLocked = true;
 
         if (SizedByParent)
         {
@@ -394,6 +490,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             try
             {
                 PerformResize();
+                DebugAssertDoesMeetConstraints();
+            }
+            catch (Exception exception)
+            {
+                ReportException("performResize", exception);
             }
             finally
             {
@@ -407,18 +508,95 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         try
         {
             PerformLayout();
+            MarkNeedsSemanticsUpdate();
+            DebugAssertDoesMeetConstraints();
+        }
+        catch (Exception exception)
+        {
+            ReportException("performLayout", exception);
         }
         finally
         {
             DebugDoingThisLayout = false;
             _debugActiveLayout = previousActiveLayout;
+            _debugMutationsLocked = false;
         }
 
         _needsLayout = false;
-        _descendantNeedsLayout = false;
-
         MarkNeedsPaint();
-        MarkNeedsSemanticsUpdate();
+    }
+
+    /// <summary>
+    /// Relayouts this render object under the constraints it was last given, without going through
+    /// the resize step.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject._layoutWithoutResize</c>. This is how a <see cref="PipelineOwner"/>
+    /// drains its dirty list: the node is already sized, so only <see cref="PerformLayout"/> re-runs.
+    /// </remarks>
+    internal void LayoutWithoutResize()
+    {
+        Debug.Assert(_needsLayout);
+        Debug.Assert(_isRelayoutBoundary == true || this is IRenderObjectWithLayoutCallback);
+        Debug.Assert(!_debugMutationsLocked);
+        Debug.Assert(!DebugDoingThisLayoutWithCallback);
+        Debug.Assert(_debugCanParentUseSize is not null);
+
+        _debugMutationsLocked = true;
+        DebugDoingThisLayout = true;
+        RenderObject? previousActiveLayout = _debugActiveLayout;
+        _debugActiveLayout = this;
+        try
+        {
+            PerformLayout();
+            MarkNeedsSemanticsUpdate();
+        }
+        catch (Exception exception)
+        {
+            ReportException("performLayout", exception);
+        }
+        finally
+        {
+            _debugActiveLayout = previousActiveLayout;
+            DebugDoingThisLayout = false;
+            _debugMutationsLocked = false;
+        }
+
+        _needsLayout = false;
+        MarkNeedsPaint();
+    }
+
+    /// <summary>Bootstraps layout for the root of a render tree.</summary>
+    /// <remarks>Flutter's <c>RenderObject.scheduleInitialLayout</c>.</remarks>
+    public void ScheduleInitialLayout()
+    {
+        EnsureNotDisposedMutation();
+        Debug.Assert(Attached);
+        Debug.Assert(Parent is null);
+        Debug.Assert(!Owner!.DebugDoingLayout);
+        Debug.Assert(_isRelayoutBoundary is null);
+
+        _isRelayoutBoundary = true;
+        _debugCanParentUseSize = false;
+        Owner.RequestLayoutFor(this);
+    }
+
+    /// <summary>Hook for subclasses that cache their size, run when a layout pass is skipped.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugResetSize</c>; a no-op by default.</remarks>
+    protected virtual void DebugResetSize()
+    {
+    }
+
+    /// <summary>
+    /// Verifies that this render object's geometry satisfies the constraints it was laid out under.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.debugAssertDoesMeetConstraints</c>, called after
+    /// <see cref="PerformResize"/> and <see cref="PerformLayout"/>. Implemented by the layout
+    /// protocols (<see cref="RenderBox"/>, <see cref="RenderSliver"/>), not by this class.
+    /// </remarks>
+    protected virtual void DebugAssertDoesMeetConstraints()
+    {
     }
 
     /// <summary>
@@ -463,16 +641,24 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         where TConstraints : IConstraints
     {
         ArgumentNullException.ThrowIfNull(callback);
+        Debug.Assert(_debugMutationsLocked);
+        Debug.Assert(DebugDoingThisLayout);
+        Debug.Assert(!DebugDoingThisLayoutWithCallback);
 
-        bool wasDoingLayoutWithCallback = DebugDoingThisLayoutWithCallback;
+        _debugMutationsLocked = false;
         DebugDoingThisLayoutWithCallback = true;
         try
         {
-            callback(constraints);
+            Owner?.EnableMutationsToDirtySubtrees(() => callback(constraints));
+            if (Owner is null)
+            {
+                callback(constraints);
+            }
         }
         finally
         {
-            DebugDoingThisLayoutWithCallback = wasDoingLayoutWithCallback;
+            DebugDoingThisLayoutWithCallback = false;
+            _debugMutationsLocked = true;
         }
     }
 
@@ -487,29 +673,68 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// </summary>
     public virtual void MarkNeedsLayout()
     {
-        EnsureNotDisposedMutation();
+        DebugAssertCanPerformMutations();
         if (_needsLayout)
         {
+            Debug.Assert(DebugRelayoutBoundaryAlreadyMarkedNeedsLayout());
             return;
         }
 
         _needsLayout = true;
 
-        if (Parent != null)
+        if (Owner is { } owner && _isRelayoutBoundary == true)
         {
-            Parent.MarkDescendantNeedsLayout();
+            owner.RequestLayoutFor(this);
+            owner.RequestVisualUpdate();
+        }
+        else if (Parent != null)
+        {
+            MarkParentNeedsLayout();
+        }
+    }
 
-            if (_isRelayoutBoundary == true)
+    /// <summary>
+    /// Marks this render object as needing layout without dirtying its ancestors, for a caller that is
+    /// about to lay it out immediately under different constraints.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>RenderObject.layout</c> compares the incoming <c>Constraints</c> object itself, so a
+    /// sliver whose <c>SliverConstraints</c> changed always re-lays out. Plumix's <see cref="Layout"/>
+    /// takes <see cref="BoxConstraints"/>, and two different <c>SliverConstraints</c> can derive the
+    /// same box constraints, so <c>RenderSliver.LayoutWithSliverConstraints</c> has to defeat the
+    /// early-out explicitly. It must not go through <see cref="MarkNeedsLayout"/>, because the viewport
+    /// calls it from its own <c>PerformLayout</c> and Dart forbids a parent from dirtying a descendant
+    /// there.
+    /// </remarks>
+    internal void MarkNeedsImmediateRelayout()
+    {
+        _needsLayout = true;
+        InvalidateLayoutCache();
+    }
+
+    /// <summary>Drops any cached layout results; overridden by <see cref="RenderBox"/>.</summary>
+    private protected virtual void InvalidateLayoutCache()
+    {
+    }
+
+    /// <remarks>Flutter's <c>RenderObject._debugRelayoutBoundaryAlreadyMarkedNeedsLayout</c>.</remarks>
+    private bool DebugRelayoutBoundaryAlreadyMarkedNeedsLayout()
+    {
+        for (RenderObject? node = this; node is not null && node._isRelayoutBoundary is not null;
+             node = node.Parent)
+        {
+            if (!node._needsLayout && !node.DebugDoingThisLayout)
             {
-                Owner?.RequestLayoutFor(this);
-                return;
+                return false;
             }
 
-            Parent.MarkNeedsLayout();
-            return;
+            if (node._isRelayoutBoundary == true)
+            {
+                return true;
+            }
         }
 
-        Owner?.RequestLayoutFor(this);
+        return true;
     }
 
     /// <summary>
@@ -535,31 +760,20 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     protected void MarkParentNeedsLayout()
     {
+        DebugAssertCanPerformMutations();
         _needsLayout = true;
-
-        var parent = this.Parent!;
-
-        parent.MarkDescendantNeedsLayout();
-
+        Debug.Assert(Parent is not null);
+        RenderObject parent = Parent!;
         if (!DebugDoingThisLayoutWithCallback)
         {
             parent.MarkNeedsLayout();
         }
-    }
-
-    private void MarkDescendantNeedsLayout()
-    {
-        if (_descendantNeedsLayout)
+        else
         {
-            return;
+            Debug.Assert(parent.DebugDoingThisLayout);
         }
 
-        _descendantNeedsLayout = true;
-
-        if (Parent != null)
-        {
-            Parent.MarkDescendantNeedsLayout();
-        }
+        Debug.Assert(ReferenceEquals(parent, Parent));
     }
 
     public void MarkNeedsCompositingBitsUpdate()
@@ -591,6 +805,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     public void MarkNeedsSemanticsUpdate()
     {
         EnsureNotDisposedMutation();
+        Debug.Assert(!Attached || Owner?.DebugDoingSemantics != true);
         if (!Attached || Owner?.HasSemanticsOwner != true)
         {
             return;
@@ -605,8 +820,6 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         {
             return;
         }
-
-        VisitChildren(static child => child.UpdateCompositingBits());
 
         bool oldNeedsCompositing = NeedsCompositing;
         PerformUpdateCompositingBits();
@@ -633,16 +846,14 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     {
         bool needsCompositing = IsRepaintBoundary || AlwaysNeedsCompositing;
 
-        if (!needsCompositing)
+        VisitChildren(child =>
         {
-            VisitChildren(child =>
+            child.UpdateCompositingBits();
+            if (child.NeedsCompositing)
             {
-                if (child.NeedsCompositing || child.IsRepaintBoundary || child.AlwaysNeedsCompositing)
-                {
-                    needsCompositing = true;
-                }
-            });
-        }
+                needsCompositing = true;
+            }
+        });
 
         NeedsCompositing = needsCompositing;
     }
@@ -696,8 +907,13 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// <remarks>Flutter's <c>RenderObject.scheduleInitialSemantics</c>.</remarks>
     public void ScheduleInitialSemantics()
     {
+        EnsureNotDisposedMutation();
+        Debug.Assert(Attached);
+        Debug.Assert(Parent is null);
+        Debug.Assert(Owner?.DebugDoingSemantics != true);
         Owner?.RequestSemanticsUpdateFor(this);
         Owner?.RequestSemanticsGeometryUpdateFor(this);
+        Owner?.RequestVisualUpdate();
     }
 
     /// <summary>
@@ -756,10 +972,43 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     internal bool HasBoxConstraints => _constraints is BoxConstraints;
     internal BoxConstraints CurrentBoxConstraints => (BoxConstraints)_constraints!;
-    internal bool NeedsLayoutOrDescendantNeedsLayout => _needsLayout || _descendantNeedsLayout;
     internal bool NeedsLayout => _needsLayout;
     internal bool NeedsCompositingBitsUpdate => _needsCompositingBitsUpdate;
     internal bool SemanticsParentDataDirty => _semantics.ParentDataDirty;
+
+    /// <remarks>Flutter's <c>RenderObject.debugNeedsLayout</c>: always <c>false</c> in release.</remarks>
+    public bool DebugNeedsLayout => Constants.KDebugMode && _needsLayout;
+
+    /// <remarks>Flutter's <c>RenderObject.debugNeedsPaint</c>: always <c>false</c> in release.</remarks>
+    public bool DebugNeedsPaint => Constants.KDebugMode && _needsPaint;
+
+    /// <remarks>Flutter's <c>RenderObject.debugNeedsCompositingBitsUpdate</c>.</remarks>
+    public bool DebugNeedsCompositingBitsUpdate => Constants.KDebugMode && _needsCompositingBitsUpdate;
+
+    /// <remarks>Flutter's <c>RenderObject.debugNeedsCompositedLayerUpdate</c>.</remarks>
+    public bool DebugNeedsCompositedLayerUpdate => Constants.KDebugMode && _needsCompositedLayerUpdate;
+
+    /// <remarks>Flutter's <c>RenderObject.debugNeedsSemanticsUpdate</c>.</remarks>
+    public bool DebugNeedsSemanticsUpdate => !Constants.KReleaseMode && _semantics.ParentDataDirty;
+
+    /// <summary>Whether the parent passed <c>parentUsesSize: true</c> to the last layout call.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugCanParentUseSize</c>; throws before the first layout.</remarks>
+    public bool DebugCanParentUseSize => _debugCanParentUseSize
+        ?? throw new AssertionError("RenderObject.DebugCanParentUseSize read before the first layout.");
+
+    /// <summary>The render object that lays this one out, when it is not the parent.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugLayoutParent</c>.</remarks>
+    protected virtual RenderObject? DebugLayoutParent => Constants.KDebugMode ? Parent : null;
+
+    /// <summary>Whether this render object has ever been laid out.</summary>
+    internal bool HasBeenLaidOut => _constraints is not null;
+
+    /// <summary>Whether this render object is its own relayout boundary.</summary>
+    internal bool IsRelayoutBoundary => _isRelayoutBoundary == true;
+
+    /// <summary>Whether this render object has ever resolved its relayout-boundary state.</summary>
+    /// <remarks>Flutter's <c>RenderObject._isRelayoutBoundary != null</c>.</remarks>
+    internal bool HasRelayoutBoundaryState => _isRelayoutBoundary is not null;
 
     /// <summary>Whether this render object may resize without its parent relaying out.</summary>
     /// <remarks>Flutter's <c>RenderObject._isRelayoutBoundary</c>.</remarks>
@@ -774,11 +1023,25 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     private bool _needsPaint = true;
     internal bool NeedsPaint => _needsPaint;
     internal bool NeedsCompositedLayerUpdate => _needsCompositedLayerUpdate;
-    internal bool NeedsCompositing { get; private set; }
+    internal bool NeedsCompositing
+    {
+        get
+        {
+            EnsureCompositingInitialized();
+            return _needsCompositingStorage;
+        }
 
-    protected void MarkNeedsPaint()
+        private set
+        {
+            EnsureCompositingInitialized();
+            _needsCompositingStorage = value;
+        }
+    }
+
+    public void MarkNeedsPaint()
     {
         EnsureNotDisposedMutation();
+        Debug.Assert(Owner is null || !Owner.DebugDoingPaint);
         if (_needsPaint)
         {
             return;
@@ -788,41 +1051,57 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         if (IsRepaintBoundary && _wasRepaintBoundary)
         {
-            Owner?.RequestPaintFor(this);
-            return;
+            Debug.Assert(_layerHandle.Layer is OffsetLayer);
+            if (Owner is { } owner)
+            {
+                owner.RequestPaintFor(this);
+                owner.RequestVisualUpdate();
+            }
         }
-
-        if (Parent != null)
+        else if (Parent != null)
         {
             Parent.MarkNeedsPaint();
-            return;
         }
-
-        Owner?.RequestPaintFor(this);
+        else
+        {
+            // If we are the root of the render tree we aren't added to the dirty list: the root is
+            // always told to paint regardless.
+            Owner?.RequestVisualUpdate();
+        }
     }
 
-    protected void MarkNeedsCompositedLayerUpdate()
+    public void MarkNeedsCompositedLayerUpdate()
     {
         EnsureNotDisposedMutation();
-        if (_needsCompositedLayerUpdate)
+        Debug.Assert(Owner is null || !Owner.DebugDoingPaint);
+        if (_needsCompositedLayerUpdate || _needsPaint)
         {
             return;
         }
 
         _needsCompositedLayerUpdate = true;
 
-        if (_needsPaint)
-        {
-            return;
-        }
-
         if (IsRepaintBoundary && _wasRepaintBoundary)
         {
-            Owner?.RequestPaintFor(this);
-            return;
+            // If we always have our own layer, we can just repaint ourselves without involving any
+            // other nodes.
+            Debug.Assert(_layerHandle.Layer is not null);
+            if (Owner is { } owner)
+            {
+                owner.RequestPaintFor(this);
+                owner.RequestVisualUpdate();
+            }
         }
+        else
+        {
+            MarkNeedsPaint();
+        }
+    }
 
-        MarkNeedsPaint();
+    /// <summary>Debug hook invoked when a repaint boundary (or its parent) attempts to paint.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugRegisterRepaintBoundaryPaint</c>; a no-op by default.</remarks>
+    public virtual void DebugRegisterRepaintBoundaryPaint(bool includedParent = true, bool includedChild = false)
+    {
     }
 
     protected virtual OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
@@ -864,27 +1143,53 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         _needsCompositedLayerUpdate = false;
     }
 
+    /// <summary>
+    /// Creates or reuses this repaint boundary's <see cref="OffsetLayer"/> and re-applies its
+    /// properties, clearing the pending-update flag.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.updateCompositedLayer(oldLayer:)</c>, which a repaint boundary runs on
+    /// every repaint. C# splits the single Dart method into <see cref="CreateCompositedLayer"/> (which
+    /// must reuse <c>oldLayer</c>) and <see cref="UpdateCompositedLayer"/> (which mutates it), because a
+    /// C# override cannot both construct and configure through one covariant return.
+    /// </remarks>
+    internal OffsetLayer UpdateCompositedLayerForRepaint()
+    {
+        Debug.Assert(IsRepaintBoundary);
+        OffsetLayer layer = EnsureCompositedLayer();
+        UpdateCompositedLayer(layer);
+        _needsCompositedLayerUpdate = false;
+        return layer;
+    }
+
 
 
     internal void HandleSkippedPaintingOnDetachedLayer()
     {
-        if (!Attached || !IsRepaintBoundary || _layer is not OffsetLayer layer || layer.Parent != null)
-        {
-            return;
-        }
+        Debug.Assert(Attached);
+        Debug.Assert(IsRepaintBoundary);
+        Debug.Assert(_needsPaint || _needsCompositedLayerUpdate);
+        Debug.Assert(_layerHandle.Layer is not null);
+        Debug.Assert(_layerHandle.Layer?.Attached != true);
 
         RenderObject? node = Parent;
         while (node != null)
         {
             if (node.IsRepaintBoundary)
             {
-                node._needsPaint = true;
-                node.Owner?.RequestPaintFor(node);
-
-                if (node._layer is not OffsetLayer ancestorLayer || ancestorLayer.Parent != null)
+                if (node._layerHandle.Layer is null)
                 {
+                    // Looks like the subtree here has never been painted. Let it handle itself.
                     break;
                 }
+
+                if (node._layerHandle.Layer!.Attached)
+                {
+                    // It's the one that detached us, so it's the one that will decide to repaint us.
+                    break;
+                }
+
+                node._needsPaint = true;
             }
 
             node = node.Parent;
@@ -926,6 +1231,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// </remarks>
     public virtual void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
+        Debug.Assert(ReferenceEquals(child.Parent, this));
     }
 
     /// <summary>Whether this render object paints <paramref name="child"/> at all.</summary>
@@ -933,7 +1239,11 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// Flutter's <c>RenderObject.paintsChild</c>. A parent that zeroes the matrix in
     /// <see cref="ApplyPaintTransform"/> to signal "not painted" must return <c>false</c> here.
     /// </remarks>
-    public virtual bool PaintsChild(RenderObject child) => true;
+    public virtual bool PaintsChild(RenderObject child)
+    {
+        Debug.Assert(ReferenceEquals(child.Parent, this));
+        return true;
+    }
 
     /// <summary>An estimate of the bounds within which this render object will paint.</summary>
     public virtual Rect PaintBounds => default;
@@ -999,19 +1309,85 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
         return transform;
     }
 
-    public Matrix4 GetTransformTo(RenderObject? ancestor = null)
+    /// <summary>
+    /// Applies the paint transform up the tree to <paramref name="target"/>.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.getTransformTo</c>. <paramref name="target"/> does not have to be an
+    /// ancestor: the two chains are walked up to their common ancestor and the target's half is
+    /// inverted. Returns a zero matrix when the target half is singular, exactly as Dart does.
+    /// </remarks>
+    public Matrix4 GetTransformTo(RenderObject? target = null)
     {
-        bool ancestorSpecified = ancestor is not null;
-        ancestor ??= Owner?.Root
-                     ?? throw new InvalidOperationException("The render object is not attached to a render tree.");
+        Debug.Assert(Attached);
+        RenderObject from = this;
+        RenderObject to = target
+                          ?? Owner?.Root
+                          ?? throw new InvalidOperationException(
+                              "The render object is not attached to a render tree.");
 
-        if (!TryComputeTransformTo(ancestor, ancestorSpecified, out Matrix4 transform))
+        var fromPath = new List<RenderObject> { from };
+        List<RenderObject>? toPath = null;
+
+        while (!ReferenceEquals(from, to))
         {
-            throw new InvalidOperationException(
-                "The requested render object is not an ancestor of this render object.");
+            int fromDepth = from.Depth;
+            int toDepth = to.Depth;
+
+            if (fromDepth >= toDepth)
+            {
+                RenderObject? fromParent = from.Parent
+                                           ?? throw new FlutterError(
+                                               $"{target} and {this} are not in the same render tree.");
+                fromPath.Add(fromParent);
+                from = fromParent;
+            }
+
+            if (fromDepth <= toDepth)
+            {
+                RenderObject? toParent = to.Parent;
+                if (toParent is null)
+                {
+                    Debug.Assert(target is not null);
+                    throw new FlutterError($"{target} and {this} are not in the same render tree.");
+                }
+
+                (toPath ??= [to]).Add(toParent);
+                to = toParent;
+            }
         }
 
-        return transform;
+        Matrix4? fromTransform = null;
+        int lastIndex = target is null ? fromPath.Count - 2 : fromPath.Count - 1;
+        for (int index = lastIndex; index > 0; index -= 1)
+        {
+            fromTransform ??= Matrix4.Identity();
+            fromPath[index].ApplyPaintTransform(fromPath[index - 1], fromTransform);
+        }
+
+        if (toPath is null)
+        {
+            return fromTransform ?? Matrix4.Identity();
+        }
+
+        Matrix4 toTransform = Matrix4.Identity();
+        for (int index = toPath.Count - 1; index > 0; index -= 1)
+        {
+            toPath[index].ApplyPaintTransform(toPath[index - 1], toTransform);
+        }
+
+        if (toTransform.Invert() == 0.0)
+        {
+            return Matrix4.Zero();
+        }
+
+        if (fromTransform is null)
+        {
+            return toTransform;
+        }
+
+        fromTransform.Multiply(toTransform);
+        return fromTransform;
     }
 
     private bool TryComputeTransformTo(RenderObject ancestor, bool ancestorSpecified, out Matrix4 transform)
@@ -1091,29 +1467,23 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     internal void _paintWithContext(PaintingContext context, Point offset)
     {
         EnsureNotDisposedMutation();
-        // assert(() {
-        //   if (_debugDoingThisPaint) {
-        //     throw FlutterError.fromParts(<DiagnosticsNode>[
-        //       ErrorSummary('Tried to paint a RenderObject reentrantly.'),
-        //       describeForError(
-        //         'The following RenderObject was already being painted when it was '
-        //         'painted again',
-        //       ),
-        //       ErrorDescription(
-        //         'Since this typically indicates an infinite recursion, it is '
-        //         'disallowed.',
-        //       ),
-        //     ]);
-        //   }
-        //   return true;
-        // }());
-        // If we still need layout, then that means that we were skipped in the
-        // layout phase and therefore don't need painting. We might not know that
-        // yet (that is, our layer might not have been detached yet), because the
-        // same node that skipped us in layout is above us in the tree (obviously)
-        // and therefore may not have had a chance to paint yet (since the tree
-        // paints in reverse order). In particular this will happen if they have
-        // a different layer, because there's a repaint boundary between us.
+        if (_debugDoingThisPaint)
+        {
+            throw new FlutterError([
+                new ErrorSummary("Tried to paint a RenderObject reentrantly."),
+                DescribeForError(
+                    "The following RenderObject was already being painted when it was painted again"),
+                new ErrorDescription(
+                    "Since this typically indicates an infinite recursion, it is disallowed."),
+            ]);
+        }
+
+        // If we still need layout, then that means that we were skipped in the layout phase and
+        // therefore don't need painting. We might not know that yet (that is, our layer might not have
+        // been detached yet), because the same node that skipped us in layout is above us in the tree
+        // (obviously) and therefore may not have had a chance to paint yet (since the tree paints in
+        // reverse order). In particular this will happen if they have a different layer, because
+        // there's a repaint boundary between us.
         if (_needsLayout)
         {
             return;
@@ -1121,91 +1491,53 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
         if (_needsCompositingBitsUpdate)
         {
-            throw new InvalidOperationException(
-                "RenderObject.paint called before compositing bits were updated.");
+            if (Parent is { } parent)
+            {
+                bool visitedByParent = false;
+                parent.VisitChildren(child =>
+                {
+                    if (ReferenceEquals(child, this))
+                    {
+                        visitedByParent = true;
+                    }
+                });
+
+                if (!visitedByParent)
+                {
+                    throw new FlutterError([
+                        new ErrorSummary(
+                            "A RenderObject was not visited by the parent's visitChildren during paint."),
+                        parent.DescribeForError("The parent was"),
+                        DescribeForError("The child that was not visited was"),
+                        new ErrorDescription(
+                            "A RenderObject with children must implement visitChildren and call the "
+                            + "visitor exactly once for each child; it also should not paint children "
+                            + "that were removed with dropChild."),
+                        new ErrorHint("This usually indicates an error in the Plumix framework itself."),
+                    ]);
+                }
+            }
+
+            throw new FlutterError([
+                new ErrorSummary("Tried to paint a RenderObject before its compositing bits were updated."),
+                DescribeForError(
+                    "The following RenderObject was marked as having dirty compositing bits at the time "
+                    + "that it was painted"),
+                new ErrorDescription(
+                    "A RenderObject that still has dirty compositing bits cannot be painted because this "
+                    + "indicates that the tree has not yet been properly configured for creating the "
+                    + "layer tree."),
+                new ErrorHint("This usually indicates an error in the Plumix framework itself."),
+            ]);
         }
 
-        // if (!kReleaseMode && debugProfilePaintsEnabled)
-        // {
-        //     Map<String, String>? debugTimelineArguments;
-        //     assert(() {
-        //         if (debugEnhancePaintTimelineArguments)
-        //         {
-        //             debugTimelineArguments = toDiagnosticsNode().toTimelineArguments();
-        //         }
-        //
-        //         return true;
-        //     }
-        //     ());
-        //     FlutterTimeline.startSync('$runtimeType', arguments: debugTimelineArguments);
-        // }
+        _debugDoingThisPaint = true;
+        RenderObject? debugLastActivePaint = _debugActivePaint;
+        _debugActivePaint = this;
+        Debug.Assert(!IsRepaintBoundary || _layerHandle.Layer is not null);
 
-        // assert(() {
-        //     if (_needsCompositingBitsUpdate)
-        //     {
-        //         final RenderObject? parent = this.parent;
-        //         if (parent != null)
-        //         {
-        //             bool visitedByParent = false;
-        //             parent.visitChildren((RenderObject child) {
-        //                 if (child == this)
-        //                 {
-        //                     visitedByParent = true;
-        //                 }
-        //             });
-        //             if (!visitedByParent)
-        //             {
-        //                 throw FlutterError.fromParts( < DiagnosticsNode >
-        //                 [
-        //                     ErrorSummary(
-        //                         "A RenderObject was not visited by the parent's visitChildren "
-        //                     'during paint.',
-        //                     ),
-        //                     parent.describeForError('The parent was'),
-        //                     describeForError('The child that was not visited was'),
-        //                     ErrorDescription(
-        //                         'A RenderObject with children must implement visitChildren and '
-        //                     'call the visitor exactly once for each child; it also should not '
-        //                     'paint children that were removed with dropChild.',
-        //                     ),
-        //                     ErrorHint('This usually indicates an error in the Plumix.Sample framework itself.'),
-        //                 ]);
-        //             }
-        //         }
-        //
-        //         throw FlutterError.fromParts( < DiagnosticsNode >
-        //         [
-        //             ErrorSummary(
-        //                 'Tried to paint a RenderObject before its compositing bits were '
-        //             'updated.',
-        //             ),
-        //             describeForError(
-        //                 'The following RenderObject was marked as having dirty compositing '
-        //             'bits at the time that it was painted',
-        //             ),
-        //             ErrorDescription(
-        //                 'A RenderObject that still has dirty compositing bits cannot be '
-        //             'painted because this indicates that the tree has not yet been '
-        //             'properly configured for creating the layer tree.',
-        //             ),
-        //             ErrorHint('This usually indicates an error in the Plumix.Sample framework itself.'),
-        //         ]);
-        //     }
-        //
-        //     return true;
-        // }
-        // ());
-        // assert(() {
-        //     _debugDoingThisPaint = true;
-        //     debugLastActivePaint = _debugActivePaint;
-        //     _debugActivePaint = this;
-        //     assert(!isRepaintBoundary || _layerHandle.layer != null);
-        //     return true;
-        // }
-        // ());
         _needsPaint = false;
         _needsCompositedLayerUpdate = false;
-
         _wasRepaintBoundary = IsRepaintBoundary;
 
         try
@@ -1214,22 +1546,138 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
             Debug.Assert(!_needsLayout); // check that the paint() method didn't mark us dirty again
             Debug.Assert(!_needsPaint); // check that the paint() method didn't mark us dirty again
         }
-        catch (Exception)
+        catch (Exception exception)
         {
-            //_reportException('paint', e, stack);
+            ReportException("paint", exception);
+        }
+        finally
+        {
+            if (Constants.KDebugMode)
+            {
+                DebugPaint(context, offset);
+            }
+
+            _debugActivePaint = debugLastActivePaint;
+            _debugDoingThisPaint = false;
+        }
+    }
+
+    /// <summary>Override point for debug-only paint overlays.</summary>
+    /// <remarks>Flutter's <c>RenderObject.debugPaint</c>; a no-op by default.</remarks>
+    protected virtual void DebugPaint(PaintingContext context, Point offset)
+    {
+    }
+
+    /// <remarks>Flutter's <c>RenderObject._reportException</c>.</remarks>
+    private void ReportException(string method, Exception exception)
+    {
+        FlutterError.ReportError(new FlutterErrorDetails(
+            exception: exception,
+            stack: exception.StackTrace,
+            library: "rendering library",
+            context: new ErrorDescription($"during {method}()"),
+            informationCollector: () =>
+            {
+                var information = new List<DiagnosticsNode>();
+                if (Constants.KDebugMode && DebugCreator is not null)
+                {
+                    information.Add(new DiagnosticsDebugCreator(DebugCreator));
+                }
+
+                information.Add(DescribeForError(
+                    "The following RenderObject was being processed when the exception was fired"));
+                information.Add(DescribeForError("RenderObject", DiagnosticsTreeStyle.TruncateChildren));
+                return information;
+            }));
+    }
+
+    /// <summary>
+    /// The closest render object up the layout-parent chain that is allowed to be mutated right now,
+    /// paired with whether mutating it is legal.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderObject._debugClosestMutationRoot</c>.</remarks>
+    private (RenderObject Root, bool MutationAllowed)? DebugClosestMutationRoot()
+    {
+        if (DebugDoingThisLayoutWithCallback)
+        {
+            return (this, true);
         }
 
-        // assert(() {
-        //     debugPaint(context, offset);
-        //     _debugActivePaint = debugLastActivePaint;
-        //     _debugDoingThisPaint = false;
-        //     return true;
-        // }
-        // ());
-        // if (!kReleaseMode && debugProfilePaintsEnabled)
-        // {
-        //     FlutterTimeline.finishSync();
-        // }
+        if (Owner is { DebugAllowMutationsToDirtySubtrees: true } && _needsLayout)
+        {
+            return (this, true);
+        }
+
+        if (_debugMutationsLocked)
+        {
+            return (this, false);
+        }
+
+        return DebugLayoutParent?.DebugClosestMutationRoot();
+    }
+
+    /// <remarks>Flutter's <c>RenderObject._debugCanPerformMutations</c>.</remarks>
+    private void DebugAssertCanPerformMutations()
+    {
+        EnsureNotDisposedMutation();
+        if (!Constants.KDebugMode || Owner is not { DebugDoingLayout: true })
+        {
+            return;
+        }
+
+        (RenderObject Root, bool MutationAllowed)? closest = DebugClosestMutationRoot();
+        if (closest?.MutationAllowed != false)
+        {
+            return;
+        }
+
+        RenderObject? activeLayoutRoot = closest.Value.Root;
+        RenderObject debugActiveLayout = DebugActiveLayout!;
+        string culpritMethodName = debugActiveLayout.DebugDoingThisLayout ? "performLayout" : "performResize";
+        string culpritFullMethodName = $"{debugActiveLayout.GetType().Name}.{culpritMethodName}";
+
+        if (ReferenceEquals(activeLayoutRoot, this))
+        {
+            throw new FlutterError([
+                new ErrorSummary(
+                    $"A {GetType().Name} was mutated in its own {culpritMethodName} implementation."),
+                new ErrorDescription("A RenderObject must not re-dirty itself while still being laid out."),
+                new DiagnosticsProperty<RenderObject>(
+                    "The RenderObject being mutated was", this, style: DiagnosticsTreeStyle.ErrorProperty),
+                new ErrorHint(
+                    "Consider using the LayoutBuilder widget to dynamically change a subtree during layout."),
+            ]);
+        }
+
+        bool isMutatedByAncestor = ReferenceEquals(activeLayoutRoot, debugActiveLayout);
+        string description = isMutatedByAncestor
+            ? $"A RenderObject must not mutate its descendants in its {culpritMethodName} method."
+            : "A RenderObject must not mutate another RenderObject from a different render subtree in "
+              + $"its {culpritMethodName} method.";
+        var parts = new List<DiagnosticsNode>
+        {
+            new ErrorSummary($"A {GetType().Name} was mutated in {culpritFullMethodName}."),
+            new ErrorDescription(description),
+            new DiagnosticsProperty<RenderObject>(
+                "The RenderObject being mutated was", this, style: DiagnosticsTreeStyle.ErrorProperty),
+            new DiagnosticsProperty<RenderObject>(
+                $"The {(isMutatedByAncestor ? "ancestor " : string.Empty)}RenderObject that was mutating "
+                + $"the said {GetType().Name} was",
+                debugActiveLayout,
+                style: DiagnosticsTreeStyle.ErrorProperty),
+        };
+
+        if (!isMutatedByAncestor)
+        {
+            parts.Add(new DiagnosticsProperty<RenderObject>(
+                "Their common ancestor was", activeLayoutRoot, style: DiagnosticsTreeStyle.ErrorProperty));
+        }
+
+        parts.Add(new ErrorHint(
+            "Mutating the layout of another RenderObject may cause some RenderObjects in its subtree to "
+            + "be laid out more than once. Consider using the LayoutBuilder widget to dynamically mutate "
+            + "a subtree during layout."));
+        throw new FlutterError(parts);
     }
 
     private void EnsureNotDisposedMutation()

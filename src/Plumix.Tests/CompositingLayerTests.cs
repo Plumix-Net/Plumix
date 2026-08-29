@@ -453,6 +453,15 @@ public sealed class CompositingLayerTests
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
+        // Flutter's `_skippedPaintingOnLayer` walks up only as far as the first ancestor whose own
+        // layer is still attached — the one that detached us — and leaves the decision to repaint to
+        // it, so the dirty boundary does not paint itself back in.
+        Assert.Equal(1, boundary.PaintCount);
+        Assert.Empty(pipeline.RootLayer.Children);
+
+        root.MarkNeedsPaint();
+        pipeline.FlushPaint();
+
         Assert.Equal(2, boundary.PaintCount);
         Assert.Equal(2, leaf.PaintCount);
         Assert.Single(pipeline.RootLayer.Children);
@@ -621,8 +630,10 @@ public sealed class CompositingLayerTests
 
         protected override void UpdateCompositedLayer(OffsetLayer layer)
         {
+            // Flutter's `updateCompositedLayer` may configure the layer but must leave `offset` alone:
+            // `PaintingContext._compositeChild` owns it and asserts the callee did not touch it.
             LayerUpdateCount += 1;
-            layer.Offset = new Point(2, 3);
+            layer.DebugCreator = LayerUpdateCount;
         }
 
         public override void Paint(PaintingContext ctx, Point offset)

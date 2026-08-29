@@ -152,7 +152,10 @@ internal sealed class RenderOverlayTheater : RenderBox,
             var parentData = (OverlayTheaterParentData)child.parentData!;
             if (child is RenderOverlayPortalLayoutBuilder layoutBuilder)
             {
-                layoutBuilder.ScheduleLayoutCallback();
+                // The portal's layout callback has to re-run on every theater layout, so the early-out
+                // in `Layout` is defeated directly. Going through `MarkNeedsLayout` would be a parent
+                // dirtying a descendant from its own `PerformLayout`, which Flutter forbids.
+                layoutBuilder.MarkNeedsImmediateRelayout();
             }
 
             if (!parentData.IsPositioned)
@@ -238,7 +241,9 @@ internal sealed class RenderOverlayTheater : RenderBox,
         }
     }
 
-    public void AddAll(List<RenderBox> children) => _container.AddAll(children);
+    public void AddAll(List<RenderBox>? children) => _container.AddAll(children);
+
+    public void RemoveAll() => _container.RemoveAll();
 
     public RenderBox? ChildBefore(RenderBox child) => _container.ChildBefore(child);
 

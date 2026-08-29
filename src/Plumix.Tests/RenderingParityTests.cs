@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;
+using Plumix.Foundation;
 using System.Collections;
 using System.Reflection;
 using Xunit;
@@ -35,7 +36,11 @@ public sealed class RenderingParityTests
         var box = new CountingRenderBox();
         var nonNormalized = new BoxConstraints(MinWidth: 200, MaxWidth: 100, MinHeight: 0, MaxHeight: 100);
 
-        Assert.Throws<InvalidOperationException>(() => box.Layout(nonNormalized));
+        // Flutter validates the incoming constraints in `RenderObject.layout` itself, before
+        // `performLayout` runs, so the FlutterError from `BoxConstraints.debugAssertIsValid`
+        // propagates rather than being reported like a layout failure.
+        FlutterError error = Assert.Throws<FlutterError>(() => box.Layout(nonNormalized));
+        Assert.Contains("non-normalized width constraints", error.Message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -273,6 +278,7 @@ public sealed class RenderingParityTests
     [Fact]
     public void Layout_PropagatesPerformLayoutException_AndStaysDirty()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var box = new ThrowingRenderBox();
         var constraints = new BoxConstraints(0, 200, 0, 100);
 

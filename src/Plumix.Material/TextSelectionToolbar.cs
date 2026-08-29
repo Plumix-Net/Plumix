@@ -483,7 +483,9 @@ internal sealed class RenderTextSelectionToolbarItemsLayout : RenderBox,
 
     public RenderBox? ChildAfter(RenderBox child) => _container.ChildAfter(child);
 
-    public void AddAll(List<RenderBox> children) => _container.AddAll(children);
+    public void AddAll(List<RenderBox>? children) => _container.AddAll(children);
+
+    public void RemoveAll() => _container.RemoveAll();
 
     public override void SetupParentData(RenderObject child)
     {

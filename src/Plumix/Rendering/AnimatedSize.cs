@@ -124,6 +124,7 @@ internal sealed class RenderAnimatedSize : RenderProxyBox
 
     protected override void PerformLayout()
     {
+        _lastValue = _controller.Value;
         _hasVisualOverflow = false;
         if (Child is null || Constraints.IsTight)
         {
@@ -223,7 +224,21 @@ internal sealed class RenderAnimatedSize : RenderProxyBox
         }
     }
 
-    private void RestartAnimation() => _controller.Forward(from: 0.0);
+    private void RestartAnimation()
+    {
+        _lastValue = 0.0;
+        _controller.Forward(from: 0.0);
+    }
+
+    /// <summary>The controller value the last layout pass was computed from.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderAnimatedSize._lastValue</c>. It keeps the controller's own listener from
+    /// re-dirtying this render object for a value change that layout has already accounted for —
+    /// including the synchronous notification <see cref="RestartAnimation"/> triggers from inside
+    /// <see cref="PerformLayout"/>, which would otherwise be a render object dirtying itself during
+    /// its own layout.
+    /// </remarks>
+    private double? _lastValue;
 
     private Size EvaluateSize()
     {
@@ -233,7 +248,13 @@ internal sealed class RenderAnimatedSize : RenderProxyBox
             _beginSize.Height + ((_endSize.Height - _beginSize.Height) * t));
     }
 
-    private void HandleControllerChanged() => MarkNeedsLayout();
+    private void HandleControllerChanged()
+    {
+        if (_controller.Value != _lastValue)
+        {
+            MarkNeedsLayout();
+        }
+    }
 
     public override void Paint(PaintingContext context, Point offset)
     {

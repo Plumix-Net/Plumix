@@ -75,6 +75,7 @@ public sealed class RenderObjectSizedByParentTests
     [Fact]
     public void RenderBox_SizedByParent_RejectsASizeWrittenFromPerformLayout()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var box = new SetsSizeInPerformLayoutRenderBox();
 
         AssertionError error = Assert.Throws<AssertionError>(
@@ -112,6 +113,7 @@ public sealed class RenderObjectSizedByParentTests
     [Fact]
     public void RenderBox_WithoutPerformLayoutAndWithoutSizedByParent_ReportsTheMissingOverride()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var box = new MissingPerformLayoutRenderBox();
 
         AssertionError error = Assert.Throws<AssertionError>(
@@ -129,7 +131,7 @@ public sealed class RenderObjectSizedByParentTests
     {
         var child = new ProbeRenderBox(sizedByParent: true);
         var parent = new SingleChildTestRenderBox(child, parentUsesSize: true);
-        Layout(parent, BoxConstraints.Loose(new Size(100, 80)));
+        LayoutAttached(parent, new Size(100, 80));
         Assert.False(parent.NeedsLayout);
 
         child.MarkNeedsLayout();
@@ -202,7 +204,7 @@ public sealed class RenderObjectSizedByParentTests
         var child = new ProbeRenderBox(sizedByParent: false);
         var offstage = new RenderOffstage(offstage: true, child: child);
         var parent = new SingleChildTestRenderBox(offstage, parentUsesSize: true);
-        Layout(parent, BoxConstraints.Loose(new Size(100, 80)));
+        PipelineOwner pipeline = LayoutAttached(parent, new Size(100, 80));
 
         // Offstage: sized by parent, so marking it dirty stops at the offstage box itself.
         Assert.Equal(new Size(0, 0), offstage.Size);
@@ -213,7 +215,7 @@ public sealed class RenderObjectSizedByParentTests
         offstage.Offstage = false;
         Assert.True(parent.NeedsLayout);
 
-        Layout(parent, BoxConstraints.Loose(new Size(100, 80)));
+        pipeline.FlushLayout(new Size(100, 80));
         Assert.Equal(new Size(20, 10), offstage.Size);
         offstage.MarkNeedsLayout();
         Assert.True(parent.NeedsLayout);
@@ -260,7 +262,7 @@ public sealed class RenderObjectSizedByParentTests
             maxHeight: 200,
             fit: OverflowBoxFit.Max);
         var parent = new SingleChildTestRenderBox(box, parentUsesSize: true);
-        Layout(parent, BoxConstraints.Loose(new Size(100, 80)));
+        PipelineOwner pipeline = LayoutAttached(parent, new Size(100, 80));
 
         Assert.Equal(new Size(100, 80), box.Size);
         box.MarkNeedsLayout();
@@ -269,7 +271,7 @@ public sealed class RenderObjectSizedByParentTests
         box.Fit = OverflowBoxFit.DeferToChild;
         Assert.True(parent.NeedsLayout);
 
-        Layout(parent, BoxConstraints.Loose(new Size(100, 80)));
+        pipeline.FlushLayout(new Size(100, 80));
         Assert.Equal(new Size(20, 10), box.Size);
         box.MarkNeedsLayout();
         Assert.True(parent.NeedsLayout);
@@ -337,6 +339,23 @@ public sealed class RenderObjectSizedByParentTests
     private static void Layout(RenderBox box, BoxConstraints constraints)
     {
         box.Layout(constraints, parentUsesSize: true);
+    }
+
+    /// <summary>
+    /// Lays <paramref name="box"/> out inside a real render tree.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>markNeedsLayout</c> only takes the relayout-boundary branch when the render object
+    /// has a <c>PipelineOwner</c>; a detached boundary falls through to <c>markParentNeedsLayout</c>.
+    /// Tests that observe the boundary therefore need an attached tree.
+    /// </remarks>
+    private static PipelineOwner LayoutAttached(RenderBox box, Size size)
+    {
+        var view = new RenderView { Child = box };
+        var pipeline = new PipelineOwner(view);
+        pipeline.Attach(view);
+        pipeline.FlushLayout(size);
+        return pipeline;
     }
 
     /// <summary>A box whose sized-by-parent behavior and phase transitions the tests can observe.</summary>

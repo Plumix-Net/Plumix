@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
+using Plumix.Foundation;
 using Plumix.UI;
 using Xunit;
 using Path = Plumix.UI.Path;
@@ -67,7 +68,7 @@ public sealed class PaintTransformTests
     }
 
     [Fact]
-    public void GetTransformTo_ThrowsWhenTheTargetIsNotADescendantOfTheAncestor()
+    public void GetTransformTo_ResolvesASiblingThroughTheCommonAncestor()
     {
         var first = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
         var second = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
@@ -80,7 +81,19 @@ public sealed class PaintTransformTests
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));
 
-        Assert.Throws<InvalidOperationException>(() => first.GetTransformTo(second));
+        // Flutter's `getTransformTo` accepts any render object in the same tree, not just an
+        // ancestor: it walks both chains to their common ancestor and inverts the target's half. The
+        // row places `second` 20 logical pixels to the right of `first`, so `first`'s origin sits at
+        // x = -20 in `second`'s coordinate space.
+        Assert.Equal(new Point(-20, 0), first.LocalToGlobal(default, second));
+
+        // A render object in a different tree is still an error.
+        var orphan = new RenderConstrainedBox(BoxConstraints.Tight(new Size(5, 5)));
+        var orphanView = new RenderView { Child = orphan };
+        var orphanPipeline = new PipelineOwner(orphanView);
+        orphanPipeline.Attach(orphanView);
+        orphanPipeline.FlushLayout(new Size(50, 50));
+        Assert.Throws<FlutterError>(() => first.GetTransformTo(orphan));
     }
 
     [Fact]

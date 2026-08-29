@@ -157,6 +157,43 @@ public abstract partial class RenderObject
         return child is null ? [] : [child.ToDiagnosticsNode(name: "child")];
     }
 
+    /// <summary>
+    /// Checks that <paramref name="child"/> is of the child type <paramref name="parent"/> expects.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObjectWithChildMixin.debugValidateChild</c> and
+    /// <c>ContainerRenderObjectMixin.debugValidateChild</c>, which share one body. C# has no mixins,
+    /// so the body lives here and both child-holding shapes call it.
+    /// </remarks>
+    internal static bool DebugValidateChildType<TChild>(RenderObject parent, RenderObject child)
+        where TChild : RenderObject
+    {
+        if (!Constants.KDebugMode || child is TChild)
+        {
+            return true;
+        }
+
+        throw new FlutterError([
+            new ErrorSummary(
+                $"A {parent.GetType().Name} expected a child of type {typeof(TChild).Name} but received a "
+                + $"child of type {child.GetType().Name}."),
+            new ErrorDescription(
+                "RenderObjects expect specific types of children because they coordinate with their "
+                + "children during layout and paint. For example, a RenderSliver cannot be the child of "
+                + "a RenderBox because a RenderSliver does not understand the RenderBox layout protocol."),
+            new ErrorSpacer(),
+            new DiagnosticsProperty<object>(
+                $"The {parent.GetType().Name} that expected a {typeof(TChild).Name} child was created by",
+                parent.DebugCreator,
+                style: DiagnosticsTreeStyle.ErrorProperty),
+            new ErrorSpacer(),
+            new DiagnosticsProperty<object>(
+                $"The {child.GetType().Name} that did not match the expected child type was created by",
+                child.DebugCreator,
+                style: DiagnosticsTreeStyle.ErrorProperty),
+        ]);
+    }
+
     private static T WithDebugActiveLayoutCleared<T>(Func<T> callback)
     {
         RenderObject? previousActiveLayout = _debugActiveLayout;

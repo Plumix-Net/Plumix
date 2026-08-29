@@ -1,4 +1,6 @@
-﻿using Avalonia;
+﻿using System.Diagnostics;
+using Avalonia;
+using Plumix.Foundation;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/box.dart (approximate)
 
@@ -109,6 +111,108 @@ public readonly record struct BoxConstraints(
     public bool IsTight => HasTightWidth && HasTightHeight;
 
     public bool IsNormalized => MinWidth >= 0.0 && MinWidth <= MaxWidth && MinHeight >= 0.0 && MinHeight <= MaxHeight;
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>BoxConstraints.debugAssertIsValid</c>.</remarks>
+    public bool DebugAssertIsValid(
+        bool isAppliedConstraint = false,
+        InformationCollector? informationCollector = null)
+    {
+        if (!Constants.KDebugMode)
+        {
+            return IsNormalized;
+        }
+
+        BoxConstraints self = this;
+        void Throw(string message)
+        {
+            List<DiagnosticsNode> information =
+            [
+                new ErrorSummary($"BoxConstraints has {message}."),
+                .. informationCollector?.Invoke() ?? [],
+                new DiagnosticsProperty<BoxConstraints>(
+                    "The offending constraints were", self, style: DiagnosticsTreeStyle.ErrorProperty),
+            ];
+            throw new FlutterError(information);
+        }
+
+        var nanFields = new List<string>();
+        if (double.IsNaN(MinWidth))
+        {
+            nanFields.Add("MinWidth");
+        }
+
+        if (double.IsNaN(MaxWidth))
+        {
+            nanFields.Add("MaxWidth");
+        }
+
+        if (double.IsNaN(MinHeight))
+        {
+            nanFields.Add("MinHeight");
+        }
+
+        if (double.IsNaN(MaxHeight))
+        {
+            nanFields.Add("MaxHeight");
+        }
+
+        if (nanFields.Count > 0)
+        {
+            Throw($"NaN values in {string.Join(", ", nanFields)}");
+        }
+
+        if (MinWidth < 0.0 && MinHeight < 0.0)
+        {
+            Throw("both a negative minimum width and a negative minimum height");
+        }
+
+        if (MinWidth < 0.0)
+        {
+            Throw("a negative minimum width");
+        }
+
+        if (MinHeight < 0.0)
+        {
+            Throw("a negative minimum height");
+        }
+
+        if (MaxWidth < MinWidth && MaxHeight < MinHeight)
+        {
+            Throw("both width and height constraints non-normalized");
+        }
+
+        if (MaxWidth < MinWidth)
+        {
+            Throw("non-normalized width constraints");
+        }
+
+        if (MaxHeight < MinHeight)
+        {
+            Throw("non-normalized height constraints");
+        }
+
+        if (isAppliedConstraint)
+        {
+            if (double.IsInfinity(MinWidth) && double.IsInfinity(MinHeight))
+            {
+                Throw("infinite minimum constraints");
+            }
+
+            if (double.IsInfinity(MinWidth))
+            {
+                Throw("an infinite minimum width constraint");
+            }
+
+            if (double.IsInfinity(MinHeight))
+            {
+                Throw("an infinite minimum height constraint");
+            }
+        }
+
+        Debug.Assert(IsNormalized);
+        return IsNormalized;
+    }
 
     public bool HasBoundedWidth => double.IsFinite(MaxWidth);
 

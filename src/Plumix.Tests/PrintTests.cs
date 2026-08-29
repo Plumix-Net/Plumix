@@ -83,6 +83,11 @@ public class PrintTests
         var pending = new List<Action>();
         Action<TimeSpan, Action> previousTimer = Print.ScheduleTimer;
         Print.ScheduleTimer = (_, callback) => pending.Add(callback);
+
+        // The throttle budget is process-global, and the rendering pipeline now reports layout and
+        // paint failures through `FlutterError.OnError` (Flutter's behaviour) instead of swallowing
+        // them, so another test may have spent it first.
+        Print.ResetThrottleForTesting();
         try
         {
             List<string> log = Capture(() =>

@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
@@ -795,12 +796,20 @@ public abstract class RenderSliver : RenderBox
     /// <remarks>Flutter's <c>RenderSliver.centerOffsetAdjustment</c>. Defaults to <c>0.0</c>.</remarks>
     public virtual double CenterOffsetAdjustment => 0.0;
 
-    public void LayoutWithSliverConstraints(SliverConstraints constraints)
+    /// <summary>Lays this sliver out under sliver constraints.</summary>
+    /// <remarks>
+    /// Flutter's viewports call <c>child.layout(SliverConstraints(...), parentUsesSize: true)</c> —
+    /// they always read the child's <c>geometry</c> afterwards — so a sliver is a relayout boundary
+    /// only when it is <see cref="RenderObject.SizedByParent"/>, never merely by virtue of being laid
+    /// out by a viewport.
+    /// </remarks>
+    public void LayoutWithSliverConstraints(SliverConstraints constraints, bool parentUsesSize = true)
     {
         if (_sliverConstraints != constraints)
         {
-            MarkNeedsLayout();
+            MarkNeedsImmediateRelayout();
         }
+
         _sliverConstraints = constraints;
         double remainingCacheExtent = constraints.RemainingCacheExtent > 0
             ? constraints.RemainingCacheExtent
@@ -827,7 +836,7 @@ public abstract class RenderSliver : RenderBox
                 MaxHeight: constraints.CrossAxisExtent);
         }
 
-        Layout(layoutConstraints);
+        Layout(layoutConstraints, parentUsesSize: parentUsesSize);
     }
 
     protected override void PerformLayout()
@@ -2190,10 +2199,12 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         return _container.ChildBefore(child);
     }
 
-    public void AddAll(List<RenderBox> children)
+    public void AddAll(List<RenderBox>? children)
     {
         _container.AddAll(children);
     }
+
+    public void RemoveAll() => _container.RemoveAll();
 
     public override void SetupParentData(RenderObject child)
     {
@@ -2376,38 +2387,72 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         }
     }
 
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor._createOrObtainChild</c>: the whole body runs inside
+    /// <c>invokeLayoutCallback</c>, because building or reviving a child dirties render objects while
+    /// this sliver is laying itself out.
+    /// </remarks>
     private bool CreateOrObtainChild(int index, RenderBox? after)
     {
-        if (index < 0)
-        {
-            return false;
-        }
+        bool created = false;
+        InvokeLayoutCallback<SliverConstraints>(
+            _ =>
+            {
+                if (index < 0)
+                {
+                    return;
+                }
 
-        if (_keepAliveBucket.TryGetValue(index, out var keptAliveChild))
-        {
-            _keepAliveBucket.Remove(index);
-            var parentData = (SliverMultiBoxAdaptorParentData)keptAliveChild.parentData!;
-            parentData.KeptAlive = false;
-            Insert(keptAliveChild, after);
-            return true;
-        }
+                if (_keepAliveBucket.TryGetValue(index, out RenderBox? keptAliveChild))
+                {
+                    _keepAliveBucket.Remove(index);
+                    var parentData = (SliverMultiBoxAdaptorParentData)keptAliveChild.parentData!;
+                    Debug.Assert(parentData.KeptAlive);
 
-        return _childManager?.CreateChild(index, after) ?? false;
+                    // A kept-alive child is still adopted by this sliver, so it has to be dropped
+                    // before it can be inserted back into the child list; `DropChild` clears the
+                    // parent data, which Dart hands straight back.
+                    DropChild(keptAliveChild);
+                    keptAliveChild.parentData = parentData;
+                    Insert(keptAliveChild, after);
+                    parentData.KeptAlive = false;
+                    created = true;
+                    return;
+                }
+
+                created = _childManager?.CreateChild(index, after) ?? false;
+            },
+            ConstraintsForSliver);
+        return created;
     }
 
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor._destroyOrCacheChild</c>, likewise wrapped in
+    /// <c>invokeLayoutCallback</c>.
+    /// </remarks>
     private void DestroyOrCacheChild(RenderBox child)
     {
-        var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
-        if (childParentData.KeepAlive)
-        {
-            Remove(child);
-            _keepAliveBucket[childParentData.Index] = child;
-            AdoptChild(child);
-            childParentData.KeptAlive = true;
-            return;
-        }
+        InvokeLayoutCallback<SliverConstraints>(
+            _ =>
+            {
+                var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
+                if (childParentData.KeepAlive)
+                {
+                    Debug.Assert(!childParentData.KeptAlive);
+                    Remove(child);
+                    _keepAliveBucket[childParentData.Index] = child;
 
-        _childManager?.RemoveChild(child);
+                    // `DropChild` clears the parent data, so Dart hands the saved instance back before
+                    // re-adopting the child: the kept-alive child has to keep its index and flags.
+                    child.parentData = childParentData;
+                    AdoptChild(child);
+                    childParentData.KeptAlive = true;
+                    return;
+                }
+
+                _childManager?.RemoveChild(child);
+            },
+            ConstraintsForSliver);
     }
 
     public void DefaultPaint(PaintingContext ctx, Point offset)

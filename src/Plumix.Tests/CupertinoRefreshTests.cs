@@ -69,6 +69,7 @@ public sealed class CupertinoRefreshTests
     [Fact]
     public void RenderCupertinoSliverRefresh_UsesOverscrollAndCompensatedLayoutExtentGeometry()
     {
+        using var renderErrors = RenderErrorRethrowScope.Enter();
         var child = new ExpandingRenderBox();
         var sliver = new RenderCupertinoSliverRefresh(
             refreshIndicatorExtent: 60.0,

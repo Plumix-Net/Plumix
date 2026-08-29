@@ -343,7 +343,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/layer.dart` | `src/Plumix/Rendering/CompositedTransform.cs`<br>`src/Plumix/Rendering/Layer.cs` _(reference) (approximate)_ | `src/Plumix.Tests/CompositedTransformTests.cs`<br>`src/Plumix.Tests/CompositingLayerTests.cs`<br>`src/Plumix.Tests/LayerV2Tests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CompositedTransformDemoPage.cs` |
 | `rendering/list_body.dart` | `src/Plumix/Rendering/ListBody.cs` | — | — |
 | `rendering/list_wheel_viewport.dart` | `src/Plumix/Rendering/ListWheelViewport.cs` | — | — |
-| `rendering/object.dart` | `src/Plumix/PipelineOwner.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/Object.PaintingContext.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/Object.RenderObject.Diagnostics.cs`<br>`src/Plumix/Rendering/Object.RenderObject.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/Object.RenderObjectSemantics.cs`<br>`src/Plumix/Rendering/Object.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/SemanticsConfigurationProvider.cs` | `src/Plumix.Tests/RenderObjectDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectLifecycleTests.cs`<br>`src/Plumix.Tests/RenderObjectSemanticsDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectSizedByParentTests.cs` | — |
+| `rendering/object.dart` | `src/Plumix/PipelineOwner.cs` _(reference) (single-owner subset)_<br>`src/Plumix/Rendering/Object.PaintingContext.cs` _(reference)_<br>`src/Plumix/Rendering/Object.RenderObject.Diagnostics.cs`<br>`src/Plumix/Rendering/Object.RenderObject.cs`<br>`src/Plumix/Rendering/Object.RenderObjectSemantics.cs`<br>`src/Plumix/Rendering/Object.cs`<br>`src/Plumix/Rendering/SemanticsConfigurationProvider.cs` | `src/Plumix.Tests/RenderObjectDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectLifecycleTests.cs`<br>`src/Plumix.Tests/RenderObjectPipelineParityTests.cs`<br>`src/Plumix.Tests/RenderObjectSemanticsDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectSizedByParentTests.cs` | — |
 | `rendering/paragraph.dart` | `src/Plumix/RenderParagraph.Selection.cs`<br>`src/Plumix/RenderParagraph.Text.cs`<br>`src/Plumix/RenderParagraph.cs`<br>`src/Plumix/Rendering/InlineChildren.cs`<br>`src/Plumix/UI/TextLayoutFallback.cs` _(reference) (adapted fallback for host-less test environments)_ | — | — |
 | `rendering/proxy_box.dart` | `src/Plumix/RenderAnimatedBox.cs` _(reference) (custom adaptation)_<br>`src/Plumix/RenderButton.cs` _(reference) (custom adaptation)_<br>`src/Plumix/Rendering/AnnotatedRegion.cs`<br>`src/Plumix/Rendering/Baseline.cs`<br>`src/Plumix/Rendering/CompositedTransform.cs`<br>`src/Plumix/Rendering/CustomClip.cs`<br>`src/Plumix/Rendering/Filter.RenderBox.cs`<br>`src/Plumix/Rendering/PhysicalModel.cs`<br>`src/Plumix/Rendering/Proxy.RenderBox.cs` _(reference) (approximate)_<br>`src/Plumix/Rendering/RepaintBoundary.cs`<br>`src/Plumix/Rendering/SemanticsGestureHandler.cs`<br>`src/Plumix/Widgets/Intrinsic.cs` | `src/Plumix.Tests/AnnotatedRegionTests.cs`<br>`src/Plumix.Tests/BaselineTests.cs`<br>`src/Plumix.Tests/CompositedTransformTests.cs`<br>`src/Plumix.Tests/FlowRepaintBoundaryTests.cs`<br>`src/Plumix.Tests/IntrinsicQueryParityTests.cs`<br>`src/Plumix.Tests/IntrinsicWidgetsTests.cs` | `dart_sample/lib/demos/general/baseline_demo_page.dart`<br>`dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`dart_sample/lib/demos/general/intrinsic_widgets_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/BaselineDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/CompositedTransformDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/IntrinsicWidgetsDemoPage.cs` |
 | `rendering/proxy_sliver.dart` | `src/Plumix/Rendering/SliverGroup.cs` | `src/Plumix.Tests/SliverGroupTests.cs` | — |
@@ -580,7 +580,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Gestures/GestureRecognizer.cs` — (reference)
 - `src/Plumix/HotReload.cs` — (reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)
 - `src/Plumix/Painting/BasicTypes.cs` — (reference) (approximate)
-- `src/Plumix/PipelineOwner.cs` — (reference) (approximate)
+- `src/Plumix/PipelineOwner.cs` — (reference) (single-owner subset)
 - `src/Plumix/RenderAnimatedBox.cs` — (reference) (custom adaptation)
 - `src/Plumix/RenderButton.cs` — (reference) (custom adaptation)
 - `src/Plumix/RenderView.cs` — (reference) (approximate)
@@ -590,9 +590,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Rendering/BoxFit.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Layer.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/LayoutHelper.cs` — (reference) (adapted helper logic)
-- `src/Plumix/Rendering/Object.PaintingContext.cs` — (reference) (approximate)
-- `src/Plumix/Rendering/Object.RenderObject.cs` — (reference) (approximate)
-- `src/Plumix/Rendering/Object.cs` — (reference) (approximate)
+- `src/Plumix/Rendering/Object.PaintingContext.cs` — (reference)
 - `src/Plumix/Rendering/Proxy.RenderBox.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Scroll.cs` — (reference) (adapted)
 - `src/Plumix/Rendering/Sliver.cs` — (reference) (approximate)
@@ -628,5 +626,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 648
 - C# files without a marker: 31
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 50
+- C# files with a qualified (non-strict) marker: 48
 
