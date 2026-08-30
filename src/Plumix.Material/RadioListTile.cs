@@ -373,11 +373,7 @@ public sealed class RadioListTile<T> : StatefulWidget
 
         if (RadioScaleFactor != 1.0)
         {
-            Matrix4 scale = Matrix4.Diagonal3Values(RadioScaleFactor, RadioScaleFactor, 1.0);
-            control = new Plumix.Widgets.Transform(
-                transform: scale,
-                alignment: Alignment.Center,
-                child: control);
+            control = Widgets.Transform.Scale(scale: RadioScaleFactor, child: control);
         }
 
         var affinity = ControlAffinity
@@ -410,7 +406,6 @@ public sealed class RadioListTile<T> : StatefulWidget
             contentPadding: ContentPadding,
             focusNode: focusNode,
             statesController: StatesController,
-            mouseCursor: MouseCursor,
             onFocusChange: OnFocusChange,
             enableFeedback: EnableFeedback,
             horizontalTitleGap: HorizontalTitleGap,

@@ -81,7 +81,9 @@ class SampleRoutes {
   static const String animatedGrid = '/animated-grid';
   static const String gridTile = '/grid-tile';
   static const String listTile = '/list-tile';
-  static const String listTileControls = '/list-tile-controls';
+  static const String checkboxListTile = '/checkbox-list-tile';
+  static const String radioListTile = '/radio-list-tile';
+  static const String switchListTile = '/switch-list-tile';
   static const String radioExpansionTile = '/radio-expansion-tile';
   static const String expansionPanel = '/expansion-panel';
   static const String stepper = '/stepper';

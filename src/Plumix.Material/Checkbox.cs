@@ -37,7 +37,7 @@ public sealed class Checkbox : StatefulWidget
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
-        ShapeBorder? shape = null,
+        OutlinedBorder? shape = null,
         WidgetStateBorderSide? side = null,
         bool isError = false,
         string? semanticLabel = null,
@@ -82,7 +82,7 @@ public sealed class Checkbox : StatefulWidget
         double? splashRadius,
         MaterialTapTargetSize? materialTapTargetSize,
         VisualDensity? visualDensity,
-        ShapeBorder? shape,
+        OutlinedBorder? shape,
         WidgetStateBorderSide? side,
         bool isError,
         string? semanticLabel,
@@ -146,7 +146,7 @@ public sealed class Checkbox : StatefulWidget
 
     public VisualDensity? VisualDensity { get; }
 
-    public ShapeBorder? Shape { get; }
+    public OutlinedBorder? Shape { get; }
 
     public WidgetStateBorderSide? Side { get; }
 
@@ -172,7 +172,7 @@ public sealed class Checkbox : StatefulWidget
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
-        ShapeBorder? shape = null,
+        OutlinedBorder? shape = null,
         WidgetStateBorderSide? side = null,
         bool isError = false,
         string? semanticLabel = null,
@@ -380,7 +380,7 @@ public sealed class Checkbox : StatefulWidget
                 focusNode: CurrentWidget.FocusNode,
                 autofocus: CurrentWidget.Autofocus,
                 side: CurrentWidget.Side,
-                shape: CurrentWidget.Shape as OutlinedBorder,
+                shape: CurrentWidget.Shape,
                 semanticLabel: CurrentWidget.SemanticLabel);
         }
 

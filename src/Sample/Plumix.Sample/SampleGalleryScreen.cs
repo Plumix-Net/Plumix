@@ -88,7 +88,9 @@ internal static class SampleRoutes
     public const string AnimatedGrid = "/animated-grid";
     public const string GridTile = "/grid-tile";
     public const string ListTile = "/list-tile";
-    public const string ListTileControls = "/list-tile-controls";
+    public const string CheckboxListTile = "/checkbox-list-tile";
+    public const string RadioListTile = "/radio-list-tile";
+    public const string SwitchListTile = "/switch-list-tile";
     public const string RadioExpansionTile = "/radio-expansion-tile";
     public const string ExpansionPanel = "/expansion-panel";
     public const string Stepper = "/stepper";
@@ -269,7 +271,21 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             () => new ReorderableListDemoPage()),
         new(SampleRoutes.GridTile, "GridTile + GridTileBar", "header/footer overlays + one/two-line bars + RTL", () => new GridTileDemoPage()),
         new(SampleRoutes.ListTile, "ListTile", "leading/title/subtitle/trailing + selected/dense/theme probes", () => new ListTileDemoPage()),
-        new(SampleRoutes.ListTileControls, "CheckboxListTile + SwitchListTile", "whole-row toggle + tristate + affinity + adaptive probes", () => new ListTileControlsDemoPage()),
+        new(
+            SampleRoutes.CheckboxListTile,
+            "CheckboxListTile",
+            "whole-row toggle + tristate + affinity + scale + adaptive probes",
+            () => new CheckboxListTileDemoPage()),
+        new(
+            SampleRoutes.RadioListTile,
+            "RadioListTile",
+            "RadioGroup + toggleable + platform affinity + scale probes",
+            () => new RadioListTileDemoPage()),
+        new(
+            SampleRoutes.SwitchListTile,
+            "SwitchListTile",
+            "whole-row toggle + affinity + density + adaptive probes",
+            () => new SwitchListTileDemoPage()),
         new(SampleRoutes.RadioExpansionTile, "RadioListTile + ExpansionTile", "RadioGroup + toggleable/adaptive + animated controller expansion", () => new RadioExpansionTileDemoPage()),
         new(SampleRoutes.ExpansionPanel, "ExpansionPanel + ExpansionPanelList", "controlled panels + radio accordion + animated material gaps", () => new ExpansionPanelDemoPage()),
         new(SampleRoutes.Stepper, "ExpandIcon + Stepper", "disclosure animation + vertical/horizontal step progress", () => new StepperDemoPage()),

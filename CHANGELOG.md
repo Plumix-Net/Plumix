@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `CheckboxListTile`/`SwitchListTile` are strict ports; `mouseCursor` goes to the control, not the tile.
+- Breaking: `CheckboxListTile`/`SwitchListTile` drop their extra `Semantics` wrapper and take `EdgeInsetsGeometry`.
+- Breaking: `CheckboxListTile.CheckboxShape` and `Checkbox.Shape` are `OutlinedBorder?` (`checkbox_list_tile.dart`).
+- Added `SwitchListTile`'s thumb images, `DragStartBehavior` and `ApplyCupertinoTheme` (`switch_list_tile.dart`).
+- Breaking: `RadioListTile` no longer passes `mouseCursor` to its `ListTile` (`radio_list_tile.dart`).
 - Added `RenderingDebug`, the render-layer debug flag surface, and wired every consumer (`rendering/debug.dart`).
 - Added `RenderBox.DebugPaintSize`/`DebugPaintBaselines`/`DebugPaintPointers`/`DebugHandleEvent` (`box.dart`).
 - Added `RenderRepaintBoundary`'s symmetric/asymmetric paint metrics and usefulness diagnosis (`proxy_box.dart`).

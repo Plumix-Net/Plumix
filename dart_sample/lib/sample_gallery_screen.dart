@@ -105,7 +105,9 @@ import 'demos/general/list_view_reverse_demo_page.dart';
 import 'demos/general/scroll_physics_demo_page.dart';
 import 'demos/general/list_view_separated_demo_page.dart';
 import 'demos/material/list_tile_demo_page.dart';
-import 'demos/material/list_tile_controls_demo_page.dart';
+import 'demos/material/checkbox_list_tile_demo_page.dart';
+import 'demos/material/radio_list_tile_demo_page.dart';
+import 'demos/material/switch_list_tile_demo_page.dart';
 import 'demos/material/radio_expansion_tile_demo_page.dart';
 import 'demos/material/expansion_panel_demo_page.dart';
 import 'demos/material/stepper_demo_page.dart';
@@ -420,10 +422,23 @@ class SampleGalleryScreen extends StatelessWidget {
       builder: () => const ListTileDemoPage(),
     ),
     SampleRouteDefinition(
-      routeName: SampleRoutes.listTileControls,
-      title: 'CheckboxListTile + SwitchListTile',
-      subtitle: 'whole-row toggle + tristate + affinity + adaptive probes',
-      builder: () => const ListTileControlsDemoPage(),
+      routeName: SampleRoutes.checkboxListTile,
+      title: 'CheckboxListTile',
+      subtitle:
+          'whole-row toggle + tristate + affinity + scale + adaptive probes',
+      builder: () => const CheckboxListTileDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.radioListTile,
+      title: 'RadioListTile',
+      subtitle: 'RadioGroup + toggleable + platform affinity + scale probes',
+      builder: () => const RadioListTileDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.switchListTile,
+      title: 'SwitchListTile',
+      subtitle: 'whole-row toggle + affinity + density + adaptive probes',
+      builder: () => const SwitchListTileDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.radioExpansionTile,
