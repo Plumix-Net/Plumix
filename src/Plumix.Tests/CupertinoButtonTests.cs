@@ -179,7 +179,7 @@ public sealed class CupertinoButtonTests : IDisposable
             onLongPress: () => { }).Enabled);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugFillProperties_ReportsTheDisabledFlag()
     {
         var properties = new DiagnosticPropertiesBuilder();

@@ -121,6 +121,13 @@ public sealed class CupertinoIconThemeDataTests
         Assert.NotEqual(first, different);
         Assert.NotEqual<IconThemeData>(first, new IconThemeData(Color: CupertinoColors.SystemRed.Color));
 
+        if (!Constants.KDebugMode)
+        {
+            // `debugFillProperties` is an assert-only body in Dart, so it fills nothing outside a
+            // debug build; the equality contract above holds in every build.
+            return;
+        }
+
         var diagnostics = new DiagnosticPropertiesBuilder();
         first.DebugFillProperties(diagnostics);
         Assert.Equal(2, diagnostics.Properties.Count(property => property.Name == "color"));

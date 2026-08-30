@@ -49,7 +49,7 @@ public sealed class RenderObjectLifecycleTests
         renderObject.Dispose();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderObject_MutationAfterDispose_ThrowsFlutterError()
     {
         var renderObject = new TestRenderBox();
@@ -140,15 +140,19 @@ public sealed class RenderObjectLifecycleTests
         };
         var handle = new LayerHandle<PictureLayer>(layer);
 
-        Assert.Contains("DETACHED", layer.ToStringShort(), StringComparison.Ordinal);
         layer.Attach(owner);
 
-        string dump = layer.ToStringDeep(minLevel: DiagnosticLevel.Debug);
-        Assert.Contains("owner: System.Object", dump, StringComparison.Ordinal);
-        Assert.Contains("creator: creator", dump, StringComparison.Ordinal);
-        Assert.Contains("engine layer: TestEngineLayer", dump, StringComparison.Ordinal);
-        Assert.Contains("handles: 1", dump, StringComparison.Ordinal);
-        Assert.DoesNotContain("DETACHED", layer.ToStringShort(), StringComparison.Ordinal);
+        // `toStringDeep` and the `DETACHED` marker come from `debugFillProperties`/`toStringShort`,
+        // which Dart strips outside a debug build; the dispose contract below holds in every build.
+        if (Constants.KDebugMode)
+        {
+            string dump = layer.ToStringDeep(minLevel: DiagnosticLevel.Debug);
+            Assert.Contains("owner: System.Object", dump, StringComparison.Ordinal);
+            Assert.Contains("creator: creator", dump, StringComparison.Ordinal);
+            Assert.Contains("engine layer: TestEngineLayer", dump, StringComparison.Ordinal);
+            Assert.Contains("handles: 1", dump, StringComparison.Ordinal);
+            Assert.DoesNotContain("DETACHED", layer.ToStringShort(), StringComparison.Ordinal);
+        }
 
         layer.Detach();
         handle.Layer = null;

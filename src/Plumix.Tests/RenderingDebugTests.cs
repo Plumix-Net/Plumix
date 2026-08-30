@@ -117,7 +117,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.True(RenderingDebug.CheckHasBoundedAxis(Axis.Horizontal, constraints));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void CheckHasBoundedAxis_Vertical_ReportsUnboundedHeightFirst()
     {
         var constraints = new BoxConstraints(
@@ -142,7 +142,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains("Vertical viewport was given unbounded width.", error.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void CheckHasBoundedAxis_Horizontal_ReportsUnboundedWidthFirst()
     {
         var constraints = new BoxConstraints(
@@ -167,7 +167,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains("Horizontal viewport was given unbounded height.", error.Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PaintPadding_WithoutInnerRect_FillsTheWholeOuterRectAsSpacing()
     {
         var probe = new PaintCallbackRenderBox(
@@ -192,7 +192,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Equal(outer, ring.GetBounds());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PaintPadding_WithEmptyInnerRect_FallsBackToTheSpacingFill()
     {
         var probe = new PaintCallbackRenderBox(
@@ -222,6 +222,25 @@ public sealed class RenderingDebugTests : IDisposable
     }
 
     [Fact]
+    public void BuildModeGates_ThePaintFlagsOnlyReachDebugPaintInADebugBuild()
+    {
+        RenderingDebug.PaintSizeEnabled = true;
+        RenderingDebug.PaintBaselinesEnabled = true;
+        RenderingDebug.PaintPointersEnabled = true;
+        var probe = new DebugPaintProbeRenderBox();
+
+        Paint(probe, new Size(40.0, 40.0));
+
+        // Dart calls `debugPaint*` from an `assert(() {...}())` block in `RenderObject._paintWithContext`,
+        // so outside a debug build the flags are inert however they are set. The `[DebugOnlyFact]`
+        // tests below cover the debug half; this covers the elided half in every configuration.
+        int expected = Constants.KDebugMode ? 1 : 0;
+        Assert.Equal(expected, probe.DebugPaintSizeCount);
+        Assert.Equal(expected, probe.DebugPaintBaselinesCount);
+        Assert.Equal(expected, probe.DebugPaintPointersCount);
+    }
+
+    [DebugOnlyFact]
     public void PaintSizeEnabled_RoutesEveryRenderBoxThroughDebugPaintSize()
     {
         RenderingDebug.PaintSizeEnabled = true;
@@ -233,7 +252,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Equal(0, probe.DebugPaintBaselinesCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PaintBaselinesEnabled_RoutesEveryRenderBoxThroughDebugPaintBaselines()
     {
         RenderingDebug.PaintBaselinesEnabled = true;
@@ -245,7 +264,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Equal(1, probe.DebugPaintBaselinesCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PaintPointersEnabled_RoutesEveryRenderBoxThroughDebugPaintPointers()
     {
         RenderingDebug.PaintPointersEnabled = true;
@@ -256,7 +275,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Equal(1, probe.DebugPaintPointersCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugHandleEvent_CountsPointersAndRepaintsOnlyWhilePaintPointersIsEnabled()
     {
         var probe = new DebugPaintProbeRenderBox();
@@ -272,7 +291,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.True(probe.DebugNeedsPaint);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugPaintPointers_PaintsOnlyWhileAPointerIsDown()
     {
         RenderingDebug.PaintPointersEnabled = true;
@@ -294,7 +313,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.False(probe.LastPaintPointersDrew);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugHandleEvent_TreatsACancelLikeAnUp()
     {
         RenderingDebug.PaintPointersEnabled = true;
@@ -309,7 +328,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.False(probe.LastPaintPointersDrew);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void OnProfilePaint_IsInvokedForEveryPaintedChild()
     {
         var painted = new List<RenderObject>();
@@ -323,7 +342,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains(leaf, painted);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PrintLayouts_LogsEveryLaidOutRenderObject()
     {
         List<string> messages = CaptureDebugPrint(() =>
@@ -335,7 +354,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains(messages, message => message.StartsWith("Laying out (", StringComparison.Ordinal));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PrintMarkNeedsLayoutStacks_LogsTheStackOfTheDirtyingCall()
     {
         var probe = new DebugPaintProbeRenderBox();
@@ -351,7 +370,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains(messages, message => message.Contains("MarkNeedsLayout() called for", StringComparison.Ordinal));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PrintMarkNeedsPaintStacks_LogsTheStackOfTheDirtyingCall()
     {
         var probe = new DebugPaintProbeRenderBox();
@@ -366,7 +385,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains(messages, message => message.Contains("MarkNeedsPaint() called for", StringComparison.Ordinal));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void CheckIntrinsicSizes_CatchesAnIntrinsicProtocolViolation()
     {
         RenderingDebug.CheckIntrinsicSizes = true;
@@ -379,7 +398,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains("returned a negative value", ((Exception)failure.Exception!).Message);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void CheckIntrinsicSizes_CatchesADryLayoutThatDisagreesWithPerformLayout()
     {
         RenderingDebug.CheckIntrinsicSizes = true;
@@ -406,7 +425,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Empty(errors);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void CheckIntrinsicSizes_CatchesADryBaselineThatDisagreesWithTheRealOne()
     {
         RenderingDebug.CheckIntrinsicSizes = true;
@@ -421,7 +440,7 @@ public sealed class RenderingDebugTests : IDisposable
                 StringComparison.Ordinal));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RepaintBoundaryMetrics_CountASharedPaintAsSymmetric()
     {
         var boundary = new RenderRepaintBoundary(new DebugPaintProbeRenderBox());
@@ -432,7 +451,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Equal(0, boundary.DebugAsymmetricPaintCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RepaintBoundaryMetrics_CountAStandaloneRepaintAsAsymmetric()
     {
         var boundary = new RenderRepaintBoundary(new DebugPaintProbeRenderBox());
@@ -462,7 +481,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Equal(0, boundary.DebugAsymmetricPaintCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RepaintBoundary_DebugFillProperties_ReportsNoMetricsBeforeTheFirstPaint()
     {
         var boundary = new RenderRepaintBoundary();
@@ -475,7 +494,7 @@ public sealed class RenderingDebugTests : IDisposable
             property => property.Name == "usefulness ratio");
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RepaintBoundary_DebugFillProperties_DiagnosesTooLittleData()
     {
         var boundary = new RenderRepaintBoundary(new DebugPaintProbeRenderBox());
@@ -491,7 +510,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains(properties.Properties, property => property.Name == "metrics");
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RepaintBoundary_DebugFillProperties_DiagnosesAnIneffectualBoundary()
     {
         var boundary = new RenderRepaintBoundary(new DebugPaintProbeRenderBox());
@@ -509,7 +528,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains("astoundingly ineffectual", diagnosis.ToDescription());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RepaintBoundary_DebugFillProperties_DiagnosesAnOutstandingBoundary()
     {
         var boundary = new RenderRepaintBoundary(new DebugPaintProbeRenderBox());
@@ -527,7 +546,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Contains("outstandingly useful", diagnosis.ToDescription());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RepaintRainbowEnabled_AdvancesTheRepaintColorByTwoDegreesPerFrame()
     {
         RenderingDebug.RepaintRainbowEnabled = true;
@@ -537,7 +556,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Equal(62.0, RenderingDebug.CurrentRepaintColor.Hue);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RepaintRainbow_WrapsTheHueBackToZeroAfter360Degrees()
     {
         RenderingDebug.RepaintRainbowEnabled = true;
@@ -556,7 +575,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.Equal(60.0, RenderingDebug.CurrentRepaintColor.Hue);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RepaintTextRainbowEnabled_AlsoAdvancesTheRepaintColor()
     {
         RenderingDebug.RepaintTextRainbowEnabled = true;
@@ -583,7 +602,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.False(picture.IsEmpty);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PaintSizeEnabled_MakesRenderPaddingDrawItsConstructionLines()
     {
         RenderingDebug.PaintSizeEnabled = true;
@@ -595,7 +614,7 @@ public sealed class RenderingDebugTests : IDisposable
         Assert.False(picture.IsEmpty);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PaintSizeEnabled_MakesAnEmptyRenderConstrainedBoxDrawSpacing()
     {
         RenderingDebug.PaintSizeEnabled = true;

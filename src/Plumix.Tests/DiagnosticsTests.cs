@@ -127,7 +127,7 @@ public class DiagnosticsTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ShortHashAndDescribeIdentity_MatchDartFormat()
     {
         object value = new();
@@ -139,7 +139,7 @@ public class DiagnosticsTests
         Assert.Equal("DiagnosticsProperty<String>", Diagnostics.DescribeType(typeof(DiagnosticsProperty<string>)));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DescribeEnum_ReturnsBareLowerCamelName()
     {
 #pragma warning disable CS0618 // Deprecated in Dart too; ported for parity.
@@ -150,7 +150,7 @@ public class DiagnosticsTests
 #pragma warning restore CS0618
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_DenseStyle()
     {
         Assert.Equal(
@@ -165,7 +165,7 @@ public class DiagnosticsTests
             RenderStyleTree(DiagnosticsTreeStyle.Dense));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_SparseStyle()
     {
         Assert.Equal(
@@ -180,7 +180,7 @@ public class DiagnosticsTests
             RenderStyleTree(DiagnosticsTreeStyle.Sparse));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_OffstageStyleUsesDashedLinks()
     {
         Assert.Equal(
@@ -195,7 +195,7 @@ public class DiagnosticsTests
             RenderStyleTree(DiagnosticsTreeStyle.Offstage));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_TransitionLastChildDrawsBox()
     {
         Assert.Equal(
@@ -214,7 +214,7 @@ public class DiagnosticsTests
             RenderStyleTree(DiagnosticsTreeStyle.Sparse, DiagnosticsTreeStyle.Transition));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_ErrorLastChildUppercasesAndStretchesHeader()
     {
         Assert.Equal(
@@ -231,7 +231,7 @@ public class DiagnosticsTests
             RenderStyleTree(DiagnosticsTreeStyle.Sparse, DiagnosticsTreeStyle.Error));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_TransitionStyleThroughout()
     {
         Assert.Equal(
@@ -258,7 +258,7 @@ public class DiagnosticsTests
             RenderStyleTree(DiagnosticsTreeStyle.Transition));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_ErrorStyleThroughoutAddsRootHeaderAndFooter()
     {
         Assert.Equal(
@@ -280,7 +280,7 @@ public class DiagnosticsTests
             RenderStyleTree(DiagnosticsTreeStyle.Error));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_WhitespaceStyleIndentsTwoSpaces()
     {
         Assert.Equal(
@@ -295,13 +295,13 @@ public class DiagnosticsTests
             RenderStyleTree(DiagnosticsTreeStyle.Whitespace));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_SingleLineStyleOmitsChildrenAndTrailingNewline()
     {
         Assert.Equal("TestTree#00000", RenderStyleTree(DiagnosticsTreeStyle.SingleLine));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_SparseStyleWithProperties()
     {
         Assert.Equal(
@@ -334,7 +334,7 @@ public class DiagnosticsTests
             RenderPropertyTree(DiagnosticsTreeStyle.Sparse));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_DenseStyleWithPropertiesInlinesAndEscapesNewlines()
     {
         Assert.Equal(
@@ -350,7 +350,7 @@ public class DiagnosticsTests
             RenderPropertyTree(DiagnosticsTreeStyle.Dense));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_WhitespaceStyleWithProperties()
     {
         Assert.Equal(
@@ -379,7 +379,7 @@ public class DiagnosticsTests
             RenderPropertyTree(DiagnosticsTreeStyle.Whitespace));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_FlatStyleAddsNoIndentation()
     {
         Assert.Equal(
@@ -408,7 +408,7 @@ public class DiagnosticsTests
             RenderPropertyTree(DiagnosticsTreeStyle.Flat));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_ErrorPropertyStyleSplitsNameAndValue()
     {
         Assert.Equal(
@@ -449,7 +449,7 @@ public class DiagnosticsTests
             RenderPropertyTree(DiagnosticsTreeStyle.Sparse, propertyStyle: DiagnosticsTreeStyle.ErrorProperty));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_SingleLineRootWithAndWithoutName()
     {
         const string body = "TestTree#00000(stringProperty1: value1, doubleProperty1: 42.5, "
@@ -463,7 +463,7 @@ public class DiagnosticsTests
             RenderPropertyTree(DiagnosticsTreeStyle.ErrorProperty, name: "some name"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_MixedStylesCompose()
     {
         var tree = new TestTree(
@@ -522,7 +522,7 @@ public class DiagnosticsTests
             Normalize(tree.ToStringDeep()));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextTreeRenderer_WrapsAtWrapWidthWithoutBreakingWords()
     {
         DiagnosticsNode node = CreateTreeWithWrappingNodes(
@@ -599,7 +599,7 @@ public class DiagnosticsTests
             rendered);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextTreeRenderer_ErrorPropertyStyleMovesValueToItsOwnLine()
     {
         DiagnosticsNode node = CreateTreeWithWrappingNodes(
@@ -619,7 +619,7 @@ public class DiagnosticsTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_HonorsSuppliedPrefixesOnEveryLine()
     {
         string rendered = RenderStyleTree(DiagnosticsTreeStyle.Sparse);
@@ -646,7 +646,7 @@ public class DiagnosticsTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Diagnosticable_ToStringUsesSingleLineStyleAndFiltersByLevel()
     {
         var tree = new TestTree(
@@ -670,7 +670,7 @@ public class DiagnosticsTests
         Assert.Equal(Diagnostics.DescribeIdentity(tree), tree.ToStringShort());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DiagnosticableTree_ToStringShallowJoinsPropertiesOnOneLine()
     {
         var tree = new TestTree(
@@ -682,7 +682,7 @@ public class DiagnosticsTests
         Assert.DoesNotContain('\n', shallow);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DiagnosticsNodeMessage_AndMessageProperty()
     {
         DiagnosticsNode message = DiagnosticsNode.Message("hello world");
@@ -698,7 +698,7 @@ public class DiagnosticsTests
         Assert.True(property.ShowName);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DiagnosticsProperty_CoreDescriptionAndLevelRules()
     {
         Assert.Equal(
@@ -738,7 +738,7 @@ public class DiagnosticsTests
         Assert.Equal(typeof(string), new DiagnosticsProperty<string>("name", "v").PropertyType);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DiagnosticsProperty_LazyComputesOnceAndCapturesExceptions()
     {
         int calls = 0;
@@ -771,7 +771,7 @@ public class DiagnosticsTests
         Assert.NotNull(throwingDescribed.Exception);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void StringProperty_QuotingRules()
     {
         Assert.Equal("name: \"value\"", new StringProperty("name", "value").ToString());
@@ -795,7 +795,7 @@ public class DiagnosticsTests
             .IsFiltered(DiagnosticLevel.Info));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DoubleProperty_FormatsWithOneDecimal()
     {
         Assert.Equal("name: 42.0", new DoubleProperty("name", 42.0).ToString());
@@ -813,7 +813,7 @@ public class DiagnosticsTests
         Assert.Equal("name: EXCEPTION (InvalidOperationException)", throwing.ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void IntProperty_FormatsAndFilters()
     {
         Assert.Equal("name: 42", new IntProperty("name", 42).ToString());
@@ -844,7 +844,7 @@ public class DiagnosticsTests
         Assert.Equal(DiagnosticLevel.Off, passedThrough.Level);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PercentProperty_ClampsAndFormats()
     {
         Assert.Equal("name: 40.0%", new PercentProperty("name", 0.4).ToString());
@@ -864,7 +864,7 @@ public class DiagnosticsTests
         Assert.Equal("50.0%", new PercentProperty("name", 0.5, showName: false).ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FlagProperty_DescribesPresentStatesOnly()
     {
         Assert.Equal("myFlag", new FlagProperty("myFlag", true, ifTrue: "myFlag").ToString());
@@ -896,7 +896,7 @@ public class DiagnosticsTests
         Assert.Throws<ArgumentException>(() => new FlagProperty("name", true));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ObjectFlagProperty_DescribesPresenceOrAbsence()
     {
         Action onClick = () => { };
@@ -924,7 +924,7 @@ public class DiagnosticsTests
         Assert.Throws<ArgumentException>(() => new ObjectFlagProperty<Action>("onClick", onClick));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FlagsSummary_ListsPresentKeysInOrder()
     {
         Action onClick = () => { };
@@ -951,7 +951,7 @@ public class DiagnosticsTests
         Assert.False(withIfEmpty.IsFiltered(DiagnosticLevel.Info));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void IterableProperty_FormatsPerStyle()
     {
         Assert.Equal("ints: 1, 2, 3", new IterableProperty<int>("ints", [1, 2, 3]).ToString());
@@ -986,7 +986,7 @@ public class DiagnosticsTests
                 .ToStringDeep()));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void EnumProperty_UsesBareLowerCamelName()
     {
         Assert.Equal("name: hello", new EnumProperty<ExampleEnum>("name", ExampleEnum.Hello).ToString());
@@ -1002,7 +1002,7 @@ public class DiagnosticsTests
             new EnumProperty<ExampleEnum>("name", ExampleEnum.Hello, level: DiagnosticLevel.Hidden).Level);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToJsonMap_EmitsOptionalKeysOnlyWhenNeeded()
     {
         DiagnosticsSerializationDelegate serializer = DiagnosticsSerializationDelegate.Create();
@@ -1049,7 +1049,7 @@ public class DiagnosticsTests
             new DoubleProperty("double", double.PositiveInfinity).ToJsonMap(serializer)["value"]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SerializationDelegate_ControlsDepthPropertiesAndTruncation()
     {
         DiagnosticsNode node = CreatePropertyTree().ToDiagnosticsNode();
@@ -1085,7 +1085,7 @@ public class DiagnosticsTests
         Assert.Equal(true, truncatedChildren[^1]["truncated"]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DiagnosticsBlock_CarriesItsOwnPropertiesAndChildren()
     {
         var block = new DiagnosticsBlock(
@@ -1105,13 +1105,13 @@ public class DiagnosticsTests
         Assert.False(unnamed.ShowName);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DiagnosticsNode_RejectsNamesEndingWithColon()
     {
         Assert.Throws<ArgumentException>(() => new StringProperty("name:", "value"));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Widget_IsDiagnosticableTreeWithDenseStyleAndKeyedShortName()
     {
         var widget = new SizedBox(width: 10, height: 10);

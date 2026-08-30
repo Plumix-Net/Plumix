@@ -34,6 +34,13 @@ public sealed class IconThemeDataTests
         Assert.Equal(data.GetHashCode(), copy.GetHashCode());
         Assert.NotEmpty(data.ToString());
 
+        if (!Constants.KDebugMode)
+        {
+            // `debugFillProperties` is an assert-only body in Dart, so it fills nothing outside a
+            // debug build; the equality contract above holds in every build.
+            return;
+        }
+
         var diagnostics = new DiagnosticPropertiesBuilder();
         data.DebugFillProperties(diagnostics);
         Assert.Equal(

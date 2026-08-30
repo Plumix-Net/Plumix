@@ -351,6 +351,13 @@ public sealed class MaterialBarControlsTests
         Assert.Equal(ButtonBarLayoutBehavior.Constrained, midpoint.LayoutBehavior);
         Assert.Equal(VerticalDirection.Up, midpoint.OverflowDirection);
 
+        if (!Constants.KDebugMode)
+        {
+            // `debugFillProperties` is an assert-only body in Dart, so it fills nothing outside a
+            // debug build; the defaults/copy/lerp contract above holds in every build.
+            return;
+        }
+
         var defaultDiagnostics = new DiagnosticPropertiesBuilder();
         empty.DebugFillProperties(defaultDiagnostics);
         Assert.DoesNotContain(

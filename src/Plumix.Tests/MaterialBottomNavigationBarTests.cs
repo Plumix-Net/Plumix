@@ -989,7 +989,7 @@ public sealed class MaterialBottomNavigationBarTests
         Assert.Same(a, BottomNavigationBarThemeData.Lerp(a, a, 0.5));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void BottomNavigationBarThemeData_DebugFillProperties_ListsEveryField()
     {
         var properties = new DiagnosticPropertiesBuilder();

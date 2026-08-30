@@ -86,7 +86,7 @@ public sealed class SemanticsDirtyPipelineTests
         Assert.Equal("changed", resent.Node.Label);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void UpdateWith_MarksTheNodeDirtyWhenTheRoleChanges()
     {
         var node = new SemanticsNode();
@@ -97,7 +97,7 @@ public sealed class SemanticsDirtyPipelineTests
         Assert.True(node.DebugIsDirty);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void UpdateWith_DoesNotDirtyTheNodeWhenNothingCompareableChanged()
     {
         var owner = new SemanticsOwner();
@@ -118,7 +118,7 @@ public sealed class SemanticsDirtyPipelineTests
         Assert.False(root.DebugIsDirty);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void UpdateWith_MarksTheNodeDirtyWhenTheCustomActionMapChanges()
     {
         var owner = new SemanticsOwner();
@@ -184,7 +184,13 @@ public sealed class SemanticsDirtyPipelineTests
 
         SemanticsNodeUpdate resent = Assert.Single(updates[1].Nodes);
         Assert.Equal(0, resent.Id);
-        Assert.False(child.DebugIsDirty);
+
+        // Dart's `SemanticsNode.debugIsDirty` reads `_dirty` from inside an assert, so it is null
+        // outside a debug build; the resend contract above holds in every build.
+        if (Constants.KDebugMode)
+        {
+            Assert.False(child.DebugIsDirty);
+        }
     }
 
     [Fact]
@@ -262,7 +268,7 @@ public sealed class SemanticsDirtyPipelineTests
         Assert.InRange(second.Id, 0, (1 << 16) - 2);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SendSemanticsUpdate_ThrowsWhenAnInvisibleNodeReachesTheTree()
     {
         var owner = new SemanticsOwner();

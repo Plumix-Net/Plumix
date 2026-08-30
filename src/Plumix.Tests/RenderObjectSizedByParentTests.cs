@@ -72,7 +72,7 @@ public sealed class RenderObjectSizedByParentTests
         Assert.False(box.DebugDoingThisLayout);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderBox_SizedByParent_RejectsASizeWrittenFromPerformLayout()
     {
         using var renderErrors = RenderErrorRethrowScope.Enter();
@@ -93,6 +93,24 @@ public sealed class RenderObjectSizedByParentTests
     }
 
     [Fact]
+    public void BuildModeGates_TheSizeSetterContractIsAssertedOnlyInADebugBuild()
+    {
+        var box = new ProbeRenderBox(sizedByParent: false);
+
+        // Dart wraps the whole size-setter diagnosis in `assert(() {...}())`, so outside a debug
+        // build the setter takes any value silently. The `[DebugOnlyFact]` tests below cover the
+        // debug half; this covers the elided half in every configuration.
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<AssertionError>(() => box.SetSizeOutsideLayout(new Size(1, 1)));
+            return;
+        }
+
+        box.SetSizeOutsideLayout(new Size(1, 1));
+        Assert.Equal(new Size(1, 1), box.Size);
+    }
+
+    [DebugOnlyFact]
     public void RenderBox_RejectsASizeWrittenOutsideLayout()
     {
         var box = new ProbeRenderBox(sizedByParent: false);
@@ -110,7 +128,7 @@ public sealed class RenderObjectSizedByParentTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderBox_WithoutPerformLayoutAndWithoutSizedByParent_ReportsTheMissingOverride()
     {
         using var renderErrors = RenderErrorRethrowScope.Enter();
@@ -179,7 +197,7 @@ public sealed class RenderObjectSizedByParentTests
         Assert.True(box.NeedsLayout);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderSliver_RejectsAGeometryWrittenOutsideLayout()
     {
         var sliver = new ProbeRenderSliver();
@@ -307,7 +325,7 @@ public sealed class RenderObjectSizedByParentTests
         Assert.Equal(new Size(100, 80), viewport.Size);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderViewport_RejectsUnboundedSpaceOnEitherAxis()
     {
         var vertical = new RenderViewport(offset: ViewportOffset.Zero());

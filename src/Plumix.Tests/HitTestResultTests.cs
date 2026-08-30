@@ -118,7 +118,7 @@ public sealed class HitTestResultTests
         Assert.Equal(m3.Multiplied(m2), CurrentTransform(result));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PushTransform_RejectsAPerspectiveMatrix()
     {
         var result = new TestHitTestResult();

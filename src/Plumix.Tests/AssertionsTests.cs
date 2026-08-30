@@ -59,7 +59,7 @@ public class AssertionsTests
         Assert.Equal(DescriptionMessage, errorDescription.ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DumpErrorToConsoleRendersLibraryContextExceptionAndInformation()
     {
         List<string> log = CaptureOutput(() =>
@@ -88,7 +88,7 @@ public class AssertionsTests
         Assert.Contains("\nExample information\n", joined, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FlutterErrorDetailsToStringRendersTheErrorBlock()
     {
         Assert.Equal(
@@ -150,7 +150,7 @@ public class AssertionsTests
         Assert.Equal("Exception caught", new FlutterErrorDetails("MESSAGE", library: null).ToStringShort());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FlutterErrorMessageConstructorSplitsLines()
     {
         var error = new FlutterError(
@@ -213,7 +213,7 @@ public class AssertionsTests
             error.ToStringDeep());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void EmptyFlutterErrorIsReportedAsAnAssertion()
     {
         AssertionError error = Assert.Throws<AssertionError>(() => new FlutterError([]));
@@ -226,7 +226,7 @@ public class AssertionsTests
             new FlutterErrorDetails(error).ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FlutterErrorWithoutASummaryIsReportedAsMalformed()
     {
         AssertionError error = Assert.Throws<AssertionError>(
@@ -249,7 +249,7 @@ public class AssertionsTests
             new FlutterErrorDetails(error).ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FlutterErrorWithMultipleSummariesIsReportedAsMalformed()
     {
         AssertionError error = Assert.Throws<AssertionError>(() => new FlutterError([
@@ -283,7 +283,7 @@ public class AssertionsTests
             new FlutterErrorDetails(error).ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void FlutterErrorWhoseSummaryIsNotFirstIsReportedAsMissingASummary()
     {
         AssertionError error = Assert.Throws<AssertionError>(() => new FlutterError([
@@ -309,7 +309,7 @@ public class AssertionsTests
             new FlutterErrorDetails(error).ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void UserThrownExceptionsHaveErrorSummaryProperties()
     {
         DiagnosticsNode node = new FlutterErrorDetails("User thrown string").ToDiagnosticsNode();
@@ -321,7 +321,7 @@ public class AssertionsTests
         Assert.Equal<object>(["Value cannot be null. (Parameter 'myArgument')"], summary.MessageParts);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void IdentifiesUserFault()
     {
         var details = new FlutterErrorDetails(new AssertionError("Test assertion"), stack: UserFaultStack);
@@ -337,7 +337,7 @@ public class AssertionsTests
         Assert.Equal(UserFaultStack, trace.Value);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void IdentifiesOurFault()
     {
         var details = new FlutterErrorDetails(new AssertionError("Test assertion"), stack: OurFaultStack);
@@ -475,7 +475,7 @@ public class AssertionsTests
         Assert.Contains(filtered, line => line.Contains("dotnet:System/Threading/Tasks", StringComparison.Ordinal));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DumpErrorToConsoleAbbreviatesRepeatErrors()
     {
         FlutterError.ResetErrorCount();
@@ -522,7 +522,7 @@ public class AssertionsTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void EmptyStackRendersWithoutATrailingColon()
     {
         FlutterError.ResetErrorCount();
@@ -584,7 +584,7 @@ public class AssertionsTests
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void PropertiesTransformersRewriteTheReportedProperties()
     {
         IEnumerable<DiagnosticsNode> Transformer(IEnumerable<DiagnosticsNode> properties)
@@ -626,7 +626,7 @@ public class AssertionsTests
             new FlutterErrorDetails(new InvalidOperationException("boom")).ExceptionAsString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void NumericExceptionsGetTheNumberPhrasing()
     {
         Assert.Equal(
@@ -636,7 +636,7 @@ public class AssertionsTests
             new FlutterErrorDetails(42).ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void NonExceptionObjectsAreDescribedAsObjects()
     {
         Assert.Contains(
@@ -645,7 +645,7 @@ public class AssertionsTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SummaryUnwrapsAFlutterErrorCarriedByAnAssertion()
     {
         var error = new FlutterError("Summary line.\nDescription line.");
@@ -656,7 +656,7 @@ public class AssertionsTests
         Assert.Equal("plain", new FlutterErrorDetails("plain").Summary.ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DiagnosticsStackTraceSingleFrameShowsOneFrame()
     {
         DiagnosticsStackTrace trace = DiagnosticsStackTrace.SingleFrame("Origin", "   at App.Main()");

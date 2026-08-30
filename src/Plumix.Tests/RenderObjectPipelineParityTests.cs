@@ -168,7 +168,7 @@ public class RenderObjectPipelineParityTests
         Assert.Equal(new Point(20, 0), second.LocalToGlobal(default, first));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void BoxConstraints_DebugAssertIsValid_NamesTheOffendingRule()
     {
         FlutterError nonNormalized = Assert.Throws<FlutterError>(

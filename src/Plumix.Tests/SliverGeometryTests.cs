@@ -77,7 +77,7 @@ public sealed class SliverGeometryTests
         Assert.Null(copy.ScrollOffsetCorrection);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Diagnostics_MatchFlutterStrings()
     {
         Assert.Equal(
@@ -97,7 +97,7 @@ public sealed class SliverGeometryTests
             new SliverGeometry(ScrollExtent: 100.0, LayoutExtent: 20.0).ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugAssertIsValid_RejectsFlutterInvalidGeometries()
     {
         Assert.True(new SliverGeometry().DebugAssertIsValid());

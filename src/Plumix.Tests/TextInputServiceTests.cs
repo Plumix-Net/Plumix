@@ -903,7 +903,7 @@ public sealed class TextInputServiceTests : IDisposable
                 TextRange.Empty).Apply(new TextEditingValue()));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextEditingDelta_DebugFillPropertiesMatchDart()
     {
         var insertion = new TextEditingDeltaInsertion(

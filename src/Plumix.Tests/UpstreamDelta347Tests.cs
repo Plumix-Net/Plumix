@@ -280,11 +280,16 @@ public sealed class UpstreamDelta347Tests : IDisposable
         Assert.Equal(1.0, paragraph.DevicePixelRatio);
 
         paragraph.DevicePixelRatio = 3.0;
-        var properties = new DiagnosticPropertiesBuilder();
-        paragraph.DebugFillProperties(properties);
-        Assert.Equal(
-            3.0,
-            Assert.Single(properties.Properties, p => p.Name == "devicePixelRatio").Value);
+        if (Constants.KDebugMode)
+        {
+            // `debugFillProperties` is an assert-only body in Dart, so it fills nothing outside a
+            // debug build; the ambient-value plumbing below holds in every build.
+            var properties = new DiagnosticPropertiesBuilder();
+            paragraph.DebugFillProperties(properties);
+            Assert.Equal(
+                3.0,
+                Assert.Single(properties.Properties, p => p.Name == "devicePixelRatio").Value);
+        }
 
         BuildContext context = default;
         var owner = new BuildOwner();

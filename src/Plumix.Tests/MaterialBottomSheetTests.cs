@@ -60,25 +60,30 @@ public sealed class MaterialBottomSheetTests : IDisposable
         Assert.Same(data, BottomSheetThemeData.Lerp(data, data, 0.5));
         Assert.Null(BottomSheetThemeData.Lerp(null, null, 0.5));
 
-        var diagnostics = new DiagnosticPropertiesBuilder();
-        data.DebugFillProperties(diagnostics);
-        Assert.Equal(
-            [
-                "backgroundColor",
-                "surfaceTintColor",
-                "elevation",
-                "modalBackgroundColor",
-                "shadowColor",
-                "modalBarrierColor",
-                "modalElevation",
-                "shape",
-                "showDragHandle",
-                "dragHandleColor",
-                "dragHandleSize",
-                "clipBehavior",
-                "constraints",
-            ],
-            diagnostics.Properties.Select(property => property.Name));
+        // `debugFillProperties` is an assert-only body in Dart, so it fills nothing outside a debug
+        // build; everything else in this test holds in every build.
+        if (Constants.KDebugMode)
+        {
+            var diagnostics = new DiagnosticPropertiesBuilder();
+            data.DebugFillProperties(diagnostics);
+            Assert.Equal(
+                [
+                    "backgroundColor",
+                    "surfaceTintColor",
+                    "elevation",
+                    "modalBackgroundColor",
+                    "shadowColor",
+                    "modalBarrierColor",
+                    "modalElevation",
+                    "shape",
+                    "showDragHandle",
+                    "dragHandleColor",
+                    "dragHandleSize",
+                    "clipBehavior",
+                    "constraints",
+                ],
+                diagnostics.Properties.Select(property => property.Name));
+        }
 
         var stateful = WidgetStateColor.ResolveWith(
             Colors.Blue,

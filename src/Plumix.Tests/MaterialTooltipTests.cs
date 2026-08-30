@@ -195,24 +195,30 @@ public sealed class MaterialTooltipTests
                 received = semanticsEvent as TooltipSemanticEvent;
             };
             var tooltip = new Tooltip(message: "Semantic event", child: new SizedBox(width: 24, height: 24));
-            var diagnostics = new DiagnosticPropertiesBuilder();
-            tooltip.DebugFillProperties(diagnostics);
-            DiagnosticsNode diagnostic = Assert.Single(
-                diagnostics.Properties,
-                node => !node.IsFiltered(DiagnosticLevel.Info));
-            Assert.Equal("message", diagnostic.Name);
-            Assert.False(diagnostic.ShowName);
-            Assert.Equal("\"Semantic event\"", diagnostic.ToDescription());
-            Assert.Equal("\"Semantic event\"", diagnostic.ToString());
 
-            var richDiagnostics = new DiagnosticPropertiesBuilder();
-            new Tooltip(richMessage: new TextSpan(text: "Rich diagnostic"))
-                .DebugFillProperties(richDiagnostics);
-            DiagnosticsNode richDiagnostic = Assert.Single(
-                richDiagnostics.Properties,
-                node => !node.IsFiltered(DiagnosticLevel.Info));
-            Assert.Equal("richMessage", richDiagnostic.Name);
-            Assert.Equal("\"Rich diagnostic\"", richDiagnostic.ToDescription());
+            // `debugFillProperties` is an assert-only body in Dart, so it fills nothing outside a
+            // debug build; the semantics event below is emitted in every build.
+            if (Constants.KDebugMode)
+            {
+                var diagnostics = new DiagnosticPropertiesBuilder();
+                tooltip.DebugFillProperties(diagnostics);
+                DiagnosticsNode diagnostic = Assert.Single(
+                    diagnostics.Properties,
+                    node => !node.IsFiltered(DiagnosticLevel.Info));
+                Assert.Equal("message", diagnostic.Name);
+                Assert.False(diagnostic.ShowName);
+                Assert.Equal("\"Semantic event\"", diagnostic.ToDescription());
+                Assert.Equal("\"Semantic event\"", diagnostic.ToString());
+
+                var richDiagnostics = new DiagnosticPropertiesBuilder();
+                new Tooltip(richMessage: new TextSpan(text: "Rich diagnostic"))
+                    .DebugFillProperties(richDiagnostics);
+                DiagnosticsNode richDiagnostic = Assert.Single(
+                    richDiagnostics.Properties,
+                    node => !node.IsFiltered(DiagnosticLevel.Info));
+                Assert.Equal("richMessage", richDiagnostic.Name);
+                Assert.Equal("\"Rich diagnostic\"", richDiagnostic.ToDescription());
+            }
 
             using var harness = new WidgetRenderHarness(new Theme(ThemeData.Light, tooltip));
             harness.Pump(new Size(160, 80));

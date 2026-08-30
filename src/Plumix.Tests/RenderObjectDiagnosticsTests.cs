@@ -18,7 +18,7 @@ public sealed class RenderObjectDiagnosticsTests
 {
     // ---------- RenderObject header ----------
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringShort_UnattachedBox_ReportsNeedsLayoutPaintAndDetached()
     {
         var box = new RenderConstrainedBox(new BoxConstraints(MaxWidth: 10, MaxHeight: 10));
@@ -36,7 +36,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Equal(box.ToStringShort(), box.ToString());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringShort_LaidOutChild_ReportsRelayoutBoundaryDepth()
     {
         RenderBox child = new SizedBox(new Size(10, 10));
@@ -50,7 +50,7 @@ public sealed class RenderObjectDiagnosticsTests
 
     // ---------- RenderObject.debugFillProperties ----------
 
-    [Fact]
+    [DebugOnlyFact]
     public void ToStringDeep_UnattachedBox_ReportsMissingParentDataConstraintsAndSize()
     {
         var box = new RenderConstraintsTransformBox(
@@ -71,7 +71,7 @@ public sealed class RenderObjectDiagnosticsTests
             Normalize(box.ToStringDeep(minLevel: DiagnosticLevel.Info)));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugFillProperties_LaidOutChild_ReportsCanUseSizeTooltip()
     {
         RenderBox child = new SizedBox(new Size(10, 10));
@@ -81,7 +81,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Contains("(can use size)", child.ToStringDeep(minLevel: DiagnosticLevel.Info), StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugFillProperties_Creator_IsHiddenAtInfoLevelAndShownAtDebugLevel()
     {
         var box = new RenderConstrainedBox(new BoxConstraints(MaxWidth: 10, MaxHeight: 10))
@@ -125,7 +125,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Equal(["child 1", "child 2"], children.Select(node => node.Name));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugDescribeChildren_Offstage_UsesTheOffstageStyleForTheChild()
     {
         var offstage = new RenderOffstage(offstage: true) { Child = new SizedBox(new Size(10, 10)) };
@@ -137,7 +137,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Equal(DiagnosticsTreeStyle.Sparse, Assert.Single(offstage.DebugDescribeChildren()).Style);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugDescribeChildren_IndexedStack_MarksEveryChildButTheSelectedOneOffstage()
     {
         var stack = new RenderIndexedStack(index: 1);
@@ -154,7 +154,7 @@ public sealed class RenderObjectDiagnosticsTests
 
     // ---------- Per-render-object properties ----------
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderFlex_ToStringShort_AppendsOverflowingWhenTheChildrenOverflow()
     {
         var flex = new RenderFlex(
@@ -165,7 +165,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.EndsWith(" OVERFLOWING", flex.ToStringShort(), StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderFlex_DebugFillProperties_ReportsTheNineFlutterProperties()
     {
         var flex = new RenderFlex(
@@ -190,7 +190,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Contains("spacing: 8.0", dump, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderLimitedBox_DebugFillProperties_HidesTheInfiniteDefaults()
     {
         string unlimited = new RenderLimitedBox().ToStringDeep(minLevel: DiagnosticLevel.Info);
@@ -203,7 +203,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Contains("maxHeight: 200.0", limited, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderConstrainedOverflowBox_DebugFillProperties_UsesTheIfNullDescriptions()
     {
         string dump = new RenderConstrainedOverflowBox().ToStringDeep(minLevel: DiagnosticLevel.Info);
@@ -215,7 +215,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Contains("fit: max", dump, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderAlign_DebugFillProperties_DescribesNullFactorsAsExpand()
     {
         string dump = new RenderAlign().ToStringDeep(minLevel: DiagnosticLevel.Info);
@@ -224,7 +224,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Contains("heightFactor: expand", dump, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderFractionallySizedBox_DebugFillProperties_DescribesNullFactorsAsPassThrough()
     {
         string dump = new RenderFractionallySizedBox().ToStringDeep(minLevel: DiagnosticLevel.Info);
@@ -233,7 +233,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Contains("heightFactor: pass-through", dump, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderOpacity_DebugFillProperties_FlagsAlwaysIncludeSemanticsOnlyWhenSet()
     {
         Assert.DoesNotContain(
@@ -246,7 +246,7 @@ public sealed class RenderObjectDiagnosticsTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderIgnorePointer_DebugFillProperties_DescribesAnImplicitIgnoringSemantics()
     {
         string dump = new RenderIgnorePointer(ignoring: true, ignoringSemantics: true)
@@ -256,7 +256,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Contains("ignoringSemantics: implicitly True", dump, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderPointerListener_DebugFillProperties_SummarizesTheAttachedListeners()
     {
         Assert.Contains(
@@ -272,7 +272,7 @@ public sealed class RenderObjectDiagnosticsTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderSemanticsGestureHandler_DebugFillProperties_ListsTheHandledGestures()
     {
         Assert.Contains(
@@ -288,7 +288,7 @@ public sealed class RenderObjectDiagnosticsTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderStack_DebugFillProperties_HidesTheHardEdgeClipDefault()
     {
         Assert.DoesNotContain(
@@ -317,7 +317,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Equal("is null", children[1].ToDescription());
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderTable_DebugFillProperties_ReportsTheTableSize()
     {
         Assert.Contains(
@@ -326,7 +326,7 @@ public sealed class RenderObjectDiagnosticsTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderSliver_DebugFillProperties_ReportsTheSliverGeometry()
     {
         var sliver = new RenderSliverToBoxAdapter { Child = new SizedBox(new Size(10, 10)) };
@@ -337,7 +337,7 @@ public sealed class RenderObjectDiagnosticsTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SliverGeometry_DebugFillProperties_ReportsHiddenWhenNothingIsPainted()
     {
         var node = new SliverGeometry(ScrollExtent: 100, MaxPaintExtent: 100).ToDiagnosticsNode();
@@ -374,7 +374,7 @@ public sealed class RenderObjectDiagnosticsTests
 
     // ---------- Layer tree ----------
 
-    [Fact]
+    [DebugOnlyFact]
     public void ContainerLayer_DebugDescribeChildren_NumbersTheChildrenFromOne()
     {
         var root = new ContainerLayer();
@@ -396,7 +396,7 @@ public sealed class RenderObjectDiagnosticsTests
 
     // ---------- PipelineOwner ----------
 
-    [Fact]
+    [DebugOnlyFact]
     public void PipelineOwner_DebugDumpRenderTree_DumpsFromTheRoot()
     {
         var root = new RenderView { Child = new SizedBox(new Size(10, 10)) };
@@ -442,7 +442,7 @@ public sealed class RenderObjectDiagnosticsTests
             property.ValueToString(TextTreeConfigurations.SingleLine));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void BoxDecoration_DebugFillProperties_UsesTheWhitespaceStyleAndEmptyBodyDescription()
     {
         string dump = new RenderDecoratedBox(new BoxDecoration())
@@ -452,7 +452,7 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Contains("<no decorations specified>", dump, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void TextSpan_DebugDescribeChildren_ReportsTheChildSpans()
     {
         var span = new TextSpan(

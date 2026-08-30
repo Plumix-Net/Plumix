@@ -198,7 +198,7 @@ public sealed class MaterialThemeDataTests
 
     // ---- Diagnostics ------------------------------------------------------------------
 
-    [Fact]
+    [DebugOnlyFact]
     public void ThemeData_DiagnosticsIncludeAllPropertiesInDartOrder()
     {
         string[] expectedNames =
@@ -299,7 +299,7 @@ public sealed class MaterialThemeDataTests
         Assert.IsType<DiagnosticsProperty<ColorScheme>>(diagnostics.Properties[14]);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ThemeData_DiagnosticsUseFallbackDefaultsAndDebugLevel()
     {
         var fallbackDiagnostics = new DiagnosticPropertiesBuilder();

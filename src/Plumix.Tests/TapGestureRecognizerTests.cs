@@ -190,7 +190,7 @@ public sealed class TapGestureRecognizerTests : IDisposable
         }
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Details_DebugFillPropertiesMatchDart()
     {
         var down = new TapDownDetails(kind: PointerDeviceKind.Unknown);

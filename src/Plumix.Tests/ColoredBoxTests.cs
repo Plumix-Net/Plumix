@@ -28,7 +28,7 @@ public sealed class ColoredBoxTests
         Assert.False(renderObject.IsAntiAlias);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Widget_DebugFillProperties_ReportsColorThenAntiAlias()
     {
         var widget = new ColoredBox(Colors.CornflowerBlue, isAntiAlias: false);

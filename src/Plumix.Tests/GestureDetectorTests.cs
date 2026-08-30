@@ -143,7 +143,7 @@ public sealed class GestureDetectorTests
 
     // ---------------------------------------------------------------- constructor asserts
 
-    [Fact]
+    [DebugOnlyFact]
     public void Constructor_RejectsRedundantPanAndScaleCallbacks()
     {
         FlutterError error = Assert.Throws<FlutterError>(() => new GestureDetector(
@@ -157,7 +157,7 @@ public sealed class GestureDetectorTests
             StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Constructor_RejectsPanOrScaleAlongsideBothDragAxes()
     {
         FlutterError scaleError = Assert.Throws<FlutterError>(() => new GestureDetector(
@@ -450,7 +450,7 @@ public sealed class GestureDetectorTests
         Assert.Null(raw.Semantics);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugFillProperties_ReportsTheDragStartBehaviorAsStartBehavior()
     {
         var properties = new DiagnosticPropertiesBuilder();
@@ -603,7 +603,7 @@ public sealed class GestureDetectorTests
         });
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void ReplaceGestureRecognizers_ThrowsOutsideTheLayoutPhase()
     {
         var harness = new ScrollSemanticsHarness(new RawGestureDetector(
@@ -689,7 +689,7 @@ public sealed class GestureDetectorTests
         FindDetectorState(excluded.RootElement).ReplaceSemanticsActions(SemanticsActions.Tap);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Dispose_DisposesEveryRecognizerAndMarksTheStateDisposed()
     {
         var harness = new ScrollSemanticsHarness(new RawGestureDetector(
@@ -712,7 +712,7 @@ public sealed class GestureDetectorTests
         Assert.Contains(properties.Properties, property => property.ToString() == "DISPOSED");
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugFillProperties_ReportsGesturesSemanticsAndBehavior()
     {
         var bare = new ScrollSemanticsHarness(new RawGestureDetector());
@@ -1076,7 +1076,7 @@ public sealed class GestureDetectorTests
         Assert.True(node.Actions.HasFlag(SemanticsActions.LongPress));
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SemanticsGestureDelegate_ToStringNamesItsRuntimeType()
     {
         Assert.Equal("EmptySemanticsGestureDelegate()", new EmptySemanticsGestureDelegate().ToString());

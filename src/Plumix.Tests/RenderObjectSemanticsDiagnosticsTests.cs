@@ -10,7 +10,7 @@ namespace Plumix.Tests;
 
 public sealed class RenderObjectSemanticsDiagnosticsTests
 {
-    [Fact]
+    [DebugOnlyFact]
     public void DebugDumpRenderObjectSemanticsTree_DescribesOwnersNodesAndBoundaries()
     {
         var leaf = new RenderSemanticsAnnotations(
@@ -39,7 +39,7 @@ public sealed class RenderObjectSemanticsDiagnosticsTests
         Assert.DoesNotContain("Sibling group", dump, StringComparison.Ordinal);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void DebugDumpRenderObjectSemanticsTree_ReportsABlockingSibling()
     {
         // The wrapper is annotated but not a boundary, so `isBlockingPreviousSibling` recurses into

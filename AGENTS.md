@@ -137,8 +137,8 @@ Run from repository root:
 dotnet restore src/Plumix.sln
 dotnet build src/Plumix.Ci.slnf -c Debug          # what CI builds; includes the F# DSL projects
 dotnet test src/Plumix.Tests/Plumix.Tests.csproj  # ~25 s for 4791 tests — always run it
-dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Profile  # profile-mode build-mode gates
-dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Release --filter BuildModeGates  # release ones
+dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Profile  # green too; assert-only tests skip themselves
+dotnet test src/Plumix.Tests/Plumix.Tests.csproj -c Release  # ditto — see src/Plumix.Tests/DebugOnlyFactAttribute.cs
 scripts/check_line_length.sh                      # 120-char rule on new/edited lines
 python3 scripts/generate_port_map.py              # regenerate docs/ai/PORT_MAP.md
 python3 scripts/generate_keyboard_keys.py         # regenerate src/Plumix/UI/KeyboardKey.g.cs

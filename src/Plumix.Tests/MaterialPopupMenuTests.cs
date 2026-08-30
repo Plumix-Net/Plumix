@@ -378,10 +378,13 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
-        PumpAnimation();
-        harness.Pump(new Size(500, 360));
+        // `Route` completes its pop future with `RunContinuationsAsynchronously`, so
+        // `_PopupMenuButtonState.HandleResult` — and the `SetState` that clears the expanded flag —
+        // runs on a pool thread. Await it before pumping, or the `SetState` races the build scope.
         await selectedCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal("three", selected);
+        PumpAnimation();
+        harness.Pump(new Size(500, 360));
 
         var reopenSemantics = harness.PumpAndGetSemantics(new Size(500, 360));
         var collapsedAnchor = FindSemantics(
@@ -397,10 +400,10 @@ public sealed class MaterialPopupMenuTests : IDisposable
         var barrier = FindSemantics(menuSemantics, node => HasLabelPart(node, "Dismiss menu"));
         Assert.NotNull(barrier);
         Assert.True(barrier!.PerformAction(SemanticsActions.Tap));
-        PumpAnimation();
-        harness.Pump(new Size(500, 360));
         await canceledCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Equal(1, canceled);
+        PumpAnimation();
+        harness.Pump(new Size(500, 360));
     }
 
     [Fact]

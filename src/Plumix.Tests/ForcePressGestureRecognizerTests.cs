@@ -417,7 +417,7 @@ public sealed class ForcePressGestureRecognizerTests : IDisposable
         Assert.Equal(new Point(1.0, 2.0), relocated.LocalPosition);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Details_DebugFillPropertiesMatchDartAndUseIdentityEquality()
     {
         var details = new ForcePressDetails(globalPosition: default, pressure: 1.0);

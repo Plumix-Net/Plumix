@@ -30,7 +30,7 @@ public sealed class RenderingParityTests
         Assert.Equal(2, box.LayoutCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Layout_Throws_ForNonNormalizedConstraints()
     {
         var box = new CountingRenderBox();
@@ -215,7 +215,7 @@ public sealed class RenderingParityTests
         Assert.Equal(1, parent.LayoutCount);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderFlex_OverflowPaint_AddsDebugIndicatorCommands()
     {
         int commandsWithoutOverflow = MeasureFlexPictureCommandCount(viewportHeight: 260, out var nonOverflowFlex);
