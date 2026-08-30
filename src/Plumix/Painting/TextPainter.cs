@@ -193,7 +193,7 @@ public sealed class TextPainter : IDisposable
 
         if (_layout is not null)
         {
-            context.DrawTextLayout(_layout, offset);
+            context.Canvas.DrawTextLayout(_layout, offset);
         }
     }
 

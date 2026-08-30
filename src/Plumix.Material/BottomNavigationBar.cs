@@ -1118,9 +1118,10 @@ internal sealed class BottomNavigationBarRadialPainter : CustomPainter
             var center = new Point(leftFraction * size.Width, size.Height / 2.0);
             double radius = new DoubleTween(begin: 0.0, end: MaxRadius(center, size))
                 .Evaluate(circle.Animation.Value);
-            context.PushClipRect(
-                rect,
-                clipped => clipped.DrawCircle(brush, null, center, radius));
+            context.Canvas.Save();
+            context.Canvas.ClipRect(rect, doAntiAlias: false);
+            context.Canvas.DrawCircle(brush, null, center, radius);
+            context.Canvas.Restore();
         }
     }
 }

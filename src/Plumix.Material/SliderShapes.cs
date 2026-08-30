@@ -251,7 +251,7 @@ public sealed class RoundSliderTickMarkShape : SliderTickMarkShape
         Color color = active
             ? sliderTheme.ActiveTickMarkColor ?? Colors.Transparent
             : sliderTheme.InactiveTickMarkColor ?? Colors.Transparent;
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             new SolidColorBrush(color),
             null,
             center,
@@ -302,7 +302,7 @@ public sealed class RoundSliderThumbShape : SliderComponentShape
         Color color = enableAnimation.Value >= 0.5
             ? sliderTheme.ThumbColor ?? Colors.Transparent
             : sliderTheme.DisabledThumbColor ?? Colors.Transparent;
-        context.DrawCircle(new SolidColorBrush(color), null, center, size.Width / 2.0);
+        context.Canvas.DrawCircle(new SolidColorBrush(color), null, center, size.Width / 2.0);
     }
 }
 
@@ -363,7 +363,7 @@ public sealed class RoundSliderOverlayShape : SliderComponentShape
     {
         Color color = SliderShapePaint.ResolveStateColor(sliderTheme.OverlayColor)
                       ?? Colors.Transparent;
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             new SolidColorBrush(color),
             null,
             center,
@@ -604,7 +604,7 @@ public sealed class RoundRangeSliderTickMarkShape : RangeSliderTickMarkShape
         Color color = active
             ? sliderTheme.ActiveTickMarkColor ?? Colors.Transparent
             : sliderTheme.InactiveTickMarkColor ?? Colors.Transparent;
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             new SolidColorBrush(color),
             null,
             center,
@@ -673,7 +673,7 @@ public sealed class RoundRangeSliderThumbShape : RangeSliderThumbShape
         IPen? pen = isOnTop && sliderTheme.OverlappingShapeStrokeColor.HasValue
             ? new Pen(new SolidColorBrush(sliderTheme.OverlappingShapeStrokeColor.Value), 1.0)
             : null;
-        context.DrawCircle(new SolidColorBrush(color), pen, center, radius);
+        context.Canvas.DrawCircle(new SolidColorBrush(color), pen, center, radius);
     }
 }
 
@@ -859,7 +859,7 @@ internal static class SliderShapePaint
     public static void DrawRoundedBar(PaintingContext context, Point center, Size size, Color color)
     {
         double radius = Math.Min(size.Width, size.Height) / 2.0;
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             new SolidColorBrush(color),
             null,
             new Rect(
@@ -885,13 +885,13 @@ internal static class SliderShapePaint
         var rect = new Rect(center.X - (width / 2.0), center.Y - height - 8.0, width, height);
         Color? stroke = overrideStrokeColor ?? theme.ValueIndicatorStrokeColor;
         IPen? pen = stroke.HasValue ? new Pen(new SolidColorBrush(stroke.Value), 1.0) : null;
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             new SolidColorBrush(theme.ValueIndicatorColor ?? Colors.Transparent),
             pen,
             rect,
             radius,
             radius);
-        context.DrawTextLayout(
+        context.Canvas.DrawTextLayout(
             labelLayout,
             new Point(rect.X + ((width - labelLayout.Width) / 2.0), rect.Y + 4.0));
     }
@@ -929,7 +929,7 @@ internal static class SliderShapePaint
         }
 
         double radius = rounded ? height / 2.0 : 0.0;
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             new SolidColorBrush(color),
             null,
             new Rect(start, centerY - (height / 2.0), end - start, height),

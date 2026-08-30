@@ -704,7 +704,7 @@ public sealed class Stepper : StatefulWidget
 
         public override void Paint(PaintingContext context, Size size)
         {
-            context.DrawPolygon(
+            context.Canvas.DrawPolygon(
                 new SolidColorBrush(Color),
                 pen: null,
                 [new Point(0, size.Height), new Point(size.Width, size.Height), new Point(size.Width / 2, 0)]);

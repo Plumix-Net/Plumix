@@ -193,29 +193,26 @@ internal sealed class CupertinoActivityIndicatorPainter : CustomPainter
     {
         int tickCount = AlphaValues.Count;
 
-        context.PushTransform(
-            Matrix4.TranslationValues(size.Width / 2.0, size.Height / 2.0, 0.0),
-            centeredContext =>
-            {
-                int activeTick = (int)Math.Floor(tickCount * Position.Value);
+        context.Canvas.Save();
+        context.Canvas.Translate(size.Width / 2.0, size.Height / 2.0);
+        int activeTick = (int)Math.Floor(tickCount * Position.Value);
 
-                for (int i = 0; i < tickCount * Progress; ++i)
-                {
-                    int t = FloorModulo(i - activeTick, tickCount);
-                    byte alpha = Progress < 1 ? PartiallyRevealedAlpha : AlphaValues[t];
-                    var tickColor = Avalonia.Media.Color.FromArgb(
-                        alpha,
-                        ActiveColor.R,
-                        ActiveColor.G,
-                        ActiveColor.B);
-                    centeredContext.PushTransform(
-                        Matrix4.RotationZ(i * TwoPi / tickCount),
-                        rotatedContext => rotatedContext.DrawRRect(
-                            TickFundamentalShape,
-                            new SolidColorBrush(tickColor),
-                            pen: null));
-                }
-            });
+        for (int i = 0; i < tickCount * Progress; ++i)
+        {
+            int t = FloorModulo(i - activeTick, tickCount);
+            byte alpha = Progress < 1 ? PartiallyRevealedAlpha : AlphaValues[t];
+            var tickColor = Avalonia.Media.Color.FromArgb(
+                alpha,
+                ActiveColor.R,
+                ActiveColor.G,
+                ActiveColor.B);
+            context.Canvas.Save();
+            context.Canvas.Rotate(i * TwoPi / tickCount);
+            context.Canvas.DrawRRect(TickFundamentalShape, new SolidColorBrush(tickColor), pen: null);
+            context.Canvas.Restore();
+        }
+
+        context.Canvas.Restore();
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)
@@ -321,7 +318,7 @@ internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
     public override void Paint(PaintingContext context, Size size)
     {
         // Draw the background of the progress bar.
-        context.DrawRRect(
+        context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(new Rect(size), Radius.Circular(size.Height / 2)),
             BackgroundPaint,
             pen: null);
@@ -329,7 +326,7 @@ internal sealed class CupertinoLinearActivityIndicatorPainter : CustomPainter
         // Draw the progress portion of the bar.
         if (Progress > 0)
         {
-            context.DrawRRect(
+            context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(
                     new Rect(new Size(Math.Clamp(Progress, 0.0, 1.0) * size.Width, size.Height)),
                     Radius.Circular(size.Height / 2)),

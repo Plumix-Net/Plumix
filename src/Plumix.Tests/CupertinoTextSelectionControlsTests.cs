@@ -94,7 +94,9 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
         Assert.Equal(new Rect(5.0, 10.5, 2.0, 10.0), Assert.IsType<RectangleGeometry>(geometry.Geometry2).Rect);
 
         var root = new ContainerLayer();
-        painter.Paint(new PaintingContext(root), new Size(12.0, 20.5));
+        var context = new PaintingContext(root);
+        painter.Paint(context, new Size(12.0, 20.5));
+        context.DebugStopRecordingIfNeeded();
         Assert.False(Assert.IsType<PictureLayer>(Assert.Single(root.Children)).IsEmpty);
         Assert.False(painter.ShouldRepaint(new CupertinoTextSelectionHandlePainter(color)));
         Assert.True(painter.ShouldRepaint(new CupertinoTextSelectionHandlePainter(Colors.Red)));

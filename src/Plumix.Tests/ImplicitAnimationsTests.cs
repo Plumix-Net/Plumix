@@ -958,10 +958,11 @@ public sealed class ImplicitAnimationsTests : IDisposable
         pipeline.FlushPaint();
 
         Assert.Equal(new Size(40, 24), physical.Size);
-        Assert.IsType<PictureLayer>(pipeline.RootLayer.Children[0]);
-        var clip = Assert.IsType<ClipGeometryLayer>(pipeline.RootLayer.Children[1]);
-        Assert.IsType<EllipseGeometry>(clip.Geometry);
-        Assert.IsType<PictureLayer>(Assert.Single(clip.Children));
+
+        // Surface, shadow and the clipped child share one picture: nothing below needs compositing,
+        // so `pushClipRRect` records the clip on the canvas rather than pushing a layer.
+        var picture = Assert.IsType<PictureLayer>(Assert.Single(pipeline.RootLayer.Children));
+        Assert.False(picture.IsEmpty);
     }
 
     [Fact]

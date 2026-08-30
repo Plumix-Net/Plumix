@@ -275,7 +275,7 @@ internal sealed class DemoSliderThumbShape : SliderComponentShape
         Color color = enableAnimation.Value >= 0.5
             ? sliderTheme.ThumbColor ?? Colors.Blue
             : sliderTheme.DisabledThumbColor ?? Colors.Gray;
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             brush: new SolidColorBrush(color),
             pen: null,
             rect: new Rect(center.X - 10.0, center.Y - 10.0, 20.0, 20.0),

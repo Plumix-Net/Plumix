@@ -1101,11 +1101,11 @@ internal sealed class RenderDecoration : RenderBox, ISlottedRenderObjectContaine
             Matrix4 labelPaintTransform = Matrix4.TranslationValues(dx, labelOffset.Y + dy, 0.0);
             labelPaintTransform.ScaleByDouble(scale, scale, 1.0, 1);
             _labelTransform = labelPaintTransform;
-            Matrix4 offsetTransform = Matrix4.TranslationValues(offset.X, offset.Y, 0.0);
-            offsetTransform.Multiply(labelPaintTransform);
             context.PushTransform(
-                offsetTransform,
-                childContext => childContext.PaintChild(_label, default));
+                NeedsCompositing,
+                offset,
+                labelPaintTransform,
+                (childContext, childOffset) => childContext.PaintChild(_label, childOffset));
         }
         else
         {

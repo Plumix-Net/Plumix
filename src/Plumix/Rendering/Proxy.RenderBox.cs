@@ -509,7 +509,7 @@ public class RenderConstrainedBox : RenderProxyBox
         base.DebugPaintSize(context, offset);
         if (Child is null || Child.Size.Width <= 0 || Child.Size.Height <= 0)
         {
-            context.DrawRectangle(
+            context.Canvas.DrawRectangle(
                 new SolidColorBrush(Color.FromUInt32(0x90909090)),
                 null,
                 new Rect(offset, Size));
@@ -761,10 +761,22 @@ public sealed class RenderConstraintsTransformBox : RenderProxyBox
             return;
         }
 
-        context.PushClipRect(
-            new Rect(offset, Size),
-            clippedContext => base.Paint(clippedContext, offset),
-            _clipBehavior);
+        _clipRectLayer.Layer = context.PushClipRect(
+            NeedsCompositing,
+            offset,
+            new Rect(new Point(0, 0), Size),
+            base.Paint,
+            _clipBehavior,
+            _clipRectLayer.Layer);
+    }
+
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
     }
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
@@ -2074,13 +2086,7 @@ public sealed class RenderFittedBox : RenderProxyBox
         }
 
         UpdatePaintData();
-        ctx.PushTransform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0), translatedContext =>
-        {
-            translatedContext.PushTransform(_transform!, transformedContext =>
-            {
-                transformedContext.PaintChild(Child, new Point(0, 0));
-            });
-        });
+        Layer = ctx.PushTransform(NeedsCompositing, offset, _transform!, base.Paint, Layer as TransformLayer);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
@@ -2401,12 +2407,12 @@ public class RenderOpacity : RenderProxyBox
 
     protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
     {
-        return oldLayer as OpacityOffsetLayer ?? new OpacityOffsetLayer();
+        return oldLayer as OpacityLayer ?? new OpacityLayer();
     }
 
     protected override void UpdateCompositedLayer(OffsetLayer layer)
     {
-        if (layer is OpacityOffsetLayer opacityLayer)
+        if (layer is OpacityLayer opacityLayer)
         {
             opacityLayer.Opacity = Opacity;
         }
@@ -2467,7 +2473,7 @@ public sealed class RenderTransform : RenderProxyBox
         {
             if (_origin == value) return;
             _origin = value;
-            MarkNeedsCompositedLayerUpdate();
+            MarkNeedsPaint();
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -2479,7 +2485,7 @@ public sealed class RenderTransform : RenderProxyBox
         {
             if (_alignment == value) return;
             _alignment = value;
-            MarkNeedsCompositedLayerUpdate();
+            MarkNeedsPaint();
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -2496,7 +2502,7 @@ public sealed class RenderTransform : RenderProxyBox
             _filterQuality = value;
             if (Child != null)
             {
-                MarkNeedsCompositedLayerUpdate();
+                MarkNeedsPaint();
             }
         }
     }
@@ -2556,7 +2562,7 @@ public sealed class RenderTransform : RenderProxyBox
             _transform = Matrix4.Copy(value);
             if (Child != null)
             {
-                MarkNeedsCompositedLayerUpdate();
+                MarkNeedsPaint();
                 MarkNeedsSemanticsUpdate();
             }
         }
@@ -2566,7 +2572,7 @@ public sealed class RenderTransform : RenderProxyBox
     public void SetIdentity()
     {
         _transform.SetIdentity();
-        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
     }
 
@@ -2574,7 +2580,7 @@ public sealed class RenderTransform : RenderProxyBox
     public void RotateX(double radians)
     {
         _transform.RotateX(radians);
-        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
     }
 
@@ -2582,7 +2588,7 @@ public sealed class RenderTransform : RenderProxyBox
     public void RotateY(double radians)
     {
         _transform.RotateY(radians);
-        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
     }
 
@@ -2590,7 +2596,7 @@ public sealed class RenderTransform : RenderProxyBox
     public void RotateZ(double radians)
     {
         _transform.RotateZ(radians);
-        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
     }
 
@@ -2598,7 +2604,7 @@ public sealed class RenderTransform : RenderProxyBox
     public void Translate(double x, double y = 0.0, double z = 0.0)
     {
         _transform.TranslateByDouble(x, y, z, 1);
-        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
     }
 
@@ -2606,12 +2612,10 @@ public sealed class RenderTransform : RenderProxyBox
     public void Scale(double x, double? y = null, double? z = null)
     {
         _transform.ScaleByDouble(x, y ?? x, z ?? x, 1);
-        MarkNeedsCompositedLayerUpdate();
+        MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
     }
 
-    public override bool IsRepaintBoundary => Child != null;
-    protected override bool AlwaysNeedsCompositing => Child != null;
 
     /// <inheritdoc />
     /// <remarks>
@@ -2626,12 +2630,42 @@ public sealed class RenderTransform : RenderProxyBox
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (Child is null || !PaintsChild(Child))
+        ArgumentNullException.ThrowIfNull(ctx);
+        if (Child is null)
         {
             return;
         }
 
-        base.Paint(ctx, offset);
+        Matrix4 transform = EffectiveTransform;
+        if (FilterQuality is null)
+        {
+            Point? childOffset = MatrixUtils.GetAsTranslation(transform);
+            if (childOffset is null)
+            {
+                double determinant = transform.Determinant();
+                if (determinant == 0.0 || !double.IsFinite(determinant))
+                {
+                    Layer = null;
+                    return;
+                }
+
+                Layer = ctx.PushTransform(NeedsCompositing, offset, transform, base.Paint, Layer as TransformLayer);
+            }
+            else
+            {
+                base.Paint(ctx, offset + childOffset.Value);
+                Layer = null;
+            }
+
+            return;
+        }
+
+        // Dart wraps the transform in an `ImageFilterLayer` built from `ImageFilter.matrix`, which
+        // Avalonia's drawing backend has no counterpart for; the transform layer carries the sampling
+        // quality instead (docs/ai/DIVERGENCES.md).
+        TransformLayer filteredLayer = Layer as TransformLayer ?? new TransformLayer();
+        filteredLayer.FilterQuality = FilterQuality;
+        Layer = ctx.PushTransform(true, offset, transform, base.Paint, filteredLayer);
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -2645,20 +2679,6 @@ public sealed class RenderTransform : RenderProxyBox
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
         transform.Multiply(EffectiveTransform);
-    }
-
-    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
-    {
-        return oldLayer as TransformOffsetLayer ?? new TransformOffsetLayer();
-    }
-
-    protected override void UpdateCompositedLayer(OffsetLayer layer)
-    {
-        if (layer is TransformOffsetLayer transformLayer)
-        {
-            transformLayer.Transform = EffectiveTransform;
-            transformLayer.FilterQuality = FilterQuality;
-        }
     }
 
     public override bool HitTest(BoxHitTestResult result, Point position) =>
@@ -2923,13 +2943,12 @@ public sealed class RenderRotatedBox : RenderProxyBox
             return;
         }
 
-        ctx.PushTransform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0), translatedContext =>
-        {
-            translatedContext.PushTransform(_paintTransform, transformedContext =>
-            {
-                transformedContext.PaintChild(Child, default);
-            });
-        });
+        Layer = ctx.PushTransform(
+            NeedsCompositing,
+            offset,
+            _paintTransform,
+            (transformedContext, transformedOffset) => transformedContext.PaintChild(Child, transformedOffset),
+            Layer as TransformLayer);
     }
 
     private static Matrix CreateRotationMatrix(double radians)
@@ -2972,29 +2991,29 @@ public sealed class RenderClipRect : RenderCustomClip<Rect>
     protected override Rect DefaultClip => new(new Point(0, 0), Size);
 
     /// <inheritdoc />
-    /// <remarks>
-    /// Plumix paints the clip through the composited-layer protocol rather than Dart's
-    /// <c>pushClipRect</c> (see the <c>PaintingContext</c> row in <c>docs/ai/DIVERGENCES.md</c>), so
-    /// the object is a repaint boundary whenever it actually clips.
-    /// </remarks>
-    public override bool IsRepaintBoundary => Child is not null && ClipBehavior != Clip.None;
-
-    /// <inheritdoc />
-    protected override bool AlwaysNeedsCompositing => Child is not null && ClipBehavior != Clip.None;
-
-    /// <inheritdoc />
-    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
+    public override void Paint(PaintingContext context, Point offset)
     {
-        return oldLayer as ClipRectOffsetLayer ?? new ClipRectOffsetLayer();
-    }
-
-    /// <inheritdoc />
-    protected override void UpdateCompositedLayer(OffsetLayer layer)
-    {
-        if (layer is ClipRectOffsetLayer clipLayer)
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is null)
         {
-            clipLayer.ClipRect = EffectiveClip;
+            Layer = null;
+            return;
         }
+
+        if (ClipBehavior == Clip.None)
+        {
+            context.PaintChild(Child, offset);
+            Layer = null;
+            return;
+        }
+
+        Layer = context.PushClipRect(
+            NeedsCompositing,
+            offset,
+            EffectiveClip,
+            base.Paint,
+            ClipBehavior,
+            Layer as ClipRectLayer);
     }
 
     /// <inheritdoc />
@@ -3015,21 +3034,10 @@ public sealed class RenderClipRect : RenderCustomClip<Rect>
     }
 
     /// <inheritdoc />
-    protected override void MarkNeedsClip()
-    {
-        InvalidateClip();
-        if (Child is not null)
-        {
-            MarkNeedsCompositedLayerUpdate();
-            MarkNeedsSemanticsUpdate();
-        }
-    }
-
-    /// <inheritdoc />
     protected override void DebugPaintClip(PaintingContext context, Point offset)
     {
         Rect clip = EffectiveClip;
-        context.DrawGeometry(
+        context.Canvas.DrawGeometry(
             null,
             RenderCustomClipDebug.DebugPen,
             new RectangleGeometry(new Rect(clip.Position + offset, clip.Size)));
@@ -3095,30 +3103,31 @@ public sealed class RenderClipRRect : RenderCustomClip<RRect>
         _borderRadius.Resolve(_textDirection ?? Plumix.UI.TextDirection.Ltr));
 
     /// <inheritdoc />
-    /// <remarks>
-    /// Plumix paints the clip through the composited-layer protocol rather than Dart's
-    /// <c>pushClipRRect</c> (see the <c>PaintingContext</c> row in <c>docs/ai/DIVERGENCES.md</c>).
-    /// </remarks>
-    public override bool IsRepaintBoundary => Child is not null && ClipBehavior != Clip.None;
-
-    /// <inheritdoc />
-    protected override bool AlwaysNeedsCompositing => Child is not null && ClipBehavior != Clip.None;
-
-    /// <inheritdoc />
-    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
+    public override void Paint(PaintingContext context, Point offset)
     {
-        return oldLayer as ClipRRectOffsetLayer ?? new ClipRRectOffsetLayer();
-    }
-
-    /// <inheritdoc />
-    protected override void UpdateCompositedLayer(OffsetLayer layer)
-    {
-        if (layer is ClipRRectOffsetLayer clipLayer)
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is null)
         {
-            RRect clip = EffectiveClip;
-            clipLayer.ClipRect = clip.Rect;
-            clipLayer.BorderRadius = clip.Radii;
+            Layer = null;
+            return;
         }
+
+        if (ClipBehavior == Clip.None)
+        {
+            context.PaintChild(Child, offset);
+            Layer = null;
+            return;
+        }
+
+        RRect clip = EffectiveClip;
+        Layer = context.PushClipRRect(
+            NeedsCompositing,
+            offset,
+            clip.Rect,
+            clip,
+            base.Paint,
+            ClipBehavior,
+            Layer as ClipRRectLayer);
     }
 
     /// <inheritdoc />
@@ -3137,23 +3146,12 @@ public sealed class RenderClipRRect : RenderCustomClip<RRect>
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
         RRect clip = EffectiveClip;
-        if (!Layer.ContainsRoundedRect(clip.Rect, clip.Radii, position))
+        if (!Rendering.Layer.ContainsRoundedRect(clip.Rect, clip.Radii, position))
         {
             return false;
         }
 
         return base.HitTest(result, position);
-    }
-
-    /// <inheritdoc />
-    protected override void MarkNeedsClip()
-    {
-        InvalidateClip();
-        if (Child is not null)
-        {
-            MarkNeedsCompositedLayerUpdate();
-            MarkNeedsSemanticsUpdate();
-        }
     }
 
     /// <inheritdoc />
@@ -3164,7 +3162,7 @@ public sealed class RenderClipRRect : RenderCustomClip<RRect>
         path.AddRRect(RRect.FromRectAndCorners(
             new Rect(clip.Rect.Position + offset, clip.Rect.Size),
             clip.Radii));
-        context.DrawPath(path, brush: null, pen: RenderCustomClipDebug.DebugPen);
+        context.Canvas.DrawPath(path, brush: null, pen: RenderCustomClipDebug.DebugPen);
         RenderCustomClipDebug.PaintScissors(context, offset, clip.Width);
     }
 }
@@ -4174,12 +4172,15 @@ public sealed class RenderInkSplash : RenderProxyBox
     {
         if (_clipToBounds)
         {
-            var clipRect = new Rect(offset, Size);
-            ctx.PushClipRect(clipRect, clippedContext =>
-            {
-                PaintSplash(clippedContext, offset);
-                base.Paint(clippedContext, offset);
-            });
+            ctx.PushClipRect(
+                NeedsCompositing,
+                offset,
+                new Rect(new Point(0, 0), Size),
+                (clippedContext, clippedOffset) =>
+                {
+                    PaintSplash(clippedContext, clippedOffset);
+                    base.Paint(clippedContext, clippedOffset);
+                });
             return;
         }
 
@@ -4202,7 +4203,7 @@ public sealed class RenderInkSplash : RenderProxyBox
         double radius = constrainedMaxRadius * _splashProgress;
 
         var brush = new SolidColorBrush(_splashColor.Value);
-        ctx.DrawCircle(brush, pen: null, center: offset + resolvedOrigin, radius: radius);
+        ctx.Canvas.DrawCircle(brush, pen: null, center: offset + resolvedOrigin, radius: radius);
     }
 
     private static double NormalizeProgress(double value)

@@ -245,15 +245,17 @@ public sealed class CompositingLayerTests
         pipeline.FlushPaint();
 
         Assert.Equal(1, leaf.PaintCount);
-        var opacityLayer = Assert.IsType<OpacityOffsetLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(0.9, opacityLayer.Opacity, 3);
+        var opacityLayer = Assert.IsType<OpacityLayer>(Assert.Single(pipeline.RootLayer.Children));
+
+        // Dart's `OpacityLayer` carries an 8-bit alpha (`Color.getAlphaFromOpacity`), not a fraction.
+        Assert.Equal(230, opacityLayer.Alpha);
 
         opacity.Opacity = 0.25;
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
         Assert.Equal(1, leaf.PaintCount);
-        Assert.Equal(0.25, opacityLayer.Opacity, 3);
+        Assert.Equal(64, opacityLayer.Alpha);
     }
 
     [Fact]
@@ -310,9 +312,9 @@ public sealed class CompositingLayerTests
     }
 
     [Fact]
-    public void RenderTransform_UpdatesLayerTransform_WithoutRepaintingChild()
+    public void RenderTransform_ReusesItsTransformLayer_AcrossPaints()
     {
-        var leaf = new TestLeafRenderBox();
+        var leaf = new CompositingLeafRenderBox();
         var transform = new RenderTransform(
             Matrix4.TranslationValues(8, 4, 0.0),
             alignment: null,
@@ -331,7 +333,7 @@ public sealed class CompositingLayerTests
         pipeline.FlushPaint();
 
         Assert.Equal(1, leaf.PaintCount);
-        var transformLayer = Assert.IsType<TransformOffsetLayer>(Assert.Single(pipeline.RootLayer.Children));
+        var transformLayer = Assert.IsType<TransformLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(Matrix4.TranslationValues(8, 4, 0.0), transformLayer.Transform);
         Assert.Equal(FilterQuality.Low, transformLayer.FilterQuality);
 
@@ -340,7 +342,11 @@ public sealed class CompositingLayerTests
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
-        Assert.Equal(1, leaf.PaintCount);
+        // Dart's `pushTransform` hands the previous layer back in through `oldLayer`, so the layer
+        // instance survives; the subtree repaints because the transform is not a repaint boundary.
+        var updatedLayer = Assert.IsType<TransformLayer>(Assert.Single(pipeline.RootLayer.Children));
+        Assert.Same(transformLayer, updatedLayer);
+        Assert.Equal(2, leaf.PaintCount);
         Assert.Equal(Matrix4.TranslationValues(21, 13, 0.0), transformLayer.Transform);
         Assert.Equal(FilterQuality.High, transformLayer.FilterQuality);
     }
@@ -374,9 +380,9 @@ public sealed class CompositingLayerTests
     }
 
     [Fact]
-    public void RenderClipRect_UpdatesLayerClip_WithoutRepaintingChild()
+    public void RenderClipRect_ReusesItsClipLayer_AcrossPaints()
     {
-        var leaf = new TestLeafRenderBox();
+        var leaf = new CompositingLeafRenderBox();
         var clipper = new FixedRectClipper(new Rect(0, 0, 32, 32));
         var clipRect = new RenderClipRect(leaf, clipper: clipper);
         var root = new RenderView
@@ -392,14 +398,16 @@ public sealed class CompositingLayerTests
         pipeline.FlushPaint();
 
         Assert.Equal(1, leaf.PaintCount);
-        var clipLayer = Assert.IsType<ClipRectOffsetLayer>(Assert.Single(pipeline.RootLayer.Children));
+        var clipLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(new Rect(0, 0, 32, 32), clipLayer.ClipRect);
 
         clipper.Rect = new Rect(3, 5, 20, 12);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
-        Assert.Equal(1, leaf.PaintCount);
+        var updatedLayer = Assert.IsType<ClipRectLayer>(Assert.Single(pipeline.RootLayer.Children));
+        Assert.Same(clipLayer, updatedLayer);
+        Assert.Equal(2, leaf.PaintCount);
         Assert.Equal(new Rect(3, 5, 20, 12), clipLayer.ClipRect);
     }
 
@@ -543,7 +551,26 @@ public sealed class CompositingLayerTests
         public override void Paint(PaintingContext ctx, Point offset)
         {
             PaintCount += 1;
-            ctx.DrawRectangle(Brushes.CadetBlue, null, new Rect(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, new Rect(offset, Size));
+        }
+    }
+
+    /// <summary>A painted leaf that forces its ancestors onto the composited-layer branch.</summary>
+    private sealed class CompositingLeafRenderBox : RenderBox
+    {
+        public int PaintCount { get; private set; }
+
+        protected override bool AlwaysNeedsCompositing => true;
+
+        protected override void PerformLayout()
+        {
+            Size = Constraints.Constrain(new Size(32, 32));
+        }
+
+        public override void Paint(PaintingContext ctx, Point offset)
+        {
+            PaintCount += 1;
+            ctx.Canvas.DrawRectangle(Brushes.CadetBlue, null, new Rect(offset, Size));
         }
     }
 
@@ -601,7 +628,7 @@ public sealed class CompositingLayerTests
         public override void Paint(PaintingContext ctx, Point offset)
         {
             PaintCount += 1;
-            ctx.DrawRectangle(Brushes.Transparent, null, new Rect(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Transparent, null, new Rect(offset, Size));
             base.Paint(ctx, offset);
         }
     }

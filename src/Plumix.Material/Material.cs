@@ -526,20 +526,24 @@ internal sealed class RenderMaterialInkFeatures : RenderProxyBoxWithHitTestBehav
     {
         if (_inkFeatures.Count > 0)
         {
-            context.PushClipRect(new Rect(offset, Size), clippedContext =>
+            // Flutter's `_RenderInkFeatures.paint`: one canvas save/translate/clip around every feature.
+            context.Canvas.Save();
+            context.Canvas.Translate(offset.X, offset.Y);
+            context.Canvas.ClipRect(new Rect(new Point(0, 0), Size), doAntiAlias: false);
+            foreach (IMaterialInkFeature feature in _inkFeatures.ToArray())
             {
-                foreach (IMaterialInkFeature feature in _inkFeatures.ToArray())
+                if (!InkFeatureTransform.TryResolve(feature.ReferenceBox, this, out Matrix4 transform))
                 {
-                    if (!InkFeatureTransform.TryResolve(feature.ReferenceBox, this, out Matrix4 transform))
-                    {
-                        continue;
-                    }
-
-                    clippedContext.PushTransform(
-                        Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
-                        translatedContext => translatedContext.PushTransform(transform, feature.PaintFeature));
+                    continue;
                 }
-            });
+
+                context.Canvas.Save();
+                context.Canvas.Transform(transform);
+                feature.PaintFeature(context);
+                context.Canvas.Restore();
+            }
+
+            context.Canvas.Restore();
         }
 
         base.Paint(context, offset);

@@ -571,7 +571,7 @@ public sealed partial class RenderParagraph : RenderBox,
 
         if (Constants.KDebugMode && RenderingDebug.RepaintTextRainbowEnabled)
         {
-            ctx.DrawRectangle(
+            ctx.Canvas.DrawRectangle(
                 new SolidColorBrush(RenderingDebug.CurrentRepaintColor.ToColor()),
                 null,
                 new Rect(offset, Size));
@@ -580,7 +580,7 @@ public sealed partial class RenderParagraph : RenderBox,
         PaintSelectionHighlights(ctx, offset);
         if (_overflow == TextOverflow.Fade && _layout.WidthIncludingTrailingWhitespace > Size.Width + 0.01)
         {
-            ctx.DrawTextLayoutWithHorizontalFade(
+            ctx.Canvas.DrawTextLayoutWithHorizontalFade(
                 _layout,
                 offset,
                 new Rect(offset, Size),
@@ -588,7 +588,7 @@ public sealed partial class RenderParagraph : RenderBox,
         }
         else
         {
-            ctx.DrawTextLayout(_layout, offset);
+            ctx.Canvas.DrawTextLayout(_layout, offset);
         }
 
         if (Constants.KDebugMode && RenderingDebug.PaintTextLayoutBoxes)
@@ -621,7 +621,7 @@ public sealed partial class RenderParagraph : RenderBox,
         foreach (TextBox box in boxes)
         {
             Rect rect = box.ToRect();
-            ctx.DrawGeometry(
+            ctx.Canvas.DrawGeometry(
                 null,
                 pen,
                 new RectangleGeometry(new Rect(rect.Position + offset, rect.Size)));

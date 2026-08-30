@@ -855,16 +855,31 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
         {
             if (ShouldClipAtCurrentOffset() && ClipBehavior != Clip.None)
             {
-                context.PushClipRect(
-                    new Rect(offset, Size),
-                    clippedContext => PaintVisibleChildren(clippedContext, offset),
-                    ClipBehavior);
+                _clipRectLayer.Layer = context.PushClipRect(
+                    NeedsCompositing,
+                    offset,
+                    new Rect(new Point(0, 0), Size),
+                    PaintVisibleChildren,
+                    ClipBehavior,
+                    _clipRectLayer.Layer);
             }
             else
             {
+                _clipRectLayer.Layer = null;
                 PaintVisibleChildren(context, offset);
             }
         }
+    }
+
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+    private readonly LayerHandle<OpacityLayer> _childOpacityLayerHandler = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        _childOpacityLayerHandler.Layer = null;
+        base.Dispose();
     }
 
     /// <summary>Paints all children visible in the current viewport.</summary>
@@ -879,8 +894,12 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
 
         // In order to reduce the number of opacity layers, we first paint all partially opaque
         // children, then finally paint the fully opaque children.
-        double alpha = Math.Round(OverAndUnderCenterOpacity * 255, MidpointRounding.AwayFromZero);
-        context.PushOpacity(alpha / 255.0, opacityContext => PaintAllChildren(opacityContext, offset, center: false));
+        int alpha = (int)Math.Round(OverAndUnderCenterOpacity * 255, MidpointRounding.AwayFromZero);
+        _childOpacityLayerHandler.Layer = context.PushOpacity(
+            offset,
+            alpha,
+            (opacityContext, opacityOffset) => PaintAllChildren(opacityContext, opacityOffset, center: false),
+            _childOpacityLayerHandler.Layer);
         PaintAllChildren(context, offset, center: true);
     }
 
@@ -980,13 +999,15 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
         if ((center == null || center == true) && inCenter)
         {
             // Clipping the part in the center.
-            context.PushClipRect(centerRect.Translate(new Vector(offset.X, offset.Y)), clippedContext =>
+            context.PushClipRect(NeedsCompositing, offset, centerRect, (clippedContext, clippedOffset) =>
             {
                 // Paint the ordinary child in the middle of the magnifier at its magnified size.
-                clippedContext.PushTransform(WithOffset(MagnifyTransform(), offset), magnifiedContext =>
-                {
-                    magnifiedContext.PaintChild(child, offset + untransformedPaintingCoordinates);
-                });
+                clippedContext.PushTransform(
+                    NeedsCompositing,
+                    clippedOffset,
+                    MagnifyTransform(),
+                    (magnifiedContext, magnifiedOffset) =>
+                        magnifiedContext.PaintChild(child, magnifiedOffset + untransformedPaintingCoordinates));
             });
         }
 
@@ -996,10 +1017,16 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
             Rect halfRect = untransformedPaintingCoordinates.Y <= magnifierTopLinePosition
                 ? topHalfRect
                 : bottomHalfRect;
-            context.PushClipRect(halfRect.Translate(new Vector(offset.X, offset.Y)), clippedContext =>
-            {
-                PaintChildCylindrically(clippedContext, offset, child, cylindricalTransform, offsetToCenter);
-            });
+            context.PushClipRect(
+                NeedsCompositing,
+                offset,
+                halfRect,
+                (clippedContext, clippedOffset) => PaintChildCylindrically(
+                    clippedContext,
+                    clippedOffset,
+                    child,
+                    cylindricalTransform,
+                    offsetToCenter));
         }
 
         if ((center == null || center == false) && !inCenter)
@@ -1024,8 +1051,11 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
 
         // Paint child cylindrically, without [overAndUnderCenterOpacity].
         context.PushTransform(
-            WithOffset(CenterOriginTransform(cylindricalTransform), offset),
-            transformedContext => transformedContext.PaintChild(child, paintOriginOffset));
+            NeedsCompositing,
+            offset,
+            CenterOriginTransform(cylindricalTransform),
+            // Pre-transform painting function: paint everything in the center, then transform.
+            (transformedContext, _) => transformedContext.PaintChild(child, paintOriginOffset));
 
         // Save the final transform that accounts both for the offset and cylindrical transform.
         Matrix4 transform = CenterOriginTransform(cylindricalTransform);
@@ -1068,13 +1098,6 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
     /// applies <paramref name="transform"/> around <paramref name="offset"/>; Plumix's context takes
     /// the effective matrix, so the translation sandwich is folded in here.
     /// </summary>
-    private static Matrix4 WithOffset(Matrix4 transform, Point offset)
-    {
-        Matrix4 effectiveTransform = Matrix4.TranslationValues(offset.X, offset.Y, 0.0);
-        effectiveTransform.Multiply(transform);
-        effectiveTransform.TranslateByDouble(-offset.X, -offset.Y, 0.0, 1.0);
-        return effectiveTransform;
-    }
 
     private static bool DebugAssertValidHitTestOffsets(string context, Point offset1, Point offset2)
     {

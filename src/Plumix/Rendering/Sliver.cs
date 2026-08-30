@@ -1037,7 +1037,7 @@ public abstract class RenderSliver : RenderBox
         double arrowExtent = Geometry.PaintExtent;
         double padding = Math.Max(2.0, strokeWidth);
         SliverConstraints constraints = ConstraintsForSliver;
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             Brushes.Transparent,
             pen,
             new Point(offset.X + padding, offset.Y + padding),
@@ -1045,7 +1045,7 @@ public abstract class RenderSliver : RenderBox
         double cross = constraints.CrossAxisExtent;
         if (constraints.Axis == Axis.Vertical)
         {
-            context.DrawLine(pen, offset, new Point(offset.X + cross, offset.Y));
+            context.Canvas.DrawLine(pen, offset, new Point(offset.X + cross, offset.Y));
             DebugDrawArrow(
                 context,
                 pen,
@@ -1061,7 +1061,7 @@ public abstract class RenderSliver : RenderBox
         }
         else
         {
-            context.DrawLine(pen, offset, new Point(offset.X, offset.Y + cross));
+            context.Canvas.DrawLine(pen, offset, new Point(offset.X, offset.Y + cross));
             DebugDrawArrow(
                 context,
                 pen,
@@ -1122,7 +1122,7 @@ public abstract class RenderSliver : RenderBox
         path.MoveTo(p1.X - dx1, p1.Y - dy1);
         path.LineTo(p1.X, p1.Y);
         path.LineTo(p1.X - dx2, p1.Y - dy2);
-        context.DrawPath(path, brush: null, pen: pen);
+        context.Canvas.DrawPath(path, brush: null, pen: pen);
     }
 
     /// <inheritdoc />
@@ -1535,12 +1535,12 @@ public sealed class RenderSliverOpacity : RenderProxySliver
 
     protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
     {
-        return oldLayer as OpacityOffsetLayer ?? new OpacityOffsetLayer();
+        return oldLayer as OpacityLayer ?? new OpacityLayer();
     }
 
     protected override void UpdateCompositedLayer(OffsetLayer layer)
     {
-        if (layer is OpacityOffsetLayer opacityLayer)
+        if (layer is OpacityLayer opacityLayer)
         {
             opacityLayer.Opacity = _opacity;
         }
@@ -1645,12 +1645,12 @@ public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
 
     protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
     {
-        return oldLayer as OpacityOffsetLayer ?? new OpacityOffsetLayer();
+        return oldLayer as OpacityLayer ?? new OpacityLayer();
     }
 
     protected override void UpdateCompositedLayer(OffsetLayer layer)
     {
-        if (layer is OpacityOffsetLayer opacityLayer)
+        if (layer is OpacityLayer opacityLayer)
         {
             opacityLayer.Opacity = _currentOpacity;
         }

@@ -1454,20 +1454,31 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
                         origin.Y + ((center.Y - origin.Y) * _splashProgress));
                 }
                 double maxRadius = _splashRadius ?? ResolveSplashRadius(origin);
-                target.DrawCircle(new SolidColorBrush(_splashColor.Value), null, offset + origin, maxRadius * _splashProgress);
+                target.Canvas.DrawCircle(
+                    new SolidColorBrush(_splashColor.Value),
+                    null,
+                    offset + origin,
+                    maxRadius * _splashProgress);
             }
         }
 
         if (_containedInkWell)
         {
+            context.Canvas.Save();
             if (_highlightShape == BoxShape.Circle)
             {
-                context.PushClipGeometry(new EllipseGeometry(new Rect(offset, Size)), PaintInk);
+                var ovalPath = new Plumix.UI.Path();
+                ovalPath.AddOval(new Rect(offset, Size));
+                context.Canvas.ClipPath(ovalPath);
             }
             else
             {
-                context.PushClipRRect(inkRect.Translate((Vector)offset), _borderRadius, PaintInk);
+                context.Canvas.ClipRRect(
+                    RRect.FromRectAndCorners(inkRect.Translate((Vector)offset), _borderRadius));
             }
+
+            PaintInk(context);
+            context.Canvas.Restore();
         }
         else
         {
@@ -1481,7 +1492,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
         if (_highlightShape == BoxShape.Circle)
         {
             double radius = _splashRadius ?? 35.0;
-            context.DrawCircle(
+            context.Canvas.DrawCircle(
                 brush,
                 null,
                 offset + inkRect.Center,
@@ -1489,7 +1500,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
             return;
         }
 
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             brush,
             null,
             inkRect.Translate((Vector)offset),
@@ -1526,7 +1537,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
         Color featureColor = ApplyOpacity(color, frame.Opacity);
         if (frame.Kind != InkFeatureKind.Sparkle)
         {
-            context.DrawCircle(
+            context.Canvas.DrawCircle(
                 new SolidColorBrush(featureColor),
                 null,
                 offset + frame.Center,
@@ -1534,13 +1545,13 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
             return;
         }
 
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             new SolidColorBrush(featureColor),
             null,
             offset + frame.Center,
             frame.Radius);
         Color haloColor = ApplyOpacity(color, frame.Opacity * 0.32);
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             new SolidColorBrush(haloColor),
             null,
             offset + frame.Center + new Vector(frame.Radius * 0.08, -frame.Radius * 0.04),
@@ -1557,7 +1568,7 @@ internal sealed class RenderInkResponsePaint : RenderProxyBox, IMaterialInkFeatu
             var dotCenter = new Point(
                 frame.Center.X + (Math.Cos(angle) * distance),
                 frame.Center.Y + (Math.Sin(angle) * distance));
-            context.DrawCircle(sparkleBrush, null, offset + dotCenter, dotRadius);
+            context.Canvas.DrawCircle(sparkleBrush, null, offset + dotCenter, dotRadius);
         }
     }
 

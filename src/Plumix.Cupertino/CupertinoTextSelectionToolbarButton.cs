@@ -224,23 +224,23 @@ public sealed class CupertinoTextSelectionToolbarButton : StatefulWidget
                 forceMoveTo: false);
             path.LineTo(origin.X + 3.5, origin.Y);
 
-            context.PushTransform(
-                Matrix4.TranslationValues(size.Width / 2.0, size.Height / 2.0, 0.0),
-                centered =>
-                {
-                    // Rotate to draw the corner four times.
-                    for (int quarter = 0; quarter < 4; quarter++)
-                    {
-                        centered.PushTransform(
-                            Matrix4.RotationZ(quarter * Math.PI / 2.0),
-                            rotated => rotated.DrawPath(path, null, pen));
-                    }
+            context.Canvas.Save();
+            context.Canvas.Translate(size.Width / 2.0, size.Height / 2.0);
 
-                    // Draw three lines.
-                    centered.DrawLine(pen, new Point(-3.0, -3.0), new Point(3.0, -3.0));
-                    centered.DrawLine(pen, new Point(-3.0, 0.0), new Point(3.0, 0.0));
-                    centered.DrawLine(pen, new Point(-3.0, 3.0), new Point(1.0, 3.0));
-                });
+            // Rotate to draw the corner four times.
+            for (int quarter = 0; quarter < 4; quarter++)
+            {
+                context.Canvas.Save();
+                context.Canvas.Rotate(quarter * Math.PI / 2.0);
+                context.Canvas.DrawPath(path, null, pen);
+                context.Canvas.Restore();
+            }
+
+            // Draw three lines.
+            context.Canvas.DrawLine(pen, new Point(-3.0, -3.0), new Point(3.0, -3.0));
+            context.Canvas.DrawLine(pen, new Point(-3.0, 0.0), new Point(3.0, 0.0));
+            context.Canvas.DrawLine(pen, new Point(-3.0, 3.0), new Point(1.0, 3.0));
+            context.Canvas.Restore();
         }
 
         public override bool ShouldRepaint(CustomPainter oldDelegate)

@@ -249,17 +249,31 @@ internal sealed class RenderOverlayTheater : RenderBox,
         }
     }
 
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
+    }
+
     public override void Paint(PaintingContext context, Point offset)
     {
         if (_clipBehavior == Clip.None)
         {
+            _clipRectLayer.Layer = null;
             PaintOnstageChildren(context, offset);
             return;
         }
 
-        context.PushClipRect(
-            new Rect(offset, Size),
-            clippedContext => PaintOnstageChildren(clippedContext, offset));
+        _clipRectLayer.Layer = context.PushClipRect(
+            NeedsCompositing,
+            offset,
+            new Rect(new Point(0, 0), Size),
+            PaintOnstageChildren,
+            _clipBehavior,
+            _clipRectLayer.Layer);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)

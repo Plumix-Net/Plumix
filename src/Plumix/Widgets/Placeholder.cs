@@ -23,9 +23,9 @@ internal sealed class PlaceholderPainter : CustomPainter
     {
         var pen = new Pen(new SolidColorBrush(Color), StrokeWidth);
         var rect = new Rect(size);
-        context.DrawRectangle(Brushes.Transparent, pen, rect);
-        context.DrawLine(pen, rect.TopRight, rect.BottomLeft);
-        context.DrawLine(pen, rect.TopLeft, rect.BottomRight);
+        context.Canvas.DrawRectangle(Brushes.Transparent, pen, rect);
+        context.Canvas.DrawLine(pen, rect.TopRight, rect.BottomLeft);
+        context.Canvas.DrawLine(pen, rect.TopLeft, rect.BottomRight);
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

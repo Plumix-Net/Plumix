@@ -739,7 +739,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
 
         var barRect = new Rect(left, offset.Y, width, Size.Height);
         double barRadius = ResolveRadius(barRect.Width, barRect.Height, radius);
-        ctx.DrawRectangle(
+        ctx.Canvas.DrawRectangle(
             brush,
             null,
             barRect,
@@ -765,7 +765,7 @@ internal sealed class RenderLinearProgressIndicator : RenderBox
             ? offset.X + maxRadius
             : offset.X + (Size.Width - maxRadius);
         var center = new Point(centerX, offset.Y + maxRadius);
-        ctx.DrawCircle(new SolidColorBrush(_stopIndicatorColor.Value), null, center, radius);
+        ctx.Canvas.DrawCircle(new SolidColorBrush(_stopIndicatorColor.Value), null, center, radius);
     }
 
     private static double GetEffectiveTrackGapFraction(double currentValue, double trackGapFraction)
@@ -1741,11 +1741,11 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
                 lineCap: ResolveTrackLineCap(StrokeCap));
             if (TryResolveTrackGapArc(arcRect, strokeWidth, resolvedValue, out double gapArcStart, out double gapArcSweep))
             {
-                ctx.DrawArc(trackPen, arcRect, startAngleRadians: gapArcStart, sweepAngleRadians: gapArcSweep);
+                ctx.Canvas.DrawArc(trackPen, arcRect, startAngleRadians: gapArcStart, sweepAngleRadians: gapArcSweep);
             }
             else
             {
-                ctx.DrawArc(trackPen, arcRect, startAngleRadians: 0, sweepAngleRadians: FullSweep);
+                ctx.Canvas.DrawArc(trackPen, arcRect, startAngleRadians: 0, sweepAngleRadians: FullSweep);
             }
         }
 
@@ -1762,7 +1762,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
             : ArcStart;
         var lineCap = ResolveIndicatorLineCap(resolvedValue, StrokeCap, Year2023);
         var indicatorPen = new Pen(new SolidColorBrush(ValueColor), strokeWidth, lineCap: lineCap);
-        ctx.DrawArc(indicatorPen, arcRect, startAngleRadians: start, sweepAngleRadians: sweep);
+        ctx.Canvas.DrawArc(indicatorPen, arcRect, startAngleRadians: start, sweepAngleRadians: sweep);
         DrawArrowhead(ctx, arcRect, strokeWidth, start + sweep);
     }
 
@@ -1780,7 +1780,7 @@ internal sealed class RenderCircularProgressIndicator : RenderBox
         var point = new Point(
             center.X + (ux * radius) - (uy * strokeWidth * 2.0 * ArrowheadScale),
             center.Y + (uy * radius) + (ux * strokeWidth * 2.0 * ArrowheadScale));
-        context.DrawPolygon(
+        context.Canvas.DrawPolygon(
             new SolidColorBrush(ValueColor),
             null,
             [

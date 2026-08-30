@@ -164,6 +164,6 @@ public sealed class RenderMagnifier : RenderProxyBox
             magnificationScale: _magnificationScale,
             decoration: _decoration,
             clipBehavior: _clipBehavior,
-            painter: childContext => base.Paint(childContext, offset));
+            painter: base.Paint);
     }
 }

@@ -677,7 +677,7 @@ internal sealed class RenderMergeableMaterialListBody : RenderListBody
             if (index % 2 == 0 && Elevation != 0.0)
             {
                 double radius = (MaterialEdges.ForType(MaterialType.Card) ?? BorderRadius.Zero).Radius;
-                context.DrawShadow(
+                context.Canvas.DrawShadow(
                     new RectangleGeometry(rect, radius, radius),
                     Colors.Black,
                     Elevation,

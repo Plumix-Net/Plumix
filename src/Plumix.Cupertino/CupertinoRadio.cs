@@ -454,7 +454,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         Color pressedColor = _brightness == PlatformBrightness.Light
             ? WithOpacity(CupertinoColors.Black, KPressedOverlayOpacity)
             : WithOpacity(CupertinoColors.White, KPressedOverlayOpacity);
-        context.DrawCircle(new SolidColorBrush(pressedColor), pen: null, center, radius);
+        context.Canvas.DrawCircle(new SolidColorBrush(pressedColor), pen: null, center, radius);
     }
 
     private static void DrawFillGradient(
@@ -470,13 +470,13 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
             end: Alignment.BottomCenter);
         Rect circleRect = RectFromCircle(center, radius);
         // Dart fills `Path()..addOval(circleRect)`; an oval fill is the same geometry.
-        context.DrawOval(circleRect, fillGradient.CreateShader(circleRect), pen: null);
+        context.Canvas.DrawOval(circleRect, fillGradient.CreateShader(circleRect), pen: null);
     }
 
     private void DrawOuterBorder(PaintingContext context, Point center)
     {
         var borderPen = new Pen(new SolidColorBrush(_borderColor), KBorderOutlineStrokeWidth);
-        context.DrawOval(RectFromCircle(center, KOuterRadius), brush: null, borderPen);
+        context.Canvas.DrawOval(RectFromCircle(center, KOuterRadius), brush: null, borderPen);
     }
 
     public override void Paint(PaintingContext context, Size size)
@@ -499,10 +499,10 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
                 var end = new Point(width * 0.85, width * 0.29);
                 path.MoveTo(origin.X + start.X, origin.Y + start.Y);
                 path.LineTo(origin.X + mid.X, origin.Y + mid.Y);
-                context.DrawPath(path, brush: null, checkPen);
+                context.Canvas.DrawPath(path, brush: null, checkPen);
                 path.MoveTo(origin.X + mid.X, origin.Y + mid.Y);
                 path.LineTo(origin.X + end.X, origin.Y + end.Y);
-                context.DrawPath(path, brush: null, checkPen);
+                context.Canvas.DrawPath(path, brush: null, checkPen);
             }
         }
         else if (_value ?? false)
@@ -524,14 +524,14 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
             }
             else
             {
-                context.DrawCircle(new SolidColorBrush(outerColor), pen: null, center, KOuterRadius);
+                context.Canvas.DrawCircle(new SolidColorBrush(outerColor), pen: null, center, KOuterRadius);
             }
             // The outer circle's opacity changes when the radio is pressed.
             if (DownPosition is not null)
             {
                 DrawPressedOverlay(context, center, KOuterRadius);
             }
-            context.DrawCircle(new SolidColorBrush(_fillColor), pen: null, center, KInnerRadius);
+            context.Canvas.DrawCircle(new SolidColorBrush(_fillColor), pen: null, center, KInnerRadius);
             // Draw an outer border if the radio is disabled and selected.
             if (!IsActive)
             {
@@ -556,7 +556,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
             }
             else
             {
-                context.DrawCircle(new SolidColorBrush(paintColor), pen: null, center, KOuterRadius);
+                context.Canvas.DrawCircle(new SolidColorBrush(paintColor), pen: null, center, KOuterRadius);
             }
             // The entire circle's opacity changes when the radio is pressed.
             if (DownPosition is not null)
@@ -569,7 +569,7 @@ internal sealed class CupertinoRadioPainter : ToggleablePainter
         if (IsFocused)
         {
             var focusPen = new Pen(new SolidColorBrush(FocusColor), KFocusOutlineStrokeWidth);
-            context.DrawOval(
+            context.Canvas.DrawOval(
                 RectFromCircle(center, KOuterRadius + (KFocusOutlineStrokeWidth / 2.0)),
                 brush: null,
                 focusPen);

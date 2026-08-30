@@ -256,6 +256,8 @@ internal sealed class RenderAnimatedSize : RenderProxyBox
         }
     }
 
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
     public override void Paint(PaintingContext context, Point offset)
     {
         if (Child is null)
@@ -265,10 +267,24 @@ internal sealed class RenderAnimatedSize : RenderProxyBox
 
         if (_hasVisualOverflow && ClipBehavior != Clip.None)
         {
-            context.PushClipRect(new Rect(offset, Size), clippedContext => base.Paint(clippedContext, offset));
+            _clipRectLayer.Layer = context.PushClipRect(
+                NeedsCompositing,
+                offset,
+                new Rect(new Point(0, 0), Size),
+                base.Paint,
+                ClipBehavior,
+                _clipRectLayer.Layer);
             return;
         }
 
+        _clipRectLayer.Layer = null;
         base.Paint(context, offset);
+    }
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
     }
 }

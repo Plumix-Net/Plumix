@@ -130,42 +130,56 @@ public sealed class RenderPhysicalModel : RenderProxyBox
 
     public override void Paint(PaintingContext context, Point offset)
     {
+        ArgumentNullException.ThrowIfNull(context);
         if (Child is null)
         {
+            Layer = null;
             return;
         }
 
-        var rect = new Rect(offset, Size);
+        var rect = new Rect(new Point(0, 0), Size);
         double radius = _shape == BoxShape.Circle
             ? Math.Min(rect.Width, rect.Height) / 2.0
             : Math.Min(_borderRadius?.Radius ?? 0.0, Math.Min(rect.Width, rect.Height) / 2.0);
         BoxShadows shadows = BuildShadow();
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             new SolidColorBrush(_color),
             null,
-            rect,
+            new Rect(rect.Position + offset, rect.Size),
             radius,
             radius,
             shadows);
 
         if (_clipBehavior == Clip.None)
         {
+            Layer = null;
             context.PaintChild(Child, offset);
             return;
         }
 
         if (_shape == BoxShape.Circle)
         {
-            context.PushClipGeometry(
-                new EllipseGeometry(rect),
-                clippedContext => clippedContext.PaintChild(Child, offset));
+            var ovalPath = new Plumix.UI.Path();
+            ovalPath.AddOval(rect);
+            Layer = context.PushClipPath(
+                NeedsCompositing,
+                offset,
+                rect,
+                ovalPath,
+                (clippedContext, clippedOffset) => clippedContext.PaintChild(Child, clippedOffset),
+                _clipBehavior,
+                Layer as ClipPathLayer);
             return;
         }
 
-        context.PushClipRRect(
+        Layer = context.PushClipRRect(
+            NeedsCompositing,
+            offset,
             rect,
-            _borderRadius ?? Plumix.Rendering.BorderRadius.Zero,
-            clippedContext => clippedContext.PaintChild(Child, offset));
+            RRect.FromRectAndCorners(rect, _borderRadius ?? Plumix.Rendering.BorderRadius.Zero),
+            (clippedContext, clippedOffset) => clippedContext.PaintChild(Child, clippedOffset),
+            _clipBehavior,
+            Layer as ClipRRectLayer);
     }
 
     private BoxShadows BuildShadow()
@@ -281,7 +295,7 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
     protected override void DebugPaintClip(PaintingContext context, Point offset)
     {
         Path clip = EffectiveClip;
-        context.DrawGeometry(null, RenderCustomClipDebug.DebugPen, clip.ToGeometry(), geometryOffset: offset);
+        context.Canvas.DrawGeometry(null, RenderCustomClipDebug.DebugPen, clip.ToGeometry(), geometryOffset: offset);
         RenderCustomClipDebug.PaintScissors(context, offset, clip.GetBounds().Width);
     }
 
@@ -307,16 +321,19 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
 
     public override void Paint(PaintingContext context, Point offset)
     {
+        ArgumentNullException.ThrowIfNull(context);
         if (Child is null)
         {
+            Layer = null;
             return;
         }
 
-        Geometry geometry = EffectiveClip.ToGeometry();
+        Plumix.UI.Path clip = EffectiveClip;
+        Geometry geometry = clip.ToGeometry();
         bool physicalShapesDisabled = Constants.KDebugMode && RenderingDebug.DisablePhysicalShapeLayers;
         if (_elevation > 0.0 && _shadowColor.A > 0 && !physicalShapesDisabled)
         {
-            context.DrawShadow(
+            context.Canvas.DrawShadow(
                 geometry,
                 _shadowColor,
                 _elevation,
@@ -324,22 +341,26 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
                 geometryOffset: offset);
         }
 
-        context.DrawGeometry(
+        context.Canvas.DrawGeometry(
             new SolidColorBrush(_color),
             null,
             geometry,
             geometryOffset: offset);
         if (ClipBehavior == Clip.None)
         {
+            Layer = null;
             base.Paint(context, offset);
             return;
         }
 
-        context.PushClipGeometry(
-            geometry,
-            clippedContext => base.Paint(clippedContext, offset),
-            clipBehavior: ClipBehavior,
-            geometryOffset: offset);
+        Layer = context.PushClipPath(
+            NeedsCompositing,
+            offset,
+            clip.GetBounds(),
+            clip,
+            base.Paint,
+            ClipBehavior,
+            Layer as ClipPathLayer);
     }
 
     private static void ValidateElevation(double elevation)

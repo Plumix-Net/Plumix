@@ -148,7 +148,7 @@ public sealed record TableBorder
             var pen = new Pen(new SolidColorBrush(VerticalInside.Color), VerticalInside.Width);
             foreach (double x in columns)
             {
-                context.DrawLine(pen, new Point(rect.Left + x, rect.Top), new Point(rect.Left + x, rect.Bottom));
+                context.Canvas.DrawLine(pen, new Point(rect.Left + x, rect.Top), new Point(rect.Left + x, rect.Bottom));
             }
         }
 
@@ -157,7 +157,7 @@ public sealed record TableBorder
             var pen = new Pen(new SolidColorBrush(HorizontalInside.Color), HorizontalInside.Width);
             foreach (double y in rows)
             {
-                context.DrawLine(pen, new Point(rect.Left, rect.Top + y), new Point(rect.Right, rect.Top + y));
+                context.Canvas.DrawLine(pen, new Point(rect.Left, rect.Top + y), new Point(rect.Right, rect.Top + y));
             }
         }
 
@@ -203,13 +203,13 @@ public sealed record TableBorder
         double right = Right.Style == BorderStyle.None ? 0.0 : Right.Width;
         double bottom = Bottom.Style == BorderStyle.None ? 0.0 : Bottom.Width;
         var geometry = RingGeometry(rect, BorderRadius, left, top, right, bottom);
-        context.DrawGeometry(new SolidColorBrush(color), null, geometry);
+        context.Canvas.DrawGeometry(new SolidColorBrush(color), null, geometry);
     }
 
     private static void PaintRing(PaintingContext context, Rect rect, BorderRadius radius, Color color, double width)
     {
         var geometry = RingGeometry(rect, radius, width, width, width, width);
-        context.DrawGeometry(new SolidColorBrush(color), null, geometry);
+        context.Canvas.DrawGeometry(new SolidColorBrush(color), null, geometry);
     }
 
     private static Geometry RingGeometry(
@@ -285,11 +285,11 @@ public sealed record TableBorder
         var brush = new SolidColorBrush(side.Color);
         if (side.Width == 0.0)
         {
-            context.DrawLine(new Pen(brush, 0.0), quad[0], quad[1]);
+            context.Canvas.DrawLine(new Pen(brush, 0.0), quad[0], quad[1]);
             return;
         }
 
-        context.DrawPolygon(brush, null, quad);
+        context.Canvas.DrawPolygon(brush, null, quad);
     }
 
     private static BorderSide ScaleSide(BorderSide side, double t)

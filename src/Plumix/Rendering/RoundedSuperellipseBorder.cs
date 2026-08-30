@@ -101,11 +101,11 @@ public sealed record RoundedSuperellipseBorder : OutlinedBorder
     {
         if (BorderRadius.IsZero)
         {
-            context.DrawRectangle(brush, null, rect);
+            context.Canvas.DrawRectangle(brush, null, rect);
             return;
         }
 
-        context.DrawRSuperellipse(ResolveRSuperellipse(rect, textDirection), brush, null);
+        context.Canvas.DrawRSuperellipse(ResolveRSuperellipse(rect, textDirection), brush, null);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -118,11 +118,11 @@ public sealed record RoundedSuperellipseBorder : OutlinedBorder
         double strokeOffset = Side.StrokeOffset / 2.0;
         if (BorderRadius.IsZero)
         {
-            context.DrawRectangle(Brushes.Transparent, Side.ToPen(), rect.Inflate(strokeOffset));
+            context.Canvas.DrawRectangle(Brushes.Transparent, Side.ToPen(), rect.Inflate(strokeOffset));
             return;
         }
 
-        context.DrawRSuperellipse(
+        context.Canvas.DrawRSuperellipse(
             ResolveRSuperellipse(rect, textDirection).Inflate(strokeOffset),
             null,
             Side.ToPen());

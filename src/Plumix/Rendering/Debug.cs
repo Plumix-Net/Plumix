@@ -172,7 +172,7 @@ public static class RenderingDebug
         }
         else
         {
-            context.DrawRectangle(new SolidColorBrush(Color.FromUInt32(0x90909090)), null, outerRect);
+            context.Canvas.DrawRectangle(new SolidColorBrush(Color.FromUInt32(0x90909090)), null, outerRect);
         }
     }
 
@@ -328,7 +328,7 @@ public static class RenderingDebug
     /// <remarks>Flutter's <c>_debugDrawDoubleRect</c>.</remarks>
     private static void DrawDoubleRect(PaintingContext context, Rect outerRect, Rect innerRect, Color color)
     {
-        context.DrawPath(BuildDoubleRectPath(outerRect, innerRect), new SolidColorBrush(color), pen: null);
+        context.Canvas.DrawPath(BuildDoubleRectPath(outerRect, innerRect), new SolidColorBrush(color), pen: null);
     }
 
     /// <summary>The even-odd ring between two nested rectangles.</summary>

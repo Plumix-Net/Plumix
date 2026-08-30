@@ -184,7 +184,7 @@ public sealed class ClipWidgetsTests
     [InlineData(Clip.HardEdge)]
     [InlineData(Clip.AntiAlias)]
     [InlineData(Clip.AntiAliasWithSaveLayer)]
-    public void RenderClipPath_PaintsGeometryLayerWithClipQualityAndOffset(Clip clipBehavior)
+    public void RenderClipPath_ClipsOnTheCanvas_WhenNoDescendantNeedsCompositing(Clip clipBehavior)
     {
         var clip = new RenderClipPath(
             child: new PaintBox(),
@@ -201,8 +201,34 @@ public sealed class ClipWidgetsTests
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
-        var layer = Assert.IsType<ClipGeometryLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(new Point(12, 8), layer.GeometryOffset);
+        // Dart's non-compositing branch records the clip into the picture, with no layer at all.
+        Assert.IsType<PictureLayer>(Assert.Single(pipeline.RootLayer.Children));
+        Assert.Null(clip.DebugLayer);
+    }
+
+    [Theory]
+    [InlineData(Clip.HardEdge)]
+    [InlineData(Clip.AntiAlias)]
+    [InlineData(Clip.AntiAliasWithSaveLayer)]
+    public void RenderClipPath_PaintsClipPathLayerWithClipQualityAndOffset(Clip clipBehavior)
+    {
+        var clip = new RenderClipPath(
+            child: new CompositingPaintBox(),
+            clipper: new RectPathClipper(),
+            clipBehavior: clipBehavior);
+        var padding = new RenderPadding(new Thickness(12, 8, 0, 0))
+        {
+            Child = clip,
+        };
+        var root = new RenderView { Child = padding };
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+        pipeline.FlushLayout(new Size(100, 60));
+        pipeline.FlushCompositingBits();
+        pipeline.FlushPaint();
+
+        var layer = Assert.IsType<ClipPathLayer>(Assert.Single(pipeline.RootLayer.Children));
+        Assert.Equal(new Point(12, 8), layer.ClipPath.GetBounds().Position);
         Assert.Equal(clipBehavior, layer.ClipBehavior);
         Assert.IsType<PictureLayer>(Assert.Single(layer.Children));
     }
@@ -292,12 +318,11 @@ public sealed class ClipWidgetsTests
         Assert.False(physicalShape.HitTest(new BoxHitTestResult(), new Point(5.0, 50.0)));
         Assert.Equal(clipRect, physicalShape.InvokeDescribeApproximatePaintClip(physicalShape.Child));
 
-        Assert.Equal(2, pipeline.RootLayer.Children.Count);
-        Assert.IsType<PictureLayer>(pipeline.RootLayer.Children[0]);
-        var clipLayer = Assert.IsType<ClipGeometryLayer>(pipeline.RootLayer.Children[1]);
-        Assert.Equal(Clip.AntiAlias, clipLayer.ClipBehavior);
-        Assert.Equal(clipRect, Assert.IsType<RectangleGeometry>(clipLayer.Geometry).Rect);
-        Assert.IsType<PictureLayer>(Assert.Single(clipLayer.Children));
+        // Surface, shadow and the clipped child all record into the same picture: nothing below the
+        // physical shape needs compositing, so `pushClipPath` takes Dart's canvas branch.
+        var picture = Assert.IsType<PictureLayer>(Assert.Single(pipeline.RootLayer.Children));
+        Assert.False(picture.IsEmpty);
+        Assert.Null(physicalShape.DebugLayer);
     }
 
     [Fact]
@@ -324,8 +349,9 @@ public sealed class ClipWidgetsTests
         var render = new RenderClipRect(child);
         LayoutRoot(render, new Size(60, 40));
 
-        // With no clipper the effective clip is the layout rect, and the object composites.
-        Assert.True(render.IsRepaintBoundary);
+        // With no clipper the effective clip is the layout rect. Dart's clip render objects are not
+        // repaint boundaries: they clip through `pushClipRect`, on the canvas or in a layer.
+        Assert.False(render.IsRepaintBoundary);
         Assert.Equal(new Rect(0, 0, 60, 40), render.InvokeDescribeApproximatePaintClip(null));
 
         var clipper = new FixedRectClipper(new Rect(0, 0, 20, 20));
@@ -587,6 +613,24 @@ public sealed class ClipWidgetsTests
         }
     }
 
+    /// <summary>A painted leaf that forces its ancestors onto the composited-layer branch.</summary>
+    private sealed class CompositingPaintBox : RenderBox
+    {
+        protected override bool AlwaysNeedsCompositing => true;
+
+        protected override void PerformLayout()
+        {
+            Size = Constraints.Constrain(new Size(100, 60));
+        }
+
+        protected override bool HitTestSelf(Point position) => true;
+
+        public override void Paint(PaintingContext ctx, Point offset)
+        {
+            ctx.Canvas.DrawRectangle(Brushes.Red, null, new Rect(offset, Size));
+        }
+    }
+
     private sealed class PaintBox : RenderBox
     {
         protected override void PerformLayout()
@@ -598,7 +642,7 @@ public sealed class ClipWidgetsTests
 
         public override void Paint(PaintingContext ctx, Point offset)
         {
-            ctx.DrawRectangle(Brushes.Red, null, new Rect(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Red, null, new Rect(offset, Size));
         }
     }
 

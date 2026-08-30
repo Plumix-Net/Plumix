@@ -116,7 +116,7 @@ public sealed class SliverOpacityTests : IDisposable
 
         Assert.True(opacity.NeedsCompositing);
         Assert.Equal(1, box.PaintCount);
-        var layer = Assert.IsType<OpacityOffsetLayer>(opacity._layer);
+        var layer = Assert.IsType<OpacityLayer>(opacity._layer);
         Assert.Equal(0.4, layer.Opacity);
 
         opacity.Opacity = 0.0;
@@ -154,8 +154,8 @@ public sealed class SliverOpacityTests : IDisposable
 
         Assert.True(opacity.NeedsCompositing);
         Assert.Equal(1, box.PaintCount);
-        var layer = Assert.IsType<OpacityOffsetLayer>(opacity._layer);
-        Assert.Equal(0.5, layer.Opacity);
+        var layer = Assert.IsType<OpacityLayer>(opacity._layer);
+        Assert.Equal(128, layer.Alpha);
 
         controller.SetValue(0.0);
         pipeline.FlushCompositingBits();
@@ -281,7 +281,7 @@ public sealed class SliverOpacityTests : IDisposable
         public override void Paint(PaintingContext ctx, Point offset)
         {
             PaintCount += 1;
-            ctx.DrawRectangle(Brushes.Blue, null, new Rect(offset, Size));
+            ctx.Canvas.DrawRectangle(Brushes.Blue, null, new Rect(offset, Size));
         }
     }
 

@@ -594,7 +594,7 @@ public sealed class RenderingDebugTests : IDisposable
         RenderingDebug.PaintLayerBordersEnabled = true;
         var probe = new PaintCallbackRenderBox(
             new Size(40.0, 40.0),
-            (context, offset) => context.DrawRectangle(Brushes.Red, null, new Rect(offset, new Size(4.0, 4.0))));
+            (context, offset) => context.Canvas.DrawRectangle(Brushes.Red, null, new Rect(offset, new Size(4.0, 4.0))));
 
         OffsetLayer layer = Paint(probe, new Size(40.0, 40.0));
 
@@ -630,43 +630,49 @@ public sealed class RenderingDebugTests : IDisposable
     public void PaintZigZag_RejectsANonPositiveZigCount()
     {
         Assert.Throws<ArgumentOutOfRangeException>(
-            () => PaintUtilities.BuildZigZagPath(
-                new Point(0.0, 0.0),
-                new Point(10.0, 0.0),
-                zigs: 0,
-                width: 4.0));
+            () => PaintUtilities.BuildZigZagPath(length: 10.0, zigs: 0, width: 4.0));
+        Assert.Throws<ArgumentOutOfRangeException>(() => PaintUtilities.PaintZigZag(
+            new PaintingContext(new ContainerLayer()),
+            new Pen(Brushes.Red),
+            new Point(0.0, 0.0),
+            new Point(10.0, 0.0),
+            zigs: 0,
+            width: 4.0));
     }
 
     [Fact]
     public void PaintZigZag_CrossesTheDirectLineZigsMinusOneTimes()
     {
-        Plumix.UI.Path path = PaintUtilities.BuildZigZagPath(
-            new Point(0.0, 0.0),
-            new Point(20.0, 0.0),
-            zigs: 4,
-            width: 3.0);
+        // Dart builds the zig-zag in the rotated local space: the line runs down the local y axis
+        // and each zig steps `width` to alternating sides of it.
+        Plumix.UI.Path path = PaintUtilities.BuildZigZagPath(length: 20.0, zigs: 4, width: 3.0);
 
         Rect bounds = path.GetBounds();
-        Assert.Equal(0.0, bounds.X, 6);
-        Assert.Equal(20.0, bounds.Right, 6);
-        Assert.Equal(-3.0, bounds.Y, 6);
-        Assert.Equal(3.0, bounds.Bottom, 6);
+        Assert.Equal(0.0, bounds.Y, 6);
+        Assert.Equal(20.0, bounds.Bottom, 6);
+        Assert.Equal(-3.0, bounds.X, 6);
+        Assert.Equal(3.0, bounds.Right, 6);
     }
 
     [Fact]
     public void PaintZigZag_RotatesTheZigZagOntoTheStartToEndLine()
     {
-        Plumix.UI.Path path = PaintUtilities.BuildZigZagPath(
+        var root = new ContainerLayer();
+        var context = new PaintingContext(root);
+
+        PaintUtilities.PaintZigZag(
+            context,
+            new Pen(Brushes.Red),
             new Point(5.0, 5.0),
             new Point(5.0, 25.0),
             zigs: 2,
             width: 4.0);
 
-        Rect bounds = path.GetBounds();
-        Assert.Equal(5.0, bounds.Y, 6);
-        Assert.Equal(25.0, bounds.Bottom, 6);
-        Assert.Equal(1.0, bounds.X, 6);
-        Assert.Equal(9.0, bounds.Right, 6);
+        // save + translate + rotate + one path draw, all unwound by the closing restore.
+        Assert.Equal(1, context.Canvas.GetSaveCount());
+        context.DebugStopRecordingIfNeeded();
+        var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
+        Assert.Equal(1, picture.Picture!.DrawCommandCount);
     }
 
     private static PointerDownEvent PointerDownAt(int pointer) => new(

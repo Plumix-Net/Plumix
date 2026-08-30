@@ -194,10 +194,9 @@ public sealed class BasicWidgetProxyTests
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
-        var offsetLayer = Assert.IsType<TransformLayer>(Assert.Single(pipeline.RootLayer.Children));
-        Assert.Equal(Matrix4.Identity(), offsetLayer.Transform);
-        var rotationLayer = Assert.IsType<TransformLayer>(Assert.Single(offsetLayer.Children));
-        Assert.Equal(expectedTransform, rotationLayer.Transform);
+        // Dart's `pushTransform` records the rotation onto the canvas: no layer, one picture.
+        Assert.IsType<PictureLayer>(Assert.Single(pipeline.RootLayer.Children));
+        Assert.Null(rotated.DebugLayer);
 
         rotated.QuarterTurns = 2;
         rotated.Layout(new BoxConstraints(MaxWidth: 100, MaxHeight: 200));

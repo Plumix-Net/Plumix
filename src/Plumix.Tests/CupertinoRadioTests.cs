@@ -550,7 +550,9 @@ public sealed class CupertinoRadioTests
     private static bool PaintIsEmpty(CupertinoRadioPainter painter, Size size)
     {
         var root = new ContainerLayer();
-        painter.Paint(new PaintingContext(root), size);
+        var context = new PaintingContext(root);
+        painter.Paint(context, size);
+        context.DebugStopRecordingIfNeeded();
         return root.Children.Count == 0
                || root.Children.All(child => child is PictureLayer { IsEmpty: true });
     }

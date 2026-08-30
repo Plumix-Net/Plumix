@@ -376,10 +376,10 @@ public static class BorderPainting
         var brush = new SolidColorBrush(side.Color);
         if (side.Width == 0.0)
         {
-            context.DrawLine(new Pen(brush, 0.0), start, end);
+            context.Canvas.DrawLine(new Pen(brush, 0.0), start, end);
             return;
         }
 
-        context.DrawPolygon(brush, null, [start, end, innerEnd, innerStart]);
+        context.Canvas.DrawPolygon(brush, null, [start, end, innerEnd, innerStart]);
     }
 }

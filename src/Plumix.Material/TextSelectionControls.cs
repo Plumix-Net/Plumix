@@ -168,7 +168,7 @@ internal sealed class TextSelectionHandlePainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        context.DrawGeometry(new SolidColorBrush(Color), pen: null, BuildPath(size));
+        context.Canvas.DrawGeometry(new SolidColorBrush(Color), pen: null, BuildPath(size));
     }
 
     /// <summary>

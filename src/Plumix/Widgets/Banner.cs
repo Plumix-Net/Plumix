@@ -99,23 +99,15 @@ public sealed class BannerPainter : CustomPainter
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
 
-        Matrix4 translation = Matrix4.TranslationValues(
-            TranslationX(size.Width),
-            TranslationY(size.Height),
-            0.0);
-        context.PushTransform(translation, translatedContext =>
-        {
-            translatedContext.PushTransform(CreateRotationMatrix(Rotation), rotatedContext =>
-            {
-                rotatedContext.DrawRectangle(
-                    Brushes.Transparent,
-                    null,
-                    BannerRect,
-                    boxShadows: new BoxShadows(Shadow.ToAvalonia()));
-                rotatedContext.DrawRectangle(new SolidColorBrush(Color), null, BannerRect);
-                PaintText(rotatedContext);
-            });
-        });
+        context.Canvas.Translate(TranslationX(size.Width), TranslationY(size.Height));
+        context.Canvas.Rotate(Rotation);
+        context.Canvas.DrawRectangle(
+            Brushes.Transparent,
+            null,
+            BannerRect,
+            boxShadows: new BoxShadows(Shadow.ToAvalonia()));
+        context.Canvas.DrawRectangle(new SolidColorBrush(Color), null, BannerRect);
+        PaintText(context);
     }
 
     public bool ShouldRepaint(BannerPainter oldDelegate)
@@ -160,7 +152,7 @@ public sealed class BannerPainter : CustomPainter
                 lineHeight: (TextStyle.FontSize ?? DefaultTextStyle.FontSize!.Value) * (TextStyle.Height ?? 1.0),
                 letterSpacing: TextStyle.LetterSpacing ?? 0);
 
-            context.DrawTextLayout(
+            context.Canvas.DrawTextLayout(
                 _textLayout,
                 BannerRect.TopLeft + new Vector(0, (BannerRect.Height - _textLayout.Height) / 2.0));
         }
@@ -170,7 +162,6 @@ public sealed class BannerPainter : CustomPainter
         }
     }
 
-    private static Matrix4 CreateRotationMatrix(double angle) => Matrix4.RotationZ(angle);
 }
 
 public sealed class Banner : StatefulWidget

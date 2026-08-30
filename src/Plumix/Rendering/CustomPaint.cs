@@ -85,15 +85,26 @@ public sealed class RenderCustomPaint : RenderProxyBox
     {
         if (Painter is not null)
         {
-            context.PushTransform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
-                childContext => Painter.Paint(childContext, Size));
+            PaintWithPainter(context, offset, Painter);
         }
         base.Paint(context, offset);
         if (ForegroundPainter is not null)
         {
-            context.PushTransform(Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
-                childContext => ForegroundPainter.Paint(childContext, Size));
+            PaintWithPainter(context, offset, ForegroundPainter);
         }
+    }
+
+    /// <remarks>Flutter's <c>RenderCustomPaint._paintWithPainter</c>.</remarks>
+    private void PaintWithPainter(PaintingContext context, Point offset, CustomPainter painter)
+    {
+        context.Canvas.Save();
+        if (offset.X != 0.0 || offset.Y != 0.0)
+        {
+            context.Canvas.Translate(offset.X, offset.Y);
+        }
+
+        painter.Paint(context, Size);
+        context.Canvas.Restore();
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)

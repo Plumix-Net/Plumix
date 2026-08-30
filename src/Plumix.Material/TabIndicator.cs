@@ -121,7 +121,7 @@ internal sealed class UnderlinePainter : BoxPainter
         if (_borderRadius is { } borderRadius)
         {
             Rect rounded = _decoration.IndicatorRectFor(rect, textDirection);
-            context.DrawRRect(
+            context.Canvas.DrawRRect(
                 Plumix.UI.RRect.FromRectAndCorners(rounded, borderRadius),
                 new SolidColorBrush(_decoration.BorderSide.Color),
                 pen: null);
@@ -138,7 +138,7 @@ internal sealed class UnderlinePainter : BoxPainter
         // Dart deflates the strip by half the stroke width and draws its bottom edge; the strip is
         // exactly `width` tall, so the deflated bottom edge sits on the strip's vertical centre.
         double y = strip.Bottom - (width / 2.0);
-        context.DrawLine(
+        context.Canvas.DrawLine(
             new Pen(
                 new SolidColorBrush(_decoration.BorderSide.Color),
                 width,

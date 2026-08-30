@@ -565,12 +565,17 @@ internal sealed class RenderLargeTitle : RenderProxyBox
         }
 
         var childParentData = (BoxParentData)child.parentData!;
-        var transform = Matrix4.TranslationValues(
-            offset.X + childParentData.offset.X,
-            offset.Y + childParentData.offset.Y,
+        Matrix4 transform = Matrix4.TranslationValues(
+            childParentData.offset.X,
+            childParentData.offset.Y,
             0.0);
         transform.ScaleByDouble(_scale, _scale, 1.0, 1.0);
-        ctx.PushTransform(transform, innerContext => innerContext.PaintChild(child, new Point(0.0, 0.0)));
+        Layer = ctx.PushTransform(
+            NeedsCompositing,
+            offset,
+            transform,
+            (innerContext, innerOffset) => innerContext.PaintChild(child, innerOffset),
+            Layer as TransformLayer);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)

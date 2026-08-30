@@ -8,6 +8,15 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `dart:ui`'s `Canvas`/`Picture`/`PictureRecorder` over the drawing backend; `PictureLayer` holds a picture.
+- Breaking: `PaintingContext` derives from `ClipContext` and exposes `Canvas`; `Draw*` moves there (`clip.dart`).
+- Breaking: `PaintingContext.Push*` take `needsCompositing`/`offset`/`oldLayer` and return the layer (`object.dart`).
+- Breaking: `PaintingContextCallback` is `(context, offset)`; a clip without compositing records onto the canvas.
+- Breaking: `RenderClipRect`/`RenderClipRRect`/`RenderTransform` are no longer repaint boundaries (`proxy_box.dart`).
+- Breaking: `ClipRRectLayer` carries an `RRect` and `ClipPathLayer` replaces `ClipGeometryLayer` (`layer.dart`).
+- Breaking: `OpacityLayer` is an `OffsetLayer` carrying an 8-bit `Alpha`; `OpacityOffsetLayer` goes (`layer.dart`).
+- Added `RenderObject.Layer`, `PaintingContext.SetIsComplexHint`/`SetWillChangeHint` and `ClipRSuperellipseLayer`.
+- `PaintUtilities.PaintZigZag` draws under the canvas save/translate/rotate Dart uses (`paint_utilities.dart`).
 - Breaking: `WidgetsApp.DefaultShortcuts`/`DefaultActions` ship Flutter's real maps, per platform (`app.dart`).
 - Breaking: traversal keys route through the app's shortcuts; `FocusManager`'s Tab/arrow fallback goes.
 - Breaking: `FocusTraversalGroup.Of`/traversal throws without a group instead of falling back to a policy.

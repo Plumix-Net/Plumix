@@ -327,6 +327,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/SizeChangedLayoutNotifier.cs`
   - `src/Plumix/Rendering/SizeChangedLayoutNotifier.cs`
   - `src/Plumix/UI/Path.cs`
+  - `src/Plumix/UI/Canvas.cs`
+  - `src/Plumix/Painting/ClipContext.cs`
   - `src/Plumix/Rendering/Layer.cs`
   - `src/Plumix/Rendering/Object.PaintingContext.cs`
 - Primary Tests:

@@ -248,7 +248,7 @@ public sealed class AnnotatedRegionTests
 
         public override void Paint(PaintingContext ctx, Point offset)
         {
-            ctx.DrawRectangle(
+            ctx.Canvas.DrawRectangle(
                 Avalonia.Media.Brushes.CadetBlue,
                 pen: null,
                 rect: new Rect(offset, Size));

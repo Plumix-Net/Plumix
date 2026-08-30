@@ -742,8 +742,8 @@ internal sealed class RenderCupertinoSegmentedControl : RenderBox,
         {
             var data = (CupertinoSegmentedControlParentData)child.parentData!;
             RSuperellipse shape = data.SurroundingRect.Shift(offset);
-            context.DrawRSuperellipse(shape, new SolidColorBrush(BackgroundColors[childIndex]), null);
-            context.DrawRSuperellipse(shape, null, borderPen);
+            context.Canvas.DrawRSuperellipse(shape, new SolidColorBrush(BackgroundColors[childIndex]), null);
+            context.Canvas.DrawRSuperellipse(shape, null, borderPen);
             context.PaintChild(child, offset + (Vector)data.offset);
             childIndex++;
         }

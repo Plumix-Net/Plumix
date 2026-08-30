@@ -209,10 +209,9 @@ public sealed class UnconstrainedLimitedBoxTests
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 
-        var clipLayer = Assert.Single(FindLayers<ClipRectLayer>(pipeline.RootLayer));
-        Assert.Equal(new Rect(0, 0, 80, 40), clipLayer.ClipRect);
-        Assert.Equal(Clip.AntiAlias, clipLayer.ClipBehavior);
-        Assert.NotEmpty(FindLayers<PictureLayer>(clipLayer));
+        // Nothing below needs compositing, so the overflow clip is recorded onto the canvas.
+        Assert.Empty(FindLayers<ClipRectLayer>(pipeline.RootLayer));
+        Assert.NotEmpty(FindLayers<PictureLayer>(pipeline.RootLayer));
         Assert.Equal(
             new Rect(0, 0, 80, 40),
             transform.InvokeDescribeApproximatePaintClip(child));
@@ -372,7 +371,7 @@ public sealed class UnconstrainedLimitedBoxTests
         {
             if (_paints)
             {
-                ctx.DrawRectangle(Brushes.Red, pen: null, new Rect(offset, Size));
+                ctx.Canvas.DrawRectangle(Brushes.Red, pen: null, new Rect(offset, Size));
             }
         }
     }

@@ -506,15 +506,29 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
 
         if (HasVisualOverflow && ClipBehavior != Clip.None)
         {
-            context.PushClipRect(
-                new Rect(offset, Size),
-                clippedContext => PaintContents(clippedContext, offset),
-                ClipBehavior);
+            _clipRectLayer.Layer = context.PushClipRect(
+                NeedsCompositing,
+                offset,
+                new Rect(new Point(0, 0), Size),
+                PaintContents,
+                ClipBehavior,
+                _clipRectLayer.Layer);
             return;
         }
 
+        _clipRectLayer.Layer = null;
         PaintContents(context, offset);
     }
+
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
+    }
+
 
     /// <inheritdoc />
     /// <remarks>Flutter's <c>RenderViewportBase.debugPaintSize</c>.</remarks>
@@ -529,7 +543,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
                 ? new Size(child.ConstraintsForSliver.CrossAxisExtent, child.Geometry.LayoutExtent)
                 : new Size(child.Geometry.LayoutExtent, child.ConstraintsForSliver.CrossAxisExtent);
             var rect = new Rect(offset + PaintOffsetOf(child), size);
-            context.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5)));
+            context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(rect.Deflate(0.5)));
         }
     }
 

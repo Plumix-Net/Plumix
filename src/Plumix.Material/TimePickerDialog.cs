@@ -1373,7 +1373,7 @@ internal sealed class TimeDialPainter : CustomPainter
                 if (layout is not null)
                 {
                     var position = OffsetForTheta(labelTheta, radius);
-                    target.DrawTextLayout(
+                    target.Canvas.DrawTextLayout(
                         layout,
                         new Point(position.X - (layout.Width / 2), position.Y - (layout.Height / 2)));
                 }
@@ -1388,14 +1388,14 @@ internal sealed class TimeDialPainter : CustomPainter
             PaintLabels(target, labels.Where(label => label.Inner).ToList(), innerLabelRadius);
         }
 
-        context.DrawCircle(new SolidColorBrush(BackgroundColor), null, center, dialRadius);
+        context.Canvas.DrawCircle(new SolidColorBrush(BackgroundColor), null, center, dialRadius);
         PaintInnerOuterLabels(context, PrimaryLabels);
 
         var handBrush = new SolidColorBrush(HandColor);
         var focusedPoint = OffsetForTheta(Theta, handleRadius);
-        context.DrawCircle(handBrush, null, center, CenterRadius);
-        context.DrawCircle(handBrush, null, focusedPoint, DotRadius);
-        context.DrawLine(new Pen(handBrush, HandWidth), center, focusedPoint);
+        context.Canvas.DrawCircle(handBrush, null, center, CenterRadius);
+        context.Canvas.DrawCircle(handBrush, null, focusedPoint, DotRadius);
+        context.Canvas.DrawLine(new Pen(handBrush, HandWidth), center, focusedPoint);
 
         if (PrimaryLabels.Count > 0)
         {
@@ -1403,17 +1403,20 @@ internal sealed class TimeDialPainter : CustomPainter
             double remainder = Theta - (Math.Floor(Theta / labelThetaIncrement) * labelThetaIncrement);
             if (remainder is > 0.1 and < 0.45)
             {
-                context.DrawCircle(new SolidColorBrush(DotColor), null, focusedPoint, 2);
+                context.Canvas.DrawCircle(new SolidColorBrush(DotColor), null, focusedPoint, 2);
             }
         }
 
-        context.PushClipGeometry(
-            new EllipseGeometry(new Rect(
-                focusedPoint.X - DotRadius,
-                focusedPoint.Y - DotRadius,
-                DotRadius * 2,
-                DotRadius * 2)),
-            clipped => PaintInnerOuterLabels(clipped, SelectedLabels));
+        var dotPath = new Plumix.UI.Path();
+        dotPath.AddOval(new Rect(
+            focusedPoint.X - DotRadius,
+            focusedPoint.Y - DotRadius,
+            DotRadius * 2,
+            DotRadius * 2));
+        context.Canvas.Save();
+        context.Canvas.ClipPath(dotPath);
+        PaintInnerOuterLabels(context, SelectedLabels);
+        context.Canvas.Restore();
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate) => oldDelegate is not TimeDialPainter old

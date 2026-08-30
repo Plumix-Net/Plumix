@@ -815,7 +815,7 @@ public abstract class RenderBox : RenderObject
     {
         ArgumentNullException.ThrowIfNull(context);
         var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FFFF)), 1.0);
-        context.DrawGeometry(null, pen, new RectangleGeometry(Deflate(new Rect(offset, Size), 0.5)));
+        context.Canvas.DrawGeometry(null, pen, new RectangleGeometry(Deflate(new Rect(offset, Size), 0.5)));
     }
 
     /// <summary>In debug mode, paints a line for each baseline.</summary>
@@ -832,7 +832,7 @@ public abstract class RenderBox : RenderObject
         if (baselineI is { } ideographic)
         {
             var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFFFFD000)), 0.25);
-            context.DrawLine(
+            context.Canvas.DrawLine(
                 pen,
                 new Point(offset.X, offset.Y + ideographic),
                 new Point(offset.X + Size.Width, offset.Y + ideographic));
@@ -843,7 +843,7 @@ public abstract class RenderBox : RenderObject
         if (baselineA is { } alphabetic)
         {
             var pen = new Pen(new SolidColorBrush(Color.FromUInt32(0xFF00FF00)), 0.25);
-            context.DrawLine(
+            context.Canvas.DrawLine(
                 pen,
                 new Point(offset.X, offset.Y + alphabetic),
                 new Point(offset.X + Size.Width, offset.Y + alphabetic));
@@ -868,7 +868,7 @@ public abstract class RenderBox : RenderObject
         }
 
         var color = Color.FromUInt32(0x00BBBBu | (uint)(0x04000000 * Depth & 0xFF000000));
-        context.DrawRectangle(new SolidColorBrush(color), null, new Rect(offset, Size));
+        context.Canvas.DrawRectangle(new SolidColorBrush(color), null, new Rect(offset, Size));
     }
 
     /// <inheritdoc />

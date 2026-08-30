@@ -80,7 +80,7 @@ public sealed record ContinuousRectangleBorder : OutlinedBorder
             return;
         }
 
-        context.DrawPath(GetOuterPath(rect, textDirection), null, Side.ToPen());
+        context.Canvas.DrawPath(GetOuterPath(rect, textDirection), null, Side.ToPen());
     }
 
     public override string ToString()

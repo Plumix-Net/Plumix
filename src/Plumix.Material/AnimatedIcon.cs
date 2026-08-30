@@ -148,16 +148,17 @@ internal sealed class AnimatedIconPainter : CustomPainter
             : Matrix4.Diagonal3Values(Scale, Scale, 1.0);
         double clampedProgress = Math.Clamp(Progress.Value, 0.0, 1.0);
 
-        context.PushTransform(transform, transformedContext =>
+        context.Canvas.Save();
+        context.Canvas.Transform(transform);
+        foreach (PathFrames path in Paths)
         {
-            foreach (PathFrames path in Paths)
-            {
-                double opacity = AnimatedIconInterpolation.Interpolate(path.Opacities, clampedProgress);
-                byte alpha = (byte)Math.Clamp((int)Math.Round(Color.A * opacity), 0, 255);
-                var brush = new SolidColorBrush(Avalonia.Media.Color.FromArgb(alpha, Color.R, Color.G, Color.B));
-                transformedContext.DrawGeometry(brush, null, path.BuildGeometry(clampedProgress));
-            }
-        });
+            double opacity = AnimatedIconInterpolation.Interpolate(path.Opacities, clampedProgress);
+            byte alpha = (byte)Math.Clamp((int)Math.Round(Color.A * opacity), 0, 255);
+            var brush = new SolidColorBrush(Avalonia.Media.Color.FromArgb(alpha, Color.R, Color.G, Color.B));
+            context.Canvas.DrawGeometry(brush, null, path.BuildGeometry(clampedProgress));
+        }
+
+        context.Canvas.Restore();
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

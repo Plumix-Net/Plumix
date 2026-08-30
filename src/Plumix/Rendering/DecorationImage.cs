@@ -521,7 +521,7 @@ public static class ImagePainting
             }
             else
             {
-                context.DrawImage(
+                context.Canvas.DrawImage(
                     image: image,
                     sourceRect: plan.SourceRect,
                     destinationRect: destination,
@@ -679,7 +679,7 @@ public static class ImagePainting
     {
         foreach (var patch in GenerateNinePatchRects(imageSize, centerSlice, destination, scale))
         {
-            context.DrawImage(
+            context.Canvas.DrawImage(
                 image: image,
                 sourceRect: patch.Source,
                 destinationRect: patch.Destination,

@@ -1356,14 +1356,14 @@ internal sealed class RenderCupertinoSlidingSegmentedControl<T> : RenderBox,
             Radius.Circular(7.0));
         foreach (BoxShadow shadow in ThumbShadows)
         {
-            context.DrawRSuperellipseShadow(shape, shadow);
+            context.Canvas.DrawRSuperellipseShadow(shape, shadow);
         }
 
-        context.DrawRSuperellipse(
+        context.Canvas.DrawRSuperellipse(
             shape.Inflate(0.5),
             new SolidColorBrush(Color.FromUInt32(0x0A000000)),
             null);
-        context.DrawRSuperellipse(shape, new SolidColorBrush(ThumbColor), null);
+        context.Canvas.DrawRSuperellipse(shape, new SolidColorBrush(ThumbColor), null);
     }
 
     private void HandleThumbAnimationTick()

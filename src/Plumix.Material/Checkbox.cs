@@ -875,11 +875,11 @@ internal sealed class CheckboxPainter : ToggleablePainter
         if (_shape is CircleBorder)
         {
             double radius = Math.Min(rect.Width, rect.Height) / 2.0;
-            context.DrawCircle(brush, pen, rect.Center, radius);
+            context.Canvas.DrawCircle(brush, pen, rect.Center, radius);
             return;
         }
 
-        context.DrawRectangle(brush, pen, rect, ShapeBorderGeometry.ResolveRadius(_shape));
+        context.Canvas.DrawRectangle(brush, pen, rect, ShapeBorderGeometry.ResolveRadius(_shape));
     }
 
     private Rect OuterRectAt(Point origin, double t)
@@ -908,12 +908,12 @@ internal sealed class CheckboxPainter : ToggleablePainter
         var pen = new Pen(new SolidColorBrush(_checkColor), StrokeWidth);
         if (t <= 0.5)
         {
-            context.DrawLine(pen, start, LerpPoint(start, middle, t * 2.0));
+            context.Canvas.DrawLine(pen, start, LerpPoint(start, middle, t * 2.0));
             return;
         }
 
-        context.DrawLine(pen, start, middle);
-        context.DrawLine(pen, middle, LerpPoint(middle, end, (t - 0.5) * 2.0));
+        context.Canvas.DrawLine(pen, start, middle);
+        context.Canvas.DrawLine(pen, middle, LerpPoint(middle, end, (t - 0.5) * 2.0));
     }
 
     private void DrawDash(PaintingContext context, Point origin, double t)
@@ -922,7 +922,7 @@ internal sealed class CheckboxPainter : ToggleablePainter
         Point middle = origin + new Vector(EdgeSize * 0.50, EdgeSize * 0.50);
         Point end = origin + new Vector(EdgeSize * 0.80, EdgeSize * 0.50);
         var pen = new Pen(new SolidColorBrush(_checkColor), StrokeWidth);
-        context.DrawLine(
+        context.Canvas.DrawLine(
             pen,
             LerpPoint(middle, start, t),
             LerpPoint(middle, end, t));

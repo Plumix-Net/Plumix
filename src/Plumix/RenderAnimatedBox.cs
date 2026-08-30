@@ -74,7 +74,7 @@ public sealed class RenderAnimatedBox : RenderBox, IDisposable
     public override void Paint(PaintingContext ctx, Point offset)
     {
         var rect = new Rect(offset, Size);
-        ctx.DrawRectangle(Brush, null, rect, 16, 16);
+        ctx.Canvas.DrawRectangle(Brush, null, rect, 16, 16);
     }
 
     public override void Dispose()

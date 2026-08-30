@@ -1006,6 +1006,16 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             : nodeConstraints.HasBoundedHeight;
     }
 
+
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
+    }
+
     public override void Paint(PaintingContext ctx, Point offset)
     {
         if (!_hasOverflow)
@@ -1020,10 +1030,13 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
             return;
         }
 
-        ctx.PushClipRect(
-            new Rect(offset, Size),
-            clippedContext => DefaultPaint(clippedContext, offset),
-            ClipBehavior);
+        _clipRectLayer.Layer = ctx.PushClipRect(
+            NeedsCompositing,
+            offset,
+            new Rect(new Point(0, 0), Size),
+            DefaultPaint,
+            ClipBehavior,
+            _clipRectLayer.Layer);
 
         Rect overflowChildRect = Direction switch
         {

@@ -172,13 +172,23 @@ public sealed class OverscrollIndicatorTests : IDisposable
         AnimationPump.Advance(0.10);
         var rootLayer = new ContainerLayer();
 
-        painter.Paint(new PaintingContext(rootLayer), new Size(240, 300));
+        var context = new PaintingContext(rootLayer);
+        painter.Paint(context, new Size(240, 300));
+        context.DebugStopRecordingIfNeeded();
 
-        var orientation = Assert.IsType<TransformLayer>(Assert.Single(rootLayer.Children));
-        Assert.Equal(0.0, orientation.Transform[0]);
-        Assert.Equal(1.0, orientation.Transform[1]);
-        Assert.Equal(1.0, orientation.Transform[4]);
-        Assert.Equal(0.0, orientation.Transform[5]);
+        // Dart rotates the up-edge glow on the canvas, so the orientation lives in the picture.
+        Assert.False(Assert.IsType<PictureLayer>(Assert.Single(rootLayer.Children)).IsEmpty);
+
+        Matrix4 orientation = GlowingOverscrollIndicatorPainter.EdgeTransform(
+            AxisDirection.Left,
+            new Size(240, 300));
+        Assert.Equal(0.0, orientation[0]);
+        Assert.Equal(1.0, orientation[1]);
+        Assert.Equal(1.0, orientation[4]);
+        Assert.Equal(0.0, orientation[5]);
+        Assert.Equal(new Size(300, 240), GlowingOverscrollIndicatorPainter.EdgeSize(
+            AxisDirection.Left,
+            new Size(240, 300)));
         controller.Dispose();
     }
 

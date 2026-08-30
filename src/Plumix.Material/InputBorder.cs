@@ -80,7 +80,7 @@ internal sealed record NoInputBorder : InputBorder
         Rect rect,
         IBrush brush,
         TextDirection? textDirection = null) =>
-        context.DrawRectangle(brush, null, rect);
+        context.Canvas.DrawRectangle(brush, null, rect);
 
     public override bool PreferPaintInterior => true;
 
@@ -141,7 +141,7 @@ public record UnderlineInputBorder : InputBorder
         Rect rect,
         IBrush brush,
         TextDirection? textDirection = null) =>
-        context.DrawRectangle(brush, null, rect, BorderRadius);
+        context.Canvas.DrawRectangle(brush, null, rect, BorderRadius);
 
     public override bool PreferPaintInterior => true;
 
@@ -194,7 +194,7 @@ public record UnderlineInputBorder : InputBorder
         }
 
         var alignInsideOffset = new Point(0, BorderSide.Width / 2.0);
-        context.DrawLine(
+        context.Canvas.DrawLine(
             BorderSide.ToPen()!,
             rect.BottomLeft - alignInsideOffset,
             rect.BottomRight - alignInsideOffset);
@@ -269,7 +269,7 @@ public record OutlineInputBorder : InputBorder
         Rect rect,
         IBrush brush,
         TextDirection? textDirection = null) =>
-        context.DrawRectangle(brush, null, rect, BorderRadius);
+        context.Canvas.DrawRectangle(brush, null, rect, BorderRadius);
 
     public override bool PreferPaintInterior => true;
 
@@ -302,7 +302,7 @@ public record OutlineInputBorder : InputBorder
 
         if (gapStart is null || gapExtent <= 0.0 || gapPercentage == 0.0)
         {
-            context.DrawRectangle(Brushes.Transparent, pen, center.Rect, center.Radii);
+            context.Canvas.DrawRectangle(Brushes.Transparent, pen, center.Rect, center.Radii);
             return;
         }
 
@@ -311,7 +311,7 @@ public record OutlineInputBorder : InputBorder
             ? gapStart.Value + GapPadding - extent
             : gapStart.Value - GapPadding;
         Path path = GapBorderPath(center, outer.Width, Math.Max(0.0, start), extent);
-        context.DrawGeometry(null, pen, path.ToGeometry());
+        context.Canvas.DrawGeometry(null, pen, path.ToGeometry());
     }
 
     private Path GapBorderPath(RRect center, double outerWidth, double start, double extent)
@@ -449,7 +449,7 @@ public record ShapedInputBorder : InputBorder
             return;
         }
 
-        context.DrawGeometry(brush, null, Shape.GetOuterPath(rect, textDirection).ToGeometry());
+        context.Canvas.DrawGeometry(brush, null, Shape.GetOuterPath(rect, textDirection).ToGeometry());
     }
 
     public override void Paint(
@@ -474,7 +474,7 @@ public record ShapedInputBorder : InputBorder
                 return;
             }
 
-            context.DrawGeometry(
+            context.Canvas.DrawGeometry(
                 null,
                 BorderSide.ToPen(),
                 Shape.GetOuterPath(deflatedRect, textDirection).ToGeometry());
@@ -486,7 +486,7 @@ public record ShapedInputBorder : InputBorder
             ? gapStart.Value + GapPadding - extent
             : gapStart.Value - GapPadding;
         Path path = GapBorderPath(deflatedRect, Math.Max(0.0, start), extent, textDirection);
-        context.DrawGeometry(null, BorderSide.ToPen(), path.ToGeometry());
+        context.Canvas.DrawGeometry(null, BorderSide.ToPen(), path.ToGeometry());
     }
 
     private Path GapBorderPath(Rect rect, double start, double extent, TextDirection? textDirection)

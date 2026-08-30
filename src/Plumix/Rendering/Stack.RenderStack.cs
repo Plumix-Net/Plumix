@@ -259,14 +259,31 @@ public sealed class RenderStack : RenderBox,
         }
     }
 
+
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
+    }
+
     public override void Paint(PaintingContext ctx, Point offset)
     {
         if (_hasVisualOverflow && ClipBehavior != Clip.None)
         {
-            ctx.PushClipRect(new Rect(offset, Size), clippedContext => DefaultPaint(clippedContext, offset));
+            _clipRectLayer.Layer = ctx.PushClipRect(
+                NeedsCompositing,
+                offset,
+                new Rect(new Point(0, 0), Size),
+                DefaultPaint,
+                ClipBehavior,
+                _clipRectLayer.Layer);
             return;
         }
 
+        _clipRectLayer.Layer = null;
         DefaultPaint(ctx, offset);
     }
 

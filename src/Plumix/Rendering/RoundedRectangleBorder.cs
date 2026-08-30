@@ -97,11 +97,11 @@ public sealed record RoundedRectangleBorder : OutlinedBorder
     {
         if (BorderRadius.IsZero)
         {
-            context.DrawRectangle(brush, null, rect);
+            context.Canvas.DrawRectangle(brush, null, rect);
             return;
         }
 
-        context.DrawRRect(BorderRadius.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect), brush, null);
+        context.Canvas.DrawRRect(BorderRadius.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect), brush, null);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -114,14 +114,14 @@ public sealed record RoundedRectangleBorder : OutlinedBorder
         BorderRadius resolved = BorderRadius.Resolve(textDirection ?? TextDirection.Ltr);
         if (Side.Width == 0.0)
         {
-            context.DrawRRect(resolved.ToRRect(rect), null, Side.ToPen());
+            context.Canvas.DrawRRect(resolved.ToRRect(rect), null, Side.ToPen());
             return;
         }
 
         RRect borderRect = resolved.ToRRect(rect);
         RRect inner = borderRect.Deflate(Side.StrokeInset);
         RRect outer = borderRect.Inflate(Side.StrokeOutset);
-        context.DrawDRRect(outer, inner, new SolidColorBrush(Side.Color));
+        context.Canvas.DrawDRRect(outer, inner, new SolidColorBrush(Side.Color));
     }
 
     public override string ToString()
@@ -239,7 +239,7 @@ internal sealed record RoundedRectangleToCircleBorder : OutlinedBorder
         BorderRadius adjustedRadius = AdjustBorderRadius(rect, textDirection);
         if (adjustedRadius == Rendering.BorderRadius.Zero)
         {
-            context.DrawRectangle(brush, null, AdjustRect(rect));
+            context.Canvas.DrawRectangle(brush, null, AdjustRect(rect));
             return;
         }
 
@@ -315,7 +315,7 @@ internal sealed record RoundedRectangleToCircleBorder : OutlinedBorder
             rrect = rrect.Inflate(amount);
         }
 
-        context.DrawRRect(rrect, brush, pen);
+        context.Canvas.DrawRRect(rrect, brush, pen);
     }
 
     private Rect AdjustRect(Rect rect)

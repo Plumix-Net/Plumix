@@ -105,7 +105,9 @@ public sealed class MaterialTextSelectionControlsTests : IDisposable
         Assert.Equal(new Rect(0, 0, 11, 11), Assert.IsType<RectangleGeometry>(combined.Geometry2).Rect);
 
         var root = new ContainerLayer();
-        painter.Paint(new PaintingContext(root), new Size(22, 22));
+        var context = new PaintingContext(root);
+        painter.Paint(context, new Size(22, 22));
+        context.DebugStopRecordingIfNeeded();
         var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
         Assert.False(picture.IsEmpty);
 

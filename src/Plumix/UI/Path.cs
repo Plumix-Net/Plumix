@@ -120,6 +120,12 @@ public sealed class Path
     }
 
     // Dart parity source: dart:ui Path.transform (affine subset).
+    /// <remarks>Dart's <c>Path.shift</c>.</remarks>
+    public Path Shift(Point offset) =>
+        offset.X == 0.0 && offset.Y == 0.0
+            ? this
+            : Transform(Matrix.CreateTranslation(offset.X, offset.Y));
+
     public Path Transform(Matrix matrix)
     {
         if (_combination is { } combination)

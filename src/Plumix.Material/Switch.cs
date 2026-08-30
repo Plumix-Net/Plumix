@@ -1703,7 +1703,7 @@ internal sealed class SwitchPainter : ToggleablePainter
             trackPaintOffset.Y,
             _trackWidth,
             _trackHeight);
-        context.DrawRRect(
+        context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(trackRect, trackRadius),
             new SolidColorBrush(trackColor),
             null);
@@ -1714,7 +1714,7 @@ internal sealed class SwitchPainter : ToggleablePainter
                 trackPaintOffset.Y + 1.0,
                 _trackWidth - 2.0,
                 _trackHeight - 2.0);
-            context.DrawRRect(
+            context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(outlineRect, trackRadius),
                 null,
                 new Pen(new SolidColorBrush(trackOutlineColor.Value), trackOutlineWidth ?? 2.0));
@@ -1724,7 +1724,7 @@ internal sealed class SwitchPainter : ToggleablePainter
         {
             if (IsFocused)
             {
-                context.DrawRRect(
+                context.Canvas.DrawRRect(
                     RRect.FromRectAndRadius(trackRect, trackRadius)
                         .Inflate(SwitchConfigCupertino.FocusTrackOutline / 2.0),
                     null,
@@ -1734,9 +1734,11 @@ internal sealed class SwitchPainter : ToggleablePainter
             }
 
             context.PushClipRRect(
+                false,
+                new Point(0, 0),
                 trackRect,
-                BorderRadius.Circular(trackRadius),
-                clipped =>
+                RRect.FromRectAndRadius(trackRect, trackRadius),
+                (clipped, _) =>
                 {
                     PaintRadialReaction(clipped, radialReactionOrigin);
                     PaintThumb(
@@ -1825,7 +1827,7 @@ internal sealed class SwitchPainter : ToggleablePainter
         double radius = thumbSize.Height / 2.0;
         if (_thumbShadow is { Count: > 0 })
         {
-            context.DrawRectangle(
+            context.Canvas.DrawRectangle(
                 Brushes.Transparent,
                 null,
                 thumbBounds,
@@ -1835,7 +1837,7 @@ internal sealed class SwitchPainter : ToggleablePainter
 
         if (_isCupertino)
         {
-            context.DrawRRect(
+            context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(thumbBounds.Inflate(0.5), radius + 0.5),
                 new SolidColorBrush(Color.FromArgb(0x0A, 0x00, 0x00, 0x00)),
                 null);

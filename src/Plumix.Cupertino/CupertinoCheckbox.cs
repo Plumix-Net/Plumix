@@ -465,11 +465,11 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
     {
         if (_shape is CircleBorder)
         {
-            context.DrawOval(rect, brush, pen);
+            context.Canvas.DrawOval(rect, brush, pen);
             return;
         }
 
-        context.DrawRRect(
+        context.Canvas.DrawRRect(
             Plumix.UI.RRect.FromRectAndCorners(rect, ShapeBorderGeometry.ResolveRadius(_shape)),
             brush,
             pen);
@@ -486,7 +486,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
 
         if (_shape is CircleBorder)
         {
-            context.DrawOval(
+            context.Canvas.DrawOval(
                 outer.Deflate(side.Width / 2.0),
                 brush: null,
                 new Pen(new SolidColorBrush(side.Color), side.Width));
@@ -496,7 +496,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         Plumix.UI.RRect outerRRect = Plumix.UI.RRect.FromRectAndCorners(
             outer,
             ShapeBorderGeometry.ResolveRadius(_shape));
-        context.DrawDRRect(outerRRect, outerRRect.Deflate(side.Width), new SolidColorBrush(side.Color));
+        context.Canvas.DrawDRRect(outerRRect, outerRRect.Deflate(side.Width), new SolidColorBrush(side.Color));
     }
 
     private void DrawCheck(PaintingContext context, Point origin, IPen pen)
@@ -507,8 +507,8 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         var start = new Point(origin.X + (CupertinoCheckbox.Width * 0.22), origin.Y + (CupertinoCheckbox.Width * 0.54));
         var mid = new Point(origin.X + (CupertinoCheckbox.Width * 0.40), origin.Y + (CupertinoCheckbox.Width * 0.75));
         var end = new Point(origin.X + (CupertinoCheckbox.Width * 0.78), origin.Y + (CupertinoCheckbox.Width * 0.25));
-        context.DrawLine(pen, start, mid);
-        context.DrawLine(pen, mid, end);
+        context.Canvas.DrawLine(pen, start, mid);
+        context.Canvas.DrawLine(pen, mid, end);
     }
 
     private void DrawDash(PaintingContext context, Point origin, IPen pen)
@@ -517,7 +517,7 @@ internal sealed class CupertinoCheckboxPainter : ToggleablePainter
         // total width, centered in the middle.
         var start = new Point(origin.X + (CupertinoCheckbox.Width * 0.25), origin.Y + (CupertinoCheckbox.Width * 0.5));
         var end = new Point(origin.X + (CupertinoCheckbox.Width * 0.75), origin.Y + (CupertinoCheckbox.Width * 0.5));
-        context.DrawLine(pen, start, end);
+        context.Canvas.DrawLine(pen, start, end);
     }
 
     public override void Paint(PaintingContext context, Size size)

@@ -330,10 +330,13 @@ internal sealed class RenderSegmentedButton : RenderBox,
         foreach (RenderBox child in Children())
         {
             var data = (SegmentedButtonParentData)child.parentData!;
+            RenderBox localChild = child;
             context.PushClipPath(
+                NeedsCompositing,
+                offset,
+                borderRect,
                 innerPath,
-                clipped => clipped.PaintChild(child, offset + (Vector)data.offset),
-                geometryOffset: offset);
+                (clipped, clippedOffset) => clipped.PaintChild(localChild, clippedOffset + (Vector)data.offset));
         }
 
         PaintDividers(context, offset, borderRect);
@@ -489,7 +492,7 @@ internal sealed class RenderSegmentedButton : RenderBox,
                 double x = TextDirection == TextDirection.Ltr
                     ? data.SurroundingRect.Right
                     : data.SurroundingRect.Left;
-                context.DrawLine(
+                context.Canvas.DrawLine(
                     pen,
                     offset + new Vector(x, borderRect.Top),
                     offset + new Vector(x, borderRect.Bottom));
@@ -500,13 +503,13 @@ internal sealed class RenderSegmentedButton : RenderBox,
                 ? data.SurroundingRect.Bottom
                 : data.SurroundingRect.Top;
             Path clipPath = EnabledBorder.GetInnerPath(borderRect, TextDirection);
-            context.PushClipPath(
-                clipPath,
-                clipped => clipped.DrawLine(
-                    pen,
-                    offset + new Vector(borderRect.Left, y),
-                    offset + new Vector(borderRect.Right, y)),
-                geometryOffset: offset);
+            context.Canvas.Save();
+            context.Canvas.ClipPath(clipPath.Shift(offset));
+            context.Canvas.DrawLine(
+                pen,
+                offset + new Vector(borderRect.Left, y),
+                offset + new Vector(borderRect.Right, y));
+            context.Canvas.Restore();
         }
     }
 
@@ -544,7 +547,10 @@ internal sealed class RenderSegmentedButton : RenderBox,
                     data.SurroundingRect.Height);
             Rect clipRect = new Rect(offset + (Vector)localClip.Position, localClip.Size).Inflate(outset);
             OutlinedBorder border = SegmentEnabled[index] ? EnabledBorder : DisabledBorder;
-            context.PushClipRect(clipRect, clipped => border.Paint(clipped, paintedRect, TextDirection));
+            context.Canvas.Save();
+            context.Canvas.ClipRect(clipRect, doAntiAlias: false);
+            border.Paint(context, paintedRect, TextDirection);
+            context.Canvas.Restore();
         }
     }
 }

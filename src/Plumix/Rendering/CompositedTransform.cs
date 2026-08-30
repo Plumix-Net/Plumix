@@ -82,7 +82,7 @@ public sealed class RenderLeaderLayer : RenderProxyBox
             leaderLayer.Offset = offset;
         }
 
-        ctx.PushLayer(leaderLayer, childContext => base.Paint(childContext, default));
+        ctx.PushLayer(leaderLayer, base.Paint, new Point(0, 0));
     }
 
     /// <inheritdoc />
@@ -260,7 +260,13 @@ public sealed class RenderFollowerLayer : RenderProxyBox
             followerLayer.LinkedTransform = linkedTransform;
         }
 
-        ctx.PushLayer(followerLayer, childContext => base.Paint(childContext, default));
+        ctx.PushLayer(
+            followerLayer,
+            base.Paint,
+            new Point(0, 0),
+            new Rect(
+                new Point(double.NegativeInfinity, double.NegativeInfinity),
+                new Point(double.PositiveInfinity, double.PositiveInfinity)));
     }
 
     private Matrix4? ComputeLinkedTransform()

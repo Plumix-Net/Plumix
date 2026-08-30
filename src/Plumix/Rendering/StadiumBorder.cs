@@ -90,7 +90,7 @@ public sealed record StadiumBorder : OutlinedBorder
         IBrush brush,
         TextDirection? textDirection = null)
     {
-        context.DrawRRect(RRect.FromRectAndRadius(rect, BoxBorder.ShortestSide(rect) / 2.0), brush, null);
+        context.Canvas.DrawRRect(RRect.FromRectAndRadius(rect, BoxBorder.ShortestSide(rect) / 2.0), brush, null);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -101,7 +101,7 @@ public sealed record StadiumBorder : OutlinedBorder
         }
 
         RRect borderRect = RRect.FromRectAndRadius(rect, BoxBorder.ShortestSide(rect) / 2.0);
-        context.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
+        context.Canvas.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
     }
 
     public override string ToString()
@@ -204,7 +204,7 @@ internal sealed record StadiumToCircleBorder : OutlinedBorder
         IBrush brush,
         TextDirection? textDirection = null)
     {
-        context.DrawRRect(AdjustBorderRadius(rect).ToRRect(AdjustRect(rect)), brush, null);
+        context.Canvas.DrawRRect(AdjustBorderRadius(rect).ToRRect(AdjustRect(rect)), brush, null);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -215,7 +215,7 @@ internal sealed record StadiumToCircleBorder : OutlinedBorder
         }
 
         RRect borderRect = AdjustBorderRadius(rect).ToRRect(AdjustRect(rect));
-        context.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
+        context.Canvas.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
     }
 
     public override string ToString()
@@ -399,11 +399,11 @@ internal sealed record StadiumToRoundedRectangleBorder : OutlinedBorder
         BorderRadiusGeometry adjusted = AdjustBorderRadius(rect);
         if (adjusted.IsZero)
         {
-            context.DrawRectangle(brush, null, rect);
+            context.Canvas.DrawRectangle(brush, null, rect);
             return;
         }
 
-        context.DrawRRect(adjusted.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect), brush, null);
+        context.Canvas.DrawRRect(adjusted.Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect), brush, null);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -414,7 +414,7 @@ internal sealed record StadiumToRoundedRectangleBorder : OutlinedBorder
         }
 
         RRect borderRect = AdjustBorderRadius(rect).Resolve(textDirection ?? TextDirection.Ltr).ToRRect(rect);
-        context.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
+        context.Canvas.DrawRRect(borderRect.Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
     }
 
     public override string ToString()

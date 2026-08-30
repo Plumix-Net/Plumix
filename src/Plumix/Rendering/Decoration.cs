@@ -806,7 +806,7 @@ internal sealed class ShapeDecorationPainter : BoxPainter
     {
         if (_decoration.Shadows is { Count: > 0 } shadows && outerRRect is { } shadowRect)
         {
-            context.DrawRectangle(brush, null, shadowRect.Rect, shadowRect.Radii, shadows.ToAvalonia());
+            context.Canvas.DrawRectangle(brush, null, shadowRect.Rect, shadowRect.Radii, shadows.ToAvalonia());
             return;
         }
 
@@ -816,7 +816,7 @@ internal sealed class ShapeDecorationPainter : BoxPainter
             return;
         }
 
-        context.DrawPath(_decoration.Shape.GetOuterPath(rect, textDirection), brush, null);
+        context.Canvas.DrawPath(_decoration.Shape.GetOuterPath(rect, textDirection), brush, null);
     }
 
     /// Resolves the rounded rectangle that matches the shape's outer path, when there is one.
@@ -1064,7 +1064,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
                     rect.Center.Y - (side / 2.0),
                     side,
                     side);
-                context.DrawRectangle(
+                context.Canvas.DrawRectangle(
                     fill ?? Brushes.Transparent,
                     null,
                     circleRect,
@@ -1075,7 +1075,7 @@ internal sealed class BoxDecorationPainter : BoxPainter
         }
         else if (fill != null || boxShadows.Count > 0)
         {
-            context.DrawRectangle(
+            context.Canvas.DrawRectangle(
                 fill ?? Brushes.Transparent,
                 null,
                 rect,

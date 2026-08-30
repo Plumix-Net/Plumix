@@ -724,7 +724,7 @@ internal sealed class RenderSelectToggleButton : RenderProxyBox
         var rect = new Rect(
             offset + new Vector(half, half),
             new Size(Math.Max(0.0, Size.Width - side.Width), Math.Max(0.0, Size.Height - side.Width)));
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             new SolidColorBrush(Colors.Transparent),
             PenFor(side),
             rect,
@@ -842,7 +842,7 @@ internal sealed class RenderSelectToggleButton : RenderProxyBox
 
         double half = side.Width / 2.0;
         double y = offset.Y + (top ? half : Size.Height - half);
-        context.DrawLine(
+        context.Canvas.DrawLine(
             PenFor(side),
             new Point(offset.X + half + startInset, y),
             new Point(
@@ -865,7 +865,7 @@ internal sealed class RenderSelectToggleButton : RenderProxyBox
 
         double half = side.Width / 2.0;
         double x = offset.X + (left ? half : Size.Width - half);
-        context.DrawLine(
+        context.Canvas.DrawLine(
             PenFor(side),
             new Point(x, offset.Y + half + startInset),
             new Point(
@@ -904,7 +904,7 @@ internal sealed class RenderSelectToggleButton : RenderProxyBox
             Corner.BottomLeft => Math.PI * 0.5,
             _ => throw new ArgumentOutOfRangeException(nameof(corner), corner, null),
         };
-        context.DrawArc(
+        context.Canvas.DrawArc(
             PenFor(side),
             new Rect(position, new Size(radius.X * 2.0, radius.Y * 2.0)),
             startAngle,

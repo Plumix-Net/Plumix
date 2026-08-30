@@ -308,15 +308,13 @@ internal sealed class RenderFlexibleSpaceHeaderOpacity : RenderOpacity
             return;
         }
 
-        double alpha = Math.Round(Opacity * 255.0, MidpointRounding.AwayFromZero);
-        if (alpha <= 0.0)
+        int alpha = (int)Math.Round(Opacity * 255.0, MidpointRounding.AwayFromZero);
+        if (alpha <= 0)
         {
             return;
         }
 
-        context.PushOpacity(
-            alpha / 255.0,
-            childContext => base.Paint(childContext, offset));
+        Layer = context.PushOpacity(offset, alpha, base.Paint, Layer as OpacityLayer);
     }
 }
 

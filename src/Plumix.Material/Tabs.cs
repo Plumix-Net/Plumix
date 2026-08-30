@@ -612,7 +612,7 @@ internal sealed class DividerPainter : CustomPainter
         }
 
         double y = size.Height - (DividerHeight / 2);
-        context.DrawLine(
+        context.Canvas.DrawLine(
             new Pen(new SolidColorBrush(DividerColor), DividerHeight),
             new Point(0, y),
             new Point(size.Width, y));
@@ -818,7 +818,7 @@ internal sealed class IndicatorPainter : CustomPainter
         if (ShowDivider && DividerHeight is > 0)
         {
             double y = size.Height - (DividerHeight.Value / 2);
-            context.DrawLine(
+            context.Canvas.DrawLine(
                 new Pen(new SolidColorBrush(DividerColor!.Value), DividerHeight.Value),
                 new Point(0, y),
                 new Point(size.Width, y));

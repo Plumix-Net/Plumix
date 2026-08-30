@@ -1379,7 +1379,7 @@ internal sealed class InputBorderPainter : CustomPainter
             }
             else
             {
-                context.DrawGeometry(brush, null, Border.GetOuterPath(canvasRect, TextDirection).ToGeometry());
+                context.Canvas.DrawGeometry(brush, null, Border.GetOuterPath(canvasRect, TextDirection).ToGeometry());
             }
         }
 

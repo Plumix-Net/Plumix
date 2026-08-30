@@ -409,16 +409,14 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         var geometry = Shape?.GetOuterPath(host, ResolveGuestRect()) ?? new RectangleGeometry(host);
         if (Elevation > 0.0 && ShadowColor.A > 0)
         {
-            context.DrawShadow(
+            context.Canvas.DrawShadow(
                 geometry,
                 ShadowColor,
                 Elevation,
                 transparentOccluder: Color.A != byte.MaxValue,
                 geometryOffset: offset);
         }
-        context.PushTransform(
-            Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
-            local => local.DrawGeometry(new SolidColorBrush(Color), null, geometry));
+        context.Canvas.DrawGeometry(new SolidColorBrush(Color), null, geometry, geometryOffset: offset);
 
         if (Child is null) return;
         var childOffset = ((BoxParentData)Child.parentData!).offset + offset;
@@ -428,11 +426,15 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
             return;
         }
 
-        context.PushTransform(
-            Matrix4.TranslationValues(offset.X, offset.Y, 0.0),
-            local => local.PushClipGeometry(
-                geometry,
-                clipped => clipped.PaintChild(Child, ((BoxParentData)Child.parentData!).offset)));
+        Layer = context.PushClipGeometry(
+            NeedsCompositing,
+            offset,
+            host,
+            geometry,
+            (clipped, clippedOffset) =>
+                clipped.PaintChild(Child, clippedOffset + ((BoxParentData)Child.parentData!).offset),
+            ClipBehavior,
+            Layer as ClipGeometryLayer);
     }
 
     private Rect? ResolveGuestRect()

@@ -136,7 +136,7 @@ internal static class RenderCustomClipDebug
     /// <remarks>Flutter's <c>_RenderCustomClip.debugPaintSize</c> scissors placement.</remarks>
     internal static void PaintScissors(PaintingContext context, Point offset, double clipWidth)
     {
-        context.DrawTextLayout(
+        context.Canvas.DrawTextLayout(
             DebugText,
             new Point(offset.X + (clipWidth / 8.0), offset.Y - (FontSize * 1.1)));
     }
@@ -323,29 +323,44 @@ public sealed class RenderClipOval : RenderCustomClip<Rect>
 
     public override void Paint(PaintingContext context, Point offset)
     {
+        ArgumentNullException.ThrowIfNull(context);
         if (Child is null)
         {
+            Layer = null;
             return;
         }
 
         if (ClipBehavior == Clip.None)
         {
-            base.Paint(context, offset);
+            context.PaintChild(Child, offset);
+            Layer = null;
             return;
         }
 
-        context.PushClipGeometry(
-            new EllipseGeometry(EffectiveClip),
-            clippedContext => base.Paint(clippedContext, offset),
-            clipBehavior: ClipBehavior,
-            geometryOffset: offset);
+        Rect clip = EffectiveClip;
+        Layer = context.PushClipPath(
+            NeedsCompositing,
+            offset,
+            clip,
+            GetClipPath(clip),
+            base.Paint,
+            ClipBehavior,
+            Layer as ClipPathLayer);
+    }
+
+    /// <remarks>Flutter's <c>RenderClipOval._getClipPath</c>.</remarks>
+    private static Path GetClipPath(Rect rect)
+    {
+        var path = new Path();
+        path.AddOval(rect);
+        return path;
     }
 
     /// <inheritdoc />
     protected override void DebugPaintClip(PaintingContext context, Point offset)
     {
         Rect clip = EffectiveClip;
-        context.DrawOval(
+        context.Canvas.DrawOval(
             new Rect(clip.Position + offset, clip.Size),
             brush: null,
             pen: RenderCustomClipDebug.DebugPen);
@@ -384,29 +399,35 @@ public sealed class RenderClipPath : RenderCustomClip<Path>
 
     public override void Paint(PaintingContext context, Point offset)
     {
+        ArgumentNullException.ThrowIfNull(context);
         if (Child is null)
         {
+            Layer = null;
             return;
         }
 
         if (ClipBehavior == Clip.None)
         {
-            base.Paint(context, offset);
+            context.PaintChild(Child, offset);
+            Layer = null;
             return;
         }
 
-        context.PushClipGeometry(
-            EffectiveClip.ToGeometry(),
-            clippedContext => base.Paint(clippedContext, offset),
-            clipBehavior: ClipBehavior,
-            geometryOffset: offset);
+        Layer = context.PushClipPath(
+            NeedsCompositing,
+            offset,
+            new Rect(new Point(0, 0), Size),
+            EffectiveClip,
+            base.Paint,
+            ClipBehavior,
+            Layer as ClipPathLayer);
     }
 
     /// <inheritdoc />
     protected override void DebugPaintClip(PaintingContext context, Point offset)
     {
         Path clip = EffectiveClip;
-        context.DrawGeometry(null, RenderCustomClipDebug.DebugPen, clip.ToGeometry(), geometryOffset: offset);
+        context.Canvas.DrawGeometry(null, RenderCustomClipDebug.DebugPen, clip.ToGeometry(), geometryOffset: offset);
         RenderCustomClipDebug.PaintScissors(context, offset, clip.GetBounds().Width);
     }
 }

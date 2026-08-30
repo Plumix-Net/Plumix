@@ -753,7 +753,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
             var scrim = new SolidColorBrush(Color.FromArgb(0x60, 0x19, 0x19, 0x19));
             if (_avatarBorder is CircleBorder)
             {
-                context.DrawCircle(
+                context.Canvas.DrawCircle(
                     scrim,
                     null,
                     avatarRect.Center,
@@ -761,7 +761,7 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
             }
             else
             {
-                context.DrawRectangle(
+                context.Canvas.DrawRectangle(
                     scrim,
                     null,
                     avatarRect,
@@ -795,12 +795,12 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
         var pen = new Pen(new SolidColorBrush(color), 2.0 * avatarRect.Height / 24.0);
         if (progress < 0.5)
         {
-            context.DrawLine(pen, start, Lerp(start, middle, progress * 2.0));
+            context.Canvas.DrawLine(pen, start, Lerp(start, middle, progress * 2.0));
             return;
         }
 
-        context.DrawLine(pen, start, middle);
-        context.DrawLine(pen, middle, Lerp(middle, end, (progress - 0.5) * 2.0));
+        context.Canvas.DrawLine(pen, start, middle);
+        context.Canvas.DrawLine(pen, middle, Lerp(middle, end, (progress - 0.5) * 2.0));
     }
 
     private static Point Lerp(Point begin, Point end, double t)
@@ -821,14 +821,19 @@ internal sealed class RenderChip : RenderBox, ISlottedRenderObjectContainer
             return;
         }
 
-        Point childOffset = ParentDataOf(child).offset + offset;
+        Point localOffset = ParentDataOf(child).offset;
         if (opacity >= 0.999)
         {
-            context.PaintChild(child, childOffset);
+            context.PaintChild(child, localOffset + offset);
             return;
         }
 
-        context.PushOpacity(opacity, childContext => childContext.PaintChild(child, childOffset));
+        // `pushOpacity` carries the offset on the layer, so the painter runs in local coordinates.
+        int alpha = (int)Math.Round(Math.Clamp(opacity, 0.0, 1.0) * 255.0);
+        context.PushOpacity(
+            offset,
+            alpha,
+            (childContext, childContextOffset) => childContext.PaintChild(child, childContextOffset + localOffset));
     }
 
     private static Size LayoutChild(RenderBox child, BoxConstraints constraints)

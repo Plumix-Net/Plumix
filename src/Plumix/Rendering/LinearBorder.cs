@@ -277,16 +277,16 @@ public sealed record LinearBorder : OutlinedBorder
         var brush = new SolidColorBrush(color);
         if (rect.Width == 0.0)
         {
-            context.DrawLine(new Pen(brush, 0.0), rect.TopLeft, new Point(rect.Left, rect.Bottom));
+            context.Canvas.DrawLine(new Pen(brush, 0.0), rect.TopLeft, new Point(rect.Left, rect.Bottom));
             return;
         }
 
         if (rect.Height == 0.0)
         {
-            context.DrawLine(new Pen(brush, 0.0), rect.TopLeft, new Point(rect.Right, rect.Top));
+            context.Canvas.DrawLine(new Pen(brush, 0.0), rect.TopLeft, new Point(rect.Right, rect.Top));
             return;
         }
 
-        context.DrawRectangle(brush, null, rect);
+        context.Canvas.DrawRectangle(brush, null, rect);
     }
 }

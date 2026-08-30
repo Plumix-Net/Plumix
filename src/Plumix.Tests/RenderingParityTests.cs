@@ -422,7 +422,7 @@ public sealed class RenderingParityTests
 
         public override void Paint(PaintingContext ctx, Point offset)
         {
-            ctx.DrawRectangle(
+            ctx.Canvas.DrawRectangle(
                 new SolidColorBrush(Color.Parse("#FFC8E6C9")),
                 null,
                 new Rect(offset, Size));
@@ -478,12 +478,6 @@ public sealed class RenderingParityTests
 
     private static int CountPictureCommands(PictureLayer pictureLayer)
     {
-        var commandsField = typeof(PictureLayer).GetField(
-            "_commands",
-            BindingFlags.Instance | BindingFlags.NonPublic)
-            ?? throw new InvalidOperationException("PictureLayer._commands field was not found.");
-        var commands = (ICollection?)commandsField.GetValue(pictureLayer)
-            ?? throw new InvalidOperationException("PictureLayer commands collection is null.");
-        return commands.Count;
+        return pictureLayer.Picture?.DrawCommandCount ?? 0;
     }
 }

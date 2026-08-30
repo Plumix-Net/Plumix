@@ -49,7 +49,7 @@ public sealed class RenderColorFilter : RenderProxyBox
         ColorFilterLayer layer = ctx.PushColorFilter(
             offset,
             ColorFilter,
-            childContext => base.Paint(childContext, offset),
+            base.Paint,
             _layer as ColorFilterLayer);
         layer.FilterBounds = new Rect(offset, Size);
         _layer = layer;
@@ -238,9 +238,7 @@ public sealed class RenderBackdropFilter : RenderProxyBox
         layer.ImageFilter = effectiveFilter;
         layer.BlendMode = BlendMode;
         layer.BackdropKey = BackdropKey;
-        context.PushLayer(
-            layer,
-            childContext => base.Paint(childContext, offset));
+        context.PushLayer(layer, base.Paint, offset);
         _layer = layer;
     }
 
@@ -319,9 +317,7 @@ public sealed class RenderShaderMask : RenderProxyBox
             ?? throw new InvalidOperationException("ShaderCallback must return a non-null brush.");
         layer.MaskRect = new Rect(offset, Size);
         layer.BlendMode = BlendMode;
-        context.PushLayer(
-            layer,
-            childContext => base.Paint(childContext, offset));
+        context.PushLayer(layer, base.Paint, offset);
         _layer = layer;
     }
 }

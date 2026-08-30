@@ -83,6 +83,10 @@ public readonly record struct RRect
 
     /// Moves each edge out by the matching inset and grows every radius by the same amounts.
     // Dart parity source: flutter/packages/flutter/lib/src/painting/edge_insets.dart EdgeInsets.inflateRRect.
+    /// <remarks>Dart's <c>RRect.shift</c>.</remarks>
+    public RRect Shift(Point offset) =>
+        new(new Rect(Rect.Position + offset, Rect.Size), TopLeft, TopRight, BottomRight, BottomLeft);
+
     public RRect InflateEdges(Thickness insets) => new(
         new Rect(
             Rect.Left - insets.Left,

@@ -34,13 +34,13 @@ internal sealed class GridPaperPainter : CustomPainter
         for (double x = 0.0; x <= size.Width; x += step)
         {
             var pen = new Pen(brush, StrokeWidthAt(x));
-            context.DrawLine(pen, new Point(x, 0.0), new Point(x, size.Height));
+            context.Canvas.DrawLine(pen, new Point(x, 0.0), new Point(x, size.Height));
         }
 
         for (double y = 0.0; y <= size.Height; y += step)
         {
             var pen = new Pen(brush, StrokeWidthAt(y));
-            context.DrawLine(pen, new Point(0.0, y), new Point(size.Width, y));
+            context.Canvas.DrawLine(pen, new Point(0.0, y), new Point(size.Width, y));
         }
     }
 

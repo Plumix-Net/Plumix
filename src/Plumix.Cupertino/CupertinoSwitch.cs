@@ -618,24 +618,29 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         double thumbY = trackY - ((thumbSize.Height / 2.0) - TrackRadius);
         var thumbBounds = new Rect(thumbX, thumbY, thumbSize.Width, thumbSize.Height);
 
-        context.DrawRRect(trackRRect, new SolidColorBrush(trackColor), null);
+        context.Canvas.DrawRRect(trackRRect, new SolidColorBrush(trackColor), null);
         if (outlineColor.HasValue)
         {
             Rect outlineRect = trackRect.Deflate(1.0);
-            context.DrawRRect(
+            context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(outlineRect, TrackRadius),
                 null,
                 new Pen(new SolidColorBrush(outlineColor.Value), outlineWidth ?? 2.0));
         }
         if (IsFocused)
         {
-            context.DrawRRect(
+            context.Canvas.DrawRRect(
                 RRect.FromRectAndRadius(trackRect.Inflate(1.75), TrackRadius + 1.75),
                 null,
                 new Pen(new SolidColorBrush(FocusColor), 3.5));
         }
 
-        context.PushClipRRect(trackRect, BorderRadius.Circular(TrackRadius), clippedContext =>
+        context.PushClipRRect(
+            false,
+            new Point(0, 0),
+            trackRect,
+            RRect.FromRectAndRadius(trackRect, TrackRadius),
+            (clippedContext, _) =>
         {
             if (_showLabels)
             {
@@ -712,11 +717,11 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
 
         Color onColor = WithOpacity(_onLabelColor, onOpacity);
         Color offColor = WithOpacity(_offLabelColor, offOpacity);
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             new SolidColorBrush(onColor),
             null,
             new Rect(onCenter.X - 0.5, onCenter.Y - 5.0, 1.0, 10.0));
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             Brushes.Transparent,
             new Pen(new SolidColorBrush(offColor), 1.0),
             offCenter,
@@ -731,13 +736,13 @@ internal sealed class CupertinoSwitchPainter : ToggleablePainter
         ImageErrorListener? imageError)
     {
         double radius = thumbBounds.Height / 2.0;
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             Brushes.Transparent,
             null,
             thumbBounds,
             BorderRadius.Circular(radius),
             ThumbShadows.ToAvalonia());
-        context.DrawRRect(
+        context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(thumbBounds.Inflate(0.5), radius + 0.5),
             new SolidColorBrush(ThumbBorderColor),
             null);

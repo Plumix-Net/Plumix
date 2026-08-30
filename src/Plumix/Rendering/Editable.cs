@@ -321,7 +321,7 @@ public sealed class RenderEditable : RenderBox
             {
                 PaintCursor(context, offset);
             }
-            context.DrawTextLayout(_layout, offset);
+            context.Canvas.DrawTextLayout(_layout, offset);
             if (_paintCursorAboveText)
             {
                 PaintCursor(context, offset);
@@ -369,7 +369,7 @@ public sealed class RenderEditable : RenderBox
         var brush = new SolidColorBrush(_selectionColor);
         foreach (Rect rect in _layout.HitTestTextRange(_selection.Start, _selection.End - _selection.Start))
         {
-            context.DrawRectangle(brush, null, new Rect(rect.Position + offset, rect.Size));
+            context.Canvas.DrawRectangle(brush, null, new Rect(rect.Position + offset, rect.Size));
         }
     }
 
@@ -382,7 +382,7 @@ public sealed class RenderEditable : RenderBox
             _cursorColor.R,
             _cursorColor.G,
             _cursorColor.B);
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             new SolidColorBrush(color),
             null,
             new Rect(caret.Position + offset, caret.Size),
@@ -403,7 +403,10 @@ public sealed class RenderEditable : RenderBox
                 double x = offset.X + rect.Left;
                 while (x < offset.X + rect.Right)
                 {
-                    context.DrawLine(pen, new Point(x, y), new Point(Math.Min(x + 2.0, offset.X + rect.Right), y - 1.5));
+                    context.Canvas.DrawLine(
+                        pen,
+                        new Point(x, y),
+                        new Point(Math.Min(x + 2.0, offset.X + rect.Right), y - 1.5));
                     x += 4.0;
                 }
             }

@@ -734,7 +734,7 @@ internal sealed class RadioPainter : ToggleablePainter
             _inactiveBackgroundColor,
             _activeBackgroundColor,
             Position.Value);
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             new SolidColorBrush(backgroundColor),
             null,
             origin,
@@ -747,7 +747,7 @@ internal sealed class RadioPainter : ToggleablePainter
         Pen? pen = side.Width > 0.0
             ? new Pen(new SolidColorBrush(side.Color), side.Width)
             : null;
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             new SolidColorBrush(Colors.Transparent),
             pen,
             origin,
@@ -759,7 +759,7 @@ internal sealed class RadioPainter : ToggleablePainter
         }
 
         Color innerColor = LerpColor(InactiveColor, ActiveColor, Position.Value);
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             new SolidColorBrush(innerColor),
             null,
             origin,

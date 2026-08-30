@@ -1576,7 +1576,7 @@ internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLay
         foreach (TextBox box in _paragraph.GetBoxesForSelection(selection))
         {
             Rect rect = box.ToRect();
-            context.DrawRectangle(brush, null, new Rect(rect.Position + offset, rect.Size));
+            context.Canvas.DrawRectangle(brush, null, new Rect(rect.Position + offset, rect.Size));
         }
     }
 
@@ -1589,12 +1589,14 @@ internal sealed class SelectableFragment : ChangeNotifier, ISelectable, ITextLay
 
         if (_startHandleLayerLink is { } startLink && Value.StartSelectionPoint is { } startPoint)
         {
-            context.PushLayer(new LeaderLayer(startLink, offset + startPoint.LocalPosition), _ => { });
+            context.PushLayer(new LeaderLayer(startLink, offset + startPoint.LocalPosition), (_, _) => { },
+                new Point(0, 0));
         }
 
         if (_endHandleLayerLink is { } endLink && Value.EndSelectionPoint is { } endPoint)
         {
-            context.PushLayer(new LeaderLayer(endLink, offset + endPoint.LocalPosition), _ => { });
+            context.PushLayer(new LeaderLayer(endLink, offset + endPoint.LocalPosition), (_, _) => { },
+                new Point(0, 0));
         }
     }
 }

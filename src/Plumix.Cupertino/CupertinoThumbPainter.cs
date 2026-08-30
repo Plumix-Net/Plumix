@@ -58,17 +58,17 @@ public sealed class CupertinoThumbPainter
         ArgumentNullException.ThrowIfNull(context);
         double radius = Math.Min(rect.Width, rect.Height) / 2.0;
         var borderRadius = BorderRadius.Circular(radius);
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             new SolidColorBrush(Color),
             null,
             rect,
             borderRadius,
             Shadows.ToAvalonia());
-        context.DrawRRect(
+        context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(rect.Inflate(0.5), radius + 0.5),
             new SolidColorBrush(ThumbBorderColor),
             null);
-        context.DrawRRect(
+        context.Canvas.DrawRRect(
             RRect.FromRectAndRadius(rect, radius),
             new SolidColorBrush(Color),
             null);

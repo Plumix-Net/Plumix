@@ -196,15 +196,29 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         ((BoxParentData)Child.parentData!).offset = ResolvePaintOffset(OffsetPixels);
     }
 
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
+    }
+
     public override void Paint(PaintingContext context, Point offset)
     {
-        var child = Child;
+        RenderBox? child = Child;
         if (child is null || Size.Width <= 0 || Size.Height <= 0) return;
-        context.PushClipRect(new Rect(offset, Size), clippedContext =>
-        {
-            var childOffset = ((BoxParentData)child.parentData!).offset;
-            clippedContext.PaintChild(child, offset + childOffset);
-        });
+        _clipRectLayer.Layer = context.PushClipRect(
+            NeedsCompositing,
+            offset,
+            new Rect(new Point(0, 0), Size),
+            (clippedContext, clippedOffset) =>
+            {
+                Point childOffset = ((BoxParentData)child.parentData!).offset;
+                clippedContext.PaintChild(child, clippedOffset + childOffset);
+            },
+            oldLayer: _clipRectLayer.Layer);
     }
 
     private Point ResolvePaintOffset(double pixels)

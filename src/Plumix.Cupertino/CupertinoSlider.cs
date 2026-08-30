@@ -559,7 +559,7 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
         {
             // Use RRect instead of RSuperellipse here since the radius is too small to make enough
             // visual difference.
-            context.DrawRRect(
+            context.Canvas.DrawRRect(
                 RRect.FromLTRBXY(trackLeft, trackTop, trackActive, trackBottom, 1.0, 1.0),
                 new SolidColorBrush(rightColor),
                 null);
@@ -567,7 +567,7 @@ internal sealed class RenderCupertinoSlider : RenderBox, IMouseTrackerAnnotation
 
         if (visualPosition < 1.0)
         {
-            context.DrawRRect(
+            context.Canvas.DrawRRect(
                 RRect.FromLTRBXY(trackActive, trackTop, trackRight, trackBottom, 1.0, 1.0),
                 new SolidColorBrush(leftColor),
                 null);

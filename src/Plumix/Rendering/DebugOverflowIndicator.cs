@@ -209,7 +209,7 @@ internal sealed class DebugOverflowIndicator
     {
         if (marker.Width > 0 && marker.Height > 0)
         {
-            context.DrawRectangle(IndicatorBrush, null, marker);
+            context.Canvas.DrawRectangle(IndicatorBrush, null, marker);
         }
     }
 
@@ -233,23 +233,16 @@ internal sealed class DebugOverflowIndicator
             var labelOrigin = new Point(-layout.Width / 2.0, 0);
             var background = new Rect(labelOrigin, new Size(layout.Width, layout.Height));
 
-            context.PushTransform(
-                Matrix4.TranslationValues(labelOffset.X, labelOffset.Y, 0.0),
-                translated =>
+            context.Canvas.Save();
+            context.Canvas.Translate(labelOffset.X, labelOffset.Y);
+            if (Math.Abs(rotation) > Constants.PrecisionErrorTolerance)
             {
-                if (Math.Abs(rotation) <= Constants.PrecisionErrorTolerance)
-                {
-                    translated.DrawRectangle(LabelBackgroundBrush, null, background);
-                    translated.DrawTextLayout(layout, labelOrigin);
-                    return;
-                }
+                context.Canvas.Rotate(rotation);
+            }
 
-                translated.PushTransform(CreateRotationMatrix(rotation), rotated =>
-                {
-                    rotated.DrawRectangle(LabelBackgroundBrush, null, background);
-                    rotated.DrawTextLayout(layout, labelOrigin);
-                });
-            });
+            context.Canvas.DrawRectangle(LabelBackgroundBrush, null, background);
+            context.Canvas.DrawTextLayout(layout, labelOrigin);
+            context.Canvas.Restore();
         }
         catch (Exception exception) when (TextLayoutFallback.IsMissingFontManager(exception))
         {
@@ -267,5 +260,4 @@ internal sealed class DebugOverflowIndicator
         };
     }
 
-    private static Matrix4 CreateRotationMatrix(double radians) => Matrix4.RotationZ(radians);
 }

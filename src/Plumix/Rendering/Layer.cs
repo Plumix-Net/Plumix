@@ -154,6 +154,11 @@ public abstract class Layer : DiagnosticableTree
         _backdropCaptureStopped = false;
     }
 
+    internal static DrawingContext.PushedState PushRoundedRectClip(DrawingContext context, RRect rrect)
+    {
+        return PushRoundedRectClip(context, rrect.Rect, rrect.Radii);
+    }
+
     internal static DrawingContext.PushedState PushRoundedRectClip(
         DrawingContext context,
         Rect rect,
@@ -1031,14 +1036,20 @@ public class OffsetLayer : ContainerLayer
     }
 }
 
-public sealed class OpacityOffsetLayer : OffsetLayer
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+public sealed class OpacityLayer : OffsetLayer
 {
-    private double _opacity = 1.0;
+    /// <summary>The amount to multiply into the alpha channel, from 0 (transparent) to 255 (opaque).</summary>
+    public int? Alpha { get; set; }
 
+    /// <summary>
+    /// Plumix-only view of <see cref="Alpha"/> as a 0..1 fraction, for the render objects and debug
+    /// flags that carry an opacity rather than Flutter's 8-bit alpha.
+    /// </summary>
     public double Opacity
     {
-        get => _opacity;
-        set => _opacity = Math.Clamp(value, 0.0, 1.0);
+        get => (Alpha ?? 255) / 255.0;
+        set => Alpha = (int)Math.Round(Math.Clamp(value, 0.0, 1.0) * 255.0);
     }
 
     internal override void AddToScene(DrawingContext context, Point offset)
@@ -1053,6 +1064,14 @@ public sealed class OpacityOffsetLayer : OffsetLayer
         {
             base.AddToScene(context, offset);
         }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<int?>("alpha", Alpha));
+        properties.Add(new DoubleProperty("opacity", Opacity));
     }
 }
 
@@ -1312,120 +1331,6 @@ public sealed class ShaderMaskLayer : ContainerLayer
     }
 }
 
-public sealed class TransformOffsetLayer : OffsetLayer
-{
-    public Matrix4 Transform { get; set; } = Matrix4.Identity();
-    public FilterQuality? FilterQuality { get; set; }
-
-    internal override void AddToScene(DrawingContext context, Point offset)
-    {
-        var sceneOffset = offset + Offset;
-        using IDisposable? renderOptions = FilterQuality.HasValue
-            ? context.PushRenderOptions(new RenderOptions
-            {
-                BitmapInterpolationMode = FilterQuality.Value switch
-                {
-                    Rendering.FilterQuality.None => BitmapInterpolationMode.None,
-                    Rendering.FilterQuality.Low => BitmapInterpolationMode.LowQuality,
-                    Rendering.FilterQuality.High => BitmapInterpolationMode.HighQuality,
-                    _ => BitmapInterpolationMode.MediumQuality,
-                }
-            })
-            : null;
-        using (context.PushTransform(Matrix.CreateTranslation(sceneOffset.X, sceneOffset.Y)))
-        using (context.PushTransform(Transform.ToAvaloniaMatrix()))
-        {
-            AddChildrenToScene(context, new Point(0, 0));
-        }
-    }
-
-    protected internal override bool FindAnnotations<T>(
-        AnnotationResult<T> result,
-        Point localPosition,
-        bool onlyFirst)
-    {
-        Matrix4? inverse = Matrix4.TryInvert(PointerEventUtils.RemovePerspectiveTransform(Transform));
-        if (inverse is null)
-        {
-            return false;
-        }
-
-        Point transformedPosition = MatrixUtils.TransformPoint(inverse, localPosition - Offset);
-        return FindAnnotationsInChildren(result, transformedPosition, onlyFirst);
-    }
-
-    /// <inheritdoc />
-    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
-    {
-        base.DebugFillProperties(properties);
-        properties.Add(new TransformProperty("transform", Transform));
-    }
-}
-
-public sealed class ClipRectOffsetLayer : OffsetLayer
-{
-    public Rect ClipRect { get; set; }
-
-    internal override void AddToScene(DrawingContext context, Point offset)
-    {
-        var sceneOffset = offset + Offset;
-        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
-        {
-            AddChildrenToScene(context, sceneOffset);
-            return;
-        }
-
-        var translatedRect = new Rect(ClipRect.Position + sceneOffset, ClipRect.Size);
-        using (context.PushClip(translatedRect))
-        {
-            AddChildrenToScene(context, sceneOffset);
-        }
-    }
-
-    protected internal override bool FindAnnotations<T>(
-        AnnotationResult<T> result,
-        Point localPosition,
-        bool onlyFirst)
-    {
-        Point transformedPosition = localPosition - Offset;
-        return ContainsRect(ClipRect, transformedPosition)
-            && FindAnnotationsInChildren(result, transformedPosition, onlyFirst);
-    }
-}
-
-public sealed class ClipRRectOffsetLayer : OffsetLayer
-{
-    public Rect ClipRect { get; set; }
-
-    public BorderRadius BorderRadius { get; set; } = BorderRadius.Zero;
-
-    internal override void AddToScene(DrawingContext context, Point offset)
-    {
-        var sceneOffset = offset + Offset;
-        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
-        {
-            AddChildrenToScene(context, sceneOffset);
-            return;
-        }
-
-        var translatedRect = new Rect(ClipRect.Position + sceneOffset, ClipRect.Size);
-        using (PushRoundedRectClip(context, translatedRect, BorderRadius))
-        {
-            AddChildrenToScene(context, sceneOffset);
-        }
-    }
-
-    protected internal override bool FindAnnotations<T>(
-        AnnotationResult<T> result,
-        Point localPosition,
-        bool onlyFirst)
-    {
-        Point transformedPosition = localPosition - Offset;
-        return ContainsRoundedRect(ClipRect, BorderRadius, transformedPosition)
-            && FindAnnotationsInChildren(result, transformedPosition, onlyFirst);
-    }
-}
-
 public sealed class ClipRectLayer : ContainerLayer
 {
     public Rect ClipRect { get; set; }
@@ -1469,11 +1374,12 @@ public sealed class ClipRectLayer : ContainerLayer
     }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
 public sealed class ClipRRectLayer : ContainerLayer
 {
-    public Rect ClipRect { get; set; }
+    public RRect ClipRRect { get; set; }
 
-    public BorderRadius BorderRadius { get; set; } = BorderRadius.Zero;
+    public Clip ClipBehavior { get; set; } = Clip.AntiAlias;
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
@@ -1483,8 +1389,7 @@ public sealed class ClipRRectLayer : ContainerLayer
             return;
         }
 
-        var translatedRect = new Rect(ClipRect.Position + offset, ClipRect.Size);
-        using (PushRoundedRectClip(context, translatedRect, BorderRadius))
+        using (PushRoundedRectClip(context, ClipRRect.Shift(offset)))
         {
             base.AddToScene(context, offset);
         }
@@ -1495,7 +1400,7 @@ public sealed class ClipRRectLayer : ContainerLayer
         Point localPosition,
         bool onlyFirst)
     {
-        return ContainsRoundedRect(ClipRect, BorderRadius, localPosition)
+        return ContainsRoundedRect(ClipRRect.Rect, ClipRRect.Radii, localPosition)
             && base.FindAnnotations(result, localPosition, onlyFirst);
     }
 
@@ -1503,11 +1408,118 @@ public sealed class ClipRRectLayer : ContainerLayer
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Rect>("clipRect", ClipRect));
-        properties.Add(new DiagnosticsProperty<BorderRadius>("borderRadius", BorderRadius));
+        properties.Add(new DiagnosticsProperty<Rect>("clipRect", ClipRRect.Rect));
+        properties.Add(new DiagnosticsProperty<BorderRadius>("borderRadius", ClipRRect.Radii));
+        properties.Add(new DiagnosticsProperty<Clip>("clipBehavior", ClipBehavior));
     }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+public sealed class ClipRSuperellipseLayer : ContainerLayer
+{
+    public RSuperellipse ClipRSuperellipse { get; set; }
+
+    public Clip ClipBehavior { get; set; } = Clip.AntiAlias;
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        {
+            base.AddToScene(context, offset);
+            return;
+        }
+
+        using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
+        {
+            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
+        });
+        using (context.PushGeometryClip(ClipRSuperellipse.Shift(offset).ToPath().ToGeometry()))
+        {
+            base.AddToScene(context, offset);
+        }
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        return ClipRSuperellipse.Contains(localPosition)
+            && base.FindAnnotations(result, localPosition, onlyFirst);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Rect>("clipRect", ClipRSuperellipse.Rect));
+        properties.Add(new DiagnosticsProperty<Clip>("clipBehavior", ClipBehavior));
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+public sealed class ClipPathLayer : ContainerLayer
+{
+    private Plumix.UI.Path _clipPath = new();
+    private Geometry? _geometry;
+
+    public Plumix.UI.Path ClipPath
+    {
+        get => _clipPath;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _clipPath = value;
+            _geometry = null;
+        }
+    }
+
+    public Clip ClipBehavior { get; set; } = Clip.AntiAlias;
+
+    internal override void AddToScene(DrawingContext context, Point offset)
+    {
+        if (Constants.KDebugMode && RenderingDebug.DisableClipLayers)
+        {
+            base.AddToScene(context, offset);
+            return;
+        }
+
+        _geometry ??= _clipPath.ToGeometry();
+        using IDisposable renderOptions = context.PushRenderOptions(new RenderOptions
+        {
+            EdgeMode = ClipBehavior == Clip.HardEdge ? EdgeMode.Aliased : EdgeMode.Antialias,
+        });
+        using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
+        using (context.PushGeometryClip(_geometry))
+        using (context.PushTransform(Matrix.CreateTranslation(-offset.X, -offset.Y)))
+        {
+            base.AddToScene(context, offset);
+        }
+    }
+
+    protected internal override bool FindAnnotations<T>(
+        AnnotationResult<T> result,
+        Point localPosition,
+        bool onlyFirst)
+    {
+        return _clipPath.Contains(localPosition)
+            && base.FindAnnotations(result, localPosition, onlyFirst);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Rect>("clipRect", _clipPath.GetBounds()));
+        properties.Add(new DiagnosticsProperty<Clip>("clipBehavior", ClipBehavior));
+    }
+}
+
+/// <summary>Plumix-only clip layer for shapes the framework models as a backend geometry.</summary>
+/// <remarks>
+/// Dart has no counterpart: every clip layer there takes a <c>Path</c>. See
+/// <c>PaintingContext.PushClipGeometry</c>.
+/// </remarks>
 public sealed class ClipGeometryLayer : ContainerLayer
 {
     public Geometry Geometry { get; set; } = new RectangleGeometry();
@@ -1531,9 +1543,9 @@ public sealed class ClipGeometryLayer : ContainerLayer
         });
         using (context.PushTransform(Matrix.CreateTranslation(clipOffset.X, clipOffset.Y)))
         using (context.PushGeometryClip(Geometry))
-        using (context.PushTransform(Matrix.CreateTranslation(-GeometryOffset.X, -GeometryOffset.Y)))
+        using (context.PushTransform(Matrix.CreateTranslation(-clipOffset.X, -clipOffset.Y)))
         {
-            base.AddToScene(context, new Point(0, 0));
+            base.AddToScene(context, offset);
         }
     }
 
@@ -1542,18 +1554,36 @@ public sealed class ClipGeometryLayer : ContainerLayer
         Point localPosition,
         bool onlyFirst)
     {
-        Point transformedPosition = localPosition - GeometryOffset;
-        return Geometry.FillContains(transformedPosition)
-            && base.FindAnnotations(result, transformedPosition, onlyFirst);
+        return Geometry.FillContains(localPosition - GeometryOffset)
+            && base.FindAnnotations(result, localPosition, onlyFirst);
     }
 }
 
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
 public sealed class TransformLayer : ContainerLayer
 {
     public Matrix4 Transform { get; set; } = Matrix4.Identity();
 
+    /// <summary>
+    /// Plumix-only: the sampling quality Dart applies through <c>ImageFilter.matrix</c> in
+    /// <c>RenderTransform</c>'s filter-quality branch, which Avalonia has no image filter for.
+    /// </summary>
+    public FilterQuality? FilterQuality { get; set; }
+
     internal override void AddToScene(DrawingContext context, Point offset)
     {
+        using IDisposable? renderOptions = FilterQuality.HasValue
+            ? context.PushRenderOptions(new RenderOptions
+            {
+                BitmapInterpolationMode = FilterQuality.Value switch
+                {
+                    Rendering.FilterQuality.None => BitmapInterpolationMode.None,
+                    Rendering.FilterQuality.Low => BitmapInterpolationMode.LowQuality,
+                    Rendering.FilterQuality.High => BitmapInterpolationMode.HighQuality,
+                    _ => BitmapInterpolationMode.MediumQuality,
+                },
+            })
+            : null;
         using (context.PushTransform(Matrix.CreateTranslation(offset.X, offset.Y)))
         using (context.PushTransform(Transform.ToAvaloniaMatrix()))
         {
@@ -1583,54 +1613,39 @@ public sealed class TransformLayer : ContainerLayer
     }
 }
 
-public sealed class OpacityLayer : ContainerLayer
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/layer.dart
+public sealed class PictureLayer : Layer
 {
-    private double _opacity = 1.0;
-
-    public double Opacity
+    public PictureLayer(Rect canvasBounds = default)
     {
-        get => _opacity;
-        set => _opacity = Math.Clamp(value, 0.0, 1.0);
+        CanvasBounds = canvasBounds;
     }
+
+    /// <summary>The bounds that were used for the canvas that drew this layer's <see cref="Picture"/>.</summary>
+    public Rect CanvasBounds { get; }
+
+    /// <summary>The picture recorded for this layer.</summary>
+    public Picture? Picture { get; set; }
+
+    /// <summary>Hint that this layer's picture is complex enough to benefit from caching.</summary>
+    public bool IsComplexHint { get; set; }
+
+    /// <summary>Hint that this layer's picture is likely to change in the next frame.</summary>
+    public bool WillChangeHint { get; set; }
+
+    public bool IsEmpty => Picture is null || Picture.IsEmpty;
 
     internal override void AddToScene(DrawingContext context, Point offset)
     {
-        if (Constants.KDebugMode && RenderingDebug.DisableOpacityLayers)
-        {
-            base.AddToScene(context, offset);
-            return;
-        }
-
-        using (context.PushOpacity(Opacity))
-        {
-            base.AddToScene(context, offset);
-        }
+        Picture?.Playback(context, offset);
     }
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DoubleProperty("opacity", Opacity));
-    }
-}
-
-public sealed class PictureLayer : Layer
-{
-    private readonly List<Action<DrawingContext, Point>> _commands = [];
-
-    public bool IsEmpty => _commands.Count == 0;
-
-    public void AddDrawCommand(Action<DrawingContext, Point> command)
-    {
-        _commands.Add(command);
-    }
-
-    internal override void AddToScene(DrawingContext context, Point offset)
-    {
-        for (int index = 0; index < _commands.Count; index++)
-        {
-            _commands[index](context, offset);
-        }
+        properties.Add(new DiagnosticsProperty<Rect>("paint bounds", CanvasBounds));
+        properties.Add(new DiagnosticsProperty<bool>("isComplexHint", IsComplexHint, defaultValue: false));
+        properties.Add(new DiagnosticsProperty<bool>("willChangeHint", WillChangeHint, defaultValue: false));
     }
 }

@@ -161,7 +161,7 @@ internal sealed class CupertinoTextSelectionHandlePainter : CustomPainter
 
     public override void Paint(PaintingContext context, Size size)
     {
-        context.DrawGeometry(new SolidColorBrush(Color), pen: null, BuildPath(size));
+        context.Canvas.DrawGeometry(new SolidColorBrush(Color), pen: null, BuildPath(size));
     }
 
     internal static Geometry BuildPath(Size size)

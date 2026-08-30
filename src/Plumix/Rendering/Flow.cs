@@ -243,33 +243,33 @@ public sealed class RenderFlow : RenderBox,
             return;
         }
 
-        void PaintTransformed(PaintingContext context)
+        void Painter(PaintingContext context, Point painterOffset)
         {
-            context.PushTransform(childTransform, transformed => transformed.PaintChild(child, default));
+            context.PaintChild(child, painterOffset);
         }
 
         Point paintOffset = _paintingOffset.Value;
-        _paintingContext.PushTransform(
-            Matrix4.TranslationValues(paintOffset.X, paintOffset.Y, 0.0),
-            translated =>
+        if (opacity == 1.0)
         {
-            if (opacity == 1.0)
-            {
-                PaintTransformed(translated);
-                return;
-            }
+            _paintingContext.PushTransform(NeedsCompositing, paintOffset, childTransform, Painter);
+            return;
+        }
 
-            translated.PushOpacity(opacity, PaintTransformed);
-        });
+        int alpha = (int)Math.Round(Math.Clamp(opacity, 0.0, 1.0) * 255.0);
+        _paintingContext.PushOpacity(
+            paintOffset,
+            alpha,
+            (context, opacityOffset) =>
+                context.PushTransform(NeedsCompositing, opacityOffset, childTransform, Painter));
     }
 
     public override void Paint(PaintingContext context, Point offset)
     {
-        void PaintWithDelegate(PaintingContext paintingContext)
+        void PaintWithDelegate(PaintingContext paintingContext, Point paintingOffset)
         {
             _lastPaintOrder.Clear();
             _paintingContext = paintingContext;
-            _paintingOffset = offset;
+            _paintingOffset = paintingOffset;
             foreach (RenderBox child in _randomAccessChildren)
             {
                 ((FlowParentData)child.parentData!).Transform = null;
@@ -288,11 +288,27 @@ public sealed class RenderFlow : RenderBox,
 
         if (ClipBehavior == Clip.None)
         {
-            PaintWithDelegate(context);
+            _clipRectLayer.Layer = null;
+            PaintWithDelegate(context, offset);
             return;
         }
 
-        context.PushClipRect(new Rect(offset, Size), PaintWithDelegate);
+        _clipRectLayer.Layer = context.PushClipRect(
+            NeedsCompositing,
+            offset,
+            new Rect(new Point(0, 0), Size),
+            PaintWithDelegate,
+            ClipBehavior,
+            _clipRectLayer.Layer);
+    }
+
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
     }
 
     public override void VisitChildren(Action<RenderObject> visitor)

@@ -91,6 +91,17 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// <remarks>Flutter's <c>RenderObject.debugDoingThisPaint</c>.</remarks>
     public bool DebugDoingThisPaint => _debugDoingThisPaint;
 
+    /// <summary>The compositing layer that this render object uses to repaint.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderObject.layer</c>: the same slot holds the <c>OffsetLayer</c> of a repaint
+    /// boundary and the clip/transform/opacity layer a non-boundary pushed for the current frame.
+    /// </remarks>
+    protected internal Layer? Layer
+    {
+        get => _layerHandle.Layer;
+        set => _layerHandle.Layer = value;
+    }
+
     /// <summary>The retained compositing layer, exposed for diagnostics and tests.</summary>
     /// <remarks>Flutter's <c>RenderObject.debugLayer</c>.</remarks>
     public Layer? DebugLayer => _layerHandle.Layer;

@@ -355,6 +355,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
             fit: BoxFit.Fill,
             centerSlice: new Rect(10, 10, 10, 10));
 
+        context.DebugStopRecordingIfNeeded();
         var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
         Assert.Equal(9, CountPictureCommands(picture));
     }
@@ -387,12 +388,14 @@ public sealed class ImageProviderDecorationTests : IDisposable
         Assert.True(SpinWait.SpinUntil(() => repaintCount >= 2, TimeSpan.FromSeconds(2)));
 
         var root = new ContainerLayer();
+        var lerpContext = new PaintingContext(root);
         painter.Paint(
-            new PaintingContext(root),
+            lerpContext,
             new Rect(0, 0, 20, 20),
             ImageConfiguration.Empty,
             shape: BoxShape.Circle);
 
+        lerpContext.DebugStopRecordingIfNeeded();
         var picture = Assert.IsType<PictureLayer>(Assert.Single(root.Children));
         Assert.Equal(2, CountPictureCommands(picture));
     }
@@ -456,9 +459,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
 
     private static int CountPictureCommands(PictureLayer pictureLayer)
     {
-        var commands = typeof(PictureLayer).GetField("_commands", BindingFlags.Instance | BindingFlags.NonPublic)!
-            .GetValue(pictureLayer) as System.Collections.ICollection;
-        return commands!.Count;
+        return pictureLayer.Picture?.DrawCommandCount ?? 0;
     }
 
     private sealed class FakeImage : IImage, IDisposable

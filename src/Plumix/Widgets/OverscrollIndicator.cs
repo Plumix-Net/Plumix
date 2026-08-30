@@ -738,12 +738,11 @@ internal sealed class GlowController : ChangeNotifier
         Matrix4 transform = Matrix4.Identity();
         transform.ScaleByDouble(1.0, scaleY, 1.0, 1);
         transform.TranslateByDouble(0.0, PaintOffset + PaintOffsetScrollPixels, 0, 1);
-        context.PushTransform(transform, transformed =>
-        {
-            transformed.PushClipRect(
-                clipRect,
-                clipped => clipped.DrawCircle(brush, null, center, radius));
-        });
+        context.Canvas.Save();
+        context.Canvas.Transform(transform);
+        context.Canvas.ClipRect(clipRect, doAntiAlias: false);
+        context.Canvas.DrawCircle(brush, null, center, radius);
+        context.Canvas.Restore();
     }
 
     public override void Dispose()
@@ -882,45 +881,59 @@ internal sealed class GlowingOverscrollIndicatorPainter : CustomPainter
         }
 
         AxisDirection edge = ResolveEdge(AxisDirection, leading);
-        switch (edge)
+        if (edge == AxisDirection.Up)
         {
-            case AxisDirection.Up:
-                controller.Paint(context, size);
-                break;
-            case AxisDirection.Down:
-                context.PushTransform(
-                    new Matrix4(
-                        1.0, 0.0, 0.0, 0.0,
-                        0.0, -1.0, 0.0, 0.0,
-                        0.0, 0.0, 1.0, 0.0,
-                        0.0, size.Height, 0.0, 1.0),
-                    transformed => controller.Paint(transformed, size));
-                break;
-            case AxisDirection.Left:
-                context.PushTransform(
-                    new Matrix4(
-                        0.0, 1.0, 0.0, 0.0,
-                        1.0, 0.0, 0.0, 0.0,
-                        0.0, 0.0, 1.0, 0.0,
-                        0.0, 0.0, 0.0, 1.0),
-                    transformed => controller.Paint(
-                        transformed,
-                        new Size(size.Height, size.Width)));
-                break;
-            case AxisDirection.Right:
-                context.PushTransform(
-                    new Matrix4(
-                        0.0, 1.0, 0.0, 0.0,
-                        -1.0, 0.0, 0.0, 0.0,
-                        0.0, 0.0, 1.0, 0.0,
-                        size.Width, 0.0, 0.0, 1.0),
-                    transformed => controller.Paint(
-                        transformed,
-                        new Size(size.Height, size.Width)));
-                break;
-            default:
-                throw new ArgumentOutOfRangeException();
+            controller.Paint(context, size);
+            return;
         }
+
+        PaintTransformed(context, EdgeTransform(edge, size), controller, EdgeSize(edge, size));
+    }
+
+    /// <summary>The canvas transform that rotates the up-edge glow onto <paramref name="edge"/>.</summary>
+    internal static Matrix4 EdgeTransform(AxisDirection edge, Size size)
+    {
+        return edge switch
+        {
+            AxisDirection.Up => Matrix4.Identity(),
+            AxisDirection.Down => new Matrix4(
+                1.0, 0.0, 0.0, 0.0,
+                0.0, -1.0, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, size.Height, 0.0, 1.0),
+            AxisDirection.Left => new Matrix4(
+                0.0, 1.0, 0.0, 0.0,
+                1.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0),
+            AxisDirection.Right => new Matrix4(
+                0.0, 1.0, 0.0, 0.0,
+                -1.0, 0.0, 0.0, 0.0,
+                0.0, 0.0, 1.0, 0.0,
+                size.Width, 0.0, 0.0, 1.0),
+            _ => throw new ArgumentOutOfRangeException(nameof(edge), edge, null),
+        };
+    }
+
+    /// <summary>The size the glow is painted with once rotated onto <paramref name="edge"/>.</summary>
+    internal static Size EdgeSize(AxisDirection edge, Size size)
+    {
+        return edge is AxisDirection.Left or AxisDirection.Right
+            ? new Size(size.Height, size.Width)
+            : size;
+    }
+
+    /// <remarks>Dart brackets each edge with <c>canvas.save()</c>/<c>canvas.restore()</c>.</remarks>
+    private static void PaintTransformed(
+        PaintingContext context,
+        Matrix4 transform,
+        GlowController controller,
+        Size size)
+    {
+        context.Canvas.Save();
+        context.Canvas.Transform(transform);
+        controller.Paint(context, size);
+        context.Canvas.Restore();
     }
 
     private static AxisDirection ResolveEdge(AxisDirection direction, bool leading)

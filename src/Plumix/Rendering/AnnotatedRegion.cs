@@ -60,9 +60,7 @@ public sealed class RenderAnnotatedRegion<T> : RenderProxyBox where T : notnull
             value: _value,
             size: _sized ? Size : null,
             offset: _sized ? offset : null);
-        context.PushLayer(
-            _annotationLayer,
-            childContext => base.Paint(childContext, offset));
+        context.PushLayer(_annotationLayer, base.Paint, offset);
     }
 
     protected override void OnDetach()

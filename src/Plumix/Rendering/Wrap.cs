@@ -181,14 +181,31 @@ public sealed class RenderWrap : RenderBox,
         PositionChildren(runs, childrenMainExtent, childrenCrossExtent);
     }
 
+
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
+    }
+
     public override void Paint(PaintingContext context, Point offset)
     {
         if (_hasVisualOverflow && ClipBehavior != Clip.None)
         {
-            context.PushClipRect(new Rect(offset, Size), clipped => DefaultPaint(clipped, offset));
+            _clipRectLayer.Layer = context.PushClipRect(
+                NeedsCompositing,
+                offset,
+                new Rect(new Point(0, 0), Size),
+                DefaultPaint,
+                ClipBehavior,
+                _clipRectLayer.Layer);
             return;
         }
 
+        _clipRectLayer.Layer = null;
         DefaultPaint(context, offset);
     }
 

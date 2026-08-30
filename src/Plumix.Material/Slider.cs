@@ -1917,7 +1917,7 @@ internal sealed class RenderSlider : RenderBox
             return;
         }
 
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             brush: new SolidColorBrush(color),
             pen: null,
             rect: new Rect(left, centerY - (TrackHeight / 2.0), width, TrackHeight),
@@ -1933,7 +1933,7 @@ internal sealed class RenderSlider : RenderBox
             ThumbSize.Width,
             ThumbSize.Height);
         double radius = Math.Min(ThumbSize.Width, ThumbSize.Height) / 2.0;
-        context.DrawRectangle(
+        context.Canvas.DrawRectangle(
             brush: new SolidColorBrush(ThumbColor),
             pen: null,
             rect: thumbRect,
@@ -2036,13 +2036,13 @@ internal sealed class RenderSlider : RenderBox
             double height = textLayout.Height + (verticalPadding * 2.0);
             double bottom = thumbCenter.Y - (ThumbSize.Height / 2.0) - 8.0;
             var indicatorRect = new Rect(thumbCenter.X - (width / 2.0), bottom - height, width, height);
-            context.DrawRectangle(
+            context.Canvas.DrawRectangle(
                 brush: new SolidColorBrush(ValueIndicatorColor),
                 pen: null,
                 rect: indicatorRect,
                 radiusX: height / 2.0,
                 radiusY: height / 2.0);
-            context.DrawTextLayout(
+            context.Canvas.DrawTextLayout(
                 textLayout,
                 new Point(indicatorRect.X + ((width - textLayout.Width) / 2.0), indicatorRect.Y + verticalPadding));
         }

@@ -370,6 +370,17 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
 
     public override bool IsRepaintBoundary => true;
 
+    // The render object is a repaint boundary, so its `Layer` slot already holds the OffsetLayer;
+    // the clip is retained separately, as Dart does with `LayerHandle`.
+    private readonly LayerHandle<ClipPathLayer> _clipPathLayer = new();
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipPathLayer.Layer = null;
+        base.Dispose();
+    }
+
     public Point AnchorAbove
     {
         get => _anchorAbove;
@@ -476,7 +487,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
         {
             var boxShadow = new Plumix.Rendering.BoxShadow(color: shadowColor, blurRadius: 15.0);
             Point shadowOrigin = offset + (Vector)childParentData.offset;
-            context.DrawRectangle(
+            context.Canvas.DrawRectangle(
                 new SolidColorBrush(Colors.Transparent),
                 null,
                 new Rect(
@@ -489,10 +500,13 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
         }
 
         Point childOffset = offset + (Vector)childParentData.offset;
-        context.PushClipPath(
+        _clipPathLayer.Layer = context.PushClipPath(
+            NeedsCompositing,
+            childOffset,
+            clipPath.GetBounds(),
             clipPath,
-            childContext => childContext.PaintChild(Child, childOffset),
-            geometryOffset: childOffset);
+            (childContext, clippedOffset) => childContext.PaintChild(Child, clippedOffset),
+            oldLayer: _clipPathLayer.Layer);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
@@ -530,7 +544,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
         var childParentData = (BoxParentData)Child.parentData!;
         Plumix.UI.Path clipPath = ClipPath(Child, ShapeRRect(Child));
         Point shift = offset + childParentData.offset;
-        context.DrawGeometry(
+        context.Canvas.DrawGeometry(
             null,
             RenderCustomClipDebug.DebugPen,
             clipPath.ToGeometry(),
@@ -1192,7 +1206,7 @@ internal sealed class RenderCupertinoTextSelectionToolbarItems : RenderBox,
 
             // Dart paints a zero-width (device-pixel hairline) line; Avalonia has no hairline pen, so
             // this is one logical pixel wide.
-            context.DrawLine(
+            context.Canvas.DrawLine(
                 new Pen(new SolidColorBrush(DividerColor)),
                 new Point(childOffset.X + child.Size.Width, childOffset.Y),
                 new Point(childOffset.X + child.Size.Width, childOffset.Y + child.Size.Height));
@@ -1334,8 +1348,8 @@ internal abstract class CupertinoChevronPainter : CustomPainter
             lineJoin: PenLineJoin.Round);
 
         // `drawPath` is used here because it renders a smoother chevron than `drawLine`.
-        context.DrawLine(pen, firstPoint, middlePoint);
-        context.DrawLine(pen, middlePoint, lowerPoint);
+        context.Canvas.DrawLine(pen, firstPoint, middlePoint);
+        context.Canvas.DrawLine(pen, middlePoint, lowerPoint);
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate)

@@ -712,7 +712,7 @@ internal sealed class DateRangeHighlightPainter : CustomPainter
             left = TextDirection == TextDirection.Ltr ? 0 : size.Width / 2;
             width = size.Width / 2;
         }
-        context.DrawRectangle(new SolidColorBrush(Color), null, new Rect(left, 0, width, size.Height));
+        context.Canvas.DrawRectangle(new SolidColorBrush(Color), null, new Rect(left, 0, width, size.Height));
     }
 
     public override bool ShouldRepaint(CustomPainter oldDelegate) => oldDelegate is not DateRangeHighlightPainter old

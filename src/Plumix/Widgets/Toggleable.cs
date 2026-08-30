@@ -528,7 +528,7 @@ public abstract class ToggleablePainter : CustomPainter
             return;
         }
 
-        context.DrawCircle(
+        context.Canvas.DrawCircle(
             new SolidColorBrush(color),
             null,
             new Point(origin.X + offset.X, origin.Y + offset.Y),

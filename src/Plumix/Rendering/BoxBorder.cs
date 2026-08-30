@@ -147,7 +147,7 @@ public abstract record BoxBorder : ShapeBorder
         IBrush brush,
         TextDirection? textDirection = null)
     {
-        context.DrawRectangle(brush, null, rect);
+        context.Canvas.DrawRectangle(brush, null, rect);
     }
 
     public override bool PreferPaintInterior => true;
@@ -175,25 +175,25 @@ public abstract record BoxBorder : ShapeBorder
         double width = side.Width;
         if (width == 0.0)
         {
-            context.DrawRRect(borderRadius.ToRRect(rect), null, new Pen(brush, 0.0));
+            context.Canvas.DrawRRect(borderRadius.ToRRect(rect), null, new Pen(brush, 0.0));
             return;
         }
 
         RRect borderRect = borderRadius.ToRRect(rect);
         RRect inner = borderRect.Deflate(side.StrokeInset);
         RRect outer = borderRect.Inflate(side.StrokeOutset);
-        context.DrawDRRect(outer, inner, brush);
+        context.Canvas.DrawDRRect(outer, inner, brush);
     }
 
     protected static void PaintUniformBorderWithCircle(PaintingContext context, Rect rect, BorderSide side)
     {
         double radius = (ShortestSide(rect) + side.StrokeOffset) / 2.0;
-        context.DrawCircle(Brushes.Transparent, side.ToPen(), rect.Center, radius);
+        context.Canvas.DrawCircle(Brushes.Transparent, side.ToPen(), rect.Center, radius);
     }
 
     protected static void PaintUniformBorderWithRectangle(PaintingContext context, Rect rect, BorderSide side)
     {
-        context.DrawRectangle(Brushes.Transparent, side.ToPen(), rect.Inflate(side.StrokeOffset / 2.0));
+        context.Canvas.DrawRectangle(Brushes.Transparent, side.ToPen(), rect.Inflate(side.StrokeOffset / 2.0));
     }
 
     /// Paints a border with a single visible color but non-uniform widths.
@@ -240,7 +240,7 @@ public abstract record BoxBorder : ShapeBorder
             new Thickness(left.StrokeInset, top.StrokeInset, right.StrokeInset, bottom.StrokeInset));
         RRect outer = borderRect.InflateEdges(
             new Thickness(left.StrokeOutset, top.StrokeOutset, right.StrokeOutset, bottom.StrokeOutset));
-        context.DrawDRRect(outer, inner, brush);
+        context.Canvas.DrawDRRect(outer, inner, brush);
     }
 
     internal static double ShortestSide(Rect rect)

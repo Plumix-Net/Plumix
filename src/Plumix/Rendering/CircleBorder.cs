@@ -96,11 +96,11 @@ public record CircleBorder : OutlinedBorder
     {
         if (Eccentricity == 0.0)
         {
-            context.DrawCircle(brush, null, rect.Center, BoxBorder.ShortestSide(rect) / 2.0);
+            context.Canvas.DrawCircle(brush, null, rect.Center, BoxBorder.ShortestSide(rect) / 2.0);
             return;
         }
 
-        context.DrawOval(AdjustRect(rect), brush, null);
+        context.Canvas.DrawOval(AdjustRect(rect), brush, null);
     }
 
     public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
@@ -112,7 +112,7 @@ public record CircleBorder : OutlinedBorder
 
         if (Eccentricity == 0.0)
         {
-            context.DrawCircle(
+            context.Canvas.DrawCircle(
                 Brushes.Transparent,
                 Side.ToPen(),
                 rect.Center,
@@ -120,7 +120,7 @@ public record CircleBorder : OutlinedBorder
             return;
         }
 
-        context.DrawOval(AdjustRect(rect).Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
+        context.Canvas.DrawOval(AdjustRect(rect).Inflate(Side.StrokeOffset / 2.0), null, Side.ToPen());
     }
 
     public override string ToString()

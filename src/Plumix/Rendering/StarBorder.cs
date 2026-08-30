@@ -322,7 +322,7 @@ public sealed record StarBorder : OutlinedBorder
 
         Rect adjustedRect = rect.Inflate(Side.StrokeOffset / 2.0);
         Path path = CreateGenerator().Generate(adjustedRect);
-        context.DrawPath(path, null, Side.ToPen());
+        context.Canvas.DrawPath(path, null, Side.ToPen());
     }
 
     public override string ToString()
