@@ -69,7 +69,7 @@ public class ChangeNotifier : IListenable, IDisposable
     /// <summary>Whether any listeners are currently registered.</summary>
     protected bool HasListeners => _listeners.Count > 0;
 
-    public void NotifyListeners()
+    public virtual void NotifyListeners()
     {
         if (_disposed)
         {

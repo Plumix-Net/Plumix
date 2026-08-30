@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `SelectionListener`/`SelectionListenerNotifier`/`SelectionDetails` (`selectable_region.dart`).
+- `ChangeNotifier.NotifyListeners` is virtual, as Dart's overridable `notifyListeners` (`change_notifier.dart`).
+- `RenderParagraph.VisitChildren` walks the inline children, so detach/attach reach `WidgetSpan`s (`paragraph.dart`).
 - Added `dart:ui`'s `Canvas`/`Picture`/`PictureRecorder` over the drawing backend; `PictureLayer` holds a picture.
 - Breaking: `PaintingContext` derives from `ClipContext` and exposes `Canvas`; `Draw*` moves there (`clip.dart`).
 - Breaking: `PaintingContext.Push*` take `needsCompositing`/`offset`/`oldLayer` and return the layer (`object.dart`).

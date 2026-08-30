@@ -260,6 +260,8 @@ public sealed partial class RenderParagraph : RenderBox,
 
     public void Remove(RenderBox child) => _container.Remove(child);
 
+    public override void VisitChildren(Action<RenderObject> visitor) => _container.VisitChildren(visitor);
+
     public void DefaultPaint(PaintingContext ctx, Point offset) => _container.DefaultPaint(ctx, offset);
 
     public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)

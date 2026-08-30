@@ -15,9 +15,31 @@ public sealed class SelectionDemoPage : StatefulWidget
 
 internal sealed class SelectionDemoPageState : State
 {
+    private readonly SelectionListenerNotifier _selectionNotifier = new();
     private bool _interactive = true;
     private string _singleSelection = "none";
     private string _areaSelection = "none";
+    private string _listenerDetails = "none";
+
+    public override void InitState()
+    {
+        base.InitState();
+        _selectionNotifier.AddListener(HandleSelectionDetailsChanged);
+    }
+
+    private void HandleSelectionDetailsChanged()
+    {
+        ISelectionDetails details = _selectionNotifier.Selection;
+        SetState(() => _listenerDetails = details.Range is { } range
+            ? $"{details.Status.ToString().ToLowerInvariant()}: {range.StartOffset}..{range.EndOffset}"
+            : $"{details.Status.ToString().ToLowerInvariant()}: none");
+    }
+
+    public override void Dispose()
+    {
+        _selectionNotifier.Dispose();
+        base.Dispose();
+    }
 
     public override Widget Build(BuildContext context)
     {
@@ -67,7 +89,9 @@ internal sealed class SelectionDemoPageState : State
                         child: new SelectionArea(
                             onSelectionChanged: content => SetState(() =>
                                 _areaSelection = content?.PlainText ?? "none"),
-                            child: new DecoratedBox(
+                            child: new SelectionListener(
+                                _selectionNotifier,
+                                new DecoratedBox(
                                 decoration: new BoxDecoration(
                                     Color: Color.Parse("#FFF4FBF8"),
                                     Border: Plumix.Rendering.Border.FromBorderSide(
@@ -89,8 +113,9 @@ internal sealed class SelectionDemoPageState : State
                                                     new Text("It also works"),
                                                     new Text("across a Row."),
                                                 ]),
-                                        ]))))),
+                                        ])))))),
                     new Text($"Area selection: {_areaSelection}", fontSize: 13, maxLines: 3),
+                    new Text($"SelectionListener: {_listenerDetails}", fontSize: 13),
                     new Divider(),
                     new Text("DefaultSelectionStyle scope", fontSize: 18, color: Colors.Black),
                     new DefaultSelectionStyle(
