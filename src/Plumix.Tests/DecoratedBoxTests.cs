@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
@@ -69,13 +70,23 @@ public sealed class DecoratedBoxTests
         Assert.Equal(BorderRadius.Circular(12), updated.Decoration.EffectiveBorderRadius);
     }
 
+    /// <summary>Dart asserts `color == null || decoration == null`: the color argument is only a
+    /// shorthand for a BoxDecoration, so the two cannot be combined.</summary>
+    [DebugOnlyFact]
+    public void Container_RejectsAColorAlongsideADecoration()
+    {
+        Assert.Throws<AssertionError>(() => new Container(
+            color: Colors.Green,
+            decoration: new BoxDecoration(Color: Colors.Red),
+            child: new SizedBox(width: 8, height: 8)));
+    }
+
     [Fact]
     public void Container_DecorationTakesPrecedenceOverColor()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Container(
-                color: Colors.Green,
                 decoration: new BoxDecoration(Color: Colors.Red),
                 child: new SizedBox(width: 8, height: 8)));
 

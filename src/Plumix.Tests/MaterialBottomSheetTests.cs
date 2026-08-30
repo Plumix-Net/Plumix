@@ -819,7 +819,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             box is RenderConstrainedBox constrained && constrained.AdditionalConstraints.MinHeight == 100);
         Assert.Equal(100, sheet.Size.Height, precision: 3);
         double expected = 100 * Curves.FastOutSlowIn(Math.Clamp(transitionController.Value, 0, 1));
-        var align = Assert.Single(FindDescendants<RenderAlign>(harness.RenderView), box =>
+        var align = Assert.Single(FindDescendants<RenderPositionedBox>(harness.RenderView), box =>
             box.HeightFactor is not null && box.HeightFactor < 1.0);
         Assert.Equal(expected, align.Size.Height, precision: 1);
     }

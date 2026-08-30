@@ -284,7 +284,7 @@ public sealed class Material : StatefulWidget
                             bottom: 0,
                             child: new DecoratedBox(
                                 new ShapeDecoration(visual.Shape),
-                                new SizedBox()))
+                                child: new SizedBox()))
                     ]);
             }
 
@@ -310,7 +310,7 @@ public sealed class Material : StatefulWidget
                     Shape: backgroundShape,
                     Color: visual.Color,
                     Shadows: MaterialSurface.BuildBoxShadows(visual.ShadowColor, visual.Elevation) ?? default),
-                content);
+                child: content);
 
             return new DefaultTextStyle(visual.TextStyle, content);
         }

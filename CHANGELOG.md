@@ -8,6 +8,21 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added the `RenderShiftedBox`/`RenderAligningShiftedBox` family in `Rendering/ShiftedBox.cs` (`shifted_box.dart`).
+- Breaking: `RenderAlign`/`RenderFractionallySizedBox` are `RenderPositionedBox`/`RenderFractionallySizedOverflowBox`.
+- Breaking: the aligning render boxes hold an `AlignmentGeometry` plus a `TextDirection` and resolve it themselves.
+- Breaking: `RenderPadding.Padding` is an `EdgeInsetsGeometry` and `RenderPadding` gained `TextDirection`.
+- Breaking: `Stack`/`IndexedStack` default to `AlignmentDirectional.TopStart`, so both need a `Directionality`.
+- Breaking: `Padding.InsetsGeometry` is `Padding.Insets`; the LTR-resolved `Thickness` property goes (`basic.dart`).
+- Breaking: `DecoratedBox(decoration, position, child, key)` follows Dart's parameter order (`container.dart`).
+- Breaking: `Container` asserts `color`/`decoration` are exclusive and drops its `Width`/`Height` properties.
+- Added `Container.transformAlignment`/`isAntiAlias` and the decoration's own padding (`container.dart`).
+- Added `SizedBox.Expand`/`Shrink`/`FromSize`, `Positioned.FromRect`/`Fill` and `FittedBox.clipBehavior`.
+- Added `IndexedStack.textDirection`/`clipBehavior`/`sizing`, forwarded to `RenderIndexedStack` (`indexed_stack.dart`).
+- Added `RenderFittedBox.ClipBehavior`, its dry layout/baseline and Dart's paint-only fit changes (`proxy_box.dart`).
+- Added `Element.DebugVisitOnstageChildren` and `Offstage`'s element override (`framework.dart`, `basic.dart`).
+- Added `BoxConstraints.Unbounded`, `EdgeInsetsGeometry.IsNonNegative` and `Path.RelativeLineTo`/`RelativeMoveTo`.
+- Fixed four `new BoxConstraints()` sites that meant Dart's unbounded `const BoxConstraints()` (`Badge`, `Chips`, ...).
 - Breaking: `RenderSliverFixedExtentList`/`RenderSliverVariedExtentList` derive from `RenderSliverFixedExtentBoxAdaptor`
 - Breaking: `RenderSliverVariableExtentList`, `SliverVariableExtentList` and `SliverVariableExtentLayout` go.
 - Breaking: `RenderSliverFillViewport`/`RenderSliverPrototypeExtentList` override `ItemExtent`; `GetItemExtent` goes.

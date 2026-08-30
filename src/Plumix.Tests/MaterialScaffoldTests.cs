@@ -4366,7 +4366,7 @@ public sealed class MaterialScaffoldTests
         return result;
     }
 
-    private static RenderPadding? FindPadding(RenderObject? root, Predicate<Thickness> predicate)
+    private static RenderPadding? FindPadding(RenderObject? root, Predicate<EdgeInsetsGeometry> predicate)
     {
         if (root is null)
         {
@@ -4529,7 +4529,10 @@ public sealed class MaterialScaffoldTests
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
 
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            // Stack's default alignment is AlignmentDirectional.topStart, which needs a direction.
+            _rootElement = new HarnessRootElement(
+                RenderView,
+                new Directionality(TextDirection.Ltr, rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();

@@ -394,10 +394,11 @@ public sealed class MaterialScaffoldGeometryTests
         RenderBox footer = harness.RequireSlot(ScaffoldSlot.PersistentFooter);
         RenderBox body = harness.RequireSlot(ScaffoldSlot.Body);
 
-        // 90 plus the 8 top and bottom padding of the footer's EdgeInsets.all(8).
-        Assert.Equal(106.0, footer.Size.Height);
-        Assert.Equal(new Point(0, 494), SlotOffset(footer));
-        Assert.Equal(494.0, body.Size.Height);
+        // 90 plus the 8 top and bottom padding of the footer's EdgeInsets.all(8), plus the 1pt top
+        // border the footer's decoration contributes through Container's paddingIncludingDecoration.
+        Assert.Equal(107.0, footer.Size.Height);
+        Assert.Equal(new Point(0, 493), SlotOffset(footer));
+        Assert.Equal(493.0, body.Size.Height);
     }
 
     [Theory]
@@ -440,8 +441,8 @@ public sealed class MaterialScaffoldGeometryTests
         Point topLeft = overflowBar.GetPaintOffsetToRoot();
 
         // The footer's SafeArea keeps the left, right and bottom padding; only the top one is removed, so
-        // the 106pt button row grows by the 40pt bottom inset and the buttons stay inside the safe area.
-        Assert.Equal(146.0, footer.Size.Height);
+        // the 107pt button row grows by the 40pt bottom inset and the buttons stay inside the safe area.
+        Assert.Equal(147.0, footer.Size.Height);
         Assert.Equal(800.0 - 30.0 - 8.0, topLeft.X + overflowBar.Size.Width);
         Assert.Equal(600.0 - 40.0 - 8.0, topLeft.Y + overflowBar.Size.Height);
     }
@@ -463,8 +464,8 @@ public sealed class MaterialScaffoldGeometryTests
         RenderBox footer = harness.RequireSlot(ScaffoldSlot.PersistentFooter);
 
         // removeBottomPadding: the bottom navigation bar already covers the safe area.
-        Assert.Equal(106.0, footer.Size.Height);
-        Assert.Equal(new Point(0, 600 - 60 - 106), SlotOffset(footer));
+        Assert.Equal(107.0, footer.Size.Height);
+        Assert.Equal(new Point(0, 600 - 60 - 107), SlotOffset(footer));
     }
 
     [Fact]

@@ -80,19 +80,23 @@ public sealed class RenderStack : RenderBox,
     IRenderObjectContainer
 {
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, StackParentData> _container;
-    private Alignment _alignment;
+    private AlignmentGeometry _alignment;
+    private TextDirection? _textDirection;
+    private Alignment? _resolvedAlignment;
     private StackFit _fit;
     private Clip _clipBehavior;
     private bool _hasVisualOverflow;
 
     public RenderStack(
         List<RenderBox>? children = null,
-        Alignment alignment = default,
+        AlignmentGeometry alignment = default,
         StackFit fit = StackFit.Loose,
-        Clip clipBehavior = Clip.HardEdge)
+        Clip clipBehavior = Clip.HardEdge,
+        TextDirection? textDirection = null)
     {
         _container = new RenderBoxContainerDefaultsMixin<RenderBox, StackParentData>(this);
         _alignment = alignment;
+        _textDirection = textDirection;
         _fit = fit;
         _clipBehavior = clipBehavior;
 
@@ -102,7 +106,7 @@ public sealed class RenderStack : RenderBox,
         }
     }
 
-    public Alignment Alignment
+    public AlignmentGeometry Alignment
     {
         get => _alignment;
         set
@@ -113,8 +117,32 @@ public sealed class RenderStack : RenderBox,
             }
 
             _alignment = value;
-            MarkNeedsLayout();
+            MarkNeedResolution();
         }
+    }
+
+    /// <summary>The text direction with which <see cref="Alignment"/> is resolved.</summary>
+    public TextDirection? TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value)
+            {
+                return;
+            }
+
+            _textDirection = value;
+            MarkNeedResolution();
+        }
+    }
+
+    private Alignment ResolvedAlignment => _resolvedAlignment ??= _alignment.Resolve(_textDirection);
+
+    private void MarkNeedResolution()
+    {
+        _resolvedAlignment = null;
+        MarkNeedsLayout();
     }
 
     public StackFit Fit
@@ -244,7 +272,7 @@ public sealed class RenderStack : RenderBox,
             var childParentData = (StackParentData)child.parentData!;
             if (!childParentData.IsPositioned)
             {
-                childParentData.offset = _alignment.AlongOffset(Size, child.Size);
+                childParentData.offset = ResolvedAlignment.AlongOffset(Size, child.Size);
                 _hasVisualOverflow |= ChildOverflows(child, childParentData.offset);
                 continue;
             }
@@ -370,7 +398,7 @@ public sealed class RenderStack : RenderBox,
             MaxHeight: childHeight ?? Size.Height);
         child.Layout(childConstraints, parentUsesSize: true);
 
-        var alignedOffset = _alignment.AlongOffset(Size, child.Size);
+        Point alignedOffset = ResolvedAlignment.AlongOffset(Size, child.Size);
         double x = childParentData.Left
                    ?? (childParentData.Right.HasValue
                        ? Size.Width - childParentData.Right.Value - child.Size.Width
@@ -413,7 +441,8 @@ public sealed class RenderStack : RenderBox,
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
         properties.Add(new EnumProperty<StackFit>("fit", Fit));
         properties.Add(new EnumProperty<Clip>("clipBehavior", ClipBehavior, defaultValue: Clip.HardEdge));
     }

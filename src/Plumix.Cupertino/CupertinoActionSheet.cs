@@ -352,7 +352,7 @@ internal sealed class CupertinoActionSheetActionState : State, ISlideTarget
         {
             content = new DecoratedBox(
                 new BoxDecoration(Color: EffectiveFocusBackgroundColor(context)),
-                content);
+                child: content);
         }
 
         return new MouseRegion(
@@ -550,7 +550,7 @@ internal sealed class ActionSheetButtonBackgroundState : State, ISlideTarget
                                 ? CupertinoDialogConstants.ActionSheetCancelPressedColor
                                 : CupertinoDialogConstants.ActionSheetCancelColor,
                             context)),
-                    Current.Child));
+                    child: Current.Child));
         }
 
         return new MetaData(metaData: this, child: child);

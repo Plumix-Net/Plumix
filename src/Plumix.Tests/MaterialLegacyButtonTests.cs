@@ -166,7 +166,7 @@ public sealed class MaterialLegacyButtonTests
         Assert.Equal(EdgeInsetsGeometry.DirectionalOnly(start: 14, end: 6), raw.Padding);
         Assert.Equal(
             new Thickness(expectedLeft, 0, expectedRight, 0),
-            FindButtonContentPadding(tree.RenderRoot));
+            FindButtonContentPadding(tree.RenderRoot).Resolve(textDirection));
     }
 
     [Fact]
@@ -351,7 +351,7 @@ public sealed class MaterialLegacyButtonTests
 
     /// The resolved insets of the `Padding` Dart's `RawMaterialButton` puts between its `InkWell`
     /// and its child — the deepest `RenderPadding` under the button's material.
-    private static Thickness FindButtonContentPadding(RenderObject? root)
+    private static EdgeInsetsGeometry FindButtonContentPadding(RenderObject? root)
     {
         RenderPadding? deepest = null;
         Collect(root);

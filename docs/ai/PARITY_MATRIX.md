@@ -4,7 +4,7 @@ Scope: structural parity of sample routes/modules between C# and Dart samples.
 
 Policy note: sample parity updates must follow `docs/ai/PORTING_MODE.md` (Dart source of truth, strict `1:1` default, documented divergences).
 
-Last checked: 2026-08-20
+Last checked: 2026-08-30
 
 Status legend:
 
@@ -144,7 +144,7 @@ Status legend:
 | Gradients demo | `src/Sample/Plumix.Sample/Demos/General/GradientsDemoPage.cs` | `dart_sample/lib/demos/general/gradients_demo_page.dart` | verify-runtime | Cycles `TileMode`, steps a `GradientRotation`, and paints `LinearGradient`/`RadialGradient`/`SweepGradient` swatches next to an `AnimatedContainer` that interpolates gradient colors and a shadow list at once. |
 | DecoratedBox demo | `src/Sample/Plumix.Sample/Demos/General/DecoratedBoxDemoPage.cs` | `dart_sample/lib/demos/general/decorated_box_demo_page.dart` | verify-runtime | Demonstrates widget-level `DecoratedBox` with `BoxDecoration`, `BorderSide`, and `BorderRadius` controls. |
 | ShapeBorders demo | `src/Sample/Plumix.Sample/Demos/General/ShapeBordersDemoPage.cs` | `dart_sample/lib/demos/general/shape_borders_demo_page.dart` | verify-runtime | Cycles the concrete `OutlinedBorder` shapes (rounded rect, stadium, circle, oval, bevel, continuous, star, polygon, `Border`), adjusts the side width, and toggles a 50% lerp to `CircleBorder`, painting through `ShapeDecoration` and clipping through `ShapeBorderClipper`. |
-| Container demo | `src/Sample/Plumix.Sample/Demos/General/ContainerDemoPage.cs` | `dart_sample/lib/demos/general/container_demo_page.dart` | verify-runtime | Demonstrates `Container` composition with `alignment`, `margin`, `constraints`, and `transform` behavior (including clamp/tighten interaction). |
+| Container demo | `src/Sample/Plumix.Sample/Demos/General/ContainerDemoPage.cs` | `dart_sample/lib/demos/general/container_demo_page.dart` | verify-runtime | Demonstrates `Container` composition with `alignment`, `margin`, `constraints`, and `transform` behavior (including clamp/tighten interaction), plus the `transformAlignment` origin and the `clipBehavior` clip against the decoration's own shape. |
 | AspectRatio + Spacer demo | `src/Sample/Plumix.Sample/Demos/General/AspectRatioDemoPage.cs` | `dart_sample/lib/demos/general/aspect_ratio_demo_page.dart` | verify-runtime | Demonstrates widget-level `AspectRatio` tight sizing and `Spacer` flex-gap behavior. |
 | Flex / Row / Column demo | `src/Sample/Plumix.Sample/Demos/General/FlexDemoPage.cs` | `dart_sample/lib/demos/general/flex_demo_page.dart` | verify-runtime | Cycles every `MainAxisAlignment` and `CrossAxisAlignment`, `spacing`, `textDirection`/`verticalDirection` flips, an overflow toggle with `clipBehavior`, and a baseline-aligned `Row`. |
 | FractionallySizedBox demo | `src/Sample/Plumix.Sample/Demos/General/FractionallySizedBoxDemoPage.cs` | `dart_sample/lib/demos/general/fractionally_sized_box_demo_page.dart` | verify-runtime | Demonstrates widget-level fractional width/height constraints with alignment controls and pass-through axis mode. |

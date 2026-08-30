@@ -82,7 +82,7 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, "Cancel"));
         Assert.NotNull(FindParagraph(harness.RenderView, "!"));
         Assert.Contains(FindDescendants<RenderCustomPaint>(harness.RenderView), _ => true);
-        Assert.Contains(FindDescendants<RenderAlign>(harness.RenderView), align => align.HeightFactor == 1);
+        Assert.Contains(FindDescendants<RenderPositionedBox>(harness.RenderView), align => align.HeightFactor == 1);
     }
 
     [Fact]
@@ -360,10 +360,12 @@ public sealed class MaterialStepperTests : IDisposable
 
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(20, 0, 10, 0));
+            padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
+                == new Thickness(20, 0, 10, 0));
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(24, 0, 67, 24));
+            padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
+                == new Thickness(24, 0, 67, 24));
     }
 
     [Fact]

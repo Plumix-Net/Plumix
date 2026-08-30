@@ -336,11 +336,11 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         // `expandedInsets` never inserts a `_DropdownMenuBody`; the field fills the parent instead.
         Assert.Empty(FindDescendants<RenderDropdownMenuBody>(harness.RenderView));
         var padding = Assert.Single(FindWidgets<Padding>(harness.RootElement)
-            .Where(item => item.InsetsGeometry.Left == 35 && item.InsetsGeometry.Right == 20)
+            .Where(item => item.Insets.Left == 35 && item.Insets.Right == 20)
             .ToList());
         // `expandedInsets` clamps top/bottom to zero, so only the horizontal insets survive.
-        Assert.Equal(0.0, padding.InsetsGeometry.Top);
-        Assert.Equal(0.0, padding.InsetsGeometry.Bottom);
+        Assert.Equal(0.0, padding.Insets.Top);
+        Assert.Equal(0.0, padding.Insets.Bottom);
         Assert.Empty(FindDescendants<RenderDropdownMenuBody>(harness.RenderView));
     }
 
@@ -353,9 +353,9 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         using var harness = new WidgetRenderHarness(Wrap(new SizedBox(width: 500, child: menu)));
         harness.Pump(new Size(500, 360));
         var padding = Assert.Single(FindWidgets<Padding>(harness.RootElement)
-            .Where(item => item.InsetsGeometry.Start == 35 && item.InsetsGeometry.End == 20)
+            .Where(item => item.Insets.Start == 35 && item.Insets.End == 20)
             .ToList());
-        Assert.Equal(0.0, padding.InsetsGeometry.Top);
+        Assert.Equal(0.0, padding.Insets.Top);
     }
 
     [Fact]

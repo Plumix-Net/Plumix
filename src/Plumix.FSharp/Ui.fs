@@ -157,7 +157,7 @@ type Ui private () =
             ?margin: Thickness,
             ?width: float,
             ?height: float,
-            ?alignment: Alignment,
+            ?alignment: AlignmentGeometry,
             ?decoration: BoxDecoration,
             ?key: Key
         ) : Widget =

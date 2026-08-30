@@ -1315,6 +1315,7 @@ public sealed class HeroNavigatorTests
         return new PageRouteBuilder(
             pageBuilder: (_, _, _) =>
                 new Stack(
+                    textDirection: TextDirection.Ltr,
                     children:
                     [
                         new Positioned(
@@ -1380,6 +1381,7 @@ public sealed class HeroNavigatorTests
         }
 
         return new Stack(
+            textDirection: TextDirection.Ltr,
             children:
             [
                 new Positioned(

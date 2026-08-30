@@ -12,7 +12,7 @@ public sealed class AlignTests
     public void RenderAlign_CentersChildWithinAvailableSpace()
     {
         var child = new FixedSizeRenderBox(new Size(20, 10));
-        var align = new RenderAlign(
+        var align = new RenderPositionedBox(
             alignment: Alignment.Center,
             child: child);
         var root = new RenderView
@@ -33,7 +33,7 @@ public sealed class AlignTests
     public void RenderAlign_AppliesTopRightAlignment()
     {
         var child = new FixedSizeRenderBox(new Size(20, 10));
-        var align = new RenderAlign(
+        var align = new RenderPositionedBox(
             alignment: Alignment.TopRight,
             child: child);
         var root = new RenderView
@@ -53,7 +53,7 @@ public sealed class AlignTests
     public void RenderAlign_WidthHeightFactors_ShrinkWrapToChild()
     {
         var child = new FixedSizeRenderBox(new Size(20, 10));
-        var align = new RenderAlign(
+        var align = new RenderPositionedBox(
             alignment: Alignment.Center,
             widthFactor: 2,
             heightFactor: 3,
@@ -86,7 +86,7 @@ public sealed class AlignTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var renderAlign = RequireRenderObject<RenderAlign>(root.ChildElement);
+        var renderAlign = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.TopLeft, renderAlign.Alignment);
         Assert.Equal(1, renderAlign.WidthFactor);
         Assert.Null(renderAlign.HeightFactor);
@@ -98,7 +98,7 @@ public sealed class AlignTests
             child: new SizedBox(width: 10, height: 10)));
         owner.FlushBuild();
 
-        var updated = RequireRenderObject<RenderAlign>(root.ChildElement);
+        var updated = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.True(ReferenceEquals(renderAlign, updated));
         Assert.Equal(Alignment.Center, updated.Alignment);
         Assert.Equal(2, updated.WidthFactor);
@@ -119,7 +119,7 @@ public sealed class AlignTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var renderAlign = RequireRenderObject<RenderAlign>(root.ChildElement);
+        var renderAlign = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.Center, renderAlign.Alignment);
         Assert.Equal(2, renderAlign.WidthFactor);
         Assert.Equal(2, renderAlign.HeightFactor);
@@ -139,8 +139,8 @@ public sealed class AlignTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var renderAlign = RequireRenderObject<RenderAlign>(root.ChildElement);
-        Assert.Equal(Alignment.TopRight, renderAlign.Alignment);
+        var renderAlign = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
+        Assert.Equal(Alignment.TopRight, renderAlign.Alignment.Resolve(renderAlign.TextDirection));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Align(widthFactor: -0.1));
         Assert.Throws<ArgumentOutOfRangeException>(() => new Align(heightFactor: double.NaN));
     }

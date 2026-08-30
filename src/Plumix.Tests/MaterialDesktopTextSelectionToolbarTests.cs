@@ -109,7 +109,7 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
             && box.AdditionalConstraints.MinHeight == 36);
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), value =>
             value.Padding == new Thickness(20, 0, 20, 3));
-        Assert.Contains(FindDescendants<RenderAlign>(harness.RenderView), align =>
+        Assert.Contains(FindDescendants<RenderPositionedBox>(harness.RenderView), align =>
             align.Alignment == Alignment.CenterLeft);
 
         RenderParagraph paragraph = Assert.Single(FindDescendants<RenderParagraph>(harness.RenderView), value =>

@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -613,7 +614,9 @@ public sealed class OverlayPortalTests
 
         public PortalHarness(params OverlayEntry[] entries)
         {
-            _root = new TestRootElement(new Overlay(initialEntries: entries));
+            // Stack's default alignment is AlignmentDirectional.topStart, which needs a direction.
+            _root = new TestRootElement(
+                new Directionality(TextDirection.Ltr, new Overlay(initialEntries: entries)));
             _root.Attach(_owner);
             _root.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();

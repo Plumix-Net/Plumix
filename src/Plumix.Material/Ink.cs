@@ -96,7 +96,7 @@ public sealed class Ink : StatelessWidget
         {
             MaterialInkController? controller = Material.MaybeOf(context);
             content = controller is null
-                ? new DecoratedBox(Decoration, content)
+                ? new DecoratedBox(Decoration, child: content)
                 : new InkDecorationWidget(
                     decoration: Decoration,
                     isVisible: Visibility.Of(context),

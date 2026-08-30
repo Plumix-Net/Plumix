@@ -117,7 +117,7 @@ public sealed class CupertinoListSectionTests
             .Where(container => container.Color == separator)
             .ToArray();
         Assert.Equal(3, dividers.Length);
-        Assert.All(dividers, divider => Assert.Equal(0.5, divider.Height));
+        Assert.All(dividers, divider => Assert.Equal(0.5, divider.Constraints?.MaxHeight));
         Assert.Equal(
             EdgeInsetsGeometry.DirectionalOnly(start: 64.0),
             Assert.Single(dividers, divider => divider.Margin.HasValue).Margin);

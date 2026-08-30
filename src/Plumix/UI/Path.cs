@@ -51,6 +51,24 @@ public sealed class Path
         _currentPoints!.Add(new Point(x, y));
     }
 
+    /// Starts a new subpath at the given offset from the current point.
+    public void RelativeMoveTo(double dx, double dy)
+    {
+        Point current = CurrentPoint;
+        MoveTo(current.X + dx, current.Y + dy);
+    }
+
+    /// Adds a straight line segment from the current point to the point at the given offset from it.
+    public void RelativeLineTo(double dx, double dy)
+    {
+        Point current = CurrentPoint;
+        LineTo(current.X + dx, current.Y + dy);
+    }
+
+    /// The point the next relative operation starts from; the origin before any point was added.
+    private Point CurrentPoint =>
+        _currentPoints is { Count: > 0 } points ? points[^1] : default;
+
     public void QuadraticBezierTo(double x1, double y1, double x2, double y2)
     {
         EnsureCurrentContour();

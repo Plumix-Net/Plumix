@@ -917,7 +917,7 @@ public sealed class RawChip : StatefulWidget
                 ? new BoxConstraints(
                     MinWidth: WidgetConstants.MinInteractiveDimension + densityAdjustment.X,
                     MinHeight: WidgetConstants.MinInteractiveDimension + densityAdjustment.Y)
-                : new BoxConstraints();
+                : BoxConstraints.Unbounded;
             result = new ChipRedirectingHitDetectionWidget(
                 constraints: constraints,
                 child: new Center(widthFactor: 1.0, heightFactor: 1.0, child: result));

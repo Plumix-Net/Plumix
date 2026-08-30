@@ -89,6 +89,37 @@ public readonly record struct EdgeInsetsGeometry
             : new Thickness(Left + End, Top, Right + Start, Bottom);
     }
 
+    /// <summary>
+    /// Whether resolving these insets needs a text direction, mirroring the assert Dart's
+    /// `EdgeInsetsDirectional.resolve` and `_MixedEdgeInsets.resolve` share.
+    /// </summary>
+    public bool RequiresTextDirection => Start != 0.0 || End != 0.0;
+
+    /// <summary>Whether every dimension is non-negative. Dart's `EdgeInsetsGeometry.isNonNegative`.</summary>
+    public bool IsNonNegative =>
+        Left >= 0.0 && Top >= 0.0 && Right >= 0.0 && Bottom >= 0.0 && Start >= 0.0 && End >= 0.0;
+
+    /// <summary>
+    /// Resolves against an optional direction: purely physical insets ignore it, while directional
+    /// (or mixed) ones require it. Dart's `EdgeInsetsGeometry.resolve(TextDirection?)`.
+    /// </summary>
+    public Thickness Resolve(TextDirection? direction)
+    {
+        if (direction is { } value)
+        {
+            return Resolve(value);
+        }
+
+        if (RequiresTextDirection)
+        {
+            throw new ArgumentNullException(
+                nameof(direction),
+                "Directional insets cannot be resolved without a text direction.");
+        }
+
+        return new Thickness(Left, Top, Right, Bottom);
+    }
+
     public EdgeInsetsGeometry Add(EdgeInsetsGeometry other)
     {
         return new EdgeInsetsGeometry(

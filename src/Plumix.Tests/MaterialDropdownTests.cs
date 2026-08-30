@@ -89,8 +89,8 @@ public sealed class MaterialDropdownTests : IDisposable
             alignment: alignment);
         using var menuItemHarness = new WidgetRenderHarness(Wrap(item, direction: direction));
         menuItemHarness.Pump(new Size(100, 80));
-        var itemAlign = Assert.Single(FindDescendants<RenderAlign>(menuItemHarness.RenderView));
-        Assert.Equal(new Alignment(expectedX, 1.0), itemAlign.Alignment);
+        var itemAlign = Assert.Single(FindDescendants<RenderPositionedBox>(menuItemHarness.RenderView));
+        Assert.Equal(new Alignment(expectedX, 1.0), itemAlign.Alignment.Resolve(itemAlign.TextDirection));
 
         using var buttonHarness = new WidgetRenderHarness(Wrap(
             new DropdownButton<string>(
@@ -102,7 +102,7 @@ public sealed class MaterialDropdownTests : IDisposable
             direction: direction));
         buttonHarness.Pump(new Size(240, 100));
         var indexedStack = Assert.Single(FindDescendants<RenderIndexedStack>(buttonHarness.RenderView));
-        Assert.Equal(new Alignment(expectedX, 1.0), indexedStack.Alignment);
+        Assert.Equal(new Alignment(expectedX, 1.0), indexedStack.Alignment.Resolve(indexedStack.TextDirection));
     }
 
     [Fact]
@@ -1218,7 +1218,7 @@ public sealed class MaterialDropdownTests : IDisposable
         harness.Pump(new Size(500, 260));
 
         Assert.Contains(
-            FindDescendants<RenderAlign>(harness.RenderView),
+            FindDescendants<RenderPositionedBox>(harness.RenderView),
             align => Close(align.Alignment.X, expectedX) && Close(align.Alignment.Y, 0.0));
     }
 

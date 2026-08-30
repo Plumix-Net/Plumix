@@ -1195,10 +1195,10 @@ public sealed class DraggableScrollableSheetTests
         }
 
         /// <summary>Finds the box the sheet's fractional sizing produced.</summary>
-        private RenderFractionallySizedBox SheetBox()
+        private RenderFractionallySizedOverflowBox SheetBox()
         {
             RenderObject root = RenderView.Child ?? throw new InvalidOperationException("Nothing was laid out.");
-            RenderFractionallySizedBox? found = null;
+            RenderFractionallySizedOverflowBox? found = null;
             void Visit(RenderObject node)
             {
                 if (found != null)
@@ -1206,7 +1206,7 @@ public sealed class DraggableScrollableSheetTests
                     return;
                 }
 
-                if (node is RenderFractionallySizedBox box)
+                if (node is RenderFractionallySizedOverflowBox box)
                 {
                     found = box;
                     return;

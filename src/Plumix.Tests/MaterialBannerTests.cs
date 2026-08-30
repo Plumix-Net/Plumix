@@ -317,7 +317,7 @@ public sealed class MaterialBannerTests
 
         Assert.Contains(FindDescendants<RenderFractionalTranslation>(harness.RenderView),
             translation => translation.Translation == new Vector(0, 0));
-        Assert.Contains(FindDescendants<RenderAlign>(harness.RenderView),
+        Assert.Contains(FindDescendants<RenderPositionedBox>(harness.RenderView),
             align => align.HeightFactor.HasValue
                      && Math.Abs(align.HeightFactor.Value - Curves.FastOutSlowIn(0.5)) < 0.001);
         var semantics = harness.PumpAndGetSemantics(new Size(360, 180));
@@ -347,7 +347,9 @@ public sealed class MaterialBannerTests
         harness.Pump(new Size(360, 180));
 
         Assert.Empty(FindDescendants<RenderFractionalTranslation>(harness.RenderView));
-        Assert.DoesNotContain(FindDescendants<RenderAlign>(harness.RenderView), align => align.HeightFactor.HasValue);
+        Assert.DoesNotContain(
+            FindDescendants<RenderPositionedBox>(harness.RenderView),
+            align => align.HeightFactor.HasValue);
     }
 
     [Fact]

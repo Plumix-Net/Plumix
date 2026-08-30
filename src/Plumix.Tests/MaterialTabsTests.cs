@@ -809,7 +809,7 @@ public sealed class MaterialTabsTests
             ])));
         harness.Pump(new Size(600, 200));
 
-        IReadOnlyList<Thickness> labelPaddings = FindDescendants<RenderPadding>(harness.RenderView)
+        IReadOnlyList<EdgeInsetsGeometry> labelPaddings = FindDescendants<RenderPadding>(harness.RenderView)
             .Select(padding => padding.Padding)
             .Where(insets => insets.Left == 16 && insets.Right == 16)
             .ToList();

@@ -86,7 +86,7 @@ public sealed class MaterialSearchTests : IDisposable
 
         // The resolved padding is applied twice: around the Row and around the inner text field.
         Assert.True(harness.FindWidgets<Padding>()
-            .Count(padding => padding.InsetsGeometry == EdgeInsetsGeometry.Symmetric(horizontal: 8.0)) >= 2);
+            .Count(padding => padding.Insets == EdgeInsetsGeometry.Symmetric(horizontal: 8.0)) >= 2);
 
         TextField field = Assert.Single(harness.FindWidgets<TextField>());
         Assert.Equal(InputBorder.None, field.Decoration?.Border);
@@ -131,7 +131,7 @@ public sealed class MaterialSearchTests : IDisposable
             new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(12)),
             themedSurface.Shape);
         Assert.Contains(themed.FindWidgets<Padding>(),
-            padding => padding.InsetsGeometry == EdgeInsetsGeometry.Symmetric(horizontal: 4));
+            padding => padding.Insets == EdgeInsetsGeometry.Symmetric(horizontal: 4));
 
         using var widgetOverride = new WidgetRenderHarness(Wrap(
             theme,
@@ -351,7 +351,7 @@ public sealed class MaterialSearchTests : IDisposable
             box => box.Constraints.MaxWidth == 700 && box.Constraints.MaxHeight == 500);
         // viewPadding is ignored in the full-screen branch.
         Assert.DoesNotContain(harness.FindWidgets<Padding>(),
-            padding => padding.InsetsGeometry == EdgeInsetsGeometry.All(16));
+            padding => padding.Insets == EdgeInsetsGeometry.All(16));
         // The full-screen header bar keeps the 72dp minimum.
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinHeight == 72);

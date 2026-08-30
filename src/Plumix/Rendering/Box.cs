@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using Avalonia;
 using Plumix.Foundation;
 
@@ -237,6 +237,19 @@ public readonly record struct BoxConstraints(
     /// <summary>
     /// Creates box constraints that is respected only by the given size.
     /// </summary>
+    /// <summary>
+    /// The constraints Dart writes as <c>const BoxConstraints()</c>: no minimum, unbounded maximum.
+    /// </summary>
+    /// <remarks>
+    /// C#'s <c>new BoxConstraints()</c> bypasses the primary constructor's defaults and yields a
+    /// tight 0x0 constraint instead, so every port of Dart's default constructor must use this.
+    /// </remarks>
+    public static BoxConstraints Unbounded => new(
+        MinWidth: 0.0,
+        MaxWidth: double.PositiveInfinity,
+        MinHeight: 0.0,
+        MaxHeight: double.PositiveInfinity);
+
     public static BoxConstraints Tight(Size s) => new BoxConstraints(s.Width, s.Width, s.Height, s.Height);
 
     /// Creates box constraints that require the given width or height.

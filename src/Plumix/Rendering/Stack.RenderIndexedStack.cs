@@ -15,13 +15,52 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
 {
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, IndexedStackParentData> _container;
     private int? _index;
-    private Alignment _alignment;
+    private AlignmentGeometry _alignment;
+    private TextDirection? _textDirection;
+    private Alignment? _resolvedAlignment;
+    private StackFit _fit;
+    private Clip _clipBehavior;
+    private bool _hasVisualOverflow;
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
 
-    public RenderIndexedStack(int? index = 0, Alignment alignment = default)
+    public RenderIndexedStack(
+        int? index = 0,
+        AlignmentGeometry alignment = default,
+        TextDirection? textDirection = null,
+        StackFit fit = StackFit.Loose,
+        Clip clipBehavior = Clip.HardEdge)
     {
         _container = new RenderBoxContainerDefaultsMixin<RenderBox, IndexedStackParentData>(this);
         _index = index;
         _alignment = alignment;
+        _textDirection = textDirection;
+        _fit = fit;
+        _clipBehavior = clipBehavior;
+    }
+
+    /// <summary>How to size the children. Defaults to <see cref="StackFit.Loose"/>.</summary>
+    public StackFit Fit
+    {
+        get => _fit;
+        set
+        {
+            if (_fit == value) return;
+            _fit = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    /// <summary>How to clip an overflowing child. Defaults to <see cref="Clip.HardEdge"/>.</summary>
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (_clipBehavior == value) return;
+            _clipBehavior = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
+        }
     }
 
     public int? Index
@@ -35,15 +74,35 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
         }
     }
 
-    public Alignment Alignment
+    public AlignmentGeometry Alignment
     {
         get => _alignment;
         set
         {
             if (_alignment == value) return;
             _alignment = value;
-            MarkNeedsLayout();
+            MarkNeedResolution();
         }
+    }
+
+    /// <summary>The text direction with which <see cref="Alignment"/> is resolved.</summary>
+    public TextDirection? TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value) return;
+            _textDirection = value;
+            MarkNeedResolution();
+        }
+    }
+
+    private Alignment ResolvedAlignment => _resolvedAlignment ??= _alignment.Resolve(_textDirection);
+
+    private void MarkNeedResolution()
+    {
+        _resolvedAlignment = null;
+        MarkNeedsLayout();
     }
 
     public int ChildCount => _container.ChildCount;
@@ -72,9 +131,17 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
     protected override double ComputeMaxIntrinsicHeight(double width) =>
         GetIntrinsicDimension(child => child.GetMaxIntrinsicHeight(width));
 
+    private BoxConstraints ChildConstraintsFor(BoxConstraints constraints) => _fit switch
+    {
+        StackFit.Loose => BoxConstraints.Loose(constraints.Biggest),
+        StackFit.Expand => BoxConstraints.Tight(constraints.Biggest),
+        StackFit.Passthrough => constraints,
+        _ => constraints,
+    };
+
     protected override Size ComputeDryLayout(BoxConstraints constraints)
     {
-        BoxConstraints childConstraints = BoxConstraints.Loose(constraints.Biggest);
+        BoxConstraints childConstraints = ChildConstraintsFor(constraints);
         double maxWidth = constraints.MinWidth;
         double maxHeight = constraints.MinHeight;
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
@@ -108,18 +175,19 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
             return null;
         }
 
-        BoxConstraints childConstraints = BoxConstraints.Loose(constraints.Biggest);
+        BoxConstraints childConstraints = ChildConstraintsFor(constraints);
         Size stackSize = ComputeDryLayout(constraints);
         Size childSize = child.GetDryLayout(childConstraints);
         double? childBaseline = child.GetDryBaseline(childConstraints, baseline);
         return childBaseline.HasValue
-            ? childBaseline.Value + Alignment.AlongOffset(stackSize, childSize).Y
+            ? childBaseline.Value + ResolvedAlignment.AlongOffset(stackSize, childSize).Y
             : null;
     }
 
     protected override void PerformLayout()
     {
-        var childConstraints = BoxConstraints.Loose(Constraints.Biggest);
+        _hasVisualOverflow = false;
+        BoxConstraints childConstraints = ChildConstraintsFor(Constraints);
         double maxWidth = 0.0;
         double maxHeight = 0.0;
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
@@ -132,17 +200,51 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
         Size = Constraints.Constrain(new Size(maxWidth, maxHeight));
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
-            ((IndexedStackParentData)child.parentData!).offset = Alignment.AlongOffset(Size, child.Size);
+            Point offset = ResolvedAlignment.AlongOffset(Size, child.Size);
+            ((IndexedStackParentData)child.parentData!).offset = offset;
+            _hasVisualOverflow |= offset.X < 0.0
+                || offset.Y < 0.0
+                || offset.X + child.Size.Width > Size.Width
+                || offset.Y + child.Size.Height > Size.Height;
         }
     }
 
     public override void Paint(PaintingContext context, Point offset)
     {
-        var child = SelectedChild;
-        if (child is null) return;
+        ArgumentNullException.ThrowIfNull(context);
+        if (SelectedChild is null) return;
+        if (_hasVisualOverflow && _clipBehavior != Clip.None)
+        {
+            _clipRectLayer.Layer = context.PushClipRect(
+                NeedsCompositing,
+                offset,
+                new Rect(new Point(0, 0), Size),
+                PaintSelectedChild,
+                _clipBehavior,
+                _clipRectLayer.Layer);
+            return;
+        }
+
+        _clipRectLayer.Layer = null;
+        PaintSelectedChild(context, offset);
+    }
+
+    private void PaintSelectedChild(PaintingContext context, Point offset)
+    {
+        if (SelectedChild is not { } child) return;
         var data = (IndexedStackParentData)child.parentData!;
         context.PaintChild(child, data.offset + offset);
     }
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        _clipRectLayer.Layer = null;
+        base.Dispose();
+    }
+
+    protected override Rect? DescribeApproximatePaintClip(RenderObject? child) =>
+        _hasVisualOverflow && _clipBehavior != Clip.None ? new Rect(new Point(), Size) : null;
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
@@ -205,7 +307,10 @@ public sealed class RenderIndexedStack : RenderBox, IRenderObjectContainer
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
+        properties.Add(new EnumProperty<StackFit>("fit", Fit));
+        properties.Add(new EnumProperty<Clip>("clipBehavior", ClipBehavior, defaultValue: Clip.HardEdge));
         properties.Add(new IntProperty("index", Index));
     }
 

@@ -135,14 +135,18 @@ public sealed class StackTests
 
         var stack = RequireRenderObject<RenderStack>(root.ChildElement);
         var indexedStack = Assert.IsType<RenderIndexedStack>(stack.FirstChild);
-        Assert.Equal(Alignment.BottomRight, stack.Alignment);
-        Assert.Equal(Alignment.BottomRight, indexedStack.Alignment);
+        Assert.Equal(Alignment.BottomRight, stack.Alignment.Resolve(stack.TextDirection));
+        Assert.Equal(
+            Alignment.BottomRight,
+            indexedStack.Alignment.Resolve(indexedStack.TextDirection));
 
         root.Update(BuildDirectionalStacks(TextDirection.Rtl));
         owner.FlushBuild();
 
-        Assert.Equal(Alignment.BottomLeft, stack.Alignment);
-        Assert.Equal(Alignment.BottomLeft, indexedStack.Alignment);
+        Assert.Equal(Alignment.BottomLeft, stack.Alignment.Resolve(stack.TextDirection));
+        Assert.Equal(
+            Alignment.BottomLeft,
+            indexedStack.Alignment.Resolve(indexedStack.TextDirection));
         root.Unmount();
     }
 

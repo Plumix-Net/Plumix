@@ -471,10 +471,18 @@ public sealed class MaterialAboutTests : IDisposable
         TapText(harness, NestedWidth, "app");
         PumpUntilLoaded(harness, NestedWidth, () => FindParagraph(harness.RenderView, "Plain line") is not null);
 
-        Assert.Equal(new Thickness(0.0, 8.0, 0.0, 0.0), PaddingAroundText(harness, "Plain line"));
-        Assert.Equal(new Thickness(16.0, 8.0, 0.0, 0.0), PaddingAroundText(harness, "one level in"));
-        Assert.Equal(new Thickness(32.0, 8.0, 0.0, 0.0), PaddingAroundText(harness, "two levels in"));
-        Assert.Equal(new Thickness(0.0, 16.0, 0.0, 0.0), PaddingAroundText(harness, "centered heading"));
+        Assert.Equal(
+            new Thickness(0.0, 8.0, 0.0, 0.0),
+            PaddingAroundText(harness, "Plain line").Resolve(TextDirection.Ltr));
+        Assert.Equal(
+            new Thickness(16.0, 8.0, 0.0, 0.0),
+            PaddingAroundText(harness, "one level in").Resolve(TextDirection.Ltr));
+        Assert.Equal(
+            new Thickness(32.0, 8.0, 0.0, 0.0),
+            PaddingAroundText(harness, "two levels in").Resolve(TextDirection.Ltr));
+        Assert.Equal(
+            new Thickness(0.0, 16.0, 0.0, 0.0),
+            PaddingAroundText(harness, "centered heading").Resolve(TextDirection.Ltr));
 
         // The divider that separates each license entry.
         Assert.Contains(FindDescendants<RenderPadding>(harness.RenderView), padding =>
@@ -661,7 +669,7 @@ public sealed class MaterialAboutTests : IDisposable
         Assert.Equal(AboutDialogs.MasterViewWidth, masterPanel.Constraints.MaxWidth);
 
         Assert.Contains(
-            FindWidgets<Padding>(harness.RootElement).Select(padding => padding.InsetsGeometry),
+            FindWidgets<Padding>(harness.RootElement).Select(padding => padding.Insets),
             geometry => Math.Abs(
                 geometry.Start - (AboutDialogs.MasterViewWidth - AboutDialogs.CardElevation)) < 0.001);
     }
@@ -889,7 +897,7 @@ public sealed class MaterialAboutTests : IDisposable
     private static RenderParagraph ParagraphFor(WidgetRenderHarness harness, string text) =>
         FindDescendants<RenderParagraph>(harness.RenderView).First(item => item.PlainText == text);
 
-    private static Thickness PaddingAroundText(WidgetRenderHarness harness, string text)
+    private static EdgeInsetsGeometry PaddingAroundText(WidgetRenderHarness harness, string text)
     {
         var paragraph = ParagraphFor(harness, text);
         for (var node = paragraph.Parent; node is not null; node = node.Parent)

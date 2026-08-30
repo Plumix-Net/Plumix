@@ -293,6 +293,13 @@ public abstract class Element
     {
     }
 
+    /// <summary>
+    /// Walks the children that are on stage, i.e. the ones the widget inspector shows. Defaults to
+    /// every child; widgets that hide part of the tree (such as <see cref="Offstage"/>) override it.
+    /// </summary>
+    /// <remarks>Flutter's <c>Element.debugVisitOnstageChildren</c>.</remarks>
+    internal virtual void DebugVisitOnstageChildren(Action<Element> visitor) => VisitChildren(visitor);
+
     internal virtual void AttachRenderObject(object? newSlot)
     {
         if (Slot is not null)

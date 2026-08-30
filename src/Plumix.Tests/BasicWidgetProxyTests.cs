@@ -9,13 +9,21 @@ namespace Plumix.Tests;
 
 public sealed class BasicWidgetProxyTests
 {
+    /// <summary>Dart asserts `opacity >= 0.0 && opacity <= 1.0` in the widget constructor; the render
+    /// object still clamps, which is what an out-of-range value set directly on it hits.</summary>
+    [DebugOnlyFact]
+    public void OpacityWidget_RejectsAnOutOfRangeOpacity()
+    {
+        Assert.Throws<AssertionError>(() => new Opacity(opacity: 1.5, child: new SizedBox()));
+    }
+
     [Fact]
     public void OpacityWidget_CreatesRenderOpacity_AndUpdatesOpacity()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Opacity(
-                opacity: 1.5,
+                opacity: 1.0,
                 child: new SizedBox(width: 16, height: 16)));
 
         root.Attach(owner);

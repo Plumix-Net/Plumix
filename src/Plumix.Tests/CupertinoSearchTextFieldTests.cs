@@ -182,8 +182,8 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
             && icon.IconData == CupertinoIcons.Search);
         Padding suffix = Assert.Single(harness.FindWidgets<Padding>(), padding =>
             padding.Child is CupertinoButton);
-        Assert.Equal(prefixInsets, prefix.InsetsGeometry);
-        Assert.Equal(suffixInsets, suffix.InsetsGeometry);
+        Assert.Equal(prefixInsets, prefix.Insets);
+        Assert.Equal(suffixInsets, suffix.Insets);
 
         using var shorthand = new CupertinoThemeTestHarness(Wrap(new CupertinoSearchTextField(
             backgroundColor: CupertinoColors.SystemRed,

@@ -6,479 +6,11 @@ using Plumix.Rendering;
 using Plumix.UI;
 using RelativeRect = Plumix.Rendering.RelativeRect;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart
 
 namespace Plumix.Widgets;
 
-public sealed class SizedBox : SingleChildRenderObjectWidget
-{
-    public SizedBox(double? width = null, double? height = null, Widget? child = null, Key? key = null) : base(child, key)
-    {
-        Width = width;
-        Height = height;
-    }
-
-    public double? Width { get; }
-
-    public double? Height { get; }
-
-    // Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (SizedBox.square).
-    public static SizedBox Square(double? dimension = null, Widget? child = null, Key? key = null) =>
-        new(width: dimension, height: dimension, child: child, key: key);
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderConstrainedBox(BoxConstraints.TightFor(width: Width, height: Height));
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        ((RenderConstrainedBox)renderObject).AdditionalConstraints = BoxConstraints.TightFor(width: Width, height: Height);
-    }
-}
-
-public sealed class ConstrainedBox : SingleChildRenderObjectWidget
-{
-    public ConstrainedBox(BoxConstraints constraints, Widget? child = null, Key? key = null) : base(child, key)
-    {
-        Constraints = constraints;
-    }
-
-    public BoxConstraints Constraints { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderConstrainedBox(Constraints);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        ((RenderConstrainedBox)renderObject).AdditionalConstraints = Constraints;
-    }
-}
-
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (UnconstrainedBox)
-public sealed class UnconstrainedBox : StatelessWidget
-{
-    public UnconstrainedBox(
-        Widget? child,
-        Alignment alignment,
-        Axis? constrainedAxis = null,
-        Key? key = null) : this(
-            child: child,
-            alignment: (AlignmentGeometry)alignment,
-            constrainedAxis: constrainedAxis,
-            key: key)
-    {
-    }
-
-    public UnconstrainedBox(
-        Widget? child = null,
-        TextDirection? textDirection = null,
-        AlignmentGeometry alignment = default,
-        Axis? constrainedAxis = null,
-        Clip clipBehavior = Clip.None,
-        Key? key = null) : base(key)
-    {
-        Child = child;
-        TextDirection = textDirection;
-        Alignment = alignment;
-        ConstrainedAxis = constrainedAxis;
-        ClipBehavior = clipBehavior;
-    }
-
-    public Widget? Child { get; }
-
-    public TextDirection? TextDirection { get; }
-
-    public AlignmentGeometry Alignment { get; }
-
-    public Axis? ConstrainedAxis { get; }
-
-    public Clip ClipBehavior { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        BoxConstraintsTransform transform = ConstrainedAxis switch
-        {
-            Axis.Horizontal => ConstraintsTransformBox.HeightUnconstrained,
-            Axis.Vertical => ConstraintsTransformBox.WidthUnconstrained,
-            null => ConstraintsTransformBox.Unconstrained,
-            _ => throw new ArgumentOutOfRangeException(),
-        };
-
-        return new ConstraintsTransformBox(
-            constraintsTransform: transform,
-            child: Child,
-            textDirection: TextDirection,
-            alignment: Alignment,
-            clipBehavior: ClipBehavior);
-    }
-}
-
-public sealed class LimitedBox : SingleChildRenderObjectWidget
-{
-    public LimitedBox(
-        Widget? child = null,
-        double maxWidth = double.PositiveInfinity,
-        double maxHeight = double.PositiveInfinity,
-        Key? key = null) : base(child, key)
-    {
-        MaxWidth = ValidateMax(maxWidth, nameof(maxWidth));
-        MaxHeight = ValidateMax(maxHeight, nameof(maxHeight));
-    }
-
-    public double MaxWidth { get; }
-
-    public double MaxHeight { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderLimitedBox(
-            maxWidth: MaxWidth,
-            maxHeight: MaxHeight);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var limitedBox = (RenderLimitedBox)renderObject;
-        limitedBox.MaxWidth = MaxWidth;
-        limitedBox.MaxHeight = MaxHeight;
-    }
-
-    private static double ValidateMax(double value, string parameterName)
-    {
-        if (double.IsNaN(value) || value < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Max value must be non-negative.");
-        }
-
-        return value;
-    }
-}
-
-public sealed class OverflowBox : SingleChildRenderObjectWidget
-{
-    public OverflowBox(
-        Widget? child = null,
-        Alignment alignment = default,
-        double? minWidth = null,
-        double? maxWidth = null,
-        double? minHeight = null,
-        double? maxHeight = null,
-        OverflowBoxFit fit = OverflowBoxFit.Max,
-        Key? key = null) : base(child, key)
-    {
-        MinWidth = ValidateConstraint(minWidth, nameof(minWidth));
-        MaxWidth = ValidateConstraint(maxWidth, nameof(maxWidth));
-        MinHeight = ValidateConstraint(minHeight, nameof(minHeight));
-        MaxHeight = ValidateConstraint(maxHeight, nameof(maxHeight));
-        ValidateRanges(MinWidth, MaxWidth, nameof(minWidth), nameof(maxWidth));
-        ValidateRanges(MinHeight, MaxHeight, nameof(minHeight), nameof(maxHeight));
-        Alignment = alignment;
-        Fit = fit;
-    }
-
-    public Alignment Alignment { get; }
-
-    public double? MinWidth { get; }
-
-    public double? MaxWidth { get; }
-
-    public double? MinHeight { get; }
-
-    public double? MaxHeight { get; }
-
-    public OverflowBoxFit Fit { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderConstrainedOverflowBox(
-            alignment: Alignment,
-            minWidth: MinWidth,
-            maxWidth: MaxWidth,
-            minHeight: MinHeight,
-            maxHeight: MaxHeight,
-            fit: Fit);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var overflowBox = (RenderConstrainedOverflowBox)renderObject;
-        overflowBox.Alignment = Alignment;
-        overflowBox.MinWidth = MinWidth;
-        overflowBox.MaxWidth = MaxWidth;
-        overflowBox.MinHeight = MinHeight;
-        overflowBox.MaxHeight = MaxHeight;
-        overflowBox.Fit = Fit;
-    }
-
-    private static double? ValidateConstraint(double? value, string parameterName)
-    {
-        if (!value.HasValue)
-        {
-            return null;
-        }
-
-        if (double.IsNaN(value.Value) || value.Value < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Constraint value must be non-negative.");
-        }
-
-        return value.Value;
-    }
-
-    private static void ValidateRanges(
-        double? minValue,
-        double? maxValue,
-        string minName,
-        string maxName)
-    {
-        if (minValue.HasValue && maxValue.HasValue && minValue.Value > maxValue.Value)
-        {
-            throw new ArgumentOutOfRangeException(
-                minName,
-                $"{minName} cannot be greater than {maxName}.");
-        }
-    }
-}
-
-public sealed class SizedOverflowBox : SingleChildRenderObjectWidget
-{
-    public SizedOverflowBox(
-        Size size,
-        Widget? child = null,
-        Alignment alignment = default,
-        Key? key = null) : base(child, key)
-    {
-        Size = size;
-        Alignment = alignment;
-    }
-
-    public Size Size { get; }
-
-    public Alignment Alignment { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderSizedOverflowBox(
-            requestedSize: Size,
-            alignment: Alignment);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var sizedOverflowBox = (RenderSizedOverflowBox)renderObject;
-        sizedOverflowBox.RequestedSize = Size;
-        sizedOverflowBox.Alignment = Alignment;
-    }
-}
-
-public sealed class Offstage : SingleChildRenderObjectWidget
-{
-    public Offstage(
-        Widget? child = null,
-        bool offstage = true,
-        Key? key = null) : base(child, key)
-    {
-        IsOffstage = offstage;
-    }
-
-    public bool IsOffstage { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderOffstage(offstage: IsOffstage);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        ((RenderOffstage)renderObject).Offstage = IsOffstage;
-    }
-}
-
-public sealed class IgnorePointer : SingleChildRenderObjectWidget
-{
-    public IgnorePointer(
-        Widget? child = null,
-        bool ignoring = true,
-        bool? ignoringSemantics = null,
-        Key? key = null) : base(child, key)
-    {
-        Ignoring = ignoring;
-        IgnoringSemantics = ignoringSemantics;
-    }
-
-    public bool Ignoring { get; }
-
-    public bool? IgnoringSemantics { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderIgnorePointer(
-            ignoring: Ignoring,
-            ignoringSemantics: IgnoringSemantics);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var ignorePointer = (RenderIgnorePointer)renderObject;
-        ignorePointer.Ignoring = Ignoring;
-        ignorePointer.IgnoringSemantics = IgnoringSemantics;
-    }
-}
-
-public sealed class AbsorbPointer : SingleChildRenderObjectWidget
-{
-    public AbsorbPointer(
-        Widget? child = null,
-        bool absorbing = true,
-        bool? ignoringSemantics = null,
-        Key? key = null) : base(child, key)
-    {
-        Absorbing = absorbing;
-        IgnoringSemantics = ignoringSemantics;
-    }
-
-    public bool Absorbing { get; }
-
-    public bool? IgnoringSemantics { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderAbsorbPointer(
-            absorbing: Absorbing,
-            ignoringSemantics: IgnoringSemantics);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var absorbPointer = (RenderAbsorbPointer)renderObject;
-        absorbPointer.Absorbing = Absorbing;
-        absorbPointer.IgnoringSemantics = IgnoringSemantics;
-    }
-}
-
-public sealed class Padding : SingleChildRenderObjectWidget
-{
-    public Padding(Thickness insets, Widget? child = null, Key? key = null) : this(
-        insets: (EdgeInsetsGeometry)insets,
-        child: child,
-        key: key)
-    {
-    }
-
-    public Padding(EdgeInsetsGeometry insets, Widget? child = null, Key? key = null) : base(child, key)
-    {
-        InsetsGeometry = insets;
-    }
-
-    public Thickness Insets => InsetsGeometry.Resolve(TextDirection.Ltr);
-
-    public EdgeInsetsGeometry InsetsGeometry { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderPadding(ResolveInsets(context));
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        ((RenderPadding)renderObject).Padding = ResolveInsets(context);
-    }
-
-    private Thickness ResolveInsets(BuildContext context)
-    {
-        return InsetsGeometry.Resolve(Directionality.Of(context));
-    }
-}
-
-public sealed class DecoratedBox : SingleChildRenderObjectWidget
-{
-    public DecoratedBox(
-        Decoration decoration,
-        Widget? child = null,
-        Key? key = null,
-        DecorationPosition position = DecorationPosition.Background) : base(child, key)
-    {
-        Decoration = decoration ?? throw new ArgumentNullException(nameof(decoration));
-        Position = position;
-    }
-
-    public Decoration Decoration { get; }
-    public DecorationPosition Position { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderDecoratedBox(
-            Decoration,
-            position: Position,
-            configuration: CreateImageConfiguration(context));
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var decoratedBox = (RenderDecoratedBox)renderObject;
-        decoratedBox.DecorationValue = Decoration;
-        decoratedBox.Position = Position;
-        decoratedBox.Configuration = CreateImageConfiguration(context);
-    }
-
-    private static ImageConfiguration CreateImageConfiguration(BuildContext context)
-    {
-        return ImageConfigurationUtils.CreateLocalImageConfiguration(context);
-    }
-}
-
-public sealed class InkSplash : SingleChildRenderObjectWidget
-{
-    public InkSplash(
-        Widget? child = null,
-        Color? splashColor = null,
-        Point splashOrigin = default,
-        double splashProgress = 0,
-        double? splashRadius = null,
-        bool clipToBounds = true,
-        Key? key = null) : base(child, key)
-    {
-        SplashColor = splashColor;
-        SplashOrigin = splashOrigin;
-        SplashProgress = splashProgress;
-        SplashRadius = splashRadius;
-        ClipToBounds = clipToBounds;
-    }
-
-    public Color? SplashColor { get; }
-
-    public Point SplashOrigin { get; }
-
-    public double SplashProgress { get; }
-
-    public double? SplashRadius { get; }
-
-    public bool ClipToBounds { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderInkSplash(
-            splashColor: SplashColor,
-            splashOrigin: SplashOrigin,
-            splashProgress: SplashProgress,
-            splashRadius: SplashRadius,
-            clipToBounds: ClipToBounds);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var inkSplash = (RenderInkSplash)renderObject;
-        inkSplash.SplashColor = SplashColor;
-        inkSplash.SplashOrigin = SplashOrigin;
-        inkSplash.SplashProgress = SplashProgress;
-        inkSplash.SplashRadius = SplashRadius;
-        inkSplash.ClipToBounds = ClipToBounds;
-    }
-}
-
+/// <summary>A widget that makes its child partially transparent.</summary>
 public sealed class Opacity : SingleChildRenderObjectWidget
 {
     public Opacity(double opacity, Widget? child = null, Key? key = null)
@@ -492,12 +24,22 @@ public sealed class Opacity : SingleChildRenderObjectWidget
         bool alwaysIncludeSemantics,
         Key? key = null) : base(child, key)
     {
+        if (Constants.KDebugMode && !(opacity >= 0.0 && opacity <= 1.0))
+        {
+            throw new AssertionError("opacity must be between 0.0 and 1.0 inclusive.");
+        }
+
         Value = opacity;
         AlwaysIncludeSemantics = alwaysIncludeSemantics;
     }
 
+    /// <summary>The fraction to scale the child's alpha value.</summary>
+    /// <remarks>Dart's `Opacity.opacity`; C# members may not repeat their declaring type's name.
+    /// </remarks>
     public double Value { get; }
 
+    /// <summary>Whether the semantics of the child are included even when it is fully transparent.
+    /// </summary>
     public bool AlwaysIncludeSemantics { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -511,17 +53,130 @@ public sealed class Opacity : SingleChildRenderObjectWidget
         opacity.Opacity = Value;
         opacity.AlwaysIncludeSemantics = AlwaysIncludeSemantics;
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("opacity", Value));
+        properties.Add(new FlagProperty(
+            "alwaysIncludeSemantics",
+            value: AlwaysIncludeSemantics,
+            ifTrue: "alwaysIncludeSemantics"));
+    }
 }
 
+/// <summary>A widget that clips its child using a rectangle.</summary>
+public sealed class ClipRect : SingleChildRenderObjectWidget
+{
+    public ClipRect(
+        CustomClipper<Rect>? clipper = null,
+        Clip clipBehavior = Clip.HardEdge,
+        Widget? child = null,
+        Key? key = null) : base(child, key)
+    {
+        Clipper = clipper;
+        ClipBehavior = clipBehavior;
+    }
+
+    /// <summary>Supplies the rectangle to clip to; <see langword="null"/> clips to the layout rect.</summary>
+    public CustomClipper<Rect>? Clipper { get; }
+
+    /// <summary>How the clip is applied. Defaults to <see cref="Clip.HardEdge"/>.</summary>
+    public Clip ClipBehavior { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderClipRect(clipper: Clipper, clipBehavior: ClipBehavior);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var clipRect = (RenderClipRect)renderObject;
+        clipRect.Clipper = Clipper;
+        clipRect.ClipBehavior = ClipBehavior;
+    }
+
+    internal override void DidUnmountRenderObject(RenderObject renderObject)
+    {
+        ((RenderClipRect)renderObject).Clipper = null;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<CustomClipper<Rect>?>("clipper", Clipper, defaultValue: null));
+    }
+}
+
+/// <summary>A widget that clips its child using a rounded rectangle.</summary>
+public sealed class ClipRRect : SingleChildRenderObjectWidget
+{
+    public ClipRRect(
+        BorderRadiusGeometry? borderRadius = null,
+        CustomClipper<RRect>? clipper = null,
+        Clip clipBehavior = Clip.AntiAlias,
+        Widget? child = null,
+        Key? key = null) : base(child, key)
+    {
+        BorderRadius = borderRadius ?? Rendering.BorderRadius.Zero;
+        Clipper = clipper;
+        ClipBehavior = clipBehavior;
+    }
+
+    /// <summary>The border radius of the rounded corners.</summary>
+    public BorderRadiusGeometry BorderRadius { get; }
+
+    /// <summary>Supplies the rounded rectangle to clip to; <see langword="null"/> uses
+    /// <see cref="BorderRadius"/> over the layout rect.</summary>
+    public CustomClipper<RRect>? Clipper { get; }
+
+    /// <summary>How the clip is applied. Defaults to <see cref="Clip.AntiAlias"/>.</summary>
+    public Clip ClipBehavior { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderClipRRect(
+            borderRadius: BorderRadius,
+            clipper: Clipper,
+            clipBehavior: ClipBehavior,
+            textDirection: Directionality.MaybeOf(context));
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var clipRRect = (RenderClipRRect)renderObject;
+        clipRRect.BorderRadius = BorderRadius;
+        clipRRect.ClipBehavior = ClipBehavior;
+        clipRRect.Clipper = Clipper;
+        clipRRect.TextDirection = Directionality.MaybeOf(context);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<BorderRadiusGeometry>(
+            "borderRadius",
+            BorderRadius,
+            showName: false,
+            defaultValue: null));
+        properties.Add(new DiagnosticsProperty<CustomClipper<RRect>?>("clipper", Clipper, defaultValue: null));
+    }
+}
+
+/// <summary>A widget that applies a transformation before painting its child.</summary>
 public sealed class Transform : SingleChildRenderObjectWidget
 {
-    private AlignmentGeometry? _geometryAlignment;
-
     public Transform(
         Matrix4 transform,
         Widget? child = null,
         Point? origin = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         bool transformHitTests = true,
         FilterQuality? filterQuality = null,
         Key? key = null) : base(child, key)
@@ -529,7 +184,6 @@ public sealed class Transform : SingleChildRenderObjectWidget
         Matrix = transform;
         Origin = origin;
         Alignment = alignment;
-        _geometryAlignment = alignment is { } value ? (AlignmentGeometry)value : null;
         TransformHitTests = transformHitTests;
         FilterQuality = filterQuality;
     }
@@ -539,7 +193,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
         double angle,
         Widget? child = null,
         Point? origin = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         bool transformHitTests = true,
         FilterQuality? filterQuality = null,
         Key? key = null) =>
@@ -575,7 +229,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
         double? scaleY = null,
         Widget? child = null,
         Point? origin = null,
-        Alignment? alignment = null,
+        AlignmentGeometry? alignment = null,
         bool transformHitTests = true,
         FilterQuality? filterQuality = null,
         Key? key = null)
@@ -604,29 +258,6 @@ public sealed class Transform : SingleChildRenderObjectWidget
             key);
     }
 
-    /// <summary>
-    /// Creates a uniformly scaled transform whose origin may be directional, matching Flutter's
-    /// <c>Transform.scale</c> alignment surface.
-    /// </summary>
-    public static Transform Scale(
-        double scale,
-        Widget? child,
-        AlignmentGeometry alignment,
-        bool transformHitTests = true,
-        FilterQuality? filterQuality = null,
-        Key? key = null)
-    {
-        var result = Scale(
-            scale: scale,
-            child: child,
-            alignment: null,
-            transformHitTests: transformHitTests,
-            filterQuality: filterQuality,
-            key: key);
-        result._geometryAlignment = alignment;
-        return result;
-    }
-
     /// <summary>Creates a widget that mirrors its child about its center.</summary>
     public static Transform Flip(
         bool flipX = false,
@@ -645,23 +276,33 @@ public sealed class Transform : SingleChildRenderObjectWidget
             filterQuality,
             key);
 
+    /// <summary>The matrix to transform the child by during painting.</summary>
+    /// <remarks>Dart's `Transform.transform`; C# members may not repeat their declaring type's name.
+    /// </remarks>
     public Matrix4 Matrix { get; }
-    public Point? Origin { get; }
-    public Alignment? Alignment { get; }
 
-    public AlignmentGeometry? GeometryAlignment => _geometryAlignment;
+    /// <summary>The origin of the coordinate system in which to apply the matrix.</summary>
+    public Point? Origin { get; }
+
+    /// <summary>The alignment of the origin, relative to the size of the box.</summary>
+    public AlignmentGeometry? Alignment { get; }
+
+    /// <summary>Whether to apply the transformation when performing hit tests.</summary>
     public bool TransformHitTests { get; }
+
+    /// <summary>The filter quality with which to apply the transform as a bitmap operation.</summary>
     public FilterQuality? FilterQuality { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderTransform(
             Matrix,
-            ResolveAlignment(context),
+            Alignment,
             child: null,
             FilterQuality,
             Origin,
-            TransformHitTests);
+            TransformHitTests,
+            Directionality.MaybeOf(context));
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -669,22 +310,10 @@ public sealed class Transform : SingleChildRenderObjectWidget
         var transform = (RenderTransform)renderObject;
         transform.Transform = Matrix;
         transform.Origin = Origin;
-        transform.Alignment = ResolveAlignment(context);
+        transform.Alignment = Alignment;
+        transform.TextDirection = Directionality.MaybeOf(context);
         transform.TransformHitTests = TransformHitTests;
         transform.FilterQuality = FilterQuality;
-    }
-
-    private Alignment? ResolveAlignment(BuildContext context)
-    {
-        if (_geometryAlignment is not { } alignment)
-        {
-            return null;
-        }
-
-        TextDirection direction = alignment.IsDirectional
-            ? Directionality.Of(context)
-            : TextDirection.Ltr;
-        return alignment.Resolve(direction);
     }
 
     /// <remarks>
@@ -738,8 +367,59 @@ public sealed class Transform : SingleChildRenderObjectWidget
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart
-// (FractionalTranslation, RotatedBox)
+/// <summary>Scales and positions its child within itself according to a <see cref="BoxFit"/>.</summary>
+public sealed class FittedBox : SingleChildRenderObjectWidget
+{
+    public FittedBox(
+        Widget? child = null,
+        BoxFit fit = BoxFit.Contain,
+        AlignmentGeometry alignment = default,
+        Clip clipBehavior = Clip.None,
+        Key? key = null) : base(child, key)
+    {
+        Fit = fit;
+        Alignment = alignment;
+        ClipBehavior = clipBehavior;
+    }
+
+    /// <summary>How to inscribe the child into the space allocated during layout.</summary>
+    public BoxFit Fit { get; }
+
+    /// <summary>How to align the child within its parent's bounds.</summary>
+    public AlignmentGeometry Alignment { get; }
+
+    /// <summary>How to clip the child when it overflows. Defaults to <see cref="Clip.None"/>.</summary>
+    public Clip ClipBehavior { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderFittedBox(
+            fit: Fit,
+            alignment: Alignment,
+            textDirection: Directionality.MaybeOf(context),
+            clipBehavior: ClipBehavior);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var fittedBox = (RenderFittedBox)renderObject;
+        fittedBox.Fit = Fit;
+        fittedBox.Alignment = Alignment;
+        fittedBox.TextDirection = Directionality.MaybeOf(context);
+        fittedBox.ClipBehavior = ClipBehavior;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<BoxFit>("fit", Fit));
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+    }
+}
+
+/// <summary>Applies a translation expressed as a fraction of the box's own size before painting.</summary>
 public sealed class FractionalTranslation : SingleChildRenderObjectWidget
 {
     public FractionalTranslation(
@@ -752,7 +432,10 @@ public sealed class FractionalTranslation : SingleChildRenderObjectWidget
         TransformHitTests = transformHitTests;
     }
 
+    /// <summary>The translation to apply, as a fraction of this box's size.</summary>
     public Vector Translation { get; }
+
+    /// <summary>Whether to apply the translation when performing hit tests.</summary>
     public bool TransformHitTests { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -768,6 +451,7 @@ public sealed class FractionalTranslation : SingleChildRenderObjectWidget
     }
 }
 
+/// <summary>Rotates its child by an integral number of quarter turns before layout.</summary>
 public sealed class RotatedBox : SingleChildRenderObjectWidget
 {
     public RotatedBox(
@@ -778,6 +462,7 @@ public sealed class RotatedBox : SingleChildRenderObjectWidget
         QuarterTurns = quarterTurns;
     }
 
+    /// <summary>The number of clockwise quarter turns the child should be rotated.</summary>
     public int QuarterTurns { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -791,340 +476,42 @@ public sealed class RotatedBox : SingleChildRenderObjectWidget
     }
 }
 
-/// <summary>A widget that clips its child using a rectangle.</summary>
-/// <remarks>Flutter's <c>ClipRect</c>.</remarks>
-public sealed class ClipRect : SingleChildRenderObjectWidget
+/// <summary>Insets its child by the given padding.</summary>
+public sealed class Padding : SingleChildRenderObjectWidget
 {
-    public ClipRect(
-        CustomClipper<Rect>? clipper = null,
-        Clip clipBehavior = Plumix.UI.Clip.HardEdge,
-        Widget? child = null,
-        Key? key = null) : base(child, key)
+    public Padding(EdgeInsetsGeometry insets, Widget? child = null, Key? key = null) : base(child, key)
     {
-        Clipper = clipper;
-        ClipBehavior = clipBehavior;
+        Insets = insets;
     }
 
-    /// <summary>Supplies the rectangle to clip to; <see langword="null"/> clips to the layout rect.</summary>
-    public CustomClipper<Rect>? Clipper { get; }
-
-    /// <summary>How the clip is applied. Defaults to <see cref="Plumix.UI.Clip.HardEdge"/>.</summary>
-    public Clip ClipBehavior { get; }
+    /// <summary>The amount of space by which to inset the child.</summary>
+    /// <remarks>Dart's `Padding.padding`; C# members may not repeat their declaring type's name.
+    /// </remarks>
+    public EdgeInsetsGeometry Insets { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderClipRect(clipper: Clipper, clipBehavior: ClipBehavior);
+        return new RenderPadding(Insets, textDirection: Directionality.MaybeOf(context));
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        var clipRect = (RenderClipRect)renderObject;
-        clipRect.Clipper = Clipper;
-        clipRect.ClipBehavior = ClipBehavior;
+        var padding = (RenderPadding)renderObject;
+        padding.Padding = Insets;
+        padding.TextDirection = Directionality.MaybeOf(context);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry>("padding", Insets));
     }
 }
 
-/// <summary>A widget that clips its child using a rounded rectangle.</summary>
-/// <remarks>Flutter's <c>ClipRRect</c>.</remarks>
-public sealed class ClipRRect : SingleChildRenderObjectWidget
-{
-    public ClipRRect(
-        BorderRadiusGeometry? borderRadius = null,
-        CustomClipper<RRect>? clipper = null,
-        Clip clipBehavior = Plumix.UI.Clip.AntiAlias,
-        Widget? child = null,
-        Key? key = null) : base(child, key)
-    {
-        BorderRadius = borderRadius ?? Rendering.BorderRadius.Zero;
-        Clipper = clipper;
-        ClipBehavior = clipBehavior;
-    }
-
-    /// <summary>The border radius of the rounded corners.</summary>
-    public BorderRadiusGeometry BorderRadius { get; }
-
-    /// <summary>Supplies the rounded rectangle to clip to; <see langword="null"/> uses
-    /// <see cref="BorderRadius"/> over the layout rect.</summary>
-    public CustomClipper<RRect>? Clipper { get; }
-
-    /// <summary>How the clip is applied. Defaults to <see cref="Plumix.UI.Clip.AntiAlias"/>.</summary>
-    public Clip ClipBehavior { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderClipRRect(
-            borderRadius: BorderRadius,
-            clipper: Clipper,
-            clipBehavior: ClipBehavior,
-            textDirection: Directionality.MaybeOf(context));
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var clipRRect = (RenderClipRRect)renderObject;
-        clipRRect.BorderRadius = BorderRadius;
-        clipRRect.Clipper = Clipper;
-        clipRRect.ClipBehavior = ClipBehavior;
-        clipRRect.TextDirection = Directionality.MaybeOf(context);
-    }
-}
-
-public sealed class AspectRatio : SingleChildRenderObjectWidget
-{
-    public AspectRatio(double aspectRatio, Widget? child = null, Key? key = null) : base(child, key)
-    {
-        Ratio = ValidateRatio(aspectRatio, nameof(aspectRatio));
-    }
-
-    public double Ratio { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderAspectRatio(Ratio);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        ((RenderAspectRatio)renderObject).AspectRatio = Ratio;
-    }
-
-    private static double ValidateRatio(double value, string parameterName)
-    {
-        if (!double.IsFinite(value) || value <= 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Aspect ratio must be finite and positive.");
-        }
-
-        return value;
-    }
-}
-
-public sealed class FractionallySizedBox : SingleChildRenderObjectWidget
-{
-    public FractionallySizedBox(
-        Widget? child = null,
-        Alignment alignment = default,
-        double? widthFactor = null,
-        double? heightFactor = null,
-        Key? key = null) : base(child, key)
-    {
-        Alignment = alignment;
-        WidthFactor = ValidateFactor(widthFactor, nameof(widthFactor));
-        HeightFactor = ValidateFactor(heightFactor, nameof(heightFactor));
-    }
-
-    public Alignment Alignment { get; }
-
-    public double? WidthFactor { get; }
-
-    public double? HeightFactor { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderFractionallySizedBox(
-            alignment: Alignment,
-            widthFactor: WidthFactor,
-            heightFactor: HeightFactor);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var fractionallySizedBox = (RenderFractionallySizedBox)renderObject;
-        fractionallySizedBox.Alignment = Alignment;
-        fractionallySizedBox.WidthFactor = WidthFactor;
-        fractionallySizedBox.HeightFactor = HeightFactor;
-    }
-
-    private static double? ValidateFactor(double? value, string parameterName)
-    {
-        if (!value.HasValue)
-        {
-            return null;
-        }
-
-        if (!double.IsFinite(value.Value) || value.Value < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Factor must be finite and non-negative.");
-        }
-
-        return value.Value;
-    }
-}
-
-public sealed class FittedBox : SingleChildRenderObjectWidget
-{
-    public FittedBox(
-        Widget? child = null,
-        BoxFit fit = BoxFit.Contain,
-        Alignment alignment = default,
-        Key? key = null) : base(child, key)
-    {
-        Fit = fit;
-        Alignment = alignment;
-    }
-
-    public BoxFit Fit { get; }
-
-    public Alignment Alignment { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context)
-    {
-        return new RenderFittedBox(
-            fit: Fit,
-            alignment: Alignment);
-    }
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var fittedBox = (RenderFittedBox)renderObject;
-        fittedBox.Fit = Fit;
-        fittedBox.Alignment = Alignment;
-    }
-}
-
-public sealed class Container : StatelessWidget
-{
-    public Container(
-        Widget? child = null,
-        Color? color = null,
-        Decoration? decoration = null,
-        Alignment? alignment = null,
-        EdgeInsetsGeometry? margin = null,
-        BoxConstraints? constraints = null,
-        Matrix4? transform = null,
-        EdgeInsetsGeometry? padding = null,
-        double? width = null,
-        double? height = null,
-        Key? key = null,
-        Decoration? foregroundDecoration = null,
-        Clip clipBehavior = Clip.None) : base(key)
-    {
-        if (clipBehavior != Clip.None && decoration is null)
-        {
-            throw new ArgumentException(
-                "Clipping a Container requires a decoration to derive the clip path from.",
-                nameof(clipBehavior));
-        }
-
-        Child = child;
-        Color = color;
-        Decoration = decoration;
-        ForegroundDecoration = foregroundDecoration;
-        Alignment = alignment;
-        Margin = margin;
-        Constraints = constraints;
-        Transform = transform;
-        Padding = padding;
-        Width = width;
-        Height = height;
-        ClipBehavior = clipBehavior;
-    }
-
-    public Widget? Child { get; }
-
-    public Color? Color { get; }
-
-    public Decoration? Decoration { get; }
-    public Decoration? ForegroundDecoration { get; }
-
-    public Alignment? Alignment { get; }
-
-    public EdgeInsetsGeometry? Margin { get; }
-
-    public BoxConstraints? Constraints { get; }
-
-    public Matrix4? Transform { get; }
-
-    public EdgeInsetsGeometry? Padding { get; }
-
-    public double? Width { get; }
-
-    public double? Height { get; }
-
-    /// <summary>The clip applied to the decoration's shape; requires <see cref="Decoration"/>.</summary>
-    public Clip ClipBehavior { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        BoxConstraints? effectiveConstraints = Constraints;
-        if (Width.HasValue || Height.HasValue)
-        {
-            effectiveConstraints = effectiveConstraints.HasValue
-                ? effectiveConstraints.Value.Tighten(width: Width, height: Height)
-                : BoxConstraints.TightFor(width: Width, height: Height);
-        }
-
-        bool expandsNullChild = Child is null
-                                && (!effectiveConstraints.HasValue || !effectiveConstraints.Value.IsTight);
-        Widget current;
-        if (expandsNullChild)
-        {
-            current = new LimitedBox(
-                maxWidth: 0.0,
-                maxHeight: 0.0,
-                child: new ConstrainedBox(BoxConstraints.Expand()));
-        }
-        else
-        {
-            current = Child ?? new SizedBox();
-        }
-
-        if (!expandsNullChild && Alignment.HasValue)
-        {
-            current = new Align(
-                alignment: Alignment.Value,
-                child: current);
-        }
-
-        if (Padding.HasValue)
-        {
-            current = new Padding(Padding.Value, current);
-        }
-
-        if (ClipBehavior != Clip.None)
-        {
-            current = new ClipPath(
-                clipper: new DecorationClipper(Decoration!, Directionality.MaybeOf(context)),
-                clipBehavior: ClipBehavior,
-                child: current);
-        }
-
-        if (Decoration != null)
-        {
-            current = new DecoratedBox(Decoration, current);
-        }
-        else if (Color.HasValue)
-        {
-            current = new ColoredBox(Color.Value, child: current);
-        }
-
-        if (ForegroundDecoration != null)
-        {
-            current = new DecoratedBox(
-                ForegroundDecoration,
-                position: DecorationPosition.Foreground,
-                child: current);
-        }
-
-        if (effectiveConstraints.HasValue)
-        {
-            current = new ConstrainedBox(effectiveConstraints.Value, current);
-        }
-
-        if (Margin.HasValue)
-        {
-            current = new Padding(Margin.Value, current);
-        }
-
-        if (Transform is { } containerTransform)
-        {
-            current = new Transform(containerTransform, current);
-        }
-
-        return current;
-    }
-}
-
+/// <summary>Aligns its child within itself and optionally sizes itself based on the child's size.
+/// </summary>
 public class Align : SingleChildRenderObjectWidget
 {
     public Align(
@@ -1149,37 +536,45 @@ public class Align : SingleChildRenderObjectWidget
         HeightFactor = heightFactor;
     }
 
+    /// <summary>How to align the child.</summary>
     public AlignmentGeometry Alignment { get; }
 
+    /// <summary>If non-null, sets its width to the child's width multiplied by this factor.</summary>
     public double? WidthFactor { get; }
 
+    /// <summary>If non-null, sets its height to the child's height multiplied by this factor.</summary>
     public double? HeightFactor { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderAlign(
-            alignment: ResolveAlignment(context),
+        return new RenderPositionedBox(
             widthFactor: WidthFactor,
-            heightFactor: HeightFactor);
+            heightFactor: HeightFactor,
+            alignment: Alignment,
+            textDirection: Directionality.MaybeOf(context));
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        var align = (RenderAlign)renderObject;
-        align.Alignment = ResolveAlignment(context);
+        var align = (RenderPositionedBox)renderObject;
+        align.Alignment = Alignment;
         align.WidthFactor = WidthFactor;
         align.HeightFactor = HeightFactor;
+        align.TextDirection = Directionality.MaybeOf(context);
     }
 
-    private Alignment ResolveAlignment(BuildContext context)
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        TextDirection direction = Alignment.IsDirectional
-            ? Directionality.Of(context)
-            : TextDirection.Ltr;
-        return Alignment.Resolve(direction);
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new DoubleProperty("widthFactor", WidthFactor, defaultValue: null));
+        properties.Add(new DoubleProperty("heightFactor", HeightFactor, defaultValue: null));
     }
 }
 
+/// <summary>Centers its child within itself.</summary>
 public sealed class Center : Align
 {
     public Center(
@@ -1196,6 +591,821 @@ public sealed class Center : Align
     }
 }
 
+/// <summary>A box with a specified size.</summary>
+public sealed class SizedBox : SingleChildRenderObjectWidget
+{
+    public SizedBox(double? width = null, double? height = null, Widget? child = null, Key? key = null)
+        : base(child, key)
+    {
+        Width = width;
+        Height = height;
+    }
+
+    /// <summary>Dart's `SizedBox.expand`: a box that becomes as large as its parent allows.</summary>
+    public static SizedBox Expand(Widget? child = null, Key? key = null) =>
+        new(width: double.PositiveInfinity, height: double.PositiveInfinity, child: child, key: key);
+
+    /// <summary>Dart's `SizedBox.shrink`: a box that becomes as small as its parent allows.</summary>
+    public static SizedBox Shrink(Widget? child = null, Key? key = null) =>
+        new(width: 0.0, height: 0.0, child: child, key: key);
+
+    /// <summary>Dart's `SizedBox.fromSize`: a box with the given size.</summary>
+    public static SizedBox FromSize(Size? size = null, Widget? child = null, Key? key = null) =>
+        new(width: size?.Width, height: size?.Height, child: child, key: key);
+
+    /// <summary>Dart's `SizedBox.square`: a box with the given dimension on both axes.</summary>
+    public static SizedBox Square(double? dimension = null, Widget? child = null, Key? key = null) =>
+        new(width: dimension, height: dimension, child: child, key: key);
+
+    /// <summary>If non-null, requires the child to have exactly this width.</summary>
+    public double? Width { get; }
+
+    /// <summary>If non-null, requires the child to have exactly this height.</summary>
+    public double? Height { get; }
+
+    private BoxConstraints AdditionalConstraints =>
+        BoxConstraints.TightFor(width: Width, height: Height);
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderConstrainedBox(AdditionalConstraints);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderConstrainedBox)renderObject).AdditionalConstraints = AdditionalConstraints;
+    }
+
+    /// <inheritdoc />
+    public override string ToStringShort()
+    {
+        string type = (Width, Height) switch
+        {
+            (double.PositiveInfinity, double.PositiveInfinity) => $"{nameof(SizedBox)}.Expand",
+            (0.0, 0.0) => $"{nameof(SizedBox)}.Shrink",
+            _ => nameof(SizedBox),
+        };
+        return Key is null ? type : $"{type}-{Key}";
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        DiagnosticLevel level =
+            (Width == double.PositiveInfinity && Height == double.PositiveInfinity)
+            || (Width == 0.0 && Height == 0.0)
+                ? DiagnosticLevel.Hidden
+                : DiagnosticLevel.Info;
+        properties.Add(new DoubleProperty("width", Width, defaultValue: null, level: level));
+        properties.Add(new DoubleProperty("height", Height, defaultValue: null, level: level));
+    }
+}
+
+/// <summary>Imposes additional constraints on its child.</summary>
+public sealed class ConstrainedBox : SingleChildRenderObjectWidget
+{
+    public ConstrainedBox(BoxConstraints constraints, Widget? child = null, Key? key = null) : base(child, key)
+    {
+        Constraints = constraints;
+    }
+
+    /// <summary>The additional constraints to impose on the child.</summary>
+    public BoxConstraints Constraints { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderConstrainedBox(Constraints);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderConstrainedBox)renderObject).AdditionalConstraints = Constraints;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<BoxConstraints>("constraints", Constraints, showName: false));
+    }
+}
+
+/// <summary>Imposes no constraints on its child, allowing it to render at its natural size.</summary>
+public sealed class UnconstrainedBox : StatelessWidget
+{
+    public UnconstrainedBox(
+        Widget? child = null,
+        TextDirection? textDirection = null,
+        AlignmentGeometry alignment = default,
+        Axis? constrainedAxis = null,
+        Clip clipBehavior = Clip.None,
+        Key? key = null) : base(key)
+    {
+        Child = child;
+        TextDirection = textDirection;
+        Alignment = alignment;
+        ConstrainedAxis = constrainedAxis;
+        ClipBehavior = clipBehavior;
+    }
+
+    /// <summary>The widget below this widget in the tree.</summary>
+    public Widget? Child { get; }
+
+    /// <summary>The text direction to use when resolving <see cref="Alignment"/>.</summary>
+    public TextDirection? TextDirection { get; }
+
+    /// <summary>The alignment to use when laying out the child.</summary>
+    public AlignmentGeometry Alignment { get; }
+
+    /// <summary>The axis to retain constraints on, if any.</summary>
+    public Axis? ConstrainedAxis { get; }
+
+    /// <summary>How to clip the child when it overflows. Defaults to <see cref="Clip.None"/>.</summary>
+    public Clip ClipBehavior { get; }
+
+    private static BoxConstraintsTransform AxisToTransform(Axis? constrainedAxis) => constrainedAxis switch
+    {
+        Axis.Horizontal => ConstraintsTransformBox.HeightUnconstrained,
+        Axis.Vertical => ConstraintsTransformBox.WidthUnconstrained,
+        null => ConstraintsTransformBox.Unconstrained,
+        _ => throw new ArgumentOutOfRangeException(nameof(constrainedAxis)),
+    };
+
+    public override Widget Build(BuildContext context)
+    {
+        return new ConstraintsTransformBox(
+            constraintsTransform: AxisToTransform(ConstrainedAxis),
+            child: Child,
+            textDirection: TextDirection,
+            alignment: Alignment,
+            clipBehavior: ClipBehavior);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new EnumProperty<Axis>("constrainedAxis", ConstrainedAxis, defaultValue: null));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
+    }
+}
+
+/// <summary>Sizes its child to a fraction of the total available space.</summary>
+public sealed class FractionallySizedBox : SingleChildRenderObjectWidget
+{
+    public FractionallySizedBox(
+        Widget? child = null,
+        AlignmentGeometry alignment = default,
+        double? widthFactor = null,
+        double? heightFactor = null,
+        Key? key = null) : base(child, key)
+    {
+        Alignment = alignment;
+        WidthFactor = ValidateFactor(widthFactor, nameof(widthFactor));
+        HeightFactor = ValidateFactor(heightFactor, nameof(heightFactor));
+    }
+
+    /// <summary>How to align the child.</summary>
+    public AlignmentGeometry Alignment { get; }
+
+    /// <summary>If non-null, the fraction of the incoming width the child is given.</summary>
+    public double? WidthFactor { get; }
+
+    /// <summary>If non-null, the fraction of the incoming height the child is given.</summary>
+    public double? HeightFactor { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderFractionallySizedOverflowBox(
+            widthFactor: WidthFactor,
+            heightFactor: HeightFactor,
+            alignment: Alignment,
+            textDirection: Directionality.MaybeOf(context));
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var fractionallySizedBox = (RenderFractionallySizedOverflowBox)renderObject;
+        fractionallySizedBox.Alignment = Alignment;
+        fractionallySizedBox.WidthFactor = WidthFactor;
+        fractionallySizedBox.HeightFactor = HeightFactor;
+        fractionallySizedBox.TextDirection = Directionality.MaybeOf(context);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new DoubleProperty("widthFactor", WidthFactor, defaultValue: null));
+        properties.Add(new DoubleProperty("heightFactor", HeightFactor, defaultValue: null));
+    }
+
+    private static double? ValidateFactor(double? value, string parameterName)
+    {
+        if (!value.HasValue)
+        {
+            return null;
+        }
+
+        if (!double.IsFinite(value.Value) || value.Value < 0)
+        {
+            throw new ArgumentOutOfRangeException(parameterName, "Factor must be finite and non-negative.");
+        }
+
+        return value.Value;
+    }
+}
+
+/// <summary>A box that limits its size only when it is unconstrained.</summary>
+public sealed class LimitedBox : SingleChildRenderObjectWidget
+{
+    public LimitedBox(
+        Widget? child = null,
+        double maxWidth = double.PositiveInfinity,
+        double maxHeight = double.PositiveInfinity,
+        Key? key = null) : base(child, key)
+    {
+        MaxWidth = ValidateMax(maxWidth, nameof(maxWidth));
+        MaxHeight = ValidateMax(maxHeight, nameof(maxHeight));
+    }
+
+    /// <summary>The maximum width limit to apply in the absence of a bounded width constraint.</summary>
+    public double MaxWidth { get; }
+
+    /// <summary>The maximum height limit to apply in the absence of a bounded height constraint.</summary>
+    public double MaxHeight { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderLimitedBox(
+            maxWidth: MaxWidth,
+            maxHeight: MaxHeight);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var limitedBox = (RenderLimitedBox)renderObject;
+        limitedBox.MaxWidth = MaxWidth;
+        limitedBox.MaxHeight = MaxHeight;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("maxWidth", MaxWidth, defaultValue: double.PositiveInfinity));
+        properties.Add(new DoubleProperty("maxHeight", MaxHeight, defaultValue: double.PositiveInfinity));
+    }
+
+    private static double ValidateMax(double value, string parameterName)
+    {
+        if (double.IsNaN(value) || value < 0)
+        {
+            throw new ArgumentOutOfRangeException(parameterName, "Max value must be non-negative.");
+        }
+
+        return value;
+    }
+}
+
+/// <summary>Imposes different constraints on its child than it gets from its parent, possibly allowing
+/// the child to overflow the parent.</summary>
+public sealed class OverflowBox : SingleChildRenderObjectWidget
+{
+    public OverflowBox(
+        Widget? child = null,
+        AlignmentGeometry alignment = default,
+        double? minWidth = null,
+        double? maxWidth = null,
+        double? minHeight = null,
+        double? maxHeight = null,
+        OverflowBoxFit fit = OverflowBoxFit.Max,
+        Key? key = null) : base(child, key)
+    {
+        Alignment = alignment;
+        MinWidth = minWidth;
+        MaxWidth = maxWidth;
+        MinHeight = minHeight;
+        MaxHeight = maxHeight;
+        Fit = fit;
+    }
+
+    /// <summary>How to align the child.</summary>
+    public AlignmentGeometry Alignment { get; }
+
+    /// <summary>The minimum width constraint to give the child, if non-null.</summary>
+    public double? MinWidth { get; }
+
+    /// <summary>The maximum width constraint to give the child, if non-null.</summary>
+    public double? MaxWidth { get; }
+
+    /// <summary>The minimum height constraint to give the child, if non-null.</summary>
+    public double? MinHeight { get; }
+
+    /// <summary>The maximum height constraint to give the child, if non-null.</summary>
+    public double? MaxHeight { get; }
+
+    /// <summary>How much space this widget takes up.</summary>
+    public OverflowBoxFit Fit { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderConstrainedOverflowBox(
+            minWidth: MinWidth,
+            maxWidth: MaxWidth,
+            minHeight: MinHeight,
+            maxHeight: MaxHeight,
+            fit: Fit,
+            alignment: Alignment,
+            textDirection: Directionality.MaybeOf(context));
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var overflowBox = (RenderConstrainedOverflowBox)renderObject;
+        overflowBox.Alignment = Alignment;
+        overflowBox.MinWidth = MinWidth;
+        overflowBox.MaxWidth = MaxWidth;
+        overflowBox.MinHeight = MinHeight;
+        overflowBox.MaxHeight = MaxHeight;
+        overflowBox.Fit = Fit;
+        overflowBox.TextDirection = Directionality.MaybeOf(context);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new DoubleProperty("minWidth", MinWidth, defaultValue: null));
+        properties.Add(new DoubleProperty("maxWidth", MaxWidth, defaultValue: null));
+        properties.Add(new DoubleProperty("minHeight", MinHeight, defaultValue: null));
+        properties.Add(new DoubleProperty("maxHeight", MaxHeight, defaultValue: null));
+        properties.Add(new EnumProperty<OverflowBoxFit>("fit", Fit));
+    }
+}
+
+/// <summary>A widget that is a specific size but passes its original constraints through to its child,
+/// which it allows to overflow.</summary>
+public sealed class SizedOverflowBox : SingleChildRenderObjectWidget
+{
+    public SizedOverflowBox(
+        Size size,
+        Widget? child = null,
+        AlignmentGeometry alignment = default,
+        Key? key = null) : base(child, key)
+    {
+        Size = size;
+        Alignment = alignment;
+    }
+
+    /// <summary>The size this widget should attempt to be.</summary>
+    public Size Size { get; }
+
+    /// <summary>How to align the child.</summary>
+    public AlignmentGeometry Alignment { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderSizedOverflowBox(
+            requestedSize: Size,
+            alignment: Alignment,
+            textDirection: Directionality.Of(context));
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var sizedOverflowBox = (RenderSizedOverflowBox)renderObject;
+        sizedOverflowBox.Alignment = Alignment;
+        sizedOverflowBox.RequestedSize = Size;
+        sizedOverflowBox.TextDirection = Directionality.Of(context);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new DiagnosticsProperty<Size>("size", Size, defaultValue: null));
+    }
+}
+
+/// <summary>Lays the child out as if it was in the tree, but without painting anything, without making
+/// the child available for hit testing, and without taking any room in the parent.</summary>
+public sealed class Offstage : SingleChildRenderObjectWidget
+{
+    public Offstage(
+        Widget? child = null,
+        bool offstage = true,
+        Key? key = null) : base(child, key)
+    {
+        IsOffstage = offstage;
+    }
+
+    /// <summary>Whether the child is hidden from the rest of the tree.</summary>
+    /// <remarks>Dart's `Offstage.offstage`; C# members may not repeat their declaring type's name.
+    /// </remarks>
+    public bool IsOffstage { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderOffstage(offstage: IsOffstage);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderOffstage)renderObject).Offstage = IsOffstage;
+    }
+
+    internal override Element CreateElement() => new OffstageElement(this);
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("offstage", IsOffstage));
+    }
+}
+
+/// <summary>Dart's private `_OffstageElement`: hides its child from the on-stage walk while offstage.
+/// </summary>
+internal sealed class OffstageElement : SingleChildRenderObjectElement
+{
+    public OffstageElement(Offstage widget) : base(widget)
+    {
+    }
+
+    internal override void DebugVisitOnstageChildren(Action<Element> visitor)
+    {
+        if (!((Offstage)Widget).IsOffstage)
+        {
+            base.DebugVisitOnstageChildren(visitor);
+        }
+    }
+}
+
+/// <summary>Attempts to size the child to a specific aspect ratio.</summary>
+public sealed class AspectRatio : SingleChildRenderObjectWidget
+{
+    public AspectRatio(double aspectRatio, Widget? child = null, Key? key = null) : base(child, key)
+    {
+        Ratio = ValidateRatio(aspectRatio, nameof(aspectRatio));
+    }
+
+    /// <summary>The aspect ratio to attempt to use, expressed as width divided by height.</summary>
+    /// <remarks>Dart's `AspectRatio.aspectRatio`; C# members may not repeat their declaring type's
+    /// name.</remarks>
+    public double Ratio { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderAspectRatio(Ratio);
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderAspectRatio)renderObject).AspectRatio = Ratio;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("aspectRatio", Ratio));
+    }
+
+    private static double ValidateRatio(double value, string parameterName)
+    {
+        if (!double.IsFinite(value) || value <= 0)
+        {
+            throw new ArgumentOutOfRangeException(parameterName, "Aspect ratio must be finite and positive.");
+        }
+
+        return value;
+    }
+}
+
+/// <summary>Positions its children relative to the edges of its box.</summary>
+public class Stack : MultiChildRenderObjectWidget
+{
+    public Stack(
+        IReadOnlyList<Widget>? children = null,
+        AlignmentGeometry? alignment = null,
+        StackFit fit = StackFit.Loose,
+        Clip clipBehavior = Clip.HardEdge,
+        TextDirection? textDirection = null,
+        Key? key = null) : base(children, key)
+    {
+        Alignment = alignment ?? AlignmentDirectional.TopStart;
+        TextDirection = textDirection;
+        Fit = fit;
+        ClipBehavior = clipBehavior;
+    }
+
+    /// <summary>How to align the non-positioned and partially-positioned children.</summary>
+    public AlignmentGeometry Alignment { get; }
+
+    /// <summary>The text direction with which to resolve <see cref="Alignment"/>.</summary>
+    public TextDirection? TextDirection { get; }
+
+    /// <summary>How to size the non-positioned children.</summary>
+    public StackFit Fit { get; }
+
+    /// <summary>How to clip overflowing content. Defaults to <see cref="Clip.HardEdge"/>.</summary>
+    public Clip ClipBehavior { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderStack(
+            alignment: Alignment,
+            fit: Fit,
+            clipBehavior: ClipBehavior,
+            textDirection: TextDirection ?? Directionality.MaybeOf(context));
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var stack = (RenderStack)renderObject;
+        stack.Alignment = Alignment;
+        stack.TextDirection = TextDirection ?? Directionality.MaybeOf(context);
+        stack.Fit = Fit;
+        stack.ClipBehavior = ClipBehavior;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
+        properties.Add(new EnumProperty<StackFit>("fit", Fit));
+        properties.Add(new EnumProperty<Clip>("clipBehavior", ClipBehavior, defaultValue: Clip.HardEdge));
+    }
+}
+
+/// <summary>Controls where a child of a <see cref="Stack"/> is positioned.</summary>
+public sealed class Positioned : ParentDataWidget<StackParentData>
+{
+    public Positioned(
+        Widget child,
+        double? left = null,
+        double? top = null,
+        double? right = null,
+        double? bottom = null,
+        double? width = null,
+        double? height = null,
+        Key? key = null) : base(child, key)
+    {
+        if (left.HasValue && right.HasValue && width.HasValue)
+        {
+            throw new ArgumentException("Cannot provide left, right, and width simultaneously.");
+        }
+
+        if (top.HasValue && bottom.HasValue && height.HasValue)
+        {
+            throw new ArgumentException("Cannot provide top, bottom, and height simultaneously.");
+        }
+
+        Left = left;
+        Top = top;
+        Right = right;
+        Bottom = bottom;
+        Width = width;
+        Height = height;
+    }
+
+    /// <summary>Dart's `Positioned.fromRect`: positions the child from a rect in the stack's
+    /// coordinate space.</summary>
+    public static Positioned FromRect(Rect rect, Widget child, Key? key = null)
+    {
+        return new Positioned(
+            child: child,
+            left: rect.Left,
+            top: rect.Top,
+            width: rect.Width,
+            height: rect.Height,
+            key: key);
+    }
+
+    /// <summary>Dart's `Positioned.fromRelativeRect`: positions the child from insets relative to the
+    /// stack's edges.</summary>
+    public static Positioned FromRelativeRect(
+        RelativeRect rect,
+        Widget child,
+        Key? key = null)
+    {
+        return new Positioned(
+            child: child,
+            left: rect.Left,
+            top: rect.Top,
+            right: rect.Right,
+            bottom: rect.Bottom,
+            key: key);
+    }
+
+    /// <summary>Dart's `Positioned.fill`: positions the child to fill the stack, inset by the given
+    /// distances.</summary>
+    public static Positioned Fill(
+        Widget child,
+        double? left = 0.0,
+        double? top = 0.0,
+        double? right = 0.0,
+        double? bottom = 0.0,
+        Key? key = null)
+    {
+        return new Positioned(
+            child: child,
+            left: left,
+            top: top,
+            right: right,
+            bottom: bottom,
+            key: key);
+    }
+
+    /// <summary>Dart's `Positioned.directional`: positions the child using start/end resolved against
+    /// the given text direction.</summary>
+    public static Positioned Directional(
+        TextDirection textDirection,
+        Widget child,
+        double? start = null,
+        double? top = null,
+        double? end = null,
+        double? bottom = null,
+        double? width = null,
+        double? height = null,
+        Key? key = null)
+    {
+        (double? left, double? right) = textDirection switch
+        {
+            TextDirection.Rtl => (end, start),
+            TextDirection.Ltr => (start, end),
+            _ => throw new ArgumentOutOfRangeException(nameof(textDirection)),
+        };
+        return new Positioned(
+            child: child,
+            left: left,
+            top: top,
+            right: right,
+            bottom: bottom,
+            width: width,
+            height: height,
+            key: key);
+    }
+
+    /// <summary>The distance from the left edge of the stack to the child's left edge.</summary>
+    public double? Left { get; }
+
+    /// <summary>The distance from the top edge of the stack to the child's top edge.</summary>
+    public double? Top { get; }
+
+    /// <summary>The distance from the right edge of the stack to the child's right edge.</summary>
+    public double? Right { get; }
+
+    /// <summary>The distance from the bottom edge of the stack to the child's bottom edge.</summary>
+    public double? Bottom { get; }
+
+    /// <summary>The child's width.</summary>
+    public double? Width { get; }
+
+    /// <summary>The child's height.</summary>
+    public double? Height { get; }
+
+    public override Type DebugTypicalAncestorWidgetType => typeof(Stack);
+
+    protected override void ApplyParentData(RenderObject renderObject)
+    {
+        ArgumentNullException.ThrowIfNull(renderObject);
+        var parentData = (StackParentData)renderObject.parentData!;
+        bool needsLayout = false;
+
+        if (parentData.Left != Left)
+        {
+            parentData.Left = Left;
+            needsLayout = true;
+        }
+
+        if (parentData.Top != Top)
+        {
+            parentData.Top = Top;
+            needsLayout = true;
+        }
+
+        if (parentData.Right != Right)
+        {
+            parentData.Right = Right;
+            needsLayout = true;
+        }
+
+        if (parentData.Bottom != Bottom)
+        {
+            parentData.Bottom = Bottom;
+            needsLayout = true;
+        }
+
+        if (parentData.Width != Width)
+        {
+            parentData.Width = Width;
+            needsLayout = true;
+        }
+
+        if (parentData.Height != Height)
+        {
+            parentData.Height = Height;
+            needsLayout = true;
+        }
+
+        if (needsLayout)
+        {
+            renderObject.Parent?.MarkNeedsLayout();
+        }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DoubleProperty("left", Left, defaultValue: null));
+        properties.Add(new DoubleProperty("top", Top, defaultValue: null));
+        properties.Add(new DoubleProperty("right", Right, defaultValue: null));
+        properties.Add(new DoubleProperty("bottom", Bottom, defaultValue: null));
+        properties.Add(new DoubleProperty("width", Width, defaultValue: null));
+        properties.Add(new DoubleProperty("height", Height, defaultValue: null));
+    }
+}
+
+/// <summary>Controls where a child of a <see cref="Stack"/> is positioned, using start/end resolved
+/// against the ambient <see cref="Directionality"/>.</summary>
+public sealed class PositionedDirectional : StatelessWidget
+{
+    public PositionedDirectional(
+        Widget child,
+        double? start = null,
+        double? top = null,
+        double? end = null,
+        double? bottom = null,
+        double? width = null,
+        double? height = null,
+        Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+        Start = start;
+        Top = top;
+        End = end;
+        Bottom = bottom;
+        Width = width;
+        Height = height;
+    }
+
+    /// <summary>The distance from the leading edge of the stack to the child's leading edge.</summary>
+    public double? Start { get; }
+
+    /// <summary>The distance from the top edge of the stack to the child's top edge.</summary>
+    public double? Top { get; }
+
+    /// <summary>The distance from the trailing edge of the stack to the child's trailing edge.</summary>
+    public double? End { get; }
+
+    /// <summary>The distance from the bottom edge of the stack to the child's bottom edge.</summary>
+    public double? Bottom { get; }
+
+    /// <summary>The child's width.</summary>
+    public double? Width { get; }
+
+    /// <summary>The child's height.</summary>
+    public double? Height { get; }
+
+    /// <summary>The widget below this widget in the tree.</summary>
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return Positioned.Directional(
+            textDirection: Directionality.Of(context),
+            child: Child,
+            start: Start,
+            top: Top,
+            end: End,
+            bottom: Bottom,
+            width: Width,
+            height: Height);
+    }
+}
+
+/// <summary>Displays its children in a one-dimensional array.</summary>
 public class Flex : MultiChildRenderObjectWidget
 {
     public Flex(
@@ -1231,22 +1441,31 @@ public class Flex : MultiChildRenderObjectWidget
         ClipBehavior = clipBehavior;
     }
 
+    /// <summary>The direction to use as the main axis.</summary>
     public Axis Direction { get; }
 
+    /// <summary>How much space should be occupied in the main axis.</summary>
     public MainAxisSize MainAxisSize { get; }
 
+    /// <summary>How the children should be placed along the main axis.</summary>
     public MainAxisAlignment MainAxisAlignment { get; }
 
+    /// <summary>How the children should be placed along the cross axis.</summary>
     public CrossAxisAlignment CrossAxisAlignment { get; }
 
+    /// <summary>How much space to place between children in the main axis.</summary>
     public double Spacing { get; }
 
+    /// <summary>Determines the order to lay children out horizontally.</summary>
     public TextDirection? TextDirection { get; }
 
+    /// <summary>Determines the order to lay children out vertically.</summary>
     public VerticalDirection VerticalDirection { get; }
 
+    /// <summary>The baseline to align to when <see cref="CrossAxisAlignment.Baseline"/> is used.</summary>
     public TextBaseline? TextBaseline { get; }
 
+    /// <summary>How to clip overflowing content. Defaults to <see cref="Clip.None"/>.</summary>
     public Clip ClipBehavior { get; }
 
     private bool NeedTextDirection => Direction switch
@@ -1299,6 +1518,7 @@ public class Flex : MultiChildRenderObjectWidget
 
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
+        ArgumentNullException.ThrowIfNull(properties);
         base.DebugFillProperties(properties);
         properties.Add(new EnumProperty<Axis>("direction", Direction));
         properties.Add(new EnumProperty<MainAxisAlignment>("mainAxisAlignment", MainAxisAlignment));
@@ -1318,87 +1538,7 @@ public class Flex : MultiChildRenderObjectWidget
     }
 }
 
-public class Flexible : ParentDataWidget<FlexParentData>
-{
-    public Flexible(
-        Widget child,
-        int flex = 1,
-        FlexFit fit = FlexFit.Loose,
-        Key? key = null) : base(child, key)
-    {
-        Flex = flex;
-        Fit = fit;
-    }
-
-    public int Flex { get; }
-
-    public FlexFit Fit { get; }
-
-    public override Type DebugTypicalAncestorWidgetType => typeof(Flex);
-
-    protected override void ApplyParentData(RenderObject renderObject)
-    {
-        var parentData = (FlexParentData)renderObject.parentData!;
-        bool needsLayout = false;
-
-        if (parentData.flex != Flex)
-        {
-            parentData.flex = Flex;
-            needsLayout = true;
-        }
-
-        if (parentData.fit != Fit)
-        {
-            parentData.fit = Fit;
-            needsLayout = true;
-        }
-
-        if (needsLayout)
-        {
-            renderObject.Parent?.MarkNeedsLayout();
-        }
-    }
-
-    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
-    {
-        base.DebugFillProperties(properties);
-        properties.Add(new IntProperty("flex", Flex));
-    }
-}
-
-public sealed class Expanded : Flexible
-{
-    public Expanded(Widget child, int flex = 1, Key? key = null) : base(
-        child: child,
-        flex: flex,
-        fit: FlexFit.Tight,
-        key: key)
-    {
-    }
-}
-
-public sealed class Spacer : StatelessWidget
-{
-    public Spacer(int flex = 1, Key? key = null) : base(key)
-    {
-        if (flex <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(flex), "Flex must be greater than zero.");
-        }
-
-        Flex = flex;
-    }
-
-    public int Flex { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return new Expanded(
-            flex: Flex,
-            child: new SizedBox(width: 0, height: 0));
-    }
-}
-
+/// <summary>Displays its children in a horizontal array.</summary>
 public sealed class Row : Flex
 {
     public Row(
@@ -1425,6 +1565,7 @@ public sealed class Row : Flex
     }
 }
 
+/// <summary>Displays its children in a vertical array.</summary>
 public sealed class Column : Flex
 {
     public Column(
@@ -1451,6 +1592,72 @@ public sealed class Column : Flex
     }
 }
 
+/// <summary>Controls how a child of a <see cref="Flex"/> flexes.</summary>
+public class Flexible : ParentDataWidget<FlexParentData>
+{
+    public Flexible(
+        Widget child,
+        int flex = 1,
+        FlexFit fit = FlexFit.Loose,
+        Key? key = null) : base(child, key)
+    {
+        Flex = flex;
+        Fit = fit;
+    }
+
+    /// <summary>The flex factor to use for this child.</summary>
+    public int Flex { get; }
+
+    /// <summary>How a flexible child is inscribed into the available space.</summary>
+    public FlexFit Fit { get; }
+
+    public override Type DebugTypicalAncestorWidgetType => typeof(Flex);
+
+    protected override void ApplyParentData(RenderObject renderObject)
+    {
+        ArgumentNullException.ThrowIfNull(renderObject);
+        var parentData = (FlexParentData)renderObject.parentData!;
+        bool needsLayout = false;
+
+        if (parentData.flex != Flex)
+        {
+            parentData.flex = Flex;
+            needsLayout = true;
+        }
+
+        if (parentData.fit != Fit)
+        {
+            parentData.fit = Fit;
+            needsLayout = true;
+        }
+
+        if (needsLayout)
+        {
+            renderObject.Parent?.MarkNeedsLayout();
+        }
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new IntProperty("flex", Flex));
+    }
+}
+
+/// <summary>A <see cref="Flexible"/> that forces its child to fill the available space.</summary>
+public sealed class Expanded : Flexible
+{
+    public Expanded(Widget child, int flex = 1, Key? key = null) : base(
+        child: child,
+        flex: flex,
+        fit: FlexFit.Tight,
+        key: key)
+    {
+    }
+}
+
+/// <summary>Displays its children in multiple horizontal or vertical runs.</summary>
 public sealed class Wrap : MultiChildRenderObjectWidget
 {
     public Wrap(
@@ -1477,14 +1684,31 @@ public sealed class Wrap : MultiChildRenderObjectWidget
         ClipBehavior = clipBehavior;
     }
 
+    /// <summary>The direction to use as the main axis.</summary>
     public Axis Direction { get; }
+
+    /// <summary>How the children within a run should be placed in the main axis.</summary>
     public WrapAlignment Alignment { get; }
+
+    /// <summary>How much space to place between children in a run in the main axis.</summary>
     public double Spacing { get; }
+
+    /// <summary>How the runs themselves should be placed in the cross axis.</summary>
     public WrapAlignment RunAlignment { get; }
+
+    /// <summary>How much space to place between the runs themselves in the cross axis.</summary>
     public double RunSpacing { get; }
+
+    /// <summary>How the children within a run should be aligned relative to each other.</summary>
     public WrapCrossAlignment CrossAxisAlignment { get; }
+
+    /// <summary>Determines the order to lay children out horizontally.</summary>
     public TextDirection? TextDirection { get; }
+
+    /// <summary>Determines the order to lay children out vertically.</summary>
     public VerticalDirection VerticalDirection { get; }
+
+    /// <summary>How to clip overflowing content. Defaults to <see cref="Clip.None"/>.</summary>
     public Clip ClipBehavior { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
@@ -1496,7 +1720,7 @@ public sealed class Wrap : MultiChildRenderObjectWidget
             runAlignment: RunAlignment,
             runSpacing: RunSpacing,
             crossAxisAlignment: CrossAxisAlignment,
-            textDirection: TextDirection ?? Directionality.Of(context),
+            textDirection: TextDirection ?? Directionality.MaybeOf(context),
             verticalDirection: VerticalDirection,
             clipBehavior: ClipBehavior);
     }
@@ -1510,315 +1734,118 @@ public sealed class Wrap : MultiChildRenderObjectWidget
         wrap.RunAlignment = RunAlignment;
         wrap.RunSpacing = RunSpacing;
         wrap.CrossAxisAlignment = CrossAxisAlignment;
-        wrap.TextDirection = TextDirection ?? Directionality.Of(context);
+        wrap.TextDirection = TextDirection ?? Directionality.MaybeOf(context);
         wrap.VerticalDirection = VerticalDirection;
         wrap.ClipBehavior = ClipBehavior;
     }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new EnumProperty<Axis>("direction", Direction));
+        properties.Add(new EnumProperty<WrapAlignment>("alignment", Alignment));
+        properties.Add(new DoubleProperty("spacing", Spacing));
+        properties.Add(new EnumProperty<WrapAlignment>("runAlignment", RunAlignment));
+        properties.Add(new DoubleProperty("runSpacing", RunSpacing));
+        properties.Add(new EnumProperty<WrapCrossAlignment>("crossAxisAlignment", CrossAxisAlignment));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
+        properties.Add(new EnumProperty<VerticalDirection>(
+            "verticalDirection",
+            VerticalDirection,
+            defaultValue: VerticalDirection.Down));
+    }
 }
 
-public sealed class Stack : MultiChildRenderObjectWidget
+/// <summary>A widget that is invisible during hit testing.</summary>
+public sealed class IgnorePointer : SingleChildRenderObjectWidget
 {
-    public Stack(
-        IReadOnlyList<Widget>? children = null,
-        AlignmentGeometry alignment = default,
-        StackFit fit = StackFit.Loose,
-        Clip clipBehavior = Clip.HardEdge,
-        Key? key = null) : base(children, key)
+    public IgnorePointer(
+        Widget? child = null,
+        bool ignoring = true,
+        bool? ignoringSemantics = null,
+        Key? key = null) : base(child, key)
     {
-        Alignment = alignment;
-        Fit = fit;
-        ClipBehavior = clipBehavior;
+        Ignoring = ignoring;
+        IgnoringSemantics = ignoringSemantics;
     }
 
-    public AlignmentGeometry Alignment { get; }
+    /// <summary>Whether this widget is ignored during hit testing.</summary>
+    public bool Ignoring { get; }
 
-    public StackFit Fit { get; }
-
-    public Clip ClipBehavior { get; }
+    /// <summary>Deprecated in Flutter: whether the semantics of this widget are ignored.</summary>
+    public bool? IgnoringSemantics { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderStack(
-            alignment: ResolveAlignment(context),
-            fit: Fit,
-            clipBehavior: ClipBehavior);
+        return new RenderIgnorePointer(
+            ignoring: Ignoring,
+            ignoringSemantics: IgnoringSemantics);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        var stack = (RenderStack)renderObject;
-        stack.Alignment = ResolveAlignment(context);
-        stack.Fit = Fit;
-        stack.ClipBehavior = ClipBehavior;
+        var ignorePointer = (RenderIgnorePointer)renderObject;
+        ignorePointer.Ignoring = Ignoring;
+        ignorePointer.IgnoringSemantics = IgnoringSemantics;
     }
 
-    private Alignment ResolveAlignment(BuildContext context)
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        TextDirection direction = Alignment.IsDirectional
-            ? Directionality.Of(context)
-            : TextDirection.Ltr;
-        return Alignment.Resolve(direction);
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("ignoring", Ignoring));
+        properties.Add(new DiagnosticsProperty<bool?>(
+            "ignoringSemantics",
+            IgnoringSemantics,
+            defaultValue: null));
     }
 }
 
-public sealed class IndexedStack : StatelessWidget
+/// <summary>A widget that absorbs pointers during hit testing.</summary>
+public sealed class AbsorbPointer : SingleChildRenderObjectWidget
 {
-    public IndexedStack(
-        IReadOnlyList<Widget>? children = null,
-        int? index = 0,
-        AlignmentGeometry alignment = default,
-        Key? key = null) : base(key)
-    {
-        Children = children ?? [];
-        if (index.HasValue && (index.Value < 0 || index.Value >= Children.Count))
-        {
-            throw new ArgumentOutOfRangeException(nameof(index));
-        }
-
-        Index = index;
-        Alignment = alignment;
-    }
-
-    public IReadOnlyList<Widget> Children { get; }
-
-    public int? Index { get; }
-
-    public AlignmentGeometry Alignment { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        // Each child is wrapped with VisibilityScope (so Visibility.Of reports the child as hidden
-        // when it is not the selected index) and with ExcludeFocus (so non-selected children cannot
-        // receive focus). Neither introduces a RenderObject between the child and the enclosing
-        // RenderIndexedStack, so ParentDataWidgets such as Positioned still apply their
-        // StackParentData. Painting, hit-testing and semantics for non-selected children are
-        // already handled by RenderIndexedStack.
-        List<Widget> wrappedChildren = new(Children.Count);
-        for (int i = 0; i < Children.Count; i++)
-        {
-            bool isSelected = i == Index;
-            wrappedChildren.Add(new VisibilityScope(
-                isSelected,
-                new ExcludeFocus(Children[i], excluding: !isSelected)));
-        }
-
-        return new RawIndexedStack(wrappedChildren, Index, Alignment);
-    }
-}
-
-/// The render object widget that backs <see cref="IndexedStack"/>. Dart's private
-/// `_RawIndexedStack`.
-internal sealed class RawIndexedStack : MultiChildRenderObjectWidget
-{
-    public RawIndexedStack(
-        IReadOnlyList<Widget>? children = null,
-        int? index = 0,
-        AlignmentGeometry alignment = default,
-        Key? key = null) : base(children, key)
-    {
-        Index = index;
-        Alignment = alignment;
-    }
-
-    public int? Index { get; }
-
-    public AlignmentGeometry Alignment { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderIndexedStack(Index, ResolveAlignment(context));
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var stack = (RenderIndexedStack)renderObject;
-        stack.Index = Index;
-        stack.Alignment = ResolveAlignment(context);
-    }
-
-    private Alignment ResolveAlignment(BuildContext context)
-    {
-        TextDirection direction = Alignment.IsDirectional
-            ? Directionality.Of(context)
-            : TextDirection.Ltr;
-        return Alignment.Resolve(direction);
-    }
-}
-
-public sealed class Positioned : ParentDataWidget<StackParentData>
-{
-    public Positioned(
-        Widget child,
-        double? left = null,
-        double? top = null,
-        double? right = null,
-        double? bottom = null,
-        double? width = null,
-        double? height = null,
+    public AbsorbPointer(
+        Widget? child = null,
+        bool absorbing = true,
+        bool? ignoringSemantics = null,
         Key? key = null) : base(child, key)
     {
-        if (left.HasValue && right.HasValue && width.HasValue)
-        {
-            throw new ArgumentException("Cannot provide left, right, and width simultaneously.");
-        }
-
-        if (top.HasValue && bottom.HasValue && height.HasValue)
-        {
-            throw new ArgumentException("Cannot provide top, bottom, and height simultaneously.");
-        }
-
-        Left = left;
-        Top = top;
-        Right = right;
-        Bottom = bottom;
-        Width = width;
-        Height = height;
+        Absorbing = absorbing;
+        IgnoringSemantics = ignoringSemantics;
     }
 
-    public static Positioned FromRelativeRect(
-        RelativeRect rect,
-        Widget child,
-        Key? key = null)
+    /// <summary>Whether this widget absorbs pointers during hit testing.</summary>
+    public bool Absorbing { get; }
+
+    /// <summary>Deprecated in Flutter: whether the semantics of this widget are ignored.</summary>
+    public bool? IgnoringSemantics { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new Positioned(
-            child: child,
-            left: rect.Left,
-            top: rect.Top,
-            right: rect.Right,
-            bottom: rect.Bottom,
-            key: key);
+        return new RenderAbsorbPointer(
+            absorbing: Absorbing,
+            ignoringSemantics: IgnoringSemantics);
     }
 
-    public static Positioned Directional(
-        TextDirection textDirection,
-        Widget child,
-        double? start = null,
-        double? top = null,
-        double? end = null,
-        double? bottom = null,
-        double? width = null,
-        double? height = null,
-        Key? key = null)
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        double? left = textDirection == TextDirection.Ltr ? start : end;
-        double? right = textDirection == TextDirection.Ltr ? end : start;
-        return new Positioned(
-            child: child,
-            left: left,
-            top: top,
-            right: right,
-            bottom: bottom,
-            width: width,
-            height: height,
-            key: key);
+        var absorbPointer = (RenderAbsorbPointer)renderObject;
+        absorbPointer.Absorbing = Absorbing;
+        absorbPointer.IgnoringSemantics = IgnoringSemantics;
     }
 
-    public double? Left { get; }
-
-    public double? Top { get; }
-
-    public double? Right { get; }
-
-    public double? Bottom { get; }
-
-    public double? Width { get; }
-
-    public double? Height { get; }
-
-    public override Type DebugTypicalAncestorWidgetType => typeof(Stack);
-
-    protected override void ApplyParentData(RenderObject renderObject)
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
-        var parentData = (StackParentData)renderObject.parentData!;
-        bool needsLayout = false;
-
-        if (parentData.Left != Left)
-        {
-            parentData.Left = Left;
-            needsLayout = true;
-        }
-
-        if (parentData.Top != Top)
-        {
-            parentData.Top = Top;
-            needsLayout = true;
-        }
-
-        if (parentData.Right != Right)
-        {
-            parentData.Right = Right;
-            needsLayout = true;
-        }
-
-        if (parentData.Bottom != Bottom)
-        {
-            parentData.Bottom = Bottom;
-            needsLayout = true;
-        }
-
-        if (parentData.Width != Width)
-        {
-            parentData.Width = Width;
-            needsLayout = true;
-        }
-
-        if (parentData.Height != Height)
-        {
-            parentData.Height = Height;
-            needsLayout = true;
-        }
-
-        if (needsLayout)
-        {
-            renderObject.Parent?.MarkNeedsLayout();
-        }
-    }
-}
-
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (PositionedDirectional)
-public sealed class PositionedDirectional : StatelessWidget
-{
-    public PositionedDirectional(
-        Widget child,
-        double? start = null,
-        double? top = null,
-        double? end = null,
-        double? bottom = null,
-        double? width = null,
-        double? height = null,
-        Key? key = null) : base(key)
-    {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
-        Start = start;
-        Top = top;
-        End = end;
-        Bottom = bottom;
-        Width = width;
-        Height = height;
-    }
-
-    public double? Start { get; }
-
-    public double? Top { get; }
-
-    public double? End { get; }
-
-    public double? Bottom { get; }
-
-    public double? Width { get; }
-
-    public double? Height { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Positioned.Directional(
-            textDirection: Directionality.Of(context),
-            child: Child,
-            start: Start,
-            top: Top,
-            end: End,
-            bottom: Bottom,
-            width: Width,
-            height: Height);
+        ArgumentNullException.ThrowIfNull(properties);
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("absorbing", Absorbing));
+        properties.Add(new DiagnosticsProperty<bool?>(
+            "ignoringSemantics",
+            IgnoringSemantics,
+            defaultValue: null));
     }
 }

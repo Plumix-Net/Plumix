@@ -694,7 +694,7 @@ internal sealed class RenderMergeableMaterialListBody : RenderListBody
     private double MeasureCrossAxis(bool horizontal)
     {
         double extent = 0.0;
-        var probe = new BoxConstraints();
+        BoxConstraints probe = BoxConstraints.Unbounded;
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
             child.Layout(probe, parentUsesSize: true);

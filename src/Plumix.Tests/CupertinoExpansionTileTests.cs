@@ -263,7 +263,7 @@ public sealed class CupertinoExpansionTileTests : IDisposable
 
     private static IReadOnlyList<double> FindAnimatedHeightFactors(RenderObject? root)
     {
-        return FindAll<RenderAlign>(root)
+        return FindAll<RenderPositionedBox>(root)
             .Where(align => align.HeightFactor.HasValue)
             .Select(align => align.HeightFactor!.Value)
             .ToArray();

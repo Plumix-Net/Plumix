@@ -13,6 +13,8 @@ class _ContainerDemoPageState extends State<ContainerDemoPage> {
   Alignment _alignment = Alignment.center;
   bool _withMargin = false;
   bool _clampConstraints = false;
+  bool _clipContent = false;
+  bool _rotateAroundTopLeft = false;
   double _shiftX = 0;
 
   @override
@@ -31,6 +33,10 @@ class _ContainerDemoPageState extends State<ContainerDemoPage> {
     final Matrix4? transform = _shiftX.abs() < 0.001
         ? null
         : Matrix4.translationValues(_shiftX, 0, 0);
+    final AlignmentGeometry? transformAlignment = _rotateAroundTopLeft
+        ? Alignment.topLeft
+        : null;
+    final Clip clipBehavior = _clipContent ? Clip.antiAlias : Clip.none;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -107,8 +113,28 @@ class _ContainerDemoPageState extends State<ContainerDemoPage> {
             ),
           ],
         ),
+        Row(
+          spacing: 8,
+          children: <Widget>[
+            _buildButton(
+              label: _clipContent ? 'Clip: antiAlias' : 'Clip: none',
+              onTap: _toggleClip,
+              width: 132,
+              background: const Color(0xFFF6E4EE),
+            ),
+            _buildButton(
+              label: _rotateAroundTopLeft ? 'Origin: topLeft' : 'Origin: default',
+              onTap: _toggleTransformAlignment,
+              width: 140,
+              background: const Color(0xFFF6E4EE),
+            ),
+          ],
+        ),
         Text(
-          'alignment=${_alignmentLabel(_alignment)}, margin=${_withMargin ? 'on' : 'off'}, clamp=${_clampConstraints ? 'on' : 'off'}, shiftX=${_shiftX.toStringAsFixed(0)}',
+          'alignment=${_alignmentLabel(_alignment)}, margin=${_withMargin ? 'on' : 'off'}, '
+          'clamp=${_clampConstraints ? 'on' : 'off'}, shiftX=${_shiftX.toStringAsFixed(0)}, '
+          'clip=${_clipContent ? 'antiAlias' : 'none'}, '
+          'transformAlignment=${_rotateAroundTopLeft ? 'topLeft' : 'none'}',
           style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
         ),
         Container(
@@ -122,6 +148,8 @@ class _ContainerDemoPageState extends State<ContainerDemoPage> {
             height: 90,
             constraints: constraints,
             transform: transform,
+            transformAlignment: transformAlignment,
+            clipBehavior: clipBehavior,
             alignment: _alignment,
             decoration: BoxDecoration(
               color: const Color(0xFFCCE3FF),
@@ -188,11 +216,25 @@ class _ContainerDemoPageState extends State<ContainerDemoPage> {
     });
   }
 
+  void _toggleClip() {
+    setState(() {
+      _clipContent = !_clipContent;
+    });
+  }
+
+  void _toggleTransformAlignment() {
+    setState(() {
+      _rotateAroundTopLeft = !_rotateAroundTopLeft;
+    });
+  }
+
   void _reset() {
     setState(() {
       _alignment = Alignment.center;
       _withMargin = false;
       _clampConstraints = false;
+      _clipContent = false;
+      _rotateAroundTopLeft = false;
       _shiftX = 0;
     });
   }

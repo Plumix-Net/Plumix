@@ -697,7 +697,7 @@ public sealed class MaterialSnackBarTests : IDisposable
 
         // The surviving padding carries only the vertical inset padding.
         Assert.Contains(FindWidgets<Padding>(harness), padding =>
-            padding.InsetsGeometry.Resolve(TextDirection.Ltr) == new Thickness(0, 5, 0, 10));
+            padding.Insets.Resolve(TextDirection.Ltr) == new Thickness(0, 5, 0, 10));
     }
 
     [Fact]

@@ -32,7 +32,7 @@ public sealed class CupertinoFormRowTests
         Padding padding = Assert.Single(harness.FindWidgets<Padding>());
         Assert.Equal(
             EdgeInsetsGeometry.DirectionalOnly(start: 20.0, top: 6.0, end: 6.0, bottom: 6.0),
-            padding.InsetsGeometry);
+            padding.Insets);
     }
 
     [Fact]

@@ -1193,7 +1193,7 @@ public sealed class MaterialBottomNavigationBarTests
         {
             Element? padding = FindElement(tile, element => element.Widget is Padding);
             Assert.NotNull(padding);
-            insets.Add(((Padding)padding!.Widget).InsetsGeometry.Resolve(TextDirection.Ltr));
+            insets.Add(((Padding)padding!.Widget).Insets.Resolve(TextDirection.Ltr));
         }
 
         return insets;

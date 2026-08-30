@@ -42,7 +42,7 @@ public sealed class ContainerTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var align = RequireRenderObject<RenderAlign>(root.ChildElement);
+        var align = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.BottomRight, align.Alignment);
     }
 
@@ -62,7 +62,7 @@ public sealed class ContainerTests
 
         var padding = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(new Thickness(6, 4, 2, 1), padding.Padding);
-        var align = Assert.IsType<RenderAlign>(padding.Child);
+        var align = Assert.IsType<RenderPositionedBox>(padding.Child);
         Assert.Equal(Alignment.TopLeft, align.Alignment);
     }
 
@@ -141,9 +141,13 @@ public sealed class ContainerTests
         owner.FlushBuild();
 
         var margin = RequireRenderObject<RenderPadding>(root.ChildElement);
-        Assert.Equal(new Thickness(1, 0, 7, 0), margin.Padding);
+        Assert.Equal(
+            new Thickness(1, 0, 7, 0),
+            margin.Padding.Resolve(margin.TextDirection));
         var padding = Assert.IsType<RenderPadding>(margin.Child);
-        Assert.Equal(new Thickness(3, 2, 9, 4), padding.Padding);
+        Assert.Equal(
+            new Thickness(3, 2, 9, 4),
+            padding.Padding.Resolve(padding.TextDirection));
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

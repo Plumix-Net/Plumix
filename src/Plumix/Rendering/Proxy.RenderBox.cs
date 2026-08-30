@@ -928,315 +928,6 @@ public sealed class RenderLimitedBox : RenderProxyBox
     }
 }
 
-public enum OverflowBoxFit
-{
-    Max,
-    DeferToChild
-}
-
-public sealed class RenderConstrainedOverflowBox : RenderProxyBox
-{
-    private Alignment _alignment;
-    private double? _minWidth;
-    private double? _maxWidth;
-    private double? _minHeight;
-    private double? _maxHeight;
-    private OverflowBoxFit _fit;
-
-    public RenderConstrainedOverflowBox(
-        Alignment alignment = default,
-        double? minWidth = null,
-        double? maxWidth = null,
-        double? minHeight = null,
-        double? maxHeight = null,
-        OverflowBoxFit fit = OverflowBoxFit.Max,
-        RenderBox? child = null)
-    {
-        _alignment = alignment;
-        _minWidth = ValidateConstraint(minWidth, nameof(minWidth));
-        _maxWidth = ValidateConstraint(maxWidth, nameof(maxWidth));
-        _minHeight = ValidateConstraint(minHeight, nameof(minHeight));
-        _maxHeight = ValidateConstraint(maxHeight, nameof(maxHeight));
-        ValidateRanges(_minWidth, _maxWidth, nameof(minWidth), nameof(maxWidth));
-        ValidateRanges(_minHeight, _maxHeight, nameof(minHeight), nameof(maxHeight));
-        _fit = fit;
-        Child = child;
-    }
-
-    public Alignment Alignment
-    {
-        get => _alignment;
-        set
-        {
-            if (_alignment == value)
-            {
-                return;
-            }
-
-            _alignment = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double? MinWidth
-    {
-        get => _minWidth;
-        set
-        {
-            double? normalized = ValidateConstraint(value, nameof(value));
-            ValidateRanges(normalized, _maxWidth, nameof(value), nameof(MaxWidth));
-            if (_minWidth == normalized)
-            {
-                return;
-            }
-
-            _minWidth = normalized;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double? MaxWidth
-    {
-        get => _maxWidth;
-        set
-        {
-            double? normalized = ValidateConstraint(value, nameof(value));
-            ValidateRanges(_minWidth, normalized, nameof(MinWidth), nameof(value));
-            if (_maxWidth == normalized)
-            {
-                return;
-            }
-
-            _maxWidth = normalized;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double? MinHeight
-    {
-        get => _minHeight;
-        set
-        {
-            double? normalized = ValidateConstraint(value, nameof(value));
-            ValidateRanges(normalized, _maxHeight, nameof(value), nameof(MaxHeight));
-            if (_minHeight == normalized)
-            {
-                return;
-            }
-
-            _minHeight = normalized;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double? MaxHeight
-    {
-        get => _maxHeight;
-        set
-        {
-            double? normalized = ValidateConstraint(value, nameof(value));
-            ValidateRanges(_minHeight, normalized, nameof(MinHeight), nameof(value));
-            if (_maxHeight == normalized)
-            {
-                return;
-            }
-
-            _maxHeight = normalized;
-            MarkNeedsLayout();
-        }
-    }
-
-    public OverflowBoxFit Fit
-    {
-        get => _fit;
-        set
-        {
-            if (_fit == value)
-            {
-                return;
-            }
-
-            _fit = value;
-            MarkNeedsLayoutForSizedByParentChange();
-        }
-    }
-
-    /// <inheritdoc />
-    /// <remarks>
-    /// Flutter's <c>RenderConstrainedOverflowBox.sizedByParent</c>: with
-    /// <see cref="OverflowBoxFit.DeferToChild"/> the size is as small as the child when it does not
-    /// overflow, so the box cannot be sized by its parent alone.
-    /// </remarks>
-    protected override bool SizedByParent => _fit switch
-    {
-        OverflowBoxFit.Max => true,
-        OverflowBoxFit.DeferToChild => false,
-        _ => throw new ArgumentOutOfRangeException(nameof(Fit)),
-    };
-
-    protected override Size ComputeDryLayout(BoxConstraints constraints) => _fit switch
-    {
-        OverflowBoxFit.Max => constraints.Biggest,
-        OverflowBoxFit.DeferToChild => Child?.GetDryLayout(constraints) ?? constraints.Smallest,
-        _ => throw new ArgumentOutOfRangeException(nameof(Fit)),
-    };
-
-    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
-    {
-        RenderBox? child = Child;
-        if (child == null)
-        {
-            return null;
-        }
-
-        BoxConstraints childConstraints = GetInnerConstraints(constraints);
-        double? result = child.GetDryBaseline(childConstraints, baseline);
-        if (result == null)
-        {
-            return null;
-        }
-
-        Size childSize = child.GetDryLayout(childConstraints);
-        Size size = GetDryLayout(constraints);
-        return result + _alignment.AlongOffset(size, childSize).Y;
-    }
-
-    protected override void PerformLayout()
-    {
-        if (Child != null)
-        {
-            Child.Layout(GetInnerConstraints(Constraints), parentUsesSize: true);
-            if (_fit == OverflowBoxFit.DeferToChild)
-            {
-                Size = Constraints.Constrain(Child.Size);
-            }
-
-            ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, Child.Size);
-            return;
-        }
-
-        if (_fit == OverflowBoxFit.DeferToChild)
-        {
-            Size = Constraints.Smallest;
-        }
-    }
-
-    private BoxConstraints GetInnerConstraints(BoxConstraints constraints)
-    {
-        return new BoxConstraints(
-            MinWidth: _minWidth ?? constraints.MinWidth,
-            MaxWidth: _maxWidth ?? constraints.MaxWidth,
-            MinHeight: _minHeight ?? constraints.MinHeight,
-            MaxHeight: _maxHeight ?? constraints.MaxHeight);
-    }
-
-    private static double? ValidateConstraint(double? value, string parameterName)
-    {
-        if (!value.HasValue)
-        {
-            return null;
-        }
-
-        if (double.IsNaN(value.Value) || value.Value < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Constraint value must be non-negative.");
-        }
-
-        return value.Value;
-    }
-
-    private static void ValidateRanges(
-        double? minValue,
-        double? maxValue,
-        string minName,
-        string maxName)
-    {
-        if (minValue.HasValue && maxValue.HasValue && minValue.Value > maxValue.Value)
-        {
-            throw new ArgumentOutOfRangeException(
-                minName,
-                $"{minName} cannot be greater than {maxName}.");
-        }
-    }
-
-    /// <inheritdoc />
-    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
-    {
-        base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
-        properties.Add(new DoubleProperty("minWidth", MinWidth, ifNull: "use parent minWidth constraint"));
-        properties.Add(new DoubleProperty("maxWidth", MaxWidth, ifNull: "use parent maxWidth constraint"));
-        properties.Add(new DoubleProperty("minHeight", MinHeight, ifNull: "use parent minHeight constraint"));
-        properties.Add(new DoubleProperty("maxHeight", MaxHeight, ifNull: "use parent maxHeight constraint"));
-        properties.Add(new EnumProperty<OverflowBoxFit>("fit", Fit));
-    }
-}
-
-public sealed class RenderSizedOverflowBox : RenderProxyBox
-{
-    private Alignment _alignment;
-    private Size _requestedSize;
-
-    public RenderSizedOverflowBox(
-        Size requestedSize,
-        Alignment alignment = default,
-        RenderBox? child = null)
-    {
-        _requestedSize = requestedSize;
-        _alignment = alignment;
-        Child = child;
-    }
-
-    public Alignment Alignment
-    {
-        get => _alignment;
-        set
-        {
-            if (_alignment == value)
-            {
-                return;
-            }
-
-            _alignment = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public Size RequestedSize
-    {
-        get => _requestedSize;
-        set
-        {
-            if (_requestedSize == value)
-            {
-                return;
-            }
-
-            _requestedSize = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    protected override void PerformLayout()
-    {
-        Size = Constraints.Constrain(_requestedSize);
-        if (Child == null)
-        {
-            return;
-        }
-
-        Child.Layout(Constraints, parentUsesSize: true);
-        ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, Child.Size);
-    }
-
-    /// <inheritdoc />
-    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
-    {
-        base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
-    }
-}
-
 public sealed class RenderOffstage : RenderProxyBox
 {
     private bool _offstage;
@@ -1527,235 +1218,6 @@ public sealed class RenderAbsorbPointer : RenderProxyBox
     }
 }
 
-public sealed class RenderPadding : RenderProxyBox
-{
-    private Thickness _padding;
-
-    public RenderPadding(Thickness padding, RenderBox? child = null)
-    {
-        _padding = padding;
-        Child = child;
-    }
-
-    public Thickness Padding
-    {
-        get => _padding;
-        set
-        {
-            if (_padding.Equals(value))
-            {
-                return;
-            }
-
-            _padding = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    protected override void PerformLayout()
-    {
-        if (Child == null)
-        {
-            Size = Constraints.Constrain(new Size(Padding.Left + Padding.Right, Padding.Top + Padding.Bottom));
-            return;
-        }
-
-        var innerConstraints = Constraints.Deflate(Padding);
-        Child.Layout(innerConstraints, parentUsesSize: true);
-
-        var childSize = Child.Size;
-        Size = Constraints.Constrain(
-            new Size(childSize.Width + Padding.Left + Padding.Right, childSize.Height + Padding.Top + Padding.Bottom));
-
-        ((BoxParentData)Child.parentData!).offset = new Point(Padding.Left, Padding.Top);
-    }
-
-    protected override double ComputeMinIntrinsicWidth(double height)
-    {
-        return Padding.Left + Padding.Right
-               + (Child?.GetMinIntrinsicWidth(Math.Max(0.0, height - Padding.Top - Padding.Bottom)) ?? 0.0);
-    }
-
-    protected override double ComputeMaxIntrinsicWidth(double height)
-    {
-        return Padding.Left + Padding.Right
-               + (Child?.GetMaxIntrinsicWidth(Math.Max(0.0, height - Padding.Top - Padding.Bottom)) ?? 0.0);
-    }
-
-    protected override double ComputeMinIntrinsicHeight(double width)
-    {
-        return Padding.Top + Padding.Bottom
-               + (Child?.GetMinIntrinsicHeight(Math.Max(0.0, width - Padding.Left - Padding.Right)) ?? 0.0);
-    }
-
-    protected override double ComputeMaxIntrinsicHeight(double width)
-    {
-        return Padding.Top + Padding.Bottom
-               + (Child?.GetMaxIntrinsicHeight(Math.Max(0.0, width - Padding.Left - Padding.Right)) ?? 0.0);
-    }
-
-    protected override Size ComputeDryLayout(BoxConstraints constraints)
-    {
-        BoxConstraints innerConstraints = constraints.Deflate(Padding);
-        Size childSize = Child?.GetDryLayout(innerConstraints) ?? innerConstraints.Smallest;
-        return constraints.Constrain(new Size(
-            childSize.Width + Padding.Left + Padding.Right,
-            childSize.Height + Padding.Top + Padding.Bottom));
-    }
-
-    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
-    {
-        double? childBaseline = Child?.GetDryBaseline(constraints.Deflate(Padding), baseline);
-        return childBaseline.HasValue ? childBaseline.Value + Padding.Top : null;
-    }
-
-    /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
-    {
-        ArgumentNullException.ThrowIfNull(context);
-        base.DebugPaintSize(context, offset);
-        var outerRect = new Rect(offset, Size);
-        RenderingDebug.PaintPadding(
-            context,
-            outerRect,
-            Child is null ? null : outerRect.Deflate(Padding));
-    }
-
-    /// <inheritdoc />
-    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
-    {
-        base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Thickness>("padding", Padding));
-    }
-}
-
-public sealed class RenderAlign : RenderProxyBox
-{
-    private Alignment _alignment;
-    private double? _widthFactor;
-    private double? _heightFactor;
-
-    public RenderAlign(
-        Alignment alignment = default,
-        double? widthFactor = null,
-        double? heightFactor = null,
-        RenderBox? child = null)
-    {
-        _alignment = alignment;
-        _widthFactor = ValidateFactor(widthFactor, nameof(widthFactor));
-        _heightFactor = ValidateFactor(heightFactor, nameof(heightFactor));
-        Child = child;
-    }
-
-    public Alignment Alignment
-    {
-        get => _alignment;
-        set
-        {
-            if (_alignment == value)
-            {
-                return;
-            }
-
-            _alignment = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double? WidthFactor
-    {
-        get => _widthFactor;
-        set
-        {
-            double? normalized = ValidateFactor(value, nameof(value));
-            if (_widthFactor == normalized)
-            {
-                return;
-            }
-
-            _widthFactor = normalized;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double? HeightFactor
-    {
-        get => _heightFactor;
-        set
-        {
-            double? normalized = ValidateFactor(value, nameof(value));
-            if (_heightFactor == normalized)
-            {
-                return;
-            }
-
-            _heightFactor = normalized;
-            MarkNeedsLayout();
-        }
-    }
-
-    protected override void PerformLayout()
-    {
-        bool shrinkWrapWidth = _widthFactor.HasValue || !Constraints.HasBoundedWidth;
-        bool shrinkWrapHeight = _heightFactor.HasValue || !Constraints.HasBoundedHeight;
-
-        if (Child == null)
-        {
-            double fallbackWidth = shrinkWrapWidth ? 0.0 : double.PositiveInfinity;
-            double fallbackHeight = shrinkWrapHeight ? 0.0 : double.PositiveInfinity;
-            Size = Constraints.Constrain(new Size(fallbackWidth, fallbackHeight));
-            return;
-        }
-
-        Child.Layout(BoxConstraints.Loose(Constraints.Biggest), parentUsesSize: true);
-        var childSize = Child.Size;
-        double widthFactor = _widthFactor ?? 1.0;
-        double heightFactor = _heightFactor ?? 1.0;
-        double targetWidth = shrinkWrapWidth ? childSize.Width * widthFactor : double.PositiveInfinity;
-        double targetHeight = shrinkWrapHeight ? childSize.Height * heightFactor : double.PositiveInfinity;
-        Size = Constraints.Constrain(new Size(targetWidth, targetHeight));
-        ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, childSize);
-    }
-
-    protected override Size ComputeDryLayout(BoxConstraints constraints)
-    {
-        bool shrinkWrapWidth = _widthFactor.HasValue || !constraints.HasBoundedWidth;
-        bool shrinkWrapHeight = _heightFactor.HasValue || !constraints.HasBoundedHeight;
-        Size childSize = Child?.GetDryLayout(BoxConstraints.Loose(constraints.Biggest)) ?? new Size();
-        double targetWidth = shrinkWrapWidth
-            ? childSize.Width * (_widthFactor ?? 1.0)
-            : double.PositiveInfinity;
-        double targetHeight = shrinkWrapHeight
-            ? childSize.Height * (_heightFactor ?? 1.0)
-            : double.PositiveInfinity;
-        return constraints.Constrain(new Size(targetWidth, targetHeight));
-    }
-
-    private static double? ValidateFactor(double? value, string parameterName)
-    {
-        if (!value.HasValue)
-        {
-            return null;
-        }
-
-        if (value.Value < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Factor must be non-negative.");
-        }
-
-        return value.Value;
-    }
-
-    /// <inheritdoc />
-    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
-    {
-        base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
-        properties.Add(new DoubleProperty("widthFactor", _widthFactor, ifNull: "expand"));
-        properties.Add(new DoubleProperty("heightFactor", _heightFactor, ifNull: "expand"));
-    }
-}
-
 public sealed class RenderAspectRatio : RenderProxyBox
 {
     private double _aspectRatio;
@@ -1862,155 +1324,41 @@ public sealed class RenderAspectRatio : RenderProxyBox
     }
 }
 
-public sealed class RenderFractionallySizedBox : RenderProxyBox
-{
-    private Alignment _alignment;
-    private double? _widthFactor;
-    private double? _heightFactor;
-
-    public RenderFractionallySizedBox(
-        Alignment alignment = default,
-        double? widthFactor = null,
-        double? heightFactor = null,
-        RenderBox? child = null)
-    {
-        _alignment = alignment;
-        _widthFactor = ValidateFactor(widthFactor, nameof(widthFactor));
-        _heightFactor = ValidateFactor(heightFactor, nameof(heightFactor));
-        Child = child;
-    }
-
-    public Alignment Alignment
-    {
-        get => _alignment;
-        set
-        {
-            if (_alignment == value)
-            {
-                return;
-            }
-
-            _alignment = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double? WidthFactor
-    {
-        get => _widthFactor;
-        set
-        {
-            double? normalized = ValidateFactor(value, nameof(value));
-            if (_widthFactor == normalized)
-            {
-                return;
-            }
-
-            _widthFactor = normalized;
-            MarkNeedsLayout();
-        }
-    }
-
-    public double? HeightFactor
-    {
-        get => _heightFactor;
-        set
-        {
-            double? normalized = ValidateFactor(value, nameof(value));
-            if (_heightFactor == normalized)
-            {
-                return;
-            }
-
-            _heightFactor = normalized;
-            MarkNeedsLayout();
-        }
-    }
-
-    protected override void PerformLayout()
-    {
-        if (Child != null)
-        {
-            var innerConstraints = GetInnerConstraints(Constraints);
-            Child.Layout(innerConstraints, parentUsesSize: true);
-            Size = Constraints.Constrain(Child.Size);
-            ((BoxParentData)Child.parentData!).offset = _alignment.AlongOffset(Size, Child.Size);
-            return;
-        }
-
-        Size = Constraints.Constrain(GetInnerConstraints(Constraints).Constrain(new Size()));
-    }
-
-    private BoxConstraints GetInnerConstraints(BoxConstraints constraints)
-    {
-        double minWidth = constraints.MinWidth;
-        double maxWidth = constraints.MaxWidth;
-
-        if (_widthFactor.HasValue && double.IsFinite(maxWidth))
-        {
-            double width = maxWidth * _widthFactor.Value;
-            minWidth = width;
-            maxWidth = width;
-        }
-
-        double minHeight = constraints.MinHeight;
-        double maxHeight = constraints.MaxHeight;
-
-        if (_heightFactor.HasValue && double.IsFinite(maxHeight))
-        {
-            double height = maxHeight * _heightFactor.Value;
-            minHeight = height;
-            maxHeight = height;
-        }
-
-        return new BoxConstraints(
-            MinWidth: minWidth,
-            MaxWidth: maxWidth,
-            MinHeight: minHeight,
-            MaxHeight: maxHeight);
-    }
-
-    private static double? ValidateFactor(double? value, string parameterName)
-    {
-        if (!value.HasValue)
-        {
-            return null;
-        }
-
-        if (!double.IsFinite(value.Value) || value.Value < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Factor must be finite and non-negative.");
-        }
-
-        return value.Value;
-    }
-
-    /// <inheritdoc />
-    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
-    {
-        base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
-        properties.Add(new DoubleProperty("widthFactor", _widthFactor, ifNull: "pass-through"));
-        properties.Add(new DoubleProperty("heightFactor", _heightFactor, ifNull: "pass-through"));
-    }
-}
-
 public sealed class RenderFittedBox : RenderProxyBox
 {
     private BoxFit _fit;
-    private Alignment _alignment;
+    private AlignmentGeometry _alignment;
+    private TextDirection? _textDirection;
+    private Alignment? _resolvedAlignment;
+    private Clip _clipBehavior;
     private Matrix4? _transform;
-    private bool _hasVisualOverflow;
+    private bool? _hasVisualOverflow;
 
     public RenderFittedBox(
         BoxFit fit = BoxFit.Contain,
-        Alignment alignment = default,
-        RenderBox? child = null)
+        AlignmentGeometry alignment = default,
+        TextDirection? textDirection = null,
+        RenderBox? child = null,
+        Clip clipBehavior = Clip.None)
     {
         _fit = fit;
         _alignment = alignment;
+        _textDirection = textDirection;
+        _clipBehavior = clipBehavior;
         Child = child;
     }
+
+    private Alignment Resolve() => _resolvedAlignment ??= _alignment.Resolve(_textDirection);
+
+    private void MarkNeedResolution()
+    {
+        _resolvedAlignment = null;
+        MarkNeedsPaint();
+    }
+
+    /// <remarks>Flutter's <c>RenderFittedBox._fitAffectsLayout</c>: only `scaleDown` changes the size
+    /// the box takes, so every other fit change is paint-only.</remarks>
+    private static bool FitAffectsLayout(BoxFit fit) => fit == BoxFit.ScaleDown;
 
     public BoxFit Fit
     {
@@ -2022,14 +1370,21 @@ public sealed class RenderFittedBox : RenderProxyBox
                 return;
             }
 
+            BoxFit lastFit = _fit;
             _fit = value;
-            ClearPaintData();
-            MarkNeedsLayout();
-            MarkNeedsSemanticsUpdate();
+            if (FitAffectsLayout(lastFit) || FitAffectsLayout(value))
+            {
+                MarkNeedsLayout();
+            }
+            else
+            {
+                ClearPaintData();
+                MarkNeedsPaint();
+            }
         }
     }
 
-    public Alignment Alignment
+    public AlignmentGeometry Alignment
     {
         get => _alignment;
         set
@@ -2041,57 +1396,137 @@ public sealed class RenderFittedBox : RenderProxyBox
 
             _alignment = value;
             ClearPaintData();
+            MarkNeedResolution();
+        }
+    }
+
+    /// <summary>The text direction with which <see cref="Alignment"/> is resolved.</summary>
+    public TextDirection? TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value)
+            {
+                return;
+            }
+
+            _textDirection = value;
+            ClearPaintData();
+            MarkNeedResolution();
+        }
+    }
+
+    /// <summary>How to clip the child when it overflows. Defaults to <see cref="Clip.None"/>.</summary>
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (_clipBehavior == value)
+            {
+                return;
+            }
+
+            _clipBehavior = value;
             MarkNeedsPaint();
             MarkNeedsSemanticsUpdate();
         }
     }
 
+    protected override Size ComputeDryLayout(BoxConstraints constraints)
+    {
+        if (Child is not { } child)
+        {
+            return constraints.Smallest;
+        }
+
+        Size childSize = child.GetDryLayout(BoxConstraints.Unbounded);
+        if (_fit == BoxFit.ScaleDown)
+        {
+            Size unconstrainedSize = constraints.Loosen()
+                .ConstrainSizeAndAttemptToPreserveAspectRatio(childSize);
+            return constraints.Constrain(unconstrainedSize);
+        }
+
+        return constraints.ConstrainSizeAndAttemptToPreserveAspectRatio(childSize);
+    }
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        // The baseline of the child laid out unconstrained, without the paint-time transform.
+        return Child?.GetDryBaseline(BoxConstraints.Unbounded, baseline);
+    }
+
     protected override void PerformLayout()
     {
-        if (Child != null)
+        if (Child is { } child)
         {
-            Child.Layout(
-                new BoxConstraints(
-                    MaxWidth: double.PositiveInfinity,
-                    MaxHeight: double.PositiveInfinity),
-                parentUsesSize: true);
-
-            Size = _fit switch
-            {
-                BoxFit.ScaleDown => Constraints.Constrain(
-                    Constraints.Loosen().ConstrainSizeAndAttemptToPreserveAspectRatio(Child.Size)),
-                _ => Constraints.ConstrainSizeAndAttemptToPreserveAspectRatio(Child.Size)
-            };
-
-            ((BoxParentData)Child.parentData!).offset = new Point(0, 0);
+            child.Layout(BoxConstraints.Unbounded, parentUsesSize: true);
+            Size = _fit == BoxFit.ScaleDown
+                ? Constraints.Constrain(
+                    Constraints.Loosen().ConstrainSizeAndAttemptToPreserveAspectRatio(child.Size))
+                : Constraints.ConstrainSizeAndAttemptToPreserveAspectRatio(child.Size);
+            ClearPaintData();
         }
         else
         {
             Size = Constraints.Smallest;
         }
-
-        ClearPaintData();
     }
 
     /// <inheritdoc />
     public override bool PaintsChild(RenderObject child) =>
-        Size.Width > 0 && Size.Height > 0 && Child is { } fitted
-        && fitted.Size.Width > 0 && fitted.Size.Height > 0;
+        Size.Width != 0 && Size.Height != 0
+        && child is RenderBox box && box.Size.Width != 0 && box.Size.Height != 0;
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (Child == null || !PaintsChild(Child))
+        ArgumentNullException.ThrowIfNull(ctx);
+        if (Child is not { } child || !PaintsChild(child))
         {
             return;
         }
 
         UpdatePaintData();
-        Layer = ctx.PushTransform(NeedsCompositing, offset, _transform!, base.Paint, Layer as TransformLayer);
+        if (_hasVisualOverflow == true && _clipBehavior != Clip.None)
+        {
+            Layer = ctx.PushClipRect(
+                NeedsCompositing,
+                offset,
+                new Rect(new Point(0, 0), Size),
+                (context, childOffset) => PaintChildWithTransform(context, childOffset),
+                clipBehavior: _clipBehavior,
+                oldLayer: Layer as ClipRectLayer);
+        }
+        else
+        {
+            Layer = PaintChildWithTransform(ctx, offset);
+        }
+    }
+
+    /// <remarks>Flutter's <c>RenderFittedBox._paintChildWithTransform</c>: a pure translation is
+    /// applied as a paint offset instead of pushing a transform layer.</remarks>
+    private TransformLayer? PaintChildWithTransform(PaintingContext context, Point offset)
+    {
+        Point? childOffset = MatrixUtils.GetAsTranslation(_transform!);
+        if (childOffset is null)
+        {
+            return context.PushTransform(
+                NeedsCompositing,
+                offset,
+                _transform!,
+                base.Paint,
+                Layer as TransformLayer);
+        }
+
+        base.Paint(context, offset + childOffset.Value);
+        return null;
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        if (Child == null || !PaintsChild(Child))
+        if (Child is not { } child || !PaintsChild(child))
         {
             return false;
         }
@@ -2100,22 +1535,12 @@ public sealed class RenderFittedBox : RenderProxyBox
         return result.AddWithPaintTransform(
             _transform,
             position,
-            (hitResult, hitPosition) => Child.HitTest(hitResult, hitPosition));
-    }
-
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
-    {
-        if (Child == null)
-        {
-            return;
-        }
-
-        UpdatePaintData();
-        visitor(Child);
+            (hitResult, hitPosition) => base.HitTestChildren(hitResult, hitPosition));
     }
 
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
+        ArgumentNullException.ThrowIfNull(transform);
         if (!PaintsChild(child))
         {
             transform.SetZero();
@@ -2128,7 +1553,7 @@ public sealed class RenderFittedBox : RenderProxyBox
 
     private void ClearPaintData()
     {
-        _hasVisualOverflow = false;
+        _hasVisualOverflow = null;
         _transform = null;
     }
 
@@ -2140,35 +1565,30 @@ public sealed class RenderFittedBox : RenderProxyBox
             return;
         }
 
-        if (Child == null)
+        if (Child is not { } child)
         {
             _hasVisualOverflow = false;
             _transform = Matrix4.Identity();
             return;
         }
 
-        var childSize = Child.Size;
-        var fittedSizes = BoxFitUtils.ApplyBoxFit(_fit, childSize, Size);
-        var sourceSize = fittedSizes.Source;
-        var destinationSize = fittedSizes.Destination;
+        Alignment resolvedAlignment = Resolve();
+        Size childSize = child.Size;
+        FittedSizes fittedSizes = BoxFitUtils.ApplyBoxFit(_fit, childSize, Size);
+        double scaleX = fittedSizes.Destination.Width / fittedSizes.Source.Width;
+        double scaleY = fittedSizes.Destination.Height / fittedSizes.Source.Height;
+        Rect sourceRect = resolvedAlignment.Inscribe(
+            fittedSizes.Source,
+            new Rect(new Point(0, 0), childSize));
+        Rect destinationRect = resolvedAlignment.Inscribe(
+            fittedSizes.Destination,
+            new Rect(new Point(0, 0), Size));
+        _hasVisualOverflow =
+            sourceRect.Width < childSize.Width || sourceRect.Height < childSize.Height;
 
-        if (sourceSize.Width <= 0.0 || sourceSize.Height <= 0.0 ||
-            destinationSize.Width <= 0.0 || destinationSize.Height <= 0.0)
-        {
-            _hasVisualOverflow = false;
-            _transform = Matrix4.Identity();
-            return;
-        }
-
-        var sourceOffset = _alignment.AlongOffset(childSize, sourceSize);
-        var destinationOffset = _alignment.AlongOffset(Size, destinationSize);
-        double scaleX = destinationSize.Width / sourceSize.Width;
-        double scaleY = destinationSize.Height / sourceSize.Height;
-        _hasVisualOverflow = sourceSize.Width < childSize.Width || sourceSize.Height < childSize.Height;
-
-        Matrix4 transform = Matrix4.TranslationValues(destinationOffset.X, destinationOffset.Y, 0.0);
+        Matrix4 transform = Matrix4.TranslationValues(destinationRect.Left, destinationRect.Top, 0.0);
         transform.ScaleByDouble(scaleX, scaleY, 1.0, 1);
-        transform.TranslateByDouble(-sourceOffset.X, -sourceOffset.Y, 0, 1);
+        transform.TranslateByDouble(-sourceRect.Left, -sourceRect.Top, 0, 1);
         _transform = transform;
     }
 
@@ -2179,16 +1599,18 @@ public sealed class RenderFittedBox : RenderProxyBox
         get
         {
             UpdatePaintData();
-            return _hasVisualOverflow;
+            return _hasVisualOverflow ?? false;
         }
     }
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
+        ArgumentNullException.ThrowIfNull(properties);
         base.DebugFillProperties(properties);
         properties.Add(new EnumProperty<BoxFit>("fit", Fit));
-        properties.Add(new DiagnosticsProperty<Alignment>("alignment", Alignment));
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry>("alignment", Alignment));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
     }
 }
 
@@ -2442,19 +1864,23 @@ public sealed class RenderTransform : RenderProxyBox
 {
     private Matrix4 _transform;
     private Point? _origin;
-    private Alignment? _alignment;
+    private AlignmentGeometry? _alignment;
+    private TextDirection? _textDirection;
+    private Alignment? _resolvedAlignment;
     private FilterQuality? _filterQuality;
 
     public RenderTransform(
         Matrix4 transform,
-        Alignment? alignment,
+        AlignmentGeometry? alignment,
         RenderBox? child,
         FilterQuality? filterQuality = null,
         Point? origin = null,
-        bool transformHitTests = true)
+        bool transformHitTests = true,
+        TextDirection? textDirection = null)
     {
         _transform = Matrix4.Copy(transform);
         _alignment = alignment;
+        _textDirection = textDirection;
         _filterQuality = filterQuality;
         _origin = origin;
         TransformHitTests = transformHitTests;
@@ -2478,16 +1904,37 @@ public sealed class RenderTransform : RenderProxyBox
         }
     }
 
-    public Alignment? Alignment
+    public AlignmentGeometry? Alignment
     {
         get => _alignment;
         set
         {
             if (_alignment == value) return;
             _alignment = value;
-            MarkNeedsPaint();
-            MarkNeedsSemanticsUpdate();
+            MarkNeedResolution();
         }
+    }
+
+    /// <summary>The text direction with which <see cref="Alignment"/> is resolved.</summary>
+    public TextDirection? TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value) return;
+            _textDirection = value;
+            MarkNeedResolution();
+        }
+    }
+
+    private Alignment? ResolvedAlignment =>
+        _alignment is { } alignment ? _resolvedAlignment ??= alignment.Resolve(_textDirection) : null;
+
+    private void MarkNeedResolution()
+    {
+        _resolvedAlignment = null;
+        MarkNeedsPaint();
+        MarkNeedsSemanticsUpdate();
     }
 
     /// <summary>Whether hit tests are transformed along with the paint.</summary>
@@ -2515,7 +1962,8 @@ public sealed class RenderTransform : RenderProxyBox
     {
         get
         {
-            if (_origin is null && _alignment is null)
+            Alignment? resolvedAlignment = ResolvedAlignment;
+            if (_origin is null && resolvedAlignment is null)
             {
                 return _transform;
             }
@@ -2527,7 +1975,7 @@ public sealed class RenderTransform : RenderProxyBox
             }
 
             Point translation = default;
-            if (_alignment is { } alignment)
+            if (resolvedAlignment is { } alignment)
             {
                 translation = alignment.AlongSize(Size);
                 result.TranslateByDouble(translation.X, translation.Y, 0, 1);
@@ -2535,7 +1983,7 @@ public sealed class RenderTransform : RenderProxyBox
 
             result.Multiply(_transform);
 
-            if (_alignment is not null)
+            if (resolvedAlignment is not null)
             {
                 result.TranslateByDouble(-translation.X, -translation.Y, 0, 1);
             }
@@ -2704,7 +2152,8 @@ public sealed class RenderTransform : RenderProxyBox
         base.DebugFillProperties(properties);
         properties.Add(new TransformProperty("transform matrix", _transform));
         properties.Add(new DiagnosticsProperty<Point?>("origin", Origin));
-        properties.Add(new DiagnosticsProperty<Alignment?>("alignment", Alignment));
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry?>("alignment", Alignment));
+        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
         properties.Add(new DiagnosticsProperty<bool>("transformHitTests", TransformHitTests));
     }
 }

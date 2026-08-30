@@ -1061,7 +1061,7 @@ public sealed class CupertinoMenuItemState : State, CupertinoMenuSwipeTarget
             behavior: Current.Behavior,
             gestures: Enabled ? BuildItemGestures(context) : RawGestureDetector.NoGestures,
             child: label);
-        interaction = new DecoratedBox(decoration, interaction);
+        interaction = new DecoratedBox(decoration, child: interaction);
         interaction = new MouseRegion(
             cursor: cursor,
             opaque: false,

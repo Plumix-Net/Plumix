@@ -283,7 +283,7 @@ internal sealed class RenderBadgePositioner : RenderProxyBox
             return;
         }
 
-        Child.Layout(new BoxConstraints(), parentUsesSize: true);
+        Child.Layout(BoxConstraints.Unbounded, parentUsesSize: true);
         var alignmentSpace = new Size(Size.Width - WidthOffset, Size.Height);
         Alignment resolvedAlignment = Alignment.Resolve(TextDirection);
         var location = resolvedAlignment.AlongOffset(alignmentSpace, new Size()) + Offset;

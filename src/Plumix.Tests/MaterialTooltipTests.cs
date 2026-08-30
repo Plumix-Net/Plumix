@@ -177,10 +177,12 @@ public sealed class MaterialTooltipTests
             } && color == Colors.Teal);
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(2, 3, 12, 4));
+            padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
+                == new Thickness(2, 3, 12, 4));
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(1, 0, 7, 0));
+            padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
+                == new Thickness(1, 0, 7, 0));
     }
 
     [Fact]

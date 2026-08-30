@@ -73,7 +73,7 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
                 title: title,
                 background: new DecoratedBox(
                     new BoxDecoration(Color: Color.Parse("#FF6750A4")),
-                    new Align(
+                    child: new Align(
                         alignment: Alignment.Center,
                         child: new Text("PARALLAX", fontSize: 30, color: Colors.White))),
                 stretchModes:

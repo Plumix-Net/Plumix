@@ -862,7 +862,8 @@ public sealed class DragTargetTests
         public WidgetHarness(Widget widget)
         {
             GestureBinding.Instance.ResetForTests();
-            _root = new TestRootElement(widget);
+            // Stack's default alignment is AlignmentDirectional.topStart, which needs a direction.
+            _root = new TestRootElement(new Directionality(TextDirection.Ltr, widget));
             _root.Attach(_owner);
             _root.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();

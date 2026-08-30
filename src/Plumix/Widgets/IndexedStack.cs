@@ -1,0 +1,129 @@
+using Plumix.Foundation;
+using Plumix.Rendering;
+using Plumix.UI;
+
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/indexed_stack.dart
+
+namespace Plumix.Widgets;
+
+/// <summary>A <see cref="Stack"/> that shows a single child from a list of children.</summary>
+public sealed class IndexedStack : StatelessWidget
+{
+    public IndexedStack(
+        IReadOnlyList<Widget>? children = null,
+        int? index = 0,
+        AlignmentGeometry? alignment = null,
+        TextDirection? textDirection = null,
+        Clip clipBehavior = Clip.HardEdge,
+        StackFit sizing = StackFit.Loose,
+        Key? key = null) : base(key)
+    {
+        Children = children ?? [];
+        Index = index;
+        Alignment = alignment ?? AlignmentDirectional.TopStart;
+        TextDirection = textDirection;
+        ClipBehavior = clipBehavior;
+        Sizing = sizing;
+    }
+
+    /// <summary>The widgets below this widget in the tree.</summary>
+    public IReadOnlyList<Widget> Children { get; }
+
+    /// <summary>The index of the child to show.</summary>
+    public int? Index { get; }
+
+    /// <summary>How to align the non-positioned and partially-positioned children.</summary>
+    public AlignmentGeometry Alignment { get; }
+
+    /// <summary>The text direction with which to resolve <see cref="Alignment"/>.</summary>
+    public TextDirection? TextDirection { get; }
+
+    /// <summary>How to clip overflowing content. Defaults to <see cref="Clip.HardEdge"/>.</summary>
+    public Clip ClipBehavior { get; }
+
+    /// <summary>How to size the non-positioned children.</summary>
+    public StackFit Sizing { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        // Each child is wrapped with VisibilityScope (so Visibility.Of reports the child as hidden
+        // when it is not the selected index) and with ExcludeFocus (so non-selected children cannot
+        // receive focus). Neither introduces a RenderObject between the child and the enclosing
+        // RenderIndexedStack, so ParentDataWidgets such as Positioned still apply their
+        // StackParentData. Painting, hit-testing and semantics for non-selected children are
+        // already handled by RenderIndexedStack.
+        List<Widget> wrappedChildren = new(Children.Count);
+        for (int i = 0; i < Children.Count; i++)
+        {
+            bool isSelected = i == Index;
+            wrappedChildren.Add(new VisibilityScope(
+                isSelected,
+                new ExcludeFocus(Children[i], excluding: !isSelected)));
+        }
+
+        return new RawIndexedStack(
+            wrappedChildren,
+            Index,
+            Alignment,
+            TextDirection,
+            ClipBehavior,
+            Sizing);
+    }
+}
+
+/// <summary>The render object widget that backs <see cref="IndexedStack"/>. Dart's private
+/// `_RawIndexedStack`.</summary>
+internal sealed class RawIndexedStack : MultiChildRenderObjectWidget
+{
+    public RawIndexedStack(
+        IReadOnlyList<Widget>? children = null,
+        int? index = 0,
+        AlignmentGeometry alignment = default,
+        TextDirection? textDirection = null,
+        Clip clipBehavior = Clip.HardEdge,
+        StackFit sizing = StackFit.Loose,
+        Key? key = null) : base(children, key)
+    {
+        if (index is { } value && !(value == 0 && Children.Count == 0)
+            && (value < 0 || value >= Children.Count))
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(index),
+                "The index must be null or within the range of children.");
+        }
+
+        Index = index;
+        Alignment = alignment;
+        TextDirection = textDirection;
+        ClipBehavior = clipBehavior;
+        Sizing = sizing;
+    }
+
+    public int? Index { get; }
+
+    public AlignmentGeometry Alignment { get; }
+
+    public TextDirection? TextDirection { get; }
+
+    public Clip ClipBehavior { get; }
+
+    public StackFit Sizing { get; }
+
+    internal override RenderObject CreateRenderObject(BuildContext context) =>
+        new RenderIndexedStack(
+            Index,
+            Alignment,
+            TextDirection ?? Directionality.MaybeOf(context),
+            Sizing,
+            ClipBehavior);
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var stack = (RenderIndexedStack)renderObject;
+        stack.Index = Index;
+        stack.Alignment = Alignment;
+        stack.TextDirection = TextDirection ?? Directionality.MaybeOf(context);
+        stack.Fit = Sizing;
+        stack.ClipBehavior = ClipBehavior;
+    }
+}

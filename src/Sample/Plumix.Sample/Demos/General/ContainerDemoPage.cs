@@ -22,6 +22,8 @@ internal sealed class ContainerDemoPageState : State
     private Alignment _alignment = Alignment.Center;
     private bool _withMargin;
     private bool _clampConstraints;
+    private bool _clipContent;
+    private bool _rotateAroundTopLeft;
     private double _shiftX;
 
     public override Widget Build(BuildContext context)
@@ -33,6 +35,10 @@ internal sealed class ContainerDemoPageState : State
         var transform = Math.Abs(_shiftX) < 0.001
             ? null
             : Matrix4.TranslationValues(_shiftX, 0.0, 0.0);
+        AlignmentGeometry? transformAlignment = _rotateAroundTopLeft
+            ? Alignment.TopLeft
+            : (AlignmentGeometry?)null;
+        Clip clipBehavior = _clipContent ? Clip.AntiAlias : Clip.None;
 
         return new Column(
             crossAxisAlignment: CrossAxisAlignment.Stretch,
@@ -67,8 +73,26 @@ internal sealed class ContainerDemoPageState : State
                         BuildButton(_clampConstraints ? "Clamp: on" : "Clamp: off", ToggleConstraints, width: 120, colorHex: "#FFE8EDF9"),
                         BuildButton("Reset", Reset, width: 88, colorHex: "#FFE8EDF9"),
                     ]),
+                new Row(
+                    spacing: 8,
+                    children:
+                    [
+                        BuildButton(
+                            _clipContent ? "Clip: antiAlias" : "Clip: none",
+                            ToggleClip,
+                            width: 132,
+                            colorHex: "#FFF6E4EE"),
+                        BuildButton(
+                            _rotateAroundTopLeft ? "Origin: topLeft" : "Origin: default",
+                            ToggleTransformAlignment,
+                            width: 140,
+                            colorHex: "#FFF6E4EE"),
+                    ]),
                 new Text(
-                    $"alignment={AlignmentLabel(_alignment)}, margin={(_withMargin ? "on" : "off")}, clamp={(_clampConstraints ? "on" : "off")}, shiftX={_shiftX:0}",
+                    $"alignment={AlignmentLabel(_alignment)}, margin={(_withMargin ? "on" : "off")}, "
+                    + $"clamp={(_clampConstraints ? "on" : "off")}, shiftX={_shiftX:0}, "
+                    + $"clip={(_clipContent ? "antiAlias" : "none")}, "
+                    + $"transformAlignment={(_rotateAroundTopLeft ? "topLeft" : "none")}",
                     fontSize: 12,
                     color: Colors.DarkSlateGray),
                 new Container(
@@ -82,6 +106,8 @@ internal sealed class ContainerDemoPageState : State
                         height: 90,
                         constraints: constraints,
                         transform: transform,
+                        transformAlignment: transformAlignment,
+                        clipBehavior: clipBehavior,
                         alignment: _alignment,
                         decoration: new BoxDecoration(
                             Color: Color.Parse("#FFCCE3FF"),
@@ -129,6 +155,16 @@ internal sealed class ContainerDemoPageState : State
         SetState(() => _clampConstraints = !_clampConstraints);
     }
 
+    private void ToggleClip()
+    {
+        SetState(() => _clipContent = !_clipContent);
+    }
+
+    private void ToggleTransformAlignment()
+    {
+        SetState(() => _rotateAroundTopLeft = !_rotateAroundTopLeft);
+    }
+
     private void Reset()
     {
         SetState(() =>
@@ -136,6 +172,8 @@ internal sealed class ContainerDemoPageState : State
             _alignment = Alignment.Center;
             _withMargin = false;
             _clampConstraints = false;
+            _clipContent = false;
+            _rotateAroundTopLeft = false;
             _shiftX = 0;
         });
     }

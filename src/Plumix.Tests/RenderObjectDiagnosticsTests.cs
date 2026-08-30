@@ -218,7 +218,7 @@ public sealed class RenderObjectDiagnosticsTests
     [DebugOnlyFact]
     public void RenderAlign_DebugFillProperties_DescribesNullFactorsAsExpand()
     {
-        string dump = new RenderAlign().ToStringDeep(minLevel: DiagnosticLevel.Info);
+        string dump = new RenderPositionedBox().ToStringDeep(minLevel: DiagnosticLevel.Info);
 
         Assert.Contains("widthFactor: expand", dump, StringComparison.Ordinal);
         Assert.Contains("heightFactor: expand", dump, StringComparison.Ordinal);
@@ -227,7 +227,7 @@ public sealed class RenderObjectDiagnosticsTests
     [DebugOnlyFact]
     public void RenderFractionallySizedBox_DebugFillProperties_DescribesNullFactorsAsPassThrough()
     {
-        string dump = new RenderFractionallySizedBox().ToStringDeep(minLevel: DiagnosticLevel.Info);
+        string dump = new RenderFractionallySizedOverflowBox().ToStringDeep(minLevel: DiagnosticLevel.Info);
 
         Assert.Contains("widthFactor: pass-through", dump, StringComparison.Ordinal);
         Assert.Contains("heightFactor: pass-through", dump, StringComparison.Ordinal);

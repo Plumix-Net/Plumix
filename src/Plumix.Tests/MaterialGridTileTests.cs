@@ -102,7 +102,8 @@ public sealed class MaterialGridTileTests
             box => box.AdditionalConstraints == BoxConstraints.TightFor(height: 48));
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(16, 0, 16, 0));
+            padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
+                == new Thickness(16, 0, 16, 0));
         Assert.Empty(FindDescendants<RenderDecoratedBox>(harness.RenderView));
 
         var title = FindParagraph(harness.RenderView, "Title");
@@ -138,7 +139,8 @@ public sealed class MaterialGridTileTests
             box => box.AdditionalConstraints == BoxConstraints.TightFor(height: 68));
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(8, 0, 8, 0));
+            padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
+                == new Thickness(8, 0, 8, 0));
         Assert.Contains(
             FindDescendants<RenderDecoratedBox>(harness.RenderView),
             box => box.Decoration.Color == background);
@@ -184,7 +186,8 @@ public sealed class MaterialGridTileTests
 
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding == new Thickness(16, 0, 8, 0));
+            padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr)
+                == new Thickness(16, 0, 8, 0));
         var row = FindDescendants<RenderFlex>(harness.RenderView)
             .Single(flex => flex.Direction == Axis.Horizontal);
         var leading = Assert.IsAssignableFrom<RenderBox>(row.FirstChild);
@@ -249,7 +252,10 @@ public sealed class MaterialGridTileTests
             RenderView = new RenderView();
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _rootElement = new HarnessRootElement(RenderView, rootWidget);
+            // Stack's default alignment is AlignmentDirectional.topStart, which needs a direction.
+            _rootElement = new HarnessRootElement(
+                RenderView,
+                new Directionality(TextDirection.Ltr, rootWidget));
             _rootElement.Attach(_owner);
             _rootElement.Mount(parent: null, newSlot: null);
             _owner.FlushBuild();

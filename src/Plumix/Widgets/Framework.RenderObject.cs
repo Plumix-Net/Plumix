@@ -274,7 +274,7 @@ public sealed class LeafRenderObjectElement : RenderObjectElement
     }
 }
 
-public sealed class SingleChildRenderObjectElement : RenderObjectElement
+public class SingleChildRenderObjectElement : RenderObjectElement
 {
     private Element? _child;
 

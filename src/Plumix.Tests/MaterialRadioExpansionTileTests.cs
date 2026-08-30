@@ -320,7 +320,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         harness.Pump(new Size(360, 240));
-        var midAlign = FindDescendants<RenderAlign>(harness.RenderView)
+        var midAlign = FindDescendants<RenderPositionedBox>(harness.RenderView)
             .FirstOrDefault(align => align.HeightFactor is > 0 and < 1);
         Assert.NotNull(midAlign);
 
@@ -703,7 +703,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.True(controller.IsExpanded);
         Assert.NotNull(FindParagraphByText(harness.RenderView, "Instant body"));
         Assert.Contains(
-            FindDescendants<RenderAlign>(harness.RenderView),
+            FindDescendants<RenderPositionedBox>(harness.RenderView),
             align => align.HeightFactor == 1.0);
     }
 
@@ -723,10 +723,11 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
 
         Assert.Contains(
             FindDescendants<RenderPadding>(harness.RenderView),
-            padding => padding.Padding.Left == 20.0 && padding.Padding.Right == 10.0);
+            padding => padding.Padding.Resolve(padding.TextDirection ?? TextDirection.Ltr) is
+                { Left: 20.0, Right: 10.0 });
         Assert.Contains(
-            FindDescendants<RenderAlign>(harness.RenderView),
-            align => align.Alignment == Alignment.CenterRight);
+            FindDescendants<RenderPositionedBox>(harness.RenderView),
+            align => align.Alignment.Resolve(align.TextDirection) == Alignment.CenterRight);
     }
 
     [Fact]

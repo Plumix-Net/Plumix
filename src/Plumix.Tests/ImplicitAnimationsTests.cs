@@ -469,7 +469,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
-        Thickness halfway = RequireRenderObject<RenderPadding>(root.ChildElement).Padding;
+        EdgeInsetsGeometry halfway = RequireRenderObject<RenderPadding>(root.ChildElement).Padding;
         Assert.InRange(halfway.Left, 0.1, 19.9);
         Assert.InRange(halfway.Top, 0.1, 9.9);
         Assert.InRange(halfway.Right, 0.1, 39.9);
@@ -520,7 +520,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
-        var halfway = RequireRenderObject<RenderAlign>(root.ChildElement);
+        var halfway = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.InRange(halfway.Alignment.X, -0.99, 0.99);
         Assert.InRange(halfway.Alignment.Y, -0.99, 0.99);
         Assert.InRange(halfway.WidthFactor!.Value, 1.01, 2.99);
@@ -529,7 +529,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
 
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1));
         owner.FlushBuild();
-        var finished = RequireRenderObject<RenderAlign>(root.ChildElement);
+        var finished = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.BottomRight, finished.Alignment);
         Assert.Equal(3, finished.WidthFactor);
         Assert.Equal(4, finished.HeightFactor);
@@ -558,7 +558,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
         owner.FlushBuild();
-        var withFactors = RequireRenderObject<RenderAlign>(root.ChildElement);
+        var withFactors = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(2, withFactors.WidthFactor);
         Assert.Equal(3, withFactors.HeightFactor);
         Assert.Equal(0, completed);
@@ -569,7 +569,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             child: new SizedBox(width: 10, height: 10),
             onEnd: () => completed++));
         owner.FlushBuild();
-        var withoutFactors = RequireRenderObject<RenderAlign>(root.ChildElement);
+        var withoutFactors = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Null(withoutFactors.WidthFactor);
         Assert.Null(withoutFactors.HeightFactor);
         Assert.Equal(0, completed);
@@ -1091,7 +1091,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.10));
         owner.FlushBuild();
-        var halfway = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        var halfway = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.InRange(halfway.Alignment.X, -0.99, 0.99);
         Assert.InRange(halfway.Alignment.Y, -0.99, 0.99);
         Assert.InRange(halfway.WidthFactor!.Value, 0.26, 0.74);
@@ -1109,14 +1109,14 @@ public sealed class ImplicitAnimationsTests : IDisposable
             onEnd: () => completed++));
         owner.FlushBuild();
 
-        var interrupted = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        var interrupted = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Equal(interruptedWidth, interrupted.WidthFactor!.Value, precision: 6);
         Assert.Equal(interruptedHeight, interrupted.HeightFactor!.Value, precision: 6);
 
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 1.0));
         owner.FlushBuild();
-        var finished = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        var finished = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Equal(Alignment.Center, finished.Alignment);
         Assert.Equal(0.4, finished.WidthFactor!.Value, precision: 6);
         Assert.Equal(0.6, finished.HeightFactor!.Value, precision: 6);
@@ -1142,7 +1142,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             child: new SizedBox(width: 10, height: 10)));
         owner.FlushBuild();
 
-        var updated = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        var updated = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Equal(0.5, updated.WidthFactor);
         Assert.Equal(0.4, updated.HeightFactor);
 
@@ -1159,7 +1159,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         var owner = new BuildOwner();
         var root = new TestRootElement(fraction);
         Mount(root, owner);
-        var renderObject = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        var renderObject = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
 
         renderObject.Layout(BoxConstraints.TightFor(width: 0, height: 0));
 

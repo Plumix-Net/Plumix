@@ -130,7 +130,7 @@ internal sealed class AutocompleteDemoPageState : State
                 Color: theme.CanvasColor,
                 Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(theme.ColorScheme.OutlineVariant)),
                 BorderRadius: BorderRadius.Circular(12)),
-            new ClipRRect(
+            child: new ClipRRect(
                 BorderRadius.Circular(12),
                 child: new ListView(
                     shrinkWrap: true,

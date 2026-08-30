@@ -11,7 +11,7 @@ public sealed class FractionallySizedBoxTests
     public void RenderFractionallySizedBox_AppliesWidthAndHeightFactors()
     {
         var child = new FixedSizeRenderBox(new Size(20, 20));
-        var fractionallySizedBox = new RenderFractionallySizedBox(
+        var fractionallySizedBox = new RenderFractionallySizedOverflowBox(
             widthFactor: 0.5,
             heightFactor: 0.25,
             child: child);
@@ -26,7 +26,7 @@ public sealed class FractionallySizedBoxTests
     public void RenderFractionallySizedBox_PassesThroughAxis_WhenFactorIsNull()
     {
         var child = new FixedSizeRenderBox(new Size(20, 40));
-        var fractionallySizedBox = new RenderFractionallySizedBox(
+        var fractionallySizedBox = new RenderFractionallySizedOverflowBox(
             widthFactor: 0.5,
             heightFactor: null,
             child: child);
@@ -42,7 +42,7 @@ public sealed class FractionallySizedBoxTests
     public void RenderFractionallySizedBox_AlignsChild_WhenParentConstraintsAreTight()
     {
         var child = new FixedSizeRenderBox(new Size(20, 20));
-        var fractionallySizedBox = new RenderFractionallySizedBox(
+        var fractionallySizedBox = new RenderFractionallySizedOverflowBox(
             alignment: Alignment.BottomRight,
             widthFactor: 0.5,
             heightFactor: 0.5,
@@ -70,7 +70,7 @@ public sealed class FractionallySizedBoxTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        var renderBox = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        var renderBox = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Equal(Alignment.TopLeft, renderBox.Alignment);
         Assert.Equal(0.7, renderBox.WidthFactor);
         Assert.Equal(0.6, renderBox.HeightFactor);
@@ -82,7 +82,7 @@ public sealed class FractionallySizedBoxTests
             child: new SizedBox(width: 10, height: 10)));
         owner.FlushBuild();
 
-        var updated = RequireRenderObject<RenderFractionallySizedBox>(root.ChildElement);
+        var updated = RequireRenderObject<RenderFractionallySizedOverflowBox>(root.ChildElement);
         Assert.Same(renderBox, updated);
         Assert.Equal(Alignment.BottomRight, updated.Alignment);
         Assert.Null(updated.WidthFactor);

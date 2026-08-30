@@ -172,7 +172,7 @@ public sealed class TransitionsTests : IDisposable
         Mount(root, owner);
 
         var clip = Assert.IsType<RenderClipRect>(root.ChildElement!.RenderObject);
-        var align = Assert.IsType<RenderAlign>(clip.Child);
+        var align = Assert.IsType<RenderPositionedBox>(clip.Child);
         clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
 
         Assert.Equal(Alignment.BottomLeft, align.Alignment);
@@ -209,7 +209,7 @@ public sealed class TransitionsTests : IDisposable
         Mount(root, owner);
 
         var clip = Assert.IsType<RenderClipRect>(root.ChildElement!.RenderObject);
-        var align = Assert.IsType<RenderAlign>(clip.Child);
+        var align = Assert.IsType<RenderPositionedBox>(clip.Child);
         clip.Layout(BoxConstraints.Loose(new Size(200, 200)));
 
         Assert.Equal(new Alignment(-0.5, -1.0), align.Alignment);
@@ -458,6 +458,7 @@ public sealed class TransitionsTests : IDisposable
             AnimationStatus.Reverse);
         var owner = new BuildOwner();
         var root = new TestRootElement(new Stack(
+            textDirection: TextDirection.Ltr,
             children:
             [
                 new PositionedTransition(
@@ -490,6 +491,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(new Size(140, 56), renderStack.FirstChild.Size);
 
         root.Update(new Stack(
+            textDirection: TextDirection.Ltr,
             children:
             [
                 new PositionedTransition(
@@ -518,6 +520,7 @@ public sealed class TransitionsTests : IDisposable
             AnimationStatus.Forward);
         var owner = new BuildOwner();
         var root = new TestRootElement(new Stack(
+            textDirection: TextDirection.Ltr,
             children:
             [
                 new RelativePositionedTransition(
@@ -582,9 +585,9 @@ public sealed class TransitionsTests : IDisposable
             child: transition));
         Mount(root, owner);
 
-        var renderAlign = Assert.IsType<RenderAlign>(root.ChildElement!.RenderObject);
+        var renderAlign = Assert.IsType<RenderPositionedBox>(root.ChildElement!.RenderObject);
         renderAlign.Layout(BoxConstraints.Loose(new Size(200, 200)));
-        Assert.Equal(Alignment.TopRight, renderAlign.Alignment);
+        Assert.Equal(Alignment.TopRight, renderAlign.Alignment.Resolve(renderAlign.TextDirection));
         Assert.Equal(new Size(80, 60), renderAlign.Size);
         Assert.Equal(1, first.ListenerCount);
 
@@ -597,8 +600,8 @@ public sealed class TransitionsTests : IDisposable
                 heightFactor: 3.0)));
         owner.FlushBuild();
 
-        renderAlign = Assert.IsType<RenderAlign>(root.ChildElement.RenderObject);
-        Assert.Equal(Alignment.BottomLeft, renderAlign.Alignment);
+        renderAlign = Assert.IsType<RenderPositionedBox>(root.ChildElement.RenderObject);
+        Assert.Equal(Alignment.BottomLeft, renderAlign.Alignment.Resolve(renderAlign.TextDirection));
         Assert.Equal(0, first.ListenerCount);
         Assert.Equal(1, second.ListenerCount);
 
