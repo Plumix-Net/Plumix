@@ -8,9 +8,22 @@ namespace Plumix.Widgets;
 
 public abstract record MouseCursor
 {
+    /// <summary>
+    /// Dart's `MouseCursor.defer`: a region carrying it does not choose a cursor, so the choice
+    /// falls through to the region behind it.
+    /// </summary>
     public static MouseCursor Defer { get; } = new DeferredMouseCursor();
 
+    /// <summary>
+    /// Dart's `MouseCursor.uncontrolled` (`_NoopMouseCursor`): a region carrying it does not change
+    /// the cursor by itself, but it does block the regions behind it from changing it, so the
+    /// pointer keeps the cursor it had on entry until it leaves the region.
+    /// </summary>
+    public static MouseCursor Uncontrolled { get; } = new NoopMouseCursor();
+
     private sealed record DeferredMouseCursor : MouseCursor;
+
+    private sealed record NoopMouseCursor : MouseCursor;
 }
 
 public sealed record SystemMouseCursor(string Kind) : MouseCursor;
@@ -133,6 +146,7 @@ public sealed class MouseRegion : StatefulWidget
 public static class MouseCursorManager
 {
     private static readonly object Sync = new();
+    private static readonly IReadOnlySet<WidgetState> EmptyStates = new HashSet<WidgetState>();
     private static readonly List<CursorRequest> Requests = [];
     private static Action<MouseCursor>? _cursorChanged;
     private static MouseCursor _currentCursor = SystemMouseCursors.Basic;
@@ -163,7 +177,19 @@ public static class MouseCursorManager
 
         lock (Sync)
         {
-            Requests.Add(new CursorRequest(requestId, cursor ?? SystemMouseCursors.Basic));
+            MouseCursor requested = cursor ?? SystemMouseCursors.Basic;
+            // Dart's `WidgetStateMouseCursor.createSession` resolves against the empty state set
+            // before it creates a session, so a region handed a state-resolving cursor shows the
+            // value it resolves to with no state applied.
+            if (requested is WidgetStateMouseCursor stateful)
+            {
+                requested = stateful.Resolve(EmptyStates) ?? SystemMouseCursors.Basic;
+            }
+
+            // `MouseCursor.Uncontrolled` blocks the regions behind it without choosing a cursor of
+            // its own, so the request retains the cursor that was in effect when it was pushed.
+            MouseCursor? retained = Equals(requested, MouseCursor.Uncontrolled) ? _currentCursor : null;
+            Requests.Add(new CursorRequest(requestId, requested, retained));
             TryUpdateCurrentCursorLocked(out listener, out nextCursor);
         }
 
@@ -215,9 +241,12 @@ public static class MouseCursorManager
         out Action<MouseCursor>? listener,
         out MouseCursor? nextCursor)
     {
-        var resolvedCursor = Requests.Count > 0
-            ? Requests[^1].Cursor
-            : SystemMouseCursors.Basic;
+        MouseCursor resolvedCursor = SystemMouseCursors.Basic;
+        if (Requests.Count > 0)
+        {
+            CursorRequest top = Requests[^1];
+            resolvedCursor = top.Retained ?? top.Cursor;
+        }
 
         if (Equals(_currentCursor, resolvedCursor))
         {
@@ -232,7 +261,7 @@ public static class MouseCursorManager
         return true;
     }
 
-    private readonly record struct CursorRequest(long Id, MouseCursor Cursor);
+    private readonly record struct CursorRequest(long Id, MouseCursor Cursor, MouseCursor? Retained);
 
     private sealed class CursorRequestHandle : IDisposable
     {

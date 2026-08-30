@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -9,8 +10,20 @@ namespace Plumix.Material;
 public sealed partial record TextSelectionThemeData(
     Color? CursorColor = null,
     Color? SelectionColor = null,
-    Color? SelectionHandleColor = null)
+    Color? SelectionHandleColor = null) : IDiagnosticable
 {
+    public void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        properties.Add(new ColorProperty("cursorColor", CursorColor, defaultValue: nullDefault));
+        properties.Add(new ColorProperty("selectionColor", SelectionColor, defaultValue: nullDefault));
+        properties.Add(new ColorProperty(
+            "selectionHandleColor",
+            SelectionHandleColor,
+            defaultValue: nullDefault));
+    }
+
     public TextSelectionThemeData CopyWith(
         Color? cursorColor = null,
         Color? selectionColor = null,

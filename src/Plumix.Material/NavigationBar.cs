@@ -180,6 +180,7 @@ public sealed class NavigationBar : StatelessWidget
             children.Add(new Expanded(
                 child: new MergeSemantics(
                     new Semantics(
+                        role: SemanticsRole.Tab,
                         selected: index == SelectedIndex,
                         child: tile))));
         }
@@ -194,6 +195,7 @@ public sealed class NavigationBar : StatelessWidget
             right: false,
             maintainBottomViewPadding: MaintainBottomViewPadding,
             child: new Semantics(
+                role: SemanticsRole.TabBar,
                 explicitChildNodes: true,
                 container: true,
                 child: content));

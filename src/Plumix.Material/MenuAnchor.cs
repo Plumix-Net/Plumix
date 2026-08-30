@@ -555,7 +555,7 @@ internal sealed class Submenu : StatelessWidget
         MenuStyle resolved = (MenuStyle ?? new MenuStyle()).Merge(themeStyle).Merge(defaults);
         VisualDensity visualDensity = resolved.VisualDensity ?? theme.VisualDensity;
         AlignmentGeometry alignment = resolved.Alignment ?? AlignmentDirectional.BottomStart;
-        MouseCursor cursor = resolved.MouseCursor?.Resolve(MaterialState.None) ?? Plumix.Widgets.MouseCursor.Defer;
+        var cursor = new MenuMouseCursor(states => resolved.MouseCursor?.Resolve(states));
         EdgeInsetsGeometry menuPadding = resolved.Padding?.Resolve(MaterialState.None)
                                          ?? EdgeInsetsGeometry.Zero;
         double densityDx = Math.Max(0.0, visualDensity.BaseSizeAdjustment.X);
@@ -639,6 +639,17 @@ internal sealed class Submenu : StatelessWidget
 
         return result;
     }
+}
+
+/// <summary>
+/// Dart's `_MouseCursor`: wraps the menu's state-resolving cursor so that it falls back to
+/// <see cref="MouseCursor.Uncontrolled"/> when no style in the chain supplies one.
+/// </summary>
+internal sealed record MenuMouseCursor(
+    Func<IReadOnlySet<WidgetState>, MouseCursor?> ResolveCallback) : WidgetStateMouseCursor
+{
+    public override MouseCursor Resolve(IReadOnlySet<WidgetState> states) =>
+        ResolveCallback(states) ?? MouseCursor.Uncontrolled;
 }
 
 /// <summary>The Material surface that hosts a menu's children.</summary>

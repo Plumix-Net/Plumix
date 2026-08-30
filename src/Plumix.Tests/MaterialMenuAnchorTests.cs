@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -10,6 +11,84 @@ namespace Plumix.Tests;
 
 public sealed class MaterialMenuAnchorTests
 {
+    [DebugOnlyFact]
+    public void MenuThemeTypes_DebugFillProperties_ListEveryFieldDartDoes()
+    {
+        var styleProperties = new DiagnosticPropertiesBuilder();
+        new MenuStyle().DebugFillProperties(styleProperties);
+        Assert.Equal(
+            [
+                "backgroundColor",
+                "shadowColor",
+                "surfaceTintColor",
+                "elevation",
+                "padding",
+                "minimumSize",
+                "fixedSize",
+                "maximumSize",
+                "side",
+                "shape",
+                "mouseCursor",
+                "visualDensity",
+                "alignment",
+            ],
+            styleProperties.Properties.Select(property => property.Name).ToList());
+
+        var menuProperties = new DiagnosticPropertiesBuilder();
+        new MenuThemeData().DebugFillProperties(menuProperties);
+        Assert.Equal(["style", "submenuIcon"], menuProperties.Properties.Select(p => p.Name).ToList());
+
+        // `MenuBarThemeData` extends `MenuThemeData` in Dart too and adds no properties of its own.
+        var barProperties = new DiagnosticPropertiesBuilder();
+        new MenuBarThemeData().DebugFillProperties(barProperties);
+        Assert.Equal(["style", "submenuIcon"], barProperties.Properties.Select(p => p.Name).ToList());
+
+        var buttonProperties = new DiagnosticPropertiesBuilder();
+        new MenuButtonThemeData().DebugFillProperties(buttonProperties);
+        Assert.Equal(["style"], buttonProperties.Properties.Select(property => property.Name).ToList());
+
+        // A default instance elides every property, exactly as Dart's `defaultValue: null` does.
+        Assert.Empty(styleProperties.Properties.Where(property => property.Value is not null));
+        Assert.Empty(menuProperties.Properties.Where(property => property.Value is not null));
+        Assert.Empty(buttonProperties.Properties.Where(property => property.Value is not null));
+    }
+
+    [Fact]
+    public void MenuMouseCursor_FallsBackToUncontrolledWhenNoStyleSuppliesACursor()
+    {
+        // Dart's `_MouseCursor`: the resolved menu cursor, or `MouseCursor.uncontrolled`.
+        var empty = new HashSet<WidgetState>();
+        var withoutCursor = new MenuMouseCursor(_ => null);
+        var withCursor = new MenuMouseCursor(_ => SystemMouseCursors.Click);
+
+        Assert.Equal(MouseCursor.Uncontrolled, withoutCursor.Resolve(empty));
+        Assert.Equal(SystemMouseCursors.Click, withCursor.Resolve(empty));
+        Assert.NotEqual(MouseCursor.Defer, MouseCursor.Uncontrolled);
+    }
+
+    [Fact]
+    public void MouseCursorUncontrolled_BlocksTheRegionBehindWithoutChangingTheCursor()
+    {
+        MouseCursorManager.ResetForTests();
+        try
+        {
+            using IDisposable text = MouseCursorManager.PushCursor(SystemMouseCursors.Text);
+            Assert.Equal(SystemMouseCursors.Text, MouseCursorManager.CurrentCursor);
+
+            // The uncontrolled region keeps the cursor it entered with, and the click request under
+            // it cannot take over while it is on top.
+            using IDisposable uncontrolled = MouseCursorManager.PushCursor(MouseCursor.Uncontrolled);
+            Assert.Equal(SystemMouseCursors.Text, MouseCursorManager.CurrentCursor);
+
+            uncontrolled.Dispose();
+            Assert.Equal(SystemMouseCursors.Text, MouseCursorManager.CurrentCursor);
+        }
+        finally
+        {
+            MouseCursorManager.ResetForTests();
+        }
+    }
+
     [Fact]
     public void MenuController_UnattachedOperationsMatchFlutterContract()
     {

@@ -451,6 +451,38 @@ public sealed class MaterialDataTableTests : IDisposable
     }
 
     [Fact]
+    public void DataTable_SortableHeaderIsOneNodeCarryingBothTheColumnHeaderRoleAndTheTapAction()
+    {
+        // Flutter wraps the heading's label row in `Semantics(role: columnHeader)` inside the
+        // `InkWell`, so the annotation merges into the ink well's node: one header node that both
+        // reports the role and performs the sort.
+        int sortedColumn = -1;
+        var table = new DataTable(
+            columns:
+            [
+                new DataColumn(new Text("Name"), onSort: (index, _) => sortedColumn = index),
+                new DataColumn(new Text("Score")),
+            ],
+            rows: [new DataRow([new DataCell(new Text("Ada")), new DataCell(new Text("10"))])]);
+        using var harness = new WidgetRenderHarness(Wrap(table));
+
+        SemanticsNode? semantics = harness.PumpAndGetSemantics(new Size(420.0, 180.0));
+        SemanticsNode tableNode = Assert.Single(
+            FlattenSemantics(semantics),
+            node => node.Role == SemanticsRole.Table);
+        IReadOnlyList<SemanticsNode> headers = tableNode.Children[0].Children;
+
+        Assert.Equal(
+            [SemanticsRole.ColumnHeader, SemanticsRole.ColumnHeader],
+            headers.Select(node => node.Role).ToArray());
+        Assert.True(headers[0].Actions.HasFlag(SemanticsActions.Tap));
+        Assert.False(headers[1].Actions.HasFlag(SemanticsActions.Tap));
+
+        Assert.True(headers[0].PerformAction(SemanticsActions.Tap));
+        Assert.Equal(0, sortedColumn);
+    }
+
+    [Fact]
     public void PaginatedDataTable_ValidatesDefaultsAndPagesThroughLongLivedSource()
     {
         var source = new TestSource(12);

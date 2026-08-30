@@ -198,8 +198,11 @@ public sealed class TextWidgetTests
     }
 
     [Fact]
-    public void TextWidget_InheritsMaterialTheme_BodyMediumStyle()
+    public void TextWidget_UnderABareThemeKeepsTheFallbackStyle_TheMaterialCarriesBodyMedium()
     {
+        // Dart's `Theme._wrapsWidgetThemes` installs only `IconTheme` and `DefaultSelectionStyle`;
+        // the text style comes from `Material`'s `AnimatedDefaultTextStyle`. A `Text` under a bare
+        // `Theme` therefore keeps `DefaultTextStyle.fallback`, not `textTheme.bodyMedium`.
         var owner = new BuildOwner();
         var themedStyle = new TextStyle(
             FontFamily: new FontFamily("Arial"),
@@ -225,13 +228,28 @@ public sealed class TextWidgetTests
         owner.FlushBuild();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
-        Assert.Equal(themedStyle.FontFamily, paragraph.FontFamily);
-        Assert.Equal(17, paragraph.FontSize);
-        Assert.Equal(FontWeight.SemiBold, paragraph.FontWeight);
-        Assert.Equal(FontStyle.Italic, paragraph.FontStyle);
-        Assert.Equal(1.5, paragraph.Height);
-        Assert.Equal(0.6, paragraph.LetterSpacing);
-        Assert.Equal(themedStyle.Color, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+        Assert.Equal(TextStyle.Fallback.FontSize, paragraph.FontSize);
+        Assert.Equal(TextStyle.Fallback.FontWeight, paragraph.FontWeight);
+        Assert.Equal(TextStyle.Fallback.FontStyle, paragraph.FontStyle);
+        Assert.Equal(TextStyle.Fallback.Color, Assert.IsType<SolidColorBrush>(paragraph.Foreground).Color);
+
+        // The same theme reaches the text once a `Material` is in between.
+        var materialRoot = new TestRootElement(
+            new Theme(
+                data: theme,
+                child: new global::Plumix.Material.Material(
+                    type: MaterialType.Transparency,
+                    child: new Text("alpha"))));
+        var materialOwner = new BuildOwner();
+        materialRoot.Attach(materialOwner);
+        materialRoot.Mount(parent: null, newSlot: null);
+        materialOwner.FlushBuild();
+
+        var materialParagraph = FindDescendant<RenderParagraph>(materialRoot.ChildElement!.RenderObject);
+        Assert.NotNull(materialParagraph);
+        Assert.Equal(17, materialParagraph!.FontSize);
+        Assert.Equal(FontWeight.SemiBold, materialParagraph.FontWeight);
+        Assert.Equal(themedStyle.Color, Assert.IsType<SolidColorBrush>(materialParagraph.Foreground).Color);
     }
 
     [Fact]

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Avalonia.Media;
 
 namespace Plumix.Painting;
@@ -31,6 +32,26 @@ public static class ColorUtilities
     {
         byte alpha = (byte)Math.Clamp((int)Math.Round(255 * opacity), 0, 255);
         return Color.FromArgb(alpha, color.R, color.G, color.B);
+    }
+
+    /// <summary>
+    /// Dart's <c>Color.toString</c>:
+    /// <c>Color(alpha: 1.0000, red: 0.1255, green: 0.6980, blue: 0.6667, colorSpace: ColorSpace.sRGB)</c>.
+    /// </summary>
+    /// <remarks>
+    /// The framework's colour type is Avalonia's <see cref="Color"/>, whose own <c>ToString</c>
+    /// renders <c>#AARRGGBB</c>. Diagnostics dumps are compared against Flutter's, so
+    /// <see cref="ColorSwatch"/>'s <c>ColorProperty</c> spells colours through this formatter
+    /// instead. Avalonia models only sRGB, which is dart:ui's default colour space.
+    /// </remarks>
+    public static string ToDartString(this Color color)
+    {
+        static string Component(byte value) =>
+            (value / 255.0).ToString("F4", CultureInfo.InvariantCulture);
+
+        return $"Color(alpha: {Component(color.A)}, red: {Component(color.R)}, "
+               + $"green: {Component(color.G)}, blue: {Component(color.B)}, "
+               + "colorSpace: ColorSpace.sRGB)";
     }
 
     public static Color AlphaBlend(Color foreground, Color background)

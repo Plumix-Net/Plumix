@@ -157,7 +157,7 @@ public sealed class AutofillTests : IDisposable
         Assert.True(connection.Attached);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void AutofillScope_AttachRejectsAClientWithAutofillDisabled()
     {
         var enabled = FakeAutofillClient.Enabled("field1", "one");
@@ -168,6 +168,27 @@ public sealed class AutofillTests : IDisposable
 
         Assert.Throws<InvalidOperationException>(
             () => scope.Attach(enabled, enabled.TextInputConfiguration));
+    }
+
+    [Fact]
+    public void BuildModeGates_TheAutofillEnabledClientCheckRunsOnlyInADebugBuild()
+    {
+        // Dart guards the check with `assert`, so a profile or release build attaches anyway.
+        var enabled = FakeAutofillClient.Enabled("field1", "one");
+        var disabled = new FakeAutofillClient("field2", new TextInputConfiguration());
+        var scope = new FakeAutofillScope();
+        scope.Register(enabled);
+        scope.Register(disabled);
+
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<InvalidOperationException>(
+                () => scope.Attach(enabled, enabled.TextInputConfiguration));
+            return;
+        }
+
+        TextInputConnection connection = scope.Attach(enabled, enabled.TextInputConfiguration);
+        Assert.True(connection.Attached);
     }
 
     [Fact]

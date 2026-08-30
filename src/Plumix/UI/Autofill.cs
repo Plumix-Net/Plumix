@@ -1,3 +1,4 @@
+using Plumix.Foundation;
 using Plumix.Widgets;
 
 namespace Plumix.UI;
@@ -382,7 +383,9 @@ public static class AutofillScopeMixin
         TextInputConfiguration configuration)
     {
         ArgumentNullException.ThrowIfNull(scope);
-        if (scope.AutofillClients.Any(client => !client.TextInputConfiguration.AutofillConfiguration.Enabled))
+        // Dart guards this with `assert`, so a profile or release build attaches without checking.
+        if (Constants.KDebugMode
+            && scope.AutofillClients.Any(client => !client.TextInputConfiguration.AutofillConfiguration.Enabled))
         {
             throw new InvalidOperationException(
                 "Every client in AutofillScope.autofillClients must enable autofill");

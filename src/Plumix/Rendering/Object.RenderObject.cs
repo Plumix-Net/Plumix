@@ -143,7 +143,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// See also:
     ///
     ///  * [BindingBase.reassembleApplication]
-    public void Reassemble()
+    public virtual void Reassemble()
     {
         EnsureNotDisposedMutation();
         MarkNeedsLayout();

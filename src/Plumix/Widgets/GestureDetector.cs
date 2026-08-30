@@ -167,8 +167,8 @@ public sealed class GestureDetector : StatelessWidget
 
     /// <summary>
     /// Dart's constructor assert: scale is a superset of pan, so the two are redundant together, and
-    /// either of them is swallowed by having both drag axes. C# has no assert elision, so the check
-    /// always runs and throws the same <see cref="FlutterError"/> Dart builds.
+    /// either of them is swallowed by having both drag axes. The check is gated on
+    /// <see cref="Constants.KDebugMode"/> so that it is elided exactly where Dart strips the assert.
     /// </summary>
     private static void AssertRecognizerCombination(
         bool haveVerticalDrag,
@@ -176,7 +176,7 @@ public sealed class GestureDetector : StatelessWidget
         bool havePan,
         bool haveScale)
     {
-        if (!havePan && !haveScale)
+        if (!Constants.KDebugMode || (!havePan && !haveScale))
         {
             return;
         }
@@ -720,7 +720,7 @@ public sealed class RawGestureDetectorState : State
     /// </remarks>
     public void ReplaceGestureRecognizers(IReadOnlyDictionary<Type, IGestureRecognizerFactory> gestures)
     {
-        if (Context.FindRenderObject()?.Owner is not { DebugDoingLayout: true })
+        if (Constants.KDebugMode && Context.FindRenderObject()?.Owner is not { DebugDoingLayout: true })
         {
             throw new FlutterError([
                 new ErrorSummary(
@@ -756,10 +756,15 @@ public sealed class RawGestureDetectorState : State
 
         if (Context.FindRenderObject() is not RenderSemanticsGestureHandler handler)
         {
-            throw new FlutterError(
-                "Unexpected call to ReplaceSemanticsActions() method of RawGestureDetectorState.\n"
-                + "The ReplaceSemanticsActions() method can only be called after the "
-                + "RenderSemanticsGestureHandler has been created.");
+            if (Constants.KDebugMode)
+            {
+                throw new FlutterError(
+                    "Unexpected call to ReplaceSemanticsActions() method of RawGestureDetectorState.\n"
+                    + "The ReplaceSemanticsActions() method can only be called after the "
+                    + "RenderSemanticsGestureHandler has been created.");
+            }
+
+            return;
         }
 
         handler.ValidActions = actions;
@@ -784,7 +789,7 @@ public sealed class RawGestureDetectorState : State
         _recognizers = recognizers;
         foreach ((Type type, IGestureRecognizerFactory factory) in gestures)
         {
-            if (!factory.HandlesType(type))
+            if (Constants.KDebugMode && !factory.HandlesType(type))
             {
                 throw new FlutterError(
                     $"GestureRecognizerFactory of type {factory.RecognizerType} was used where type "
@@ -794,7 +799,7 @@ public sealed class RawGestureDetectorState : State
             if (!oldRecognizers.TryGetValue(type, out GestureRecognizer? recognizer))
             {
                 recognizer = factory.ConstructorRaw();
-                if (recognizer.GetType() != type)
+                if (Constants.KDebugMode && recognizer.GetType() != type)
                 {
                     throw new FlutterError(
                         $"GestureRecognizerFactory of type {type} created a GestureRecognizer of type "

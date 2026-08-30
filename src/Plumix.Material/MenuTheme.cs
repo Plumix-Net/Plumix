@@ -10,7 +10,7 @@ namespace Plumix.Material;
 /// Flutter declares this as an ordinary class so <see cref="MenuBarThemeData"/> can extend it; Plumix
 /// keeps that shape, which is why the members are `virtual` rather than record properties.
 /// </remarks>
-public class MenuThemeData
+public class MenuThemeData : IDiagnosticable
 {
     public MenuThemeData(
         MenuStyle? style = null,
@@ -57,6 +57,19 @@ public class MenuThemeData
         }
 
         return Equals(Style, other.Style) && Equals(SubmenuIcon, other.SubmenuIcon);
+    }
+
+    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.Add(new DiagnosticsProperty<MenuStyle?>(
+            "style",
+            Style,
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Widget?>?>(
+            "submenuIcon",
+            SubmenuIcon,
+            defaultValue: DiagnosticsDefaults.NullValue));
     }
 
     public override int GetHashCode() => HashCode.Combine(Style, SubmenuIcon);

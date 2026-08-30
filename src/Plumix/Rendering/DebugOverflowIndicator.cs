@@ -40,6 +40,19 @@ internal sealed class DebugOverflowIndicator
 
     private bool _overflowReportNeeded = true;
 
+    /// <summary>
+    /// Dart's <c>DebugOverflowIndicatorMixin.reassemble</c>: users expect the overflow error to be
+    /// reported again after a hot reload, so the one-shot report flag is armed again. Dart wraps the
+    /// reset in an `assert`, so it only happens in a debug build.
+    /// </summary>
+    public void Reassemble()
+    {
+        if (Constants.KDebugMode)
+        {
+            _overflowReportNeeded = true;
+        }
+    }
+
     /// To be called when the overflow indicators should be painted.
     ///
     /// Typically only called if there is an overflow, and only from within a debug build.

@@ -258,6 +258,48 @@ public sealed class MaterialNavigationSurfacesTests
     }
 
     [Fact]
+    public void NavigationBar_CarriesTheTabBarAndTabRolesDartDeclares()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            BarHost(new NavigationBar(
+                destinations: BarDestinations(),
+                selectedIndex: 1,
+                onDestinationSelected: _ => { }))));
+
+        var root = harness.PumpAndGetSemantics(new Size(320, 160));
+
+        var bar = FindSemantics(root, node => node.Role == SemanticsRole.TabBar);
+        Assert.NotNull(bar);
+
+        var tabs = new List<SemanticsNode>();
+        CollectSemantics(bar!, node => node.Role == SemanticsRole.Tab, tabs);
+        Assert.Equal(2, tabs.Count);
+
+        // The role does not fold into the flag set, so the destination still merges into one node
+        // carrying its own button/selected flags and the localized index label.
+        Assert.True(tabs[1].Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.True(tabs[1].Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.Contains("Tab 2 of 2", tabs[1].Label, StringComparison.Ordinal);
+    }
+
+    private static void CollectSemantics(
+        SemanticsNode node,
+        Func<SemanticsNode, bool> predicate,
+        List<SemanticsNode> into)
+    {
+        if (predicate(node))
+        {
+            into.Add(node);
+        }
+
+        foreach (SemanticsNode child in node.Children)
+        {
+            CollectSemantics(child, predicate, into);
+        }
+    }
+
+    [Fact]
     public void NavigationDrawer_ValidatesGeometryAndDestinationContract()
     {
         Assert.Throws<ArgumentOutOfRangeException>(() => new NavigationDrawer(

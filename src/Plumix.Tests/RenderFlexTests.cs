@@ -352,6 +352,41 @@ public sealed class RenderFlexTests
             details.InformationCollector!().Select(node => node.ToString()));
     }
 
+    [DebugOnlyFact]
+    public void RenderFlex_Reassemble_ArmsTheOverflowReportAgain()
+    {
+        // Dart's `DebugOverflowIndicatorMixin.reassemble`: users expect the error again after a hot
+        // reload, so `RenderObject.reassemble` resets the one-shot report flag.
+        var flex = new RenderFlex(
+            children: [Box(200, 100)],
+            direction: Axis.Vertical,
+            textDirection: TextDirection.Ltr);
+        Layout(flex, BoxConstraints.Tight(new Size(100, 50)));
+
+        var reported = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = reported.Add;
+        try
+        {
+            flex.UpdateCompositingBits();
+            flex.Paint(new PaintingContext(new ContainerLayer()), default);
+            Assert.Single(reported);
+
+            flex.Paint(new PaintingContext(new ContainerLayer()), default);
+            Assert.Single(reported);
+
+            flex.Reassemble();
+            Layout(flex, BoxConstraints.Tight(new Size(100, 50)));
+            flex.UpdateCompositingBits();
+            flex.Paint(new PaintingContext(new ContainerLayer()), default);
+            Assert.Equal(2, reported.Count);
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
+    }
+
     [Fact]
     public void RenderFlex_VerticalOverflowWithSpacing_AddsTheGapToTheMainIntrinsic()
     {

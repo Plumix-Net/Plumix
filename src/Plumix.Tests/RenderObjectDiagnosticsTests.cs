@@ -430,6 +430,21 @@ public sealed class RenderObjectDiagnosticsTests
     }
 
     [Fact]
+    public void ColorProperty_SpellsTheValueTheWayDartUiDoes()
+    {
+        // dart:ui's `Color.toString`, not Avalonia's `#AARRGGBB`.
+        Assert.Equal(
+            "Color(alpha: 1.0000, red: 0.3922, green: 0.5843, blue: 0.9294, colorSpace: ColorSpace.sRGB)",
+            new ColorProperty("color", Avalonia.Media.Color.FromArgb(0xFF, 0x64, 0x95, 0xED)).ValueToString());
+        Assert.Equal(
+            "Color(alpha: 0.0000, red: 0.0000, green: 0.0000, blue: 0.0000, colorSpace: ColorSpace.sRGB)",
+            new ColorProperty("color", Avalonia.Media.Color.FromArgb(0, 0, 0, 0)).ValueToString());
+
+        // A null colour keeps the base spelling.
+        Assert.Equal("null", new ColorProperty("color", null).ValueToString());
+    }
+
+    [Fact]
     public void TransformProperty_RendersOneRowPerLineAndCollapsesInsideASingleLineParent()
     {
         var property = new TransformProperty("transform", Matrix4.Identity());

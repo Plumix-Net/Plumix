@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -13,7 +14,7 @@ namespace Plumix.Material;
 /// Flutter declares this as an ordinary class so `_MenuBarDefaultsM3`/`_MenuDefaultsM3` can extend it
 /// and override individual getters against the ambient `ColorScheme`; Plumix keeps that shape, which
 /// is why the members are `virtual` rather than record properties.
-public class MenuStyle
+public class MenuStyle : IDiagnosticable
 {
     public MenuStyle(
         MaterialStateProperty<Color?>? backgroundColor = null,
@@ -197,6 +198,64 @@ public class MenuStyle
                && Equals(MouseCursor, other.MouseCursor)
                && Equals(VisualDensity, other.VisualDensity)
                && Equals(Alignment, other.Alignment);
+    }
+
+    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Color?>?>(
+            "backgroundColor",
+            BackgroundColor,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Color?>?>(
+            "shadowColor",
+            ShadowColor,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Color?>?>(
+            "surfaceTintColor",
+            SurfaceTintColor,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<double?>?>(
+            "elevation",
+            Elevation,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<EdgeInsetsGeometry?>?>(
+            "padding",
+            Padding,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Size?>?>(
+            "minimumSize",
+            MinimumSize,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Size?>?>(
+            "fixedSize",
+            FixedSize,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Size?>?>(
+            "maximumSize",
+            MaximumSize,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<BorderSide?>?>(
+            "side",
+            Side,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<OutlinedBorder?>?>(
+            "shape",
+            Shape,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<MaterialStateProperty<MouseCursor?>?>(
+            "mouseCursor",
+            MouseCursor,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<VisualDensity?>(
+            "visualDensity",
+            VisualDensity,
+            defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<AlignmentGeometry?>(
+            "alignment",
+            Alignment,
+            defaultValue: nullDefault));
     }
 
     public override int GetHashCode()

@@ -26,7 +26,7 @@ public class MenuBarThemeData : MenuThemeData
 }
 
 /// <summary>Button-style overrides shared by <see cref="MenuItemButton"/> and <see cref="SubmenuButton"/>.</summary>
-public class MenuButtonThemeData
+public class MenuButtonThemeData : IDiagnosticable
 {
     public MenuButtonThemeData(ButtonStyle? style = null)
     {
@@ -63,6 +63,15 @@ public class MenuButtonThemeData
         }
 
         return Equals(Style, other.Style);
+    }
+
+    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.Add(new DiagnosticsProperty<ButtonStyle?>(
+            "style",
+            Style,
+            defaultValue: DiagnosticsDefaults.NullValue));
     }
 
     public override int GetHashCode() => Style?.GetHashCode() ?? 0;

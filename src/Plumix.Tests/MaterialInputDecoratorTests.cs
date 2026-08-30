@@ -16,6 +16,39 @@ public sealed class MaterialInputDecoratorTests
     private const double InputGapM3 = 4.0;
     private const double FinalLabelScale = 0.75;
 
+    [DebugOnlyFact]
+    public void InputDecorationThemeData_DebugFillProperties_ListsEveryFieldInDartsOrder()
+    {
+        var properties = new DiagnosticPropertiesBuilder();
+        new InputDecorationThemeData().DebugFillProperties(properties);
+
+        Assert.Equal(
+            [
+                "labelStyle", "floatingLabelStyle", "helperStyle", "helperMaxLines", "hintStyle",
+                "hintFadeDuration", "hintMaxLines", "errorStyle", "errorMaxLines",
+                "floatingLabelBehavior", "floatingLabelAlignment", "isDense", "contentPadding",
+                "isCollapsed", "iconColor", "prefixIconColor", "prefixIconConstraints", "prefixStyle",
+                "suffixIconColor", "suffixIconConstraints", "suffixStyle", "counterStyle", "filled",
+                "fillColor", "activeIndicatorBorder", "outlineBorder", "focusColor", "hoverColor",
+                "errorBorder", "focusedBorder", "focusedErrorBorder", "disabledBorder",
+                "enabledBorder", "border", "alignLabelWithHint", "constraints", "visualDensity",
+            ],
+            properties.Properties.Select(property => property.Name).ToList());
+
+        // Dart passes `defaultValue: defaultTheme.<field>`, so a default theme hides every entry.
+        Assert.All(properties.Properties, property => Assert.Equal(DiagnosticLevel.Fine, property.Level));
+
+        var changed = new DiagnosticPropertiesBuilder();
+        new InputDecorationThemeData(isDense: true, filled: true, helperMaxLines: 3)
+            .DebugFillProperties(changed);
+        Assert.Equal(
+            ["helperMaxLines", "isDense", "filled"],
+            changed.Properties
+                .Where(property => property.Level != DiagnosticLevel.Fine)
+                .Select(property => property.Name)
+                .ToList());
+    }
+
     [Fact]
     public void InputDecoration_ValidatesExclusiveSlotsAndCollapsedDefaults()
     {

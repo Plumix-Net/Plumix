@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
@@ -14,7 +15,7 @@ namespace Plumix.Material;
 /// Flutter declares this as an ordinary class so `_InputDecoratorDefaultsM2`/`_InputDecoratorDefaultsM3`
 /// can extend it and override individual getters with state-resolving values; Plumix keeps that shape,
 /// which is why the members are `virtual` rather than record properties.
-public class InputDecorationThemeData
+public class InputDecorationThemeData : IDiagnosticable
 {
     public InputDecorationThemeData(
         WidgetStateTextStyle? labelStyle = null,
@@ -303,6 +304,86 @@ public class InputDecorationThemeData
                && AlignLabelWithHint == other.AlignLabelWithHint
                && Nullable.Equals(Constraints, other.Constraints)
                && Nullable.Equals(VisualDensity, other.VisualDensity);
+    }
+
+    /// <summary>Dart's `InputDecorationThemeData.debugFillProperties`.</summary>
+    /// <remarks>
+    /// The state-resolving members are typed `WidgetState*` here rather than the plain `TextStyle`,
+    /// `Color` and `BorderSide` Dart declares (see the `WidgetState` row in
+    /// `docs/ai/DIVERGENCES.md`), so they are dumped through `DiagnosticsProperty` of that type;
+    /// name, order, level and default-value elision match Dart.
+    /// </remarks>
+    public virtual void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        ArgumentNullException.ThrowIfNull(properties);
+        var defaultTheme = new InputDecorationThemeData();
+        object nullDefault = DiagnosticsDefaults.NullValue;
+        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+            "labelStyle", LabelStyle, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+            "floatingLabelStyle", FloatingLabelStyle, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+            "helperStyle", HelperStyle, defaultValue: nullDefault));
+        properties.Add(new IntProperty("helperMaxLines", HelperMaxLines, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+            "hintStyle", HintStyle, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<TimeSpan?>(
+            "hintFadeDuration", HintFadeDuration, defaultValue: nullDefault));
+        properties.Add(new IntProperty("hintMaxLines", HintMaxLines, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+            "errorStyle", ErrorStyle, defaultValue: nullDefault));
+        properties.Add(new IntProperty("errorMaxLines", ErrorMaxLines, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<FloatingLabelBehavior>(
+            "floatingLabelBehavior", FloatingLabelBehavior, defaultValue: defaultTheme.FloatingLabelBehavior));
+        properties.Add(new DiagnosticsProperty<FloatingLabelAlignment>(
+            "floatingLabelAlignment", FloatingLabelAlignment, defaultValue: defaultTheme.FloatingLabelAlignment));
+        properties.Add(new DiagnosticsProperty<bool>("isDense", IsDense, defaultValue: defaultTheme.IsDense));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>(
+            "contentPadding", ContentPadding, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<bool>(
+            "isCollapsed", IsCollapsed, defaultValue: defaultTheme.IsCollapsed));
+        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+            "iconColor", IconColor, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+            "prefixIconColor", PrefixIconColor, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<BoxConstraints?>(
+            "prefixIconConstraints", PrefixIconConstraints, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+            "prefixStyle", PrefixStyle, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+            "suffixIconColor", SuffixIconColor, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<BoxConstraints?>(
+            "suffixIconConstraints", SuffixIconConstraints, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+            "suffixStyle", SuffixStyle, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateTextStyle?>(
+            "counterStyle", CounterStyle, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<bool>("filled", Filled, defaultValue: defaultTheme.Filled));
+        properties.Add(new DiagnosticsProperty<WidgetStateColor?>(
+            "fillColor", FillColor, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateBorderSide?>(
+            "activeIndicatorBorder", ActiveIndicatorBorder, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<WidgetStateBorderSide?>(
+            "outlineBorder", OutlineBorder, defaultValue: nullDefault));
+        properties.Add(new ColorProperty("focusColor", FocusColor, defaultValue: nullDefault));
+        properties.Add(new ColorProperty("hoverColor", HoverColor, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<InputBorder?>(
+            "errorBorder", ErrorBorder, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<InputBorder?>(
+            "focusedBorder", FocusedBorder, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<InputBorder?>(
+            "focusedErrorBorder", FocusedErrorBorder, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<InputBorder?>(
+            "disabledBorder", DisabledBorder, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<InputBorder?>(
+            "enabledBorder", EnabledBorder, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<InputBorder?>("border", Border, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<bool>(
+            "alignLabelWithHint", AlignLabelWithHint, defaultValue: defaultTheme.AlignLabelWithHint));
+        properties.Add(new DiagnosticsProperty<BoxConstraints?>(
+            "constraints", Constraints, defaultValue: nullDefault));
+        properties.Add(new DiagnosticsProperty<VisualDensity?>(
+            "visualDensity", VisualDensity, defaultValue: nullDefault));
     }
 
     public override int GetHashCode()

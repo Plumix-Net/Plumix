@@ -59,7 +59,7 @@ public sealed class Theme : InheritedTheme
 
     // Dart's `Theme._wrapsWidgetThemes`: the inherited themes in the widgets library cannot infer
     // their values from a Material `Theme`, so the subtree is wrapped in the widget-library themes
-    // that carry them. `DefaultTextStyle` is Plumix's own addition (see `DIVERGENCES.md`).
+    // that carry them. The text style is not among them - `Material` installs it.
     private static Widget WrapsWidgetThemes(BuildContext context, ThemeData data, Widget child)
     {
         DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
@@ -68,9 +68,7 @@ public sealed class Theme : InheritedTheme
             child: new DefaultSelectionStyle(
                 selectionColor: data.TextSelectionTheme.SelectionColor ?? selectionStyle.SelectionColor,
                 cursorColor: data.TextSelectionTheme.CursorColor ?? selectionStyle.CursorColor,
-                child: new DefaultTextStyle(
-                    style: data.TextTheme.BodyMedium,
-                    child: child)));
+                child: child));
     }
 
     public override Widget Wrap(BuildContext context, Widget child)

@@ -85,7 +85,6 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         IncreasedValue = increasedValue;
         DecreasedValue = decreasedValue;
         Flags = flags
-                | RoleFlags(role)
                 | (scopesRoute ? SemanticsFlags.ScopesRoute : SemanticsFlags.None)
                 | (namesRoute ? SemanticsFlags.NamesRoute : SemanticsFlags.None)
                 | (expanded.HasValue ? SemanticsFlags.HasExpandedState : SemanticsFlags.None)
@@ -317,13 +316,6 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.AccessibilityFocusBlockType = AccessibilityFocusBlockType;
     }
 
-    private static SemanticsFlags RoleFlags(SemanticsRole role) => role switch
-    {
-        SemanticsRole.Dialog => SemanticsFlags.IsDialog,
-        SemanticsRole.AlertDialog => SemanticsFlags.IsAlertDialog,
-        SemanticsRole.MenuItem or SemanticsRole.MenuItemCheckbox or SemanticsRole.Tab => SemanticsFlags.IsButton,
-        _ => SemanticsFlags.None,
-    };
 }
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (MergeSemantics)

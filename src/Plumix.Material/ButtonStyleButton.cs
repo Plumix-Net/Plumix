@@ -518,12 +518,14 @@ public sealed class ButtonStyleState : State
             statesController: StatesController,
             child: result);
 
-        // Dart wraps this in `AnimatedTheme(data: theme.copyWith(iconTheme: ...))`, whose only effect
-        // is animating the icon theme. Plumix's `Theme` also installs a `DefaultTextStyle`
-        // (`docs/ai/DIVERGENCES.md`), which would clobber the text style `Material` just set, so the
-        // icon theme is animated directly instead.
-        result = new AnimatedIconTheme(
-            data: iconTheme.Merge(new IconThemeData(Color: resolvedIconColor, Size: resolvedIconSize)),
+        // Dart's `AnimatedTheme(data: theme.copyWith(iconTheme: ...))`: its only effect is animating
+        // the icon theme, but a descendant reading `Theme.of(context)` sees the button's icon theme.
+        result = new AnimatedTheme(
+            data: theme with
+            {
+                IconTheme = iconTheme.Merge(
+                    new IconThemeData(Color: resolvedIconColor, Size: resolvedIconSize)),
+            },
             duration: resolvedAnimationDuration,
             child: result);
 

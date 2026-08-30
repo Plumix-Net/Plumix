@@ -222,6 +222,13 @@ public class RenderFlex : RenderBox, IRenderBoxContainerDefaultsMixin<RenderBox,
     // Dart mixes `DebugOverflowIndicatorMixin` in; C# has no mixins, so its state lives here.
     private readonly DebugOverflowIndicator _debugOverflowIndicator = new();
 
+    /// <inheritdoc />
+    public override void Reassemble()
+    {
+        base.Reassemble();
+        _debugOverflowIndicator.Reassemble();
+    }
+
     // Check whether any meaningful overflow is present. Values below an epsilon
     // are treated as not overflowing.
     public bool _hasOverflow => _overflow > Constants.PrecisionErrorTolerance;

@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Cupertino;
 using Plumix.Foundation;
 using Plumix.Material;
+using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -17,6 +18,29 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
     public MaterialTextSelectionThemeTests() => FocusManager.Instance.ResetForTests();
 
     public void Dispose() => FocusManager.Instance.ResetForTests();
+
+    [DebugOnlyFact]
+    public void TextSelectionThemeData_DebugFillProperties_MatchesFlutter()
+    {
+        // Flutter's `text_selection_theme_test.dart`: three `ColorProperty` entries, and a default
+        // instance elides all of them.
+        var defaults = new DiagnosticPropertiesBuilder();
+        new TextSelectionThemeData().DebugFillProperties(defaults);
+        Assert.Equal(
+            ["cursorColor", "selectionColor", "selectionHandleColor"],
+            defaults.Properties.Select(property => property.Name).ToList());
+        Assert.Empty(defaults.Properties.Where(property => property.Value is not null));
+
+        var filled = new DiagnosticPropertiesBuilder();
+        new TextSelectionThemeData(
+            CursorColor: Color.FromUInt32(0xffeeffaa),
+            SelectionColor: Color.FromUInt32(0x88888888),
+            SelectionHandleColor: Color.FromUInt32(0xaabbccdd)).DebugFillProperties(filled);
+        Assert.All(filled.Properties, property => Assert.IsType<ColorProperty>(property));
+        Assert.Equal(
+            "Color(alpha: 1.0000, red: 0.9333, green: 1.0000, blue: 0.6667, colorSpace: ColorSpace.sRGB)",
+            ((ColorProperty)filled.Properties[0]).ValueToString());
+    }
 
     [Fact]
     public void TextSelectionThemeData_CopyWithEqualsAndHashCodeBasics()

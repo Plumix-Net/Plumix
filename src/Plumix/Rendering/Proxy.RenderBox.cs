@@ -619,6 +619,13 @@ public sealed class RenderConstraintsTransformBox : RenderProxyBox
     // Dart mixes `DebugOverflowIndicatorMixin` in; C# has no mixins, so its state lives here.
     private readonly DebugOverflowIndicator _debugOverflowIndicator = new();
 
+    /// <inheritdoc />
+    public override void Reassemble()
+    {
+        base.Reassemble();
+        _debugOverflowIndicator.Reassemble();
+    }
+
     public RenderConstraintsTransformBox(
         AlignmentGeometry alignment,
         TextDirection? textDirection,

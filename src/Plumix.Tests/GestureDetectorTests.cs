@@ -584,7 +584,7 @@ public sealed class GestureDetectorTests
         Assert.NotNull(handler.OnLongPress);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void SyncAll_RejectsAFactoryRegisteredUnderTheWrongType()
     {
         var harness = new ScrollSemanticsHarness(new SizedBox(width: 4.0, height: 4.0));
@@ -601,6 +601,41 @@ public sealed class GestureDetectorTests
                             _ => { }),
                 }));
         });
+    }
+
+    [Fact]
+    public void BuildModeGates_TheGestureDetectorContractChecksRunOnlyInADebugBuild()
+    {
+        // Dart wraps the constructor combination check, the `replaceGestureRecognizers` layout-phase
+        // check, `_debugAssertTypeMatches` and the `replaceSemanticsActions` render-object check in
+        // `assert(...)`, so a release build runs none of them. The `[DebugOnlyFact]` tests above
+        // cover the debug half; this covers the two observable elided halves in every configuration
+        // (a mismatched factory type still breaks the semantics delegate's cast, in Dart as here).
+        if (Constants.KDebugMode)
+        {
+            Assert.Throws<FlutterError>(() => new GestureDetector(
+                onPanUpdate: _ => { },
+                onScaleUpdate: _ => { }));
+            return;
+        }
+
+        var detector = new GestureDetector(onPanUpdate: _ => { }, onScaleUpdate: _ => { });
+        Assert.NotNull(detector);
+
+        var harness = new ScrollSemanticsHarness(new RawGestureDetector(
+            child: new SizedBox(width: 4.0, height: 4.0)));
+        harness.Pump(SurfaceSize);
+        RawGestureDetectorState state = FindDetectorState(harness.RootElement);
+
+        // Called outside the layout phase: silently accepted.
+        state.ReplaceGestureRecognizers(new Dictionary<Type, IGestureRecognizerFactory>
+        {
+            [typeof(LongPressGestureRecognizer)] =
+                new GestureRecognizerFactoryWithHandlers<LongPressGestureRecognizer>(
+                    () => new LongPressGestureRecognizer(),
+                    _ => { }),
+        });
+        Assert.Equal([typeof(LongPressGestureRecognizer)], state.Recognizers.Keys);
     }
 
     [DebugOnlyFact]

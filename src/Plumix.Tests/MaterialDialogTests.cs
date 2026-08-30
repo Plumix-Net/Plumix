@@ -63,7 +63,7 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.Contains(FindDescendants<RenderDecoratedBox>(harness.RenderView), box =>
             box.Decoration.Color == ThemeData.Light.ColorScheme.SurfaceContainerHigh
             && box.Decoration.EffectiveBorderRadius == BorderRadius.Circular(28));
-        Assert.NotNull(FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsDialog)));
+        Assert.NotNull(FindSemantics(semantics, node => node.Role == SemanticsRole.Dialog));
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public sealed class MaterialDialogTests : IDisposable
             HasLabelPart(node, "Alert")
             && node.Flags.HasFlag(SemanticsFlags.ScopesRoute)
             && node.Flags.HasFlag(SemanticsFlags.NamesRoute)));
-        Assert.NotNull(FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsAlertDialog)));
+        Assert.NotNull(FindSemantics(semantics, node => node.Role == SemanticsRole.AlertDialog));
     }
 
     [Fact]
@@ -267,7 +267,7 @@ public sealed class MaterialDialogTests : IDisposable
             HasLabelPart(node, "Dialog")
             && node.Flags.HasFlag(SemanticsFlags.ScopesRoute)
             && node.Flags.HasFlag(SemanticsFlags.NamesRoute)));
-        Assert.NotNull(FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsDialog)));
+        Assert.NotNull(FindSemantics(semantics, node => node.Role == SemanticsRole.Dialog));
     }
 
     [Fact]

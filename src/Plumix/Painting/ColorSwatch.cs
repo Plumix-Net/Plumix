@@ -164,6 +164,17 @@ public sealed class ColorProperty : DiagnosticsProperty<Color?>
     {
     }
 
+    /// <summary>
+    /// Renders the colour the way dart:ui's <c>Color.toString</c> does rather than the way
+    /// Avalonia's <see cref="Color.ToString"/> does, so a diagnostics dump reads like Flutter's.
+    /// </summary>
+    public override string ValueToString(TextTreeConfiguration? parentConfiguration = null)
+    {
+        return TypedValue is { } color
+            ? color.ToDartString()
+            : base.ValueToString(parentConfiguration);
+    }
+
     /// <inheritdoc />
     public override Dictionary<string, object?> ToJsonMap(DiagnosticsSerializationDelegate serializationDelegate)
     {

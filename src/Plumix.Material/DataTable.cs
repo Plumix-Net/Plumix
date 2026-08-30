@@ -431,10 +431,12 @@ public sealed class DataTable : StatelessWidget
                 duration: TimeSpan.FromMilliseconds(150)));
             content.Add(new SizedBox(width: 2.0));
         }
-        Widget label = new Row(
-            mainAxisAlignment: alignment,
-            textDirection: column.Numeric ? TextDirection.Rtl : null,
-            children: content);
+        Widget label = new Semantics(
+            role: SemanticsRole.ColumnHeader,
+            child: new Row(
+                mainAxisAlignment: alignment,
+                textDirection: column.Numeric ? TextDirection.Rtl : null,
+                children: content));
         TextStyle effectiveStyle = DefaultTextStyle.Of(context).Merge(style);
         Alignment cellAlignment = column.Numeric
             ? Alignment.CenterRight
@@ -462,12 +464,7 @@ public sealed class DataTable : StatelessWidget
             overlayColor: overlayColor,
             mouseCursor: column.MouseCursor?.Resolve(states) ?? tableTheme.HeadingCellCursor?.Resolve(states),
             child: label);
-        // Flutter's semantics fragments preserve the inner annotation through InkWell. Plumix's table compiler
-        // consumes the cell's outer node, so keep the same resulting role at that boundary.
-        return new Semantics(
-            container: true,
-            role: SemanticsRole.ColumnHeader,
-            child: inkWell);
+        return inkWell;
     }
 
     private static Widget BuildDataCell(
