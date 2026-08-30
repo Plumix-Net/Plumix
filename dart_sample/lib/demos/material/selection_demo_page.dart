@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
-import 'package:flutter/rendering.dart' show SelectedContent;
+import 'package:flutter/rendering.dart'
+    show SelectedContent, SelectedContentRange;
 
 class SelectionDemoPage extends StatefulWidget {
   const SelectionDemoPage({super.key});
@@ -9,9 +10,34 @@ class SelectionDemoPage extends StatefulWidget {
 }
 
 class _SelectionDemoPageState extends State<SelectionDemoPage> {
+  final SelectionListenerNotifier _selectionNotifier =
+      SelectionListenerNotifier();
   bool _interactive = true;
   String _singleSelection = 'none';
   String _areaSelection = 'none';
+  String _listenerDetails = 'none';
+
+  @override
+  void initState() {
+    super.initState();
+    _selectionNotifier.addListener(_handleSelectionDetailsChanged);
+  }
+
+  void _handleSelectionDetailsChanged() {
+    final SelectionDetails details = _selectionNotifier.selection;
+    final SelectedContentRange? range = details.range;
+    setState(() {
+      _listenerDetails = range == null
+          ? '${details.status.name}: none'
+          : '${details.status.name}: ${range.startOffset}..${range.endOffset}';
+    });
+  }
+
+  @override
+  void dispose() {
+    _selectionNotifier.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,28 +110,31 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
               onSelectionChanged: (SelectedContent? content) {
                 setState(() => _areaSelection = content?.plainText ?? 'none');
               },
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF4FBF8),
-                  border: Border.all(color: const Color(0xFF80CBC4)),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    spacing: 6,
-                    children: <Widget>[
-                      Text('SelectionArea coordinates selection across'),
-                      Text('multiple Text widgets in one subtree.'),
-                      Row(
-                        spacing: 8,
-                        children: <Widget>[
-                          Text('It also works'),
-                          Text('across a Row.'),
-                        ],
-                      ),
-                    ],
+              child: SelectionListener(
+                selectionNotifier: _selectionNotifier,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF4FBF8),
+                    border: Border.all(color: const Color(0xFF80CBC4)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      spacing: 6,
+                      children: <Widget>[
+                        Text('SelectionArea coordinates selection across'),
+                        Text('multiple Text widgets in one subtree.'),
+                        Row(
+                          spacing: 8,
+                          children: <Widget>[
+                            Text('It also works'),
+                            Text('across a Row.'),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -114,6 +143,10 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
           Text(
             'Area selection: $_areaSelection',
             maxLines: 3,
+            style: const TextStyle(fontSize: 13),
+          ),
+          Text(
+            'SelectionListener: $_listenerDetails',
             style: const TextStyle(fontSize: 13),
           ),
           const Divider(),
