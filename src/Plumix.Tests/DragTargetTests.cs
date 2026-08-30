@@ -283,6 +283,17 @@ public sealed class DragTargetTests
         Assert.Equal(Clip.HardEdge, theater.ClipBehavior);
     }
 
+    /// <summary>
+    /// Counts what <see cref="RenderObject.VisitChildren"/> reaches: the theater's own children plus
+    /// the overlay children adopted from the <c>OverlayPortal</c>s hosted on them.
+    /// </summary>
+    private static int CountVisitedChildren(RenderObject renderObject)
+    {
+        int count = 0;
+        renderObject.VisitChildren(_ => count += 1);
+        return count;
+    }
+
     [Fact]
     public void OverlayPortal_ControllerAndInheritedSubtreeMatchFlutter()
     {
@@ -342,7 +353,11 @@ public sealed class DragTargetTests
         Assert.Equal(new Thickness(10), portalMedia?.Padding);
         Assert.Equal(2.0, portalMedia?.TextScaleFactor);
         Assert.Equal(1, overlayBuilds);
-        Assert.Equal(2, theater.ChildCount);
+
+        // The overlay child is adopted by the theater but never listed among its children, exactly as
+        // Flutter's `_RenderTheater` does: only the tree walk sees it.
+        Assert.Equal(1, theater.ChildCount);
+        Assert.Equal(2, CountVisitedChildren(theater));
         Assert.Equal(new Size(30, 20), harness.FindRenderObject<RenderColoredBox>().Size);
 
         DateTime now = DateTime.UtcNow;
@@ -363,12 +378,14 @@ public sealed class DragTargetTests
         controller.Show();
         harness.Pump();
         Assert.True(controller.IsShowing);
-        Assert.Equal(2, theater.ChildCount);
+        Assert.Equal(1, theater.ChildCount);
+        Assert.Equal(2, CountVisitedChildren(theater));
 
         controller.Hide();
         harness.Pump();
         Assert.False(controller.IsShowing);
         Assert.Equal(1, theater.ChildCount);
+        Assert.Equal(1, CountVisitedChildren(theater));
         Assert.Empty(harness.FindWidgets<ColoredBox>());
     }
 
@@ -391,12 +408,15 @@ public sealed class DragTargetTests
         IReadOnlyList<RenderOverlayTheater> theaters = harness.FindRenderObjects<RenderOverlayTheater>();
 
         Assert.Equal(2, theaters.Count);
-        Assert.Equal(2, theaters[0].ChildCount);
+        Assert.Equal(1, theaters[0].ChildCount);
+        Assert.Equal(2, CountVisitedChildren(theaters[0]));
         Assert.Equal(1, theaters[1].ChildCount);
+        Assert.Equal(1, CountVisitedChildren(theaters[1]));
 
         controller.Hide();
         harness.Pump();
         Assert.Equal(1, theaters[0].ChildCount);
+        Assert.Equal(1, CountVisitedChildren(theaters[0]));
         Assert.Empty(harness.FindWidgets<ColoredBox>());
     }
 

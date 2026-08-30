@@ -10,15 +10,30 @@ namespace Plumix.Rendering;
 
 internal sealed class OverlayTheaterParentData : StackParentData
 {
-    public bool CanSizeOverlay { get; set; }
+    /// <summary>
+    /// The entry this child was built for, or <see langword="null"/> for a child adopted from an
+    /// <c>OverlayPortal</c>, which is how the theater tells the two apart.
+    /// </summary>
+    /// <remarks>Flutter's <c>_TheaterParentData.overlayEntry</c>, renamed because C# forbids a member
+    /// whose name matches its own type.</remarks>
+    public OverlayEntry? Entry { get; set; }
 
-    public bool IsOnstage { get; set; } = true;
+    /// <remarks>Flutter's <c>_TheaterParentData.paintOrderIterator</c>.</remarks>
+    internal IEnumerable<RenderDeferredLayoutBox> PaintOrderChildren =>
+        Entry?.WidgetState?.PaintOrderChildren ?? [];
 
-    public bool IsPortal { get; set; }
+    /// <remarks>Flutter's <c>_TheaterParentData.hitTestOrderIterator</c>.</remarks>
+    internal IEnumerable<RenderDeferredLayoutBox> HitTestOrderChildren =>
+        Entry?.WidgetState?.HitTestOrderChildren ?? [];
 
-    public RenderBox? PortalAnchor { get; set; }
-
-    public long PortalZOrder { get; set; }
+    /// <remarks>Flutter's <c>_TheaterParentData.visitOverlayPortalChildrenOnOverlayEntry</c>.</remarks>
+    internal void VisitOverlayPortalChildrenOnOverlayEntry(Action<RenderObject> visitor)
+    {
+        foreach (RenderDeferredLayoutBox child in PaintOrderChildren)
+        {
+            visitor(child);
+        }
+    }
 }
 
 internal sealed class RenderOverlayTheater : RenderBox,
@@ -27,6 +42,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
 {
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, OverlayTheaterParentData> _container;
     private Alignment _alignment;
+    private int _skipCount;
     private Clip _clipBehavior;
     private bool _alwaysSizeToContent;
     private bool _hasVisualOverflow;
@@ -44,11 +60,18 @@ internal sealed class RenderOverlayTheater : RenderBox,
 
     public RenderOverlayTheater(
         Alignment alignment,
+        int skipCount,
         Clip clipBehavior,
         bool alwaysSizeToContent)
     {
+        if (skipCount < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(skipCount));
+        }
+
         _container = new RenderBoxContainerDefaultsMixin<RenderBox, OverlayTheaterParentData>(this);
         _alignment = alignment;
+        _skipCount = skipCount;
         _clipBehavior = clipBehavior;
         _alwaysSizeToContent = alwaysSizeToContent;
     }
@@ -64,6 +87,29 @@ internal sealed class RenderOverlayTheater : RenderBox,
             }
 
             _alignment = value;
+            MarkNeedsLayout();
+        }
+    }
+
+    /// <summary>How many of the leading children are offstage - hidden behind an opaque entry but
+    /// kept alive by <c>OverlayEntry.MaintainState</c>.</summary>
+    /// <remarks>Flutter's <c>_RenderTheater.skipCount</c>.</remarks>
+    public int SkipCount
+    {
+        get => _skipCount;
+        set
+        {
+            if (_skipCount == value)
+            {
+                return;
+            }
+
+            if (value < 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value));
+            }
+
+            _skipCount = value;
             MarkNeedsLayout();
         }
     }
@@ -247,23 +293,33 @@ internal sealed class RenderOverlayTheater : RenderBox,
         return DescribeApproximatePaintClip(child);
     }
 
+    /// <remarks>
+    /// Flutter's <c>_RenderTheater.visitChildren</c>: every entry, on- and offstage, followed by the
+    /// overlay children hosted on it. Deferred children are adopted but never listed in the sibling
+    /// chain, so this is the only walk that reaches them - and, because Plumix routes attach, detach
+    /// and redepth through <see cref="VisitChildren"/>, it also stands in for Dart's separate
+    /// <c>attach</c>/<c>detach</c>/<c>redepthChildren</c> overrides.
+    /// </remarks>
     public override void VisitChildren(Action<RenderObject> visitor)
     {
         for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
         {
+            var parentData = (OverlayTheaterParentData)child.parentData!;
             visitor(child);
+            parentData.VisitOverlayPortalChildrenOnOverlayEntry(visitor);
         }
     }
 
+    /// <remarks>Flutter's <c>_RenderTheater.visitChildrenForSemantics</c>: the same walk, starting at
+    /// the first onstage entry so entries hidden behind an opaque one - and their overlay children -
+    /// contribute nothing.</remarks>
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        foreach (RenderBox child in ChildrenInPaintOrder())
+        for (RenderBox? child = FirstOnstageChild; child is not null; child = ChildAfter(child))
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
-            if (!parentData.IsPortal)
-            {
-                visitor(child);
-            }
+            visitor(child);
+            parentData.VisitOverlayPortalChildrenOnOverlayEntry(visitor);
         }
     }
 
@@ -307,26 +363,17 @@ internal sealed class RenderOverlayTheater : RenderBox,
     }
 
     /// <remarks>
-    /// Flutter's <c>_RenderTheater._addDeferredChild</c> together with
-    /// <c>_OverlayEntryLocation._addToChildModel</c>: the theater adopts the box without dirtying its
-    /// own layout, and the layout surrogate is dirtied instead so the box is laid out in this frame.
+    /// Flutter's <c>_RenderTheater._addDeferredChild</c>. The box is adopted without being inserted
+    /// into the sibling chain, so <see cref="ChildCount"/>, <see cref="FirstChild"/> and
+    /// <see cref="LastChild"/> never see it; its position among the theater's children comes from the
+    /// hosting entry's child model instead. Adopting it must not dirty the theater's layout, so the
+    /// <c>MarkNeedsLayout</c> inside <c>AdoptChild</c> is swallowed by the counter and the repaint is
+    /// requested explicitly.
     /// </remarks>
-    internal void AddDeferredChild(
-        RenderDeferredLayoutBox child,
-        RenderBox anchor,
-        long zOrder)
+    internal void AddDeferredChild(RenderDeferredLayoutBox child)
     {
-        if (!ReferenceEquals(anchor.Parent, this))
-        {
-            throw new InvalidOperationException("An OverlayPortal anchor must belong to the target Overlay.");
-        }
-
         _outstandingDeferredChildUpdateCalls += 1;
-        Insert(child, after: anchor);
-        UpdatePortalParentData(child, anchor, zOrder);
-
-        // The overlay still needs repainting when a deferred child is added: `MarkNeedsLayout` usually
-        // implies `MarkNeedsPaint`, but here it is suppressed.
+        AdoptChild(child);
         MarkNeedsPaint();
         _outstandingDeferredChildUpdateCalls -= 1;
         Debug.Assert(_outstandingDeferredChildUpdateCalls >= 0);
@@ -334,32 +381,11 @@ internal sealed class RenderOverlayTheater : RenderBox,
         child.LayoutSurrogate.MarkNeedsLayout();
     }
 
-    /// <remarks>Flutter's <c>_OverlayEntryLocation._moveChild</c>.</remarks>
-    internal void MoveDeferredChild(
-        RenderDeferredLayoutBox child,
-        RenderOverlayTheater oldTheater,
-        RenderBox anchor,
-        long zOrder)
-    {
-        if (!ReferenceEquals(oldTheater, this))
-        {
-            oldTheater.RemoveDeferredChild(child);
-            AddDeferredChild(child, anchor, zOrder);
-            return;
-        }
-
-        _outstandingDeferredChildUpdateCalls += 1;
-        UpdatePortalParentData(child, anchor, zOrder);
-        MarkNeedsPaint();
-        _outstandingDeferredChildUpdateCalls -= 1;
-        Debug.Assert(_outstandingDeferredChildUpdateCalls >= 0);
-    }
-
     /// <remarks>Flutter's <c>_RenderTheater._removeDeferredChild</c>.</remarks>
     internal void RemoveDeferredChild(RenderDeferredLayoutBox child)
     {
         _outstandingDeferredChildUpdateCalls += 1;
-        Remove(child);
+        DropChild(child);
         MarkNeedsPaint();
         _outstandingDeferredChildUpdateCalls -= 1;
         Debug.Assert(_outstandingDeferredChildUpdateCalls >= 0);
@@ -370,10 +396,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
         for (RenderBox? child = LastChild; child is not null; child = ChildBefore(child))
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
-            if (parentData.IsOnstage
-                && !parentData.IsPortal
-                && parentData.CanSizeOverlay
-                && !parentData.IsPositioned)
+            if (parentData.Entry?.CanSizeOverlay == true && !parentData.IsPositioned)
             {
                 return child;
             }
@@ -394,76 +417,68 @@ internal sealed class RenderOverlayTheater : RenderBox,
         }
     }
 
-    private IEnumerable<RenderBox> ChildrenInPaintOrder()
+    /// <remarks>Flutter's <c>_RenderTheater._firstOnstageChild</c>.</remarks>
+    private RenderBox? FirstOnstageChild
     {
-        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        get
+        {
+            if (_skipCount == ChildCount)
+            {
+                return null;
+            }
+
+            RenderBox? child = FirstChild;
+            for (int toSkip = _skipCount; toSkip > 0; toSkip--)
+            {
+                child = ChildAfter(child!);
+                Debug.Assert(child is not null);
+            }
+
+            return child;
+        }
+    }
+
+    /// <remarks>Flutter's <c>_RenderTheater._lastOnstageChild</c>.</remarks>
+    private RenderBox? LastOnstageChild => _skipCount == ChildCount ? null : LastChild;
+
+    /// <remarks>
+    /// Flutter's <c>_RenderTheater._childrenInPaintOrder</c>: each onstage entry, then the overlay
+    /// children hosted on it in ascending z-order, so an overlay child paints above its host entry and
+    /// below the next one. Lazy, because the walk has to tolerate a child being added or removed while
+    /// layout is running.
+    /// </remarks>
+    internal IEnumerable<RenderBox> ChildrenInPaintOrder()
+    {
+        for (RenderBox? child = FirstOnstageChild; child is not null; child = ChildAfter(child))
         {
             var parentData = (OverlayTheaterParentData)child.parentData!;
-            if (!parentData.IsOnstage || parentData.IsPortal)
-            {
-                continue;
-            }
-
             yield return child;
-            foreach (RenderBox portal in PortalChildrenForAnchor(child))
+            foreach (RenderDeferredLayoutBox overlayChild in parentData.PaintOrderChildren)
             {
-                yield return portal;
+                yield return overlayChild;
             }
         }
     }
 
+    /// <remarks>Flutter's <c>_RenderTheater._childrenInHitTestOrder</c>: the exact reverse of the paint
+    /// order, and lazy so hit testing stops at the first hit.</remarks>
     private IEnumerable<RenderBox> ChildrenInHitTestOrder()
     {
-        return ChildrenInPaintOrder().Reverse();
-    }
-
-    private IEnumerable<RenderBox> PortalChildrenForAnchor(RenderBox anchor)
-    {
-        return EnumerateChildren()
-            .Where(child =>
+        RenderBox? child = LastOnstageChild;
+        int childLeft = ChildCount - _skipCount;
+        while (child is not null)
+        {
+            var parentData = (OverlayTheaterParentData)child.parentData!;
+            foreach (RenderDeferredLayoutBox overlayChild in parentData.HitTestOrderChildren)
             {
-                var parentData = (OverlayTheaterParentData)child.parentData!;
-                return parentData.IsPortal
-                       && ReferenceEquals(parentData.PortalAnchor, anchor)
-                       && IsPortalAnchorOnstage(parentData);
-            })
-            .OrderBy(child => ((OverlayTheaterParentData)child.parentData!).PortalZOrder);
-    }
+                yield return overlayChild;
+            }
 
-    private IEnumerable<RenderBox> EnumerateChildren()
-    {
-        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
-        {
             yield return child;
+
+            childLeft -= 1;
+            child = childLeft <= 0 ? null : ChildBefore(child);
         }
-    }
-
-    private static bool IsPortalAnchorOnstage(OverlayTheaterParentData parentData)
-    {
-        return parentData.PortalAnchor?.parentData is OverlayTheaterParentData
-        {
-            IsOnstage: true,
-            IsPortal: false,
-        };
-    }
-
-    private void UpdatePortalParentData(
-        RenderBox child,
-        RenderBox anchor,
-        long zOrder)
-    {
-        var parentData = (OverlayTheaterParentData)child.parentData!;
-        parentData.IsPortal = true;
-        parentData.IsOnstage = true;
-        parentData.CanSizeOverlay = false;
-        parentData.PortalAnchor = anchor;
-        parentData.PortalZOrder = zOrder;
-
-        // Flutter's `_OverlayEntryLocation._addToChildModel` repaints, recomputes compositing bits and
-        // dirties semantics, but deliberately never dirties the theater's layout.
-        MarkNeedsPaint();
-        MarkNeedsCompositingBitsUpdate();
-        MarkNeedsSemanticsUpdate();
     }
 
     private static void LayoutPositionedChild(
@@ -524,7 +539,76 @@ internal sealed class RenderOverlayTheater : RenderBox,
     }
 
     /// <inheritdoc />
-    public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new IntProperty("skipCount", SkipCount));
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_RenderTheater.debugDescribeChildren</c>: entries are numbered from the first
+    /// onstage one, and each entry's overlay children follow it as <c>onstage N - M</c>.
+    /// </remarks>
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        var onstageChildren = new List<DiagnosticsNode>();
+        var offstageChildren = new List<DiagnosticsNode>();
+        RenderBox? firstOnstageChild = FirstOnstageChild;
+        int count = 1;
+        bool onstage = false;
+
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            var parentData = (OverlayTheaterParentData)child.parentData!;
+            if (ReferenceEquals(child, firstOnstageChild))
+            {
+                onstage = true;
+                count = 1;
+            }
+
+            if (onstage)
+            {
+                onstageChildren.Add(child.ToDiagnosticsNode(name: $"onstage {count}"));
+            }
+            else
+            {
+                offstageChildren.Add(
+                    child.ToDiagnosticsNode(name: $"offstage {count}", style: DiagnosticsTreeStyle.Offstage));
+            }
+
+            int subcount = 1;
+            foreach (RenderDeferredLayoutBox overlayChild in parentData.PaintOrderChildren)
+            {
+                if (onstage)
+                {
+                    onstageChildren.Add(overlayChild.ToDiagnosticsNode(name: $"onstage {count} - {subcount}"));
+                }
+                else
+                {
+                    offstageChildren.Add(
+                        overlayChild.ToDiagnosticsNode(
+                            name: $"offstage {count} - {subcount}",
+                            style: DiagnosticsTreeStyle.Offstage));
+                }
+
+                subcount += 1;
+            }
+
+            count += 1;
+        }
+
+        if (offstageChildren.Count > 0)
+        {
+            onstageChildren.AddRange(offstageChildren);
+        }
+        else
+        {
+            onstageChildren.Add(
+                DiagnosticsNode.Message("no offstage children", style: DiagnosticsTreeStyle.Offstage));
+        }
+
+        return onstageChildren;
+    }
 }
 
 /// <summary>
@@ -542,6 +626,7 @@ internal sealed class RenderOverlayTheater : RenderBox,
 internal sealed class RenderDeferredLayoutBox : RenderProxyBox
 {
     private readonly RenderOverlayPortalSurrogate _layoutSurrogate;
+    private object? _childIdentifier;
     private bool _doingLayoutFromTreeWalk;
 
     /// <remarks>
@@ -551,12 +636,38 @@ internal sealed class RenderDeferredLayoutBox : RenderProxyBox
     /// </remarks>
     private bool _deferredNeedsLayout = true;
 
-    public RenderDeferredLayoutBox(RenderOverlayPortalSurrogate layoutSurrogate)
+    public RenderDeferredLayoutBox(RenderOverlayPortalSurrogate layoutSurrogate, object? childIdentifier)
     {
         _layoutSurrogate = layoutSurrogate;
+        _childIdentifier = childIdentifier;
     }
 
     internal RenderOverlayPortalSurrogate LayoutSurrogate => _layoutSurrogate;
+
+    /// <summary>
+    /// The <c>OverlayPortal</c> state this subtree is traversed under in the semantics tree, wherever
+    /// the theater ends up painting it.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>_RenderDeferredLayoutBox.childIdentifier</c>. Dart's setter compares the field
+    /// with its own getter, so it never assigns; the value is the owning <c>_OverlayPortalState</c>
+    /// and cannot change for a given render object, so the assignment here is equivalent and marks
+    /// semantics dirty for the case Dart's setter cannot reach.
+    /// </remarks>
+    internal object? ChildIdentifier
+    {
+        get => _childIdentifier;
+        set
+        {
+            if (Equals(_childIdentifier, value))
+            {
+                return;
+            }
+
+            _childIdentifier = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
 
     internal RenderOverlayTheater Theater => Parent as RenderOverlayTheater
         ?? throw new InvalidOperationException(
@@ -586,6 +697,21 @@ internal sealed class RenderDeferredLayoutBox : RenderProxyBox
     protected override void PerformResize()
     {
         Size = Constraints.Biggest;
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_RenderDeferredLayoutBox.describeSemanticsConfiguration</c>. Naming a traversal
+    /// child identifier both keeps the theater from absorbing this subtree's semantics and grafts it
+    /// under the <c>OverlayPortal</c>'s own node, which names the same identifier as its traversal
+    /// parent.
+    /// </remarks>
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        if (_childIdentifier is not null)
+        {
+            configuration.TraversalChildIdentifier = _childIdentifier;
+        }
     }
 
     /// <remarks>

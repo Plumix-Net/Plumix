@@ -191,6 +191,13 @@ internal sealed class OverlayPortalState : State
 {
     private long? _zOrderIndex;
 
+    /// <remarks>Flutter's <c>_OverlayPortalState._childModelMayHaveChanged</c>: set whenever an
+    /// inherited dependency or the requested overlay changed, so the cached location is re-validated
+    /// against a fresh <see cref="RenderTheaterMarker"/> lookup instead of being trusted.</remarks>
+    private bool _childModelMayHaveChanged = true;
+
+    private OverlayEntryLocation? _locationCache;
+
     private OverlayPortal CurrentWidget => (OverlayPortal)StateWidget;
 
     internal long? ZOrderIndex => _zOrderIndex;
@@ -201,10 +208,18 @@ internal sealed class OverlayPortalState : State
         SetupController(CurrentWidget.Controller);
     }
 
+    public override void DidChangeDependencies()
+    {
+        base.DidChangeDependencies();
+        _childModelMayHaveChanged = true;
+    }
+
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
         base.DidUpdateWidget(oldWidget);
         var oldPortal = (OverlayPortal)oldWidget;
+        _childModelMayHaveChanged = _childModelMayHaveChanged
+                                    || oldPortal.OverlayLocation != CurrentWidget.OverlayLocation;
         if (!ReferenceEquals(oldPortal.Controller, CurrentWidget.Controller))
         {
             oldPortal.Controller.Detach(this);
@@ -215,45 +230,90 @@ internal sealed class OverlayPortalState : State
     public override void Dispose()
     {
         CurrentWidget.Controller.Detach(this);
+        _locationCache?.DebugMarkLocationInvalid();
+        _locationCache = null;
         base.Dispose();
     }
 
     public override Widget Build(BuildContext context)
     {
+        // The portal's own subtree names this state as its traversal parent, and the overlay child's
+        // deferred layout box names the same object as its traversal child identifier, so the semantics
+        // owner grafts the overlay child under the portal wherever the theater paints it.
+        var child = new Semantics(
+            traversalParentIdentifier: this,
+            child: CurrentWidget.Child);
         if (!_zOrderIndex.HasValue)
         {
             return new OverlayPortalRenderWidget(
-                child: CurrentWidget.Child,
+                child: child,
                 overlayChild: null,
                 location: null);
         }
 
-        bool rootOverlay = CurrentWidget.OverlayLocation == OverlayChildLocation.RootOverlay;
-        OverlayState target = Overlay.Of(context, rootOverlay);
-        var location = new OverlayPortalLocation(
-            target.RequireTheater(),
-            _zOrderIndex.Value);
+        OverlayEntryLocation location = GetLocation(_zOrderIndex.Value, CurrentWidget.OverlayLocation);
         Widget overlayChild = CurrentWidget.LayoutBuilder is { } layoutBuilder
             ? new OverlayPortalLayoutBuilderWidget(layoutBuilder)
             : new Builder(CurrentWidget.OverlayChildBuilder);
         overlayChild = WrapWithOverlayMediaQuery(
             context,
-            target.Context,
+            location.ChildModel.Context,
             overlayChild);
         return new OverlayPortalRenderWidget(
-            child: CurrentWidget.Child,
-            overlayChild: new DeferredLayout(overlayChild),
+            child: child,
+            overlayChild: new DeferredLayout(overlayChild, childIdentifier: this),
             location: location);
     }
 
     internal void Show(long zOrderIndex)
     {
         SetState(() => _zOrderIndex = zOrderIndex);
+        _locationCache?.DebugMarkLocationInvalid();
+        _locationCache = null;
     }
 
     internal void Hide()
     {
         SetState(() => _zOrderIndex = null);
+        _locationCache?.DebugMarkLocationInvalid();
+        _locationCache = null;
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_OverlayPortalState._getLocation</c>. The marker lookup is deliberately deferred:
+    /// when nothing can have changed the cache is returned without creating a new dependency, exactly
+    /// as Dart's <c>late final marker</c> does.
+    /// </remarks>
+    private OverlayEntryLocation GetLocation(long zOrderIndex, OverlayChildLocation overlayLocation)
+    {
+        OverlayEntryLocation? cachedLocation = _locationCache;
+        bool targetRootOverlay = overlayLocation == OverlayChildLocation.RootOverlay;
+        RenderTheaterMarker? marker = null;
+        bool isCacheValid = cachedLocation is not null;
+        if (isCacheValid && _childModelMayHaveChanged)
+        {
+            marker = RenderTheaterMarker.Of(Context, targetRootOverlay);
+            isCacheValid = IsTheSameLocation(cachedLocation!, marker);
+        }
+
+        _childModelMayHaveChanged = false;
+        if (isCacheValid)
+        {
+            Debug.Assert(cachedLocation!.ZOrderIndex == zOrderIndex);
+            Debug.Assert(cachedLocation.DebugIsLocationValid());
+            return cachedLocation;
+        }
+
+        marker ??= RenderTheaterMarker.Of(Context, targetRootOverlay);
+        cachedLocation?.DebugMarkLocationInvalid();
+        var newLocation = new OverlayEntryLocation(zOrderIndex, marker.EntryState, marker.Theater);
+        return _locationCache = newLocation;
+    }
+
+    private static bool IsTheSameLocation(OverlayEntryLocation locationCache, RenderTheaterMarker marker)
+    {
+        return ReferenceEquals(locationCache.ChildModel, marker.EntryState)
+               && ReferenceEquals(locationCache.Theater, marker.Theater);
     }
 
     private void SetupController(OverlayPortalController controller)
@@ -289,13 +349,256 @@ internal sealed class OverlayPortalState : State
     }
 }
 
+/// <summary>
+/// A cursor into one <see cref="OverlayEntry"/>'s child model: it names the overlay an
+/// <see cref="OverlayPortal"/>'s overlay child goes into and, through its z-order index, the child's
+/// paint order among the other overlay children hosted on the same entry.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>_OverlayEntryLocation</c>, a <c>LinkedListEntry</c> in the hosting entry's sorted
+/// sibling list. It is deliberately mutable and identity-compared - it is used as an element slot, so
+/// one instance must never stand for two locations.
+/// </remarks>
+internal sealed class OverlayEntryLocation
+{
+    private StackTrace? _debugMarkLocationInvalidStackTrace;
+
+    internal OverlayEntryLocation(
+        long zOrderIndex,
+        OverlayEntryWidgetState childModel,
+        RenderOverlayTheater theater)
+    {
+        ZOrderIndex = zOrderIndex;
+        ChildModel = childModel;
+        Theater = theater;
+    }
+
+    internal long ZOrderIndex { get; }
+
+    internal OverlayEntryWidgetState ChildModel { get; }
+
+    internal RenderOverlayTheater Theater { get; }
+
+    /// <summary>The box occupying this location, or <see langword="null"/> while the location is
+    /// unoccupied or its portal is detached from its layout surrogate.</summary>
+    internal RenderDeferredLayoutBox? OverlayChildRenderBox { get; private set; }
+
+    internal OverlayEntryLocation? Previous { get; set; }
+
+    internal OverlayEntryLocation? Next { get; set; }
+
+    internal OverlayEntryLocationList? List { get; set; }
+
+    /// <remarks>Flutter's <c>_OverlayEntryLocation._addToChildModel</c>.</remarks>
+    internal void AddToChildModel(RenderDeferredLayoutBox child)
+    {
+        Debug.Assert(
+            OverlayChildRenderBox is null,
+            $"Failed to add {child}. This location ({this}) is already occupied.");
+        OverlayChildRenderBox = child;
+        ChildModel.Add(this);
+        Theater.MarkNeedsPaint();
+        Theater.MarkNeedsCompositingBitsUpdate();
+        Theater.MarkNeedsSemanticsUpdate();
+    }
+
+    /// <remarks>Flutter's <c>_OverlayEntryLocation._removeFromChildModel</c>.</remarks>
+    internal void RemoveFromChildModel(RenderDeferredLayoutBox child)
+    {
+        Debug.Assert(ReferenceEquals(child, OverlayChildRenderBox));
+        OverlayChildRenderBox = null;
+        ChildModel.Remove(this);
+        Theater.MarkNeedsPaint();
+        Theater.MarkNeedsCompositingBitsUpdate();
+        Theater.MarkNeedsSemanticsUpdate();
+    }
+
+    /// <remarks>Flutter's <c>_OverlayEntryLocation._addChild</c>.</remarks>
+    internal void AddChild(RenderDeferredLayoutBox child)
+    {
+        Debug.Assert(DebugIsLocationValid());
+        AddToChildModel(child);
+        Theater.AddDeferredChild(child);
+        Debug.Assert(ReferenceEquals(child.Parent, Theater));
+    }
+
+    /// <remarks>Flutter's <c>_OverlayEntryLocation._removeChild</c>. Legal even after the location has
+    /// been invalidated: it runs while the portal is being torn down.</remarks>
+    internal void RemoveChild(RenderDeferredLayoutBox child)
+    {
+        RemoveFromChildModel(child);
+        Theater.RemoveDeferredChild(child);
+        Debug.Assert(child.Parent is null);
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_OverlayEntryLocation._moveChild</c>. The theater move and the child-model move are
+    /// independent: staying in the same theater but changing entry or z-order only relinks the sorted
+    /// sibling list, and staying in the same location does nothing at all.
+    /// </remarks>
+    internal void MoveChild(RenderDeferredLayoutBox child, OverlayEntryLocation fromLocation)
+    {
+        Debug.Assert(!ReferenceEquals(fromLocation, this));
+        Debug.Assert(DebugIsLocationValid());
+        RenderOverlayTheater fromTheater = fromLocation.Theater;
+        OverlayEntryWidgetState fromModel = fromLocation.ChildModel;
+
+        if (!ReferenceEquals(fromTheater, Theater))
+        {
+            fromTheater.RemoveDeferredChild(child);
+            Theater.AddDeferredChild(child);
+        }
+
+        if (!ReferenceEquals(fromModel, ChildModel) || fromLocation.ZOrderIndex != ZOrderIndex)
+        {
+            fromLocation.RemoveFromChildModel(child);
+            AddToChildModel(child);
+        }
+    }
+
+    /// <remarks>Flutter's <c>_OverlayEntryLocation._reattachFromLayoutSurrogate</c>: the location keeps
+    /// its place in the sorted sibling list the whole time, so a reactivated portal lands back in the
+    /// same paint order without re-inserting anything.</remarks>
+    internal void ReattachFromLayoutSurrogate(RenderDeferredLayoutBox child)
+    {
+        Debug.Assert(
+            OverlayChildRenderBox is null,
+            $"{this} failed to reattach: DetachFromLayoutSurrogate must run first.");
+        Theater.AddDeferredChild(child);
+        OverlayChildRenderBox = child;
+    }
+
+    /// <remarks>Flutter's <c>_OverlayEntryLocation._detachFromLayoutSurrogate</c>.</remarks>
+    internal void DetachFromLayoutSurrogate(RenderDeferredLayoutBox child)
+    {
+        Theater.RemoveDeferredChild(child);
+        OverlayChildRenderBox = null;
+    }
+
+    /// <remarks>Flutter's <c>_OverlayEntryLocation._debugIsLocationValid</c>.</remarks>
+    internal bool DebugIsLocationValid()
+    {
+        if (_debugMarkLocationInvalidStackTrace is null)
+        {
+            return true;
+        }
+
+        throw new InvalidOperationException(
+            $"{this} is already disposed. Stack trace: {_debugMarkLocationInvalidStackTrace}");
+    }
+
+    /// <remarks>Flutter's <c>_OverlayEntryLocation._debugMarkLocationInvalid</c>: irreversible, and
+    /// called whenever the owning portal drops its cached location.</remarks>
+    internal void DebugMarkLocationInvalid()
+    {
+        Debug.Assert(DebugIsLocationValid());
+        if (Constants.KDebugMode)
+        {
+            _debugMarkLocationInvalidStackTrace = new StackTrace();
+        }
+    }
+
+    public override string ToString()
+    {
+        string invalid = _debugMarkLocationInvalidStackTrace is null ? string.Empty : " (INVALID)";
+        return $"{nameof(OverlayEntryLocation)}[z-order {ZOrderIndex}]{invalid}";
+    }
+}
+
+/// <summary>
+/// The sorted sibling list one <see cref="OverlayEntry"/> keeps of the overlay children hosted on it.
+/// </summary>
+/// <remarks>
+/// Stands in for the <c>dart:collection</c> <c>LinkedList</c> Flutter uses: .NET's
+/// <c>LinkedList&lt;T&gt;</c> wraps values in nodes, while Dart's entries carry their own links, which
+/// is what lets a walk advance past an entry the consumer is about to unlink.
+/// </remarks>
+internal sealed class OverlayEntryLocationList
+{
+    internal OverlayEntryLocation? First { get; private set; }
+
+    internal OverlayEntryLocation? Last { get; private set; }
+
+    internal bool IsEmpty => First is null;
+
+    internal void AddFirst(OverlayEntryLocation entry)
+    {
+        Debug.Assert(entry.List is null);
+        entry.List = this;
+        entry.Previous = null;
+        entry.Next = First;
+        if (First is null)
+        {
+            Last = entry;
+        }
+        else
+        {
+            First.Previous = entry;
+        }
+
+        First = entry;
+    }
+
+    internal void InsertAfter(OverlayEntryLocation position, OverlayEntryLocation entry)
+    {
+        Debug.Assert(ReferenceEquals(position.List, this));
+        Debug.Assert(entry.List is null);
+        entry.List = this;
+        entry.Previous = position;
+        entry.Next = position.Next;
+        if (position.Next is null)
+        {
+            Last = entry;
+        }
+        else
+        {
+            position.Next.Previous = entry;
+        }
+
+        position.Next = entry;
+    }
+
+    internal bool Remove(OverlayEntryLocation entry)
+    {
+        if (!ReferenceEquals(entry.List, this))
+        {
+            return false;
+        }
+
+        if (entry.Previous is null)
+        {
+            First = entry.Next;
+        }
+        else
+        {
+            entry.Previous.Next = entry.Next;
+        }
+
+        if (entry.Next is null)
+        {
+            Last = entry.Previous;
+        }
+        else
+        {
+            entry.Next.Previous = entry.Previous;
+        }
+
+        entry.Previous = null;
+        entry.Next = null;
+        entry.List = null;
+        return true;
+    }
+
+    internal bool Contains(OverlayEntryLocation entry) => ReferenceEquals(entry.List, this);
+}
+
 public sealed class OverlayEntry : IListenable, IDisposable
 {
     private OverlayState? _overlay;
     private bool _disposed;
     private bool _opaque;
     private bool _maintainState;
-    private bool _widgetMounted;
+    private OverlayEntryWidgetState? _widgetState;
     private readonly List<Action> _listeners = [];
 
     public OverlayEntry(
@@ -349,7 +652,12 @@ public sealed class OverlayEntry : IListenable, IDisposable
 
     public bool CanSizeOverlay { get; }
 
-    public bool Mounted => _widgetMounted;
+    public bool Mounted => _widgetState is not null;
+
+    /// <summary>The state of the widget built for this entry, and the owner of the sorted list of
+    /// overlay children hosted on it.</summary>
+    /// <remarks>Flutter's <c>OverlayEntry._overlayEntryStateNotifier</c>.</remarks>
+    internal OverlayEntryWidgetState? WidgetState => _widgetState;
 
     /// <summary>Whether this entry currently belongs to an overlay.</summary>
     public bool IsInserted => _overlay is not null;
@@ -428,20 +736,20 @@ public sealed class OverlayEntry : IListenable, IDisposable
         }
     }
 
-    internal void SetWidgetMounted(bool mounted)
+    internal void SetWidgetState(OverlayEntryWidgetState? state)
     {
-        if (_widgetMounted == mounted)
+        if (ReferenceEquals(_widgetState, state))
         {
             return;
         }
 
-        _widgetMounted = mounted;
+        _widgetState = state;
         foreach (Action listener in _listeners.ToArray())
         {
             listener();
         }
 
-        if (!mounted && _disposed)
+        if (state is null && _disposed)
         {
             ReleaseListeners();
         }
@@ -524,7 +832,6 @@ public sealed class Overlay : StatefulWidget
 public sealed class OverlayState : State
 {
     private readonly List<OverlayEntry> _entries = [];
-    private RenderOverlayTheater? _theater;
 
     private Overlay CurrentWidget => (Overlay)StateWidget;
 
@@ -716,8 +1023,7 @@ public sealed class OverlayState : State
             if (onstage)
             {
                 onstageCount += 1;
-                children.Add(
-                    BuildEntry(entry, tickerEnabled: true, isOnstage: true));
+                children.Add(BuildEntry(entry, tickerEnabled: true));
 
                 if (entry.Opaque)
                 {
@@ -726,46 +1032,24 @@ public sealed class OverlayState : State
             }
             else if (entry.MaintainState)
             {
-                children.Add(
-                    BuildEntry(entry, tickerEnabled: false, isOnstage: false));
+                children.Add(BuildEntry(entry, tickerEnabled: false));
             }
         }
 
         children.Reverse();
         return new OverlayTheater(
-            owner: this,
-            offstageCount: children.Count - onstageCount,
+            skipCount: children.Count - onstageCount,
             clipBehavior: CurrentWidget.ClipBehavior,
             alwaysSizeToContent: CurrentWidget.AlwaysSizeToContent,
             children: children);
     }
 
-    internal void SetTheater(RenderOverlayTheater theater)
+    private static Widget BuildEntry(OverlayEntry entry, bool tickerEnabled)
     {
-        _theater = theater;
-    }
-
-    internal RenderOverlayTheater RequireTheater()
-    {
-        return _theater
-               ?? throw new InvalidOperationException("The target Overlay has not created its render theater.");
-    }
-
-    private static Widget BuildEntry(
-        OverlayEntry entry,
-        bool tickerEnabled,
-        bool isOnstage)
-    {
-        // Both levels carry the entry's identity: the theater's children change position (and count) as
-        // entries go offstage, so an unkeyed parent would re-target its child element onto another entry.
-        return new OverlayTheaterEntry(
-            canSizeOverlay: entry.CanSizeOverlay,
-            isOnstage: isOnstage,
-            key: new ObjectKey(entry),
-            child: new OverlayEntryWidget(
-                entry,
-                tickerEnabled,
-                key: new ObjectKey(entry)));
+        // The theater's children change position (and count) as entries go offstage, so the entry's own
+        // identity has to key the widget or an element would be re-targeted onto another entry. Dart
+        // spells this `entry._key`, a GlobalKey it owns.
+        return new OverlayEntryWidget(entry, tickerEnabled, key: new ObjectKey(entry));
     }
 
     private int ResolveInsertionIndex(OverlayEntry? below, OverlayEntry? above)
@@ -871,42 +1155,39 @@ internal sealed class WrappingOverlayState : State
 internal sealed class OverlayTheater : MultiChildRenderObjectWidget
 {
     public OverlayTheater(
-        OverlayState owner,
         IReadOnlyList<Widget> children,
-        int offstageCount,
+        int skipCount,
         Clip clipBehavior,
         bool alwaysSizeToContent) : base(children)
     {
-        if (offstageCount < 0 || offstageCount > children.Count)
+        if (skipCount < 0 || skipCount > children.Count)
         {
-            throw new ArgumentOutOfRangeException(nameof(offstageCount));
+            throw new ArgumentOutOfRangeException(nameof(skipCount));
         }
 
-        Owner = owner;
-        OffstageCount = offstageCount;
+        SkipCount = skipCount;
         ClipBehavior = clipBehavior;
         AlwaysSizeToContent = alwaysSizeToContent;
     }
 
-    public OverlayState Owner { get; }
-
-    public int OffstageCount { get; }
+    public int SkipCount { get; }
 
     public Clip ClipBehavior { get; }
 
     public bool AlwaysSizeToContent { get; }
+
+    internal override Element CreateElement() => new OverlayTheaterElement(this);
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         Alignment alignment = Directionality.Of(context) == TextDirection.Rtl
             ? Alignment.TopRight
             : Alignment.TopLeft;
-        var theater = new RenderOverlayTheater(
+        return new RenderOverlayTheater(
             alignment,
+            SkipCount,
             ClipBehavior,
             AlwaysSizeToContent);
-        Owner.SetTheater(theater);
-        return theater;
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -915,15 +1196,11 @@ internal sealed class OverlayTheater : MultiChildRenderObjectWidget
         theater.Alignment = Directionality.Of(context) == TextDirection.Rtl
             ? Alignment.TopRight
             : Alignment.TopLeft;
+        theater.SkipCount = SkipCount;
         theater.ClipBehavior = ClipBehavior;
         theater.AlwaysSizeToContent = AlwaysSizeToContent;
-        Owner.SetTheater(theater);
     }
 }
-
-internal sealed record OverlayPortalLocation(
-    RenderOverlayTheater Theater,
-    long ZOrder);
 
 internal sealed class OverlayPortalLayoutBuilderWidget : RenderObjectWidget
 {
@@ -950,16 +1227,30 @@ internal sealed class OverlayPortalLayoutBuilderWidget : RenderObjectWidget
 /// between the overlay child and the regular child is not supported.</remarks>
 internal sealed class DeferredLayout : SingleChildRenderObjectWidget
 {
-    public DeferredLayout(Widget child) : base(child)
+    public DeferredLayout(Widget child, object? childIdentifier) : base(child)
     {
+        ChildIdentifier = childIdentifier;
     }
+
+    /// <summary>The object the overlay child's semantics are traversed under.</summary>
+    /// <remarks>Flutter's <c>_DeferredLayout.childIdentifier</c>; the owning
+    /// <c>OverlayPortalState</c>.</remarks>
+    public object? ChildIdentifier { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
         RenderOverlayPortalSurrogate parent = GetLayoutParent(context);
-        var renderObject = new RenderDeferredLayoutBox(parent);
+        var renderObject = new RenderDeferredLayoutBox(parent, ChildIdentifier);
         parent.DeferredLayoutChild = renderObject;
         return renderObject;
+    }
+
+    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var deferredLayoutBox = (RenderDeferredLayoutBox)renderObject;
+        Debug.Assert(ReferenceEquals(deferredLayoutBox.LayoutSurrogate, GetLayoutParent(context)));
+        Debug.Assert(ReferenceEquals(GetLayoutParent(context).DeferredLayoutChild, deferredLayoutBox));
+        deferredLayoutBox.ChildIdentifier = ChildIdentifier;
     }
 
     private static RenderOverlayPortalSurrogate GetLayoutParent(BuildContext context)
@@ -1099,12 +1390,14 @@ internal sealed class OverlayPortalRenderWidget : RenderObjectWidget
     public OverlayPortalRenderWidget(
         Widget? child,
         Widget? overlayChild,
-        OverlayPortalLocation? location)
+        OverlayEntryLocation? location)
     {
         if (overlayChild is not null && location is null)
         {
             throw new ArgumentException("A visible overlay child requires an OverlayPortal location.");
         }
+
+        Debug.Assert(location is null || location.DebugIsLocationValid());
 
         Child = child;
         OverlayChild = overlayChild;
@@ -1115,7 +1408,7 @@ internal sealed class OverlayPortalRenderWidget : RenderObjectWidget
 
     public Widget? OverlayChild { get; }
 
-    public OverlayPortalLocation? Location { get; }
+    public OverlayEntryLocation? Location { get; }
 
     internal override Element CreateElement() => new OverlayPortalElement(this);
 
@@ -1199,7 +1492,7 @@ internal sealed class OverlayPortalElement : RenderObjectElement
             return;
         }
 
-        if (slot is not OverlayPortalLocation location)
+        if (slot is not OverlayEntryLocation location)
         {
             throw new InvalidOperationException("OverlayPortal received an invalid overlay child slot.");
         }
@@ -1208,8 +1501,7 @@ internal sealed class OverlayPortalElement : RenderObjectElement
         // got as far as inserting it here.
         var deferredChild = (RenderDeferredLayoutBox)child;
         Debug.Assert(ReferenceEquals(PortalRenderObject.DeferredLayoutChild, deferredChild));
-        RenderBox anchor = FindAnchor(location.Theater);
-        location.Theater.AddDeferredChild(deferredChild, anchor, location.ZOrder);
+        location.AddChild(deferredChild);
         PortalRenderObject.MarkNeedsSemanticsUpdate();
     }
 
@@ -1223,18 +1515,14 @@ internal sealed class OverlayPortalElement : RenderObjectElement
             return;
         }
 
-        if (oldSlot is not OverlayPortalLocation oldLocation
-            || newSlot is not OverlayPortalLocation newLocation)
+        if (oldSlot is not OverlayEntryLocation oldLocation
+            || newSlot is not OverlayEntryLocation newLocation)
         {
             throw new InvalidOperationException("OverlayPortal cannot move a child between regular and overlay slots.");
         }
 
-        RenderBox anchor = FindAnchor(newLocation.Theater);
-        newLocation.Theater.MoveDeferredChild(
-            (RenderDeferredLayoutBox)child,
-            oldLocation.Theater,
-            anchor,
-            newLocation.ZOrder);
+        Debug.Assert(newLocation.DebugIsLocationValid());
+        newLocation.MoveChild((RenderDeferredLayoutBox)child, oldLocation);
         PortalRenderObject.MarkNeedsSemanticsUpdate();
     }
 
@@ -1250,11 +1538,11 @@ internal sealed class OverlayPortalElement : RenderObjectElement
             return;
         }
 
-        if (slot is OverlayPortalLocation location)
+        if (slot is OverlayEntryLocation location)
         {
             var deferredChild = (RenderDeferredLayoutBox)child;
             Debug.Assert(ReferenceEquals(PortalRenderObject.DeferredLayoutChild, deferredChild));
-            location.Theater.RemoveDeferredChild(deferredChild);
+            location.RemoveChild(deferredChild);
             PortalRenderObject.DeferredLayoutChild = null;
             PortalRenderObject.MarkNeedsSemanticsUpdate();
         }
@@ -1277,22 +1565,6 @@ internal sealed class OverlayPortalElement : RenderObjectElement
         base.Unmount();
     }
 
-    private RenderBox FindAnchor(RenderOverlayTheater theater)
-    {
-        RenderObject? candidate = PortalRenderObject;
-        while (candidate?.Parent is not null && !ReferenceEquals(candidate.Parent, theater))
-        {
-            candidate = candidate.Parent;
-        }
-
-        if (candidate is not RenderBox anchor || !ReferenceEquals(anchor.Parent, theater))
-        {
-            throw new InvalidOperationException(
-                "An OverlayPortal can only target an ancestor Overlay.");
-        }
-
-        return anchor;
-    }
 }
 
 /// <summary>
@@ -1306,12 +1578,12 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
     private RenderDeferredLayoutBox? _deferredLayoutChild;
     private bool _didDetachDeferredChild;
 
-    public RenderOverlayPortalSurrogate(OverlayPortalLocation? location)
+    public RenderOverlayPortalSurrogate(OverlayEntryLocation? location)
     {
         Location = location;
     }
 
-    internal OverlayPortalLocation? Location { get; set; }
+    internal OverlayEntryLocation? Location { get; set; }
 
     /// <remarks>
     /// Assigned as soon as <c>DeferredLayout</c> creates the box, and set back to null only when that
@@ -1330,15 +1602,6 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
 
             _deferredLayoutChild = value;
             MarkNeedsSemanticsUpdate();
-        }
-    }
-
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
-    {
-        base.VisitChildrenForSemantics(visitor);
-        if (_deferredLayoutChild is not null)
-        {
-            visitor(_deferredLayoutChild);
         }
     }
 
@@ -1371,11 +1634,11 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
         }
 
         _didDetachDeferredChild = false;
-        OverlayPortalLocation location = Location
+        OverlayEntryLocation location = Location
             ?? throw new InvalidOperationException("A visible overlay child requires a portal location.");
         RenderDeferredLayoutBox child = _deferredLayoutChild
             ?? throw new InvalidOperationException("A detached portal child cannot be reattached after removal.");
-        location.Theater.AddDeferredChild(child, FindAnchor(location.Theater), location.ZOrder);
+        location.ReattachFromLayoutSurrogate(child);
     }
 
     /// <remarks>
@@ -1388,7 +1651,7 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
             && Location is { } location
             && location.Theater.Attached)
         {
-            location.Theater.RemoveDeferredChild(child);
+            location.DetachFromLayoutSurrogate(child);
             _didDetachDeferredChild = true;
         }
 
@@ -1429,85 +1692,40 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
         deferredChild.DoLayoutFrom(this, BoxConstraints.Tight(boxSize));
     }
 
-    private RenderBox FindAnchor(RenderOverlayTheater theater)
-    {
-        RenderObject? candidate = this;
-        while (candidate?.Parent is not null && !ReferenceEquals(candidate.Parent, theater))
-        {
-            candidate = candidate.Parent;
-        }
-
-        if (candidate is not RenderBox anchor || !ReferenceEquals(anchor.Parent, theater))
-        {
-            throw new InvalidOperationException(
-                "An OverlayPortal can only target an ancestor Overlay.");
-        }
-
-        return anchor;
-    }
-
-    /// <summary>
-    /// The overlay child is laid out under the theater but painted here, so its semantics transform is
-    /// the one that maps its own paint position back into this surrogate's coordinates.
-    /// </summary>
-    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
-    {
-        if (!ReferenceEquals(child, _deferredLayoutChild))
-        {
-            base.ApplyPaintTransform(child, transform);
-            return;
-        }
-
-        Matrix4 portalChildToRoot = _deferredLayoutChild!.ComputePaintTransformToRoot();
-        Matrix4 rootToSurrogate = ComputePaintTransformToRoot();
-        if (rootToSurrogate.Invert() == 0.0)
-        {
-            return;
-        }
-
-        transform.Multiply(rootToSurrogate);
-        transform.Multiply(portalChildToRoot);
-    }
 }
 
-internal sealed class OverlayTheaterEntry : ParentDataWidget<OverlayTheaterParentData>
+/// <summary>
+/// Stamps each theater child with the <see cref="OverlayEntry"/> it was built for, which is how the
+/// theater reaches that entry's sorted list of overlay children.
+/// </summary>
+/// <remarks>Flutter's <c>_TheaterElement</c>.</remarks>
+internal sealed class OverlayTheaterElement : MultiChildRenderObjectElement
 {
-    public OverlayTheaterEntry(
-        Widget child,
-        bool canSizeOverlay,
-        bool isOnstage,
-        Key? key = null) : base(child, key)
+    public OverlayTheaterElement(OverlayTheater widget) : base(widget)
     {
-        CanSizeOverlay = canSizeOverlay;
-        IsOnstage = isOnstage;
     }
 
-    public bool CanSizeOverlay { get; }
-
-    public bool IsOnstage { get; }
-
-    public override Type DebugTypicalAncestorWidgetType => typeof(OverlayTheater);
-
-    protected override void ApplyParentData(RenderObject renderObject)
+    public override void InsertRenderObjectChild(RenderObject child, object? slot)
     {
-        var parentData = (OverlayTheaterParentData)renderObject.parentData!;
-        bool needsLayout = false;
-        if (parentData.CanSizeOverlay != CanSizeOverlay)
+        base.InsertRenderObjectChild(child, slot);
+        var indexedSlot = (IndexedSlot<Element?>)slot!;
+        var parentData = (OverlayTheaterParentData)child.parentData!;
+        parentData.Entry = ((OverlayEntryWidget)((OverlayTheater)Widget).Children[indexedSlot.Index]).Entry;
+    }
+
+    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
+    {
+        base.MoveRenderObjectChild(child, oldSlot, newSlot);
+        if (!Constants.KDebugMode)
         {
-            parentData.CanSizeOverlay = CanSizeOverlay;
-            needsLayout = true;
+            return;
         }
 
-        if (parentData.IsOnstage != IsOnstage)
-        {
-            parentData.IsOnstage = IsOnstage;
-            needsLayout = true;
-        }
-
-        if (needsLayout)
-        {
-            renderObject.Parent?.MarkNeedsLayout();
-        }
+        var indexedSlot = (IndexedSlot<Element?>)newSlot!;
+        var parentData = (OverlayTheaterParentData)child.parentData!;
+        OverlayEntry entryAtNewSlot =
+            ((OverlayEntryWidget)((OverlayTheater)Widget).Children[indexedSlot.Index]).Entry;
+        Debug.Assert(ReferenceEquals(parentData.Entry, entryAtNewSlot));
     }
 }
 
@@ -1528,13 +1746,32 @@ internal sealed class OverlayEntryWidget : StatefulWidget
 
 internal sealed class OverlayEntryWidgetState : State
 {
+    private RenderOverlayTheater? _theater;
+
+    /// <remarks>Flutter's <c>_OverlayEntryWidgetState._sortedTheaterSiblings</c>, created lazily and
+    /// dropped wholesale on dispose rather than unlinked entry by entry.</remarks>
+    private OverlayEntryLocationList? _sortedTheaterSiblings;
+
     private OverlayEntryWidget CurrentWidget => (OverlayEntryWidget)StateWidget;
+
+    internal RenderOverlayTheater Theater => _theater
+        ?? throw new InvalidOperationException("An OverlayEntry must be built inside an Overlay.");
+
+    /// <summary>The overlay children hosted on this entry, farthest first.</summary>
+    /// <remarks>Flutter's <c>_OverlayEntryWidgetState._paintOrderIterable</c>.</remarks>
+    internal IEnumerable<RenderDeferredLayoutBox> PaintOrderChildren => EnumerateChildren(reversed: false);
+
+    /// <summary>The overlay children hosted on this entry, closest first.</summary>
+    /// <remarks>Flutter's <c>_OverlayEntryWidgetState._hitTestOrderIterable</c>.</remarks>
+    internal IEnumerable<RenderDeferredLayoutBox> HitTestOrderChildren => EnumerateChildren(reversed: true);
 
     public override void InitState()
     {
         base.InitState();
         CurrentWidget.Entry.Changed += HandleEntryChanged;
-        CurrentWidget.Entry.SetWidgetMounted(true);
+        CurrentWidget.Entry.SetWidgetState(this);
+        _theater = Context.FindAncestorRenderObjectOfType<RenderOverlayTheater>()
+                   ?? throw new InvalidOperationException("An OverlayEntry must be built inside an Overlay.");
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -1547,23 +1784,89 @@ internal sealed class OverlayEntryWidgetState : State
         }
 
         oldEntryWidget.Entry.Changed -= HandleEntryChanged;
-        oldEntryWidget.Entry.SetWidgetMounted(false);
+        oldEntryWidget.Entry.SetWidgetState(null);
         CurrentWidget.Entry.Changed += HandleEntryChanged;
-        CurrentWidget.Entry.SetWidgetMounted(true);
+        CurrentWidget.Entry.SetWidgetState(this);
     }
 
     public override void Dispose()
     {
         CurrentWidget.Entry.Changed -= HandleEntryChanged;
-        CurrentWidget.Entry.SetWidgetMounted(false);
+        CurrentWidget.Entry.SetWidgetState(null);
+        _sortedTheaterSiblings = null;
         base.Dispose();
     }
 
     public override Widget Build(BuildContext context)
     {
+        // The `Builder` is what lets the entry's own builder read the marker below.
         return new TickerMode(
             enabled: CurrentWidget.TickerEnabled,
-            child: CurrentWidget.Entry.Builder(context));
+            child: new RenderTheaterMarker(
+                theater: Theater,
+                entryState: this,
+                child: new Builder(entryContext => CurrentWidget.Entry.Builder(entryContext))));
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_OverlayEntryWidgetState._add</c>: a backwards scan from the tail, inserting after
+    /// the first location whose z-order index is not greater, so ties keep insertion order and the list
+    /// stays sorted ascending. Worst case is linear in the number of children shown in one frame.
+    /// </remarks>
+    internal void Add(OverlayEntryLocation child)
+    {
+        Debug.Assert(Mounted);
+        OverlayEntryLocationList children = _sortedTheaterSiblings ??= new OverlayEntryLocationList();
+        Debug.Assert(!children.Contains(child));
+        OverlayEntryLocation? insertPosition = children.IsEmpty ? null : children.Last;
+        while (insertPosition is not null && insertPosition.ZOrderIndex > child.ZOrderIndex)
+        {
+            insertPosition = insertPosition.Previous;
+        }
+
+        if (insertPosition is null)
+        {
+            children.AddFirst(child);
+        }
+        else
+        {
+            children.InsertAfter(insertPosition, child);
+        }
+
+        Debug.Assert(children.Contains(child));
+    }
+
+    /// <remarks>Flutter's <c>_OverlayEntryWidgetState._remove</c>.</remarks>
+    internal void Remove(OverlayEntryLocation child)
+    {
+        bool wasInCollection = _sortedTheaterSiblings?.Remove(child) ?? false;
+        Debug.Assert(wasInCollection);
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_OverlayEntryWidgetState._createChildIterable</c>. The cursor advances before the
+    /// element is yielded, so the consumer may unlink the location it is looking at - which is exactly
+    /// what a hit test or a layout pass that removes an overlay child does. Locations whose portal is
+    /// currently detached from its layout surrogate hold no box and are skipped.
+    /// </remarks>
+    private IEnumerable<RenderDeferredLayoutBox> EnumerateChildren(bool reversed)
+    {
+        OverlayEntryLocationList? children = _sortedTheaterSiblings;
+        if (children is null || children.IsEmpty)
+        {
+            yield break;
+        }
+
+        OverlayEntryLocation? candidate = reversed ? children.Last : children.First;
+        while (candidate is not null)
+        {
+            RenderDeferredLayoutBox? renderBox = candidate.OverlayChildRenderBox;
+            candidate = reversed ? candidate.Previous : candidate.Next;
+            if (renderBox is not null)
+            {
+                yield return renderBox;
+            }
+        }
     }
 
     private void HandleEntryChanged()
@@ -1572,5 +1875,96 @@ internal sealed class OverlayEntryWidgetState : State
         {
             SetState(static () => { });
         }
+    }
+}
+
+/// <summary>
+/// Carries the target <see cref="RenderOverlayTheater"/> and the child model of the entry an
+/// <see cref="OverlayPortal"/> sits in down to the portal.
+/// </summary>
+/// <remarks>Flutter's <c>_RenderTheaterMarker</c>.</remarks>
+internal sealed class RenderTheaterMarker : InheritedWidget
+{
+    public RenderTheaterMarker(
+        RenderOverlayTheater theater,
+        OverlayEntryWidgetState entryState,
+        Widget child,
+        Key? key = null) : base(key)
+    {
+        Theater = theater;
+        EntryState = entryState;
+        Child = child;
+    }
+
+    public RenderOverlayTheater Theater { get; }
+
+    public OverlayEntryWidgetState EntryState { get; }
+
+    public Widget Child { get; }
+
+    public override Widget Build(BuildContext context) => Child;
+
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        var old = (RenderTheaterMarker)oldWidget;
+        return !ReferenceEquals(old.Theater, Theater) || !ReferenceEquals(old.EntryState, EntryState);
+    }
+
+    /// <remarks>Flutter's <c>_RenderTheaterMarker.of</c>.</remarks>
+    internal static RenderTheaterMarker Of(BuildContext context, bool targetRootOverlay = false)
+    {
+        return MaybeOf(context, targetRootOverlay)
+               ?? throw new InvalidOperationException(
+                   "No Overlay widget found. An OverlayPortal requires an Overlay widget ancestor.");
+    }
+
+    /// <remarks>Flutter's <c>_RenderTheaterMarker.maybeOf</c>.</remarks>
+    internal static RenderTheaterMarker? MaybeOf(
+        BuildContext context,
+        bool targetRootOverlay = false,
+        bool createDependency = true)
+    {
+        if (!targetRootOverlay)
+        {
+            return createDependency
+                ? LookupBoundary.DependOnInheritedWidgetOfExactType<RenderTheaterMarker>(context)
+                : LookupBoundary.GetInheritedWidgetOfExactType<RenderTheaterMarker>(context);
+        }
+
+        InheritedElement? ancestor = RootMarkerElementOf(
+            LookupBoundary.GetElementForInheritedWidgetOfExactType<RenderTheaterMarker>(context));
+        if (ancestor is null)
+        {
+            return null;
+        }
+
+        return createDependency
+            ? (RenderTheaterMarker)context.Owner.DependOnInheritedElement(ancestor, aspect: null)
+            : (RenderTheaterMarker)ancestor.Widget;
+    }
+
+    /// <remarks>Flutter's <c>_RenderTheaterMarker._rootRenderTheaterMarkerOf</c>: the outermost marker
+    /// reachable without crossing a <see cref="LookupBoundary"/>, which is the root Overlay of this
+    /// view rather than of the whole app.</remarks>
+    private static InheritedElement? RootMarkerElementOf(InheritedElement? markerElement)
+    {
+        if (markerElement is null)
+        {
+            return null;
+        }
+
+        InheritedElement? ancestor = null;
+        new BuildContext(markerElement).VisitAncestorElements(element =>
+        {
+            // Dart's `getElementForInheritedWidgetOfExactType` reads the element's own inherited map,
+            // which includes the element itself; Plumix's starts at the parent, so check it here.
+            ancestor = element is InheritedElement { Widget: RenderTheaterMarker } self
+                ? self
+                : LookupBoundary.GetElementForInheritedWidgetOfExactType<RenderTheaterMarker>(
+                    new BuildContext(element));
+            return false;
+        });
+
+        return ancestor is null ? markerElement : RootMarkerElementOf(ancestor);
     }
 }

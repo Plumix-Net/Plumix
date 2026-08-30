@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: overlay children are adopted outside the theater's child list and ordered per entry (`overlay.dart`).
+- Breaking: `RenderOverlayTheater` takes `SkipCount`; an `OverlayEntry` builds under a `Builder` (`overlay.dart`).
 - Breaking: `CheckboxListTile`/`SwitchListTile` are strict ports; `mouseCursor` goes to the control, not the tile.
 - Breaking: `CheckboxListTile`/`SwitchListTile` drop their extra `Semantics` wrapper and take `EdgeInsetsGeometry`.
 - Breaking: `CheckboxListTile.CheckboxShape` and `Checkbox.Shape` are `OutlinedBorder?` (`checkbox_list_tile.dart`).

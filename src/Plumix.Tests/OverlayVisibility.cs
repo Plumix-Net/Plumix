@@ -21,15 +21,19 @@ internal static class OverlayVisibility
         }
 
         visitor(root);
-        root.VisitChildren(child =>
+        if (root is RenderOverlayTheater theater)
         {
-            if (child.parentData is OverlayTheaterParentData { IsOnstage: false })
+            // Mirrors `_TheaterElement.debugVisitOnstageChildren`: the leading `skipCount` entries are
+            // kept alive but never laid out or painted, so finders must not see them.
+            foreach (RenderObject child in theater.ChildrenInPaintOrder())
             {
-                return;
+                VisitOnstage(child, visitor);
             }
 
-            VisitOnstage(child, visitor);
-        });
+            return;
+        }
+
+        root.VisitChildren(child => VisitOnstage(child, visitor));
     }
 
     public static TRenderObject? FindOnstage<TRenderObject>(
