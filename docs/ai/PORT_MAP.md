@@ -353,9 +353,9 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/proxy_sliver.dart` | `src/Plumix/Rendering/SliverGroup.cs` | `src/Plumix.Tests/SliverGroupTests.cs` | — |
 | `rendering/selection.dart` | `src/Plumix/Rendering/Selection.cs`<br>`src/Plumix/Widgets/TextSelection.cs` | `src/Plumix.Tests/CupertinoTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/CupertinoTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialDesktopTextSelectionToolbarTests.cs`<br>`src/Plumix.Tests/MaterialSelectionTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionControlsTests.cs`<br>`src/Plumix.Tests/MaterialTextSelectionThemeTests.cs`<br>`src/Plumix.Tests/SelectionListenerTests.cs`<br>`src/Plumix.Tests/SelectionOverlayTests.cs`<br>`src/Plumix.Tests/SelectionSubsystemTests.cs`<br>`src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_text_selection_controls_demo_page.dart`<br>`dart_sample/lib/demos/material/desktop_text_selection_toolbar_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_demo_page.dart`<br>`dart_sample/lib/demos/material/selection_handles_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoTextSelectionControlsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/DesktopTextSelectionToolbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SelectionHandlesDemoPage.cs` |
 | `rendering/shifted_box.dart` | `src/Plumix/Rendering/Baseline.cs`<br>`src/Plumix/Rendering/CustomSingleChildLayout.cs` | `src/Plumix.Tests/BaselineTests.cs` | `dart_sample/lib/demos/general/baseline_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/BaselineDemoPage.cs` |
-| `rendering/sliver.dart` | `src/Plumix/Rendering/Sliver.cs` _(reference) (approximate)_ | `src/Plumix.Tests/DecoratedPinnedSliverTests.cs`<br>`src/Plumix.Tests/MaterialSliverAppBarTests.cs`<br>`src/Plumix.Tests/SliverFillTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/SliverGroupTests.cs`<br>`src/Plumix.Tests/SliverHeaderTests.cs`<br>`src/Plumix.Tests/SliverOpacityTests.cs`<br>`src/Plumix.Tests/SliverPersistentHeaderTests.cs` | `dart_sample/lib/demos/general/custom_slivers_demo_page.dart`<br>`dart_sample/lib/demos/material/sliver_app_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CustomSliversDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SliverAppBarDemoPage.cs` |
+| `rendering/sliver.dart` | `src/Plumix/Rendering/Sliver.cs` _(reference) (approximate)_ | `src/Plumix.Tests/DecoratedPinnedSliverTests.cs`<br>`src/Plumix.Tests/MaterialSliverAppBarTests.cs`<br>`src/Plumix.Tests/SliverFillTests.cs`<br>`src/Plumix.Tests/SliverFixedExtentListTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/SliverGroupTests.cs`<br>`src/Plumix.Tests/SliverHeaderTests.cs`<br>`src/Plumix.Tests/SliverOpacityTests.cs`<br>`src/Plumix.Tests/SliverPersistentHeaderTests.cs` | `dart_sample/lib/demos/general/custom_slivers_demo_page.dart`<br>`dart_sample/lib/demos/material/sliver_app_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CustomSliversDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SliverAppBarDemoPage.cs` |
 | `rendering/sliver_fill.dart` | `src/Plumix/Rendering/SliverFill.cs` | `src/Plumix.Tests/SliverFillTests.cs` | — |
-| `rendering/sliver_fixed_extent_list.dart` | `src/Plumix/Rendering/SliverFixedExtentList.cs` | — | — |
+| `rendering/sliver_fixed_extent_list.dart` | `src/Plumix/Rendering/SliverFixedExtentList.cs` | `src/Plumix.Tests/SliverFixedExtentListTests.cs` | — |
 | `rendering/sliver_group.dart` | `src/Plumix/Rendering/SliverGroup.cs` | `src/Plumix.Tests/SliverGroupTests.cs` | — |
 | `rendering/sliver_persistent_header.dart` | `src/Plumix/Rendering/SliverPersistentHeader.cs`<br>`src/Plumix/Rendering/SliverPersistentHeaderReveal.cs` | `src/Plumix.Tests/SliverPersistentHeaderTests.cs` | — |
 | `rendering/stack.dart` | `src/Plumix/Rendering/RelativeRect.cs`<br>`src/Plumix/Rendering/Stack.RenderIndexedStack.cs` _(RenderIndexedStack subset)_<br>`src/Plumix/Rendering/Stack.RenderStack.cs` _(reference) (approximate)_ | — | — |
@@ -507,6 +507,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/sliver_floating_header.dart` | `src/Plumix/Rendering/SliverHeaders.cs`<br>`src/Plumix/Widgets/SliverHeaders.cs` | — | — |
 | `widgets/sliver_layout_builder.dart` | `src/Plumix/Widgets/SliverLayoutBuilder.cs` | — | — |
 | `widgets/sliver_persistent_header.dart` | `src/Plumix/Widgets/SliverPersistentHeader.cs` | `src/Plumix.Tests/SliverPersistentHeaderTests.cs` | — |
+| `widgets/sliver_prototype_extent_list.dart` | `src/Plumix/Rendering/SliverPrototypeExtentList.cs` | — | — |
 | `widgets/sliver_resizing_header.dart` | `src/Plumix/Rendering/SliverHeaders.cs`<br>`src/Plumix/Widgets/SliverHeaders.cs` | — | — |
 | `widgets/snapshot_widget.dart` | `src/Plumix/Rendering/SnapshotWidget.cs`<br>`src/Plumix/Widgets/SnapshotWidget.cs` | — | — |
 | `widgets/spell_check.dart` | `src/Plumix/Widgets/SpellCheck.cs` | — | — |
@@ -627,8 +628,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 510
-- C# files carrying a marker: 657
+- Flutter files mapped: 511
+- C# files carrying a marker: 658
 - C# files without a marker: 33
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 45

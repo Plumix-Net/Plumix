@@ -754,7 +754,7 @@ internal sealed class RenderSliverFixedExtentCarousel : RenderSliverFixedExtentB
 
     public override ItemExtentBuilder? ItemExtentBuilder => _extentBuilder;
 
-    protected override double IndexToLayoutOffset(double itemExtent, int index)
+    public override double IndexToLayoutOffset(double itemExtent, int index)
     {
         if (_maxExtent == 0.0)
         {
@@ -777,12 +777,12 @@ internal sealed class RenderSliverFixedExtentCarousel : RenderSliverFixedExtentB
         return _maxExtent * index;
     }
 
-    protected override int GetMinChildIndexForScrollOffset(double scrollOffset, double itemExtent)
+    public override int GetMinChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
         return _maxExtent > 0.0 ? Math.Max((int)Math.Floor(scrollOffset / _maxExtent), 0) : 0;
     }
 
-    protected override int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
+    public override int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
         if (_maxExtent <= 0.0)
         {
@@ -981,7 +981,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
 
     private double DistanceToLeadingEdge => FirstChildExtent - FirstVisibleItemOffscreenExtent;
 
-    protected override double IndexToLayoutOffset(double itemExtent, int index)
+    public override double IndexToLayoutOffset(double itemExtent, int index)
     {
         SliverConstraints constraints = ConstraintsForSliver;
         int firstVisibleItemIndex = FirstVisibleItemIndex;
@@ -1001,12 +1001,12 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
         return constraints.ScrollOffset + visibleItemsTotalExtent;
     }
 
-    protected override int GetMinChildIndexForScrollOffset(double scrollOffset, double itemExtent)
+    public override int GetMinChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
         return Math.Max(FirstVisibleItemIndex, 0);
     }
 
-    protected override int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
+    public override int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
         SliverConstraints constraints = ConstraintsForSliver;
         int? childCount = ChildManager?.ChildCount;
@@ -1048,7 +1048,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
         return childCount ?? 0;
     }
 
-    protected override double ComputeMaxScrollOffset(SliverConstraints constraints, double itemExtent)
+    public override double ComputeMaxScrollOffset(SliverConstraints constraints, double itemExtent)
     {
         return _infinite ? double.PositiveInfinity : (ChildManager?.ChildCount ?? 0) * MaxChildExtent;
     }

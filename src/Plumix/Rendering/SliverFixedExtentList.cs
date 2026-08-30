@@ -23,7 +23,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     /// </summary>
     protected const double DeprecatedExtraItemExtent = -1;
 
-    private SliverLayoutDimensions _currentLayoutDimensions;
+    private SliverLayoutDimensions? _currentLayoutDimensions;
 
     protected RenderSliverFixedExtentBoxAdaptor(IRenderSliverBoxChildManager? childManager = null)
         : base(childManager)
@@ -37,15 +37,20 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     public virtual ItemExtentBuilder? ItemExtentBuilder => null;
 
     /// <summary>The viewport geometry the current layout pass is running against.</summary>
-    protected SliverLayoutDimensions LayoutDimensions => _currentLayoutDimensions;
+    /// <remarks>
+    /// Flutter's <c>layoutDimensions</c>: before the first layout pass it is derived from the
+    /// current constraints rather than from the pass that has not run yet.
+    /// </remarks>
+    public SliverLayoutDimensions LayoutDimensions =>
+        _currentLayoutDimensions ?? DimensionsFor(ConstraintsForSliver);
 
     /// <summary>The scroll offset of the child at <paramref name="index"/>.</summary>
-    protected virtual double IndexToLayoutOffset(double itemExtent, int index)
+    public virtual double IndexToLayoutOffset(double itemExtent, int index)
     {
         ItemExtentBuilder? builder = ItemExtentBuilder;
         if (builder is null)
         {
-            return itemExtent * index;
+            return (ItemExtent ?? 0) * index;
         }
 
         double offset = 0;
@@ -57,7 +62,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
                 break;
             }
 
-            double? extent = builder(i, _currentLayoutDimensions);
+            double? extent = builder(i, LayoutDimensions);
             if (extent is null)
             {
                 break;
@@ -70,7 +75,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     }
 
     /// <summary>The index of the first child that paints at or after <paramref name="scrollOffset"/>.</summary>
-    protected virtual int GetMinChildIndexForScrollOffset(double scrollOffset, double itemExtent)
+    public virtual int GetMinChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
         ItemExtentBuilder? builder = ItemExtentBuilder;
         if (builder is not null)
@@ -78,6 +83,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             return GetChildIndexForScrollOffset(scrollOffset, builder);
         }
 
+        itemExtent = ItemExtent ?? 0;
         if (itemExtent > 0.0)
         {
             double actual = scrollOffset / itemExtent;
@@ -91,7 +97,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     }
 
     /// <summary>The index of the last child that paints at or before <paramref name="scrollOffset"/>.</summary>
-    protected virtual int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
+    public virtual int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
         ItemExtentBuilder? builder = ItemExtentBuilder;
         if (builder is not null)
@@ -99,6 +105,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             return GetChildIndexForScrollOffset(scrollOffset, builder);
         }
 
+        itemExtent = ItemExtent ?? 0;
         if (itemExtent > 0.0)
         {
             double actual = (scrollOffset / itemExtent) - 1;
@@ -112,19 +119,19 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     }
 
     /// <summary>The scroll extent of the whole child list, when the child count is known.</summary>
-    protected virtual double ComputeMaxScrollOffset(SliverConstraints constraints, double itemExtent)
+    public virtual double ComputeMaxScrollOffset(SliverConstraints constraints, double itemExtent)
     {
         int childCount = ChildManager?.ChildCount ?? 0;
         ItemExtentBuilder? builder = ItemExtentBuilder;
         if (builder is null)
         {
-            return childCount * itemExtent;
+            return childCount * (ItemExtent ?? 0);
         }
 
         double offset = 0;
         for (int i = 0; i < childCount; i += 1)
         {
-            double? extent = builder(i, _currentLayoutDimensions);
+            double? extent = builder(i, LayoutDimensions);
             if (extent is null)
             {
                 break;
@@ -140,6 +147,10 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     /// Estimates the scroll extent of the children that have not been laid out, by extrapolating
     /// from the average extent of the ones that have.
     /// </summary>
+    /// <remarks>
+    /// Flutter defers to <c>RenderSliverBoxChildManager.estimateMaxScrollOffset</c>; Plumix's child
+    /// manager interface carries no such member, so the element's algorithm lives here.
+    /// </remarks>
     protected virtual double EstimateMaxScrollOffset(
         SliverConstraints constraints,
         int firstIndex,
@@ -166,6 +177,52 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         return trailingScrollOffset + (averageExtent * remainingCount);
     }
 
+    /// <inheritdoc />
+    public override double PaintExtentOf(RenderBox child)
+    {
+        ItemExtentBuilder? builder = ItemExtentBuilder;
+        return builder is null
+            ? ItemExtent ?? 0
+            : builder(IndexOf(child), LayoutDimensions) ?? 0;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderSliverFixedExtentBoxAdaptor.debugAssertDoesMeetConstraints</c>: a
+    /// <see cref="ComputeMaxScrollOffset"/> override that does not return a multiple of the item
+    /// extent leaves a partial item at the end of the list.
+    /// </remarks>
+    protected override void DebugAssertDoesMeetConstraints()
+    {
+        base.DebugAssertDoesMeetConstraints();
+        if (!Constants.KDebugMode || ItemExtentBuilder is not null || !double.IsFinite(Geometry.ScrollExtent))
+        {
+            return;
+        }
+
+        double itemExtent = ItemExtent ?? 0;
+        double scrollExtent = Geometry.ScrollExtent;
+        double count = scrollExtent / itemExtent;
+        double diff = Math.Abs(Math.Round(count, MidpointRounding.AwayFromZero) - count);
+        if (diff * itemExtent <= Constants.PrecisionErrorTolerance || diff <= Constants.PrecisionErrorTolerance)
+        {
+            return;
+        }
+
+        throw new FlutterError(
+        [
+            new ErrorSummary(
+                "RenderSliverFixedExtentBoxAdaptor.computeMaxScrollOffset() returned a value that is "
+                + "not an even multiple of its itemExtent."),
+            new ErrorDescription(
+                $"The itemExtent was {itemExtent}, but the scrollExtent was {scrollExtent}."),
+            new ErrorDescription(
+                $"The difference was {diff}, which is greater than precisionErrorTolerance "
+                + $"({Constants.PrecisionErrorTolerance})."),
+            DescribeForError("The render object in question was"),
+        ]);
+    }
+
     protected override void PerformSliverLayout(SliverConstraints constraints)
     {
         IRenderSliverBoxChildManager? childManager = ChildManager;
@@ -178,14 +235,13 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         childManager.SetDidUnderflow(false);
         SetLayoutDimensions(constraints);
 
-        double itemExtent = ItemExtent ?? 0;
         double scrollOffset = Math.Max(0, constraints.ScrollOffset + constraints.CacheOrigin);
         double remainingExtent = Math.Max(0, constraints.RemainingCacheExtent);
         double targetEndScrollOffset = scrollOffset + remainingExtent;
 
-        int firstIndex = GetMinChildIndexForScrollOffset(scrollOffset, itemExtent);
+        int firstIndex = GetMinChildIndexForScrollOffset(scrollOffset, DeprecatedExtraItemExtent);
         int? targetLastIndex = double.IsFinite(targetEndScrollOffset)
-            ? GetMaxChildIndexForScrollOffset(targetEndScrollOffset, itemExtent)
+            ? GetMaxChildIndexForScrollOffset(targetEndScrollOffset, DeprecatedExtraItemExtent)
             : null;
 
         if (FirstChild is not null)
@@ -199,11 +255,13 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             CollectGarbage(0, 0);
         }
 
-        if (FirstChild is null && !AddInitialChild(firstIndex, IndexToLayoutOffset(itemExtent, firstIndex)))
+        if (FirstChild is null
+            && !AddInitialChild(firstIndex, IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex)))
         {
-            double max = childManager.ChildCount is null && firstIndex <= 0
+            // There are either no children, or we are past the end of all our children.
+            double max = firstIndex <= 0
                 ? 0.0
-                : ComputeMaxScrollOffset(constraints, itemExtent);
+                : ComputeMaxScrollOffset(constraints, DeprecatedExtraItemExtent);
             Geometry = new SliverGeometry(ScrollExtent: max, MaxPaintExtent: max);
             return;
         }
@@ -216,11 +274,12 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             {
                 // The children before the current first child are gone; let the viewport re-run
                 // layout from the corrected offset instead of guessing their extent.
-                Geometry = new SliverGeometry(ScrollOffsetCorrection: IndexToLayoutOffset(itemExtent, index));
+                Geometry = new SliverGeometry(
+                    ScrollOffsetCorrection: IndexToLayoutOffset(DeprecatedExtraItemExtent, index));
                 return;
             }
 
-            SetChildGeometry(leading, constraints, IndexToLayoutOffset(itemExtent, index));
+            SetChildGeometry(leading, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, index));
             trailingChildWithLayout ??= leading;
         }
 
@@ -228,7 +287,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         {
             RenderBox first = FirstChild!;
             first.Layout(ChildConstraintsForIndex(constraints, IndexOf(first)), parentUsesSize: true);
-            SetChildGeometry(first, constraints, IndexToLayoutOffset(itemExtent, firstIndex));
+            SetChildGeometry(first, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex));
             trailingChildWithLayout = first;
         }
 
@@ -243,7 +302,8 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
                 child = InsertAndLayoutChild(ChildConstraintsForIndex(constraints, index), trailingChildWithLayout);
                 if (child is null)
                 {
-                    estimatedMaxScrollOffset = IndexToLayoutOffset(itemExtent, index);
+                    // We have run out of children.
+                    estimatedMaxScrollOffset = IndexToLayoutOffset(DeprecatedExtraItemExtent, index);
                     break;
                 }
             }
@@ -253,15 +313,18 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             }
 
             trailingChildWithLayout = child;
-            SetChildGeometry(child, constraints, IndexToLayoutOffset(itemExtent, IndexOf(child)));
+            SetChildGeometry(
+                child,
+                constraints,
+                IndexToLayoutOffset(DeprecatedExtraItemExtent, IndexOf(child)));
         }
 
         int lastIndex = IndexOf(LastChild!);
-        double leadingScrollOffset = IndexToLayoutOffset(itemExtent, firstIndex);
-        double trailingScrollOffset = IndexToLayoutOffset(itemExtent, lastIndex + 1);
+        double leadingScrollOffset = IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex);
+        double trailingScrollOffset = IndexToLayoutOffset(DeprecatedExtraItemExtent, lastIndex + 1);
         Geometry = BuildGeometry(
             constraints,
-            itemExtent,
+            DeprecatedExtraItemExtent,
             firstIndex,
             lastIndex,
             leadingScrollOffset,
@@ -296,6 +359,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             ? GetMaxChildIndexForScrollOffset(targetEndScrollOffsetForPaint, itemExtent)
             : null;
 
+        // We may have started the layout while scrolled to the end, which would not expose a new child.
         if (Math.Abs(estimatedMaxScrollOffset - trailingScrollOffset) < Constants.PrecisionErrorTolerance)
         {
             ChildManager?.SetDidUnderflow(true);
@@ -307,6 +371,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             LayoutExtent: paintExtent,
             MaxPaintExtent: estimatedMaxScrollOffset,
             CacheExtent: cacheExtent,
+            // Conservative to avoid flickering away the clip during scroll.
             HasVisualOverflow: (targetLastIndexForPaint is not null && lastIndex >= targetLastIndexForPaint.Value)
                                || constraints.ScrollOffset > 0.0);
     }
@@ -314,18 +379,14 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     /// <summary>Records the viewport geometry the current layout pass runs against.</summary>
     protected void SetLayoutDimensions(SliverConstraints constraints)
     {
-        _currentLayoutDimensions = new SliverLayoutDimensions(
-            ScrollOffset: constraints.ScrollOffset,
-            PrecedingScrollExtent: constraints.PrecedingScrollExtent,
-            ViewportMainAxisExtent: constraints.ViewportMainAxisExtent,
-            CrossAxisExtent: constraints.CrossAxisExtent);
+        _currentLayoutDimensions = DimensionsFor(constraints);
     }
 
     /// <summary>The tight box constraints the child at <paramref name="index"/> is laid out with.</summary>
     protected BoxConstraints ChildConstraintsForIndex(SliverConstraints constraints, int index)
     {
         double extent = ItemExtentBuilder is { } builder
-            ? builder(index, _currentLayoutDimensions) ?? 0
+            ? builder(index, LayoutDimensions) ?? 0
             : ItemExtent ?? 0;
         return constraints.AsBoxConstraints(minExtent: extent, maxExtent: extent);
     }
@@ -340,38 +401,19 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             : new Point(layoutOffset - constraints.ScrollOffset, 0);
     }
 
-    /// <summary>The number of laid-out children before <paramref name="firstIndex"/>.</summary>
-    protected int CalculateLeadingGarbage(int firstIndex)
-    {
-        RenderBox? walker = FirstChild;
-        int count = 0;
-        while (walker is not null && IndexOf(walker) < firstIndex)
-        {
-            count += 1;
-            walker = ChildAfter(walker);
-        }
-
-        return count;
-    }
-
-    /// <summary>The number of laid-out children after <paramref name="lastIndex"/>.</summary>
-    protected int CalculateTrailingGarbage(int lastIndex)
-    {
-        RenderBox? walker = LastChild;
-        int count = 0;
-        while (walker is not null && IndexOf(walker) > lastIndex)
-        {
-            count += 1;
-            walker = ChildBefore(walker);
-        }
-
-        return count;
-    }
-
     /// <summary>Dart's <c>double.round()</c>, which rounds halves away from zero.</summary>
     protected static int RoundHalfAwayFromZero(double value)
     {
         return (int)Math.Round(value, MidpointRounding.AwayFromZero);
+    }
+
+    private static SliverLayoutDimensions DimensionsFor(SliverConstraints constraints)
+    {
+        return new SliverLayoutDimensions(
+            ScrollOffset: constraints.ScrollOffset,
+            PrecedingScrollExtent: constraints.PrecedingScrollExtent,
+            ViewportMainAxisExtent: constraints.ViewportMainAxisExtent,
+            CrossAxisExtent: constraints.CrossAxisExtent);
     }
 
     private int GetChildIndexForScrollOffset(double scrollOffset, ItemExtentBuilder callback)
@@ -391,7 +433,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
                 break;
             }
 
-            double? extent = callback(index, _currentLayoutDimensions);
+            double? extent = callback(index, LayoutDimensions);
             if (extent is null)
             {
                 break;
@@ -402,5 +444,83 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         }
 
         return index - 1;
+    }
+}
+
+/// <summary>
+/// A sliver that places multiple box children with the same main-axis extent in a linear array.
+/// </summary>
+/// <remarks>Flutter's <c>RenderSliverFixedExtentList</c>.</remarks>
+public class RenderSliverFixedExtentList : RenderSliverFixedExtentBoxAdaptor
+{
+    private double _itemExtent;
+
+    public RenderSliverFixedExtentList(double itemExtent, IRenderSliverBoxChildManager? childManager = null)
+        : base(childManager)
+    {
+        _itemExtent = itemExtent;
+    }
+
+    /// <inheritdoc />
+    public override double? ItemExtent => _itemExtent;
+
+    /// <summary>
+    /// Sets the main-axis extent every child is forced to.
+    /// </summary>
+    /// <remarks>
+    /// Dart spells this as the setter half of <c>itemExtent</c>. C# cannot add a setter to an
+    /// overridden getter-only property, so the mutable half is a method (see
+    /// <c>docs/ai/DIVERGENCES.md</c>).
+    /// </remarks>
+    public void SetItemExtent(double value)
+    {
+        if (_itemExtent == value)
+        {
+            return;
+        }
+
+        _itemExtent = value;
+        MarkNeedsLayout();
+    }
+}
+
+/// <summary>
+/// A sliver that places multiple box children with the corresponding main-axis extent in a linear
+/// array.
+/// </summary>
+/// <remarks>Flutter's <c>RenderSliverVariedExtentList</c>.</remarks>
+public class RenderSliverVariedExtentList : RenderSliverFixedExtentBoxAdaptor
+{
+    private ItemExtentBuilder _itemExtentBuilder;
+
+    public RenderSliverVariedExtentList(
+        ItemExtentBuilder itemExtentBuilder,
+        IRenderSliverBoxChildManager? childManager = null)
+        : base(childManager)
+    {
+        _itemExtentBuilder = itemExtentBuilder ?? throw new ArgumentNullException(nameof(itemExtentBuilder));
+    }
+
+    /// <inheritdoc />
+    public override ItemExtentBuilder? ItemExtentBuilder => _itemExtentBuilder;
+
+    /// <inheritdoc />
+    public override double? ItemExtent => null;
+
+    /// <summary>Sets the callback that supplies each child's main-axis extent.</summary>
+    /// <remarks>
+    /// Dart's <c>itemExtentBuilder</c> setter; the method spelling is explained on
+    /// <see cref="RenderSliverFixedExtentList.SetItemExtent"/>.
+    /// </remarks>
+    public void SetItemExtentBuilder(ItemExtentBuilder value)
+    {
+        ArgumentNullException.ThrowIfNull(value);
+        if (ReferenceEquals(_itemExtentBuilder, value))
+        {
+            return;
+        }
+
+        _itemExtentBuilder = value;
+        MarkNeedsLayout();
     }
 }

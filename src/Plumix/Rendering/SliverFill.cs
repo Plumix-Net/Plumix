@@ -6,7 +6,7 @@ namespace Plumix.Rendering;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/sliver_fill.dart
 
-public sealed class RenderSliverFillViewport : RenderSliverFixedExtentList
+public class RenderSliverFillViewport : RenderSliverFixedExtentBoxAdaptor
 {
     private double _viewportFraction;
     private bool _allowImplicitScrolling;
@@ -15,11 +15,14 @@ public sealed class RenderSliverFillViewport : RenderSliverFixedExtentList
         double viewportFraction = 1.0,
         bool allowImplicitScrolling = true,
         IRenderSliverBoxChildManager? childManager = null)
-        : base(itemExtent: 0.0, childManager)
+        : base(childManager)
     {
         _viewportFraction = ValidateViewportFraction(viewportFraction);
         _allowImplicitScrolling = allowImplicitScrolling;
     }
+
+    /// <inheritdoc />
+    public override double? ItemExtent => ConstraintsForSliver.ViewportMainAxisExtent * _viewportFraction;
 
     public double ViewportFraction
     {
@@ -52,13 +55,6 @@ public sealed class RenderSliverFillViewport : RenderSliverFixedExtentList
         }
     }
 
-    protected override double GetItemExtent(SliverConstraints constraints)
-    {
-        double itemExtent = constraints.ViewportMainAxisExtent * _viewportFraction;
-        _itemExtent = itemExtent;
-        return itemExtent;
-    }
-
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
         if (_allowImplicitScrolling)
@@ -68,7 +64,7 @@ public sealed class RenderSliverFillViewport : RenderSliverFixedExtentList
         }
 
         SliverConstraints constraints = ConstraintsForSliver;
-        double itemExtent = GetItemExtent(constraints);
+        double itemExtent = ItemExtent!.Value;
         double visibleStart = constraints.ScrollOffset;
         double visibleEnd = visibleStart + constraints.ViewportMainAxisExtent;
 

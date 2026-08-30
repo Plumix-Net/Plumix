@@ -2346,7 +2346,7 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderSliverFixedExtentList)renderObject).ItemExtent = ItemExtent;
+        ((RenderSliverFixedExtentList)renderObject).SetItemExtent(ItemExtent);
     }
 }
 
@@ -2414,7 +2414,7 @@ public sealed class SliverVariedExtentList : SliverMultiBoxAdaptorWidget
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderSliverVariedExtentList)renderObject).ItemExtentBuilder = ItemExtentBuilder;
+        ((RenderSliverVariedExtentList)renderObject).SetItemExtentBuilder(ItemExtentBuilder);
     }
 }
 
@@ -2571,20 +2571,6 @@ internal sealed class SliverPrototypeExtentListElement : SliverMultiBoxAdaptorEl
 
         base.Unmount();
     }
-}
-
-public sealed class SliverVariableExtentList : SliverMultiBoxAdaptorWidget
-{
-    public SliverVariableExtentList(SliverChildDelegate @delegate, SliverVariableExtentLayout layout, Key? key = null) : base(@delegate, key)
-    {
-        Layout = layout ?? throw new ArgumentNullException(nameof(layout));
-    }
-
-    public SliverVariableExtentLayout Layout { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverVariableExtentList(Layout);
-
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject) => ((RenderSliverVariableExtentList)renderObject).ExtentLayout = Layout;
 }
 
 public sealed class SliverGrid : SliverMultiBoxAdaptorWidget

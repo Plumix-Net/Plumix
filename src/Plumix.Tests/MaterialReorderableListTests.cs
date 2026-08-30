@@ -605,8 +605,8 @@ public sealed class MaterialReorderableListTests
         using WidgetRenderHarness harness = new(Wrap(list));
         harness.Pump(new Size(200, 150));
 
-        RenderSliverVariableExtentList sliver = Assert.Single(
-            FindDescendants<RenderSliverVariableExtentList>(harness.RenderView));
+        RenderSliverVariedExtentList sliver = Assert.Single(
+            FindDescendants<RenderSliverVariedExtentList>(harness.RenderView));
         List<double> heights = [];
         for (RenderBox? child = sliver.FirstChild; child is not null; child = sliver.ChildAfter(child))
         {

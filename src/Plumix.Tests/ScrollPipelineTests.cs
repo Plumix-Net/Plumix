@@ -663,7 +663,7 @@ public sealed class ScrollPipelineTests
     }
 
     [Fact]
-    public void RenderSliverVariedExtentList_UsesKnownExtentsLazilyAndPreservesLayoutDimensions()
+    public void RenderSliverVariedExtentList_QueriesTheBuilderWithTheCurrentLayoutDimensions()
     {
         double[] extents = [30, 50, 20, 40];
         var dimensions = new List<SliverLayoutDimensions>();
@@ -685,12 +685,16 @@ public sealed class ScrollPipelineTests
             RemainingCacheExtent: 100,
             PrecedingScrollExtent: 17));
 
-        Assert.Equal(140, sliver.Geometry.ScrollExtent);
+        // Dart's `estimateMaxScrollOffset` extrapolates from the average extent of the laid-out
+        // children (100 over three children, one child left) rather than summing every extent.
+        Assert.Equal(400.0 / 3, sliver.Geometry.ScrollExtent, 9);
         Assert.Equal([0, 1, 2], ActiveIndices(sliver));
         Assert.Equal([30, 50, 20], ActiveChildren(sliver).Select(child => child.Size.Height));
         Assert.Equal([0, 30, 80], ActiveChildren(sliver).Select(
             child => ((SliverMultiBoxAdaptorParentData)child.parentData!).LayoutOffset));
-        Assert.Equal(4, dimensions.Count);
+        // Dart's `RenderSliverFixedExtentBoxAdaptor` memoizes nothing: every offset query re-walks
+        // the builder from index zero, so only the dimensions it is handed are contractual.
+        Assert.NotEmpty(dimensions);
         Assert.All(dimensions, current =>
         {
             Assert.Equal(0, current.ScrollOffset);
@@ -707,13 +711,15 @@ public sealed class ScrollPipelineTests
             ViewportMainAxisExtent: 100,
             RemainingCacheExtent: 60));
 
-        Assert.Equal([2, 3], ActiveIndices(sliver));
-        Assert.Equal(new Point(0, 0),
+        // `_getChildIndexForScrollOffset` walks until the running position reaches the offset and
+        // then steps back one, so the child that ends exactly at the scroll offset stays reified.
+        Assert.Equal([1, 2, 3], ActiveIndices(sliver));
+        Assert.Equal(new Point(0, -50),
             ((SliverMultiBoxAdaptorParentData)sliver.FirstChild!.parentData!).offset);
         Assert.True(manager.RemoveCount > 0);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RenderSliverVariedExtentList_RejectsInvalidBuilderExtents()
     {
         using var renderErrors = RenderErrorRethrowScope.Enter();
@@ -721,7 +727,9 @@ public sealed class ScrollPipelineTests
         var sliver = new RenderSliverVariedExtentList((_, _) => double.NaN, manager);
         manager.AttachOwner(sliver);
 
-        Assert.Throws<InvalidOperationException>(() => sliver.LayoutWithSliverConstraints(new SliverConstraints(
+        // Flutter has no extent validation of its own: a NaN item extent reaches the child's box
+        // constraints, and `BoxConstraints`'s own assert reports it.
+        Assert.Throws<FlutterError>(() => sliver.LayoutWithSliverConstraints(new SliverConstraints(
             Axis: Axis.Vertical,
             ScrollOffset: 0,
             RemainingPaintExtent: 100,
