@@ -418,7 +418,11 @@ public sealed class PipelineOwner : DiagnosticableTree
 
     /// <summary>Update the layout information for all dirty render objects.</summary>
     /// <remarks>Flutter's <c>PipelineOwner.flushLayout</c>.</remarks>
-    public void FlushLayout() => FlushLayoutCore(null);
+    public void FlushLayout()
+    {
+        FlushLayoutCore(null);
+        FlushMicrotasksOutsideFrame();
+    }
 
     /// <summary>
     /// Update the layout information for all dirty render objects, laying the <see cref="Root"/> view
@@ -428,7 +432,24 @@ public sealed class PipelineOwner : DiagnosticableTree
     /// The single-view entry point Plumix hosts call. Flutter's <c>RenderView</c> reads its size from
     /// its own <c>configuration</c>, so <c>flushLayout</c> takes no argument there.
     /// </remarks>
-    public void FlushLayout(Size rootSize) => FlushLayoutCore(rootSize);
+    public void FlushLayout(Size rootSize)
+    {
+        FlushLayoutCore(rootSize);
+        FlushMicrotasksOutsideFrame();
+    }
+
+    /// <summary>
+    /// Layout builds widgets (<c>LayoutBuilder</c> and friends), and those builds queue microtasks —
+    /// an autofocus request, for example. Inside a frame the scheduler drains the queue once the frame
+    /// ends; when the pipeline is driven directly, the event-loop turn ends here instead.
+    /// </summary>
+    private static void FlushMicrotasksOutsideFrame()
+    {
+        if (Scheduler.Phase == SchedulerPhase.Idle)
+        {
+            Scheduler.FlushMicrotasks();
+        }
+    }
 
     private void FlushLayoutCore(Size? rootSize)
     {

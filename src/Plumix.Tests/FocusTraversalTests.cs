@@ -14,12 +14,14 @@ public sealed class FocusTraversalTests : IDisposable
 
     public FocusTraversalTests()
     {
+        Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
+        Scheduler.ResetForTests();
     }
 
     [Fact]
@@ -98,9 +100,9 @@ public sealed class FocusTraversalTests : IDisposable
         FocusNode expectedFirst = direction == TextDirection.Ltr ? leftNode : rightNode;
         FocusNode expectedSecond = direction == TextDirection.Ltr ? rightNode : leftNode;
 
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(expectedFirst, FocusManager.Instance.PrimaryFocus);
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(expectedSecond, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -124,9 +126,9 @@ public sealed class FocusTraversalTests : IDisposable
         harness.Layout(ViewSize);
 
         Assert.Same(first, FocusManager.Instance.PrimaryFocus);
-        Assert.True(FocusManager.Instance.FocusPrevious());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusPrevious));
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
-        Assert.True(FocusManager.Instance.FocusPrevious());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusPrevious));
         Assert.Same(third, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -154,11 +156,11 @@ public sealed class FocusTraversalTests : IDisposable
 
         Assert.Same(unordered, FocusManager.Instance.PrimaryFocus);
         // Ordered nodes come first in numeric order; the unordered node trails them.
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(ordered1, FocusManager.Instance.PrimaryFocus);
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(ordered2, FocusManager.Instance.PrimaryFocus);
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(unordered, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -185,7 +187,7 @@ public sealed class FocusTraversalTests : IDisposable
                 ]))));
         harness.Layout(ViewSize);
 
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(alpha, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -220,11 +222,11 @@ public sealed class FocusTraversalTests : IDisposable
         harness.Layout(ViewSize);
 
         // The group's own policy orders its members, and the whole group stays in reading order.
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(innerLast, FocusManager.Instance.PrimaryFocus);
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(innerFirst, FocusManager.Instance.PrimaryFocus);
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(outerLast, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -263,9 +265,9 @@ public sealed class FocusTraversalTests : IDisposable
 
         Assert.True(excluded.CanRequestFocus);
         Assert.True(excluded.SkipTraversal);
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
-        Assert.True(excluded.RequestFocus());
+        Assert.True(PumpFocus(excluded.RequestFocus));
         Assert.Same(excluded, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -297,7 +299,7 @@ public sealed class FocusTraversalTests : IDisposable
             ])));
         harness.Layout(ViewSize);
 
-        Assert.True(origin.FocusInDirection(TraversalDirection.Down));
+        Assert.True(PumpFocus(() => origin.FocusInDirection(TraversalDirection.Down)));
         Assert.Same(below, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -324,12 +326,12 @@ public sealed class FocusTraversalTests : IDisposable
             ])));
         harness.Layout(ViewSize);
 
-        Assert.True(topLeft.FocusInDirection(TraversalDirection.Down));
+        Assert.True(PumpFocus(() => topLeft.FocusInDirection(TraversalDirection.Down)));
         Assert.Same(bottomWide, FocusManager.Instance.PrimaryFocus);
 
         // Dart records the node it came from, so going back up returns to it instead of re-running
         // the geometric search from the wide node's centre.
-        Assert.True(bottomWide.FocusInDirection(TraversalDirection.Up));
+        Assert.True(PumpFocus(() => bottomWide.FocusInDirection(TraversalDirection.Up)));
         Assert.Same(topLeft, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -347,10 +349,10 @@ public sealed class FocusTraversalTests : IDisposable
             ])));
         harness.Layout(ViewSize);
 
-        Assert.True(first.FocusInDirection(TraversalDirection.Right));
+        Assert.True(PumpFocus(() => first.FocusInDirection(TraversalDirection.Right)));
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
         // FocusScopeNode.directionalTraversalEdgeBehavior defaults to stop.
-        Assert.False(second.FocusInDirection(TraversalDirection.Right));
+        Assert.False(PumpFocus(() => second.FocusInDirection(TraversalDirection.Right)));
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -371,9 +373,9 @@ public sealed class FocusTraversalTests : IDisposable
                 ]))));
         harness.Layout(ViewSize);
 
-        Assert.True(first.FocusInDirection(TraversalDirection.Right));
+        Assert.True(PumpFocus(() => first.FocusInDirection(TraversalDirection.Right)));
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
-        Assert.True(second.FocusInDirection(TraversalDirection.Right));
+        Assert.True(PumpFocus(() => second.FocusInDirection(TraversalDirection.Right)));
         Assert.Same(first, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -394,9 +396,9 @@ public sealed class FocusTraversalTests : IDisposable
                 ]))));
         harness.Layout(ViewSize);
 
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
-        Assert.False(FocusManager.Instance.FocusNext());
+        Assert.False(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -413,7 +415,7 @@ public sealed class FocusTraversalTests : IDisposable
         harness.Layout(ViewSize);
 
         Assert.Same(only, FocusManager.Instance.PrimaryFocus);
-        Assert.False(FocusManager.Instance.FocusNext());
+        Assert.False(PumpFocus(FocusManager.Instance.FocusNext));
         // Dart's unfocus hands the focus back to the enclosing scope rather than clearing it.
         Assert.False(only.HasPrimaryFocus);
         Assert.IsType<FocusScopeNode>(FocusManager.Instance.PrimaryFocus);
@@ -445,7 +447,7 @@ public sealed class FocusTraversalTests : IDisposable
         harness.Layout(ViewSize);
 
         Assert.Same(inner, FocusManager.Instance.PrimaryFocus);
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(outerLast, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -465,6 +467,7 @@ public sealed class FocusTraversalTests : IDisposable
 
         var next = new NextFocusAction();
         Assert.Equal(true, next.Invoke(new NextFocusIntent()));
+        Scheduler.FlushMicrotasks();
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
         Assert.Equal(KeyEventResult.Handled, next.ToKeyEventResult(new NextFocusIntent(), true));
         Assert.Equal(
@@ -473,6 +476,7 @@ public sealed class FocusTraversalTests : IDisposable
 
         var previous = new PreviousFocusAction();
         Assert.Equal(true, previous.Invoke(new PreviousFocusIntent()));
+        Scheduler.FlushMicrotasks();
         Assert.Same(first, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -513,6 +517,14 @@ public sealed class FocusTraversalTests : IDisposable
 
         DirectionalFocusAction.ForTextField().Invoke(
             new DirectionalFocusIntent(TraversalDirection.Right, ignoreTextFields: false));
+        Scheduler.FlushMicrotasks();
         Assert.Same(second, FocusManager.Instance.PrimaryFocus);
+    }
+
+    private static bool PumpFocus(Func<bool> action)
+    {
+        bool result = action();
+        Scheduler.FlushMicrotasks();
+        return result;
     }
 }

@@ -18,12 +18,14 @@ public sealed class CupertinoFocusHaloTests : IDisposable
 
     public CupertinoFocusHaloTests()
     {
+        Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
+        Scheduler.ResetForTests();
     }
 
     [Fact]

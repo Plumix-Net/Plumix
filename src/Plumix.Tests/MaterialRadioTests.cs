@@ -182,6 +182,7 @@ public sealed class MaterialRadioTests
             owner.FlushBuild();
 
             Assert.True(focusNode.RequestFocus());
+            Scheduler.FlushMicrotasks();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);
@@ -220,6 +221,7 @@ public sealed class MaterialRadioTests
             owner.FlushBuild();
 
             Assert.True(focusNode.RequestFocus());
+            Scheduler.FlushMicrotasks();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
             Assert.True(handled);

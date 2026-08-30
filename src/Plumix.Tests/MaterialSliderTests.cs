@@ -794,6 +794,7 @@ public sealed class MaterialSliderTests
 
             Assert.False(focusNode.HasFocus);
             Assert.True(node.PerformAction(SemanticsActions.Focus));
+            Scheduler.FlushMicrotasks();
             Assert.True(focusNode.HasFocus);
         }
         finally

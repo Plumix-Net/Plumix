@@ -427,6 +427,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
         Assert.False(buttons[1].Actions.HasFlag(SemanticsActions.Tap));
 
         Tap(harness.RenderView, new Point(30.0, 14.0), pointer: 60);
+        Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Equal("three", reported);
         harness.PumpWidget(Wrap(new CupertinoSlidingSegmentedControl<string>(
@@ -436,6 +437,7 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
             disabledChildren: new HashSet<string> { "two" })));
         harness.Pump(ViewSize);
         reported = null;
+        Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal("one", reported);
     }

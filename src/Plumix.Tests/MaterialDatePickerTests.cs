@@ -194,6 +194,7 @@ public sealed class MaterialDatePickerTests : IDisposable
              index++)
         {
             Assert.True(FocusManager.Instance.FocusNext());
+            Scheduler.FlushMicrotasks();
         }
         Assert.Equal("HandleGridKey", FocusManager.Instance.PrimaryFocus?.OnKeyEvent?.Method.Name);
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
@@ -992,4 +993,3 @@ public sealed class MaterialDatePickerTests : IDisposable
     private static bool HasLabelPart(SemanticsNode node, string part) =>
         node.Label?.Split('\n').Contains(part) == true;
 }
-

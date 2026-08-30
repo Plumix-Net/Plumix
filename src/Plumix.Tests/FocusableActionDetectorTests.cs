@@ -184,12 +184,12 @@ public sealed class FocusableActionDetectorTests : IDisposable
                         child: new SizedBox(width: 20, height: 20)),
                 ]));
 
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
-        Assert.True(excluded.RequestFocus());
+        Assert.True(PumpFocus(excluded.RequestFocus));
         Assert.Same(excluded, FocusManager.Instance.PrimaryFocus);
-        Assert.True(first.RequestFocus());
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(first.RequestFocus));
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
         // Dart's `skipTraversal` getter reports true as soon as an ancestor is untraversable.
         Assert.True(excluded.SkipTraversal);
@@ -227,9 +227,10 @@ public sealed class FocusableActionDetectorTests : IDisposable
         Assert.False(blocked.CanRequestFocus);
         Assert.False(blocked.RequestFocus());
         Assert.True(skipped.CanRequestFocus);
-        Assert.True(skipped.RequestFocus());
+        Assert.True(PumpFocus(skipped.RequestFocus));
         skipped.Unfocus();
-        Assert.True(FocusManager.Instance.FocusNext());
+        Scheduler.FlushMicrotasks();
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
         Assert.True(skipped.SkipTraversal);
     }
@@ -257,6 +258,13 @@ public sealed class FocusableActionDetectorTests : IDisposable
                         return null;
                     }),
             });
+    }
+
+    private static bool PumpFocus(Func<bool> action)
+    {
+        bool result = action();
+        Scheduler.FlushMicrotasks();
+        return result;
     }
 
     private sealed class ProbeIntent : Intent;

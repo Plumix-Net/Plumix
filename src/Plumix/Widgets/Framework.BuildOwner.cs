@@ -210,7 +210,11 @@ public sealed class BuildOwner
 
     internal void FlushBuild()
     {
+        Scheduler.FlushMicrotasks();
         BuildScope();
+        // Test harnesses use FlushBuild as their pump boundary. Production frame flow calls
+        // BuildScope directly and drains microtasks after the frame in Scheduler.HandleFrame.
+        Scheduler.FlushMicrotasks();
     }
 
     private void FinalizeInactiveElements()

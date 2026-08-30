@@ -570,6 +570,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         harness.Pump(ViewSize);
 
         Assert.True(FocusManager.Instance.FocusNext());
+        Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(FocusManager.Instance.HandleTextInput("99"));
         var semantics = harness.PumpAndGetSemantics(ViewSize);
@@ -583,6 +584,7 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         // A complete, valid hour advances focus to the minute field on its own.
         Assert.True(FocusManager.Instance.HandleTextInput("11"));
+        Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.KeyA, control: true)));
         Assert.True(FocusManager.Instance.HandleTextInput("45"));
         semantics = harness.PumpAndGetSemantics(ViewSize);
@@ -965,4 +967,3 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
     private static bool HasLabelPart(SemanticsNode node, string part) =>
         node.Label?.Split('\n').Contains(part) == true;
 }
-

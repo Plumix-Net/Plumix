@@ -458,11 +458,14 @@ public class FocusNode : ChangeNotifier
         return true;
     }
 
-    /// <summary>Dart parity source: <c>FocusNode.requestFocus</c>; returns whether the node ended up focused.</summary>
+    /// <summary>
+    /// Dart parity source: <c>FocusNode.requestFocus</c>; returns whether the request was accepted.
+    /// The primary focus changes on the next microtask.
+    /// </summary>
     public bool RequestFocus()
     {
         DoRequestFocus(findFirstFocus: true);
-        return HasFocus;
+        return CanRequestFocus && Parent != null;
     }
 
     /// <summary>Dart parity source: <c>FocusNode.requestFocus(node)</c>.</summary>
@@ -475,7 +478,7 @@ public class FocusNode : ChangeNotifier
         }
 
         node.DoRequestFocus(findFirstFocus: true);
-        return node.HasFocus;
+        return node.CanRequestFocus && node.Parent != null;
     }
 
     /// <summary>Dart parity source: <c>FocusNode.nextFocus</c>.</summary>
@@ -924,7 +927,7 @@ public sealed class FocusManager : ChangeNotifier
     private FocusHighlightMode? _highlightMode;
     private FocusHighlightStrategy _highlightStrategy = FocusHighlightStrategy.Automatic;
     private bool? _lastInteractionRequiresTraditionalHighlights;
-    private bool _applyingFocusChanges;
+    private bool _haveScheduledUpdate;
     private FocusAppLifecycleListener? _appLifecycleListener;
     private FocusNode? _suspendedNode;
 
@@ -1086,7 +1089,7 @@ public sealed class FocusManager : ChangeNotifier
         }
 
         node.DoRequestFocus(findFirstFocus: true);
-        return node.HasFocus;
+        return node.CanRequestFocus && node.Parent != null;
     }
 
     /// <summary>C#-only convenience wrapper around <see cref="FocusNode.Unfocus"/>.</summary>
@@ -1149,85 +1152,81 @@ public sealed class FocusManager : ChangeNotifier
 
     internal void AddPendingAutofocus(PendingAutofocus autofocus) => _pendingAutofocuses.Add(autofocus);
 
-    /// <summary>
-    /// Dart schedules <c>applyFocusChangesIfNeeded</c> on a microtask; Plumix applies focus changes
-    /// synchronously (see <c>docs/ai/DIVERGENCES.md</c>), so this runs the pass straight away and
-    /// guards against re-entering it from a listener.
-    /// </summary>
+    /// <summary>Dart parity source: <c>FocusManager._markNeedsUpdate</c>.</summary>
     internal void MarkNeedsUpdate()
     {
-        if (_applyingFocusChanges)
+        if (_haveScheduledUpdate)
         {
             return;
         }
 
-        ApplyFocusChangesIfNeeded();
+        _haveScheduledUpdate = true;
+        Scheduler.ScheduleMicrotask(ApplyScheduledFocusChanges);
+    }
+
+    private void ApplyScheduledFocusChanges()
+    {
+        if (_haveScheduledUpdate)
+        {
+            ApplyFocusChangesIfNeeded();
+        }
     }
 
     /// <summary>Dart parity source: <c>FocusManager.applyFocusChangesIfNeeded</c>.</summary>
     public void ApplyFocusChangesIfNeeded()
     {
-        if (_applyingFocusChanges)
+        System.Diagnostics.Debug.Assert(
+            Scheduler.Phase != SchedulerPhase.PersistentCallbacks,
+            "Focus changes must not be applied during the build phase.");
+        _haveScheduledUpdate = false;
+        FocusNode? previousFocus = PrimaryFocus;
+
+        foreach (PendingAutofocus autofocus in _pendingAutofocuses.ToArray())
         {
-            return;
+            autofocus.ApplyIfValid(this);
         }
 
-        _applyingFocusChanges = true;
-        try
+        _pendingAutofocuses.Clear();
+
+        if (PrimaryFocus == null && MarkedForFocus == null)
         {
-            FocusNode? previousFocus = PrimaryFocus;
+            MarkedForFocus = _rootScope;
+        }
 
-            foreach (PendingAutofocus autofocus in _pendingAutofocuses.ToArray())
+        if (MarkedForFocus != null && !ReferenceEquals(MarkedForFocus, PrimaryFocus))
+        {
+            HashSet<FocusNode> previousPath = previousFocus?.Ancestors.ToHashSet() ?? [];
+            HashSet<FocusNode> nextPath = MarkedForFocus.Ancestors.ToHashSet();
+            _dirtyNodes.UnionWith(nextPath.Except(previousPath));
+            _dirtyNodes.UnionWith(previousPath.Except(nextPath));
+
+            PrimaryFocus = MarkedForFocus;
+            MarkedForFocus = null;
+        }
+
+        if (!ReferenceEquals(previousFocus, PrimaryFocus))
+        {
+            if (previousFocus != null)
             {
-                autofocus.ApplyIfValid(this);
+                _dirtyNodes.Add(previousFocus);
             }
 
-            _pendingAutofocuses.Clear();
-
-            if (PrimaryFocus == null && MarkedForFocus == null)
+            if (PrimaryFocus != null)
             {
-                MarkedForFocus = _rootScope;
-            }
-
-            if (MarkedForFocus != null && !ReferenceEquals(MarkedForFocus, PrimaryFocus))
-            {
-                HashSet<FocusNode> previousPath = previousFocus?.Ancestors.ToHashSet() ?? [];
-                HashSet<FocusNode> nextPath = MarkedForFocus.Ancestors.ToHashSet();
-                _dirtyNodes.UnionWith(nextPath.Except(previousPath));
-                _dirtyNodes.UnionWith(previousPath.Except(nextPath));
-
-                PrimaryFocus = MarkedForFocus;
-                MarkedForFocus = null;
-            }
-
-            if (!ReferenceEquals(previousFocus, PrimaryFocus))
-            {
-                if (previousFocus != null)
-                {
-                    _dirtyNodes.Add(previousFocus);
-                }
-
-                if (PrimaryFocus != null)
-                {
-                    _dirtyNodes.Add(PrimaryFocus);
-                }
-            }
-
-            foreach (FocusNode node in _dirtyNodes.ToArray())
-            {
-                node.Notify();
-            }
-
-            _dirtyNodes.Clear();
-            if (!ReferenceEquals(previousFocus, PrimaryFocus))
-            {
-                PrimaryFocusChanged?.Invoke();
-                NotifyListeners();
+                _dirtyNodes.Add(PrimaryFocus);
             }
         }
-        finally
+
+        foreach (FocusNode node in _dirtyNodes.ToArray())
         {
-            _applyingFocusChanges = false;
+            node.Notify();
+        }
+
+        _dirtyNodes.Clear();
+        if (!ReferenceEquals(previousFocus, PrimaryFocus))
+        {
+            PrimaryFocusChanged?.Invoke();
+            NotifyListeners();
         }
     }
 
@@ -1374,6 +1373,7 @@ public sealed class FocusManager : ChangeNotifier
     {
         PrimaryFocus = null;
         MarkedForFocus = null;
+        _haveScheduledUpdate = false;
         _suspendedNode = null;
         _dirtyNodes.Clear();
         _pendingAutofocuses.Clear();

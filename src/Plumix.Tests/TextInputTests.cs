@@ -42,6 +42,7 @@ public sealed class TextInputTests : IDisposable
 
         manager.RegisterNode(node);
         manager.RequestFocus(node);
+        Scheduler.FlushMicrotasks();
 
         bool handled = manager.HandleTextInput("A");
 
@@ -65,6 +66,7 @@ public sealed class TextInputTests : IDisposable
 
         manager.RegisterNode(node);
         manager.RequestFocus(node);
+        Scheduler.FlushMicrotasks();
 
         bool updateHandled = manager.HandleTextCompositionUpdate("pre");
         bool commitHandled = manager.HandleTextCompositionCommit("final");

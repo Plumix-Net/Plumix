@@ -257,12 +257,15 @@ public sealed class CupertinoSegmentedControlTests : IDisposable
             disabledChildren: new HashSet<string> { "two" })));
         harness.Pump(ViewSize);
         Tap(harness.RenderView, new Point(41.0, 14.0), pointer: 30);
+        Scheduler.FlushMicrotasks();
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Equal("three", reported);
+        Scheduler.FlushMicrotasks();
         reported = null;
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Equal("one", reported);
+        Scheduler.FlushMicrotasks();
         reported = null;
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal("three", reported);

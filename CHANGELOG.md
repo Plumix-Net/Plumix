@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `FocusManager` applies focus changes on a microtask instead of synchronously (`focus_manager.dart`).
+- Breaking: `FocusNode.RequestFocus` and friends report whether the request was accepted, not `HasFocus`.
+- `PipelineOwner.FlushLayout` drains the microtask queue when the pipeline is driven outside a frame.
 - Breaking: `ClipRect`/`ClipRRect` derive from `RenderCustomClip<T>`; `ClipRect(clipRect:)` goes (`proxy_box.dart`).
 - Breaking: `ClipRRect` gained `clipper`/`clipBehavior`/`BorderRadiusGeometry`/`textDirection` (`proxy_box.dart`).
 - Breaking: `MaterialLocalizations` declares its resources abstract; the US English values move to the default.

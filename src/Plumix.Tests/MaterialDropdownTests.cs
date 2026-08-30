@@ -271,7 +271,6 @@ public sealed class MaterialDropdownTests : IDisposable
         Assert.NotNull(FindSemantics(openedSemantics, node =>
             node.Role == SemanticsRole.Menu
             && node.Label == "Popup menu"));
-
         // The selected row autofocuses; arrow traversal skips the disabled row, which has no InkWell.
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         harness.Pump(new Size(500, 360));

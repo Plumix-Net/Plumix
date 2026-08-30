@@ -22,6 +22,7 @@ internal sealed class FocusLayoutHarness : IDisposable
         _rootElement.Attach(_owner);
         _rootElement.Mount(parent: null, newSlot: null);
         _owner.FlushBuild();
+        Scheduler.FlushMicrotasks();
     }
 
     public RenderView RenderView { get; }
@@ -31,6 +32,7 @@ internal sealed class FocusLayoutHarness : IDisposable
         _owner.FlushBuild();
         _pipeline.RequestLayout();
         _pipeline.FlushLayout(size);
+        Scheduler.FlushMicrotasks();
     }
 
     public void Update(Widget widget, Size size)
@@ -39,7 +41,11 @@ internal sealed class FocusLayoutHarness : IDisposable
         Layout(size);
     }
 
-    public void Dispose() => _rootElement.Unmount();
+    public void Dispose()
+    {
+        _rootElement.Unmount();
+        Scheduler.FlushMicrotasks();
+    }
 
     private sealed class HarnessRootElement : Element, IRenderObjectHost
     {

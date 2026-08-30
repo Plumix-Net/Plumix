@@ -14,6 +14,7 @@ public sealed class KeyboardListenerTests : IDisposable
 {
     public KeyboardListenerTests()
     {
+        Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
 #pragma warning disable CS0618
         RawKeyboard.Instance.ClearKeysPressed();
@@ -24,6 +25,7 @@ public sealed class KeyboardListenerTests : IDisposable
     public void Dispose()
     {
         FocusManager.Instance.ResetForTests();
+        Scheduler.ResetForTests();
 #pragma warning disable CS0618
         RawKeyboard.Instance.ClearKeysPressed();
         RawKeyboard.Instance.ClearListeners();
@@ -95,6 +97,7 @@ public sealed class KeyboardListenerTests : IDisposable
         Assert.False(focusable.Flags.HasFlag(SemanticsFlags.IsFocused));
         Assert.True(focusable.Actions.HasFlag(SemanticsActions.Focus));
         Assert.True(harness.PerformSemanticsAction(focusable.Id, SemanticsActions.Focus));
+        Scheduler.FlushMicrotasks();
         Assert.True(focusNode.HasFocus);
 
         semantics = harness.PumpAndGetSemantics(new Size(120, 60));
@@ -156,6 +159,7 @@ public sealed class KeyboardListenerTests : IDisposable
         Assert.All(rawEvents, @event => Assert.Equal(LogicalKeyboardKey.Enter, @event.LogicalKey));
 
         focusNode.Unfocus();
+        Scheduler.FlushMicrotasks();
         KeySim.DispatchRaw(LogicalKeyboardKey.Escape, down: true);
         Assert.Equal(2, rawEvents.Count);
 #pragma warning restore CS0618
@@ -185,6 +189,7 @@ public sealed class KeyboardListenerTests : IDisposable
         // leaves the new one unfocused; the listener has to ask for focus explicitly.
         Assert.False(secondNode.HasFocus);
         Assert.True(secondNode.RequestFocus());
+        Scheduler.FlushMicrotasks();
 
         KeySim.DispatchRaw(LogicalKeyboardKey.Space, down: true);
         Assert.Equal(1, eventCount);

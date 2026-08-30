@@ -268,6 +268,7 @@ public sealed class MaterialCheckboxTests
             _ = harness.PumpAndGetSemantics(new Size(120, 120));
 
             Assert.True(focusNode.RequestFocus());
+            Scheduler.FlushMicrotasks();
             Assert.True(FocusManager.Instance.HandleKeyEvent(
                 KeySim.Down(LogicalKeyboardKey.Space)));
 

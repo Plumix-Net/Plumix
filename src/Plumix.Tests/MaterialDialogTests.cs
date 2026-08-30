@@ -499,10 +499,10 @@ public sealed class MaterialDialogTests : IDisposable
         harness.Pump(new Size(600, 400));
 
         // The dialog route focus scope defaults to a closed loop: Tab cycles endlessly.
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         FocusNode first = FocusManager.Instance.PrimaryFocus!;
-        Assert.True(FocusManager.Instance.FocusNext());
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(first, FocusManager.Instance.PrimaryFocus);
 
         Navigator.Of(captured).Pop();
@@ -518,9 +518,9 @@ public sealed class MaterialDialogTests : IDisposable
             traversalEdgeBehavior: TraversalEdgeBehavior.LeaveFlutterView);
         PumpAnimation();
         harness.Pump(new Size(600, 400));
-        Assert.True(FocusManager.Instance.FocusNext());
+        Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         // At the loop edge the focus leaves the view instead of wrapping.
-        Assert.False(FocusManager.Instance.FocusNext());
+        Assert.False(PumpFocus(FocusManager.Instance.FocusNext));
         // Dart's `unfocus()` hands the focus back to the enclosing scope rather than clearing it.
         Assert.IsType<FocusScopeNode>(FocusManager.Instance.PrimaryFocus);
         Navigator.Of(captured).Pop();
@@ -541,6 +541,7 @@ public sealed class MaterialDialogTests : IDisposable
                 new Focus(focusNode: homeFocus, child: new Text("Home")))))));
         harness.Pump(new Size(600, 400));
         homeFocus.RequestFocus();
+        Scheduler.FlushMicrotasks();
         Assert.Same(homeFocus, FocusManager.Instance.PrimaryFocus);
 
         var kept = MaterialDialogs.ShowDialog<string>(
@@ -651,6 +652,13 @@ public sealed class MaterialDialogTests : IDisposable
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text) =>
         FindDescendants<RenderParagraph>(root).FirstOrDefault(paragraph => paragraph.PlainText == text);
+
+    private static bool PumpFocus(Func<bool> action)
+    {
+        bool result = action();
+        Scheduler.FlushMicrotasks();
+        return result;
+    }
 
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {

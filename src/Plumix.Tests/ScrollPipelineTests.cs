@@ -47,6 +47,7 @@ public sealed class ScrollPipelineTests
                 PointerButtons.Primary,
                 true,
                 now.AddMilliseconds(16)));
+        Scheduler.FlushMicrotasks();
 
         Assert.False(focusNode.HasFocus);
         GestureBinding.Instance.HandlePointerEvent(
