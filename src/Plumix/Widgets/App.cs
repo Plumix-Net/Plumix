@@ -519,6 +519,9 @@ public sealed class WidgetsApp : StatefulWidget
             child = new ShortcutRegistrar(child);
             child = new TapRegionSurface(child);
             child = new FocusScope(child);
+            child = new FocusTraversalGroup(
+                policy: new ReadingOrderTraversalPolicy(),
+                child: child);
             child = new Actions(
                 actions: CurrentWidget.Actions ?? DefaultActions,
                 child: child);

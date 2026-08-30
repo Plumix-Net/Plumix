@@ -104,6 +104,16 @@ public class PlumixHost : Control
 
     internal RenderBox? RootChild => _root.Child;
 
+    /// <summary>
+    /// The platform view the root render view renders into. Flutter's <c>RenderView</c> takes one in
+    /// its constructor; Plumix's hosts create it lazily once the view metrics are known.
+    /// </summary>
+    internal FlutterView? RootFlutterView
+    {
+        get => _root.FlutterView;
+        set => _root.FlutterView = value;
+    }
+
     public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner?.RootNode;
 
     public void SetRootChild(RenderBox? child)

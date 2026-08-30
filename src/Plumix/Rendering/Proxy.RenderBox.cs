@@ -2955,132 +2955,40 @@ public sealed class RenderRotatedBox : RenderProxyBox
     }
 }
 
-public sealed class RenderClipRect : RenderProxyBox
+/// <summary>
+/// Clips its child to a rectangle.
+/// </summary>
+/// <remarks>Flutter's <c>RenderClipRect</c>.</remarks>
+public sealed class RenderClipRect : RenderCustomClip<Rect>
 {
-    private Rect _clipRect;
-    private bool _hasExplicitClipRect;
-    private CustomClipper<Rect>? _clipper;
-    private Clip _clipBehavior;
-
     public RenderClipRect(
         RenderBox? child = null,
         CustomClipper<Rect>? clipper = null,
-        Clip clipBehavior = Clip.HardEdge)
+        Clip clipBehavior = Clip.HardEdge) : base(child, clipper, clipBehavior)
     {
-        _clipper = clipper;
-        _clipBehavior = clipBehavior;
-        Child = child;
     }
 
-    public Clip ClipBehavior
-    {
-        get => _clipBehavior;
-        set
-        {
-            if (_clipBehavior == value)
-            {
-                return;
-            }
+    /// <inheritdoc />
+    protected override Rect DefaultClip => new(new Point(0, 0), Size);
 
-            _clipBehavior = value;
-            MarkNeedsPaint();
-            MarkNeedsCompositingBitsUpdate();
-            MarkNeedsSemanticsUpdate();
-        }
-    }
+    /// <inheritdoc />
+    /// <remarks>
+    /// Plumix paints the clip through the composited-layer protocol rather than Dart's
+    /// <c>pushClipRect</c> (see the <c>PaintingContext</c> row in <c>docs/ai/DIVERGENCES.md</c>), so
+    /// the object is a repaint boundary whenever it actually clips.
+    /// </remarks>
+    public override bool IsRepaintBoundary => Child is not null && ClipBehavior != Clip.None;
 
-    public CustomClipper<Rect>? Clipper
-    {
-        get => _clipper;
-        set
-        {
-            if (ReferenceEquals(_clipper, value))
-            {
-                return;
-            }
+    /// <inheritdoc />
+    protected override bool AlwaysNeedsCompositing => Child is not null && ClipBehavior != Clip.None;
 
-            CustomClipper<Rect>? oldClipper = _clipper;
-            _clipper = value;
-            if (Attached)
-            {
-                oldClipper?.RemoveListener(MarkNeedsClip);
-                value?.AddListener(MarkNeedsClip);
-            }
-
-            MarkNeedsClip();
-        }
-    }
-
-    public Rect ClipRect
-    {
-        get => _clipRect;
-        set
-        {
-            if (_hasExplicitClipRect && _clipRect == value)
-            {
-                return;
-            }
-
-            _clipRect = value;
-            _hasExplicitClipRect = true;
-            if (Child != null)
-            {
-                MarkNeedsCompositedLayerUpdate();
-                MarkNeedsSemanticsUpdate();
-            }
-        }
-    }
-
-    public void ClearClipRect()
-    {
-        if (!_hasExplicitClipRect)
-        {
-            return;
-        }
-
-        _hasExplicitClipRect = false;
-        MarkNeedsCompositedLayerUpdate();
-        MarkNeedsSemanticsUpdate();
-    }
-
-    public override bool IsRepaintBoundary => Child != null && _clipBehavior != Clip.None;
-    protected override bool AlwaysNeedsCompositing => Child != null && _clipBehavior != Clip.None;
-
-    protected override void OnAttach()
-    {
-        base.OnAttach();
-        _clipper?.AddListener(MarkNeedsClip);
-    }
-
-    protected override void OnDetach()
-    {
-        _clipper?.RemoveListener(MarkNeedsClip);
-        base.OnDetach();
-    }
-
-    protected override void PerformLayout()
-    {
-        bool hadSize = HasSize;
-        var previousSize = hadSize ? Size : default;
-        base.PerformLayout();
-
-        if (_hasExplicitClipRect || Child == null)
-        {
-            return;
-        }
-
-        if (!hadSize || previousSize != Size)
-        {
-            MarkNeedsCompositedLayerUpdate();
-            MarkNeedsSemanticsUpdate();
-        }
-    }
-
+    /// <inheritdoc />
     protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
     {
         return oldLayer as ClipRectOffsetLayer ?? new ClipRectOffsetLayer();
     }
 
+    /// <inheritdoc />
     protected override void UpdateCompositedLayer(OffsetLayer layer)
     {
         if (layer is ClipRectOffsetLayer clipLayer)
@@ -3089,24 +2997,16 @@ public sealed class RenderClipRect : RenderProxyBox
         }
     }
 
+    /// <inheritdoc />
     protected override Rect? DescribeSemanticsClip(RenderObject? child)
     {
         return null;
     }
 
-    protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
-    {
-        return _clipBehavior == Clip.None
-            ? null
-            : _hasExplicitClipRect
-            ? _clipRect
-            : _clipper?.GetApproximateClipRect(Size) ?? new Rect(new Point(0, 0), Size);
-    }
-
+    /// <inheritdoc />
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
-        Rect clip = EffectiveClip;
-        if (!clip.Contains(position))
+        if (Clipper is not null && !EffectiveClip.Contains(position))
         {
             return false;
         }
@@ -3114,31 +3014,20 @@ public sealed class RenderClipRect : RenderProxyBox
         return base.HitTest(result, position);
     }
 
-    private Rect EffectiveClip => _hasExplicitClipRect
-        ? _clipRect
-        : _clipper?.GetClip(Size) ?? new Rect(new Point(0, 0), Size);
-
-    private void MarkNeedsClip()
+    /// <inheritdoc />
+    protected override void MarkNeedsClip()
     {
-        MarkNeedsCompositedLayerUpdate();
-        MarkNeedsSemanticsUpdate();
+        InvalidateClip();
+        if (Child is not null)
+        {
+            MarkNeedsCompositedLayerUpdate();
+            MarkNeedsSemanticsUpdate();
+        }
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected override void DebugPaintClip(PaintingContext context, Point offset)
     {
-        ArgumentNullException.ThrowIfNull(context);
-        if (Child is null)
-        {
-            return;
-        }
-
-        base.DebugPaintSize(context, offset);
-        if (_clipBehavior == Clip.None)
-        {
-            return;
-        }
-
         Rect clip = EffectiveClip;
         context.DrawGeometry(
             null,
@@ -3148,38 +3037,28 @@ public sealed class RenderClipRect : RenderProxyBox
     }
 }
 
-public sealed class RenderClipRRect : RenderProxyBox
+/// <summary>
+/// Clips its child to a rounded rectangle.
+/// </summary>
+/// <remarks>Flutter's <c>RenderClipRRect</c>.</remarks>
+public sealed class RenderClipRRect : RenderCustomClip<RRect>
 {
-    private Rect _clipRect;
-    private bool _hasExplicitClipRect;
-    private BorderRadius _borderRadius;
+    private BorderRadiusGeometry _borderRadius;
+    private TextDirection? _textDirection;
 
-    public RenderClipRRect(RenderBox? child = null)
+    public RenderClipRRect(
+        RenderBox? child = null,
+        BorderRadiusGeometry? borderRadius = null,
+        CustomClipper<RRect>? clipper = null,
+        Clip clipBehavior = Clip.AntiAlias,
+        TextDirection? textDirection = null) : base(child, clipper, clipBehavior)
     {
-        Child = child;
+        _borderRadius = borderRadius ?? Rendering.BorderRadius.Zero;
+        _textDirection = textDirection;
     }
 
-    public Rect ClipRect
-    {
-        get => _clipRect;
-        set
-        {
-            if (_hasExplicitClipRect && _clipRect == value)
-            {
-                return;
-            }
-
-            _clipRect = value;
-            _hasExplicitClipRect = true;
-            if (Child != null)
-            {
-                MarkNeedsCompositedLayerUpdate();
-                MarkNeedsSemanticsUpdate();
-            }
-        }
-    }
-
-    public BorderRadius BorderRadius
+    /// <summary>The border radius of the rounded corners.</summary>
+    public BorderRadiusGeometry BorderRadius
     {
         get => _borderRadius;
         set
@@ -3190,63 +3069,75 @@ public sealed class RenderClipRRect : RenderProxyBox
             }
 
             _borderRadius = value;
-            if (Child != null)
-            {
-                MarkNeedsCompositedLayerUpdate();
-                MarkNeedsSemanticsUpdate();
-            }
+            MarkNeedsClip();
         }
     }
 
-    public override bool IsRepaintBoundary => Child != null;
-    protected override bool AlwaysNeedsCompositing => Child != null;
-
-    protected override void PerformLayout()
+    /// <summary>The text direction with which to resolve a directional <see cref="BorderRadius"/>.</summary>
+    public TextDirection? TextDirection
     {
-        bool hadSize = HasSize;
-        var previousSize = hadSize ? Size : default;
-        base.PerformLayout();
-
-        if (_hasExplicitClipRect || Child == null)
+        get => _textDirection;
+        set
         {
-            return;
-        }
+            if (_textDirection == value)
+            {
+                return;
+            }
 
-        if (!hadSize || previousSize != Size)
-        {
-            MarkNeedsCompositedLayerUpdate();
-            MarkNeedsSemanticsUpdate();
+            _textDirection = value;
+            MarkNeedsClip();
         }
     }
 
+    /// <inheritdoc />
+    protected override RRect DefaultClip => RRect.FromRectAndCorners(
+        new Rect(new Point(0, 0), Size),
+        _borderRadius.Resolve(_textDirection ?? Plumix.UI.TextDirection.Ltr));
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Plumix paints the clip through the composited-layer protocol rather than Dart's
+    /// <c>pushClipRRect</c> (see the <c>PaintingContext</c> row in <c>docs/ai/DIVERGENCES.md</c>).
+    /// </remarks>
+    public override bool IsRepaintBoundary => Child is not null && ClipBehavior != Clip.None;
+
+    /// <inheritdoc />
+    protected override bool AlwaysNeedsCompositing => Child is not null && ClipBehavior != Clip.None;
+
+    /// <inheritdoc />
     protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
     {
         return oldLayer as ClipRRectOffsetLayer ?? new ClipRRectOffsetLayer();
     }
 
+    /// <inheritdoc />
     protected override void UpdateCompositedLayer(OffsetLayer layer)
     {
         if (layer is ClipRRectOffsetLayer clipLayer)
         {
-            clipLayer.ClipRect = _hasExplicitClipRect ? _clipRect : new Rect(new Point(0, 0), Size);
-            clipLayer.BorderRadius = _borderRadius;
+            RRect clip = EffectiveClip;
+            clipLayer.ClipRect = clip.Rect;
+            clipLayer.BorderRadius = clip.Radii;
         }
     }
 
+    /// <inheritdoc />
     protected override Rect? DescribeSemanticsClip(RenderObject? child)
     {
         return null;
     }
 
+    /// <inheritdoc />
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        return _hasExplicitClipRect ? _clipRect : new Rect(new Point(0, 0), Size);
+        return ClipBehavior == Clip.None ? null : EffectiveClip.Rect;
     }
 
+    /// <inheritdoc />
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
-        var clip = _hasExplicitClipRect ? _clipRect : new Rect(new Point(0, 0), Size);
-        if (!Layer.ContainsRoundedRect(clip, _borderRadius, position))
+        RRect clip = EffectiveClip;
+        if (!Layer.ContainsRoundedRect(clip.Rect, clip.Radii, position))
         {
             return false;
         }
@@ -3255,18 +3146,24 @@ public sealed class RenderClipRRect : RenderProxyBox
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected override void MarkNeedsClip()
     {
-        ArgumentNullException.ThrowIfNull(context);
-        if (Child is null)
+        InvalidateClip();
+        if (Child is not null)
         {
-            return;
+            MarkNeedsCompositedLayerUpdate();
+            MarkNeedsSemanticsUpdate();
         }
+    }
 
-        base.DebugPaintSize(context, offset);
-        Rect clip = _hasExplicitClipRect ? _clipRect : new Rect(new Point(0, 0), Size);
+    /// <inheritdoc />
+    protected override void DebugPaintClip(PaintingContext context, Point offset)
+    {
+        RRect clip = EffectiveClip;
         var path = new Plumix.UI.Path();
-        path.AddRRect(RRect.FromRectAndCorners(new Rect(clip.Position + offset, clip.Size), _borderRadius));
+        path.AddRRect(RRect.FromRectAndCorners(
+            new Rect(clip.Rect.Position + offset, clip.Rect.Size),
+            clip.Radii));
         context.DrawPath(path, brush: null, pen: RenderCustomClipDebug.DebugPen);
         RenderCustomClipDebug.PaintScissors(context, offset, clip.Width);
     }

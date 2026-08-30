@@ -386,27 +386,22 @@ public sealed class MaterialColorSchemeTests
     }
 
     [Fact]
-    public void MaterialLocalizations_MapsFlutterScriptCategories()
+    public void MaterialLocalizations_DefaultDelegateIsEnglishOnly()
     {
-        string[] dense = ["bo", "hi", "ja", "km", "ko", "mr", "ta", "zh"];
-        string[] tall =
-        [
-            "ar", "bn", "fa", "gu", "kn", "lo", "ml", "my", "ne", "or", "pa", "ps", "te", "th", "ug",
-            "ur",
-        ];
-
-        Assert.All(dense, language => Assert.Equal(
-            ScriptCategory.Dense,
-            DefaultMaterialLocalizations.Delegate.LoadTyped(new Locale(language)).ScriptCategory));
-        Assert.All(tall, language => Assert.Equal(
-            ScriptCategory.Tall,
-            DefaultMaterialLocalizations.Delegate.LoadTyped(new Locale(language)).ScriptCategory));
+        // Dart's `_MaterialLocalizationsDelegate` supports `en` alone and always reports
+        // `ScriptCategory.englishLike`; every other script category comes from
+        // `GlobalMaterialLocalizations`.
+        Assert.True(DefaultMaterialLocalizations.Delegate.IsSupported(new Locale("en")));
+        Assert.True(DefaultMaterialLocalizations.Delegate.IsSupported(new Locale("en", "US")));
+        Assert.All(
+            new[] { "bo", "hi", "ja", "ar", "th", "he", "vi" },
+            language => Assert.False(DefaultMaterialLocalizations.Delegate.IsSupported(new Locale(language))));
         Assert.Equal(
             ScriptCategory.EnglishLike,
-            DefaultMaterialLocalizations.Delegate.LoadTyped(new Locale("he")).ScriptCategory);
+            DefaultMaterialLocalizations.Delegate.LoadTyped(new Locale("en")).ScriptCategory);
         Assert.Equal(
-            ScriptCategory.EnglishLike,
-            DefaultMaterialLocalizations.Delegate.LoadTyped(new Locale("vi")).ScriptCategory);
+            "DefaultMaterialLocalizations.delegate(en_US)",
+            DefaultMaterialLocalizations.Delegate.ToString());
     }
 
     [Fact]
@@ -473,7 +468,7 @@ public sealed class MaterialColorSchemeTests
         return 400;
     }
 
-    private sealed class TestMaterialLocalizations(ScriptCategory scriptCategory) : MaterialLocalizations
+    private sealed class TestMaterialLocalizations(ScriptCategory scriptCategory) : DefaultMaterialLocalizations
     {
         public override ScriptCategory ScriptCategory { get; } = scriptCategory;
 

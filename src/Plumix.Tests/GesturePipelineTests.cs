@@ -30,10 +30,7 @@ public sealed class GesturePipelineTests
     public void RenderClipRect_HitTest_RejectsOutsideEffectiveClip()
     {
         var child = new FixedHitTestBox(new Size(80, 80), hitSelf: true);
-        var clip = new RenderClipRect(child)
-        {
-            ClipRect = new Rect(0, 0, 20, 20)
-        };
+        var clip = new RenderClipRect(child, clipper: new FixedRectClipper(new Rect(0, 0, 20, 20)));
 
         var pipeline = BuildPipeline(clip);
 

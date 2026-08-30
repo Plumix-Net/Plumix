@@ -300,6 +300,133 @@ public sealed class ClipWidgetsTests
         Assert.IsType<PictureLayer>(Assert.Single(clipLayer.Children));
     }
 
+    [Fact]
+    public void ClipRectAndClipRRect_ExposeFlutterDefaultsAndShareTheCustomClipBase()
+    {
+        var clipRect = new ClipRect(child: new SizedBox(width: 40, height: 30));
+        var clipRRect = new ClipRRect(child: new SizedBox(width: 40, height: 30));
+
+        Assert.Null(clipRect.Clipper);
+        Assert.Equal(Clip.HardEdge, clipRect.ClipBehavior);
+        Assert.Null(clipRRect.Clipper);
+        Assert.Equal(Clip.AntiAlias, clipRRect.ClipBehavior);
+        Assert.Equal(BorderRadius.Zero, clipRRect.BorderRadius.Physical);
+
+        var render = new RenderClipRect();
+        Assert.IsAssignableFrom<RenderCustomClip<Rect>>(render);
+        Assert.IsAssignableFrom<RenderCustomClip<RRect>>(new RenderClipRRect());
+    }
+
+    [Fact]
+    public void RenderClipRect_ClipsToTheLayoutRectOrTheClipper_AndHonorsClipNone()
+    {
+        var child = new SizedBoxRenderBox(new Size(60, 40));
+        var render = new RenderClipRect(child);
+        LayoutRoot(render, new Size(60, 40));
+
+        // With no clipper the effective clip is the layout rect, and the object composites.
+        Assert.True(render.IsRepaintBoundary);
+        Assert.Equal(new Rect(0, 0, 60, 40), render.InvokeDescribeApproximatePaintClip(null));
+
+        var clipper = new FixedRectClipper(new Rect(0, 0, 20, 20));
+        render.Clipper = clipper;
+        Assert.Equal(new Rect(0, 0, 20, 20), render.InvokeDescribeApproximatePaintClip(null));
+
+        render.ClipBehavior = Clip.None;
+        Assert.False(render.IsRepaintBoundary);
+        Assert.Null(render.InvokeDescribeApproximatePaintClip(null));
+    }
+
+    [Fact]
+    public void RenderClipRRect_ResolvesADirectionalBorderRadiusThroughTextDirection()
+    {
+        var child = new SizedBoxRenderBox(new Size(40, 40));
+        var render = new RenderClipRRect(
+            child,
+            borderRadius: BorderRadiusDirectional.Only(topStart: 12.0),
+            textDirection: TextDirection.Ltr);
+        LayoutRoot(render, new Size(40, 40));
+
+        Assert.True(render.HitTest(new BoxHitTestResult(), new Point(20, 20)));
+        // The rounded top-left corner rejects the corner pixel in LTR ...
+        Assert.False(render.HitTest(new BoxHitTestResult(), new Point(0.5, 0.5)));
+        Assert.True(render.HitTest(new BoxHitTestResult(), new Point(39.5, 0.5)));
+
+        // ... and the rounded corner moves to the top-right in RTL.
+        render.TextDirection = TextDirection.Rtl;
+        Assert.True(render.HitTest(new BoxHitTestResult(), new Point(0.5, 0.5)));
+        Assert.False(render.HitTest(new BoxHitTestResult(), new Point(39.5, 0.5)));
+    }
+
+    [Fact]
+    public void ClipRRectWidget_PassesTheAmbientDirectionalityToTheRenderObject()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new Directionality(
+            TextDirection.Rtl,
+            new ClipRRect(
+                borderRadius: BorderRadius.Circular(6),
+                clipBehavior: Clip.HardEdge,
+                child: new SizedBox(width: 40, height: 30))));
+        Mount(root, owner);
+
+        var render = FindRenderClipRRect(root.ChildElement);
+        Assert.Equal(TextDirection.Rtl, render.TextDirection);
+        Assert.Equal(Clip.HardEdge, render.ClipBehavior);
+
+        root.Unmount();
+    }
+
+    private static RenderClipRRect FindRenderClipRRect(Element? element)
+    {
+        RenderClipRRect? found = null;
+        void Walk(Element? current)
+        {
+            if (current is null || found is not null)
+            {
+                return;
+            }
+
+            if (current.RenderObject is RenderClipRRect match)
+            {
+                found = match;
+                return;
+            }
+
+            current.VisitChildren(Walk);
+        }
+
+        Walk(element);
+        Assert.NotNull(found);
+        return found!;
+    }
+
+    private static void LayoutRoot(RenderBox render, Size size)
+    {
+        var view = new RenderView { Child = render };
+        var pipeline = new PipelineOwner(view);
+        pipeline.Attach(view);
+        pipeline.FlushLayout(size);
+    }
+
+    private sealed class SizedBoxRenderBox : RenderBox
+    {
+        private readonly Size _size;
+
+        public SizedBoxRenderBox(Size size)
+        {
+            _size = size;
+        }
+
+        protected override void PerformLayout() => Size = Constraints.Constrain(_size);
+
+        protected override bool HitTestSelf(Point position) => true;
+
+        public override void Paint(PaintingContext context, Point offset)
+        {
+        }
+    }
+
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);

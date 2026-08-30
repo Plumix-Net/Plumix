@@ -418,7 +418,7 @@ public sealed class MaterialActionButtonsTests
         return result;
     }
 
-    private sealed class TestMaterialLocalizations : MaterialLocalizations
+    private sealed class TestMaterialLocalizations : DefaultMaterialLocalizations
     {
         public override string BackButtonTooltip => "Retour";
         public override string CloseButtonTooltip => "Fermer";

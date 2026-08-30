@@ -132,7 +132,7 @@ internal sealed class AutocompleteDemoPageState : State
                 BorderRadius: BorderRadius.Circular(12)),
             new ClipRRect(
                 BorderRadius.Circular(12),
-                new ListView(
+                child: new ListView(
                     shrinkWrap: true,
                     children: materialized.Select((option, index) =>
                     {

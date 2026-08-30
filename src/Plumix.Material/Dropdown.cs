@@ -371,7 +371,7 @@ internal sealed class DropdownMenuPanelState<T> : State
         // otherwise, so the unrounded menu is left unclipped rather than clipped to its own bounds.
         if (widget.BorderRadius is not null)
         {
-            content = new ClipRRect(widget.BorderRadius.Value, content);
+            content = new ClipRRect(widget.BorderRadius.Value, child: content);
         }
         content = new Semantics(
             role: SemanticsRole.Menu,

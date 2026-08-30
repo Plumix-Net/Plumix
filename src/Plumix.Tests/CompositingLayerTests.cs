@@ -377,7 +377,8 @@ public sealed class CompositingLayerTests
     public void RenderClipRect_UpdatesLayerClip_WithoutRepaintingChild()
     {
         var leaf = new TestLeafRenderBox();
-        var clipRect = new RenderClipRect(leaf);
+        var clipper = new FixedRectClipper(new Rect(0, 0, 32, 32));
+        var clipRect = new RenderClipRect(leaf, clipper: clipper);
         var root = new RenderView
         {
             Child = clipRect
@@ -394,7 +395,7 @@ public sealed class CompositingLayerTests
         var clipLayer = Assert.IsType<ClipRectOffsetLayer>(Assert.Single(pipeline.RootLayer.Children));
         Assert.Equal(new Rect(0, 0, 32, 32), clipLayer.ClipRect);
 
-        clipRect.ClipRect = new Rect(3, 5, 20, 12);
+        clipper.Rect = new Rect(3, 5, 20, 12);
         pipeline.FlushCompositingBits();
         pipeline.FlushPaint();
 

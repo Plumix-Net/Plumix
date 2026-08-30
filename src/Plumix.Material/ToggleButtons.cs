@@ -196,7 +196,7 @@ public sealed class ToggleButtons : StatelessWidget
                 style: style,
                 onPressed: enabled ? () => OnPressed!(capturedIndex) : null,
                 child: Children[index]);
-            button = new ClipRRect(clipRadius, button);
+            button = new ClipRRect(clipRadius, child: button);
             button = new SelectToggleButton(
                 leadingBorderSide: leadingSide,
                 borderSide: currentSide,

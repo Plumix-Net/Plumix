@@ -791,37 +791,29 @@ public sealed class RotatedBox : SingleChildRenderObjectWidget
     }
 }
 
+/// <summary>A widget that clips its child using a rectangle.</summary>
+/// <remarks>Flutter's <c>ClipRect</c>.</remarks>
 public sealed class ClipRect : SingleChildRenderObjectWidget
 {
     public ClipRect(
-        Rect? clipRect = null,
         CustomClipper<Rect>? clipper = null,
+        Clip clipBehavior = Plumix.UI.Clip.HardEdge,
         Widget? child = null,
-        Key? key = null,
-        Clip clipBehavior = Plumix.UI.Clip.HardEdge) : base(child, key)
+        Key? key = null) : base(child, key)
     {
-        Clip = clipRect;
         Clipper = clipper;
         ClipBehavior = clipBehavior;
     }
 
-    public Rect? Clip { get; }
-
+    /// <summary>Supplies the rectangle to clip to; <see langword="null"/> clips to the layout rect.</summary>
     public CustomClipper<Rect>? Clipper { get; }
 
+    /// <summary>How the clip is applied. Defaults to <see cref="Plumix.UI.Clip.HardEdge"/>.</summary>
     public Clip ClipBehavior { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        var renderObject = new RenderClipRect(
-            clipper: Clipper,
-            clipBehavior: ClipBehavior);
-        if (Clip.HasValue)
-        {
-            renderObject.ClipRect = Clip.Value;
-        }
-
-        return renderObject;
+        return new RenderClipRect(clipper: Clipper, clipBehavior: ClipBehavior);
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -829,37 +821,51 @@ public sealed class ClipRect : SingleChildRenderObjectWidget
         var clipRect = (RenderClipRect)renderObject;
         clipRect.Clipper = Clipper;
         clipRect.ClipBehavior = ClipBehavior;
-        if (Clip.HasValue)
-        {
-            clipRect.ClipRect = Clip.Value;
-        }
-        else
-        {
-            clipRect.ClearClipRect();
-        }
     }
 }
 
+/// <summary>A widget that clips its child using a rounded rectangle.</summary>
+/// <remarks>Flutter's <c>ClipRRect</c>.</remarks>
 public sealed class ClipRRect : SingleChildRenderObjectWidget
 {
-    public ClipRRect(BorderRadius borderRadius, Widget? child = null, Key? key = null) : base(child, key)
+    public ClipRRect(
+        BorderRadiusGeometry? borderRadius = null,
+        CustomClipper<RRect>? clipper = null,
+        Clip clipBehavior = Plumix.UI.Clip.AntiAlias,
+        Widget? child = null,
+        Key? key = null) : base(child, key)
     {
-        BorderRadius = borderRadius;
+        BorderRadius = borderRadius ?? Rendering.BorderRadius.Zero;
+        Clipper = clipper;
+        ClipBehavior = clipBehavior;
     }
 
-    public BorderRadius BorderRadius { get; }
+    /// <summary>The border radius of the rounded corners.</summary>
+    public BorderRadiusGeometry BorderRadius { get; }
+
+    /// <summary>Supplies the rounded rectangle to clip to; <see langword="null"/> uses
+    /// <see cref="BorderRadius"/> over the layout rect.</summary>
+    public CustomClipper<RRect>? Clipper { get; }
+
+    /// <summary>How the clip is applied. Defaults to <see cref="Plumix.UI.Clip.AntiAlias"/>.</summary>
+    public Clip ClipBehavior { get; }
 
     internal override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderClipRRect
-        {
-            BorderRadius = BorderRadius
-        };
+        return new RenderClipRRect(
+            borderRadius: BorderRadius,
+            clipper: Clipper,
+            clipBehavior: ClipBehavior,
+            textDirection: Directionality.MaybeOf(context));
     }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderClipRRect)renderObject).BorderRadius = BorderRadius;
+        var clipRRect = (RenderClipRRect)renderObject;
+        clipRRect.BorderRadius = BorderRadius;
+        clipRRect.Clipper = Clipper;
+        clipRRect.ClipBehavior = ClipBehavior;
+        clipRRect.TextDirection = Directionality.MaybeOf(context);
     }
 }
 

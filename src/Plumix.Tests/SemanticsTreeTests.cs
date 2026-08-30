@@ -685,10 +685,7 @@ public sealed class SemanticsTreeTests
     {
         var leaf = new FixedSemanticBox("Hidden", new Size(12, 8));
         var transform = new RenderTransform(Matrix4.TranslationValues(40, 0, 0.0), leaf);
-        var clip = new RenderClipRect(transform)
-        {
-            ClipRect = new Rect(0, 0, 20, 20)
-        };
+        var clip = new RenderClipRect(transform, clipper: new FixedRectClipper(new Rect(0, 0, 20, 20)));
 
         var renderView = new RenderView
         {
@@ -711,10 +708,8 @@ public sealed class SemanticsTreeTests
     {
         var leaf = new FixedSemanticBox("Clipped", new Size(12, 8));
         var transform = new RenderTransform(Matrix4.TranslationValues(20, 0, 0.0), leaf);
-        var clip = new RenderClipRect(transform)
-        {
-            ClipRect = new Rect(0, 0, 64, 32)
-        };
+        var clipper = new FixedRectClipper(new Rect(0, 0, 64, 32));
+        var clip = new RenderClipRect(transform, clipper: clipper);
 
         var renderView = new RenderView
         {
@@ -731,7 +726,7 @@ public sealed class SemanticsTreeTests
         Assert.NotNull(firstRoot);
         Assert.Single(firstRoot.Children);
 
-        clip.ClipRect = new Rect(0, 0, 8, 8);
+        clipper.Rect = new Rect(0, 0, 8, 8);
         pipeline.FlushSemantics();
 
         var updatedRoot = pipeline.SemanticsOwner!.RootNode;

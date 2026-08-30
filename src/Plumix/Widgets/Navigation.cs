@@ -44,6 +44,18 @@ public enum RoutePopDisposition
 }
 
 /// <summary>
+/// Signature of a callback that vetoes an attempt to pop the enclosing <see cref="ModalRoute"/>.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>WillPopCallback</c>, whose result is a <c>Future&lt;bool&gt;</c>. Plumix's route pop
+/// path is synchronous throughout (see <see cref="Route.WillPop()"/>), so the callback returns the
+/// veto directly.
+/// </remarks>
+[Obsolete(
+    "Use PopEntry/PopScope instead. Mirrors Flutter's deprecation after v3.12.0-1.0.pre.")]
+public delegate bool WillPopCallback();
+
+/// <summary>
 /// Flutter's <c>_ModalRouteAspect</c>: the piece of route status a <see cref="ModalRoute"/> dependent reads.
 /// Depending on one aspect rebuilds the dependent only when that aspect changes.
 /// </summary>
@@ -923,6 +935,9 @@ public abstract class ModalRoute : TransitionRoute
 {
     private readonly PageStorageBucket _storageBucket = new();
     private readonly List<PopEntry> _popEntries = [];
+#pragma warning disable CS0618 // The scoped will-pop list is Flutter's deprecated surface.
+    private readonly List<WillPopCallback> _willPopCallbacks = [];
+#pragma warning restore CS0618
     private readonly GlobalKey<ModalScopeState> _scopeKey;
     private readonly GlobalKey _subtreeKey;
     private readonly ProxyAnimation _animationProxy = new(AlwaysDismissedAnimation);
@@ -1140,6 +1155,79 @@ public abstract class ModalRoute : TransitionRoute
         HandlePopEntryChanged();
     }
 
+#pragma warning disable CS0618 // Flutter's deprecated scoped will-pop surface.
+    /// <summary>
+    /// Registers a callback that vetoes attempts to pop this route.
+    /// </summary>
+    /// <remarks>Flutter's <c>ModalRoute.addScopedWillPopCallback</c>.</remarks>
+    [Obsolete(
+        "Use RegisterPopEntry or PopScope instead. "
+        + "Mirrors Flutter's deprecation after v3.12.0-1.0.pre.")]
+    public void AddScopedWillPopCallback(WillPopCallback callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        if (Constants.KDebugMode && _scopeKey.CurrentState is null)
+        {
+            throw new InvalidOperationException(
+                "Tried to add a willPop callback to a route that is not currently in the tree.");
+        }
+
+        _willPopCallbacks.Add(callback);
+        if (_willPopCallbacks.Count == 1)
+        {
+            NotifyRouteChanged();
+        }
+    }
+
+    /// <summary>Removes one of the callbacks run by <see cref="WillPop()"/>.</summary>
+    /// <remarks>Flutter's <c>ModalRoute.removeScopedWillPopCallback</c>.</remarks>
+    [Obsolete(
+        "Use UnregisterPopEntry or PopScope instead. "
+        + "Mirrors Flutter's deprecation after v3.12.0-1.0.pre.")]
+    public void RemoveScopedWillPopCallback(WillPopCallback callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        if (Constants.KDebugMode && _scopeKey.CurrentState is null)
+        {
+            throw new InvalidOperationException(
+                "Tried to remove a willPop callback from a route that is not currently in the tree.");
+        }
+
+        _willPopCallbacks.Remove(callback);
+        if (_willPopCallbacks.Count == 0)
+        {
+            NotifyRouteChanged();
+        }
+    }
+
+    /// <summary>True if one or more <c>WillPopCallback</c> callbacks exist.</summary>
+    /// <remarks>
+    /// Flutter's <c>ModalRoute.hasScopedWillPopCallback</c>, used to disable the back-swipe gesture
+    /// while a pop might be vetoed.
+    /// </remarks>
+    [Obsolete(
+        "Use PopDisposition instead. Mirrors Flutter's deprecation after v3.12.0-1.0.pre.")]
+    protected internal bool HasScopedWillPopCallback => _willPopCallbacks.Count > 0;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>ModalRoute.willPop</c>: the scoped callbacks run first, and any veto stops the
+    /// pop before the base route consumes a local history entry.
+    /// </remarks>
+    public override bool WillPop()
+    {
+        foreach (WillPopCallback callback in _willPopCallbacks.ToArray())
+        {
+            if (!callback())
+            {
+                return false;
+            }
+        }
+
+        return base.WillPop();
+    }
+#pragma warning restore CS0618
+
     public void UnregisterPopEntry(PopEntry popEntry)
     {
         if (!_popEntries.Remove(popEntry))
@@ -1159,6 +1247,7 @@ public abstract class ModalRoute : TransitionRoute
         }
 
         _popEntries.Clear();
+        _willPopCallbacks.Clear();
         base.Dispose();
 
         // Cleared after `OverlayRoute.Dispose` disposed them, so a late `ChangedInternalState` cannot mark a
@@ -1378,10 +1467,13 @@ public abstract class PageRoute : ModalRoute
 
     public override bool MaintainState { get; }
 
+#pragma warning disable CS0618 // Flutter's deprecated scoped will-pop surface.
     public override bool PopGestureEnabled => !IsFirst
                                               && !WillHandlePopInternally
+                                              && !HasScopedWillPopCallback
                                               && PopDisposition != RoutePopDisposition.DoNotPop
                                               && Animation.Status == AnimationStatus.Completed;
+#pragma warning restore CS0618
 
     public override bool PopGestureInProgress => Navigator?.UserGestureInProgress == true;
 

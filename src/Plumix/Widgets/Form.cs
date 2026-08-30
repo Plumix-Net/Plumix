@@ -29,7 +29,10 @@ public sealed class Form : StatefulWidget
         Key? key = null,
         bool? canPop = null,
         PopInvokedCallback? onPopInvoked = null,
-        PopInvokedWithResultCallback<object?>? onPopInvokedWithResult = null) : base(key)
+        PopInvokedWithResultCallback<object?>? onPopInvokedWithResult = null,
+#pragma warning disable CS0618
+        WillPopCallback? onWillPop = null) : base(key)
+#pragma warning restore CS0618
     {
         if (onPopInvokedWithResult != null && onPopInvoked != null)
         {
@@ -38,10 +41,18 @@ public sealed class Form : StatefulWidget
                 nameof(onPopInvoked));
         }
 
+        if ((onPopInvokedWithResult ?? (object?)onPopInvoked ?? canPop) != null && onWillPop != null)
+        {
+            throw new ArgumentException(
+                "onWillPop is deprecated; use canPop and/or onPopInvokedWithResult.",
+                nameof(onWillPop));
+        }
+
         Child = child ?? throw new ArgumentNullException(nameof(child));
         CanPop = canPop;
 #pragma warning disable CS0618
         OnPopInvoked = onPopInvoked;
+        OnWillPop = onWillPop;
 #pragma warning restore CS0618
         OnPopInvokedWithResult = onPopInvokedWithResult;
         OnChanged = onChanged;
@@ -52,6 +63,16 @@ public sealed class Form : StatefulWidget
     public bool? CanPop { get; }
     [Obsolete("Use OnPopInvokedWithResult instead.")]
     public PopInvokedCallback? OnPopInvoked { get; }
+
+    /// <summary>
+    /// Enables the form to veto attempts by the user to dismiss the enclosing <see cref="ModalRoute"/>.
+    /// </summary>
+#pragma warning disable CS0618
+    [Obsolete(
+        "Use CanPop and/or OnPopInvokedWithResult instead. "
+        + "Mirrors Flutter's deprecation after v3.12.0-1.0.pre.")]
+    public WillPopCallback? OnWillPop { get; }
+#pragma warning restore CS0618
     public PopInvokedWithResultCallback<object?>? OnPopInvokedWithResult { get; }
     public Action? OnChanged { get; }
     public AutovalidateMode AutovalidateMode { get; }
@@ -137,17 +158,22 @@ public sealed class FormState : State
                 break;
         }
 
-        Widget form = new FormScope(this, _generation, Current.Child);
-        if (Current.CanPop != null || Current.OnPopInvokedWithResult != null
+        Widget scope = new FormScope(this, _generation, Current.Child);
+        Widget form;
 #pragma warning disable CS0618
-            || Current.OnPopInvoked != null)
-#pragma warning restore CS0618
+        if (Current.CanPop != null
+            || (Current.OnPopInvokedWithResult ?? (object?)Current.OnPopInvoked) != null)
         {
             form = new PopScope<object?>(
                 canPop: Current.CanPop ?? true,
                 onPopInvokedWithResult: CallPopInvoked,
-                child: form);
+                child: scope);
         }
+        else
+        {
+            form = new WillPopScope(child: scope, onWillPop: Current.OnWillPop);
+        }
+#pragma warning restore CS0618
 
         return new Semantics(
             container: true,

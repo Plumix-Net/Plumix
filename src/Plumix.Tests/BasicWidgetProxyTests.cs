@@ -208,10 +208,10 @@ public sealed class BasicWidgetProxyTests
     public void ClipRectWidget_CreatesRenderClipRect_AndUpdatesClip()
     {
         var owner = new BuildOwner();
-        var initialClip = new Rect(1, 2, 30, 40);
+        var initialClipper = new FixedRectClipper(new Rect(1, 2, 30, 40));
         var root = new TestRootElement(
             new ClipRect(
-                clipRect: initialClip,
+                clipper: initialClipper,
                 child: new SizedBox(width: 40, height: 50)));
 
         root.Attach(owner);
@@ -219,17 +219,18 @@ public sealed class BasicWidgetProxyTests
         owner.FlushBuild();
 
         var renderClipRect = RequireRenderObject<RenderClipRect>(root.ChildElement);
-        Assert.Equal(initialClip, renderClipRect.ClipRect);
+        Assert.Same(initialClipper, renderClipRect.Clipper);
+        Assert.Equal(Plumix.UI.Clip.HardEdge, renderClipRect.ClipBehavior);
 
-        var updatedClip = new Rect(4, 6, 12, 14);
+        var updatedClipper = new FixedRectClipper(new Rect(4, 6, 12, 14));
         root.Update(new ClipRect(
-            clipRect: updatedClip,
+            clipper: updatedClipper,
             child: new SizedBox(width: 40, height: 50)));
         owner.FlushBuild();
 
         var updatedRenderClipRect = RequireRenderObject<RenderClipRect>(root.ChildElement);
         Assert.Same(renderClipRect, updatedRenderClipRect);
-        Assert.Equal(updatedClip, updatedRenderClipRect.ClipRect);
+        Assert.Same(updatedClipper, updatedRenderClipRect.Clipper);
     }
 
     [Fact]

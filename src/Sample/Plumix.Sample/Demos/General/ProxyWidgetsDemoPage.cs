@@ -78,7 +78,7 @@ internal sealed class ProxyWidgetsDemoPageState : State
                     color: Color.Parse("#FFE7EDF6"),
                     padding: new Thickness(8),
                     child: new ClipRect(
-                        clipRect: clip,
+                        clipper: new FixedRectClipper(clip),
                         child: new Plumix.Widgets.Transform(
                             transform: Matrix4.TranslationValues(_shiftX, 10.0, 0.0),
                             child: new Opacity(
@@ -246,6 +246,21 @@ internal sealed class ProxyWidgetsDemoPageState : State
             _fractionalShift = 0;
             _quarterTurns = 0;
         });
+    }
+
+    private sealed class FixedRectClipper : CustomClipper<Rect>
+    {
+        private readonly Rect _rect;
+
+        public FixedRectClipper(Rect rect)
+        {
+            _rect = rect;
+        }
+
+        public override Rect GetClip(Size size) => _rect;
+
+        public override bool ShouldReclip(CustomClipper<Rect> oldClipper) =>
+            oldClipper is not FixedRectClipper other || other._rect != _rect;
     }
 
     private sealed class TrianglePathClipper : CustomClipper<Path>

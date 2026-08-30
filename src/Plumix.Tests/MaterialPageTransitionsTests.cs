@@ -264,7 +264,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
 
         Assert.True(detailsRoute.PopGestureInProgress);
         Assert.Equal(0.5, detailsRoute.Animation.Value, precision: 6);
-        Assert.Contains(FindWidgets<ClipRRect>(root), clip => clip.BorderRadius.Radius > 0.0);
+        Assert.Contains(FindWidgets<ClipRRect>(root), clip => clip.BorderRadius.Physical.Radius > 0.0);
 
         WidgetsBinding.Instance.HandleCancelBackGesture();
         Settle(root.TestOwner);

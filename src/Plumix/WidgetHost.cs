@@ -102,6 +102,7 @@ public sealed class WidgetHost : PlumixHost
         _lastMediaQueryData = data;
         _view ??= new FlutterView(data.PhysicalSize, data.DevicePixelRatio, data.ViewId);
         _view.UpdateMetrics(data.PhysicalSize, data.DevicePixelRatio, data.ViewId);
+        RootFlutterView = _view;
         return new View(
             view: _view,
             child: new MediaQuery(

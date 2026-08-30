@@ -1463,7 +1463,7 @@ public sealed class MaterialBottomNavigationBarTests
             child: themedContent);
     }
 
-    private sealed class TestMaterialLocalizations : MaterialLocalizations
+    private sealed class TestMaterialLocalizations : DefaultMaterialLocalizations
     {
         public override string TabLabel(int tabIndex, int tabCount)
         {

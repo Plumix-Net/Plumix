@@ -8,6 +8,14 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `ClipRect`/`ClipRRect` derive from `RenderCustomClip<T>`; `ClipRect(clipRect:)` goes (`proxy_box.dart`).
+- Breaking: `ClipRRect` gained `clipper`/`clipBehavior`/`BorderRadiusGeometry`/`textDirection` (`proxy_box.dart`).
+- Breaking: `MaterialLocalizations` declares its resources abstract; the US English values move to the default.
+- Breaking: `DefaultMaterialLocalizations.Delegate` supports `en` alone and always reports `englishLike`.
+- Added `WillPopScope`, `ModalRoute`'s scoped will-pop callbacks and `Form.OnWillPop` (`will_pop_scope.dart`).
+- Added `ViewConfiguration`, `RenderView.Configuration`/`FlutterView`/`DebugFillProperties` (`rendering/view.dart`).
+- Added `BoxConstraints`'s `*`, `/` and `%` operators plus `TruncatingDivide` (`box.dart`).
+- `WidgetsApp` now installs Flutter's app-level `FocusTraversalGroup` (`app.dart`).
 - Breaking: `Theme` no longer installs a `DefaultTextStyle`; the button restores `AnimatedTheme` (`theme.dart`).
 - Breaking: a `SemanticsRole` no longer folds into `SemanticsFlags`; `SemanticsFlags.IsDialog`/`IsAlertDialog` go.
 - Added `SemanticsRole.TabBar`/`Tab` to `NavigationBar` and `button: true` to popup menu items (`popup_menu.dart`).

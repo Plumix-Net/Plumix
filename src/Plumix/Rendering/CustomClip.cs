@@ -98,10 +98,9 @@ internal sealed class DecorationClipper : CustomClipper<Path>
 /// </summary>
 /// <remarks>
 /// Flutter keeps <c>_debugPaint</c> and <c>_debugText</c> as instance fields on the private
-/// <c>_RenderCustomClip</c> mixin base. Plumix's clip render objects do not share one base class
-/// (<see cref="RenderClipRect"/> and <see cref="RenderClipRRect"/> derive straight from
-/// <see cref="RenderProxyBox"/>), so the two lazily created objects live here instead; they are
-/// stateless, so one shared instance is equivalent to Dart's per-object caching.
+/// <c>_RenderCustomClip</c> mixin base. Both objects are stateless, so
+/// <see cref="RenderCustomClip{T}"/> reaches them through these lazily created statics instead of
+/// carrying a copy per render object.
 /// </remarks>
 internal static class RenderCustomClipDebug
 {
@@ -202,6 +201,9 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
 
             _clipBehavior = value;
             MarkNeedsPaint();
+            // Plumix-only: `RenderClipRect`/`RenderClipRRect` derive `AlwaysNeedsCompositing` from
+            // the clip behavior, so the compositing bits have to be recomputed with it.
+            MarkNeedsCompositingBitsUpdate();
             MarkNeedsSemanticsUpdate();
         }
     }
@@ -242,7 +244,7 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
         base.PerformLayout();
         if (!hadSize || oldSize != Size)
         {
-            _hasClip = false;
+            MarkNeedsClip();
         }
     }
 
@@ -256,12 +258,37 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
         return _clipper?.GetApproximateClipRect(Size) ?? new Rect(new Point(0, 0), Size);
     }
 
-    private void MarkNeedsClip()
+    /// <summary>Drops the cached clip so the next paint recomputes it.</summary>
+    protected void InvalidateClip() => _hasClip = false;
+
+    /// <remarks>Flutter's <c>_RenderCustomClip._markNeedsClip</c>.</remarks>
+    protected virtual void MarkNeedsClip()
     {
-        _hasClip = false;
+        InvalidateClip();
         MarkNeedsPaint();
         MarkNeedsSemanticsUpdate();
     }
+
+    /// <remarks>Flutter's <c>_RenderCustomClip.debugPaintSize</c>.</remarks>
+    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is null)
+        {
+            return;
+        }
+
+        base.DebugPaintSize(context, offset);
+        if (ClipBehavior == Clip.None)
+        {
+            return;
+        }
+
+        DebugPaintClip(context, offset);
+    }
+
+    /// <summary>Outlines the effective clip; Flutter inlines this in each subclass's paint.</summary>
+    protected abstract void DebugPaintClip(PaintingContext context, Point offset);
 }
 
 public sealed class RenderClipOval : RenderCustomClip<Rect>
@@ -315,20 +342,8 @@ public sealed class RenderClipOval : RenderCustomClip<Rect>
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected override void DebugPaintClip(PaintingContext context, Point offset)
     {
-        ArgumentNullException.ThrowIfNull(context);
-        if (Child is null)
-        {
-            return;
-        }
-
-        base.DebugPaintSize(context, offset);
-        if (ClipBehavior == Clip.None)
-        {
-            return;
-        }
-
         Rect clip = EffectiveClip;
         context.DrawOval(
             new Rect(clip.Position + offset, clip.Size),
@@ -388,20 +403,8 @@ public sealed class RenderClipPath : RenderCustomClip<Path>
     }
 
     /// <inheritdoc />
-    protected internal override void DebugPaintSize(PaintingContext context, Point offset)
+    protected override void DebugPaintClip(PaintingContext context, Point offset)
     {
-        ArgumentNullException.ThrowIfNull(context);
-        if (Child is null)
-        {
-            return;
-        }
-
-        base.DebugPaintSize(context, offset);
-        if (ClipBehavior == Clip.None)
-        {
-            return;
-        }
-
         Path clip = EffectiveClip;
         context.DrawGeometry(null, RenderCustomClipDebug.DebugPen, clip.ToGeometry(), geometryOffset: offset);
         RenderCustomClipDebug.PaintScissors(context, offset, clip.GetBounds().Width);

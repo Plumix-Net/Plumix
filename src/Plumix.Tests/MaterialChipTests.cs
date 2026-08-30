@@ -1099,7 +1099,7 @@ public sealed class MaterialChipTests : IDisposable
         }
     }
 
-    private sealed class TestMaterialLocalizations(string deleteTooltip) : MaterialLocalizations
+    private sealed class TestMaterialLocalizations(string deleteTooltip) : DefaultMaterialLocalizations
     {
         public override string DeleteButtonTooltip => deleteTooltip;
 

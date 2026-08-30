@@ -277,6 +277,14 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
         }
     }
 
+    /// <inheritdoc />
+    protected override void DebugPaintClip(PaintingContext context, Point offset)
+    {
+        Path clip = EffectiveClip;
+        context.DrawGeometry(null, RenderCustomClipDebug.DebugPen, clip.ToGeometry(), geometryOffset: offset);
+        RenderCustomClipDebug.PaintScissors(context, offset, clip.GetBounds().Width);
+    }
+
     protected override Path DefaultClip
     {
         get

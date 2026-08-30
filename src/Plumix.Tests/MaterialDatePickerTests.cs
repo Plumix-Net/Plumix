@@ -866,7 +866,7 @@ public sealed class MaterialDatePickerTests : IDisposable
         return string.Join(Environment.NewLine, lines);
     }
 
-    private sealed class MondayFirstLocalizations : MaterialLocalizations
+    private sealed class MondayFirstLocalizations : DefaultMaterialLocalizations
     {
         public override int FirstDayOfWeekIndex => 1;
         public override string TabLabel(int tabIndex, int tabCount) => $"{tabIndex}/{tabCount}";

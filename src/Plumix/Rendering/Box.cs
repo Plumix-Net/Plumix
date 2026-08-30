@@ -270,6 +270,42 @@ public readonly record struct BoxConstraints(
 
     public BoxConstraints Loosen() => new BoxConstraints(MaxWidth: MaxWidth, MaxHeight: MaxHeight);
 
+    /// <summary>
+    /// Dart's <c>BoxConstraints.operator *</c>: scales every constraint by <paramref name="factor"/>.
+    /// </summary>
+    public static BoxConstraints operator *(BoxConstraints constraints, double factor)
+        => new BoxConstraints(
+            MinWidth: constraints.MinWidth * factor,
+            MaxWidth: constraints.MaxWidth * factor,
+            MinHeight: constraints.MinHeight * factor,
+            MaxHeight: constraints.MaxHeight * factor);
+
+    /// <summary>
+    /// Dart's <c>BoxConstraints.operator /</c>: divides every constraint by <paramref name="factor"/>.
+    /// </summary>
+    public static BoxConstraints operator /(BoxConstraints constraints, double factor)
+        => new BoxConstraints(
+            MinWidth: constraints.MinWidth / factor,
+            MaxWidth: constraints.MaxWidth / factor,
+            MinHeight: constraints.MinHeight / factor,
+            MaxHeight: constraints.MaxHeight / factor);
+
+    /// <summary>Dart's <c>BoxConstraints.operator %</c>: the remainder of every constraint.</summary>
+    public static BoxConstraints operator %(BoxConstraints constraints, double value)
+        => new BoxConstraints(
+            MinWidth: constraints.MinWidth % value,
+            MaxWidth: constraints.MaxWidth % value,
+            MinHeight: constraints.MinHeight % value,
+            MaxHeight: constraints.MaxHeight % value);
+
+    /// <summary>Dart's <c>BoxConstraints.operator ~/</c>: truncating division of every constraint.</summary>
+    public BoxConstraints TruncatingDivide(double factor)
+        => new BoxConstraints(
+            MinWidth: Math.Truncate(MinWidth / factor),
+            MaxWidth: Math.Truncate(MaxWidth / factor),
+            MinHeight: Math.Truncate(MinHeight / factor),
+            MaxHeight: Math.Truncate(MaxHeight / factor));
+
     /// <summary>Dart's `BoxConstraints.widthConstraints`: only the width constraints.</summary>
     public BoxConstraints WidthConstraints() => new BoxConstraints(MinWidth: MinWidth, MaxWidth: MaxWidth);
 

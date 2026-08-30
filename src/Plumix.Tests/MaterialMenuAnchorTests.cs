@@ -824,7 +824,7 @@ public sealed class MaterialMenuAnchorTests
             ShortcutSerialization.Modifier(LogicalKeyboardKey.Home, control: true);
     }
 
-    private sealed class KeyLabelOverrideLocalizations : MaterialLocalizations
+    private sealed class KeyLabelOverrideLocalizations : DefaultMaterialLocalizations
     {
         public override string TabLabel(int tabIndex, int tabCount) => $"Tab {tabIndex} of {tabCount}";
 

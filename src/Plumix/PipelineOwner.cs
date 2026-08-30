@@ -432,6 +432,20 @@ public sealed class PipelineOwner : DiagnosticableTree
 
     private void FlushLayoutCore(Size? rootSize)
     {
+        if (rootSize is { } viewSize && _rootNode is RenderView configuredView)
+        {
+            // Flutter's `RendererBinding` writes the `ViewConfiguration` onto the `RenderView`
+            // whenever the platform view's metrics change; Plumix hosts hand the size to the frame
+            // instead, so the owner keeps the configuration in step here.
+            BoxConstraints logicalConstraints = new BoxConstraints(0, viewSize.Width, 0, viewSize.Height);
+            double devicePixelRatio = configuredView.FlutterView?.DevicePixelRatio
+                ?? (configuredView.HasConfiguration ? configuredView.Configuration.DevicePixelRatio : 1.0);
+            configuredView.Configuration = new ViewConfiguration(
+                physicalConstraints: logicalConstraints * devicePixelRatio,
+                logicalConstraints: logicalConstraints,
+                devicePixelRatio: devicePixelRatio);
+        }
+
         DebugDoingLayout = true;
         try
         {
@@ -460,9 +474,11 @@ public sealed class PipelineOwner : DiagnosticableTree
 
     private void FlushLayoutNodes(Size? rootSize)
     {
-        BoxConstraints? constraints = rootSize is { } size
-            ? new BoxConstraints(0, size.Width, 0, size.Height)
-            : null;
+        BoxConstraints? constraints = rootSize is null
+            ? null
+            : _rootNode is RenderView { HasConfiguration: true } configuredRootView
+                ? configuredRootView.Configuration.LogicalConstraints
+                : new BoxConstraints(0, rootSize.Value.Width, 0, rootSize.Value.Height);
         _shouldMergeDirtyNodes = false;
 
         while (_nodesNeedingLayout.Count > 0)
