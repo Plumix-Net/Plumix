@@ -260,7 +260,7 @@ public sealed class CupertinoSearchTextFieldTests : IDisposable
         IconTheme prefix = PrefixTheme(harness);
         Assert.Equal(30.0, prefix.Data.Size);
 
-        Assert.True(externalFocusNode.RequestFocus());
+        externalFocusNode.RequestFocus();
         harness.Pump(ViewSize);
         Assert.Equal(0.0, PrefixTheme(harness).Data.Size);
 

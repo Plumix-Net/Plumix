@@ -3388,6 +3388,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private Action? _onDecrease;
     private IReadOnlyDictionary<CustomSemanticsAction, Action>? _customSemanticsActions;
     private Action? _onFocus;
+    private Action? _onDidGainAccessibilityFocus;
+    private Action? _onDidLoseAccessibilityFocus;
     private bool _liveRegion;
     private bool _container;
     private bool _explicitChildNodes;
@@ -3749,6 +3751,30 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    /// <remarks>Flutter's <c>SemanticsProperties.onDidGainAccessibilityFocus</c>.</remarks>
+    public Action? OnDidGainAccessibilityFocus
+    {
+        get => _onDidGainAccessibilityFocus;
+        set
+        {
+            if (ReferenceEquals(_onDidGainAccessibilityFocus, value)) return;
+            _onDidGainAccessibilityFocus = value;
+            MarkNeedsSemanticsUpdateBatched();
+        }
+    }
+
+    /// <remarks>Flutter's <c>SemanticsProperties.onDidLoseAccessibilityFocus</c>.</remarks>
+    public Action? OnDidLoseAccessibilityFocus
+    {
+        get => _onDidLoseAccessibilityFocus;
+        set
+        {
+            if (ReferenceEquals(_onDidLoseAccessibilityFocus, value)) return;
+            _onDidLoseAccessibilityFocus = value;
+            MarkNeedsSemanticsUpdateBatched();
+        }
+    }
+
     public IReadOnlyDictionary<CustomSemanticsAction, Action>? CustomSemanticsActions
     {
         get => _customSemanticsActions;
@@ -3925,6 +3951,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _onDecrease is null
             && _customSemanticsActions is null
             && _onFocus is null
+            && _onDidGainAccessibilityFocus is null
+            && _onDidLoseAccessibilityFocus is null
             && !_liveRegion
             && !_container
             && !_explicitChildNodes
@@ -4022,6 +4050,14 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         if (_onFocus is not null)
         {
             configuration.AddActionHandler(SemanticsActions.Focus, _onFocus);
+        }
+        if (_onDidGainAccessibilityFocus is not null)
+        {
+            configuration.OnDidGainAccessibilityFocus = _onDidGainAccessibilityFocus;
+        }
+        if (_onDidLoseAccessibilityFocus is not null)
+        {
+            configuration.OnDidLoseAccessibilityFocus = _onDidLoseAccessibilityFocus;
         }
         if (_customSemanticsActions is not null)
         {

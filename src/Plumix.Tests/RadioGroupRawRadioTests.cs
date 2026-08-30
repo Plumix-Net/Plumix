@@ -97,7 +97,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         harness.Pump(new Size(240, 120));
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
-        Assert.True(state.FirstFocus.RequestFocus());
+        state.FirstFocus.RequestFocus();
         Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
@@ -124,7 +124,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         harness.Pump(new Size(240, 120));
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
-        Assert.True(state.FirstFocus.RequestFocus());
+        state.FirstFocus.RequestFocus();
         Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
@@ -145,7 +145,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         harness.Pump(new Size(240, 120));
         RadioGroupProbeState state = harness.FindState<RadioGroupProbeState>();
 
-        Assert.True(state.FirstFocus.RequestFocus());
+        state.FirstFocus.RequestFocus();
         Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         harness.Pump(new Size(240, 120));
@@ -205,12 +205,12 @@ public sealed class RadioGroupRawRadioTests : IDisposable
                                 ]))))));
         harness.Pump(new Size(240, 120));
 
-        Assert.True(otherFocus.RequestFocus());
+        otherFocus.RequestFocus();
         Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal(1, outerShortcutCount);
 
-        Assert.True(radioFocus.RequestFocus());
+        radioFocus.RequestFocus();
         Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Equal(1, outerShortcutCount);
@@ -356,6 +356,12 @@ public sealed class RadioGroupRawRadioTests : IDisposable
         bool result = action();
         Scheduler.FlushMicrotasks();
         return result;
+    }
+
+    private static void PumpFocus(Action action)
+    {
+        action();
+        Scheduler.FlushMicrotasks();
     }
 
     private static List<SemanticsNode> FindNodes(

@@ -660,6 +660,12 @@ public sealed class MaterialDialogTests : IDisposable
         return result;
     }
 
+    private static void PumpFocus(Action action)
+    {
+        action();
+        Scheduler.FlushMicrotasks();
+    }
+
     private static List<T> FindDescendants<T>(RenderObject? root) where T : RenderObject
     {
         var result = new List<T>();

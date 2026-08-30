@@ -169,6 +169,12 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
     public Action? OnFocus { get; init; }
 
+    /// <summary>Handler for <c>SemanticsAction.didGainAccessibilityFocus</c>.</summary>
+    public Action? OnDidGainAccessibilityFocus { get; init; }
+
+    /// <summary>Handler for <c>SemanticsAction.didLoseAccessibilityFocus</c>.</summary>
+    public Action? OnDidLoseAccessibilityFocus { get; init; }
+
     public bool LiveRegion { get; }
 
     public bool Container { get; }
@@ -272,6 +278,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             tagForChildren: TagForChildren,
             accessibilityFocusBlockType: AccessibilityFocusBlockType);
         semantics.OnFocus = OnFocus;
+        semantics.OnDidGainAccessibilityFocus = OnDidGainAccessibilityFocus;
+        semantics.OnDidLoseAccessibilityFocus = OnDidLoseAccessibilityFocus;
         return semantics;
     }
 
@@ -305,6 +313,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.OnDecrease = OnDecrease;
         semantics.CustomSemanticsActions = CustomSemanticsActions;
         semantics.OnFocus = OnFocus;
+        semantics.OnDidGainAccessibilityFocus = OnDidGainAccessibilityFocus;
+        semantics.OnDidLoseAccessibilityFocus = OnDidLoseAccessibilityFocus;
         semantics.LiveRegion = LiveRegion;
         semantics.Container = Container;
         semantics.ExplicitChildNodes = ExplicitChildNodes;

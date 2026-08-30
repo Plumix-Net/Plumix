@@ -35,8 +35,8 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(second);
         manager.AddListener(() => notificationCount += 1);
 
-        Assert.True(first.RequestFocus());
-        Assert.True(second.RequestFocus());
+        first.RequestFocus();
+        second.RequestFocus();
         Assert.Null(manager.PrimaryFocus);
         Assert.Equal(0, notificationCount);
 
@@ -108,12 +108,12 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(first);
         manager.RegisterNode(second);
 
-        Assert.True(PumpFocus(() => manager.RequestFocus(first)));
+        PumpFocus(() => manager.RequestFocus(first));
         Assert.Same(first, manager.PrimaryFocus);
         Assert.True(first.HasFocus);
         Assert.False(second.HasFocus);
 
-        Assert.True(PumpFocus(() => manager.RequestFocus(second)));
+        PumpFocus(() => manager.RequestFocus(second));
         Assert.Same(second, manager.PrimaryFocus);
         Assert.False(first.HasFocus);
         Assert.True(second.HasFocus);
@@ -134,9 +134,9 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(firstChild, firstScope);
         manager.RegisterNode(secondChild, secondScope);
 
-        Assert.True(PumpFocus(firstChild.RequestFocus));
+        PumpFocus(firstChild.RequestFocus);
         Assert.Same(firstChild, firstScope.FocusedChild);
-        Assert.True(PumpFocus(secondChild.RequestFocus));
+        PumpFocus(secondChild.RequestFocus);
         Assert.Same(firstChild, firstScope.FocusedChild);
         Assert.Same(secondChild, secondScope.FocusedChild);
 
@@ -173,17 +173,17 @@ public sealed class FocusTests : IDisposable
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(first.RequestFocus());
+        first.RequestFocus();
         owner.FlushBuild();
         Assert.True(ancestor.HasFocus);
         Assert.Equal([true], changes);
 
-        Assert.True(second.RequestFocus());
+        second.RequestFocus();
         owner.FlushBuild();
         Assert.True(ancestor.HasFocus);
         Assert.Equal([true], changes);
 
-        Assert.True(outside.RequestFocus());
+        outside.RequestFocus();
         owner.FlushBuild();
         Assert.False(ancestor.HasFocus);
         Assert.Equal([true, false], changes);
@@ -221,55 +221,69 @@ public sealed class FocusTests : IDisposable
     [Fact]
     public void FocusManager_TabTraversal_MovesForwardAndBackward()
     {
-        var manager = new FocusManager();
         var first = new FocusNode();
         var second = new FocusNode();
-        var third = new FocusNode
-        {
-            CanRequestFocus = false
-        };
+        var third = new FocusNode();
 
-        manager.RegisterNode(first);
-        manager.RegisterNode(second);
-        manager.RegisterNode(third);
-        manager.RequestFocus(first);
-        Scheduler.FlushMicrotasks();
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
+            TextDirection.Ltr,
+            new Row(children:
+            [
+                new Focus(focusNode: first, autofocus: true, child: new SizedBox(width: 12, height: 12)),
+                new Focus(focusNode: second, child: new SizedBox(width: 12, height: 12)),
+                new Focus(
+                    focusNode: third,
+                    canRequestFocus: false,
+                    child: new SizedBox(width: 12, height: 12)),
+            ])));
+        harness.Layout(new Size(400, 400));
 
-        bool movedForward = manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
-        Scheduler.FlushMicrotasks();
-        Assert.True(movedForward);
-        Assert.Same(second, manager.PrimaryFocus);
-
-        bool movedBackward = manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab, shift: true));
-        Scheduler.FlushMicrotasks();
-        Assert.True(movedBackward);
+        FocusManager manager = FocusManager.Instance;
         Assert.Same(first, manager.PrimaryFocus);
 
-        PumpFocus(() => manager.RequestFocus(second));
-        bool movedPastLast = manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab)));
         Scheduler.FlushMicrotasks();
-        Assert.True(movedPastLast);
+        Assert.Same(second, manager.PrimaryFocus);
+
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab, shift: true)));
+        Scheduler.FlushMicrotasks();
+        Assert.Same(first, manager.PrimaryFocus);
+
+        // `canRequestFocus: false` keeps the third node out of the order, so the scope wraps.
+        PumpFocus(() => manager.RequestFocus(second));
+        Assert.True(manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab)));
+        Scheduler.FlushMicrotasks();
         Assert.Same(first, manager.PrimaryFocus);
     }
 
     [Fact]
     public void FocusManager_TabTraversal_StaysWithinCurrentFocusScope()
     {
-        var manager = new FocusManager();
         var leftScope = new FocusScopeNode();
         var rightScope = new FocusScopeNode();
         var leftFirst = new FocusNode();
         var leftSecond = new FocusNode();
         var rightOnly = new FocusNode();
 
-        manager.RegisterNode(leftScope);
-        manager.RegisterNode(rightScope);
-        manager.RegisterNode(leftFirst, leftScope);
-        manager.RegisterNode(leftSecond, leftScope);
-        manager.RegisterNode(rightOnly, rightScope);
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
+            TextDirection.Ltr,
+            new Row(children:
+            [
+                FocusScope.WithExternalFocusNode(
+                    leftScope,
+                    new Row(children:
+                    [
+                        new Focus(focusNode: leftFirst, child: new SizedBox(width: 12, height: 12)),
+                        new Focus(focusNode: leftSecond, child: new SizedBox(width: 12, height: 12)),
+                    ])),
+                FocusScope.WithExternalFocusNode(
+                    rightScope,
+                    new Focus(focusNode: rightOnly, child: new SizedBox(width: 12, height: 12))),
+            ])));
+        harness.Layout(new Size(400, 400));
 
-        manager.RequestFocus(leftFirst);
-        Scheduler.FlushMicrotasks();
+        FocusManager manager = FocusManager.Instance;
+        PumpFocus(leftFirst.RequestFocus);
         Assert.Same(leftFirst, leftScope.FocusedChild);
 
         Assert.True(PumpFocus(manager.FocusNext));
@@ -319,41 +333,37 @@ public sealed class FocusTests : IDisposable
     [Fact]
     public void FocusManager_DirectionalKeys_UseGeometryWhenTraversalRectsAvailable()
     {
-        var manager = new FocusManager();
-        var source = new FocusNode
-        {
-            TraversalRect = new Rect(0, 0, 20, 20)
-        };
-        var right = new FocusNode
-        {
-            TraversalRect = new Rect(120, 0, 20, 20)
-        };
-        var down = new FocusNode
-        {
-            TraversalRect = new Rect(0, 120, 20, 20)
-        };
-        var diagonal = new FocusNode
-        {
-            TraversalRect = new Rect(120, 120, 20, 20)
-        };
+        var source = new FocusNode { TraversalRect = new Rect(0, 0, 20, 20) };
+        var right = new FocusNode { TraversalRect = new Rect(120, 0, 20, 20) };
+        var down = new FocusNode { TraversalRect = new Rect(0, 120, 20, 20) };
+        var diagonal = new FocusNode { TraversalRect = new Rect(120, 120, 20, 20) };
 
-        manager.RegisterNode(source);
-        manager.RegisterNode(right);
-        manager.RegisterNode(down);
-        manager.RegisterNode(diagonal);
-        manager.RequestFocus(source);
-        Scheduler.FlushMicrotasks();
+        // `TraversalRect` (C#-only) overrides the render geometry, so the tree's own layout does not
+        // matter; the widgets exist only so the nodes sit under the app's `FocusTraversalGroup`.
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
+            TextDirection.Ltr,
+            new Row(children:
+            [
+                new Focus(focusNode: source, autofocus: true, child: new SizedBox(width: 12, height: 12)),
+                new Focus(focusNode: right, child: new SizedBox(width: 12, height: 12)),
+                new Focus(focusNode: down, child: new SizedBox(width: 12, height: 12)),
+                new Focus(focusNode: diagonal, child: new SizedBox(width: 12, height: 12)),
+            ])));
+        harness.Layout(new Size(400, 400));
 
-        Assert.True(PumpFocus(() => manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown))));
+        FocusManager manager = FocusManager.Instance;
+        Assert.Same(source, manager.PrimaryFocus);
+
+        PumpFocus(() => manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         Assert.Same(down, manager.PrimaryFocus);
 
-        Assert.True(PumpFocus(() => manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight))));
+        PumpFocus(() => manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Assert.Same(diagonal, manager.PrimaryFocus);
 
-        Assert.True(PumpFocus(() => manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp))));
+        PumpFocus(() => manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowUp)));
         Assert.Same(right, manager.PrimaryFocus);
 
-        Assert.True(PumpFocus(() => manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft))));
+        PumpFocus(() => manager.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft)));
         Assert.Same(source, manager.PrimaryFocus);
     }
 
@@ -363,7 +373,7 @@ public sealed class FocusTests : IDisposable
         var source = new FocusNode();
         var right = new FocusNode();
         var transformedDown = new FocusNode();
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Row(children:
             [
@@ -455,12 +465,12 @@ public sealed class FocusTests : IDisposable
         var first = new FocusNode();
         var second = new FocusNode();
 
-        var root = new TestRootElement(
+        var root = new TestRootElement(AppTraversalScope.Wrap(
             new Row(children:
             [
                 new Focus(focusNode: first, autofocus: true, child: new SizedBox(width: 12, height: 12)),
                 new Focus(focusNode: second, child: new SizedBox(width: 12, height: 12))
-            ]));
+            ])));
 
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
@@ -487,7 +497,7 @@ public sealed class FocusTests : IDisposable
         var secondInScope = new FocusNode();
         var trailingSibling = new FocusNode();
 
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Row(children:
             [
@@ -532,7 +542,7 @@ public sealed class FocusTests : IDisposable
         var secondInScope = new FocusNode();
         var trailingSibling = new FocusNode();
 
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Row(children:
             [
@@ -549,20 +559,19 @@ public sealed class FocusTests : IDisposable
 
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
 
-        bool movedBeforeScopeStart = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft));
+        // `Shortcuts` consumes the arrow key whenever it maps to a `DirectionalFocusIntent`, so the
+        // key result reports "handled", not "the focus moved"; the focus assertions carry the test.
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft));
         Scheduler.FlushMicrotasks();
-        Assert.False(movedBeforeScopeStart);
         Assert.Same(firstInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(leadingSibling.HasFocus);
 
-        bool movedInsideScope = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
         Scheduler.FlushMicrotasks();
-        Assert.True(movedInsideScope);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
 
-        bool movedAfterScopeEnd = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
+        FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
         Scheduler.FlushMicrotasks();
-        Assert.False(movedAfterScopeEnd);
         Assert.Same(secondInScope, FocusManager.Instance.PrimaryFocus);
         Assert.False(trailingSibling.HasFocus);
     }
@@ -606,7 +615,9 @@ public sealed class FocusTests : IDisposable
         harness.Layout(new Size(200, 200));
 
         Assert.False(blocked.CanRequestFocus);
-        Assert.False(blocked.RequestFocus());
+        blocked.RequestFocus();
+        Scheduler.FlushMicrotasks();
+        Assert.False(blocked.HasFocus);
         Assert.Empty(blocker.TraversalDescendants);
     }
 
@@ -647,7 +658,7 @@ public sealed class FocusTests : IDisposable
                 ]))));
         harness.Layout(new Size(200, 200));
 
-        Assert.True(PumpFocus(second.RequestFocus));
+        PumpFocus(second.RequestFocus);
         second.Unfocus(UnfocusDisposition.PreviouslyFocusedChild);
         Scheduler.FlushMicrotasks();
 
@@ -661,7 +672,8 @@ public sealed class FocusTests : IDisposable
         var manager = new FocusManager();
         var node = new FocusNode(debugLabel: "node");
 
-        Assert.False(node.RequestFocus());
+        node.RequestFocus();
+        Scheduler.FlushMicrotasks();
         Assert.Null(manager.PrimaryFocus);
 
         manager.RegisterNode(node);
@@ -678,7 +690,7 @@ public sealed class FocusTests : IDisposable
         FocusAttachment attachment = node.Attach(context: null);
         manager.RootScope.Reparent(node);
 
-        Assert.True(PumpFocus(node.RequestFocus));
+        PumpFocus(node.RequestFocus);
         Assert.True(attachment.IsAttached);
 
         attachment.Detach();
@@ -700,7 +712,7 @@ public sealed class FocusTests : IDisposable
         manager.RegisterNode(taken, scopeNode);
         manager.RegisterNode(late, scopeNode);
 
-        Assert.True(taken.RequestFocus());
+        taken.RequestFocus();
         scopeNode.Autofocus(late);
         Scheduler.FlushMicrotasks();
 
@@ -783,7 +795,7 @@ public sealed class FocusTests : IDisposable
             manager.ListenToApplicationLifecycleChangesIfSupported();
             var node = new FocusNode(debugLabel: "node");
             manager.RegisterNode(node);
-            Assert.True(PumpFocus(node.RequestFocus));
+            PumpFocus(node.RequestFocus);
 
             WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Inactive);
             Assert.Same(manager.RootScope, manager.PrimaryFocus);
@@ -811,10 +823,10 @@ public sealed class FocusTests : IDisposable
             var other = new FocusNode(debugLabel: "other");
             manager.RegisterNode(suspended);
             manager.RegisterNode(other);
-            Assert.True(PumpFocus(suspended.RequestFocus));
+            PumpFocus(suspended.RequestFocus);
 
             WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Inactive);
-            Assert.True(other.RequestFocus());
+            other.RequestFocus();
             WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
             Scheduler.FlushMicrotasks();
 
@@ -844,6 +856,12 @@ public sealed class FocusTests : IDisposable
         bool result = action();
         Scheduler.FlushMicrotasks();
         return result;
+    }
+
+    private static void PumpFocus(Action action)
+    {
+        action();
+        Scheduler.FlushMicrotasks();
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost

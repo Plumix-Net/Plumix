@@ -2681,7 +2681,7 @@ public sealed class MaterialButtonsTests
             theme.ColorScheme.Primary,
             Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
 
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         owner.FlushBuild();
 
         decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2748,7 +2748,7 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4760,7 +4760,7 @@ public sealed class MaterialButtonsTests
                                 : null)),
                 child: new Text("Priority")));
 
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         harness.Pump(ButtonHarnessSize);
         Assert.Equal(otherOverlay, InkHighlight(harness));
 
@@ -4783,7 +4783,7 @@ public sealed class MaterialButtonsTests
             new TextButton(onPressed: () => { }, focusNode: focusNode, child: new Text("M2 overlay")),
             theme))
         {
-            Assert.True(focusNode.RequestFocus());
+            focusNode.RequestFocus();
             harness.Pump(ButtonHarnessSize);
             Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), InkHighlight(harness));
 
@@ -4809,7 +4809,7 @@ public sealed class MaterialButtonsTests
             new ElevatedButton(onPressed: () => { }, focusNode: focusNode, child: new Text("M2 focus")),
             theme))
         {
-            Assert.True(focusNode.RequestFocus());
+            focusNode.RequestFocus();
             harness.Pump(ButtonHarnessSize);
 
             // `ElevatedButton.styleFrom` derives the Material 2 overlay from `onPrimary` at
@@ -4847,7 +4847,7 @@ public sealed class MaterialButtonsTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         owner.FlushBuild();
 
         var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -5090,7 +5090,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(initialDecorated);
         Assert.Null(initialDecorated!.HighlightColor);
 
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         owner.FlushBuild();
 
         var focusedDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));

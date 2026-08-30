@@ -817,9 +817,12 @@ public sealed class MaterialDatePickerTests : IDisposable
         Widget child,
         ThemeData? theme = null,
         Size? mediaSize = null) => new(
-        new MediaQuery(
-            new MediaQueryData(Size: mediaSize ?? new Size(420, 500)),
-            new Directionality(TextDirection.Ltr, new Theme(theme ?? ThemeData.Light, child))));
+        // `MaterialApp` is what installs the traversal scope in Flutter's own tests; this helper
+        // stands in for it, and Tab moves nothing without it.
+        AppTraversalScope.Wrap(
+            new MediaQuery(
+                new MediaQueryData(Size: mediaSize ?? new Size(420, 500)),
+                new Directionality(TextDirection.Ltr, new Theme(theme ?? ThemeData.Light, child)))));
 
     private static bool Close(double a, double b) => Math.Abs(a - b) < 0.001;
 

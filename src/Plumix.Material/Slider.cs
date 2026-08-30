@@ -432,6 +432,9 @@ public sealed class Slider : StatefulWidget
                         semanticFormatterCallback: CurrentWidget.SemanticFormatterCallback,
                         adjustmentUnit: ResolveAdjustmentUnit(theme),
                         onFocusRequested: RequestFocusFromSemantics,
+                        onDidGainAccessibilityFocus: theme.Platform is TargetPlatform.Windows
+                            ? HandleDidGainAccessibilityFocus
+                            : null,
                         onChangeStartNormalized: IsInteractive ? HandleChangeStartNormalized : null,
                         onChangedNormalized: IsInteractive ? HandleChangedNormalized : null,
                         onChangeEndNormalized: IsInteractive ? HandleChangeEndNormalized : null));
@@ -604,6 +607,18 @@ public sealed class Slider : StatefulWidget
             }
 
             CurrentWidget.OnChangeEnd?.Invoke(Denormalize(SnapNormalized(normalized)));
+        }
+
+        /// <remarks>
+        /// Flutter's <c>_SliderState.handleDidGainAccessibilityFocus</c>: on Windows a screen reader
+        /// moving accessibility focus onto the slider also activates it, so the arrow keys work.
+        /// </remarks>
+        private void HandleDidGainAccessibilityFocus()
+        {
+            if (_focusNode is { HasFocus: false, CanRequestFocus: true } node)
+            {
+                node.RequestFocus();
+            }
         }
 
         /// <remarks>Flutter's <c>_RenderSlider.onFocusAction</c>.</remarks>
@@ -924,6 +939,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         SemanticFormatterCallback? semanticFormatterCallback,
         double adjustmentUnit,
         Action onFocusRequested,
+        Action? onDidGainAccessibilityFocus,
         Action<double>? onChangeStartNormalized,
         Action<double>? onChangedNormalized,
         Action<double>? onChangeEndNormalized,
@@ -963,6 +979,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         SemanticFormatterCallback = semanticFormatterCallback;
         AdjustmentUnit = adjustmentUnit;
         OnFocusRequested = onFocusRequested;
+        OnDidGainAccessibilityFocus = onDidGainAccessibilityFocus;
         OnChangeStartNormalized = onChangeStartNormalized;
         OnChangedNormalized = onChangedNormalized;
         OnChangeEndNormalized = onChangeEndNormalized;
@@ -1036,6 +1053,12 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
 
     public Action OnFocusRequested { get; }
 
+    /// <summary>
+    /// The Windows-only "accessibility focus arrived" handler, or <c>null</c> on every other
+    /// platform. Dart's <c>_SliderRenderObjectWidget.onDidGainAccessibilityFocus</c>.
+    /// </summary>
+    public Action? OnDidGainAccessibilityFocus { get; }
+
     public Action<double>? OnChangeStartNormalized { get; }
 
     public Action<double>? OnChangedNormalized { get; }
@@ -1079,6 +1102,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
             semanticFormatterCallback: SemanticFormatterCallback,
             adjustmentUnit: AdjustmentUnit,
             onFocusRequested: OnFocusRequested,
+            onDidGainAccessibilityFocus: OnDidGainAccessibilityFocus,
             onChangeStartNormalized: OnChangeStartNormalized,
             onChangedNormalized: OnChangedNormalized,
             onChangeEndNormalized: OnChangeEndNormalized);
@@ -1121,6 +1145,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
         slider.SemanticFormatterCallback = SemanticFormatterCallback;
         slider.AdjustmentUnit = AdjustmentUnit;
         slider.OnFocusRequested = OnFocusRequested;
+        slider.OnDidGainAccessibilityFocus = OnDidGainAccessibilityFocus;
         slider.OnChangeStartNormalized = OnChangeStartNormalized;
         slider.OnChangedNormalized = OnChangedNormalized;
         slider.OnChangeEndNormalized = OnChangeEndNormalized;
@@ -1165,6 +1190,7 @@ internal sealed class RenderSlider : RenderBox
     private double _max;
     private SemanticFormatterCallback? _semanticFormatterCallback;
     private double _adjustmentUnit;
+    private Action? _onDidGainAccessibilityFocus;
     private Action<double>? _onChangeStartNormalized;
     private Action<double>? _onChangedNormalized;
     private Action<double>? _onChangeEndNormalized;
@@ -1209,6 +1235,7 @@ internal sealed class RenderSlider : RenderBox
         SemanticFormatterCallback? semanticFormatterCallback,
         double adjustmentUnit,
         Action onFocusRequested,
+        Action? onDidGainAccessibilityFocus,
         Action<double>? onChangeStartNormalized,
         Action<double>? onChangedNormalized,
         Action<double>? onChangeEndNormalized)
@@ -1250,6 +1277,7 @@ internal sealed class RenderSlider : RenderBox
         _semanticFormatterCallback = semanticFormatterCallback;
         _adjustmentUnit = adjustmentUnit;
         OnFocusRequested = onFocusRequested;
+        _onDidGainAccessibilityFocus = onDidGainAccessibilityFocus;
     }
 
     /// <summary>The lower bound the normalized value is mapped back onto for semantics.</summary>
@@ -1320,6 +1348,22 @@ internal sealed class RenderSlider : RenderBox
 
     /// <remarks>Flutter's <c>_RenderSlider.onFocusAction</c>, which lives on the state.</remarks>
     public Action OnFocusRequested { get; set; }
+
+    /// <remarks>Flutter's <c>_RenderSlider.onDidGainAccessibilityFocus</c>.</remarks>
+    public Action? OnDidGainAccessibilityFocus
+    {
+        get => _onDidGainAccessibilityFocus;
+        set
+        {
+            if (ReferenceEquals(_onDidGainAccessibilityFocus, value))
+            {
+                return;
+            }
+
+            _onDidGainAccessibilityFocus = value;
+            MarkNeedsSemanticsUpdate();
+        }
+    }
 
     public SliderThemeData SliderTheme
     {
@@ -2277,6 +2321,11 @@ internal sealed class RenderSlider : RenderBox
 
         configuration.IsSlider = true;
         configuration.IsFocused = IsFocused;
+        if (_onDidGainAccessibilityFocus is { } didGainAccessibilityFocus)
+        {
+            configuration.OnDidGainAccessibilityFocus = didGainAccessibilityFocus;
+        }
+
         configuration.TextDirection = TextDirection;
         if (IsInteractive)
         {

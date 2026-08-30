@@ -538,7 +538,7 @@ public sealed class MaterialSliderTests
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            Assert.True(focusNode.RequestFocus());
+            focusNode.RequestFocus();
             owner.FlushBuild();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight));
@@ -579,7 +579,7 @@ public sealed class MaterialSliderTests
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            Assert.True(focusNode.RequestFocus());
+            focusNode.RequestFocus();
             owner.FlushBuild();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowLeft));
@@ -636,6 +636,71 @@ public sealed class MaterialSliderTests
             Assert.Equal("50%", disabled.Value);
             Assert.Equal("55%", disabled.IncreasedValue);
             Assert.Equal("45%", disabled.DecreasedValue);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    /// <remarks>
+    /// Flutter's <c>slider_test.dart</c> "Slider gains keyboard focus when it gains semantics focus
+    /// on Windows": the Windows-only <c>didGainAccessibilityFocus</c> handler is declared, and
+    /// performing the action pulls keyboard focus onto the slider.
+    /// </remarks>
+    [Fact]
+    public void Slider_DidGainAccessibilityFocus_IsWindowsOnlyAndTakesKeyboardFocus()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            var focusNode = new FocusNode();
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: new ThemeData(platform: TargetPlatform.Windows),
+                    child: new SizedBox(
+                        width: 220,
+                        child: new Slider(value: 0.5, focusNode: focusNode, onChanged: _ => { }))));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(260, 120)));
+            SemanticsNode node = Assert.IsType<SemanticsNode>(
+                FindFirstSemanticsNode(root, static candidate => candidate.Flags.HasFlag(SemanticsFlags.IsSlider)));
+
+            Assert.Equal(
+                SemanticsActions.Increase
+                | SemanticsActions.Decrease
+                | SemanticsActions.Focus
+                | SemanticsActions.DidGainAccessibilityFocus,
+                node.Actions);
+
+            Assert.False(focusNode.HasFocus);
+            Assert.True(harness.PerformSemanticsAction(node.Id, SemanticsActions.DidGainAccessibilityFocus));
+            harness.PumpAndGetSemantics(new Size(260, 120));
+            Assert.True(focusNode.HasFocus);
+        }
+        finally
+        {
+            FocusManager.Instance.ResetForTests();
+        }
+    }
+
+    /// <remarks>Dart registers no accessibility-focus handler on any non-Windows platform.</remarks>
+    [Fact]
+    public void Slider_DidGainAccessibilityFocus_IsAbsentOffWindows()
+    {
+        FocusManager.Instance.ResetForTests();
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: new ThemeData(platform: TargetPlatform.MacOS),
+                    child: new SizedBox(width: 220, child: new Slider(value: 0.5, onChanged: _ => { }))));
+
+            SemanticsNode root = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(new Size(260, 120)));
+            SemanticsNode node = Assert.IsType<SemanticsNode>(
+                FindFirstSemanticsNode(root, static candidate => candidate.Flags.HasFlag(SemanticsFlags.IsSlider)));
+
+            Assert.False(node.Actions.HasFlag(SemanticsActions.DidGainAccessibilityFocus));
         }
         finally
         {
@@ -1046,6 +1111,11 @@ public sealed class MaterialSliderTests
             _pipeline.RequestSemanticsUpdate();
             _pipeline.FlushSemantics();
             return _pipeline.SemanticsOwner!.RootNode;
+        }
+
+        public bool PerformSemanticsAction(int nodeId, SemanticsActions action)
+        {
+            return _pipeline.SemanticsOwner!.PerformAction(nodeId, action);
         }
 
         public void Dispose()

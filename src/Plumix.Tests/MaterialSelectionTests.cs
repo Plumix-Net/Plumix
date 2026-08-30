@@ -336,7 +336,7 @@ public sealed class MaterialSelectionTests
             ThemeData.Light));
         harness.Pump(new Size(320, 160));
 
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         harness.Pump(new Size(320, 160));
 
         SelectableRegionState state = key.CurrentState!.SelectableRegion;

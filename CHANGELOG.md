@@ -8,8 +8,13 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `WidgetsApp.DefaultShortcuts`/`DefaultActions` ship Flutter's real maps, per platform (`app.dart`).
+- Breaking: traversal keys route through the app's shortcuts; `FocusManager`'s Tab/arrow fallback goes.
+- Breaking: `FocusTraversalGroup.Of`/traversal throws without a group instead of falling back to a policy.
+- Breaking: `FocusNode.RequestFocus` and `FocusManager.RequestFocus` return `void`, as Dart's do.
+- Added `SemanticsActions.DidGain`/`DidLoseAccessibilityFocus` and the Windows slider handler (`slider.dart`).
+- A user-action-blocked node now keeps its accessibility-focus actions, as Dart's `_kUnblockedUserActions` does.
 - Breaking: `FocusManager` applies focus changes on a microtask instead of synchronously (`focus_manager.dart`).
-- Breaking: `FocusNode.RequestFocus` and friends report whether the request was accepted, not `HasFocus`.
 - `PipelineOwner.FlushLayout` drains the microtask queue when the pipeline is driven outside a frame.
 - Breaking: `ClipRect`/`ClipRRect` derive from `RenderCustomClip<T>`; `ClipRect(clipRect:)` goes (`proxy_box.dart`).
 - Breaking: `ClipRRect` gained `clipper`/`clipBehavior`/`BorderRadiusGeometry`/`textDirection` (`proxy_box.dart`).

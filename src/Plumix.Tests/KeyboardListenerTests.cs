@@ -188,7 +188,7 @@ public sealed class KeyboardListenerTests : IDisposable
         // Dart re-runs autofocus only when the `autofocus` flag itself changes, so swapping the node
         // leaves the new one unfocused; the listener has to ask for focus explicitly.
         Assert.False(secondNode.HasFocus);
-        Assert.True(secondNode.RequestFocus());
+        secondNode.RequestFocus();
         Scheduler.FlushMicrotasks();
 
         KeySim.DispatchRaw(LogicalKeyboardKey.Space, down: true);

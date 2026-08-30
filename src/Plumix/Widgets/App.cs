@@ -1,6 +1,7 @@
 using System.Globalization;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Rendering;
 using Plumix.UI;
 using RouterStatics = Plumix.Widgets.Router;
 
@@ -17,16 +18,131 @@ public sealed class WidgetsApp : StatefulWidget
     private static readonly IReadOnlyList<Locale> DefaultSupportedLocalesValue =
         [new Locale("en", "US")];
 
+    /// <remarks>Dart parity source: <c>WidgetsApp._defaultShortcuts</c>.</remarks>
     private static readonly IReadOnlyDictionary<ShortcutActivator, Intent> DefaultShortcutsValue =
-        new Dictionary<ShortcutActivator, Intent>();
+        new Dictionary<ShortcutActivator, Intent>
+        {
+            // Activation
+            [new SingleActivator(LogicalKeyboardKey.Enter)] = new ActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.NumpadEnter)] = new ActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Space)] = new ActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.GameButtonA)] = new ActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Select)] = new ActivateIntent(),
+
+            // Dismissal
+            [new SingleActivator(LogicalKeyboardKey.Escape)] = new DismissIntent(),
+
+            // Keyboard traversal.
+            [new SingleActivator(LogicalKeyboardKey.Tab)] = new NextFocusIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Tab, shift: true)] = new PreviousFocusIntent(),
+            [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] =
+                new DirectionalFocusIntent(TraversalDirection.Left),
+            [new SingleActivator(LogicalKeyboardKey.ArrowRight)] =
+                new DirectionalFocusIntent(TraversalDirection.Right),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown)] =
+                new DirectionalFocusIntent(TraversalDirection.Down),
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp)] =
+                new DirectionalFocusIntent(TraversalDirection.Up),
+
+            // Scrolling
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp, control: true)] =
+                new ScrollIntent(AxisDirection.Up),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown, control: true)] =
+                new ScrollIntent(AxisDirection.Down),
+            [new SingleActivator(LogicalKeyboardKey.ArrowLeft, control: true)] =
+                new ScrollIntent(AxisDirection.Left),
+            [new SingleActivator(LogicalKeyboardKey.ArrowRight, control: true)] =
+                new ScrollIntent(AxisDirection.Right),
+            [new SingleActivator(LogicalKeyboardKey.PageUp)] =
+                new ScrollIntent(AxisDirection.Up, ScrollIncrementType.Page),
+            [new SingleActivator(LogicalKeyboardKey.PageDown)] =
+                new ScrollIntent(AxisDirection.Down, ScrollIncrementType.Page),
+        };
+
+    /// <remarks>Dart parity source: <c>WidgetsApp._defaultWebShortcuts</c>.</remarks>
+    private static readonly IReadOnlyDictionary<ShortcutActivator, Intent> DefaultWebShortcutsValue =
+        new Dictionary<ShortcutActivator, Intent>
+        {
+            // Activation
+            [new SingleActivator(LogicalKeyboardKey.Space)] = new PrioritizedIntents(
+            [
+                new ActivateIntent(),
+                new ScrollIntent(AxisDirection.Down, ScrollIncrementType.Page),
+            ]),
+
+            // On the web, enter activates buttons, but not other controls.
+            [new SingleActivator(LogicalKeyboardKey.Enter)] = new ButtonActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.NumpadEnter)] = new ButtonActivateIntent(),
+
+            // Dismissal
+            [new SingleActivator(LogicalKeyboardKey.Escape)] = new DismissIntent(),
+
+            // Keyboard traversal.
+            [new SingleActivator(LogicalKeyboardKey.Tab)] = new NextFocusIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Tab, shift: true)] = new PreviousFocusIntent(),
+
+            // Scrolling
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp)] = new ScrollIntent(AxisDirection.Up),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown)] = new ScrollIntent(AxisDirection.Down),
+            [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] = new ScrollIntent(AxisDirection.Left),
+            [new SingleActivator(LogicalKeyboardKey.ArrowRight)] = new ScrollIntent(AxisDirection.Right),
+            [new SingleActivator(LogicalKeyboardKey.PageUp)] =
+                new ScrollIntent(AxisDirection.Up, ScrollIncrementType.Page),
+            [new SingleActivator(LogicalKeyboardKey.PageDown)] =
+                new ScrollIntent(AxisDirection.Down, ScrollIncrementType.Page),
+        };
+
+    /// <remarks>Dart parity source: <c>WidgetsApp._defaultAppleOsShortcuts</c>.</remarks>
+    private static readonly IReadOnlyDictionary<ShortcutActivator, Intent> DefaultAppleOsShortcutsValue =
+        new Dictionary<ShortcutActivator, Intent>
+        {
+            // Activation
+            [new SingleActivator(LogicalKeyboardKey.Enter)] = new ActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.NumpadEnter)] = new ActivateIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Space)] = new ActivateIntent(),
+
+            // Dismissal
+            [new SingleActivator(LogicalKeyboardKey.Escape)] = new DismissIntent(),
+
+            // Keyboard traversal
+            [new SingleActivator(LogicalKeyboardKey.Tab)] = new NextFocusIntent(),
+            [new SingleActivator(LogicalKeyboardKey.Tab, shift: true)] = new PreviousFocusIntent(),
+            [new SingleActivator(LogicalKeyboardKey.ArrowLeft)] =
+                new DirectionalFocusIntent(TraversalDirection.Left),
+            [new SingleActivator(LogicalKeyboardKey.ArrowRight)] =
+                new DirectionalFocusIntent(TraversalDirection.Right),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown)] =
+                new DirectionalFocusIntent(TraversalDirection.Down),
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp)] =
+                new DirectionalFocusIntent(TraversalDirection.Up),
+
+            // Scrolling
+            [new SingleActivator(LogicalKeyboardKey.ArrowUp, meta: true)] =
+                new ScrollIntent(AxisDirection.Up),
+            [new SingleActivator(LogicalKeyboardKey.ArrowDown, meta: true)] =
+                new ScrollIntent(AxisDirection.Down),
+            [new SingleActivator(LogicalKeyboardKey.ArrowLeft, meta: true)] =
+                new ScrollIntent(AxisDirection.Left),
+            [new SingleActivator(LogicalKeyboardKey.ArrowRight, meta: true)] =
+                new ScrollIntent(AxisDirection.Right),
+            [new SingleActivator(LogicalKeyboardKey.PageUp)] =
+                new ScrollIntent(AxisDirection.Up, ScrollIncrementType.Page),
+            [new SingleActivator(LogicalKeyboardKey.PageDown)] =
+                new ScrollIntent(AxisDirection.Down, ScrollIncrementType.Page),
+        };
 
     private static readonly IReadOnlyDictionary<Type, FlutterAction> DefaultActionsValue =
         new Dictionary<Type, FlutterAction>
         {
             [typeof(DoNothingIntent)] = new DoNothingAction(),
             [typeof(DoNothingAndStopPropagationIntent)] = new DoNothingAction(consumesKey: false),
-            [typeof(VoidCallbackIntent)] = new VoidCallbackAction(),
+            [typeof(RequestFocusIntent)] = new RequestFocusAction(),
+            [typeof(NextFocusIntent)] = new NextFocusAction(),
+            [typeof(PreviousFocusIntent)] = new PreviousFocusAction(),
+            [typeof(DirectionalFocusIntent)] = new DirectionalFocusAction(),
             [typeof(ScrollIntent)] = new ScrollAction(),
+            [typeof(PrioritizedIntents)] = new PrioritizedAction(),
+            [typeof(VoidCallbackIntent)] = new VoidCallbackAction(),
         };
 
     public WidgetsApp(
@@ -384,8 +500,26 @@ public sealed class WidgetsApp : StatefulWidget
 
     public bool UseInheritedMediaQuery { get; }
 
-    public static IReadOnlyDictionary<ShortcutActivator, Intent> DefaultShortcuts =>
-        DefaultShortcutsValue;
+    /// <summary>
+    /// The default shortcut key bindings for <see cref="PlatformDefaults.TargetPlatform"/>.
+    /// </summary>
+    /// <remarks>Dart parity source: <c>WidgetsApp.defaultShortcuts</c>.</remarks>
+    public static IReadOnlyDictionary<ShortcutActivator, Intent> DefaultShortcuts
+    {
+        get
+        {
+            if (PlatformDefaults.IsWeb)
+            {
+                return DefaultWebShortcutsValue;
+            }
+
+            return PlatformDefaults.TargetPlatform switch
+            {
+                TargetPlatform.IOS or TargetPlatform.MacOS => DefaultAppleOsShortcutsValue,
+                _ => DefaultShortcutsValue
+            };
+        }
+    }
 
     public static IReadOnlyDictionary<Type, FlutterAction> DefaultActions => DefaultActionsValue;
 

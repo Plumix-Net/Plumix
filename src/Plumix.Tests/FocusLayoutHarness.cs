@@ -25,6 +25,14 @@ internal sealed class FocusLayoutHarness : IDisposable
         Scheduler.FlushMicrotasks();
     }
 
+    /// <summary>
+    /// Mounts the tree under the traversal scope <c>WidgetsApp</c> installs, the way Flutter's own
+    /// focus tests reach it through <c>MaterialApp</c>/<c>WidgetsApp</c>. Traversal throws without a
+    /// <see cref="FocusTraversalGroup"/> in scope, so every test that moves the focus goes here.
+    /// </summary>
+    public static FocusLayoutHarness WithTraversalGroup(Widget widget) =>
+        new(AppTraversalScope.Wrap(widget));
+
     public RenderView RenderView { get; }
 
     public void Layout(Size size)

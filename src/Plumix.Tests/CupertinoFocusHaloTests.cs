@@ -50,17 +50,17 @@ public sealed class CupertinoFocusHaloTests : IDisposable
         Assert.Equal(BorderSide.None, Assert.IsType<RoundedRectangleBorder>(initial[0].Shape).Side);
         Assert.Equal(BorderSide.None, Assert.IsType<RoundedRectangleBorder>(initial[1].Shape).Side);
 
-        Assert.True(groupOneFirst.RequestFocus());
+        groupOneFirst.RequestFocus();
         harness.Pump(ViewSize);
         AssertFocused(FindHaloDecorations(harness.RenderView)[0]);
         AssertNotFocused(FindHaloDecorations(harness.RenderView)[1]);
 
-        Assert.True(groupOneSecond.RequestFocus());
+        groupOneSecond.RequestFocus();
         harness.Pump(ViewSize);
         AssertFocused(FindHaloDecorations(harness.RenderView)[0]);
         AssertNotFocused(FindHaloDecorations(harness.RenderView)[1]);
 
-        Assert.True(groupTwo.RequestFocus());
+        groupTwo.RequestFocus();
         harness.Pump(ViewSize);
         AssertNotFocused(FindHaloDecorations(harness.RenderView)[0]);
         AssertFocused(FindHaloDecorations(harness.RenderView)[1]);
@@ -106,7 +106,7 @@ public sealed class CupertinoFocusHaloTests : IDisposable
         using var harness = new CupertinoThemeTestHarness(Wrap(
             CupertinoFocusHalo.WithRRect(FocusBox(focusNode), BorderRadius.Circular(8.0))));
 
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         harness.Pump(ViewSize);
 
         ShapeDecoration decoration = Assert.Single(FindHaloDecorations(harness.RenderView));
@@ -125,7 +125,7 @@ public sealed class CupertinoFocusHaloTests : IDisposable
             height: 0.0,
             child: CupertinoFocusHalo.WithRect(FocusBox(focusNode)))));
 
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         harness.Pump(ViewSize);
 
         RenderDecoratedBox decorated = Assert.Single(FindAll<RenderDecoratedBox>(harness.RenderView));

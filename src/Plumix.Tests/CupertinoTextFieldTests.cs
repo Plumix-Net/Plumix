@@ -227,7 +227,7 @@ public sealed class CupertinoTextFieldTests : IDisposable
         EditableText editable = Assert.Single(harness.FindWidgets<EditableText>());
         Assert.Same(options, editable.ToolbarOptions);
         Assert.True(editable.SelectAllOnFocus);
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         harness.Pump(ViewSize);
         Assert.Equal(new TextSelection(0, controller.Text.Length), controller.Selection);
         Assert.Empty(harness.FindState<EditableText.EditableTextState>().ContextMenuButtonItems);

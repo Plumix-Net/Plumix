@@ -75,7 +75,7 @@ public sealed class FocusTraversalTests : IDisposable
         var leftNode = new FocusNode(debugLabel: "left");
         var rightNode = new FocusNode(debugLabel: "right");
         var anchor = new FocusNode(debugLabel: "anchor");
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             direction,
             new Stack(children:
             [
@@ -198,6 +198,81 @@ public sealed class FocusTraversalTests : IDisposable
             () => new NumericFocusOrder(1).CompareTo(new LexicalFocusOrder("a")));
     }
 
+    /// <remarks>
+    /// Dart parity source: <c>FocusTraversalGroup.of</c>'s assert — traversal outside a group is an
+    /// error, not a silent fallback onto a default policy.
+    /// </remarks>
+    [Fact]
+    public void FocusTraversalGroup_TraversalWithoutAGroupThrows()
+    {
+        var node = new FocusNode(debugLabel: "lonely");
+        using var harness = new FocusLayoutHarness(new Directionality(
+            TextDirection.Ltr,
+            new Focus(focusNode: node, autofocus: true, child: new SizedBox(width: 20, height: 20))));
+        harness.Layout(ViewSize);
+
+        Assert.True(node.HasFocus);
+        InvalidOperationException error = Assert.Throws<InvalidOperationException>(() => node.NextFocus());
+        Assert.Contains("FocusTraversalGroup", error.Message, StringComparison.Ordinal);
+        Assert.Throws<InvalidOperationException>(() => node.PreviousFocus());
+        Assert.Throws<InvalidOperationException>(() => node.FocusInDirection(TraversalDirection.Down));
+    }
+
+    /// <remarks>
+    /// Dart routes Tab and the arrow keys through <c>WidgetsApp</c>'s default shortcut map into
+    /// <c>NextFocusIntent</c>/<c>PreviousFocusIntent</c>/<c>DirectionalFocusIntent</c>; the focus
+    /// manager itself has no traversal fallback.
+    /// </remarks>
+    [Fact]
+    public void TraversalKeys_MoveTheFocusThroughTheAppShortcutMap()
+    {
+        var first = new FocusNode(debugLabel: "first");
+        var second = new FocusNode(debugLabel: "second");
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
+            TextDirection.Ltr,
+            new Row(children:
+            [
+                new Focus(focusNode: first, autofocus: true, child: new SizedBox(width: 20, height: 20)),
+                new Focus(focusNode: second, child: new SizedBox(width: 20, height: 20)),
+            ])));
+        harness.Layout(ViewSize);
+
+        Assert.Same(first, FocusManager.Instance.PrimaryFocus);
+
+        Assert.True(PumpFocus(() => FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab))));
+        Assert.Same(second, FocusManager.Instance.PrimaryFocus);
+
+        Assert.True(PumpFocus(() =>
+            FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab, shift: true))));
+        Assert.Same(first, FocusManager.Instance.PrimaryFocus);
+
+        Assert.True(PumpFocus(() =>
+            FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight))));
+        Assert.Same(second, FocusManager.Instance.PrimaryFocus);
+    }
+
+    /// <remarks>
+    /// Without the app's shortcuts nothing maps Tab to <c>NextFocusIntent</c>, so the key is
+    /// unhandled and the focus stays put — the manager has no traversal fallback of its own.
+    /// </remarks>
+    [Fact]
+    public void TraversalKeys_DoNothingWithoutTheAppShortcutMap()
+    {
+        var first = new FocusNode(debugLabel: "first");
+        var second = new FocusNode(debugLabel: "second");
+        using var harness = new FocusLayoutHarness(new Directionality(
+            TextDirection.Ltr,
+            new FocusTraversalGroup(child: new Row(children:
+            [
+                new Focus(focusNode: first, autofocus: true, child: new SizedBox(width: 20, height: 20)),
+                new Focus(focusNode: second, child: new SizedBox(width: 20, height: 20)),
+            ]))));
+        harness.Layout(ViewSize);
+
+        Assert.False(PumpFocus(() => FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab))));
+        Assert.Same(first, FocusManager.Instance.PrimaryFocus);
+    }
+
     [Fact]
     public void FocusTraversalGroup_SortsEachGroupThenSplicesItIntoTheOuterOrder()
     {
@@ -205,7 +280,7 @@ public sealed class FocusTraversalTests : IDisposable
         var innerLast = new FocusNode(debugLabel: "innerLast");
         var innerFirst = new FocusNode(debugLabel: "innerFirst");
         var outerLast = new FocusNode(debugLabel: "outerLast");
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Row(children:
             [
@@ -252,7 +327,7 @@ public sealed class FocusTraversalTests : IDisposable
         var first = new FocusNode(debugLabel: "first");
         var excluded = new FocusNode(debugLabel: "excluded");
         var last = new FocusNode(debugLabel: "last");
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Row(children:
             [
@@ -267,7 +342,7 @@ public sealed class FocusTraversalTests : IDisposable
         Assert.True(excluded.SkipTraversal);
         Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
-        Assert.True(PumpFocus(excluded.RequestFocus));
+        PumpFocus(excluded.RequestFocus);
         Assert.Same(excluded, FocusManager.Instance.PrimaryFocus);
     }
 
@@ -277,7 +352,7 @@ public sealed class FocusTraversalTests : IDisposable
         var origin = new FocusNode(debugLabel: "origin");
         var below = new FocusNode(debugLabel: "below");
         var farRight = new FocusNode(debugLabel: "farRight");
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Stack(children:
             [
@@ -308,7 +383,7 @@ public sealed class FocusTraversalTests : IDisposable
     {
         var topLeft = new FocusNode(debugLabel: "topLeft");
         var bottomWide = new FocusNode(debugLabel: "bottomWide");
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Stack(children:
             [
@@ -340,7 +415,7 @@ public sealed class FocusTraversalTests : IDisposable
     {
         var first = new FocusNode(debugLabel: "first");
         var second = new FocusNode(debugLabel: "second");
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Row(children:
             [
@@ -362,7 +437,7 @@ public sealed class FocusTraversalTests : IDisposable
         var first = new FocusNode(debugLabel: "first");
         var second = new FocusNode(debugLabel: "second");
         var scope = new FocusScopeNode(directionalTraversalEdgeBehavior: TraversalEdgeBehavior.ClosedLoop);
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             FocusScope.WithExternalFocusNode(
                 scope,
@@ -385,7 +460,7 @@ public sealed class FocusTraversalTests : IDisposable
         var first = new FocusNode(debugLabel: "first");
         var second = new FocusNode(debugLabel: "second");
         var scope = new FocusScopeNode(traversalEdgeBehavior: TraversalEdgeBehavior.Stop);
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             FocusScope.WithExternalFocusNode(
                 scope,
@@ -407,7 +482,7 @@ public sealed class FocusTraversalTests : IDisposable
     {
         var only = new FocusNode(debugLabel: "only");
         var scope = new FocusScopeNode(traversalEdgeBehavior: TraversalEdgeBehavior.LeaveFlutterView);
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             FocusScope.WithExternalFocusNode(
                 scope,
@@ -429,7 +504,7 @@ public sealed class FocusTraversalTests : IDisposable
         var outerLast = new FocusNode(debugLabel: "outerLast");
         var innerScope = new FocusScopeNode(traversalEdgeBehavior: TraversalEdgeBehavior.ParentScope);
         var outerScope = new FocusScopeNode();
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             FocusScope.WithExternalFocusNode(
                 outerScope,
@@ -456,7 +531,7 @@ public sealed class FocusTraversalTests : IDisposable
     {
         var first = new FocusNode(debugLabel: "first");
         var second = new FocusNode(debugLabel: "second");
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Row(children:
             [
@@ -503,7 +578,7 @@ public sealed class FocusTraversalTests : IDisposable
     {
         var first = new FocusNode(debugLabel: "first");
         var second = new FocusNode(debugLabel: "second");
-        using var harness = new FocusLayoutHarness(new Directionality(
+        using var harness = FocusLayoutHarness.WithTraversalGroup(new Directionality(
             TextDirection.Ltr,
             new Row(children:
             [
@@ -526,5 +601,11 @@ public sealed class FocusTraversalTests : IDisposable
         bool result = action();
         Scheduler.FlushMicrotasks();
         return result;
+    }
+
+    private static void PumpFocus(Action action)
+    {
+        action();
+        Scheduler.FlushMicrotasks();
     }
 }

@@ -387,7 +387,7 @@ public sealed class CupertinoRadioTests
                 new CupertinoRadio<string>(value: "a", groupValue: "a", onChanged: _ => { }, focusNode: node)));
 
             Scheduler.PumpFrameForTests();
-            Assert.True(node.RequestFocus());
+            node.RequestFocus();
             harness.Pump(ViewSize);
 
             CupertinoRadioPainter painter = Painter(harness);
@@ -413,7 +413,7 @@ public sealed class CupertinoRadioTests
                     focusColor: testFocusColor,
                     focusNode: custom)));
             Scheduler.PumpFrameForTests();
-            Assert.True(custom.RequestFocus());
+            custom.RequestFocus();
             customHarness.Pump(ViewSize);
             Assert.Equal(testFocusColor, Painter(customHarness).EffectiveFocusColor);
         }
@@ -505,7 +505,7 @@ public sealed class CupertinoRadioTests
                 mouseCursor: cursor,
                 focusNode: node)));
             Scheduler.PumpFrameForTests();
-            Assert.True(node.RequestFocus());
+            node.RequestFocus();
             focused.Pump(ViewSize);
             Assert.Equal(
                 SystemMouseCursors.Basic,

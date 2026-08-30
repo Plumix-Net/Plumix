@@ -167,7 +167,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
         var first = new FocusNode();
         var excluded = new FocusNode();
         var last = new FocusNode();
-        using var harness = new WidgetHarness(
+        using var harness = WidgetHarness.WithTraversalGroup(
             new Row(
                 children:
                 [
@@ -186,9 +186,9 @@ public sealed class FocusableActionDetectorTests : IDisposable
 
         Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
-        Assert.True(PumpFocus(excluded.RequestFocus));
+        PumpFocus(excluded.RequestFocus);
         Assert.Same(excluded, FocusManager.Instance.PrimaryFocus);
-        Assert.True(PumpFocus(first.RequestFocus));
+        PumpFocus(first.RequestFocus);
         Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
         Assert.Same(last, FocusManager.Instance.PrimaryFocus);
         // Dart's `skipTraversal` getter reports true as soon as an ancestor is untraversable.
@@ -201,7 +201,7 @@ public sealed class FocusableActionDetectorTests : IDisposable
         var blocked = new FocusNode();
         var skipped = new FocusNode();
         var last = new FocusNode();
-        using var harness = new WidgetHarness(
+        using var harness = WidgetHarness.WithTraversalGroup(
             new Column(
                 children:
                 [
@@ -225,9 +225,11 @@ public sealed class FocusableActionDetectorTests : IDisposable
                 ]));
 
         Assert.False(blocked.CanRequestFocus);
-        Assert.False(blocked.RequestFocus());
+        blocked.RequestFocus();
+        Scheduler.FlushMicrotasks();
+        Assert.False(blocked.HasFocus);
         Assert.True(skipped.CanRequestFocus);
-        Assert.True(PumpFocus(skipped.RequestFocus));
+        PumpFocus(skipped.RequestFocus);
         skipped.Unfocus();
         Scheduler.FlushMicrotasks();
         Assert.True(PumpFocus(FocusManager.Instance.FocusNext));
@@ -265,6 +267,12 @@ public sealed class FocusableActionDetectorTests : IDisposable
         bool result = action();
         Scheduler.FlushMicrotasks();
         return result;
+    }
+
+    private static void PumpFocus(Action action)
+    {
+        action();
+        Scheduler.FlushMicrotasks();
     }
 
     private sealed class ProbeIntent : Intent;
@@ -307,6 +315,12 @@ public sealed class FocusableActionDetectorTests : IDisposable
         private readonly BuildOwner _owner = new();
         private readonly PipelineOwner _pipeline;
         private readonly HarnessRootElement _rootElement;
+
+        /// <summary>
+        /// Mounts the tree under the traversal scope <c>WidgetsApp</c> installs, the way Flutter's
+        /// own tests reach it through <c>MaterialApp</c>/<c>WidgetsApp</c>.
+        /// </summary>
+        public static WidgetHarness WithTraversalGroup(Widget widget) => new(AppTraversalScope.Wrap(widget));
 
         public WidgetHarness(Widget widget)
         {

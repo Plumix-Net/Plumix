@@ -84,7 +84,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                     ]))));
 
         harness.Pump(new Size(360, 180));
-        Assert.True(firstFocus.RequestFocus());
+        firstFocus.RequestFocus();
         Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Scheduler.FlushMicrotasks();
@@ -257,7 +257,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                 ThemeData.Light with { Platform = TargetPlatform.IOS }));
 
         harness.Pump(new Size(360, 180));
-        Assert.True(firstFocus.RequestFocus());
+        firstFocus.RequestFocus();
         Scheduler.FlushMicrotasks();
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowRight)));
         Scheduler.FlushMicrotasks();

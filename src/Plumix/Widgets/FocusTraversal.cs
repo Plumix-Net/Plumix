@@ -1284,12 +1284,6 @@ internal sealed class FocusTraversalGroupNode : FocusNode
 /// <summary>Dart parity source: <c>FocusTraversalGroup</c>.</summary>
 public sealed class FocusTraversalGroup : StatefulWidget
 {
-    /// <summary>
-    /// C#-only fallback: Flutter's <c>FocusTraversalGroup.of</c> asserts that an app-level group exists,
-    /// while Plumix's unit tests and hosts routinely build trees without one.
-    /// </summary>
-    private static readonly ReadingOrderTraversalPolicy DefaultPolicyInstance = new();
-
     public FocusTraversalGroup(
         Widget child,
         FocusTraversalPolicy? policy = null,
@@ -1346,10 +1340,7 @@ public sealed class FocusTraversalGroup : StatefulWidget
     /// <summary>Dart parity source: <c>FocusTraversalGroup.of</c>.</summary>
     public static FocusTraversalPolicy Of(BuildContext context)
     {
-        return MaybeOf(context)
-               ?? throw new InvalidOperationException(
-                   "Unable to find a Focus or FocusScope widget in the given context, or the FocusNode "
-                   + "from the widget that was found is not associated with a FocusTraversalPolicy.");
+        return MaybeOf(context) ?? throw NoGroupError();
     }
 
     /// <summary>Dart parity source: <c>FocusTraversalGroup.maybeOf</c>.</summary>
@@ -1359,12 +1350,28 @@ public sealed class FocusTraversalGroup : StatefulWidget
         return node == null ? null : MaybeOfNode(node);
     }
 
-    /// <summary>The policy that governs traversal from <paramref name="node"/>.</summary>
+    /// <summary>
+    /// The policy that governs traversal from <paramref name="node"/>. Dart's
+    /// <c>FocusNode.nextFocus</c>/<c>previousFocus</c>/<c>focusInDirection</c> all resolve it through
+    /// <see cref="Of"/>, which throws when no <see cref="FocusTraversalGroup"/> is in scope.
+    /// </summary>
     internal static FocusTraversalPolicy PolicyForNode(FocusNode node)
     {
         return MaybeOfNode(node)
                ?? (node.Context is { } context ? MaybeOf(context) : null)
-               ?? DefaultPolicyInstance;
+               ?? throw NoGroupError();
+    }
+
+    private static InvalidOperationException NoGroupError()
+    {
+        return new InvalidOperationException(
+            "Unable to find a Focus or FocusScope widget in the given context, or the FocusNode "
+            + "from with the widget that was found is not associated with a FocusTraversalPolicy.\n"
+            + "FocusTraversalGroup.Of() was called with a context that does not contain a "
+            + "Focus or FocusScope widget, or there was no FocusTraversalPolicy in effect.\n"
+            + "This can happen if there is not a FocusTraversalGroup that defines the policy, "
+            + "or if the context comes from a widget that is above the WidgetsApp, MaterialApp, "
+            + "or CupertinoApp widget (those widgets introduce an implicit default policy).");
     }
 
     public override State CreateState() => new FocusTraversalGroupState();

@@ -631,7 +631,7 @@ public sealed class MaterialSwitchTests
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            Assert.True(focusNode.RequestFocus());
+            focusNode.RequestFocus();
             owner.FlushBuild();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));

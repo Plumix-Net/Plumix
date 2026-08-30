@@ -494,14 +494,14 @@ public sealed class MaterialRangeSliderTests
             harness.Pump(ViewSize);
 
             RangeSlider.RangeSliderState state = StateOf(harness);
-            Assert.True(state.StartFocusNode.RequestFocus());
+            state.StartFocusNode.RequestFocus();
 
             IReadOnlyList<SemanticsNode> thumbs = FindThumbNodes(
                 Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize)));
             Assert.True(thumbs[0].Flags.HasFlag(SemanticsFlags.IsFocused));
             Assert.False(thumbs[1].Flags.HasFlag(SemanticsFlags.IsFocused));
 
-            Assert.True(state.EndFocusNode.RequestFocus());
+            state.EndFocusNode.RequestFocus();
 
             thumbs = FindThumbNodes(Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize)));
             Assert.False(thumbs[0].Flags.HasFlag(SemanticsFlags.IsFocused));
@@ -527,7 +527,7 @@ public sealed class MaterialRangeSliderTests
             harness.Pump(ViewSize);
 
             RangeSlider.RangeSliderState state = StateOf(harness);
-            Assert.True(state.StartFocusNode.RequestFocus());
+            state.StartFocusNode.RequestFocus();
             harness.Pump(ViewSize);
             Assert.Same(state.StartFocusNode, FocusManager.Instance.PrimaryFocus);
 
@@ -677,22 +677,25 @@ public sealed class MaterialRangeSliderTests
         Action<RangeValues>? onChangeEnd = null,
         bool omitOnChanged = false)
     {
-        return new Theme(
-            data: new ThemeData(platform: TargetPlatform.Android),
-            child: new Directionality(
-                textDirection: textDirection,
-                child: new Align(
-                    alignment: Alignment.TopLeft,
-                    child: new SizedBox(
-                        width: 220,
-                        child: new RangeSlider(
-                            values: values,
-                            min: min,
-                            max: max,
-                            labels: labels,
-                            onChanged: omitOnChanged ? null : onChanged ?? (_ => { }),
-                            onChangeStart: onChangeStart,
-                            onChangeEnd: onChangeEnd)))));
+        // `MaterialApp` is what installs the traversal scope in Flutter's own tests; this helper
+        // stands in for it, and Tab moves nothing without it.
+        return AppTraversalScope.Wrap(
+            new Theme(
+                data: new ThemeData(platform: TargetPlatform.Android),
+                child: new Directionality(
+                    textDirection: textDirection,
+                    child: new Align(
+                        alignment: Alignment.TopLeft,
+                        child: new SizedBox(
+                            width: 220,
+                            child: new RangeSlider(
+                                values: values,
+                                min: min,
+                                max: max,
+                                labels: labels,
+                                onChanged: omitOnChanged ? null : onChanged ?? (_ => { }),
+                                onChangeStart: onChangeStart,
+                                onChangeEnd: onChangeEnd))))));
     }
 
     private static RangeSlider.RangeSliderState StateOf(WidgetRenderHarness harness)

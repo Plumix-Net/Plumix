@@ -175,6 +175,18 @@ public enum SemanticsActions
     Collapse = 1 << 13,
 
     /// <summary>
+    /// The node just gained accessibility focus. Together with
+    /// <see cref="DidLoseAccessibilityFocus"/> this is the only pair of actions that survives
+    /// <see cref="SemanticsConfiguration.IsBlockingUserActions"/>.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsAction.didGainAccessibilityFocus</c>.</remarks>
+    DidGainAccessibilityFocus = 1 << 15,
+
+    /// <summary>The node just lost accessibility focus.</summary>
+    /// <remarks>Flutter's <c>SemanticsAction.didLoseAccessibilityFocus</c>.</remarks>
+    DidLoseAccessibilityFocus = 1 << 16,
+
+    /// <summary>
     /// Run one of the node's <see cref="CustomSemanticsAction"/>s. The action argument is the
     /// <see cref="CustomSemanticsAction.GetIdentifier"/> of the action to run.
     /// </summary>
@@ -570,6 +582,22 @@ public sealed class SemanticsConfiguration
     private static readonly IReadOnlyDictionary<CustomSemanticsAction, Action> EmptyCustomHandlers =
         new Dictionary<CustomSemanticsAction, Action>();
 
+    /// <summary>
+    /// The only actions that survive <see cref="IsBlockingUserActions"/>: a blocked subtree still
+    /// reports accessibility focus changes.
+    /// </summary>
+    /// <remarks>Flutter's library-private <c>_kUnblockedUserActions</c>.</remarks>
+    internal const SemanticsActions UnblockedUserActions =
+        SemanticsActions.DidGainAccessibilityFocus | SemanticsActions.DidLoseAccessibilityFocus;
+
+    /// <summary>
+    /// <see cref="Actions"/> as the semantics tree sees it: masked down to
+    /// <see cref="UnblockedUserActions"/> while <see cref="IsBlockingUserActions"/> is set.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration._effectiveActionsAsBits</c>.</remarks>
+    internal SemanticsActions EffectiveActions =>
+        IsBlockingUserActions ? Actions & UnblockedUserActions : Actions;
+
     /// <remarks>Flutter's <c>SemanticsConfiguration._addArgumentlessAction</c>.</remarks>
     public void AddActionHandler(SemanticsActions action, Action handler)
     {
@@ -727,7 +755,37 @@ public sealed class SemanticsConfiguration
         }
     }
 
+    /// <summary>
+    /// The node just gained accessibility focus (a screen reader moved its cursor onto it).
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onDidGainAccessibilityFocus</c>.</remarks>
+    public Action? OnDidGainAccessibilityFocus
+    {
+        get => _onDidGainAccessibilityFocus;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.DidGainAccessibilityFocus, value);
+            _onDidGainAccessibilityFocus = value;
+        }
+    }
+
+    /// <summary>The node just lost accessibility focus.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onDidLoseAccessibilityFocus</c>.</remarks>
+    public Action? OnDidLoseAccessibilityFocus
+    {
+        get => _onDidLoseAccessibilityFocus;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.DidLoseAccessibilityFocus, value);
+            _onDidLoseAccessibilityFocus = value;
+        }
+    }
+
     private Action? _onFocus;
+    private Action? _onDidGainAccessibilityFocus;
+    private Action? _onDidLoseAccessibilityFocus;
     private Action? _onIncrease;
     private Action? _onDecrease;
     private Action? _onScrollLeft;
@@ -832,6 +890,8 @@ public sealed class SemanticsConfiguration
             _onScrollDown = _onScrollDown,
             _onScrollToOffset = _onScrollToOffset,
             _onShowOnScreen = _onShowOnScreen,
+            _onDidGainAccessibilityFocus = _onDidGainAccessibilityFocus,
+            _onDidLoseAccessibilityFocus = _onDidLoseAccessibilityFocus,
             _traversalParentIdentifier = _traversalParentIdentifier,
             _traversalChildIdentifier = _traversalChildIdentifier
         };
@@ -865,6 +925,8 @@ public sealed class SemanticsConfiguration
         _onScrollDown = null;
         _onScrollToOffset = null;
         _onShowOnScreen = null;
+        _onDidGainAccessibilityFocus = null;
+        _onDidLoseAccessibilityFocus = null;
     }
 
     /// <summary>The shared empty configuration Flutter calls <c>_kEmptyConfig</c>.</summary>
@@ -971,7 +1033,7 @@ public sealed class SemanticsConfiguration
         }
 
         Flags |= child.Flags;
-        Actions |= child.Actions;
+        Actions |= child.EffectiveActions;
         AccessibilityFocusBlockType = _accessibilityFocusBlockType.Merge(child.AccessibilityFocusBlockType);
         if (_traversalChildIdentifier is null)
         {
@@ -1040,6 +1102,12 @@ public sealed class SemanticsConfiguration
             _actionHandlers ??= [];
             foreach (var pair in child.ActionHandlers)
             {
+                // A blocked child only hands up its accessibility-focus handlers.
+                if (child.IsBlockingUserActions && (UnblockedUserActions & pair.Key) == SemanticsActions.None)
+                {
+                    continue;
+                }
+
                 _actionHandlers.TryAdd(pair.Key, pair.Value);
             }
         }
@@ -1358,10 +1426,8 @@ public sealed partial class SemanticsNode
         InputType = config.InputType;
         HitTestBehavior = config.HitTestBehavior;
         Flags = config.Flags;
-        // Flutter masks the actions with `_kUnblockedUserActions` when the node blocks user actions;
-        // that mask only keeps the two accessibility-focus actions, neither of which Plumix models.
         AreUserActionsBlocked = config.IsBlockingUserActions;
-        Actions = AreUserActionsBlocked ? SemanticsActions.None : config.Actions;
+        Actions = config.EffectiveActions;
         IndexInParent = config.IndexInParent;
         SortKey = config.SortKey;
         ScrollPosition = config.ScrollPosition;

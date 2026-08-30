@@ -216,7 +216,7 @@ public sealed class CupertinoSwitchTests
                 focusColor: focus)));
 
             Scheduler.PumpFrameForTests();
-            Assert.True(node.RequestFocus());
+            node.RequestFocus();
             harness.Pump(ViewSize);
             CupertinoSwitchPainter painter = Painter(harness);
 

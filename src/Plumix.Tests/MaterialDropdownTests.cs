@@ -1751,13 +1751,16 @@ public sealed class MaterialDropdownTests : IDisposable
     private static Widget Wrap(
         Widget child,
         ThemeData? theme = null,
-        TextDirection direction = TextDirection.Ltr) => new Directionality(
-        direction,
-        new MediaQuery(
-            new MediaQueryData(Size: new Size(500, 360)),
-            new Theme(
-                theme ?? ThemeData.Light,
-                new Overlay(initialEntries: [new OverlayEntry(_ => child)]))));
+        TextDirection direction = TextDirection.Ltr) =>
+        // `MaterialApp` is what installs the traversal scope in Flutter's own tests; this helper
+        // stands in for it, and the menu's arrow-key navigation moves nothing without it.
+        AppTraversalScope.Wrap(new Directionality(
+            direction,
+            new MediaQuery(
+                new MediaQueryData(Size: new Size(500, 360)),
+                new Theme(
+                    theme ?? ThemeData.Light,
+                    new Overlay(initialEntries: [new OverlayEntry(_ => child)])))));
 
     private static Color Opacity(Color color, double opacity) =>
         color.WithOpacity(opacity);

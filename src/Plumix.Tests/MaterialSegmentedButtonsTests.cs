@@ -452,7 +452,7 @@ public sealed class MaterialSegmentedButtonsTests
         harness.Pump(new Size(360, 120));
         IReadOnlyList<Focus> focusWidgets = harness.FindWidgets<Focus>();
         FocusNode focusNode = Assert.IsType<FocusNode>(focusWidgets[1].FocusNode);
-        Assert.True(focusNode.RequestFocus());
+        focusNode.RequestFocus();
         harness.Pump(new Size(360, 120));
         Assert.True(focusNode.HasFocus);
 

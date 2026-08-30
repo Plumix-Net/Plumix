@@ -404,7 +404,7 @@ public sealed class CupertinoCheckboxTests
                 new CupertinoCheckbox(value: true, onChanged: _ => { }, focusNode: node)));
 
             Scheduler.PumpFrameForTests();
-            Assert.True(node.RequestFocus());
+            node.RequestFocus();
             harness.Pump(ViewSize);
 
             CupertinoCheckboxPainter painter = Painter(harness);
@@ -427,7 +427,7 @@ public sealed class CupertinoCheckboxTests
                     focusColor: testFocusColor,
                     focusNode: custom)));
             Scheduler.PumpFrameForTests();
-            Assert.True(custom.RequestFocus());
+            custom.RequestFocus();
             customHarness.Pump(ViewSize);
             Assert.Equal(testFocusColor, Painter(customHarness).EffectiveFocusColor);
         }

@@ -267,7 +267,7 @@ public sealed class MaterialCheckboxTests
                         semanticLabel: "Event checkbox")));
             _ = harness.PumpAndGetSemantics(new Size(120, 120));
 
-            Assert.True(focusNode.RequestFocus());
+            focusNode.RequestFocus();
             Scheduler.FlushMicrotasks();
             Assert.True(FocusManager.Instance.HandleKeyEvent(
                 KeySim.Down(LogicalKeyboardKey.Space)));
@@ -304,7 +304,7 @@ public sealed class MaterialCheckboxTests
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            Assert.True(focusNode.RequestFocus());
+            focusNode.RequestFocus();
             owner.FlushBuild();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
@@ -341,7 +341,7 @@ public sealed class MaterialCheckboxTests
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            Assert.True(focusNode.RequestFocus());
+            focusNode.RequestFocus();
             owner.FlushBuild();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
@@ -378,7 +378,7 @@ public sealed class MaterialCheckboxTests
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            Assert.True(focusNode.RequestFocus());
+            focusNode.RequestFocus();
             owner.FlushBuild();
 
             bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));

@@ -459,17 +459,16 @@ public class FocusNode : ChangeNotifier
     }
 
     /// <summary>
-    /// Dart parity source: <c>FocusNode.requestFocus</c>; returns whether the request was accepted.
-    /// The primary focus changes on the next microtask.
+    /// Dart parity source: <c>FocusNode.requestFocus</c>. The primary focus changes on the next
+    /// microtask.
     /// </summary>
-    public bool RequestFocus()
+    public void RequestFocus()
     {
         DoRequestFocus(findFirstFocus: true);
-        return CanRequestFocus && Parent != null;
     }
 
     /// <summary>Dart parity source: <c>FocusNode.requestFocus(node)</c>.</summary>
-    public bool RequestFocus(FocusNode node)
+    public void RequestFocus(FocusNode node)
     {
         ArgumentNullException.ThrowIfNull(node);
         if (node.Parent == null)
@@ -478,7 +477,6 @@ public class FocusNode : ChangeNotifier
         }
 
         node.DoRequestFocus(findFirstFocus: true);
-        return node.CanRequestFocus && node.Parent != null;
     }
 
     /// <summary>Dart parity source: <c>FocusNode.nextFocus</c>.</summary>
@@ -1080,7 +1078,7 @@ public sealed class FocusManager : ChangeNotifier
     }
 
     /// <summary>C#-only convenience wrapper around <see cref="FocusNode.RequestFocus()"/>.</summary>
-    public bool RequestFocus(FocusNode node)
+    public void RequestFocus(FocusNode node)
     {
         ArgumentNullException.ThrowIfNull(node);
         if (node.Parent == null && !ReferenceEquals(node, _rootScope))
@@ -1089,7 +1087,6 @@ public sealed class FocusManager : ChangeNotifier
         }
 
         node.DoRequestFocus(findFirstFocus: true);
-        return node.CanRequestFocus && node.Parent != null;
     }
 
     /// <summary>C#-only convenience wrapper around <see cref="FocusNode.Unfocus"/>.</summary>
@@ -1106,7 +1103,22 @@ public sealed class FocusManager : ChangeNotifier
     public bool FocusInDirection(TraversalDirection direction) =>
         TraversalOrigin().FocusInDirection(direction);
 
-    private FocusNode TraversalOrigin() => PrimaryFocus ?? _rootScope;
+    /// <summary>
+    /// The node traversal starts from. Dart's traversal actions read <c>primaryFocus!</c> and then
+    /// <c>node.context!</c>, so they only ever run with a mounted node focused; when nothing is
+    /// focused yet these C#-only helpers start from the first traversable descendant of the root
+    /// scope, which is the node whose context carries the ambient
+    /// <see cref="FocusTraversalGroup"/>.
+    /// </summary>
+    private FocusNode TraversalOrigin()
+    {
+        if (PrimaryFocus is { } primary && !ReferenceEquals(primary, _rootScope))
+        {
+            return primary;
+        }
+
+        return _rootScope.TraversalDescendants.FirstOrDefault() ?? _rootScope;
+    }
 
     /// <summary>Dart parity source: <c>FocusManager._markDetached</c>.</summary>
     internal void MarkDetached(FocusNode node)
@@ -1297,46 +1309,7 @@ public sealed class FocusManager : ChangeNotifier
             }
         }
 
-        return handled || HandleDefaultTraversalKey(@event);
-    }
-
-    /// <summary>
-    /// C#-only: Flutter routes Tab and the arrow keys through <c>WidgetsApp</c>'s default shortcuts.
-    /// Plumix's hosts deliver key events straight to the manager, so the traversal fallback lives here.
-    /// </summary>
-    private bool HandleDefaultTraversalKey(KeyEvent @event)
-    {
-        if (@event is not KeyDownEvent)
-        {
-            return false;
-        }
-
-        if (@event.LogicalKey.Equals(LogicalKeyboardKey.Tab))
-        {
-            return HardwareKeyboard.Instance.IsShiftPressed ? FocusPrevious() : FocusNext();
-        }
-
-        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowRight))
-        {
-            return FocusInDirection(TraversalDirection.Right);
-        }
-
-        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowDown))
-        {
-            return FocusInDirection(TraversalDirection.Down);
-        }
-
-        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowLeft))
-        {
-            return FocusInDirection(TraversalDirection.Left);
-        }
-
-        if (@event.LogicalKey.Equals(LogicalKeyboardKey.ArrowUp))
-        {
-            return FocusInDirection(TraversalDirection.Up);
-        }
-
-        return false;
+        return handled;
     }
 
     public bool HandleTextInput(string text)

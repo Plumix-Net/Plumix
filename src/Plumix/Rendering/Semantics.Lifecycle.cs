@@ -226,7 +226,7 @@ public sealed partial class SemanticsNode
                || ScrollPosition != config.ScrollPosition
                || ScrollExtentMax != config.ScrollExtentMax
                || ScrollExtentMin != config.ScrollExtentMin
-               || Actions != (config.IsBlockingUserActions ? SemanticsActions.None : config.Actions)
+               || Actions != config.EffectiveActions
                || IndexInParent != config.IndexInParent
                || MergeAllDescendantsIntoThisNode != config.IsMergingSemanticsOfDescendants
                || AreUserActionsBlocked != config.IsBlockingUserActions

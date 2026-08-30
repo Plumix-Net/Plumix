@@ -126,6 +126,111 @@ public sealed class ApplicationWidgetsTests : IDisposable
         root.Unmount();
     }
 
+    /// <remarks>
+    /// Dart parity source: <c>WidgetsApp.defaultShortcuts</c> / <c>WidgetsApp.defaultActions</c>
+    /// — the maps that make Tab, the arrow keys, Enter/Space and Escape work in every app.
+    /// </remarks>
+    [Theory]
+    [InlineData(TargetPlatform.Android)]
+    [InlineData(TargetPlatform.Linux)]
+    [InlineData(TargetPlatform.Windows)]
+    [InlineData(TargetPlatform.Fuchsia)]
+    public void WidgetsApp_DefaultShortcuts_MatchFlutterOnNonAppleDesktopAndMobile(TargetPlatform platform)
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = platform;
+        try
+        {
+            AssertNonAppleDefaults(WidgetsApp.DefaultShortcuts);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = null;
+        }
+    }
+
+    private static void AssertNonAppleDefaults(IReadOnlyDictionary<ShortcutActivator, Intent> shortcuts)
+    {
+
+        Assert.IsType<ActivateIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Enter)]);
+        Assert.IsType<ActivateIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.NumpadEnter)]);
+        Assert.IsType<ActivateIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Space)]);
+        Assert.IsType<ActivateIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.GameButtonA)]);
+        Assert.IsType<ActivateIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Select)]);
+        Assert.IsType<DismissIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Escape)]);
+        Assert.IsType<NextFocusIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Tab)]);
+        Assert.IsType<PreviousFocusIntent>(
+            shortcuts[new SingleActivator(LogicalKeyboardKey.Tab, shift: true)]);
+
+        var left = Assert.IsType<DirectionalFocusIntent>(
+            shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowLeft)]);
+        Assert.Equal(TraversalDirection.Left, left.Direction);
+        var up = Assert.IsType<DirectionalFocusIntent>(
+            shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowUp)]);
+        Assert.Equal(TraversalDirection.Up, up.Direction);
+
+        var controlUp = Assert.IsType<ScrollIntent>(
+            shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowUp, control: true)]);
+        Assert.Equal(AxisDirection.Up, controlUp.Direction);
+        Assert.Equal(ScrollIncrementType.Line, controlUp.Type);
+        var pageDown = Assert.IsType<ScrollIntent>(
+            shortcuts[new SingleActivator(LogicalKeyboardKey.PageDown)]);
+        Assert.Equal(AxisDirection.Down, pageDown.Direction);
+        Assert.Equal(ScrollIncrementType.Page, pageDown.Type);
+    }
+
+    /// <remarks>
+    /// Dart parity source: <c>WidgetsApp._defaultAppleOsShortcuts</c> — Apple platforms scroll with
+    /// meta rather than control, and drop the game-button/select activators.
+    /// </remarks>
+    [Theory]
+    [InlineData(TargetPlatform.IOS)]
+    [InlineData(TargetPlatform.MacOS)]
+    public void WidgetsApp_DefaultShortcuts_UseTheAppleMapOnAppleOperatingSystems(TargetPlatform platform)
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = platform;
+        try
+        {
+            AssertAppleDefaults(WidgetsApp.DefaultShortcuts);
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = null;
+        }
+    }
+
+    private static void AssertAppleDefaults(IReadOnlyDictionary<ShortcutActivator, Intent> shortcuts)
+    {
+        Assert.DoesNotContain(new SingleActivator(LogicalKeyboardKey.GameButtonA), shortcuts.Keys);
+        Assert.DoesNotContain(new SingleActivator(LogicalKeyboardKey.Select), shortcuts.Keys);
+        Assert.DoesNotContain(
+            new SingleActivator(LogicalKeyboardKey.ArrowUp, control: true),
+            shortcuts.Keys);
+
+        var metaUp = Assert.IsType<ScrollIntent>(
+            shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowUp, meta: true)]);
+        Assert.Equal(AxisDirection.Up, metaUp.Direction);
+        Assert.IsType<NextFocusIntent>(shortcuts[new SingleActivator(LogicalKeyboardKey.Tab)]);
+        Assert.IsType<DirectionalFocusIntent>(
+            shortcuts[new SingleActivator(LogicalKeyboardKey.ArrowRight)]);
+    }
+
+    /// <remarks>Dart parity source: <c>WidgetsApp.defaultActions</c>.</remarks>
+    [Fact]
+    public void WidgetsApp_DefaultActions_CoverEveryDefaultIntent()
+    {
+        IReadOnlyDictionary<Type, FlutterAction> actions = WidgetsApp.DefaultActions;
+
+        Assert.IsType<DoNothingAction>(actions[typeof(DoNothingIntent)]);
+        Assert.IsType<DoNothingAction>(actions[typeof(DoNothingAndStopPropagationIntent)]);
+        Assert.IsType<RequestFocusAction>(actions[typeof(RequestFocusIntent)]);
+        Assert.IsType<NextFocusAction>(actions[typeof(NextFocusIntent)]);
+        Assert.IsType<PreviousFocusAction>(actions[typeof(PreviousFocusIntent)]);
+        Assert.IsType<DirectionalFocusAction>(actions[typeof(DirectionalFocusIntent)]);
+        Assert.IsType<ScrollAction>(actions[typeof(ScrollIntent)]);
+        Assert.IsType<PrioritizedAction>(actions[typeof(PrioritizedIntents)]);
+        Assert.IsType<VoidCallbackAction>(actions[typeof(VoidCallbackIntent)]);
+    }
+
     [Fact]
     public void WidgetsApp_ExposesFlutterDefaultsAndValidatesRoutingContracts()
     {
@@ -143,7 +248,6 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.False(app.ShowPerformanceOverlay);
         Assert.False(app.ShowSemanticsDebugger);
         Assert.Empty(app.NavigatorObservers);
-        Assert.Empty(WidgetsApp.DefaultShortcuts);
         Assert.Contains(typeof(VoidCallbackIntent), WidgetsApp.DefaultActions.Keys);
 
         Assert.Throws<ArgumentException>(() => new WidgetsApp(

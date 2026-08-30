@@ -107,7 +107,9 @@ public sealed class FocusScopeTests : IDisposable
 
         Assert.NotNull(blocked.Parent);
         Assert.False(blocked.CanRequestFocus);
-        Assert.False(blocked.RequestFocus());
+        blocked.RequestFocus();
+        Scheduler.FlushMicrotasks();
+        Assert.False(blocked.HasFocus);
     }
 
     [Fact]
@@ -122,7 +124,7 @@ public sealed class FocusScopeTests : IDisposable
         harness.Layout(ViewSize);
 
         Assert.True(node.CanRequestFocus);
-        Assert.True(node.RequestFocus());
+        node.RequestFocus();
         Scheduler.FlushMicrotasks();
     }
 
@@ -140,7 +142,7 @@ public sealed class FocusScopeTests : IDisposable
                 child: new Focus(focusNode: child, child: new SizedBox(width: 20, height: 20)))));
         harness.Layout(ViewSize);
 
-        Assert.True(child.RequestFocus());
+        child.RequestFocus();
         Scheduler.FlushMicrotasks();
         // Dart reports `hasFocus`, which is true for every node on the primary focus path.
         Assert.Contains(true, parentChanges);
@@ -172,12 +174,12 @@ public sealed class FocusScopeTests : IDisposable
         harness.Layout(ViewSize);
 
         Assert.Same(firstChild, firstScope.FocusedChild);
-        Assert.True(secondChild.RequestFocus());
+        secondChild.RequestFocus();
         Scheduler.FlushMicrotasks();
         Assert.Same(firstChild, firstScope.FocusedChild);
         Assert.Same(secondChild, secondScope.FocusedChild);
 
-        Assert.True(firstScope.RequestFocus());
+        firstScope.RequestFocus();
         Scheduler.FlushMicrotasks();
         Assert.Same(firstChild, FocusManager.Instance.PrimaryFocus);
     }
