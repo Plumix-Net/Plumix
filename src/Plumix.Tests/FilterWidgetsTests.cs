@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -419,7 +420,7 @@ public sealed class FilterWidgetsTests
         var backdrop = new RenderBackdropFilter(
             new ImageFilterConfig(new ImageFilter.Blur(2.0, 2.0)),
             child: filteredChild);
-        var stack = new RenderStack([background, backdrop]);
+        var stack = new RenderStack([background, backdrop], textDirection: TextDirection.Ltr);
         var renderView = new RenderView { Child = stack };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
@@ -478,7 +479,9 @@ public sealed class FilterWidgetsTests
             new ImageFilterConfig(new ImageFilter.Blur(1.0, 1.0)),
             child: new PaintProbeRenderBox(),
             backdropKey: sharedKey);
-        var stack = new RenderStack([new PaintProbeRenderBox(), first, second]);
+        var stack = new RenderStack(
+            [new PaintProbeRenderBox(), first, second],
+            textDirection: TextDirection.Ltr);
         var renderView = new RenderView { Child = stack };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);

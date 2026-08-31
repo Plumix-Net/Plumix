@@ -73,57 +73,86 @@ public sealed class IndexedStack : StatelessWidget
 
 /// <summary>The render object widget that backs <see cref="IndexedStack"/>. Dart's private
 /// `_RawIndexedStack`.</summary>
-internal sealed class RawIndexedStack : MultiChildRenderObjectWidget
+internal sealed class RawIndexedStack : Stack
 {
     public RawIndexedStack(
         IReadOnlyList<Widget>? children = null,
         int? index = 0,
-        AlignmentGeometry alignment = default,
+        AlignmentGeometry? alignment = null,
         TextDirection? textDirection = null,
         Clip clipBehavior = Clip.HardEdge,
         StackFit sizing = StackFit.Loose,
-        Key? key = null) : base(children, key)
+        Key? key = null)
+        : base(
+            children,
+            alignment: alignment,
+            fit: sizing,
+            clipBehavior: clipBehavior,
+            textDirection: textDirection,
+            key: key)
     {
-        if (index is { } value && !(value == 0 && Children.Count == 0)
+        if (Constants.KDebugMode
+            && index is { } value
+            && !(value == 0 && Children.Count == 0)
             && (value < 0 || value >= Children.Count))
         {
-            throw new ArgumentOutOfRangeException(
-                nameof(index),
-                "The index must be null or within the range of children.");
+            throw new AssertionError("The index must be null or within the range of children.");
         }
 
         Index = index;
-        Alignment = alignment;
-        TextDirection = textDirection;
-        ClipBehavior = clipBehavior;
-        Sizing = sizing;
     }
 
     public int? Index { get; }
 
-    public AlignmentGeometry Alignment { get; }
+    internal override Element CreateElement() => new IndexedStackElement(this);
 
-    public TextDirection? TextDirection { get; }
-
-    public Clip ClipBehavior { get; }
-
-    public StackFit Sizing { get; }
-
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderIndexedStack(
-            Index,
-            Alignment,
-            TextDirection ?? Directionality.MaybeOf(context),
-            Sizing,
-            ClipBehavior);
+    internal override RenderObject CreateRenderObject(BuildContext context)
+    {
+        TextDirection? textDirection = ResolveTextDirection(context);
+        return new RenderIndexedStack(
+            alignment: Alignment,
+            textDirection: textDirection,
+            fit: Fit,
+            clipBehavior: ClipBehavior,
+            index: Index);
+    }
 
     internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var stack = (RenderIndexedStack)renderObject;
         stack.Index = Index;
-        stack.Alignment = Alignment;
-        stack.TextDirection = TextDirection ?? Directionality.MaybeOf(context);
-        stack.Fit = Sizing;
+        stack.Fit = Fit;
         stack.ClipBehavior = ClipBehavior;
+        stack.Alignment = Alignment;
+        stack.TextDirection = ResolveTextDirection(context);
+    }
+
+    private TextDirection? ResolveTextDirection(BuildContext context)
+    {
+        TextDirection? textDirection = TextDirection ?? Directionality.MaybeOf(context);
+        if (Constants.KDebugMode && Alignment.RequiresTextDirection && textDirection is null)
+        {
+            throw new AssertionError(
+                "IndexedStack requires a Directionality ancestor when its alignment is directional.");
+        }
+
+        return textDirection;
+    }
+}
+
+/// <summary>Dart's private `_IndexedStackElement`: visits only the displayed child onstage.</summary>
+internal sealed class IndexedStackElement : MultiChildRenderObjectElement
+{
+    public IndexedStackElement(RawIndexedStack widget) : base(widget)
+    {
+    }
+
+    internal override void DebugVisitOnstageChildren(Action<Element> visitor)
+    {
+        int? index = ((RawIndexedStack)Widget).Index;
+        if (index.HasValue && Children.Count > 0)
+        {
+            visitor(Children[index.Value]);
+        }
     }
 }

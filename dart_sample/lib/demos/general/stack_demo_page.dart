@@ -14,6 +14,7 @@ class _StackDemoPageState extends State<StackDemoPage> {
   double _top = 8;
   bool _pinBottomRight = false;
   bool _rtl = false;
+  bool _showPositionedIndexedChild = false;
 
   @override
   Widget build(BuildContext context) {
@@ -137,6 +138,63 @@ class _StackDemoPageState extends State<StackDemoPage> {
             ),
           ),
         ),
+        const Text(
+          'IndexedStack + Positioned',
+          style: TextStyle(fontSize: 20, color: Colors.black),
+        ),
+        const Text(
+          'Switch between retained children; the second child uses StackParentData offsets.',
+          style: TextStyle(fontSize: 14, color: Colors.black54),
+        ),
+        _buildButton(
+          label: _showPositionedIndexedChild
+              ? 'Show base child'
+              : 'Show positioned child',
+          onTap: () {
+            setState(() {
+              _showPositionedIndexedChild = !_showPositionedIndexedChild;
+            });
+          },
+          width: 170,
+          background: const Color(0xFFDCE3ED),
+        ),
+        Container(
+          width: 220,
+          height: 140,
+          color: const Color(0xFFE7EDF6),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: IndexedStack(
+              index: _showPositionedIndexedChild ? 1 : 0,
+              children: <Widget>[
+                Container(
+                  color: const Color(0xFFCCE3FF),
+                  child: const Center(
+                    child: Text(
+                      'non-positioned child',
+                      style: TextStyle(fontSize: 14, color: Color(0xFF1D3557)),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 18,
+                  top: 24,
+                  width: 150,
+                  height: 50,
+                  child: Container(
+                    color: const Color(0xFFD1495B),
+                    child: const Center(
+                      child: Text(
+                        'positioned child',
+                        style: TextStyle(fontSize: 14, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -189,6 +247,7 @@ class _StackDemoPageState extends State<StackDemoPage> {
       _top = 8;
       _pinBottomRight = false;
       _rtl = false;
+      _showPositionedIndexedChild = false;
     });
   }
 }

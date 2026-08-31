@@ -178,7 +178,7 @@ public sealed class ModalBarrierTests
             label: "Foreground",
             child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 30, height: 20)));
         var block = new RenderBlockSemantics(child: foreground);
-        var stack = new RenderStack(children: [behind, block]);
+        var stack = new RenderStack(children: [behind, block], textDirection: TextDirection.Ltr);
         var renderView = new RenderView { Child = stack };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);

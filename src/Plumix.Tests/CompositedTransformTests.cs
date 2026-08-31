@@ -159,7 +159,10 @@ public sealed class CompositedTransformTests
             Matrix4.Diagonal3Values(0.5, 0.75, 1.0),
             Alignment.TopLeft,
             follower);
-        var stack = new RenderStack([transformedTarget, transformedFollower], clipBehavior: Clip.None);
+        var stack = new RenderStack(
+            [transformedTarget, transformedFollower],
+            clipBehavior: Clip.None,
+            textDirection: TextDirection.Ltr);
         Position(transformedTarget, left: 30, top: 40, width: 40, height: 20);
         Position(transformedFollower, left: 150, top: 100, width: 20, height: 10);
         var renderView = new RenderView { Child = stack };
@@ -208,7 +211,10 @@ public sealed class CompositedTransformTests
 
     private static RenderStack CreatePositionedStack(RenderLeaderLayer target, RenderFollowerLayer follower)
     {
-        var stack = new RenderStack([target, follower], clipBehavior: Clip.None);
+        var stack = new RenderStack(
+            [target, follower],
+            clipBehavior: Clip.None,
+            textDirection: TextDirection.Ltr);
         Position(target, left: 30, top: 40, width: 40, height: 20);
         Position(follower, left: 150, top: 100, width: 20, height: 10);
         return stack;

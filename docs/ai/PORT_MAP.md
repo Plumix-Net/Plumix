@@ -359,7 +359,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/sliver_group.dart` | `src/Plumix/Rendering/SliverGroup.cs` | `src/Plumix.Tests/SliverGroupTests.cs` | — |
 | `rendering/sliver_multi_box_adaptor.dart` | `src/Plumix/Rendering/Sliver.cs` _(reference) (approximate)_ | `src/Plumix.Tests/DecoratedPinnedSliverTests.cs`<br>`src/Plumix.Tests/MaterialSliverAppBarTests.cs`<br>`src/Plumix.Tests/SliverChildManagerTests.cs`<br>`src/Plumix.Tests/SliverFillTests.cs`<br>`src/Plumix.Tests/SliverFixedExtentListTests.cs`<br>`src/Plumix.Tests/SliverGeometryTests.cs`<br>`src/Plumix.Tests/SliverGroupTests.cs`<br>`src/Plumix.Tests/SliverHeaderTests.cs`<br>`src/Plumix.Tests/SliverOpacityTests.cs`<br>`src/Plumix.Tests/SliverPersistentHeaderTests.cs` | `dart_sample/lib/demos/general/custom_slivers_demo_page.dart`<br>`dart_sample/lib/demos/material/sliver_app_bar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/CustomSliversDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/SliverAppBarDemoPage.cs` |
 | `rendering/sliver_persistent_header.dart` | `src/Plumix/Rendering/SliverPersistentHeader.cs`<br>`src/Plumix/Rendering/SliverPersistentHeaderReveal.cs` | `src/Plumix.Tests/SliverPersistentHeaderTests.cs` | — |
-| `rendering/stack.dart` | `src/Plumix/Rendering/RelativeRect.cs`<br>`src/Plumix/Rendering/Stack.RenderIndexedStack.cs` _(RenderIndexedStack subset)_<br>`src/Plumix/Rendering/Stack.RenderStack.cs` _(reference) (approximate)_ | — | — |
+| `rendering/stack.dart` | `src/Plumix/Rendering/RelativeRect.cs`<br>`src/Plumix/Rendering/Stack.RenderIndexedStack.cs`<br>`src/Plumix/Rendering/Stack.RenderStack.cs` | — | — |
 | `rendering/table.dart` | `src/Plumix/Rendering/Table.cs` | `src/Plumix.Tests/DirectionalPositionedTableCellTests.cs`<br>`src/Plumix.Tests/MaterialDataTableTests.cs`<br>`src/Plumix.Tests/TableTests.cs` | `dart_sample/lib/demos/general/editable_text_demo_page.dart`<br>`dart_sample/lib/demos/material/data_table_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Material/DataTableDemoPage.cs` |
 | `rendering/table_border.dart` | `src/Plumix/Rendering/TableBorder.cs` | — | — |
 | `rendering/view.dart` | `src/Plumix/RenderView.cs` _(reference) (approximate)_ | — | — |
@@ -606,8 +606,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Rendering/Proxy.RenderBox.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Scroll.cs` — (reference) (adapted)
 - `src/Plumix/Rendering/Sliver.cs` — (reference) (approximate)
-- `src/Plumix/Rendering/Stack.RenderIndexedStack.cs` — (RenderIndexedStack subset)
-- `src/Plumix/Rendering/Stack.RenderStack.cs` — (reference) (approximate)
 - `src/Plumix/Scheduler.cs` — (reference) (approximate)
 - `src/Plumix/UI/Feedback.cs` — (reference) (approximate)
 - `src/Plumix/UI/PointerEvents.cs` — (reference) (approximate)
@@ -636,5 +634,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 664
 - C# files without a marker: 34
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 44
+- C# files with a qualified (non-strict) marker: 42
 

@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -35,7 +36,7 @@ public sealed class StackTests
     public void RenderStack_PositionedChild_UsesLeftTop()
     {
         var child = new FixedSizeRenderBox(new Size(20, 10));
-        var stack = new RenderStack();
+        var stack = new RenderStack(textDirection: TextDirection.Ltr);
         stack.Insert(child);
         var parentData = (StackParentData)child.parentData!;
         parentData.Left = 5;
@@ -57,7 +58,7 @@ public sealed class StackTests
     public void RenderStack_PositionedChild_UsesRightBottom()
     {
         var child = new FixedSizeRenderBox(new Size(20, 10));
-        var stack = new RenderStack();
+        var stack = new RenderStack(textDirection: TextDirection.Ltr);
         stack.Insert(child);
         var parentData = (StackParentData)child.parentData!;
         parentData.Right = 6;
@@ -176,6 +177,149 @@ public sealed class StackTests
         Assert.Equal(5, rtl.Top);
     }
 
+    [Fact]
+    public void StackParentData_RectAndPositionedConstraintsMatchFlutter()
+    {
+        var data = new StackParentData();
+        Assert.False(data.IsPositioned);
+
+        data.Width = -100.0;
+        Assert.True(data.IsPositioned);
+        Assert.Equal(BoxConstraints.TightFor(width: 0.0), data.PositionedChildConstraints(new Size(800, 600)));
+
+        data.Left = 0.0;
+        data.Right = 0.0;
+        Assert.Equal(BoxConstraints.TightFor(width: 800.0), data.PositionedChildConstraints(new Size(800, 600)));
+
+        data.Rect = new Plumix.Rendering.RelativeRect(1.0, 2.0, 3.0, 4.0);
+        Assert.Equal(1.0, data.Left);
+        Assert.Equal(2.0, data.Top);
+        Assert.Equal(3.0, data.Right);
+        Assert.Equal(4.0, data.Bottom);
+        Assert.Equal(new Plumix.Rendering.RelativeRect(1.0, 2.0, 3.0, 4.0), data.Rect);
+        Assert.Equal(
+            BoxConstraints.Tight(new Size(796.0, 594.0)),
+            data.PositionedChildConstraints(new Size(800, 600)));
+    }
+
+    [Fact]
+    public void RenderStack_PositionedChildLeavesUnspecifiedAxisUnbounded()
+    {
+        var child = new ConstraintProbeRenderBox(new Size(30, 40));
+        var stack = new RenderStack(textDirection: TextDirection.Ltr);
+        stack.Insert(child);
+        var data = (StackParentData)child.parentData!;
+        data.Left = 10.0;
+        data.Top = 20.0;
+        data.Width = 30.0;
+
+        stack.Layout(BoxConstraints.Tight(new Size(100, 100)));
+
+        Assert.Equal(BoxConstraints.TightFor(width: 30.0), child.LastConstraints);
+        Assert.Equal(new Point(10, 20), data.offset);
+    }
+
+    [Fact]
+    public void IndexedStack_PositionedChildUsesStackParentDataAndIsADirectRenderChild()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new RawIndexedStack(
+            children:
+            [
+                new Positioned(
+                    left: 10.0,
+                    top: 20.0,
+                    width: 30.0,
+                    height: 40.0,
+                    child: new SizedBox()),
+                new SizedBox(width: 5.0, height: 5.0),
+            ],
+            index: 0,
+            textDirection: TextDirection.Ltr));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var stack = RequireRenderObject<RenderIndexedStack>(root.ChildElement);
+        RenderBox child = Assert.IsAssignableFrom<RenderBox>(stack.FirstChild);
+        var data = Assert.IsType<StackParentData>(child.parentData);
+        stack.Layout(BoxConstraints.Tight(new Size(100, 100)));
+
+        Assert.Same(stack, child.Parent);
+        Assert.Equal(new Size(30, 40), child.Size);
+        Assert.Equal(new Point(10, 20), data.offset);
+        root.Unmount();
+    }
+
+    [Fact]
+    public void IndexedStackElement_VisitsOnlyTheSelectedChildOnstage()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new RawIndexedStack(
+            children:
+            [
+                new SizedBox(width: 1.0),
+                new SizedBox(width: 2.0),
+                new SizedBox(width: 3.0),
+            ],
+            index: 1,
+            textDirection: TextDirection.Ltr));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var element = Assert.IsType<IndexedStackElement>(root.ChildElement);
+        var onstage = new List<Element>();
+        element.DebugVisitOnstageChildren(onstage.Add);
+
+        Element selected = Assert.Single(onstage);
+        Assert.Equal(2.0, Assert.IsType<SizedBox>(selected.Widget).Width);
+        root.Unmount();
+    }
+
+    [Fact]
+    public void RenderIndexedStack_UsesOnlyTheSelectedChildForHitTestingSemanticsAndBaseline()
+    {
+        var first = new ConstraintProbeRenderBox(new Size(30, 20), baseline: 4.0);
+        var second = new ConstraintProbeRenderBox(new Size(30, 20), baseline: 7.0);
+        var stack = new RenderIndexedStack(
+            children: [first, second],
+            textDirection: TextDirection.Ltr,
+            index: 1);
+        ((StackParentData)second.parentData!).Top = 10.0;
+        stack.Layout(BoxConstraints.Tight(new Size(100, 100)));
+
+        Assert.True(stack.HitTest(new BoxHitTestResult(), new Point(1, 11)));
+        Assert.Equal(0, first.HitTestCount);
+        Assert.Equal(1, second.HitTestCount);
+
+        var semanticsChildren = new List<RenderObject>();
+        stack.VisitChildrenForSemantics(semanticsChildren.Add);
+        Assert.Equal([second], semanticsChildren);
+        Assert.Equal(17.0, stack.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
+        Assert.Equal(
+            17.0,
+            stack.GetDryBaseline(BoxConstraints.Tight(new Size(100, 100)), TextBaseline.Alphabetic));
+    }
+
+    [DebugOnlyFact]
+    public void RawIndexedStack_ValidatesIndexAndDirectionalAlignmentLikeFlutter()
+    {
+        _ = new RawIndexedStack();
+        _ = new RawIndexedStack(children: [new SizedBox()], index: null);
+        Assert.Throws<AssertionError>(() => new RawIndexedStack(children: [new SizedBox()], index: -1));
+        Assert.Throws<AssertionError>(() => new RawIndexedStack(children: [new SizedBox()], index: 1));
+
+        var directional = new RawIndexedStack(children: [new SizedBox()]);
+        var owner = new BuildOwner();
+        var contextRoot = new TestRootElement(new SizedBox());
+        contextRoot.Attach(owner);
+        contextRoot.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+        Assert.Throws<AssertionError>(() => directional.CreateRenderObject(new BuildContext(contextRoot)));
+        contextRoot.Unmount();
+    }
+
     private static Widget BuildDirectionalStacks(TextDirection direction) => new Directionality(
         direction,
         new Stack(
@@ -206,6 +350,44 @@ public sealed class StackTests
         protected override void PerformLayout()
         {
             Size = Constraints.Constrain(_size);
+        }
+
+        public override void Paint(PaintingContext ctx, Point offset)
+        {
+        }
+    }
+
+    private sealed class ConstraintProbeRenderBox : RenderBox
+    {
+        private readonly Size _size;
+        private readonly double? _baseline;
+
+        public ConstraintProbeRenderBox(Size size, double? baseline = null)
+        {
+            _size = size;
+            _baseline = baseline;
+        }
+
+        public BoxConstraints LastConstraints { get; private set; }
+        public int HitTestCount { get; private set; }
+
+        protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(_size);
+
+        protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) =>
+            _baseline;
+
+        protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) => _baseline;
+
+        protected override void PerformLayout()
+        {
+            LastConstraints = Constraints;
+            Size = Constraints.Constrain(_size);
+        }
+
+        protected override bool HitTestSelf(Point position)
+        {
+            HitTestCount += 1;
+            return true;
         }
 
         public override void Paint(PaintingContext ctx, Point offset)

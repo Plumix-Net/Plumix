@@ -149,7 +149,7 @@ public sealed class BasicWidgetsParityTests
         var raw = Assert.Single(Of<RawIndexedStack>(widgets));
         Assert.Equal(TextDirection.Rtl, raw.TextDirection);
         Assert.Equal(Clip.AntiAlias, raw.ClipBehavior);
-        Assert.Equal(StackFit.Expand, raw.Sizing);
+        Assert.Equal(StackFit.Expand, raw.Fit);
     }
 
     [Fact]

@@ -1,9 +1,10 @@
 using Avalonia;
 using Avalonia.Media;
-using Plumix.UI;
 using Plumix.Foundation;
+using Plumix.UI;
+using System.Diagnostics;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/stack.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/stack.dart
 
 namespace Plumix.Rendering;
 
@@ -23,6 +24,18 @@ public class StackParentData : ContainerBoxParentData<RenderBox>
     public double? Width { get; set; }
     public double? Height { get; set; }
 
+    public RelativeRect Rect
+    {
+        get => new(Left!.Value, Top!.Value, Right!.Value, Bottom!.Value);
+        set
+        {
+            Top = value.Top;
+            Right = value.Right;
+            Bottom = value.Bottom;
+            Left = value.Left;
+        }
+    }
+
     public bool IsPositioned =>
         Left.HasValue
         || Top.HasValue
@@ -30,6 +43,22 @@ public class StackParentData : ContainerBoxParentData<RenderBox>
         || Bottom.HasValue
         || Width.HasValue
         || Height.HasValue;
+
+    public BoxConstraints PositionedChildConstraints(Size stackSize)
+    {
+        double? width = Left.HasValue && Right.HasValue
+            ? stackSize.Width - Right.Value - Left.Value
+            : Width;
+        double? height = Top.HasValue && Bottom.HasValue
+            ? stackSize.Height - Bottom.Value - Top.Value
+            : Height;
+
+        Debug.Assert(!width.HasValue || !double.IsNaN(width.Value));
+        Debug.Assert(!height.HasValue || !double.IsNaN(height.Value));
+        return BoxConstraints.TightFor(
+            width: width.HasValue ? Math.Max(0.0, width.Value) : null,
+            height: height.HasValue ? Math.Max(0.0, height.Value) : null);
+    }
 
     /// <inheritdoc />
     public override string ToString()
@@ -75,7 +104,7 @@ public class StackParentData : ContainerBoxParentData<RenderBox>
     }
 }
 
-public sealed class RenderStack : RenderBox,
+public class RenderStack : RenderBox,
     IRenderBoxContainerDefaultsMixin<RenderBox, StackParentData>,
     IRenderObjectContainer
 {
@@ -86,24 +115,21 @@ public sealed class RenderStack : RenderBox,
     private StackFit _fit;
     private Clip _clipBehavior;
     private bool _hasVisualOverflow;
+    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
 
     public RenderStack(
         List<RenderBox>? children = null,
-        AlignmentGeometry alignment = default,
+        AlignmentGeometry? alignment = null,
         StackFit fit = StackFit.Loose,
         Clip clipBehavior = Clip.HardEdge,
         TextDirection? textDirection = null)
     {
         _container = new RenderBoxContainerDefaultsMixin<RenderBox, StackParentData>(this);
-        _alignment = alignment;
+        _alignment = alignment ?? AlignmentDirectional.TopStart;
         _textDirection = textDirection;
         _fit = fit;
         _clipBehavior = clipBehavior;
-
-        if (children != null)
-        {
-            AddAll(children);
-        }
+        AddAll(children);
     }
 
     public AlignmentGeometry Alignment
@@ -137,7 +163,7 @@ public sealed class RenderStack : RenderBox,
         }
     }
 
-    private Alignment ResolvedAlignment => _resolvedAlignment ??= _alignment.Resolve(_textDirection);
+    protected Alignment ResolvedAlignment => _resolvedAlignment ??= _alignment.Resolve(_textDirection);
 
     private void MarkNeedResolution()
     {
@@ -179,8 +205,8 @@ public sealed class RenderStack : RenderBox,
     public int ChildCount => _container.ChildCount;
     public RenderBox? FirstChild => _container.FirstChild;
     public RenderBox? LastChild => _container.LastChild;
-    public void AddAll(List<RenderBox>? children) => _container.AddAll(children);
 
+    public void AddAll(List<RenderBox>? children) => _container.AddAll(children);
     public void RemoveAll() => _container.RemoveAll();
     public RenderBox? ChildBefore(RenderBox child) => _container.ChildBefore(child);
     public RenderBox? ChildAfter(RenderBox child) => _container.ChildAfter(child);
@@ -193,11 +219,12 @@ public sealed class RenderStack : RenderBox,
         }
     }
 
-    /// <summary>Flutter's `RenderStack.getIntrinsicDimension`: the max over non-positioned children.</summary>
-    private double GetIntrinsicDimension(Func<RenderBox, double> mainChildSizeGetter)
+    protected static double GetIntrinsicDimension(
+        RenderStack stack,
+        Func<RenderBox, double> mainChildSizeGetter)
     {
         double extent = 0.0;
-        for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
+        for (RenderBox? child = stack.FirstChild; child != null; child = stack.ChildAfter(child))
         {
             var childParentData = (StackParentData)child.parentData!;
             if (!childParentData.IsPositioned)
@@ -210,34 +237,40 @@ public sealed class RenderStack : RenderBox,
     }
 
     protected override double ComputeMinIntrinsicWidth(double height) =>
-        GetIntrinsicDimension(child => child.GetMinIntrinsicWidth(height));
+        GetIntrinsicDimension(this, child => child.GetMinIntrinsicWidth(height));
 
     protected override double ComputeMaxIntrinsicWidth(double height) =>
-        GetIntrinsicDimension(child => child.GetMaxIntrinsicWidth(height));
+        GetIntrinsicDimension(this, child => child.GetMaxIntrinsicWidth(height));
 
     protected override double ComputeMinIntrinsicHeight(double width) =>
-        GetIntrinsicDimension(child => child.GetMinIntrinsicHeight(width));
+        GetIntrinsicDimension(this, child => child.GetMinIntrinsicHeight(width));
 
     protected override double ComputeMaxIntrinsicHeight(double width) =>
-        GetIntrinsicDimension(child => child.GetMaxIntrinsicHeight(width));
+        GetIntrinsicDimension(this, child => child.GetMaxIntrinsicHeight(width));
 
-    protected override void PerformLayout()
+    protected BoxConstraints NonPositionedConstraintsFor(BoxConstraints constraints) => Fit switch
     {
-        var constraints = Constraints;
-        bool hadVisualOverflow = _hasVisualOverflow;
-        _hasVisualOverflow = false;
-        bool hasNonPositionedChild = false;
-        double maxWidth = 0.0;
-        double maxHeight = 0.0;
+        StackFit.Loose => constraints.Loosen(),
+        StackFit.Expand => BoxConstraints.Tight(constraints.Biggest),
+        StackFit.Passthrough => constraints,
+        _ => throw new ArgumentOutOfRangeException(),
+    };
 
-        var nonPositionedConstraints = _fit switch
+    protected Size ComputeSize(
+        BoxConstraints constraints,
+        Func<RenderBox, BoxConstraints, Size> layoutChild)
+    {
+        if (ChildCount == 0)
         {
-            StackFit.Loose => BoxConstraints.Loose(constraints.Biggest),
-            StackFit.Expand => BoxConstraints.Tight(constraints.Biggest),
-            StackFit.Passthrough => constraints,
-            _ => constraints
-        };
+            return double.IsFinite(constraints.MaxWidth) && double.IsFinite(constraints.MaxHeight)
+                ? constraints.Biggest
+                : constraints.Smallest;
+        }
 
+        bool hasNonPositionedChildren = false;
+        double width = constraints.MinWidth;
+        double height = constraints.MinHeight;
+        BoxConstraints nonPositionedConstraints = NonPositionedConstraintsFor(constraints);
         for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
         {
             var childParentData = (StackParentData)child.parentData!;
@@ -246,39 +279,95 @@ public sealed class RenderStack : RenderBox,
                 continue;
             }
 
-            hasNonPositionedChild = true;
-            child.Layout(nonPositionedConstraints, parentUsesSize: true);
-            maxWidth = Math.Max(maxWidth, child.Size.Width);
-            maxHeight = Math.Max(maxHeight, child.Size.Height);
+            hasNonPositionedChildren = true;
+            Size childSize = layoutChild(child, nonPositionedConstraints);
+            width = Math.Max(width, childSize.Width);
+            height = Math.Max(height, childSize.Height);
         }
 
-        if (hasNonPositionedChild)
+        Size size = hasNonPositionedChildren ? new Size(width, height) : constraints.Biggest;
+        if (Constants.KDebugMode && (!double.IsFinite(size.Width) || !double.IsFinite(size.Height)))
         {
-            Size = constraints.Constrain(new Size(maxWidth, maxHeight));
+            throw new AssertionError("A RenderStack requires finite constraints when it has only positioned children.");
         }
-        else
+
+        return size;
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) =>
+        ComputeSize(constraints, ChildLayoutHelper.DryLayoutChild);
+
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) =>
+        _container.DefaultComputeDistanceToHighestActualBaseline(baseline);
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        BoxConstraints nonPositionedConstraints = NonPositionedConstraintsFor(constraints);
+        Alignment resolvedAlignment = ResolvedAlignment;
+        Size stackSize = ComputeSize(constraints, ChildLayoutHelper.DryLayoutChild);
+        double? result = null;
+        for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
         {
-            Size = constraints.Biggest;
-            if (double.IsPositiveInfinity(Size.Width) || double.IsPositiveInfinity(Size.Height))
+            double? childBaseline = BaselineForChild(
+                child,
+                nonPositionedConstraints,
+                stackSize,
+                resolvedAlignment,
+                baseline);
+            if (childBaseline.HasValue)
             {
-                Size = constraints.Constrain(new Size(
-                    double.IsPositiveInfinity(Size.Width) ? 0.0 : Size.Width,
-                    double.IsPositiveInfinity(Size.Height) ? 0.0 : Size.Height));
+                result = result.HasValue
+                    ? Math.Min(result.Value, childBaseline.Value)
+                    : childBaseline;
             }
         }
+
+        return result;
+    }
+
+    protected static double? BaselineForChild(
+        RenderBox child,
+        BoxConstraints nonPositionedConstraints,
+        Size stackSize,
+        Alignment resolvedAlignment,
+        TextBaseline baseline)
+    {
+        var childParentData = (StackParentData)child.parentData!;
+        BoxConstraints childConstraints = childParentData.IsPositioned
+            ? childParentData.PositionedChildConstraints(stackSize)
+            : nonPositionedConstraints;
+        double? childBaseline = child.GetDryBaseline(childConstraints, baseline);
+        if (!childBaseline.HasValue)
+        {
+            return null;
+        }
+
+        Size childSize = child.GetDryLayout(childConstraints);
+        double y = childParentData.Top
+                   ?? (childParentData.Bottom.HasValue
+                       ? stackSize.Height - childParentData.Bottom.Value - childSize.Height
+                       : resolvedAlignment.AlongOffset(stackSize, childSize).Y);
+        return childBaseline.Value + y;
+    }
+
+    protected override void PerformLayout()
+    {
+        BoxConstraints constraints = Constraints;
+        bool hadVisualOverflow = _hasVisualOverflow;
+        _hasVisualOverflow = false;
+        Size = ComputeSize(constraints, ChildLayoutHelper.LayoutChild);
+        Alignment resolvedAlignment = ResolvedAlignment;
 
         for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
         {
             var childParentData = (StackParentData)child.parentData!;
             if (!childParentData.IsPositioned)
             {
-                childParentData.offset = ResolvedAlignment.AlongOffset(Size, child.Size);
-                _hasVisualOverflow |= ChildOverflows(child, childParentData.offset);
+                childParentData.offset = resolvedAlignment.AlongOffset(Size, child.Size);
                 continue;
             }
 
-            LayoutPositionedChild(child, childParentData);
-            _hasVisualOverflow |= ChildOverflows(child, childParentData.offset);
+            _hasVisualOverflow |= LayoutPositionedChild(child, childParentData, Size, resolvedAlignment);
         }
 
         if (hadVisualOverflow != _hasVisualOverflow)
@@ -287,8 +376,30 @@ public sealed class RenderStack : RenderBox,
         }
     }
 
+    protected static bool LayoutPositionedChild(
+        RenderBox child,
+        StackParentData childParentData,
+        Size size,
+        Alignment alignment)
+    {
+        BoxConstraints childConstraints = childParentData.PositionedChildConstraints(size);
+        child.Layout(childConstraints, parentUsesSize: true);
 
-    private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
+        Point alignedOffset = alignment.AlongOffset(size, child.Size);
+        double x = childParentData.Left
+                   ?? (childParentData.Right.HasValue
+                       ? size.Width - childParentData.Right.Value - child.Size.Width
+                       : alignedOffset.X);
+        double y = childParentData.Top
+                   ?? (childParentData.Bottom.HasValue
+                       ? size.Height - childParentData.Bottom.Value - child.Size.Height
+                       : alignedOffset.Y);
+        childParentData.offset = new Point(x, y);
+        return x < 0.0
+               || x + child.Size.Width > size.Width
+               || y < 0.0
+               || y + child.Size.Height > size.Height;
+    }
 
     /// <inheritdoc />
     public override void Dispose()
@@ -297,40 +408,33 @@ public sealed class RenderStack : RenderBox,
         base.Dispose();
     }
 
-    public override void Paint(PaintingContext ctx, Point offset)
+    public override void Paint(PaintingContext context, Point offset)
     {
         if (_hasVisualOverflow && ClipBehavior != Clip.None)
         {
-            _clipRectLayer.Layer = ctx.PushClipRect(
+            _clipRectLayer.Layer = context.PushClipRect(
                 NeedsCompositing,
                 offset,
-                new Rect(new Point(0, 0), Size),
-                DefaultPaint,
+                new Rect(new Point(), Size),
+                PaintStack,
                 ClipBehavior,
                 _clipRectLayer.Layer);
             return;
         }
 
         _clipRectLayer.Layer = null;
-        DefaultPaint(ctx, offset);
+        PaintStack(context, offset);
     }
 
-    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
-    {
-        return DefaultHitTestChildren(result, position);
-    }
+    protected virtual void PaintStack(PaintingContext context, Point offset) => DefaultPaint(context, offset);
 
-    protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
-    {
-        return _hasVisualOverflow && ClipBehavior != Clip.None
-            ? new Rect(new Point(), Size)
-            : null;
-    }
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position) =>
+        DefaultHitTestChildren(result, position);
 
-    protected override Rect? DescribeSemanticsClip(RenderObject? child)
-    {
-        return DescribeApproximatePaintClip(child);
-    }
+    protected override Rect? DescribeApproximatePaintClip(RenderObject? child) =>
+        _hasVisualOverflow && ClipBehavior != Clip.None ? new Rect(new Point(), Size) : null;
+
+    protected override Rect? DescribeSemanticsClip(RenderObject? child) => DescribeApproximatePaintClip(child);
 
     public override void VisitChildren(Action<RenderObject> visitor)
     {
@@ -344,98 +448,26 @@ public sealed class RenderStack : RenderBox,
     {
         for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
         {
-            var childParentData = (StackParentData)child.parentData!;
             visitor(child);
         }
     }
 
-    public void DefaultPaint(PaintingContext ctx, Point offset)
-    {
-        _container.DefaultPaint(ctx, offset);
-    }
+    public void DefaultPaint(PaintingContext context, Point offset) => _container.DefaultPaint(context, offset);
 
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
-    {
-        return _container.DefaultHitTestChildren(result, position);
-    }
+    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position) =>
+        _container.DefaultHitTestChildren(result, position);
 
     public void Insert(RenderBox child, RenderBox? after = null) => _container.Insert(child, after);
     public void Move(RenderBox child, RenderBox? after = null) => _container.Move(child, after);
     public void Remove(RenderBox child) => _container.Remove(child);
 
-    void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after)
-    {
+    void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after) =>
         Insert((RenderBox)child, after as RenderBox);
-    }
 
-    void IRenderObjectContainer.Move(RenderObject child, RenderObject? after)
-    {
+    void IRenderObjectContainer.Move(RenderObject child, RenderObject? after) =>
         Move((RenderBox)child, after as RenderBox);
-    }
 
-    void IRenderObjectContainer.Remove(RenderObject child)
-    {
-        Remove((RenderBox)child);
-    }
-
-    private void LayoutPositionedChild(RenderBox child, StackParentData childParentData)
-    {
-        double? childWidth = ComputeChildExtent(
-            leading: childParentData.Left,
-            trailing: childParentData.Right,
-            extent: childParentData.Width,
-            availableExtent: Size.Width);
-        double? childHeight = ComputeChildExtent(
-            leading: childParentData.Top,
-            trailing: childParentData.Bottom,
-            extent: childParentData.Height,
-            availableExtent: Size.Height);
-
-        var childConstraints = new BoxConstraints(
-            MinWidth: childWidth ?? 0.0,
-            MaxWidth: childWidth ?? Size.Width,
-            MinHeight: childHeight ?? 0.0,
-            MaxHeight: childHeight ?? Size.Height);
-        child.Layout(childConstraints, parentUsesSize: true);
-
-        Point alignedOffset = ResolvedAlignment.AlongOffset(Size, child.Size);
-        double x = childParentData.Left
-                   ?? (childParentData.Right.HasValue
-                       ? Size.Width - childParentData.Right.Value - child.Size.Width
-                       : alignedOffset.X);
-        double y = childParentData.Top
-                   ?? (childParentData.Bottom.HasValue
-                       ? Size.Height - childParentData.Bottom.Value - child.Size.Height
-                       : alignedOffset.Y);
-        childParentData.offset = new Point(x, y);
-    }
-
-    private static double? ComputeChildExtent(
-        double? leading,
-        double? trailing,
-        double? extent,
-        double availableExtent)
-    {
-        if (leading.HasValue && trailing.HasValue)
-        {
-            return Math.Max(0.0, availableExtent - leading.Value - trailing.Value);
-        }
-
-        if (extent.HasValue)
-        {
-            return Math.Max(0.0, extent.Value);
-        }
-
-        return null;
-    }
-
-    private bool ChildOverflows(RenderBox child, Point offset)
-    {
-        return offset.X < 0.0
-               || offset.Y < 0.0
-               || offset.X + child.Size.Width > Size.Width
-               || offset.Y + child.Size.Height > Size.Height;
-    }
+    void IRenderObjectContainer.Remove(RenderObject child) => Remove((RenderBox)child);
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)

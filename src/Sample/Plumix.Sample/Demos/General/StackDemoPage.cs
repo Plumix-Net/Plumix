@@ -23,6 +23,7 @@ internal sealed class StackDemoPageState : State
     private double _top = 8;
     private bool _pinBottomRight;
     private bool _rtl;
+    private bool _showPositionedIndexedChild;
 
     public override Widget Build(BuildContext context)
     {
@@ -98,6 +99,46 @@ internal sealed class StackDemoPageState : State
                                                 color: Color.Parse("#FF1D3557")))),
                                     badge,
                                 ])))),
+                new Text("IndexedStack + Positioned", fontSize: 20, color: Colors.Black),
+                new Text(
+                    "Switch between retained children; the second child uses StackParentData offsets.",
+                    fontSize: 14,
+                    color: Colors.DimGray),
+                BuildButton(
+                    _showPositionedIndexedChild ? "Show base child" : "Show positioned child",
+                    () => SetState(() => _showPositionedIndexedChild = !_showPositionedIndexedChild),
+                    width: 170,
+                    colorHex: "#FFDCE3ED"),
+                new Container(
+                    width: 220,
+                    height: 140,
+                    color: Color.Parse("#FFE7EDF6"),
+                    child: new Directionality(
+                        TextDirection.Ltr,
+                        new IndexedStack(
+                            index: _showPositionedIndexedChild ? 1 : 0,
+                            children:
+                            [
+                                new Container(
+                                    color: Color.Parse("#FFCCE3FF"),
+                                    child: new Center(
+                                        child: new Text(
+                                            "non-positioned child",
+                                            fontSize: 14,
+                                            color: Color.Parse("#FF1D3557")))),
+                                new Positioned(
+                                    left: 18,
+                                    top: 24,
+                                    width: 150,
+                                    height: 50,
+                                    child: new Container(
+                                        color: Color.Parse("#FFD1495B"),
+                                        child: new Center(
+                                            child: new Text(
+                                                "positioned child",
+                                                fontSize: 14,
+                                                color: Colors.White)))),
+                            ]))),
             ]);
     }
 
@@ -146,6 +187,7 @@ internal sealed class StackDemoPageState : State
             _top = 8;
             _pinBottomRight = false;
             _rtl = false;
+            _showPositionedIndexedChild = false;
         });
     }
 }

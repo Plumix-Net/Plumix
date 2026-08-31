@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `RenderIndexedStack` derives from strict `RenderStack` and shares `StackParentData` (`stack.dart`).
 - Breaking: `IRenderSliverBoxChildManager` carries Dart's full contract (`sliver_multi_box_adaptor.dart`).
 - Breaking: the manager's `ChildCount` is the precise `int`; the nullable estimate is `EstimatedChildCount`.
 - Added `SliverChildDelegate.EstimateMaxScrollOffset`/`DidFinishLayout` and the widget hook (`scroll_delegate.dart`).
