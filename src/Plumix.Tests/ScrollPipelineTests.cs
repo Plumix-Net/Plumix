@@ -827,7 +827,11 @@ public sealed class ScrollPipelineTests
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
 
-        Assert.Equal(2290, viewportOffset.MaxScrollExtent);
+        // `TestSliverChildManager.EstimateMaxScrollOffset` is Flutter's own render-test extrapolation
+        // (`childCount * (trailing - leading) / reifiedCount`), which is what `RenderSliverGrid` asks
+        // for: 100 * 190 / 8 = 2375, less the 200 px viewport. The widget-level `SliverGrid` instead
+        // resolves the grid layout's exact extent - see SliverChildManagerTests.
+        Assert.Equal(2175, viewportOffset.MaxScrollExtent);
         Assert.Contains(6, ActiveIndices(sliverGrid));
         Assert.DoesNotContain(8, ActiveIndices(sliverGrid));
 
@@ -1945,7 +1949,25 @@ public sealed class ScrollPipelineTests
                 : [];
         }
 
-        public int? ChildCount => _childCount;
+        public int ChildCount => _childCount;
+
+        public int? EstimatedChildCount => ChildCount;
+
+        /// <remarks>
+        /// The body Flutter's own `RenderSliverBoxChildManager` test doubles use.
+        /// </remarks>
+        public double EstimateMaxScrollOffset(
+            SliverConstraints constraints,
+            int? firstIndex = null,
+            int? lastIndex = null,
+            double? leadingScrollOffset = null,
+            double? trailingScrollOffset = null)
+        {
+            Assert.True(lastIndex >= firstIndex);
+            return ChildCount
+                   * (trailingScrollOffset!.Value - leadingScrollOffset!.Value)
+                   / (lastIndex!.Value - firstIndex!.Value + 1);
+        }
 
         public int MaxCreatedIndex { get; private set; } = -1;
 
@@ -2037,7 +2059,25 @@ public sealed class ScrollPipelineTests
             TotalContentExtent = Enumerable.Range(0, childCount).Sum(index => Math.Max(0, _extentForIndex(index)));
         }
 
-        public int? ChildCount => _childCount;
+        public int ChildCount => _childCount;
+
+        public int? EstimatedChildCount => ChildCount;
+
+        /// <remarks>
+        /// The body Flutter's own `RenderSliverBoxChildManager` test doubles use.
+        /// </remarks>
+        public double EstimateMaxScrollOffset(
+            SliverConstraints constraints,
+            int? firstIndex = null,
+            int? lastIndex = null,
+            double? leadingScrollOffset = null,
+            double? trailingScrollOffset = null)
+        {
+            Assert.True(lastIndex >= firstIndex);
+            return ChildCount
+                   * (trailingScrollOffset!.Value - leadingScrollOffset!.Value)
+                   / (lastIndex!.Value - firstIndex!.Value + 1);
+        }
 
         public double TotalContentExtent { get; }
 

@@ -6,6 +6,7 @@ using Plumix.Foundation;
 using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/sliver.dart (approximate)
+// flutter/packages/flutter/lib/src/rendering/sliver_multi_box_adaptor.dart
 
 namespace Plumix.Rendering;
 
@@ -664,13 +665,62 @@ public sealed class SliverGridDelegateWithMaxCrossAxisExtent : SliverGridDelegat
     }
 }
 
+/// <remarks>Flutter's <c>RenderSliverBoxChildManager</c>.</remarks>
 public interface IRenderSliverBoxChildManager
 {
-    int? ChildCount { get; }
+    /// <summary>
+    /// A precise measure of the total number of children: one greater than the greatest index for
+    /// which <see cref="CreateChild"/> will actually create a child.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>childCount</c>. Read when <see cref="CreateChild"/> could not add a child for a
+    /// positive index, so it must be accurate; it is never read for an infinite child list.
+    /// </remarks>
+    int ChildCount { get; }
+
+    /// <summary>The best available estimate of <see cref="ChildCount"/>, or null if none exists.</summary>
+    /// <remarks>Flutter's <c>estimatedChildCount</c>, which defers to
+    /// <see cref="SliverChildDelegate.EstimatedChildCount"/>.</remarks>
+    int? EstimatedChildCount => null;
+
     bool CreateChild(int index, RenderBox? after);
+
     void RemoveChild(RenderBox child);
+
+    /// <summary>
+    /// Estimates the total distance from the start of the child with the earliest possible index to
+    /// the end of the child with the last possible index.
+    /// </summary>
+    /// <remarks>Flutter's <c>estimateMaxScrollOffset</c>.</remarks>
+    double EstimateMaxScrollOffset(
+        SliverConstraints constraints,
+        int? firstIndex = null,
+        int? lastIndex = null,
+        double? leadingScrollOffset = null,
+        double? trailingScrollOffset = null);
+
     void DidAdoptChild(RenderBox child);
+
     void SetDidUnderflow(bool value);
+
+    /// <summary>Called at the beginning of layout to indicate that layout is about to occur.</summary>
+    /// <remarks>Flutter's <c>didStartLayout</c>.</remarks>
+    void DidStartLayout()
+    {
+    }
+
+    /// <summary>Called at the end of layout to indicate that layout is now complete.</summary>
+    /// <remarks>Flutter's <c>didFinishLayout</c>.</remarks>
+    void DidFinishLayout()
+    {
+    }
+
+    /// <summary>
+    /// In debug mode, asserts that this manager is not expecting any modifications to the
+    /// <see cref="RenderSliverMultiBoxAdaptor"/>'s child list. Always returns true.
+    /// </summary>
+    /// <remarks>Flutter's <c>debugAssertChildListLocked</c>.</remarks>
+    bool DebugAssertChildListLocked() => true;
 }
 
 public sealed class SliverPhysicalParentData : ContainerBoxParentData<RenderSliver>
@@ -2431,8 +2481,12 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         return ChildScrollOffset(child)!.Value - ConstraintsForSliver.ScrollOffset;
     }
 
+    /// <remarks>Flutter's <c>RenderSliverMultiBoxAdaptor._debugAssertChildListLocked</c>.</remarks>
+    private bool DebugAssertChildListLocked() => _childManager?.DebugAssertChildListLocked() ?? true;
+
     protected bool AddInitialChild(int index = 0, double layoutOffset = 0)
     {
+        Debug.Assert(DebugAssertChildListLocked());
         if (FirstChild != null)
         {
             return true;
@@ -2451,6 +2505,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
 
     protected RenderBox? InsertAndLayoutLeadingChild(BoxConstraints childConstraints)
     {
+        Debug.Assert(DebugAssertChildListLocked());
         if (FirstChild == null)
         {
             return null;
@@ -2475,6 +2530,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
 
     protected RenderBox? InsertAndLayoutChild(BoxConstraints childConstraints, RenderBox after)
     {
+        Debug.Assert(DebugAssertChildListLocked());
         int index = IndexOf(after) + 1;
         if (!CreateOrObtainChild(index, after))
         {
@@ -2551,6 +2607,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
 
     protected void CollectGarbage(int leadingGarbage, int trailingGarbage)
     {
+        Debug.Assert(DebugAssertChildListLocked());
         while (leadingGarbage > 0 && FirstChild != null)
         {
             DestroyOrCacheChild(FirstChild);
@@ -2715,11 +2772,13 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
             return;
         }
 
+        childManager.DidStartLayout();
         childManager.SetDidUnderflow(false);
 
         if (FirstChild == null && !AddInitialChild())
         {
             Geometry = default;
+            childManager.DidFinishLayout();
             return;
         }
 
@@ -2728,6 +2787,7 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
         {
             Geometry = default;
             childManager.SetDidUnderflow(true);
+            childManager.DidFinishLayout();
             return;
         }
 
@@ -2857,6 +2917,7 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
         if (firstChild == null)
         {
             Geometry = default;
+            childManager.DidFinishLayout();
             return;
         }
 
@@ -2864,12 +2925,12 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
         double leadingScrollOffset = ChildScrollOffset(firstChild);
         double estimatedMaxScrollOffset = reachedEnd
             ? endScrollOffset
-            : EstimateMaxScrollOffset(
-                firstIndex,
-                index,
-                leadingScrollOffset,
-                endScrollOffset,
-                childManager.ChildCount);
+            : childManager.EstimateMaxScrollOffset(
+                constraints,
+                firstIndex: firstIndex,
+                lastIndex: IndexOf(LastChild!),
+                leadingScrollOffset: leadingScrollOffset,
+                trailingScrollOffset: endScrollOffset);
 
         double paintExtent = CalculatePaintExtent(
             from: leadingScrollOffset,
@@ -2891,29 +2952,14 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
             MaxPaintExtent: estimatedMaxScrollOffset,
             CacheExtent: cacheExtent,
             HasVisualOverflow: endScrollOffset > targetEndScrollOffsetForPaint || constraints.ScrollOffset > 0);
-    }
 
-    private static double EstimateMaxScrollOffset(
-        int firstIndex,
-        int lastIndex,
-        double leadingScrollOffset,
-        double trailingScrollOffset,
-        int? childCount)
-    {
-        if (!childCount.HasValue)
+        // We may have started the layout while scrolled to the end, which would not expose a new child.
+        if (estimatedMaxScrollOffset == endScrollOffset)
         {
-            return double.PositiveInfinity;
+            childManager.SetDidUnderflow(true);
         }
 
-        if (lastIndex >= childCount.Value - 1)
-        {
-            return trailingScrollOffset;
-        }
-
-        int reifiedCount = Math.Max(1, lastIndex - firstIndex + 1);
-        double averageExtent = (trailingScrollOffset - leadingScrollOffset) / reifiedCount;
-        int remainingCount = Math.Max(0, childCount.Value - lastIndex - 1);
-        return trailingScrollOffset + averageExtent * remainingCount;
+        childManager.DidFinishLayout();
     }
 
     private static double CalculatePaintExtent(
@@ -2973,8 +3019,9 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
             return;
         }
 
+        childManager.DidStartLayout();
         childManager.SetDidUnderflow(false);
-        int? childCount = childManager.ChildCount;
+        int? childCount = childManager.EstimatedChildCount;
         if (childCount == 0)
         {
             int activeChildCount = CountActiveChildren();
@@ -2985,6 +3032,7 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
 
             Geometry = default;
             childManager.SetDidUnderflow(true);
+            childManager.DidFinishLayout();
             return;
         }
 
@@ -3007,6 +3055,7 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
             {
                 Geometry = default;
                 childManager.SetDidUnderflow(true);
+                childManager.DidFinishLayout();
                 return;
             }
 
@@ -3025,13 +3074,13 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
         var firstChildGeometry = layout.GetGeometryForChildIndex(firstIndex);
         if (FirstChild == null && !AddInitialChild(firstIndex, firstChildGeometry.ScrollOffset))
         {
-            double max = childCount.HasValue
-                ? layout.ComputeMaxScrollOffset(childCount.Value)
-                : 0;
+            // There are either no children, or we are past the end of all our children.
+            double max = layout.ComputeMaxScrollOffset(childManager.ChildCount);
             Geometry = new SliverGeometry(
                 ScrollExtent: max,
                 MaxPaintExtent: max);
             childManager.SetDidUnderflow(true);
+            childManager.DidFinishLayout();
             return;
         }
 
@@ -3040,6 +3089,7 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
         {
             Geometry = default;
             childManager.SetDidUnderflow(true);
+            childManager.DidFinishLayout();
             return;
         }
 
@@ -3135,6 +3185,7 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
         if (lastLaidOutChild == null)
         {
             Geometry = default;
+            childManager.DidFinishLayout();
             return;
         }
 
@@ -3145,11 +3196,15 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
 
         CollectGarbage(leadingGarbage, trailingGarbage);
 
-        double estimatedMaxScrollOffset = childCount.HasValue
-            ? layout.ComputeMaxScrollOffset(childCount.Value)
-            : reachedEnd
-                ? trailingScrollOffset
-                : double.PositiveInfinity;
+        int lastIndex = IndexOf(LastChild!);
+        double estimatedMaxScrollOffset = reachedEnd
+            ? trailingScrollOffset
+            : childManager.EstimateMaxScrollOffset(
+                constraints,
+                firstIndex: firstIndex,
+                lastIndex: lastIndex,
+                leadingScrollOffset: leadingScrollOffset,
+                trailingScrollOffset: trailingScrollOffset);
 
         double paintExtent = CalculatePaintExtent(
             from: Math.Min(constraints.ScrollOffset, leadingScrollOffset),
@@ -3176,6 +3231,8 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
         {
             childManager.SetDidUnderflow(true);
         }
+
+        childManager.DidFinishLayout();
     }
 
     public override double ChildCrossAxisPosition(RenderObject child)

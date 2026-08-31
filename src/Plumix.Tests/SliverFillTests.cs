@@ -371,7 +371,25 @@ public sealed class SliverFillTests
         private readonly Dictionary<RenderBox, int> _indices = [];
         private RenderSliverMultiBoxAdaptor _owner = null!;
 
-        public int? ChildCount => childCount;
+        public int ChildCount => childCount;
+
+        public int? EstimatedChildCount => ChildCount;
+
+        /// <remarks>
+        /// The body Flutter's own `RenderSliverBoxChildManager` test doubles use.
+        /// </remarks>
+        public double EstimateMaxScrollOffset(
+            SliverConstraints constraints,
+            int? firstIndex = null,
+            int? lastIndex = null,
+            double? leadingScrollOffset = null,
+            double? trailingScrollOffset = null)
+        {
+            Assert.True(lastIndex >= firstIndex);
+            return ChildCount
+                   * (trailingScrollOffset!.Value - leadingScrollOffset!.Value)
+                   / (lastIndex!.Value - firstIndex!.Value + 1);
+        }
 
         public void AttachOwner(RenderSliverMultiBoxAdaptor owner)
         {

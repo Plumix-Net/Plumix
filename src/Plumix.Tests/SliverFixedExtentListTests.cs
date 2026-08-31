@@ -357,7 +357,25 @@ public sealed class SliverFixedExtentListTests
             _children = children;
         }
 
-        public int? ChildCount => _children.Count;
+        public int ChildCount => _children.Count;
+
+        public int? EstimatedChildCount => ChildCount;
+
+        /// <remarks>
+        /// The body Flutter's own `RenderSliverBoxChildManager` test doubles use.
+        /// </remarks>
+        public double EstimateMaxScrollOffset(
+            SliverConstraints constraints,
+            int? firstIndex = null,
+            int? lastIndex = null,
+            double? leadingScrollOffset = null,
+            double? trailingScrollOffset = null)
+        {
+            Assert.True(lastIndex >= firstIndex);
+            return ChildCount
+                   * (trailingScrollOffset!.Value - leadingScrollOffset!.Value)
+                   / (lastIndex!.Value - firstIndex!.Value + 1);
+        }
 
         public RenderSliverFillViewport CreateFillViewport()
         {
@@ -420,7 +438,25 @@ public sealed class SliverFixedExtentListTests
         private RenderBox? _child;
         private RenderSliverMultiBoxAdaptor? _renderObject;
 
-        public int? ChildCount => 1;
+        public int ChildCount => 1;
+
+        public int? EstimatedChildCount => ChildCount;
+
+        /// <remarks>
+        /// The body Flutter's own `RenderSliverBoxChildManager` test doubles use.
+        /// </remarks>
+        public double EstimateMaxScrollOffset(
+            SliverConstraints constraints,
+            int? firstIndex = null,
+            int? lastIndex = null,
+            double? leadingScrollOffset = null,
+            double? trailingScrollOffset = null)
+        {
+            Assert.True(lastIndex >= firstIndex);
+            return ChildCount
+                   * (trailingScrollOffset!.Value - leadingScrollOffset!.Value)
+                   / (lastIndex!.Value - firstIndex!.Value + 1);
+        }
 
         public void Setup(RenderSliverMultiBoxAdaptor renderObject, RenderBox child)
         {

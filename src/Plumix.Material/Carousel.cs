@@ -1009,7 +1009,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
     public override int GetMaxChildIndexForScrollOffset(double scrollOffset, double itemExtent)
     {
         SliverConstraints constraints = ConstraintsForSliver;
-        int? childCount = ChildManager?.ChildCount;
+        int? childCount = ChildManager?.EstimatedChildCount;
         int firstVisibleItemIndex = FirstVisibleItemIndex;
         if (_infinite && childCount is null)
         {
@@ -1067,6 +1067,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
             return;
         }
 
+        childManager.DidStartLayout();
         childManager.SetDidUnderflow(false);
         SetLayoutDimensions(constraints);
 
@@ -1094,6 +1095,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
         {
             double max = firstIndex <= 0 ? 0.0 : ComputeMaxScrollOffset(constraints, DeprecatedExtraItemExtent);
             Geometry = new SliverGeometry(ScrollExtent: max, MaxPaintExtent: max);
+            childManager.DidFinishLayout();
             return;
         }
 
@@ -1185,6 +1187,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
             trailingScrollOffset,
             estimatedMaxScrollOffset,
             paintFrom: _consumeMaxWeight ? 0 : leadingScrollOffset);
+        childManager.DidFinishLayout();
     }
 
     private double? BuildItemExtent(int index, SliverLayoutDimensions dimensions)

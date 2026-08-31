@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
@@ -7,6 +8,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/scrollable.dart; flutter/packages/flutter/lib/src/widgets/scroll_view.dart; flutter/packages/flutter/lib/src/widgets/sliver.dart (approximate)
+// flutter/packages/flutter/lib/src/widgets/scroll_delegate.dart
 
 namespace Plumix.Widgets;
 
@@ -1589,7 +1591,34 @@ public abstract class SliverChildDelegate
 
     public abstract Widget? Build(BuildContext context, int index);
 
+    /// <summary>
+    /// An estimate of the number of children this delegate will build, or null when the child list
+    /// is unbounded or too hard to count.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>estimatedChildCount</c>. Once <see cref="Build"/> has returned null this must be
+    /// precise, because <see cref="IRenderSliverBoxChildManager.ChildCount"/> is built on it.
+    /// </remarks>
     public virtual int? EstimatedChildCount => null;
+
+    /// <summary>
+    /// An estimate of the max scroll extent for all the children, or null to let the caller
+    /// extrapolate it from the laid-out range.
+    /// </summary>
+    /// <remarks>Flutter's <c>SliverChildDelegate.estimateMaxScrollOffset</c>.</remarks>
+    public virtual double? EstimateMaxScrollOffset(
+        int firstIndex,
+        int lastIndex,
+        double leadingScrollOffset,
+        double trailingScrollOffset) => null;
+
+    /// <summary>
+    /// Called at the end of layout with the index range of the children that were included in it.
+    /// </summary>
+    /// <remarks>Flutter's <c>SliverChildDelegate.didFinishLayout</c>.</remarks>
+    public virtual void DidFinishLayout(int firstIndex, int lastIndex)
+    {
+    }
 
     public virtual int? FindIndexByKey(Key key) => null;
 
@@ -1902,6 +1931,29 @@ public abstract class SliverMultiBoxAdaptorWidget : RenderObjectWidget
 
     public SliverChildDelegate Delegate { get; }
 
+    /// <summary>
+    /// An estimate of the max scroll extent for all the children, or null to let the element
+    /// extrapolate it. Subclasses override this when they know more than the delegate does.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SliverMultiBoxAdaptorWidget.estimateMaxScrollOffset</c>: the default defers to
+    /// <see cref="SliverChildDelegate.EstimateMaxScrollOffset"/>.
+    /// </remarks>
+    public virtual double? EstimateMaxScrollOffset(
+        SliverConstraints? constraints,
+        int firstIndex,
+        int lastIndex,
+        double leadingScrollOffset,
+        double trailingScrollOffset)
+    {
+        Debug.Assert(lastIndex >= firstIndex);
+        return Delegate.EstimateMaxScrollOffset(
+            firstIndex,
+            lastIndex,
+            leadingScrollOffset,
+            trailingScrollOffset);
+    }
+
     internal override Element CreateElement()
     {
         return new SliverMultiBoxAdaptorElement(this);
@@ -1913,6 +1965,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
     private readonly SortedDictionary<int, Element> _childElements = [];
     private readonly Dictionary<Element, int> _indexByElement = [];
     private readonly Dictionary<RenderBox, Element> _elementByRenderObject = [];
+    private int? _currentlyUpdatingChildIndex;
     private bool _didUnderflow;
 
     public SliverMultiBoxAdaptorElement(SliverMultiBoxAdaptorWidget widget) : base(widget)
@@ -1923,7 +1976,146 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
 
     protected RenderSliverMultiBoxAdaptor TypedRenderObject => (RenderSliverMultiBoxAdaptor)RequireRenderObject();
 
-    int? IRenderSliverBoxChildManager.ChildCount => TypedWidget.Delegate.EstimatedChildCount;
+    /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement._extrapolateMaxScrollOffset</c>.</remarks>
+    private static double ExtrapolateMaxScrollOffset(
+        int firstIndex,
+        int lastIndex,
+        double leadingScrollOffset,
+        double trailingScrollOffset,
+        int childCount)
+    {
+        if (lastIndex == childCount - 1)
+        {
+            return trailingScrollOffset;
+        }
+
+        int reifiedCount = lastIndex - firstIndex + 1;
+        double averageExtent = (trailingScrollOffset - leadingScrollOffset) / reifiedCount;
+        int remainingCount = childCount - lastIndex - 1;
+        return trailingScrollOffset + (averageExtent * remainingCount);
+    }
+
+    /// <inheritdoc />
+    public double EstimateMaxScrollOffset(
+        SliverConstraints constraints,
+        int? firstIndex = null,
+        int? lastIndex = null,
+        double? leadingScrollOffset = null,
+        double? trailingScrollOffset = null)
+    {
+        int? childCount = EstimatedChildCount;
+        if (childCount is null)
+        {
+            return double.PositiveInfinity;
+        }
+
+        return TypedWidget.EstimateMaxScrollOffset(
+                   constraints,
+                   firstIndex!.Value,
+                   lastIndex!.Value,
+                   leadingScrollOffset!.Value,
+                   trailingScrollOffset!.Value)
+               ?? ExtrapolateMaxScrollOffset(
+                   firstIndex.Value,
+                   lastIndex.Value,
+                   leadingScrollOffset.Value,
+                   trailingScrollOffset.Value,
+                   childCount.Value);
+    }
+
+    /// <inheritdoc />
+    public int? EstimatedChildCount => TypedWidget.Delegate.EstimatedChildCount;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>SliverMultiBoxAdaptorElement.childCount</c>: when the delegate cannot estimate
+    /// the count, the fact that this getter was read means the builder already returned null once,
+    /// so the list is finite and an open-ended binary search finds its end.
+    /// </remarks>
+    public int ChildCount
+    {
+        get
+        {
+            int? result = EstimatedChildCount;
+            if (result is not null)
+            {
+                return result.Value;
+            }
+
+            int lo = 0;
+            int hi = 1;
+            SliverMultiBoxAdaptorWidget adaptorWidget = TypedWidget;
+            const int max = int.MaxValue;
+            while (BuildChildWidget(hi - 1, adaptorWidget) is not null)
+            {
+                lo = hi - 1;
+                if (hi < max / 2)
+                {
+                    hi *= 2;
+                }
+                else if (hi < max)
+                {
+                    hi = max;
+                }
+                else
+                {
+                    throw new FlutterError(
+                    [
+                        new ErrorSummary(
+                            $"Could not find the number of children in {adaptorWidget.Delegate}."),
+                        new ErrorDescription(
+                            "The childCount getter was called (implying that the delegate's builder returned "
+                            + $"null for a positive index), but even building the child with index {hi} (the "
+                            + "maximum possible integer) did not return null. Consider implementing childCount "
+                            + "to avoid the cost of searching for the final child."),
+                    ]);
+                }
+            }
+
+            while (hi - lo > 1)
+            {
+                int mid = ((hi - lo) / 2) + lo;
+                if (BuildChildWidget(mid - 1, adaptorWidget) is null)
+                {
+                    hi = mid;
+                }
+                else
+                {
+                    lo = mid;
+                }
+            }
+
+            return lo;
+        }
+    }
+
+    /// <inheritdoc />
+    public void DidStartLayout()
+    {
+        Debug.Assert(DebugAssertChildListLocked());
+    }
+
+    /// <inheritdoc />
+    public void DidFinishLayout()
+    {
+        Debug.Assert(DebugAssertChildListLocked());
+        int firstIndex = _childElements.Count == 0 ? 0 : _childElements.Keys.First();
+        int lastIndex = _childElements.Count == 0 ? 0 : _childElements.Keys.Last();
+        TypedWidget.Delegate.DidFinishLayout(firstIndex, lastIndex);
+    }
+
+    /// <inheritdoc />
+    public bool DebugAssertChildListLocked()
+    {
+        Debug.Assert(_currentlyUpdatingChildIndex is null);
+        return true;
+    }
+
+    /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement._build</c>.</remarks>
+    private Widget? BuildChildWidget(int index, SliverMultiBoxAdaptorWidget widget)
+    {
+        return widget.Delegate.Build(new BuildContext(this), index);
+    }
 
     protected override void OnMount()
     {
@@ -1990,12 +2182,13 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
 
     public bool CreateChild(int index, RenderBox? after)
     {
+        Debug.Assert(DebugAssertChildListLocked());
         if (_childElements.ContainsKey(index))
         {
             return true;
         }
 
-        var widget = TypedWidget.Delegate.Build(new BuildContext(this), index);
+        var widget = BuildChildWidget(index, TypedWidget);
         if (widget == null)
         {
             return false;
@@ -2006,7 +2199,17 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
             : PreviousElementForIndex(index);
 
         var slot = new IndexedSlot<Element?>(index, previousElement);
-        var child = UpdateChild(null, widget, slot);
+        Element? child;
+        _currentlyUpdatingChildIndex = index;
+        try
+        {
+            child = UpdateChild(null, widget, slot);
+        }
+        finally
+        {
+            _currentlyUpdatingChildIndex = null;
+        }
+
         if (child == null)
         {
             return false;
@@ -2018,13 +2221,29 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
 
     public void RemoveChild(RenderBox child)
     {
+        Debug.Assert(DebugAssertChildListLocked());
         if (!_elementByRenderObject.TryGetValue(child, out var element))
         {
             return;
         }
 
+        if (!_indexByElement.TryGetValue(element, out int index))
+        {
+            RemoveMappings(element);
+            DeactivateChild(element);
+            return;
+        }
+
         RemoveMappings(element);
-        DeactivateChild(element);
+        _currentlyUpdatingChildIndex = index;
+        try
+        {
+            DeactivateChild(element);
+        }
+        finally
+        {
+            _currentlyUpdatingChildIndex = null;
+        }
     }
 
     public void DidAdoptChild(RenderBox child)
@@ -2089,42 +2308,86 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
     {
         RemapChildrenByKey();
 
-        foreach (int index in _childElements.Keys.ToArray())
+        Debug.Assert(DebugAssertChildListLocked());
+        bool childrenUpdated = false;
+        try
         {
-            if (!_childElements.TryGetValue(index, out var oldChild))
+            foreach (int index in _childElements.Keys.ToArray())
             {
-                continue;
+                childrenUpdated |= ProcessElement(index);
             }
 
+            // An element rebuild only updates existing children. The underflow check is here to make
+            // sure we look ahead one more child if we were at the end of the child list before the
+            // update. By doing so, we can update the max scroll offset during the layout phase.
+            // Otherwise, the layout phase may be skipped, and the scroll view may be stuck at the
+            // previous max scroll offset.
+            if (!childrenUpdated && _didUnderflow)
+            {
+                int lastKey = _childElements.Count == 0 ? -1 : _childElements.Keys.Last();
+                ProcessElement(lastKey + 1);
+            }
+        }
+        finally
+        {
+            _currentlyUpdatingChildIndex = null;
+        }
+    }
+
+    /// <summary>
+    /// Rebuilds the child at <paramref name="index"/> against the current delegate.
+    /// </summary>
+    /// <returns>Whether the element list changed as a result.</returns>
+    /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement.performRebuild.processElement</c>.</remarks>
+    private bool ProcessElement(int index)
+    {
+        _currentlyUpdatingChildIndex = index;
+        try
+        {
+            _childElements.TryGetValue(index, out Element? oldChild);
             var updatedWidget = TypedWidget.Delegate.Build(new BuildContext(this), index);
             if (updatedWidget == null)
             {
+                if (oldChild == null)
+                {
+                    return false;
+                }
+
                 RemoveMappings(oldChild);
                 DeactivateChild(oldChild);
-                continue;
+                return true;
             }
 
-            var updatedChild = UpdateChild(oldChild, updatedWidget, new IndexedSlot<Element?>(index, PreviousElementForIndex(index)));
+            var slot = new IndexedSlot<Element?>(index, PreviousElementForIndex(index));
+            var updatedChild = UpdateChild(oldChild, updatedWidget, slot);
             if (updatedChild == null)
             {
+                if (oldChild == null)
+                {
+                    return false;
+                }
+
                 RemoveMappings(oldChild);
-                continue;
+                return true;
             }
 
             if (!ReferenceEquals(updatedChild, oldChild))
             {
-                RemoveMappings(oldChild);
-                AttachMappings(index, updatedChild);
-            }
-            else
-            {
-                RefreshRenderObjectMapping(updatedChild);
-            }
-        }
+                if (oldChild != null)
+                {
+                    RemoveMappings(oldChild);
+                }
 
-        if (_didUnderflow)
+                AttachMappings(index, updatedChild);
+                return true;
+            }
+
+            RefreshRenderObjectMapping(updatedChild);
+            return false;
+        }
+        finally
         {
-            TypedRenderObject.MarkNeedsLayout();
+            _currentlyUpdatingChildIndex = null;
         }
     }
 
@@ -2584,6 +2847,29 @@ public sealed class SliverGrid : SliverMultiBoxAdaptorWidget
     }
 
     public SliverGridDelegate GridDelegate { get; }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>SliverGrid.estimateMaxScrollOffset</c>: when the delegate has no estimate of its
+    /// own, the grid layout knows the exact extent of a known number of children.
+    /// </remarks>
+    public override double? EstimateMaxScrollOffset(
+        SliverConstraints? constraints,
+        int firstIndex,
+        int lastIndex,
+        double leadingScrollOffset,
+        double trailingScrollOffset)
+    {
+        return base.EstimateMaxScrollOffset(
+                   constraints,
+                   firstIndex,
+                   lastIndex,
+                   leadingScrollOffset,
+                   trailingScrollOffset)
+               ?? GridDelegate
+                   .GetLayout(constraints!.Value)
+                   .ComputeMaxScrollOffset(Delegate.EstimatedChildCount!.Value);
+    }
 
     public static SliverGrid FromChildren(
         IReadOnlyList<Widget> children,

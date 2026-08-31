@@ -56,7 +56,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         double offset = 0;
         for (int i = 0; i < index; i += 1)
         {
-            int? childCount = ChildManager?.ChildCount;
+            int? childCount = ChildManager?.EstimatedChildCount;
             if (childCount is not null && i > childCount.Value - 1)
             {
                 break;
@@ -144,12 +144,13 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
     }
 
     /// <summary>
-    /// Estimates the scroll extent of the children that have not been laid out, by extrapolating
-    /// from the average extent of the ones that have.
+    /// Estimates the scroll extent of the whole child list, including the children that have not
+    /// been laid out.
     /// </summary>
     /// <remarks>
-    /// Flutter defers to <c>RenderSliverBoxChildManager.estimateMaxScrollOffset</c>; Plumix's child
-    /// manager interface carries no such member, so the element's algorithm lives here.
+    /// Flutter's <c>RenderSliverFixedExtentBoxAdaptor.estimateMaxScrollOffset</c>: a thin forward to
+    /// <see cref="IRenderSliverBoxChildManager.EstimateMaxScrollOffset"/>, which extrapolates from
+    /// the average extent of the reified children unless the delegate knows better.
     /// </remarks>
     protected virtual double EstimateMaxScrollOffset(
         SliverConstraints constraints,
@@ -158,23 +159,12 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         double leadingScrollOffset,
         double trailingScrollOffset)
     {
-        int? childCount = ChildManager?.ChildCount;
-        if (childCount is null)
-        {
-            return double.PositiveInfinity;
-        }
-
-        if (lastIndex == childCount.Value - 1)
-        {
-            return trailingScrollOffset;
-        }
-
-        int reifiedCount = lastIndex - firstIndex + 1;
-        double averageExtent = reifiedCount <= 0
-            ? 0
-            : (trailingScrollOffset - leadingScrollOffset) / reifiedCount;
-        int remainingCount = childCount.Value - lastIndex - 1;
-        return trailingScrollOffset + (averageExtent * remainingCount);
+        return ChildManager?.EstimateMaxScrollOffset(
+            constraints,
+            firstIndex: firstIndex,
+            lastIndex: lastIndex,
+            leadingScrollOffset: leadingScrollOffset,
+            trailingScrollOffset: trailingScrollOffset) ?? double.PositiveInfinity;
     }
 
     /// <inheritdoc />
@@ -232,6 +222,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             return;
         }
 
+        childManager.DidStartLayout();
         childManager.SetDidUnderflow(false);
         SetLayoutDimensions(constraints);
 
@@ -263,6 +254,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
                 ? 0.0
                 : ComputeMaxScrollOffset(constraints, DeprecatedExtraItemExtent);
             Geometry = new SliverGeometry(ScrollExtent: max, MaxPaintExtent: max);
+            childManager.DidFinishLayout();
             return;
         }
 
@@ -276,6 +268,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
                 // layout from the corrected offset instead of guessing their extent.
                 Geometry = new SliverGeometry(
                     ScrollOffsetCorrection: IndexToLayoutOffset(DeprecatedExtraItemExtent, index));
+                // Dart returns without didFinishLayout here: the viewport will re-run this layout.
                 return;
             }
 
@@ -330,6 +323,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             leadingScrollOffset,
             trailingScrollOffset,
             estimatedMaxScrollOffset);
+        childManager.DidFinishLayout();
     }
 
     /// <summary>
@@ -427,7 +421,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         int index = 0;
         while (position < scrollOffset)
         {
-            int? childCount = ChildManager?.ChildCount;
+            int? childCount = ChildManager?.EstimatedChildCount;
             if (childCount is not null && index > childCount.Value - 1)
             {
                 break;
