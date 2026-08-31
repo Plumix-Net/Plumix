@@ -485,7 +485,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/restoration_properties.dart` | `src/Plumix/Widgets/RestorationProperties.cs` | `src/Plumix.Tests/RestorationPropertiesTests.cs` | — |
 | `widgets/router.dart` | `src/Plumix/Widgets/Router.cs` | `src/Plumix.Tests/PointerRouterTests.cs`<br>`src/Plumix.Tests/RouterTests.cs` | `dart_sample/lib/demos/general/router_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/RouterDemoPage.cs` |
 | `widgets/routes.dart` | `src/Plumix/Widgets/Navigation.cs`<br>`src/Plumix/Widgets/RawDialogRoute.cs` | `src/Plumix.Tests/CupertinoNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialBottomNavigationBarTests.cs`<br>`src/Plumix.Tests/MaterialNavigationSurfacesTests.cs`<br>`src/Plumix.Tests/NavigationTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_navigation_bar_demo_page.dart`<br>`dart_sample/lib/demos/general/navigation_pop_demo_page.dart`<br>`dart_sample/lib/demos/material/bottom_navigation_bar_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_drawer_demo_page.dart`<br>`dart_sample/lib/demos/material/navigation_surfaces_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoNavigationBarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NavigationPopDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/BottomNavigationBarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationDrawerDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/Material/NavigationSurfacesDemoPage.cs` |
-| `widgets/safe_area.dart` | `src/Plumix/Widgets/SafeArea.cs` _(reference) (approximate)_ | `src/Plumix.Tests/SafeAreaTests.cs` | — |
+| `widgets/safe_area.dart` | `src/Plumix/Widgets/SafeArea.cs` | `src/Plumix.Tests/SafeAreaTests.cs` | `dart_sample/lib/demos/general/safe_area_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/SafeAreaDemoPage.cs` |
 | `widgets/scroll_activity.dart` | `src/Plumix/Rendering/Scroll.cs` _(reference) (adapted)_ | `src/Plumix.Tests/CupertinoScrollbarTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollMetricsTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs` |
 | `widgets/scroll_configuration.dart` | `src/Plumix/Widgets/ScrollConfiguration.cs` | — | — |
 | `widgets/scroll_context.dart` | `src/Plumix/Widgets/ScrollContext.cs` | — | — |
@@ -622,7 +622,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Widgets/Icon.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/MouseCursor.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/PageStorage.cs` — (reference)
-- `src/Plumix/Widgets/SafeArea.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Scroll.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Semantics.cs` — (reference) (Semantics subset)
 - `src/Plumix/Widgets/SharedAppData.cs` — (reference)
@@ -634,5 +633,5 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - C# files carrying a marker: 664
 - C# files without a marker: 34
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 42
+- C# files with a qualified (non-strict) marker: 41
 

@@ -67,7 +67,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                     color: Colors.DimGray),
                             ]))),
                 new SliverSafeArea(
-                    minimum: new Thickness(12, 8, 12, 0),
+                    minimum: new EdgeInsets(12, 8, 12, 0),
                     sliver: new SliverLayoutBuilder((_, constraints) =>
                     {
                         bool compact = constraints.CrossAxisExtent < 420;

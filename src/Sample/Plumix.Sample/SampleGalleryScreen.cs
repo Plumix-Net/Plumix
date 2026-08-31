@@ -149,6 +149,7 @@ internal static class SampleRoutes
     public const string OverflowIndicator = "/overflow-indicator";
     public const string Offstage = "/offstage";
     public const string Baseline = "/baseline";
+    public const string SafeArea = "/safe-area";
     public const string RichText = "/rich-text";
     public const string IntrinsicWidgets = "/intrinsic-widgets";
     public const string LayoutBuilder = "/layout-builder";
@@ -579,6 +580,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Baseline + IgnoreBaseline",
             "real text baselines + bottom fallback + Row exclusion",
             () => new BaselineDemoPage()),
+        new(
+            SampleRoutes.SafeArea,
+            "SafeArea + SliverSafeArea",
+            "system insets + minimums + maintained bottom view padding",
+            () => new SafeAreaDemoPage()),
         new(
             SampleRoutes.RichText,
             "RichText + TextSpan + WidgetSpan",

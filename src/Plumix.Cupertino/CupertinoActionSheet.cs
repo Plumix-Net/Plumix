@@ -131,7 +131,7 @@ internal sealed class CupertinoActionSheetState : State
             : MediaQuery.HeightOf(context);
 
         return new SafeArea(
-            minimum: new Thickness(0, 0, 0, CupertinoDialogConstants.ActionSheetEdgePadding),
+            minimum: new EdgeInsets(0, 0, 0, CupertinoDialogConstants.ActionSheetEdgePadding),
             // A CupertinoScrollbar is built-in below.
             child: new ScrollConfiguration(
                 behavior: ScrollConfiguration.Of(context).CopyWith(scrollbars: false),

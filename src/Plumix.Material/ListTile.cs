@@ -315,7 +315,11 @@ public sealed class ListTile : StatelessWidget
         content = new SafeArea(
             top: false,
             bottom: false,
-            minimum: resolvedContentPadding,
+            minimum: new EdgeInsets(
+                resolvedContentPadding.Left,
+                resolvedContentPadding.Top,
+                resolvedContentPadding.Right,
+                resolvedContentPadding.Bottom),
             child: content);
         content = new Ink(
             decoration: new ShapeDecoration(effectiveShape, effectiveTileColor),

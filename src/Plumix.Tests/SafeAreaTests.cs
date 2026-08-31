@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix;
+using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.Widgets;
@@ -9,6 +10,44 @@ namespace Plumix.Tests;
 
 public sealed class SafeAreaTests
 {
+    [Fact]
+    public void SafeAreaAndSliverSafeArea_DefaultsMatchFlutter()
+    {
+        var child = new SizedBox();
+        var safeArea = new SafeArea(child);
+        var sliverSafeArea = new SliverSafeArea(new SliverToBoxAdapter(child));
+
+        Assert.True(safeArea.Left);
+        Assert.True(safeArea.Top);
+        Assert.True(safeArea.Right);
+        Assert.True(safeArea.Bottom);
+        Assert.Equal(EdgeInsets.Zero, safeArea.Minimum);
+        Assert.False(safeArea.MaintainBottomViewPadding);
+        Assert.Same(child, safeArea.Child);
+
+        Assert.True(sliverSafeArea.Left);
+        Assert.True(sliverSafeArea.Top);
+        Assert.True(sliverSafeArea.Right);
+        Assert.True(sliverSafeArea.Bottom);
+        Assert.Equal(EdgeInsets.Zero, sliverSafeArea.Minimum);
+    }
+
+    [DebugOnlyFact]
+    public void SafeAreaAndSliverSafeArea_DebugPropertiesDescribeOnlyAvoidedSides()
+    {
+        var safeArea = new SafeArea(
+            child: new SizedBox(),
+            right: false,
+            bottom: false);
+        var sliverSafeArea = new SliverSafeArea(
+            sliver: new SliverToBoxAdapter(new SizedBox()),
+            right: false,
+            bottom: false);
+
+        AssertAvoidedSides(safeArea);
+        AssertAvoidedSides(sliverSafeArea);
+    }
+
     [Fact]
     public void SliverSafeArea_AppliesSliverPaddingAndRemovesConsumedPaddingFromDescendants()
     {
@@ -49,7 +88,7 @@ public sealed class SafeAreaTests
                     top: true,
                     right: true,
                     bottom: false,
-                    minimum: new Thickness(5, 1, 8, 4),
+                    minimum: new EdgeInsets(5, 1, 8, 4),
                     sliver: new SliverToBoxAdapter(new MediaQueryProbeWidget()))));
 
         root.Attach(owner);
@@ -65,6 +104,12 @@ public sealed class SafeAreaTests
     public void SliverSafeArea_RequiresSliver()
     {
         Assert.Throws<ArgumentNullException>(() => new SliverSafeArea(null!));
+    }
+
+    [Fact]
+    public void SafeArea_RequiresChild()
+    {
+        Assert.Throws<ArgumentNullException>(() => new SafeArea(null!));
     }
 
     [Fact]
@@ -164,7 +209,7 @@ public sealed class SafeAreaTests
                     top: true,
                     right: true,
                     bottom: false,
-                    minimum: new Thickness(5, 1, 8, 4),
+                    minimum: new EdgeInsets(5, 1, 8, 4),
                     child: new MediaQueryProbeWidget())));
 
         root.Attach(owner);
@@ -174,6 +219,70 @@ public sealed class SafeAreaTests
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
         Assert.Equal(new Thickness(5, 10, 8, 4), outerPadding.Padding);
         Assert.Equal(new Thickness(4, 0, 0, 2), MediaQueryProbe.Padding);
+    }
+
+    [Fact]
+    public void SafeArea_NestingConsumesEachMediaPaddingSideOnlyOnce()
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new MediaQuery(
+                data: new MediaQueryData(
+                    Padding: new Thickness(20),
+                    ViewPadding: new Thickness(20)),
+                child: new SafeArea(
+                    top: false,
+                    child: new SafeArea(
+                        right: false,
+                        child: new SizedBox(width: 40, height: 30)))));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
+        var inner = Assert.IsType<RenderPadding>(outer.Child);
+        outer.Layout(new BoxConstraints(MaxWidth: 800, MaxHeight: 600));
+
+        Assert.Equal(new Thickness(20, 0, 20, 20), outer.Padding);
+        Assert.Equal(new Thickness(0, 20, 0, 0), inner.Padding);
+        Assert.Equal(new Size(80, 70), outer.Size);
+    }
+
+    [Fact]
+    public void SafeArea_RebuildsWhenMediaPaddingChanges()
+    {
+        Widget child = new SafeArea(
+            bottom: false,
+            child: new SafeArea(
+                left: false,
+                bottom: false,
+                child: new SizedBox(width: 40, height: 30)));
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new MediaQuery(
+            data: new MediaQueryData(
+                Padding: new Thickness(20),
+                ViewPadding: new Thickness(20)),
+            child: child));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
+        Assert.Equal(new Thickness(20, 20, 20, 0), outer.Padding);
+
+        root.Update(new MediaQuery(
+            data: new MediaQueryData(
+                Padding: new Thickness(100, 30, 0, 40),
+                ViewPadding: new Thickness(100, 30, 0, 40)),
+            child: child));
+        owner.FlushBuild();
+
+        outer = RequireRenderObject<RenderPadding>(root.ChildElement);
+        var inner = Assert.IsType<RenderPadding>(outer.Child);
+        Assert.Equal(new Thickness(100, 30, 0, 0), outer.Padding);
+        Assert.Equal(default, inner.Padding);
     }
 
     [Fact]
@@ -300,6 +409,21 @@ public sealed class SafeAreaTests
         Assert.NotNull(element);
         Assert.NotNull(element!.RenderObject);
         return Assert.IsType<T>(element.RenderObject);
+    }
+
+    private static void AssertAvoidedSides(Widget widget)
+    {
+        var properties = new DiagnosticPropertiesBuilder();
+        widget.DebugFillProperties(properties);
+        var descriptions = properties.Properties
+            .OfType<FlagProperty>()
+            .Select(property => property.ToString())
+            .ToList();
+
+        Assert.Contains("avoid left padding", descriptions);
+        Assert.Contains("avoid top padding", descriptions);
+        Assert.DoesNotContain("avoid right padding", descriptions);
+        Assert.DoesNotContain("avoid bottom padding", descriptions);
     }
 
     private static class MediaQueryProbe

@@ -67,7 +67,7 @@ public sealed class CupertinoAppDemoPage : StatelessWidget
     {
         return new CupertinoPageScaffold(
             child: new SafeArea(
-                minimum: new Thickness(20.0),
+                minimum: EdgeInsets.All(20.0),
                 child: new Center(
                     child: new Column(
                         mainAxisSize: MainAxisSize.Min,

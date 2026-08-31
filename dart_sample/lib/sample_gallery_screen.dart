@@ -124,6 +124,7 @@ import 'demos/general/navigator_pages_demo_page.dart';
 import 'demos/general/router_demo_page.dart';
 import 'demos/general/offstage_demo_page.dart';
 import 'demos/general/baseline_demo_page.dart';
+import 'demos/general/safe_area_demo_page.dart';
 import 'demos/general/rich_text_demo_page.dart';
 import 'demos/general/intrinsic_widgets_demo_page.dart';
 import 'demos/general/layout_builder_demo_page.dart';
@@ -967,6 +968,12 @@ class SampleGalleryScreen extends StatelessWidget {
       builder: () => const BaselineDemoPage(),
     ),
     SampleRouteDefinition(
+      routeName: SampleRoutes.safeArea,
+      title: 'SafeArea + SliverSafeArea',
+      subtitle: 'system insets + minimums + maintained bottom view padding',
+      builder: () => const SafeAreaDemoPage(),
+    ),
+    SampleRouteDefinition(
       routeName: SampleRoutes.richText,
       title: 'RichText + TextSpan + WidgetSpan',
       subtitle: 'styled runs + span recognizers + inline widget alignment',
@@ -993,7 +1000,8 @@ class SampleGalleryScreen extends StatelessWidget {
     SampleRouteDefinition(
       routeName: SampleRoutes.focusTraversal,
       title: 'Focus traversal policies',
-      subtitle: 'FocusTraversalGroup + reading/widget/numeric order + directional keys',
+      subtitle:
+          'FocusTraversalGroup + reading/widget/numeric order + directional keys',
       builder: () => const FocusTraversalDemoPage(),
     ),
     SampleRouteDefinition(
