@@ -342,21 +342,25 @@ public sealed class NavigationIndicator : StatelessWidget
     {
         double scale = AnimationValue <= 0
             ? 0
-            : 0.4 + (0.6 * Curves.EaseInOut(AnimationValue));
+            : 0.4 + (0.6 * Curves.EaseInOutCubicEmphasized(AnimationValue));
         var shape = Shape ?? new RoundedRectangleBorder(borderRadius:
             Plumix.Rendering.BorderRadius.Circular(BorderRadius.Radius));
-        return new Opacity(
-            opacity: AnimationValue,
-            child: new SizedBox(
-                width: Width * scale,
-                height: Height,
-                child: new DecoratedBox(
-                    decoration: new BoxDecoration(
-                        Color: Color ?? Theme.Of(context).ColorScheme.Secondary,
-                        Border: ShapeBorderGeometry.SideOrNull(shape) is { } shapeSide
-                            ? Plumix.Rendering.Border.FromBorderSide(shapeSide)
-                            : null,
-                        BorderRadius: ShapeBorderGeometry.ResolveRadius(shape)))));
+        return Plumix.Widgets.Transform.Scale(
+            scaleX: scale,
+            scaleY: 1.0,
+            alignment: Alignment.Center,
+            child: new Opacity(
+                opacity: AnimationValue,
+                child: new SizedBox(
+                    width: Width,
+                    height: Height,
+                    child: new DecoratedBox(
+                        decoration: new BoxDecoration(
+                            Color: Color ?? Theme.Of(context).ColorScheme.Secondary,
+                            Border: ShapeBorderGeometry.SideOrNull(shape) is { } shapeSide
+                                ? Plumix.Rendering.Border.FromBorderSide(shapeSide)
+                                : null,
+                            BorderRadius: ShapeBorderGeometry.ResolveRadius(shape))))));
     }
 }
 
@@ -412,6 +416,7 @@ internal sealed class NavigationBarDestinationTile : StatefulWidget
 
 internal sealed class NavigationBarDestinationTileState : State
 {
+    private readonly GlobalKey _iconKey = new LabeledGlobalKey<State>("NavigationBar destination icon");
     private AnimationController? _controller;
 
     private NavigationBarDestinationTile CurrentWidget => (NavigationBarDestinationTile)StateWidget;
@@ -446,7 +451,7 @@ internal sealed class NavigationBarDestinationTileState : State
     {
         var widget = CurrentWidget;
         var destination = widget.Destination;
-        double progress = _controller?.Evaluate() ?? (widget.Selected ? 1 : 0);
+        double progress = _controller?.Value ?? (widget.Selected ? 1 : 0);
         var icon = widget.Selected && destination.SelectedIcon is not null
             ? destination.SelectedIcon
             : destination.Icon;
@@ -466,35 +471,36 @@ internal sealed class NavigationBarDestinationTileState : State
                 iconTheme is null ? icon : IconTheme.Merge(data: iconTheme, child: icon)
             ]);
 
-        Widget content;
-        if (widget.LabelBehavior == NavigationDestinationLabelBehavior.AlwaysHide)
+        double layoutProgress = widget.LabelBehavior switch
         {
-            content = iconWithIndicator;
-        }
-        else
+            NavigationDestinationLabelBehavior.AlwaysShow => 1.0,
+            NavigationDestinationLabelBehavior.AlwaysHide => 0.0,
+            _ => Curves.EaseInOutCubicEmphasized(progress),
+        };
+        AnimationStatus layoutStatus = layoutProgress switch
         {
-            double labelOpacity = widget.LabelBehavior == NavigationDestinationLabelBehavior.AlwaysShow ? 1 : progress;
-            var label = new Opacity(
-                opacity: labelOpacity,
-                child: new Padding(
-                    insets: widget.LabelPadding,
-                    child: new Text(
-                        destination.Label,
-                        style: widget.LabelTextStyle.Resolve(states),
-                        softWrap: false,
-                        maxLines: 1,
-                        overflow: TextOverflow.Ellipsis)));
-            content = new Column(
-                mainAxisSize: MainAxisSize.Min,
-                mainAxisAlignment: MainAxisAlignment.Center,
-                children: [iconWithIndicator, label]);
-        }
+            <= 0.0 => AnimationStatus.Dismissed,
+            >= 1.0 => AnimationStatus.Completed,
+            _ => widget.Selected ? AnimationStatus.Forward : AnimationStatus.Reverse,
+        };
+        var layoutAnimation = new ConstantAnimation<double>(layoutProgress, layoutStatus);
+        Widget label = new Padding(
+            insets: widget.LabelPadding,
+            child: new Text(
+                destination.Label,
+                style: widget.LabelTextStyle.Resolve(states),
+                softWrap: false,
+                maxLines: 1,
+                overflow: TextOverflow.Ellipsis));
+        Widget content = new NavigationBarDestinationLayout(
+            icon: iconWithIndicator,
+            iconKey: _iconKey,
+            label: label,
+            animation: layoutAnimation);
 
-        // Dart parity: `_IndicatorInkWell`, without the `getRectCallback` override that clips the
-        // ripple to the icon box (`docs/ai/DIVERGENCES.md`).
-        Widget result = new InkResponse(
-            containedInkWell: true,
-            highlightColor: Colors.Transparent,
+        Widget result = new NavigationBarIndicatorInkWell(
+            iconKey: _iconKey,
+            labelBehavior: widget.LabelBehavior,
             overlayColor: widget.OverlayColor,
             customBorder: widget.IndicatorShape,
             onTap: destination.Enabled ? widget.OnTap : null,
@@ -542,6 +548,119 @@ internal sealed class NavigationBarDestinationTileState : State
         _controller.Changed -= HandleAnimationChanged;
         _controller.Dispose();
         _controller = null;
+    }
+}
+
+internal sealed class NavigationBarIndicatorInkWell : InkResponse
+{
+    private readonly GlobalKey _iconKey;
+
+    public NavigationBarIndicatorInkWell(
+        GlobalKey iconKey,
+        NavigationDestinationLabelBehavior labelBehavior,
+        MaterialStateProperty<Color?>? overlayColor,
+        ShapeBorder? customBorder,
+        Action? onTap,
+        Widget child)
+        : base(
+            child: child,
+            onTap: onTap,
+            containedInkWell: true,
+            highlightColor: Colors.Transparent,
+            overlayColor: overlayColor,
+            customBorder: customBorder)
+    {
+        _iconKey = iconKey ?? throw new ArgumentNullException(nameof(iconKey));
+        LabelBehavior = labelBehavior;
+    }
+
+    public NavigationDestinationLabelBehavior LabelBehavior { get; }
+
+    public override Func<Rect> GetRectCallback(RenderBox referenceBox)
+    {
+        ArgumentNullException.ThrowIfNull(referenceBox);
+        return () =>
+        {
+            RenderBox iconBox = _iconKey.CurrentContext?.FindRenderObject() as RenderBox
+                                ?? throw new InvalidOperationException(
+                                    "The navigation destination icon must be laid out before resolving its ink rect.");
+            Point iconTopLeft = iconBox.LocalToGlobal(default);
+            Point localTopLeft = referenceBox.GlobalToLocal(iconTopLeft);
+            return new Rect(localTopLeft, iconBox.Size);
+        };
+    }
+}
+
+internal sealed class NavigationBarDestinationLayout : StatelessWidget
+{
+    public NavigationBarDestinationLayout(
+        Widget icon,
+        GlobalKey iconKey,
+        Widget label,
+        Animation<double> animation,
+        Key? key = null) : base(key)
+    {
+        Icon = icon ?? throw new ArgumentNullException(nameof(icon));
+        IconKey = iconKey ?? throw new ArgumentNullException(nameof(iconKey));
+        Label = label ?? throw new ArgumentNullException(nameof(label));
+        Animation = animation ?? throw new ArgumentNullException(nameof(animation));
+    }
+
+    public Widget Icon { get; }
+    public GlobalKey IconKey { get; }
+    public Widget Label { get; }
+    public Animation<double> Animation { get; }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new CustomMultiChildLayout(
+            @delegate: new NavigationDestinationLayoutDelegate(Animation),
+            children:
+            [
+                new LayoutId(
+                    NavigationDestinationLayoutDelegate.IconId,
+                    new KeyedSubtree(Icon, IconKey)),
+                new LayoutId(
+                    NavigationDestinationLayoutDelegate.LabelId,
+                    new FadeTransition(
+                        opacity: Animation,
+                        alwaysIncludeSemantics: true,
+                        child: Label)),
+            ]);
+    }
+}
+
+internal sealed class NavigationDestinationLayoutDelegate : MultiChildLayoutDelegate
+{
+    public const int IconId = 1;
+    public const int LabelId = 2;
+
+    public NavigationDestinationLayoutDelegate(Animation<double> animation) : base(animation)
+    {
+        Animation = animation ?? throw new ArgumentNullException(nameof(animation));
+    }
+
+    public Animation<double> Animation { get; }
+
+    public override void PerformLayout(Size size)
+    {
+        Size iconSize = LayoutChild(IconId, BoxConstraints.Loose(size));
+        Size labelSize = LayoutChild(LabelId, BoxConstraints.Loose(size));
+        double yPositionOffset = (iconSize.Height / 2.0)
+                                 + ((labelSize.Height / 2.0) * Animation.Value);
+        double iconYPosition = (size.Height / 2.0) - yPositionOffset;
+        PositionChild(
+            IconId,
+            new Point((size.Width - iconSize.Width) / 2.0, iconYPosition));
+        PositionChild(
+            LabelId,
+            new Point((size.Width - labelSize.Width) / 2.0, iconYPosition + iconSize.Height));
+    }
+
+    public override bool ShouldRelayout(MultiChildLayoutDelegate oldDelegate)
+    {
+        return oldDelegate is not NavigationDestinationLayoutDelegate old
+               || !ReferenceEquals(old.Animation, Animation);
     }
 }
 

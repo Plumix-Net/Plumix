@@ -283,6 +283,22 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains("Tab 2 of 2", tabs[1].Label, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void NavigationBar_IndicatorInkRectTracksTheKeyedIconLayout()
+    {
+        Rect[] alwaysShow = NavigationBarInkRects(NavigationDestinationLabelBehavior.AlwaysShow);
+        Rect[] alwaysHide = NavigationBarInkRects(NavigationDestinationLabelBehavior.AlwaysHide);
+        Rect[] selectedOnly = NavigationBarInkRects(NavigationDestinationLabelBehavior.OnlyShowSelected);
+
+        Assert.All(alwaysShow, rect => Assert.Equal(new Size(64.0, 32.0), rect.Size));
+        Assert.All(alwaysHide, rect => Assert.Equal(new Size(64.0, 32.0), rect.Size));
+        Assert.All(selectedOnly, rect => Assert.Equal(new Size(64.0, 32.0), rect.Size));
+        Assert.True(alwaysShow[0].Y < alwaysHide[0].Y);
+        Assert.Equal(alwaysShow[0].Y, selectedOnly[0].Y, precision: 3);
+        Assert.Equal(alwaysHide[1].Y, selectedOnly[1].Y, precision: 3);
+        Assert.Equal(alwaysShow[0].X, alwaysHide[0].X, precision: 3);
+    }
+
     private static void CollectSemantics(
         SemanticsNode node,
         Func<SemanticsNode, bool> predicate,
@@ -613,7 +629,84 @@ public sealed class MaterialNavigationSurfacesTests
         Assert.Contains(FindDescendants<RenderConstrainedBox>(harness.RenderView),
             box => box.AdditionalConstraints.MinWidth == 80);
         Assert.NotNull(FindParagraph(harness.RenderView, "rail-selected-one"));
-        Assert.Null(FindParagraph(harness.RenderView, "Rail one"));
+        Assert.NotNull(FindParagraph(harness.RenderView, "Rail one"));
+        Assert.Contains(FindDescendants<RenderVisibility>(harness.RenderView), visibility => !visibility.Visible);
+    }
+
+    [Fact]
+    public void NavigationRail_M3IndicatorInkRectMatchesLabelAndCompactGeometry()
+    {
+        Rect[] allLabels = NavigationRailInkRects(new NavigationRail(
+            CompactRailDestinations(),
+            selectedIndex: 0,
+            labelType: NavigationRailLabelType.All));
+        Rect[] compact = NavigationRailInkRects(new NavigationRail(
+            CompactRailDestinations(),
+            selectedIndex: 0,
+            minWidth: 50.0));
+
+        Assert.All(allLabels, rect => Assert.Equal(new Rect(12.0, 0.0, 56.0, 32.0), rect));
+        Assert.All(compact, rect => Assert.Equal(new Rect(-3.0, 6.0, 56.0, 32.0), rect));
+    }
+
+    [Fact]
+    public void NavigationRail_UsesRailLevelIndicatorTokensLikePinnedDart()
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            RailHost(new NavigationRail(
+                destinations:
+                [
+                    new NavigationRailDestination(
+                        new Icon(Icons.Menu),
+                        new Text("One"),
+                        indicatorColor: Colors.Yellow),
+                    new NavigationRailDestination(new Icon(Icons.InfoOutline), new Text("Two")),
+                ],
+                selectedIndex: 0,
+                indicatorColor: Colors.DarkGreen))));
+
+        harness.Pump(new Size(420, 320));
+
+        Assert.Contains(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.DarkGreen);
+        Assert.DoesNotContain(
+            FindDescendants<RenderDecoratedBox>(harness.RenderView),
+            box => box.Decoration.Color == Colors.Yellow);
+    }
+
+    [Theory]
+    [InlineData(TextDirection.Ltr, 12.0)]
+    [InlineData(TextDirection.Rtl, 188.0)]
+    public void NavigationRail_ExtendedIndicatorInkRectTracksDirection(
+        TextDirection textDirection,
+        double expectedLeft)
+    {
+        Rect[] rects = NavigationRailInkRects(
+            new NavigationRail(
+                RailDestinations(),
+                selectedIndex: 0,
+                extended: true),
+            textDirection);
+
+        Assert.All(rects, rect => Assert.Equal(new Rect(expectedLeft, 6.0, 56.0, 32.0), rect));
+    }
+
+    [Fact]
+    public void NavigationRail_LargeIconOffsetsIndicatorInkRectVertically()
+    {
+        Rect[] rects = NavigationRailInkRects(new NavigationRail(
+            destinations:
+            [
+                new NavigationRailDestination(new Icon(Icons.Menu), new Text("One")),
+                new NavigationRailDestination(new Icon(Icons.InfoOutline), new Text("Two")),
+            ],
+            selectedIndex: 0,
+            selectedIconTheme: new IconThemeData(Size: 50.0),
+            unselectedIconTheme: new IconThemeData(Size: 50.0)));
+
+        Assert.All(rects, rect => Assert.Equal(new Rect(12.0, 15.0, 56.0, 32.0), rect));
     }
 
     [Fact]
@@ -837,6 +930,12 @@ public sealed class MaterialNavigationSurfacesTests
         RailDestination("Rail two", "rail-two", "rail-selected-two"),
     ];
 
+    private static IReadOnlyList<NavigationRailDestination> CompactRailDestinations() =>
+    [
+        new NavigationRailDestination(new Icon(Icons.Menu), new Text("A")),
+        new NavigationRailDestination(new Icon(Icons.InfoOutline), new Text("B")),
+    ];
+
     private static NavigationRailDestination RailDestination(string label, string icon, string selectedIcon) =>
         new(new Text(icon), new Text(label), new Text(selectedIcon));
 
@@ -850,6 +949,38 @@ public sealed class MaterialNavigationSurfacesTests
     private static Widget BarHost(Widget bar) => new Column(children: [new Expanded(new SizedBox()), bar]);
 
     private static Widget RailHost(Widget rail) => new Row(children: [rail, new Expanded(new SizedBox())]);
+
+    private static Rect[] NavigationBarInkRects(NavigationDestinationLabelBehavior labelBehavior)
+    {
+        using var harness = new WidgetRenderHarness(Wrap(
+            ThemeData.Light,
+            BarHost(new NavigationBar(
+                destinations:
+                [
+                    Destination("One", Icons.Menu),
+                    Destination("Two", Icons.InfoOutline),
+                ],
+                selectedIndex: 0,
+                labelBehavior: labelBehavior))));
+        harness.Pump(new Size(320, 160));
+        return FindDescendants<RenderInkResponsePaint>(harness.RenderView)
+            .Select(paint => paint.ResolvedInkRect)
+            .ToArray();
+    }
+
+    private static Rect[] NavigationRailInkRects(
+        NavigationRail rail,
+        TextDirection textDirection = TextDirection.Ltr)
+    {
+        Widget content = new MediaQuery(
+            new MediaQueryData(Size: new Size(420, 320)),
+            new Theme(ThemeData.Light, RailHost(rail)));
+        using var harness = new WidgetRenderHarness(new Directionality(textDirection, content));
+        harness.Pump(new Size(420, 320));
+        return FindDescendants<RenderInkResponsePaint>(harness.RenderView)
+            .Select(paint => paint.ResolvedInkRect)
+            .ToArray();
+    }
 
     private static void Tap(RenderView view, Point point, int pointer)
     {
@@ -957,4 +1088,3 @@ public sealed class MaterialNavigationSurfacesTests
     private static bool HasLabelPart(SemanticsNode node, string part) =>
         node.Label?.Split('\n').Contains(part) == true;
 }
-

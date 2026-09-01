@@ -56,7 +56,8 @@ class _NavigationSurfacesDemoPageState
           ),
           const SizedBox(height: 14),
           const Text(
-            'Seed-generated ColorScheme, Material 2021 typography, navigation defaults, and theme precedence.',
+            'Seed-generated ColorScheme, Material 2021 typography, navigation defaults, '
+            'theme precedence, and icon-scoped hover/press ripples.',
             style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
           ),
           const SizedBox(height: 14),

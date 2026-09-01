@@ -60,7 +60,7 @@ internal sealed class NavigationSurfacesDemoPageState : State
                     new Text("NavigationBar + NavigationRail", fontSize: 20),
                     new Text(
                         "Seed-generated ColorScheme, Material 2021 typography, navigation defaults, "
-                        + "and theme precedence.",
+                        + "theme precedence, and icon-scoped hover/press ripples.",
                         fontSize: 14,
                         color: Color.Parse("#8A000000")),
                     new Row(
