@@ -83,11 +83,30 @@ public sealed class ShiftedBoxTests
         Assert.Equal(10.0, box.GetMinIntrinsicHeight(double.PositiveInfinity));
     }
 
-    [DebugOnlyFact]
-    public void RenderPositionedBox_RejectsNegativeFactors()
+    [Fact]
+    public void RenderPositionedBox_HasDebugOnlyFactorAssertions()
     {
-        Assert.Throws<AssertionError>(() => new RenderPositionedBox(widthFactor: -1.0));
-        Assert.Throws<AssertionError>(() => new RenderPositionedBox(heightFactor: -1.0));
+        RenderPositionedBox? widthBox = null;
+        Exception? widthError = Record.Exception(() => widthBox = new RenderPositionedBox(widthFactor: -1.0));
+        var heightBox = new RenderPositionedBox();
+        Exception? heightError = Record.Exception(() => heightBox.HeightFactor = double.NaN);
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(widthError);
+            Assert.IsType<AssertionError>(heightError);
+        }
+        else
+        {
+            Assert.Null(widthError);
+            Assert.Null(heightError);
+            Assert.Equal(-1.0, widthBox!.WidthFactor);
+            Assert.True(double.IsNaN(heightBox.HeightFactor!.Value));
+        }
+
+        Assert.Equal(
+            double.PositiveInfinity,
+            new RenderPositionedBox(widthFactor: double.PositiveInfinity).WidthFactor);
     }
 
     [Fact]
@@ -168,6 +187,33 @@ public sealed class ShiftedBoxTests
         // The child is forced to 100x20, and the box constrains itself to the child's size.
         Assert.Equal(new Size(100, 20), child.Size);
         Assert.Equal(new Size(100, 20), box.Size);
+    }
+
+    [Fact]
+    public void RenderFractionallySizedOverflowBox_HasDebugOnlyFactorAssertions()
+    {
+        RenderFractionallySizedOverflowBox? widthBox = null;
+        Exception? widthError = Record.Exception(
+            () => widthBox = new RenderFractionallySizedOverflowBox(widthFactor: -1.0));
+        var heightBox = new RenderFractionallySizedOverflowBox();
+        Exception? heightError = Record.Exception(() => heightBox.HeightFactor = double.NaN);
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(widthError);
+            Assert.IsType<AssertionError>(heightError);
+        }
+        else
+        {
+            Assert.Null(widthError);
+            Assert.Null(heightError);
+            Assert.Equal(-1.0, widthBox!.WidthFactor);
+            Assert.True(double.IsNaN(heightBox.HeightFactor!.Value));
+        }
+
+        Assert.Equal(
+            double.PositiveInfinity,
+            new RenderFractionallySizedOverflowBox(widthFactor: double.PositiveInfinity).WidthFactor);
     }
 
     [Fact]

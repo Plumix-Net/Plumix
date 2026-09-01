@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -33,13 +34,21 @@ public sealed class AspectRatioTests
     }
 
     [Fact]
-    public void RenderAspectRatio_Throws_WhenBothAxesAreUnbounded()
+    public void RenderAspectRatio_HasADebugOnlyUnboundedAxesAssertion()
     {
         using var renderErrors = RenderErrorRethrowScope.Enter();
         var aspectRatio = new RenderAspectRatio(2.0);
 
-        Assert.Throws<InvalidOperationException>(() =>
-            aspectRatio.Layout(new BoxConstraints(MinWidth: 0, MaxWidth: double.PositiveInfinity, MinHeight: 0, MaxHeight: double.PositiveInfinity)));
+        Exception? error = Record.Exception(() => aspectRatio.Layout(BoxConstraints.Unbounded));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(error);
+        }
+        else
+        {
+            Assert.Null(error);
+        }
     }
 
     [Fact]
@@ -96,9 +105,54 @@ public sealed class AspectRatioTests
     }
 
     [Fact]
-    public void Spacer_Throws_ForNonPositiveFlex()
+    public void AspectRatio_HasDistinctWidgetAndRenderObjectDebugAssertions()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Spacer(flex: 0));
+        double[] widgetInvalidValues = [0.0, -1.0, double.NaN];
+        foreach (double value in widgetInvalidValues)
+        {
+            AspectRatio? widget = null;
+            Exception? error = Record.Exception(() => widget = new AspectRatio(value));
+            if (Constants.KDebugMode)
+            {
+                Assert.IsType<AssertionError>(error);
+            }
+            else
+            {
+                Assert.Null(error);
+                Assert.Equal(value, widget!.Ratio);
+            }
+        }
+
+        var infiniteWidget = new AspectRatio(double.PositiveInfinity);
+        Assert.Equal(double.PositiveInfinity, infiniteWidget.Ratio);
+
+        double[] renderInvalidValues = [0.0, -1.0, double.NaN, double.PositiveInfinity];
+        foreach (double value in renderInvalidValues)
+        {
+            RenderAspectRatio? renderObject = null;
+            Exception? error = Record.Exception(() => renderObject = new RenderAspectRatio(value));
+            if (Constants.KDebugMode)
+            {
+                Assert.IsType<AssertionError>(error);
+            }
+            else
+            {
+                Assert.Null(error);
+                Assert.Equal(value, renderObject!.AspectRatio);
+            }
+        }
+
+        var updated = new RenderAspectRatio(1.0);
+        Exception? updateError = Record.Exception(() => updated.AspectRatio = double.PositiveInfinity);
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(updateError);
+        }
+        else
+        {
+            Assert.Null(updateError);
+            Assert.Equal(double.PositiveInfinity, updated.AspectRatio);
+        }
     }
 
     [Fact]

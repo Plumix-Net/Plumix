@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -323,6 +324,47 @@ public sealed class UnconstrainedLimitedBoxTests
         Assert.Same(renderBox, updated);
         Assert.Equal(90, updated.MaxWidth);
         Assert.Equal(44, updated.MaxHeight);
+    }
+
+    [Fact]
+    public void LimitedBox_HasDebugOnlyMaximumAssertions()
+    {
+        double[] invalidValues = [-1.0, double.NaN];
+        foreach (double value in invalidValues)
+        {
+            LimitedBox? widget = null;
+            RenderLimitedBox? renderObject = null;
+            Exception? widgetError = Record.Exception(() => widget = new LimitedBox(maxWidth: value));
+            Exception? renderError = Record.Exception(() => renderObject = new RenderLimitedBox(maxHeight: value));
+
+            if (Constants.KDebugMode)
+            {
+                Assert.IsType<AssertionError>(widgetError);
+                Assert.IsType<AssertionError>(renderError);
+            }
+            else
+            {
+                Assert.Null(widgetError);
+                Assert.Null(renderError);
+                Assert.Equal(value, widget!.MaxWidth);
+                Assert.Equal(value, renderObject!.MaxHeight);
+            }
+        }
+
+        var updated = new RenderLimitedBox();
+        Exception? updateError = Record.Exception(() => updated.MaxWidth = -1.0);
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(updateError);
+        }
+        else
+        {
+            Assert.Null(updateError);
+            Assert.Equal(-1.0, updated.MaxWidth);
+        }
+
+        Assert.Equal(double.PositiveInfinity, new LimitedBox().MaxWidth);
+        Assert.Equal(double.PositiveInfinity, new RenderLimitedBox().MaxHeight);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

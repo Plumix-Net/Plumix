@@ -911,9 +911,9 @@ public sealed class RenderLimitedBox : RenderProxyBox
 
     private static double ValidateMaxValue(double value, string parameterName)
     {
-        if (double.IsNaN(value) || value < 0)
+        if (Constants.KDebugMode && !(value >= 0.0))
         {
-            throw new ArgumentOutOfRangeException(parameterName, "Max value must be non-negative.");
+            throw new AssertionError($"{parameterName} must be non-negative.");
         }
 
         return value;
@@ -1263,10 +1263,11 @@ public sealed class RenderAspectRatio : RenderProxyBox
             return constraints.Smallest;
         }
 
-        if (double.IsPositiveInfinity(constraints.MaxWidth) &&
-            double.IsPositiveInfinity(constraints.MaxHeight))
+        if (Constants.KDebugMode
+            && double.IsPositiveInfinity(constraints.MaxWidth)
+            && double.IsPositiveInfinity(constraints.MaxHeight))
         {
-            throw new InvalidOperationException(
+            throw new AssertionError(
                 "RenderAspectRatio requires at least one bounded axis.");
         }
 
@@ -1308,9 +1309,9 @@ public sealed class RenderAspectRatio : RenderProxyBox
 
     private static double ValidateAspectRatio(double value, string parameterName)
     {
-        if (!double.IsFinite(value) || value <= 0)
+        if (Constants.KDebugMode && (!(value > 0.0) || !double.IsFinite(value)))
         {
-            throw new ArgumentOutOfRangeException(parameterName, "Aspect ratio must be finite and positive.");
+            throw new AssertionError($"{parameterName} must be finite and greater than zero.");
         }
 
         return value;

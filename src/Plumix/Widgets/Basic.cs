@@ -521,14 +521,14 @@ public class Align : SingleChildRenderObjectWidget
         double? heightFactor = null,
         Key? key = null) : base(child, key)
     {
-        if (widthFactor.HasValue && (double.IsNaN(widthFactor.Value) || widthFactor.Value < 0.0))
+        if (Constants.KDebugMode && widthFactor is double width && !(width >= 0.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(widthFactor), "Width factor must be non-negative.");
+            throw new AssertionError("widthFactor must be null or non-negative.");
         }
 
-        if (heightFactor.HasValue && (double.IsNaN(heightFactor.Value) || heightFactor.Value < 0.0))
+        if (Constants.KDebugMode && heightFactor is double height && !(height >= 0.0))
         {
-            throw new ArgumentOutOfRangeException(nameof(heightFactor), "Height factor must be non-negative.");
+            throw new AssertionError("heightFactor must be null or non-negative.");
         }
 
         Alignment = alignment;
@@ -765,9 +765,19 @@ public sealed class FractionallySizedBox : SingleChildRenderObjectWidget
         double? heightFactor = null,
         Key? key = null) : base(child, key)
     {
+        if (Constants.KDebugMode && widthFactor is double width && !(width >= 0.0))
+        {
+            throw new AssertionError("widthFactor must be null or non-negative.");
+        }
+
+        if (Constants.KDebugMode && heightFactor is double height && !(height >= 0.0))
+        {
+            throw new AssertionError("heightFactor must be null or non-negative.");
+        }
+
         Alignment = alignment;
-        WidthFactor = ValidateFactor(widthFactor, nameof(widthFactor));
-        HeightFactor = ValidateFactor(heightFactor, nameof(heightFactor));
+        WidthFactor = widthFactor;
+        HeightFactor = heightFactor;
     }
 
     /// <summary>How to align the child.</summary>
@@ -806,21 +816,6 @@ public sealed class FractionallySizedBox : SingleChildRenderObjectWidget
         properties.Add(new DoubleProperty("widthFactor", WidthFactor, defaultValue: null));
         properties.Add(new DoubleProperty("heightFactor", HeightFactor, defaultValue: null));
     }
-
-    private static double? ValidateFactor(double? value, string parameterName)
-    {
-        if (!value.HasValue)
-        {
-            return null;
-        }
-
-        if (!double.IsFinite(value.Value) || value.Value < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Factor must be finite and non-negative.");
-        }
-
-        return value.Value;
-    }
 }
 
 /// <summary>A box that limits its size only when it is unconstrained.</summary>
@@ -832,8 +827,18 @@ public sealed class LimitedBox : SingleChildRenderObjectWidget
         double maxHeight = double.PositiveInfinity,
         Key? key = null) : base(child, key)
     {
-        MaxWidth = ValidateMax(maxWidth, nameof(maxWidth));
-        MaxHeight = ValidateMax(maxHeight, nameof(maxHeight));
+        if (Constants.KDebugMode && !(maxWidth >= 0.0))
+        {
+            throw new AssertionError("maxWidth must be non-negative.");
+        }
+
+        if (Constants.KDebugMode && !(maxHeight >= 0.0))
+        {
+            throw new AssertionError("maxHeight must be non-negative.");
+        }
+
+        MaxWidth = maxWidth;
+        MaxHeight = maxHeight;
     }
 
     /// <summary>The maximum width limit to apply in the absence of a bounded width constraint.</summary>
@@ -863,16 +868,6 @@ public sealed class LimitedBox : SingleChildRenderObjectWidget
         base.DebugFillProperties(properties);
         properties.Add(new DoubleProperty("maxWidth", MaxWidth, defaultValue: double.PositiveInfinity));
         properties.Add(new DoubleProperty("maxHeight", MaxHeight, defaultValue: double.PositiveInfinity));
-    }
-
-    private static double ValidateMax(double value, string parameterName)
-    {
-        if (double.IsNaN(value) || value < 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Max value must be non-negative.");
-        }
-
-        return value;
     }
 }
 
@@ -1060,7 +1055,12 @@ public sealed class AspectRatio : SingleChildRenderObjectWidget
 {
     public AspectRatio(double aspectRatio, Widget? child = null, Key? key = null) : base(child, key)
     {
-        Ratio = ValidateRatio(aspectRatio, nameof(aspectRatio));
+        if (Constants.KDebugMode && !(aspectRatio > 0.0))
+        {
+            throw new AssertionError("aspectRatio must be greater than zero.");
+        }
+
+        Ratio = aspectRatio;
     }
 
     /// <summary>The aspect ratio to attempt to use, expressed as width divided by height.</summary>
@@ -1084,16 +1084,6 @@ public sealed class AspectRatio : SingleChildRenderObjectWidget
         ArgumentNullException.ThrowIfNull(properties);
         base.DebugFillProperties(properties);
         properties.Add(new DoubleProperty("aspectRatio", Ratio));
-    }
-
-    private static double ValidateRatio(double value, string parameterName)
-    {
-        if (!double.IsFinite(value) || value <= 0)
-        {
-            throw new ArgumentOutOfRangeException(parameterName, "Aspect ratio must be finite and positive.");
-        }
-
-        return value;
     }
 }
 

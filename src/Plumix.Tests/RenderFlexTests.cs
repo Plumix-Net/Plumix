@@ -1149,9 +1149,20 @@ public sealed class RenderFlexTests
     }
 
     [Fact]
-    public void Spacer_RequiresAPositiveFlex()
+    public void Spacer_HasADebugOnlyPositiveFlexAssertion()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Spacer(flex: 0));
+        Spacer? spacer = null;
+        Exception? error = Record.Exception(() => spacer = new Spacer(flex: 0));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(error);
+        }
+        else
+        {
+            Assert.Null(error);
+            Assert.Equal(0, spacer!.Flex);
+        }
     }
 
     // ---------- Helpers ----------

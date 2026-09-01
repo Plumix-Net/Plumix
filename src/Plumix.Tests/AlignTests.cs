@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -126,7 +127,7 @@ public sealed class AlignTests
     }
 
     [Fact]
-    public void AlignWidget_ResolvesDirectionalAlignmentAndValidatesFactors()
+    public void AlignWidget_ResolvesDirectionalAlignmentAndUsesDebugOnlyFactorAssertions()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(new Directionality(
@@ -141,8 +142,26 @@ public sealed class AlignTests
 
         var renderAlign = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
         Assert.Equal(Alignment.TopRight, renderAlign.Alignment.Resolve(renderAlign.TextDirection));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Align(widthFactor: -0.1));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Align(heightFactor: double.NaN));
+
+        Align? negativeWidth = null;
+        Align? nanHeight = null;
+        Exception? widthError = Record.Exception(() => negativeWidth = new Align(widthFactor: -0.1));
+        Exception? heightError = Record.Exception(() => nanHeight = new Align(heightFactor: double.NaN));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(widthError);
+            Assert.IsType<AssertionError>(heightError);
+        }
+        else
+        {
+            Assert.Null(widthError);
+            Assert.Null(heightError);
+            Assert.Equal(-0.1, negativeWidth!.WidthFactor);
+            Assert.True(double.IsNaN(nanHeight!.HeightFactor!.Value));
+        }
+
+        Assert.Equal(double.PositiveInfinity, new Align(widthFactor: double.PositiveInfinity).WidthFactor);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

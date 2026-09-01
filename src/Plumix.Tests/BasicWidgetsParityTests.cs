@@ -47,7 +47,7 @@ public sealed class BasicWidgetsParityTests
     }
 
     [Fact]
-    public void Spacer_UsesAShrunkSizedBoxAndRejectsNonPositiveFlex()
+    public void Spacer_UsesAShrunkSizedBox()
     {
         IReadOnlyList<Widget> widgets = Mount(new Row(children: [new Spacer(flex: 3)]));
 
@@ -56,7 +56,6 @@ public sealed class BasicWidgetsParityTests
         SizedBox box = Assert.Single(Of<SizedBox>(widgets));
         Assert.Equal(0.0, box.Width);
         Assert.Equal(0.0, box.Height);
-        Assert.Throws<ArgumentOutOfRangeException>(() => new Spacer(flex: 0));
     }
 
     [Fact]

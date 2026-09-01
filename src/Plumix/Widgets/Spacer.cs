@@ -10,9 +10,9 @@ public sealed class Spacer : StatelessWidget
 {
     public Spacer(int flex = 1, Key? key = null) : base(key)
     {
-        if (flex <= 0)
+        if (Constants.KDebugMode && !(flex > 0))
         {
-            throw new ArgumentOutOfRangeException(nameof(flex), "Flex must be greater than zero.");
+            throw new AssertionError("flex must be greater than zero.");
         }
 
         Flex = flex;

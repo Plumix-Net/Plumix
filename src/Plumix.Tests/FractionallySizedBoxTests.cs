@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
@@ -90,9 +91,31 @@ public sealed class FractionallySizedBoxTests
     }
 
     [Fact]
-    public void FractionallySizedBox_Throws_ForNegativeFactor()
+    public void FractionallySizedBox_HasDebugOnlyFactorAssertions()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new FractionallySizedBox(widthFactor: -0.1));
+        FractionallySizedBox? negativeWidth = null;
+        FractionallySizedBox? nanHeight = null;
+        Exception? widthError = Record.Exception(
+            () => negativeWidth = new FractionallySizedBox(widthFactor: -0.1));
+        Exception? heightError = Record.Exception(
+            () => nanHeight = new FractionallySizedBox(heightFactor: double.NaN));
+
+        if (Constants.KDebugMode)
+        {
+            Assert.IsType<AssertionError>(widthError);
+            Assert.IsType<AssertionError>(heightError);
+        }
+        else
+        {
+            Assert.Null(widthError);
+            Assert.Null(heightError);
+            Assert.Equal(-0.1, negativeWidth!.WidthFactor);
+            Assert.True(double.IsNaN(nanHeight!.HeightFactor!.Value));
+        }
+
+        Assert.Equal(
+            double.PositiveInfinity,
+            new FractionallySizedBox(widthFactor: double.PositiveInfinity).WidthFactor);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
