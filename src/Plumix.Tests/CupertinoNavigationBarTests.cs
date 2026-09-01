@@ -632,6 +632,51 @@ public sealed class CupertinoNavigationBarTests : IDisposable
     }
 
     [Fact]
+    public void Transition_UsesTheRouteAnimationForHeroSubcurves()
+    {
+        var viewportSize = new Size(400, 600);
+        NavigatorState? navigatorState = null;
+        using var harness = new WidgetRenderHarness(Wrap(new Navigator(
+            initialRoute: BuildRoute("Home", "home-content", captureState: state => navigatorState = state))));
+        harness.Pump(viewportSize);
+
+        CupertinoPageRoute<object?> destination = BuildRoute("Second", "second-content");
+        navigatorState!.Push(destination);
+        harness.Pump(viewportSize);
+        PumpHeroTransitionFrame(harness, viewportSize);
+
+        NavigationBarTransition pushTransition = Assert.Single(harness.FindWidgets<NavigationBarTransition>());
+        var pushHeroAnimation = Assert.IsType<CurvedAnimation>(pushTransition.Animation);
+        Assert.Same(destination.Animation, pushHeroAnimation.Parent);
+        Assert.Same(
+            destination.Animation,
+            new NavigationBarComponentsTransition(
+                animation: pushTransition.Animation,
+                bottomNavBar: pushTransition.BottomNavBar,
+                topNavBar: pushTransition.TopNavBar,
+                directionality: TextDirection.Ltr).RouteAnimation);
+
+        AdvanceHeroTransition(harness, viewportSize);
+
+        navigatorState.Pop();
+        harness.Pump(viewportSize);
+        PumpHeroTransitionFrame(harness, viewportSize);
+
+        NavigationBarTransition popTransition = Assert.Single(harness.FindWidgets<NavigationBarTransition>());
+        var popHeroAnimation = Assert.IsType<CurvedAnimation>(popTransition.Animation);
+        Assert.Same(destination.Animation, popHeroAnimation.Parent);
+        Assert.Same(
+            destination.Animation,
+            new NavigationBarComponentsTransition(
+                animation: popTransition.Animation,
+                bottomNavBar: popTransition.BottomNavBar,
+                topNavBar: popTransition.TopNavBar,
+                directionality: TextDirection.Ltr).RouteAnimation);
+
+        AdvanceHeroTransition(harness, viewportSize);
+    }
+
+    [Fact]
     public void Transition_LongPreviousTitleTurnsIntoBack()
     {
         var viewportSize = new Size(400, 600);
@@ -722,7 +767,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
         }
     }
 
-    private static Route BuildRoute(
+    private static CupertinoPageRoute<object?> BuildRoute(
         string title,
         string content,
         bool fullscreenDialog = false,
