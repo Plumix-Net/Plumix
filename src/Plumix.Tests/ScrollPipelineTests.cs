@@ -892,7 +892,7 @@ public sealed class ScrollPipelineTests
         var indices = new List<int>();
         for (var child = sliverList.FirstChild; child != null; child = sliverList.ChildAfter(child))
         {
-            indices.Add(((SliverMultiBoxAdaptorParentData)child.parentData!).Index);
+            indices.Add(((SliverMultiBoxAdaptorParentData)child.parentData!).Index!.Value);
         }
 
         return indices;
@@ -1984,16 +1984,16 @@ public sealed class ScrollPipelineTests
             _owner = owner;
         }
 
-        public bool CreateChild(int index, RenderBox? after)
+        public void CreateChild(int index, RenderBox? after)
         {
             if (index >= _childCount)
             {
-                return false;
+                return;
             }
 
             if (_childrenByIndex.ContainsKey(index))
             {
-                return true;
+                return;
             }
 
             var child = new FixedSizeBox(new Size(100, _childExtent));
@@ -2009,7 +2009,7 @@ public sealed class ScrollPipelineTests
                 parentData.KeepAlive = _keepAliveIndices.Contains(index);
             }
 
-            return true;
+            return;
         }
 
         public void RemoveChild(RenderBox child)
@@ -2086,16 +2086,16 @@ public sealed class ScrollPipelineTests
             _owner = owner;
         }
 
-        public bool CreateChild(int index, RenderBox? after)
+        public void CreateChild(int index, RenderBox? after)
         {
             if (index < 0 || index >= _childCount)
             {
-                return false;
+                return;
             }
 
             if (_childrenByIndex.ContainsKey(index))
             {
-                return true;
+                return;
             }
 
             double extent = Math.Max(0, _extentForIndex(index));
@@ -2103,7 +2103,7 @@ public sealed class ScrollPipelineTests
             _childrenByIndex[index] = child;
             _indexByChild[child] = index;
             _owner.Insert(child, after);
-            return true;
+            return;
         }
 
         public void RemoveChild(RenderBox child)

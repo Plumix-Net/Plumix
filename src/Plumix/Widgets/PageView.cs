@@ -655,7 +655,7 @@ public sealed class PageView : StatefulWidget
 
     /// <summary>Dart parity: <c>PageView.builder</c>.</summary>
     public static PageView Builder(
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         int? itemCount = null,
         ChildIndexGetter? findChildIndexCallback = null,
         PageController? controller = null,

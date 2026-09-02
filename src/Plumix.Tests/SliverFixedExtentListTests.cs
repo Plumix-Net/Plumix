@@ -396,11 +396,11 @@ public sealed class SliverFixedExtentListTests
             _renderObject = renderObject;
         }
 
-        public bool CreateChild(int index, RenderBox? after)
+        public void CreateChild(int index, RenderBox? after)
         {
             if (index < 0 || index >= _children.Count)
             {
-                return false;
+                return;
             }
 
             try
@@ -413,7 +413,7 @@ public sealed class SliverFixedExtentListTests
                 _currentlyUpdatingChildIndex = null;
             }
 
-            return true;
+            return;
         }
 
         public void RemoveChild(RenderBox child) => _renderObject!.Remove(child);
@@ -464,15 +464,15 @@ public sealed class SliverFixedExtentListTests
             _child = child;
         }
 
-        public bool CreateChild(int index, RenderBox? after)
+        public void CreateChild(int index, RenderBox? after)
         {
             if (index != 0 || _child is null)
             {
-                return false;
+                return;
             }
 
             _renderObject!.Insert(_child, after);
-            return true;
+            return;
         }
 
         public void RemoveChild(RenderBox child)

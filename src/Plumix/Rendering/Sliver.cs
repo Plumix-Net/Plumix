@@ -683,7 +683,7 @@ public interface IRenderSliverBoxChildManager
     /// <see cref="SliverChildDelegate.EstimatedChildCount"/>.</remarks>
     int? EstimatedChildCount => null;
 
-    bool CreateChild(int index, RenderBox? after);
+    void CreateChild(int index, RenderBox? after);
 
     void RemoveChild(RenderBox child);
 
@@ -752,14 +752,27 @@ public sealed class SliverLogicalParentData : ContainerBoxParentData<RenderSlive
 
 public class SliverMultiBoxAdaptorParentData : ContainerBoxParentData<RenderBox>
 {
-    public int Index { get; set; }
-    public double LayoutOffset { get; set; }
+    /// <summary>
+    /// The index of this child according to the <see cref="IRenderSliverBoxChildManager"/>, or null
+    /// before the manager has adopted the child.
+    /// </summary>
+    public int? Index { get; set; }
+
+    /// <summary>
+    /// The position of the child relative to the zero scroll offset, along the main axis, or null
+    /// when the child has not been laid out at this offset yet — which is how a child that the
+    /// delegate reordered is marked for collection at the start of the next layout.
+    /// </summary>
+    public double? LayoutOffset { get; set; }
+
     public bool KeepAlive { get; set; }
+
     public bool KeptAlive { get; set; }
 
     /// <inheritdoc />
     public override string ToString() =>
-        $"index={Index}; {(KeepAlive ? "keepAlive; " : string.Empty)}{base.ToString()}";
+        $"index={(Index is null ? "null" : Index.Value.ToString(CultureInfo.InvariantCulture))}; "
+        + $"{(KeepAlive ? "keepAlive; " : string.Empty)}{base.ToString()}";
 }
 
 public sealed class SliverGridParentData : SliverMultiBoxAdaptorParentData
@@ -2280,7 +2293,9 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
 {
     private readonly RenderBoxContainerDefaultsMixin<RenderBox, SliverMultiBoxAdaptorParentData> _container;
     private readonly Dictionary<int, RenderBox> _keepAliveBucket = [];
+    private readonly List<RenderBox> _debugDanglingKeepAlives = [];
     private IRenderSliverBoxChildManager? _childManager;
+    private bool _debugChildIntegrityEnabled = true;
 
     protected RenderSliverMultiBoxAdaptor(IRenderSliverBoxChildManager? childManager = null)
     {
@@ -2303,58 +2318,117 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         }
     }
 
+    /// <summary>
+    /// Whether the child-integrity check is enabled. Setting it immediately performs the check.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor.debugChildIntegrityEnabled</c>. The check verifies
+    /// that the child indices in the child list are in ascending order, and that <see cref="Move"/>
+    /// left no dangling kept-alive child behind. It has no effect in release builds.
+    /// </remarks>
+    public bool DebugChildIntegrityEnabled
+    {
+        get => _debugChildIntegrityEnabled;
+        set
+        {
+            if (!Constants.KDebugMode)
+            {
+                return;
+            }
+
+            _debugChildIntegrityEnabled = value;
+            Debug.Assert(DebugVerifyChildOrder());
+            Debug.Assert(!_debugChildIntegrityEnabled || _debugDanglingKeepAlives.Count == 0);
+        }
+    }
+
     public int ChildCount => _container.ChildCount;
 
     public RenderBox? FirstChild => _container.FirstChild;
 
     public RenderBox? LastChild => _container.LastChild;
 
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor.adoptChild</c>: a child that is being revived out of
+    /// the keep-alive bucket keeps the index it was cached under, so the child manager is not told
+    /// about it again.
+    /// </remarks>
+    public override void AdoptChild(RenderObject child)
+    {
+        base.AdoptChild(child);
+        var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
+        if (!childParentData.KeptAlive)
+        {
+            _childManager?.DidAdoptChild((RenderBox)child);
+        }
+    }
+
     public void Insert(RenderBox child, RenderBox? after = null)
     {
+        Debug.Assert(!_keepAliveBucket.ContainsValue(child));
         SetupParentData(child);
-        var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
-        childParentData.KeptAlive = false;
         _container.Insert(child, after);
-        _childManager?.DidAdoptChild(child);
+        Debug.Assert(FirstChild is not null);
+        Debug.Assert(DebugVerifyChildOrder());
     }
 
     public void Move(RenderBox child, RenderBox? after = null)
     {
+        // Two scenarios. A child that is not kept alive still sits in the container's child list, so
+        // the move relinks it and the manager updates the slot. A kept-alive child is no longer in
+        // that list but may sit in the keep-alive bucket, whose key has to move with it.
         var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
         if (!childParentData.KeptAlive)
         {
             _container.Move(child, after);
             _childManager?.DidAdoptChild(child);
+
+            // The slot may change even when the position does not, so the layout still has to re-run.
             MarkNeedsLayout();
             return;
         }
 
-        if (_keepAliveBucket.TryGetValue(childParentData.Index, out var cachedChild) && ReferenceEquals(cachedChild, child))
+        // If the child in the bucket is not this child, someone has already moved and replaced it,
+        // and this child must not be removed.
+        if (_keepAliveBucket.TryGetValue(childParentData.Index!.Value, out RenderBox? cachedChild)
+            && ReferenceEquals(cachedChild, child))
         {
-            _keepAliveBucket.Remove(childParentData.Index);
+            _keepAliveBucket.Remove(childParentData.Index!.Value);
+        }
+
+        if (Constants.KDebugMode)
+        {
+            _debugDanglingKeepAlives.Remove(child);
         }
 
         _childManager?.DidAdoptChild(child);
-        _keepAliveBucket[childParentData.Index] = child;
+        if (Constants.KDebugMode
+            && _keepAliveBucket.TryGetValue(childParentData.Index!.Value, out RenderBox? displaced))
+        {
+            _debugDanglingKeepAlives.Add(displaced);
+        }
+
+        _keepAliveBucket[childParentData.Index!.Value] = child;
         MarkNeedsLayout();
     }
 
     public void Remove(RenderBox child)
     {
         var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
-        if (childParentData.KeptAlive)
+        if (!childParentData.KeptAlive)
         {
-            if (_keepAliveBucket.TryGetValue(childParentData.Index, out var cachedChild) && ReferenceEquals(cachedChild, child))
-            {
-                _keepAliveBucket.Remove(childParentData.Index);
-            }
-
-            DropChild(child);
-            childParentData.KeptAlive = false;
+            _container.Remove(child);
             return;
         }
 
-        _container.Remove(child);
+        Debug.Assert(_keepAliveBucket[childParentData.Index!.Value] == child);
+        if (Constants.KDebugMode)
+        {
+            _debugDanglingKeepAlives.Remove(child);
+        }
+
+        _keepAliveBucket.Remove(childParentData.Index!.Value);
+        DropChild(child);
     }
 
     void IRenderObjectContainer.Insert(RenderObject child, RenderObject? after)
@@ -2387,7 +2461,16 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         _container.AddAll(children);
     }
 
-    public void RemoveAll() => _container.RemoveAll();
+    public void RemoveAll()
+    {
+        _container.RemoveAll();
+        foreach (RenderBox child in _keepAliveBucket.Values)
+        {
+            DropChild(child);
+        }
+
+        _keepAliveBucket.Clear();
+    }
 
     public override void SetupParentData(RenderObject child)
     {
@@ -2452,18 +2535,14 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         return axis == Axis.Vertical ? child.Size.Height : child.Size.Width;
     }
 
-    protected int IndexOf(RenderBox child)
-    {
-        return ((SliverMultiBoxAdaptorParentData)child.parentData!).Index;
-    }
-
     /// <summary>
-    /// The typed sibling of <see cref="ChildScrollOffset(RenderObject)"/>. Every child of an adaptor
-    /// sliver is laid out, so this never has to report a null offset.
+    /// The index of the given child, as given by <see cref="SliverMultiBoxAdaptorParentData.Index"/>.
     /// </summary>
-    protected double ChildScrollOffset(RenderBox child)
+    public int IndexOf(RenderBox child)
     {
-        return ((SliverMultiBoxAdaptorParentData)child.parentData!).LayoutOffset;
+        var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
+        Debug.Assert(childParentData.Index is not null);
+        return childParentData.Index!.Value;
     }
 
     public override double? ChildScrollOffset(RenderObject child)
@@ -2484,69 +2563,104 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
     /// <remarks>Flutter's <c>RenderSliverMultiBoxAdaptor._debugAssertChildListLocked</c>.</remarks>
     private bool DebugAssertChildListLocked() => _childManager?.DebugAssertChildListLocked() ?? true;
 
-    protected bool AddInitialChild(int index = 0, double layoutOffset = 0)
+    /// <summary>Verifies that the child-list indices are in strictly increasing order.</summary>
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor._debugVerifyChildOrder</c>; always returns true and
+    /// has no effect in release builds.
+    /// </remarks>
+    private bool DebugVerifyChildOrder()
     {
-        Debug.Assert(DebugAssertChildListLocked());
-        if (FirstChild != null)
+        if (!_debugChildIntegrityEnabled)
         {
             return true;
         }
 
-        if (!CreateOrObtainChild(index, after: null) || FirstChild == null)
+        RenderBox? child = FirstChild;
+        while (child is not null)
         {
-            _childManager?.SetDidUnderflow(true);
-            return false;
+            int index = IndexOf(child);
+            child = ChildAfter(child);
+            Debug.Assert(child is null || IndexOf(child) > index);
         }
 
-        var firstChildParentData = (SliverMultiBoxAdaptorParentData)FirstChild.parentData!;
-        firstChildParentData.LayoutOffset = layoutOffset;
         return true;
     }
 
-    protected RenderBox? InsertAndLayoutLeadingChild(BoxConstraints childConstraints)
+    /// <summary>
+    /// Asserts that the reified child list is not empty and has a contiguous sequence of indices.
+    /// </summary>
+    /// <remarks>Flutter's <c>debugAssertChildListIsNonEmptyAndContiguous</c>; always returns true.</remarks>
+    public bool DebugAssertChildListIsNonEmptyAndContiguous()
     {
-        Debug.Assert(DebugAssertChildListLocked());
-        if (FirstChild == null)
+        if (!Constants.KDebugMode)
         {
-            return null;
+            return true;
         }
 
-        int index = IndexOf(FirstChild) - 1;
-        if (index < 0)
+        Debug.Assert(FirstChild is not null);
+        int index = IndexOf(FirstChild!);
+        RenderBox? child = ChildAfter(FirstChild!);
+        while (child is not null)
         {
-            _childManager?.SetDidUnderflow(true);
-            return null;
+            index += 1;
+            Debug.Assert(IndexOf(child) == index);
+            child = ChildAfter(child);
         }
 
-        if (!CreateOrObtainChild(index, after: null) || FirstChild == null || IndexOf(FirstChild) != index)
-        {
-            _childManager?.SetDidUnderflow(true);
-            return null;
-        }
-
-        FirstChild.Layout(childConstraints, parentUsesSize: true);
-        return FirstChild;
+        return true;
     }
 
-    protected RenderBox? InsertAndLayoutChild(BoxConstraints childConstraints, RenderBox after)
+    protected bool AddInitialChild(int index = 0, double layoutOffset = 0)
     {
         Debug.Assert(DebugAssertChildListLocked());
-        int index = IndexOf(after) + 1;
-        if (!CreateOrObtainChild(index, after))
+        Debug.Assert(FirstChild is null);
+        CreateOrObtainChild(index, after: null);
+        if (FirstChild is not null)
         {
-            _childManager?.SetDidUnderflow(true);
-            return null;
+            Debug.Assert(ReferenceEquals(FirstChild, LastChild));
+            Debug.Assert(IndexOf(FirstChild) == index);
+            var firstChildParentData = (SliverMultiBoxAdaptorParentData)FirstChild.parentData!;
+            firstChildParentData.LayoutOffset = layoutOffset;
+            return true;
         }
 
-        var child = ChildAfter(after);
-        if (child == null || IndexOf(child) != index)
+        _childManager?.SetDidUnderflow(true);
+        return false;
+    }
+
+    protected RenderBox? InsertAndLayoutLeadingChild(BoxConstraints childConstraints, bool parentUsesSize = false)
+    {
+        Debug.Assert(DebugAssertChildListLocked());
+        int index = IndexOf(FirstChild!) - 1;
+        CreateOrObtainChild(index, after: null);
+        if (FirstChild is not null && IndexOf(FirstChild) == index)
         {
-            _childManager?.SetDidUnderflow(true);
-            return null;
+            FirstChild.Layout(childConstraints, parentUsesSize: parentUsesSize);
+            return FirstChild;
         }
 
-        child.Layout(childConstraints, parentUsesSize: true);
-        return child;
+        _childManager?.SetDidUnderflow(true);
+        return null;
+    }
+
+    protected RenderBox? InsertAndLayoutChild(
+        BoxConstraints childConstraints,
+        RenderBox? after,
+        bool parentUsesSize = false)
+    {
+        Debug.Assert(DebugAssertChildListLocked());
+        Debug.Assert(after is not null);
+        int index = IndexOf(after!) + 1;
+        CreateOrObtainChild(index, after);
+        RenderBox? child = ChildAfter(after!);
+        if (child is not null && IndexOf(child) == index)
+        {
+            child.Layout(childConstraints, parentUsesSize: parentUsesSize);
+            return child;
+        }
+
+        _childManager?.SetDidUnderflow(true);
+        return null;
     }
 
     /// <summary>
@@ -2602,35 +2716,42 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
             return false;
         }
 
-        return !_keepAliveBucket.ContainsKey(childParentData.Index);
+        return childParentData.Index is not { } index || !_keepAliveBucket.ContainsKey(index);
     }
 
     protected void CollectGarbage(int leadingGarbage, int trailingGarbage)
     {
         Debug.Assert(DebugAssertChildListLocked());
-        while (leadingGarbage > 0 && FirstChild != null)
-        {
-            DestroyOrCacheChild(FirstChild);
-            leadingGarbage -= 1;
-        }
+        Debug.Assert(ChildCount >= leadingGarbage + trailingGarbage);
+        Action<SliverConstraints> body =
+            _ =>
+            {
+                while (leadingGarbage > 0)
+                {
+                    DestroyOrCacheChild(FirstChild!);
+                    leadingGarbage -= 1;
+                }
 
-        while (trailingGarbage > 0 && LastChild != null)
-        {
-            DestroyOrCacheChild(LastChild);
-            trailingGarbage -= 1;
-        }
+                while (trailingGarbage > 0)
+                {
+                    DestroyOrCacheChild(LastChild!);
+                    trailingGarbage -= 1;
+                }
 
-        if (_childManager == null || _keepAliveBucket.Count == 0)
-        {
-            return;
-        }
+                // Ask the child manager to remove the children that are no longer being kept alive.
+                // This mutates the bucket, so the list has to be prepared ahead of time.
+                foreach (RenderBox keepAliveChild in _keepAliveBucket.Values
+                             .Where(static child =>
+                                 !((SliverMultiBoxAdaptorParentData)child.parentData!).KeepAlive)
+                             .ToArray())
+                {
+                    _childManager?.RemoveChild(keepAliveChild);
+                }
 
-        foreach (var keepAliveChild in _keepAliveBucket.Values
-                     .Where(child => !((SliverMultiBoxAdaptorParentData)child.parentData!).KeepAlive)
-                     .ToArray())
-        {
-            _childManager.RemoveChild(keepAliveChild);
-        }
+                Debug.Assert(_keepAliveBucket.Values.All(static child =>
+                    ((SliverMultiBoxAdaptorParentData)child.parentData!).KeepAlive));
+            };
+        body(ConstraintsForSliver);
     }
 
     /// <remarks>
@@ -2638,9 +2759,8 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
     /// <c>invokeLayoutCallback</c>, because building or reviving a child dirties render objects while
     /// this sliver is laying itself out.
     /// </remarks>
-    private bool CreateOrObtainChild(int index, RenderBox? after)
+    private void CreateOrObtainChild(int index, RenderBox? after)
     {
-        bool created = false;
         InvokeLayoutCallback<SliverConstraints>(
             _ =>
             {
@@ -2662,43 +2782,48 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
                     keptAliveChild.parentData = parentData;
                     Insert(keptAliveChild, after);
                     parentData.KeptAlive = false;
-                    created = true;
                     return;
                 }
 
-                created = _childManager?.CreateChild(index, after) ?? false;
+                _childManager?.CreateChild(index, after);
             },
             ConstraintsForSliver);
-        return created;
     }
 
     /// <remarks>
     /// Flutter's <c>RenderSliverMultiBoxAdaptor._destroyOrCacheChild</c>, likewise wrapped in
     /// <c>invokeLayoutCallback</c>.
     /// </remarks>
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor._destroyOrCacheChild</c>. Its caller
+    /// (<see cref="CollectGarbage"/>) already runs inside <c>invokeLayoutCallback</c>, so this does
+    /// not open a second one.
+    /// </remarks>
     private void DestroyOrCacheChild(RenderBox child)
     {
-        InvokeLayoutCallback<SliverConstraints>(
-            _ =>
-            {
-                var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
-                if (childParentData.KeepAlive)
-                {
-                    Debug.Assert(!childParentData.KeptAlive);
-                    Remove(child);
-                    _keepAliveBucket[childParentData.Index] = child;
+        InvokeLayoutCallback<SliverConstraints>(_ => DestroyOrCacheChildInner(child), ConstraintsForSliver);
+    }
 
-                    // `DropChild` clears the parent data, so Dart hands the saved instance back before
-                    // re-adopting the child: the kept-alive child has to keep its index and flags.
-                    child.parentData = childParentData;
-                    AdoptChild(child);
-                    childParentData.KeptAlive = true;
-                    return;
-                }
+    private void DestroyOrCacheChildInner(RenderBox child)
+    {
+        var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
+        if (childParentData.KeepAlive)
+        {
+            Debug.Assert(!childParentData.KeptAlive);
+            Remove(child);
+            _keepAliveBucket[childParentData.Index!.Value] = child;
 
-                _childManager?.RemoveChild(child);
-            },
-            ConstraintsForSliver);
+            // `DropChild` clears the parent data, so Dart hands the saved instance back before
+            // re-adopting the child: the kept-alive child has to keep its index and flags.
+            child.parentData = childParentData;
+            base.AdoptChild(child);
+            childParentData.KeptAlive = true;
+            return;
+        }
+
+        Debug.Assert(ReferenceEquals(child.Parent, this));
+        _childManager?.RemoveChild(child);
+        Debug.Assert(child.Parent is null);
     }
 
     public void DefaultPaint(PaintingContext ctx, Point offset)
@@ -2765,195 +2890,321 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
 
     protected override void PerformSliverLayout(SliverConstraints constraints)
     {
-        var childManager = ChildManager;
-        if (childManager == null)
+        IRenderSliverBoxChildManager? childManager = ChildManager;
+        if (childManager is null)
         {
-            Geometry = default;
+            Geometry = SliverGeometry.Zero;
             return;
         }
 
         childManager.DidStartLayout();
         childManager.SetDidUnderflow(false);
 
-        if (FirstChild == null && !AddInitialChild())
-        {
-            Geometry = default;
-            childManager.DidFinishLayout();
-            return;
-        }
-
-        var firstChild = FirstChild;
-        if (firstChild == null)
-        {
-            Geometry = default;
-            childManager.SetDidUnderflow(true);
-            childManager.DidFinishLayout();
-            return;
-        }
-
-        var childConstraints = ChildConstraintsForSliver(constraints);
-        double remainingCacheExtent = constraints.RemainingCacheExtent > 0
-            ? constraints.RemainingCacheExtent
-            : constraints.RemainingPaintExtent;
-        double scrollOffset = Math.Max(0, constraints.ScrollOffset + constraints.CacheOrigin);
-        double targetEndScrollOffset = scrollOffset + Math.Max(0, remainingCacheExtent);
-
-        var earliestUsefulChild = firstChild;
-        while (ChildScrollOffset(earliestUsefulChild) > scrollOffset)
-        {
-            var oldFirstChild = earliestUsefulChild;
-            double oldFirstOffset = ChildScrollOffset(oldFirstChild);
-
-            var newLeadingChild = InsertAndLayoutLeadingChild(childConstraints);
-            if (newLeadingChild == null)
-            {
-                var anchorChild = FirstChild ?? earliestUsefulChild;
-                if (IndexOf(anchorChild) == 0)
-                {
-                    double correction = -ChildScrollOffset(anchorChild);
-                    if (Math.Abs(correction) > 0.0001)
-                    {
-                        Geometry = new SliverGeometry(ScrollOffsetCorrection: correction);
-                        return;
-                    }
-                }
-
-                break;
-            }
-
-            var newLeadingParentData = (SliverMultiBoxAdaptorParentData)newLeadingChild.parentData!;
-            newLeadingParentData.LayoutOffset = oldFirstOffset - ChildMainAxisExtent(newLeadingChild, constraints.Axis);
-            earliestUsefulChild = newLeadingChild;
-        }
-
-        earliestUsefulChild = FirstChild ?? earliestUsefulChild;
-        earliestUsefulChild.Layout(childConstraints, parentUsesSize: true);
-        var earliestUsefulParentData = (SliverMultiBoxAdaptorParentData)earliestUsefulChild.parentData!;
-        earliestUsefulParentData.offset = constraints.Axis == Axis.Vertical
-            ? new Point(0, earliestUsefulParentData.LayoutOffset - constraints.ScrollOffset)
-            : new Point(earliestUsefulParentData.LayoutOffset - constraints.ScrollOffset, 0);
-
+        double scrollOffset = constraints.ScrollOffset + constraints.CacheOrigin;
+        Debug.Assert(scrollOffset >= 0.0);
+        double remainingExtent = constraints.RemainingCacheExtent;
+        Debug.Assert(remainingExtent >= 0.0);
+        double targetEndScrollOffset = scrollOffset + remainingExtent;
+        BoxConstraints childConstraints = ChildConstraintsForSliver(constraints);
         int leadingGarbage = 0;
         int trailingGarbage = 0;
         bool reachedEnd = false;
 
-        RenderBox? child = earliestUsefulChild;
-        int index = IndexOf(child);
-        double endScrollOffset = ChildScrollOffset(child) + ChildMainAxisExtent(child, constraints.Axis);
+        // This algorithm in principle is straight-forward: find the first child that overlaps the
+        // given scrollOffset, creating more children at the top of the list if necessary, then walk
+        // down the list updating and laying out each child and adding more at the end if necessary
+        // until we have enough children to cover the entire viewport.
+        //
+        // It is complicated by one minor issue, which is that any time you update or create a child,
+        // it's possible that some of the children that haven't yet been laid out will be removed,
+        // leaving the list in an inconsistent state, and requiring that missing nodes be recreated.
+        //
+        // To keep this mess tractable, this algorithm starts from what is currently the first child,
+        // if any, and then walks up and/or down from there, so that the nodes that might get removed
+        // are always at the edges of what has already been laid out.
 
-        bool Advance()
+        // Make sure we have at least one child to start from.
+        if (FirstChild is null && !AddInitialChild())
         {
-            if (child == null)
+            // There are no children.
+            Geometry = SliverGeometry.Zero;
+            childManager.DidFinishLayout();
+            return;
+        }
+
+        // We have at least one child.
+
+        // These variables track the range of children that we have laid out. Within this range, the
+        // children have consecutive indices. Outside this range, it's possible for a child to get
+        // removed without notice.
+        RenderBox? leadingChildWithLayout = null;
+        RenderBox? trailingChildWithLayout = null;
+
+        RenderBox? earliestUsefulChild = FirstChild;
+
+        // A firstChild with null layout offset is likely a result of children reordering.
+        //
+        // We rely on firstChild to have an accurate layout offset. In the case of a null layout
+        // offset, we have to find the first child that has a valid one.
+        if (ChildScrollOffset(FirstChild!) is null)
+        {
+            int leadingChildrenWithoutLayoutOffset = 0;
+            while (earliestUsefulChild is not null && ChildScrollOffset(earliestUsefulChild) is null)
             {
-                return false;
+                earliestUsefulChild = ChildAfter(earliestUsefulChild);
+                leadingChildrenWithoutLayoutOffset += 1;
             }
 
-            var nextChild = ChildAfter(child);
-            int nextIndex = index + 1;
-            if (nextChild == null || IndexOf(nextChild) != nextIndex)
+            // We should be able to destroy children with a null layout offset safely, because they
+            // are likely outside of the viewport.
+            CollectGarbage(leadingChildrenWithoutLayoutOffset, 0);
+
+            // If we cannot find a valid layout offset, start from the initial child.
+            if (FirstChild is null && !AddInitialChild())
             {
-                nextChild = InsertAndLayoutChild(childConstraints, child);
-                if (nextChild == null)
+                // There are no children.
+                Geometry = SliverGeometry.Zero;
+                childManager.DidFinishLayout();
+                return;
+            }
+        }
+
+        // Find the last child that is at or before the scrollOffset.
+        earliestUsefulChild = FirstChild;
+        for (double earliestScrollOffset = ChildScrollOffset(earliestUsefulChild!)!.Value;
+             earliestScrollOffset > scrollOffset;
+             earliestScrollOffset = ChildScrollOffset(earliestUsefulChild!)!.Value)
+        {
+            // We have to add children before the earliestUsefulChild.
+            earliestUsefulChild = InsertAndLayoutLeadingChild(childConstraints, parentUsesSize: true);
+            if (earliestUsefulChild is null)
+            {
+                var firstChildParentData = (SliverMultiBoxAdaptorParentData)FirstChild!.parentData!;
+                firstChildParentData.LayoutOffset = 0.0;
+
+                if (scrollOffset == 0.0)
                 {
-                    return false;
+                    // InsertAndLayoutLeadingChild only lays out the children before firstChild. In
+                    // this case, nothing has been laid out, so firstChild is laid out by hand.
+                    FirstChild.Layout(childConstraints, parentUsesSize: true);
+                    earliestUsefulChild = FirstChild;
+                    leadingChildWithLayout = earliestUsefulChild;
+                    trailingChildWithLayout ??= earliestUsefulChild;
+                    break;
+                }
+
+                // We ran out of children before reaching the scroll offset. We must inform our
+                // parent that this sliver cannot fulfill its contract and that we need a scroll
+                // offset correction.
+                Geometry = new SliverGeometry(ScrollOffsetCorrection: -scrollOffset);
+                return;
+            }
+
+            double firstChildScrollOffset = earliestScrollOffset - PaintExtentOf(FirstChild!);
+
+            // firstChildScrollOffset may contain a double precision error.
+            if (firstChildScrollOffset < -Constants.PrecisionErrorTolerance)
+            {
+                // Let's assume there is no child before the first child. We will correct it on the
+                // next layout if it is not.
+                Geometry = new SliverGeometry(ScrollOffsetCorrection: -firstChildScrollOffset);
+                var firstChildParentData = (SliverMultiBoxAdaptorParentData)FirstChild!.parentData!;
+                firstChildParentData.LayoutOffset = 0.0;
+                return;
+            }
+
+            var childParentData = (SliverMultiBoxAdaptorParentData)earliestUsefulChild.parentData!;
+            childParentData.LayoutOffset = firstChildScrollOffset;
+            Debug.Assert(ReferenceEquals(earliestUsefulChild, FirstChild));
+            leadingChildWithLayout = earliestUsefulChild;
+            trailingChildWithLayout ??= earliestUsefulChild;
+        }
+
+        Debug.Assert(ChildScrollOffset(FirstChild!)!.Value > -Constants.PrecisionErrorTolerance);
+
+        // If the scroll offset is at zero, we should make sure we are actually at the beginning of
+        // the list.
+        if (scrollOffset < Constants.PrecisionErrorTolerance)
+        {
+            // We iterate from the firstChild in case the leading child has a 0 paint extent.
+            while (IndexOf(FirstChild!) > 0)
+            {
+                double earliestScrollOffset = ChildScrollOffset(FirstChild!)!.Value;
+
+                // We correct one child at a time. If there are more children before the
+                // earliestUsefulChild, we will correct it once the scroll offset reaches zero again.
+                earliestUsefulChild = InsertAndLayoutLeadingChild(childConstraints, parentUsesSize: true);
+                Debug.Assert(earliestUsefulChild is not null);
+                double firstChildScrollOffset = earliestScrollOffset - PaintExtentOf(FirstChild!);
+                var childParentData = (SliverMultiBoxAdaptorParentData)FirstChild!.parentData!;
+                childParentData.LayoutOffset = 0.0;
+
+                // We only need to correct if the leading child actually has a paint extent.
+                if (firstChildScrollOffset < -Constants.PrecisionErrorTolerance)
+                {
+                    Geometry = new SliverGeometry(ScrollOffsetCorrection: -firstChildScrollOffset);
+                    return;
                 }
             }
-            else
+        }
+
+        // At this point, earliestUsefulChild is the first child, and is a child whose scrollOffset is
+        // at or before the scrollOffset, and leadingChildWithLayout and trailingChildWithLayout are
+        // either null or cover a range of render boxes that we have laid out with the first being the
+        // same as earliestUsefulChild and the last being either at or after the scroll offset.
+        Debug.Assert(ReferenceEquals(earliestUsefulChild, FirstChild));
+        Debug.Assert(ChildScrollOffset(earliestUsefulChild!)!.Value <= scrollOffset);
+
+        // Make sure we've laid out at least one child.
+        if (leadingChildWithLayout is null)
+        {
+            earliestUsefulChild!.Layout(childConstraints, parentUsesSize: true);
+            leadingChildWithLayout = earliestUsefulChild;
+            trailingChildWithLayout = earliestUsefulChild;
+        }
+
+        // Here, earliestUsefulChild is still the first child, it's got a scrollOffset that is at or
+        // before our actual scrollOffset, and it has been laid out, and is in fact our
+        // leadingChildWithLayout. It's possible that some children beyond that one have also been
+        // laid out.
+        bool inLayoutRange = true;
+        RenderBox? child = earliestUsefulChild;
+        int index = IndexOf(child!);
+        double endScrollOffset = ChildScrollOffset(child!)!.Value + PaintExtentOf(child!);
+
+        // Returns true if we advanced, false if we have no more children. Used in two different
+        // places below, to avoid code duplication.
+        bool Advance()
+        {
+            Debug.Assert(child is not null);
+            if (ReferenceEquals(child, trailingChildWithLayout))
             {
-                nextChild.Layout(childConstraints, parentUsesSize: true);
+                inLayoutRange = false;
             }
 
-            var nextChildParentData = (SliverMultiBoxAdaptorParentData)nextChild.parentData!;
-            nextChildParentData.Index = nextIndex;
-            nextChildParentData.LayoutOffset = endScrollOffset;
-            nextChildParentData.offset = constraints.Axis == Axis.Vertical
-                ? new Point(0, nextChildParentData.LayoutOffset - constraints.ScrollOffset)
-                : new Point(nextChildParentData.LayoutOffset - constraints.ScrollOffset, 0);
+            child = ChildAfter(child!);
+            if (child is null)
+            {
+                inLayoutRange = false;
+            }
 
-            child = nextChild;
-            index = nextIndex;
-            endScrollOffset = nextChildParentData.LayoutOffset + ChildMainAxisExtent(nextChild, constraints.Axis);
+            index += 1;
+            if (!inLayoutRange)
+            {
+                if (child is null || IndexOf(child) != index)
+                {
+                    // We are missing a child. Insert it (and lay it out) if possible.
+                    child = InsertAndLayoutChild(
+                        childConstraints,
+                        after: trailingChildWithLayout,
+                        parentUsesSize: true);
+                    if (child is null)
+                    {
+                        // We have run out of children.
+                        return false;
+                    }
+                }
+                else
+                {
+                    // Lay out the child.
+                    child.Layout(childConstraints, parentUsesSize: true);
+                }
+
+                trailingChildWithLayout = child;
+            }
+
+            Debug.Assert(child is not null);
+            var childParentData = (SliverMultiBoxAdaptorParentData)child!.parentData!;
+            childParentData.LayoutOffset = endScrollOffset;
+            Debug.Assert(childParentData.Index == index);
+            endScrollOffset = ChildScrollOffset(child)!.Value + PaintExtentOf(child);
             return true;
         }
 
+        // Find the first child that ends after the scroll offset.
         while (endScrollOffset < scrollOffset)
         {
             leadingGarbage += 1;
             if (!Advance())
             {
-                reachedEnd = true;
-                if (leadingGarbage > 0)
-                {
-                    leadingGarbage -= 1;
-                }
+                Debug.Assert(leadingGarbage == ChildCount);
+                Debug.Assert(child is null);
 
+                // We want to make sure we keep the last child around so we know the end scroll offset.
+                CollectGarbage(leadingGarbage - 1, 0);
+                Debug.Assert(ReferenceEquals(FirstChild, LastChild));
+                double lastExtent = ChildScrollOffset(LastChild!)!.Value + PaintExtentOf(LastChild!);
+                PlaceChildren(constraints);
+                Geometry = new SliverGeometry(ScrollExtent: lastExtent, MaxPaintExtent: lastExtent);
+                return;
+            }
+        }
+
+        // Now find the first child that ends after our end.
+        while (endScrollOffset < targetEndScrollOffset)
+        {
+            if (!Advance())
+            {
+                reachedEnd = true;
                 break;
             }
         }
 
-        if (!reachedEnd)
+        // Finally count up all the remaining children and label them as garbage.
+        if (child is not null)
         {
-            while (endScrollOffset < targetEndScrollOffset)
-            {
-                if (!Advance())
-                {
-                    reachedEnd = true;
-                    break;
-                }
-            }
-        }
-
-        if (child != null)
-        {
-            for (var trailingChild = ChildAfter(child); trailingChild != null; trailingChild = ChildAfter(trailingChild))
+            child = ChildAfter(child);
+            while (child is not null)
             {
                 trailingGarbage += 1;
+                child = ChildAfter(child);
             }
         }
 
+        // At this point everything should be good to go, we just have to clean up the garbage and
+        // report the geometry.
         CollectGarbage(leadingGarbage, trailingGarbage);
 
-        firstChild = FirstChild;
-        if (firstChild == null)
+        Debug.Assert(DebugAssertChildListIsNonEmptyAndContiguous());
+        double estimatedMaxScrollOffset;
+        if (reachedEnd)
         {
-            Geometry = default;
-            childManager.DidFinishLayout();
-            return;
+            estimatedMaxScrollOffset = endScrollOffset;
+        }
+        else
+        {
+            estimatedMaxScrollOffset = childManager.EstimateMaxScrollOffset(
+                constraints,
+                firstIndex: IndexOf(FirstChild!),
+                lastIndex: IndexOf(LastChild!),
+                leadingScrollOffset: ChildScrollOffset(FirstChild!),
+                trailingScrollOffset: endScrollOffset);
+            Debug.Assert(estimatedMaxScrollOffset
+                >= endScrollOffset - ChildScrollOffset(FirstChild!)!.Value);
         }
 
-        int firstIndex = IndexOf(firstChild);
-        double leadingScrollOffset = ChildScrollOffset(firstChild);
-        double estimatedMaxScrollOffset = reachedEnd
-            ? endScrollOffset
-            : childManager.EstimateMaxScrollOffset(
-                constraints,
-                firstIndex: firstIndex,
-                lastIndex: IndexOf(LastChild!),
-                leadingScrollOffset: leadingScrollOffset,
-                trailingScrollOffset: endScrollOffset);
-
-        double paintExtent = CalculatePaintExtent(
-            from: leadingScrollOffset,
-            to: endScrollOffset,
-            scrollOffset: constraints.ScrollOffset,
-            remainingPaintExtent: constraints.RemainingPaintExtent);
-        double layoutExtent = Math.Min(paintExtent, constraints.ViewportMainAxisExtent);
-        double cacheExtent = CalculatePaintExtent(
-            from: leadingScrollOffset,
-            to: endScrollOffset,
-            scrollOffset: constraints.ScrollOffset + constraints.CacheOrigin,
-            remainingPaintExtent: remainingCacheExtent);
+        double paintExtent = CalculatePaintOffset(
+            constraints,
+            from: ChildScrollOffset(FirstChild!)!.Value,
+            to: endScrollOffset);
+        double cacheExtent = CalculateCacheOffset(
+            constraints,
+            from: ChildScrollOffset(FirstChild!)!.Value,
+            to: endScrollOffset);
         double targetEndScrollOffsetForPaint = constraints.ScrollOffset + constraints.RemainingPaintExtent;
 
+        PlaceChildren(constraints);
         Geometry = new SliverGeometry(
             ScrollExtent: estimatedMaxScrollOffset,
             PaintExtent: paintExtent,
-            LayoutExtent: layoutExtent,
             MaxPaintExtent: estimatedMaxScrollOffset,
             CacheExtent: cacheExtent,
-            HasVisualOverflow: endScrollOffset > targetEndScrollOffsetForPaint || constraints.ScrollOffset > 0);
 
-        // We may have started the layout while scrolled to the end, which would not expose a new child.
+            // Conservative to avoid flickering away the clip during scroll.
+            HasVisualOverflow: endScrollOffset > targetEndScrollOffsetForPaint || constraints.ScrollOffset > 0.0);
+
+        // We may have started the layout while scrolled to the end, which would not expose a new
+        // child.
         if (estimatedMaxScrollOffset == endScrollOffset)
         {
             childManager.SetDidUnderflow(true);
@@ -2962,15 +3213,29 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
         childManager.DidFinishLayout();
     }
 
-    private static double CalculatePaintExtent(
-        double from,
-        double to,
-        double scrollOffset,
-        double remainingPaintExtent)
+    /// <summary>
+    /// Writes each laid-out child's paint offset from its layout offset.
+    /// </summary>
+    /// <remarks>
+    /// Dart has no counterpart: its <c>RenderSliverMultiBoxAdaptor.paint</c> derives the paint offset
+    /// from <c>childMainAxisPosition</c> instead of reading <c>parentData.offset</c>. Plumix paints
+    /// adaptor children through the container defaults, so the offset is materialized here (see the
+    /// adaptor-paint row in <c>docs/ai/BACKLOG.md</c>).
+    /// </remarks>
+    private void PlaceChildren(SliverConstraints constraints)
     {
-        double visibleStart = Math.Max(from, scrollOffset);
-        double visibleEnd = Math.Min(to, scrollOffset + remainingPaintExtent);
-        return Math.Max(0, visibleEnd - visibleStart);
+        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
+        {
+            var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
+            if (childParentData.LayoutOffset is not { } layoutOffset)
+            {
+                continue;
+            }
+
+            childParentData.offset = constraints.Axis == Axis.Vertical
+                ? new Point(0, layoutOffset - constraints.ScrollOffset)
+                : new Point(layoutOffset - constraints.ScrollOffset, 0);
+        }
     }
 }
 

@@ -300,7 +300,7 @@ public sealed class SliverFillTests
     private static IReadOnlyList<int> ActiveIndices(RenderSliverMultiBoxAdaptor sliver)
     {
         return ActiveChildren(sliver)
-            .Select(child => ((SliverMultiBoxAdaptorParentData)child.parentData!).Index)
+            .Select(child => ((SliverMultiBoxAdaptorParentData)child.parentData!).Index!.Value)
             .ToArray();
     }
 
@@ -396,23 +396,23 @@ public sealed class SliverFillTests
             _owner = owner;
         }
 
-        public bool CreateChild(int index, RenderBox? after)
+        public void CreateChild(int index, RenderBox? after)
         {
             if (index < 0 || index >= childCount)
             {
-                return false;
+                return;
             }
 
             if (_children.ContainsKey(index))
             {
-                return true;
+                return;
             }
 
             var child = new NaturalSizeBox(new Size(10, 10));
             _children[index] = child;
             _indices[child] = index;
             _owner.Insert(child, after);
-            return true;
+            return;
         }
 
         public void RemoveChild(RenderBox child)

@@ -1620,6 +1620,16 @@ public abstract class SliverChildDelegate
     {
     }
 
+    /// <summary>
+    /// Whether a sliver that was given a new instance of this delegate class has to rebuild its
+    /// children, because the new instance represents different information than the old one.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SliverChildDelegate.shouldRebuild</c>. When it returns false, the
+    /// <see cref="Build"/> call might be optimized away.
+    /// </remarks>
+    public abstract bool ShouldRebuild(SliverChildDelegate oldDelegate);
+
     public virtual int? FindIndexByKey(Key key) => null;
 
     /// <summary>
@@ -1649,7 +1659,7 @@ internal sealed record SliverChildKey(Key Value) : LocalKey;
 
 public sealed class SliverChildBuilderDelegate : SliverChildDelegate
 {
-    private readonly IndexedWidgetBuilder _builder;
+    private readonly NullableIndexedWidgetBuilder _builder;
     private readonly int? _childCount;
     private readonly bool _addAutomaticKeepAlives;
     private readonly bool _addSemanticIndexes;
@@ -1657,7 +1667,7 @@ public sealed class SliverChildBuilderDelegate : SliverChildDelegate
     private readonly int _semanticIndexOffset;
 
     public SliverChildBuilderDelegate(
-        IndexedWidgetBuilder builder,
+        NullableIndexedWidgetBuilder builder,
         int? childCount = null,
         bool addAutomaticKeepAlives = true,
         bool addSemanticIndexes = true,
@@ -1688,6 +1698,14 @@ public sealed class SliverChildBuilderDelegate : SliverChildDelegate
         return FindChildIndexCallback(key is SliverChildKey childKey ? childKey.Value : key);
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>SliverChildBuilderDelegate.shouldRebuild</c> is unconditionally true: a new
+    /// delegate instance always re-runs the builder (which is what makes
+    /// <see cref="FindChildIndexCallback"/> run on every widget update).
+    /// </remarks>
+    public override bool ShouldRebuild(SliverChildDelegate oldDelegate) => true;
+
     public override Widget? Build(BuildContext context, int index)
     {
         if (index < 0 || (_childCount.HasValue && index >= _childCount.Value))
@@ -1695,7 +1713,12 @@ public sealed class SliverChildBuilderDelegate : SliverChildDelegate
             return null;
         }
 
-        var child = _builder(context, index);
+        Widget? child = _builder(context, index);
+        if (child is null)
+        {
+            return null;
+        }
+
         Key? key = child.Key is null ? null : new SliverChildKey(child.Key);
         Widget result = AddSemanticIndex(
             child,
@@ -1716,33 +1739,121 @@ public sealed class SliverChildListDelegate : SliverChildDelegate
     private readonly SemanticIndexCallback _semanticIndexCallback;
     private readonly int _semanticIndexOffset;
 
+    /// <summary>
+    /// Maps a child's key to its index, filled lazily by <see cref="FindIndexByKey"/>. Null for a
+    /// <see cref="Fixed"/> delegate, whose children never move.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SliverChildListDelegate._keyToIndex</c>. Dart parks the scan cursor in the same
+    /// map under the <c>null</c> key; a C# <c>Dictionary</c> takes no null key, so the cursor is
+    /// <see cref="_keyToIndexCursor"/>.
+    /// </remarks>
+    private readonly Dictionary<Key, int>? _keyToIndex;
+    private int _keyToIndexCursor;
+
     public SliverChildListDelegate(
         IReadOnlyList<Widget> children,
         bool addAutomaticKeepAlives = true,
         bool addSemanticIndexes = true,
         SemanticIndexCallback? semanticIndexCallback = null,
         int semanticIndexOffset = 0)
+        : this(children, [], addAutomaticKeepAlives, addSemanticIndexes,
+            semanticIndexCallback, semanticIndexOffset)
+    {
+    }
+
+    private SliverChildListDelegate(
+        IReadOnlyList<Widget> children,
+        Dictionary<Key, int>? keyToIndex,
+        bool addAutomaticKeepAlives,
+        bool addSemanticIndexes,
+        SemanticIndexCallback? semanticIndexCallback,
+        int semanticIndexOffset)
     {
         _children = children;
+        _keyToIndex = keyToIndex;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
         _addSemanticIndexes = addSemanticIndexes;
         _semanticIndexCallback = semanticIndexCallback ?? DefaultSemanticIndexCallback;
         _semanticIndexOffset = semanticIndexOffset;
     }
 
+    /// <summary>
+    /// A delegate for a child list that will not be mutated, so no key-to-index bookkeeping is kept
+    /// and <see cref="FindIndexByKey"/> never remaps a child.
+    /// </summary>
+    /// <remarks>Flutter's <c>SliverChildListDelegate.fixed</c>.</remarks>
+    public static SliverChildListDelegate Fixed(
+        IReadOnlyList<Widget> children,
+        bool addAutomaticKeepAlives = true,
+        bool addSemanticIndexes = true,
+        SemanticIndexCallback? semanticIndexCallback = null,
+        int semanticIndexOffset = 0)
+    {
+        return new SliverChildListDelegate(
+            children,
+            keyToIndex: null,
+            addAutomaticKeepAlives,
+            addSemanticIndexes,
+            semanticIndexCallback,
+            semanticIndexOffset);
+    }
+
+    public IReadOnlyList<Widget> Children => _children;
+
+    private bool IsConstantInstance => _keyToIndex is null;
+
     public override int? EstimatedChildCount => _children.Count;
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>SliverChildListDelegate.shouldRebuild</c>: <c>List</c> has no value equality in
+    /// Dart, so this is reference identity of the child list.
+    /// </remarks>
+    public override bool ShouldRebuild(SliverChildDelegate oldDelegate)
+    {
+        return !ReferenceEquals(_children, ((SliverChildListDelegate)oldDelegate)._children);
+    }
 
     public override int? FindIndexByKey(Key key)
     {
         Key childKey = key is SliverChildKey saltedKey ? saltedKey.Value : key;
-        for (int index = 0; index < _children.Count; index++)
+        return FindChildIndex(childKey);
+    }
+
+    /// <remarks>Flutter's <c>SliverChildListDelegate._findChildIndex</c>.</remarks>
+    private int? FindChildIndex(Key key)
+    {
+        if (IsConstantInstance)
         {
-            if (Equals(_children[index].Key, childKey))
-            {
-                return index;
-            }
+            return null;
         }
 
+        if (_keyToIndex!.TryGetValue(key, out int cached))
+        {
+            return cached;
+        }
+
+        int index = _keyToIndexCursor;
+        while (index < _children.Count)
+        {
+            Widget child = _children[index];
+            if (child.Key is not null)
+            {
+                _keyToIndex[child.Key] = index;
+            }
+
+            if (Equals(child.Key, key))
+            {
+                // Record the current index for the next call.
+                _keyToIndexCursor = index + 1;
+                return index;
+            }
+
+            index += 1;
+        }
+
+        _keyToIndexCursor = index;
         return null;
     }
 
@@ -1753,7 +1864,7 @@ public sealed class SliverChildListDelegate : SliverChildDelegate
             return null;
         }
 
-        var child = _children[index];
+        Widget child = _children[index];
         Widget result = AddSemanticIndex(
             child,
             index,
@@ -1962,14 +2073,16 @@ public abstract class SliverMultiBoxAdaptorWidget : RenderObjectWidget
 
 internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliverBoxChildManager
 {
-    private readonly SortedDictionary<int, Element> _childElements = [];
-    private readonly Dictionary<Element, int> _indexByElement = [];
-    private readonly Dictionary<RenderBox, Element> _elementByRenderObject = [];
+    private readonly SortedDictionary<int, Element?> _childElements = [];
+    private readonly bool _replaceMovedChildren;
+    private RenderBox? _currentBeforeChild;
     private int? _currentlyUpdatingChildIndex;
     private bool _didUnderflow;
 
-    public SliverMultiBoxAdaptorElement(SliverMultiBoxAdaptorWidget widget) : base(widget)
+    public SliverMultiBoxAdaptorElement(SliverMultiBoxAdaptorWidget widget, bool replaceMovedChildren = false)
+        : base(widget)
     {
+        _replaceMovedChildren = replaceMovedChildren;
     }
 
     protected SliverMultiBoxAdaptorWidget TypedWidget => (SliverMultiBoxAdaptorWidget)Widget;
@@ -2139,182 +2252,116 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
         base.OnDeactivate();
     }
 
+    /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement.update</c>: a new delegate instance only
+    /// rebuilds the children when it is of a different runtime type or says so itself.</remarks>
+    internal override void Update(Widget newWidget)
+    {
+        SliverChildDelegate oldDelegate = TypedWidget.Delegate;
+        base.Update(newWidget);
+        TypedRenderObject.ChildManager = this;
+        SliverChildDelegate newDelegate = ((SliverMultiBoxAdaptorWidget)newWidget).Delegate;
+        if (!ReferenceEquals(newDelegate, oldDelegate)
+            && (newDelegate.GetType() != oldDelegate.GetType() || newDelegate.ShouldRebuild(oldDelegate)))
+        {
+            Rebuild();
+        }
+    }
+
+    /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement.performRebuild</c>.</remarks>
     internal override void Rebuild()
     {
         base.Rebuild();
-        SyncChildWidgets();
-        TypedRenderObject.MarkNeedsLayout();
-    }
-
-    internal override void Update(Widget newWidget)
-    {
-        base.Update(newWidget);
-        TypedRenderObject.ChildManager = this;
-        SyncChildWidgets();
-        TypedRenderObject.MarkNeedsLayout();
-    }
-
-    internal override void VisitChildren(Action<Element> visitor)
-    {
-        foreach (var child in _childElements.Values)
-        {
-            visitor(child);
-        }
-    }
-
-    internal override void ForgetChild(Element child)
-    {
-        RemoveMappings(child);
-    }
-
-    internal override void Unmount()
-    {
-        foreach (var child in _childElements.Values.ToArray())
-        {
-            UnmountChild(child);
-        }
-
-        _childElements.Clear();
-        _indexByElement.Clear();
-        _elementByRenderObject.Clear();
-        base.Unmount();
-    }
-
-    public bool CreateChild(int index, RenderBox? after)
-    {
-        Debug.Assert(DebugAssertChildListLocked());
-        if (_childElements.ContainsKey(index))
-        {
-            return true;
-        }
-
-        var widget = BuildChildWidget(index, TypedWidget);
-        if (widget == null)
-        {
-            return false;
-        }
-
-        var previousElement = after != null && _elementByRenderObject.TryGetValue(after, out var mapped)
-            ? mapped
-            : PreviousElementForIndex(index);
-
-        var slot = new IndexedSlot<Element?>(index, previousElement);
-        Element? child;
-        _currentlyUpdatingChildIndex = index;
-        try
-        {
-            child = UpdateChild(null, widget, slot);
-        }
-        finally
-        {
-            _currentlyUpdatingChildIndex = null;
-        }
-
-        if (child == null)
-        {
-            return false;
-        }
-
-        AttachMappings(index, child);
-        return true;
-    }
-
-    public void RemoveChild(RenderBox child)
-    {
-        Debug.Assert(DebugAssertChildListLocked());
-        if (!_elementByRenderObject.TryGetValue(child, out var element))
-        {
-            return;
-        }
-
-        if (!_indexByElement.TryGetValue(element, out int index))
-        {
-            RemoveMappings(element);
-            DeactivateChild(element);
-            return;
-        }
-
-        RemoveMappings(element);
-        _currentlyUpdatingChildIndex = index;
-        try
-        {
-            DeactivateChild(element);
-        }
-        finally
-        {
-            _currentlyUpdatingChildIndex = null;
-        }
-    }
-
-    public void DidAdoptChild(RenderBox child)
-    {
-        if (!_elementByRenderObject.TryGetValue(child, out var element))
-        {
-            return;
-        }
-
-        if (!_indexByElement.TryGetValue(element, out int index))
-        {
-            return;
-        }
-
-        if (child.parentData is SliverMultiBoxAdaptorParentData parentData)
-        {
-            parentData.Index = index;
-        }
-    }
-
-    public void SetDidUnderflow(bool value)
-    {
-        _didUnderflow = value;
-    }
-
-    public override void InsertRenderObjectChild(RenderObject child, object? slot)
-    {
-        if (slot is not IndexedSlot<Element?> indexedSlot)
-        {
-            throw new InvalidOperationException("SliverMultiBoxAdaptorElement expects IndexedSlot.");
-        }
-
-        var renderBox = (RenderBox)child;
-        TypedRenderObject.Insert(renderBox, (RenderBox?)indexedSlot.Value?.RenderObject);
-        if (renderBox.parentData is SliverMultiBoxAdaptorParentData parentData)
-        {
-            parentData.Index = indexedSlot.Index;
-        }
-    }
-
-    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
-    {
-        if (newSlot is not IndexedSlot<Element?> indexedSlot)
-        {
-            throw new InvalidOperationException("SliverMultiBoxAdaptorElement expects IndexedSlot.");
-        }
-
-        var renderBox = (RenderBox)child;
-        TypedRenderObject.Move(renderBox, (RenderBox?)indexedSlot.Value?.RenderObject);
-        if (renderBox.parentData is SliverMultiBoxAdaptorParentData parentData)
-        {
-            parentData.Index = indexedSlot.Index;
-        }
-    }
-
-    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
-    {
-        TypedRenderObject.Remove((RenderBox)child);
-    }
-
-    private void SyncChildWidgets()
-    {
-        RemapChildrenByKey();
-
-        Debug.Assert(DebugAssertChildListLocked());
+        _currentBeforeChild = null;
         bool childrenUpdated = false;
+        Debug.Assert(_currentlyUpdatingChildIndex is null);
         try
         {
+            var newChildren = new SortedDictionary<int, Element?>();
+            var indexToLayoutOffset = new Dictionary<int, double>();
+            SliverMultiBoxAdaptorWidget adaptorWidget = TypedWidget;
+
+            void ProcessElement(int index)
+            {
+                _currentlyUpdatingChildIndex = index;
+                newChildren.TryGetValue(index, out Element? reusedChild);
+                if (_childElements.TryGetValue(index, out Element? oldChild)
+                    && oldChild is not null
+                    && !ReferenceEquals(oldChild, reusedChild))
+                {
+                    // This index has an old child that isn't used anywhere and should be deactivated.
+                    _childElements[index] = UpdateChild(oldChild, null, index);
+                    childrenUpdated = true;
+                }
+
+                Element? newChild = UpdateChild(reusedChild, BuildChildWidget(index, adaptorWidget), index);
+                if (newChild is not null)
+                {
+                    _childElements.TryGetValue(index, out Element? previousChild);
+                    childrenUpdated = childrenUpdated || !ReferenceEquals(previousChild, newChild);
+                    _childElements[index] = newChild;
+                    var parentData = (SliverMultiBoxAdaptorParentData)newChild.RenderObject!.parentData!;
+                    if (index == 0)
+                    {
+                        parentData.LayoutOffset = 0.0;
+                    }
+                    else if (indexToLayoutOffset.TryGetValue(index, out double inheritedOffset))
+                    {
+                        parentData.LayoutOffset = inheritedOffset;
+                    }
+
+                    if (!parentData.KeptAlive)
+                    {
+                        _currentBeforeChild = (RenderBox?)newChild.RenderObject;
+                    }
+                }
+                else
+                {
+                    childrenUpdated = true;
+                    _childElements.Remove(index);
+                }
+            }
+
             foreach (int index in _childElements.Keys.ToArray())
             {
-                childrenUpdated |= ProcessElement(index);
+                Element child = _childElements[index]!;
+                Key? key = child.Widget.Key;
+                int? newIndex = key is null ? null : adaptorWidget.Delegate.FindIndexByKey(key);
+                var childParentData = child.RenderObject?.parentData as SliverMultiBoxAdaptorParentData;
+
+                if (childParentData?.LayoutOffset is { } layoutOffset)
+                {
+                    indexToLayoutOffset[index] = layoutOffset;
+                }
+
+                if (newIndex is not null && newIndex.Value != index)
+                {
+                    // The layout offset of the child being moved is no longer accurate.
+                    if (childParentData is not null)
+                    {
+                        childParentData.LayoutOffset = null;
+                    }
+
+                    newChildren[newIndex.Value] = child;
+                    if (_replaceMovedChildren)
+                    {
+                        // We need to make sure the original index gets processed.
+                        newChildren.TryAdd(index, null);
+                    }
+
+                    // We do not want the remapped child to get deactivated during processElement.
+                    _childElements.Remove(index);
+                }
+                else
+                {
+                    newChildren.TryAdd(index, child);
+                }
+            }
+
+            // Moving children will temporarily violate the integrity.
+            TypedRenderObject.DebugChildIntegrityEnabled = false;
+            foreach (int index in newChildren.Keys.ToArray())
+            {
+                ProcessElement(index);
             }
 
             // An element rebuild only updates existing children. The underflow check is here to make
@@ -2322,193 +2369,196 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
             // update. By doing so, we can update the max scroll offset during the layout phase.
             // Otherwise, the layout phase may be skipped, and the scroll view may be stuck at the
             // previous max scroll offset.
+            //
+            // This logic is not needed if any existing children have been updated, because then the
+            // layout phase will not be skipped.
             if (!childrenUpdated && _didUnderflow)
             {
                 int lastKey = _childElements.Count == 0 ? -1 : _childElements.Keys.Last();
-                ProcessElement(lastKey + 1);
+                int rightBoundary = lastKey + 1;
+                _childElements.TryGetValue(rightBoundary, out Element? boundaryChild);
+                newChildren[rightBoundary] = boundaryChild;
+                ProcessElement(rightBoundary);
             }
         }
         finally
         {
             _currentlyUpdatingChildIndex = null;
+            TypedRenderObject.DebugChildIntegrityEnabled = true;
         }
     }
 
-    /// <summary>
-    /// Rebuilds the child at <paramref name="index"/> against the current delegate.
-    /// </summary>
-    /// <returns>Whether the element list changed as a result.</returns>
-    /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement.performRebuild.processElement</c>.</remarks>
-    private bool ProcessElement(int index)
+    /// <remarks>
+    /// Flutter's <c>SliverMultiBoxAdaptorElement.updateChild</c>: a rebuilt child that swapped its
+    /// render object keeps the layout offset the old one had.
+    /// </remarks>
+    internal override Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
     {
-        _currentlyUpdatingChildIndex = index;
-        try
+        var oldParentData = child?.RenderObject?.parentData as SliverMultiBoxAdaptorParentData;
+        Element? newChild = base.UpdateChild(child, newWidget, newSlot);
+        var newParentData = newChild?.RenderObject?.parentData as SliverMultiBoxAdaptorParentData;
+
+        // Preserve the old layoutOffset if the renderObject was swapped out.
+        if (!ReferenceEquals(oldParentData, newParentData)
+            && oldParentData is not null
+            && newParentData is not null)
         {
-            _childElements.TryGetValue(index, out Element? oldChild);
-            var updatedWidget = TypedWidget.Delegate.Build(new BuildContext(this), index);
-            if (updatedWidget == null)
+            newParentData.LayoutOffset = oldParentData.LayoutOffset;
+        }
+
+        return newChild;
+    }
+
+    internal override void VisitChildren(Action<Element> visitor)
+    {
+        Debug.Assert(_childElements.Values.All(static child => child is not null));
+        foreach (Element child in _childElements.Values.Select(static child => child!).ToArray())
+        {
+            visitor(child);
+        }
+    }
+
+    /// <remarks>
+    /// Flutter's <c>SliverMultiBoxAdaptorElement.forgetChild</c> asserts the slot is still
+    /// registered, because Dart only reaches it through the global-key retake path. Plumix's
+    /// <c>Element.DeactivateChild</c> also calls it, and a remapped child has already left the map
+    /// by then, so the entry is dropped only when it still points at this child.
+    /// </remarks>
+    internal override void ForgetChild(Element child)
+    {
+        if (child.Slot is int slot
+            && _childElements.TryGetValue(slot, out Element? registered)
+            && ReferenceEquals(registered, child))
+        {
+            _childElements.Remove(slot);
+        }
+
+        base.ForgetChild(child);
+    }
+
+    internal override void Unmount()
+    {
+        foreach (Element child in _childElements.Values.Select(static child => child!).ToArray())
+        {
+            UnmountChild(child);
+        }
+
+        _childElements.Clear();
+        base.Unmount();
+    }
+
+    /// <inheritdoc />
+    public void CreateChild(int index, RenderBox? after)
+    {
+        Debug.Assert(_currentlyUpdatingChildIndex is null);
+        Owner!.BuildScopeDuringLayout(
+            this,
+            () =>
             {
-                if (oldChild == null)
+                bool insertFirst = after is null;
+                Debug.Assert(insertFirst || _childElements[index - 1] is not null);
+                _currentBeforeChild = insertFirst ? null : (RenderBox?)_childElements[index - 1]!.RenderObject;
+                Element? newChild;
+                try
                 {
-                    return false;
+                    SliverMultiBoxAdaptorWidget adaptorWidget = TypedWidget;
+                    _currentlyUpdatingChildIndex = index;
+                    _childElements.TryGetValue(index, out Element? oldChild);
+                    newChild = UpdateChild(oldChild, BuildChildWidget(index, adaptorWidget), index);
+                }
+                finally
+                {
+                    _currentlyUpdatingChildIndex = null;
                 }
 
-                RemoveMappings(oldChild);
-                DeactivateChild(oldChild);
-                return true;
-            }
-
-            var slot = new IndexedSlot<Element?>(index, PreviousElementForIndex(index));
-            var updatedChild = UpdateChild(oldChild, updatedWidget, slot);
-            if (updatedChild == null)
-            {
-                if (oldChild == null)
+                if (newChild is not null)
                 {
-                    return false;
+                    _childElements[index] = newChild;
+                }
+                else
+                {
+                    _childElements.Remove(index);
+                }
+            });
+    }
+
+    /// <inheritdoc />
+    public void RemoveChild(RenderBox child)
+    {
+        int index = TypedRenderObject.IndexOf(child);
+        Debug.Assert(_currentlyUpdatingChildIndex is null);
+        Debug.Assert(index >= 0);
+        Owner!.BuildScopeDuringLayout(
+            this,
+            () =>
+            {
+                Debug.Assert(_childElements.ContainsKey(index));
+                try
+                {
+                    _currentlyUpdatingChildIndex = index;
+                    Element? result = UpdateChild(_childElements[index], null, index);
+                    Debug.Assert(result is null);
+                }
+                finally
+                {
+                    _currentlyUpdatingChildIndex = null;
                 }
 
-                RemoveMappings(oldChild);
-                return true;
-            }
-
-            if (!ReferenceEquals(updatedChild, oldChild))
-            {
-                if (oldChild != null)
-                {
-                    RemoveMappings(oldChild);
-                }
-
-                AttachMappings(index, updatedChild);
-                return true;
-            }
-
-            RefreshRenderObjectMapping(updatedChild);
-            return false;
-        }
-        finally
-        {
-            _currentlyUpdatingChildIndex = null;
-        }
+                _childElements.Remove(index);
+                Debug.Assert(!_childElements.ContainsKey(index));
+            });
     }
 
-    private void RemapChildrenByKey()
+    /// <inheritdoc />
+    public virtual void DidAdoptChild(RenderBox child)
     {
-        var moves = new List<(int OldIndex, int NewIndex, Element Child)>();
-        foreach (var (index, child) in _childElements)
-        {
-            if (child.Widget.Key is not { } key)
-            {
-                continue;
-            }
-
-            int? newIndex = TypedWidget.Delegate.FindIndexByKey(key);
-            if (newIndex.HasValue && newIndex.Value >= 0 && newIndex.Value != index)
-            {
-                moves.Add((index, newIndex.Value, child));
-            }
-        }
-
-        if (moves.Count == 0)
-        {
-            return;
-        }
-
-        var movedChildren = moves.Select(static move => move.Child).ToHashSet();
-        foreach (var move in moves)
-        {
-            _childElements.Remove(move.OldIndex);
-        }
-
-        foreach (var move in moves)
-        {
-            if (_childElements.TryGetValue(move.NewIndex, out var displaced)
-                && !movedChildren.Contains(displaced))
-            {
-                RemoveMappings(displaced);
-                DeactivateChild(displaced);
-            }
-
-            _childElements[move.NewIndex] = move.Child;
-            _indexByElement[move.Child] = move.NewIndex;
-        }
+        Debug.Assert(_currentlyUpdatingChildIndex is not null);
+        var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
+        childParentData.Index = _currentlyUpdatingChildIndex;
     }
 
-    private Element? PreviousElementForIndex(int index)
+    /// <inheritdoc />
+    public void SetDidUnderflow(bool value)
     {
-        Element? previous = null;
-        foreach (var pair in _childElements)
-        {
-            if (pair.Key >= index)
-            {
-                break;
-            }
-
-            if (IsActiveRenderListChild(pair.Value))
-            {
-                previous = pair.Value;
-            }
-        }
-
-        return previous;
+        _didUnderflow = value;
     }
 
-    private static bool IsActiveRenderListChild(Element element)
+    public override void InsertRenderObjectChild(RenderObject child, object? slot)
     {
-        if (element.RenderObject is not RenderBox renderBox)
-        {
-            return false;
-        }
-
-        if (renderBox.parentData is not SliverMultiBoxAdaptorParentData parentData)
-        {
-            return false;
-        }
-
-        return !parentData.KeptAlive;
+        Debug.Assert(Equals(_currentlyUpdatingChildIndex, slot));
+        TypedRenderObject.Insert((RenderBox)child, _currentBeforeChild);
+        Debug.Assert(Equals(slot, ((SliverMultiBoxAdaptorParentData)child.parentData!).Index));
     }
 
-    private void AttachMappings(int index, Element child)
+    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
     {
-        _childElements[index] = child;
-        _indexByElement[child] = index;
-        if (child.RenderObject is RenderBox renderBox)
-        {
-            _elementByRenderObject[renderBox] = child;
-        }
+        Debug.Assert(Equals(_currentlyUpdatingChildIndex, newSlot));
+        TypedRenderObject.Move((RenderBox)child, _currentBeforeChild);
     }
 
-    private void RemoveMappings(Element child)
+    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
     {
-        if (_indexByElement.TryGetValue(child, out int index))
-        {
-            _indexByElement.Remove(child);
-            _childElements.Remove(index);
-        }
-
-        if (child.RenderObject is RenderBox renderBox)
-        {
-            _elementByRenderObject.Remove(renderBox);
-        }
-    }
-
-    private void RefreshRenderObjectMapping(Element child)
-    {
-        foreach (var key in _elementByRenderObject.Where(pair => ReferenceEquals(pair.Value, child)).Select(pair => pair.Key).ToArray())
-        {
-            _elementByRenderObject.Remove(key);
-        }
-
-        if (child.RenderObject is RenderBox renderBox)
-        {
-            _elementByRenderObject[renderBox] = child;
-        }
+        Debug.Assert(_currentlyUpdatingChildIndex is not null);
+        TypedRenderObject.Remove((RenderBox)child);
     }
 }
+
 
 public sealed class SliverList : SliverMultiBoxAdaptorWidget
 {
     public SliverList(SliverChildDelegate @delegate, Key? key = null) : base(@delegate, key)
     {
+    }
+
+    /// <remarks>
+    /// Flutter's <c>SliverList.createElement</c> passes <c>replaceMovedChildren: true</c>: this
+    /// sliver dead-reckons its layout offsets, so a vacated index has to be re-inflated to give the
+    /// leading edge an anchor. The fixed-extent and grid slivers derive offsets from the index and
+    /// keep the default.
+    /// </remarks>
+    internal override Element CreateElement()
+    {
+        return new SliverMultiBoxAdaptorElement(this, replaceMovedChildren: true);
     }
 
     public static SliverList FromChildren(
@@ -2525,11 +2575,12 @@ public sealed class SliverList : SliverMultiBoxAdaptorWidget
 
     public static SliverList Builder(
         int childCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         bool addAutomaticKeepAlives = true,
         bool addSemanticIndexes = true,
         SemanticIndexCallback? semanticIndexCallback = null,
         int semanticIndexOffset = 0,
+        ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null)
     {
         return new SliverList(
@@ -2539,7 +2590,8 @@ public sealed class SliverList : SliverMultiBoxAdaptorWidget
                 addAutomaticKeepAlives: addAutomaticKeepAlives,
                 addSemanticIndexes: addSemanticIndexes,
                 semanticIndexCallback: semanticIndexCallback,
-                semanticIndexOffset: semanticIndexOffset),
+                semanticIndexOffset: semanticIndexOffset,
+                findChildIndexCallback: findChildIndexCallback),
             key);
     }
 
@@ -2582,12 +2634,13 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
 
     public static SliverFixedExtentList Builder(
         int childCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         double itemExtent,
         bool addAutomaticKeepAlives = true,
         bool addSemanticIndexes = true,
         SemanticIndexCallback? semanticIndexCallback = null,
         int semanticIndexOffset = 0,
+        ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null)
     {
         return new SliverFixedExtentList(
@@ -2597,7 +2650,8 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
                 addAutomaticKeepAlives: addAutomaticKeepAlives,
                 addSemanticIndexes: addSemanticIndexes,
                 semanticIndexCallback: semanticIndexCallback,
-                semanticIndexOffset: semanticIndexOffset),
+                semanticIndexOffset: semanticIndexOffset,
+                findChildIndexCallback: findChildIndexCallback),
             itemExtent,
             key);
     }
@@ -2649,7 +2703,7 @@ public sealed class SliverVariedExtentList : SliverMultiBoxAdaptorWidget
 
     public static SliverVariedExtentList Builder(
         int childCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         ItemExtentBuilder itemExtentBuilder,
         bool addAutomaticKeepAlives = true,
         ChildIndexGetter? findChildIndexCallback = null,
@@ -2713,7 +2767,7 @@ public sealed class SliverPrototypeExtentList : SliverMultiBoxAdaptorWidget
 
     public static SliverPrototypeExtentList Builder(
         int childCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         Widget prototypeItem,
         bool addAutomaticKeepAlives = true,
         ChildIndexGetter? findChildIndexCallback = null,
@@ -2758,6 +2812,18 @@ internal sealed class SliverPrototypeExtentListElement : SliverMultiBoxAdaptorEl
 
     private RenderSliverPrototypeExtentList PrototypeRenderObject =>
         (RenderSliverPrototypeExtentList)TypedRenderObject;
+
+    /// <remarks>
+    /// Flutter's <c>_SliverPrototypeExtentListElement.didAdoptChild</c>: the prototype is adopted
+    /// outside the lazy child list, so it carries no child index.
+    /// </remarks>
+    public override void DidAdoptChild(RenderBox child)
+    {
+        if (!ReferenceEquals(child, PrototypeRenderObject.PrototypeChild))
+        {
+            base.DidAdoptChild(child);
+        }
+    }
 
     protected override void OnMount()
     {
@@ -2887,16 +2953,18 @@ public sealed class SliverGrid : SliverMultiBoxAdaptorWidget
 
     public static SliverGrid Builder(
         int childCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         SliverGridDelegate gridDelegate,
         bool addAutomaticKeepAlives = true,
+        ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null)
     {
         return new SliverGrid(
             new SliverChildBuilderDelegate(
                 itemBuilder,
                 childCount,
-                addAutomaticKeepAlives: addAutomaticKeepAlives),
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                findChildIndexCallback: findChildIndexCallback),
             gridDelegate,
             key);
     }
@@ -3239,8 +3307,9 @@ public sealed class SingleChildScrollView : StatelessWidget
 public sealed class ListView : StatelessWidget
 {
     private readonly IReadOnlyList<Widget>? _children;
-    private readonly IndexedWidgetBuilder? _itemBuilder;
+    private readonly NullableIndexedWidgetBuilder? _itemBuilder;
     private readonly IndexedWidgetBuilder? _separatorBuilder;
+    private readonly ChildIndexGetter? _findChildIndexCallback;
     private readonly int _itemCount;
     private readonly double? _itemExtent;
     private readonly Thickness _padding;
@@ -3264,6 +3333,7 @@ public sealed class ListView : StatelessWidget
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         int? semanticChildCount = null,
+        ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null,
         bool shrinkWrap = false) : base(key)
     {
@@ -3296,8 +3366,9 @@ public sealed class ListView : StatelessWidget
 
     private ListView(
         int itemCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         IndexedWidgetBuilder? separatorBuilder,
+        ChildIndexGetter? findChildIndexCallback,
         Axis scrollDirection,
         bool reverse,
         ScrollController? controller,
@@ -3341,6 +3412,7 @@ public sealed class ListView : StatelessWidget
         _itemCount = itemCount;
         _itemBuilder = itemBuilder;
         _separatorBuilder = separatorBuilder;
+        _findChildIndexCallback = findChildIndexCallback;
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
@@ -3372,7 +3444,7 @@ public sealed class ListView : StatelessWidget
 
     public static ListView Builder(
         int itemCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
@@ -3386,6 +3458,7 @@ public sealed class ListView : StatelessWidget
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         int? semanticChildCount = null,
+        ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null,
         bool shrinkWrap = false)
     {
@@ -3393,6 +3466,7 @@ public sealed class ListView : StatelessWidget
             itemCount: itemCount,
             itemBuilder: itemBuilder,
             separatorBuilder: null,
+            findChildIndexCallback: findChildIndexCallback,
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
@@ -3412,7 +3486,7 @@ public sealed class ListView : StatelessWidget
 
     public static ListView Separated(
         int itemCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         IndexedWidgetBuilder separatorBuilder,
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
@@ -3426,6 +3500,7 @@ public sealed class ListView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
+        ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null,
         bool shrinkWrap = false)
     {
@@ -3433,6 +3508,7 @@ public sealed class ListView : StatelessWidget
             itemCount: itemCount,
             itemBuilder: itemBuilder,
             separatorBuilder: separatorBuilder,
+            findChildIndexCallback: findChildIndexCallback,
             semanticChildCount: null,
             scrollDirection: scrollDirection,
             reverse: reverse,
@@ -3456,10 +3532,20 @@ public sealed class ListView : StatelessWidget
         if (_itemBuilder != null)
         {
             int childCount = _itemCount;
-            IndexedWidgetBuilder effectiveItemBuilder = _itemBuilder;
+            NullableIndexedWidgetBuilder effectiveItemBuilder = _itemBuilder;
+            ChildIndexGetter? effectiveFindChildIndexCallback = _findChildIndexCallback;
 
             if (_separatorBuilder != null)
             {
+                // A separated list holds two delegate children per item, so a caller's item index
+                // has to be doubled before the delegate can use it (Dart's `ListView.separated`).
+                if (_findChildIndexCallback is { } findItemIndex)
+                {
+                    effectiveFindChildIndexCallback = key => findItemIndex(key) is { } itemIndex
+                        ? itemIndex * 2
+                        : null;
+                }
+
                 var itemBuilder = _itemBuilder;
                 var separatorBuilder = _separatorBuilder;
                 childCount = SeparatedChildCount(_itemCount);
@@ -3482,12 +3568,14 @@ public sealed class ListView : StatelessWidget
                     effectiveItemBuilder,
                     _itemExtent.Value,
                     addAutomaticKeepAlives: _addAutomaticKeepAlives,
-                    semanticIndexCallback: semanticIndexCallback)
+                    semanticIndexCallback: semanticIndexCallback,
+                    findChildIndexCallback: effectiveFindChildIndexCallback)
                 : SliverList.Builder(
                     childCount,
                     effectiveItemBuilder,
                     addAutomaticKeepAlives: _addAutomaticKeepAlives,
-                    semanticIndexCallback: semanticIndexCallback);
+                    semanticIndexCallback: semanticIndexCallback,
+                    findChildIndexCallback: effectiveFindChildIndexCallback);
         }
         else
         {
@@ -3550,7 +3638,8 @@ public sealed class GridView : StatelessWidget
 {
     private readonly SliverGridDelegate _gridDelegate;
     private readonly IReadOnlyList<Widget>? _children;
-    private readonly IndexedWidgetBuilder? _itemBuilder;
+    private readonly NullableIndexedWidgetBuilder? _itemBuilder;
+    private readonly ChildIndexGetter? _findChildIndexCallback;
     private readonly int _itemCount;
     private readonly Thickness _padding;
     private readonly bool _addAutomaticKeepAlives;
@@ -3596,7 +3685,8 @@ public sealed class GridView : StatelessWidget
     private GridView(
         SliverGridDelegate gridDelegate,
         int itemCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
+        ChildIndexGetter? findChildIndexCallback,
         Axis scrollDirection,
         bool reverse,
         ScrollController? controller,
@@ -3623,6 +3713,7 @@ public sealed class GridView : StatelessWidget
         _gridDelegate = gridDelegate ?? throw new ArgumentNullException(nameof(gridDelegate));
         _itemCount = itemCount;
         _itemBuilder = itemBuilder;
+        _findChildIndexCallback = findChildIndexCallback;
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
@@ -3652,7 +3743,7 @@ public sealed class GridView : StatelessWidget
 
     public static GridView Builder(
         int itemCount,
-        IndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder itemBuilder,
         SliverGridDelegate gridDelegate,
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
@@ -3665,12 +3756,14 @@ public sealed class GridView : StatelessWidget
         bool addAutomaticKeepAlives = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
+        ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null)
     {
         return new GridView(
             gridDelegate: gridDelegate,
             itemCount: itemCount,
             itemBuilder: itemBuilder,
+            findChildIndexCallback: findChildIndexCallback,
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
@@ -3776,7 +3869,8 @@ public sealed class GridView : StatelessWidget
                 childCount: _itemCount,
                 itemBuilder: _itemBuilder,
                 gridDelegate: _gridDelegate,
-                addAutomaticKeepAlives: _addAutomaticKeepAlives)
+                addAutomaticKeepAlives: _addAutomaticKeepAlives,
+                findChildIndexCallback: _findChildIndexCallback)
             : SliverGrid.FromChildren(
                 _children ?? [],
                 _gridDelegate,

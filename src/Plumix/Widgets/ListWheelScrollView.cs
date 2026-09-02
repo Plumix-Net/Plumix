@@ -986,7 +986,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
     public void CreateChild(int index, RenderBox? after)
     {
         BuildOwner owner = Owner ?? throw new InvalidOperationException("ListWheelElement is not attached.");
-        owner.BuildScope(this, () =>
+        owner.BuildScopeDuringLayout(this, () =>
         {
             bool insertFirst = after == null;
             Debug.Assert(insertFirst || _childElements.ContainsKey(index - 1));
@@ -1006,7 +1006,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
     public void RemoveChild(RenderBox child)
     {
         BuildOwner owner = Owner ?? throw new InvalidOperationException("ListWheelElement is not attached.");
-        owner.BuildScope(this, () =>
+        owner.BuildScopeDuringLayout(this, () =>
         {
             int index = TypedRenderObject.IndexOf(child);
             Debug.Assert(_childElements.ContainsKey(index));

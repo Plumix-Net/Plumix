@@ -253,7 +253,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
     /// <summary>
     /// Called by subclasses when they decide a render object is a child.
     /// </summary>
-    public void AdoptChild(RenderObject child)
+    public virtual void AdoptChild(RenderObject child)
     {
         EnsureNotDisposedMutation();
         Debug.Assert(child.Parent is null);

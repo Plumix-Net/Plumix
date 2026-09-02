@@ -230,6 +230,43 @@ public sealed class BuildOwner
         }
     }
 
+    /// <summary>
+    /// Runs <paramref name="callback"/> as a build scope rooted at <paramref name="context"/> from
+    /// inside a layout pass, flushing only the elements the callback itself dirtied.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>BuildOwner.buildScope</c> flushes the whole dirty list, which is safe there because
+    /// a frame builds before it lays out and nothing dirties an element in between. Plumix drains the
+    /// scheduler microtask queue at the pump boundary, so `FocusManager.MarkNeedsUpdate` and friends
+    /// can leave elements dirty when layout starts. Rebuilding one of those mid-layout re-dirties a
+    /// render subtree whose ancestor is already being laid out; that ancestor then clears its own
+    /// flag and the subtree stays dirty under a clean parent. Deferring the pre-existing entries to
+    /// the next build keeps the lazy child mutation itself faithful to Dart.
+    /// </remarks>
+    internal void BuildScopeDuringLayout(Element context, Action callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        Element[] deferred = [.. _dirty];
+        _dirty.Clear();
+        _dirtyMembership.Clear();
+        try
+        {
+            BuildScope(context, callback);
+        }
+        finally
+        {
+            foreach (Element element in deferred)
+            {
+                if (element.IsActive && ReferenceEquals(element.Owner, this) && element.Dirty
+                    && _dirtyMembership.Add(element))
+                {
+                    _dirty.Add(element);
+                    _dirtyNeedsResorting = true;
+                }
+            }
+        }
+    }
+
     private void FlushDirtyElements()
     {
         // Flutter parity (`BuildOwner.buildScope`): process the dirty list in order of increasing depth so
@@ -271,6 +308,7 @@ public sealed class BuildOwner
     {
         Scheduler.FlushMicrotasks();
         BuildScope();
+
         // Test harnesses use FlushBuild as their pump boundary. Production frame flow calls
         // BuildScope directly and drains microtasks after the frame in Scheduler.HandleFrame.
         Scheduler.FlushMicrotasks();

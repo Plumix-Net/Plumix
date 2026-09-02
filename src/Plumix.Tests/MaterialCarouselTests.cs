@@ -625,7 +625,7 @@ public sealed class MaterialCarouselTests
                 RenderBox box = (RenderBox)child;
                 var data = (SliverMultiBoxAdaptorParentData)box.parentData!;
                 geometry.Add((
-                    data.Index,
+                    data.Index!.Value,
                     axis == Axis.Horizontal ? data.offset.X : data.offset.Y,
                     axis == Axis.Horizontal ? box.Size.Width : box.Size.Height));
             }

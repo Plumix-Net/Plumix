@@ -214,7 +214,8 @@ public sealed class AnimatedListTests : IDisposable
                         new ValueKey<int>(ids[index])),
                     gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2),
                     findChildIndexCallback: childKey => childKey is ValueKey<int> valueKey
-                        ? ids.IndexOf(valueKey.Value)
+                        && ids.IndexOf(valueKey.Value) is int found and >= 0
+                        ? found
                         : null,
                     initialItemCount: ids.Count,
                     key: key),
@@ -518,7 +519,8 @@ public sealed class AnimatedListTests : IDisposable
                         ids[index],
                         new ValueKey<int>(ids[index])),
                     findChildIndexCallback: childKey => childKey is ValueKey<int> valueKey
-                        ? ids.IndexOf(valueKey.Value)
+                        && ids.IndexOf(valueKey.Value) is int found and >= 0
+                        ? found
                         : null,
                     initialItemCount: ids.Count,
                     key: key),

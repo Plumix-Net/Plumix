@@ -362,12 +362,12 @@ public sealed class RenderObjectDiagnosticsTests
         Assert.Equal("paintOffset=0, 0", new SliverPhysicalParentData().ToString());
         Assert.Equal("layoutOffset=None", new SliverLogicalParentData().ToString());
         Assert.Equal("layoutOffset=12.5", new SliverLogicalParentData { LayoutOffset = 12.5 }.ToString());
-        Assert.Equal("index=0; offset=0, 0", new SliverMultiBoxAdaptorParentData().ToString());
+        Assert.Equal("index=null; offset=0, 0", new SliverMultiBoxAdaptorParentData().ToString());
         Assert.Equal(
             "index=3; keepAlive; offset=0, 0",
             new SliverMultiBoxAdaptorParentData { Index = 3, KeepAlive = true }.ToString());
         Assert.Equal(
-            "crossAxisOffset=4; index=0; offset=0, 0",
+            "crossAxisOffset=4; index=null; offset=0, 0",
             new SliverGridParentData { CrossAxisOffset = 4 }.ToString());
         Assert.Equal("offset=0, 0; id=", new MultiChildLayoutParentData().ToString());
     }

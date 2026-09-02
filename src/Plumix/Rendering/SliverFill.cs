@@ -71,7 +71,11 @@ public class RenderSliverFillViewport : RenderSliverFixedExtentBoxAdaptor
         for (RenderBox? child = FirstChild; child != null; child = ChildAfter(child))
         {
             var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
-            double childStart = childParentData.LayoutOffset;
+            if (childParentData.LayoutOffset is not { } childStart)
+            {
+                continue;
+            }
+
             if (childStart >= visibleEnd)
             {
                 break;

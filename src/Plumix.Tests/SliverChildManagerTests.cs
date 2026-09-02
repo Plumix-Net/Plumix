@@ -379,15 +379,447 @@ public sealed class SliverChildManagerTests
         Assert.Equal(0.0, sliver.Geometry.ScrollExtent);
     }
 
-    private static IReadOnlyList<int> ActiveIndices(RenderSliverMultiBoxAdaptor sliver)
+
+    // ---------------------------------------------------------------------------------------
+    // scroll_delegate.dart / sliver.dart child-management parity: shouldRebuild, the nullable
+    // builder, the index/layout-offset nullability and the moved-child re-inflation.
+    // ---------------------------------------------------------------------------------------
+
+    /// <remarks>
+    /// `SliverChildBuilderDelegate.shouldRebuild` is unconditionally true and
+    /// `SliverChildListDelegate.shouldRebuild` compares the child list by reference (Dart's `List`
+    /// has no value equality).
+    /// </remarks>
+    [Fact]
+    public void ShouldRebuild_MatchesDartsTwoBuiltInDelegates()
     {
-        var indices = new List<int>();
-        for (var child = sliver.FirstChild; child != null; child = sliver.ChildAfter(child))
+        var builderDelegate = new SliverChildBuilderDelegate((_, _) => new SizedBox(), childCount: 2);
+        Assert.True(builderDelegate.ShouldRebuild(builderDelegate));
+        Assert.True(new SliverChildBuilderDelegate((_, _) => new SizedBox()).ShouldRebuild(builderDelegate));
+
+        List<Widget> children = [new SizedBox(height: 10)];
+        var listDelegate = new SliverChildListDelegate(children);
+        Assert.False(new SliverChildListDelegate(children).ShouldRebuild(listDelegate));
+        Assert.True(new SliverChildListDelegate([new SizedBox(height: 10)]).ShouldRebuild(listDelegate));
+    }
+
+    /// <remarks>
+    /// `SliverMultiBoxAdaptorElement.update` only rebuilds the children when the delegate instance
+    /// changed *and* either its runtime type differs or it says so itself.
+    /// </remarks>
+    [Fact]
+    public void Update_OnlyRebuildsChildrenWhenTheDelegateSaysSo()
+    {
+        var builds = new List<int>();
+        List<Widget> children =
+        [
+            new SizedBox(height: 100),
+            new SizedBox(height: 100),
+        ];
+        var sharedDelegate = new CountingChildListDelegate(children, builds);
+        StateSetter? setState = null;
+        SliverChildDelegate current = sharedDelegate;
+
+        Widget widget = new StatefulBuilder((_, stateSetter) =>
         {
-            indices.Add(((SliverMultiBoxAdaptorParentData)child.parentData!).Index);
+            setState = stateSetter;
+            return new CustomScrollView(slivers: [new SliverList(current)]);
+        });
+
+        var harness = new WidgetRenderHarness(widget);
+        harness.Pump(new Size(800, 600));
+        int initialBuilds = builds.Count;
+        Assert.True(initialBuilds > 0);
+
+        // Same instance: the gate short-circuits before shouldRebuild is even consulted.
+        setState!(() => { });
+        harness.Pump(new Size(800, 600));
+        Assert.Equal(initialBuilds, builds.Count);
+
+        // A new instance over the same list: shouldRebuild is false, so no child is rebuilt.
+        current = new CountingChildListDelegate(children, builds);
+        setState(() => { });
+        harness.Pump(new Size(800, 600));
+        Assert.Equal(initialBuilds, builds.Count);
+
+        // A new instance over a new list: shouldRebuild is true.
+        current = new CountingChildListDelegate([new SizedBox(height: 100), new SizedBox(height: 100)], builds);
+        setState(() => { });
+        harness.Pump(new Size(800, 600));
+        Assert.True(builds.Count > initialBuilds);
+    }
+
+    /// <remarks>
+    /// A `SliverChildBuilderDelegate` with no `childCount` ends where its builder first returns null;
+    /// `SliverMultiBoxAdaptorElement.childCount` then finds that end with the doubling-plus-binary
+    /// search, and the sliver stops reporting an infinite scroll extent.
+    /// </remarks>
+    [Fact]
+    public void NullChildCount_EndsWhereTheBuilderReturnsNull()
+    {
+        var probed = new List<int>();
+        var widget = new CustomScrollView(
+            slivers:
+            [
+                new SliverFixedExtentList(
+                    new SliverChildBuilderDelegate(
+                        (_, index) =>
+                        {
+                            probed.Add(index);
+                            return index >= 4 ? null : new SizedBox(height: 100);
+                        },
+                        childCount: null,
+                        addAutomaticKeepAlives: false),
+                    itemExtent: 100),
+            ]);
+
+        var harness = new WidgetRenderHarness(widget);
+        harness.Pump(new Size(800, 600));
+
+        var sliver = Assert.IsType<RenderSliverFixedExtentList>(
+            FindRenderObject<RenderSliverFixedExtentList>(harness.RenderView));
+        IRenderSliverBoxChildManager manager = Assert.IsAssignableFrom<IRenderSliverBoxChildManager>(
+            sliver.ChildManager);
+
+        Assert.Null(manager.EstimatedChildCount);
+        Assert.Equal(4, manager.ChildCount);
+        Assert.Equal(400.0, sliver.Geometry.ScrollExtent);
+
+        // The probe doubles past the end before bisecting, so it asks for indices beyond the list.
+        Assert.Contains(probed, index => index > 4);
+    }
+
+    /// <remarks>
+    /// `SliverChildBuilderDelegate.build` returns null for a negative index and for an index at or
+    /// past `childCount` without ever calling the builder.
+    /// </remarks>
+    [Fact]
+    public void BuilderDelegate_DoesNotCallTheBuilderOutOfRange()
+    {
+        var calls = new List<int>();
+        var childDelegate = new SliverChildBuilderDelegate(
+            (_, index) =>
+            {
+                calls.Add(index);
+                return new SizedBox();
+            },
+            childCount: 2);
+
+        Assert.Null(childDelegate.Build(default, -1));
+        Assert.Null(childDelegate.Build(default, 2));
+        Assert.Empty(calls);
+    }
+
+    /// <remarks>
+    /// `SliverChildListDelegate.fixed` keeps no key-to-index map, so it never remaps a child;
+    /// the growable constructor resolves keys through the lazily filled cache.
+    /// </remarks>
+    [Fact]
+    public void SliverChildListDelegate_FixedNeverRemapsWhileTheDefaultResolvesKeys()
+    {
+        List<Widget> children =
+        [
+            new SizedBox(height: 10, key: new ValueKey<int>(0)),
+            new SizedBox(height: 10, key: new ValueKey<int>(1)),
+            new SizedBox(height: 10, key: new ValueKey<int>(2)),
+        ];
+
+        var growable = new SliverChildListDelegate(children);
+        Assert.Equal(2, growable.FindIndexByKey(new ValueKey<int>(2)));
+        Assert.Equal(1, growable.FindIndexByKey(new ValueKey<int>(1)));
+        Assert.Equal(0, growable.FindIndexByKey(new ValueKey<int>(0)));
+        Assert.Null(growable.FindIndexByKey(new ValueKey<int>(9)));
+
+        // The salted key a built child carries is unwrapped before the lookup.
+        Assert.Equal(1, growable.FindIndexByKey(new SliverChildKey(new ValueKey<int>(1))));
+
+        var fixedDelegate = SliverChildListDelegate.Fixed(children);
+        Assert.Null(fixedDelegate.FindIndexByKey(new ValueKey<int>(2)));
+        Assert.Same(children, fixedDelegate.Children);
+    }
+
+    /// <remarks>
+    /// Flutter's `list_view_test.dart` "ListView.builder respects findChildIndexCallback": the
+    /// callback is not consulted on the first build, and is on the next widget update, because
+    /// `SliverChildBuilderDelegate.shouldRebuild` always forces the remap pass.
+    /// </remarks>
+    [Fact]
+    public void FindChildIndexCallback_RunsOnTheUpdateButNotOnTheFirstBuild()
+    {
+        bool called = false;
+        StateSetter? setState = null;
+        int itemCount = 10;
+
+        Widget widget = new StatefulBuilder((_, stateSetter) =>
+        {
+            setState = stateSetter;
+            return ListView.Builder(
+                itemCount: itemCount,
+                itemBuilder: (_, index) => new SizedBox(
+                    height: 100,
+                    key: new ValueKey<int>(index)),
+                findChildIndexCallback: _ =>
+                {
+                    called = true;
+                    return null;
+                });
+        });
+
+        var harness = new WidgetRenderHarness(widget);
+        harness.Pump(new Size(800, 600));
+        Assert.False(called);
+
+        itemCount = 9;
+        setState!(() => { });
+        harness.Pump(new Size(800, 600));
+        Assert.True(called);
+    }
+
+    /// <remarks>
+    /// Flutter's `sliver_list_test.dart` "SliverList should layout first child in case of child
+    /// reordering" (issue 35904): reversing a keyed two-item list keeps both children laid out.
+    /// `SliverList` is the sliver Dart builds with `replaceMovedChildren: true`, so the index a
+    /// moved child vacated is re-inflated and the leading edge keeps a valid layout offset.
+    /// </remarks>
+    [Fact]
+    public void SliverList_LaysOutTheFirstChildAfterChildReordering()
+    {
+        List<string> items = ["1", "2"];
+        StateSetter? setState = null;
+
+        Widget widget = new StatefulBuilder((_, stateSetter) =>
+        {
+            setState = stateSetter;
+            return new CustomScrollView(
+                slivers:
+                [
+                    SliverList.Builder(
+                        childCount: items.Count,
+                        itemBuilder: (_, index) => new SizedBox(
+                            height: 100,
+                            key: new ValueKey<string>(items[index])),
+                        addAutomaticKeepAlives: false,
+                        findChildIndexCallback: key => key is ValueKey<string> valueKey
+                            && items.IndexOf(valueKey.Value) is int found and >= 0
+                            ? found
+                            : null),
+                ]);
+        });
+
+        var harness = new WidgetRenderHarness(widget);
+        harness.Pump(new Size(800, 600));
+
+        var sliver = Assert.IsType<RenderSliverList>(FindRenderObject<RenderSliverList>(harness.RenderView));
+        Assert.Equal([0, 1], ActiveIndices(sliver));
+        Assert.Equal([0.0, 100.0], ActiveLayoutOffsets(sliver));
+
+        items.Reverse();
+        setState!(() => { });
+        harness.Pump(new Size(800, 600));
+
+        Assert.Equal([0, 1], ActiveIndices(sliver));
+        Assert.Equal([0.0, 100.0], ActiveLayoutOffsets(sliver));
+        Assert.Equal(200.0, sliver.Geometry.ScrollExtent);
+    }
+
+    /// <remarks>
+    /// The remap pass nulls a moved child's layout offset (`performRebuild`), and
+    /// `RenderSliverList.performLayout` collects the leading children whose offset is null before it
+    /// starts dead-reckoning — Flutter's `sliver_list_test.dart` "should recalculate inaccurate
+    /// layout offset case 2".
+    /// </remarks>
+    [Fact]
+    public void SliverList_RecalculatesAfterAMovedChildLosesItsLayoutOffset()
+    {
+        List<int> items = [.. Enumerable.Range(0, 20)];
+        StateSetter? setState = null;
+
+        Widget widget = new StatefulBuilder((_, stateSetter) =>
+        {
+            setState = stateSetter;
+            return new CustomScrollView(
+                slivers:
+                [
+                    SliverList.Builder(
+                        childCount: items.Count,
+                        itemBuilder: (_, index) => new SizedBox(
+                            height: 100,
+                            key: new ValueKey<int>(items[index])),
+                        addAutomaticKeepAlives: false,
+                        findChildIndexCallback: key => key is ValueKey<int> valueKey
+                            && items.IndexOf(valueKey.Value) is int found and >= 0
+                            ? found
+                            : null),
+                ]);
+        });
+
+        var harness = new WidgetRenderHarness(widget);
+        harness.Pump(new Size(800, 600));
+
+        var sliver = Assert.IsType<RenderSliverList>(FindRenderObject<RenderSliverList>(harness.RenderView));
+        IReadOnlyList<int> before = ActiveIndices(sliver);
+        Assert.Equal(0, before[0]);
+
+        // Swap two items so their keys move: the moved children have their layout offsets nulled.
+        (items[0], items[3]) = (items[3], items[0]);
+        setState!(() => { });
+        harness.Pump(new Size(800, 600));
+
+        Assert.Equal(before, ActiveIndices(sliver));
+        Assert.Equal(0.0, ((SliverMultiBoxAdaptorParentData)sliver.FirstChild!.parentData!).LayoutOffset);
+        Assert.All(
+            ActiveChildren(sliver),
+            child => Assert.NotNull(((SliverMultiBoxAdaptorParentData)child.parentData!).LayoutOffset));
+    }
+
+    /// <remarks>
+    /// Flutter's `sliver_list_test.dart` "SliverList should start to perform layout from the initial
+    /// child when there is no valid offset" (issue 66198): when every reified child lost its layout
+    /// offset, the null-offset garbage pass empties the child list and `addInitialChild` restarts it.
+    /// </remarks>
+    [Fact]
+    public void SliverList_RestartsFromTheInitialChildWhenNoChildHasAValidOffset()
+    {
+        var manager = new RecordingChildManager(childCount: 3, childExtent: 100);
+        var sliver = new RenderSliverList(manager);
+        manager.AttachOwner(sliver);
+
+        var viewport = new RenderViewport(
+            offset: new TestViewportOffset(),
+            scrollCacheExtent: ScrollCacheExtent.Pixels(0));
+        viewport.Insert(sliver);
+        var root = new RenderView { Child = viewport };
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+        pipeline.FlushLayout(new Size(100, 300));
+
+        Assert.Equal(3, sliver.ChildCount);
+
+        // Null every reified child's layout offset, the state `performRebuild` leaves behind when
+        // the delegate reordered all of them.
+        foreach (RenderBox child in ActiveChildren(sliver))
+        {
+            ((SliverMultiBoxAdaptorParentData)child.parentData!).LayoutOffset = null;
         }
 
-        return indices;
+        sliver.MarkNeedsLayout();
+        pipeline.FlushLayout(new Size(100, 300));
+
+        Assert.Equal(0, sliver.IndexOf(sliver.FirstChild!));
+        Assert.Equal(0.0, ((SliverMultiBoxAdaptorParentData)sliver.FirstChild!.parentData!).LayoutOffset);
+        Assert.Equal(300.0, sliver.Geometry.ScrollExtent);
+    }
+
+    /// <remarks>
+    /// Flutter's `slivers_block_test.dart` "SliverList - no zero scroll offset correction" and "no
+    /// correction when tiny double precision error": a leading layout offset within
+    /// `precisionErrorTolerance` of zero must not produce a `scrollOffsetCorrection`.
+    /// </remarks>
+    [Theory]
+    [InlineData(0.001)]
+    [InlineData(-0.0000000000001)]
+    public void SliverList_DoesNotCorrectAScrollOffsetInsideThePrecisionTolerance(double leadingOffset)
+    {
+        var manager = new RecordingChildManager(childCount: 3, childExtent: 100);
+        var sliver = new RenderSliverList(manager);
+        manager.AttachOwner(sliver);
+
+        var viewport = new RenderViewport(
+            offset: new TestViewportOffset(),
+            scrollCacheExtent: ScrollCacheExtent.Pixels(0));
+        viewport.Insert(sliver);
+        var root = new RenderView { Child = viewport };
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+        pipeline.FlushLayout(new Size(100, 300));
+
+        ((SliverMultiBoxAdaptorParentData)sliver.FirstChild!.parentData!).LayoutOffset = leadingOffset;
+        sliver.MarkNeedsLayout();
+        pipeline.FlushLayout(new Size(100, 300));
+
+        Assert.Null(sliver.Geometry.ScrollOffsetCorrection);
+    }
+
+    /// <remarks>
+    /// `RenderSliverMultiBoxAdaptor.debugChildIntegrityEnabled` verifies the child indices are in
+    /// strictly increasing order and that `move` left no dangling kept-alive child; it defaults to
+    /// true and `debugAssertChildListIsNonEmptyAndContiguous` is the layout-time contiguity check.
+    /// </remarks>
+    [Fact]
+    public void DebugChildIntegrity_IsOnByDefaultAndVerifiesTheLiveChildOrder()
+    {
+        var widget = new CustomScrollView(
+            slivers:
+            [
+                SliverList.FromChildren(
+                    [
+                        new SizedBox(height: 100),
+                        new SizedBox(height: 100),
+                        new SizedBox(height: 100),
+                    ],
+                    addAutomaticKeepAlives: false),
+            ]);
+
+        var harness = new WidgetRenderHarness(widget);
+        harness.Pump(new Size(800, 600));
+
+        var sliver = Assert.IsType<RenderSliverList>(FindRenderObject<RenderSliverList>(harness.RenderView));
+        Assert.True(sliver.DebugChildIntegrityEnabled);
+        Assert.True(sliver.DebugAssertChildListIsNonEmptyAndContiguous());
+
+        // Dart wraps the whole setter body in an `assert`, so the flag only moves in a debug build.
+        sliver.DebugChildIntegrityEnabled = false;
+        Assert.Equal(!Constants.KDebugMode, sliver.DebugChildIntegrityEnabled);
+        sliver.DebugChildIntegrityEnabled = true;
+        Assert.True(sliver.DebugChildIntegrityEnabled);
+    }
+
+    private static IReadOnlyList<RenderBox> ActiveChildren(RenderSliverMultiBoxAdaptor sliver)
+    {
+        var children = new List<RenderBox>();
+        for (RenderBox? child = sliver.FirstChild; child is not null; child = sliver.ChildAfter(child))
+        {
+            children.Add(child);
+        }
+
+        return children;
+    }
+
+    private static IReadOnlyList<int> ActiveIndices(RenderSliverMultiBoxAdaptor sliver)
+    {
+        return [.. ActiveChildren(sliver)
+            .Select(child => ((SliverMultiBoxAdaptorParentData)child.parentData!).Index!.Value)];
+    }
+
+    private static IReadOnlyList<double?> ActiveLayoutOffsets(RenderSliverMultiBoxAdaptor sliver)
+    {
+        return [.. ActiveChildren(sliver)
+            .Select(child => ((SliverMultiBoxAdaptorParentData)child.parentData!).LayoutOffset)];
+    }
+
+    /// <summary>A list delegate that records every index it builds.</summary>
+    private sealed class CountingChildListDelegate(IReadOnlyList<Widget> children, List<int> builds)
+        : SliverChildDelegate
+    {
+        public IReadOnlyList<Widget> Children => children;
+
+        public override int? EstimatedChildCount => children.Count;
+
+        public override bool ShouldRebuild(SliverChildDelegate oldDelegate)
+        {
+            return !ReferenceEquals(children, ((CountingChildListDelegate)oldDelegate).Children);
+        }
+
+        public override Widget? Build(BuildContext context, int index)
+        {
+            if (index < 0 || index >= children.Count)
+            {
+                return null;
+            }
+
+            builds.Add(index);
+            return children[index];
+        }
     }
 
     private static TRenderObject? FindRenderObject<TRenderObject>(RenderObject root)
@@ -520,7 +952,9 @@ public sealed class SliverChildManagerTests
     {
         public int ChildCount => 0;
 
-        public bool CreateChild(int index, RenderBox? after) => false;
+        public void CreateChild(int index, RenderBox? after)
+        {
+        }
 
         public void RemoveChild(RenderBox child)
         {
@@ -545,6 +979,8 @@ public sealed class SliverChildManagerTests
     /// <summary>A delegate that reports no estimated child count but is finite.</summary>
     private sealed class ProbeChildDelegate(int realCount) : SliverChildDelegate
     {
+        public override bool ShouldRebuild(SliverChildDelegate oldDelegate) => true;
+
         public int BuildCount { get; private set; }
 
         public override int? EstimatedChildCount => null;
@@ -560,6 +996,8 @@ public sealed class SliverChildManagerTests
 
     private sealed class RecordingChildDelegate(int childCount, double childExtent) : SliverChildDelegate
     {
+        public override bool ShouldRebuild(SliverChildDelegate oldDelegate) => true;
+
         public List<(int First, int Last)> Layouts { get; } = [];
 
         public override int? EstimatedChildCount => childCount;
@@ -577,6 +1015,8 @@ public sealed class SliverChildManagerTests
 
     private sealed class FixedEstimateChildDelegate(int childCount, double estimate) : SliverChildDelegate
     {
+        public override bool ShouldRebuild(SliverChildDelegate oldDelegate) => true;
+
         public override int? EstimatedChildCount => childCount;
 
         public override Widget? Build(BuildContext context, int index)
@@ -605,24 +1045,24 @@ public sealed class SliverChildManagerTests
 
         public void AttachOwner(RenderSliverMultiBoxAdaptor owner) => _owner = owner;
 
-        public bool CreateChild(int index, RenderBox? after)
+        public void CreateChild(int index, RenderBox? after)
         {
             Calls.Add("CreateChild");
             if (index < 0 || index >= childCount)
             {
-                return false;
+                return;
             }
 
             if (_childrenByIndex.ContainsKey(index))
             {
-                return true;
+                return;
             }
 
             var child = new FixedSizeBox(new Size(100, childExtent));
             _childrenByIndex[index] = child;
             _indexByChild[child] = index;
             _owner.Insert(child, after);
-            return true;
+            return;
         }
 
         public void RemoveChild(RenderBox child)

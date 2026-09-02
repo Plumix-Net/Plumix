@@ -427,7 +427,9 @@ public sealed class CarouselViewState : State
             effectiveBuilder = (itemContext, index) => BuildCarouselItem(itemContext, index);
         }
 
-        SliverChildDelegate childDelegate = new CarouselChildDelegate(effectiveBuilder, childCount);
+        SliverChildDelegate childDelegate = new SliverChildBuilderDelegate(
+            new NullableIndexedWidgetBuilder(effectiveBuilder),
+            childCount: childCount);
         if (_itemExtent is { } itemExtent)
         {
             return new SliverFixedExtentCarousel(
@@ -580,35 +582,6 @@ public sealed class CarouselViewState : State
 
             return null;
         });
-    }
-
-    /// <summary>
-    /// Dart passes a <c>NullableIndexedWidgetBuilder</c> to <c>SliverChildBuilderDelegate</c>;
-    /// Plumix's builder delegate takes a non-nullable builder, so the carousel keeps its own.
-    /// </summary>
-    private sealed class CarouselChildDelegate : SliverChildDelegate
-    {
-        private readonly CarouselItemBuilder _builder;
-        private readonly int? _childCount;
-
-        public CarouselChildDelegate(CarouselItemBuilder builder, int? childCount)
-        {
-            _builder = builder;
-            _childCount = childCount;
-        }
-
-        public override int? EstimatedChildCount => _childCount;
-
-        public override Widget? Build(BuildContext context, int index)
-        {
-            if (index < 0 || (_childCount.HasValue && index >= _childCount.Value))
-            {
-                return null;
-            }
-
-            Widget? child = _builder(context, index);
-            return child is null ? null : new AutomaticKeepAlive(child);
-        }
     }
 }
 
