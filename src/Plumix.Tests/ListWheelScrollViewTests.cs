@@ -492,6 +492,30 @@ public sealed class ListWheelScrollViewTests
         controller.Dispose();
     }
 
+    [Fact]
+    public void ListWheelScrollView_CreatesAndRemovesChildrenInsideTheElementBuildScope()
+    {
+        var builtInScope = new List<bool>();
+        var deactivatedInScope = new List<bool>();
+        var controller = new FixedExtentScrollController();
+        using var harness = Harness(new ListWheelScrollView(
+            controller: controller,
+            itemExtent: 100.0,
+            children: Enumerable.Range(0, 10)
+                .Select(_ => (Widget)new BuildScopeProbe(builtInScope, deactivatedInScope))
+                .ToArray()));
+
+        harness.Pump(Screen);
+        Assert.NotEmpty(builtInScope);
+        Assert.All(builtInScope, Assert.True);
+
+        controller.JumpToItem(9);
+        harness.Pump(Screen);
+        Assert.NotEmpty(deactivatedInScope);
+        Assert.All(deactivatedInScope, Assert.True);
+        controller.Dispose();
+    }
+
     // ------------------------------------------------------------------ paint
 
     [Fact]
@@ -1543,6 +1567,30 @@ public sealed class ListWheelScrollViewTests
 
         public void RemoveChild(RenderBox child)
         {
+        }
+    }
+
+    private sealed class BuildScopeProbe(
+        List<bool> builtInScope,
+        List<bool> deactivatedInScope) : StatefulWidget
+    {
+        public override State CreateState() => new BuildScopeProbeState(builtInScope, deactivatedInScope);
+    }
+
+    private sealed class BuildScopeProbeState(
+        List<bool> builtInScope,
+        List<bool> deactivatedInScope) : State
+    {
+        public override Widget Build(BuildContext context)
+        {
+            builtInScope.Add(context.Owner.Owner!.IsBuilding);
+            return new SizedBox();
+        }
+
+        public override void Deactivate()
+        {
+            deactivatedInScope.Add(Element.Owner!.IsBuilding);
+            base.Deactivate();
         }
     }
 

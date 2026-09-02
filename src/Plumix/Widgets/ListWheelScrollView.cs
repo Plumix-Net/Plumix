@@ -985,28 +985,36 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
 
     public void CreateChild(int index, RenderBox? after)
     {
-        bool insertFirst = after == null;
-        Debug.Assert(insertFirst || _childElements.ContainsKey(index - 1));
-        _childElements.TryGetValue(index, out Element? current);
-        Element? newChild = UpdateChild(current, RetrieveWidget(index), index);
-        if (newChild != null)
+        BuildOwner owner = Owner ?? throw new InvalidOperationException("ListWheelElement is not attached.");
+        owner.BuildScope(this, () =>
         {
-            _childElements[index] = newChild;
-        }
-        else
-        {
-            _childElements.Remove(index);
-        }
+            bool insertFirst = after == null;
+            Debug.Assert(insertFirst || _childElements.ContainsKey(index - 1));
+            _childElements.TryGetValue(index, out Element? current);
+            Element? newChild = UpdateChild(current, RetrieveWidget(index), index);
+            if (newChild != null)
+            {
+                _childElements[index] = newChild;
+            }
+            else
+            {
+                _childElements.Remove(index);
+            }
+        });
     }
 
     public void RemoveChild(RenderBox child)
     {
-        int index = TypedRenderObject.IndexOf(child);
-        Debug.Assert(_childElements.ContainsKey(index));
-        Element? result = UpdateChild(_childElements[index], null, index);
-        Debug.Assert(result == null);
-        _childElements.Remove(index);
-        Debug.Assert(!_childElements.ContainsKey(index));
+        BuildOwner owner = Owner ?? throw new InvalidOperationException("ListWheelElement is not attached.");
+        owner.BuildScope(this, () =>
+        {
+            int index = TypedRenderObject.IndexOf(child);
+            Debug.Assert(_childElements.ContainsKey(index));
+            Element? result = UpdateChild(_childElements[index], null, index);
+            Debug.Assert(result == null);
+            _childElements.Remove(index);
+            Debug.Assert(!_childElements.ContainsKey(index));
+        });
     }
 
     /// <summary>Dart's <c>ListWheelElement.updateChild</c> override: keeps the child's previous

@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- ListWheel child mutation now runs in an element-scoped build callback (`list_wheel_scroll_view.dart`).
 - Breaking: `Focus` defaults to semantics; ink/buttons merge to one node (`focus_scope.dart`, `ink_well.dart`).
 - Breaking: basic box/render-object and Spacer guards are debug-only (`basic.dart`, `proxy_box.dart`, `spacer.dart`).
 - Cupertino navigation-bar Hero sub-curves are pinned to the route animation (`nav_bar.dart`, `heroes.dart`).

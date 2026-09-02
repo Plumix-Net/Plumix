@@ -17,7 +17,11 @@ public sealed class BuildOwner
     private readonly Dictionary<GlobalKey, Element> _globalKeyRegistry = [];
 
     private bool _scheduled;
+    private bool _building;
     internal Action? OnBuildScheduled { get; set; }
+
+    /// <summary>Whether this owner is currently executing a build-scope callback or flushing dirty elements.</summary>
+    internal bool IsBuilding => _building;
 
     public void RegisterElement(Element element)
     {
@@ -118,7 +122,7 @@ public sealed class BuildOwner
             _dirtyNeedsResorting = true;
         }
 
-        if (_scheduled)
+        if (_scheduled || _building)
         {
             return;
         }
@@ -168,10 +172,66 @@ public sealed class BuildOwner
 
     internal void BuildScope()
     {
+        if (_building)
+        {
+            throw new InvalidOperationException("BuildOwner.buildScope must not be re-entered.");
+        }
+
         _scheduled = false;
 
         using IDisposable buildPhase = Scheduler.BuildScope();
 
+        _building = true;
+        try
+        {
+            FlushDirtyElements();
+            FinalizeInactiveElements();
+        }
+        finally
+        {
+            _building = false;
+        }
+    }
+
+    /// <summary>
+    /// Establishes <paramref name="context"/> as the target of a build-scope callback, then flushes
+    /// elements dirtied by that callback.
+    /// </summary>
+    /// <remarks>Flutter's <c>BuildOwner.buildScope(Element, [VoidCallback])</c>.</remarks>
+    internal void BuildScope(Element context, Action? callback = null)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (!ReferenceEquals(context.Owner, this))
+        {
+            throw new InvalidOperationException("The build-scope context belongs to a different BuildOwner.");
+        }
+
+        if (callback == null && _dirty.Count == 0)
+        {
+            return;
+        }
+
+        if (_building)
+        {
+            throw new InvalidOperationException("BuildOwner.buildScope must not be re-entered.");
+        }
+
+        _scheduled = false;
+        using IDisposable buildPhase = Scheduler.BuildScope();
+        _building = true;
+        try
+        {
+            callback?.Invoke();
+            FlushDirtyElements();
+        }
+        finally
+        {
+            _building = false;
+        }
+    }
+
+    private void FlushDirtyElements()
+    {
         // Flutter parity (`BuildOwner.buildScope`): process the dirty list in order of increasing depth so
         // parents rebuild before children; elements cleaned by an ancestor's rebuild are skipped via the
         // Dirty check instead of rebuilding twice. The list is re-sorted whenever it grew or an element was
@@ -205,7 +265,6 @@ public sealed class BuildOwner
 
         _dirty.Clear();
         _dirtyMembership.Clear();
-        FinalizeInactiveElements();
     }
 
     internal void FlushBuild()

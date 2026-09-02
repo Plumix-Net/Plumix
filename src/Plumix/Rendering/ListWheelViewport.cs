@@ -1093,12 +1093,6 @@ public class RenderListWheelViewport : RenderBox, IContainerRenderObjectMixin<Re
         return result;
     }
 
-    /// <summary>
-    /// Flutter's <c>PaintingContext.pushTransform(needsCompositing, offset, transform, painter)</c>
-    /// applies <paramref name="transform"/> around <paramref name="offset"/>; Plumix's context takes
-    /// the effective matrix, so the translation sandwich is folded in here.
-    /// </summary>
-
     private static bool DebugAssertValidHitTestOffsets(string context, Point offset1, Point offset2)
     {
         if (offset1 != offset2)
