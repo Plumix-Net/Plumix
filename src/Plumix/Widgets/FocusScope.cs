@@ -35,7 +35,7 @@ public class Focus : StatefulWidget
         string? debugLabel = null,
         Key? key = null) : this(
             child: child,
-            includeSemantics: false,
+            includeSemantics: true,
             focusNode: focusNode,
             parentNode: parentNode,
             autofocus: autofocus,
@@ -148,7 +148,7 @@ public class Focus : StatefulWidget
         FocusNode? parentNode = null,
         bool autofocus = false,
         Action<bool>? onFocusChange = null,
-        bool includeSemantics = false,
+        bool includeSemantics = true,
         Key? key = null)
     {
         ArgumentNullException.ThrowIfNull(focusNode);
@@ -199,7 +199,7 @@ internal sealed class FocusWithExternalFocusNode : Focus
         FocusNode? parentNode = null,
         bool autofocus = false,
         Action<bool>? onFocusChange = null,
-        bool includeSemantics = false,
+        bool includeSemantics = true,
         Key? key = null) : base(
             child: child,
             includeSemantics: includeSemantics,
@@ -403,7 +403,9 @@ internal class FocusState : State
 
             child = new Semantics(child: child, flags: flags)
             {
-                OnFocus = _couldRequestFocus ? RequestSemanticFocus : null,
+                OnFocus = PlatformDefaults.TargetPlatform != TargetPlatform.IOS && _couldRequestFocus
+                    ? RequestSemanticFocus
+                    : null,
             };
         }
 
@@ -444,7 +446,7 @@ public class FocusScope : Focus
         bool? descendantsAreTraversable = null,
         Action<bool>? onFocusChange = null,
         FocusOnKeyEventCallback? onKeyEvent = null,
-        bool includeSemantics = false,
+        bool includeSemantics = true,
         string? debugLabel = null,
         Key? key = null) : base(
             child: child,
@@ -472,7 +474,7 @@ public class FocusScope : Focus
         Widget child,
         FocusNode? parentNode = null,
         bool autofocus = false,
-        bool includeSemantics = false,
+        bool includeSemantics = true,
         Action<bool>? onFocusChange = null,
         Key? key = null)
     {
@@ -511,7 +513,7 @@ internal sealed class FocusScopeWithExternalFocusNode : FocusScope
         FocusScopeNode focusScopeNode,
         FocusNode? parentNode = null,
         bool autofocus = false,
-        bool includeSemantics = false,
+        bool includeSemantics = true,
         Action<bool>? onFocusChange = null,
         Key? key = null) : base(
             child: child,

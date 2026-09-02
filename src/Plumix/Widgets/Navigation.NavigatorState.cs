@@ -198,6 +198,7 @@ public sealed partial class NavigatorState : RestorationState
                     focusNode: FocusNode,
                     autofocus: true,
                     skipTraversal: true,
+                    includeSemantics: false,
                     child: new UnmanagedRestorationScope(
                         bucket: Bucket,
                         child: new Overlay(

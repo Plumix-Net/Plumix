@@ -568,13 +568,14 @@ public sealed class MaterialNavigationSurfacesTests
             node => node.Label?.Contains("Explore\nTab 2 of 3", StringComparison.Ordinal) == true);
         Assert.NotNull(selectedNode);
         Assert.True(selectedNode!.Flags.HasFlag(SemanticsFlags.IsSelected));
-        Assert.True(selectedNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(selectedNode.Flags.HasFlag(SemanticsFlags.HasEnabledState));
         Assert.True(selectedNode.Actions.HasFlag(SemanticsActions.Tap));
 
         var disabledNode = FindSemantics(root,
             node => node.Label?.Contains("Disabled\nTab 3 of 3", StringComparison.Ordinal) == true);
         Assert.NotNull(disabledNode);
         Assert.False(disabledNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(disabledNode.Flags.HasFlag(SemanticsFlags.HasEnabledState));
         Assert.False(disabledNode.Actions.HasFlag(SemanticsActions.Tap));
         Color disabledColor = NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38);
         Assert.Equal(disabledColor,
@@ -897,7 +898,7 @@ public sealed class MaterialNavigationSurfacesTests
         var first = FindSemantics(root, node => HasLabelPart(node, "Tab 1 of 2"));
         Assert.NotNull(first);
         Assert.True(first!.Flags.HasFlag(SemanticsFlags.IsSelected));
-        Assert.True(first.Flags.HasFlag(SemanticsFlags.IsEnabled));
+        Assert.False(first.Flags.HasFlag(SemanticsFlags.HasEnabledState));
     }
 
     private static IReadOnlyList<NavigationDestination> BarDestinations() =>

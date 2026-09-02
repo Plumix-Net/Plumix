@@ -424,7 +424,10 @@ public sealed class CupertinoSlidingSegmentedControlTests : IDisposable
             node => node.Flags.HasFlag(SemanticsFlags.IsButton));
         Assert.Equal(3, buttons.Count);
         Assert.Single(buttons, button => button.Flags.HasFlag(SemanticsFlags.IsSelected));
-        Assert.False(buttons[1].Actions.HasFlag(SemanticsActions.Tap));
+        Assert.True(buttons[1].Actions.HasFlag(SemanticsActions.Tap));
+        Assert.False(buttons[1].Flags.HasFlag(SemanticsFlags.IsFocusable));
+        Assert.True(buttons[1].PerformAction(SemanticsActions.Tap));
+        Assert.Null(reported);
 
         Tap(harness.RenderView, new Point(30.0, 14.0), pointer: 60);
         Scheduler.FlushMicrotasks();

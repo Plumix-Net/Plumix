@@ -43,6 +43,14 @@ internal sealed class FocusLayoutHarness : IDisposable
         Scheduler.FlushMicrotasks();
     }
 
+    public SemanticsNode? LayoutAndGetSemantics(Size size)
+    {
+        Layout(size);
+        _pipeline.RequestSemanticsUpdate();
+        _pipeline.FlushSemantics();
+        return _pipeline.SemanticsOwner!.RootNode;
+    }
+
     public void Update(Widget widget, Size size)
     {
         _rootElement.Update(widget);

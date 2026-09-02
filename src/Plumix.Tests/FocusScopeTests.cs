@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
@@ -22,6 +23,62 @@ public sealed class FocusScopeTests : IDisposable
     {
         FocusManager.Instance.ResetForTests();
         Scheduler.ResetForTests();
+    }
+
+    [Fact]
+    public void FocusAndFocusScope_IncludeSemanticsByDefault()
+    {
+        Widget child = new SizedBox(width: 20, height: 20);
+        var focusNode = new FocusNode();
+        var focusScopeNode = new FocusScopeNode();
+
+        Assert.True(new Focus(child).IncludeSemantics);
+        Assert.True(Focus.WithExternalFocusNode(focusNode, child).IncludeSemantics);
+        Assert.True(new FocusScope(child).IncludeSemantics);
+        Assert.True(FocusScope.WithExternalFocusNode(focusScopeNode, child).IncludeSemantics);
+
+        Assert.False(new Focus(child: child, includeSemantics: false).IncludeSemantics);
+        Assert.False(Focus.WithExternalFocusNode(focusNode, child, includeSemantics: false).IncludeSemantics);
+        Assert.False(new FocusScope(child, includeSemantics: false).IncludeSemantics);
+        Assert.False(
+            FocusScope.WithExternalFocusNode(focusScopeNode, child, includeSemantics: false).IncludeSemantics);
+    }
+
+    [Fact]
+    public void Focus_SemanticFocusActionIsOmittedOnlyOnIOS()
+    {
+        TargetPlatform? previousPlatform = PlatformDefaults.DebugTargetPlatformOverride;
+        try
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
+            using (var androidHarness = new FocusLayoutHarness(BuildSemanticFocus()))
+            {
+                SemanticsNode androidNode = Assert.Single(
+                    androidHarness.LayoutAndGetSemantics(ViewSize)!.Children);
+                Assert.True(androidNode.Flags.HasFlag(SemanticsFlags.IsFocusable));
+                Assert.True(androidNode.Actions.HasFlag(SemanticsActions.Focus));
+            }
+
+            PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
+            using var iosHarness = new FocusLayoutHarness(BuildSemanticFocus());
+            SemanticsNode iosNode = Assert.Single(iosHarness.LayoutAndGetSemantics(ViewSize)!.Children);
+            Assert.True(iosNode.Flags.HasFlag(SemanticsFlags.IsFocusable));
+            Assert.False(iosNode.Actions.HasFlag(SemanticsActions.Focus));
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = previousPlatform;
+        }
+
+        static Widget BuildSemanticFocus()
+        {
+            return new Directionality(
+                TextDirection.Ltr,
+                new Focus(
+                    child: new Semantics(
+                        label: "Focusable",
+                        child: new SizedBox(width: 20, height: 20))));
+        }
     }
 
     [Fact]

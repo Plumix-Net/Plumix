@@ -214,19 +214,17 @@ internal sealed class CupertinoSlidingSegmentedControlState<T> : State where T :
             var semantics = new Semantics(
                 flags: SemanticsFlags.IsButton | SemanticsFlags.IsInMutuallyExclusiveGroup,
                 selected: ValuesEqual(Current.GroupValue, entry.Key),
-                enabled: enabled,
-                focusable: enabled,
-                onTap: enabled
-                    ? () =>
+                onTap: () =>
+                {
+                    if (!enabled)
                     {
-                        segmentKey.CurrentState?.FocusNode.RequestFocus();
-                        Current.OnValueChanged(entry.Key);
+                        return;
                     }
-                    : null,
-                child: child)
-            {
-                OnFocus = enabled ? () => segmentKey.CurrentState?.FocusNode.RequestFocus() : null,
-            };
+
+                    segmentKey.CurrentState?.FocusNode.RequestFocus();
+                    Current.OnValueChanged(entry.Key);
+                },
+                child: child);
             physicalChildren.Add(new CupertinoSlidingSegmentButton<T>(
                 value: entry.Key,
                 enabled: enabled,

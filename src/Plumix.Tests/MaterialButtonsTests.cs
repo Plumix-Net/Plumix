@@ -185,7 +185,7 @@ public sealed class MaterialButtonsTests
             semantics,
             node => node.Actions.HasFlag(SemanticsActions.LongPress));
         Assert.NotNull(actionNode);
-        Assert.False(actionNode!.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.True(actionNode!.Flags.HasFlag(SemanticsFlags.IsButton));
         Assert.True(actionNode.PerformAction(SemanticsActions.LongPress));
         Assert.True(longPressed);
     }
@@ -242,7 +242,7 @@ public sealed class MaterialButtonsTests
             semantics,
             node => node.Actions.HasFlag(SemanticsActions.LongPress));
         Assert.NotNull(actionNode);
-        Assert.False(actionNode!.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.True(actionNode!.Flags.HasFlag(SemanticsFlags.IsButton));
         Assert.True(actionNode.PerformAction(SemanticsActions.LongPress));
         Assert.True(longPressed);
     }
@@ -299,7 +299,7 @@ public sealed class MaterialButtonsTests
             semantics,
             node => node.Actions.HasFlag(SemanticsActions.LongPress));
         Assert.NotNull(actionNode);
-        Assert.False(actionNode!.Flags.HasFlag(SemanticsFlags.IsButton));
+        Assert.True(actionNode!.Flags.HasFlag(SemanticsFlags.IsButton));
         Assert.True(actionNode.PerformAction(SemanticsActions.LongPress));
         Assert.True(longPressed);
     }
@@ -508,14 +508,79 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(buttonNode);
         Assert.True(buttonNode!.Flags.HasFlag(SemanticsFlags.IsEnabled));
 
-        // The button's own node carries the button/enabled flags and the `InkWell` below it carries
-        // the gesture actions; Flutter merges the two (see `docs/ai/DIVERGENCES.md`).
         var actionNode = FindSemantics(
             semantics,
             node => node.Actions.HasFlag(SemanticsActions.LongPress));
         Assert.NotNull(actionNode);
+        Assert.Same(buttonNode, actionNode);
         Assert.True(actionNode!.PerformAction(SemanticsActions.LongPress));
         Assert.True(longPressed);
+    }
+
+    [Fact]
+    public void ButtonStyleButton_SemanticsAbsorbFocusInkAndLabelIntoTheTapTargetNode()
+    {
+        var style = new ButtonStyle(
+            MinimumSize: MaterialStateProperty<Size?>.All(new Size(88, 36)),
+            TapTargetSize: MaterialTapTargetSize.Padded);
+        Func<Action, Action, ButtonStyleButton>[] factories =
+        [
+            (onPressed, onLongPress) => new ElevatedButton(
+                onPressed: onPressed,
+                onLongPress: onLongPress,
+                style: style,
+                child: new Text("ABC")),
+            (onPressed, onLongPress) => new OutlinedButton(
+                onPressed: onPressed,
+                onLongPress: onLongPress,
+                style: style,
+                child: new Text("ABC")),
+            (onPressed, onLongPress) => new TextButton(
+                onPressed: onPressed,
+                onLongPress: onLongPress,
+                style: style,
+                child: new Text("ABC")),
+            (onPressed, onLongPress) => new FilledButton(
+                onPressed: onPressed,
+                onLongPress: onLongPress,
+                style: style,
+                child: new Text("ABC")),
+        ];
+
+        foreach (Func<Action, Action, ButtonStyleButton> factory in factories)
+        {
+            int tapCount = 0;
+            int longPressCount = 0;
+            using var harness = new WidgetRenderHarness(
+                new Theme(
+                    data: ThemeData.Light,
+                    child: new Directionality(
+                        TextDirection.Ltr,
+                        new Align(
+                            alignment: Alignment.Center,
+                            child: factory(() => tapCount++, () => longPressCount++)))));
+
+            SemanticsNode root = harness.PumpAndGetSemantics(new Size(800, 600))!;
+            SemanticsNode buttonNode = Assert.Single(root.Children);
+
+            Assert.Empty(buttonNode.Children);
+            Assert.Equal("ABC", buttonNode.Label);
+            Assert.Equal(new Rect(0, 0, 88, 48), buttonNode.Rect);
+            Assert.Equal(new Rect(356, 276, 88, 48), buttonNode.GlobalRect);
+            Assert.True(buttonNode.Flags.HasFlag(SemanticsFlags.HasEnabledState));
+            Assert.True(buttonNode.Flags.HasFlag(SemanticsFlags.IsEnabled));
+            Assert.True(buttonNode.Flags.HasFlag(SemanticsFlags.IsButton));
+            Assert.True(buttonNode.Flags.HasFlag(SemanticsFlags.IsFocusable));
+            Assert.True(buttonNode.Actions.HasFlag(SemanticsActions.Tap));
+            Assert.True(buttonNode.Actions.HasFlag(SemanticsActions.LongPress));
+            Assert.True(buttonNode.Actions.HasFlag(SemanticsActions.Focus));
+            Assert.True(buttonNode.PerformAction(SemanticsActions.Tap));
+            Assert.True(buttonNode.PerformAction(SemanticsActions.LongPress));
+            Assert.True(buttonNode.PerformAction(SemanticsActions.Focus));
+            Scheduler.FlushMicrotasks();
+            Assert.Equal(1, tapCount);
+            Assert.Equal(1, longPressCount);
+        }
     }
 
     [Fact]
