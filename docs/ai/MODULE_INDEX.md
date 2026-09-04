@@ -492,6 +492,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/SliverGroup.cs`
   - `src/Plumix/Rendering/SliverGroup.cs`
   - `src/Plumix/Widgets/DraggableScrollableSheet.cs`
+  - `src/Plumix/Rendering/TwoDimensionalViewport.cs` (`ChildVicinity`, `TwoDimensionalViewportParentData`, `ITwoDimensionalChildManager`, `RenderTwoDimensionalViewport`: the lazy 2D child lifecycle, paint offsets and reveal protocol)
+  - `src/Plumix/Widgets/TwoDimensionalViewport.cs` (the widget and its element, which is the child manager)
+  - `src/Plumix/Widgets/TwoDimensionalScrollable.cs` (`DiagonalDragBehavior` and the nested vertical-outer/horizontal-inner scrollable pair)
+  - `src/Plumix/Widgets/TwoDimensionalScrollView.cs`
 - Primary Tests:
   - `src/Plumix.Tests/ScrollPipelineTests.cs`
   - `src/Plumix.Tests/ListWheelScrollViewTests.cs`
@@ -505,6 +509,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix.Tests/MaterialSliverAppBarTests.cs`
   - `src/Plumix.Tests/DraggableScrollableSheetTests.cs`
   - `src/Plumix.Tests/DecoratedPinnedSliverTests.cs`
+  - `src/Plumix.Tests/TwoDimensionalViewportTests.cs`
+  - `src/Plumix.Tests/TwoDimensionalScrollViewTests.cs`
   - `src/Plumix.Tests/SliverGroupTests.cs`
   - `src/Plumix.Tests/SliverHeaderTests.cs`
 - Note:

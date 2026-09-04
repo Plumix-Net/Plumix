@@ -973,7 +973,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
         {
             case ScrollPositionAlignmentPolicy.KeepVisibleAtEnd:
                 resolved = Math.Clamp(
-                    viewport.GetOffsetToReveal(target, 1.0, targetRect).Offset,
+                    viewport.GetOffsetToReveal(target, 1.0, targetRect, Axis).Offset,
                     MinScrollExtent,
                     MaxScrollExtent);
                 if (resolved < Pixels)
@@ -984,7 +984,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
                 break;
             case ScrollPositionAlignmentPolicy.KeepVisibleAtStart:
                 resolved = Math.Clamp(
-                    viewport.GetOffsetToReveal(target, 0.0, targetRect).Offset,
+                    viewport.GetOffsetToReveal(target, 0.0, targetRect, Axis).Offset,
                     MinScrollExtent,
                     MaxScrollExtent);
                 if (resolved > Pixels)
@@ -995,7 +995,7 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
                 break;
             default:
                 resolved = Math.Clamp(
-                    viewport.GetOffsetToReveal(target, alignment, targetRect).Offset,
+                    viewport.GetOffsetToReveal(target, alignment, targetRect, Axis).Offset,
                     MinScrollExtent,
                     MaxScrollExtent);
                 break;

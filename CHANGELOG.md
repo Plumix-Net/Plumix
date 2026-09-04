@@ -8,6 +8,13 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `TwoDimensionalViewport`, `RenderTwoDimensionalViewport` and `ChildVicinity` (`two_dimensional_viewport.dart`).
+- Added `TwoDimensionalScrollable` and `DiagonalDragBehavior` (`scrollable.dart`).
+- Added `TwoDimensionalScrollView` (`two_dimensional_scroll_view.dart`).
+- Added the `TwoDimensionalChildDelegate` builder/list family (`scroll_delegate.dart`).
+- Breaking: `KeepAlive` writes to the new `IKeepAliveParentData` rather than `SliverMultiBoxAdaptorParentData`.
+- Breaking: `Scrollable` takes an optional `axisDirection` that overrides `axis`/`reverse` (`scrollable.dart`).
+- Breaking: `ScrollPosition.EnsureVisible` reveals on its own axis, which a 2D viewport honors (`scroll_position.dart`).
 - Breaking: `scroll_delegate.dart` is a strict port in `Widgets/ScrollDelegate.cs` (`scroll_delegate.dart`).
 - Breaking: sliver/list delegates wrap every child in `RepaintBoundary` and always in `KeyedSubtree`.
 - Breaking: sliver/list/grid builder factories take a nullable `itemCount` first-class; `null` is unbounded.

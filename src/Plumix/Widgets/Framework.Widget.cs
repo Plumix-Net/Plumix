@@ -84,6 +84,20 @@ public abstract class ParentDataWidget<T> : ProxyWidget, IParentDataWidget where
 
     public abstract Type DebugTypicalAncestorWidgetType { get; }
 
+    /// <summary>
+    /// How the ancestor this widget expects is named in error messages, when naming the single
+    /// <see cref="DebugTypicalAncestorWidgetType"/> is not enough.
+    /// </summary>
+    /// <remarks>Flutter's <c>ParentDataWidget.debugTypicalAncestorWidgetDescription</c>.</remarks>
+    public virtual string DebugTypicalAncestorWidgetDescription => DebugTypicalAncestorWidgetType.Name;
+
+    /// <summary>
+    /// Whether the parent data this widget writes may be applied outside of the build phase, because
+    /// the write cannot invalidate layout.
+    /// </summary>
+    /// <remarks>Flutter's <c>ParentDataWidget.debugCanApplyOutOfTurn</c>; false by default.</remarks>
+    public virtual bool DebugCanApplyOutOfTurn() => false;
+
     internal override Element CreateElement() => new ParentDataElement<T>(this);
 
     protected virtual bool DebugIsValidRenderObject(RenderObject renderObject)

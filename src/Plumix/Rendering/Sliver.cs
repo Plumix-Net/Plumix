@@ -750,7 +750,27 @@ public sealed class SliverLogicalParentData : ContainerBoxParentData<RenderSlive
             : LayoutOffset.Value.ToString("F1", CultureInfo.InvariantCulture))}";
 }
 
-public class SliverMultiBoxAdaptorParentData : ContainerBoxParentData<RenderBox>
+/// <summary>
+/// Parent data that can keep its child alive after it scrolls out of view.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>KeepAliveParentDataMixin</c> (<c>rendering/sliver_multi_box_adaptor.dart</c>). C#
+/// has no mixins, so the contract is an interface: it is what <see cref="Plumix.Widgets.KeepAlive"/>
+/// writes into, and both the sliver adaptors and the two-dimensional viewport implement it.
+/// </remarks>
+public interface IKeepAliveParentData : IParentData
+{
+    /// <summary>Whether to keep the child alive even when it is no longer visible.</summary>
+    bool KeepAlive { get; set; }
+
+    /// <summary>
+    /// Whether the child is currently being kept alive, i.e. has <see cref="KeepAlive"/> set and is
+    /// offscreen.
+    /// </summary>
+    bool KeptAlive { get; }
+}
+
+public class SliverMultiBoxAdaptorParentData : ContainerBoxParentData<RenderBox>, IKeepAliveParentData
 {
     /// <summary>
     /// The index of this child according to the <see cref="IRenderSliverBoxChildManager"/>, or null

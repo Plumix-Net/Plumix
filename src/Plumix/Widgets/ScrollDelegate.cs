@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
@@ -128,9 +129,16 @@ public abstract class SliverChildDelegate
 
         return new KeyedSubtree(child, key);
     }
+}
 
+/// <summary>
+/// The file-level helpers `scroll_delegate.dart` shares between its one- and two-dimensional
+/// delegates, which C# cannot express as free functions.
+/// </summary>
+internal static class ScrollDelegateSupport
+{
     /// <remarks>Flutter's file-level <c>_createErrorWidget</c>.</remarks>
-    private protected static Widget CreateErrorWidget(Exception exception)
+    public static Widget CreateErrorWidget(Exception exception)
     {
         var details = new FlutterErrorDetails(
             exception: exception,
@@ -139,6 +147,28 @@ public abstract class SliverChildDelegate
             context: new ErrorDescription("building"));
         FlutterError.ReportError(details);
         return ErrorWidget.Builder(details);
+    }
+
+    /// <summary>
+    /// The wrapper chain both two-dimensional delegates put around every child:
+    /// <c>AutomaticKeepAlive &gt; SelectionKeepAlive &gt; RepaintBoundary &gt; child</c>.
+    /// </summary>
+    public static Widget WrapTwoDimensionalChild(
+        Widget child,
+        bool addRepaintBoundaries,
+        bool addAutomaticKeepAlives)
+    {
+        if (addRepaintBoundaries)
+        {
+            child = new RepaintBoundary(child);
+        }
+
+        if (addAutomaticKeepAlives)
+        {
+            child = new AutomaticKeepAlive(new SelectionKeepAlive(child));
+        }
+
+        return child;
     }
 }
 
@@ -227,7 +257,7 @@ public sealed class SliverChildBuilderDelegate : SliverChildDelegate
         }
         catch (Exception exception)
         {
-            child = CreateErrorWidget(exception);
+            child = ScrollDelegateSupport.CreateErrorWidget(exception);
         }
 
         if (child is null)
@@ -544,4 +574,208 @@ internal sealed class SelectionKeepAlive : StatefulWidget
             KeepAliveWanted = _selectablesWithSelections?.Count > 0;
         }
     }
+}
+
+/// <summary>
+/// Supplies the children of a <see cref="TwoDimensionalViewport"/>.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>TwoDimensionalChildDelegate</c>. As a <see cref="ChangeNotifier"/>, subclasses call
+/// <see cref="ChangeNotifier.NotifyListeners"/> whenever a value a builder or getter returns
+/// changes, so the viewport rebuilds without a new delegate instance.
+/// </remarks>
+public abstract class TwoDimensionalChildDelegate : ChangeNotifier
+{
+    /// <summary>
+    /// Returns the child at <paramref name="vicinity"/>, or null when there is no child there.
+    /// </summary>
+    public abstract Widget? Build(BuildContext context, ChildVicinity vicinity);
+
+    /// <summary>
+    /// Whether a viewport that was given a new instance of this delegate class has to rebuild its
+    /// children, because the new instance represents different information than the old one.
+    /// </summary>
+    public abstract bool ShouldRebuild(TwoDimensionalChildDelegate oldDelegate);
+}
+
+/// <summary>
+/// A <see cref="TwoDimensionalChildDelegate"/> that builds its children lazily from a callback.
+/// </summary>
+/// <remarks>Flutter's <c>TwoDimensionalChildBuilderDelegate</c>.</remarks>
+public class TwoDimensionalChildBuilderDelegate : TwoDimensionalChildDelegate
+{
+    private int? _maxXIndex;
+    private int? _maxYIndex;
+
+    public TwoDimensionalChildBuilderDelegate(
+        TwoDimensionalIndexedWidgetBuilder builder,
+        int? maxXIndex = null,
+        int? maxYIndex = null,
+        bool addRepaintBoundaries = true,
+        bool addAutomaticKeepAlives = true)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        Debug.Assert(maxYIndex is null or >= -1);
+        Debug.Assert(maxXIndex is null or >= -1);
+        Builder = builder;
+        AddRepaintBoundaries = addRepaintBoundaries;
+        AddAutomaticKeepAlives = addAutomaticKeepAlives;
+        _maxYIndex = maxYIndex;
+        _maxXIndex = maxXIndex;
+    }
+
+    /// <summary>Called to build children on demand, for vicinities within the max indices.</summary>
+    public TwoDimensionalIndexedWidgetBuilder Builder { get; }
+
+    /// <summary>
+    /// The greatest <see cref="ChildVicinity.XIndex"/> the <see cref="Builder"/> can produce, or
+    /// null when the builder itself signals the end by returning null. <c>-1</c> means there are no
+    /// children at all.
+    /// </summary>
+    public int? MaxXIndex
+    {
+        get => _maxXIndex;
+        set
+        {
+            if (value == _maxXIndex)
+            {
+                return;
+            }
+
+            if (value is not (null or >= -1))
+            {
+                throw new AssertionError("value == null || value >= -1");
+            }
+
+            _maxXIndex = value;
+            NotifyListeners();
+        }
+    }
+
+    /// <summary>The greatest <see cref="ChildVicinity.YIndex"/> the <see cref="Builder"/> can produce.</summary>
+    public int? MaxYIndex
+    {
+        get => _maxYIndex;
+        set
+        {
+            if (_maxYIndex == value)
+            {
+                return;
+            }
+
+            if (value is not (null or >= -1))
+            {
+                throw new AssertionError("value == null || value >= -1");
+            }
+
+            _maxYIndex = value;
+            NotifyListeners();
+        }
+    }
+
+    /// <summary>Whether to wrap each child in a <see cref="RepaintBoundary"/>.</summary>
+    public bool AddRepaintBoundaries { get; }
+
+    /// <summary>Whether to wrap each child in an <see cref="AutomaticKeepAlive"/>.</summary>
+    public bool AddAutomaticKeepAlives { get; }
+
+    /// <inheritdoc />
+    public override Widget? Build(BuildContext context, ChildVicinity vicinity)
+    {
+        ArgumentNullException.ThrowIfNull(vicinity);
+        // If we have exceeded explicit upper bounds, return null.
+        if (vicinity.XIndex < 0 || (MaxXIndex is { } maxX && vicinity.XIndex > maxX))
+        {
+            return null;
+        }
+
+        if (vicinity.YIndex < 0 || (MaxYIndex is { } maxY && vicinity.YIndex > maxY))
+        {
+            return null;
+        }
+
+        Widget? child;
+        try
+        {
+            child = Builder(context, vicinity);
+        }
+        catch (Exception exception)
+        {
+            child = ScrollDelegateSupport.CreateErrorWidget(exception);
+        }
+
+        if (child is null)
+        {
+            return null;
+        }
+
+        return ScrollDelegateSupport.WrapTwoDimensionalChild(
+            child,
+            AddRepaintBoundaries,
+            AddAutomaticKeepAlives);
+    }
+
+    /// <inheritdoc />
+    /// <remarks>A builder delegate always rebuilds: Flutter returns true unconditionally.</remarks>
+    public override bool ShouldRebuild(TwoDimensionalChildDelegate oldDelegate) => true;
+}
+
+/// <summary>
+/// A <see cref="TwoDimensionalChildDelegate"/> that takes an explicit list of rows of children.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>TwoDimensionalChildListDelegate</c>. The outer list is indexed by
+/// <see cref="ChildVicinity.YIndex"/> and the inner one by <see cref="ChildVicinity.XIndex"/>.
+/// </remarks>
+public class TwoDimensionalChildListDelegate : TwoDimensionalChildDelegate
+{
+    public TwoDimensionalChildListDelegate(
+        IReadOnlyList<IReadOnlyList<Widget>> children,
+        bool addRepaintBoundaries = true,
+        bool addAutomaticKeepAlives = true)
+    {
+        ArgumentNullException.ThrowIfNull(children);
+        Children = children;
+        AddRepaintBoundaries = addRepaintBoundaries;
+        AddAutomaticKeepAlives = addAutomaticKeepAlives;
+    }
+
+    /// <summary>
+    /// The widgets to display, as rows of children. A modified list must be supplied as a new list
+    /// object, because <see cref="ShouldRebuild"/> compares list identity.
+    /// </summary>
+    public IReadOnlyList<IReadOnlyList<Widget>> Children { get; }
+
+    /// <summary>Whether to wrap each child in a <see cref="RepaintBoundary"/>.</summary>
+    public bool AddRepaintBoundaries { get; }
+
+    /// <summary>Whether to wrap each child in an <see cref="AutomaticKeepAlive"/>.</summary>
+    public bool AddAutomaticKeepAlives { get; }
+
+    /// <inheritdoc />
+    public override Widget? Build(BuildContext context, ChildVicinity vicinity)
+    {
+        ArgumentNullException.ThrowIfNull(vicinity);
+        // If we have exceeded explicit upper bounds, return null.
+        if (vicinity.YIndex < 0 || vicinity.YIndex >= Children.Count)
+        {
+            return null;
+        }
+
+        if (vicinity.XIndex < 0 || vicinity.XIndex >= Children[vicinity.YIndex].Count)
+        {
+            return null;
+        }
+
+        Widget child = Children[vicinity.YIndex][vicinity.XIndex];
+        return ScrollDelegateSupport.WrapTwoDimensionalChild(
+            child,
+            AddRepaintBoundaries,
+            AddAutomaticKeepAlives);
+    }
+
+    /// <inheritdoc />
+    public override bool ShouldRebuild(TwoDimensionalChildDelegate oldDelegate) =>
+        oldDelegate is not TwoDimensionalChildListDelegate listDelegate
+        || !ReferenceEquals(Children, listDelegate.Children);
 }

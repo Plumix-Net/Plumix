@@ -263,6 +263,9 @@ internal static class DartFormat
     /// dart:ui `Offset.toString`.
     public static string Offset(Point offset) => $"Offset({Fixed(offset.X)}, {Fixed(offset.Y)})";
 
+    /// dart:ui `Size.toString`.
+    public static string SizeOf(Size size) => $"Size({Fixed(size.Width)}, {Fixed(size.Height)})";
+
     /// `foundation.debugFormatDouble`, which prints one fractional digit.
     public static string Fixed(double value)
     {

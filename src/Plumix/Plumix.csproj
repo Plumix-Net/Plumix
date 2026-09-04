@@ -25,6 +25,7 @@
 
     <ItemGroup>
         <InternalsVisibleTo Include="Plumix.Tests" />
+        <InternalsVisibleTo Include="Plumix.Sample" />
         <InternalsVisibleTo Include="Plumix.Material" />
         <InternalsVisibleTo Include="Plumix.Cupertino" />
         <InternalsVisibleTo Include="Plumix.Android" />

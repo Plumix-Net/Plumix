@@ -634,6 +634,7 @@ public class Scrollable : StatefulWidget
         IReadOnlyList<Widget>? slivers = null,
         Axis axis = Axis.Vertical,
         bool reverse = false,
+        AxisDirection? axisDirection = null,
         ScrollController? controller = null,
         ScrollPhysics? physics = null,
         double cacheExtent = 250.0,
@@ -667,7 +668,8 @@ public class Scrollable : StatefulWidget
 
         Child = child;
         Slivers = slivers;
-        Axis = axis;
+        ExplicitAxisDirection = axisDirection;
+        _axis = axis;
         Reverse = reverse;
         Controller = controller;
         Physics = physics;
@@ -689,7 +691,23 @@ public class Scrollable : StatefulWidget
 
     public IReadOnlyList<Widget>? Slivers { get; }
 
-    public Axis Axis { get; }
+    private readonly Axis _axis;
+
+    /// <summary>
+    /// The direction in which this widget scrolls, when it was given one directly rather than as an
+    /// <see cref="Axis"/> plus <see cref="Reverse"/>.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>Scrollable.axisDirection</c> is the only way to configure the direction, and
+    /// <c>ScrollView</c> resolves it from <c>scrollDirection</c>/<c>reverse</c>. Plumix's
+    /// <see cref="Scrollable"/> takes the pair directly; supplying a direction here overrides both,
+    /// which is what the two-dimensional scrollables need.
+    /// </remarks>
+    public AxisDirection? ExplicitAxisDirection { get; }
+
+    public Axis Axis => ExplicitAxisDirection is { } direction
+        ? ScrollDirectionUtils.AxisDirectionToAxis(direction)
+        : _axis;
 
     public bool Reverse { get; }
 
@@ -851,16 +869,17 @@ public class Scrollable : StatefulWidget
                 break;
             }
 
-            futures.Add(scrollable.PerformEnsureVisible(
+            (IReadOnlyList<Task> newFutures, ScrollableState next) = scrollable.PerformEnsureVisibleInternal(
                 renderObject,
                 alignment,
                 effectiveDuration,
                 curve,
                 alignmentPolicy,
-                targetRenderObject));
+                targetRenderObject);
+            futures.AddRange(newFutures);
             targetRenderObject ??= renderObject;
 
-            context = scrollable.Context;
+            context = next.Context;
             scrollable = MaybeOf(context);
         }
 
@@ -899,19 +918,25 @@ public class Scrollable : StatefulWidget
         private double _devicePixelRatio = 1.0;
         // Keys are records, so the identity has to come from a per-state sentinel: two scrollables
         // must never share one global key.
-        private readonly GlobalObjectKey<RawGestureDetectorState> _gestureDetectorKey =
+        private protected readonly GlobalObjectKey<RawGestureDetectorState> _gestureDetectorKey =
             new(new object());
         private readonly GlobalObjectKey<State> _ignorePointerKey = new(new object());
 
         private IScrollHoldController? _hold;
         private ScrollDragController? _drag;
-        private bool _lastCanDrag;
-        private Axis? _lastAxis;
-        private IReadOnlyDictionary<Type, IGestureRecognizerFactory> _gestureRecognizers =
+        private protected bool _lastCanDrag;
+        private protected Axis? _lastAxis;
+        private protected IReadOnlyDictionary<Type, IGestureRecognizerFactory> _gestureRecognizers =
             RawGestureDetector.NoGestures;
         private bool _shouldIgnorePointer;
 
-        private Scrollable CurrentWidget => (Scrollable)Element.Widget;
+        private protected Scrollable CurrentWidget => (Scrollable)Element.Widget;
+
+        /// <summary>The ambient scroll behavior this scrollable resolved.</summary>
+        private protected ScrollBehavior Configuration => _configuration;
+
+        /// <summary>The controller the position is attached to: the widget's, or the fallback.</summary>
+        private protected ScrollController? EffectiveScrollController => _attachedController;
 
         public ScrollPosition Position => _position;
 
@@ -1121,22 +1146,40 @@ public class Scrollable : StatefulWidget
                     child: scrollable);
             }
 
+            return BuildChrome(context, scrollable);
+        }
+
+        /// <summary>
+        /// Wraps the scrollable in the decorations the ambient <see cref="ScrollBehavior"/> supplies:
+        /// the scrollbar and the overscroll indicator.
+        /// </summary>
+        /// <remarks>
+        /// Flutter's <c>ScrollableState._buildChrome</c>; the two-dimensional dimensions override it
+        /// to drop the one-axis scrollbar.
+        /// </remarks>
+        private protected virtual Widget BuildChrome(BuildContext context, Widget child)
+        {
             var details = new ScrollableDetails(
-                Direction: axisDirection,
+                Direction: _axisDirection,
                 Controller: _attachedController,
                 Physics: _effectivePhysics,
-                DecorationClipBehavior: widget.ClipBehavior);
+                DecorationClipBehavior: CurrentWidget.ClipBehavior);
             return _configuration.BuildScrollbar(
                 context,
-                _configuration.BuildOverscrollIndicator(context, scrollable, details),
+                _configuration.BuildOverscrollIndicator(context, child, details),
                 details);
         }
 
         /// <summary>
-        /// Reveals <paramref name="renderObject"/> in this scrollable. Flutter's two-dimensional
-        /// scrollables override this to drive both of their positions.
+        /// Reveals <paramref name="renderObject"/> in this scrollable, and reports the scrollable the
+        /// enclosing walk should continue from.
         /// </summary>
-        internal Task PerformEnsureVisible(
+        /// <remarks>
+        /// Flutter's <c>ScrollableState._performEnsureVisible</c>, whose record return lets a
+        /// two-dimensional scrollable reveal both of its axes at once and then hand the walk back to
+        /// its outer dimension.
+        /// </remarks>
+        private protected virtual (IReadOnlyList<Task> Futures, ScrollableState Next) PerformEnsureVisible(
             RenderObject renderObject,
             double alignment,
             TimeSpan duration,
@@ -1144,7 +1187,28 @@ public class Scrollable : StatefulWidget
             ScrollPositionAlignmentPolicy alignmentPolicy,
             RenderObject? targetRenderObject)
         {
-            return _position.EnsureVisible(
+            return (
+                [
+                    _position.EnsureVisible(
+                        renderObject,
+                        alignment,
+                        duration,
+                        curve,
+                        alignmentPolicy,
+                        targetRenderObject),
+                ],
+                this);
+        }
+
+        internal (IReadOnlyList<Task> Futures, ScrollableState Next) PerformEnsureVisibleInternal(
+            RenderObject renderObject,
+            double alignment,
+            TimeSpan duration,
+            Curve? curve,
+            ScrollPositionAlignmentPolicy alignmentPolicy,
+            RenderObject? targetRenderObject)
+        {
+            return PerformEnsureVisible(
                 renderObject,
                 alignment,
                 duration,
@@ -1252,7 +1316,7 @@ public class Scrollable : StatefulWidget
         /// position captured.
         /// </summary>
         /// <remarks>Flutter's <c>ScrollableState.setCanDrag</c>.</remarks>
-        public void SetCanDrag(bool value)
+        public virtual void SetCanDrag(bool value)
         {
             if (value == _lastCanDrag && (!value || CurrentWidget.Axis == _lastAxis))
             {
@@ -1336,10 +1400,30 @@ public class Scrollable : StatefulWidget
             }
         }
 
-        private void HandleDragDown(DragDownDetails details)
+        private protected virtual void HandleDragDown(DragDownDetails details)
         {
             _hold = _position.Hold(DisposeHold);
         }
+
+        /// <summary>
+        /// Replays a drag callback on this scrollable from another one. Flutter's two-dimensional
+        /// outer dimension calls its peer's private handlers directly; C#'s access rules do not
+        /// reach a sibling instance's <c>private protected</c> members, so the forwarding goes
+        /// through these.
+        /// </summary>
+        internal void ForwardDragDown(DragDownDetails details) => HandleDragDown(details);
+
+        /// <inheritdoc cref="ForwardDragDown"/>
+        internal void ForwardDragStart(DragStartDetails details) => HandleDragStart(details);
+
+        /// <inheritdoc cref="ForwardDragDown"/>
+        internal void ForwardDragUpdate(DragUpdateDetails details) => HandleDragUpdate(details);
+
+        /// <inheritdoc cref="ForwardDragDown"/>
+        internal void ForwardDragEnd(DragEndDetails details) => HandleDragEnd(details);
+
+        /// <inheritdoc cref="ForwardDragDown"/>
+        internal void ForwardDragCancel() => HandleDragCancel();
 
         /// <summary>
         /// Replays a semantic scroll request as a complete drag, so it runs through the scroll physics
@@ -1356,7 +1440,7 @@ public class Scrollable : StatefulWidget
             _drag = null;
         }
 
-        private void HandleDragStart(DragStartDetails details)
+        private protected virtual void HandleDragStart(DragStartDetails details)
         {
             ScrollViewKeyboardDismissBehavior keyboardDismissBehavior =
                 CurrentWidget.KeyboardDismissBehavior
@@ -1386,18 +1470,18 @@ public class Scrollable : StatefulWidget
             return false;
         }
 
-        private void HandleDragUpdate(DragUpdateDetails details)
+        private protected virtual void HandleDragUpdate(DragUpdateDetails details)
         {
             ApplyDragOffset(details);
         }
 
-        private void HandleDragEnd(DragEndDetails details)
+        private protected virtual void HandleDragEnd(DragEndDetails details)
         {
             _drag?.End(details);
             new ScrollEndNotification(CurrentMetrics(), dragDetails: details).Dispatch(NotificationContext);
         }
 
-        private void HandleDragCancel()
+        private protected virtual void HandleDragCancel()
         {
             _hold?.Cancel();
             _drag?.Cancel();
@@ -1531,6 +1615,11 @@ public class Scrollable : StatefulWidget
 
         private AxisDirection ResolveAxisDirection(Axis axis, bool reverse)
         {
+            if (CurrentWidget.ExplicitAxisDirection is { } explicitDirection)
+            {
+                return explicitDirection;
+            }
+
             if (axis == Axis.Vertical)
             {
                 return reverse ? AxisDirection.Up : AxisDirection.Down;
@@ -1701,7 +1790,7 @@ public sealed class SliverPadding : SingleChildRenderObjectWidget
     }
 }
 
-public sealed class KeepAlive : ParentDataWidget<SliverMultiBoxAdaptorParentData>
+public sealed class KeepAlive : ParentDataWidget<IKeepAliveParentData>
 {
     public KeepAlive(
         bool keepAlive,
@@ -1713,11 +1802,29 @@ public sealed class KeepAlive : ParentDataWidget<SliverMultiBoxAdaptorParentData
 
     public bool Value { get; }
 
+    /// <remarks>
+    /// Dart's <c>debugTypicalAncestorWidgetClass</c> throws here, because two ancestor types are
+    /// valid; the name it reports comes from <see cref="DebugTypicalAncestorWidgetDescription"/>
+    /// instead. C# keeps the type non-throwing and names the first of the two.
+    /// </remarks>
     public override Type DebugTypicalAncestorWidgetType => typeof(SliverMultiBoxAdaptorWidget);
+
+    /// <inheritdoc />
+    public override string DebugTypicalAncestorWidgetDescription =>
+        "SliverWithKeepAliveWidget or TwoDimensionalViewport";
+
+    /// <summary>
+    /// Turning keep-alive <em>on</em> needs no layout — the child is alive already — so the write is
+    /// allowed outside a build, which is what lets an <see cref="AutomaticKeepAlive"/> handle claim a
+    /// child mid-layout.
+    /// </summary>
+    /// <remarks>Flutter's <c>KeepAlive.debugCanApplyOutOfTurn</c>.</remarks>
+    public override bool DebugCanApplyOutOfTurn() => Value;
 
     protected override void ApplyParentData(RenderObject renderObject)
     {
-        var parentData = (SliverMultiBoxAdaptorParentData)renderObject.parentData!;
+        Debug.Assert(renderObject.parentData is IKeepAliveParentData);
+        var parentData = (IKeepAliveParentData)renderObject.parentData!;
         if (parentData.KeepAlive == Value)
         {
             return;
@@ -1728,6 +1835,13 @@ public sealed class KeepAlive : ParentDataWidget<SliverMultiBoxAdaptorParentData
         {
             renderObject.Parent?.MarkNeedsLayout();
         }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("keepAlive", Value));
     }
 }
 

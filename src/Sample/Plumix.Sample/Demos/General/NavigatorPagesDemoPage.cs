@@ -124,7 +124,8 @@ internal sealed class SampleDeclarativePageRoute : PageRoute
                         new Text($"canPop: {ModalRoute.CanPopOf(context)}", fontSize: 12, color: Colors.DimGray),
                         new CounterTapButton(
                             label: "Pop this page",
-                            onTap: () => Navigator.Of(context).MaybePop(),
+                            // Qualified: `Route.Navigator` shadows the widget type inside a Route.
+                            onTap: () => Plumix.Widgets.Navigator.Of(context).MaybePop(),
                             background: Color.Parse("#FFFFFFFF"),
                             foreground: Colors.Black,
                             fontSize: 12,
