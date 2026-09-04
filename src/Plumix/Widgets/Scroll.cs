@@ -1877,7 +1877,7 @@ public abstract class SliverMultiBoxAdaptorWidget : RenderObjectWidget
             trailingScrollOffset);
     }
 
-    internal override Element CreateElement()
+    public override Element CreateElement()
     {
         return new SliverMultiBoxAdaptorElement(this);
     }
@@ -2066,7 +2066,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
 
     /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement.update</c>: a new delegate instance only
     /// rebuilds the children when it is of a different runtime type or says so itself.</remarks>
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         SliverChildDelegate oldDelegate = TypedWidget.Delegate;
         base.Update(newWidget);
@@ -2080,7 +2080,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
     }
 
     /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement.performRebuild</c>.</remarks>
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         _currentBeforeChild = null;
@@ -2204,7 +2204,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
     /// Flutter's <c>SliverMultiBoxAdaptorElement.updateChild</c>: a rebuilt child that swapped its
     /// render object keeps the layout offset the old one had.
     /// </remarks>
-    internal override Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
+    public override Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
     {
         var oldParentData = child?.RenderObject?.parentData as SliverMultiBoxAdaptorParentData;
         Element? newChild = base.UpdateChild(child, newWidget, newSlot);
@@ -2221,7 +2221,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
         return newChild;
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         Debug.Assert(_childElements.Values.All(static child => child is not null));
         foreach (Element child in _childElements.Values.Select(static child => child!).ToArray())
@@ -2236,7 +2236,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
     /// <c>Element.DeactivateChild</c> also calls it, and a remapped child has already left the map
     /// by then, so the entry is dropped only when it still points at this child.
     /// </remarks>
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (child.Slot is int slot
             && _childElements.TryGetValue(slot, out Element? registered)
@@ -2248,7 +2248,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
         base.ForgetChild(child);
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         foreach (Element child in _childElements.Values.Select(static child => child!).ToArray())
         {
@@ -2368,7 +2368,7 @@ public sealed class SliverList : SliverMultiBoxAdaptorWidget
     /// leading edge an anchor. The fixed-extent and grid slivers derive offsets from the index and
     /// keep the default.
     /// </remarks>
-    internal override Element CreateElement()
+    public override Element CreateElement()
     {
         return new SliverMultiBoxAdaptorElement(this, replaceMovedChildren: true);
     }
@@ -2694,7 +2694,7 @@ public sealed class SliverPrototypeExtentList : SliverMultiBoxAdaptorWidget
             key);
     }
 
-    internal override Element CreateElement()
+    public override Element CreateElement()
     {
         return new SliverPrototypeExtentListElement(this);
     }
@@ -2737,13 +2737,13 @@ internal sealed class SliverPrototypeExtentListElement : SliverMultiBoxAdaptorEl
         _prototype = UpdateChild(_prototype, PrototypeWidget.PrototypeItem, PrototypeSlot);
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         _prototype = UpdateChild(_prototype, PrototypeWidget.PrototypeItem, PrototypeSlot);
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_prototype != null)
         {
@@ -2753,7 +2753,7 @@ internal sealed class SliverPrototypeExtentListElement : SliverMultiBoxAdaptorEl
         base.VisitChildren(visitor);
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _prototype))
         {
@@ -2796,7 +2796,7 @@ internal sealed class SliverPrototypeExtentListElement : SliverMultiBoxAdaptorEl
         base.RemoveRenderObjectChild(child, slot);
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         if (_prototype != null)
         {

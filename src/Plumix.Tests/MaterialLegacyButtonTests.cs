@@ -474,7 +474,7 @@ public sealed class MaterialLegacyButtonTests
 
         public Element? Child { get; private set; }
         public override RenderObject? RenderObject => Child?.RenderObject;
-        internal override Element? RenderObjectAttachingChild => Child;
+        public override Element? RenderObjectAttachingChild => Child;
 
         protected override void OnMount()
         {
@@ -482,29 +482,29 @@ public sealed class MaterialLegacyButtonTests
             Rebuild();
         }
 
-        internal override void Rebuild()
+        public override void Rebuild()
         {
             Dirty = false;
             Child = UpdateChild(Child, Widget, Slot);
         }
 
-        internal override void Update(Widget newWidget)
+        public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
             Rebuild();
         }
 
-        internal override void VisitChildren(Action<Element> visitor)
+        public override void VisitChildren(Action<Element> visitor)
         {
             if (Child is not null) visitor(Child);
         }
 
-        internal override void ForgetChild(Element child)
+        public override void ForgetChild(Element child)
         {
             if (ReferenceEquals(Child, child)) Child = null;
         }
 
-        internal override void Unmount()
+        public override void Unmount()
         {
             if (Child is not null)
             {

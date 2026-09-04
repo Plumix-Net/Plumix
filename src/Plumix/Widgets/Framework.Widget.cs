@@ -17,12 +17,12 @@ public abstract class Widget(Key? key = null) : DiagnosticableTree
 {
     public Key? Key { get; } = key;
 
-    internal static bool CanUpdate(Widget oldWidget, Widget newWidget)
+    public static bool CanUpdate(Widget oldWidget, Widget newWidget)
     {
         return oldWidget.GetType() == newWidget.GetType() && Equals(oldWidget.Key, newWidget.Key);
     }
 
-    internal abstract Element CreateElement();
+    public abstract Element CreateElement();
 
     /// A short, textual description of this widget.
     public override string ToStringShort()
@@ -45,7 +45,7 @@ public abstract class StatelessWidget : Widget
     }
 
     public abstract Widget Build(BuildContext context);
-    internal override Element CreateElement() => new StatelessElement(this);
+    public override Element CreateElement() => new StatelessElement(this);
 }
 
 public abstract class StatefulWidget : Widget
@@ -55,7 +55,7 @@ public abstract class StatefulWidget : Widget
     }
 
     public abstract State CreateState();
-    internal override Element CreateElement() => new StatefulElement(this);
+    public override Element CreateElement() => new StatefulElement(this);
 }
 
 public abstract class ProxyWidget : Widget
@@ -67,7 +67,7 @@ public abstract class ProxyWidget : Widget
 
     public Widget Child { get; }
 
-    internal override Element CreateElement() => new ProxyElement(this);
+    public override Element CreateElement() => new ProxyElement(this);
 }
 
 internal interface IParentDataWidget
@@ -98,7 +98,7 @@ public abstract class ParentDataWidget<T> : ProxyWidget, IParentDataWidget where
     /// <remarks>Flutter's <c>ParentDataWidget.debugCanApplyOutOfTurn</c>; false by default.</remarks>
     public virtual bool DebugCanApplyOutOfTurn() => false;
 
-    internal override Element CreateElement() => new ParentDataElement<T>(this);
+    public override Element CreateElement() => new ParentDataElement<T>(this);
 
     protected virtual bool DebugIsValidRenderObject(RenderObject renderObject)
     {
@@ -285,7 +285,7 @@ public abstract class InheritedWidget : Widget
 
     internal bool InvokeUpdateShouldNotify(InheritedWidget oldWidget) => UpdateShouldNotify(oldWidget);
 
-    internal override Element CreateElement() => new InheritedElement(this);
+    public override Element CreateElement() => new InheritedElement(this);
 }
 
 public abstract class InheritedModel<TAspect> : InheritedWidget
@@ -303,7 +303,7 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
 
     protected virtual bool IsSupportedAspect(object aspect) => true;
 
-    internal override Element CreateElement() => new InheritedModelElement<TAspect>(this);
+    public override Element CreateElement() => new InheritedModelElement<TAspect>(this);
 
     public static TModel? InheritFrom<TModel>(BuildContext context, object? aspect = null)
         where TModel : InheritedModel<TAspect>
@@ -384,5 +384,5 @@ public abstract class InheritedNotifier<TNotifier> : InheritedWidget where TNoti
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         => !ReferenceEquals(((InheritedNotifier<TNotifier>)oldWidget).Notifier, Notifier);
 
-    internal override Element CreateElement() => new InheritedNotifierElement<TNotifier>(this);
+    public override Element CreateElement() => new InheritedNotifierElement<TNotifier>(this);
 }

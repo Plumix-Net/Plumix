@@ -25,6 +25,7 @@ class SampleRoutes {
   static const String listViewReverse = '/list-reverse';
   static const String centerViewport = '/center-viewport';
   static const String twoDimensionalScrollView = '/two-dimensional-scroll-view';
+  static const String customElement = '/custom-element';
   static const String pageView = '/page-view';
   static const String listWheelScrollView = '/list-wheel-scroll-view';
   static const String gridView = '/grid-view';

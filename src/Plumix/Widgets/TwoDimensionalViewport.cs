@@ -102,7 +102,7 @@ public abstract class TwoDimensionalViewport : RenderObjectWidget
                    + "TwoDimensionalViewport's own element.");
     }
 
-    internal override Element CreateElement() => new TwoDimensionalViewportElement(this);
+    public override Element CreateElement() => new TwoDimensionalViewportElement(this);
 
     /// <inheritdoc />
     public abstract override RenderTwoDimensionalViewport CreateRenderObject(BuildContext context);
@@ -150,7 +150,7 @@ internal sealed class TwoDimensionalViewportElement
         return false;
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         // The child list is updated during layout, since only then is it known which children will
@@ -163,7 +163,7 @@ internal sealed class TwoDimensionalViewportElement
     /// calls <c>forgetChild</c>. Plumix's <c>Element.DeactivateChild</c> does, and the child manager
     /// deactivates its leftovers from inside <see cref="EndLayout"/>, so the assert cannot hold.
     /// </remarks>
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         base.ForgetChild(child);
         if (child.Slot is ChildVicinity vicinity)
@@ -192,7 +192,7 @@ internal sealed class TwoDimensionalViewportElement
         TypedRenderObject.RemoveChild((RenderBox)child, (ChildVicinity)slot!);
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         foreach (Element child in _vicinityToChild.Values.ToList())
         {

@@ -724,7 +724,7 @@ internal sealed class CupertinoTextSelectionToolbarItems : RenderObjectWidget
         items.DividerWidth = DividerWidth;
     }
 
-    internal override Element CreateElement() => new CupertinoTextSelectionToolbarItemsElement(this);
+    public override Element CreateElement() => new CupertinoTextSelectionToolbarItemsElement(this);
 }
 
 /// <summary>Dart's `_CupertinoTextSelectionToolbarItemsElement`: two slots plus an indexed list.</summary>
@@ -763,19 +763,19 @@ internal sealed class CupertinoTextSelectionToolbarItemsElement : RenderObjectEl
         }
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         UpdateChildrenAndSlots();
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         UpdateChildrenAndSlots();
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (child.Slot is CupertinoTextSelectionToolbarItemsSlot slot && _slotToChild.ContainsKey(slot))
         {
@@ -787,7 +787,7 @@ internal sealed class CupertinoTextSelectionToolbarItemsElement : RenderObjectEl
         }
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         foreach (Element child in _slotToChild.Values)
         {
@@ -840,7 +840,7 @@ internal sealed class CupertinoTextSelectionToolbarItemsElement : RenderObjectEl
         Items.Remove((RenderBox)child);
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         foreach (Element child in _slotToChild.Values.ToList())
         {

@@ -101,6 +101,7 @@ import 'demos/general/list_wheel_scroll_view_demo_page.dart';
 import 'demos/general/page_view_demo_page.dart';
 import 'demos/general/ensure_visible_demo_page.dart';
 import 'demos/general/center_viewport_demo_page.dart';
+import 'demos/general/custom_element_demo_page.dart';
 import 'demos/general/two_dimensional_scroll_view_demo_page.dart';
 import 'demos/general/list_view_reverse_demo_page.dart';
 import 'demos/general/scroll_physics_demo_page.dart';
@@ -797,6 +798,12 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'TwoDimensionalScrollView',
       subtitle: '2D viewport + diagonal drag behavior',
       builder: () => const TwoDimensionalScrollViewDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.customElement,
+      title: 'Custom element',
+      subtitle: 'hand-written Widget + Element pair',
+      builder: () => const CustomElementDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.ensureVisible,

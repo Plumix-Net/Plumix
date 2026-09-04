@@ -34,6 +34,7 @@ internal static class SampleRoutes
     public const string ListViewReverse = "/list-reverse";
     public const string CenterViewport = "/center-viewport";
     public const string TwoDimensionalScrollView = "/two-dimensional-scroll-view";
+    public const string CustomElement = "/custom-element";
     public const string PageView = "/page-view";
     public const string ListWheelScrollView = "/list-wheel-scroll-view";
     public const string GridView = "/grid-view";
@@ -489,6 +490,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "TwoDimensionalScrollView",
             "2D viewport + diagonal drag behavior",
             () => new TwoDimensionalScrollViewDemoPage()),
+        new(
+            SampleRoutes.CustomElement,
+            "Custom element",
+            "hand-written Widget + Element pair",
+            () => new CustomElementDemoPage()),
         new(SampleRoutes.PageView, "PageView.Builder", "lazy pages + viewportFraction", () => new PageViewDemoPage()),
         new(
             SampleRoutes.ListWheelScrollView,

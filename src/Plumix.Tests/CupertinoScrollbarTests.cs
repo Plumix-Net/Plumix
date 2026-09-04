@@ -479,14 +479,14 @@ public sealed class CupertinoScrollbarTests
 
         public HarnessRootElement(RenderView renderView, Widget widget) : base(widget) => _renderView = renderView;
         public override RenderObject? RenderObject => _child?.RenderObject;
-        internal override Element? RenderObjectAttachingChild => _child;
+        public override Element? RenderObjectAttachingChild => _child;
         protected override void OnMount() { base.OnMount(); Rebuild(); }
-        internal override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
-        internal override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
-        internal override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
-        internal override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
+        public override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
+        public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+        public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
+        public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
 
-        internal override void Unmount()
+        public override void Unmount()
         {
             if (_child is not null)
             {

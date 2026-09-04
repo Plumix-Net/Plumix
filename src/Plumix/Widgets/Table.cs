@@ -186,7 +186,7 @@ public sealed class Table : RenderObjectWidget
 
     internal IReadOnlyList<Decoration?>? RowDecorations => _rowDecorations;
 
-    internal override Element CreateElement() => new TableElement(this);
+    public override Element CreateElement() => new TableElement(this);
 
     public override RenderObject CreateRenderObject(BuildContext context) => new RenderTable(
         columns: ColumnCount,
@@ -253,7 +253,7 @@ public sealed class TableElement : RenderObjectElement
         _doingMountOrUpdate = false;
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         _doingMountOrUpdate = true;
         var oldKeyedRows = new Dictionary<Key, List<Element>>();
@@ -339,12 +339,12 @@ public sealed class TableElement : RenderObjectElement
         Table.SetChild(tableSlot.Column, tableSlot.Row, null);
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         _forgottenChildren.Add(child);
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         foreach (TableElementRow row in _children)
         {

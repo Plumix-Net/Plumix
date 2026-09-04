@@ -66,7 +66,7 @@ public class NotificationListener<TNotification> : ProxyWidget
 
     public Func<TNotification, bool>? OnNotification { get; }
 
-    internal override Element CreateElement()
+    public override Element CreateElement()
     {
         return new NotificationListenerElement<TNotification>(this);
     }

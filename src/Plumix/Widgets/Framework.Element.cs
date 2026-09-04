@@ -23,7 +23,7 @@ public readonly struct BuildContext
 {
     internal Element Owner { get; }
 
-    internal BuildContext(Element owner)
+    public BuildContext(Element owner)
     {
         Owner = owner;
     }
@@ -179,12 +179,12 @@ public abstract class Element
     public object? Slot { get; private set; }
 
     internal int SequenceId { get; } = Interlocked.Increment(ref _nextElementId);
-    internal bool Dirty { get; set; }
-    internal BuildOwner? Owner { get; private set; }
+    public bool Dirty { get; protected set; }
+    public BuildOwner? Owner { get; private set; }
 
-    internal bool IsActive => _lifecycleState == ElementLifecycleState.Active;
+    public bool IsActive => _lifecycleState == ElementLifecycleState.Active;
     internal bool IsInactive => _lifecycleState == ElementLifecycleState.Inactive;
-    internal bool IsMounted =>
+    public bool IsMounted =>
         _lifecycleState is ElementLifecycleState.Active or ElementLifecycleState.Inactive;
 
     protected Element(Widget widget)
@@ -203,7 +203,7 @@ public abstract class Element
         Owner.RegisterElement(this);
     }
 
-    internal void Mount(Element? parent, object? newSlot)
+    public void Mount(Element? parent, object? newSlot)
     {
         if (_lifecycleState != ElementLifecycleState.Initial)
         {
@@ -275,7 +275,7 @@ public abstract class Element
     {
     }
 
-    internal virtual void UpdateSlot(object? newSlot)
+    public virtual void UpdateSlot(object? newSlot)
     {
         Slot = newSlot;
     }
@@ -284,12 +284,12 @@ public abstract class Element
     {
     }
 
-    internal virtual void DidChangeDependencies()
+    public virtual void DidChangeDependencies()
     {
         MarkNeedsBuild();
     }
 
-    internal virtual void VisitChildren(Action<Element> visitor)
+    public virtual void VisitChildren(Action<Element> visitor)
     {
     }
 
@@ -298,9 +298,9 @@ public abstract class Element
     /// every child; widgets that hide part of the tree (such as <see cref="Offstage"/>) override it.
     /// </summary>
     /// <remarks>Flutter's <c>Element.debugVisitOnstageChildren</c>.</remarks>
-    internal virtual void DebugVisitOnstageChildren(Action<Element> visitor) => VisitChildren(visitor);
+    public virtual void DebugVisitOnstageChildren(Action<Element> visitor) => VisitChildren(visitor);
 
-    internal virtual void AttachRenderObject(object? newSlot)
+    public virtual void AttachRenderObject(object? newSlot)
     {
         if (Slot is not null)
         {
@@ -311,7 +311,7 @@ public abstract class Element
         Slot = newSlot;
     }
 
-    internal virtual void DetachRenderObject()
+    public virtual void DetachRenderObject()
     {
         VisitChildren(static child => child.DetachRenderObject());
         Slot = null;
@@ -341,7 +341,7 @@ public abstract class Element
         Owner?.TrackInactive(this);
     }
 
-    internal virtual void Unmount()
+    public virtual void Unmount()
     {
         if (_lifecycleState == ElementLifecycleState.Defunct)
         {
@@ -368,9 +368,9 @@ public abstract class Element
         _lifecycleState = ElementLifecycleState.Defunct;
     }
 
-    internal abstract void Rebuild();
+    public abstract void Rebuild();
 
-    internal virtual void MarkNeedsBuild()
+    public virtual void MarkNeedsBuild()
     {
         if (Dirty)
         {
@@ -392,13 +392,13 @@ public abstract class Element
     ///
     ///  * [State.Reassemble]
     ///  * [BuildOwner.Reassemble]
-    internal virtual void Reassemble()
+    public virtual void Reassemble()
     {
         MarkNeedsBuild();
         VisitChildren(child => child.Reassemble());
     }
 
-    internal virtual void Update(Widget newWidget)
+    public virtual void Update(Widget newWidget)
     {
         var oldGlobalKey = Widget.Key as GlobalKey;
         var newGlobalKey = newWidget.Key as GlobalKey;
@@ -424,11 +424,11 @@ public abstract class Element
         }
     }
 
-    internal virtual void ForgetChild(Element child)
+    public virtual void ForgetChild(Element child)
     {
     }
 
-    internal virtual void UpdateSlotForChild(Element child, object? newSlot)
+    public virtual void UpdateSlotForChild(Element child, object? newSlot)
     {
         void Visit(Element element)
         {
@@ -443,7 +443,7 @@ public abstract class Element
         Visit(child);
     }
 
-    internal virtual void DeactivateChild(Element child)
+    public virtual void DeactivateChild(Element child)
     {
         ForgetChild(child);
         child.Parent = null;
@@ -458,7 +458,7 @@ public abstract class Element
         Owner.Deactivate(child);
     }
 
-    internal virtual void UnmountChild(Element child)
+    public virtual void UnmountChild(Element child)
     {
         ForgetChild(child);
         if (child.IsActive)
@@ -474,7 +474,7 @@ public abstract class Element
         child.Unmount();
     }
 
-    internal Element InflateWidget(Widget newWidget, object? newSlot)
+    public Element InflateWidget(Widget newWidget, object? newSlot)
     {
         var owner = Owner ?? throw new InvalidOperationException("Element is not attached to BuildOwner.");
 
@@ -496,7 +496,7 @@ public abstract class Element
         return element;
     }
 
-    internal virtual Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
+    public virtual Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
     {
         if (newWidget == null)
         {
@@ -537,7 +537,7 @@ public abstract class Element
         return InflateWidget(newWidget, newSlot);
     }
 
-    internal List<Element> UpdateChildren(
+    public List<Element> UpdateChildren(
         List<Element> oldChildren,
         IReadOnlyList<Widget> newWidgets,
         HashSet<Element>? forgottenChildren = null,
@@ -680,7 +680,7 @@ public abstract class Element
         return [..newChildren];
     }
 
-    internal virtual T? DependOnInherited<T>(object? aspect = null) where T : InheritedWidget
+    public virtual T? DependOnInherited<T>(object? aspect = null) where T : InheritedWidget
     {
         if (!IsActive)
         {
@@ -727,9 +727,9 @@ public abstract class Element
 
     public virtual RenderObject? RenderObject => null;
 
-    internal virtual Element? RenderObjectAttachingChild => null;
+    public virtual Element? RenderObjectAttachingChild => null;
 
-    internal InheritedWidget DependOnInheritedElement(InheritedElement ancestor, object? aspect)
+    public InheritedWidget DependOnInheritedElement(InheritedElement ancestor, object? aspect)
     {
         _dependencies ??= [];
         _dependencies.Add(ancestor);
@@ -762,7 +762,7 @@ public sealed class StatelessElement : Element
 
     public override RenderObject? RenderObject => _child?.RenderObject;
 
-    internal override Element? RenderObjectAttachingChild => _child;
+    public override Element? RenderObjectAttachingChild => _child;
 
     protected override void OnMount()
     {
@@ -770,20 +770,20 @@ public sealed class StatelessElement : Element
         Rebuild();
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         Dirty = false;
         var childWidget = ((StatelessWidget)Widget).Build(new BuildContext(this));
         _child = UpdateChild(_child, childWidget, Slot);
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         Rebuild();
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_child != null)
         {
@@ -791,7 +791,7 @@ public sealed class StatelessElement : Element
         }
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _child))
         {
@@ -799,7 +799,7 @@ public sealed class StatelessElement : Element
         }
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         if (_child != null)
         {
@@ -826,7 +826,7 @@ public sealed class StatefulElement : Element
 
     public override RenderObject? RenderObject => _child?.RenderObject;
 
-    internal override Element? RenderObjectAttachingChild => _child;
+    public override Element? RenderObjectAttachingChild => _child;
 
     protected override void OnMount()
     {
@@ -849,7 +849,7 @@ public sealed class StatefulElement : Element
         base.OnDeactivate();
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         Dirty = false;
 
@@ -863,7 +863,7 @@ public sealed class StatefulElement : Element
         _child = UpdateChild(_child, widget, Slot);
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         var old = (StatefulWidget)Widget;
         base.Update(newWidget);
@@ -871,19 +871,19 @@ public sealed class StatefulElement : Element
         Rebuild();
     }
 
-    internal override void DidChangeDependencies()
+    public override void DidChangeDependencies()
     {
         base.DidChangeDependencies();
         _didChangeDependencies = true;
     }
 
-    internal override void Reassemble()
+    public override void Reassemble()
     {
         State.Reassemble();
         base.Reassemble();
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_child != null)
         {
@@ -891,7 +891,7 @@ public sealed class StatefulElement : Element
         }
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _child))
         {
@@ -899,7 +899,7 @@ public sealed class StatefulElement : Element
         }
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         if (_child != null)
         {
@@ -930,7 +930,7 @@ public class InheritedElement : Element
 
     public override RenderObject? RenderObject => _child?.RenderObject;
 
-    internal override Element? RenderObjectAttachingChild => _child;
+    public override Element? RenderObjectAttachingChild => _child;
 
     protected override void OnMount()
     {
@@ -938,14 +938,14 @@ public class InheritedElement : Element
         Rebuild();
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         Dirty = false;
         var child = ((InheritedWidget)Widget).Build(new BuildContext(this));
         _child = UpdateChild(_child, child, Slot);
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         var old = (InheritedWidget)Widget;
         base.Update(newWidget);
@@ -968,12 +968,12 @@ public class InheritedElement : Element
         _dependents[dependent] = value;
     }
 
-    internal virtual void UpdateDependencies(Element dependent, object? aspect)
+    public virtual void UpdateDependencies(Element dependent, object? aspect)
     {
         SetDependencies(dependent, value: null);
     }
 
-    internal virtual void RemoveDependent(Element dependent)
+    public virtual void RemoveDependent(Element dependent)
     {
         _dependents.Remove(dependent);
     }
@@ -991,12 +991,12 @@ public class InheritedElement : Element
         }
     }
 
-    internal virtual void NotifyDependent(InheritedWidget _, Element dependent)
+    public virtual void NotifyDependent(InheritedWidget _, Element dependent)
     {
         dependent.DidChangeDependencies();
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_child != null)
         {
@@ -1004,7 +1004,7 @@ public class InheritedElement : Element
         }
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _child))
         {
@@ -1012,7 +1012,7 @@ public class InheritedElement : Element
         }
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         if (_child != null)
         {
@@ -1033,7 +1033,7 @@ public sealed class InheritedModelElement<TAspect> : InheritedElement
 
     private InheritedModel<TAspect> InheritedModelWidget => (InheritedModel<TAspect>)Widget;
 
-    internal override void UpdateDependencies(Element dependent, object? aspect)
+    public override void UpdateDependencies(Element dependent, object? aspect)
     {
         var dependencies = GetDependencies(dependent) as HashSet<TAspect>;
         if (dependencies != null && dependencies.Count == 0)
@@ -1057,7 +1057,7 @@ public sealed class InheritedModelElement<TAspect> : InheritedElement
         SetDependencies(dependent, dependencies);
     }
 
-    internal override void NotifyDependent(InheritedWidget oldWidget, Element dependent)
+    public override void NotifyDependent(InheritedWidget oldWidget, Element dependent)
     {
         var dependencies = GetDependencies(dependent) as HashSet<TAspect>;
         if (dependencies == null)
@@ -1089,7 +1089,7 @@ public sealed class InheritedNotifierElement<TNotifier> : InheritedElement where
         base.OnMount();
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         var oldNotifier = InheritedNotifierWidget.Notifier;
         var newNotifier = ((InheritedNotifier<TNotifier>)newWidget).Notifier;
@@ -1102,7 +1102,7 @@ public sealed class InheritedNotifierElement<TNotifier> : InheritedElement where
         base.Update(newWidget);
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         if (_dirty)
         {
@@ -1113,7 +1113,7 @@ public sealed class InheritedNotifierElement<TNotifier> : InheritedElement where
         base.Rebuild();
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         InheritedNotifierWidget.Notifier?.RemoveListener(HandleUpdate);
         base.Unmount();
@@ -1136,7 +1136,7 @@ public class ProxyElement : Element
 
     public override RenderObject? RenderObject => _child?.RenderObject;
 
-    internal override Element? RenderObjectAttachingChild => _child;
+    public override Element? RenderObjectAttachingChild => _child;
 
     protected override void OnMount()
     {
@@ -1144,13 +1144,13 @@ public class ProxyElement : Element
         Rebuild();
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         Dirty = false;
         _child = UpdateChild(_child, ((ProxyWidget)Widget).Child, Slot);
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         var old = (ProxyWidget)Widget;
         base.Update(newWidget);
@@ -1162,7 +1162,7 @@ public class ProxyElement : Element
     {
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_child != null)
         {
@@ -1170,7 +1170,7 @@ public class ProxyElement : Element
         }
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _child))
         {
@@ -1178,7 +1178,7 @@ public class ProxyElement : Element
         }
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         if (_child != null)
         {
@@ -1207,7 +1207,7 @@ internal sealed class ParentDataElement<T> : ParentDataElementBase where T : IPa
 
     internal override IParentDataWidget ParentDataWidget => (IParentDataWidget)Widget;
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         ApplyParentData((ParentDataWidget<T>)Widget);

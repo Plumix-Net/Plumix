@@ -18,10 +18,15 @@ public sealed class BuildOwner
 
     private bool _scheduled;
     private bool _building;
-    internal Action? OnBuildScheduled { get; set; }
+    public Action? OnBuildScheduled { get; set; }
 
     /// <summary>Whether this owner is currently executing a build-scope callback or flushing dirty elements.</summary>
-    internal bool IsBuilding => _building;
+    /// <remarks>Flutter's <c>BuildOwner.debugBuilding</c>, which Plumix keeps outside the debug-only surface.</remarks>
+    public bool IsBuilding => _building;
+
+    /// <summary>The number of <see cref="GlobalKey"/> instances currently registered with this owner.</summary>
+    /// <remarks>Flutter's <c>BuildOwner.globalKeyCount</c>.</remarks>
+    public int GlobalKeyCount => _globalKeyRegistry.Count;
 
     public void RegisterElement(Element element)
     {
@@ -198,7 +203,7 @@ public sealed class BuildOwner
     /// elements dirtied by that callback.
     /// </summary>
     /// <remarks>Flutter's <c>BuildOwner.buildScope(Element, [VoidCallback])</c>.</remarks>
-    internal void BuildScope(Element context, Action? callback = null)
+    public void BuildScope(Element context, Action? callback = null)
     {
         ArgumentNullException.ThrowIfNull(context);
         if (!ReferenceEquals(context.Owner, this))
@@ -312,6 +317,15 @@ public sealed class BuildOwner
         // Test harnesses use FlushBuild as their pump boundary. Production frame flow calls
         // BuildScope directly and drains microtasks after the frame in Scheduler.HandleFrame.
         Scheduler.FlushMicrotasks();
+    }
+
+    /// <summary>
+    /// Unmounts every element that was deactivated during the current build and never reactivated.
+    /// </summary>
+    /// <remarks>Flutter's <c>BuildOwner.finalizeTree</c>.</remarks>
+    public void FinalizeTree()
+    {
+        FinalizeInactiveElements();
     }
 
     private void FinalizeInactiveElements()

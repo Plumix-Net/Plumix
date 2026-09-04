@@ -90,7 +90,7 @@ public class Viewport : MultiChildRenderObjectWidget
         return textDirection == TextDirection.Rtl ? AxisDirection.Left : AxisDirection.Right;
     }
 
-    internal override Element CreateElement() => new ViewportElement(this);
+    public override Element CreateElement() => new ViewportElement(this);
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -211,7 +211,7 @@ public sealed class ViewportElement : MultiChildRenderObjectElement
         _doingMountOrUpdate = false;
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         _doingMountOrUpdate = true;
         base.Update(newWidget);

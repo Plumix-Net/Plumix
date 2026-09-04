@@ -37,7 +37,7 @@ public abstract class RenderObjectWidget(Key? key = null) : Widget(key)
 
 public abstract class LeafRenderObjectWidget(Key? key = null) : RenderObjectWidget(key)
 {
-    internal override Element CreateElement() => new LeafRenderObjectElement(this);
+    public override Element CreateElement() => new LeafRenderObjectElement(this);
 }
 
 public abstract class SingleChildRenderObjectWidget : RenderObjectWidget
@@ -49,7 +49,7 @@ public abstract class SingleChildRenderObjectWidget : RenderObjectWidget
 
     public Widget? Child { get; }
 
-    internal override Element CreateElement() => new SingleChildRenderObjectElement(this);
+    public override Element CreateElement() => new SingleChildRenderObjectElement(this);
 }
 
 public abstract class MultiChildRenderObjectWidget : RenderObjectWidget
@@ -61,7 +61,7 @@ public abstract class MultiChildRenderObjectWidget : RenderObjectWidget
 
     public IReadOnlyList<Widget> Children { get; }
 
-    internal override Element CreateElement() => new MultiChildRenderObjectElement(this);
+    public override Element CreateElement() => new MultiChildRenderObjectElement(this);
 }
 
 public abstract class SlottedMultiChildRenderObjectWidget<TSlot> : RenderObjectWidget
@@ -75,7 +75,7 @@ public abstract class SlottedMultiChildRenderObjectWidget<TSlot> : RenderObjectW
 
     public abstract Widget? ChildForSlot(TSlot slot);
 
-    internal override Element CreateElement() => new SlottedRenderObjectElement<TSlot>(this);
+    public override Element CreateElement() => new SlottedRenderObjectElement<TSlot>(this);
 }
 
 public abstract class RenderObjectElement : Element, IRenderObjectHost
@@ -112,19 +112,19 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         }
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         RenderObjectWidget.UpdateRenderObject(new BuildContext(this), RequireRenderObject());
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         Dirty = false;
         RenderObjectWidget.UpdateRenderObject(new BuildContext(this), RequireRenderObject());
     }
 
-    internal override void UpdateSlot(object? newSlot)
+    public override void UpdateSlot(object? newSlot)
     {
         object? oldSlot = Slot;
         base.UpdateSlot(newSlot);
@@ -151,7 +151,7 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         return _renderObject ?? throw new InvalidOperationException("RenderObjectElement is not mounted.");
     }
 
-    internal override void AttachRenderObject(object? newSlot)
+    public override void AttachRenderObject(object? newSlot)
     {
         if (_ancestorRenderObjectHost != null)
         {
@@ -195,7 +195,7 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         }
     }
 
-    internal override void DetachRenderObject()
+    public override void DetachRenderObject()
     {
         if (_ancestorRenderObjectHost != null)
         {
@@ -207,7 +207,7 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         base.UpdateSlot(null);
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         if (_renderObject is null)
         {
@@ -288,19 +288,19 @@ public class SingleChildRenderObjectElement : RenderObjectElement
         _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _child))
         {
@@ -308,7 +308,7 @@ public class SingleChildRenderObjectElement : RenderObjectElement
         }
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_child != null)
         {
@@ -359,7 +359,7 @@ public class SingleChildRenderObjectElement : RenderObjectElement
         }
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         if (_child != null)
         {
@@ -400,7 +400,7 @@ public class MultiChildRenderObjectElement : RenderObjectElement
         }
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         _children = UpdateChildren(_children, ((MultiChildRenderObjectWidget)Widget).Children, _forgottenChildren);
@@ -408,7 +408,7 @@ public class MultiChildRenderObjectElement : RenderObjectElement
         EnsureChildrenHaveAssociatedRenderObjects();
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         _children = UpdateChildren(_children, ((MultiChildRenderObjectWidget)Widget).Children, _forgottenChildren);
@@ -416,12 +416,12 @@ public class MultiChildRenderObjectElement : RenderObjectElement
         EnsureChildrenHaveAssociatedRenderObjects();
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         _forgottenChildren.Add(child);
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         foreach (var child in _children)
         {
@@ -488,7 +488,7 @@ public class MultiChildRenderObjectElement : RenderObjectElement
         }
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         foreach (var child in _children)
         {
@@ -522,19 +522,19 @@ public sealed class SlottedRenderObjectElement<TSlot> : RenderObjectElement
         UpdateSlotChildren();
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         UpdateSlotChildren();
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         UpdateSlotChildren();
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         TSlot? forgottenSlot = default;
         bool found = false;
@@ -556,7 +556,7 @@ public sealed class SlottedRenderObjectElement<TSlot> : RenderObjectElement
         }
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         foreach (Element child in _children.Values)
         {
@@ -588,7 +588,7 @@ public sealed class SlottedRenderObjectElement<TSlot> : RenderObjectElement
         RequireContainer().SetChild(null, RequireSlot(slot));
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         foreach (Element child in _children.Values.ToList())
         {

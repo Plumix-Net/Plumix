@@ -183,7 +183,7 @@ public sealed class FramePipelineTests
 
     private sealed class ProbeWidget : Widget
     {
-        internal override Element CreateElement()
+        public override Element CreateElement()
         {
             throw new NotSupportedException("ProbeWidget does not create elements.");
         }
@@ -197,7 +197,7 @@ public sealed class FramePipelineTests
         {
         }
 
-        internal override void Rebuild()
+        public override void Rebuild()
         {
             Dirty = false;
             RebuildCount += 1;

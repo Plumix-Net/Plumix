@@ -915,7 +915,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
 
             public override RenderObject? RenderObject => _child?.RenderObject;
 
-            internal override Element? RenderObjectAttachingChild => _child;
+            public override Element? RenderObjectAttachingChild => _child;
 
             protected override void OnMount()
             {
@@ -923,24 +923,24 @@ public sealed class MaterialAutocompleteTests : IDisposable
                 Rebuild();
             }
 
-            internal override void Rebuild()
+            public override void Rebuild()
             {
                 Dirty = false;
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
-            internal override void Update(Widget newWidget)
+            public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
                 Rebuild();
             }
 
-            internal override void ForgetChild(Element child)
+            public override void ForgetChild(Element child)
             {
                 if (ReferenceEquals(_child, child)) _child = null;
             }
 
-            internal override void VisitChildren(Action<Element> visitor)
+            public override void VisitChildren(Action<Element> visitor)
             {
                 if (_child is not null) visitor(_child);
             }
@@ -959,7 +959,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
                 if (ReferenceEquals(_renderView.Child, child)) _renderView.Child = null;
             }
 
-            internal override void Unmount()
+            public override void Unmount()
             {
                 if (_child is not null)
                 {

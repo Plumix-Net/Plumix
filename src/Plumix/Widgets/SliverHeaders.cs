@@ -68,7 +68,7 @@ internal sealed class SliverResizingHeaderRenderObjectWidget : RenderObjectWidge
 
     public Widget Child { get; }
 
-    internal override Element CreateElement() => new SliverResizingHeaderElement(this);
+    public override Element CreateElement() => new SliverResizingHeaderElement(this);
 
     public override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverResizingHeader();
 }
@@ -95,19 +95,19 @@ internal sealed class SliverResizingHeaderElement : RenderObjectElement
         UpdateSlotChildren();
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         UpdateSlotChildren();
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         UpdateSlotChildren();
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_minExtentPrototype != null)
         {
@@ -125,7 +125,7 @@ internal sealed class SliverResizingHeaderElement : RenderObjectElement
         }
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _minExtentPrototype))
         {
@@ -159,7 +159,7 @@ internal sealed class SliverResizingHeaderElement : RenderObjectElement
         SetRenderObjectChild(slot, null);
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         UnmountSlotChild(ref _minExtentPrototype);
         UnmountSlotChild(ref _maxExtentPrototype);

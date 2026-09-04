@@ -922,7 +922,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
 
     private RenderListWheelViewport TypedRenderObject => (RenderListWheelViewport)RequireRenderObject();
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         var oldWidget = (ListWheelViewport)Widget;
         base.Update(newWidget);
@@ -940,7 +940,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
 
     /// <summary>Dart's <c>performRebuild</c>: drops the widget cache and updates every active child
     /// against a freshly built widget.</summary>
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         _childWidgets.Clear();
         base.Rebuild();
@@ -1019,7 +1019,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
 
     /// <summary>Dart's <c>ListWheelElement.updateChild</c> override: keeps the child's previous
     /// layout offset and stamps its index into the parent data.</summary>
-    internal override Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
+    public override Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
     {
         var oldParentData = child?.RenderObject?.parentData as ListWheelParentData;
         Element? newChild = base.UpdateChild(child, newWidget, newSlot);
@@ -1057,7 +1057,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
         TypedRenderObject.Remove((RenderBox)child);
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         foreach (Element child in _childElements.Values.ToArray())
         {
@@ -1065,7 +1065,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
         }
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (child.Slot is int slot && _childElements.TryGetValue(slot, out Element? current)
             && ReferenceEquals(current, child))
@@ -1076,7 +1076,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
         base.ForgetChild(child);
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         foreach (Element child in _childElements.Values.ToArray())
         {
@@ -1210,7 +1210,7 @@ public sealed class ListWheelViewport : RenderObjectWidget
     /// <see cref="Clip.HardEdge"/>.</summary>
     public Clip ClipBehavior { get; }
 
-    internal override Element CreateElement() => new ListWheelElement(this);
+    public override Element CreateElement() => new ListWheelElement(this);
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {

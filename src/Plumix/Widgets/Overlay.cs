@@ -1176,7 +1176,7 @@ internal sealed class OverlayTheater : MultiChildRenderObjectWidget
 
     public bool AlwaysSizeToContent { get; }
 
-    internal override Element CreateElement() => new OverlayTheaterElement(this);
+    public override Element CreateElement() => new OverlayTheaterElement(this);
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -1211,7 +1211,7 @@ internal sealed class OverlayPortalLayoutBuilderWidget : RenderObjectWidget
 
     public OverlayChildLayoutBuilder Builder { get; }
 
-    internal override Element CreateElement() => new OverlayPortalLayoutBuilderElement(this);
+    public override Element CreateElement() => new OverlayPortalLayoutBuilderElement(this);
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -1284,7 +1284,7 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
         LayoutRenderObject.UpdateCallback(RebuildDuringLayout);
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         LayoutRenderObject.UpdateCallback(RebuildDuringLayout);
@@ -1292,7 +1292,7 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
         LayoutRenderObject.ScheduleLayoutCallback();
     }
 
-    internal override void MarkNeedsBuild()
+    public override void MarkNeedsBuild()
     {
         if (!IsActive)
         {
@@ -1304,14 +1304,14 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
         LayoutRenderObject.ScheduleLayoutCallback();
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         Dirty = false;
         _needsBuild = true;
         LayoutRenderObject.ScheduleLayoutCallback();
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_child is not null)
         {
@@ -1319,7 +1319,7 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
         }
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _child))
         {
@@ -1358,7 +1358,7 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
         }
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         LayoutRenderObject.ClearCallback();
         if (_child is not null)
@@ -1410,7 +1410,7 @@ internal sealed class OverlayPortalRenderWidget : RenderObjectWidget
 
     public OverlayEntryLocation? Location { get; }
 
-    internal override Element CreateElement() => new OverlayPortalElement(this);
+    public override Element CreateElement() => new OverlayPortalElement(this);
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -1445,21 +1445,21 @@ internal sealed class OverlayPortalElement : RenderObjectElement
         _overlayChild = UpdateChild(_overlayChild, PortalWidget.OverlayChild, PortalWidget.Location);
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
         _child = UpdateChild(_child, PortalWidget.Child, ChildSlot);
         _overlayChild = UpdateChild(_overlayChild, PortalWidget.OverlayChild, PortalWidget.Location);
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         _child = UpdateChild(_child, PortalWidget.Child, ChildSlot);
         _overlayChild = UpdateChild(_overlayChild, PortalWidget.OverlayChild, PortalWidget.Location);
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _child))
         {
@@ -1471,7 +1471,7 @@ internal sealed class OverlayPortalElement : RenderObjectElement
         }
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_child is not null)
         {
@@ -1548,7 +1548,7 @@ internal sealed class OverlayPortalElement : RenderObjectElement
         }
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         if (_child is not null)
         {

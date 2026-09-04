@@ -1022,7 +1022,7 @@ public sealed class Offstage : SingleChildRenderObjectWidget
         ((RenderOffstage)renderObject).Offstage = IsOffstage;
     }
 
-    internal override Element CreateElement() => new OffstageElement(this);
+    public override Element CreateElement() => new OffstageElement(this);
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
@@ -1041,7 +1041,7 @@ internal sealed class OffstageElement : SingleChildRenderObjectElement
     {
     }
 
-    internal override void DebugVisitOnstageChildren(Action<Element> visitor)
+    public override void DebugVisitOnstageChildren(Action<Element> visitor)
     {
         if (!((Offstage)Widget).IsOffstage)
         {

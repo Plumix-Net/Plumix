@@ -19,7 +19,7 @@ public sealed class LayoutBuilder : RenderObjectWidget
 
     public LayoutWidgetBuilder Builder { get; }
 
-    internal override Element CreateElement() => new LayoutBuilderElement(this);
+    public override Element CreateElement() => new LayoutBuilderElement(this);
 
     public override RenderObject CreateRenderObject(BuildContext context) => new RenderLayoutBuilder();
 
@@ -46,7 +46,7 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
         LayoutRenderObject.UpdateCallback(RebuildWithConstraints);
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         var oldWidget = LayoutBuilderWidget;
         base.Update(newWidget);
@@ -59,7 +59,7 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
         }
     }
 
-    internal override void MarkNeedsBuild()
+    public override void MarkNeedsBuild()
     {
         if (!IsActive)
         {
@@ -71,7 +71,7 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
         LayoutRenderObject.ScheduleLayoutCallback();
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         Dirty = false;
         _needsBuild = true;
@@ -92,7 +92,7 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
         _previousConstraints = constraints;
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_child != null)
         {
@@ -100,7 +100,7 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
         }
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _child))
         {
@@ -131,7 +131,7 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
         }
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         LayoutRenderObject.ClearCallback();
         if (_child != null)

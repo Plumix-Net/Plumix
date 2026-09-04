@@ -742,7 +742,7 @@ public sealed class AutofillTests : IDisposable
 
             public override RenderObject? RenderObject => _child?.RenderObject;
 
-            internal override Element? RenderObjectAttachingChild => _child;
+            public override Element? RenderObjectAttachingChild => _child;
 
             protected override void OnMount()
             {
@@ -750,13 +750,13 @@ public sealed class AutofillTests : IDisposable
                 Rebuild();
             }
 
-            internal override void Rebuild()
+            public override void Rebuild()
             {
                 Dirty = false;
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
-            internal override void ForgetChild(Element child)
+            public override void ForgetChild(Element child)
             {
                 if (ReferenceEquals(_child, child))
                 {
@@ -764,7 +764,7 @@ public sealed class AutofillTests : IDisposable
                 }
             }
 
-            internal override void VisitChildren(Action<Element> visitor)
+            public override void VisitChildren(Action<Element> visitor)
             {
                 if (_child is not null)
                 {

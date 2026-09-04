@@ -110,7 +110,7 @@ internal abstract class SliverPersistentHeaderRenderObjectWidget : RenderObjectW
 
     public bool Floating { get; }
 
-    internal override Element CreateElement() => new SliverPersistentHeaderElement(this, Floating);
+    public override Element CreateElement() => new SliverPersistentHeaderElement(this, Floating);
 }
 
 internal sealed class SliverScrollingPersistentHeader : SliverPersistentHeaderRenderObjectWidget
@@ -251,7 +251,7 @@ internal sealed class SliverPersistentHeaderElement : RenderObjectElement
         HeaderRenderObject.ChildBuilder = BuildChildDuringLayout;
     }
 
-    internal override void Unmount()
+    public override void Unmount()
     {
         HeaderRenderObject.ChildBuilder = null;
         if (_child != null)
@@ -264,7 +264,7 @@ internal sealed class SliverPersistentHeaderElement : RenderObjectElement
         base.Unmount();
     }
 
-    internal override void Update(Widget newWidget)
+    public override void Update(Widget newWidget)
     {
         SliverPersistentHeaderDelegate oldDelegate = HeaderWidget.Delegate;
         base.Update(newWidget);
@@ -281,13 +281,13 @@ internal sealed class SliverPersistentHeaderElement : RenderObjectElement
         }
     }
 
-    internal override void Rebuild()
+    public override void Rebuild()
     {
         base.Rebuild();
         HeaderRenderObject.MarkNeedsLayout();
     }
 
-    internal override void VisitChildren(Action<Element> visitor)
+    public override void VisitChildren(Action<Element> visitor)
     {
         if (_child != null)
         {
@@ -295,7 +295,7 @@ internal sealed class SliverPersistentHeaderElement : RenderObjectElement
         }
     }
 
-    internal override void ForgetChild(Element child)
+    public override void ForgetChild(Element child)
     {
         if (ReferenceEquals(child, _child))
         {

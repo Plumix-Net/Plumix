@@ -104,7 +104,7 @@ internal sealed class RawIndexedStack : Stack
 
     public int? Index { get; }
 
-    internal override Element CreateElement() => new IndexedStackElement(this);
+    public override Element CreateElement() => new IndexedStackElement(this);
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
@@ -147,7 +147,7 @@ internal sealed class IndexedStackElement : MultiChildRenderObjectElement
     {
     }
 
-    internal override void DebugVisitOnstageChildren(Action<Element> visitor)
+    public override void DebugVisitOnstageChildren(Action<Element> visitor)
     {
         int? index = ((RawIndexedStack)Widget).Index;
         if (index.HasValue && Children.Count > 0)

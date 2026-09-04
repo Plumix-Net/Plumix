@@ -1510,7 +1510,7 @@ public sealed class HeroNavigatorTests
 
             public override RenderObject? RenderObject => _child?.RenderObject;
 
-            internal override Element? RenderObjectAttachingChild => _child;
+            public override Element? RenderObjectAttachingChild => _child;
 
             protected override void OnMount()
             {
@@ -1518,19 +1518,19 @@ public sealed class HeroNavigatorTests
                 Rebuild();
             }
 
-            internal override void Rebuild()
+            public override void Rebuild()
             {
                 Dirty = false;
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
-            internal override void Update(Widget newWidget)
+            public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
                 Rebuild();
             }
 
-            internal override void ForgetChild(Element child)
+            public override void ForgetChild(Element child)
             {
                 if (ReferenceEquals(_child, child))
                 {
@@ -1538,7 +1538,7 @@ public sealed class HeroNavigatorTests
                 }
             }
 
-            internal override void VisitChildren(Action<Element> visitor)
+            public override void VisitChildren(Action<Element> visitor)
             {
                 if (_child != null)
                 {
@@ -1582,7 +1582,7 @@ public sealed class HeroNavigatorTests
                 }
             }
 
-            internal override void Unmount()
+            public override void Unmount()
             {
                 if (_child != null)
                 {
