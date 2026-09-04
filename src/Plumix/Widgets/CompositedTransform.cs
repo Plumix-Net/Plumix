@@ -16,12 +16,12 @@ public sealed class CompositedTransformTarget : SingleChildRenderObjectWidget
 
     public LayerLink Link { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderLeaderLayer(Link);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderLeaderLayer)renderObject).Link = Link;
     }
@@ -55,7 +55,7 @@ public sealed class CompositedTransformFollower : SingleChildRenderObjectWidget
 
     public Alignment FollowerAnchor { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFollowerLayer(
             Link,
@@ -65,7 +65,7 @@ public sealed class CompositedTransformFollower : SingleChildRenderObjectWidget
             FollowerAnchor);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var follower = (RenderFollowerLayer)renderObject;
         follower.Link = Link;

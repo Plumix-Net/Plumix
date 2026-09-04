@@ -21,7 +21,7 @@ public sealed class LayoutBuilder : RenderObjectWidget
 
     internal override Element CreateElement() => new LayoutBuilderElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderLayoutBuilder();
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderLayoutBuilder();
 
     internal bool UpdateShouldRebuild(LayoutBuilder oldWidget) => true;
 }

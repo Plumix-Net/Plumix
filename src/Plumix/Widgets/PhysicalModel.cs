@@ -45,7 +45,7 @@ public sealed class PhysicalModel : SingleChildRenderObjectWidget
 
     public Color ShadowColor { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderPhysicalModel(
             color: Color,
@@ -56,7 +56,7 @@ public sealed class PhysicalModel : SingleChildRenderObjectWidget
             shadowColor: ShadowColor);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var physicalModel = (RenderPhysicalModel)renderObject;
         physicalModel.Shape = Shape;
@@ -102,7 +102,7 @@ public sealed class PhysicalShape : SingleChildRenderObjectWidget
 
     public Color ShadowColor { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderPhysicalShape(
             clipper: Clipper,
@@ -112,7 +112,7 @@ public sealed class PhysicalShape : SingleChildRenderObjectWidget
             shadowColor: ShadowColor);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var physicalShape = (RenderPhysicalShape)renderObject;
         physicalShape.Clipper = Clipper;

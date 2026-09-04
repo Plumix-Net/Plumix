@@ -400,7 +400,7 @@ internal sealed class LinearProgressIndicatorRenderWidget : LeafRenderObjectWidg
 
     public TextDirection TextDirection { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderLinearProgressIndicator(
             value: Value,
@@ -415,7 +415,7 @@ internal sealed class LinearProgressIndicatorRenderWidget : LeafRenderObjectWidg
             textDirection: TextDirection);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var indicator = (RenderLinearProgressIndicator)renderObject;
         indicator.Value = Value;
@@ -1426,7 +1426,7 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
 
     public double ArrowheadScale { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCircularProgressIndicator(
             value: Value,
@@ -1443,7 +1443,7 @@ internal sealed class CircularProgressIndicatorRenderWidget : LeafRenderObjectWi
             arrowheadScale: ArrowheadScale);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var indicator = (RenderCircularProgressIndicator)renderObject;
         indicator.Value = Value;

@@ -1065,7 +1065,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
 
     public Action<double>? OnChangeEndNormalized { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSlider(
             sliderTheme: SliderTheme,
@@ -1108,7 +1108,7 @@ internal sealed class SliderRenderWidget : LeafRenderObjectWidget
             onChangeEndNormalized: OnChangeEndNormalized);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var slider = (RenderSlider)renderObject;
         slider.SliderTheme = SliderTheme;

@@ -24,10 +24,10 @@ public sealed class CustomPaint : SingleChildRenderObjectWidget
     public CustomPainter? ForegroundPainter { get; }
     public Size Size { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderCustomPaint(Painter, ForegroundPainter, Size);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var customPaint = (RenderCustomPaint)renderObject;
         customPaint.Painter = Painter;

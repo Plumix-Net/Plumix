@@ -518,14 +518,14 @@ internal sealed class CupertinoSegmentedControlRenderWidget : MultiChildRenderOb
 
     public TextDirection TextDirection { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderCupertinoSegmentedControl(
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderCupertinoSegmentedControl(
         selectedIndex: SelectedIndex,
         pressedIndex: PressedIndex,
         backgroundColors: BackgroundColors,
         borderColor: BorderColor,
         textDirection: TextDirection);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var segmentedControl = (RenderCupertinoSegmentedControl)renderObject;
         segmentedControl.SelectedIndex = SelectedIndex;

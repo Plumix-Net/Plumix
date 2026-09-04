@@ -35,12 +35,12 @@ internal sealed class EnsureMinSemanticsSize : SingleChildRenderObjectWidget
     public bool Enabled { get; }
     public Action? OnTap { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderEnsureMinSemanticsSize(MinSemanticSize, Label, Enabled, OnTap);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var semantics = (RenderEnsureMinSemanticsSize)renderObject;
         semantics.MinSemanticSize = MinSemanticSize;
@@ -208,7 +208,7 @@ internal sealed class ChipRenderWidget : SlottedMultiChildRenderObjectWidget<Chi
         };
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderChip(
             padding: Padding,
@@ -228,7 +228,7 @@ internal sealed class ChipRenderWidget : SlottedMultiChildRenderObjectWidget<Chi
             enableProgress: EnableProgress);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var chip = (RenderChip)renderObject;
         chip.Padding = Padding;

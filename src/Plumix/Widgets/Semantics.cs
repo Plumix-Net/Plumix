@@ -243,7 +243,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     /// </summary>
     public AccessibilityFocusBlockType AccessibilityFocusBlockType { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         var semantics = new RenderSemanticsAnnotations(
             label: Label,
@@ -283,7 +283,7 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         return semantics;
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var semantics = (RenderSemanticsAnnotations)renderObject;
 
@@ -360,12 +360,12 @@ public sealed class ExcludeSemantics : SingleChildRenderObjectWidget
 
     public bool Excluding { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderExcludeSemantics(Excluding);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderExcludeSemantics)renderObject).Excluding = Excluding;
     }
@@ -384,12 +384,12 @@ public sealed class BlockSemantics : SingleChildRenderObjectWidget
 
     public bool Blocking { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderBlockSemantics(Blocking);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderBlockSemantics)renderObject).Blocking = Blocking;
     }
@@ -408,12 +408,12 @@ public sealed class IndexedSemantics : SingleChildRenderObjectWidget
 
     public int Index { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderIndexedSemantics(Index);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderIndexedSemantics)renderObject).Index = Index;
     }

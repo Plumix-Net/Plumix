@@ -1436,10 +1436,10 @@ internal sealed class CupertinoAlignMidpoint : SingleChildRenderObjectWidget
 
     public AlignmentGeometry Alignment { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderCupertinoAlignMidpoint(Alignment.Resolve(Directionality.Of(context)));
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderCupertinoAlignMidpoint)renderObject).Alignment = Alignment.Resolve(Directionality.Of(context));
     }

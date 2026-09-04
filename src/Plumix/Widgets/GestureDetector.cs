@@ -1103,14 +1103,14 @@ internal sealed class GestureSemantics : SingleChildRenderObjectWidget
 
     public Action<RenderSemanticsGestureHandler> AssignSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         var renderObject = new RenderSemanticsGestureHandler { Behavior = Behavior };
         AssignSemantics(renderObject);
         return renderObject;
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var handler = (RenderSemanticsGestureHandler)renderObject;
         handler.Behavior = Behavior;

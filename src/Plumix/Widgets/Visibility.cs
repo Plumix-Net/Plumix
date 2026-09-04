@@ -308,12 +308,12 @@ internal sealed class VisibilityRenderWidget : SingleChildRenderObjectWidget
 
     public bool MaintainSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderVisibility(Visible, MaintainSemantics);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var visibility = (RenderVisibility)renderObject;
         visibility.Visible = Visible;
@@ -337,12 +337,12 @@ internal sealed class SliverVisibilityRenderWidget : SingleChildRenderObjectWidg
 
     public bool MaintainSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverVisibility(Visible, MaintainSemantics);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var visibility = (RenderSliverVisibility)renderObject;
         visibility.Visible = Visible;

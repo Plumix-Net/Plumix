@@ -22,10 +22,10 @@ public sealed class ListBody : MultiChildRenderObjectWidget
 
     public bool Reverse { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderListBody(ResolveAxisDirection(context));
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject) =>
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject) =>
         ((RenderListBody)renderObject).AxisDirection = ResolveAxisDirection(context);
 
     private AxisDirection ResolveAxisDirection(BuildContext context)

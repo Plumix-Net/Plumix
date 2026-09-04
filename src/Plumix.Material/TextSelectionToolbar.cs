@@ -294,12 +294,12 @@ internal sealed class TextSelectionToolbarTrailingEdgeAlign : SingleChildRenderO
 
     public TextDirection TextDirection { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderTextSelectionToolbarTrailingEdgeAlign(OverflowOpen, TextDirection);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var align = (RenderTextSelectionToolbarTrailingEdgeAlign)renderObject;
         align.OverflowOpen = OverflowOpen;
@@ -393,12 +393,12 @@ internal sealed class TextSelectionToolbarItemsLayout : MultiChildRenderObjectWi
 
     public TextDirection TextDirection { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderTextSelectionToolbarItemsLayout(IsAbove, OverflowOpen, TextDirection);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var layout = (RenderTextSelectionToolbarItemsLayout)renderObject;
         layout.IsAbove = IsAbove;

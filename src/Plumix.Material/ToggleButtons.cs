@@ -443,7 +443,7 @@ internal sealed class SelectToggleButton : SingleChildRenderObjectWidget
     public VerticalDirection VerticalDirection { get; }
     public TextDirection TextDirection { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSelectToggleButton(
             leadingBorderSide: LeadingBorderSide,
@@ -457,7 +457,7 @@ internal sealed class SelectToggleButton : SingleChildRenderObjectWidget
             textDirection: TextDirection);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var button = (RenderSelectToggleButton)renderObject;
         button.LeadingBorderSide = LeadingBorderSide;
@@ -985,12 +985,12 @@ internal sealed class ToggleButtonInputPadding : SingleChildRenderObjectWidget
     public Size MinSize { get; }
     public Axis Direction { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderToggleButtonInputPadding(MinSize, Direction);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var padding = (RenderToggleButtonInputPadding)renderObject;
         padding.MinSize = MinSize;

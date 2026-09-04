@@ -42,12 +42,12 @@ public sealed class Opacity : SingleChildRenderObjectWidget
     /// </summary>
     public bool AlwaysIncludeSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderOpacity(Value, AlwaysIncludeSemantics);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var opacity = (RenderOpacity)renderObject;
         opacity.Opacity = Value;
@@ -86,19 +86,19 @@ public sealed class ClipRect : SingleChildRenderObjectWidget
     /// <summary>How the clip is applied. Defaults to <see cref="Clip.HardEdge"/>.</summary>
     public Clip ClipBehavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderClipRect(clipper: Clipper, clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var clipRect = (RenderClipRect)renderObject;
         clipRect.Clipper = Clipper;
         clipRect.ClipBehavior = ClipBehavior;
     }
 
-    internal override void DidUnmountRenderObject(RenderObject renderObject)
+    public override void DidUnmountRenderObject(RenderObject renderObject)
     {
         ((RenderClipRect)renderObject).Clipper = null;
     }
@@ -137,7 +137,7 @@ public sealed class ClipRRect : SingleChildRenderObjectWidget
     /// <summary>How the clip is applied. Defaults to <see cref="Clip.AntiAlias"/>.</summary>
     public Clip ClipBehavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderClipRRect(
             borderRadius: BorderRadius,
@@ -146,7 +146,7 @@ public sealed class ClipRRect : SingleChildRenderObjectWidget
             textDirection: Directionality.MaybeOf(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var clipRRect = (RenderClipRRect)renderObject;
         clipRRect.BorderRadius = BorderRadius;
@@ -293,7 +293,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
     /// <summary>The filter quality with which to apply the transform as a bitmap operation.</summary>
     public FilterQuality? FilterQuality { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderTransform(
             Matrix,
@@ -305,7 +305,7 @@ public sealed class Transform : SingleChildRenderObjectWidget
             Directionality.MaybeOf(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var transform = (RenderTransform)renderObject;
         transform.Transform = Matrix;
@@ -391,7 +391,7 @@ public sealed class FittedBox : SingleChildRenderObjectWidget
     /// <summary>How to clip the child when it overflows. Defaults to <see cref="Clip.None"/>.</summary>
     public Clip ClipBehavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFittedBox(
             fit: Fit,
@@ -400,7 +400,7 @@ public sealed class FittedBox : SingleChildRenderObjectWidget
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var fittedBox = (RenderFittedBox)renderObject;
         fittedBox.Fit = Fit;
@@ -438,12 +438,12 @@ public sealed class FractionalTranslation : SingleChildRenderObjectWidget
     /// <summary>Whether to apply the translation when performing hit tests.</summary>
     public bool TransformHitTests { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFractionalTranslation(Translation, TransformHitTests);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var translation = (RenderFractionalTranslation)renderObject;
         translation.Translation = Translation;
@@ -465,12 +465,12 @@ public sealed class RotatedBox : SingleChildRenderObjectWidget
     /// <summary>The number of clockwise quarter turns the child should be rotated.</summary>
     public int QuarterTurns { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderRotatedBox(QuarterTurns);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderRotatedBox)renderObject).QuarterTurns = QuarterTurns;
     }
@@ -489,12 +489,12 @@ public sealed class Padding : SingleChildRenderObjectWidget
     /// </remarks>
     public EdgeInsetsGeometry Insets { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderPadding(Insets, textDirection: Directionality.MaybeOf(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var padding = (RenderPadding)renderObject;
         padding.Padding = Insets;
@@ -545,7 +545,7 @@ public class Align : SingleChildRenderObjectWidget
     /// <summary>If non-null, sets its height to the child's height multiplied by this factor.</summary>
     public double? HeightFactor { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderPositionedBox(
             widthFactor: WidthFactor,
@@ -554,7 +554,7 @@ public class Align : SingleChildRenderObjectWidget
             textDirection: Directionality.MaybeOf(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var align = (RenderPositionedBox)renderObject;
         align.Alignment = Alignment;
@@ -626,12 +626,12 @@ public sealed class SizedBox : SingleChildRenderObjectWidget
     private BoxConstraints AdditionalConstraints =>
         BoxConstraints.TightFor(width: Width, height: Height);
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderConstrainedBox(AdditionalConstraints);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderConstrainedBox)renderObject).AdditionalConstraints = AdditionalConstraints;
     }
@@ -674,12 +674,12 @@ public sealed class ConstrainedBox : SingleChildRenderObjectWidget
     /// <summary>The additional constraints to impose on the child.</summary>
     public BoxConstraints Constraints { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderConstrainedBox(Constraints);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderConstrainedBox)renderObject).AdditionalConstraints = Constraints;
     }
@@ -789,7 +789,7 @@ public sealed class FractionallySizedBox : SingleChildRenderObjectWidget
     /// <summary>If non-null, the fraction of the incoming height the child is given.</summary>
     public double? HeightFactor { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFractionallySizedOverflowBox(
             widthFactor: WidthFactor,
@@ -798,7 +798,7 @@ public sealed class FractionallySizedBox : SingleChildRenderObjectWidget
             textDirection: Directionality.MaybeOf(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var fractionallySizedBox = (RenderFractionallySizedOverflowBox)renderObject;
         fractionallySizedBox.Alignment = Alignment;
@@ -847,14 +847,14 @@ public sealed class LimitedBox : SingleChildRenderObjectWidget
     /// <summary>The maximum height limit to apply in the absence of a bounded height constraint.</summary>
     public double MaxHeight { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderLimitedBox(
             maxWidth: MaxWidth,
             maxHeight: MaxHeight);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var limitedBox = (RenderLimitedBox)renderObject;
         limitedBox.MaxWidth = MaxWidth;
@@ -911,7 +911,7 @@ public sealed class OverflowBox : SingleChildRenderObjectWidget
     /// <summary>How much space this widget takes up.</summary>
     public OverflowBoxFit Fit { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderConstrainedOverflowBox(
             minWidth: MinWidth,
@@ -923,7 +923,7 @@ public sealed class OverflowBox : SingleChildRenderObjectWidget
             textDirection: Directionality.MaybeOf(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var overflowBox = (RenderConstrainedOverflowBox)renderObject;
         overflowBox.Alignment = Alignment;
@@ -969,7 +969,7 @@ public sealed class SizedOverflowBox : SingleChildRenderObjectWidget
     /// <summary>How to align the child.</summary>
     public AlignmentGeometry Alignment { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSizedOverflowBox(
             requestedSize: Size,
@@ -977,7 +977,7 @@ public sealed class SizedOverflowBox : SingleChildRenderObjectWidget
             textDirection: Directionality.Of(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var sizedOverflowBox = (RenderSizedOverflowBox)renderObject;
         sizedOverflowBox.Alignment = Alignment;
@@ -1012,12 +1012,12 @@ public sealed class Offstage : SingleChildRenderObjectWidget
     /// </remarks>
     public bool IsOffstage { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderOffstage(offstage: IsOffstage);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderOffstage)renderObject).Offstage = IsOffstage;
     }
@@ -1068,12 +1068,12 @@ public sealed class AspectRatio : SingleChildRenderObjectWidget
     /// name.</remarks>
     public double Ratio { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderAspectRatio(Ratio);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderAspectRatio)renderObject).AspectRatio = Ratio;
     }
@@ -1116,7 +1116,7 @@ public class Stack : MultiChildRenderObjectWidget
     /// <summary>How to clip overflowing content. Defaults to <see cref="Clip.HardEdge"/>.</summary>
     public Clip ClipBehavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderStack(
             alignment: Alignment,
@@ -1125,7 +1125,7 @@ public class Stack : MultiChildRenderObjectWidget
             textDirection: TextDirection ?? Directionality.MaybeOf(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var stack = (RenderStack)renderObject;
         stack.Alignment = Alignment;
@@ -1477,7 +1477,7 @@ public class Flex : MultiChildRenderObjectWidget
         return TextDirection ?? (NeedTextDirection ? Directionality.MaybeOf(context) : null);
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFlex(
             children: null,
@@ -1492,7 +1492,7 @@ public class Flex : MultiChildRenderObjectWidget
             spacing: Spacing);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var flex = (RenderFlex)renderObject;
         flex.Direction = Direction;
@@ -1701,7 +1701,7 @@ public sealed class Wrap : MultiChildRenderObjectWidget
     /// <summary>How to clip overflowing content. Defaults to <see cref="Clip.None"/>.</summary>
     public Clip ClipBehavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderWrap(
             direction: Direction,
@@ -1715,7 +1715,7 @@ public sealed class Wrap : MultiChildRenderObjectWidget
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var wrap = (RenderWrap)renderObject;
         wrap.Direction = Direction;
@@ -1767,14 +1767,14 @@ public sealed class IgnorePointer : SingleChildRenderObjectWidget
     /// <summary>Deprecated in Flutter: whether the semantics of this widget are ignored.</summary>
     public bool? IgnoringSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderIgnorePointer(
             ignoring: Ignoring,
             ignoringSemantics: IgnoringSemantics);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var ignorePointer = (RenderIgnorePointer)renderObject;
         ignorePointer.Ignoring = Ignoring;
@@ -1813,14 +1813,14 @@ public sealed class AbsorbPointer : SingleChildRenderObjectWidget
     /// <summary>Deprecated in Flutter: whether the semantics of this widget are ignored.</summary>
     public bool? IgnoringSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderAbsorbPointer(
             absorbing: Absorbing,
             ignoringSemantics: IgnoringSemantics);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var absorbPointer = (RenderAbsorbPointer)renderObject;
         absorbPointer.Absorbing = Absorbing;

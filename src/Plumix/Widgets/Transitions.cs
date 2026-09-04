@@ -563,14 +563,14 @@ public sealed class SliverFadeTransition : SingleChildRenderObjectWidget
 
     public bool AlwaysIncludeSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverAnimatedOpacity(
             opacity: Opacity,
             alwaysIncludeSemantics: AlwaysIncludeSemantics);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var opacity = (RenderSliverAnimatedOpacity)renderObject;
         opacity.Opacity = Opacity;

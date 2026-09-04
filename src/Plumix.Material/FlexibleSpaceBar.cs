@@ -278,12 +278,12 @@ internal sealed class FlexibleSpaceHeaderOpacity : SingleChildRenderObjectWidget
 
     public bool AlwaysIncludeSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFlexibleSpaceHeaderOpacity(Opacity, AlwaysIncludeSemantics);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var opacity = (RenderFlexibleSpaceHeaderOpacity)renderObject;
         opacity.AlwaysIncludeSemantics = AlwaysIncludeSemantics;

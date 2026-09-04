@@ -45,7 +45,7 @@ public sealed class OverflowBar : MultiChildRenderObjectWidget
     public VerticalDirection OverflowDirection { get; }
     public TextDirection? TextDirection { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderOverflowBar(
             spacing: Spacing,
@@ -56,7 +56,7 @@ public sealed class OverflowBar : MultiChildRenderObjectWidget
             textDirection: TextDirection ?? Directionality.Of(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var bar = (RenderOverflowBar)renderObject;
         bar.Spacing = Spacing;

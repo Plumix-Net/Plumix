@@ -211,7 +211,7 @@ internal sealed class SimpleBuilderTableViewport : TwoDimensionalViewport
 
     public bool SetLayoutOffset { get; }
 
-    internal override RenderTwoDimensionalViewport CreateRenderObject(BuildContext context)
+    public override RenderTwoDimensionalViewport CreateRenderObject(BuildContext context)
     {
         return new RenderSimpleBuilderTableViewport(
             horizontalOffset: HorizontalOffset,
@@ -229,7 +229,7 @@ internal sealed class SimpleBuilderTableViewport : TwoDimensionalViewport
             forgetToLayoutChild: ForgetToLayoutChild);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderSimpleBuilderTableViewport)renderObject;
         viewport.HorizontalOffset = HorizontalOffset;
@@ -438,7 +438,7 @@ internal sealed class SimpleListTableViewport : TwoDimensionalViewport
     {
     }
 
-    internal override RenderTwoDimensionalViewport CreateRenderObject(BuildContext context)
+    public override RenderTwoDimensionalViewport CreateRenderObject(BuildContext context)
     {
         return new RenderSimpleListTableViewport(
             horizontalOffset: HorizontalOffset,
@@ -451,7 +451,7 @@ internal sealed class SimpleListTableViewport : TwoDimensionalViewport
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderSimpleListTableViewport)renderObject;
         viewport.HorizontalOffset = HorizontalOffset;

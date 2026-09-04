@@ -45,7 +45,7 @@ internal sealed class SegmentedButtonRenderWidget : MultiChildRenderObjectWidget
     public bool Expanded { get; }
     public double TapTargetVerticalPadding { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSegmentedButton(
             segmentEnabled: SegmentEnabled,
@@ -57,7 +57,7 @@ internal sealed class SegmentedButtonRenderWidget : MultiChildRenderObjectWidget
             tapTargetVerticalPadding: TapTargetVerticalPadding);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var segmentedButton = (RenderSegmentedButton)renderObject;
         segmentedButton.SegmentEnabled = SegmentEnabled;

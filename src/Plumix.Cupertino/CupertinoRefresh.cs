@@ -47,14 +47,14 @@ internal sealed class CupertinoSliverRefresh : SingleChildRenderObjectWidget
 
     public bool HasLayoutExtent { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCupertinoSliverRefresh(
             refreshIndicatorExtent: RefreshIndicatorLayoutExtent,
             hasLayoutExtent: HasLayoutExtent);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var refresh = (RenderCupertinoSliverRefresh)renderObject;
         refresh.RefreshIndicatorLayoutExtent = RefreshIndicatorLayoutExtent;

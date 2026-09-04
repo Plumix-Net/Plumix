@@ -83,7 +83,7 @@ internal sealed class ListTileRenderWidget : SlottedMultiChildRenderObjectWidget
         };
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderListTile(
             isDense: IsDense,
@@ -99,7 +99,7 @@ internal sealed class ListTileRenderWidget : SlottedMultiChildRenderObjectWidget
             titleAlignment: TitleAlignment);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var tile = (RenderListTile)renderObject;
         tile.IsDense = IsDense;

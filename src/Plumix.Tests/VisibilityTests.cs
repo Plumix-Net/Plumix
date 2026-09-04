@@ -471,7 +471,7 @@ public sealed class VisibilityTests
             _size = size;
         }
 
-        internal override RenderObject CreateRenderObject(BuildContext context)
+        public override RenderObject CreateRenderObject(BuildContext context)
         {
             return new HitTestRenderBox(_size);
         }

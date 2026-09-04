@@ -24,7 +24,7 @@ public sealed class DecoratedSliver : SingleChildRenderObjectWidget
 
     public DecorationPosition Position { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderDecoratedSliver(
             decoration: Decoration,
@@ -32,7 +32,7 @@ public sealed class DecoratedSliver : SingleChildRenderObjectWidget
             configuration: ImageConfigurationUtils.CreateLocalImageConfiguration(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var decoratedSliver = (RenderDecoratedSliver)renderObject;
         decoratedSliver.Decoration = Decoration;
@@ -66,7 +66,7 @@ internal sealed class PinnedHeaderSliverRenderWidget : SingleChildRenderObjectWi
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderPinnedHeaderSliver();
     }

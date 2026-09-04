@@ -1505,12 +1505,12 @@ internal sealed class ChipRedirectingHitDetectionWidget : SingleChildRenderObjec
 
     public BoxConstraints Constraints { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderChipRedirectingHitDetection(Constraints);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderChipRedirectingHitDetection)renderObject).AdditionalConstraints = Constraints;
     }

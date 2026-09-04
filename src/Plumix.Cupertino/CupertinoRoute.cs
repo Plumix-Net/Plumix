@@ -1073,13 +1073,13 @@ internal sealed class CupertinoPageSizeObserver : SingleChildRenderObjectWidget
 
     public Action<Size> OnSizeChanged { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         _ = context;
         return new RenderCupertinoPageSizeObserver(OnSizeChanged);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         _ = context;
         ((RenderCupertinoPageSizeObserver)renderObject).OnSizeChanged = OnSizeChanged;

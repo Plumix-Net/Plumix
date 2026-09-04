@@ -1178,7 +1178,7 @@ internal sealed class OverlayTheater : MultiChildRenderObjectWidget
 
     internal override Element CreateElement() => new OverlayTheaterElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         Alignment alignment = Directionality.Of(context) == TextDirection.Rtl
             ? Alignment.TopRight
@@ -1190,7 +1190,7 @@ internal sealed class OverlayTheater : MultiChildRenderObjectWidget
             AlwaysSizeToContent);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var theater = (RenderOverlayTheater)renderObject;
         theater.Alignment = Directionality.Of(context) == TextDirection.Rtl
@@ -1213,7 +1213,7 @@ internal sealed class OverlayPortalLayoutBuilderWidget : RenderObjectWidget
 
     internal override Element CreateElement() => new OverlayPortalLayoutBuilderElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderOverlayPortalLayoutBuilder();
     }
@@ -1237,7 +1237,7 @@ internal sealed class DeferredLayout : SingleChildRenderObjectWidget
     /// <c>OverlayPortalState</c>.</remarks>
     public object? ChildIdentifier { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         RenderOverlayPortalSurrogate parent = GetLayoutParent(context);
         var renderObject = new RenderDeferredLayoutBox(parent, ChildIdentifier);
@@ -1245,7 +1245,7 @@ internal sealed class DeferredLayout : SingleChildRenderObjectWidget
         return renderObject;
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var deferredLayoutBox = (RenderDeferredLayoutBox)renderObject;
         Debug.Assert(ReferenceEquals(deferredLayoutBox.LayoutSurrogate, GetLayoutParent(context)));
@@ -1412,12 +1412,12 @@ internal sealed class OverlayPortalRenderWidget : RenderObjectWidget
 
     internal override Element CreateElement() => new OverlayPortalElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderOverlayPortalSurrogate(Location);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderOverlayPortalSurrogate)renderObject).Location = Location;
     }

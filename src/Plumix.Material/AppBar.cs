@@ -50,12 +50,12 @@ internal sealed class AppBarTitleBox : SingleChildRenderObjectWidget
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderAppBarTitleBox(Directionality.Of(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderAppBarTitleBox)renderObject).TextDirection = Directionality.Of(context);
     }

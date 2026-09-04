@@ -175,7 +175,7 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
     public bool HasFloatingActionButton { get; }
     public ScaffoldGeometryNotifier? GeometryNotifier { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderBottomAppBarSurface(
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderBottomAppBarSurface(
         Color,
         Elevation,
         ShadowColor,
@@ -185,7 +185,7 @@ internal sealed class BottomAppBarSurface : SingleChildRenderObjectWidget
         HasFloatingActionButton,
         GeometryNotifier);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var surface = (RenderBottomAppBarSurface)renderObject;
         surface.Color = Color;

@@ -70,7 +70,7 @@ internal sealed class SliverResizingHeaderRenderObjectWidget : RenderObjectWidge
 
     internal override Element CreateElement() => new SliverResizingHeaderElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverResizingHeader();
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverResizingHeader();
 }
 
 internal sealed class SliverResizingHeaderElement : RenderObjectElement
@@ -351,7 +351,7 @@ internal sealed class SliverFloatingHeaderRenderObjectWidget : SingleChildRender
 
     public PersistentHeaderShowOnScreenConfiguration? ShowOnScreenConfiguration { get; init; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFloatingHeader(
             animationStyle: AnimationStyle,
@@ -361,7 +361,7 @@ internal sealed class SliverFloatingHeaderRenderObjectWidget : SingleChildRender
         };
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var floatingHeader = (RenderSliverFloatingHeader)renderObject;
         floatingHeader.AnimationStyle = AnimationStyle;

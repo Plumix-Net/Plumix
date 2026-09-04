@@ -660,10 +660,10 @@ internal sealed class DayPeriodInputPadding : SingleChildRenderObjectWidget
     public Size MinSize { get; }
     public Orientation Orientation { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderDayPeriodInputPadding(MinSize, Orientation);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var padding = (RenderDayPeriodInputPadding)renderObject;
         padding.MinSize = MinSize;

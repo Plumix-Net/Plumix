@@ -139,7 +139,7 @@ internal sealed class ButtonBarRow : Flex
 
     public double? OverflowButtonSpacing { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderButtonBarRow(
             mainAxisSize: MainAxisSize,
@@ -149,7 +149,7 @@ internal sealed class ButtonBarRow : Flex
             overflowButtonSpacing: OverflowButtonSpacing);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var row = (RenderButtonBarRow)renderObject;
         row.Direction = Direction;

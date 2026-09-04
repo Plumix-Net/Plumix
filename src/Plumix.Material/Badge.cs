@@ -197,7 +197,7 @@ internal sealed class BadgePositioner : SingleChildRenderObjectWidget
     public bool HasLabel { get; }
     public TextDirection TextDirection { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderBadgePositioner(
             Alignment,
@@ -207,7 +207,7 @@ internal sealed class BadgePositioner : SingleChildRenderObjectWidget
             TextDirection);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var badge = (RenderBadgePositioner)renderObject;
         badge.Alignment = Alignment;
@@ -305,12 +305,12 @@ internal sealed class BadgeHorizontalStadium : SingleChildRenderObjectWidget
 
     public double MinSize { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderBadgeHorizontalStadium(MinSize);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderBadgeHorizontalStadium)renderObject).MinSize = MinSize;
     }

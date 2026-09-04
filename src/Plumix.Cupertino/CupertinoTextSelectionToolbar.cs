@@ -334,12 +334,12 @@ internal sealed class CupertinoTextSelectionToolbarShape : SingleChildRenderObje
 
     public Color? ShadowColor { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCupertinoTextSelectionToolbarShape(AnchorAbove, AnchorBelow, ShadowColor);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var shape = (RenderCupertinoTextSelectionToolbarShape)renderObject;
         shape.AnchorAbove = AnchorAbove;
@@ -711,12 +711,12 @@ internal sealed class CupertinoTextSelectionToolbarItems : RenderObjectWidget
 
     public int Page { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCupertinoTextSelectionToolbarItems(DividerColor, DividerWidth, Page);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var items = (RenderCupertinoTextSelectionToolbarItems)renderObject;
         items.Page = Page;

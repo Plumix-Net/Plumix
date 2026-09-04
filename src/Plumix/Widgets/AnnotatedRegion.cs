@@ -24,14 +24,14 @@ public sealed class AnnotatedRegion<T> : SingleChildRenderObjectWidget where T :
 
     public bool Sized { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderAnnotatedRegion<T>(
             value: Value,
             sized: Sized);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var annotatedRegion = (RenderAnnotatedRegion<T>)renderObject;
         annotatedRegion.Value = Value;

@@ -21,12 +21,12 @@ public sealed class ImageFiltered : SingleChildRenderObjectWidget
 
     public bool Enabled { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderImageFilter(ImageFilter, Enabled);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var imageFilter = (RenderImageFilter)renderObject;
         imageFilter.Enabled = Enabled;

@@ -151,7 +151,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
     /// The color to use when painting the selection.
     public Avalonia.Media.Color? SelectionColor { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         var paragraph = new RenderParagraph(Text)
         {
@@ -172,7 +172,7 @@ public sealed class RichText : MultiChildRenderObjectWidget
         return paragraph;
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var paragraph = (RenderParagraph)renderObject;
         paragraph.Text = Text;

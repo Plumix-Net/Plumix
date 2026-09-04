@@ -111,7 +111,7 @@ public sealed class BackdropFilter : SingleChildRenderObjectWidget
             key);
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderBackdropFilter(
             EffectiveFilterConfig,
@@ -120,7 +120,7 @@ public sealed class BackdropFilter : SingleChildRenderObjectWidget
             backdropKey: GetBackdropGroupKey(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var backdropFilter = (RenderBackdropFilter)renderObject;
         backdropFilter.FilterConfig = EffectiveFilterConfig;

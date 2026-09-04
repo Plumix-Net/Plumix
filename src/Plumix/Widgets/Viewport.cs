@@ -92,7 +92,7 @@ public class Viewport : MultiChildRenderObjectWidget
 
     internal override Element CreateElement() => new ViewportElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderViewport(
             offset: Offset,
@@ -105,7 +105,7 @@ public class Viewport : MultiChildRenderObjectWidget
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderViewport)renderObject;
         viewport.AxisDirection = AxisDirection;
@@ -161,7 +161,7 @@ public class ShrinkWrappingViewport : MultiChildRenderObjectWidget
 
     public Clip ClipBehavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderShrinkWrappingViewport(
             offset: Offset,
@@ -173,7 +173,7 @@ public class ShrinkWrappingViewport : MultiChildRenderObjectWidget
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderShrinkWrappingViewport)renderObject;
         viewport.AxisDirection = AxisDirection;

@@ -22,14 +22,14 @@ public sealed class MetaData : SingleChildRenderObjectWidget
 
     public HitTestBehavior Behavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderMetaData(
             metaData: Metadata,
             behavior: Behavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var metadata = (RenderMetaData)renderObject;
         metadata.MetaData = Metadata;

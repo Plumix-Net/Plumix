@@ -24,14 +24,14 @@ public sealed class ClipOval : SingleChildRenderObjectWidget
 
     public Clip ClipBehavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderClipOval(
             clipper: Clipper,
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var clipOval = (RenderClipOval)renderObject;
         clipOval.Clipper = Clipper;
@@ -72,14 +72,14 @@ public sealed class ClipPath : SingleChildRenderObjectWidget
                 child: child));
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderClipPath(
             clipper: Clipper,
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var clipPath = (RenderClipPath)renderObject;
         clipPath.Clipper = Clipper;

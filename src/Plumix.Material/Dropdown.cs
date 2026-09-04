@@ -756,9 +756,9 @@ internal sealed class MenuItem<T> : SingleChildRenderObjectWidget
     public Action<Size> OnLayout { get; }
     public DropdownMenuItem<T>? Item { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderMenuItem(OnLayout);
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderMenuItem(OnLayout);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject) =>
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject) =>
         ((RenderMenuItem)renderObject).OnLayout = OnLayout;
 }
 

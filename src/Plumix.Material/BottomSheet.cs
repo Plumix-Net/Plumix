@@ -420,14 +420,14 @@ internal sealed class BottomSheetLayoutWithSizeListener : SingleChildRenderObjec
     public bool IsScrollControlled { get; }
     public double ScrollControlDisabledMaxHeightRatio { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderBottomSheetLayoutWithSizeListener(
             OnChildSizeChanged,
             AnimationValue,
             IsScrollControlled,
             ScrollControlDisabledMaxHeightRatio);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var layout = (RenderBottomSheetLayoutWithSizeListener)renderObject;
         layout.OnChildSizeChanged = OnChildSizeChanged;

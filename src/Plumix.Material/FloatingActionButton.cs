@@ -598,7 +598,7 @@ internal sealed class FloatingActionButtonChildOverflowBox : SingleChildRenderOb
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFloatingActionButtonChildOverflowBox();
     }

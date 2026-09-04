@@ -21,7 +21,7 @@ public sealed class SliverLayoutBuilder : RenderObjectWidget
 
     internal override Element CreateElement() => new SliverLayoutBuilderElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverLayoutBuilder();
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverLayoutBuilder();
 
     internal bool UpdateShouldRebuild(SliverLayoutBuilder oldWidget) => true;
 }

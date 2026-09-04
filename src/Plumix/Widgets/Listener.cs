@@ -70,7 +70,7 @@ public sealed class Listener : SingleChildRenderObjectWidget
 
     public HitTestBehavior Behavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderPointerListener(
             onPointerDown: OnPointerDown,
@@ -87,7 +87,7 @@ public sealed class Listener : SingleChildRenderObjectWidget
             behavior: Behavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var listener = (RenderPointerListener)renderObject;
         listener.OnPointerDown = OnPointerDown;

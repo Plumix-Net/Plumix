@@ -953,9 +953,9 @@ internal sealed class DropdownMenuBody : MultiChildRenderObjectWidget
 
     public double? Width { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderDropdownMenuBody(Width);
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderDropdownMenuBody(Width);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject) =>
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject) =>
         ((RenderDropdownMenuBody)renderObject).Width = Width;
 }
 

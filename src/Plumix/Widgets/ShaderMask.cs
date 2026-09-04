@@ -23,14 +23,14 @@ public sealed class ShaderMask : SingleChildRenderObjectWidget
 
     public BlendMode BlendMode { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderShaderMask(
             shaderCallback: ShaderCallback,
             blendMode: BlendMode);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var shaderMask = (RenderShaderMask)renderObject;
         shaderMask.ShaderCallback = ShaderCallback;

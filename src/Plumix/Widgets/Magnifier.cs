@@ -210,7 +210,7 @@ public sealed class RawMagnifier : SingleChildRenderObjectWidget
 
     public double MagnificationScale { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderMagnifier(
             Size,
@@ -220,7 +220,7 @@ public sealed class RawMagnifier : SingleChildRenderObjectWidget
             MagnificationScale);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var magnifier = (RenderMagnifier)renderObject;
         magnifier.RequestedSize = Size;

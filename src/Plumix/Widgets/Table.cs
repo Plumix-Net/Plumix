@@ -188,7 +188,7 @@ public sealed class Table : RenderObjectWidget
 
     internal override Element CreateElement() => new TableElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderTable(
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderTable(
         columns: ColumnCount,
         rows: Children.Count,
         columnWidths: ColumnWidths,
@@ -200,7 +200,7 @@ public sealed class Table : RenderObjectWidget
         defaultVerticalAlignment: DefaultVerticalAlignment,
         textBaseline: TextBaseline);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var table = (RenderTable)renderObject;
         table.ColumnWidths = ColumnWidths ?? EmptyColumnWidths;

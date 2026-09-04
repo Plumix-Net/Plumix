@@ -23,10 +23,10 @@ public sealed class IntrinsicWidth : SingleChildRenderObjectWidget
     public double? StepWidth { get; }
     public double? StepHeight { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderIntrinsicWidth(stepWidth: EffectiveStep(StepWidth), stepHeight: EffectiveStep(StepHeight));
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var intrinsicWidth = (RenderIntrinsicWidth)renderObject;
         intrinsicWidth.StepWidth = EffectiveStep(StepWidth);
@@ -54,7 +54,7 @@ public sealed class IntrinsicHeight : SingleChildRenderObjectWidget
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderIntrinsicHeight();
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderIntrinsicHeight();
 }
 
 public sealed class RenderIntrinsicWidth : RenderProxyBox

@@ -1212,7 +1212,7 @@ public sealed class ListWheelViewport : RenderObjectWidget
 
     internal override Element CreateElement() => new ListWheelElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         var childManager = (ListWheelElement)context.Owner;
         return new RenderListWheelViewport(
@@ -1230,7 +1230,7 @@ public sealed class ListWheelViewport : RenderObjectWidget
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderListWheelViewport)renderObject;
         viewport.Offset = Offset;

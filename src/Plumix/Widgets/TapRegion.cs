@@ -31,7 +31,7 @@ public sealed class TapRegionSurface : SingleChildRenderObjectWidget
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderTapRegionSurface();
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderTapRegionSurface();
 }
 
 public class TapRegion : SingleChildRenderObjectWidget
@@ -78,7 +78,7 @@ public class TapRegion : SingleChildRenderObjectWidget
 
     public string? DebugLabel { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         bool isCurrent = ModalRoute.IsCurrentOf(context) ?? true;
         return new RenderTapRegion(
@@ -94,7 +94,7 @@ public class TapRegion : SingleChildRenderObjectWidget
             debugLabel: DebugLabel);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         bool isCurrent = ModalRoute.IsCurrentOf(context) ?? true;
         var region = (RenderTapRegion)renderObject;

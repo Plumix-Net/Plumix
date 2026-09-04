@@ -62,7 +62,7 @@ public sealed class ErrorWidget : LeafRenderObjectWidget
     /// <summary>The message to display.</summary>
     public string Message { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderErrorBox(Message);
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderErrorBox(Message);
 
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {

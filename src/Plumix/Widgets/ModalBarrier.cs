@@ -94,12 +94,12 @@ internal sealed class SemanticsClipper : SingleChildRenderObjectWidget
 
     public ValueNotifier<Thickness> ClipDetailsNotifier { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSemanticsClipper(ClipDetailsNotifier);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSemanticsClipper)renderObject).ClipDetailsNotifier = ClipDetailsNotifier;
     }

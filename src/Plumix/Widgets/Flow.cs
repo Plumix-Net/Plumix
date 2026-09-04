@@ -46,12 +46,12 @@ public sealed class Flow : MultiChildRenderObjectWidget
         return new Flow(@delegate, children ?? [], clipBehavior, key, wrapChildren: false);
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderFlow(Delegate, clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var flow = (RenderFlow)renderObject;
         flow.Delegate = Delegate;

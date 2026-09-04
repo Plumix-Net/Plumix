@@ -616,7 +616,7 @@ public sealed class RawImage : LeafRenderObjectWidget
     public FilterQuality FilterQuality { get; }
     public bool IsAntiAlias { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderImage(
             image: Image,
@@ -638,7 +638,7 @@ public sealed class RawImage : LeafRenderObjectWidget
             filterQuality: FilterQuality);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var image = (RenderImage)renderObject;
         image.Image = Image;

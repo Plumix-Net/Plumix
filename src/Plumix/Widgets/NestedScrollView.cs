@@ -1417,12 +1417,12 @@ public class SliverOverlapAbsorber : SingleChildRenderObjectWidget
     /// <summary>The handle the absorbed overlap is reported through.</summary>
     public SliverOverlapAbsorberHandle Handle { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverOverlapAbsorber(Handle);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverOverlapAbsorber)renderObject).Handle = Handle;
     }
@@ -1445,12 +1445,12 @@ public class SliverOverlapInjector : SingleChildRenderObjectWidget
     /// <summary>The handle whose absorbed overlap is injected.</summary>
     public SliverOverlapAbsorberHandle Handle { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverOverlapInjector(Handle);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverOverlapInjector)renderObject).Handle = Handle;
     }
@@ -1484,7 +1484,7 @@ public class NestedScrollViewViewport : Viewport
     /// <summary>The handle the injectors in the body listen to.</summary>
     public SliverOverlapAbsorberHandle Handle { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderNestedScrollViewViewport(
             offset: Offset,
@@ -1496,7 +1496,7 @@ public class NestedScrollViewViewport : Viewport
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderNestedScrollViewViewport)renderObject;
         viewport.AxisDirection = AxisDirection;

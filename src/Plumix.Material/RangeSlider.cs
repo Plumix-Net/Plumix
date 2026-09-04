@@ -812,7 +812,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
 
     public Action<NormalizedRangeValues>? OnChangeEndNormalized { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderRangeSlider(
             sliderTheme: SliderTheme,
@@ -851,7 +851,7 @@ internal sealed class RangeSliderRenderWidget : LeafRenderObjectWidget
             onChangeEndNormalized: OnChangeEndNormalized);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var rangeSlider = (RenderRangeSlider)renderObject;
         rangeSlider.SliderTheme = SliderTheme;

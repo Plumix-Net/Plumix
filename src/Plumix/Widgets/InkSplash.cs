@@ -37,7 +37,7 @@ public sealed class InkSplash : SingleChildRenderObjectWidget
 
     public bool ClipToBounds { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderInkSplash(
             splashColor: SplashColor,
@@ -47,7 +47,7 @@ public sealed class InkSplash : SingleChildRenderObjectWidget
             clipToBounds: ClipToBounds);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var inkSplash = (RenderInkSplash)renderObject;
         inkSplash.SplashColor = SplashColor;

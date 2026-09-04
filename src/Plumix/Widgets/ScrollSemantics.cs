@@ -42,7 +42,7 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
 
     public int? SemanticChildCount { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderScrollSemantics(
             position: Position,
@@ -51,7 +51,7 @@ internal sealed class ScrollSemantics : SingleChildRenderObjectWidget
             semanticChildCount: SemanticChildCount);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var scrollSemantics = (RenderScrollSemantics)renderObject;
         scrollSemantics.AllowImplicitScrolling = AllowImplicitScrolling;

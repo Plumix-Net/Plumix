@@ -207,12 +207,12 @@ internal sealed class AutoScaleInlineWidget : SingleChildRenderObjectWidget
 
     public double TextScaleFactor { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderScaledInlineWidget(Span.Alignment, Span.Baseline, TextScaleFactor);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var scaled = (RenderScaledInlineWidget)renderObject;
         scaled.Alignment = Span.Alignment;

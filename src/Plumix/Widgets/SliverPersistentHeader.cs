@@ -119,7 +119,7 @@ internal sealed class SliverScrollingPersistentHeader : SliverPersistentHeaderRe
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverScrollingPersistentHeader(
             minExtent: Delegate.MinExtent,
@@ -127,7 +127,7 @@ internal sealed class SliverScrollingPersistentHeader : SliverPersistentHeaderRe
             stretchConfiguration: Delegate.StretchConfiguration);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var header = (RenderSliverScrollingPersistentHeader)renderObject;
         header.MinExtent = Delegate.MinExtent;
@@ -142,7 +142,7 @@ internal sealed class SliverPinnedPersistentHeader : SliverPersistentHeaderRende
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverPinnedPersistentHeader(
             minExtent: Delegate.MinExtent,
@@ -151,7 +151,7 @@ internal sealed class SliverPinnedPersistentHeader : SliverPersistentHeaderRende
             showOnScreenConfiguration: Delegate.ShowOnScreenConfiguration);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var header = (RenderSliverPinnedPersistentHeader)renderObject;
         header.MinExtent = Delegate.MinExtent;
@@ -168,7 +168,7 @@ internal sealed class SliverFloatingPersistentHeader : SliverPersistentHeaderRen
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFloatingPersistentHeader(
             minExtent: Delegate.MinExtent,
@@ -179,7 +179,7 @@ internal sealed class SliverFloatingPersistentHeader : SliverPersistentHeaderRen
             showOnScreenConfiguration: Delegate.ShowOnScreenConfiguration);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var header = (RenderSliverFloatingPersistentHeader)renderObject;
         header.MinExtent = Delegate.MinExtent;
@@ -198,7 +198,7 @@ internal sealed class SliverFloatingPinnedPersistentHeader : SliverPersistentHea
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFloatingPinnedPersistentHeader(
             minExtent: Delegate.MinExtent,
@@ -209,7 +209,7 @@ internal sealed class SliverFloatingPinnedPersistentHeader : SliverPersistentHea
             showOnScreenConfiguration: Delegate.ShowOnScreenConfiguration);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var header = (RenderSliverFloatingPinnedPersistentHeader)renderObject;
         header.MinExtent = Delegate.MinExtent;

@@ -1160,12 +1160,12 @@ public sealed class GestureDetectorTests
 
         public Action OnPerformLayout { get; }
 
-        internal override RenderObject CreateRenderObject(BuildContext context)
+        public override RenderObject CreateRenderObject(BuildContext context)
         {
             return new RenderLayoutCallback { OnPerformLayout = OnPerformLayout };
         }
 
-        internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+        public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
         {
             ((RenderLayoutCallback)renderObject).OnPerformLayout = OnPerformLayout;
         }

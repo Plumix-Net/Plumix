@@ -148,7 +148,7 @@ internal sealed class SampleTableViewport : TwoDimensionalViewport
     {
     }
 
-    internal override RenderTwoDimensionalViewport CreateRenderObject(BuildContext context)
+    public override RenderTwoDimensionalViewport CreateRenderObject(BuildContext context)
     {
         return new RenderSampleTableViewport(
             horizontalOffset: HorizontalOffset,
@@ -161,7 +161,7 @@ internal sealed class SampleTableViewport : TwoDimensionalViewport
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderSampleTableViewport)renderObject;
         viewport.HorizontalOffset = HorizontalOffset;

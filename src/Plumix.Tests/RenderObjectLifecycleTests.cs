@@ -241,13 +241,13 @@ public sealed class RenderObjectLifecycleTests
         public bool DidUnmountCalled { get; private set; }
         public bool WasDisposedDuringDidUnmount { get; private set; }
 
-        internal override RenderObject CreateRenderObject(BuildContext context)
+        public override RenderObject CreateRenderObject(BuildContext context)
         {
             CreatedRenderObject = new TestRenderBox();
             return CreatedRenderObject;
         }
 
-        internal override void DidUnmountRenderObject(RenderObject renderObject)
+        public override void DidUnmountRenderObject(RenderObject renderObject)
         {
             DidUnmountCalled = true;
             WasDisposedDuringDidUnmount = renderObject.DebugDisposed;
@@ -262,7 +262,7 @@ public sealed class RenderObjectLifecycleTests
 
         public RenderObject? CreatedRenderObject { get; private set; }
 
-        internal override RenderObject CreateRenderObject(BuildContext context)
+        public override RenderObject CreateRenderObject(BuildContext context)
         {
             CreatedRenderObject = new TrackingRenderBox();
             return CreatedRenderObject;

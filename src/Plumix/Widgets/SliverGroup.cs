@@ -59,12 +59,12 @@ internal sealed class SliverConstrainedCrossAxisRenderWidget : SingleChildRender
 
     public double MaxExtent { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverConstrainedCrossAxis(MaxExtent);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverConstrainedCrossAxis)renderObject).MaxExtent = MaxExtent;
     }
@@ -110,7 +110,7 @@ public sealed class SliverCrossAxisGroup : MultiChildRenderObjectWidget
 
     public IReadOnlyList<Widget> Slivers { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverCrossAxisGroup();
     }
@@ -125,7 +125,7 @@ public sealed class SliverMainAxisGroup : MultiChildRenderObjectWidget
 
     public IReadOnlyList<Widget> Slivers { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverMainAxisGroup();
     }

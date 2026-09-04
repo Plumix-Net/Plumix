@@ -22,10 +22,10 @@ public sealed class Baseline : SingleChildRenderObjectWidget
 
     public TextBaseline BaselineType { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderBaseline(baseline: BaselineOffset, baselineType: BaselineType);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var baseline = (RenderBaseline)renderObject;
         baseline.Baseline = BaselineOffset;
@@ -39,5 +39,5 @@ public sealed class IgnoreBaseline : SingleChildRenderObjectWidget
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderIgnoreBaseline();
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderIgnoreBaseline();
 }

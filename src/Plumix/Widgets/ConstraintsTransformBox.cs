@@ -85,7 +85,7 @@ public sealed class ConstraintsTransformBox : SingleChildRenderObjectWidget
         };
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderConstraintsTransformBox(
             alignment: Alignment,
@@ -94,7 +94,7 @@ public sealed class ConstraintsTransformBox : SingleChildRenderObjectWidget
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var transformBox = (RenderConstraintsTransformBox)renderObject;
         transformBox.TextDirection = TextDirection ?? Directionality.MaybeOf(context);

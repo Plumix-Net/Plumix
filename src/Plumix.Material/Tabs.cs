@@ -575,7 +575,7 @@ internal sealed class TabLabelBar : Flex
 
     public TabLayoutCallback OnPerformLayout { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new TabLabelBarRenderer(
+    public override RenderObject CreateRenderObject(BuildContext context) => new TabLabelBarRenderer(
         direction: Direction,
         mainAxisSize: MainAxisSize,
         mainAxisAlignment: MainAxisAlignment,
@@ -584,7 +584,7 @@ internal sealed class TabLabelBar : Flex
         verticalDirection: VerticalDirection,
         onPerformLayout: OnPerformLayout);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         base.UpdateRenderObject(context, renderObject);
         ((TabLabelBarRenderer)renderObject).OnPerformLayout = OnPerformLayout;

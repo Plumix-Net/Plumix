@@ -24,13 +24,13 @@ public interface ISlottedRenderObjectContainer
 
 public abstract class RenderObjectWidget(Key? key = null) : Widget(key)
 {
-    internal abstract RenderObject CreateRenderObject(BuildContext context);
+    public abstract RenderObject CreateRenderObject(BuildContext context);
 
-    internal virtual void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public virtual void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
     }
 
-    internal virtual void DidUnmountRenderObject(RenderObject renderObject)
+    public virtual void DidUnmountRenderObject(RenderObject renderObject)
     {
     }
 }

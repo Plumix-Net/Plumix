@@ -528,12 +528,12 @@ public sealed class OverlayPortalTests
 
         public Action OnPaint { get; }
 
-        internal override RenderObject CreateRenderObject(BuildContext context)
+        public override RenderObject CreateRenderObject(BuildContext context)
         {
             return new RenderPaintProbe { OnPaint = OnPaint };
         }
 
-        internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+        public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
         {
             ((RenderPaintProbe)renderObject).OnPaint = OnPaint;
         }
@@ -580,12 +580,12 @@ public sealed class OverlayPortalTests
 
         public Action OnPerformLayout { get; }
 
-        internal override RenderObject CreateRenderObject(BuildContext context)
+        public override RenderObject CreateRenderObject(BuildContext context)
         {
             return new RenderLayoutProbe { OnPerformLayout = OnPerformLayout };
         }
 
-        internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+        public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
         {
             ((RenderLayoutProbe)renderObject).OnPerformLayout = OnPerformLayout;
         }

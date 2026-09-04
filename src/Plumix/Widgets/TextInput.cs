@@ -2892,14 +2892,14 @@ internal sealed class EditableRenderObjectWidget : LeafRenderObjectWidget
     public IReadOnlyList<SuggestionSpan> SuggestionSpans { get; }
     public Color MisspelledColor { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         var render = new RenderEditable(StartHandleLayerLink, EndHandleLayerLink, ToolbarLayerLink);
         Apply(render);
         return render;
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         Apply((RenderEditable)renderObject);
     }

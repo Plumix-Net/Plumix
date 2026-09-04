@@ -69,12 +69,12 @@ public sealed class SnapshotWidget : SingleChildRenderObjectWidget
 
     public double PixelRatio { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSnapshotWidget(Controller, Mode, Autoresize, PixelRatio);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var snapshot = (RenderSnapshotWidget)renderObject;
         snapshot.Controller = Controller;

@@ -1204,7 +1204,7 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
     public IReadOnlyList<InkSplashVisual>? Splashes { get; }
     public IReadOnlyList<InkHighlightVisual>? Highlights { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         var paint = new RenderInkResponsePaint(
             HighlightColor,
@@ -1225,7 +1225,7 @@ internal sealed class InkResponsePaint : SingleChildRenderObjectWidget
         return paint;
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var paint = (RenderInkResponsePaint)renderObject;
         paint.HighlightColor = HighlightColor;

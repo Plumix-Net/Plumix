@@ -106,7 +106,7 @@ internal sealed class RawIndexedStack : Stack
 
     internal override Element CreateElement() => new IndexedStackElement(this);
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         TextDirection? textDirection = ResolveTextDirection(context);
         return new RenderIndexedStack(
@@ -117,7 +117,7 @@ internal sealed class RawIndexedStack : Stack
             index: Index);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var stack = (RenderIndexedStack)renderObject;
         stack.Index = Index;

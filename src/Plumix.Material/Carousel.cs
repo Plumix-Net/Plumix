@@ -606,10 +606,10 @@ internal sealed class SliverFixedExtentCarousel : SliverMultiBoxAdaptorWidget
 
     public bool Infinite { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderSliverFixedExtentCarousel(maxExtent: ItemExtent, minExtent: MinExtent, infinite: Infinite);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var carousel = (RenderSliverFixedExtentCarousel)renderObject;
         carousel.MaxExtent = ItemExtent;
@@ -643,13 +643,13 @@ internal sealed class SliverWeightedCarousel : SliverMultiBoxAdaptorWidget
 
     public bool Infinite { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverWeightedCarousel(
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderSliverWeightedCarousel(
         consumeMaxWeight: ConsumeMaxWeight,
         shrinkExtent: ShrinkExtent,
         weights: Weights,
         infinite: Infinite);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var carousel = (RenderSliverWeightedCarousel)renderObject;
         carousel.ConsumeMaxWeight = ConsumeMaxWeight;

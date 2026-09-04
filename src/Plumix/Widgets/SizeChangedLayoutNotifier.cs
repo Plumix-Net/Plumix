@@ -15,7 +15,7 @@ public sealed class SizeChangedLayoutNotifier : SingleChildRenderObjectWidget
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSizeChangedWithCallback(
             onLayoutChangedCallback: () => new SizeChangedLayoutNotification().Dispatch(context));

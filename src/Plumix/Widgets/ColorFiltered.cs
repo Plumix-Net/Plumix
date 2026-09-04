@@ -17,12 +17,12 @@ public sealed class ColorFiltered : SingleChildRenderObjectWidget
 
     public ColorFilter ColorFilter { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderColorFilter(ColorFilter);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderColorFilter)renderObject).ColorFilter = ColorFilter;
     }

@@ -569,12 +569,12 @@ internal sealed class MergeableMaterialListBody : MultiChildRenderObjectWidget
 
     public double Elevation { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderMergeableMaterialListBody(ResolveAxisDirection(context), Elevation);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var listBody = (RenderMergeableMaterialListBody)renderObject;
         listBody.AxisDirection = ResolveAxisDirection(context);

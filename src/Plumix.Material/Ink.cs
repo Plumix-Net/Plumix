@@ -157,12 +157,12 @@ internal sealed class InkDecorationWidget : SingleChildRenderObjectWidget
 
     public MaterialInkController Controller { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderInkDecoration(Decoration, IsVisible, Configuration, Controller);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var inkDecoration = (RenderInkDecoration)renderObject;
         inkDecoration.Decoration = Decoration;

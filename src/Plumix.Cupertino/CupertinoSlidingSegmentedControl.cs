@@ -853,7 +853,7 @@ internal sealed class CupertinoSlidingSegmentedControlRenderWidget<T> : MultiChi
 
     public CupertinoSlidingSegmentedControlState<T> State { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderCupertinoSlidingSegmentedControl<T>(
             highlightedIndex: HighlightedIndex,
             thumbColor: ThumbColor,
@@ -861,7 +861,7 @@ internal sealed class CupertinoSlidingSegmentedControlRenderWidget<T> : MultiChi
             proportionalWidth: ProportionalWidth,
             state: State);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var control = (RenderCupertinoSlidingSegmentedControl<T>)renderObject;
         control.HighlightedIndex = HighlightedIndex;

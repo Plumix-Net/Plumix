@@ -1653,11 +1653,11 @@ internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
 
     public ViewportOffset Offset { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderSingleChildViewport(
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderSingleChildViewport(
         axisDirection: AxisDirection,
         offset: Offset);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderSingleChildViewport)renderObject;
         viewport.AxisDirection = AxisDirection;
@@ -1671,7 +1671,7 @@ public sealed class SliverToBoxAdapter : SingleChildRenderObjectWidget
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverToBoxAdapter();
     }
@@ -1694,14 +1694,14 @@ public sealed class SliverIgnorePointer : SingleChildRenderObjectWidget
 
     public bool? IgnoringSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverIgnorePointer(
             ignoring: Ignoring,
             ignoringSemantics: IgnoringSemantics);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var ignorePointer = (RenderSliverIgnorePointer)renderObject;
         ignorePointer.Ignoring = Ignoring;
@@ -1722,12 +1722,12 @@ public sealed class SliverOffstage : SingleChildRenderObjectWidget
 
     public bool Offstage { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverOffstage(offstage: Offstage);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverOffstage)renderObject).Offstage = Offstage;
     }
@@ -1755,14 +1755,14 @@ public sealed class SliverOpacity : SingleChildRenderObjectWidget
 
     public bool AlwaysIncludeSemantics { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverOpacity(
             opacity: Opacity,
             alwaysIncludeSemantics: AlwaysIncludeSemantics);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var opacity = (RenderSliverOpacity)renderObject;
         opacity.Opacity = Opacity;
@@ -1779,12 +1779,12 @@ public sealed class SliverPadding : SingleChildRenderObjectWidget
 
     public Thickness Padding { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverPadding(Padding);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverPadding)renderObject).Padding = Padding;
     }
@@ -2477,7 +2477,7 @@ public sealed class SliverList : SliverMultiBoxAdaptorWidget
             key);
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverList();
     }
@@ -2548,12 +2548,12 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
             key);
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFixedExtentList(ItemExtent);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverFixedExtentList)renderObject).SetItemExtent(ItemExtent);
     }
@@ -2623,12 +2623,12 @@ public sealed class SliverVariedExtentList : SliverMultiBoxAdaptorWidget
             key);
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverVariedExtentList(ItemExtentBuilder);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverVariedExtentList)renderObject).SetItemExtentBuilder(ItemExtentBuilder);
     }
@@ -2699,7 +2699,7 @@ public sealed class SliverPrototypeExtentList : SliverMultiBoxAdaptorWidget
         return new SliverPrototypeExtentListElement(this);
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverPrototypeExtentList();
     }
@@ -2929,12 +2929,12 @@ public sealed class SliverGrid : SliverMultiBoxAdaptorWidget
             key: key);
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverGrid(GridDelegate);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverGrid)renderObject).GridDelegate = GridDelegate;
     }

@@ -509,7 +509,7 @@ public sealed class LayoutBuilderTests
         {
         }
 
-        internal override RenderObject CreateRenderObject(BuildContext context)
+        public override RenderObject CreateRenderObject(BuildContext context)
         {
             return new RenderSkipLayoutHost();
         }

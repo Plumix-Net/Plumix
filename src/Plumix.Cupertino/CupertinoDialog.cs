@@ -982,12 +982,12 @@ internal sealed class PriorityColumn : Flex
 
     public double BottomMinHeight { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderPriorityColumn(BottomMinHeight);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         base.UpdateRenderObject(context, renderObject);
         ((RenderPriorityColumn)renderObject).BottomMinHeight = BottomMinHeight;
@@ -1105,14 +1105,14 @@ internal sealed class AlertDialogActionsLayout : Flex
 
     public double DividerThickness { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderAlertDialogActionsLayout(
             DividerThickness,
             Directionality.MaybeOf(context) ?? Plumix.UI.TextDirection.Ltr);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         base.UpdateRenderObject(context, renderObject);
         var layout = (RenderAlertDialogActionsLayout)renderObject;

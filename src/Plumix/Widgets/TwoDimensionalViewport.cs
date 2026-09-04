@@ -105,10 +105,10 @@ public abstract class TwoDimensionalViewport : RenderObjectWidget
     internal override Element CreateElement() => new TwoDimensionalViewportElement(this);
 
     /// <inheritdoc />
-    internal abstract override RenderTwoDimensionalViewport CreateRenderObject(BuildContext context);
+    public abstract override RenderTwoDimensionalViewport CreateRenderObject(BuildContext context);
 
     /// <inheritdoc />
-    internal abstract override void UpdateRenderObject(BuildContext context, RenderObject renderObject);
+    public abstract override void UpdateRenderObject(BuildContext context, RenderObject renderObject);
 }
 
 /// <summary>

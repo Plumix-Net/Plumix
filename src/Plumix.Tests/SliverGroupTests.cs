@@ -310,7 +310,7 @@ public sealed class SliverGroupTests
 
     private sealed class RecordingSliverWidget : LeafRenderObjectWidget
     {
-        internal override RenderObject CreateRenderObject(BuildContext context)
+        public override RenderObject CreateRenderObject(BuildContext context)
         {
             return new RecordingSliver(scrollExtent: 20);
         }

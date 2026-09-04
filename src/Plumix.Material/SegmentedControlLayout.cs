@@ -30,7 +30,7 @@ internal sealed class SegmentedControlLayout : MultiChildRenderObjectWidget
     public VerticalDirection VerticalDirection { get; }
     public bool Expanded { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSegmentedControlLayout(
             direction: Direction,
@@ -39,7 +39,7 @@ internal sealed class SegmentedControlLayout : MultiChildRenderObjectWidget
             expanded: Expanded);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var layout = (RenderSegmentedControlLayout)renderObject;
         layout.Direction = Direction;

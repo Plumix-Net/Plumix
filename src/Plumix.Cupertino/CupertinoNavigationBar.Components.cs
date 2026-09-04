@@ -429,14 +429,14 @@ internal sealed class LargeTitleWidget : SingleChildRenderObjectWidget
 
     public double Height { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderLargeTitle(
             alignment: AlignmentDirectional.BottomStart.Resolve(Directionality.Of(context)),
             height: Height);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var renderLargeTitle = (RenderLargeTitle)renderObject;
         renderLargeTitle.Alignment = AlignmentDirectional.BottomStart.Resolve(Directionality.Of(context));

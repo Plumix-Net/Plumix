@@ -330,10 +330,10 @@ internal sealed class FloatingActionButtonPosition : SingleChildRenderObjectWidg
     public ScaffoldPrelayoutGeometry Geometry { get; }
     public FloatingActionButtonLocation Location { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderFloatingActionButtonPosition(Geometry, Location);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var position = (RenderFloatingActionButtonPosition)renderObject;
         position.Geometry = Geometry;

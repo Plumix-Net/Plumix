@@ -31,5 +31,5 @@ public sealed class RepaintBoundary : SingleChildRenderObjectWidget
         return boundaries;
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderRepaintBoundary();
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderRepaintBoundary();
 }

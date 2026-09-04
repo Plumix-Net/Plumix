@@ -1187,12 +1187,12 @@ internal sealed class CupertinoBaselineAlignedStack : MultiChildRenderObjectWidg
 
     public TextAlignVertical TextAlignVertical { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCupertinoBaselineAlignedStack(TextAlignVertical);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderCupertinoBaselineAlignedStack)renderObject).TextAlignVertical = TextAlignVertical;
     }

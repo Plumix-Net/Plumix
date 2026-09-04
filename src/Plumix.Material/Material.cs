@@ -462,12 +462,12 @@ internal sealed class MaterialInkFeatures : SingleChildRenderObjectWidget
 
     public bool AbsorbHitTest { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderMaterialInkFeatures(Color, Vsync, AbsorbHitTest);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var inkFeatures = (RenderMaterialInkFeatures)renderObject;
         inkFeatures.Color = Color;

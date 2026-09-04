@@ -142,7 +142,7 @@ internal sealed class DecoratorRenderWidget : SlottedMultiChildRenderObjectWidge
         _ => null,
     };
 
-    internal override RenderObject CreateRenderObject(BuildContext context) => new RenderDecoration(
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderDecoration(
         decoration: Decoration,
         textDirection: TextDirection,
         textBaseline: TextBaseline,
@@ -151,7 +151,7 @@ internal sealed class DecoratorRenderWidget : SlottedMultiChildRenderObjectWidge
         expands: Expands,
         material3: Material3);
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var decorator = (RenderDecoration)renderObject;
         decorator.Decoration = Decoration;

@@ -29,7 +29,7 @@ public sealed class DecoratedBox : SingleChildRenderObjectWidget
     /// <summary>Whether to paint the box decoration behind or in front of the child.</summary>
     public DecorationPosition Position { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderDecoratedBox(
             Decoration,
@@ -37,7 +37,7 @@ public sealed class DecoratedBox : SingleChildRenderObjectWidget
             configuration: ImageConfigurationUtils.CreateLocalImageConfiguration(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var decoratedBox = (RenderDecoratedBox)renderObject;
         decoratedBox.DecorationValue = Decoration;

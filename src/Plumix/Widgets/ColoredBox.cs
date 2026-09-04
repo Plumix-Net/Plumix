@@ -23,14 +23,14 @@ public sealed class ColoredBox : SingleChildRenderObjectWidget
 
     public bool IsAntiAlias { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderColoredBox(
             Color,
             isAntiAlias: IsAntiAlias);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var coloredBox = (RenderColoredBox)renderObject;
         coloredBox.Color = Color;

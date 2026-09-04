@@ -203,7 +203,7 @@ internal sealed class CupertinoSliderRenderWidget : LeafRenderObjectWidget
     public Action<double>? OnChangeEnd { get; }
     public ITickerProvider Vsync { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCupertinoSlider(
             value: Value,
@@ -219,7 +219,7 @@ internal sealed class CupertinoSliderRenderWidget : LeafRenderObjectWidget
             cursor: PlatformDefaults.IsWeb ? SystemMouseCursors.Click : MouseCursor.Defer);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var slider = (RenderCupertinoSlider)renderObject;
         // The assignment order matches Dart: `value` is applied while `divisions` still holds the

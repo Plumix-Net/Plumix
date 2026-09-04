@@ -684,12 +684,12 @@ internal sealed class ExclusiveMouseRegion : SingleChildRenderObjectWidget
 
     public Action<PointerExitEvent>? OnExit { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderExclusiveMouseRegion(OnEnter, OnExit);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var region = (RenderExclusiveMouseRegion)renderObject;
         region.OnPointerEnter = OnEnter;

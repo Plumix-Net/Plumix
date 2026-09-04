@@ -951,12 +951,12 @@ public sealed class FocusTests : IDisposable
 
         public Matrix4 Transform { get; }
 
-        internal override RenderObject CreateRenderObject(BuildContext context)
+        public override RenderObject CreateRenderObject(BuildContext context)
         {
             return new RenderTransform(Transform);
         }
 
-        internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+        public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
         {
             ((RenderTransform)renderObject).Transform = Transform;
         }

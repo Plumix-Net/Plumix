@@ -46,12 +46,12 @@ public sealed class CustomMultiChildLayout : MultiChildRenderObjectWidget
 
     public MultiChildLayoutDelegate Delegate { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCustomMultiChildLayoutBox(Delegate);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderCustomMultiChildLayoutBox)renderObject).Delegate = Delegate;
     }

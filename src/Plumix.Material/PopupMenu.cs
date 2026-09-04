@@ -1051,14 +1051,14 @@ internal sealed class PopupMenuPositionLayout : SingleChildRenderObjectWidget
     public Thickness SafePadding { get; }
     public IReadOnlyList<DisplayFeature> DisplayFeatures { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context) =>
+    public override RenderObject CreateRenderObject(BuildContext context) =>
         new RenderPopupMenuPositionLayout(
             Position,
             SafePadding,
             DisplayFeatures,
             Directionality.Of(context));
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var layout = (RenderPopupMenuPositionLayout)renderObject;
         layout.Position = Position;

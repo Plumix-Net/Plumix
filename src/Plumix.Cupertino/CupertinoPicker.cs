@@ -438,14 +438,14 @@ internal sealed class CupertinoPickerSemantics : SingleChildRenderObjectWidget
 
     public FixedExtentScrollController ScrollController { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderCupertinoPickerSemantics(
             ScrollController,
             Directionality.Of(context));
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var semantics = (RenderCupertinoPickerSemantics)renderObject;
         semantics.TextDirection = Directionality.Of(context);

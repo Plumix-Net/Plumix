@@ -628,12 +628,12 @@ internal sealed class InputPadding : SingleChildRenderObjectWidget
 
     public Size MinSize { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderInputPadding(MinSize);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderInputPadding)renderObject).MinSize = MinSize;
     }

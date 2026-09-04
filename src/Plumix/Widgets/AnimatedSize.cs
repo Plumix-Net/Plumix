@@ -125,7 +125,7 @@ internal sealed class AnimatedSizeRenderObjectWidget : SingleChildRenderObjectWi
 
     public Clip ClipBehavior { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderAnimatedSize(
             controller: Controller,
@@ -135,7 +135,7 @@ internal sealed class AnimatedSizeRenderObjectWidget : SingleChildRenderObjectWi
             clipBehavior: ClipBehavior);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var animatedSize = (RenderAnimatedSize)renderObject;
         animatedSize.Controller = Controller;

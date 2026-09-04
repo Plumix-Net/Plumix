@@ -66,14 +66,14 @@ internal sealed class SliverFillViewportRenderObjectWidget : SliverMultiBoxAdapt
 
     public bool AllowImplicitScrolling { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFillViewport(
             viewportFraction: ViewportFraction,
             allowImplicitScrolling: AllowImplicitScrolling);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var fillViewport = (RenderSliverFillViewport)renderObject;
         fillViewport.ViewportFraction = ViewportFraction;
@@ -93,12 +93,12 @@ internal sealed class SliverFractionalPadding : SingleChildRenderObjectWidget
 
     public double ViewportFraction { get; }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFractionalPadding(ViewportFraction);
     }
 
-    internal override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         ((RenderSliverFractionalPadding)renderObject).ViewportFraction = ViewportFraction;
     }
@@ -142,7 +142,7 @@ internal sealed class SliverFillRemainingWithScrollable : SingleChildRenderObjec
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFillRemainingWithScrollable();
     }
@@ -154,7 +154,7 @@ internal sealed class SliverFillRemainingWithoutScrollable : SingleChildRenderOb
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFillRemaining();
     }
@@ -166,7 +166,7 @@ internal sealed class SliverFillRemainingAndOverscroll : SingleChildRenderObject
     {
     }
 
-    internal override RenderObject CreateRenderObject(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderSliverFillRemainingAndOverscroll();
     }
