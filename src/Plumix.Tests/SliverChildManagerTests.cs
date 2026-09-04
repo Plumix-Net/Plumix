@@ -88,7 +88,7 @@ public sealed class SliverChildManagerTests
             slivers:
             [
                 SliverFixedExtentList.Builder(
-                    childCount: 10,
+                    itemCount: 10,
                     itemBuilder: (_, _) => new SizedBox(height: 100),
                     itemExtent: 100,
                     addAutomaticKeepAlives: false),
@@ -321,7 +321,7 @@ public sealed class SliverChildManagerTests
             slivers:
             [
                 SliverGrid.Builder(
-                    childCount: 100,
+                    itemCount: 100,
                     itemBuilder: (_, _) => new SizedBox(height: 40),
                     gridDelegate: new SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: 2,
@@ -594,7 +594,7 @@ public sealed class SliverChildManagerTests
                 slivers:
                 [
                     SliverList.Builder(
-                        childCount: items.Count,
+                        itemCount: items.Count,
                         itemBuilder: (_, index) => new SizedBox(
                             height: 100,
                             key: new ValueKey<string>(items[index])),
@@ -641,7 +641,7 @@ public sealed class SliverChildManagerTests
                 slivers:
                 [
                     SliverList.Builder(
-                        childCount: items.Count,
+                        itemCount: items.Count,
                         itemBuilder: (_, index) => new SizedBox(
                             height: 100,
                             key: new ValueKey<int>(items[index])),

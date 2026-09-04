@@ -42,7 +42,7 @@ public sealed class GridViewDemoPage : StatelessWidget
                             new SliverPadding(
                                 padding: new Thickness(12, 0, 12, 10),
                                 sliver: SliverGrid.Builder(
-                                    childCount: 12,
+                                    itemCount: 12,
                                     gridDelegate: new SliverGridDelegateWithMaxCrossAxisExtent(
                                         maxCrossAxisExtent: 140,
                                         crossAxisSpacing: 8,

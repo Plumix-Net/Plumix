@@ -1,4 +1,5 @@
-﻿using Plumix.Widgets;
+﻿using System.Runtime.CompilerServices;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/foundation/key.dart (approximate)
 
@@ -38,6 +39,14 @@ public abstract record LocalKey : Key;
 /// </summary>
 public sealed record UniqueKey : LocalKey
 {
+    /// <remarks>
+    /// Dart's `UniqueKey` inherits `Object`'s identity `==`, so it is only ever equal to itself. A
+    /// C# record with no fields would otherwise make every `UniqueKey` equal to every other one.
+    /// </remarks>
+    public bool Equals(UniqueKey? other) => ReferenceEquals(this, other);
+
+    public override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
+
     public override string ToString()
     {
         return $"[#{Diagnostics.ShortHash(this)}]";

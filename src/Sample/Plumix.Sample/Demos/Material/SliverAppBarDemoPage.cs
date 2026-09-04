@@ -57,7 +57,7 @@ public sealed class SliverAppBarDemoPage : StatefulWidget
                 new SliverPadding(
                     padding: new Thickness(12, 0, 12, 20),
                     sliver: SliverList.Builder(
-                        childCount: 24,
+                        itemCount: 24,
                         itemBuilder: (_, index) => new Container(
                             color: index % 2 == 0 ? Color.Parse("#FFF3EDF7") : Color.Parse("#FFE8DEF8"),
                             margin: new Thickness(0, 0, 0, 6),

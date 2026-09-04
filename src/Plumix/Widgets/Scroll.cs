@@ -8,7 +8,6 @@ using Plumix.Rendering;
 using Plumix.UI;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/scrollable.dart; flutter/packages/flutter/lib/src/widgets/scroll_view.dart; flutter/packages/flutter/lib/src/widgets/sliver.dart (approximate)
-// flutter/packages/flutter/lib/src/widgets/scroll_delegate.dart
 
 namespace Plumix.Widgets;
 
@@ -1577,307 +1576,6 @@ internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
     }
 }
 
-/// <summary>
-/// Maps a child and its position in the delegate onto the index assistive technologies see, or
-/// <c>null</c> to give that child no semantic index at all.
-/// </summary>
-/// <remarks>Flutter's <c>SemanticIndexCallback</c>.</remarks>
-public delegate int? SemanticIndexCallback(Widget widget, int localIndex);
-
-public abstract class SliverChildDelegate
-{
-    /// <remarks>Flutter's <c>_kDefaultSemanticIndexCallback</c>.</remarks>
-    public static int? DefaultSemanticIndexCallback(Widget widget, int localIndex) => localIndex;
-
-    public abstract Widget? Build(BuildContext context, int index);
-
-    /// <summary>
-    /// An estimate of the number of children this delegate will build, or null when the child list
-    /// is unbounded or too hard to count.
-    /// </summary>
-    /// <remarks>
-    /// Flutter's <c>estimatedChildCount</c>. Once <see cref="Build"/> has returned null this must be
-    /// precise, because <see cref="IRenderSliverBoxChildManager.ChildCount"/> is built on it.
-    /// </remarks>
-    public virtual int? EstimatedChildCount => null;
-
-    /// <summary>
-    /// An estimate of the max scroll extent for all the children, or null to let the caller
-    /// extrapolate it from the laid-out range.
-    /// </summary>
-    /// <remarks>Flutter's <c>SliverChildDelegate.estimateMaxScrollOffset</c>.</remarks>
-    public virtual double? EstimateMaxScrollOffset(
-        int firstIndex,
-        int lastIndex,
-        double leadingScrollOffset,
-        double trailingScrollOffset) => null;
-
-    /// <summary>
-    /// Called at the end of layout with the index range of the children that were included in it.
-    /// </summary>
-    /// <remarks>Flutter's <c>SliverChildDelegate.didFinishLayout</c>.</remarks>
-    public virtual void DidFinishLayout(int firstIndex, int lastIndex)
-    {
-    }
-
-    /// <summary>
-    /// Whether a sliver that was given a new instance of this delegate class has to rebuild its
-    /// children, because the new instance represents different information than the old one.
-    /// </summary>
-    /// <remarks>
-    /// Flutter's <c>SliverChildDelegate.shouldRebuild</c>. When it returns false, the
-    /// <see cref="Build"/> call might be optimized away.
-    /// </remarks>
-    public abstract bool ShouldRebuild(SliverChildDelegate oldDelegate);
-
-    public virtual int? FindIndexByKey(Key key) => null;
-
-    /// <summary>
-    /// Wraps <paramref name="child"/> in an <see cref="IndexedSemantics"/> so the enclosing scrollable
-    /// can report which child is the first visible one.
-    /// </summary>
-    private protected static Widget AddSemanticIndex(
-        Widget child,
-        int index,
-        bool addSemanticIndexes,
-        SemanticIndexCallback semanticIndexCallback,
-        int semanticIndexOffset)
-    {
-        if (!addSemanticIndexes)
-        {
-            return child;
-        }
-
-        int? semanticIndex = semanticIndexCallback(child, index);
-        return semanticIndex is null
-            ? child
-            : new IndexedSemantics(index: semanticIndex.Value + semanticIndexOffset, child: child);
-    }
-}
-
-internal sealed record SliverChildKey(Key Value) : LocalKey;
-
-public sealed class SliverChildBuilderDelegate : SliverChildDelegate
-{
-    private readonly NullableIndexedWidgetBuilder _builder;
-    private readonly int? _childCount;
-    private readonly bool _addAutomaticKeepAlives;
-    private readonly bool _addSemanticIndexes;
-    private readonly SemanticIndexCallback _semanticIndexCallback;
-    private readonly int _semanticIndexOffset;
-
-    public SliverChildBuilderDelegate(
-        NullableIndexedWidgetBuilder builder,
-        int? childCount = null,
-        bool addAutomaticKeepAlives = true,
-        bool addSemanticIndexes = true,
-        SemanticIndexCallback? semanticIndexCallback = null,
-        int semanticIndexOffset = 0,
-        ChildIndexGetter? findChildIndexCallback = null)
-    {
-        _builder = builder ?? throw new ArgumentNullException(nameof(builder));
-        _childCount = childCount;
-        _addAutomaticKeepAlives = addAutomaticKeepAlives;
-        _addSemanticIndexes = addSemanticIndexes;
-        _semanticIndexCallback = semanticIndexCallback ?? DefaultSemanticIndexCallback;
-        _semanticIndexOffset = semanticIndexOffset;
-        FindChildIndexCallback = findChildIndexCallback;
-    }
-
-    public override int? EstimatedChildCount => _childCount;
-
-    public ChildIndexGetter? FindChildIndexCallback { get; }
-
-    public override int? FindIndexByKey(Key key)
-    {
-        if (FindChildIndexCallback is null)
-        {
-            return null;
-        }
-
-        return FindChildIndexCallback(key is SliverChildKey childKey ? childKey.Value : key);
-    }
-
-    /// <inheritdoc />
-    /// <remarks>
-    /// Flutter's <c>SliverChildBuilderDelegate.shouldRebuild</c> is unconditionally true: a new
-    /// delegate instance always re-runs the builder (which is what makes
-    /// <see cref="FindChildIndexCallback"/> run on every widget update).
-    /// </remarks>
-    public override bool ShouldRebuild(SliverChildDelegate oldDelegate) => true;
-
-    public override Widget? Build(BuildContext context, int index)
-    {
-        if (index < 0 || (_childCount.HasValue && index >= _childCount.Value))
-        {
-            return null;
-        }
-
-        Widget? child = _builder(context, index);
-        if (child is null)
-        {
-            return null;
-        }
-
-        Key? key = child.Key is null ? null : new SliverChildKey(child.Key);
-        Widget result = AddSemanticIndex(
-            child,
-            index,
-            _addSemanticIndexes,
-            _semanticIndexCallback,
-            _semanticIndexOffset);
-        result = _addAutomaticKeepAlives ? new AutomaticKeepAlive(result) : result;
-        return key is null ? result : new KeyedSubtree(result, key);
-    }
-}
-
-public sealed class SliverChildListDelegate : SliverChildDelegate
-{
-    private readonly IReadOnlyList<Widget> _children;
-    private readonly bool _addAutomaticKeepAlives;
-    private readonly bool _addSemanticIndexes;
-    private readonly SemanticIndexCallback _semanticIndexCallback;
-    private readonly int _semanticIndexOffset;
-
-    /// <summary>
-    /// Maps a child's key to its index, filled lazily by <see cref="FindIndexByKey"/>. Null for a
-    /// <see cref="Fixed"/> delegate, whose children never move.
-    /// </summary>
-    /// <remarks>
-    /// Flutter's <c>SliverChildListDelegate._keyToIndex</c>. Dart parks the scan cursor in the same
-    /// map under the <c>null</c> key; a C# <c>Dictionary</c> takes no null key, so the cursor is
-    /// <see cref="_keyToIndexCursor"/>.
-    /// </remarks>
-    private readonly Dictionary<Key, int>? _keyToIndex;
-    private int _keyToIndexCursor;
-
-    public SliverChildListDelegate(
-        IReadOnlyList<Widget> children,
-        bool addAutomaticKeepAlives = true,
-        bool addSemanticIndexes = true,
-        SemanticIndexCallback? semanticIndexCallback = null,
-        int semanticIndexOffset = 0)
-        : this(children, [], addAutomaticKeepAlives, addSemanticIndexes,
-            semanticIndexCallback, semanticIndexOffset)
-    {
-    }
-
-    private SliverChildListDelegate(
-        IReadOnlyList<Widget> children,
-        Dictionary<Key, int>? keyToIndex,
-        bool addAutomaticKeepAlives,
-        bool addSemanticIndexes,
-        SemanticIndexCallback? semanticIndexCallback,
-        int semanticIndexOffset)
-    {
-        _children = children;
-        _keyToIndex = keyToIndex;
-        _addAutomaticKeepAlives = addAutomaticKeepAlives;
-        _addSemanticIndexes = addSemanticIndexes;
-        _semanticIndexCallback = semanticIndexCallback ?? DefaultSemanticIndexCallback;
-        _semanticIndexOffset = semanticIndexOffset;
-    }
-
-    /// <summary>
-    /// A delegate for a child list that will not be mutated, so no key-to-index bookkeeping is kept
-    /// and <see cref="FindIndexByKey"/> never remaps a child.
-    /// </summary>
-    /// <remarks>Flutter's <c>SliverChildListDelegate.fixed</c>.</remarks>
-    public static SliverChildListDelegate Fixed(
-        IReadOnlyList<Widget> children,
-        bool addAutomaticKeepAlives = true,
-        bool addSemanticIndexes = true,
-        SemanticIndexCallback? semanticIndexCallback = null,
-        int semanticIndexOffset = 0)
-    {
-        return new SliverChildListDelegate(
-            children,
-            keyToIndex: null,
-            addAutomaticKeepAlives,
-            addSemanticIndexes,
-            semanticIndexCallback,
-            semanticIndexOffset);
-    }
-
-    public IReadOnlyList<Widget> Children => _children;
-
-    private bool IsConstantInstance => _keyToIndex is null;
-
-    public override int? EstimatedChildCount => _children.Count;
-
-    /// <inheritdoc />
-    /// <remarks>
-    /// Flutter's <c>SliverChildListDelegate.shouldRebuild</c>: <c>List</c> has no value equality in
-    /// Dart, so this is reference identity of the child list.
-    /// </remarks>
-    public override bool ShouldRebuild(SliverChildDelegate oldDelegate)
-    {
-        return !ReferenceEquals(_children, ((SliverChildListDelegate)oldDelegate)._children);
-    }
-
-    public override int? FindIndexByKey(Key key)
-    {
-        Key childKey = key is SliverChildKey saltedKey ? saltedKey.Value : key;
-        return FindChildIndex(childKey);
-    }
-
-    /// <remarks>Flutter's <c>SliverChildListDelegate._findChildIndex</c>.</remarks>
-    private int? FindChildIndex(Key key)
-    {
-        if (IsConstantInstance)
-        {
-            return null;
-        }
-
-        if (_keyToIndex!.TryGetValue(key, out int cached))
-        {
-            return cached;
-        }
-
-        int index = _keyToIndexCursor;
-        while (index < _children.Count)
-        {
-            Widget child = _children[index];
-            if (child.Key is not null)
-            {
-                _keyToIndex[child.Key] = index;
-            }
-
-            if (Equals(child.Key, key))
-            {
-                // Record the current index for the next call.
-                _keyToIndexCursor = index + 1;
-                return index;
-            }
-
-            index += 1;
-        }
-
-        _keyToIndexCursor = index;
-        return null;
-    }
-
-    public override Widget? Build(BuildContext context, int index)
-    {
-        if (index < 0 || index >= _children.Count)
-        {
-            return null;
-        }
-
-        Widget child = _children[index];
-        Widget result = AddSemanticIndex(
-            child,
-            index,
-            _addSemanticIndexes,
-            _semanticIndexCallback,
-            _semanticIndexOffset);
-        result = _addAutomaticKeepAlives ? new AutomaticKeepAlive(result) : result;
-        return child.Key is null
-            ? result
-            : new KeyedSubtree(result, new SliverChildKey(child.Key));
-    }
-}
-
 public sealed class SliverToBoxAdapter : SingleChildRenderObjectWidget
 {
     public SliverToBoxAdapter(Widget? child = null, Key? key = null) : base(child, key)
@@ -2561,22 +2259,29 @@ public sealed class SliverList : SliverMultiBoxAdaptorWidget
         return new SliverMultiBoxAdaptorElement(this, replaceMovedChildren: true);
     }
 
+    /// <remarks>Flutter's <c>SliverList.list</c>.</remarks>
     public static SliverList FromChildren(
         IReadOnlyList<Widget> children,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         Key? key = null)
     {
         return new SliverList(
             new SliverChildListDelegate(
                 children,
-                addAutomaticKeepAlives: addAutomaticKeepAlives),
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes),
             key);
     }
 
+    /// <remarks>Flutter's <c>SliverList.builder</c>; a null <paramref name="itemCount"/> is unbounded.</remarks>
     public static SliverList Builder(
-        int childCount,
         NullableIndexedWidgetBuilder itemBuilder,
+        int? itemCount = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
         bool addSemanticIndexes = true,
         SemanticIndexCallback? semanticIndexCallback = null,
         int semanticIndexOffset = 0,
@@ -2586,12 +2291,75 @@ public sealed class SliverList : SliverMultiBoxAdaptorWidget
         return new SliverList(
             new SliverChildBuilderDelegate(
                 itemBuilder,
-                childCount,
+                itemCount,
                 addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
                 addSemanticIndexes: addSemanticIndexes,
                 semanticIndexCallback: semanticIndexCallback,
                 semanticIndexOffset: semanticIndexOffset,
                 findChildIndexCallback: findChildIndexCallback),
+            key);
+    }
+
+    /// <summary>
+    /// Places box children in a linear array, separated by box widgets built by
+    /// <paramref name="separatorBuilder"/>.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SliverList.separated</c>. The delegate holds two children per item, so the child
+    /// count is <c>max(0, itemCount * 2 - 1)</c>, an even child index <c>2k</c> is item <c>k</c> and
+    /// an odd child index <c>2k + 1</c> is the separator after item <c>k</c>. Separators get no
+    /// semantic index at all, so item <c>k</c> keeps index <c>k</c>.
+    /// <paramref name="findItemIndexCallback"/> returns an *item* index and is doubled here;
+    /// <paramref name="findChildIndexCallback"/> is Dart's deprecated form, which returns a child
+    /// index and is passed through unchanged.
+    /// </remarks>
+    public static SliverList Separated(
+        NullableIndexedWidgetBuilder itemBuilder,
+        NullableIndexedWidgetBuilder separatorBuilder,
+        int? itemCount = null,
+        bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
+        ChildIndexGetter? findItemIndexCallback = null,
+        ChildIndexGetter? findChildIndexCallback = null,
+        Key? key = null)
+    {
+        if (findItemIndexCallback is not null && findChildIndexCallback is not null)
+        {
+            throw new ArgumentException(
+                "Cannot provide both findItemIndexCallback and findChildIndexCallback. "
+                + "Use findItemIndexCallback as findChildIndexCallback is deprecated.");
+        }
+
+        ChildIndexGetter? effectiveFindChildIndexCallback = findItemIndexCallback is null
+            ? findChildIndexCallback
+            : childKey => findItemIndexCallback(childKey) is { } itemIndex ? itemIndex * 2 : null;
+
+        return new SliverList(
+            new SliverChildBuilderDelegate(
+                (context, index) =>
+                {
+                    int itemIndex = index / 2;
+                    if (index % 2 == 0)
+                    {
+                        return itemBuilder(context, itemIndex);
+                    }
+
+                    Widget? separator = separatorBuilder(context, itemIndex);
+                    if (Constants.KDebugMode && separator is null)
+                    {
+                        throw new FlutterError("separatorBuilder cannot return null.");
+                    }
+
+                    return separator;
+                },
+                itemCount is null ? null : Math.Max(0, (itemCount.Value * 2) - 1),
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes,
+                semanticIndexCallback: static (_, index) => index % 2 == 0 ? index / 2 : null,
+                findChildIndexCallback: effectiveFindChildIndexCallback),
             key);
     }
 
@@ -2618,25 +2386,34 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
 
     public double ItemExtent { get; }
 
+    /// <remarks>Flutter's <c>SliverFixedExtentList.list</c>.</remarks>
     public static SliverFixedExtentList FromChildren(
         IReadOnlyList<Widget> children,
         double itemExtent,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         Key? key = null)
     {
         return new SliverFixedExtentList(
             new SliverChildListDelegate(
                 children,
-                addAutomaticKeepAlives: addAutomaticKeepAlives),
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes),
             itemExtent,
             key);
     }
 
+    /// <remarks>
+    /// Flutter's <c>SliverFixedExtentList.builder</c>; a null <paramref name="itemCount"/> is unbounded.
+    /// </remarks>
     public static SliverFixedExtentList Builder(
-        int childCount,
         NullableIndexedWidgetBuilder itemBuilder,
         double itemExtent,
+        int? itemCount = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
         bool addSemanticIndexes = true,
         SemanticIndexCallback? semanticIndexCallback = null,
         int semanticIndexOffset = 0,
@@ -2646,8 +2423,9 @@ public sealed class SliverFixedExtentList : SliverMultiBoxAdaptorWidget
         return new SliverFixedExtentList(
             new SliverChildBuilderDelegate(
                 itemBuilder,
-                childCount,
+                itemCount,
                 addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
                 addSemanticIndexes: addSemanticIndexes,
                 semanticIndexCallback: semanticIndexCallback,
                 semanticIndexOffset: semanticIndexOffset,
@@ -2687,39 +2465,46 @@ public sealed class SliverVariedExtentList : SliverMultiBoxAdaptorWidget
 
     public ItemExtentBuilder ItemExtentBuilder { get; }
 
+    /// <remarks>Flutter's <c>SliverVariedExtentList.list</c>.</remarks>
     public static SliverVariedExtentList FromChildren(
         IReadOnlyList<Widget> children,
         ItemExtentBuilder itemExtentBuilder,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         Key? key = null)
     {
         return new SliverVariedExtentList(
             new SliverChildListDelegate(
                 children,
-                addAutomaticKeepAlives: addAutomaticKeepAlives),
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes),
             itemExtentBuilder,
             key);
     }
 
+    /// <remarks>
+    /// Flutter's <c>SliverVariedExtentList.builder</c>; a null <paramref name="itemCount"/> is unbounded.
+    /// </remarks>
     public static SliverVariedExtentList Builder(
-        int childCount,
         NullableIndexedWidgetBuilder itemBuilder,
         ItemExtentBuilder itemExtentBuilder,
+        int? itemCount = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null)
     {
-        if (childCount < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(childCount));
-        }
-
         return new SliverVariedExtentList(
             new SliverChildBuilderDelegate(
                 itemBuilder,
-                childCount,
-                addAutomaticKeepAlives,
-                findChildIndexCallback:                 findChildIndexCallback),
+                itemCount,
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes,
+                findChildIndexCallback: findChildIndexCallback),
             itemExtentBuilder,
             key);
     }
@@ -2751,39 +2536,46 @@ public sealed class SliverPrototypeExtentList : SliverMultiBoxAdaptorWidget
 
     public Widget PrototypeItem { get; }
 
+    /// <remarks>Flutter's <c>SliverPrototypeExtentList.list</c>.</remarks>
     public static SliverPrototypeExtentList FromChildren(
         IReadOnlyList<Widget> children,
         Widget prototypeItem,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         Key? key = null)
     {
         return new SliverPrototypeExtentList(
             new SliverChildListDelegate(
                 children,
-                addAutomaticKeepAlives: addAutomaticKeepAlives),
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes),
             prototypeItem,
             key);
     }
 
+    /// <remarks>
+    /// Flutter's <c>SliverPrototypeExtentList.builder</c>; a null <paramref name="itemCount"/> is unbounded.
+    /// </remarks>
     public static SliverPrototypeExtentList Builder(
-        int childCount,
         NullableIndexedWidgetBuilder itemBuilder,
         Widget prototypeItem,
+        int? itemCount = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null)
     {
-        if (childCount < 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(childCount));
-        }
-
         return new SliverPrototypeExtentList(
             new SliverChildBuilderDelegate(
                 itemBuilder,
-                childCount,
-                addAutomaticKeepAlives,
-                findChildIndexCallback:                 findChildIndexCallback),
+                itemCount,
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes,
+                findChildIndexCallback: findChildIndexCallback),
             prototypeItem,
             key);
     }
@@ -2937,33 +2729,47 @@ public sealed class SliverGrid : SliverMultiBoxAdaptorWidget
                    .ComputeMaxScrollOffset(Delegate.EstimatedChildCount!.Value);
     }
 
+    /// <remarks>Flutter's <c>SliverGrid.list</c>.</remarks>
     public static SliverGrid FromChildren(
         IReadOnlyList<Widget> children,
         SliverGridDelegate gridDelegate,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
+        int semanticIndexOffset = 0,
         Key? key = null)
     {
         return new SliverGrid(
             new SliverChildListDelegate(
                 children,
-                addAutomaticKeepAlives: addAutomaticKeepAlives),
+                addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes,
+                semanticIndexOffset: semanticIndexOffset),
             gridDelegate,
             key);
     }
 
+    /// <remarks>Flutter's <c>SliverGrid.builder</c>; a null <paramref name="itemCount"/> is unbounded.</remarks>
     public static SliverGrid Builder(
-        int childCount,
         NullableIndexedWidgetBuilder itemBuilder,
         SliverGridDelegate gridDelegate,
+        int? itemCount = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
+        int semanticIndexOffset = 0,
         ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null)
     {
         return new SliverGrid(
             new SliverChildBuilderDelegate(
                 itemBuilder,
-                childCount,
+                itemCount,
                 addAutomaticKeepAlives: addAutomaticKeepAlives,
+                addRepaintBoundaries: addRepaintBoundaries,
+                addSemanticIndexes: addSemanticIndexes,
+                semanticIndexOffset: semanticIndexOffset,
                 findChildIndexCallback: findChildIndexCallback),
             gridDelegate,
             key);
@@ -3310,10 +3116,13 @@ public sealed class ListView : StatelessWidget
     private readonly NullableIndexedWidgetBuilder? _itemBuilder;
     private readonly IndexedWidgetBuilder? _separatorBuilder;
     private readonly ChildIndexGetter? _findChildIndexCallback;
-    private readonly int _itemCount;
+    private readonly ChildIndexGetter? _findItemIndexCallback;
+    private readonly int? _itemCount;
     private readonly double? _itemExtent;
     private readonly Thickness _padding;
     private readonly bool _addAutomaticKeepAlives;
+    private readonly bool _addRepaintBoundaries;
+    private readonly bool _addSemanticIndexes;
     private readonly bool _shrinkWrap;
     private readonly double _cacheExtent;
     private readonly CacheExtentStyle _cacheExtentStyle;
@@ -3330,6 +3139,8 @@ public sealed class ListView : StatelessWidget
         double? itemExtent = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         int? semanticChildCount = null,
@@ -3360,15 +3171,18 @@ public sealed class ListView : StatelessWidget
         _padding = padding ?? default;
         _shrinkWrap = shrinkWrap;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
+        _addRepaintBoundaries = addRepaintBoundaries;
+        _addSemanticIndexes = addSemanticIndexes;
         _cacheExtent = cacheExtent;
         _cacheExtentStyle = cacheExtentStyle;
     }
 
     private ListView(
-        int itemCount,
+        int? itemCount,
         NullableIndexedWidgetBuilder itemBuilder,
         IndexedWidgetBuilder? separatorBuilder,
         ChildIndexGetter? findChildIndexCallback,
+        ChildIndexGetter? findItemIndexCallback,
         Axis scrollDirection,
         bool reverse,
         ScrollController? controller,
@@ -3380,6 +3194,8 @@ public sealed class ListView : StatelessWidget
         Thickness? padding,
         bool shrinkWrap,
         bool addAutomaticKeepAlives,
+        bool addRepaintBoundaries,
+        bool addSemanticIndexes,
         double cacheExtent,
         CacheExtentStyle cacheExtentStyle,
         int? semanticChildCount,
@@ -3395,7 +3211,14 @@ public sealed class ListView : StatelessWidget
             throw new ArgumentOutOfRangeException(nameof(itemCount), "itemCount cannot be negative.");
         }
 
-        if (semanticChildCount is < 0 || semanticChildCount > itemCount)
+        if (findItemIndexCallback is not null && findChildIndexCallback is not null)
+        {
+            throw new ArgumentException(
+                "Cannot provide both findItemIndexCallback and findChildIndexCallback. "
+                + "Use findItemIndexCallback as findChildIndexCallback is deprecated.");
+        }
+
+        if (semanticChildCount is < 0 || (itemCount is not null && semanticChildCount > itemCount))
         {
             throw new ArgumentOutOfRangeException(
                 nameof(semanticChildCount),
@@ -3413,6 +3236,7 @@ public sealed class ListView : StatelessWidget
         _itemBuilder = itemBuilder;
         _separatorBuilder = separatorBuilder;
         _findChildIndexCallback = findChildIndexCallback;
+        _findItemIndexCallback = findItemIndexCallback;
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
@@ -3424,6 +3248,8 @@ public sealed class ListView : StatelessWidget
         _padding = padding ?? default;
         _shrinkWrap = shrinkWrap;
         _addAutomaticKeepAlives = addAutomaticKeepAlives;
+        _addRepaintBoundaries = addRepaintBoundaries;
+        _addSemanticIndexes = addSemanticIndexes;
         _cacheExtent = cacheExtent;
         _cacheExtentStyle = cacheExtentStyle;
     }
@@ -3442,9 +3268,10 @@ public sealed class ListView : StatelessWidget
 
     public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
 
+    /// <remarks>Flutter's <c>ListView.builder</c>; a null <paramref name="itemCount"/> is unbounded.</remarks>
     public static ListView Builder(
-        int itemCount,
         NullableIndexedWidgetBuilder itemBuilder,
+        int? itemCount = null,
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
@@ -3455,6 +3282,8 @@ public sealed class ListView : StatelessWidget
         double? itemExtent = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         int? semanticChildCount = null,
@@ -3467,6 +3296,7 @@ public sealed class ListView : StatelessWidget
             itemBuilder: itemBuilder,
             separatorBuilder: null,
             findChildIndexCallback: findChildIndexCallback,
+            findItemIndexCallback: null,
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
@@ -3478,12 +3308,19 @@ public sealed class ListView : StatelessWidget
             padding: padding,
             shrinkWrap: shrinkWrap,
             addAutomaticKeepAlives: addAutomaticKeepAlives,
+            addRepaintBoundaries: addRepaintBoundaries,
+            addSemanticIndexes: addSemanticIndexes,
             cacheExtent: cacheExtent,
             cacheExtentStyle: cacheExtentStyle,
             semanticChildCount: semanticChildCount,
             key: key);
     }
 
+    /// <remarks>
+    /// Flutter's <c>ListView.separated</c>. <paramref name="findItemIndexCallback"/> returns an item
+    /// index and is doubled internally; <paramref name="findChildIndexCallback"/> is Dart's
+    /// deprecated form, which already returns a child index. Only one of the two may be given.
+    /// </remarks>
     public static ListView Separated(
         int itemCount,
         NullableIndexedWidgetBuilder itemBuilder,
@@ -3498,8 +3335,11 @@ public sealed class ListView : StatelessWidget
         double? itemExtent = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
+        ChildIndexGetter? findItemIndexCallback = null,
         ChildIndexGetter? findChildIndexCallback = null,
         Key? key = null,
         bool shrinkWrap = false)
@@ -3509,6 +3349,7 @@ public sealed class ListView : StatelessWidget
             itemBuilder: itemBuilder,
             separatorBuilder: separatorBuilder,
             findChildIndexCallback: findChildIndexCallback,
+            findItemIndexCallback: findItemIndexCallback,
             semanticChildCount: null,
             scrollDirection: scrollDirection,
             reverse: reverse,
@@ -3521,6 +3362,8 @@ public sealed class ListView : StatelessWidget
             padding: padding,
             shrinkWrap: shrinkWrap,
             addAutomaticKeepAlives: addAutomaticKeepAlives,
+            addRepaintBoundaries: addRepaintBoundaries,
+            addSemanticIndexes: addSemanticIndexes,
             cacheExtent: cacheExtent,
             cacheExtentStyle: cacheExtentStyle,
             key: key);
@@ -3531,23 +3374,24 @@ public sealed class ListView : StatelessWidget
         Widget sliver;
         if (_itemBuilder != null)
         {
-            int childCount = _itemCount;
+            int? childCount = _itemCount;
             NullableIndexedWidgetBuilder effectiveItemBuilder = _itemBuilder;
             ChildIndexGetter? effectiveFindChildIndexCallback = _findChildIndexCallback;
 
             if (_separatorBuilder != null)
             {
-                // A separated list holds two delegate children per item, so a caller's item index
-                // has to be doubled before the delegate can use it (Dart's `ListView.separated`).
-                if (_findChildIndexCallback is { } findItemIndex)
+                // A separated list holds two delegate children per item, so an *item* index has to
+                // be doubled before the delegate can use it. Dart's deprecated
+                // `findChildIndexCallback` already returns a child index and is passed through.
+                if (_findItemIndexCallback is { } findItemIndex)
                 {
-                    effectiveFindChildIndexCallback = key => findItemIndex(key) is { } itemIndex
+                    effectiveFindChildIndexCallback = childKey => findItemIndex(childKey) is { } itemIndex
                         ? itemIndex * 2
                         : null;
                 }
 
-                var itemBuilder = _itemBuilder;
-                var separatorBuilder = _separatorBuilder;
+                NullableIndexedWidgetBuilder itemBuilder = _itemBuilder;
+                IndexedWidgetBuilder separatorBuilder = _separatorBuilder;
                 childCount = SeparatedChildCount(_itemCount);
                 effectiveItemBuilder = (buildContext, index) =>
                 {
@@ -3564,16 +3408,20 @@ public sealed class ListView : StatelessWidget
                 : static (_, localIndex) => localIndex % 2 == 0 ? localIndex / 2 : null;
             sliver = _itemExtent.HasValue
                 ? SliverFixedExtentList.Builder(
-                    childCount,
                     effectiveItemBuilder,
                     _itemExtent.Value,
+                    childCount,
                     addAutomaticKeepAlives: _addAutomaticKeepAlives,
+                    addRepaintBoundaries: _addRepaintBoundaries,
+                    addSemanticIndexes: _addSemanticIndexes,
                     semanticIndexCallback: semanticIndexCallback,
                     findChildIndexCallback: effectiveFindChildIndexCallback)
                 : SliverList.Builder(
-                    childCount,
                     effectiveItemBuilder,
+                    childCount,
                     addAutomaticKeepAlives: _addAutomaticKeepAlives,
+                    addRepaintBoundaries: _addRepaintBoundaries,
+                    addSemanticIndexes: _addSemanticIndexes,
                     semanticIndexCallback: semanticIndexCallback,
                     findChildIndexCallback: effectiveFindChildIndexCallback);
         }
@@ -3583,10 +3431,14 @@ public sealed class ListView : StatelessWidget
                 ? SliverFixedExtentList.FromChildren(
                     _children ?? [],
                     _itemExtent.Value,
-                    addAutomaticKeepAlives: _addAutomaticKeepAlives)
+                    addAutomaticKeepAlives: _addAutomaticKeepAlives,
+                    addRepaintBoundaries: _addRepaintBoundaries,
+                    addSemanticIndexes: _addSemanticIndexes)
                 : SliverList.FromChildren(
                     _children ?? [],
-                    addAutomaticKeepAlives: _addAutomaticKeepAlives);
+                    addAutomaticKeepAlives: _addAutomaticKeepAlives,
+                    addRepaintBoundaries: _addRepaintBoundaries,
+                    addSemanticIndexes: _addSemanticIndexes);
         }
 
         if (HasNonZeroPadding(_padding))
@@ -3615,14 +3467,10 @@ public sealed class ListView : StatelessWidget
     /// </summary>
     public int? SemanticChildCount { get; }
 
-    private static int SeparatedChildCount(int itemCount)
+    /// <remarks>Flutter's <c>ListView._computeActualChildCount</c>.</remarks>
+    private static int? SeparatedChildCount(int? itemCount)
     {
-        if (itemCount <= 0)
-        {
-            return 0;
-        }
-
-        return itemCount * 2 - 1;
+        return itemCount is null ? null : Math.Max(0, (itemCount.Value * 2) - 1);
     }
 
     private static bool HasNonZeroPadding(Thickness padding)
@@ -3640,9 +3488,11 @@ public sealed class GridView : StatelessWidget
     private readonly IReadOnlyList<Widget>? _children;
     private readonly NullableIndexedWidgetBuilder? _itemBuilder;
     private readonly ChildIndexGetter? _findChildIndexCallback;
-    private readonly int _itemCount;
+    private readonly int? _itemCount;
     private readonly Thickness _padding;
     private readonly bool _addAutomaticKeepAlives;
+    private readonly bool _addRepaintBoundaries;
+    private readonly bool _addSemanticIndexes;
     private readonly double _cacheExtent;
     private readonly CacheExtentStyle _cacheExtentStyle;
 
@@ -3658,6 +3508,8 @@ public sealed class GridView : StatelessWidget
         ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         Key? key = null) : base(key)
@@ -3669,6 +3521,8 @@ public sealed class GridView : StatelessWidget
 
         _gridDelegate = gridDelegate ?? throw new ArgumentNullException(nameof(gridDelegate));
         _children = children ?? [];
+        _addRepaintBoundaries = addRepaintBoundaries;
+        _addSemanticIndexes = addSemanticIndexes;
         ScrollDirection = scrollDirection;
         Reverse = reverse;
         Controller = controller;
@@ -3684,7 +3538,7 @@ public sealed class GridView : StatelessWidget
 
     private GridView(
         SliverGridDelegate gridDelegate,
-        int itemCount,
+        int? itemCount,
         NullableIndexedWidgetBuilder itemBuilder,
         ChildIndexGetter? findChildIndexCallback,
         Axis scrollDirection,
@@ -3696,6 +3550,8 @@ public sealed class GridView : StatelessWidget
         ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior,
         Thickness? padding,
         bool addAutomaticKeepAlives,
+        bool addRepaintBoundaries,
+        bool addSemanticIndexes,
         double cacheExtent,
         CacheExtentStyle cacheExtentStyle,
         Key? key) : base(key)
@@ -3711,6 +3567,8 @@ public sealed class GridView : StatelessWidget
         }
 
         _gridDelegate = gridDelegate ?? throw new ArgumentNullException(nameof(gridDelegate));
+        _addRepaintBoundaries = addRepaintBoundaries;
+        _addSemanticIndexes = addSemanticIndexes;
         _itemCount = itemCount;
         _itemBuilder = itemBuilder;
         _findChildIndexCallback = findChildIndexCallback;
@@ -3741,10 +3599,11 @@ public sealed class GridView : StatelessWidget
 
     public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
 
+    /// <remarks>Flutter's <c>GridView.builder</c>; a null <paramref name="itemCount"/> is unbounded.</remarks>
     public static GridView Builder(
-        int itemCount,
         NullableIndexedWidgetBuilder itemBuilder,
         SliverGridDelegate gridDelegate,
+        int? itemCount = null,
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
@@ -3754,6 +3613,8 @@ public sealed class GridView : StatelessWidget
         ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         Thickness? padding = null,
         bool addAutomaticKeepAlives = true,
+        bool addRepaintBoundaries = true,
+        bool addSemanticIndexes = true,
         double cacheExtent = 250.0,
         CacheExtentStyle cacheExtentStyle = CacheExtentStyle.Pixel,
         ChildIndexGetter? findChildIndexCallback = null,
@@ -3764,6 +3625,8 @@ public sealed class GridView : StatelessWidget
             itemCount: itemCount,
             itemBuilder: itemBuilder,
             findChildIndexCallback: findChildIndexCallback,
+            addRepaintBoundaries: addRepaintBoundaries,
+            addSemanticIndexes: addSemanticIndexes,
             scrollDirection: scrollDirection,
             reverse: reverse,
             controller: controller,
@@ -3866,15 +3729,19 @@ public sealed class GridView : StatelessWidget
     {
         Widget sliver = _itemBuilder != null
             ? SliverGrid.Builder(
-                childCount: _itemCount,
                 itemBuilder: _itemBuilder,
                 gridDelegate: _gridDelegate,
+                itemCount: _itemCount,
                 addAutomaticKeepAlives: _addAutomaticKeepAlives,
+                addRepaintBoundaries: _addRepaintBoundaries,
+                addSemanticIndexes: _addSemanticIndexes,
                 findChildIndexCallback: _findChildIndexCallback)
             : SliverGrid.FromChildren(
                 _children ?? [],
                 _gridDelegate,
-                addAutomaticKeepAlives: _addAutomaticKeepAlives);
+                addAutomaticKeepAlives: _addAutomaticKeepAlives,
+                addRepaintBoundaries: _addRepaintBoundaries,
+                addSemanticIndexes: _addSemanticIndexes);
 
         if (HasNonZeroPadding(_padding))
         {

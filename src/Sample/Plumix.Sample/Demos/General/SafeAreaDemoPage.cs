@@ -68,7 +68,7 @@ public sealed class SafeAreaDemoPage : StatelessWidget
                         new SliverSafeArea(
                             minimum: EdgeInsets.All(8),
                             sliver: SliverFixedExtentList.Builder(
-                                childCount: 8,
+                                itemCount: 8,
                                 itemExtent: 44,
                                 itemBuilder: (_, index) => new Container(
                                     alignment: Alignment.CenterLeft,

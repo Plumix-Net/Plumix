@@ -148,9 +148,9 @@ public sealed class ScrollSemanticsTests
                 controller: controller,
                 slivers: [
                     SliverFixedExtentList.Builder(
-                        20,
                         static (_, index) => new Semantics(label: $"item {index}", container: true),
                         ItemHeight,
+                        20,
                         semanticIndexOffset: 5)
                 ])));
         harness.Pump(Surface);
@@ -205,9 +205,9 @@ public sealed class ScrollSemanticsTests
                 slivers: [
                     new SliverPersistentHeader(new TestHeaderDelegate(), pinned: true),
                     SliverFixedExtentList.Builder(
-                        20,
                         static (_, index) => new Semantics(label: $"item {index}", container: true),
-                        ItemHeight)
+                        ItemHeight,
+                        20)
                 ])));
         harness.Pump(Surface);
 
@@ -239,9 +239,9 @@ public sealed class ScrollSemanticsTests
                     new PinnedHeaderSliver(new Semantics(label: "header", container: true, child:
                         new SizedBox(height: 60, width: 300))),
                     SliverFixedExtentList.Builder(
-                        20,
                         static (_, index) => new Semantics(label: $"item {index}", container: true),
-                        ItemHeight)
+                        ItemHeight,
+                        20)
                 ])));
         harness.Pump(Surface);
 
@@ -289,9 +289,9 @@ public sealed class ScrollSemanticsTests
                 excludeFromSemantics: true,
                 slivers: [
                     SliverFixedExtentList.Builder(
-                        20,
                         static (_, index) => new Semantics(label: $"item {index}", container: true),
-                        ItemHeight)
+                        ItemHeight,
+                        20)
                 ])));
         harness.Pump(Surface);
 
@@ -314,9 +314,9 @@ public sealed class ScrollSemanticsTests
                 semanticChildCount: itemCount,
                 slivers: [
                     SliverFixedExtentList.Builder(
-                        itemCount,
                         static (_, index) => new Semantics(label: $"item {index}", container: true),
-                        ItemHeight)
+                        ItemHeight,
+                        itemCount)
                 ]));
     }
 

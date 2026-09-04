@@ -45,7 +45,7 @@ internal sealed class CupertinoRefreshDemoPageState : State
                         [
                             new CupertinoSliverRefreshControl(onRefresh: HandleRefresh),
                             SliverFixedExtentList.Builder(
-                                childCount: 24,
+                                itemCount: 24,
                                 itemExtent: 54.0,
                                 addAutomaticKeepAlives: false,
                                 itemBuilder: (_, index) => new Container(

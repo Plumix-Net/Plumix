@@ -355,9 +355,9 @@ public sealed class ScrollInfrastructureTests
 
         // The delegate gives items a semantic index and separators none, exactly as Flutter's
         // `ListView.separated` does through its `semanticIndexCallback`.
-        Assert.Equal(0, Assert.IsType<IndexedSemantics>(sampledChildren[0]).Index);
-        Assert.IsNotType<IndexedSemantics>(sampledChildren[1]);
-        Assert.Equal(1, Assert.IsType<IndexedSemantics>(sampledChildren[2]).Index);
+        Assert.Equal(0, SemanticIndexOf(sampledChildren[0]));
+        Assert.Null(SemanticIndexOf(sampledChildren[1]));
+        Assert.Equal(1, SemanticIndexOf(sampledChildren[2]));
         Assert.Equal(0, item0.Index);
         Assert.Equal(0, separator0.Index);
         Assert.Equal(1, item1.Index);
@@ -763,9 +763,61 @@ public sealed class ScrollInfrastructureTests
     /// Strips the <see cref="IndexedSemantics"/> wrapper the child delegates add by default, so a test
     /// can assert on the widget the caller actually supplied.
     /// </summary>
+    /// <summary>
+    /// Peels the wrapper chain `SliverChildDelegate.Build` puts around every child
+    /// (`KeyedSubtree > AutomaticKeepAlive > SelectionKeepAlive > IndexedSemantics > RepaintBoundary`).
+    /// </summary>
     private static Widget? UnwrapSemanticIndex(Widget? widget)
     {
-        return widget is IndexedSemantics indexed ? indexed.Child : widget;
+        while (true)
+        {
+            switch (widget)
+            {
+                case KeyedSubtree keyed:
+                    widget = keyed.Child;
+                    break;
+                case AutomaticKeepAlive keepAlive:
+                    widget = keepAlive.Child;
+                    break;
+                case SelectionKeepAlive selectionKeepAlive:
+                    widget = selectionKeepAlive.Child;
+                    break;
+                case IndexedSemantics indexed:
+                    widget = indexed.Child;
+                    break;
+                case RepaintBoundary boundary:
+                    widget = boundary.Child;
+                    break;
+                default:
+                    return widget;
+            }
+        }
+    }
+
+    /// <summary>The semantic index the delegate gave a built child, or null when it gave it none.</summary>
+    private static int? SemanticIndexOf(Widget? widget)
+    {
+        while (widget is not null)
+        {
+            switch (widget)
+            {
+                case IndexedSemantics indexed:
+                    return indexed.Index;
+                case KeyedSubtree keyed:
+                    widget = keyed.Child;
+                    break;
+                case AutomaticKeepAlive keepAlive:
+                    widget = keepAlive.Child;
+                    break;
+                case SelectionKeepAlive selectionKeepAlive:
+                    widget = selectionKeepAlive.Child;
+                    break;
+                default:
+                    return null;
+            }
+        }
+
+        return null;
     }
 
     private sealed class ItemMarker : StatelessWidget

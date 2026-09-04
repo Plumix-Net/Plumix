@@ -41,7 +41,7 @@ public sealed class NestedScrollViewDemoPage : StatelessWidget
                 new SliverOverlapInjector(
                     NestedScrollView.SliverOverlapAbsorberHandleFor(bodyContext)),
                 SliverFixedExtentList.Builder(
-                    childCount: 40,
+                    itemCount: 40,
                     itemExtent: 46,
                     itemBuilder: (_, index) => new Container(
                         color: index % 2 == 0

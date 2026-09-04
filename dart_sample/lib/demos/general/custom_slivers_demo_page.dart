@@ -282,7 +282,7 @@ class CustomSliversDemoPage extends StatelessWidget {
           ),
         ),
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(12, 8, 12, 16),
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
           sliver: SliverList.builder(
             itemCount: 8,
             itemBuilder: (BuildContext context, int index) {
@@ -297,6 +297,28 @@ class CustomSliversDemoPage extends StatelessWidget {
                   style: const TextStyle(fontSize: 13, color: Colors.black),
                 ),
               );
+            },
+          ),
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.fromLTRB(12, 4, 12, 16),
+          sliver: SliverList.separated(
+            itemCount: 5,
+            itemBuilder: (BuildContext context, int index) {
+              return Container(
+                color: const Color(0xFFFFF3E0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 10,
+                ),
+                child: Text(
+                  'separated sliver row #$index',
+                  style: const TextStyle(fontSize: 13, color: Colors.black),
+                ),
+              );
+            },
+            separatorBuilder: (BuildContext context, int index) {
+              return Container(color: const Color(0xFFFFB74D), height: 2);
             },
           ),
         ),

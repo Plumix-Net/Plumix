@@ -8,6 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `scroll_delegate.dart` is a strict port in `Widgets/ScrollDelegate.cs` (`scroll_delegate.dart`).
+- Breaking: sliver/list delegates wrap every child in `RepaintBoundary` and always in `KeyedSubtree`.
+- Breaking: sliver/list/grid builder factories take a nullable `itemCount` first-class; `null` is unbounded.
+- Added `SliverList.Separated`, `SelectionKeepAlive` and `SliverChildDelegate.DebugFillDescription`.
+- Added `ErrorWidget`/`ErrorWidget.Builder` and `RenderErrorBox`; a throwing item builder now becomes one.
+- Breaking: `UniqueKey` compares by identity, not record value equality (`key.dart`).
 - Breaking: sliver item builders take `NullableIndexedWidgetBuilder`; `childCount: null` ends a list (`sliver.dart`).
 - Breaking: `SliverChildDelegate.ShouldRebuild` is abstract and gates the child rebuild (`scroll_delegate.dart`).
 - Breaking: `SliverMultiBoxAdaptorParentData.Index`/`LayoutOffset` are nullable; a moved child drops its offset.

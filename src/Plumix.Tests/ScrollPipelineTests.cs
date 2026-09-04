@@ -642,10 +642,12 @@ public sealed class ScrollPipelineTests
         Assert.Same(childDelegate, widget.Delegate);
         Assert.Same(initialBuilder, widget.ItemExtentBuilder);
         Assert.Throws<ArgumentNullException>(() => new SliverVariedExtentList(childDelegate, null!));
-        Assert.Throws<ArgumentOutOfRangeException>(() => SliverVariedExtentList.Builder(
-            childCount: -1,
+        // Dart's SliverChildBuilderDelegate has no assert on childCount; a negative count simply
+        // makes every index fail the `index >= childCount` bounds check, so the sliver is empty.
+        Assert.Null(SliverVariedExtentList.Builder(
+            itemCount: -1,
             itemBuilder: (_, _) => new SizedBox(),
-            itemExtentBuilder: initialBuilder));
+            itemExtentBuilder: initialBuilder).Delegate.Build(default, 0));
 
         var renderObject = Assert.IsType<RenderSliverVariedExtentList>(widget.CreateRenderObject(default));
         ItemExtentBuilder updatedBuilder = (index, _) => 48 + index;
@@ -657,7 +659,7 @@ public sealed class ScrollPipelineTests
             [new SizedBox(), new SizedBox()],
             initialBuilder).Delegate.EstimatedChildCount);
         Assert.Equal(3, SliverVariedExtentList.Builder(
-            childCount: 3,
+            itemCount: 3,
             itemBuilder: (_, _) => new SizedBox(),
             itemExtentBuilder: initialBuilder).Delegate.EstimatedChildCount);
     }
@@ -783,7 +785,7 @@ public sealed class ScrollPipelineTests
             slivers:
             [
                 SliverPrototypeExtentList.Builder(
-                    childCount: 5,
+                    itemCount: 5,
                     prototypeItem: new SizedBox(height: 55),
                     itemBuilder: (_, index) => new SizedBox(
                         height: 10,

@@ -807,7 +807,7 @@ internal sealed class PackageLicensePageState : State
                     new SliverPadding(
                         padding,
                         SliverList.Builder(
-                            childCount: listWidgets.Count,
+                            itemCount: listWidgets.Count,
                             itemBuilder: (itemContext, index) => Localizations.Override(
                                 itemContext,
                                 listWidgets[index],

@@ -40,7 +40,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                             color: Colors.DimGray),
                                     ]))),
                         SliverFixedExtentList.Builder(
-                            childCount: 5,
+                            itemCount: 5,
                             itemExtent: 44,
                             itemBuilder: (_, index) => BuildExtentCell(
                                 $"resizing-header group row #{index}",
@@ -130,7 +130,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                     sliver: new SliverPadding(
                         padding: new Thickness(12, 10, 12, 8),
                         sliver: SliverFixedExtentList.Builder(
-                            childCount: 8,
+                            itemCount: 8,
                             itemExtent: 42,
                             itemBuilder: (_, index) => new Container(
                                 color: index % 2 == 0
@@ -165,7 +165,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                             slivers:
                             [
                                 SliverFixedExtentList.Builder(
-                                    childCount: 8,
+                                    itemCount: 8,
                                     itemExtent: 38,
                                     itemBuilder: (_, index) => BuildGroupCell(
                                         $"1x #{index}",
@@ -174,7 +174,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                 new SliverConstrainedCrossAxis(
                                     maxExtent: 96,
                                     sliver: SliverFixedExtentList.Builder(
-                                        childCount: 6,
+                                        itemCount: 6,
                                         itemExtent: 46,
                                         itemBuilder: (_, index) => BuildGroupCell(
                                             $"96 #{index}",
@@ -183,7 +183,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                 new SliverCrossAxisExpanded(
                                     flex: 2,
                                     sliver: SliverFixedExtentList.Builder(
-                                        childCount: 10,
+                                        itemCount: 10,
                                         itemExtent: 34,
                                         itemBuilder: (_, index) => BuildGroupCell(
                                             $"2x #{index}",
@@ -194,7 +194,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                 new SliverPadding(
                     padding: new Thickness(12, 10, 12, 4),
                     sliver: SliverPrototypeExtentList.Builder(
-                        childCount: 4,
+                        itemCount: 4,
                         prototypeItem: new SizedBox(height: 54),
                         itemBuilder: (_, index) => BuildExtentCell(
                             $"prototype extent row #{index}",
@@ -205,7 +205,7 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                 new SliverPadding(
                     padding: new Thickness(12, 4, 12, 8),
                     sliver: SliverVariedExtentList.Builder(
-                        childCount: 6,
+                        itemCount: 6,
                         itemExtentBuilder: (index, _) => index % 3 switch
                         {
                             0 => 38,
@@ -219,9 +219,9 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                 : Color.Parse("#FFE8F5E9")),
                         addAutomaticKeepAlives: false)),
                 new SliverPadding(
-                    padding: new Thickness(12, 8, 12, 16),
+                    padding: new Thickness(12, 8, 12, 4),
                     sliver: SliverList.Builder(
-                        childCount: 8,
+                        itemCount: 8,
                         itemBuilder: (_, index) => new Container(
                             color: Color.Parse("#FFF5F5F5"),
                             padding: new Thickness(10, 10),
@@ -229,6 +229,21 @@ public sealed class CustomSliversDemoPage : StatelessWidget
                                 $"regular sliver row #{index}",
                                 fontSize: 13,
                                 color: Colors.Black)),
+                        addAutomaticKeepAlives: false)),
+                new SliverPadding(
+                    padding: new Thickness(12, 4, 12, 16),
+                    sliver: SliverList.Separated(
+                        itemCount: 5,
+                        itemBuilder: (_, index) => new Container(
+                            color: Color.Parse("#FFFFF3E0"),
+                            padding: new Thickness(10, 10),
+                            child: new Text(
+                                $"separated sliver row #{index}",
+                                fontSize: 13,
+                                color: Colors.Black)),
+                        separatorBuilder: (_, _) => new Container(
+                            color: Color.Parse("#FFFFB74D"),
+                            height: 2),
                         addAutomaticKeepAlives: false)),
             ]);
     }
