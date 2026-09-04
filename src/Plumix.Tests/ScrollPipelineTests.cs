@@ -716,8 +716,7 @@ public sealed class ScrollPipelineTests
         // `_getChildIndexForScrollOffset` walks until the running position reaches the offset and
         // then steps back one, so the child that ends exactly at the scroll offset stays reified.
         Assert.Equal([1, 2, 3], ActiveIndices(sliver));
-        Assert.Equal(new Point(0, -50),
-            ((SliverMultiBoxAdaptorParentData)sliver.FirstChild!.parentData!).offset);
+        Assert.Equal(-50, sliver.ChildMainAxisPosition(sliver.FirstChild!));
         Assert.True(manager.RemoveCount > 0);
     }
 
@@ -925,7 +924,7 @@ public sealed class ScrollPipelineTests
                     $"Active child index {parentData.Index} has no size. Active children: {DescribeActiveChildren(sliverList)}");
             }
 
-            double top = sliverMainAxisOffset + parentData.offset.Y;
+            double top = sliverMainAxisOffset + sliverList.ChildMainAxisPosition(child);
             double bottom = top + child.Size.Height;
             if (top <= viewportY + epsilon && bottom >= viewportY - epsilon)
             {

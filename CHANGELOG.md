@@ -8,6 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: sliver adaptors paint from `ChildMainAxisPosition`; reversed lists fixed (`sliver_multi_box_adaptor.dart`).
+- Breaking: `RenderSliverMultiBoxAdaptor.PaintsChild` is false for an unindexed child (`sliver_multi_box_adaptor.dart`).
+- Added `RenderSliverHelpers`: `HitTestBoxChild`, `ApplyPaintTransformForBoxChild` (`sliver.dart`).
+- Breaking: `SliverMultiBoxAdaptorParentData` extends `SliverLogicalParentData` and has no paint offset (`sliver.dart`).
+- Breaking: the viewport's sliver parent data is renamed `SliverLogicalContainerParentData` (`sliver.dart`).
+- Breaking: `RenderSliverFixedExtentBoxAdaptor.SetChildGeometry` is static and drops its constraints argument.
 - Added `TwoDimensionalViewport`, `RenderTwoDimensionalViewport` and `ChildVicinity` (`two_dimensional_viewport.dart`).
 - Added `TwoDimensionalScrollable` and `DiagonalDragBehavior` (`scrollable.dart`).
 - Added `TwoDimensionalScrollView` (`two_dimensional_scroll_view.dart`).

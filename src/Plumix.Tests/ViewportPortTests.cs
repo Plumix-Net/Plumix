@@ -396,7 +396,7 @@ public class ViewportPortTests
 
         Assert.Equal(new Point(0, 0), viewport.PaintOffsetOf(first));
         Assert.Equal(new Point(0, 60), viewport.PaintOffsetOf(second));
-        Assert.IsType<SliverLogicalParentData>(first.parentData);
+        Assert.IsType<SliverLogicalContainerParentData>(first.parentData);
     }
 
     private static RenderViewport BuildViewport(

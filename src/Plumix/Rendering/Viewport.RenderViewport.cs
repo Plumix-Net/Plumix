@@ -1350,7 +1350,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
 /// <summary>
 /// A viewport that sizes itself to the total extent of its slivers along the main axis.
 /// </summary>
-public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalParentData>
+public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalContainerParentData>
 {
     private double _maxScrollExtent;
     private double _shrinkWrapExtent;
@@ -1513,13 +1513,13 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalPare
         double layoutOffset,
         GrowthDirection growthDirection)
     {
-        var childParentData = (SliverLogicalParentData)child.parentData!;
+        var childParentData = (SliverLogicalContainerParentData)child.parentData!;
         childParentData.LayoutOffset = layoutOffset;
     }
 
     public override Point PaintOffsetOf(RenderSliver child)
     {
-        var childParentData = (SliverLogicalParentData)child.parentData!;
+        var childParentData = (SliverLogicalContainerParentData)child.parentData!;
         return ComputeAbsolutePaintOffset(
             child,
             childParentData.LayoutOffset ?? 0.0,
@@ -1554,7 +1554,7 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalPare
 
     public override double ComputeChildMainAxisPosition(RenderSliver child, double parentMainAxisPosition)
     {
-        double layoutOffset = ((SliverLogicalParentData)child.parentData!).LayoutOffset ?? 0.0;
+        double layoutOffset = ((SliverLogicalContainerParentData)child.parentData!).LayoutOffset ?? 0.0;
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
             child.ConstraintsForSliver.AxisDirection,
             child.ConstraintsForSliver.GrowthDirection) switch

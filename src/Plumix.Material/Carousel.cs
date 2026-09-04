@@ -1083,7 +1083,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
                 return;
             }
 
-            SetChildGeometry(leading, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, index));
+            SetChildGeometry(leading, IndexToLayoutOffset(DeprecatedExtraItemExtent, index));
             trailingChildWithLayout ??= leading;
         }
 
@@ -1091,7 +1091,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
         {
             RenderBox first = FirstChild!;
             first.Layout(ChildConstraintsForIndex(constraints, IndexOf(first)), parentUsesSize: true);
-            SetChildGeometry(first, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex));
+            SetChildGeometry(first, IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex));
             trailingChildWithLayout = first;
         }
 
@@ -1132,7 +1132,7 @@ internal sealed class RenderSliverWeightedCarousel : RenderSliverFixedExtentBoxA
             }
 
             trailingChildWithLayout = child;
-            SetChildGeometry(child, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, IndexOf(child)));
+            SetChildGeometry(child, IndexToLayoutOffset(DeprecatedExtraItemExtent, IndexOf(child)));
         }
 
         int lastIndex = IndexOf(LastChild!);

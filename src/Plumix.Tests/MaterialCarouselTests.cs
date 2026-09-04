@@ -620,13 +620,14 @@ public sealed class MaterialCarouselTests
         public List<(int Index, double Offset, double Extent)> ItemGeometry(Axis axis = Axis.Horizontal)
         {
             List<(int Index, double Offset, double Extent)> geometry = [];
-            foreach (RenderObject child in Children(FindSliver()))
+            RenderSliverMultiBoxAdaptor sliver = FindSliver();
+            foreach (RenderObject child in Children(sliver))
             {
                 RenderBox box = (RenderBox)child;
                 var data = (SliverMultiBoxAdaptorParentData)box.parentData!;
                 geometry.Add((
                     data.Index!.Value,
-                    axis == Axis.Horizontal ? data.offset.X : data.offset.Y,
+                    sliver.ChildMainAxisPosition(box),
                     axis == Axis.Horizontal ? box.Size.Width : box.Size.Height));
             }
 

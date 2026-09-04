@@ -3,6 +3,7 @@ using System.Globalization;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/sliver.dart (approximate)
@@ -732,15 +733,36 @@ public sealed class SliverPhysicalParentData : ContainerBoxParentData<RenderSliv
 }
 
 /// <summary>
-/// Parent data for slivers positioned by a scroll offset rather than by a paint offset.
+/// Parent data for a child positioned by a scroll offset rather than by a paint offset.
 /// </summary>
-/// <remarks>Flutter's <c>SliverLogicalContainerParentData</c>.</remarks>
-public sealed class SliverLogicalParentData : ContainerBoxParentData<RenderSliver>
+/// <remarks>Flutter's <c>SliverLogicalParentData</c>.</remarks>
+public class SliverLogicalParentData : ParentData
 {
     /// <summary>
     /// The position of the child relative to the zero scroll offset, along the main axis, or null
     /// before the child has been laid out.
     /// </summary>
+    public double? LayoutOffset { get; set; }
+
+    /// <inheritdoc />
+    public override string ToString() =>
+        $"layoutOffset={(LayoutOffset is null
+            ? "None"
+            : LayoutOffset.Value.ToString("F1", CultureInfo.InvariantCulture))}";
+}
+
+/// <summary>
+/// Parent data for a sliver in a list of slivers positioned by scroll offset.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>SliverLogicalContainerParentData</c>. It does not extend
+/// <see cref="SliverLogicalParentData"/> the way Dart's does: C# has no mixins, so the container
+/// half is <see cref="ContainerBoxParentData{TChild}"/>, which is what
+/// <c>RenderViewportBase</c> composes.
+/// </remarks>
+public sealed class SliverLogicalContainerParentData : ContainerBoxParentData<RenderSliver>
+{
+    /// <inheritdoc cref="SliverLogicalParentData.LayoutOffset" />
     public double? LayoutOffset { get; set; }
 
     /// <inheritdoc />
@@ -770,24 +792,47 @@ public interface IKeepAliveParentData : IParentData
     bool KeptAlive { get; }
 }
 
-public class SliverMultiBoxAdaptorParentData : ContainerBoxParentData<RenderBox>, IKeepAliveParentData
+/// <summary>
+/// Parent data used by <see cref="RenderSliverMultiBoxAdaptor"/>.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>SliverMultiBoxAdaptorParentData</c>: a <c>SliverLogicalParentData</c> with the
+/// container and keep-alive mixins. The child carries no paint offset — the adaptor derives one
+/// from <see cref="RenderSliver.ChildMainAxisPosition"/> and
+/// <see cref="RenderSliver.ChildCrossAxisPosition"/> each time it paints.
+/// </remarks>
+public class SliverMultiBoxAdaptorParentData : SliverLogicalParentData,
+    IContainerParentDataMixin<RenderBox>,
+    IKeepAliveParentData
 {
+    private readonly IContainerParentDataMixin<RenderBox> _containerMixin;
+
+    public SliverMultiBoxAdaptorParentData()
+    {
+        _containerMixin = new ContainerParentDataMixin<RenderBox>(this);
+    }
+
     /// <summary>
     /// The index of this child according to the <see cref="IRenderSliverBoxChildManager"/>, or null
     /// before the manager has adopted the child.
     /// </summary>
     public int? Index { get; set; }
 
-    /// <summary>
-    /// The position of the child relative to the zero scroll offset, along the main axis, or null
-    /// when the child has not been laid out at this offset yet — which is how a child that the
-    /// delegate reordered is marked for collection at the start of the next layout.
-    /// </summary>
-    public double? LayoutOffset { get; set; }
-
     public bool KeepAlive { get; set; }
 
     public bool KeptAlive { get; set; }
+
+    public RenderBox? previousSibling
+    {
+        get => _containerMixin.previousSibling;
+        set => _containerMixin.previousSibling = value;
+    }
+
+    public RenderBox? nextSibling
+    {
+        get => _containerMixin.nextSibling;
+        set => _containerMixin.nextSibling = value;
+    }
 
     /// <inheritdoc />
     public override string ToString() =>
@@ -1200,6 +1245,139 @@ public abstract class RenderSliver : RenderBox
     {
         base.DebugFillProperties(properties);
         properties.Add(new DiagnosticsProperty<SliverGeometry>("geometry", Geometry));
+    }
+}
+
+/// <summary>
+/// Helpers for slivers whose children are <see cref="RenderBox"/>es, which have to be converted
+/// between the sliver coordinate system and the Cartesian one the box protocol uses.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>RenderSliverHelpers</c>. C# has no mixins, so the bodies live in a static class that
+/// takes the sliver as its first argument; every member it reads is public on
+/// <see cref="RenderSliver"/>.
+/// </remarks>
+public static class RenderSliverHelpers
+{
+    /// <remarks>Flutter's <c>RenderSliverHelpers._getRightWayUp</c>.</remarks>
+    private static bool GetRightWayUp(SliverConstraints constraints)
+    {
+        bool reversed = ScrollDirectionUtils.AxisDirectionIsReversed(constraints.AxisDirection);
+        return constraints.GrowthDirection == GrowthDirection.Forward ? !reversed : reversed;
+    }
+
+    /// <summary>
+    /// Converts a position in the sliver's own box coordinate system into the main/cross-axis pair
+    /// Flutter's sliver hit-test protocol carries.
+    /// </summary>
+    /// <remarks>
+    /// C#-only. Dart's <c>RenderViewportBase.computeChildMainAxisPosition</c> resolves the main-axis
+    /// position before it reaches the sliver; <see cref="RenderSliver"/> is a <see cref="RenderBox"/>
+    /// in Plumix and is entered through the box protocol, so a sliver that hit tests box children
+    /// resolves it here instead. The cross-axis position needs no conversion: Dart passes the
+    /// viewport's straight through, and the sliver's box spans the cross axis at the same origin.
+    /// </remarks>
+    public static (double MainAxisPosition, double CrossAxisPosition) SliverHitTestPosition(
+        this RenderSliver sliver,
+        Point position)
+    {
+        SliverConstraints constraints = sliver.ConstraintsForSliver;
+        bool vertical = constraints.Axis == Axis.Vertical;
+        double mainAxisPosition = vertical ? position.Y : position.X;
+        double crossAxisPosition = vertical ? position.X : position.Y;
+        AxisDirection resolved = ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            constraints.AxisDirection,
+            constraints.GrowthDirection);
+        if (ScrollDirectionUtils.AxisDirectionIsReversed(resolved))
+        {
+            mainAxisPosition = sliver.Geometry.PaintExtent - mainAxisPosition;
+        }
+
+        return (mainAxisPosition, crossAxisPosition);
+    }
+
+    /// <summary>
+    /// Hit tests a box child of <paramref name="sliver"/>, converting the sliver-space position into
+    /// the child's box space. Calling this for a child that is not visible is not valid.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderSliverHelpers.hitTestBoxChild</c>.</remarks>
+    public static bool HitTestBoxChild(
+        this RenderSliver sliver,
+        BoxHitTestResult result,
+        RenderBox child,
+        double mainAxisPosition,
+        double crossAxisPosition)
+    {
+        SliverConstraints constraints = sliver.ConstraintsForSliver;
+        bool rightWayUp = GetRightWayUp(constraints);
+        double delta = sliver.ChildMainAxisPosition(child);
+        double crossAxisDelta = sliver.ChildCrossAxisPosition(child);
+        double absolutePosition = mainAxisPosition - delta;
+        double absoluteCrossAxisPosition = crossAxisPosition - crossAxisDelta;
+        Point paintOffset;
+        Point transformedPosition;
+        if (constraints.Axis == Axis.Horizontal)
+        {
+            if (!rightWayUp)
+            {
+                absolutePosition = child.Size.Width - absolutePosition;
+                delta = sliver.Geometry.PaintExtent - child.Size.Width - delta;
+            }
+
+            paintOffset = new Point(delta, crossAxisDelta);
+            transformedPosition = new Point(absolutePosition, absoluteCrossAxisPosition);
+        }
+        else
+        {
+            if (!rightWayUp)
+            {
+                absolutePosition = child.Size.Height - absolutePosition;
+                delta = sliver.Geometry.PaintExtent - child.Size.Height - delta;
+            }
+
+            paintOffset = new Point(crossAxisDelta, delta);
+            transformedPosition = new Point(absoluteCrossAxisPosition, absolutePosition);
+        }
+
+        return result.AddWithOutOfBandPosition(
+            hitResult => child.HitTest(hitResult, transformedPosition),
+            paintOffset: paintOffset);
+    }
+
+    /// <summary>
+    /// Turns the values <see cref="RenderSliver.ChildMainAxisPosition"/> and
+    /// <see cref="RenderSliver.ChildCrossAxisPosition"/> return for a box child into a translation,
+    /// and applies it to <paramref name="transform"/>. Calling this for a child that is not visible
+    /// is not valid.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderSliverHelpers.applyPaintTransformForBoxChild</c>.</remarks>
+    public static void ApplyPaintTransformForBoxChild(
+        this RenderSliver sliver,
+        RenderBox child,
+        Matrix4 transform)
+    {
+        SliverConstraints constraints = sliver.ConstraintsForSliver;
+        bool rightWayUp = GetRightWayUp(constraints);
+        double delta = sliver.ChildMainAxisPosition(child);
+        double crossAxisDelta = sliver.ChildCrossAxisPosition(child);
+        if (constraints.Axis == Axis.Horizontal)
+        {
+            if (!rightWayUp)
+            {
+                delta = sliver.Geometry.PaintExtent - child.Size.Width - delta;
+            }
+
+            transform.TranslateByDouble(delta, crossAxisDelta, 0, 1);
+        }
+        else
+        {
+            if (!rightWayUp)
+            {
+                delta = sliver.Geometry.PaintExtent - child.Size.Height - delta;
+            }
+
+            transform.TranslateByDouble(crossAxisDelta, delta, 0, 1);
+        }
     }
 }
 
@@ -2308,10 +2486,10 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
 }
 
 public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
-    IRenderBoxContainerDefaultsMixin<RenderBox, SliverMultiBoxAdaptorParentData>,
+    IContainerRenderObjectMixin<RenderBox, SliverMultiBoxAdaptorParentData>,
     IRenderObjectContainer
 {
-    private readonly RenderBoxContainerDefaultsMixin<RenderBox, SliverMultiBoxAdaptorParentData> _container;
+    private readonly ContainerRenderObjectMixin<RenderBox, SliverMultiBoxAdaptorParentData> _container;
     private readonly Dictionary<int, RenderBox> _keepAliveBucket = [];
     private readonly List<RenderBox> _debugDanglingKeepAlives = [];
     private IRenderSliverBoxChildManager? _childManager;
@@ -2319,7 +2497,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
 
     protected RenderSliverMultiBoxAdaptor(IRenderSliverBoxChildManager? childManager = null)
     {
-        _container = new RenderBoxContainerDefaultsMixin<RenderBox, SliverMultiBoxAdaptorParentData>(this);
+        _container = new ContainerRenderObjectMixin<RenderBox, SliverMultiBoxAdaptorParentData>(this);
         _childManager = childManager;
     }
 
@@ -2513,14 +2691,120 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor.paint</c>: the child's paint offset is derived from
+    /// <see cref="RenderSliver.ChildMainAxisPosition"/> and
+    /// <see cref="RenderSliver.ChildCrossAxisPosition"/> against the resolved axis direction, so a
+    /// reversed sliver paints its children from the trailing edge back.
+    /// </remarks>
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        _container.DefaultPaint(ctx, offset);
+        if (FirstChild is null)
+        {
+            return;
+        }
+
+        // offset is to the top-left corner, regardless of our axis direction.
+        // originOffset gives us the delta from the real origin to the origin in the axis direction.
+        SliverConstraints constraints = ConstraintsForSliver;
+        Point mainAxisUnit;
+        Point crossAxisUnit;
+        Point originOffset;
+        bool addExtent;
+        switch (ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
+            constraints.AxisDirection,
+            constraints.GrowthDirection))
+        {
+            case AxisDirection.Up:
+                mainAxisUnit = new Point(0.0, -1.0);
+                crossAxisUnit = new Point(1.0, 0.0);
+                originOffset = offset + new Point(0.0, Geometry.PaintExtent);
+                addExtent = true;
+                break;
+            case AxisDirection.Right:
+                mainAxisUnit = new Point(1.0, 0.0);
+                crossAxisUnit = new Point(0.0, 1.0);
+                originOffset = offset;
+                addExtent = false;
+                break;
+            case AxisDirection.Down:
+                mainAxisUnit = new Point(0.0, 1.0);
+                crossAxisUnit = new Point(1.0, 0.0);
+                originOffset = offset;
+                addExtent = false;
+                break;
+            default:
+                mainAxisUnit = new Point(-1.0, 0.0);
+                crossAxisUnit = new Point(0.0, 1.0);
+                originOffset = offset + new Point(Geometry.PaintExtent, 0.0);
+                addExtent = true;
+                break;
+        }
+
+        RenderBox? child = FirstChild;
+        while (child is not null)
+        {
+            double mainAxisDelta = ChildMainAxisPosition(child);
+            double crossAxisDelta = ChildCrossAxisPosition(child);
+            var childOffset = new Point(
+                originOffset.X + (mainAxisUnit.X * mainAxisDelta) + (crossAxisUnit.X * crossAxisDelta),
+                originOffset.Y + (mainAxisUnit.Y * mainAxisDelta) + (crossAxisUnit.Y * crossAxisDelta));
+            double childExtent = PaintExtentOf(child);
+            if (addExtent)
+            {
+                childOffset += new Point(mainAxisUnit.X * childExtent, mainAxisUnit.Y * childExtent);
+            }
+
+            // If the child's visible interval (mainAxisDelta, mainAxisDelta + paintExtentOf(child))
+            // does not intersect the paint extent interval (0, constraints.remainingPaintExtent),
+            // it's hidden.
+            if (mainAxisDelta < constraints.RemainingPaintExtent && mainAxisDelta + childExtent > 0)
+            {
+                ctx.PaintChild(child, childOffset);
+            }
+
+            child = ChildAfter(child);
+        }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor.hitTestChildren</c>, entered through the box protocol
+    /// because <see cref="RenderSliver"/> is a <see cref="RenderBox"/> in Plumix.
+    /// </remarks>
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        return _container.DefaultHitTestChildren(result, position);
+        (double mainAxisPosition, double crossAxisPosition) = this.SliverHitTestPosition(position);
+        RenderBox? child = LastChild;
+        while (child is not null)
+        {
+            if (this.HitTestBoxChild(result, child, mainAxisPosition, crossAxisPosition))
+            {
+                return true;
+            }
+
+            child = ChildBefore(child);
+        }
+
+        return false;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderSliverMultiBoxAdaptor.applyPaintTransform</c>: a child that is not painted
+    /// has no meaningful transform, and asking for one is valid, so the matrix is zeroed instead of
+    /// running the box-child conversion, which would throw.
+    /// </remarks>
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        if (!PaintsChild(child))
+        {
+            transform.SetZero();
+            return;
+        }
+
+        this.ApplyPaintTransformForBoxChild((RenderBox)child, transform);
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -2736,7 +3020,7 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
             return false;
         }
 
-        return childParentData.Index is not { } index || !_keepAliveBucket.ContainsKey(index);
+        return childParentData.Index is { } index && !_keepAliveBucket.ContainsKey(index);
     }
 
     protected void CollectGarbage(int leadingGarbage, int trailingGarbage)
@@ -2844,16 +3128,6 @@ public abstract class RenderSliverMultiBoxAdaptor : RenderSliver,
         Debug.Assert(ReferenceEquals(child.Parent, this));
         _childManager?.RemoveChild(child);
         Debug.Assert(child.Parent is null);
-    }
-
-    public void DefaultPaint(PaintingContext ctx, Point offset)
-    {
-        _container.DefaultPaint(ctx, offset);
-    }
-
-    public bool DefaultHitTestChildren(BoxHitTestResult result, Point position)
-    {
-        return _container.DefaultHitTestChildren(result, position);
     }
 
     /// <inheritdoc />
@@ -3154,7 +3428,6 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
                 CollectGarbage(leadingGarbage - 1, 0);
                 Debug.Assert(ReferenceEquals(FirstChild, LastChild));
                 double lastExtent = ChildScrollOffset(LastChild!)!.Value + PaintExtentOf(LastChild!);
-                PlaceChildren(constraints);
                 Geometry = new SliverGeometry(ScrollExtent: lastExtent, MaxPaintExtent: lastExtent);
                 return;
             }
@@ -3213,7 +3486,6 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
             to: endScrollOffset);
         double targetEndScrollOffsetForPaint = constraints.ScrollOffset + constraints.RemainingPaintExtent;
 
-        PlaceChildren(constraints);
         Geometry = new SliverGeometry(
             ScrollExtent: estimatedMaxScrollOffset,
             PaintExtent: paintExtent,
@@ -3233,30 +3505,6 @@ public sealed class RenderSliverList : RenderSliverMultiBoxAdaptor
         childManager.DidFinishLayout();
     }
 
-    /// <summary>
-    /// Writes each laid-out child's paint offset from its layout offset.
-    /// </summary>
-    /// <remarks>
-    /// Dart has no counterpart: its <c>RenderSliverMultiBoxAdaptor.paint</c> derives the paint offset
-    /// from <c>childMainAxisPosition</c> instead of reading <c>parentData.offset</c>. Plumix paints
-    /// adaptor children through the container defaults, so the offset is materialized here (see the
-    /// adaptor-paint row in <c>docs/ai/BACKLOG.md</c>).
-    /// </remarks>
-    private void PlaceChildren(SliverConstraints constraints)
-    {
-        for (RenderBox? child = FirstChild; child is not null; child = ChildAfter(child))
-        {
-            var childParentData = (SliverMultiBoxAdaptorParentData)child.parentData!;
-            if (childParentData.LayoutOffset is not { } layoutOffset)
-            {
-                continue;
-            }
-
-            childParentData.offset = constraints.Axis == Axis.Vertical
-                ? new Point(0, layoutOffset - constraints.ScrollOffset)
-                : new Point(layoutOffset - constraints.ScrollOffset, 0);
-        }
-    }
 }
 
 public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
@@ -3391,7 +3639,7 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
 
             var newLeadingParentData = (SliverGridParentData)newLeadingChild.parentData!;
             newLeadingParentData.Index = targetIndex;
-            ApplyChildGeometry(newLeadingParentData, gridGeometry, constraints);
+            ApplyChildGeometry(newLeadingParentData, gridGeometry);
             firstChild = newLeadingChild;
         }
 
@@ -3439,7 +3687,7 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
             child.Layout(gridGeometry.GetBoxConstraints(constraints), parentUsesSize: true);
             var childParentData = (SliverGridParentData)child.parentData!;
             childParentData.Index = index;
-            ApplyChildGeometry(childParentData, gridGeometry, constraints);
+            ApplyChildGeometry(childParentData, gridGeometry);
             lastLaidOutChild = child;
             trailingScrollOffset = Math.Max(trailingScrollOffset, gridGeometry.TrailingScrollOffset);
 
@@ -3525,16 +3773,10 @@ public sealed class RenderSliverGrid : RenderSliverMultiBoxAdaptor
         return ((SliverGridParentData)child.parentData!).CrossAxisOffset;
     }
 
-    private static void ApplyChildGeometry(
-        SliverGridParentData parentData,
-        SliverGridGeometry geometry,
-        SliverConstraints constraints)
+    private static void ApplyChildGeometry(SliverGridParentData parentData, SliverGridGeometry geometry)
     {
         parentData.LayoutOffset = geometry.ScrollOffset;
         parentData.CrossAxisOffset = geometry.CrossAxisOffset;
-        parentData.offset = constraints.Axis == Axis.Vertical
-            ? new Point(geometry.CrossAxisOffset, geometry.ScrollOffset - constraints.ScrollOffset)
-            : new Point(geometry.ScrollOffset - constraints.ScrollOffset, geometry.CrossAxisOffset);
     }
 
     private int CountActiveChildren()

@@ -272,7 +272,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
                 return;
             }
 
-            SetChildGeometry(leading, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, index));
+            SetChildGeometry(leading, IndexToLayoutOffset(DeprecatedExtraItemExtent, index));
             trailingChildWithLayout ??= leading;
         }
 
@@ -280,7 +280,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         {
             RenderBox first = FirstChild!;
             first.Layout(ChildConstraintsForIndex(constraints, IndexOf(first)), parentUsesSize: true);
-            SetChildGeometry(first, constraints, IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex));
+            SetChildGeometry(first, IndexToLayoutOffset(DeprecatedExtraItemExtent, firstIndex));
             trailingChildWithLayout = first;
         }
 
@@ -306,10 +306,7 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
             }
 
             trailingChildWithLayout = child;
-            SetChildGeometry(
-                child,
-                constraints,
-                IndexToLayoutOffset(DeprecatedExtraItemExtent, IndexOf(child)));
+            SetChildGeometry(child, IndexToLayoutOffset(DeprecatedExtraItemExtent, IndexOf(child)));
         }
 
         int lastIndex = IndexOf(LastChild!);
@@ -385,14 +382,15 @@ public abstract class RenderSliverFixedExtentBoxAdaptor : RenderSliverMultiBoxAd
         return constraints.AsBoxConstraints(minExtent: extent, maxExtent: extent);
     }
 
-    /// <summary>Stores the child's scroll offset and derives its paint offset from it.</summary>
-    protected void SetChildGeometry(RenderBox child, SliverConstraints constraints, double layoutOffset)
+    /// <summary>Stores the child's scroll offset.</summary>
+    /// <remarks>
+    /// Flutter writes <c>childParentData.layoutOffset</c> inline in <c>performLayout</c>; the paint
+    /// position follows from it through <c>RenderSliverMultiBoxAdaptor.paint</c>.
+    /// </remarks>
+    protected static void SetChildGeometry(RenderBox child, double layoutOffset)
     {
         var data = (SliverMultiBoxAdaptorParentData)child.parentData!;
         data.LayoutOffset = layoutOffset;
-        data.offset = constraints.Axis == Axis.Vertical
-            ? new Point(0, layoutOffset - constraints.ScrollOffset)
-            : new Point(layoutOffset - constraints.ScrollOffset, 0);
     }
 
     /// <summary>Dart's <c>double.round()</c>, which rounds halves away from zero.</summary>

@@ -84,7 +84,7 @@ public sealed class SliverFillTests
             remainingCacheExtent: 200));
 
         Assert.Equal([2, 3], ActiveIndices(sliver));
-        Assert.Equal(new Point(0, 0), ParentData(sliver.FirstChild!).offset);
+        Assert.Equal(0.0, sliver.ChildMainAxisPosition(sliver.FirstChild!));
     }
 
     [Fact]
