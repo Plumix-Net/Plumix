@@ -12,6 +12,9 @@ class SelectionDemoPage extends StatefulWidget {
 class _SelectionDemoPageState extends State<SelectionDemoPage> {
   final SelectionListenerNotifier _selectionNotifier =
       SelectionListenerNotifier();
+  final ContextMenuController _menuController = ContextMenuController();
+  int _menuValue = 0;
+  int _pageClicks = 0;
   bool _interactive = true;
   String _singleSelection = 'none';
   String _areaSelection = 'none';
@@ -35,8 +38,45 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
 
   @override
   void dispose() {
+    _menuController.remove();
     _selectionNotifier.dispose();
     super.dispose();
+  }
+
+  void _showMenu() {
+    _menuValue++;
+    _menuController.show(context: context, contextMenuBuilder: _buildMenu);
+  }
+
+  Widget _buildMenu(BuildContext context) {
+    return Positioned(
+      right: 16,
+      top: 80,
+      width: 260,
+      child: Material(
+        elevation: 8,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 8,
+            children: <Widget>[
+              Text(
+                'Menu value: $_menuValue',
+                style: const TextStyle(fontSize: 18),
+              ),
+              const Text('The page stays interactive while this menu is open.'),
+              TextButton(
+                onPressed: _menuController.remove,
+                child: const Text('Close menu'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -63,6 +103,34 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
               onPressed: () => setState(() => _interactive = !_interactive),
               child: Text('Interactive: $_interactive'),
             ),
+          ),
+          const Text(
+            'ContextMenuController',
+            style: TextStyle(fontSize: 18, color: Colors.black),
+          ),
+          const Text(
+            'Show a menu, update its value, and click the page while it stays open.',
+          ),
+          Wrap(
+            spacing: 8,
+            children: <Widget>[
+              TextButton(
+                onPressed: _showMenu,
+                child: const Text('Show / replace builder'),
+              ),
+              TextButton(
+                onPressed: () {
+                  if (!_menuController.isShown) return;
+                  _menuValue++;
+                  _menuController.markNeedsBuild();
+                },
+                child: const Text('Rebuild menu'),
+              ),
+              TextButton(
+                onPressed: () => setState(() => _pageClicks++),
+                child: Text('Page clicks: $_pageClicks'),
+              ),
+            ],
           ),
           const Text(
             'Single selectable run',

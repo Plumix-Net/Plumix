@@ -324,7 +324,7 @@ public sealed class MaterialSelectionTests
     }
 
     [Fact]
-    public void SelectionArea_ShowToolbarSurvivesTheFocusHandoverToTheMenuRoute()
+    public void SelectionArea_ShowToolbarPreservesFocusAndSelection()
     {
         var key = new LabeledGlobalKey<SelectionAreaState>("toolbar-area");
         var focusNode = new FocusNode();
@@ -342,15 +342,16 @@ public sealed class MaterialSelectionTests
         SelectableRegionState state = key.CurrentState!.SelectableRegion;
         state.SelectAll();
 
-        // Pushing the route-backed menu hands focus to the modal scope, which used to
-        // re-enter HideToolbar and tear the route down mid-push.
         Assert.True(state.ShowToolbar());
         harness.Pump(new Size(320, 160));
 
         Assert.True(state.ContextMenuIsVisible);
+        Assert.True(focusNode.HasFocus);
         Assert.Equal("long pressed", state.SelectedContent?.PlainText);
 
-        state.HideToolbar();
+        focusNode.Unfocus();
+        harness.Pump(new Size(320, 160));
+        Assert.True(string.IsNullOrEmpty(state.SelectedContent?.PlainText));
         Assert.False(state.ContextMenuIsVisible);
     }
 
@@ -453,10 +454,8 @@ public sealed class MaterialSelectionTests
             Assert.True(state.ContextMenuIsVisible);
             Assert.Equal("alpha beta gamma", state.SelectedContent?.PlainText);
 
-            // Flutter toggles the menu off on the next right click; Plumix's menu is a route whose
-            // modal barrier consumes that press instead (see `DIVERGENCES.md`), so the toggle is
-            // asserted through the API the barrier ultimately calls.
-            state.HideToolbar();
+            SecondaryTapAt(harness, 74, new Point(2, 8));
+            harness.Pump(new Size(320, 160));
             Assert.False(state.ContextMenuIsVisible);
         }
         finally

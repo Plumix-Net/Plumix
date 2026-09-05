@@ -55,13 +55,9 @@ public delegate Widget SelectableRegionContextMenuBuilder(
     BuildContext context,
     SelectableRegionState selectableRegionState);
 
-/// <summary>Owns the route-backed presentation of a Flutter-style context menu.</summary>
+/// <summary>Builds and manages the single application-wide context menu in the root overlay.</summary>
 public sealed class ContextMenuController
 {
-    private static ContextMenuController? _shownInstance;
-    private ContextMenuRoute? _route;
-    private NavigatorState? _navigator;
-
     public ContextMenuController(Action? onRemove = null)
     {
         OnRemove = onRemove;
@@ -69,42 +65,59 @@ public sealed class ContextMenuController
 
     public Action? OnRemove { get; }
 
-    public bool IsShown => ReferenceEquals(_shownInstance, this);
+    private static Func<BuildContext, Widget>? _contextMenuBuilder;
+    private static ContextMenuController? _shownInstance;
+    private static OverlayEntry? _menuOverlayEntry;
 
-    public bool Show(BuildContext context, Func<BuildContext, Widget> contextMenuBuilder)
+    public void Show(
+        BuildContext context,
+        Func<BuildContext, Widget> contextMenuBuilder,
+        Widget? debugRequiredFor = null)
     {
         ArgumentNullException.ThrowIfNull(contextMenuBuilder);
-
-        if (IsShown && _route is not null)
+        if (IsShown)
         {
-            // Update the currently-shown menu in place by swapping the builder and rebuilding the
-            // existing entry, so a caller that rebuilds its builder closure every frame does not
-            // tear the menu down and re-show it.
-            _route.UpdateBuilder(contextMenuBuilder);
-            return true;
+            _contextMenuBuilder = contextMenuBuilder;
+            _menuOverlayEntry?.MarkNeedsBuild();
+            return;
         }
 
         RemoveAny();
-
-        NavigatorState? navigator = Navigator.MaybeOf(context, rootNavigator: true);
-        if (navigator is null)
+        OverlayState overlayState = Overlay.Of(context, rootOverlay: true, debugRequiredFor: debugRequiredFor);
+        _contextMenuBuilder = contextMenuBuilder;
+        _menuOverlayEntry = new OverlayEntry(menuContext =>
         {
-            return false;
-        }
-
-        _navigator = navigator;
-        _route = new ContextMenuRoute(
-            contextMenuBuilder,
-            onDismiss: Hide,
-            onRemoved: HandleRouteRemoved);
+            CapturedThemes capturedThemes = InheritedTheme.Capture(
+                from: menuContext,
+                to: Navigator.MaybeOf(menuContext)?.Context);
+            return capturedThemes.Wrap(_contextMenuBuilder!(menuContext));
+        });
         _shownInstance = this;
-        navigator.Push(_route);
-        return true;
+        overlayState.Insert(_menuOverlayEntry);
     }
 
-    public void Hide()
+    public static void RemoveAny()
     {
-        Remove();
+        _menuOverlayEntry?.Remove();
+        _menuOverlayEntry?.Dispose();
+        _menuOverlayEntry = null;
+        _contextMenuBuilder = null;
+        if (_shownInstance is not null)
+        {
+            _shownInstance.OnRemove?.Invoke();
+            _shownInstance = null;
+        }
+    }
+
+    public bool IsShown => ReferenceEquals(_shownInstance, this);
+
+    public void MarkNeedsBuild()
+    {
+        if (Constants.KDebugMode && !IsShown)
+        {
+            throw new AssertionError("The context menu must be shown before marking it dirty.");
+        }
+        _menuOverlayEntry?.MarkNeedsBuild();
     }
 
     public void Remove()
@@ -113,107 +126,9 @@ public sealed class ContextMenuController
         {
             return;
         }
-
-        RemoveRoute();
+        RemoveAny();
     }
 
-    public static void RemoveAny()
-    {
-        _shownInstance?.RemoveRoute();
-    }
-
-    private void RemoveRoute()
-    {
-        ContextMenuRoute? route = _route;
-        NavigatorState? navigator = _navigator;
-        _route = null;
-        _navigator = null;
-        if (ReferenceEquals(_shownInstance, this))
-        {
-            _shownInstance = null;
-        }
-        if (route is not null && navigator is not null)
-        {
-            navigator.RemoveRoute(route);
-        }
-        OnRemove?.Invoke();
-    }
-
-    private void HandleRouteRemoved(ContextMenuRoute route)
-    {
-        if (!ReferenceEquals(_route, route))
-        {
-            return;
-        }
-
-        _route = null;
-        _navigator = null;
-        if (ReferenceEquals(_shownInstance, this))
-        {
-            _shownInstance = null;
-        }
-        OnRemove?.Invoke();
-    }
-
-    private sealed class ContextMenuRoute : PageRoute
-    {
-        private Func<BuildContext, Widget> _builder;
-        private readonly Action _onDismiss;
-        private readonly Action<ContextMenuRoute> _onRemoved;
-        private bool _removed;
-
-        public ContextMenuRoute(
-            Func<BuildContext, Widget> builder,
-            Action onDismiss,
-            Action<ContextMenuRoute> onRemoved)
-        {
-            _builder = builder;
-            _onDismiss = onDismiss;
-            _onRemoved = onRemoved;
-        }
-
-        public override bool Opaque => false;
-
-        /// Dart's `_menuOverlayEntry.markNeedsBuild()` after swapping `_contextMenuBuilder`.
-        public void UpdateBuilder(Func<BuildContext, Widget> builder)
-        {
-            _builder = builder;
-            ChangedInternalState();
-        }
-
-        public override Widget BuildPage(BuildContext context)
-        {
-            return new GestureDetector(
-                behavior: HitTestBehavior.Translucent,
-                onTap: _onDismiss,
-                child: new Stack(
-                    fit: StackFit.Expand,
-                    clipBehavior: Clip.None,
-                    children: [_builder(context)]));
-        }
-
-        public override bool DidPop(object? result)
-        {
-            bool returnValue = base.DidPop(result);
-            NotifyRemoved();
-            return returnValue;
-        }
-
-        public override void Dispose()
-        {
-            NotifyRemoved();
-            base.Dispose();
-        }
-
-        private void NotifyRemoved()
-        {
-            if (_removed)
-            {
-                return;
-            }
-
-            _removed = true;
-            _onRemoved(this);
-        }
-    }
+    /// <summary>Alias for <see cref="Remove"/>.</summary>
+    public void Hide() => Remove();
 }

@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `ContextMenuController.Show` returns void and uses root overlays (`context_menu_controller.dart`).
+- Breaking: `WidgetHost`/`WidgetsApp` leave overlays to navigators or explicit `Overlay` widgets (`app.dart`).
 - Breaking: the `Element` lifecycle and `Widget.CreateElement` are public API (`framework.dart`).
 - Breaking: `RenderObjectWidget`'s render-object hooks are public, so any assembly can author one (`framework.dart`).
 - Breaking: sliver adaptors paint from `ChildMainAxisPosition`; reversed lists fixed (`sliver_multi_box_adaptor.dart`).

@@ -813,10 +813,41 @@ public sealed class Overlay : StatefulWidget
             key);
     }
 
-    public static OverlayState Of(BuildContext context, bool rootOverlay = false)
+    public static OverlayState Of(
+        BuildContext context,
+        bool rootOverlay = false,
+        Widget? debugRequiredFor = null)
     {
-        return MaybeOf(context, rootOverlay)
-               ?? throw new InvalidOperationException("No Overlay ancestor was found.");
+        OverlayState? result = MaybeOf(context, rootOverlay);
+        if (Constants.KDebugMode && result is null)
+        {
+            var information = new List<DiagnosticsNode>
+            {
+                new ErrorSummary("No Overlay widget found."),
+                new ErrorDescription(
+                    $"{debugRequiredFor?.GetType().Name ?? "Some"} widgets require an Overlay widget "
+                    + "ancestor for correct operation."),
+                new ErrorHint(
+                    "The most common way to add an Overlay to an application is to include a MaterialApp, "
+                    + "CupertinoApp or Navigator widget in the runApp() call."),
+            };
+            if (debugRequiredFor is not null)
+            {
+                information.Add(new DiagnosticsProperty<Widget>(
+                    "The specific widget that failed to find an overlay was",
+                    debugRequiredFor,
+                    style: DiagnosticsTreeStyle.ErrorProperty));
+            }
+            if (!ReferenceEquals(context.Owner.Widget, debugRequiredFor))
+            {
+                information.Add(new DiagnosticsProperty<Element>(
+                    "The context from which that widget was searching for an overlay was",
+                    context.Owner,
+                    style: DiagnosticsTreeStyle.ErrorProperty));
+            }
+            throw new FlutterError(information);
+        }
+        return result ?? throw new InvalidOperationException("No Overlay ancestor was found.");
     }
 
     public static OverlayState? MaybeOf(BuildContext context, bool rootOverlay = false)

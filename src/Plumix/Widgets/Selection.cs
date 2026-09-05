@@ -200,7 +200,6 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
     private bool _isShiftPressed;
     private bool? _adjustingSelectionEnd;
     private double? _directionalHorizontalBaseline;
-    private bool _showingToolbar;
 
     private SelectableRegion Current => (SelectableRegion)StateWidget;
 
@@ -478,38 +477,22 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
 
         _selectionOverlay!.ToolbarLocation = location;
 
-        // The menu is route-backed here (see `DIVERGENCES.md`), so pushing it hands
-        // focus to the modal scope. That focus loss must not tear down the route
-        // that is still being pushed, so re-entrant hides are ignored while showing.
-        _showingToolbar = true;
-        try
+        if (Current.SelectionControls is not ITextSelectionHandleControls)
         {
-            if (Current.SelectionControls is not ITextSelectionHandleControls)
-            {
-                _selectionOverlay.ShowToolbar();
-                return true;
-            }
-
-            _selectionOverlay.HideToolbar();
-            _selectionOverlay.ShowToolbar(
-                context: Context,
-                contextMenuBuilder: context => Current.ContextMenuBuilder!(context, this));
+            _selectionOverlay.ShowToolbar();
             return true;
         }
-        finally
-        {
-            _showingToolbar = false;
-        }
+
+        _selectionOverlay.HideToolbar();
+        _selectionOverlay.ShowToolbar(
+            context: Context,
+            contextMenuBuilder: context => Current.ContextMenuBuilder!(context, this));
+        return true;
     }
 
     /// Hides the context menu, and optionally the selection handles.
     public void HideToolbar(bool hideHandles = true)
     {
-        if (_showingToolbar)
-        {
-            return;
-        }
-
         _selectionOverlay?.HideToolbar();
         if (hideHandles)
         {
@@ -1512,10 +1495,7 @@ public sealed class SelectableRegionState : State, ISelectionRegistrar
 
     private void HandleFocusChanged()
     {
-        // Flutter's context menu is an overlay entry and never takes focus, so the
-        // selection survives while it is open. Plumix's menu is a route, so focus
-        // moves to its modal scope; keep the selection in that case.
-        if (_attachedFocusNode?.HasFocus == false && !_showingToolbar && !ContextMenuIsVisible)
+        if (_attachedFocusNode?.HasFocus == false)
         {
             ClearSelection();
             SetChangingThenFinalize();

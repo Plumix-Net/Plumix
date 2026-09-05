@@ -1316,7 +1316,6 @@ public sealed class EditableText : StatefulWidget
         private bool _ownsFocusNode;
         private double? _verticalNavigationX;
         private int? _verticalNavigationColumn;
-        private readonly ContextMenuController _contextMenuController = new();
         private readonly GlobalKey _editableRenderKey = new EditableRenderKey(Guid.NewGuid());
         private readonly LayerLink _startHandleLayerLink = new();
         private readonly LayerLink _endHandleLayerLink = new();
@@ -1391,7 +1390,7 @@ public sealed class EditableText : StatefulWidget
             }
         }
 
-        public bool ContextMenuIsVisible => _contextMenuController.IsShown;
+        public bool ContextMenuIsVisible => _selectionOverlay?.ToolbarIsVisible ?? false;
 
         public TextEditingValue CurrentTextEditingValue => _controller!.Value;
 
@@ -1650,7 +1649,6 @@ public sealed class EditableText : StatefulWidget
             _selectionOverlay?.Dispose();
             _selectionOverlay = null;
             _clipboardStatus.Dispose();
-            _contextMenuController.Hide();
             DetachController();
             DetachFocusNode(disposeOwned: true);
             _cursorTicker.Dispose();
@@ -1776,7 +1774,6 @@ public sealed class EditableText : StatefulWidget
 
         public void HideToolbar(bool hideHandles = true)
         {
-            _contextMenuController.Hide();
             _selectionOverlay?.HideToolbar();
             if (hideHandles) _selectionOverlay?.HideHandles();
         }

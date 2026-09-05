@@ -16,6 +16,9 @@ public sealed class SelectionDemoPage : StatefulWidget
 internal sealed class SelectionDemoPageState : State
 {
     private readonly SelectionListenerNotifier _selectionNotifier = new();
+    private readonly ContextMenuController _menuController = new();
+    private int _menuValue;
+    private int _pageClicks;
     private bool _interactive = true;
     private string _singleSelection = "none";
     private string _areaSelection = "none";
@@ -37,8 +40,38 @@ internal sealed class SelectionDemoPageState : State
 
     public override void Dispose()
     {
+        _menuController.Remove();
         _selectionNotifier.Dispose();
         base.Dispose();
+    }
+
+    private void ShowMenu()
+    {
+        _menuValue++;
+        _menuController.Show(Context, BuildMenu);
+    }
+
+    private Widget BuildMenu(BuildContext context)
+    {
+        return new Positioned(
+            right: 16,
+            top: 80,
+            width: 260,
+            child: new Plumix.Material.Material(
+                elevation: 8,
+                borderRadius: BorderRadius.Circular(12),
+                child: new Padding(
+                    insets: new Thickness(16),
+                    child: new Column(
+                        mainAxisSize: MainAxisSize.Min,
+                        crossAxisAlignment: CrossAxisAlignment.Start,
+                        spacing: 8,
+                        children:
+                        [
+                            new Text($"Menu value: {_menuValue}", fontSize: 18),
+                            new Text("The page stays interactive while this menu is open."),
+                            new TextButton(new Text("Close menu"), _menuController.Remove),
+                        ]))));
     }
 
     public override Widget Build(BuildContext context)
@@ -62,6 +95,22 @@ internal sealed class SelectionDemoPageState : State
                         child: new TextButton(
                             new Text($"Interactive: {_interactive}"),
                             () => SetState(() => _interactive = !_interactive))),
+                    new Text("ContextMenuController", fontSize: 18, color: Colors.Black),
+                    new Text("Show a menu, update its value, and click the page while it stays open."),
+                    new Wrap(
+                        spacing: 8,
+                        children:
+                        [
+                            new TextButton(new Text("Show / replace builder"), ShowMenu),
+                            new TextButton(new Text("Rebuild menu"), () =>
+                            {
+                                if (!_menuController.IsShown) return;
+                                _menuValue++;
+                                _menuController.MarkNeedsBuild();
+                            }),
+                            new TextButton(new Text($"Page clicks: {_pageClicks}"),
+                                () => SetState(() => _pageClicks++)),
+                        ]),
                     new Text("Single selectable run", fontSize: 18, color: Colors.Black),
                     new DecoratedBox(
                         decoration: new BoxDecoration(

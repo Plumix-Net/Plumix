@@ -304,6 +304,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.NotNull(builderChild);
         Assert.True(homeContext.HasValue);
         Assert.Same(navigatorKey.CurrentState, Navigator.Of(homeContext!.Value));
+        Assert.Same(navigatorKey.CurrentState!.Overlay, Overlay.Of(homeContext.Value, rootOverlay: true));
         Assert.Equal(TextDirection.Ltr, Directionality.Of(homeContext.Value));
         Assert.Equal("localized", Localizations.Of<TestStrings>(homeContext.Value).Value);
         Assert.NotNull(SharedAppData.GetValue(homeContext.Value, "key", () => new object()));

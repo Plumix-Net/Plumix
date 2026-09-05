@@ -379,23 +379,23 @@ public sealed class SafeAreaTests
         Assert.Equal(new Thickness(), MediaQueryProbe.Padding);
         Assert.Equal(new Thickness(), MediaQueryProbe.ViewPadding);
         Assert.Equal(new Size(0, 0), MediaQueryProbe.Size);
-        Assert.True(MediaQueryProbe.HasOverlay);
+        Assert.False(MediaQueryProbe.HasOverlay);
 
         _ = host;
     }
 
     [Fact]
-    public void WidgetHost_RootOverlaySupportsInitiallyVisiblePortal()
+    public void WidgetHost_ExplicitOverlaySupportsInitiallyVisiblePortal()
     {
         var controller = new OverlayPortalController();
         controller.Show();
 
         var host = new WidgetHost
         {
-            RootWidget = new OverlayPortal(
+            RootWidget = Overlay.Wrap(new OverlayPortal(
                 controller: controller,
                 overlayChildBuilder: _ => new SizedBox(width: 8, height: 8),
-                child: new SizedBox(width: 16, height: 16)),
+                child: new SizedBox(width: 16, height: 16))),
         };
 
         Assert.True(controller.IsShowing);

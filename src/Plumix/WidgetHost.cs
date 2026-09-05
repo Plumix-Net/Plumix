@@ -107,7 +107,7 @@ public sealed class WidgetHost : PlumixHost
             view: _view,
             child: new MediaQuery(
                 data: data,
-                child: Overlay.Wrap(rootWidget)));
+                child: rootWidget));
     }
 
     private sealed class RootElement : Element, IRenderObjectHost
