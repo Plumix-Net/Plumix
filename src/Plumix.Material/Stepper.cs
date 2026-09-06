@@ -666,10 +666,10 @@ public sealed class Stepper : StatefulWidget
         private void HandleStepTapped(int index, bool ensureVisible)
         {
             BuildContext? stepContext = _keys[index].CurrentContext;
-            if (ensureVisible && stepContext.HasValue)
+            if (ensureVisible && stepContext is not null)
             {
                 _ = Scrollable.EnsureVisible(
-                    stepContext.Value,
+                    stepContext,
                     duration: MaterialConstants.ThemeAnimationDuration,
                     curve: Curves.FastOutSlowIn);
             }

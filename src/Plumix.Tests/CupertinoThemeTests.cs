@@ -316,7 +316,7 @@ public sealed class CupertinoThemeTests
             new SizedBox());
 
         using var harness = new CupertinoThemeTestHarness(inherited.Wrap(
-            default,
+            null!,
             new Builder(context =>
             {
                 captured = CupertinoTheme.Of(context);

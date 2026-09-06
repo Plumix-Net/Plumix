@@ -216,23 +216,23 @@ public sealed class ScrollInfrastructureTests
 
         Assert.Same(behavior, inherited);
         Assert.IsType<RawScrollbar>(desktopChrome);
-        Assert.IsType<BouncingScrollPhysics>(behavior.GetScrollPhysics(new BuildContext(root)));
+        Assert.IsType<BouncingScrollPhysics>(behavior.GetScrollPhysics(root));
         Assert.Equal(
             MultitouchDragStrategy.AverageBoundaryPointers,
-            behavior.GetMultitouchDragStrategy(new BuildContext(root)));
+            behavior.GetMultitouchDragStrategy(root));
         Assert.DoesNotContain(PointerDeviceKind.Mouse, behavior.DragDevices);
         Assert.Contains(PointerDeviceKind.Trackpad, behavior.DragDevices);
 
         ScrollBehavior withoutChrome = behavior.CopyWith(scrollbars: false, overscroll: false);
         Widget undecorated = withoutChrome.BuildScrollbar(
-            new BuildContext(root),
+            root,
             child,
             ScrollableDetails.Vertical());
         Assert.Same(child, undecorated);
         Widget restoredChrome = withoutChrome
             .CopyWith(scrollbars: true)
             .BuildScrollbar(
-                new BuildContext(root),
+                root,
                 child,
                 ScrollableDetails.Vertical(controller: desktopController));
         Assert.IsType<RawScrollbar>(restoredChrome);
@@ -876,16 +876,16 @@ public sealed class ScrollInfrastructureTests
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

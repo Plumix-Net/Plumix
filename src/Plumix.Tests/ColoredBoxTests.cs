@@ -16,13 +16,13 @@ public sealed class ColoredBoxTests
         var widget = new ColoredBox(Colors.CornflowerBlue);
         Assert.True(widget.IsAntiAlias);
 
-        var renderObject = Assert.IsType<RenderColoredBox>(widget.CreateRenderObject(default));
+        var renderObject = Assert.IsType<RenderColoredBox>(widget.CreateRenderObject(null!));
         Assert.Equal(Colors.CornflowerBlue, renderObject.Color);
         Assert.True(renderObject.IsAntiAlias);
         Assert.Equal(HitTestBehavior.Opaque, renderObject.Behavior);
 
         var updated = new ColoredBox(Colors.OrangeRed, isAntiAlias: false);
-        updated.UpdateRenderObject(default, renderObject);
+        updated.UpdateRenderObject(null!, renderObject);
 
         Assert.Equal(Colors.OrangeRed, renderObject.Color);
         Assert.False(renderObject.IsAntiAlias);

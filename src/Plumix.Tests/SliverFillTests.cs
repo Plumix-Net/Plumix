@@ -29,7 +29,7 @@ public sealed class SliverFillTests
 
         var padded = Assert.IsType<SliverFractionalPadding>(new SliverFillViewport(
             childDelegate,
-            viewportFraction: 0.5).Build(default));
+            viewportFraction: 0.5).Build(null!));
         Assert.Equal(0.25, padded.ViewportFraction);
         var fill = Assert.IsType<SliverFillViewportRenderObjectWidget>(padded.Child);
         Assert.Equal(0.5, fill.ViewportFraction);
@@ -39,7 +39,7 @@ public sealed class SliverFillTests
             childDelegate,
             viewportFraction: 0.5,
             padEnds: false,
-            allowImplicitScrolling: false).Build(default));
+            allowImplicitScrolling: false).Build(null!));
         Assert.Equal(0.0, unpadded.ViewportFraction);
         Assert.False(Assert.IsType<SliverFillViewportRenderObjectWidget>(unpadded.Child).AllowImplicitScrolling);
 
@@ -47,12 +47,12 @@ public sealed class SliverFillTests
             childDelegate,
             viewportFraction: 0.5,
             allowImplicitScrolling: false);
-        var renderObject = Assert.IsType<RenderSliverFillViewport>(initialRenderWidget.CreateRenderObject(default));
+        var renderObject = Assert.IsType<RenderSliverFillViewport>(initialRenderWidget.CreateRenderObject(null!));
         var updatedRenderWidget = new SliverFillViewportRenderObjectWidget(
             childDelegate,
             viewportFraction: 0.75,
             allowImplicitScrolling: true);
-        updatedRenderWidget.UpdateRenderObject(default, renderObject);
+        updatedRenderWidget.UpdateRenderObject(null!, renderObject);
         Assert.Equal(0.75, renderObject.ViewportFraction);
         Assert.True(renderObject.AllowImplicitScrolling);
     }
@@ -140,12 +140,12 @@ public sealed class SliverFillTests
     public void SliverFillRemaining_SelectsTheThreeSourceRenderPaths()
     {
         var child = new SizedBox(height: 20);
-        var scrollable = new SliverFillRemaining(child).Build(default);
-        var nonScrollable = new SliverFillRemaining(child, hasScrollBody: false).Build(default);
+        var scrollable = new SliverFillRemaining(child).Build(null!);
+        var nonScrollable = new SliverFillRemaining(child, hasScrollBody: false).Build(null!);
         var overscroll = new SliverFillRemaining(
             child,
             hasScrollBody: false,
-            fillOverscroll: true).Build(default);
+            fillOverscroll: true).Build(null!);
 
         Assert.IsType<SliverFillRemainingWithScrollable>(scrollable);
         Assert.IsType<SliverFillRemainingWithoutScrollable>(nonScrollable);

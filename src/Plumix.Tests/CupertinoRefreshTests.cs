@@ -37,7 +37,7 @@ public sealed class CupertinoRefreshTests
     public void BuildRefreshIndicator_MatchesDragArmedRefreshDoneAndInactiveComposition()
     {
         var drag = Assert.IsType<Center>(CupertinoSliverRefreshControl.BuildRefreshIndicator(
-            default,
+            null!,
             RefreshIndicatorMode.Drag,
             pulledExtent: 50.0,
             refreshTriggerPullDistance: 100.0,
@@ -195,7 +195,7 @@ public sealed class CupertinoRefreshTests
     private static Widget IndicatorFor(RefreshIndicatorMode mode, double pulledExtent)
     {
         var center = Assert.IsType<Center>(CupertinoSliverRefreshControl.BuildRefreshIndicator(
-            default,
+            null!,
             mode,
             pulledExtent,
             refreshTriggerPullDistance: 100.0,

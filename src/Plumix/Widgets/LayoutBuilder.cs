@@ -66,14 +66,14 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
             return;
         }
 
-        Dirty = false;
+        base.PerformRebuild();
         _needsBuild = true;
         LayoutRenderObject.ScheduleLayoutCallback();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        Dirty = false;
+        base.PerformRebuild();
         _needsBuild = true;
         LayoutRenderObject.ScheduleLayoutCallback();
     }
@@ -85,7 +85,7 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
             return;
         }
 
-        Widget built = LayoutBuilderWidget.Builder(new BuildContext(this), constraints)
+        Widget built = LayoutBuilderWidget.Builder(this, constraints)
             ?? throw new InvalidOperationException("LayoutBuilder.Builder must return a widget.");
         _child = UpdateChild(_child, built, null);
         _needsBuild = false;

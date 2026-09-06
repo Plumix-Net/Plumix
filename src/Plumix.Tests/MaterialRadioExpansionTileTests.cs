@@ -603,7 +603,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         Assert.Equal(Clip.None, lerped.ClipBehavior);
 
         var local = new ExpansionTileTheme(first, new SizedBox());
-        Widget wrapped = local.Wrap(default, new Text("captured"));
+        Widget wrapped = local.Wrap(null!, new Text("captured"));
         Assert.Equal(first, Assert.IsType<ExpansionTileTheme>(wrapped).Data);
     }
 
@@ -939,16 +939,16 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

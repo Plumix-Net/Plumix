@@ -223,7 +223,7 @@ public sealed class NavigatorOverlayTests : IDisposable
         harness.Navigator.Push(blocking);
         harness.Pump();
 
-        BuildContext context = blocking.CapturedContext!.Value;
+        BuildContext context = blocking.CapturedContext!;
         var action = Assert.IsType<DismissModalAction>(Actions.MaybeFind(context, new DismissIntent()));
         Assert.False(action.IsEnabled(new DismissIntent()));
 
@@ -231,7 +231,7 @@ public sealed class NavigatorOverlayTests : IDisposable
         harness.Navigator.Push(dismissible);
         harness.Pump();
 
-        context = dismissible.CapturedContext!.Value;
+        context = dismissible.CapturedContext!;
         action = Assert.IsType<DismissModalAction>(Actions.MaybeFind(context, new DismissIntent()));
         Assert.True(action.IsEnabled(new DismissIntent()));
 
@@ -422,16 +422,16 @@ public sealed class NavigatorOverlayTests : IDisposable
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

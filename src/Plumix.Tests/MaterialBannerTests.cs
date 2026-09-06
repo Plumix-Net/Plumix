@@ -106,7 +106,7 @@ public sealed class MaterialBannerTests
         var theme = new MaterialBannerTheme(data, child);
 
         Assert.IsAssignableFrom<InheritedTheme>(theme);
-        var wrapped = Assert.IsType<MaterialBannerTheme>(theme.Wrap(default, child));
+        var wrapped = Assert.IsType<MaterialBannerTheme>(theme.Wrap(null!, child));
         Assert.Equal(data, wrapped.Data);
         Assert.Same(child, wrapped.Child);
 
@@ -711,8 +711,12 @@ public sealed class MaterialBannerTests
             public override RenderObject? RenderObject => _child?.RenderObject;
             public override Element? RenderObjectAttachingChild => _child;
             protected override void OnMount() { base.OnMount(); Rebuild(); }
-            public override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
-            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+            protected override void PerformRebuild()
+            {
+                base.PerformRebuild();
+                _child = UpdateChild(_child, Widget, Slot);
+            }
+            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
             public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;

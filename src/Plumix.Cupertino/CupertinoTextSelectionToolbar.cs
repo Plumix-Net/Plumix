@@ -763,9 +763,9 @@ internal sealed class CupertinoTextSelectionToolbarItemsElement : RenderObjectEl
         }
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         UpdateChildrenAndSlots();
     }
 

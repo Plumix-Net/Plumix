@@ -267,7 +267,7 @@ public sealed class MaterialAboutTests : IDisposable
         harness.Pump(new Size(640, 480));
 
         Assert.NotNull(capturedContext);
-        AboutDialogs.ShowAboutDialog(capturedContext!.Value, applicationName: "Dialog app");
+        AboutDialogs.ShowAboutDialog(capturedContext!, applicationName: "Dialog app");
         harness.Pump(new Size(640, 480));
         Assert.NotNull(FindParagraph(harness.RenderView, "Dialog app"));
 
@@ -304,12 +304,12 @@ public sealed class MaterialAboutTests : IDisposable
         using var harness = new WidgetRenderHarness(BuildThemed(outer));
         harness.Pump(new Size(640, 480));
 
-        Assert.True(innerContext.HasValue);
-        AboutDialogs.ShowAboutDialog(innerContext.Value, applicationName: "Root dialog");
+        Assert.True(innerContext is not null);
+        AboutDialogs.ShowAboutDialog(innerContext, applicationName: "Root dialog");
         harness.Pump(new Size(640, 480));
 
-        Assert.True(Navigator.Of(innerContext.Value, rootNavigator: true).CanPop);
-        Assert.False(Navigator.Of(innerContext.Value).CanPop);
+        Assert.True(Navigator.Of(innerContext, rootNavigator: true).CanPop);
+        Assert.False(Navigator.Of(innerContext).CanPop);
         Assert.NotNull(FindParagraph(harness.RenderView, "Root dialog"));
     }
 
@@ -329,10 +329,10 @@ public sealed class MaterialAboutTests : IDisposable
         using var harness = new WidgetRenderHarness(BuildThemed(outer));
         harness.Pump(new Size(640, 480));
 
-        AboutDialogs.ShowAboutDialog(innerContext!.Value, applicationName: "Nested dialog", useRootNavigator: false);
+        AboutDialogs.ShowAboutDialog(innerContext!, applicationName: "Nested dialog", useRootNavigator: false);
         harness.Pump(new Size(640, 480));
 
-        Assert.True(Navigator.Of(innerContext.Value).CanPop);
+        Assert.True(Navigator.Of(innerContext!).CanPop);
         Assert.NotNull(FindParagraph(harness.RenderView, "Nested dialog"));
     }
 
@@ -352,17 +352,17 @@ public sealed class MaterialAboutTests : IDisposable
         using var harness = new WidgetRenderHarness(BuildThemed(outer));
         harness.Pump(new Size(NestedWidth, 560));
 
-        AboutDialogs.ShowLicensePage(innerContext!.Value, applicationName: "Nested licenses");
+        AboutDialogs.ShowLicensePage(innerContext!, applicationName: "Nested licenses");
         harness.Pump(new Size(NestedWidth, 560));
-        Assert.True(Navigator.Of(innerContext.Value).CanPop);
-        Assert.False(Navigator.Of(innerContext.Value, rootNavigator: true).CanPop);
+        Assert.True(Navigator.Of(innerContext!).CanPop);
+        Assert.False(Navigator.Of(innerContext!, rootNavigator: true).CanPop);
 
         AboutDialogs.ShowLicensePage(
-            innerContext.Value,
+            innerContext!,
             applicationName: "Root licenses",
             useRootNavigator: true);
         harness.Pump(new Size(NestedWidth, 560));
-        Assert.True(Navigator.Of(innerContext.Value, rootNavigator: true).CanPop);
+        Assert.True(Navigator.Of(innerContext!, rootNavigator: true).CanPop);
     }
 
     // ---- LicensePage: shared behavior ----
@@ -708,7 +708,7 @@ public sealed class MaterialAboutTests : IDisposable
 
         PumpUntilLoaded(harness, LateralWidth, () => FindParagraph(harness.RenderView, "App license") is not null);
 
-        var resolved = Theme.Of(inner!.Value);
+        var resolved = Theme.Of(inner!);
         var title = FindWidgets<PackageLicensePageTitle>(harness.RootElement).Single();
         Assert.Null(title.ForegroundColor);
         Assert.Equal(resolved.TextTheme.TitleLarge, title.TitleTextStyle);
@@ -733,7 +733,7 @@ public sealed class MaterialAboutTests : IDisposable
         TapText(harness, NestedWidth, "app");
         PumpUntilLoaded(harness, NestedWidth, () => FindParagraph(harness.RenderView, "App license") is not null);
 
-        var resolved = Theme.Of(inner!.Value);
+        var resolved = Theme.Of(inner!);
         var title = FindWidgets<PackageLicensePageTitle>(harness.RootElement).Single();
         Assert.Equal(useMaterial3 ? resolved.TextTheme : resolved.PrimaryTextTheme, title.Theme);
         Assert.NotEqual(useMaterial3 ? resolved.PrimaryTextTheme : resolved.TextTheme, title.Theme);
@@ -777,7 +777,7 @@ public sealed class MaterialAboutTests : IDisposable
             new CaptureContext(value => captured = value, new Text("bare"))));
         harness.Pump(new Size(400, 300));
 
-        Assert.Throws<InvalidOperationException>(() => MasterDetailFlow.Of(captured!.Value));
+        Assert.Throws<InvalidOperationException>(() => MasterDetailFlow.Of(captured!));
     }
 
     // ---- helpers ----
@@ -1024,8 +1024,12 @@ public sealed class MaterialAboutTests : IDisposable
             public override RenderObject? RenderObject => _child?.RenderObject;
             public override Element? RenderObjectAttachingChild => _child;
             protected override void OnMount() { base.OnMount(); Rebuild(); }
-            public override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
-            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+            protected override void PerformRebuild()
+            {
+                base.PerformRebuild();
+                _child = UpdateChild(_child, Widget, Slot);
+            }
+            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
             public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = Assert.IsAssignableFrom<RenderBox>(child);

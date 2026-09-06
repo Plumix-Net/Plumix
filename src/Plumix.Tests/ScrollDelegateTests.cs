@@ -24,7 +24,7 @@ public sealed class ScrollDelegateTests
             (_, index) => new SizedBox(height: 10, key: new ValueKey<int>(index)),
             childCount: 1);
 
-        var keyed = Assert.IsType<KeyedSubtree>(childDelegate.Build(default, 0));
+        var keyed = Assert.IsType<KeyedSubtree>(childDelegate.Build(null!, 0));
         Assert.Equal(new SliverChildKey(new ValueKey<int>(0)), keyed.Key);
         var keepAlive = Assert.IsType<AutomaticKeepAlive>(keyed.Child);
         var selectionKeepAlive = Assert.IsType<SelectionKeepAlive>(keepAlive.Child);
@@ -40,7 +40,7 @@ public sealed class ScrollDelegateTests
     {
         var childDelegate = new SliverChildListDelegate([new SizedBox(height: 10)]);
 
-        var keyed = Assert.IsType<KeyedSubtree>(childDelegate.Build(default, 0));
+        var keyed = Assert.IsType<KeyedSubtree>(childDelegate.Build(null!, 0));
         Assert.Null(keyed.Key);
         var keepAlive = Assert.IsType<AutomaticKeepAlive>(keyed.Child);
         var selectionKeepAlive = Assert.IsType<SelectionKeepAlive>(keepAlive.Child);
@@ -69,11 +69,11 @@ public sealed class ScrollDelegateTests
             addRepaintBoundaries: false,
             addSemanticIndexes: false);
 
-        var fromBuilder = Assert.IsType<KeyedSubtree>(builderDelegate.Build(default, 0));
+        var fromBuilder = Assert.IsType<KeyedSubtree>(builderDelegate.Build(null!, 0));
         Assert.Null(fromBuilder.Key);
         Assert.IsType<SizedBox>(fromBuilder.Child);
 
-        var fromList = Assert.IsType<KeyedSubtree>(listDelegate.Build(default, 0));
+        var fromList = Assert.IsType<KeyedSubtree>(listDelegate.Build(null!, 0));
         Assert.IsType<SizedBox>(fromList.Child);
     }
 
@@ -95,8 +95,8 @@ public sealed class ScrollDelegateTests
                 return localIndex == 0 ? localIndex : null;
             });
 
-        var first = Assert.IsType<KeyedSubtree>(childDelegate.Build(default, 0));
-        var second = Assert.IsType<KeyedSubtree>(childDelegate.Build(default, 1));
+        var first = Assert.IsType<KeyedSubtree>(childDelegate.Build(null!, 0));
+        var second = Assert.IsType<KeyedSubtree>(childDelegate.Build(null!, 1));
 
         Assert.All(seen, widget => Assert.IsType<RepaintBoundary>(widget));
         Assert.Equal(0, Assert.IsType<IndexedSemantics>(first.Child).Index);
@@ -131,7 +131,7 @@ public sealed class ScrollDelegateTests
         {
             for (int index = 0; index < 3; index++)
             {
-                Assert.Equal(offset + index, SemanticIndexOf(childDelegate.Build(default, index)));
+                Assert.Equal(offset + index, SemanticIndexOf(childDelegate.Build(null!, index)));
             }
         }
     }
@@ -156,7 +156,7 @@ public sealed class ScrollDelegateTests
                 addRepaintBoundaries: false,
                 addSemanticIndexes: false);
 
-            var keyed = Assert.IsType<KeyedSubtree>(childDelegate.Build(default, 0));
+            var keyed = Assert.IsType<KeyedSubtree>(childDelegate.Build(null!, 0));
             var errorWidget = Assert.IsType<ErrorWidget>(keyed.Child);
 
             FlutterErrorDetails details = Assert.Single(reported);
@@ -172,7 +172,7 @@ public sealed class ScrollDelegateTests
                 overridden = errorDetails;
                 return new SizedBox(height: 1);
             };
-            var replaced = Assert.IsType<KeyedSubtree>(childDelegate.Build(default, 0));
+            var replaced = Assert.IsType<KeyedSubtree>(childDelegate.Build(null!, 0));
             Assert.IsType<SizedBox>(replaced.Child);
             Assert.Same(Assert.Single(reported), overridden);
         }
@@ -243,17 +243,17 @@ public sealed class ScrollDelegateTests
 
         for (int index = 0; index < 5; index++)
         {
-            sliver.Delegate.Build(default, index);
+            sliver.Delegate.Build(null!, index);
         }
 
         Assert.Equal([0, 1, 2], items);
         Assert.Equal([0, 1], separators);
-        Assert.Equal(0, SemanticIndexOf(sliver.Delegate.Build(default, 0)));
-        Assert.Null(SemanticIndexOf(sliver.Delegate.Build(default, 1)));
-        Assert.Equal(1, SemanticIndexOf(sliver.Delegate.Build(default, 2)));
-        Assert.Null(SemanticIndexOf(sliver.Delegate.Build(default, 3)));
-        Assert.Equal(2, SemanticIndexOf(sliver.Delegate.Build(default, 4)));
-        Assert.Null(sliver.Delegate.Build(default, 5));
+        Assert.Equal(0, SemanticIndexOf(sliver.Delegate.Build(null!, 0)));
+        Assert.Null(SemanticIndexOf(sliver.Delegate.Build(null!, 1)));
+        Assert.Equal(1, SemanticIndexOf(sliver.Delegate.Build(null!, 2)));
+        Assert.Null(SemanticIndexOf(sliver.Delegate.Build(null!, 3)));
+        Assert.Equal(2, SemanticIndexOf(sliver.Delegate.Build(null!, 4)));
+        Assert.Null(sliver.Delegate.Build(null!, 5));
     }
 
     /// <remarks>
@@ -309,7 +309,7 @@ public sealed class ScrollDelegateTests
                 addRepaintBoundaries: false,
                 addSemanticIndexes: false);
 
-            var keyed = Assert.IsType<KeyedSubtree>(sliver.Delegate.Build(default, 1));
+            var keyed = Assert.IsType<KeyedSubtree>(sliver.Delegate.Build(null!, 1));
             Assert.IsType<ErrorWidget>(keyed.Child);
             var error = Assert.IsType<FlutterError>(Assert.Single(reported).Exception);
             Assert.Contains("separatorBuilder cannot return null.", error.Message);
@@ -597,16 +597,16 @@ public sealed class ScrollDelegateTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

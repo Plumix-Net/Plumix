@@ -166,7 +166,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
             }));
         int visits = 0;
 
-        LookupBoundary.VisitChildElements(capturedContext!.Value, element => visits += 1);
+        LookupBoundary.VisitChildElements(capturedContext!, element => visits += 1);
 
         Assert.Equal(0, visits);
     }
@@ -427,16 +427,16 @@ public sealed class StatefulBuilderLookupBoundaryTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void VisitChildren(Action<Element> visitor)

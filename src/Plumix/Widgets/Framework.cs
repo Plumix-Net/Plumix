@@ -75,7 +75,7 @@ public abstract record GlobalKey : Key
 
     internal Element? CurrentElement => CurrentElements.TryGetValue(this, out var holder) ? holder.Element : null;
 
-    public BuildContext? CurrentContext => CurrentElement is null ? null : new BuildContext(CurrentElement);
+    public BuildContext? CurrentContext => CurrentElement;
     public Widget? CurrentWidget => CurrentElement?.Widget;
 
     internal void AttachElement(Element element)

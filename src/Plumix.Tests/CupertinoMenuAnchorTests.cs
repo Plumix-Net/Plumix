@@ -66,7 +66,7 @@ public sealed class CupertinoMenuAnchorTests : IDisposable
     {
         var divider = new CupertinoMenuDivider();
         Assert.True(divider.IsDivider);
-        Assert.False(divider.HasLeading(new BuildContext(null!)));
+        Assert.False(divider.HasLeading(null!));
 
         using var light = new CupertinoThemeTestHarness(Wrap(divider));
         light.Pump(ViewSize);

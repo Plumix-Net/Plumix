@@ -323,7 +323,7 @@ public sealed class MaterialDialogTests : IDisposable
     [Fact]
     public async Task SimpleDialogOption_CompletesTypedDialogResult()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -331,7 +331,7 @@ public sealed class MaterialDialogTests : IDisposable
                 new Text("Home"))))));
         harness.Pump(new Size(500, 320));
         var result = MaterialDialogs.ShowDialog<string>(
-            captured,
+            captured!,
             routeContext => new SimpleDialog(
                 title: new Text("Select workspace"),
                 children:
@@ -357,7 +357,7 @@ public sealed class MaterialDialogTests : IDisposable
     [Fact]
     public async Task ShowDialog_KeepsUnderlyingRouteCompletesResultAfterReverseAnimation()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(context => new DialogTheme(
@@ -368,7 +368,7 @@ public sealed class MaterialDialogTests : IDisposable
         harness.Pump(new Size(600, 400));
 
         var result = MaterialDialogs.ShowDialog<string>(
-            captured,
+            captured!,
             _ => new AlertDialog(title: new Text("Route dialog"), content: new Text("Body")));
         PumpAnimation();
         harness.Pump(new Size(600, 400));
@@ -401,7 +401,7 @@ public sealed class MaterialDialogTests : IDisposable
         PlatformDefaults.DebugTargetPlatformOverride = platform;
         try
         {
-            BuildContext captured = default;
+            BuildContext captured = null!;
             using var harness = new WidgetRenderHarness(Wrap(
                 ThemeData.Light,
                 new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -409,7 +409,7 @@ public sealed class MaterialDialogTests : IDisposable
                     new Text("Home"))))));
             harness.Pump(new Size(500, 320));
             var result = MaterialDialogs.ShowDialog<string>(
-                captured,
+                captured!,
                 _ => new Dialog(child: new Text("Dismiss me")),
                 barrierLabel: "Close modal");
             PumpAnimation();
@@ -478,7 +478,7 @@ public sealed class MaterialDialogTests : IDisposable
     [Fact]
     public async Task ShowDialog_ClosedLoopTraversalCyclesInsideDialogAndLeaveViewEscapes()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -487,7 +487,7 @@ public sealed class MaterialDialogTests : IDisposable
         harness.Pump(new Size(600, 400));
 
         var result = MaterialDialogs.ShowDialog<string>(
-            captured,
+            captured!,
             _ => new AlertDialog(
                 title: new Text("Traversal"),
                 actions:
@@ -532,7 +532,7 @@ public sealed class MaterialDialogTests : IDisposable
     [Fact]
     public async Task ShowDialog_RequestFocusFalseKeepsPreviousFocus()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         var homeFocus = new FocusNode();
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
@@ -545,7 +545,7 @@ public sealed class MaterialDialogTests : IDisposable
         Assert.Same(homeFocus, FocusManager.Instance.PrimaryFocus);
 
         var kept = MaterialDialogs.ShowDialog<string>(
-            captured,
+            captured!,
             _ => new AlertDialog(title: new Text("Silent")),
             requestFocus: false);
         PumpAnimation();
@@ -571,7 +571,7 @@ public sealed class MaterialDialogTests : IDisposable
     [Fact]
     public async Task ShowDialog_AppliesAnimationStyleDuration()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -581,7 +581,7 @@ public sealed class MaterialDialogTests : IDisposable
 
         ModalRoute? route = null;
         var result = MaterialDialogs.ShowDialog<string>(
-            captured,
+            captured!,
             dialogContext =>
             {
                 route = ModalRoute.MaybeOf(dialogContext);
@@ -750,8 +750,12 @@ public sealed class MaterialDialogTests : IDisposable
             public override RenderObject? RenderObject => _child?.RenderObject;
             public override Element? RenderObjectAttachingChild => _child;
             protected override void OnMount() { base.OnMount(); Rebuild(); }
-            public override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
-            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+            protected override void PerformRebuild()
+            {
+                base.PerformRebuild();
+                _child = UpdateChild(_child, Widget, Slot);
+            }
+            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
             public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;

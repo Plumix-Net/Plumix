@@ -160,20 +160,25 @@ public sealed class FramePipelineTests
             element.Attach(owner);
             element.Mount(parent: null, newSlot: null);
 
+            // An element is born dirty and clears the flag by building once during mount, so the
+            // first build is not the scheduler's work.
+            Assert.Equal(1, element.RebuildCount);
+            Assert.False(element.Dirty);
+
             element.MarkNeedsBuild();
             element.MarkNeedsBuild();
 
             Assert.Equal(0, drawFrames);
-            Assert.Equal(0, element.RebuildCount);
+            Assert.Equal(1, element.RebuildCount);
 
             Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
 
             Assert.Equal(1, drawFrames);
-            Assert.Equal(1, element.RebuildCount);
+            Assert.Equal(2, element.RebuildCount);
 
             Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(32));
             Assert.Equal(1, drawFrames);
-            Assert.Equal(1, element.RebuildCount);
+            Assert.Equal(2, element.RebuildCount);
         }
         finally
         {
@@ -197,9 +202,18 @@ public sealed class FramePipelineTests
         {
         }
 
-        public override void Rebuild()
+        protected override void OnMount()
         {
-            Dirty = false;
+            base.OnMount();
+
+            // Dart's `_firstBuild`: every concrete element builds once during mount, which is what
+            // clears the dirty flag an element is born with and makes MarkNeedsBuild schedulable.
+            Rebuild();
+        }
+
+        protected override void PerformRebuild()
+        {
+            base.PerformRebuild();
             RebuildCount += 1;
         }
     }

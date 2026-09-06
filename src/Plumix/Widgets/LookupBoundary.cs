@@ -26,7 +26,7 @@ public sealed class LookupBoundary : InheritedWidget
             return null;
         }
 
-        return (T)context.Owner.DependOnInheritedElement(candidate, aspect);
+        return (T)context.DependOnInheritedElement(candidate, aspect);
     }
 
     public static T? GetInheritedWidgetOfExactType<T>(BuildContext context, object? aspect = null)

@@ -105,7 +105,7 @@ public sealed class MaterialLinearProgressIndicatorTests
 
         var child = new SizedBox();
         var theme = new ProgressIndicatorTheme(data: data, child: child);
-        var wrapped = Assert.IsType<ProgressIndicatorTheme>(theme.Wrap(default, child));
+        var wrapped = Assert.IsType<ProgressIndicatorTheme>(theme.Wrap(null!, child));
         Assert.NotSame(theme, wrapped);
         Assert.Equal(data, wrapped.Data);
         Assert.Same(child, wrapped.Child);
@@ -602,16 +602,16 @@ public sealed class MaterialLinearProgressIndicatorTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

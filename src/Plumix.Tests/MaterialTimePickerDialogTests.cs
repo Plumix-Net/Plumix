@@ -556,13 +556,13 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
     [Fact]
     public async Task InputMode_RejectsInvalidTextThenReturnsTheEnteredTime()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
             value => captured = value,
             new Text("Home")))));
         harness.Pump(ViewSize);
         var result = MaterialTimePickers.ShowTimePicker(
-            captured,
+            captured!,
             initialTime: new TimeOfDay(9, 30),
             initialEntryMode: TimePickerEntryMode.Input,
             errorInvalidText: "Bad time");
@@ -598,13 +598,13 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
     [Fact]
     public async Task InputMode_UnmodifiedFieldsReturnTheInitialTime()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
             value => captured = value,
             new Text("Home")))));
         harness.Pump(ViewSize);
         var result = MaterialTimePickers.ShowTimePicker(
-            captured,
+            captured!,
             initialTime: new TimeOfDay(7, 0),
             initialEntryMode: TimePickerEntryMode.Input);
         PumpAnimation();
@@ -619,12 +619,12 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
     [Fact]
     public async Task Cancel_PopsWithoutAResult()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
             value => captured = value,
             new Text("Home")))));
         harness.Pump(ViewSize);
-        var result = MaterialTimePickers.ShowTimePicker(captured, initialTime: new TimeOfDay(7, 0));
+        var result = MaterialTimePickers.ShowTimePicker(captured!, initialTime: new TimeOfDay(7, 0));
         PumpAnimation();
         var semantics = harness.PumpAndGetSemantics(ViewSize);
         var cancel = FindSemantics(
@@ -952,8 +952,12 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
             public override RenderObject? RenderObject => _child?.RenderObject;
             public override Element? RenderObjectAttachingChild => _child;
             protected override void OnMount() { base.OnMount(); Rebuild(); }
-            public override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
-            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+            protected override void PerformRebuild()
+            {
+                base.PerformRebuild();
+                _child = UpdateChild(_child, Widget, Slot);
+            }
+            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
             public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;

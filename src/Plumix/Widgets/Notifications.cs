@@ -10,13 +10,13 @@ public abstract class Notification
 
     public virtual bool Dispatch(BuildContext? target)
     {
-        if (target is not BuildContext resolvedTarget)
+        if (target is not Element resolvedTarget)
         {
             return false;
         }
 
         SetContext(resolvedTarget);
-        for (Element? ancestor = resolvedTarget.Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        for (Element? ancestor = resolvedTarget.Parent; ancestor != null; ancestor = ancestor.Parent)
         {
             if (ancestor.Widget is Viewport && this is IViewportNotification viewportNotification)
             {

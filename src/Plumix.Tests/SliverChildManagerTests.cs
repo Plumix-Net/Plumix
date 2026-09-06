@@ -505,8 +505,8 @@ public sealed class SliverChildManagerTests
             },
             childCount: 2);
 
-        Assert.Null(childDelegate.Build(default, -1));
-        Assert.Null(childDelegate.Build(default, 2));
+        Assert.Null(childDelegate.Build(null!, -1));
+        Assert.Null(childDelegate.Build(null!, 2));
         Assert.Empty(calls);
     }
 
@@ -889,16 +889,16 @@ public sealed class SliverChildManagerTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

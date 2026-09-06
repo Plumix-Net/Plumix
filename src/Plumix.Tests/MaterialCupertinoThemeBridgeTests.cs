@@ -79,12 +79,12 @@ public sealed class MaterialCupertinoThemeBridgeTests
     {
         using (TestTheme(ThemeData.Dark, out _))
         {
-            Assert.Equal(PlatformBrightness.Dark, CupertinoTheme.BrightnessOf(_context!.Value));
+            Assert.Equal(PlatformBrightness.Dark, CupertinoTheme.BrightnessOf(_context!));
         }
 
         using (TestTheme(new ThemeData(), out _))
         {
-            Assert.Equal(PlatformBrightness.Light, CupertinoTheme.BrightnessOf(_context!.Value));
+            Assert.Equal(PlatformBrightness.Light, CupertinoTheme.BrightnessOf(_context!));
         }
 
         // Overridable by cupertinoOverrideTheme.
@@ -95,7 +95,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
                            brightness: PlatformBrightness.Dark)),
                    out _))
         {
-            Assert.Equal(PlatformBrightness.Dark, CupertinoTheme.BrightnessOf(_context!.Value));
+            Assert.Equal(PlatformBrightness.Dark, CupertinoTheme.BrightnessOf(_context!));
         }
 
         using (TestTheme(
@@ -105,7 +105,7 @@ public sealed class MaterialCupertinoThemeBridgeTests
                            brightness: PlatformBrightness.Light)),
                    out _))
         {
-            Assert.Equal(PlatformBrightness.Light, CupertinoTheme.BrightnessOf(_context!.Value));
+            Assert.Equal(PlatformBrightness.Light, CupertinoTheme.BrightnessOf(_context!));
         }
     }
 

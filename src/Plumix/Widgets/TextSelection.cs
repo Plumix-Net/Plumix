@@ -764,7 +764,7 @@ public sealed class SelectionOverlay : IDisposable
         }
 
         _contextMenuController.Show(
-            context.Value,
+            context,
             menuContext => new SelectionToolbarWrapper(
                 layerLink: ToolbarLayerLink,
                 offset: -ResolveEditingRegion().TopLeft,

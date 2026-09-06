@@ -118,7 +118,7 @@ public sealed class FocusScopeTests : IDisposable
     public void Focus_MaybeOfSkipsScopeNodesUnlessScopeOkIsSet()
     {
         var scopeNode = new FocusScopeNode(debugLabel: "scope");
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new FocusLayoutHarness(new Directionality(
             TextDirection.Ltr,
             FocusScope.WithExternalFocusNode(
@@ -130,7 +130,7 @@ public sealed class FocusScopeTests : IDisposable
                 }))));
         harness.Layout(ViewSize);
 
-        Assert.Null(Focus.MaybeOf(captured));
+        Assert.Null(Focus.MaybeOf(captured!));
         Assert.Same(scopeNode, Focus.MaybeOf(captured, scopeOk: true));
         Assert.Same(scopeNode, FocusScope.Of(captured));
     }
@@ -138,7 +138,7 @@ public sealed class FocusScopeTests : IDisposable
     [Fact]
     public void FocusScope_OfFallsBackToTheRootScopeWithoutAFocusAncestor()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new FocusLayoutHarness(new Directionality(
             TextDirection.Ltr,
             new Builder(context =>
@@ -148,7 +148,7 @@ public sealed class FocusScopeTests : IDisposable
             })));
         harness.Layout(ViewSize);
 
-        Assert.Null(Focus.MaybeOf(captured, scopeOk: true));
+        Assert.Null(Focus.MaybeOf(captured!, scopeOk: true));
         Assert.Same(FocusManager.Instance.RootScope, FocusScope.Of(captured));
     }
 

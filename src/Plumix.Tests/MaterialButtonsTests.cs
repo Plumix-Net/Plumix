@@ -198,7 +198,7 @@ public sealed class MaterialButtonsTests
         Widget child = new Text("Captured");
         var theme = new TextButtonTheme(data, child);
 
-        var wrapped = Assert.IsType<TextButtonTheme>(theme.Wrap(default, child));
+        var wrapped = Assert.IsType<TextButtonTheme>(theme.Wrap(null!, child));
 
         Assert.Same(data, wrapped.Data);
         Assert.Same(child, wrapped.Child);
@@ -255,7 +255,7 @@ public sealed class MaterialButtonsTests
         Widget child = new Text("Captured");
         var theme = new ElevatedButtonTheme(data, child);
 
-        var wrapped = Assert.IsType<ElevatedButtonTheme>(theme.Wrap(default, child));
+        var wrapped = Assert.IsType<ElevatedButtonTheme>(theme.Wrap(null!, child));
 
         Assert.Same(data, wrapped.Data);
         Assert.Same(child, wrapped.Child);
@@ -312,7 +312,7 @@ public sealed class MaterialButtonsTests
         Widget child = new Text("Captured");
         var theme = new OutlinedButtonTheme(data, child);
 
-        var wrapped = Assert.IsType<OutlinedButtonTheme>(theme.Wrap(default, child));
+        var wrapped = Assert.IsType<OutlinedButtonTheme>(theme.Wrap(null!, child));
 
         Assert.Same(data, wrapped.Data);
         Assert.Same(child, wrapped.Child);
@@ -688,7 +688,7 @@ public sealed class MaterialButtonsTests
         Widget child = new Text("Captured");
         var theme = new FilledButtonTheme(data, child);
 
-        var wrapped = Assert.IsType<FilledButtonTheme>(theme.Wrap(default, child));
+        var wrapped = Assert.IsType<FilledButtonTheme>(theme.Wrap(null!, child));
 
         Assert.Same(data, wrapped.Data);
         Assert.Same(child, wrapped.Child);
@@ -6181,16 +6181,16 @@ public sealed class MaterialButtonsTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)
@@ -6326,16 +6326,16 @@ public sealed class MaterialButtonsTests
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

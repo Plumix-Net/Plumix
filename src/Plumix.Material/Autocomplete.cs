@@ -297,9 +297,9 @@ internal sealed class AutocompleteOptionsListState<T> : State
 
             T option = Current.Options[Current.HighlightedIndex];
             BuildContext? highlightedContext = KeyForOption(option).CurrentContext;
-            if (highlightedContext.HasValue)
+            if (highlightedContext is not null)
             {
-                _ = Scrollable.EnsureVisible(highlightedContext.Value, alignment: 0.5);
+                _ = Scrollable.EnsureVisible(highlightedContext, alignment: 0.5);
                 return;
             }
 

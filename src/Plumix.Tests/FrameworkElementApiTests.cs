@@ -57,7 +57,7 @@ public sealed class FrameworkElementApiTests
     [InlineData(nameof(Element.Owner))]
     [InlineData(nameof(Element.Dirty))]
     [InlineData(nameof(Element.IsActive))]
-    [InlineData(nameof(Element.IsMounted))]
+    [InlineData(nameof(Element.Mounted))]
     [InlineData(nameof(Element.RenderObject))]
     [InlineData(nameof(Element.RenderObjectAttachingChild))]
     public void ElementLifecycleProperty_HasPublicGetter(string name)
@@ -70,13 +70,31 @@ public sealed class FrameworkElementApiTests
     }
 
     [Fact]
-    public void ElementDirty_HasProtectedSetter()
+    public void ElementDirty_HasNoAccessibleSetter()
     {
-        // Dart backs `Element.dirty` with a library-private field that only `performRebuild` clears.
-        // C# has no library privacy, so the setter is protected: subclasses clear it, nobody else.
+        // Dart backs `Element.dirty` with a library-private field that only `performRebuild` clears,
+        // and `performRebuild` is the single writer. Plumix matches that: the setter is private.
         PropertyInfo property = typeof(Element).GetProperty(nameof(Element.Dirty), AnyInstance)!;
         Assert.NotNull(property.SetMethod);
-        Assert.True(property.SetMethod!.IsFamily, "Element.Dirty must have a protected setter.");
+        Assert.True(property.SetMethod!.IsPrivate, "Only Element.PerformRebuild may clear Element.Dirty.");
+    }
+
+    [Fact]
+    public void ElementPerformRebuild_IsProtectedAndVirtual()
+    {
+        // Dart's `@protected void performRebuild()` is the overridable half of the rebuild split;
+        // `rebuild({force})` itself is public and not virtual.
+        MethodInfo performRebuild = typeof(Element).GetMethod("PerformRebuild", AnyInstance)!;
+        Assert.NotNull(performRebuild);
+        Assert.True(performRebuild.IsFamily, "Element.PerformRebuild must be protected.");
+        Assert.True(performRebuild.IsVirtual, "Element.PerformRebuild must be virtual.");
+
+        MethodInfo rebuild = typeof(Element).GetMethod(nameof(Element.Rebuild), AnyInstance)!;
+        Assert.True(rebuild.IsPublic, "Element.Rebuild must be public.");
+        Assert.False(rebuild.IsVirtual, "Element.Rebuild must not be overridable; PerformRebuild is.");
+        Assert.True(
+            rebuild.GetParameters() is [{ Name: "force", HasDefaultValue: true, DefaultValue: false }],
+            "Element.Rebuild must take Dart's optional `force` flag.");
     }
 
     [Theory]
@@ -103,18 +121,19 @@ public sealed class FrameworkElementApiTests
     }
 
     [Fact]
-    public void BuildContextConstructor_IsPublic()
+    public void BuildContext_IsTheElementItself()
     {
-        ConstructorInfo? constructor = typeof(BuildContext).GetConstructor(
-            AnyInstance,
-            binder: null,
-            [typeof(Element)],
-            modifiers: null);
-
-        Assert.NotNull(constructor);
+        // Dart declares `abstract class Element ... implements BuildContext`, so a build context and
+        // the element it points at are one object: `context as SomeElement` is the supported idiom.
+        Assert.True(typeof(BuildContext).IsInterface, "BuildContext must be an interface, not a wrapper.");
         Assert.True(
-            constructor!.IsPublic,
-            "A hand-written element must be able to build a BuildContext over itself.");
+            typeof(BuildContext).IsAssignableFrom(typeof(Element)),
+            "Element must implement BuildContext.");
+
+        var element = (Element)new SizedBox().CreateElement();
+        BuildContext context = element;
+        Assert.Same(element, context);
+        Assert.Same(element, Assert.IsAssignableFrom<Element>(context));
     }
 
     // `BuildScope` is covered by BuildScopeAcceptsAnExternalContext: only the Dart-shaped
@@ -216,6 +235,217 @@ public sealed class FrameworkElementApiTests
         Assert.DoesNotContain("update", log.Events);
     }
 
+    [Fact]
+    public void Element_IsBornDirtyAndClearsTheFlagWithItsFirstBuild()
+    {
+        // Dart initialises `Element._dirty` to true; the flag is what makes the first build happen,
+        // and only `performRebuild` clears it.
+        Element fresh = new Builder(_ => new SizedBox()).CreateElement();
+        Assert.True(fresh.Dirty);
+
+        var log = new ProbeLog();
+        var owner = new BuildOwner();
+        var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox()));
+        Assert.True(root.Dirty);
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.False(root.Dirty);
+        Assert.False(FindProbeElement(root).Dirty);
+    }
+
+    [Fact]
+    public void Rebuild_SkipsACleanElementUnlessItIsForced()
+    {
+        var log = new ProbeLog();
+        var owner = new BuildOwner();
+        var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox(width: 10, height: 10)));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Element probe = FindProbeElement(root);
+        Assert.False(probe.Dirty);
+        int builds = log.ChildBuilds;
+
+        probe.Rebuild();
+        Assert.Equal(builds, log.ChildBuilds);
+
+        probe.Rebuild(force: true);
+        Assert.Equal(builds + 1, log.ChildBuilds);
+
+        probe.MarkNeedsBuild();
+        Assert.True(probe.Dirty);
+        probe.Rebuild();
+        Assert.Equal(builds + 2, log.ChildBuilds);
+        Assert.False(probe.Dirty);
+    }
+
+    [Fact]
+    public void Rebuild_ThrowsBeforeMountAndIsSilentAfterUnmount()
+    {
+        // Dart asserts `_lifecycleState != initial` and returns early for anything but `active`.
+        var log = new ProbeLog();
+        var element = new ProbeRootElement(new LifecycleProbe(log, new SizedBox()));
+        Assert.Throws<AssertionError>(() => element.Rebuild());
+        Assert.Throws<AssertionError>(() => element.Rebuild(force: true));
+
+        var owner = new BuildOwner();
+        element.Attach(owner);
+        element.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+        element.Unmount();
+
+        int builds = log.ChildBuilds;
+        element.Rebuild(force: true);
+        Assert.Equal(builds, log.ChildBuilds);
+    }
+
+    [Fact]
+    public void MarkNeedsBuild_DuringTheBuildItself_IsIgnored()
+    {
+        // Dart clears the dirty flag only after `build()` returns, precisely so that a
+        // markNeedsBuild() made while building is swallowed instead of scheduling a second pass.
+        int builds = 0;
+        var owner = new BuildOwner();
+        var root = new ProbeRootElement(new Builder(context =>
+        {
+            builds += 1;
+            ((Element)context).MarkNeedsBuild();
+            return new SizedBox();
+        }));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.Equal(1, builds);
+
+        owner.FlushBuild();
+        Assert.Equal(1, builds);
+    }
+
+    [Fact]
+    public void DebugDoingBuild_IsSetOnlyWhileTheElementIsBuilding()
+    {
+        bool insideBuild = false;
+        Element? captured = null;
+        var owner = new BuildOwner();
+        var root = new ProbeRootElement(new Builder(context =>
+        {
+            captured = (Element)context;
+            insideBuild = context.DebugDoingBuild;
+            return new SizedBox();
+        }));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.True(insideBuild, "BuildContext.DebugDoingBuild must be true inside Build().");
+        Assert.False(captured!.DebugDoingBuild);
+    }
+
+    [Fact]
+    public void DebugDoingBuild_IsSetWhileARenderObjectIsCreatedAndUpdated()
+    {
+        var log = new List<(string Phase, bool DoingBuild)>();
+        var owner = new BuildOwner();
+        var root = new ProbeRootElement(new DoingBuildProbe(log));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        root.Update(new DoingBuildProbe(log));
+        owner.FlushBuild();
+
+        Assert.Equal([("create", true), ("update", true)], log);
+    }
+
+    [DebugOnlyFact]
+    public void FindRenderObject_ThrowsOnADefunctElement()
+    {
+        // Flutter's framework_test.dart asserts the same message for a render object read off an
+        // element that has left the tree.
+        var log = new ProbeLog();
+        var owner = new BuildOwner();
+        var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox()));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Element probe = FindProbeElement(root);
+        root.Unmount();
+
+        AssertionError error = Assert.Throws<AssertionError>(() => probe.FindRenderObject());
+        Assert.Contains("Cannot get renderObject of inactive element.", error.Message);
+    }
+
+    [Fact]
+    public void BuildContext_OwnerIsTheBuildOwnerAndTheContextIsTheElement()
+    {
+        // The struct wrapper used to expose the *element* as `Owner`; Dart's `BuildContext.owner` is
+        // the BuildOwner, and the element is the context itself.
+        var owner = new BuildOwner();
+        Element? captured = null;
+        var root = new ProbeRootElement(new Builder(context =>
+        {
+            captured = (Element)context;
+            Assert.Same(owner, context.Owner);
+            Assert.Same(context, context.Widget is Builder ? context : null);
+            return new SizedBox();
+        }));
+
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        Assert.NotNull(captured);
+        Assert.Same(owner, captured!.Owner);
+        Assert.True(captured.Mounted);
+    }
+
+    private static Element FindProbeElement(Element root)
+    {
+        Element? found = null;
+        void Visit(Element element)
+        {
+            if (element is LifecycleProbeElement)
+            {
+                found ??= element;
+                return;
+            }
+
+            element.VisitChildren(Visit);
+        }
+
+        Visit(root);
+        return found!;
+    }
+
+    private sealed class DoingBuildProbe : LeafRenderObjectWidget
+    {
+        private readonly List<(string Phase, bool DoingBuild)> _log;
+
+        public DoingBuildProbe(List<(string Phase, bool DoingBuild)> log)
+        {
+            _log = log;
+        }
+
+        public override RenderObject CreateRenderObject(BuildContext context)
+        {
+            _log.Add(("create", context.DebugDoingBuild));
+            return new RenderConstrainedBox(BoxConstraints.TightFor(width: 1.0, height: 1.0));
+        }
+
+        public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+        {
+            _log.Add(("update", context.DebugDoingBuild));
+        }
+    }
+
     private static void AssertPublicMethod(Type type, string name)
     {
         MethodInfo[] methods = type
@@ -273,9 +503,9 @@ public sealed class FrameworkElementApiTests
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             Probe.Log.Events.Add("rebuild");
             Probe.Log.ChildBuilds += 1;
             _child = UpdateChild(_child, Probe.Child, Slot);
@@ -285,7 +515,7 @@ public sealed class FrameworkElementApiTests
         {
             base.Update(newWidget);
             Probe.Log.Events.Add("update");
-            Rebuild();
+            Rebuild(force: true);
         }
 
         protected override void OnDeactivate()
@@ -341,16 +571,16 @@ public sealed class FrameworkElementApiTests
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

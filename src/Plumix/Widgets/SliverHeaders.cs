@@ -95,9 +95,9 @@ internal sealed class SliverResizingHeaderElement : RenderObjectElement
         UpdateSlotChildren();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         UpdateSlotChildren();
     }
 

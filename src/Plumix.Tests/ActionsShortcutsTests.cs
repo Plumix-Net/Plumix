@@ -110,7 +110,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         int outerInvocations = 0;
         int innerInvocations = 0;
         var dispatcher = new TrackingDispatcher();
-        BuildContext capturedContext = default;
+        BuildContext capturedContext = null!;
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Actions(
@@ -142,7 +142,7 @@ public sealed class ActionsShortcutsTests : IDisposable
 
         Mount(root, owner);
 
-        FlutterAction<IncrementIntent> found = Actions.Find<IncrementIntent>(capturedContext);
+        FlutterAction<IncrementIntent> found = Actions.Find<IncrementIntent>(capturedContext!);
         Assert.NotNull(found);
         Assert.Equal("inner", Actions.Invoke(capturedContext, new IncrementIntent(2)));
         Assert.Equal(2, innerInvocations);
@@ -166,7 +166,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         var action = new ToggleAction(enabled: false);
         int outerInvocations = 0;
         int dependentBuilds = 0;
-        BuildContext capturedContext = default;
+        BuildContext capturedContext = null!;
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Actions(
@@ -194,7 +194,7 @@ public sealed class ActionsShortcutsTests : IDisposable
 
         Mount(root, owner);
         Assert.Equal(1, dependentBuilds);
-        Assert.Null(Actions.Handler(capturedContext, new IncrementIntent(1)));
+        Assert.Null(Actions.Handler(capturedContext!, new IncrementIntent(1)));
         Assert.Null(Actions.MaybeInvoke(capturedContext, new IncrementIntent(1)));
         Assert.Equal(0, outerInvocations);
 
@@ -245,7 +245,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         // `callingAction` for the duration of the call.
         var defaultAction = new RecordingAction("default");
         var override1 = new RecordingAction("override");
-        BuildContext innerContext = default;
+        BuildContext innerContext = null!;
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Actions(
@@ -262,7 +262,7 @@ public sealed class ActionsShortcutsTests : IDisposable
 
         var overridable = (ContextAction<OverridableIntent>)FlutterAction.Overridable(
             defaultAction,
-            innerContext);
+            innerContext!);
 
         Assert.Equal("override", overridable.Invoke(new OverridableIntent(), innerContext));
         Assert.Equal(1, override1.Invocations);
@@ -291,7 +291,7 @@ public sealed class ActionsShortcutsTests : IDisposable
     public void OverridableAction_FallsBackToTheDefaultActionWhenNoOverrideIsFound()
     {
         var defaultAction = new RecordingAction("default");
-        BuildContext context = default;
+        BuildContext context = null!;
         var owner = new BuildOwner();
         var root = new TestRootElement(new Builder(builderContext =>
         {
@@ -302,7 +302,7 @@ public sealed class ActionsShortcutsTests : IDisposable
 
         var overridable = (ContextAction<OverridableIntent>)FlutterAction.Overridable(
             defaultAction,
-            context);
+            context!);
         Assert.Equal("default", overridable.Invoke(new OverridableIntent(), context));
         Assert.Equal(1, defaultAction.Invocations);
         Assert.True(overridable.IsActionEnabled);
@@ -318,7 +318,7 @@ public sealed class ActionsShortcutsTests : IDisposable
     {
         var action = new ContextProbeAction();
         var focusNode = new FocusNode();
-        BuildContext capturedContext = default;
+        BuildContext capturedContext = null!;
         var owner = new BuildOwner();
         var root = new TestRootElement(
             new Actions(
@@ -336,16 +336,16 @@ public sealed class ActionsShortcutsTests : IDisposable
                 })));
         Mount(root, owner);
 
-        Assert.Equal("context", Actions.Invoke(capturedContext, new ContextProbeIntent()));
-        Assert.True(action.LastContext.HasValue);
-        Assert.Same(capturedContext.Owner, action.LastContext.Value.Owner);
+        Assert.Equal("context", Actions.Invoke(capturedContext!, new ContextProbeIntent()));
+        Assert.True(action.LastContext is not null);
+        Assert.Same(capturedContext, action.LastContext);
 
         action.LastContext = null;
         Assert.Equal(
             "context",
             new ActionDispatcher().InvokeAction(action, new ContextProbeIntent()));
-        Assert.True(action.LastContext.HasValue);
-        Assert.Same(focusNode.AttachmentElement, action.LastContext.Value.Owner);
+        Assert.True(action.LastContext is not null);
+        Assert.Same(focusNode.AttachmentElement, action.LastContext);
 
         root.Unmount();
     }
@@ -647,7 +647,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         public override object? Invoke(ContextProbeIntent intent, BuildContext? context)
         {
             LastContext = context;
-            return context.HasValue ? "context" : "missing";
+            return context is not null ? "context" : "missing";
         }
     }
 
@@ -679,16 +679,16 @@ public sealed class ActionsShortcutsTests : IDisposable
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void ForgetChild(Element child)

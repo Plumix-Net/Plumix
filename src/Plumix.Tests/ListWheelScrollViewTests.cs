@@ -1583,7 +1583,7 @@ public sealed class ListWheelScrollViewTests
     {
         public override Widget Build(BuildContext context)
         {
-            builtInScope.Add(context.Owner.Owner!.IsBuilding);
+            builtInScope.Add(context.Owner!.IsBuilding);
             return new SizedBox();
         }
 
@@ -1694,16 +1694,16 @@ public sealed class ListWheelScrollViewTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

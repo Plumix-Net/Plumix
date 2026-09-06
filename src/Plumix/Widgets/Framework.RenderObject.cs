@@ -95,8 +95,20 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
     protected override void OnMount()
     {
         base.OnMount();
-        _renderObject = RenderObjectWidget.CreateRenderObject(new BuildContext(this));
+        DebugDoingBuild = true;
+        try
+        {
+            _renderObject = RenderObjectWidget.CreateRenderObject(this);
+        }
+        finally
+        {
+            DebugDoingBuild = false;
+        }
+
         AttachRenderObject(Slot);
+
+        // Dart's RenderObjectElement.mount clears the dirty flag itself rather than building.
+        base.PerformRebuild();
     }
 
     protected override void OnDeactivate()
@@ -115,13 +127,32 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
     public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
-        RenderObjectWidget.UpdateRenderObject(new BuildContext(this), RequireRenderObject());
+        PerformRenderObjectRebuild();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild() => PerformRenderObjectRebuild();
+
+    /// <summary>
+    /// Pushes the widget's configuration into the render object and clears <see cref="Element.Dirty"/>.
+    /// </summary>
+    /// <remarks>
+    /// Dart's private <c>RenderObjectElement._performRebuild</c>. <c>update</c> goes through this
+    /// rather than through the virtual <c>performRebuild</c>, so a subclass that rebuilds children
+    /// there (a sliver or list-wheel adaptor) is not asked to rebuild them twice.
+    /// </remarks>
+    private void PerformRenderObjectRebuild()
     {
-        Dirty = false;
-        RenderObjectWidget.UpdateRenderObject(new BuildContext(this), RequireRenderObject());
+        DebugDoingBuild = true;
+        try
+        {
+            RenderObjectWidget.UpdateRenderObject(this, RequireRenderObject());
+        }
+        finally
+        {
+            DebugDoingBuild = false;
+        }
+
+        base.PerformRebuild();
     }
 
     public override void UpdateSlot(object? newSlot)
@@ -288,9 +319,9 @@ public class SingleChildRenderObjectElement : RenderObjectElement
         _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
     }
 
@@ -400,9 +431,9 @@ public class MultiChildRenderObjectElement : RenderObjectElement
         }
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         _children = UpdateChildren(_children, ((MultiChildRenderObjectWidget)Widget).Children, _forgottenChildren);
         _forgottenChildren.Clear();
         EnsureChildrenHaveAssociatedRenderObjects();
@@ -522,9 +553,9 @@ public sealed class SlottedRenderObjectElement<TSlot> : RenderObjectElement
         UpdateSlotChildren();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         UpdateSlotChildren();
     }
 

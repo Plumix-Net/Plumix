@@ -1001,7 +1001,7 @@ public sealed class DraggableScrollableSheetTests
         private bool _shouldCloseOnMinExtent;
         private ScrollPhysics? _physics;
         private DraggableScrollableController _controller;
-        private BuildContext _sheetContext;
+        private BuildContext _sheetContext = null!;
         private ScrollController? _sheetScrollController;
 
         public SheetHarness(
@@ -1249,16 +1249,16 @@ public sealed class DraggableScrollableSheetTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, _childWidget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

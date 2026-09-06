@@ -838,11 +838,11 @@ public sealed class Overlay : StatefulWidget
                     debugRequiredFor,
                     style: DiagnosticsTreeStyle.ErrorProperty));
             }
-            if (!ReferenceEquals(context.Owner.Widget, debugRequiredFor))
+            if (!ReferenceEquals(context.Widget, debugRequiredFor))
             {
                 information.Add(new DiagnosticsProperty<Element>(
                     "The context from which that widget was searching for an overlay was",
-                    context.Owner,
+                    (Element)context,
                     style: DiagnosticsTreeStyle.ErrorProperty));
             }
             throw new FlutterError(information);
@@ -1330,14 +1330,14 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
             return;
         }
 
-        Dirty = false;
+        base.PerformRebuild();
         _needsBuild = true;
         LayoutRenderObject.ScheduleLayoutCallback();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        Dirty = false;
+        base.PerformRebuild();
         _needsBuild = true;
         LayoutRenderObject.ScheduleLayoutCallback();
     }
@@ -1408,7 +1408,7 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
             return;
         }
 
-        Widget built = LayoutWidget.Builder(new BuildContext(this), info)
+        Widget built = LayoutWidget.Builder(this, info)
             ?? throw new InvalidOperationException("OverlayPortal.WithLayoutBuilder must return a widget.");
         _child = UpdateChild(_child, built, null);
         _needsBuild = false;
@@ -1483,9 +1483,9 @@ internal sealed class OverlayPortalElement : RenderObjectElement
         _overlayChild = UpdateChild(_overlayChild, PortalWidget.OverlayChild, PortalWidget.Location);
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         _child = UpdateChild(_child, PortalWidget.Child, ChildSlot);
         _overlayChild = UpdateChild(_overlayChild, PortalWidget.OverlayChild, PortalWidget.Location);
     }
@@ -1970,7 +1970,7 @@ internal sealed class RenderTheaterMarker : InheritedWidget
         }
 
         return createDependency
-            ? (RenderTheaterMarker)context.Owner.DependOnInheritedElement(ancestor, aspect: null)
+            ? (RenderTheaterMarker)context.DependOnInheritedElement(ancestor, aspect: null)
             : (RenderTheaterMarker)ancestor.Widget;
     }
 
@@ -1985,14 +1985,14 @@ internal sealed class RenderTheaterMarker : InheritedWidget
         }
 
         InheritedElement? ancestor = null;
-        new BuildContext(markerElement).VisitAncestorElements(element =>
+        markerElement.VisitAncestorElements(element =>
         {
             // Dart's `getElementForInheritedWidgetOfExactType` reads the element's own inherited map,
             // which includes the element itself; Plumix's starts at the parent, so check it here.
             ancestor = element is InheritedElement { Widget: RenderTheaterMarker } self
                 ? self
                 : LookupBoundary.GetElementForInheritedWidgetOfExactType<RenderTheaterMarker>(
-                    new BuildContext(element));
+                    element);
             return false;
         });
 

@@ -220,7 +220,7 @@ public class ActionDispatcher
     private static BuildContext? ResolveContext(BuildContext? context)
     {
         Element? focusedElement = FocusManager.Instance.PrimaryFocus?.AttachmentElement;
-        return context ?? (focusedElement == null ? null : new BuildContext(focusedElement));
+        return context ?? (focusedElement == null ? null : focusedElement);
     }
 }
 
@@ -374,7 +374,7 @@ public sealed class Actions : StatefulWidget
                 continue;
             }
 
-            _ = context.Owner.DependOnInheritedElement(element, aspect: null);
+            _ = context.DependOnInheritedElement(element, aspect: null);
             return action;
         }
 
@@ -427,7 +427,7 @@ public sealed class Actions : StatefulWidget
         {
             if (isNearest)
             {
-                _ = context.Owner.DependOnInheritedElement(element, aspect: null);
+                _ = context.DependOnInheritedElement(element, aspect: null);
                 isNearest = false;
             }
 
@@ -487,7 +487,7 @@ public sealed class Actions : StatefulWidget
 
     private static IEnumerable<(InheritedElement Element, ActionsScope Scope)> VisitScopes(BuildContext context)
     {
-        for (Element? ancestor = context.Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
+        for (Element? ancestor = ((Element)context).Parent; ancestor != null; ancestor = ancestor.Parent)
         {
             if (ancestor is InheritedElement { Widget: ActionsScope scope } inheritedElement)
             {
@@ -920,19 +920,19 @@ public sealed class PrioritizedAction : ContextAction<PrioritizedIntents>
 {
     public override bool IsEnabled(PrioritizedIntents intent, BuildContext? context)
     {
-        return context.HasValue && ResolveEnabledAction(intent, context.Value).HasValue;
+        return context is not null && ResolveEnabledAction(intent, context).HasValue;
     }
 
     public override object? Invoke(PrioritizedIntents intent, BuildContext? context)
     {
-        if (!context.HasValue)
+        if (context is null)
         {
             return null;
         }
 
-        (FlutterAction Action, Intent Intent)? resolved = ResolveEnabledAction(intent, context.Value);
+        (FlutterAction Action, Intent Intent)? resolved = ResolveEnabledAction(intent, context);
         return resolved.HasValue
-            ? Actions.Of(context.Value).InvokeAction(resolved.Value.Action, resolved.Value.Intent, context)
+            ? Actions.Of(context).InvokeAction(resolved.Value.Action, resolved.Value.Intent, context)
             : null;
     }
 

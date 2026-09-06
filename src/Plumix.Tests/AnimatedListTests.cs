@@ -187,9 +187,9 @@ public sealed class AnimatedListTests : IDisposable
         harness.Pump(new Size(200, 160));
 
         Assert.NotNull(itemContext);
-        Assert.Same(key.CurrentState, AnimatedGrid.Of(itemContext!.Value));
-        Assert.Same(key.CurrentState, AnimatedGrid.MaybeOf(itemContext.Value));
-        Assert.NotNull(SliverAnimatedGrid.MaybeOf(itemContext.Value));
+        Assert.Same(key.CurrentState, AnimatedGrid.Of(itemContext!));
+        Assert.Same(key.CurrentState, AnimatedGrid.MaybeOf(itemContext));
+        Assert.NotNull(SliverAnimatedGrid.MaybeOf(itemContext));
 
         RenderViewport viewport = Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
         Assert.Equal(Clip.None, viewport.ClipBehavior);
@@ -496,9 +496,9 @@ public sealed class AnimatedListTests : IDisposable
         harness.Pump(new Size(200, 120));
 
         Assert.NotNull(itemContext);
-        Assert.Same(key.CurrentState, AnimatedList.Of(itemContext!.Value));
-        Assert.Same(key.CurrentState, AnimatedList.MaybeOf(itemContext.Value));
-        Assert.NotNull(SliverAnimatedList.MaybeOf(itemContext.Value));
+        Assert.Same(key.CurrentState, AnimatedList.Of(itemContext!));
+        Assert.Same(key.CurrentState, AnimatedList.MaybeOf(itemContext));
+        Assert.NotNull(SliverAnimatedList.MaybeOf(itemContext));
 
         RenderViewport viewport = Assert.Single(FindDescendants<RenderViewport>(harness.RenderView));
         Assert.Equal(Clip.None, viewport.ClipBehavior);
@@ -643,9 +643,9 @@ public sealed class AnimatedListTests : IDisposable
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 

@@ -733,24 +733,24 @@ public sealed class NavigationTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(rootContext.HasValue);
+        Assert.True(rootContext is not null);
         Assert.Equal("root", currentPageName);
-        Assert.False(Navigator.CanPop(rootContext.Value));
+        Assert.False(Navigator.CanPop(rootContext));
 
-        Navigator.PushNamed(rootContext.Value, "/details", arguments: 99);
+        Navigator.PushNamed(rootContext, "/details", arguments: 99);
         owner.FlushBuild();
 
-        Assert.True(detailsContext.HasValue);
+        Assert.True(detailsContext is not null);
         Assert.Equal("details", currentPageName);
         Assert.Equal(99, latestArguments);
-        Assert.True(Navigator.CanPop(detailsContext.Value));
+        Assert.True(Navigator.CanPop(detailsContext));
 
-        Navigator.Pop(detailsContext.Value);
+        Navigator.Pop(detailsContext);
         owner.FlushBuild();
 
-        Assert.True(rootContext.HasValue);
-        Assert.Equal("/", CurrentPage(Navigator.Of(rootContext.Value)));
-        Assert.False(Navigator.CanPop(rootContext.Value));
+        Assert.True(rootContext is not null);
+        Assert.Equal("/", CurrentPage(Navigator.Of(rootContext)));
+        Assert.False(Navigator.CanPop(rootContext));
     }
 
     [Fact]
@@ -1337,16 +1337,16 @@ public sealed class NavigationTests
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

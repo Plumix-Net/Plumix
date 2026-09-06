@@ -208,7 +208,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
 
     private static WidgetRenderHarness PushRoute(Route route, out BuildContext context)
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         var harness = new WidgetRenderHarness(new Directionality(
             TextDirection.Ltr,
             new MediaQuery(
@@ -217,7 +217,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
                     value => captured = value,
                     child: new Text("Underlying")))))));
         harness.Pump(new Size(400, 300));
-        Navigator.Of(captured).Push(route);
+        Navigator.Of(captured!).Push(route);
         harness.Pump(new Size(400, 300));
         context = captured;
         return harness;
@@ -381,16 +381,16 @@ public sealed class ModalRouteBarrierTests : IDisposable
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

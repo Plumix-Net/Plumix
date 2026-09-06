@@ -15,7 +15,7 @@ public sealed class ScrollBehaviorParityTests
     [Fact]
     public void ScrollBehavior_VelocityTrackerBuilderUsesPlatformAndSurvivesCopyWith()
     {
-        var context = new BuildContext(new SizedBox().CreateElement());
+        var context = new SizedBox().CreateElement();
         var ios = new FixedPlatformScrollBehavior(TargetPlatform.IOS);
         var macos = new FixedPlatformScrollBehavior(TargetPlatform.MacOS);
         var android = new FixedPlatformScrollBehavior(TargetPlatform.Android);
@@ -264,16 +264,16 @@ public sealed class ScrollBehaviorParityTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

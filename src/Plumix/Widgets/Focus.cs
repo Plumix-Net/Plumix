@@ -219,7 +219,7 @@ public class FocusNode : ChangeNotifier
     public BuildContext? Context { get; private set; }
 
     /// <summary>The element <see cref="Context"/> belongs to.</summary>
-    internal Element? AttachmentElement => Context?.Owner;
+    internal Element? AttachmentElement => Context as Element;
 
     /// <summary>Dart parity source: <c>FocusNode.parent</c>.</summary>
     public FocusNode? Parent { get; private set; }
@@ -589,7 +589,7 @@ public class FocusNode : ChangeNotifier
 
         if (oldScope != null && child.Context != null && !ReferenceEquals(child.EnclosingScope, oldScope))
         {
-            FocusTraversalGroup.MaybeOf(child.Context.Value)?.ChangedScope(child, oldScope);
+            FocusTraversalGroup.MaybeOf(child.Context)?.ChangedScope(child, oldScope);
         }
 
         if (child._requestFocusWhenReparented)

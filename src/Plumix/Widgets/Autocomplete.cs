@@ -183,7 +183,7 @@ internal sealed class RawAutocompleteState<T> : State
     private string? _lastFieldText;
     private int _onChangedCallId;
     private FlutterAction? _previousDismissAction;
-    private BuildContext _previousDismissContext;
+    private BuildContext? _previousDismissContext;
 
     private RawAutocomplete<T> Current => (RawAutocomplete<T>)StateWidget;
 

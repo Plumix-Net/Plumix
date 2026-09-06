@@ -595,7 +595,7 @@ public class SearchAnchor : StatefulWidget
 
         public override void DidPush()
         {
-            BuildContext anchorContext = _anchorKey.CurrentContext!.Value;
+            BuildContext anchorContext = _anchorKey.CurrentContext!;
             UpdateViewConfig(anchorContext);
             UpdateTweens(anchorContext);
             _toggleVisibility?.Invoke();
@@ -606,9 +606,9 @@ public class SearchAnchor : StatefulWidget
         public override bool DidPop(object? result)
         {
             BuildContext? anchorContext = _anchorKey.CurrentContext;
-            if (anchorContext.HasValue)
+            if (anchorContext is not null)
             {
-                UpdateTweens(anchorContext.Value);
+                UpdateTweens(anchorContext);
             }
 
             _toggleVisibility?.Invoke();
@@ -616,9 +616,9 @@ public class SearchAnchor : StatefulWidget
             Scheduler.AddPostFrameCallback(_ =>
             {
                 BuildContext? context = _anchorKey.CurrentContext;
-                if (context.HasValue)
+                if (context is not null)
                 {
-                    FocusScope.MaybeOf(context.Value)?.Unfocus();
+                    FocusScope.MaybeOf(context)?.Unfocus();
                 }
             });
             return base.DidPop(result);
@@ -705,12 +705,12 @@ public class SearchAnchor : StatefulWidget
         internal Rect? GetRect()
         {
             BuildContext? context = _anchorKey.CurrentContext;
-            if (!context.HasValue)
+            if (context is null)
             {
                 return null;
             }
 
-            var searchBarBox = (RenderBox)context.Value.FindRenderObject()!;
+            var searchBarBox = (RenderBox)context.FindRenderObject()!;
             RenderObject? navigatorBox = Navigator!.Context.FindRenderObject();
             Point boxLocation = searchBarBox.LocalToGlobal(default, ancestor: navigatorBox);
             return new Rect(boxLocation, searchBarBox.Size);

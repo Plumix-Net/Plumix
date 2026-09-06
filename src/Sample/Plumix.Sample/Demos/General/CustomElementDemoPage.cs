@@ -199,9 +199,9 @@ internal sealed class ElementLifecycleProbeElement : Element
         Rebuild();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        Dirty = false;
+        base.PerformRebuild();
         Probe.Log.RecordRebuild();
         _child = UpdateChild(_child, Probe.Child, Slot);
     }
@@ -210,7 +210,7 @@ internal sealed class ElementLifecycleProbeElement : Element
     {
         base.Update(newWidget);
         Probe.Log.RecordUpdate();
-        Rebuild();
+        Rebuild(force: true);
     }
 
     protected override void OnDeactivate()

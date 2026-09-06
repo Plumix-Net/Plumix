@@ -123,7 +123,7 @@ public sealed class MaterialReorderableListTests
         using WidgetRenderHarness harness = new(Wrap(list));
         harness.Pump(new Size(200, 100));
 
-        BuildContext itemContext = itemKey.CurrentContext!.Value;
+        BuildContext itemContext = itemKey.CurrentContext!;
         Scrollable scrollable = Assert.IsType<Scrollable>(
             itemContext.FindAncestorWidgetOfExactType<Scrollable>());
         Assert.Equal(0.25, scrollable.Anchor);
@@ -209,7 +209,7 @@ public sealed class MaterialReorderableListTests
         using WidgetRenderHarness harness = new(Wrap(widget));
         harness.Pump(new Size(240, 200));
 
-        BuildContext context = key.CurrentContext!.Value;
+        BuildContext context = key.CurrentContext!;
         DragBoundaryDelegate<Rect> global = DragBoundary.ForRectOf(context);
         Assert.False(global.IsWithinBoundary(new Rect(10, 10, 20, 20)));
         Assert.True(global.IsWithinBoundary(new Rect(40, 30, 20, 20)));
@@ -235,7 +235,7 @@ public sealed class MaterialReorderableListTests
             key: freeKey)));
         freeHarness.Pump(new Size(100, 100));
 
-        BuildContext freeContext = freeKey.CurrentContext!.Value;
+        BuildContext freeContext = freeKey.CurrentContext!;
         Assert.Null(DragBoundary.ForRectMaybeOf(freeContext));
         DragBoundaryDelegate<Rect> free = DragBoundary.ForRectOf(freeContext);
         var unrestricted = new Rect(300, 300, 300, 300);
@@ -1057,16 +1057,16 @@ public sealed class MaterialReorderableListTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

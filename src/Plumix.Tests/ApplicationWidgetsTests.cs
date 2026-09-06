@@ -302,15 +302,15 @@ public sealed class ApplicationWidgetsTests : IDisposable
         MountAndFlush(root, owner);
 
         Assert.NotNull(builderChild);
-        Assert.True(homeContext.HasValue);
-        Assert.Same(navigatorKey.CurrentState, Navigator.Of(homeContext!.Value));
-        Assert.Same(navigatorKey.CurrentState!.Overlay, Overlay.Of(homeContext.Value, rootOverlay: true));
-        Assert.Equal(TextDirection.Ltr, Directionality.Of(homeContext.Value));
-        Assert.Equal("localized", Localizations.Of<TestStrings>(homeContext.Value).Value);
-        Assert.NotNull(SharedAppData.GetValue(homeContext.Value, "key", () => new object()));
-        Assert.NotNull(ShortcutRegistry.MaybeOf(homeContext.Value));
-        Assert.NotNull(TapRegion.MaybeOf(homeContext.Value));
-        Assert.NotNull(homeContext.Value.DependOnInherited<UnmanagedRestorationScope>());
+        Assert.True(homeContext is not null);
+        Assert.Same(navigatorKey.CurrentState, Navigator.Of(homeContext!));
+        Assert.Same(navigatorKey.CurrentState!.Overlay, Overlay.Of(homeContext, rootOverlay: true));
+        Assert.Equal(TextDirection.Ltr, Directionality.Of(homeContext));
+        Assert.Equal("localized", Localizations.Of<TestStrings>(homeContext).Value);
+        Assert.NotNull(SharedAppData.GetValue(homeContext, "key", () => new object()));
+        Assert.NotNull(ShortcutRegistry.MaybeOf(homeContext));
+        Assert.NotNull(TapRegion.MaybeOf(homeContext));
+        Assert.NotNull(homeContext.DependOnInherited<UnmanagedRestorationScope>());
         Assert.Equal("ar", generatedTitleLocale);
         Assert.Equal(
             new ApplicationSwitcherDescription("localized", 0xFF112233),
@@ -605,16 +605,16 @@ public sealed class ApplicationWidgetsTests : IDisposable
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

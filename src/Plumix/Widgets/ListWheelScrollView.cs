@@ -931,7 +931,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
         if (!ReferenceEquals(newDelegate, oldDelegate)
             && (newDelegate.GetType() != oldDelegate.GetType() || newDelegate.ShouldRebuild(oldDelegate)))
         {
-            Rebuild();
+            PerformRebuild();
             TypedRenderObject.MarkNeedsLayout();
         }
     }
@@ -940,10 +940,10 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
 
     /// <summary>Dart's <c>performRebuild</c>: drops the widget cache and updates every active child
     /// against a freshly built widget.</summary>
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
         _childWidgets.Clear();
-        base.Rebuild();
+        base.PerformRebuild();
         if (_childElements.Count == 0)
         {
             return;
@@ -974,7 +974,7 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
     {
         if (!_childWidgets.TryGetValue(index, out Widget? widget))
         {
-            widget = TypedWidget.ChildDelegate.Build(new BuildContext(this), index);
+            widget = TypedWidget.ChildDelegate.Build(this, index);
             _childWidgets[index] = widget;
         }
 
@@ -1214,7 +1214,7 @@ public sealed class ListWheelViewport : RenderObjectWidget
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        var childManager = (ListWheelElement)context.Owner;
+        var childManager = (ListWheelElement)context;
         return new RenderListWheelViewport(
             childManager: childManager,
             offset: Offset,

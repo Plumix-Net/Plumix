@@ -195,28 +195,28 @@ public sealed class CupertinoAppTests : IDisposable
         var details = ScrollableDetails.Vertical(controller: controller);
 
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.MacOS;
-        var macPhysics = Assert.IsType<BouncingScrollPhysics>(behavior.GetScrollPhysics(default));
+        var macPhysics = Assert.IsType<BouncingScrollPhysics>(behavior.GetScrollPhysics(null!));
         Assert.Equal(ScrollDecelerationRate.Fast, macPhysics.DecelerationRate);
-        var scrollbar = Assert.IsType<CupertinoScrollbar>(behavior.BuildScrollbar(default, child, details));
+        var scrollbar = Assert.IsType<CupertinoScrollbar>(behavior.BuildScrollbar(null!, child, details));
         Assert.Same(controller, scrollbar.Controller);
         Assert.Same(child, scrollbar.Child);
         Assert.Throws<InvalidOperationException>(() => behavior.BuildScrollbar(
-            default,
+            null!,
             child,
             ScrollableDetails.Vertical()));
 
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
-        var iosPhysics = Assert.IsType<BouncingScrollPhysics>(behavior.GetScrollPhysics(default));
+        var iosPhysics = Assert.IsType<BouncingScrollPhysics>(behavior.GetScrollPhysics(null!));
         Assert.Equal(ScrollDecelerationRate.Normal, iosPhysics.DecelerationRate);
-        Assert.Same(child, behavior.BuildScrollbar(default, child, details));
-        Assert.Same(child, behavior.BuildOverscrollIndicator(default, child, details));
+        Assert.Same(child, behavior.BuildScrollbar(null!, child, details));
+        Assert.Same(child, behavior.BuildOverscrollIndicator(null!, child, details));
         Assert.Equal(
             MultitouchDragStrategy.AverageBoundaryPointers,
-            behavior.GetMultitouchDragStrategy(default));
+            behavior.GetMultitouchDragStrategy(null!));
         Assert.Equal(
             ScrollViewKeyboardDismissBehavior.OnDrag,
             behavior.CopyWith(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.OnDrag)
-                .GetKeyboardDismissBehavior(default));
+                .GetKeyboardDismissBehavior(null!));
     }
 
     private static void MountAndFlush(TestRootElement root, BuildOwner owner)
@@ -282,16 +282,16 @@ public sealed class CupertinoAppTests : IDisposable
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

@@ -106,7 +106,7 @@ public sealed class MaterialScaffoldGeometryTests
         using var harness = new Harness(Wrap(new Scaffold(body: Capture(c => context = c))));
         harness.Pump(Viewport);
 
-        ScaffoldGeometryNotifier notifier = Scaffold.GeometryNotifierMaybeOf(context!.Value)!;
+        ScaffoldGeometryNotifier notifier = Scaffold.GeometryNotifierMaybeOf(context!)!;
         int notifications = 0;
         notifier.AddListener(() => notifications++);
 
@@ -130,7 +130,7 @@ public sealed class MaterialScaffoldGeometryTests
         using var harness = new Harness(Wrap(Capture(c => context = c)));
         harness.Pump(Viewport);
 
-        Assert.Throws<InvalidOperationException>(() => Scaffold.GeometryOf(context!.Value));
+        Assert.Throws<InvalidOperationException>(() => Scaffold.GeometryOf(context!));
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public sealed class MaterialScaffoldGeometryTests
         using var harness = new Harness(Wrap(new Scaffold(body: Capture(c => context = c))));
         harness.Pump(Viewport);
 
-        IValueListenable<ScaffoldGeometry> listenable = Scaffold.GeometryOf(context!.Value);
+        IValueListenable<ScaffoldGeometry> listenable = Scaffold.GeometryOf(context!);
         Assert.Throws<InvalidOperationException>(() => _ = listenable.Value);
     }
 
@@ -644,7 +644,7 @@ public sealed class MaterialScaffoldGeometryTests
         // Closed: the start drawer is appended last and therefore paints on top.
         Assert.True(harness.SlotIndex(ScaffoldSlot.Drawer) > harness.SlotIndex(ScaffoldSlot.EndDrawer));
 
-        Scaffold.Of(context!.Value).OpenEndDrawer();
+        Scaffold.Of(context!).OpenEndDrawer();
         harness.Pump(Viewport);
 
         Assert.True(harness.SlotIndex(ScaffoldSlot.EndDrawer) > harness.SlotIndex(ScaffoldSlot.Drawer));
@@ -659,13 +659,13 @@ public sealed class MaterialScaffoldGeometryTests
             drawer: new Drawer())));
         harness.Pump(Viewport);
 
-        ScaffoldState scaffold = Scaffold.Of(context!.Value);
-        Assert.Null(Actions.Handler(context!.Value, new DismissIntent()));
+        ScaffoldState scaffold = Scaffold.Of(context!);
+        Assert.Null(Actions.Handler(context!, new DismissIntent()));
 
         scaffold.OpenDrawer();
         harness.Pump(Viewport);
 
-        Action? handler = Actions.Handler(context!.Value, new DismissIntent());
+        Action? handler = Actions.Handler(context!, new DismissIntent());
         Assert.NotNull(handler);
         handler!();
         harness.Pump(Viewport);
@@ -683,10 +683,10 @@ public sealed class MaterialScaffoldGeometryTests
             drawer: new Drawer())));
         harness.Pump(Viewport);
 
-        Scaffold.Of(context!.Value).OpenDrawer();
+        Scaffold.Of(context!).OpenDrawer();
         harness.Pump(Viewport);
 
-        Assert.Null(Actions.Handler(context!.Value, new DismissIntent()));
+        Assert.Null(Actions.Handler(context!, new DismissIntent()));
     }
 
     [Fact]
@@ -700,7 +700,7 @@ public sealed class MaterialScaffoldGeometryTests
             drawer: new Drawer())));
         harness.Pump(Viewport);
 
-        ScaffoldState scaffold = Scaffold.Of(context!.Value);
+        ScaffoldState scaffold = Scaffold.Of(context!);
         scaffold.OpenDrawer();
         harness.Pump(Viewport);
         scaffold.OpenDrawer();
@@ -831,8 +831,8 @@ public sealed class MaterialScaffoldGeometryTests
 
     private static ScaffoldGeometry RequireGeometry(BuildContext? context)
     {
-        Assert.True(context.HasValue);
-        ScaffoldGeometryNotifier notifier = Scaffold.GeometryNotifierMaybeOf(context!.Value)!;
+        Assert.True(context is not null);
+        ScaffoldGeometryNotifier notifier = Scaffold.GeometryNotifierMaybeOf(context!)!;
         Assert.NotNull(notifier);
         return notifier.ValueForLayout;
     }
@@ -1025,16 +1025,16 @@ public sealed class MaterialScaffoldGeometryTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

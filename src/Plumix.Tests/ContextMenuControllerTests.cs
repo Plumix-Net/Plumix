@@ -150,7 +150,7 @@ public sealed class ContextMenuControllerTests : IDisposable
         var controller = new ContextMenuController();
         BuildContext? menuContext = null;
         double? inheritedFontSize = null;
-        controller.Show(nestedContext!.Value, context =>
+        controller.Show(nestedContext!, context =>
         {
             menuContext = context;
             inheritedFontSize = DefaultTextStyle.Of(context).FontSize;
@@ -159,7 +159,7 @@ public sealed class ContextMenuControllerTests : IDisposable
         harness.Pump();
         Assert.Equal(2, harness.Overlay.Entries.Count);
         Assert.Single(nestedKey.CurrentState!.Entries);
-        Assert.Same(harness.Overlay, Overlay.Of(menuContext!.Value));
+        Assert.Same(harness.Overlay, Overlay.Of(menuContext!));
         // The pinned source captures from the entry builder, not from the Show caller.
         Assert.Equal(19, inheritedFontSize);
         RenderParagraph paragraph = harness.FindText("menu")!;
@@ -188,10 +188,10 @@ public sealed class ContextMenuControllerTests : IDisposable
         using var harness = new Harness(new Navigator(route));
         focus.RequestFocus();
         harness.Pump();
-        NavigatorState navigator = Navigator.Of(context!.Value);
+        NavigatorState navigator = Navigator.Of(context!);
         int entries = navigator.Overlay!.Entries.Count;
         var controller = new ContextMenuController();
-        controller.Show(context.Value, _ => new Positioned(
+        controller.Show(context!, _ => new Positioned(
             left: 200, top: 100, width: 100, height: 40, child: new Text("menu")));
         harness.Pump();
         Assert.True(focus.HasFocus);
@@ -274,8 +274,8 @@ public sealed class ContextMenuControllerTests : IDisposable
         };
         try
         {
-            OverlayState rootOverlay = Overlay.Of(context!.Value, rootOverlay: true);
-            Assert.Same(Navigator.Of(context.Value).Overlay, rootOverlay);
+            OverlayState rootOverlay = Overlay.Of(context!, rootOverlay: true);
+            Assert.Same(Navigator.Of(context!).Overlay, rootOverlay);
             Assert.Equal(TextDirection.Ltr, Directionality.Of(rootOverlay.Context));
             Assert.Equal(theme.PrimaryColor, Plumix.Material.Theme.Of(rootOverlay.Context).PrimaryColor);
             Assert.Equal(new Locale("en", "US"), Localizations.LocaleOf(rootOverlay.Context));
@@ -301,7 +301,7 @@ public sealed class ContextMenuControllerTests : IDisposable
         var next = new ContextMenuController();
         var required = new Text("requires overlay");
         FlutterError error = Assert.Throws<FlutterError>(() =>
-            next.Show(missingContext!.Value, _ => new SizedBox(), debugRequiredFor: required));
+            next.Show(missingContext!, _ => new SizedBox(), debugRequiredFor: required));
         Assert.Contains("No Overlay widget found", error.ToString());
         Assert.Contains("Text widgets require an Overlay", error.ToString());
         Assert.Contains(error.Diagnostics, node =>
@@ -342,7 +342,7 @@ public sealed class ContextMenuControllerTests : IDisposable
     private sealed class Harness : IDisposable
     {
         private readonly FocusLayoutHarness _harness;
-        public BuildContext Context { get; private set; }
+        public BuildContext Context { get; private set; } = null!;
         public OverlayState Overlay => Widgets.Overlay.Of(Context);
         public RenderView View => _harness.RenderView;
 

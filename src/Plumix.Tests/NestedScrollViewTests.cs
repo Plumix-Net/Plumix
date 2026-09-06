@@ -648,7 +648,7 @@ public sealed class NestedScrollViewTests : IDisposable
 
         // The injector reproduces the overlap inside the body, so the body's first box starts below
         // the header rather than under it.
-        RenderObject body = bodyKey.CurrentContext!.Value.FindRenderObject()!;
+        RenderObject body = bodyKey.CurrentContext!.FindRenderObject()!;
         Assert.Equal(pinnedExtent, GlobalTopOf(body, harness.RenderView), precision: 6);
     }
 
@@ -851,16 +851,16 @@ public sealed class NestedScrollViewTests : IDisposable
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

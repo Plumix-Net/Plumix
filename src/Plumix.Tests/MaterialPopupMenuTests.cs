@@ -69,7 +69,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Throws<ArgumentException>(() =>
         {
             _ = PopupMenus.ShowMenu(
-                default,
+                null!,
                 Array.Empty<PopupMenuEntry<string>>(),
                 position: new RelativeRect(0, 0, 0, 0));
         });
@@ -192,7 +192,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public async Task ShowMenu_UsesPositionThemeSurfaceShrinkWrapAndCompletesSelection()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         int itemTapCount = 0;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light with { Platform = TargetPlatform.Android },
@@ -202,7 +202,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         harness.Pump(new Size(500, 360));
 
         var result = PopupMenus.ShowMenu(
-            captured,
+            captured!,
             items:
             [
                 new PopupMenuItem<string>(new Text("First"), value: "first", onTap: () => itemTapCount++),
@@ -241,7 +241,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public async Task CheckedPopupMenuItem_TapFadesCheckmarkInBeforeRouteCloses()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -250,7 +250,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         harness.Pump(new Size(500, 360));
 
         var result = PopupMenus.ShowMenu<string>(
-            captured,
+            captured!,
             items:
             [
                 new CheckedPopupMenuItem<string>(
@@ -282,7 +282,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public void ShowMenu_WidgetValuesOverrideLocalAndGlobalPopupMenuThemes()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         var global = ThemeData.Light with
         {
             PopupMenuTheme = new PopupMenuThemeData(
@@ -300,7 +300,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
                 new CaptureContext(value => captured = value, new Text("Home")))))));
         harness.Pump(new Size(500, 360));
         _ = PopupMenus.ShowMenu(
-            captured,
+            captured!,
             items: [new PopupMenuItem<string>(new Text("Override"), value: "override")],
             position: new RelativeRect(20, 20, 400, 290),
             color: Colors.Orange,
@@ -502,7 +502,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public void ShowMenu_CapturesLocalThemeAndTracksGlobalThemeChanges()
     {
-        BuildContext localContext = default;
+        BuildContext localContext = null!;
         using var localHarness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new PopupMenuTheme(
@@ -510,7 +510,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
                 new Builder(context => new CaptureContext(value => localContext = value, new Text("Home"))))))));
         localHarness.Pump(new Size(500, 360));
         _ = PopupMenus.ShowMenu(
-            localContext,
+            localContext!,
             items: [new PopupMenuItem<string>(new Text("Local theme"), value: "local")],
             position: new RelativeRect(20, 20, 400, 290));
         PumpAnimation();
@@ -518,7 +518,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Assert.Contains(FindDescendants<RenderDecoratedBox>(localHarness.RenderView), box =>
             box.Decoration.Color == Colors.Purple);
 
-        BuildContext globalContext = default;
+        BuildContext globalContext = null!;
         Widget BuildRoot(Color color) => Wrap(
             ThemeData.Light with
             {
@@ -530,7 +530,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         using var globalHarness = new WidgetRenderHarness(BuildRoot(Colors.Green));
         globalHarness.Pump(new Size(500, 360));
         _ = PopupMenus.ShowMenu(
-            globalContext,
+            globalContext!,
             items: [new PopupMenuItem<string>(new Text("Global theme"), value: "global")],
             position: new RelativeRect(20, 20, 400, 290));
         PumpAnimation();
@@ -548,7 +548,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     public void ShowMenu_SemanticLabelUsesDefaultTargetPlatformInsteadOfThemePlatform()
     {
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
-        BuildContext appleContext = default;
+        BuildContext appleContext = null!;
         using (var appleHarness = new WidgetRenderHarness(Wrap(
                    ThemeData.Light with { Platform = TargetPlatform.Android },
                    new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -557,7 +557,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         {
             appleHarness.Pump(new Size(500, 360));
             _ = PopupMenus.ShowMenu(
-                appleContext,
+                appleContext!,
                 items: [new PopupMenuItem<string>(new Text("Apple item"), value: "apple")],
                 position: new RelativeRect(20, 20, 400, 290));
             PumpAnimation();
@@ -568,7 +568,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         }
 
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
-        BuildContext androidContext = default;
+        BuildContext androidContext = null!;
         using var androidHarness = new WidgetRenderHarness(Wrap(
             ThemeData.Light with { Platform = TargetPlatform.IOS },
             new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -576,7 +576,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
                 new Text("Android home"))))));
         androidHarness.Pump(new Size(500, 360));
         _ = PopupMenus.ShowMenu(
-            androidContext,
+            androidContext!,
             items: [new PopupMenuItem<string>(new Text("Android item"), value: "android")],
             position: new RelativeRect(20, 20, 400, 290));
         PumpAnimation();
@@ -588,7 +588,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public async Task PopupMenuItem_PopsBeforeOnTapPushesAnotherRoute()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -597,13 +597,13 @@ public sealed class MaterialPopupMenuTests : IDisposable
         harness.Pump(new Size(500, 360));
 
         Task<string?> result = PopupMenus.ShowMenu(
-            captured,
+            captured!,
             items:
             [
                 new PopupMenuItem<string>(
                     new Text("Push next"),
                     value: "next",
-                    onTap: () => Navigator.Of(captured).Push(
+                    onTap: () => Navigator.Of(captured!).Push(
                         new BuilderPageRoute(_ => new Text("Pushed route")))),
             ],
             position: new RelativeRect(20, 20, 400, 290));
@@ -624,7 +624,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public void ShowMenu_UsesDisplayFeatureSubScreenAndDirectionalMenuPadding()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         var mediaQuery = new MediaQueryData(
             Size: new Size(800, 600),
             DisplayFeatures:
@@ -649,7 +649,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
                             new Text("Home"))))))))));
         harness.Pump(new Size(800, 600));
         _ = PopupMenus.ShowMenu(
-            captured,
+            captured!,
             items: [new PopupMenuItem<string>(new Text("Fold item"), value: "fold")],
             position: new RelativeRect(380, 20, 410, 500));
         PumpAnimation();
@@ -666,7 +666,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public void ShowMenu_ScrollsTheFirstInitialValueIntoView()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -679,7 +679,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
                 value: index.ToString()))
             .ToArray();
         _ = PopupMenus.ShowMenu(
-            captured,
+            captured!,
             items: items,
             initialValue: "49",
             position: new RelativeRect(20, 20, 200, 100));
@@ -789,7 +789,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public void ShowMenu_ReevaluatesPositionBuilderAndHonorsNoAnimationConstraintsAndClip()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         int positionBuilds = 0;
         Size lastConstraintSize = default;
         Widget BuildRoot(Size size) => new Directionality(
@@ -804,7 +804,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         using var harness = new WidgetRenderHarness(BuildRoot(new Size(500, 360)));
         harness.Pump(new Size(500, 360));
         _ = PopupMenus.ShowMenu(
-            captured,
+            captured!,
             items: [new PopupMenuItem<string>(new Text("Sized"), value: "sized")],
             positionBuilder: (_, constraints) =>
             {
@@ -946,8 +946,12 @@ public sealed class MaterialPopupMenuTests : IDisposable
             public override RenderObject? RenderObject => _child?.RenderObject;
             public override Element? RenderObjectAttachingChild => _child;
             protected override void OnMount() { base.OnMount(); Rebuild(); }
-            public override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
-            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+            protected override void PerformRebuild()
+            {
+                base.PerformRebuild();
+                _child = UpdateChild(_child, Widget, Slot);
+            }
+            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
             public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;

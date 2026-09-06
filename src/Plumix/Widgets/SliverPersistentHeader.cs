@@ -281,9 +281,9 @@ internal sealed class SliverPersistentHeaderElement : RenderObjectElement
         }
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         HeaderRenderObject.MarkNeedsLayout();
     }
 
@@ -331,7 +331,7 @@ internal sealed class SliverPersistentHeaderElement : RenderObjectElement
         double shrinkOffset,
         bool overlapsContent)
     {
-        Widget built = @delegate.Build(new BuildContext(this), shrinkOffset, overlapsContent);
+        Widget built = @delegate.Build(this, shrinkOffset, overlapsContent);
         _child = UpdateChild(_child, Floating ? new FloatingHeader(built) : built, null);
     }
 }

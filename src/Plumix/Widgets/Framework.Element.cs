@@ -19,142 +19,68 @@ public sealed class IndexedSlot<T>
     public T? Value { get; }
 }
 
-public readonly struct BuildContext
+/// <summary>
+/// A handle to the location of a widget in the widget tree. Dart parity:
+/// <c>BuildContext</c>, which <see cref="Element"/> implements — a build context *is* the element.
+/// </summary>
+public interface BuildContext
 {
-    internal Element Owner { get; }
+    /// <summary>The current configuration of the <see cref="Element"/> that is this build context.</summary>
+    Widget Widget { get; }
 
-    public BuildContext(Element owner)
-    {
-        Owner = owner;
-    }
+    /// <summary>The <see cref="BuildOwner"/> for this context, managing its rebuilds.</summary>
+    BuildOwner? Owner { get; }
 
-    public T? DependOnInherited<T>(object? aspect = null) where T : InheritedWidget => Owner.DependOnInherited<T>(aspect);
+    /// <summary>Whether the widget is currently updating the widget or render tree.</summary>
+    bool DebugDoingBuild { get; }
+
+    /// <summary>Whether the <see cref="Widget"/> this context is associated with is currently mounted.</summary>
+    bool Mounted { get; }
 
     /// <summary>
     /// The size of the render object returned by <see cref="FindRenderObject"/> when it is a
-    /// <see cref="RenderBox"/>. Dart parity: <c>BuildContext.size</c>.
+    /// <see cref="RenderBox"/>.
     /// </summary>
-    public Size? Size => Owner.RenderObject is RenderBox box ? box.Size : null;
+    Size? Size { get; }
 
-    /// <summary>
-    /// Whether the [Widget] this context is associated with is currently mounted in the widget
-    /// tree. Dart parity: <c>BuildContext.mounted</c>.
-    /// </summary>
-    public bool Mounted => Owner is not null && Owner.IsMounted;
+    /// <summary>The render object of this element, or of the nearest descendant that has one.</summary>
+    RenderObject? FindRenderObject();
 
-    internal IReadOnlyList<T> DependOnInheritedAncestors<T>() where T : InheritedWidget =>
-        Owner.DependOnInheritedAncestors<T>();
+    /// <summary>Registers this context with the nearest <typeparamref name="T"/> ancestor and returns it.</summary>
+    T? DependOnInherited<T>(object? aspect = null) where T : InheritedWidget;
+
+    /// <summary>Registers this context as depending on <paramref name="ancestor"/>.</summary>
+    InheritedWidget DependOnInheritedElement(InheritedElement ancestor, object? aspect = null);
 
     /// <summary>
     /// Finds the nearest ancestor <typeparamref name="T"/> without registering a dependency.
     /// Use this when you want to read a value once without subscribing to future changes.
     /// </summary>
-    public T? GetInherited<T>() where T : InheritedWidget
-    {
-        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (ancestor is InheritedElement inheritedElement && inheritedElement.Widget is T typedWidget)
-                return typedWidget;
-        }
-
-        return null;
-    }
+    T? GetInherited<T>() where T : InheritedWidget;
 
     /// <summary>Returns the nearest inherited element of the exact requested widget type.</summary>
-    public InheritedElement? GetElementForInheritedWidgetOfExactType<T>() where T : InheritedWidget
-    {
-        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (ancestor is InheritedElement inheritedElement && ancestor.Widget.GetType() == typeof(T))
-            {
-                return inheritedElement;
-            }
-        }
-
-        return null;
-    }
+    InheritedElement? GetElementForInheritedWidgetOfExactType<T>() where T : InheritedWidget;
 
     /// <summary>Returns the nearest ancestor widget of the requested type without creating a dependency.</summary>
-    public T? FindAncestorWidgetOfExactType<T>() where T : Widget
-    {
-        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (ancestor.Widget is T widget)
-            {
-                return widget;
-            }
-        }
-
-        return null;
-    }
-
-    /// <summary>Walks ancestor elements until <paramref name="visitor"/> returns false.</summary>
-    public void VisitAncestorElements(Func<Element, bool> visitor)
-    {
-        ArgumentNullException.ThrowIfNull(visitor);
-        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (!visitor(ancestor))
-            {
-                return;
-            }
-        }
-    }
+    T? FindAncestorWidgetOfExactType<T>() where T : Widget;
 
     /// <summary>Returns the nearest ancestor state of type <typeparamref name="T"/>.</summary>
-    public T? FindAncestorStateOfType<T>() where T : State
-    {
-        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (ancestor is StatefulElement statefulElement && statefulElement.State is T state)
-            {
-                return state;
-            }
-        }
-
-        return null;
-    }
+    T? FindAncestorStateOfType<T>() where T : State;
 
     /// <summary>Returns the furthest ancestor state assignable to <typeparamref name="T"/>.</summary>
-    public T? FindRootAncestorStateOfType<T>() where T : State
-    {
-        T? result = null;
-        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (ancestor is StatefulElement statefulElement && statefulElement.State is T state)
-            {
-                result = state;
-            }
-        }
-
-        return result;
-    }
+    T? FindRootAncestorStateOfType<T>() where T : State;
 
     /// <summary>Returns the nearest ancestor render object assignable to <typeparamref name="T"/>.</summary>
-    public T? FindAncestorRenderObjectOfType<T>() where T : RenderObject
-    {
-        for (var ancestor = Owner.Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (ancestor is RenderObjectElement { RenderObject: T renderObject })
-            {
-                return renderObject;
-            }
-        }
+    T? FindAncestorRenderObjectOfType<T>() where T : RenderObject;
 
-        return null;
-    }
+    /// <summary>Walks ancestor elements until <paramref name="visitor"/> returns false.</summary>
+    void VisitAncestorElements(Func<Element, bool> visitor);
 
     /// <summary>Visits each direct child element of this build context.</summary>
-    public void VisitChildElements(Action<Element> visitor)
-    {
-        ArgumentNullException.ThrowIfNull(visitor);
-        Owner.VisitChildren(visitor);
-    }
+    void VisitChildElements(Action<Element> visitor);
 
-    public RenderObject? FindRenderObject() => Owner.RenderObject;
-
-    /// <summary>The widget of the element this context belongs to. Dart parity: <c>BuildContext.widget</c>.</summary>
-    public Widget Widget => Owner.Widget;
+    /// <summary>Starts bubbling <paramref name="notification"/> at this context.</summary>
+    void DispatchNotification(Notification notification);
 }
 
 internal enum ElementLifecycleState
@@ -165,7 +91,7 @@ internal enum ElementLifecycleState
     Defunct
 }
 
-public abstract class Element
+public abstract class Element : BuildContext
 {
     private static int _nextElementId;
 
@@ -179,13 +105,23 @@ public abstract class Element
     public object? Slot { get; private set; }
 
     internal int SequenceId { get; } = Interlocked.Increment(ref _nextElementId);
-    public bool Dirty { get; protected set; }
+
+    /// <summary>
+    /// Whether this element needs rebuilding. Dart parity: the private <c>Element._dirty</c>, which
+    /// starts out true because a freshly created element has never been built.
+    /// </summary>
+    public bool Dirty { get; private set; } = true;
+
     public BuildOwner? Owner { get; private set; }
 
     public bool IsActive => _lifecycleState == ElementLifecycleState.Active;
     internal bool IsInactive => _lifecycleState == ElementLifecycleState.Inactive;
-    public bool IsMounted =>
+    public bool Mounted =>
         _lifecycleState is ElementLifecycleState.Active or ElementLifecycleState.Inactive;
+
+    /// <summary>Whether this element is currently running <see cref="PerformRebuild"/>.</summary>
+    /// <remarks>Flutter's <c>Element.debugDoingBuild</c>.</remarks>
+    public bool DebugDoingBuild { get; protected set; }
 
     protected Element(Widget widget)
     {
@@ -368,7 +304,36 @@ public abstract class Element
         _lifecycleState = ElementLifecycleState.Defunct;
     }
 
-    public abstract void Rebuild();
+    /// <summary>
+    /// Rebuilds this element if it is dirty, or unconditionally when <paramref name="force"/> is set.
+    /// The rebuild itself is done by <see cref="PerformRebuild"/>.
+    /// </summary>
+    /// <remarks>Flutter's <c>Element.rebuild({bool force = false})</c>.</remarks>
+    public void Rebuild(bool force = false)
+    {
+        if (_lifecycleState == ElementLifecycleState.Initial)
+        {
+            throw new AssertionError("Cannot rebuild an element that has not been mounted.");
+        }
+
+        if (_lifecycleState != ElementLifecycleState.Active || (!Dirty && !force))
+        {
+            return;
+        }
+
+        PerformRebuild();
+    }
+
+    /// <summary>
+    /// Rebuilds the element's subtree and clears <see cref="Dirty"/>. Only <see cref="Rebuild"/>
+    /// calls it. Subclasses chain to <c>base.PerformRebuild()</c> after running their build step, so
+    /// that a <see cref="MarkNeedsBuild"/> made while building is ignored the way Dart's is.
+    /// </summary>
+    /// <remarks>Flutter's <c>@protected Element.performRebuild()</c>.</remarks>
+    protected virtual void PerformRebuild()
+    {
+        Dirty = false;
+    }
 
     public virtual void MarkNeedsBuild()
     {
@@ -729,13 +694,151 @@ public abstract class Element
 
     public virtual Element? RenderObjectAttachingChild => null;
 
-    public InheritedWidget DependOnInheritedElement(InheritedElement ancestor, object? aspect)
+    public InheritedWidget DependOnInheritedElement(InheritedElement ancestor, object? aspect = null)
     {
         _dependencies ??= [];
         _dependencies.Add(ancestor);
         ancestor.UpdateDependencies(this, aspect);
 
         return (InheritedWidget)ancestor.Widget;
+    }
+
+    /// <summary>
+    /// The size of the render object returned by <see cref="FindRenderObject"/> when it is a
+    /// <see cref="RenderBox"/>. Dart parity: <c>BuildContext.size</c>.
+    /// </summary>
+    public Size? Size => RenderObject is RenderBox box ? box.Size : null;
+
+    public RenderObject? FindRenderObject()
+    {
+        if (Constants.KDebugMode && _lifecycleState != ElementLifecycleState.Active)
+        {
+            throw new AssertionError(
+                "Cannot get renderObject of inactive element.\n"
+                + "In order for an element to have a valid renderObject, it must be active, which "
+                + "means it is part of the tree.\n"
+                + $"Instead, this element is in the {_lifecycleState} state.\n"
+                + "If you called this method from a State object, consider guarding it with "
+                + "State.Mounted.");
+        }
+
+        return RenderObject;
+    }
+
+    /// <summary>
+    /// Finds the nearest ancestor <typeparamref name="T"/> without registering a dependency.
+    /// Use this when you want to read a value once without subscribing to future changes.
+    /// </summary>
+    public T? GetInherited<T>() where T : InheritedWidget
+    {
+        for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is InheritedElement && ancestor.Widget is T typedWidget)
+            {
+                return typedWidget;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Returns the nearest inherited element of the exact requested widget type.</summary>
+    public InheritedElement? GetElementForInheritedWidgetOfExactType<T>() where T : InheritedWidget
+    {
+        for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is InheritedElement inheritedElement && ancestor.Widget.GetType() == typeof(T))
+            {
+                return inheritedElement;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Returns the nearest ancestor widget of the requested type without creating a dependency.</summary>
+    public T? FindAncestorWidgetOfExactType<T>() where T : Widget
+    {
+        for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor.Widget is T widget)
+            {
+                return widget;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Walks ancestor elements until <paramref name="visitor"/> returns false.</summary>
+    public void VisitAncestorElements(Func<Element, bool> visitor)
+    {
+        ArgumentNullException.ThrowIfNull(visitor);
+        for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (!visitor(ancestor))
+            {
+                return;
+            }
+        }
+    }
+
+    /// <summary>Returns the nearest ancestor state of type <typeparamref name="T"/>.</summary>
+    public T? FindAncestorStateOfType<T>() where T : State
+    {
+        for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is StatefulElement statefulElement && statefulElement.State is T state)
+            {
+                return state;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Returns the furthest ancestor state assignable to <typeparamref name="T"/>.</summary>
+    public T? FindRootAncestorStateOfType<T>() where T : State
+    {
+        T? result = null;
+        for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is StatefulElement statefulElement && statefulElement.State is T state)
+            {
+                result = state;
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>Returns the nearest ancestor render object assignable to <typeparamref name="T"/>.</summary>
+    public T? FindAncestorRenderObjectOfType<T>() where T : RenderObject
+    {
+        for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        {
+            if (ancestor is RenderObjectElement { RenderObject: T renderObject })
+            {
+                return renderObject;
+            }
+        }
+
+        return null;
+    }
+
+    /// <summary>Visits each direct child element of this build context.</summary>
+    public void VisitChildElements(Action<Element> visitor)
+    {
+        ArgumentNullException.ThrowIfNull(visitor);
+        VisitChildren(visitor);
+    }
+
+    /// <summary>Starts bubbling <paramref name="notification"/> at this element.</summary>
+    /// <remarks>Flutter's <c>Element.dispatchNotification</c>.</remarks>
+    public void DispatchNotification(Notification notification)
+    {
+        ArgumentNullException.ThrowIfNull(notification);
+        _ = notification.Dispatch(this);
     }
 
     private void RemoveDependencies()
@@ -770,17 +873,30 @@ public sealed class StatelessElement : Element
         Rebuild();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        Dirty = false;
-        var childWidget = ((StatelessWidget)Widget).Build(new BuildContext(this));
+        Widget childWidget;
+        DebugDoingBuild = true;
+        try
+        {
+            childWidget = ((StatelessWidget)Widget).Build(this);
+        }
+        finally
+        {
+            DebugDoingBuild = false;
+
+            // Dart clears the dirty flag only after build() has run, so a MarkNeedsBuild made while
+            // building is swallowed instead of scheduling a second pass.
+            base.PerformRebuild();
+        }
+
         _child = UpdateChild(_child, childWidget, Slot);
     }
 
     public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
-        Rebuild();
+        Rebuild(force: true);
     }
 
     public override void VisitChildren(Action<Element> visitor)
@@ -849,17 +965,26 @@ public sealed class StatefulElement : Element
         base.OnDeactivate();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        Dirty = false;
-
         if (_didChangeDependencies)
         {
             State.DidChangeDependencies();
             _didChangeDependencies = false;
         }
 
-        var widget = State.Build(new BuildContext(this));
+        Widget widget;
+        DebugDoingBuild = true;
+        try
+        {
+            widget = State.Build(this);
+        }
+        finally
+        {
+            DebugDoingBuild = false;
+            base.PerformRebuild();
+        }
+
         _child = UpdateChild(_child, widget, Slot);
     }
 
@@ -868,7 +993,7 @@ public sealed class StatefulElement : Element
         var old = (StatefulWidget)Widget;
         base.Update(newWidget);
         State.DidUpdateWidget(old);
-        Rebuild();
+        Rebuild(force: true);
     }
 
     public override void DidChangeDependencies()
@@ -938,10 +1063,20 @@ public class InheritedElement : Element
         Rebuild();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        Dirty = false;
-        var child = ((InheritedWidget)Widget).Build(new BuildContext(this));
+        Widget child;
+        DebugDoingBuild = true;
+        try
+        {
+            child = ((InheritedWidget)Widget).Build(this);
+        }
+        finally
+        {
+            DebugDoingBuild = false;
+            base.PerformRebuild();
+        }
+
         _child = UpdateChild(_child, child, Slot);
     }
 
@@ -954,7 +1089,7 @@ public class InheritedElement : Element
             NotifyClients(old);
         }
 
-        Rebuild();
+        Rebuild(force: true);
     }
 
     protected object? GetDependencies(Element dependent)
@@ -1102,7 +1237,7 @@ public sealed class InheritedNotifierElement<TNotifier> : InheritedElement where
         base.Update(newWidget);
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
         if (_dirty)
         {
@@ -1110,7 +1245,7 @@ public sealed class InheritedNotifierElement<TNotifier> : InheritedElement where
             _dirty = false;
         }
 
-        base.Rebuild();
+        base.PerformRebuild();
     }
 
     public override void Unmount()
@@ -1144,10 +1279,11 @@ public class ProxyElement : Element
         Rebuild();
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        Dirty = false;
-        _child = UpdateChild(_child, ((ProxyWidget)Widget).Child, Slot);
+        Widget child = ((ProxyWidget)Widget).Child;
+        base.PerformRebuild();
+        _child = UpdateChild(_child, child, Slot);
     }
 
     public override void Update(Widget newWidget)
@@ -1155,7 +1291,7 @@ public class ProxyElement : Element
         var old = (ProxyWidget)Widget;
         base.Update(newWidget);
         Updated(old);
-        Rebuild();
+        Rebuild(force: true);
     }
 
     protected virtual void Updated(ProxyWidget oldWidget)
@@ -1207,9 +1343,9 @@ internal sealed class ParentDataElement<T> : ParentDataElementBase where T : IPa
 
     internal override IParentDataWidget ParentDataWidget => (IParentDataWidget)Widget;
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         ApplyParentData((ParentDataWidget<T>)Widget);
     }
 

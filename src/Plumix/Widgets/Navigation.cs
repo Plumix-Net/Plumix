@@ -2013,7 +2013,7 @@ public sealed class Navigator : StatefulWidget
         }
 
         NavigatorState? result = null;
-        for (var ancestor = context.Owner; ancestor is not null; ancestor = ancestor.Parent)
+        for (Element? ancestor = (Element)context; ancestor is not null; ancestor = ancestor.Parent)
         {
             if (ancestor.Widget is NavigatorScope scope) result = scope.Navigator;
         }

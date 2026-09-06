@@ -647,12 +647,12 @@ public sealed class ScrollPipelineTests
         Assert.Null(SliverVariedExtentList.Builder(
             itemCount: -1,
             itemBuilder: (_, _) => new SizedBox(),
-            itemExtentBuilder: initialBuilder).Delegate.Build(default, 0));
+            itemExtentBuilder: initialBuilder).Delegate.Build(null!, 0));
 
-        var renderObject = Assert.IsType<RenderSliverVariedExtentList>(widget.CreateRenderObject(default));
+        var renderObject = Assert.IsType<RenderSliverVariedExtentList>(widget.CreateRenderObject(null!));
         ItemExtentBuilder updatedBuilder = (index, _) => 48 + index;
         var updatedWidget = new SliverVariedExtentList(childDelegate, updatedBuilder);
-        updatedWidget.UpdateRenderObject(default, renderObject);
+        updatedWidget.UpdateRenderObject(null!, renderObject);
 
         Assert.Same(updatedBuilder, renderObject.ItemExtentBuilder);
         Assert.Equal(2, SliverVariedExtentList.FromChildren(
@@ -1084,7 +1084,7 @@ public sealed class ScrollPipelineTests
             harness.Pump(new Size(100, 200));
 
             Assert.NotNull(itemContext);
-            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!));
 
             ScrollPosition position = controller.PrimaryPosition!;
 
@@ -1094,14 +1094,14 @@ public sealed class ScrollPipelineTests
             Scheduler.PumpFrameForTests();
 
             position.GoBallistic(-300.0);
-            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!));
 
             position.GoBallistic(-5000.0);
-            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!));
 
             // A request for the other axis walks past this scrollable and finds none.
-            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value, Axis.Horizontal));
-            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value, Axis.Vertical));
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!, Axis.Horizontal));
+            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!, Axis.Vertical));
         }
         finally
         {
@@ -1135,11 +1135,11 @@ public sealed class ScrollPipelineTests
 
             controller.JumpTo(1000.0);
 
-            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!.Value));
+            Assert.True(Scrollable.RecommendDeferredLoadingForContext(itemContext!));
 
             Scheduler.PumpFrameForTests();
 
-            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext.Value));
+            Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!));
         }
         finally
         {
@@ -1160,7 +1160,7 @@ public sealed class ScrollPipelineTests
         harness.Pump(new Size(100, 100));
 
         Assert.NotNull(context);
-        Assert.False(Scrollable.RecommendDeferredLoadingForContext(context!.Value));
+        Assert.False(Scrollable.RecommendDeferredLoadingForContext(context!));
     }
 
     // ---- ScrollContext / ignore-pointer parity (scroll_context.dart, scroll_activity.dart) ----
@@ -1342,7 +1342,7 @@ public sealed class ScrollPipelineTests
         (IScrollContext context, ScrollPosition? oldPosition) = Assert.Single(controller.Calls);
         Assert.Null(oldPosition);
         Scrollable.ScrollableState state = Assert.IsAssignableFrom<Scrollable.ScrollableState>(context);
-        Assert.Same(state, Scrollable.MaybeOf(controller.PrimaryPosition!.Context.NotificationContext!.Value));
+        Assert.Same(state, Scrollable.MaybeOf(controller.PrimaryPosition!.Context.NotificationContext!));
         Assert.Same(state.Position, controller.PrimaryPosition);
         ScrollPosition first = controller.PrimaryPosition!;
 
@@ -1477,7 +1477,7 @@ public sealed class ScrollPipelineTests
         ScrollNotification notification = Assert.Single(seen);
         Assert.IsType<ScrollStartNotification>(notification);
         // And Scrollable.of(notification.context) resolves to the scrollable that sent it.
-        Assert.Same(controller.PrimaryPosition!.Context, Scrollable.Of(notification.Context!.Value));
+        Assert.Same(controller.PrimaryPosition!.Context, Scrollable.Of(notification.Context!));
     }
 
     private static Widget TappableScrollView(ScrollController controller) => new CustomScrollView(
@@ -1747,16 +1747,16 @@ public sealed class ScrollPipelineTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

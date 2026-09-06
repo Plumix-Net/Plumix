@@ -63,8 +63,8 @@ public sealed class TwoDimensionalScrollViewTests
             })));
         harness.Pump(Surface);
 
-        Assert.NotNull(TwoDimensionalScrollable.MaybeOf(cellContext!.Value));
-        Assert.NotNull(TwoDimensionalScrollable.Of(cellContext!.Value));
+        Assert.NotNull(TwoDimensionalScrollable.MaybeOf(cellContext!));
+        Assert.NotNull(TwoDimensionalScrollable.Of(cellContext!));
     }
 
     [Fact]
@@ -150,10 +150,10 @@ public sealed class TwoDimensionalScrollViewTests
         TwoDimensionalScrollableState state = ScrollableState(harness);
         Assert.Equal(
             "OuterVerticalTwoDimensionalScrollable",
-            ((Scrollable)state.VerticalScrollable.Context.Owner!.Widget).RestorationId);
+            ((Scrollable)state.VerticalScrollable.Context.Widget).RestorationId);
         Assert.Equal(
             "InnerHorizontalTwoDimensionalScrollable",
-            ((Scrollable)state.HorizontalScrollable.Context.Owner!.Widget).RestorationId);
+            ((Scrollable)state.HorizontalScrollable.Context.Widget).RestorationId);
     }
 
     [Fact]
@@ -174,8 +174,8 @@ public sealed class TwoDimensionalScrollViewTests
         harness.Pump(Surface);
 
         TwoDimensionalScrollableState state = ScrollableState(harness);
-        var vertical = (Scrollable)state.VerticalScrollable.Context.Owner!.Widget;
-        var horizontal = (Scrollable)state.HorizontalScrollable.Context.Owner!.Widget;
+        var vertical = (Scrollable)state.VerticalScrollable.Context.Widget;
+        var horizontal = (Scrollable)state.HorizontalScrollable.Context.Widget;
 
         Assert.Same(verticalController, vertical.Controller);
         Assert.IsType<AlwaysScrollableScrollPhysics>(vertical.Physics);
@@ -447,7 +447,7 @@ public sealed class TwoDimensionalScrollViewTests
     private static TwoDimensionalScrollableState ScrollableState(TwoDimensionalRenderHarness harness)
     {
         TwoDimensionalScrollableState? found = null;
-        Visit(harness.RootContext.Owner!, element =>
+        Visit((Element)harness.RootContext, element =>
         {
             if (element is StatefulElement { State: TwoDimensionalScrollableState state })
             {
@@ -460,7 +460,7 @@ public sealed class TwoDimensionalScrollViewTests
     private static TwoDimensionalScrollable ScrollableWidget(TwoDimensionalRenderHarness harness)
     {
         TwoDimensionalScrollable? found = null;
-        Visit(harness.RootContext.Owner!, element =>
+        Visit((Element)harness.RootContext, element =>
         {
             if (element.Widget is TwoDimensionalScrollable widget)
             {

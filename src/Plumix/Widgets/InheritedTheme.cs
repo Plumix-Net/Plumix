@@ -23,18 +23,18 @@ public abstract class InheritedTheme : InheritedWidget
 
     public static CapturedThemes Capture(BuildContext from, BuildContext? to = null)
     {
-        if (to.HasValue && from.Equals(to.Value))
+        if (to is not null && ReferenceEquals(from, to))
         {
             return new CapturedThemes([]);
         }
 
         var themes = new List<InheritedTheme>();
         var themeTypes = new HashSet<Type>();
-        bool didFindAncestor = !to.HasValue;
+        bool didFindAncestor = to is null;
 
         from.VisitAncestorElements(ancestor =>
         {
-            if (to.HasValue && ReferenceEquals(ancestor, to.Value.Owner))
+            if (ReferenceEquals(ancestor, to))
             {
                 didFindAncestor = true;
                 return false;

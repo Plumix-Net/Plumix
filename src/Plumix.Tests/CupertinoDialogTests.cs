@@ -255,13 +255,13 @@ public sealed class CupertinoDialogTests : IDisposable
     [Fact]
     public async Task ShowCupertinoDialog_BarrierNotDismissibleByDefault()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new RenderHarness(Wrap(new Navigator(new BuilderPageRoute(context =>
             new CaptureContext(value => captured = value, new Text("Underlying"))))));
         harness.Pump(new Size(600, 600));
 
         Task<string?> result = CupertinoDialogs.ShowCupertinoDialog<string>(
-            captured,
+            captured!,
             _ => new CupertinoAlertDialog(
                 title: new Text("Alert body"),
                 actions: [new CupertinoDialogAction(new Text("OK"), onPressed: () => { })]));
@@ -282,13 +282,13 @@ public sealed class CupertinoDialogTests : IDisposable
     [Fact]
     public void ShowCupertinoDialog_EntranceScalesFromOnePointThreeAndExitOnlyFades()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new RenderHarness(Wrap(new Navigator(new BuilderPageRoute(context =>
             new CaptureContext(value => captured = value, new Text("Underlying"))))));
         harness.Pump(new Size(600, 600));
 
         CupertinoDialogs.ShowCupertinoDialog<string>(
-            captured,
+            captured!,
             _ => new CupertinoAlertDialog(title: new Text("Springy")));
         // One micro-frame in: the scale transition is still near its 1.3 starting value.
         double now = Scheduler.CurrentSeconds;
@@ -316,7 +316,7 @@ public sealed class CupertinoDialogTests : IDisposable
     [Fact]
     public void ShowCupertinoModalPopup_ResolvesDarkBarrierAndForwardsRouteOptions()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         Widget navigator = new Navigator(new BuilderPageRoute(context =>
             new CaptureContext(value => captured = value, new Text("Underlying"))));
         using var harness = new RenderHarness(Wrap(new CupertinoTheme(
@@ -325,7 +325,7 @@ public sealed class CupertinoDialogTests : IDisposable
         harness.Pump(new Size(600, 600));
 
         _ = CupertinoDialogs.ShowCupertinoModalPopup<string>(
-            captured,
+            captured!,
             _ => new Text("Popup"),
             barrierDismissible: false,
             semanticsDismissible: true,
@@ -346,8 +346,8 @@ public sealed class CupertinoDialogTests : IDisposable
     [Fact]
     public void ShowCupertinoModalPopup_UsesRootNavigatorByDefaultAndCanTargetNestedNavigator()
     {
-        BuildContext rootContext = default;
-        BuildContext nestedContext = default;
+        BuildContext rootContext = null!;
+        BuildContext nestedContext = null!;
         var rootRoute = new BuilderPageRoute(context =>
         {
             rootContext = context;
@@ -361,9 +361,9 @@ public sealed class CupertinoDialogTests : IDisposable
         harness.Pump(new Size(600, 600));
 
         _ = CupertinoDialogs.ShowCupertinoModalPopup<object?>(
-            nestedContext,
+            nestedContext!,
             _ => new Text("Root popup"));
-        Assert.IsType<CupertinoModalPopupRoute<object?>>(Navigator.Of(rootContext).CurrentRoute);
+        Assert.IsType<CupertinoModalPopupRoute<object?>>(Navigator.Of(rootContext!).CurrentRoute);
         Assert.IsNotType<CupertinoModalPopupRoute<object?>>(Navigator.Of(nestedContext).CurrentRoute);
 
         Navigator.Of(rootContext).Pop();
@@ -508,16 +508,16 @@ public sealed class CupertinoDialogTests : IDisposable
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

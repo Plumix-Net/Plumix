@@ -99,7 +99,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             lerped.DragHandleColor.Resolve(new HashSet<WidgetState> { WidgetState.Hovered }));
 
         var theme = new BottomSheetTheme(data, new SizedBox());
-        var wrapped = Assert.IsType<BottomSheetTheme>(theme.Wrap(default, new Text("child")));
+        var wrapped = Assert.IsType<BottomSheetTheme>(theme.Wrap(null!, new Text("child")));
         Assert.Same(data, wrapped.Data);
 
         var replacement = new BottomSheetThemeData(BackgroundColor: Colors.Crimson);
@@ -513,7 +513,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
         try
         {
-            BuildContext captured = default;
+            BuildContext captured = null!;
             using var harness = new WidgetRenderHarness(Wrap(
                 ThemeData.Light,
                 new Navigator(new BuilderPageRoute(context => new CaptureContext(
@@ -522,7 +522,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             harness.Pump(new Size(500, 400));
 
             var result = MaterialBottomSheets.ShowModalBottomSheet<string>(
-                captured,
+                captured!,
                 _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
             PumpAnimation();
             var semantics = harness.PumpAndGetSemantics(new Size(500, 400));
@@ -561,7 +561,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         PlatformDefaults.DebugTargetPlatformOverride = platform;
         try
         {
-            BuildContext captured = default;
+            BuildContext captured = null!;
             using var harness = new WidgetRenderHarness(Wrap(
                 ThemeData.Light,
                 new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -570,7 +570,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             harness.Pump(new Size(500, 400));
 
             MaterialBottomSheets.ShowModalBottomSheet<string>(
-                captured,
+                captured!,
                 _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
             PumpAnimation();
             var semantics = harness.PumpAndGetSemantics(new Size(500, 400));
@@ -593,7 +593,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
         try
         {
-            BuildContext captured = default;
+            BuildContext captured = null!;
             using var harness = new WidgetRenderHarness(Wrap(
                 ThemeData.Light,
                 new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -602,7 +602,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             harness.Pump(new Size(500, 400));
 
             MaterialBottomSheets.ShowModalBottomSheet<string>(
-                captured,
+                captured!,
                 _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
             PumpAnimation();
             harness.Pump(new Size(500, 400));
@@ -619,7 +619,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     [Fact]
     public void ModalBottomSheet_IsDismissibleFalseKeepsTheSheetOnBarrierTap()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -628,7 +628,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
+            captured!,
             _ => new SizedBox(height: 120, child: new Text("Modal sheet")),
             isDismissible: false);
         PumpAnimation();
@@ -643,7 +643,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     [Fact]
     public void ModalBottomSheet_DismissibleBarrierTapPopsTheRoute()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -652,7 +652,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
+            captured!,
             _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
         PumpAnimation();
         harness.Pump(new Size(500, 400));
@@ -688,7 +688,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
                 Elevation: 0,
                 ModalElevation: 3),
         };
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             theme,
             new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -697,7 +697,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
+            captured!,
             _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
         PumpAnimation();
         harness.Pump(new Size(500, 400));
@@ -729,7 +729,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     {
         var controller = new AnimationController(
             duration: TimeSpan.FromSeconds(2)) { ReverseDuration = TimeSpan.FromSeconds(2) };
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -738,7 +738,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
+            captured!,
             _ => new SizedBox(height: 120, child: new Text("Modal sheet")),
             transitionAnimationController: controller);
         double now = Scheduler.CurrentSeconds;
@@ -763,7 +763,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     [Fact]
     public async Task PersistentBottomSheet_ControllerRebuildCloseAndLocalHistoryMatchScaffoldFlow()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         string label = "First";
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
@@ -772,7 +772,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         var controller = MaterialBottomSheets.ShowBottomSheet(
-            captured,
+            captured!,
             _ => new SizedBox(height: 96, child: new Text(label)));
         PumpAnimation();
         harness.Pump(new Size(500, 400));
@@ -792,7 +792,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     [Fact]
     public void PersistentBottomSheet_GrowsWithTheStandardHeightFactorCurve()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new Scaffold(
@@ -804,7 +804,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
                 Duration: TimeSpan.FromMilliseconds(800),
                 ReverseDuration: TimeSpan.FromMilliseconds(400)));
         MaterialBottomSheets.ShowBottomSheet(
-            captured,
+            captured!,
             _ => new SizedBox(height: 100, child: new Text("Persistent")),
             transitionAnimationController: transitionController);
 
@@ -827,7 +827,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     [Fact]
     public void ModalBottomSheet_PageSemanticsAreOpaqueToHitTesting()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -836,7 +836,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
+            captured!,
             _ => new SizedBox(height: 120, child: new Text("Modal sheet")));
         PumpAnimation();
         var semantics = harness.PumpAndGetSemantics(new Size(500, 400));
@@ -883,14 +883,14 @@ public sealed class MaterialBottomSheetTests : IDisposable
     public void PersistentBottomSheet_DraggableChildAtItsMinimumExtentClosesTheSheet()
     {
         var controller = new DraggableScrollableController();
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new Scaffold(
                 body: new CaptureContext(value => captured = value, new Text("Body")))))));
         harness.Pump(new Size(500, 400));
 
-        MaterialBottomSheets.ShowBottomSheet(captured, _ => DraggableSheet(controller, shouldCloseOnMinExtent: true));
+        MaterialBottomSheets.ShowBottomSheet(captured!, _ => DraggableSheet(controller, shouldCloseOnMinExtent: true));
         PumpAnimation();
         harness.Pump(new Size(500, 400));
         Assert.NotNull(FindParagraph(harness.RenderView, "Sheet content"));
@@ -905,7 +905,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     public void PersistentBottomSheet_DominatingDraggableChildDrivesTheBodyScrimAndTheFloatingActionButton()
     {
         var controller = new DraggableScrollableController();
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new Scaffold(
@@ -913,7 +913,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
                 floatingActionButton: new FloatingActionButton(child: new Text("+"), onPressed: () => { }))))));
         harness.Pump(new Size(500, 400));
 
-        MaterialBottomSheets.ShowBottomSheet(captured, _ => DraggableSheet(controller, shouldCloseOnMinExtent: true));
+        MaterialBottomSheets.ShowBottomSheet(captured!, _ => DraggableSheet(controller, shouldCloseOnMinExtent: true));
         PumpAnimation();
         harness.Pump(new Size(500, 400));
 
@@ -944,14 +944,14 @@ public sealed class MaterialBottomSheetTests : IDisposable
     public void StaticBottomSheet_DraggableChildRegistersALocalHistoryEntryAboveItsInitialExtent()
     {
         var controller = new DraggableScrollableController();
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new Scaffold(
                 body: new CaptureContext(value => captured = value, new Text("Body")),
                 bottomSheet: DraggableSheet(controller, shouldCloseOnMinExtent: true))))));
         harness.Pump(new Size(500, 400));
-        var route = ModalRoute.Of(captured);
+        var route = ModalRoute.Of(captured!);
         Assert.False(route.WillHandlePopInternally);
 
         controller.JumpTo(0.9);
@@ -1071,7 +1071,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     public void ShowBottomSheet_WhileScaffoldBottomSheetIsSet_Throws()
     {
         // Dart: `scaffold_test.dart` "showBottomSheet() while Scaffold has bottom sheet".
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new Scaffold(
@@ -1080,7 +1080,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         var error = Assert.Throws<InvalidOperationException>(
-            () => MaterialBottomSheets.ShowBottomSheet(captured, _ => new Text("Shown")));
+            () => MaterialBottomSheets.ShowBottomSheet(captured!, _ => new Text("Shown")));
         Assert.Contains("Rebuild the Scaffold with a null bottomSheet", error.Message, StringComparison.Ordinal);
     }
 
@@ -1089,7 +1089,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
     {
         // Dart: `scaffold_test.dart` "didUpdate bottomSheet while a previous bottom sheet is still
         // displayed" — the `didUpdateWidget` assert, whose hint names PersistentBottomSheetController.
-        BuildContext captured = default;
+        BuildContext captured = null!;
         Widget? sheet = null;
         StateSetter? rebuild = null;
         using var harness = new WidgetRenderHarness(Wrap(
@@ -1103,7 +1103,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
             })))));
         harness.Pump(new Size(500, 400));
 
-        MaterialBottomSheets.ShowBottomSheet(captured, _ => new SizedBox(height: 100, child: new Text("Shown")));
+        MaterialBottomSheets.ShowBottomSheet(captured!, _ => new SizedBox(height: 100, child: new Text("Shown")));
         PumpAnimation();
         harness.Pump(new Size(500, 400));
 
@@ -1117,13 +1117,13 @@ public sealed class MaterialBottomSheetTests : IDisposable
     {
         // Dart: `bottom_sheet_test.dart` "The old route entry should be removed when a new sheet popup"
         // (flutter#99627): the entry goes away on `close()`, before the exit animation ends.
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new Scaffold(
                 body: new CaptureContext(value => captured = value, new Text("Body")))))));
         harness.Pump(new Size(500, 400));
-        var route = ModalRoute.Of(captured);
+        var route = ModalRoute.Of(captured!);
         Assert.False(route.WillHandlePopInternally);
 
         PersistentBottomSheetController first = MaterialBottomSheets.ShowBottomSheet(
@@ -1178,7 +1178,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         bool shouldCloseOnMinExtent,
         out BuildContext context)
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         var harness = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new Navigator(new BuilderPageRoute(_ => new CaptureContext(
@@ -1187,7 +1187,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
+            captured!,
             _ => DraggableSheet(controller, shouldCloseOnMinExtent),
             isScrollControlled: true);
         PumpAnimation();
@@ -1198,7 +1198,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
     private static Rect ShowModalAndMeasureSheet(MediaQueryData media, Point? anchorPoint)
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = new WidgetRenderHarness(new Directionality(
             TextDirection.Ltr,
             new MediaQuery(
@@ -1213,7 +1213,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(media.Size);
 
         MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
+            captured!,
             _ => new SizedBox(height: 120, child: new Text("Modal sheet")),
             anchorPoint: anchorPoint);
         PumpAnimation();
@@ -1226,7 +1226,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
 
     private static MediaQueryData ShowModalAndCaptureMediaQuery(bool useSafeArea)
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         MediaQueryData? sheetMedia = null;
         using var harness = new WidgetRenderHarness(new Directionality(
             TextDirection.Ltr,
@@ -1242,7 +1242,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         MaterialBottomSheets.ShowModalBottomSheet<string>(
-            captured,
+            captured!,
             context =>
             {
                 sheetMedia = MediaQuery.Of(context);
@@ -1369,8 +1369,12 @@ public sealed class MaterialBottomSheetTests : IDisposable
             public override RenderObject? RenderObject => _child?.RenderObject;
             public override Element? RenderObjectAttachingChild => _child;
             protected override void OnMount() { base.OnMount(); Rebuild(); }
-            public override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
-            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+            protected override void PerformRebuild()
+            {
+                base.PerformRebuild();
+                _child = UpdateChild(_child, Widget, Slot);
+            }
+            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
             public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _view.Child = (RenderBox)child;

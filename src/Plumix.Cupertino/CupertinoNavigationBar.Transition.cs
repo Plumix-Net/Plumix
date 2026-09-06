@@ -144,7 +144,7 @@ internal sealed class TransitionableNavigationBar : StatelessWidget
     {
         get
         {
-            var box = (RenderBox)ComponentsKeys.NavBarBoxKey.CurrentContext!.Value.FindRenderObject()!;
+            var box = (RenderBox)ComponentsKeys.NavBarBoxKey.CurrentContext!.FindRenderObject()!;
             if (!box.Attached)
             {
                 throw new InvalidOperationException(
@@ -158,7 +158,7 @@ internal sealed class TransitionableNavigationBar : StatelessWidget
     }
 
     public bool UserGestureInProgress =>
-        Navigator.Of(ComponentsKeys.NavBarBoxKey.CurrentContext!.Value).UserGestureInProgress;
+        Navigator.Of(ComponentsKeys.NavBarBoxKey.CurrentContext!).UserGestureInProgress;
 
     public override Widget Build(BuildContext context)
     {
@@ -365,7 +365,7 @@ internal sealed class NavigationBarComponentsTransition
     /// </summary>
     public RelativeRect PositionInTransitionBox(GlobalKey key, RenderBox from)
     {
-        var componentBox = (RenderBox)key.CurrentContext!.Value.FindRenderObject()!;
+        var componentBox = (RenderBox)key.CurrentContext!.FindRenderObject()!;
         return RelativeRect.FromRect(
             new Rect(componentBox.LocalToGlobal(new Point(0.0, 0.0), ancestor: from), componentBox.Size),
             TransitionBox);
@@ -385,8 +385,8 @@ internal sealed class NavigationBarComponentsTransition
         Curve? curve = null)
     {
         curve ??= Curves.Interval(0.0, 1.0);
-        var fromBox = (RenderBox)fromKey.CurrentContext!.Value.FindRenderObject()!;
-        var toBox = (RenderBox)toKey.CurrentContext!.Value.FindRenderObject()!;
+        var fromBox = (RenderBox)fromKey.CurrentContext!.FindRenderObject()!;
+        var toBox = (RenderBox)toKey.CurrentContext!.FindRenderObject()!;
 
         bool isLtr = ForwardDirection > 0;
 
@@ -782,7 +782,7 @@ internal sealed class NavigationBarComponentsTransition
             if (bottomBackChevron == null)
             {
                 var topBackChevronBox =
-                    (RenderBox)TopComponents.BackChevronKey.CurrentContext!.Value.FindRenderObject()!;
+                    (RenderBox)TopComponents.BackChevronKey.CurrentContext!.FindRenderObject()!;
                 from = Shift(
                     to,
                     new Point(ForwardDirection * topBackChevronBox.Size.Width * 2.0, 0.0));
@@ -895,7 +895,7 @@ internal sealed class NavigationBarComponentsTransition
             }
 
             RelativeRect to = PositionInTransitionBox(TopComponents.MiddleKey, from: TopNavBarBox);
-            var toBox = (RenderBox)TopComponents.MiddleKey.CurrentContext!.Value.FindRenderObject()!;
+            var toBox = (RenderBox)TopComponents.MiddleKey.CurrentContext!.FindRenderObject()!;
 
             bool isLtr = ForwardDirection > 0;
 

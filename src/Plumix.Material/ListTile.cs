@@ -142,7 +142,7 @@ public sealed class ListTile : StatelessWidget
         Color? color = null)
     {
         ArgumentNullException.ThrowIfNull(tiles);
-        if (!color.HasValue && !context.HasValue)
+        if (!color.HasValue && context is null)
         {
             throw new ArgumentException("ListTile.DivideTiles requires either a context or an explicit color.");
         }

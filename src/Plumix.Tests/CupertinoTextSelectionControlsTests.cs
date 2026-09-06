@@ -181,7 +181,7 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
 
         Assert.Equal(default, controls.GetHandleSize(20.0));
         Assert.Equal(default, controls.GetHandleAnchor(TextSelectionHandleType.Left, 20.0));
-        Assert.IsType<SizedBox>(controls.BuildHandle(default, TextSelectionHandleType.Left, 20.0));
+        Assert.IsType<SizedBox>(controls.BuildHandle(null!, TextSelectionHandleType.Left, 20.0));
 
 #pragma warning disable CS0618 // Exercises Flutter's deprecated legacy selection-controls surface.
         controls.HandleSelectAll(@delegate);
@@ -481,16 +481,16 @@ public sealed class CupertinoTextSelectionControlsTests : IDisposable
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

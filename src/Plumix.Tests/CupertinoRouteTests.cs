@@ -98,7 +98,7 @@ public sealed class CupertinoRouteTests : IDisposable
             fullscreenDialog: true,
             allowSnapshotting: false,
             name: "/details");
-        var route = Assert.IsType<PageBasedCupertinoPageRoute<object?>>(firstPage.CreateRoute(default));
+        var route = Assert.IsType<PageBasedCupertinoPageRoute<object?>>(firstPage.CreateRoute(null!));
 
         Assert.Same(firstPage, route.Settings);
         Assert.Equal("First", route.Title);
@@ -120,7 +120,7 @@ public sealed class CupertinoRouteTests : IDisposable
         Assert.False(route.FullscreenDialog);
         Assert.True(route.AllowSnapshotting);
         Assert.NotNull(route.DelegatedTransition);
-        var semantics = Assert.IsType<Semantics>(route.BuildPage(default));
+        var semantics = Assert.IsType<Semantics>(route.BuildPage(null!));
         Assert.Same(secondChild, semantics.Child);
     }
 
@@ -166,13 +166,13 @@ public sealed class CupertinoRouteTests : IDisposable
         Assert.Equal(TimeSpan.FromMilliseconds(335), route.TransitionDuration);
         Assert.False(route.AllowSnapshotting);
 
-        var level = Assert.IsType<CupertinoUserInterfaceLevel>(route.BuildPage(default));
+        var level = Assert.IsType<CupertinoUserInterfaceLevel>(route.BuildPage(null!));
         Assert.Equal(CupertinoUserInterfaceLevelData.Elevated, level.Data);
         var subScreen = Assert.IsType<DisplayFeatureSubScreen>(level.Child);
         Assert.IsType<Builder>(subScreen.Child);
 
         var transition = Assert.IsType<Align>(route.BuildTransitions(
-            default,
+            null!,
             new ConstantAnimation<double>(0.25),
             new ConstantAnimation<double>(0.0),
             new SizedBox()));
@@ -249,16 +249,16 @@ public sealed class CupertinoRouteTests : IDisposable
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

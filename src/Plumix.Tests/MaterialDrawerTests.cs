@@ -64,7 +64,7 @@ public sealed class MaterialDrawerTests
         var child = new Text("wrapped");
         var drawerTheme = new DrawerTheme(data, new SizedBox());
         Assert.IsAssignableFrom<InheritedTheme>(drawerTheme);
-        var wrapped = Assert.IsType<DrawerTheme>(drawerTheme.Wrap(default, child));
+        var wrapped = Assert.IsType<DrawerTheme>(drawerTheme.Wrap(null!, child));
         Assert.Same(data, wrapped.Data);
         Assert.Same(child, wrapped.Child);
     }
@@ -313,16 +313,16 @@ public sealed class MaterialDrawerTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

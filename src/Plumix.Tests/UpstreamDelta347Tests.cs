@@ -167,7 +167,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
             () => new ImageIcon(provider, color: Green, useOriginalColors: true));
 
         var owner = new BuildOwner();
-        BuildContext context = default;
+        BuildContext context = null!;
         var root = new TestRootElement(new Builder(builderContext =>
         {
             context = builderContext;
@@ -175,7 +175,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
         }));
         Mount(root, owner);
 
-        Assert.Equal(Green, ImageOf(new ImageIcon(provider, color: Green).Build(context)).Color);
+        Assert.Equal(Green, ImageOf(new ImageIcon(provider, color: Green).Build(context!)).Color);
         Assert.Null(ImageOf(new ImageIcon(provider, useOriginalColors: true).Build(context)).Color);
         root.Unmount();
 
@@ -209,7 +209,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
         var second = new SizedBox(width: 2);
 
         var raw = Assert.IsType<RawIndexedStack>(
-            new IndexedStack(children: [first, second], index: 1).Build(default));
+            new IndexedStack(children: [first, second], index: 1).Build(null!));
         Assert.Equal(2, raw.Children.Count);
 
         var firstScope = Assert.IsType<VisibilityScope>(raw.Children[0]);
@@ -251,15 +251,16 @@ public sealed class UpstreamDelta347Tests : IDisposable
     {
         // Dart guards the inherited-widget lookup with `context.mounted`, so an animation
         // controller that is a late field first touched in State.dispose() still gets a value.
-        Assert.False(default(BuildContext).Mounted);
+        BuildContext neverMounted = new SizedBox().CreateElement();
+        Assert.False(neverMounted.Mounted);
         Assert.Same(
-            TickerMode.GetValuesNotifier(default),
-            TickerMode.GetValuesNotifier(default));
+            TickerMode.GetValuesNotifier(neverMounted),
+            TickerMode.GetValuesNotifier(neverMounted));
         Assert.Equal(
             TickerModeData.Fallback,
-            TickerMode.GetValuesNotifier(default).Value);
+            TickerMode.GetValuesNotifier(neverMounted).Value);
 
-        BuildContext context = default;
+        BuildContext context = null!;
         var owner = new BuildOwner();
         var root = new TestRootElement(new Builder(builderContext =>
         {
@@ -291,7 +292,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
                 Assert.Single(properties.Properties, p => p.Name == "devicePixelRatio").Value);
         }
 
-        BuildContext context = default;
+        BuildContext context = null!;
         var owner = new BuildOwner();
         var root = new TestRootElement(new MediaQuery(
             new MediaQueryData(DevicePixelRatio: 2.5),
@@ -305,7 +306,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
         Mount(root, owner);
 
         var richText = new RichText(new TextSpan("hi"));
-        var created = (RenderParagraph)richText.CreateRenderObject(context);
+        var created = (RenderParagraph)richText.CreateRenderObject(context!);
         Assert.Equal(2.5, created.DevicePixelRatio);
         root.Unmount();
     }
@@ -423,16 +424,16 @@ public sealed class UpstreamDelta347Tests : IDisposable
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void ForgetChild(Element child)

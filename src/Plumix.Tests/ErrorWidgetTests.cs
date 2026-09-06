@@ -46,7 +46,7 @@ public sealed class ErrorWidgetTests
         Assert.IsType<UniqueKey>(first.Key);
         Assert.NotEqual(first.Key, second.Key);
 
-        var box = Assert.IsType<RenderErrorBox>(first.CreateRenderObject(default));
+        var box = Assert.IsType<RenderErrorBox>(first.CreateRenderObject(null!));
         Assert.Equal(first.Message, box.Message);
     }
 

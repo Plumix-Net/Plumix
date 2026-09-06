@@ -981,7 +981,7 @@ internal sealed class ReadingOrderSortData
                     Element? parent = directionalityElement.Parent;
                     directionalityElement = parent == null
                         ? null
-                        : new BuildContext(parent).GetElementForInheritedWidgetOfExactType<Directionality>();
+                        : parent.GetElementForInheritedWidgetOfExactType<Directionality>();
                 }
             }
 

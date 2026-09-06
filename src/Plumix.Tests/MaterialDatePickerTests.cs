@@ -625,13 +625,13 @@ public sealed class MaterialDatePickerTests : IDisposable
     [Fact]
     public async Task ShowDatePicker_InputModeRejectsInvalidThenReturnsSavedDate()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
             value => captured = value,
             new Text("Home")))));
         harness.Pump(new Size(500, 700));
         var result = MaterialDatePickers.ShowDatePicker(
-            captured,
+            captured!,
             initialDate: new DateTime(2026, 3, 12),
             firstDate: new DateTime(2026, 1, 1),
             lastDate: new DateTime(2026, 12, 31),
@@ -666,13 +666,13 @@ public sealed class MaterialDatePickerTests : IDisposable
     [Fact]
     public async Task ShowDatePicker_CalendarSelectionUpdatesHeaderAndConfirmedResult()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
             value => captured = value,
             new Text("Home")))));
         harness.Pump(new Size(500, 700));
         var result = MaterialDatePickers.ShowDatePicker(
-            captured,
+            captured!,
             initialDate: new DateTime(2026, 3, 12),
             firstDate: new DateTime(2026, 3, 1),
             lastDate: new DateTime(2026, 3, 31));
@@ -771,13 +771,13 @@ public sealed class MaterialDatePickerTests : IDisposable
     [Fact]
     public async Task ShowDateRangePicker_CalendarReturnsSelectedRange()
     {
-        BuildContext captured = default;
+        BuildContext captured = null!;
         using var harness = CreateHarness(new Navigator(new BuilderPageRoute(context => new CaptureContext(
             value => captured = value,
             new Text("Home")))));
         harness.Pump(new Size(500, 700));
         var result = MaterialDatePickers.ShowDateRangePicker(
-            captured,
+            captured!,
             firstDate: new DateTime(2026, 3, 1),
             lastDate: new DateTime(2026, 3, 31),
             currentDate: new DateTime(2026, 3, 13));
@@ -978,8 +978,12 @@ public sealed class MaterialDatePickerTests : IDisposable
             public override RenderObject? RenderObject => _child?.RenderObject;
             public override Element? RenderObjectAttachingChild => _child;
             protected override void OnMount() { base.OnMount(); Rebuild(); }
-            public override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
-            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+            protected override void PerformRebuild()
+            {
+                base.PerformRebuild();
+                _child = UpdateChild(_child, Widget, Slot);
+            }
+            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
             public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;

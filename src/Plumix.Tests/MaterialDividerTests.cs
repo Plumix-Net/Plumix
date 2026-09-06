@@ -68,7 +68,7 @@ public sealed class MaterialDividerTests
         var child = new Text("wrapped");
 
         Assert.IsAssignableFrom<InheritedTheme>(theme);
-        var wrapped = Assert.IsType<DividerTheme>(theme.Wrap(default, child));
+        var wrapped = Assert.IsType<DividerTheme>(theme.Wrap(null!, child));
         Assert.Same(data, wrapped.Data);
         Assert.Same(child, wrapped.Child);
     }
@@ -425,16 +425,16 @@ public sealed class MaterialDividerTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)

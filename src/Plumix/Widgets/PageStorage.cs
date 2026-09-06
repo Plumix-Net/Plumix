@@ -47,7 +47,7 @@ public sealed class PageStorageBucket
     private static StorageEntryIdentifier ComputeIdentifier(BuildContext context)
     {
         var keys = new List<Key>();
-        if (MaybeAddKey(context.Owner.Widget, keys))
+        if (MaybeAddKey(context.Widget, keys))
         {
             context.VisitAncestorElements(element => MaybeAddKey(element.Widget, keys));
         }

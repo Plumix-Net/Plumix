@@ -220,7 +220,7 @@ internal sealed class SimpleBuilderTableViewport : TwoDimensionalViewport
             verticalAxisDirection: VerticalAxisDirection,
             @delegate: (TwoDimensionalChildBuilderDelegate)Delegate,
             mainAxis: MainAxis,
-            childManager: ChildManagerOf(context),
+            childManager: (ITwoDimensionalChildManager)context,
             scrollCacheExtent: ScrollCacheExtent,
             clipBehavior: ClipBehavior,
             applyDimensions: ApplyDimensions,
@@ -447,7 +447,7 @@ internal sealed class SimpleListTableViewport : TwoDimensionalViewport
             verticalAxisDirection: VerticalAxisDirection,
             @delegate: (TwoDimensionalChildListDelegate)Delegate,
             mainAxis: MainAxis,
-            childManager: ChildManagerOf(context),
+            childManager: (ITwoDimensionalChildManager)context,
             clipBehavior: ClipBehavior);
     }
 
@@ -588,7 +588,7 @@ internal sealed class TwoDimensionalRenderHarness : IDisposable
             _renderView = renderView;
         }
 
-        public BuildContext OwnContext => new(this);
+        public BuildContext OwnContext => this;
 
         public override RenderObject? RenderObject => _child?.RenderObject;
 
@@ -600,16 +600,16 @@ internal sealed class TwoDimensionalRenderHarness : IDisposable
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void ForgetChild(Element child)

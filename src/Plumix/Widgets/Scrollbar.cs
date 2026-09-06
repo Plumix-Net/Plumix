@@ -1268,7 +1268,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
         _fadeoutAnimationController.Forward();
 
         ScrollPosition position = _cachedController!.Position;
-        var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.Value.FindRenderObject()!;
+        var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.FindRenderObject()!;
         var details = new DragStartDetails(
             GlobalPosition: renderBox.LocalToGlobal(localPosition),
             LocalPosition: localPosition);
@@ -1318,7 +1318,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
         Point delta = direction == Axis.Horizontal
             ? new Point(primaryDelta.Value, 0)
             : new Point(0, primaryDelta.Value);
-        var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.Value.FindRenderObject()!;
+        var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.FindRenderObject()!;
 
         // Triggers updates to the ScrollPosition and the ScrollbarPainter.
         _thumbDrag.Update(new DragUpdateDetails(
@@ -1356,7 +1356,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
         Velocity adjustedVelocity = platform is TargetPlatform.IOS or TargetPlatform.Android
             ? -velocity
             : Velocity.Zero;
-        var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.Value.FindRenderObject()!;
+        var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.FindRenderObject()!;
         var details = new DragEndDetails(
             velocity: adjustedVelocity,
             primaryVelocity: direction == Axis.Horizontal
@@ -1402,7 +1402,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
                 : AxisDirection.Left;
         }
 
-        Scrollable.ScrollableState? state = Scrollable.MaybeOf(position.Context.NotificationContext!.Value);
+        Scrollable.ScrollableState? state = Scrollable.MaybeOf(position.Context.NotificationContext!);
         var intent = new ScrollIntent(direction: scrollDirection, type: ScrollIncrementType.Page);
         if (state is null)
         {
@@ -1528,7 +1528,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
     // source of the event is a trackpad or a stylus.
     private Point GlobalToScrollbar(Point offset)
     {
-        var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.Value.FindRenderObject()!;
+        var renderBox = (RenderBox)_scrollbarPainterKey.CurrentContext!.FindRenderObject()!;
         return renderBox.GlobalToLocal(offset);
     }
 

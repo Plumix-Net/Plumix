@@ -122,7 +122,7 @@ public sealed class Hero : StatefulWidget
             {
                 var heroElement = (StatefulElement)element;
                 object tag = hero.Tag;
-                var heroContext = new BuildContext(heroElement);
+                var heroContext = heroElement;
                 if (ReferenceEquals(Navigator.MaybeOf(heroContext), navigator))
                 {
                     InviteHero(heroElement, tag);

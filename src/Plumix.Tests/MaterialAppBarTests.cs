@@ -224,11 +224,11 @@ public sealed class MaterialAppBarTests
         owner.FlushBuild();
         Assert.Equal(Colors.Goldenrod, MaterialColor(root));
 
-        Dispatch(emitter!.Value, AxisDirection.Right, pixels: 12);
+        Dispatch(emitter!, AxisDirection.Right, pixels: 12);
         owner.FlushBuild();
         Assert.Equal(Colors.Goldenrod, MaterialColor(root));
 
-        Dispatch(emitter!.Value, AxisDirection.Left, pixels: 12);
+        Dispatch(emitter!, AxisDirection.Left, pixels: 12);
         owner.FlushBuild();
         Assert.Equal(Colors.Goldenrod, MaterialColor(root));
     }
@@ -247,11 +247,11 @@ public sealed class MaterialAppBarTests
         owner.FlushBuild();
 
         // AxisDirection.Up: scrolled under while content remains *after* the viewport.
-        Dispatch(emitter!.Value, AxisDirection.Up, pixels: 0);
+        Dispatch(emitter!, AxisDirection.Up, pixels: 0);
         owner.FlushBuild();
         Assert.Equal(Colors.DarkGreen, MaterialColor(root));
 
-        Dispatch(emitter!.Value, AxisDirection.Up, pixels: 100);
+        Dispatch(emitter!, AxisDirection.Up, pixels: 100);
         owner.FlushBuild();
         Assert.Equal(Colors.Goldenrod, MaterialColor(root));
     }
@@ -296,7 +296,7 @@ public sealed class MaterialAppBarTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Dispatch(emitter!.Value, AxisDirection.Down, pixels: 12);
+        Dispatch(emitter!, AxisDirection.Down, pixels: 12);
         owner.FlushBuild();
         Assert.Equal(Colors.DarkGreen, AppBarMaterialColor(root));
 
@@ -310,7 +310,7 @@ public sealed class MaterialAppBarTests
         rebuildTheme!(() => dark = true);
         owner.FlushBuild();
 
-        Dispatch(emitter!.Value, AxisDirection.Down, pixels: 0);
+        Dispatch(emitter!, AxisDirection.Down, pixels: 0);
         owner.FlushBuild();
         Assert.Equal(Colors.DarkGreen, AppBarMaterialColor(root));
 
@@ -324,7 +324,7 @@ public sealed class MaterialAppBarTests
         rebuildTheme!(() => dark = false);
         owner.FlushBuild();
 
-        Dispatch(emitter!.Value, AxisDirection.Down, pixels: 0);
+        Dispatch(emitter!, AxisDirection.Down, pixels: 0);
         owner.FlushBuild();
         Assert.Equal(Colors.Goldenrod, AppBarMaterialColor(root));
     }
@@ -657,7 +657,7 @@ public sealed class MaterialAppBarTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
         Assert.NotNull(captured);
-        return captured!.Value;
+        return captured!;
     }
 
     private static IReadOnlyList<T> FindWidgets<T>(Element? element) where T : Widget
@@ -778,16 +778,16 @@ public sealed class MaterialAppBarTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)
@@ -849,16 +849,16 @@ public sealed class MaterialAppBarTests
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

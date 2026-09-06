@@ -21,7 +21,7 @@ public sealed class SliverHeaderTests
         Assert.Null(resizing.MaxExtentPrototype);
         Assert.Null(resizing.Child);
         var resizingRenderWidget = Assert.IsType<SliverResizingHeaderRenderObjectWidget>(
-            resizing.Build(default));
+            resizing.Build(null!));
         Assert.Null(resizingRenderWidget.MinExtentPrototype);
         Assert.Null(resizingRenderWidget.MaxExtentPrototype);
         var resizingSemantics = Assert.IsType<Semantics>(resizingRenderWidget.Child);
@@ -33,7 +33,7 @@ public sealed class SliverHeaderTests
         var maxPrototype = new SizedBox(height: 120);
         var child = new SizedBox(height: 120);
         resizingRenderWidget = Assert.IsType<SliverResizingHeaderRenderObjectWidget>(
-            new SliverResizingHeader(minPrototype, maxPrototype, child).Build(default));
+            new SliverResizingHeader(minPrototype, maxPrototype, child).Build(null!));
         Assert.Same(minPrototype, Assert.IsType<ExcludeFocus>(resizingRenderWidget.MinExtentPrototype).Child);
         Assert.Same(maxPrototype, Assert.IsType<ExcludeFocus>(resizingRenderWidget.MaxExtentPrototype).Child);
         Assert.Same(child, Assert.IsType<Semantics>(resizingRenderWidget.Child).Child);
@@ -273,16 +273,16 @@ public sealed class SliverHeaderTests
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

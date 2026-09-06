@@ -2039,7 +2039,7 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
     /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement._build</c>.</remarks>
     private Widget? BuildChildWidget(int index, SliverMultiBoxAdaptorWidget widget)
     {
-        return widget.Delegate.Build(new BuildContext(this), index);
+        return widget.Delegate.Build(this, index);
     }
 
     protected override void OnMount()
@@ -2075,14 +2075,14 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
         if (!ReferenceEquals(newDelegate, oldDelegate)
             && (newDelegate.GetType() != oldDelegate.GetType() || newDelegate.ShouldRebuild(oldDelegate)))
         {
-            Rebuild();
+            PerformRebuild();
         }
     }
 
     /// <remarks>Flutter's <c>SliverMultiBoxAdaptorElement.performRebuild</c>.</remarks>
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         _currentBeforeChild = null;
         bool childrenUpdated = false;
         Debug.Assert(_currentlyUpdatingChildIndex is null);

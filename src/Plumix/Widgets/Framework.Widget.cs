@@ -134,11 +134,11 @@ public abstract class State : Diagnosticable, ITickerProvider
                     "This State no longer has a context because its Element was unmounted.");
             }
 
-            return new BuildContext(Element);
+            return Element;
         }
     }
 
-    public bool Mounted => Element is not null && Element.IsMounted;
+    public bool Mounted => Element is not null && Element.Mounted;
     protected StatefulWidget StateWidget => (StatefulWidget)Element.Widget;
 
     public virtual void InitState()
@@ -314,7 +314,7 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
         }
 
         var models = new List<InheritedElement>();
-        FindModels<TModel>(context.Owner, aspect, models);
+        FindModels<TModel>((Element)context, aspect, models);
         if (models.Count == 0)
         {
             return null;
@@ -323,7 +323,7 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
         TModel? value = null;
         foreach (var model in models)
         {
-            value = (TModel)context.Owner.DependOnInheritedElement(model, aspect);
+            value = (TModel)context.DependOnInheritedElement(model, aspect);
         }
 
         return value;

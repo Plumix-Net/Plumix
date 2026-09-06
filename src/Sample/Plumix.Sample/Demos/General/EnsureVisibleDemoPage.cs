@@ -130,7 +130,7 @@ internal sealed class EnsureVisibleDemoPageState : State
 
     private void Reveal(int index)
     {
-        if (!_itemContexts.TryGetValue(index, out BuildContext itemContext))
+        if (!_itemContexts.TryGetValue(index, out BuildContext? itemContext))
         {
             SetState(() => _status = $"Row {index} is not built yet; scroll closer to it first.");
             return;

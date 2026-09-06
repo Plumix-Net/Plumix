@@ -392,7 +392,7 @@ public sealed class MaterialScaffoldTests
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.False(state.IsDrawerOpen);
             Assert.False(state.IsEndDrawerOpen);
 
@@ -419,7 +419,7 @@ public sealed class MaterialScaffoldTests
         restarted.Mount(parent: null, newSlot: null);
         restartOwner.FlushBuild();
 
-        var restored = Scaffold.Of(restoredContext!.Value);
+        var restored = Scaffold.Of(restoredContext!);
         Assert.False(restored.IsDrawerOpen);
         Assert.True(restored.IsEndDrawerOpen);
         Assert.NotNull(FindParagraphByText(restarted.ChildElement?.RenderObject, "End drawer panel"));
@@ -445,9 +445,9 @@ public sealed class MaterialScaffoldTests
             root.Mount(parent: null, newSlot: null);
             owner.FlushBuild();
 
-            Scaffold.Of(scaffoldContext!.Value).OpenDrawer();
+            Scaffold.Of(scaffoldContext!).OpenDrawer();
             SettleDrawerAnimation(owner);
-            Assert.True(Scaffold.Of(scaffoldContext!.Value).IsDrawerOpen);
+            Assert.True(Scaffold.Of(scaffoldContext!).IsDrawerOpen);
 
             manager.DoSerialization();
             snapshot = RestorationSerialization.CopyRestorationData(rawData);
@@ -465,7 +465,7 @@ public sealed class MaterialScaffoldTests
         restarted.Mount(parent: null, newSlot: null);
         restartOwner.FlushBuild();
 
-        Assert.False(Scaffold.Of(restoredContext!.Value).IsDrawerOpen);
+        Assert.False(Scaffold.Of(restoredContext!).IsDrawerOpen);
         Assert.Null(FindParagraphByText(restarted.ChildElement?.RenderObject, "Drawer panel"));
         restarted.Unmount();
     }
@@ -500,8 +500,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(scaffoldContext.HasValue);
-        var state = Scaffold.Of(scaffoldContext!.Value);
+        Assert.True(scaffoldContext is not null);
+        var state = Scaffold.Of(scaffoldContext!);
         Assert.False(state.IsDrawerOpen);
         Assert.Null(FindParagraphByText(root.ChildElement?.RenderObject, "Drawer panel"));
 
@@ -536,8 +536,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(scaffoldContext.HasValue);
-        var state = Scaffold.Of(scaffoldContext!.Value);
+        Assert.True(scaffoldContext is not null);
+        var state = Scaffold.Of(scaffoldContext!);
         state.OpenDrawer();
         owner.FlushBuild();
 
@@ -564,8 +564,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(scaffoldContext.HasValue);
-        var state = Scaffold.Of(scaffoldContext!.Value);
+        Assert.True(scaffoldContext is not null);
+        var state = Scaffold.Of(scaffoldContext!);
         Assert.False(state.IsEndDrawerOpen);
         Assert.Null(FindParagraphByText(root.ChildElement?.RenderObject, "End drawer panel"));
 
@@ -600,8 +600,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(scaffoldContext.HasValue);
-        var state = Scaffold.Of(scaffoldContext!.Value);
+        Assert.True(scaffoldContext is not null);
+        var state = Scaffold.Of(scaffoldContext!);
         state.OpenEndDrawer();
         owner.FlushBuild();
 
@@ -628,8 +628,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(scaffoldContext.HasValue);
-        var state = Scaffold.Of(scaffoldContext!.Value);
+        Assert.True(scaffoldContext is not null);
+        var state = Scaffold.Of(scaffoldContext!);
 
         state.OpenEndDrawer();
         owner.FlushBuild();
@@ -664,14 +664,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7001, position: new Point(2, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7001, position: new Point(220, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7001, position: new Point(220, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "Start drawer panel"));
         }
@@ -705,14 +705,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7006, position: new Point(398, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7006, position: new Point(180, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7006, position: new Point(180, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "RTL start drawer panel"));
         }
@@ -744,14 +744,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7002, position: new Point(398, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7002, position: new Point(180, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7002, position: new Point(180, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsEndDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "End drawer panel"));
         }
@@ -785,14 +785,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7007, position: new Point(2, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7007, position: new Point(220, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7007, position: new Point(220, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsEndDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "RTL end drawer panel"));
         }
@@ -825,14 +825,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7010, position: new Point(2, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7010, position: new Point(220, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7010, position: new Point(220, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.False(state.IsDrawerOpen);
             Assert.Null(FindParagraphByText(harness.RenderView, "Disabled start drawer panel"));
         }
@@ -865,14 +865,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7011, position: new Point(398, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7011, position: new Point(180, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7011, position: new Point(180, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.False(state.IsEndDrawerOpen);
             Assert.Null(FindParagraphByText(harness.RenderView, "Disabled end drawer panel"));
         }
@@ -904,14 +904,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7012, position: new Point(2, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7012, position: new Point(220, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7012, position: new Point(220, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.False(state.IsDrawerOpen);
             Assert.Null(FindParagraphByText(harness.RenderView, "Desktop drawer panel"));
         }
@@ -946,14 +946,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7003, position: new Point(40, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7003, position: new Point(220, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7003, position: new Point(220, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "Padded edge drawer panel"));
         }
@@ -990,14 +990,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7008, position: new Point(360, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7008, position: new Point(180, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7008, position: new Point(180, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "RTL padded edge start drawer panel"));
         }
@@ -1034,14 +1034,14 @@ public sealed class MaterialScaffoldTests
         try
         {
             harness.Pump(new Size(400, 300));
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7009, position: new Point(40, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7009, position: new Point(220, 120));
             DispatchPointerUp(binding, harness.RenderView, pointer: 7009, position: new Point(220, 120));
             harness.Pump(new Size(400, 300));
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsEndDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "RTL padded edge end drawer panel"));
         }
@@ -1075,9 +1075,9 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             state.OpenDrawer();
             harness.Pump(size);
 
@@ -1141,9 +1141,9 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             state.OpenDrawer();
             harness.Pump(size);
 
@@ -1197,9 +1197,9 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             state.OpenDrawer();
             harness.Pump(size);
 
@@ -1252,7 +1252,7 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             var start = new DateTime(2026, 4, 12, 8, 0, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7101, position: new Point(2, 120), timestampUtc: start);
@@ -1269,7 +1269,7 @@ public sealed class MaterialScaffoldTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "Velocity drawer panel"));
         }
@@ -1304,9 +1304,9 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             state.OpenDrawer();
             harness.Pump(size);
 
@@ -1365,7 +1365,7 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7103, position: new Point(2, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7103, position: new Point(80, 120));
@@ -1377,7 +1377,7 @@ public sealed class MaterialScaffoldTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.False(state.IsDrawerOpen);
             Assert.Null(FindParagraphByText(harness.RenderView, "Cancel close drawer panel"));
         }
@@ -1412,7 +1412,7 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7104, position: new Point(2, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7104, position: new Point(220, 120));
@@ -1424,7 +1424,7 @@ public sealed class MaterialScaffoldTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "Cancel open drawer panel"));
         }
@@ -1460,7 +1460,7 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7105, position: new Point(2, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7105, position: new Point(122, 120));
@@ -1472,7 +1472,7 @@ public sealed class MaterialScaffoldTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "Themed width drawer panel"));
         }
@@ -1507,7 +1507,7 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             var start = new DateTime(2026, 4, 12, 8, 5, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7111, position: new Point(398, 120), timestampUtc: start);
@@ -1524,7 +1524,7 @@ public sealed class MaterialScaffoldTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsEndDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "End velocity drawer panel"));
         }
@@ -1559,9 +1559,9 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             state.OpenEndDrawer();
             harness.Pump(size);
 
@@ -1620,7 +1620,7 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7113, position: new Point(398, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7113, position: new Point(320, 120));
@@ -1632,7 +1632,7 @@ public sealed class MaterialScaffoldTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.False(state.IsEndDrawerOpen);
             Assert.Null(FindParagraphByText(harness.RenderView, "End cancel close drawer panel"));
         }
@@ -1667,7 +1667,7 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
             DispatchPointerDown(binding, harness.RenderView, pointer: 7114, position: new Point(398, 120));
             DispatchPointerMove(binding, harness.RenderView, pointer: 7114, position: new Point(150, 120));
@@ -1679,7 +1679,7 @@ public sealed class MaterialScaffoldTests
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.40));
             harness.Pump(size);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             Assert.True(state.IsEndDrawerOpen);
             Assert.NotNull(FindParagraphByText(harness.RenderView, "End cancel open drawer panel"));
         }
@@ -1715,9 +1715,9 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
 
             var startOpenAt = new DateTime(2026, 5, 3, 9, 0, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7121, position: new Point(2, 120), timestampUtc: startOpenAt);
@@ -1810,9 +1810,9 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
 
             var endOpenAt = new DateTime(2026, 5, 3, 9, 3, 0, DateTimeKind.Utc);
             DispatchPointerDown(binding, harness.RenderView, pointer: 7124, position: new Point(398, 120), timestampUtc: endOpenAt);
@@ -1906,9 +1906,9 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             state.OpenDrawer();
             harness.Pump(size);
 
@@ -1956,9 +1956,9 @@ public sealed class MaterialScaffoldTests
         {
             var size = new Size(400, 300);
             harness.Pump(size);
-            Assert.True(scaffoldContext.HasValue);
+            Assert.True(scaffoldContext is not null);
 
-            var state = Scaffold.Of(scaffoldContext!.Value);
+            var state = Scaffold.Of(scaffoldContext!);
             state.OpenDrawer();
             harness.Pump(size);
 
@@ -2009,12 +2009,12 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(scaffoldContext.HasValue);
+        Assert.True(scaffoldContext is not null);
         Assert.NotNull(navigatorState);
         Assert.NotNull(rootRoute);
         Assert.False(navigatorState!.CanPop);
 
-        var scaffoldState = Scaffold.Of(scaffoldContext!.Value);
+        var scaffoldState = Scaffold.Of(scaffoldContext!);
         scaffoldState.OpenDrawer();
         owner.FlushBuild();
 
@@ -2025,7 +2025,7 @@ public sealed class MaterialScaffoldTests
         Assert.False(rootRoute!.ImpliesAppBarDismissal);
         Assert.Same(rootRoute, navigatorState.CurrentRoute);
 
-        Assert.True(Navigator.MaybePop(scaffoldContext.Value));
+        Assert.True(Navigator.MaybePop(scaffoldContext));
         owner.FlushBuild();
 
         Assert.False(scaffoldState.IsDrawerOpen);
@@ -2649,8 +2649,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(rootContext.HasValue);
-        Navigator.PushNamed(rootContext!.Value, "/details");
+        Assert.True(rootContext is not null);
+        Navigator.PushNamed(rootContext!, "/details");
         owner.FlushBuild();
 
         string arrowBackGlyph = char.ConvertFromUtf32(
@@ -2744,8 +2744,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(rootContext.HasValue);
-        Navigator.PushNamed(rootContext!.Value, "/dialog");
+        Assert.True(rootContext is not null);
+        Navigator.PushNamed(rootContext!, "/dialog");
         owner.FlushBuild();
 
         string closeGlyph = char.ConvertFromUtf32(Icons.Close.CodePoint);
@@ -2800,8 +2800,8 @@ public sealed class MaterialScaffoldTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.True(rootContext.HasValue);
-        Navigator.PushNamed(rootContext!.Value, "/details");
+        Assert.True(rootContext is not null);
+        Navigator.PushNamed(rootContext!, "/details");
         owner.FlushBuild();
 
         string arrowBackGlyph = char.ConvertFromUtf32(Icons.ArrowBack.CodePoint);
@@ -4166,7 +4166,7 @@ public sealed class MaterialScaffoldTests
         root.Attach(owner);
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
-        Scaffold.Of(scaffoldContext!.Value).OpenEndDrawer();
+        Scaffold.Of(scaffoldContext!).OpenEndDrawer();
         SettleDrawerAnimation(owner);
 
         Assert.NotNull(captured);
@@ -4574,16 +4574,16 @@ public sealed class MaterialScaffoldTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void ForgetChild(Element child)
@@ -4721,16 +4721,16 @@ public sealed class MaterialScaffoldTests
             Rebuild();
         }
 
-        public override void Rebuild()
+        protected override void PerformRebuild()
         {
-            Dirty = false;
+            base.PerformRebuild();
             _child = UpdateChild(_child, Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild();
+            Rebuild(force: true);
         }
 
         public override void VisitChildren(Action<Element> visitor)

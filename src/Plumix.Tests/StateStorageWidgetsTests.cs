@@ -177,16 +177,16 @@ public sealed class StateStorageWidgetsTests
         harness.Pump(new Size(80, 40));
         Assert.Equal((1, 1), (keyABuilds, keyBBuilds));
 
-        SharedAppData.SetValue(context!.Value, "a", 2);
+        SharedAppData.SetValue(context!, "a", 2);
         harness.Pump(new Size(80, 40));
         Assert.Equal((2, 1), (keyABuilds, keyBBuilds));
         Assert.Equal((2, 10), (observedA, observedB));
 
-        SharedAppData.SetValue(context.Value, "a", 2);
+        SharedAppData.SetValue(context!, "a", 2);
         harness.Pump(new Size(80, 40));
         Assert.Equal((2, 1), (keyABuilds, keyBBuilds));
 
-        SharedAppData.SetValue(context.Value, "b", 20);
+        SharedAppData.SetValue(context!, "b", 20);
         harness.Pump(new Size(80, 40));
         Assert.Equal((2, 2), (keyABuilds, keyBBuilds));
         Assert.Equal((2, 20), (observedA, observedB));
@@ -330,9 +330,9 @@ public sealed class StateStorageWidgetsTests
                 Rebuild();
             }
 
-            public override void Rebuild()
+            protected override void PerformRebuild()
             {
-                Dirty = false;
+                base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
 
@@ -344,7 +344,7 @@ public sealed class StateStorageWidgetsTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild();
+                Rebuild(force: true);
             }
 
             public override void VisitChildren(Action<Element> visitor)

@@ -682,7 +682,7 @@ public sealed class MaterialScrollbarTests
 
         var inherited = new ScrollbarTheme(end, new SizedBox());
         Assert.IsAssignableFrom<InheritedTheme>(inherited);
-        Assert.Equal(end, Assert.IsType<ScrollbarTheme>(inherited.Wrap(default, new SizedBox())).Data);
+        Assert.Equal(end, Assert.IsType<ScrollbarTheme>(inherited.Wrap(null!, new SizedBox())).Data);
     }
 
     [Theory]
@@ -998,8 +998,8 @@ public sealed class MaterialScrollbarTests
         public override RenderObject? RenderObject => _child?.RenderObject;
         public override Element? RenderObjectAttachingChild => _child;
         protected override void OnMount() { base.OnMount(); Rebuild(); }
-        public override void Rebuild() { Dirty = false; _child = UpdateChild(_child, Widget, Slot); }
-        public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+        protected override void PerformRebuild() { base.PerformRebuild(); _child = UpdateChild(_child, Widget, Slot); }
+        public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
         public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
         public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
         public override void Unmount()
@@ -1024,8 +1024,8 @@ public sealed class MaterialScrollbarTests
         public override RenderObject? RenderObject => Child?.RenderObject;
         public override Element? RenderObjectAttachingChild => Child;
         protected override void OnMount() { base.OnMount(); Rebuild(); }
-        public override void Rebuild() { Dirty = false; Child = UpdateChild(Child, Widget, Slot); }
-        public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(); }
+        protected override void PerformRebuild() { base.PerformRebuild(); Child = UpdateChild(Child, Widget, Slot); }
+        public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
         public override void VisitChildren(Action<Element> visitor) { if (Child is not null) visitor(Child); }
         public override void ForgetChild(Element child) { if (ReferenceEquals(Child, child)) Child = null; }
         public override void Unmount() { if (Child is not null) { UnmountChild(Child); Child = null; } base.Unmount(); }

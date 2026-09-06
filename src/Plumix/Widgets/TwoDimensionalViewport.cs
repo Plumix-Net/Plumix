@@ -18,8 +18,9 @@ public delegate Widget? TwoDimensionalIndexedWidgetBuilder(BuildContext context,
 /// </summary>
 /// <remarks>
 /// Flutter's <c>TwoDimensionalViewport</c>. Subclasses build a
-/// <see cref="RenderTwoDimensionalViewport"/> and obtain its child manager with
-/// <see cref="ChildManagerOf"/>.
+/// <see cref="RenderTwoDimensionalViewport"/> and obtain its child manager by casting the build
+/// context to <see cref="ITwoDimensionalChildManager"/>, exactly as Dart writes
+/// <c>context as TwoDimensionalChildManager</c>.
 /// </remarks>
 public abstract class TwoDimensionalViewport : RenderObjectWidget
 {
@@ -85,23 +86,6 @@ public abstract class TwoDimensionalViewport : RenderObjectWidget
     /// <summary>Supplies the children of the viewport.</summary>
     public TwoDimensionalChildDelegate Delegate { get; }
 
-    /// <summary>
-    /// The child manager the viewport's render object must be given, taken from the element behind
-    /// <paramref name="context"/>.
-    /// </summary>
-    /// <remarks>
-    /// Flutter writes <c>childManager: context as TwoDimensionalChildManager</c>, which C# cannot
-    /// express because <see cref="BuildContext"/> is a struct that wraps the element rather than
-    /// being it. Call this from <see cref="CreateRenderObject"/> instead.
-    /// </remarks>
-    public static ITwoDimensionalChildManager ChildManagerOf(BuildContext context)
-    {
-        return context.Owner as ITwoDimensionalChildManager
-               ?? throw new InvalidOperationException(
-                   "TwoDimensionalViewport.ChildManagerOf() was called with a context that is not a "
-                   + "TwoDimensionalViewport's own element.");
-    }
-
     public override Element CreateElement() => new TwoDimensionalViewportElement(this);
 
     /// <inheritdoc />
@@ -150,9 +134,9 @@ internal sealed class TwoDimensionalViewportElement
         return false;
     }
 
-    public override void Rebuild()
+    protected override void PerformRebuild()
     {
-        base.Rebuild();
+        base.PerformRebuild();
         // The child list is updated during layout, since only then is it known which children will
         // be visible.
         TypedRenderObject.MarkNeedsLayout(withDelegateRebuild: true);
@@ -218,7 +202,7 @@ internal sealed class TwoDimensionalViewportElement
         Debug.Assert(DebugIsDoingLayout);
         Owner!.BuildScope(this, () =>
         {
-            Widget? newWidget = TypedWidget.Delegate.Build(new BuildContext(this), vicinity);
+            Widget? newWidget = TypedWidget.Delegate.Build(this, vicinity);
             if (newWidget is null)
             {
                 return;

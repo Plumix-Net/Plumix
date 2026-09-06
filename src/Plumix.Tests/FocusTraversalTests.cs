@@ -318,7 +318,7 @@ public sealed class FocusTraversalTests : IDisposable
         harness.Layout(ViewSize);
 
         Assert.Same(policy, FocusTraversalGroup.MaybeOfNode(node));
-        Assert.Same(policy, FocusTraversalGroup.MaybeOf(node.Context!.Value));
+        Assert.Same(policy, FocusTraversalGroup.MaybeOf(node.Context!));
     }
 
     [Fact]

@@ -157,7 +157,7 @@ internal sealed class SampleTableViewport : TwoDimensionalViewport
             verticalAxisDirection: VerticalAxisDirection,
             @delegate: (TwoDimensionalChildBuilderDelegate)Delegate,
             mainAxis: MainAxis,
-            childManager: ChildManagerOf(context),
+            childManager: (ITwoDimensionalChildManager)context,
             clipBehavior: ClipBehavior);
     }
 

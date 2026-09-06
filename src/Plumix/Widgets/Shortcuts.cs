@@ -688,7 +688,7 @@ public sealed class Shortcuts : StatefulWidget
             Element? focusedElement = FocusManager.Instance.PrimaryFocus?.AttachmentElement;
             return focusedElement == null
                 ? KeyEventResult.Ignored
-                : EffectiveManager.HandleKeypress(new BuildContext(focusedElement), @event);
+                : EffectiveManager.HandleKeypress(focusedElement, @event);
         }
     }
 }

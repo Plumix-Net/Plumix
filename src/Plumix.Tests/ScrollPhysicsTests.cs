@@ -724,16 +724,16 @@ public sealed class ScrollPhysicsTests
             position.CallForcePixels(600.0);
             Assert.Equal(600.0, position.Pixels);
             Assert.True(position.OutOfRange);
-            Assert.True(position.RecommendDeferredLoading(default));
+            Assert.True(position.RecommendDeferredLoading(null!));
             Assert.Equal(600.0, physics.LastVelocity);
 
             position.CallForcePixels(100.0);
-            Assert.True(position.RecommendDeferredLoading(default));
+            Assert.True(position.RecommendDeferredLoading(null!));
             Assert.Equal(-500.0, physics.LastVelocity);
 
             Scheduler.PumpFrameForTests();
 
-            Assert.False(position.RecommendDeferredLoading(default));
+            Assert.False(position.RecommendDeferredLoading(null!));
             Assert.Equal(0.0, physics.LastVelocity);
         }
         finally

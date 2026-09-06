@@ -783,7 +783,7 @@ public static class CupertinoSheets
         double? topGap = null,
         bool showDragHandle = false)
     {
-        ArgumentNullException.ThrowIfNull(context.Owner);
+        ArgumentNullException.ThrowIfNull(context);
         if (topGap is < 0.0 or > 0.9)
         {
             throw new ArgumentOutOfRangeException(nameof(topGap), "topGap must be between 0.0 and 0.9.");
