@@ -155,6 +155,7 @@ class SampleRoutes {
   static const String focusTraversal = '/focus-traversal';
 
   static const String trackpadPanZoom = '/trackpad-pan-zoom';
+  static const String mouseRegion = '/mouse-region';
   static const String debugPainting = '/debug-painting';
   static const String renderingDebugFlags = '/rendering-debug-flags';
   static const String flow = '/flow';

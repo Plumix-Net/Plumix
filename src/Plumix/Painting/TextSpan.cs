@@ -47,7 +47,7 @@ public class TextSpan : InlineSpan, IHitTestTarget, IMouseTrackerAnnotation
         Children = children;
         Recognizer = recognizer;
         MouseCursor = mouseCursor
-                      ?? (recognizer is null ? Widgets.MouseCursor.Defer : SystemMouseCursors.Click);
+                      ?? (recognizer is null ? UI.MouseCursor.Defer : SystemMouseCursors.Click);
         OnEnter = onEnter;
         OnExit = onExit;
         SemanticsLabel = semanticsLabel;

@@ -8,6 +8,15 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `MouseTracker`/`MouseTrackerAnnotation`: per-device enter/exit diffing per event/frame (`mouse_tracker.dart`).
+- Added `RenderMouseRegion` with `opaque`/`hitTestBehavior`/`validForMouseTracker` (`proxy_box.dart`).
+- Added `PointerAddedEvent`/`PointerRemovedEvent`, `PointerEvent.Device`/`ViewId`, enter/exit `FromMouseEvent`.
+- Breaking: `MouseCursor` is a `Plumix.UI` class with sessions over `flutter/mousecursor` (`mouse_cursor.dart`).
+- Breaking: `MouseCursorManager` is a per-tracker instance; the static push/pop cursor stack is gone.
+- Breaking: `SystemMouseCursors` carries all 36 Flutter cursors; `WidgetStateMouseCursor` gains `Textable`.
+- Breaking: `MouseRegion` is a `SingleChildRenderObjectWidget`; it no longer wraps a `Listener` (`basic.dart`).
+- Breaking: `Listener`/`RenderPointerListener` drop `onPointerEnter`/`onPointerExit`; they belong to `MouseRegion`.
+- Breaking: `InkResponse` and `TextField` take their cursor from a `MouseRegion` instead of pushing it on a stack.
 - Added `RenderAnimatedOpacity` + the shared animated-opacity mixin; `FadeTransition` is now a render-object widget.
 - Added `RenderClipRSuperellipse`/`RenderMergeSemantics`; their widgets now build them (`proxy_box.dart`).
 - Added `Semantics.ExcludeSemantics`/`BlockUserActions` and the matching render-object setters (`object.dart`).

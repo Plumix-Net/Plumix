@@ -2703,8 +2703,6 @@ public class RenderPointerListener : RenderProxyBoxWithHitTestBehavior
     public RenderPointerListener(
         Action<PointerDownEvent>? onPointerDown = null,
         Action<PointerMoveEvent>? onPointerMove = null,
-        Action<PointerEnterEvent>? onPointerEnter = null,
-        Action<PointerExitEvent>? onPointerExit = null,
         Action<PointerHoverEvent>? onPointerHover = null,
         Action<PointerUpEvent>? onPointerUp = null,
         Action<PointerCancelEvent>? onPointerCancel = null,
@@ -2717,8 +2715,6 @@ public class RenderPointerListener : RenderProxyBoxWithHitTestBehavior
     {
         OnPointerDown = onPointerDown;
         OnPointerMove = onPointerMove;
-        OnPointerEnter = onPointerEnter;
-        OnPointerExit = onPointerExit;
         OnPointerHover = onPointerHover;
         OnPointerUp = onPointerUp;
         OnPointerCancel = onPointerCancel;
@@ -2731,10 +2727,6 @@ public class RenderPointerListener : RenderProxyBoxWithHitTestBehavior
     public Action<PointerDownEvent>? OnPointerDown { get; set; }
 
     public Action<PointerMoveEvent>? OnPointerMove { get; set; }
-
-    public Action<PointerEnterEvent>? OnPointerEnter { get; set; }
-
-    public Action<PointerExitEvent>? OnPointerExit { get; set; }
 
     public Action<PointerHoverEvent>? OnPointerHover { get; set; }
 
@@ -2767,12 +2759,6 @@ public class RenderPointerListener : RenderProxyBoxWithHitTestBehavior
                 break;
             case PointerMoveEvent moveEvent:
                 OnPointerMove?.Invoke(moveEvent);
-                break;
-            case PointerEnterEvent enterEvent:
-                OnPointerEnter?.Invoke(enterEvent);
-                break;
-            case PointerExitEvent exitEvent:
-                OnPointerExit?.Invoke(exitEvent);
                 break;
             case PointerHoverEvent hoverEvent:
                 OnPointerHover?.Invoke(hoverEvent);
@@ -2816,6 +2802,181 @@ public class RenderPointerListener : RenderProxyBoxWithHitTestBehavior
                 new KeyValuePair<string, Delegate?>("signal", OnPointerSignal),
             ],
             ifEmpty: "<none>"));
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderMouseRegion)
+
+/// <summary>
+/// Calls callbacks in response to pointers entering, hovering over and exiting the region, and
+/// chooses the mouse cursor while a pointer is inside it. Dart's `RenderMouseRegion`.
+/// </summary>
+/// <remarks>
+/// Unlike <see cref="RenderPointerListener"/>, this render object is an
+/// <see cref="IMouseTrackerAnnotation"/>: enter and exit are produced by
+/// <see cref="MouseTracker"/> from the per-device annotation diff, not by ordinary event dispatch,
+/// so they also fire when the region itself appears, disappears or moves under a still pointer.
+/// </remarks>
+public class RenderMouseRegion : RenderProxyBoxWithHitTestBehavior, IMouseTrackerAnnotation
+{
+    private MouseCursor _cursor;
+    private bool _opaque;
+    private bool _validForMouseTracker;
+
+    public RenderMouseRegion(
+        PointerEnterEventListener? onEnter = null,
+        PointerHoverEventListener? onHover = null,
+        PointerExitEventListener? onExit = null,
+        MouseCursor? cursor = null,
+        bool validForMouseTracker = true,
+        bool opaque = true,
+        RenderBox? child = null,
+        Plumix.Rendering.HitTestBehavior? hitTestBehavior = Plumix.Rendering.HitTestBehavior.Opaque)
+        : base(hitTestBehavior ?? Plumix.Rendering.HitTestBehavior.Opaque, child)
+    {
+        OnEnter = onEnter;
+        OnHover = onHover;
+        OnExit = onExit;
+        _cursor = cursor ?? MouseCursor.Defer;
+        _validForMouseTracker = validForMouseTracker;
+        _opaque = opaque;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Assigning a callback does not repaint: Dart keeps these as plain fields.</remarks>
+    public PointerEnterEventListener? OnEnter { get; set; }
+
+    /// <summary>
+    /// Called when a pointer moves while inside the region. Dart's `RenderMouseRegion.onHover`;
+    /// unlike enter and exit this arrives through ordinary hit-test dispatch.
+    /// </summary>
+    public PointerHoverEventListener? OnHover { get; set; }
+
+    /// <inheritdoc />
+    public PointerExitEventListener? OnExit { get; set; }
+
+    /// <inheritdoc />
+    public MouseCursor Cursor
+    {
+        get => _cursor;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            if (_cursor.Equals(value))
+            {
+                return;
+            }
+
+            _cursor = value;
+            // A repaint is what makes the mouse tracker re-run the device update for this frame.
+            MarkNeedsPaint();
+        }
+    }
+
+    /// <summary>
+    /// Whether this region blocks the regions behind it from receiving pointers. Dart's
+    /// `RenderMouseRegion.opaque`; it changes only the result of <see cref="HitTest"/>, not whether
+    /// this object is added to the hit-test path.
+    /// </summary>
+    public bool Opaque
+    {
+        get => _opaque;
+        set
+        {
+            if (_opaque == value)
+            {
+                return;
+            }
+
+            _opaque = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    /// <summary>
+    /// How this region behaves during hit testing. Dart's `RenderMouseRegion.hitTestBehavior`;
+    /// setting it to null restores <see cref="HitTestBehavior.Opaque"/>, so the getter is never null.
+    /// </summary>
+    public Plumix.Rendering.HitTestBehavior? HitTestBehavior
+    {
+        get => Behavior;
+        set
+        {
+            Plumix.Rendering.HitTestBehavior newValue = value ?? Plumix.Rendering.HitTestBehavior.Opaque;
+            if (Behavior == newValue)
+            {
+                return;
+            }
+
+            Behavior = newValue;
+            MarkNeedsPaint();
+        }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Dart's `RenderMouseRegion.validForMouseTracker` has no setter: it is true only while the
+    /// render object is attached, so a region detached between the hit test and the callback is
+    /// skipped instead of firing on a dead node.
+    /// </remarks>
+    public bool ValidForMouseTracker => _validForMouseTracker;
+
+    /// <inheritdoc />
+    /// <remarks>Dart's `RenderMouseRegion.attach`, which runs after `super.attach`.</remarks>
+    protected override void OnAttach()
+    {
+        base.OnAttach();
+        _validForMouseTracker = true;
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Dart's `RenderMouseRegion.detach` clears the flag before `super.detach`, because the mouse
+    /// tracker may still be dispatching an update when this render object is detached.
+    /// </remarks>
+    protected override void OnDetach()
+    {
+        _validForMouseTracker = false;
+        base.OnDetach();
+    }
+
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderMouseRegion.computeSizeForNoChild</c>.</remarks>
+    protected override Size ComputeSizeForNoChild(BoxConstraints constraints) => constraints.Biggest;
+
+    /// <inheritdoc />
+    public override bool HitTest(BoxHitTestResult result, Point position)
+        => base.HitTest(result, position) && _opaque;
+
+    /// <inheritdoc />
+    public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
+    {
+        DebugHandleEvent(@event, entry);
+        if (@event is PointerHoverEvent hoverEvent)
+        {
+            OnHover?.Invoke(hoverEvent);
+        }
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new FlagsSummary<Delegate>(
+            "listeners",
+            [
+                new KeyValuePair<string, Delegate?>("enter", OnEnter),
+                new KeyValuePair<string, Delegate?>("hover", OnHover),
+                new KeyValuePair<string, Delegate?>("exit", OnExit),
+            ],
+            ifEmpty: "<none>"));
+        properties.Add(new DiagnosticsProperty<MouseCursor>("cursor", Cursor, defaultValue: MouseCursor.Defer));
+        properties.Add(new DiagnosticsProperty<bool>("opaque", Opaque, defaultValue: true));
+        properties.Add(new FlagProperty(
+            "validForMouseTracker",
+            ValidForMouseTracker,
+            defaultValue: true,
+            ifFalse: "invalid for MouseTracker"));
     }
 }
 

@@ -138,16 +138,15 @@ public sealed class MaterialInkResponseTests : IDisposable
                 child: new SizedBox(width: 80.0, height: 48.0))));
         harness.Pump(new Size(120.0, 80.0));
 
-        RenderPointerListener hoverListener = FindDescendants<RenderPointerListener>(harness.RenderView)
-            .Single(listener => listener.OnPointerEnter is not null && listener.OnPointerExit is not null);
-        hoverListener.HandleEvent(
+        RenderMouseRegion hoverListener = FindDescendants<RenderMouseRegion>(harness.RenderView)
+            .Single(listener => listener.OnEnter is not null && listener.OnExit is not null);
+        hoverListener.OnEnter?.Invoke(
             new PointerEnterEvent(
                 803,
                 PointerDeviceKind.Mouse,
                 new Point(10.0, 10.0),
                 PointerButtons.None,
-                DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10.0, 10.0)));
+                DateTime.UtcNow));
         double hoverStartSeconds = Scheduler.CurrentSeconds;
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(hoverStartSeconds));
         harness.Pump(new Size(120.0, 80.0));
@@ -541,11 +540,10 @@ public sealed class MaterialInkResponseTests : IDisposable
             child: new SizedBox(width: 80, height: 48)));
         harness.Pump(new Size(120, 80));
 
-        var hoverListener = FindDescendants<RenderPointerListener>(harness.RenderView)
-            .Single(listener => listener.OnPointerEnter is not null && listener.OnPointerExit is not null);
-        hoverListener.HandleEvent(
-            new PointerEnterEvent(703, PointerDeviceKind.Mouse, new Point(10, 10), PointerButtons.None, DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 10)));
+        RenderMouseRegion hoverListener = FindDescendants<RenderMouseRegion>(harness.RenderView)
+            .Single(listener => listener.OnEnter is not null && listener.OnExit is not null);
+        hoverListener.OnEnter?.Invoke(new PointerEnterEvent(
+            703, PointerDeviceKind.Mouse, new Point(10, 10), PointerButtons.None, DateTime.UtcNow));
         harness.Pump(new Size(120, 80));
         Assert.True(controller.Value.HasFlag(MaterialState.Hovered));
         Assert.Equal(hovered, Assert.Single(FindDescendants<RenderInkResponsePaint>(harness.RenderView)).HighlightColor);

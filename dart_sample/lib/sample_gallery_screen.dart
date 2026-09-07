@@ -144,6 +144,7 @@ import 'demos/general/scrollbar_demo_page.dart';
 import 'demos/general/stack_demo_page.dart';
 import 'demos/general/state_storage_demo_page.dart';
 import 'demos/general/stateful_builder_lookup_boundary_demo_page.dart';
+import 'demos/general/mouse_region_demo_page.dart';
 import 'demos/general/navigation_pop_demo_page.dart';
 import 'demos/cupertino/action_sheet_demo_page.dart';
 import 'demos/cupertino/route_demo_page.dart';
@@ -1023,6 +1024,13 @@ class SampleGalleryScreen extends StatelessWidget {
       title: 'Trackpad pan/zoom',
       subtitle: 'PointerPanZoom start/update/end through Listener',
       builder: () => const TrackpadPanZoomDemoPage(),
+    ),
+    SampleRouteDefinition(
+      routeName: SampleRoutes.mouseRegion,
+      title: 'MouseRegion + MouseTracker',
+      subtitle:
+          'per-device enter/exit diffing, hit-test cursor precedence, opaque stacking',
+      builder: () => const MouseRegionDemoPage(),
     ),
     SampleRouteDefinition(
       routeName: SampleRoutes.debugPainting,

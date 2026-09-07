@@ -5,6 +5,7 @@ using Plumix.Foundation;
 using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.Widgets;
+using Plumix.UI;
 
 namespace Plumix.Material;
 

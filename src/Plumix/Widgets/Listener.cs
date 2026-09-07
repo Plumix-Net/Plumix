@@ -17,8 +17,6 @@ public sealed class Listener : SingleChildRenderObjectWidget
         Widget? child = null,
         Action<PointerDownEvent>? onPointerDown = null,
         Action<PointerMoveEvent>? onPointerMove = null,
-        Action<PointerEnterEvent>? onPointerEnter = null,
-        Action<PointerExitEvent>? onPointerExit = null,
         Action<PointerHoverEvent>? onPointerHover = null,
         Action<PointerUpEvent>? onPointerUp = null,
         Action<PointerCancelEvent>? onPointerCancel = null,
@@ -31,8 +29,6 @@ public sealed class Listener : SingleChildRenderObjectWidget
     {
         OnPointerDown = onPointerDown;
         OnPointerMove = onPointerMove;
-        OnPointerEnter = onPointerEnter;
-        OnPointerExit = onPointerExit;
         OnPointerHover = onPointerHover;
         OnPointerUp = onPointerUp;
         OnPointerCancel = onPointerCancel;
@@ -46,10 +42,6 @@ public sealed class Listener : SingleChildRenderObjectWidget
     public Action<PointerDownEvent>? OnPointerDown { get; }
 
     public Action<PointerMoveEvent>? OnPointerMove { get; }
-
-    public Action<PointerEnterEvent>? OnPointerEnter { get; }
-
-    public Action<PointerExitEvent>? OnPointerExit { get; }
 
     public Action<PointerHoverEvent>? OnPointerHover { get; }
 
@@ -75,8 +67,6 @@ public sealed class Listener : SingleChildRenderObjectWidget
         return new RenderPointerListener(
             onPointerDown: OnPointerDown,
             onPointerMove: OnPointerMove,
-            onPointerEnter: OnPointerEnter,
-            onPointerExit: OnPointerExit,
             onPointerHover: OnPointerHover,
             onPointerUp: OnPointerUp,
             onPointerCancel: OnPointerCancel,
@@ -92,8 +82,6 @@ public sealed class Listener : SingleChildRenderObjectWidget
         var listener = (RenderPointerListener)renderObject;
         listener.OnPointerDown = OnPointerDown;
         listener.OnPointerMove = OnPointerMove;
-        listener.OnPointerEnter = OnPointerEnter;
-        listener.OnPointerExit = OnPointerExit;
         listener.OnPointerHover = OnPointerHover;
         listener.OnPointerUp = OnPointerUp;
         listener.OnPointerCancel = OnPointerCancel;

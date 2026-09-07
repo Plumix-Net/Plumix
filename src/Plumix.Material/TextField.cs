@@ -222,7 +222,6 @@ public sealed class TextField : StatefulWidget
         private bool _ownsController;
         private bool _ownsFocusNode;
         private bool _hovering;
-        private IDisposable? _cursorHandle;
         private MouseCursor? _resolvedMouseCursor;
         private TextField Current => (TextField)StateWidget;
 
@@ -371,11 +370,12 @@ public sealed class TextField : StatefulWidget
                 onSecondaryTap: () => _editableTextKey.CurrentState?.ShowToolbar(),
                 behavior: HitTestBehavior.Translucent,
                 child: result);
-            result = new Listener(
-                onPointerEnter: _ => BeginHover(),
-                onPointerExit: _ => EndHover(),
-                onPointerHover: _ => BeginHover(),
-                behavior: HitTestBehavior.Translucent,
+            // Dart's `_TextFieldState.build` wraps the field in a `MouseRegion` that carries the
+            // resolved cursor and reports hover; the cursor belongs to the region.
+            result = new MouseRegion(
+                cursor: _resolvedMouseCursor ?? SystemMouseCursors.Text,
+                onEnter: _ => BeginHover(),
+                onExit: _ => EndHover(),
                 child: result);
             if (Current.OnTapOutside is not null)
             {
@@ -454,13 +454,9 @@ public sealed class TextField : StatefulWidget
         private void BeginHover()
         {
             if (!_hovering) SetState(() => _hovering = true);
-            bool enabled = Current.Enabled ?? Current.Decoration?.Enabled ?? true;
-            _cursorHandle ??= MouseCursorManager.PushCursor(
-                _resolvedMouseCursor ?? (enabled ? SystemMouseCursors.Text : SystemMouseCursors.Basic));
         }
         private void EndHover()
         {
-            _cursorHandle?.Dispose(); _cursorHandle = null;
             if (_hovering && Mounted) SetState(() => _hovering = false); else _hovering = false;
         }
         private void Changed() { if (Mounted) SetState(() => { }); }

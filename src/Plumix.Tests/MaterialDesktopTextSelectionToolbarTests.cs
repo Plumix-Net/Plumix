@@ -16,13 +16,11 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
     public MaterialDesktopTextSelectionToolbarTests()
     {
         Scheduler.ResetForTests();
-        MouseCursorManager.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = null;
     }
 
     public void Dispose()
     {
-        MouseCursorManager.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = null;
         Scheduler.ResetForTests();
     }
@@ -127,19 +125,12 @@ public sealed class MaterialDesktopTextSelectionToolbarTests : IDisposable
         Assert.True(actionNode.PerformAction(SemanticsActions.Tap));
         Assert.Equal(1, taps);
 
-        using IDisposable outerCursor = MouseCursorManager.PushCursor(SystemMouseCursors.Click);
-        RenderPointerListener listener = Assert.Single(
-            FindDescendants<RenderPointerListener>(harness.RenderView),
-            value => value.OnPointerEnter is not null && value.OnPointerExit is not null);
-        listener.HandleEvent(
-            new PointerEnterEvent(
-                1,
-                PointerDeviceKind.Mouse,
-                new Point(10, 10),
-                PointerButtons.None,
-                DateTime.UtcNow),
-            new BoxHitTestEntry(listener, new Point(10, 10)));
-        Assert.Equal(SystemMouseCursors.Basic, MouseCursorManager.CurrentCursor);
+        // The button's `ButtonStyle.mouseCursor` is the basic cursor, so its mouse region carries
+        // it rather than the ink response's `clickable` default.
+        RenderMouseRegion listener = Assert.Single(
+            FindDescendants<RenderMouseRegion>(harness.RenderView),
+            value => value.OnEnter is not null && value.OnExit is not null);
+        Assert.Equal(SystemMouseCursors.Basic, listener.Cursor);
     }
 
     [Fact]

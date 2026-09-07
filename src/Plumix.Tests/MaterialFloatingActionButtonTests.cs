@@ -251,98 +251,48 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButton_DefaultMouseCursor_UsesAdaptiveDesktopBasicOnHover()
     {
-        MouseCursorManager.ResetForTests();
-        try
-        {
-            var owner = new BuildOwner();
-            var root = new TestRootElement(
-                new Theme(
-                    data: ThemeData.Light,
-                    child: new FloatingActionButton(
-                        child: new Icon(Icons.Add),
-                        onPressed: () => { })));
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light,
+                child: new FloatingActionButton(
+                    child: new Icon(Icons.Add),
+                    onPressed: () => { })));
 
-            root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
-            owner.FlushBuild();
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
 
-            Assert.Equal(SystemMouseCursors.Basic, MouseCursorManager.CurrentCursor);
-
-            var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(hoverListener);
-            hoverListener!.HandleEvent(
-                new PointerEnterEvent(
-                    pointer: 702,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 8),
-                    buttons: PointerButtons.None,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-            owner.FlushBuild();
-
-            Assert.Equal(SystemMouseCursors.Basic, MouseCursorManager.CurrentCursor);
-
-            hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(hoverListener);
-            hoverListener!.HandleEvent(
-                new PointerExitEvent(
-                    pointer: 702,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(150, 8),
-                    buttons: PointerButtons.None,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(hoverListener, new Point(150, 8)));
-            owner.FlushBuild();
-
-            Assert.Equal(SystemMouseCursors.Basic, MouseCursorManager.CurrentCursor);
-        }
-        finally
-        {
-            MouseCursorManager.ResetForTests();
-        }
+        // `_EffectiveMouseCursor` falls through to `WidgetStateMouseCursor.adaptiveClickable`, which
+        // is the basic cursor off the web.
+        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(hoverListener);
+        Assert.Equal(SystemMouseCursors.Basic, hoverListener!.Cursor);
     }
 
     [Fact]
     public void FloatingActionButton_ThemeMouseCursor_UsedWhenWidgetMouseCursorIsNull()
     {
-        MouseCursorManager.ResetForTests();
-        try
-        {
-            var themeCursor = new SystemMouseCursor("themeCursor");
-            var owner = new BuildOwner();
-            var root = new TestRootElement(
-                new Theme(
-                    data: ThemeData.Light with
-                    {
-                        FloatingActionButtonTheme = new FloatingActionButtonThemeData(
-                            MouseCursor: MaterialStateProperty<MouseCursor?>.All(themeCursor)),
-                    },
-                    child: new FloatingActionButton(
-                        child: new Icon(Icons.Add),
-                        onPressed: () => { })));
+        var themeCursor = new SystemMouseCursor("themeCursor");
+        var owner = new BuildOwner();
+        var root = new TestRootElement(
+            new Theme(
+                data: ThemeData.Light with
+                {
+                    FloatingActionButtonTheme = new FloatingActionButtonThemeData(
+                        MouseCursor: MaterialStateProperty<MouseCursor?>.All(themeCursor)),
+                },
+                child: new FloatingActionButton(
+                    child: new Icon(Icons.Add),
+                    onPressed: () => { })));
 
-            root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
-            owner.FlushBuild();
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
 
-            var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
-            Assert.NotNull(hoverListener);
-            hoverListener!.HandleEvent(
-                new PointerEnterEvent(
-                    pointer: 703,
-                    kind: PointerDeviceKind.Mouse,
-                    position: new Point(10, 8),
-                    buttons: PointerButtons.None,
-                    timestampUtc: DateTime.UtcNow),
-                new BoxHitTestEntry(hoverListener, new Point(10, 8)));
-            owner.FlushBuild();
-
-            Assert.Equal(themeCursor, MouseCursorManager.CurrentCursor);
-        }
-        finally
-        {
-            MouseCursorManager.ResetForTests();
-        }
+        var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
+        Assert.NotNull(hoverListener);
+        Assert.Equal(themeCursor, hoverListener!.Cursor);
     }
 
     [Fact]
@@ -782,14 +732,13 @@ public sealed class MaterialFloatingActionButtonTests
 
         var hoverListener = FindHoverPointerListener(harness.RenderView);
         Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
+        hoverListener!.OnEnter?.Invoke(
             new PointerEnterEvent(
                 pointer: 700,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(10, 8),
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
+                timestampUtc: DateTime.UtcNow));
         // Dart's `Material` animates elevation over `animationDuration`, so the shadow only reaches
         // `hoverElevation` once the implicit animation has settled.
         harness.Settle(size, TimeSpan.FromSeconds(1));
@@ -1076,21 +1025,21 @@ public sealed class MaterialFloatingActionButtonTests
         return result;
     }
 
-    private static RenderPointerListener? FindHoverPointerListener(RenderObject? root)
+    private static RenderMouseRegion? FindHoverPointerListener(RenderObject? root)
     {
         if (root is null)
         {
             return null;
         }
 
-        if (root is RenderPointerListener listener
-            && listener.OnPointerEnter != null
-            && listener.OnPointerExit != null)
+        if (root is RenderMouseRegion listener
+            && listener.OnEnter != null
+            && listener.OnExit != null)
         {
             return listener;
         }
 
-        RenderPointerListener? result = null;
+        RenderMouseRegion? result = null;
         root.VisitChildren(child =>
         {
             if (result is not null)
@@ -1113,9 +1062,7 @@ public sealed class MaterialFloatingActionButtonTests
         if (root is RenderPointerListener listener
             && listener.OnPointerDown != null
             && listener.OnPointerUp == null
-            && listener.OnPointerCancel == null
-            && listener.OnPointerEnter == null
-            && listener.OnPointerExit == null)
+            && listener.OnPointerCancel == null)
         {
             return listener;
         }

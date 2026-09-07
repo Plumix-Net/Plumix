@@ -607,14 +607,13 @@ public sealed class MaterialButtonsTests
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
+        hoverListener!.OnEnter?.Invoke(
             new PointerEnterEvent(
                 pointer: 212,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(10, 8),
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
+                timestampUtc: DateTime.UtcNow));
         owner.FlushBuild();
 
         root.Update(BuildButton(onPressed: null));
@@ -625,14 +624,13 @@ public sealed class MaterialButtonsTests
 
         hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
+        hoverListener!.OnExit?.Invoke(
             new PointerExitEvent(
                 pointer: 212,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(130, 90),
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(130, 90)));
+                timestampUtc: DateTime.UtcNow));
         owner.FlushBuild();
 
         Assert.Equal([true, false], hoverChanges);
@@ -2480,14 +2478,13 @@ public sealed class MaterialButtonsTests
 
         var hoverListener = FindHoverPointerListener(renderRoot);
         Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
+        hoverListener!.OnEnter?.Invoke(
             new PointerEnterEvent(
                 pointer: 104,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(10, 8),
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(10, 8)));
+                timestampUtc: DateTime.UtcNow));
         owner.FlushBuild();
 
         var hoveredDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3848,14 +3845,13 @@ public sealed class MaterialButtonsTests
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
+        hoverListener!.OnEnter?.Invoke(
             new PointerEnterEvent(
                 pointer: 25,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(11, 10),
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(11, 10)));
+                timestampUtc: DateTime.UtcNow));
 
         owner.FlushBuild();
 
@@ -4512,14 +4508,13 @@ public sealed class MaterialButtonsTests
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
+        hoverListener!.OnEnter?.Invoke(
             new PointerEnterEvent(
                 pointer: 1,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(8, 8),
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(8, 8)));
+                timestampUtc: DateTime.UtcNow));
 
         owner.FlushBuild();
 
@@ -4529,14 +4524,13 @@ public sealed class MaterialButtonsTests
 
         hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
+        hoverListener!.OnExit?.Invoke(
             new PointerExitEvent(
                 pointer: 1,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(120, 8),
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(120, 8)));
+                timestampUtc: DateTime.UtcNow));
 
         owner.FlushBuild();
 
@@ -4611,14 +4605,13 @@ public sealed class MaterialButtonsTests
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
+        hoverListener!.OnEnter?.Invoke(
             new PointerEnterEvent(
                 pointer: 19,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(12, 9),
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(12, 9)));
+                timestampUtc: DateTime.UtcNow));
 
         owner.FlushBuild();
 
@@ -4628,14 +4621,13 @@ public sealed class MaterialButtonsTests
 
         hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
-        hoverListener!.HandleEvent(
+        hoverListener!.OnExit?.Invoke(
             new PointerExitEvent(
                 pointer: 19,
                 kind: PointerDeviceKind.Mouse,
                 position: new Point(120, 9),
                 buttons: PointerButtons.None,
-                timestampUtc: DateTime.UtcNow),
-            new BoxHitTestEntry(hoverListener, new Point(120, 9)));
+                timestampUtc: DateTime.UtcNow));
 
         owner.FlushBuild();
 
@@ -5895,13 +5887,21 @@ public sealed class MaterialButtonsTests
 
     private static void HoverButton(WidgetRenderHarness harness, bool enter, int pointer = 91)
     {
-        RenderPointerListener? listener = FindHoverPointerListener(harness.RenderView);
+        RenderMouseRegion? listener = FindHoverPointerListener(harness.RenderView);
         Assert.NotNull(listener);
         var position = enter ? new Point(20, 20) : new Point(400, 400);
-        PointerEvent hover = enter
-            ? new PointerEnterEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, DateTime.UtcNow)
-            : new PointerExitEvent(pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, DateTime.UtcNow);
-        listener!.HandleEvent(hover, new BoxHitTestEntry(listener, position));
+        // Enter and exit come from the mouse tracker's annotation diff, not from event dispatch.
+        if (enter)
+        {
+            listener!.OnEnter?.Invoke(new PointerEnterEvent(
+                pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, DateTime.UtcNow));
+        }
+        else
+        {
+            listener!.OnExit?.Invoke(new PointerExitEvent(
+                pointer, PointerDeviceKind.Mouse, position, PointerButtons.None, DateTime.UtcNow));
+        }
+
         harness.Pump(ButtonHarnessSize);
     }
 
@@ -5990,21 +5990,21 @@ public sealed class MaterialButtonsTests
         return result;
     }
 
-    private static RenderPointerListener? FindHoverPointerListener(RenderObject? root)
+    private static RenderMouseRegion? FindHoverPointerListener(RenderObject? root)
     {
         if (root is null)
         {
             return null;
         }
 
-        if (root is RenderPointerListener listener
-            && listener.OnPointerEnter != null
-            && listener.OnPointerExit != null)
+        if (root is RenderMouseRegion listener
+            && listener.OnEnter != null
+            && listener.OnExit != null)
         {
             return listener;
         }
 
-        RenderPointerListener? result = null;
+        RenderMouseRegion? result = null;
         root.VisitChildren(child =>
         {
             if (result is not null)
@@ -6028,9 +6028,7 @@ public sealed class MaterialButtonsTests
         if (root is RenderPointerListener listener
             && listener.OnPointerDown != null
             && listener.OnPointerUp == null
-            && listener.OnPointerCancel == null
-            && listener.OnPointerEnter == null
-            && listener.OnPointerExit == null)
+            && listener.OnPointerCancel == null)
         {
             return listener;
         }

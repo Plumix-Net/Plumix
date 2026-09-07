@@ -406,10 +406,13 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 
 ### Gestures and Input
 
-- Goal: pointer dispatch, hit testing, arena resolution, recognizer callbacks.
+- Goal: pointer dispatch, hit testing, arena resolution, recognizer callbacks, mouse tracking.
 - Read First:
   - `src/Plumix/UI/PointerEvents.cs`
   - `src/Plumix/Gestures/GestureBinding.cs`
+  - `src/Plumix/Rendering/MouseTracker.cs` (enter/exit diffing and cursor selection)
+  - `src/Plumix/UI/MouseCursor.cs`
+  - `src/Plumix/Widgets/MouseRegion.cs`
   - `src/Plumix/Gestures/GestureArena.cs`
   - `src/Plumix/Widgets/Gestures.cs`
   - `src/Plumix/Widgets/DragTarget.cs`
@@ -422,6 +425,8 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Rendering/Object.HitTest.cs`
 - Primary Tests:
   - `src/Plumix.Tests/GesturePipelineTests.cs`
+  - `src/Plumix.Tests/MouseTrackerTests.cs`
+  - `src/Plumix.Tests/MouseRegionTests.cs`
   - `src/Plumix.Tests/DragTargetTests.cs`
   - `src/Plumix.Tests/TapRegionTests.cs`
 

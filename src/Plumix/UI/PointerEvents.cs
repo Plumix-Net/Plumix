@@ -25,6 +25,8 @@ public enum PointerButtons
 
 public abstract class PointerEvent
 {
+    private readonly int? _device;
+
     protected PointerEvent(
         int pointer,
         PointerDeviceKind kind,
@@ -45,6 +47,28 @@ public abstract class PointerEvent
     }
 
     public int Pointer { get; }
+
+    /// <summary>
+    /// Unique identifier for the pointing device that produced this event. Dart's
+    /// `PointerEvent.device`; <see cref="Plumix.Rendering.MouseTracker"/> keys its per-device state
+    /// on it, so two mice hovering at once keep separate enter/exit and cursor state.
+    /// </summary>
+    /// <remarks>
+    /// Dart defaults it to 0 because its engine allocates pointer ids per gesture and device ids per
+    /// device. Plumix's hosts get one identifier per device from the platform and pass it as
+    /// <see cref="Pointer"/>, so an event that does not set this reports its pointer as its device.
+    /// </remarks>
+    public int Device
+    {
+        get => _device ?? Pointer;
+        init => _device = value;
+    }
+
+    /// <summary>
+    /// The identifier of the view this event came from. Dart's `PointerEvent.viewId`; the mouse
+    /// tracker stores it so a frame-driven re-hit-test goes to the same view the pointer is over.
+    /// </summary>
+    public int ViewId { get; init; }
 
     public PointerDeviceKind Kind { get; }
 
@@ -171,6 +195,16 @@ public abstract class PointerEvent
         return kind;
     }
 
+    /// <summary>
+    /// Copies <paramref name="source"/>'s delta onto this freshly built event. The synthesized
+    /// enter/exit events Dart builds with `fromMouseEvent` carry the triggering event's delta.
+    /// </summary>
+    private protected void CopyDeltaFrom(PointerEvent source)
+    {
+        Delta = source.Delta;
+        LocalDelta = source.Delta;
+    }
+
     internal PointerEvent WithDelta(Point delta)
     {
         var clone = (PointerEvent)MemberwiseClone();
@@ -217,6 +251,43 @@ public sealed class PointerMoveEvent : PointerEvent
     }
 }
 
+/// <summary>
+/// The device has started tracking the pointer. Dart's `PointerAddedEvent`: for a mouse this is the
+/// moment the pointer becomes able to produce hover events, and it is what makes
+/// <see cref="Plumix.Rendering.MouseTracker.MouseIsConnected"/> true.
+/// </summary>
+public sealed class PointerAddedEvent : PointerEvent
+{
+    public PointerAddedEvent(
+        int pointer,
+        PointerDeviceKind kind,
+        Point position,
+        PointerButtons buttons = PointerButtons.None,
+        DateTime timestampUtc = default)
+        : base(pointer, kind, position, buttons, down: false, timestampUtc)
+    {
+        Pressure = 0.0;
+    }
+}
+
+/// <summary>
+/// The device is no longer tracking the pointer. Dart's `PointerRemovedEvent`: the mouse tracker
+/// treats it as an exit from every annotation and drops the device's cursor session.
+/// </summary>
+public sealed class PointerRemovedEvent : PointerEvent
+{
+    public PointerRemovedEvent(
+        int pointer,
+        PointerDeviceKind kind,
+        Point position,
+        PointerButtons buttons = PointerButtons.None,
+        DateTime timestampUtc = default)
+        : base(pointer, kind, position, buttons, down: false, timestampUtc)
+    {
+        Pressure = 0.0;
+    }
+}
+
 public sealed class PointerHoverEvent : PointerEvent
 {
     public PointerHoverEvent(
@@ -237,9 +308,37 @@ public sealed class PointerEnterEvent : PointerEvent
         PointerDeviceKind kind,
         Point position,
         PointerButtons buttons,
-        DateTime timestampUtc)
-        : base(pointer, kind, position, buttons, down: false, timestampUtc)
+        DateTime timestampUtc,
+        bool down = false)
+        : base(pointer, kind, position, buttons, down, timestampUtc)
     {
+        Pressure = 0.0;
+    }
+
+    /// <summary>
+    /// Creates an enter event from the mouse event that triggered the region change. Dart's
+    /// `PointerEnterEvent.fromMouseEvent`: every field is copied except the pressure, which is
+    /// forced to zero, and the result is transformed by the source event's own transform.
+    /// </summary>
+    public static PointerEnterEvent FromMouseEvent(PointerEvent @event)
+    {
+        ArgumentNullException.ThrowIfNull(@event);
+        var result = new PointerEnterEvent(
+            pointer: @event.Pointer,
+            kind: @event.Kind,
+            position: @event.Position,
+            buttons: @event.Buttons,
+            timestampUtc: @event.TimestampUtc,
+            down: @event.Down)
+        {
+            Device = @event.Device,
+            ViewId = @event.ViewId,
+            PressureMin = @event.PressureMin,
+            PressureMax = @event.PressureMax,
+            Synthesized = @event.Synthesized,
+        };
+        result.CopyDeltaFrom(@event);
+        return (PointerEnterEvent)result.Transformed(@event.Transform);
     }
 }
 
@@ -250,9 +349,36 @@ public sealed class PointerExitEvent : PointerEvent
         PointerDeviceKind kind,
         Point position,
         PointerButtons buttons,
-        DateTime timestampUtc)
-        : base(pointer, kind, position, buttons, down: false, timestampUtc)
+        DateTime timestampUtc,
+        bool down = false)
+        : base(pointer, kind, position, buttons, down, timestampUtc)
     {
+        Pressure = 0.0;
+    }
+
+    /// <summary>
+    /// Creates an exit event from the mouse event that triggered the region change. Dart's
+    /// `PointerExitEvent.fromMouseEvent`; see <see cref="PointerEnterEvent.FromMouseEvent"/>.
+    /// </summary>
+    public static PointerExitEvent FromMouseEvent(PointerEvent @event)
+    {
+        ArgumentNullException.ThrowIfNull(@event);
+        var result = new PointerExitEvent(
+            pointer: @event.Pointer,
+            kind: @event.Kind,
+            position: @event.Position,
+            buttons: @event.Buttons,
+            timestampUtc: @event.TimestampUtc,
+            down: @event.Down)
+        {
+            Device = @event.Device,
+            ViewId = @event.ViewId,
+            PressureMin = @event.PressureMin,
+            PressureMax = @event.PressureMax,
+            Synthesized = @event.Synthesized,
+        };
+        result.CopyDeltaFrom(@event);
+        return (PointerExitEvent)result.Transformed(@event.Transform);
     }
 }
 

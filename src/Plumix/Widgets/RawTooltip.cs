@@ -669,35 +669,26 @@ internal sealed class RawTooltipPositionLayoutDelegate : SingleChildLayoutDelega
     }
 }
 
-internal sealed class ExclusiveMouseRegion : SingleChildRenderObjectWidget
+/// <summary>
+/// A <see cref="MouseRegion"/> that only the innermost one under the pointer receives events for.
+/// Dart's `_ExclusiveMouseRegion` in `tooltip.dart`.
+/// </summary>
+internal sealed class ExclusiveMouseRegion : MouseRegion
 {
     public ExclusiveMouseRegion(
-        Action<PointerEnterEvent>? onEnter = null,
-        Action<PointerExitEvent>? onExit = null,
-        Widget? child = null) : base(child)
+        PointerEnterEventListener? onEnter = null,
+        PointerExitEventListener? onExit = null,
+        Widget? child = null) : base(child: child, onEnter: onEnter, onExit: onExit)
     {
-        OnEnter = onEnter;
-        OnExit = onExit;
     }
-
-    public Action<PointerEnterEvent>? OnEnter { get; }
-
-    public Action<PointerExitEvent>? OnExit { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
         return new RenderExclusiveMouseRegion(OnEnter, OnExit);
     }
-
-    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
-    {
-        var region = (RenderExclusiveMouseRegion)renderObject;
-        region.OnPointerEnter = OnEnter;
-        region.OnPointerExit = OnExit;
-    }
 }
 
-internal sealed class RenderExclusiveMouseRegion : RenderPointerListener
+internal sealed class RenderExclusiveMouseRegion : RenderMouseRegion
 {
     [ThreadStatic]
     private static bool _isOutermostMouseRegion;
@@ -706,10 +697,10 @@ internal sealed class RenderExclusiveMouseRegion : RenderPointerListener
     private static bool _foundInnermostMouseRegion;
 
     public RenderExclusiveMouseRegion(
-        Action<PointerEnterEvent>? onEnter,
-        Action<PointerExitEvent>? onExit) : base(
-        onPointerEnter: onEnter,
-        onPointerExit: onExit)
+        PointerEnterEventListener? onEnter,
+        PointerExitEventListener? onExit) : base(
+        onEnter: onEnter,
+        onExit: onExit)
     {
     }
 
@@ -726,7 +717,8 @@ internal sealed class RenderExclusiveMouseRegion : RenderPointerListener
         if (position.X >= 0 && position.Y >= 0 && position.X <= Size.Width && position.Y <= Size.Height)
         {
             hit = HitTestChildren(result, position) || HitTestSelf(position);
-            if ((hit || Behavior == HitTestBehavior.Translucent) && !_foundInnermostMouseRegion)
+            if ((hit || Behavior == Plumix.Rendering.HitTestBehavior.Translucent)
+                && !_foundInnermostMouseRegion)
             {
                 _foundInnermostMouseRegion = true;
                 result.Add(new BoxHitTestEntry(this, position));

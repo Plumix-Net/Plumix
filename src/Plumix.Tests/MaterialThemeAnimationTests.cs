@@ -4,6 +4,7 @@ using Plumix.Rendering;
 using Plumix.Widgets;
 using System.Reflection;
 using Xunit;
+using Plumix.UI;
 
 namespace Plumix.Tests;
 

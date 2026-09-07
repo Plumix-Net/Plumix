@@ -48,7 +48,7 @@ public class PlumixHost : Control
     private SystemUiOverlayStyle _currentSystemUiOverlayStyle = SystemChrome.CurrentSystemUiOverlayStyle;
     private ApplicationSwitcherDescription? _currentApplicationSwitcherDescription =
         SystemChrome.CurrentApplicationSwitcherDescription;
-    private MouseCursor _currentMouseCursor = MouseCursorManager.CurrentCursor;
+    private string _currentMouseCursorKind = SystemMouseCursors.Basic.Kind;
 
     public event Action<SemanticsNode?>? SemanticsUpdated;
 
@@ -257,6 +257,28 @@ public class PlumixHost : Control
         {
             e.Handled = true;
         }
+    }
+
+    protected override void OnPointerEntered(PointerEventArgs e)
+    {
+        base.OnPointerEntered(e);
+
+        DispatchPointerEvent(new PointerAddedEvent(
+            pointer: unchecked((int)e.Pointer.Id),
+            kind: ToPointerKind(e.Pointer.Type),
+            position: e.GetPosition(this),
+            timestampUtc: DateTime.UtcNow));
+    }
+
+    protected override void OnPointerExited(PointerEventArgs e)
+    {
+        base.OnPointerExited(e);
+
+        DispatchPointerEvent(new PointerRemovedEvent(
+            pointer: unchecked((int)e.Pointer.Id),
+            kind: ToPointerKind(e.Pointer.Type),
+            position: e.GetPosition(this),
+            timestampUtc: DateTime.UtcNow));
     }
 
     protected override void OnPointerMoved(PointerEventArgs e)
@@ -547,6 +569,11 @@ public class PlumixHost : Control
         {
             FlushSemanticsAndNotify();
         }
+
+        // Dart's `RendererBinding._handlePersistentFrameCallback` schedules exactly one device
+        // update after every produced frame, so a region that moved, appeared or disappeared during
+        // it still produces its enter and exit events.
+        _gestureBinding.ScheduleMouseTrackerUpdate();
     }
 
     public bool PerformSemanticsAction(int nodeId, SemanticsActions action)
@@ -810,6 +837,10 @@ public class PlumixHost : Control
         _isSubscribedToApplicationSwitcherDescription = false;
     }
 
+    /// <summary>
+    /// Registers the platform side of Flutter's `flutter/mousecursor` channel. Dart's engine
+    /// implements `activateSystemCursor`; here it maps the cursor kind onto Avalonia's cursor set.
+    /// </summary>
     private void AttachMouseCursorListener()
     {
         if (_isSubscribedToMouseCursor)
@@ -817,8 +848,7 @@ public class PlumixHost : Control
             return;
         }
 
-        _currentMouseCursor = MouseCursorManager.CurrentCursor;
-        MouseCursorManager.CursorChanged += HandleMouseCursorChanged;
+        SystemChannels.MouseCursor.SetPlatformMethodCallHandler(HandleMouseCursorMethodCall);
         _isSubscribedToMouseCursor = true;
         ApplyMouseCursor();
     }
@@ -830,34 +860,62 @@ public class PlumixHost : Control
             return;
         }
 
-        MouseCursorManager.CursorChanged -= HandleMouseCursorChanged;
+        SystemChannels.MouseCursor.SetPlatformMethodCallHandler(null);
         _isSubscribedToMouseCursor = false;
         Cursor = null;
     }
 
-    private void HandleMouseCursorChanged(MouseCursor cursor)
+    private Task<object?> HandleMouseCursorMethodCall(MethodCall call)
     {
-        _currentMouseCursor = cursor;
+        if (call.Method != "activateSystemCursor")
+        {
+            throw new MissingPluginException($"{call.Method} is not implemented on flutter/mousecursor.");
+        }
+
+        // The standard codec decodes a map as `Dictionary<object, object?>`, so the arguments are
+        // read through the non-generic interface.
+        string kind = call.Arguments is System.Collections.IDictionary arguments
+            ? arguments["kind"] as string ?? SystemMouseCursors.Basic.Kind
+            : SystemMouseCursors.Basic.Kind;
+
+        _currentMouseCursorKind = kind;
         ApplyMouseCursor();
+        return Task.FromResult<object?>(null);
     }
 
     private void ApplyMouseCursor()
     {
-        Cursor = ResolveAvaloniaCursor(_currentMouseCursor);
+        Cursor = ResolveAvaloniaCursor(_currentMouseCursorKind);
     }
 
-    private static Cursor ResolveAvaloniaCursor(MouseCursor cursor)
+    /// <summary>
+    /// Maps a Flutter cursor kind onto the closest Avalonia standard cursor. Avalonia has no
+    /// counterpart for a few of Flutter's kinds, which fall back to the arrow.
+    /// </summary>
+    private static Cursor ResolveAvaloniaCursor(string kind)
     {
-        if (cursor is SystemMouseCursor systemCursor)
+        return kind switch
         {
-            return systemCursor.Kind switch
-            {
-                "click" => new Cursor(StandardCursorType.Hand),
-                _ => new Cursor(StandardCursorType.Arrow)
-            };
-        }
-
-        return new Cursor(StandardCursorType.Arrow);
+            "none" => new Cursor(StandardCursorType.None),
+            "click" => new Cursor(StandardCursorType.Hand),
+            "forbidden" or "noDrop" => new Cursor(StandardCursorType.No),
+            "wait" => new Cursor(StandardCursorType.Wait),
+            "progress" => new Cursor(StandardCursorType.AppStarting),
+            "help" => new Cursor(StandardCursorType.Help),
+            "text" => new Cursor(StandardCursorType.Ibeam),
+            "precise" or "cell" => new Cursor(StandardCursorType.Cross),
+            "move" or "allScroll" or "grab" or "grabbing" => new Cursor(StandardCursorType.SizeAll),
+            "alias" or "copy" => new Cursor(StandardCursorType.DragCopy),
+            "resizeLeftRight" or "resizeColumn" or "resizeLeft" or "resizeRight" =>
+                new Cursor(StandardCursorType.SizeWestEast),
+            "resizeUpDown" or "resizeRow" or "resizeUp" or "resizeDown" =>
+                new Cursor(StandardCursorType.SizeNorthSouth),
+            "resizeUpLeftDownRight" or "resizeUpLeft" or "resizeDownRight" =>
+                new Cursor(StandardCursorType.TopLeftCorner),
+            "resizeUpRightDownLeft" or "resizeUpRight" or "resizeDownLeft" =>
+                new Cursor(StandardCursorType.TopRightCorner),
+            _ => new Cursor(StandardCursorType.Arrow),
+        };
     }
 
     private void AttachFeedbackListener()

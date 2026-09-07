@@ -660,9 +660,7 @@ public sealed class MaterialRadioTests
         if (root is RenderPointerListener listener
             && listener.OnPointerDown != null
             && listener.OnPointerUp == null
-            && listener.OnPointerCancel == null
-            && listener.OnPointerEnter == null
-            && listener.OnPointerExit == null)
+            && listener.OnPointerCancel == null)
         {
             return listener;
         }

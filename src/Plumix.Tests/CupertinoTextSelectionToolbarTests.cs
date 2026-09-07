@@ -20,12 +20,10 @@ public sealed class CupertinoTextSelectionToolbarTests : IDisposable
     public CupertinoTextSelectionToolbarTests()
     {
         Scheduler.ResetForTests();
-        MouseCursorManager.ResetForTests();
     }
 
     public void Dispose()
     {
-        MouseCursorManager.ResetForTests();
         Scheduler.ResetForTests();
     }
 

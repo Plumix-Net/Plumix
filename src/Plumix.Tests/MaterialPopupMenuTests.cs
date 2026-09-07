@@ -20,7 +20,6 @@ public sealed class MaterialPopupMenuTests : IDisposable
         Scheduler.ResetForTests();
         FocusManager.Instance.ResetForTests();
         GestureBinding.Instance.ResetForTests();
-        MouseCursorManager.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
     }
 
@@ -29,7 +28,6 @@ public sealed class MaterialPopupMenuTests : IDisposable
         GestureBinding.Instance.ResetForTests();
         FocusManager.Instance.ResetForTests();
         Scheduler.ResetForTests();
-        MouseCursorManager.ResetForTests();
         PlatformDefaults.DebugTargetPlatformOverride = null;
     }
 
@@ -752,38 +750,34 @@ public sealed class MaterialPopupMenuTests : IDisposable
                 new PopupMenuThemeData(MouseCursor: cursor),
                 new PopupMenuItem<string>(new Text("Enabled")))));
         enabled.Pump(new Size(200, 80));
-        RenderPointerListener enabledListener = Assert.Single(
-            FindDescendants<RenderPointerListener>(enabled.RenderView),
-            listener => listener.OnPointerEnter is not null && listener.OnPointerExit is not null);
-        enabledListener.HandleEvent(
-            new PointerEnterEvent(
-                101,
-                PointerDeviceKind.Mouse,
-                new Point(10, 10),
-                PointerButtons.None,
-                DateTime.UtcNow),
-            new BoxHitTestEntry(enabledListener, new Point(10, 10)));
-        Assert.Equal(SystemMouseCursors.Text, MouseCursorManager.CurrentCursor);
+        RenderMouseRegion enabledListener = Assert.Single(
+            FindDescendants<RenderMouseRegion>(enabled.RenderView),
+            listener => listener.OnEnter is not null && listener.OnExit is not null);
+        // Entering marks the ink response hovered, which rebuilds the region with the hovered
+        // cursor — Dart resolves `mouseCursor` against `statesController.value` on every build.
+        enabledListener.OnEnter?.Invoke(new PointerEnterEvent(
+            101,
+            PointerDeviceKind.Mouse,
+            new Point(10, 10),
+            PointerButtons.None,
+            DateTime.UtcNow));
+        enabled.Pump(new Size(200, 80));
+        Assert.Equal(
+            SystemMouseCursors.Text,
+            Assert.Single(
+                FindDescendants<RenderMouseRegion>(enabled.RenderView),
+                listener => listener.OnEnter is not null && listener.OnExit is not null).Cursor);
 
-        MouseCursorManager.ResetForTests();
         using var disabled = new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new PopupMenuTheme(
                 new PopupMenuThemeData(MouseCursor: cursor),
                 new PopupMenuItem<string>(new Text("Disabled"), enabled: false))));
         disabled.Pump(new Size(200, 80));
-        RenderPointerListener disabledListener = Assert.Single(
-            FindDescendants<RenderPointerListener>(disabled.RenderView),
-            listener => listener.OnPointerEnter is not null && listener.OnPointerExit is not null);
-        disabledListener.HandleEvent(
-            new PointerEnterEvent(
-                102,
-                PointerDeviceKind.Mouse,
-                new Point(10, 10),
-                PointerButtons.None,
-                DateTime.UtcNow),
-            new BoxHitTestEntry(disabledListener, new Point(10, 10)));
-        Assert.Equal(SystemMouseCursors.Grab, MouseCursorManager.CurrentCursor);
+        RenderMouseRegion disabledListener = Assert.Single(
+            FindDescendants<RenderMouseRegion>(disabled.RenderView),
+            listener => listener.OnEnter is not null && listener.OnExit is not null);
+        Assert.Equal(SystemMouseCursors.Grab, disabledListener.Cursor);
     }
 
     [Fact]

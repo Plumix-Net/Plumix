@@ -355,11 +355,11 @@ public sealed class CupertinoSwitch : StatefulWidget
             {
                 if (states.Contains(WidgetState.Disabled))
                 {
-                    return Plumix.Widgets.MouseCursor.Defer;
+                    return Plumix.UI.MouseCursor.Defer;
                 }
                 return OperatingSystem.IsBrowser()
                     ? SystemMouseCursors.Click
-                    : Plumix.Widgets.MouseCursor.Defer;
+                    : Plumix.UI.MouseCursor.Defer;
             });
         }
 

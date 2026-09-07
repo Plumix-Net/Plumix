@@ -157,7 +157,6 @@ public class InkResponse : StatefulWidget
         private Color _resolvedSplashColor;
         private bool _splashConfirmed;
         private bool _splashCanceled;
-        private IDisposable? _cursorHandle;
         private readonly List<SplashEntry> _splashes = [];
         private readonly List<HighlightEntry> _highlights = [];
         private SplashEntry? _currentSplash;
@@ -223,7 +222,6 @@ public class InkResponse : StatefulWidget
             {
                 SetPressed(false, notifyCancel: true);
                 ResetHighlight(InkHighlightKind.Hover);
-                ReleaseCursor();
             }
         }
 
@@ -253,7 +251,6 @@ public class InkResponse : StatefulWidget
 
         public override void Dispose()
         {
-            ReleaseCursor();
             FocusManager.Instance.RemoveHighlightModeListener(HandleFocusHighlightModeChanged);
             DetachFocusNode();
             DetachStatesController();
@@ -350,10 +347,13 @@ public class InkResponse : StatefulWidget
                     child: result);
             }
 
-            result = new Listener(
-                behavior: HitTestBehavior.Opaque,
-                onPointerEnter: _ => SetHovered(true),
-                onPointerExit: _ => SetHovered(false),
+            // Dart's `_InkResponseState.build` wraps the response in a `MouseRegion` that both
+            // reports hover and supplies the cursor; the cursor is a property of the region, not a
+            // stack the state pushes onto.
+            result = new MouseRegion(
+                cursor: EffectiveMouseCursor,
+                onEnter: _ => SetHovered(true),
+                onExit: _ => SetHovered(false),
                 child: result);
 
             result = new Focus(
@@ -793,6 +793,28 @@ public class InkResponse : StatefulWidget
             }
         }
 
+        /// <summary>
+        /// Dart's `_InkResponseState.build` resolves `widget.mouseCursor ??
+        /// WidgetStateMouseCursor.clickable` against the current states.
+        /// </summary>
+        private MouseCursor EffectiveMouseCursor
+        {
+            get
+            {
+                MaterialState states = _statesController?.Value ?? MaterialState.None;
+                if (!Enabled)
+                {
+                    states |= MaterialState.Disabled;
+                }
+
+                MouseCursor candidate = CurrentWidget.MouseCursor ?? WidgetStateMouseCursor.Clickable;
+                return (candidate is WidgetStateMouseCursor stateCursor
+                           ? stateCursor.Resolve(MaterialStateSet.Of(states))
+                           : candidate)
+                       ?? SystemMouseCursors.Basic;
+            }
+        }
+
         private void SetHovered(bool value, bool notify = true)
         {
             if (_hovered == value) return;
@@ -800,27 +822,16 @@ public class InkResponse : StatefulWidget
             _statesController?.Update(MaterialState.Hovered, value);
             if (value)
             {
-                ReleaseCursor();
-                MaterialState states = _statesController?.Value ?? MaterialState.None;
-                MouseCursor? cursor = CurrentWidget.MouseCursor is WidgetStateMouseCursor stateCursor
-                    ? stateCursor.Resolve(states)
-                    : CurrentWidget.MouseCursor;
-                cursor ??= Enabled ? SystemMouseCursors.Click : SystemMouseCursors.Basic;
-                _cursorHandle = MouseCursorManager.PushCursor(cursor);
                 if (notify && Enabled)
                 {
                     _hoverCallbackActive = true;
                     CurrentWidget.OnHover?.Invoke(true);
                 }
             }
-            else
+            else if (notify && _hoverCallbackActive)
             {
-                ReleaseCursor();
-                if (!value && notify && _hoverCallbackActive)
-                {
-                    _hoverCallbackActive = false;
-                    CurrentWidget.OnHover?.Invoke(false);
-                }
+                _hoverCallbackActive = false;
+                CurrentWidget.OnHover?.Invoke(false);
             }
         }
 
@@ -879,12 +890,6 @@ public class InkResponse : StatefulWidget
             _splashFeature = latest?.Feature;
             _splashConfirmed = latest?.Confirmed ?? false;
             _splashCanceled = latest?.Canceled ?? false;
-        }
-
-        private void ReleaseCursor()
-        {
-            _cursorHandle?.Dispose();
-            _cursorHandle = null;
         }
 
         private static bool IsActivateKey(KeyEvent @event)

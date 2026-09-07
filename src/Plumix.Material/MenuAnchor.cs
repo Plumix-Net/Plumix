@@ -645,11 +645,11 @@ internal sealed class Submenu : StatelessWidget
 /// Dart's `_MouseCursor`: wraps the menu's state-resolving cursor so that it falls back to
 /// <see cref="MouseCursor.Uncontrolled"/> when no style in the chain supplies one.
 /// </summary>
-internal sealed record MenuMouseCursor(
-    Func<IReadOnlySet<WidgetState>, MouseCursor?> ResolveCallback) : WidgetStateMouseCursor
+internal sealed class MenuMouseCursor(Func<IReadOnlySet<WidgetState>, MouseCursor?> resolveCallback)
+    : WidgetStateMouseCursor("WidgetStateMouseCursor(Menu)")
 {
     public override MouseCursor Resolve(IReadOnlySet<WidgetState> states) =>
-        ResolveCallback(states) ?? MouseCursor.Uncontrolled;
+        resolveCallback(states) ?? MouseCursor.Uncontrolled;
 }
 
 /// <summary>The Material surface that hosts a menu's children.</summary>

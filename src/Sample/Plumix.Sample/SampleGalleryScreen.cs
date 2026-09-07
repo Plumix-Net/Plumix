@@ -159,6 +159,7 @@ internal static class SampleRoutes
     public const string FocusTraversal = "/focus-traversal";
 
     public const string TrackpadPanZoom = "/trackpad-pan-zoom";
+    public const string MouseRegion = "/mouse-region";
     public const string DebugPainting = "/debug-painting";
     public const string RenderingDebugFlags = "/rendering-debug-flags";
     public const string Flow = "/flow";
@@ -627,6 +628,11 @@ internal sealed class SampleGalleryScreen : StatelessWidget
             "Trackpad pan/zoom",
             "PointerPanZoom start/update/end through Listener",
             () => new TrackpadPanZoomDemoPage()),
+        new(
+            SampleRoutes.MouseRegion,
+            "MouseRegion + MouseTracker",
+            "per-device enter/exit diffing, hit-test cursor precedence, opaque stacking",
+            () => new MouseRegionDemoPage()),
         new(
             SampleRoutes.DebugPainting,
             "Placeholder + GridPaper",

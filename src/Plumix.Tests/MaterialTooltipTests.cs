@@ -84,7 +84,11 @@ public sealed class MaterialTooltipTests
         plainHarness.Pump(new Size(160, 80));
         RawTooltip plain = Assert.Single(plainHarness.FindWidgets<RawTooltip>());
         Assert.True(plain.IgnorePointer);
-        Assert.Equal(MouseCursor.Defer, Assert.Single(plainHarness.FindWidgets<MouseRegion>()).Cursor);
+        // The tooltip's regions contribute no cursor of their own; `_ExclusiveMouseRegion` is a
+        // `MouseRegion` subclass, so both show up here.
+        Assert.All(
+            plainHarness.FindWidgets<MouseRegion>(),
+            region => Assert.Equal(MouseCursor.Defer, region.Cursor));
 
         using var richHarness = new WidgetRenderHarness(
             new Theme(
@@ -245,8 +249,8 @@ public sealed class MaterialTooltipTests
 
         Assert.NotNull(FindParagraph(harness.RenderView, "child"));
         Assert.DoesNotContain(
-            FindDescendants<RenderPointerListener>(harness.RenderView),
-            listener => listener.OnPointerEnter is not null && listener.OnPointerExit is not null);
+            FindDescendants<RenderMouseRegion>(harness.RenderView),
+            listener => listener.OnEnter is not null && listener.OnExit is not null);
     }
 
     [Fact]
@@ -263,7 +267,9 @@ public sealed class MaterialTooltipTests
 
         var state = harness.FindState<TooltipState>();
         Assert.False(state.EnsureTooltipVisible());
-        Assert.NotNull(FindTooltipListener(harness.RenderView));
+        // An invisible tooltip builds no `RawTooltip`, so there is no `_ExclusiveMouseRegion` and
+        // no hover plumbing at all.
+        Assert.Null(FindTooltipListener(harness.RenderView));
         Assert.Empty(harness.FindWidgets<RawTooltip>());
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.2));
         harness.Pump(new Size(120, 60));
@@ -394,7 +400,7 @@ public sealed class MaterialTooltipTests
 
             var listener = FindTooltipListener(harness.RenderView);
             Assert.NotNull(listener);
-            listener!.HandleEvent(PointerEnter(1), new BoxHitTestEntry(listener, new Point(5, 5)));
+            listener!.OnEnter?.Invoke(PointerEnter(1));
             double clock = Scheduler.CurrentSeconds;
             AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.20));
@@ -407,7 +413,7 @@ public sealed class MaterialTooltipTests
             Assert.Equal(0, triggered);
 
             listener = FindTooltipListener(harness.RenderView);
-            listener!.HandleEvent(PointerExit(1), new BoxHitTestEntry(listener, new Point(100, 5)));
+            listener!.OnExit?.Invoke(PointerExit(1));
             clock = Scheduler.CurrentSeconds;
             AnimationPump.Prime();
             Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(clock + 0.10));
@@ -530,10 +536,10 @@ public sealed class MaterialTooltipTests
     private static PointerExitEvent PointerExit(int pointer) => new(
         pointer, PointerDeviceKind.Mouse, new Point(100, 5), PointerButtons.None, DateTime.UtcNow);
 
-    private static RenderPointerListener? FindTooltipListener(RenderObject? root)
+    private static RenderMouseRegion? FindTooltipListener(RenderObject? root)
     {
-        return FindDescendants<RenderPointerListener>(root)
-            .FirstOrDefault(listener => listener.OnPointerEnter is not null && listener.OnPointerExit is not null);
+        return FindDescendants<RenderMouseRegion>(root)
+            .FirstOrDefault(listener => listener.OnEnter is not null && listener.OnExit is not null);
     }
 
     private static RenderParagraph? FindParagraph(RenderObject? root, string text)

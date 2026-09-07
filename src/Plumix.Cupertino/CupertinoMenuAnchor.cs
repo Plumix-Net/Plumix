@@ -876,7 +876,7 @@ public sealed class CupertinoMenuItem : StatefulWidget, CupertinoMenuEntry
         WidgetStateProperty<MouseCursor>.ResolveWith(states =>
             !states.Contains(WidgetState.Disabled) && OperatingSystem.IsBrowser()
                 ? SystemMouseCursors.Click
-                : Plumix.Widgets.MouseCursor.Defer);
+                : Plumix.UI.MouseCursor.Defer);
 
     public CupertinoMenuItem(
         Widget child,

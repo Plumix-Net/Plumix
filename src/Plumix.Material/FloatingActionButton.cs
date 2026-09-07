@@ -577,16 +577,21 @@ public sealed class FloatingActionButton : StatelessWidget
 /// Dart parity: `_EffectiveMouseCursor`. Resolved by `RawMaterialButton` against the button's
 /// current states.
 /// </summary>
-internal sealed record FloatingActionButtonEffectiveMouseCursor(
-    MouseCursor? WidgetCursor,
-    MaterialStateProperty<MouseCursor?>? ThemeCursor) : WidgetStateMouseCursor
+internal sealed class FloatingActionButtonEffectiveMouseCursor(
+    MouseCursor? widgetCursor,
+    MaterialStateProperty<MouseCursor?>? themeCursor)
+    : WidgetStateMouseCursor("WidgetStateMouseCursor(FloatingActionButton)")
 {
+    public MouseCursor? WidgetCursor { get; } = widgetCursor;
+
+    public MaterialStateProperty<MouseCursor?>? ThemeCursor { get; } = themeCursor;
+
     public override MouseCursor? Resolve(IReadOnlySet<WidgetState> states)
     {
-        MouseCursor? widgetCursor = WidgetCursor is WidgetStateMouseCursor stateful
+        MouseCursor? resolvedWidgetCursor = WidgetCursor is WidgetStateMouseCursor stateful
             ? stateful.Resolve(states)
             : WidgetCursor;
-        return widgetCursor
+        return resolvedWidgetCursor
                ?? ThemeCursor?.Resolve(states)
                ?? AdaptiveClickable.Resolve(states);
     }

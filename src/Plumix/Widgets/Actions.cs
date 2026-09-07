@@ -637,7 +637,7 @@ public sealed class FocusableActionDetector : StatefulWidget
         OnShowFocusHighlight = onShowFocusHighlight;
         OnShowHoverHighlight = onShowHoverHighlight;
         OnFocusChange = onFocusChange;
-        MouseCursor = mouseCursor ?? Plumix.Widgets.MouseCursor.Defer;
+        MouseCursor = mouseCursor ?? Plumix.UI.MouseCursor.Defer;
         IncludeFocusSemantics = includeFocusSemantics;
     }
 

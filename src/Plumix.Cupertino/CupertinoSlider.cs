@@ -5,7 +5,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
-using MouseCursor = Plumix.Widgets.MouseCursor;
+using MouseCursor = Plumix.UI.MouseCursor;
 
 namespace Plumix.Cupertino;
 

@@ -7,7 +7,7 @@ using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
-using MouseCursor = Plumix.Widgets.MouseCursor;
+using MouseCursor = Plumix.UI.MouseCursor;
 
 namespace Plumix.Tests;
 

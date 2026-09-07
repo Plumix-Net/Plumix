@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -145,36 +146,69 @@ public abstract class WidgetStateBorderSide
 
 /// A mouse cursor whose value can depend on the current widget states, as Flutter's
 /// `WidgetStateMouseCursor` — a `MouseCursor` that also implements `WidgetStateProperty`.
-public abstract record WidgetStateMouseCursor : MouseCursor
+///
+/// Used as a plain cursor it resolves against the empty state set, the way Dart's
+/// `createSession` does.
+public abstract class WidgetStateMouseCursor : MouseCursor
 {
+    /// <summary>Creates a state-resolving cursor. Dart's `const WidgetStateMouseCursor()`.</summary>
+    protected WidgetStateMouseCursor(string debugDescription)
+    {
+        DebugDescription = debugDescription;
+    }
+
+    /// <inheritdoc />
+    public override string DebugDescription { get; }
+
     public abstract MouseCursor? Resolve(IReadOnlySet<WidgetState> states);
 
+    /// <inheritdoc />
+    protected internal override MouseCursorSession CreateSession(int device)
+    {
+        MouseCursor resolved = Resolve(EmptyWidgetStates) ?? SystemMouseCursors.Basic;
+        return resolved.CreateSession(device);
+    }
+
     public static WidgetStateMouseCursor ResolveWith(
-        Func<IReadOnlySet<WidgetState>, MouseCursor?> resolver)
+        Func<IReadOnlySet<WidgetState>, MouseCursor?> resolver,
+        string debugDescription = "WidgetStateMouseCursor()")
     {
         ArgumentNullException.ThrowIfNull(resolver);
-        return new ResolverWidgetStateMouseCursor(resolver);
+        return new ResolverWidgetStateMouseCursor(resolver, debugDescription);
     }
 
     /// <summary>
     /// Dart's `WidgetStateMouseCursor.clickable` (`widgets/widget_state.dart`): the click cursor
     /// unless the widget is disabled, in which case the basic cursor.
     /// </summary>
-    public static WidgetStateMouseCursor Clickable { get; } = ResolveWith(states =>
-        states.Contains(WidgetState.Disabled) ? SystemMouseCursors.Basic : SystemMouseCursors.Click);
+    public static WidgetStateMouseCursor Clickable { get; } = ResolveWith(
+        states => states.Contains(WidgetState.Disabled) ? SystemMouseCursors.Basic : SystemMouseCursors.Click,
+        "WidgetStateMouseCursor(clickable)");
 
     /// <summary>
     /// Dart's `WidgetStateMouseCursor.adaptiveClickable` (`widgets/widget_state.dart`): the click
     /// cursor on web only, and the basic cursor when disabled or on any other platform.
     /// </summary>
-    public static WidgetStateMouseCursor AdaptiveClickable { get; } = ResolveWith(states =>
-        states.Contains(WidgetState.Disabled) || !PlatformDefaults.IsWeb
+    public static WidgetStateMouseCursor AdaptiveClickable { get; } = ResolveWith(
+        states => states.Contains(WidgetState.Disabled) || !PlatformDefaults.IsWeb
             ? SystemMouseCursors.Basic
-            : SystemMouseCursors.Click);
+            : SystemMouseCursors.Click,
+        "WidgetStateMouseCursor(adaptiveClickable)");
 
-    private sealed record ResolverWidgetStateMouseCursor(
-        Func<IReadOnlySet<WidgetState>, MouseCursor?> Resolver) : WidgetStateMouseCursor
+    /// <summary>
+    /// Dart's `WidgetStateMouseCursor.textable`: the text cursor unless the widget is disabled, in
+    /// which case the basic cursor.
+    /// </summary>
+    public static WidgetStateMouseCursor Textable { get; } = ResolveWith(
+        states => states.Contains(WidgetState.Disabled) ? SystemMouseCursors.Basic : SystemMouseCursors.Text,
+        "WidgetStateMouseCursor(textable)");
+
+    private static readonly IReadOnlySet<WidgetState> EmptyWidgetStates = new HashSet<WidgetState>();
+
+    private sealed class ResolverWidgetStateMouseCursor(
+        Func<IReadOnlySet<WidgetState>, MouseCursor?> resolver,
+        string debugDescription) : WidgetStateMouseCursor(debugDescription)
     {
-        public override MouseCursor? Resolve(IReadOnlySet<WidgetState> states) => Resolver(states);
+        public override MouseCursor? Resolve(IReadOnlySet<WidgetState> states) => resolver(states);
     }
 }

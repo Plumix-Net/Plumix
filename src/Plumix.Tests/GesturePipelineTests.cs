@@ -837,11 +837,11 @@ public sealed class GesturePipelineTests
         int exits = 0;
         int hovers = 0;
 
-        var listener = new RenderPointerListener(
-            behavior: HitTestBehavior.Opaque,
-            onPointerEnter: _ => enters += 1,
-            onPointerExit: _ => exits += 1,
-            onPointerHover: _ => hovers += 1,
+        var listener = new RenderMouseRegion(
+            hitTestBehavior: HitTestBehavior.Opaque,
+            onEnter: _ => enters += 1,
+            onExit: _ => exits += 1,
+            onHover: _ => hovers += 1,
             child: new FixedHitTestBox(new Size(80, 80), hitSelf: true));
         var pipeline = BuildPipeline(listener);
 

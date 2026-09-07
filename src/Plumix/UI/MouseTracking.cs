@@ -1,4 +1,4 @@
-using Plumix.Widgets;
+using Plumix.Foundation;
 
 // Dart parity source: flutter/packages/flutter/lib/src/services/mouse_tracking.dart
 
@@ -18,6 +18,10 @@ public delegate void PointerHoverEventListener(PointerHoverEvent @event);
 ///
 /// To use an annotation, return this object as a hit-test result from an object
 /// in the hit-test chain.
+///
+/// Dart declares `MouseTrackerAnnotation` as a class and lets `RenderMouseRegion` implement its
+/// implicit interface; C# has no implicit interfaces, so the contract is this interface and
+/// <see cref="MouseTrackerAnnotation"/> is the concrete class Dart's constructor produces.
 public interface IMouseTrackerAnnotation
 {
     /// Triggered when a mouse pointer, with or without buttons pressed, has
@@ -44,4 +48,51 @@ public interface IMouseTrackerAnnotation
     /// current annotation list even if it's included in the hit test, affecting
     /// mouse-related behavior such as enter events, exit events, and mouse cursors.
     bool ValidForMouseTracker { get; }
+}
+
+/// <summary>
+/// The plain annotation object Dart's `MouseTrackerAnnotation` constructor produces. Hit-test
+/// targets that want mouse tracking implement <see cref="IMouseTrackerAnnotation"/> directly the
+/// way `RenderMouseRegion` does.
+/// </summary>
+public class MouseTrackerAnnotation : Diagnosticable, IMouseTrackerAnnotation
+{
+    /// <summary>Creates an annotation. Dart's `const MouseTrackerAnnotation(...)`.</summary>
+    public MouseTrackerAnnotation(
+        PointerEnterEventListener? onEnter = null,
+        PointerExitEventListener? onExit = null,
+        MouseCursor? cursor = null,
+        bool validForMouseTracker = true)
+    {
+        OnEnter = onEnter;
+        OnExit = onExit;
+        Cursor = cursor ?? MouseCursor.Defer;
+        ValidForMouseTracker = validForMouseTracker;
+    }
+
+    /// <inheritdoc />
+    public PointerEnterEventListener? OnEnter { get; }
+
+    /// <inheritdoc />
+    public PointerExitEventListener? OnExit { get; }
+
+    /// <inheritdoc />
+    public MouseCursor Cursor { get; }
+
+    /// <inheritdoc />
+    public bool ValidForMouseTracker { get; }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new FlagsSummary<Delegate>(
+            "callbacks",
+            [
+                new KeyValuePair<string, Delegate?>("enter", OnEnter),
+                new KeyValuePair<string, Delegate?>("exit", OnExit),
+            ],
+            ifEmpty: "<none>"));
+        properties.Add(new DiagnosticsProperty<MouseCursor>("cursor", Cursor, defaultValue: MouseCursor.Defer));
+    }
 }

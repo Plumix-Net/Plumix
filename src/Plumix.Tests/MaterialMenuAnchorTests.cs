@@ -66,26 +66,32 @@ public sealed class MaterialMenuAnchorTests
         Assert.NotEqual(MouseCursor.Defer, MouseCursor.Uncontrolled);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void MouseCursorUncontrolled_BlocksTheRegionBehindWithoutChangingTheCursor()
     {
-        MouseCursorManager.ResetForTests();
+        var manager = new MouseCursorManager(SystemMouseCursors.Basic);
+        var log = new List<string>();
+        SystemChannels.MouseCursor.SetPlatformMethodCallHandler(call =>
+        {
+            var arguments = (System.Collections.IDictionary)call.Arguments!;
+            log.Add((string)arguments["kind"]!);
+            return Task.FromResult<object?>(null);
+        });
+
         try
         {
-            using IDisposable text = MouseCursorManager.PushCursor(SystemMouseCursors.Text);
-            Assert.Equal(SystemMouseCursors.Text, MouseCursorManager.CurrentCursor);
+            manager.HandleDeviceCursorUpdate(1, null, [SystemMouseCursors.Text]);
+            Assert.Equal(SystemMouseCursors.Text, manager.DebugDeviceActiveCursor(1));
 
-            // The uncontrolled region keeps the cursor it entered with, and the click request under
-            // it cannot take over while it is on top.
-            using IDisposable uncontrolled = MouseCursorManager.PushCursor(MouseCursor.Uncontrolled);
-            Assert.Equal(SystemMouseCursors.Text, MouseCursorManager.CurrentCursor);
-
-            uncontrolled.Dispose();
-            Assert.Equal(SystemMouseCursors.Text, MouseCursorManager.CurrentCursor);
+            // The uncontrolled region is chosen over the click request behind it, and its session
+            // issues no platform call, so the pointer keeps the cursor it entered with.
+            manager.HandleDeviceCursorUpdate(1, null, [MouseCursor.Uncontrolled, SystemMouseCursors.Click]);
+            Assert.Equal(MouseCursor.Uncontrolled, manager.DebugDeviceActiveCursor(1));
+            Assert.Equal(["text"], log);
         }
         finally
         {
-            MouseCursorManager.ResetForTests();
+            SystemChannels.MouseCursor.SetPlatformMethodCallHandler(null);
         }
     }
 

@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 
@@ -13,8 +14,24 @@ public sealed class GestureBinding
     public static GestureBinding Instance { get; } = new();
 
     private readonly Dictionary<int, HitTestResult> _hitTests = [];
-    private readonly Dictionary<int, HitTestResult> _hoverHitTests = [];
     private readonly Dictionary<int, Point> _lastPositions = [];
+    private RenderView? _hitTestRoot;
+    private bool _mouseTrackerUpdateScheduled;
+
+    private GestureBinding()
+    {
+        InitMouseTracker();
+    }
+
+    /// <summary>
+    /// Creates the mouse tracker over this binding's hit-test entry point. Dart's
+    /// `RendererBinding.initMouseTracker`; a test may pass its own tracker.
+    /// </summary>
+    public void InitMouseTracker(MouseTracker? tracker = null)
+    {
+        MouseTracker?.Dispose();
+        MouseTracker = tracker ?? new MouseTracker(HitTestInView);
+    }
 
     public PointerRouter PointerRouter { get; } = new();
 
@@ -26,8 +43,18 @@ public sealed class GestureBinding
     /// </summary>
     public PointerSignalResolver PointerSignalResolver { get; } = new();
 
+    /// <summary>
+    /// Tracks which annotated regions each mouse is over. Dart's `RendererBinding.mouseTracker`;
+    /// Plumix has no renderer binding, so the single hit-testing entry point owns it.
+    /// </summary>
+    public MouseTracker MouseTracker { get; private set; } = null!;
+
     public void HandlePointerEvent(RenderView root, PointerEvent @event)
     {
+        ArgumentNullException.ThrowIfNull(root);
+        // Dart resolves the view from `PointerEvent.viewId`; Plumix's hosts pass the root they own,
+        // so the tracker's own hit tests (which run outside an event) reuse the last one seen.
+        _hitTestRoot = root;
         PointerEventReceived?.Invoke(@event);
         var eventWithDelta = AttachDelta(@event);
         HitTestResult? hitTestResult = null;
@@ -54,8 +81,6 @@ public sealed class GestureBinding
             {
                 var result = new BoxHitTestResult();
                 root.HitTest(result, @event.Position);
-                DispatchHoverTransitions((PointerHoverEvent)eventWithDelta, GetHoverHitTest(@event.Pointer), result);
-                _hoverHitTests[@event.Pointer] = result;
                 hitTestResult = result;
                 break;
             }
@@ -89,11 +114,6 @@ public sealed class GestureBinding
             _lastPositions.Remove(@event.Pointer);
         }
 
-        if (@event is PointerCancelEvent)
-        {
-            _hoverHitTests.Remove(@event.Pointer);
-        }
-
         // Dart's `_resolveByDefault` runs in a microtask, i.e. after the whole event has been
         // dispatched; draining here reproduces that ordering.
         GestureArena.FlushDefaultResolutions();
@@ -101,6 +121,10 @@ public sealed class GestureBinding
 
     public void DispatchEvent(PointerEvent @event, HitTestResult? hitTestResult)
     {
+        // Dart's `RendererBinding.dispatchEvent` updates the tracker before the path dispatch, so a
+        // nested region's enter (back to front) precedes its hover (front to back). A move reuses
+        // the cached down-path, which is not a valid hover hit test, so the tracker re-runs its own.
+        MouseTracker.UpdateWithEvent(@event, @event is PointerMoveEvent ? null : hitTestResult);
         if (hitTestResult != null)
         {
             foreach (var entry in hitTestResult.Path)
@@ -112,87 +136,60 @@ public sealed class GestureBinding
         PointerRouter.Route(@event);
     }
 
-    internal void ResetForTests()
+    /// <summary>
+    /// Schedules the once-per-frame device update. Dart's
+    /// `RendererBinding._scheduleMouseTrackerUpdate`, called after every produced frame so a region
+    /// that moved, appeared or disappeared during it still produces its enter and exit events.
+    /// </summary>
+    public void ScheduleMouseTrackerUpdate()
     {
-        _hitTests.Clear();
-        _hoverHitTests.Clear();
-        _lastPositions.Clear();
-        PointerRouter.Reset();
-        GestureArena.Reset();
+        // Dart asserts that no update is pending, because one `RendererBinding` produces one frame.
+        // Plumix's hosts share this binding, so several of them may report the same frame; the first
+        // one schedules the single update and the rest are no-ops.
+        if (_mouseTrackerUpdateScheduled)
+        {
+            return;
+        }
+
+        _mouseTrackerUpdateScheduled = true;
+        Scheduler.AddPostFrameCallback(
+            _ =>
+            {
+                _mouseTrackerUpdateScheduled = false;
+                MouseTracker.UpdateAllDevices();
+            },
+            scheduleFrame: false);
     }
 
-    private HitTestResult? GetHoverHitTest(int pointer)
+    /// <summary>
+    /// Hit-tests at <paramref name="position"/> for the view the last pointer event came from.
+    /// Dart's `RendererBinding.hitTestInView`.
+    /// </summary>
+    public HitTestResult HitTestInView(Point position, int viewId)
     {
-        _hoverHitTests.TryGetValue(pointer, out var result);
+        var result = new BoxHitTestResult();
+        _hitTestRoot?.HitTest(result, position);
         return result;
     }
 
-    private void DispatchHoverTransitions(PointerHoverEvent hoverEvent, HitTestResult? previousResult, HitTestResult currentResult)
+    internal void ResetForTests()
     {
-        var previousEntries = BuildEntryMap(previousResult);
-        var currentEntries = BuildEntryMap(currentResult);
-
-        var exitEvent = new PointerExitEvent(
-            pointer: hoverEvent.Pointer,
-            kind: hoverEvent.Kind,
-            position: hoverEvent.Position,
-            buttons: hoverEvent.Buttons,
-            timestampUtc: hoverEvent.TimestampUtc);
-
-        foreach (var entry in previousEntries)
-        {
-            if (currentEntries.ContainsKey(entry.Key))
-            {
-                continue;
-            }
-
-            DispatchTransformedEvent(exitEvent, entry.Value);
-        }
-
-        var enterEvent = new PointerEnterEvent(
-            pointer: hoverEvent.Pointer,
-            kind: hoverEvent.Kind,
-            position: hoverEvent.Position,
-            buttons: hoverEvent.Buttons,
-            timestampUtc: hoverEvent.TimestampUtc);
-
-        foreach (var entry in currentEntries)
-        {
-            if (previousEntries.ContainsKey(entry.Key))
-            {
-                continue;
-            }
-
-            DispatchTransformedEvent(enterEvent, entry.Value);
-        }
-    }
-
-    private static Dictionary<IHitTestTarget, HitTestEntry> BuildEntryMap(HitTestResult? result)
-    {
-        var map = new Dictionary<IHitTestTarget, HitTestEntry>();
-        if (result is null)
-        {
-            return map;
-        }
-
-        foreach (var entry in result.Path)
-        {
-            map[entry.Target] = entry;
-        }
-
-        return map;
-    }
-
-    private static void DispatchTransformedEvent(PointerEvent @event, HitTestEntry entry)
-    {
-        entry.Target.HandleEvent(@event.Transformed(entry.Transform), entry);
+        _hitTests.Clear();
+        _lastPositions.Clear();
+        _hitTestRoot = null;
+        _mouseTrackerUpdateScheduled = false;
+        PointerRouter.Reset();
+        GestureArena.Reset();
+        InitMouseTracker();
     }
 
     private PointerEvent AttachDelta(PointerEvent @event)
     {
         // Signals carry their own scroll delta, and a pan/zoom gesture reports movement through
         // `PanDelta`; Dart leaves `delta` at zero for both.
-        if (@event is PointerSignalEvent
+        // An added or removed pointer reports no movement either, and Dart's synthesized exit on
+        // disconnect is asserted to carry a zero delta.
+        if (@event is PointerSignalEvent or PointerAddedEvent or PointerRemovedEvent
             or PointerPanZoomStartEvent or PointerPanZoomUpdateEvent or PointerPanZoomEndEvent)
         {
             return @event.WithDelta(default);

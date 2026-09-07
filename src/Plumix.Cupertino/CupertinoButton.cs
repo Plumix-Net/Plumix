@@ -393,7 +393,7 @@ public sealed class CupertinoButton : StatefulWidget
             WidgetStateMouseCursor.ResolveWith(states =>
                 !states.Contains(WidgetState.Disabled) && PlatformDefaults.IsWeb
                     ? SystemMouseCursors.Click
-                    : Widgets.MouseCursor.Defer);
+                    : UI.MouseCursor.Defer);
 
         private readonly DoubleTween _opacityTween = new(begin: 1.0);
         private readonly Dictionary<Type, FlutterAction> _actionMap;
@@ -518,7 +518,7 @@ public sealed class CupertinoButton : StatefulWidget
                 ? stateCursor.Resolve(states)
                 : Current.MouseCursor;
             MouseCursor effectiveMouseCursor =
-                resolvedCursor ?? DefaultCursor.Resolve(states) ?? Widgets.MouseCursor.Defer;
+                resolvedCursor ?? DefaultCursor.Resolve(states) ?? UI.MouseCursor.Defer;
 
             var shapeDecoration = new ShapeDecoration(
                 Shape: new RoundedSuperellipseBorder(
