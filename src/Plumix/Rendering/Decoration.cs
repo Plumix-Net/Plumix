@@ -301,6 +301,15 @@ public readonly record struct BorderRadius
 
     public Plumix.UI.RRect ToRRect(Avalonia.Rect rect) => Plumix.UI.RRect.FromRectAndCorners(rect, this);
 
+    /// <remarks>Flutter's <c>BorderRadius.toRSuperellipse</c>.</remarks>
+    public Plumix.UI.RSuperellipse ToRSuperellipse(Avalonia.Rect rect) =>
+        Plumix.UI.RSuperellipse.FromRectAndCorners(
+            rect,
+            TopLeftRadius,
+            TopRightRadius,
+            BottomRightRadius,
+            BottomLeftRadius);
+
     public static BorderRadius operator *(BorderRadius radius, double factor)
     {
         return new BorderRadius(

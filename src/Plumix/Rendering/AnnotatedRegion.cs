@@ -8,7 +8,7 @@ public sealed class RenderAnnotatedRegion<T> : RenderProxyBox where T : notnull
 {
     private T _value;
     private bool _sized;
-    private AnnotatedRegionLayer<T>? _annotationLayer;
+    private readonly LayerHandle<AnnotatedRegionLayer<T>> _layerHandle = new();
 
     public RenderAnnotatedRegion(
         T value,
@@ -56,17 +56,19 @@ public sealed class RenderAnnotatedRegion<T> : RenderProxyBox where T : notnull
 
     public override void Paint(PaintingContext context, Point offset)
     {
-        _annotationLayer = new AnnotatedRegionLayer<T>(
+        ArgumentNullException.ThrowIfNull(context);
+        var layer = new AnnotatedRegionLayer<T>(
             value: _value,
             size: _sized ? Size : null,
             offset: _sized ? offset : null);
-        context.PushLayer(_annotationLayer, base.Paint, offset);
+        _layerHandle.Layer = layer;
+        context.PushLayer(layer, base.Paint, offset);
     }
 
-    protected override void OnDetach()
+    /// <inheritdoc />
+    public override void Dispose()
     {
-        _annotationLayer?.Parent?.Remove(_annotationLayer);
-        _annotationLayer = null;
-        base.OnDetach();
+        _layerHandle.Layer = null;
+        base.Dispose();
     }
 }

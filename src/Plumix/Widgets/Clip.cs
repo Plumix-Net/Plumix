@@ -88,37 +88,49 @@ public sealed class ClipPath : SingleChildRenderObjectWidget
 }
 
 /// <summary>Clips its child to an iOS-style rounded superellipse.</summary>
-public sealed class ClipRSuperellipse : StatelessWidget
+public sealed class ClipRSuperellipse : SingleChildRenderObjectWidget
 {
     public ClipRSuperellipse(
         BorderRadiusGeometry? borderRadius = null,
-        CustomClipper<Path>? clipper = null,
+        CustomClipper<RSuperellipse>? clipper = null,
         Clip clipBehavior = Clip.AntiAlias,
         Widget? child = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         BorderRadius = borderRadius ?? Plumix.Rendering.BorderRadius.Zero;
         Clipper = clipper;
         ClipBehavior = clipBehavior;
-        Child = child;
     }
 
     public BorderRadiusGeometry BorderRadius { get; }
 
-    public CustomClipper<Path>? Clipper { get; }
+    public CustomClipper<RSuperellipse>? Clipper { get; }
 
     public Clip ClipBehavior { get; }
 
-    public Widget? Child { get; }
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderClipRSuperellipse(
+        borderRadius: BorderRadius,
+        clipper: Clipper,
+        clipBehavior: ClipBehavior,
+        textDirection: Directionality.MaybeOf(context));
 
-    public override Widget Build(BuildContext context)
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        CustomClipper<Path> effectiveClipper = Clipper ?? new ShapeBorderClipper(
-            new RoundedSuperellipseBorder(borderRadius: BorderRadius),
-            Directionality.MaybeOf(context));
-        return new ClipPath(
-            clipper: effectiveClipper,
-            clipBehavior: ClipBehavior,
-            child: Child);
+        var clip = (RenderClipRSuperellipse)renderObject;
+        clip.BorderRadius = BorderRadius;
+        clip.Clipper = Clipper;
+        clip.ClipBehavior = ClipBehavior;
+        clip.TextDirection = Directionality.MaybeOf(context);
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<BorderRadiusGeometry>(
+            "borderRadius",
+            BorderRadius,
+            showName: false,
+            defaultValue: DiagnosticsDefaults.NullValue));
     }
 }

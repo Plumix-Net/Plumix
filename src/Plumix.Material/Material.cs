@@ -272,20 +272,14 @@ public sealed class Material : StatefulWidget
             Widget content = CurrentWidget.Child ?? new SizedBox();
             if (CurrentWidget.BorderOnForeground && HasVisibleOutline(visual.Shape))
             {
-                content = new Stack(
-                    fit: StackFit.Passthrough,
-                    children:
-                    [
-                        content,
-                        new Positioned(
-                            left: 0,
-                            top: 0,
-                            right: 0,
-                            bottom: 0,
-                            child: new DecoratedBox(
-                                new ShapeDecoration(visual.Shape),
-                                child: new SizedBox()))
-                    ]);
+                // Flutter paints the foreground outline with `_ShapeBorderPaint`, a `CustomPaint`
+                // wrapping the contents; a foreground `DecoratedBox` is the same shape here. It must
+                // not be a sibling above the contents — that would swallow the pointer, because
+                // `RenderDecoratedBox.hitTestSelf` reports a hit anywhere inside the decoration.
+                content = new DecoratedBox(
+                    new ShapeDecoration(visual.Shape),
+                    position: DecorationPosition.Foreground,
+                    child: content);
             }
 
             content = new MaterialInkFeatures(

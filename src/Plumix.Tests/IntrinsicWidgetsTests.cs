@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -44,15 +45,17 @@ public sealed class IntrinsicWidgetsTests
         Assert.Equal(8.0, updated.StepHeight);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void IntrinsicWidth_RejectsInvalidWidgetAndRenderSteps()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new IntrinsicWidth(stepWidth: -1.0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new IntrinsicWidth(stepHeight: double.NaN));
-        Assert.Throws<ArgumentOutOfRangeException>(
-            () => new IntrinsicWidth(stepWidth: double.PositiveInfinity));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new RenderIntrinsicWidth(stepWidth: 0.0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new RenderIntrinsicWidth(stepHeight: -1.0));
+        // Dart asserts `stepWidth == null || stepWidth >= 0.0` on the widget and
+        // `value == null || value > 0.0` on the render object; infinity satisfies both.
+        Assert.Throws<AssertionError>(() => new IntrinsicWidth(stepWidth: -1.0));
+        Assert.Throws<AssertionError>(() => new IntrinsicWidth(stepHeight: double.NaN));
+        Assert.Throws<AssertionError>(() => new RenderIntrinsicWidth(stepWidth: 0.0));
+        Assert.Throws<AssertionError>(() => new RenderIntrinsicWidth(stepHeight: -1.0));
+        _ = new IntrinsicWidth(stepWidth: double.PositiveInfinity);
+        _ = new RenderIntrinsicWidth(stepWidth: double.PositiveInfinity);
     }
 
     [Fact]

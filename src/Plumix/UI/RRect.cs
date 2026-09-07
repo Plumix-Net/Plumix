@@ -59,6 +59,10 @@ public readonly record struct RRect
 
     public Point Center => Rect.Center;
 
+    /// <remarks>Flutter's <c>RRect.fromRectXY</c>: one elliptical radius on all four corners.</remarks>
+    public static RRect FromRectXY(Rect rect, double radiusX, double radiusY) =>
+        FromRectAndRadius(rect, new Plumix.Rendering.Radius(radiusX, radiusY));
+
     public static RRect FromRectAndRadius(Rect rect, double radius) =>
         FromRectAndRadius(rect, Plumix.Rendering.Radius.Circular(radius));
 

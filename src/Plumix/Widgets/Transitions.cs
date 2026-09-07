@@ -134,30 +134,42 @@ public sealed class SlideTransition : AnimatedWidget
     }
 }
 
-public sealed class FadeTransition : AnimatedWidget
+public sealed class FadeTransition : SingleChildRenderObjectWidget
 {
     public FadeTransition(
         Animation<double> opacity,
         Widget? child = null,
         bool alwaysIncludeSemantics = false,
-        Key? key = null) : base(opacity ?? throw new ArgumentNullException(nameof(opacity)), key)
+        Key? key = null) : base(child, key)
     {
-        Child = child;
+        Opacity = opacity ?? throw new ArgumentNullException(nameof(opacity));
         AlwaysIncludeSemantics = alwaysIncludeSemantics;
     }
 
-    public Animation<double> Opacity => (Animation<double>)Listenable;
-
-    public Widget? Child { get; }
+    public Animation<double> Opacity { get; }
 
     public bool AlwaysIncludeSemantics { get; }
 
-    public override Widget Build(BuildContext context)
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderAnimatedOpacity(
+        opacity: Opacity,
+        alwaysIncludeSemantics: AlwaysIncludeSemantics);
+
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        return new Opacity(
-            opacity: Math.Clamp(Opacity.Value, 0.0, 1.0),
-            child: Child,
-            alwaysIncludeSemantics: AlwaysIncludeSemantics);
+        var animatedOpacity = (RenderAnimatedOpacity)renderObject;
+        animatedOpacity.Opacity = Opacity;
+        animatedOpacity.AlwaysIncludeSemantics = AlwaysIncludeSemantics;
+    }
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Animation<double>>("opacity", Opacity));
+        properties.Add(new FlagProperty(
+            "alwaysIncludeSemantics",
+            AlwaysIncludeSemantics,
+            ifTrue: "alwaysIncludeSemantics"));
     }
 }
 

@@ -50,8 +50,10 @@ public sealed class GesturePipelineTests
 
         var pipeline = BuildPipeline(listener);
 
+        // Dart's `RenderProxyBoxWithHitTestBehavior.hitTest` adds the translucent target to the
+        // path but still reports `hitTarget` (false here), so ancestors keep testing behind it.
         var translucentResult = new BoxHitTestResult();
-        Assert.True(pipeline.Root.HitTest(translucentResult, new Point(10, 10)));
+        Assert.False(pipeline.Root.HitTest(translucentResult, new Point(10, 10)));
         Assert.Contains(translucentResult.Path, entry => ReferenceEquals(entry.Target, listener));
 
         listener.Behavior = HitTestBehavior.DeferToChild;
@@ -84,9 +86,11 @@ public sealed class GesturePipelineTests
         var absorbPointer = new RenderAbsorbPointer(absorbing: true, child: child);
         var pipeline = BuildPipeline(absorbPointer);
 
+        // Dart's `RenderAbsorbPointer.hitTest` returns `size.contains(position)` without adding
+        // itself, so the absorber swallows the event instead of becoming its target.
         var absorbedResult = new BoxHitTestResult();
         Assert.True(pipeline.Root.HitTest(absorbedResult, new Point(10, 10)));
-        Assert.Contains(absorbedResult.Path, entry => ReferenceEquals(entry.Target, absorbPointer));
+        Assert.DoesNotContain(absorbedResult.Path, entry => ReferenceEquals(entry.Target, absorbPointer));
         Assert.DoesNotContain(absorbedResult.Path, entry => ReferenceEquals(entry.Target, child));
 
         absorbPointer.Absorbing = false;

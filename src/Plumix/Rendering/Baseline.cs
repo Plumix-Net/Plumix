@@ -8,7 +8,7 @@ namespace Plumix.Rendering;
 // flutter/packages/flutter/lib/src/rendering/shifted_box.dart (RenderBaseline)
 // flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderIgnoreBaseline)
 
-public sealed class RenderBaseline : RenderProxyBox
+public sealed class RenderBaseline : RenderShiftedBox
 {
     private double _baseline;
     private TextBaseline _baselineType;
@@ -16,11 +16,10 @@ public sealed class RenderBaseline : RenderProxyBox
     public RenderBaseline(
         double baseline,
         TextBaseline baselineType,
-        RenderBox? child = null)
+        RenderBox? child = null) : base(child)
     {
         _baseline = baseline;
         _baselineType = baselineType;
-        Child = child;
     }
 
     public double Baseline
@@ -53,20 +52,49 @@ public sealed class RenderBaseline : RenderProxyBox
         }
     }
 
-    protected override void PerformLayout()
+    private (Size Size, double Top) ComputeSizes(
+        BoxConstraints constraints,
+        Func<RenderBox, BoxConstraints, Size> layoutChild,
+        Func<RenderBox, BoxConstraints, TextBaseline, double?> getBaseline)
     {
-        if (Child is null)
+        RenderBox? child = Child;
+        if (child is null)
         {
-            Size = Constraints.Smallest;
-            return;
+            return (constraints.Smallest, 0.0);
         }
 
-        BoxConstraints childConstraints = Constraints.Loosen();
-        Child.Layout(childConstraints, parentUsesSize: true);
-        double childBaseline = Child.GetDistanceToBaseline(_baselineType, onlyReal: true) ?? Child.Size.Height;
+        BoxConstraints childConstraints = constraints.Loosen();
+        Size childSize = layoutChild(child, childConstraints);
+        double childBaseline = getBaseline(child, childConstraints, _baselineType) ?? childSize.Height;
         double top = _baseline - childBaseline;
-        Size = Constraints.Constrain(new Size(Child.Size.Width, top + Child.Size.Height));
-        ((BoxParentData)Child.parentData!).offset = new Point(0, top);
+        return (constraints.Constrain(new Size(childSize.Width, top + childSize.Height)), top);
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) =>
+        ComputeSizes(constraints, ChildLayoutHelper.DryLayoutChild, ChildLayoutHelper.GetDryBaseline).Size;
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        RenderBox? child = Child;
+        double? result1 = child?.GetDryBaseline(constraints.Loosen(), baseline);
+        double? result2 = child?.GetDryBaseline(constraints.Loosen(), _baselineType);
+        if (result1 is null || result2 is null)
+        {
+            return null;
+        }
+
+        return _baseline + result1 - result2;
+    }
+
+    protected override void PerformLayout()
+    {
+        (Size size, double top) =
+            ComputeSizes(Constraints, ChildLayoutHelper.LayoutChild, ChildLayoutHelper.GetBaseline);
+        Size = size;
+        if (Child?.parentData is BoxParentData parentData)
+        {
+            parentData.offset = new Point(0.0, top);
+        }
     }
 
     /// <inheritdoc />
@@ -86,4 +114,6 @@ public sealed class RenderIgnoreBaseline : RenderProxyBox
     }
 
     protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) => null;
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) => null;
 }

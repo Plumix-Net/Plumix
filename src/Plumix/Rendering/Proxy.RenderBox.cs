@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Foundation;
+using Plumix.Painting;
 using Plumix.UI;
 using Plumix.Widgets;
 
@@ -64,10 +66,15 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
     {
         if (_child != null)
         {
-            var childParentData = (BoxParentData)_child.parentData!;
             visitor(_child);
         }
     }
+
+    /// <summary>
+    /// Dart's <c>RenderProxyBox.computeSizeForNoChild</c>: the size to take when there is no child.
+    /// Read by both <see cref="PerformLayout"/> and <see cref="ComputeDryLayout"/>.
+    /// </summary>
+    protected virtual Size ComputeSizeForNoChild(BoxConstraints constraints) => constraints.Smallest;
 
     protected override void PerformLayout()
     {
@@ -79,7 +86,7 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
         }
         else
         {
-            Size = Constraints.Constrain(new Size());
+            Size = ComputeSizeForNoChild(Constraints);
         }
     }
 
@@ -105,12 +112,12 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
 
     protected override Size ComputeDryLayout(BoxConstraints constraints)
     {
-        return _child?.GetDryLayout(constraints) ?? constraints.Smallest;
+        return _child?.GetDryLayout(constraints) ?? ComputeSizeForNoChild(constraints);
     }
 
     protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
     {
-        return _child?.GetDryBaseline(constraints, baseline);
+        return _child?.GetDryBaseline(constraints, baseline) ?? base.ComputeDryBaseline(constraints, baseline);
     }
 
     public override void Paint(PaintingContext ctx, Point offset)
@@ -146,7 +153,9 @@ public abstract class RenderProxyBox : RenderBox, IRenderObjectSingleChildContai
 
         var childParentData = (BoxParentData)_child.parentData!;
         double? childBaseline = _child.GetDistanceToBaseline(baseline, onlyReal: true);
-        return childBaseline + childParentData.offset.Y;
+        return childBaseline is null
+            ? base.ComputeDistanceToActualBaseline(baseline)
+            : childBaseline + childParentData.offset.Y;
     }
 
     /// <inheritdoc />
@@ -226,6 +235,23 @@ public sealed class RenderMetaData : RenderProxyBoxWithHitTestBehavior
     {
         base.DebugFillProperties(properties);
         properties.Add(new DiagnosticsProperty<object>("metaData", MetaData));
+    }
+}
+
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderMergeSemantics)
+public class RenderMergeSemantics : RenderProxyBox
+{
+    public RenderMergeSemantics(RenderBox? child = null)
+    {
+        Child = child;
+    }
+
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        ArgumentNullException.ThrowIfNull(configuration);
+        configuration.IsSemanticBoundary = true;
+        configuration.IsMergingSemanticsOfDescendants = true;
     }
 }
 
@@ -453,42 +479,48 @@ public class RenderConstrainedBox : RenderProxyBox
 
     protected override double ComputeMinIntrinsicWidth(double height)
     {
-        if (_additionalConstraints.HasTightWidth)
-        {
-            return _additionalConstraints.MinWidth;
-        }
-
-        return _additionalConstraints.ConstrainWidth(base.ComputeMinIntrinsicWidth(height));
+        return ConstrainIntrinsicWidth(base.ComputeMinIntrinsicWidth(height));
     }
 
     protected override double ComputeMaxIntrinsicWidth(double height)
     {
-        if (_additionalConstraints.HasTightWidth)
-        {
-            return _additionalConstraints.MinWidth;
-        }
-
-        return _additionalConstraints.ConstrainWidth(base.ComputeMaxIntrinsicWidth(height));
+        return ConstrainIntrinsicWidth(base.ComputeMaxIntrinsicWidth(height));
     }
 
     protected override double ComputeMinIntrinsicHeight(double width)
     {
-        if (_additionalConstraints.HasTightHeight)
-        {
-            return _additionalConstraints.MinHeight;
-        }
-
-        return _additionalConstraints.ConstrainHeight(base.ComputeMinIntrinsicHeight(width));
+        return ConstrainIntrinsicHeight(base.ComputeMinIntrinsicHeight(width));
     }
 
     protected override double ComputeMaxIntrinsicHeight(double width)
     {
-        if (_additionalConstraints.HasTightHeight)
+        return ConstrainIntrinsicHeight(base.ComputeMaxIntrinsicHeight(width));
+    }
+
+    private double ConstrainIntrinsicWidth(double childIntrinsic)
+    {
+        if (_additionalConstraints.HasBoundedWidth && _additionalConstraints.HasTightWidth)
+        {
+            return _additionalConstraints.MinWidth;
+        }
+
+        Debug.Assert(double.IsFinite(childIntrinsic));
+        return _additionalConstraints.HasInfiniteWidth
+            ? childIntrinsic
+            : _additionalConstraints.ConstrainWidth(childIntrinsic);
+    }
+
+    private double ConstrainIntrinsicHeight(double childIntrinsic)
+    {
+        if (_additionalConstraints.HasBoundedHeight && _additionalConstraints.HasTightHeight)
         {
             return _additionalConstraints.MinHeight;
         }
 
-        return _additionalConstraints.ConstrainHeight(base.ComputeMaxIntrinsicHeight(width));
+        Debug.Assert(double.IsFinite(childIntrinsic));
+        return _additionalConstraints.HasInfiniteHeight
+            ? childIntrinsic
+            : _additionalConstraints.ConstrainHeight(childIntrinsic);
     }
 
     protected override Size ComputeDryLayout(BoxConstraints constraints)
@@ -863,7 +895,7 @@ public sealed class RenderLimitedBox : RenderProxyBox
         set
         {
             double normalized = ValidateMaxValue(value, nameof(value));
-            if (Math.Abs(_maxWidth - normalized) < 0.0001)
+            if (_maxWidth.Equals(normalized))
             {
                 return;
             }
@@ -879,7 +911,7 @@ public sealed class RenderLimitedBox : RenderProxyBox
         set
         {
             double normalized = ValidateMaxValue(value, nameof(value));
-            if (Math.Abs(_maxHeight - normalized) < 0.0001)
+            if (_maxHeight.Equals(normalized))
             {
                 return;
             }
@@ -889,23 +921,32 @@ public sealed class RenderLimitedBox : RenderProxyBox
         }
     }
 
+    private BoxConstraints LimitConstraints(BoxConstraints constraints) => new BoxConstraints(
+        MinWidth: constraints.MinWidth,
+        MaxWidth: constraints.HasBoundedWidth ? constraints.MaxWidth : constraints.ConstrainWidth(_maxWidth),
+        MinHeight: constraints.MinHeight,
+        MaxHeight: constraints.HasBoundedHeight ? constraints.MaxHeight : constraints.ConstrainHeight(_maxHeight));
+
+    private Size ComputeSize(BoxConstraints constraints, Func<RenderBox, BoxConstraints, Size> layoutChild)
+    {
+        if (Child is null)
+        {
+            return LimitConstraints(constraints).Constrain(new Size());
+        }
+
+        Size childSize = layoutChild(Child, LimitConstraints(constraints));
+        return constraints.Constrain(childSize);
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) =>
+        ComputeSize(constraints, ChildLayoutHelper.DryLayoutChild);
+
     protected override void PerformLayout()
     {
-        var limitedConstraints = new BoxConstraints(
-            MinWidth: Constraints.MinWidth,
-            MaxWidth: Constraints.HasBoundedWidth ? Constraints.MaxWidth : Constraints.ConstrainWidth(MaxWidth),
-            MinHeight: Constraints.MinHeight,
-            MaxHeight: Constraints.HasBoundedHeight ? Constraints.MaxHeight : Constraints.ConstrainHeight(MaxHeight));
-
+        Size = ComputeSize(Constraints, ChildLayoutHelper.LayoutChild);
         if (Child != null)
         {
-            Child.Layout(limitedConstraints, parentUsesSize: true);
-            Size = Constraints.Constrain(Child.Size);
             ((BoxParentData)Child.parentData!).offset = new Point(0, 0);
-        }
-        else
-        {
-            Size = limitedConstraints.Constrain(new Size());
         }
     }
 
@@ -971,6 +1012,12 @@ public sealed class RenderOffstage : RenderProxyBox
     /// <inheritdoc />
     /// <remarks>Flutter's <c>RenderOffstage.sizedByParent</c>: an offstage child takes no room.</remarks>
     protected override bool SizedByParent => _offstage;
+
+    protected override void PerformResize()
+    {
+        Debug.Assert(_offstage);
+        base.PerformResize();
+    }
 
     protected override Size ComputeDryLayout(BoxConstraints constraints) =>
         _offstage ? constraints.Smallest : base.ComputeDryLayout(constraints);
@@ -1170,24 +1217,16 @@ public sealed class RenderAbsorbPointer : RenderProxyBox
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderAbsorbPointer.hitTest</c> reports the hit without adding itself to the
+    /// path, so the absorber swallows the event rather than receiving it.
+    /// </remarks>
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
-        if (!_absorbing)
-        {
-            return base.HitTest(result, position);
-        }
-
-        if (!HasSize
-            || position.X < 0
-            || position.Y < 0
-            || position.X > Size.Width
-            || position.Y > Size.Height)
-        {
-            return false;
-        }
-
-        result.Add(new BoxHitTestEntry(this, position));
-        return true;
+        return _absorbing
+            ? HasSize && Size.Contains(position)
+            : base.HitTest(result, position);
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
@@ -1234,7 +1273,7 @@ public sealed class RenderAspectRatio : RenderProxyBox
         set
         {
             double normalized = ValidateAspectRatio(value, nameof(value));
-            if (Math.Abs(_aspectRatio - normalized) < 0.0001)
+            if (_aspectRatio.Equals(normalized))
             {
                 return;
             }
@@ -1244,14 +1283,31 @@ public sealed class RenderAspectRatio : RenderProxyBox
         }
     }
 
+    protected override double ComputeMinIntrinsicWidth(double height) =>
+        double.IsFinite(height) ? height * _aspectRatio : base.ComputeMinIntrinsicWidth(height);
+
+    protected override double ComputeMaxIntrinsicWidth(double height) =>
+        double.IsFinite(height) ? height * _aspectRatio : base.ComputeMaxIntrinsicWidth(height);
+
+    protected override double ComputeMinIntrinsicHeight(double width) =>
+        double.IsFinite(width) ? width / _aspectRatio : base.ComputeMinIntrinsicHeight(width);
+
+    protected override double ComputeMaxIntrinsicHeight(double width) =>
+        double.IsFinite(width) ? width / _aspectRatio : base.ComputeMaxIntrinsicHeight(width);
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) =>
+        ComputeSizeForConstraints(constraints);
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) =>
+        base.ComputeDryBaseline(BoxConstraints.Tight(GetDryLayout(constraints)), baseline);
+
     protected override void PerformLayout()
     {
-        var computedSize = ComputeSizeForConstraints(Constraints);
-        Size = computedSize;
+        Size = GetDryLayout(Constraints);
 
         if (Child != null)
         {
-            Child.Layout(BoxConstraints.Tight(computedSize));
+            Child.Layout(BoxConstraints.Tight(Size));
             ((BoxParentData)Child.parentData!).offset = new Point(0, 0);
         }
     }
@@ -1477,9 +1533,11 @@ public sealed class RenderFittedBox : RenderProxyBox
     }
 
     /// <inheritdoc />
-    public override bool PaintsChild(RenderObject child) =>
-        Size.Width != 0 && Size.Height != 0
-        && child is RenderBox box && box.Size.Width != 0 && box.Size.Height != 0;
+    public override bool PaintsChild(RenderObject child)
+    {
+        Debug.Assert(ReferenceEquals(child.Parent, this));
+        return !Size.IsEmpty && child is RenderBox box && !box.Size.IsEmpty;
+    }
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
@@ -1716,31 +1774,63 @@ public sealed class RenderDecoratedBox : RenderProxyBox
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderDecoratedBox.hitTestSelf</c>.</remarks>
+    protected override bool HitTestSelf(Point position) =>
+        _decoration.HitTest(Size, position, textDirection: _configuration.TextDirection);
+
     public override void Paint(PaintingContext ctx, Point offset)
     {
+        _painter ??= _decoration.CreateBoxPainter(HandleImageChanged);
+        ImageConfiguration filledConfiguration = _configuration.CopyWith(size: Size);
         if (_position == DecorationPosition.Background)
         {
-            PaintDecoration(ctx, offset);
+            int debugSaveCount = 0;
+            if (Constants.KDebugMode)
+            {
+                debugSaveCount = ctx.Canvas.GetSaveCount();
+            }
+
+            _painter.Paint(ctx, offset, filledConfiguration);
+            if (Constants.KDebugMode && debugSaveCount != ctx.Canvas.GetSaveCount())
+            {
+                throw new AssertionError(
+                    $"{_decoration.GetType().Name} painter had mismatching save and restore calls.");
+            }
+
+            if (_decoration.IsComplex)
+            {
+                ctx.SetIsComplexHint();
+            }
         }
 
         base.Paint(ctx, offset);
 
         if (_position == DecorationPosition.Foreground)
         {
-            PaintDecoration(ctx, offset);
+            _painter.Paint(ctx, offset, filledConfiguration);
+            if (_decoration.IsComplex)
+            {
+                ctx.SetIsComplexHint();
+            }
         }
-    }
-
-    private void PaintDecoration(PaintingContext ctx, Point offset)
-    {
-        _painter ??= _decoration.CreateBoxPainter(HandleImageChanged);
-        _painter.Paint(ctx, offset, _configuration.CopyWith(size: Size));
     }
 
     protected override void OnDetach()
     {
         DisposePainter();
         base.OnDetach();
+
+        // Dart's `RenderDecoratedBox.detach` repaints on purpose: without it a decoration moved
+        // through a GlobalKey never re-creates its painter, so image-change notifications stop.
+        MarkNeedsPaint();
+    }
+
+    /// <inheritdoc />
+    public override void Dispose()
+    {
+        DisposePainter();
+        base.Dispose();
     }
 
     private void HandleImageChanged()
@@ -1766,6 +1856,7 @@ public sealed class RenderDecoratedBox : RenderProxyBox
 public class RenderOpacity : RenderProxyBox
 {
     private double _opacity;
+    private int _alpha;
     private bool _alwaysIncludeSemantics;
 
     public RenderOpacity(double opacity = 1.0, RenderBox? child = null)
@@ -1778,7 +1869,9 @@ public class RenderOpacity : RenderProxyBox
         bool alwaysIncludeSemantics,
         RenderBox? child = null)
     {
-        _opacity = Math.Clamp(opacity, 0.0, 1.0);
+        Debug.Assert(opacity is >= 0.0 and <= 1.0);
+        _opacity = opacity;
+        _alpha = ColorUtilities.GetAlphaFromOpacity(opacity);
         _alwaysIncludeSemantics = alwaysIncludeSemantics;
         Child = child;
     }
@@ -1788,22 +1881,23 @@ public class RenderOpacity : RenderProxyBox
         get => _opacity;
         set
         {
-            double clamped = Math.Clamp(value, 0.0, 1.0);
-            if (Math.Abs(_opacity - clamped) < 0.0001)
+            Debug.Assert(value is >= 0.0 and <= 1.0);
+            if (_opacity.Equals(value))
             {
                 return;
             }
 
             bool didNeedCompositing = AlwaysNeedsCompositing;
-            bool semanticsVisibilityChanged = (_opacity == 0.0) != (clamped == 0.0);
-            _opacity = clamped;
+            bool wasVisible = _alpha != 0;
+            _opacity = value;
+            _alpha = ColorUtilities.GetAlphaFromOpacity(value);
             if (didNeedCompositing != AlwaysNeedsCompositing)
             {
                 MarkNeedsCompositingBitsUpdate();
             }
 
             MarkNeedsCompositedLayerUpdate();
-            if (semanticsVisibilityChanged && !AlwaysIncludeSemantics)
+            if (wasVisible != (_alpha != 0) && !AlwaysIncludeSemantics)
             {
                 MarkNeedsSemanticsUpdate();
             }
@@ -1826,7 +1920,7 @@ public class RenderOpacity : RenderProxyBox
     }
 
     public override bool IsRepaintBoundary => AlwaysNeedsCompositing;
-    protected override bool AlwaysNeedsCompositing => Child != null && Opacity > 0.0;
+    protected override bool AlwaysNeedsCompositing => Child != null && _alpha > 0;
 
     protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
     {
@@ -1837,13 +1931,29 @@ public class RenderOpacity : RenderProxyBox
     {
         if (layer is OpacityLayer opacityLayer)
         {
-            opacityLayer.Opacity = Opacity;
+            opacityLayer.Alpha = _alpha;
         }
+    }
+
+    public override bool PaintsChild(RenderObject child)
+    {
+        Debug.Assert(ReferenceEquals(child.Parent, this));
+        return _alpha > 0;
+    }
+
+    public override void Paint(PaintingContext ctx, Point offset)
+    {
+        if (Child is null || _alpha == 0)
+        {
+            return;
+        }
+
+        base.Paint(ctx, offset);
     }
 
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        if (Opacity > 0.0 || AlwaysIncludeSemantics)
+        if (_alpha != 0 || AlwaysIncludeSemantics)
         {
             base.VisitChildrenForSemantics(visitor);
         }
@@ -1947,13 +2057,19 @@ public sealed class RenderTransform : RenderProxyBox
         set
         {
             if (_filterQuality == value) return;
+            bool didNeedCompositing = AlwaysNeedsCompositing;
             _filterQuality = value;
-            if (Child != null)
+            if (didNeedCompositing != AlwaysNeedsCompositing)
             {
-                MarkNeedsPaint();
+                MarkNeedsCompositingBitsUpdate();
             }
+
+            MarkNeedsPaint();
         }
     }
+
+    /// <inheritdoc />
+    protected override bool AlwaysNeedsCompositing => Child != null && _filterQuality is not null;
 
     /// <remarks>
     /// Flutter's <c>RenderTransform._effectiveTransform</c>: `T(origin) * T(a) * M * T(-a) * T(-origin)`
@@ -2009,11 +2125,8 @@ public sealed class RenderTransform : RenderProxyBox
             }
 
             _transform = Matrix4.Copy(value);
-            if (Child != null)
-            {
-                MarkNeedsPaint();
-                MarkNeedsSemanticsUpdate();
-            }
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -2066,17 +2179,6 @@ public sealed class RenderTransform : RenderProxyBox
     }
 
 
-    /// <inheritdoc />
-    /// <remarks>
-    /// Flutter drops the layer and paints nothing when the effective transform is singular or carries
-    /// a non-finite entry; Plumix expresses the same rule by skipping the child paint.
-    /// </remarks>
-    public override bool PaintsChild(RenderObject child)
-    {
-        double determinant = EffectiveTransform.Determinant();
-        return determinant != 0 && double.IsFinite(determinant);
-    }
-
     public override void Paint(PaintingContext ctx, Point offset)
     {
         ArgumentNullException.ThrowIfNull(ctx);
@@ -2117,14 +2219,6 @@ public sealed class RenderTransform : RenderProxyBox
         Layer = ctx.PushTransform(true, offset, transform, base.Paint, filteredLayer);
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
-    {
-        if (Child != null)
-        {
-            visitor(Child);
-        }
-    }
-
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
         transform.Multiply(EffectiveTransform);
@@ -2140,11 +2234,10 @@ public sealed class RenderTransform : RenderProxyBox
             return false;
         }
 
-        var childParentData = (BoxParentData)Child.parentData!;
         return result.AddWithPaintTransform(
             TransformHitTests ? EffectiveTransform : null,
-            position - childParentData.offset,
-            (hitResult, hitPosition) => Child.HitTest(hitResult, hitPosition));
+            position,
+            base.HitTestChildren);
     }
 
     /// <inheritdoc />
@@ -2204,28 +2297,19 @@ public sealed class RenderFractionalTranslation : RenderProxyBox
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
+        Debug.Assert(!DebugNeedsLayout);
         if (Child is null) return;
-        var data = (BoxParentData)Child.parentData!;
-        ctx.PaintChild(Child, data.offset + offset + PaintOffset);
+        base.Paint(ctx, offset + PaintOffset);
     }
 
     protected override bool HitTestChildren(BoxHitTestResult result, Point position)
     {
-        if (Child is null) return false;
-        var data = (BoxParentData)Child.parentData!;
+        Debug.Assert(!DebugNeedsLayout);
         Vector offset = PaintOffset;
         return result.AddWithPaintOffset(
             TransformHitTests ? new Point(offset.X, offset.Y) : null,
-            position - data.offset,
-            (hitResult, hitPosition) => Child.HitTest(hitResult, hitPosition));
-    }
-
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
-    {
-        if (Child is null) return;
-        var data = (BoxParentData)Child.parentData!;
-        var offset = PaintOffset;
-        visitor(Child);
+            position,
+            base.HitTestChildren);
     }
 
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
@@ -2433,7 +2517,7 @@ public sealed class RenderClipRect : RenderCustomClip<Rect>
     public RenderClipRect(
         RenderBox? child = null,
         CustomClipper<Rect>? clipper = null,
-        Clip clipBehavior = Clip.HardEdge) : base(child, clipper, clipBehavior)
+        Clip clipBehavior = Clip.AntiAlias) : base(child, clipper, clipBehavior)
     {
     }
 
@@ -2587,18 +2671,15 @@ public sealed class RenderClipRRect : RenderCustomClip<RRect>
     }
 
     /// <inheritdoc />
-    protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
-    {
-        return ClipBehavior == Clip.None ? null : EffectiveClip.Rect;
-    }
-
-    /// <inheritdoc />
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
-        RRect clip = EffectiveClip;
-        if (!Rendering.Layer.ContainsRoundedRect(clip.Rect, clip.Radii, position))
+        if (Clipper is not null)
         {
-            return false;
+            RRect clip = EffectiveClip;
+            if (!Rendering.Layer.ContainsRoundedRect(clip.Rect, clip.Radii, position))
+            {
+                return false;
+            }
         }
 
         return base.HitTest(result, position);
@@ -2613,14 +2694,12 @@ public sealed class RenderClipRRect : RenderCustomClip<RRect>
             new Rect(clip.Rect.Position + offset, clip.Rect.Size),
             clip.Radii));
         context.Canvas.DrawPath(path, brush: null, pen: RenderCustomClipDebug.DebugPen);
-        RenderCustomClipDebug.PaintScissors(context, offset, clip.Width);
+        RenderCustomClipDebug.PaintScissorsAt(context, offset, clip.TopLeft.X);
     }
 }
 
-public class RenderPointerListener : RenderProxyBox
+public class RenderPointerListener : RenderProxyBoxWithHitTestBehavior
 {
-    private HitTestBehavior _behavior;
-
     public RenderPointerListener(
         Action<PointerDownEvent>? onPointerDown = null,
         Action<PointerMoveEvent>? onPointerMove = null,
@@ -2634,7 +2713,7 @@ public class RenderPointerListener : RenderProxyBox
         Action<PointerPanZoomEndEvent>? onPointerPanZoomEnd = null,
         Action<PointerSignalEvent>? onPointerSignal = null,
         HitTestBehavior behavior = HitTestBehavior.DeferToChild,
-        RenderBox? child = null)
+        RenderBox? child = null) : base(behavior, child)
     {
         OnPointerDown = onPointerDown;
         OnPointerMove = onPointerMove;
@@ -2647,8 +2726,6 @@ public class RenderPointerListener : RenderProxyBox
         OnPointerPanZoomUpdate = onPointerPanZoomUpdate;
         OnPointerPanZoomEnd = onPointerPanZoomEnd;
         OnPointerSignal = onPointerSignal;
-        _behavior = behavior;
-        Child = child;
     }
 
     public Action<PointerDownEvent>? OnPointerDown { get; set; }
@@ -2676,32 +2753,9 @@ public class RenderPointerListener : RenderProxyBox
 
     public Action<PointerSignalEvent>? OnPointerSignal { get; set; }
 
-    public HitTestBehavior Behavior
-    {
-        get => _behavior;
-        set => _behavior = value;
-    }
-
-    public override bool HitTest(BoxHitTestResult result, Point position)
-    {
-        if (position.X < 0 || position.Y < 0 || position.X > Size.Width || position.Y > Size.Height)
-        {
-            return false;
-        }
-
-        bool hitTarget = HitTestChildren(result, position) || HitTestSelf(position);
-        if (hitTarget || Behavior == HitTestBehavior.Translucent || Behavior == HitTestBehavior.Opaque)
-        {
-            result.Add(new BoxHitTestEntry(this, position));
-        }
-
-        return hitTarget || Behavior == HitTestBehavior.Opaque || Behavior == HitTestBehavior.Translucent;
-    }
-
-    protected override bool HitTestSelf(Point position)
-    {
-        return Behavior == HitTestBehavior.Opaque;
-    }
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>RenderPointerListener.computeSizeForNoChild</c>.</remarks>
+    protected override Size ComputeSizeForNoChild(BoxConstraints constraints) => constraints.Biggest;
 
     public override void HandleEvent(PointerEvent @event, HitTestEntry entry)
     {
@@ -2756,6 +2810,9 @@ public class RenderPointerListener : RenderProxyBox
                 new KeyValuePair<string, Delegate?>("up", OnPointerUp),
                 new KeyValuePair<string, Delegate?>("hover", OnPointerHover),
                 new KeyValuePair<string, Delegate?>("cancel", OnPointerCancel),
+                new KeyValuePair<string, Delegate?>("panZoomStart", OnPointerPanZoomStart),
+                new KeyValuePair<string, Delegate?>("panZoomUpdate", OnPointerPanZoomUpdate),
+                new KeyValuePair<string, Delegate?>("panZoomEnd", OnPointerPanZoomEnd),
                 new KeyValuePair<string, Delegate?>("signal", OnPointerSignal),
             ],
             ifEmpty: "<none>"));
@@ -2840,6 +2897,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     private Action? _onDidLoseAccessibilityFocus;
     private bool _liveRegion;
     private bool _container;
+    private bool _excludeSemantics;
+    private bool _blockUserActions;
     private bool _explicitChildNodes;
     private bool _mergeDescendants;
     private SemanticsSortKey? _sortKey;
@@ -2874,6 +2933,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
+        bool excludeSemantics = false,
+        bool blockUserActions = false,
         SemanticsSortKey? sortKey = null,
         TextDirection? textDirection = null,
         bool mergeDescendants = false,
@@ -2910,6 +2971,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         _liveRegion = liveRegion;
         _container = container;
         _explicitChildNodes = explicitChildNodes;
+        _excludeSemantics = excludeSemantics;
+        _blockUserActions = blockUserActions;
         _sortKey = sortKey;
         _textDirection = textDirection;
         _mergeDescendants = mergeDescendants;
@@ -3290,6 +3353,40 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    /// <summary>Whether to drop all of the child's semantics.</summary>
+    /// <remarks>Flutter's <c>SemanticsAnnotationsMixin.excludeSemantics</c>.</remarks>
+    public bool ExcludeSemantics
+    {
+        get => _excludeSemantics;
+        set
+        {
+            if (_excludeSemantics == value)
+            {
+                return;
+            }
+
+            _excludeSemantics = value;
+            MarkNeedsSemanticsUpdateBatched();
+        }
+    }
+
+    /// <summary>Whether the user actions of this subtree are blocked.</summary>
+    /// <remarks>Flutter's <c>SemanticsAnnotationsMixin.blockUserActions</c>.</remarks>
+    public bool BlockUserActions
+    {
+        get => _blockUserActions;
+        set
+        {
+            if (_blockUserActions == value)
+            {
+                return;
+            }
+
+            _blockUserActions = value;
+            MarkNeedsSemanticsUpdateBatched();
+        }
+    }
+
     /// <summary>
     /// The reading direction for this subtree's semantics, and the direction the default traversal
     /// sort walks siblings in.
@@ -3375,6 +3472,18 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>Flutter's <c>SemanticsAnnotationsMixin.visitChildrenForSemantics</c>.</remarks>
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    {
+        if (_excludeSemantics)
+        {
+            return;
+        }
+
+        base.VisitChildrenForSemantics(visitor);
+    }
+
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         if (string.IsNullOrWhiteSpace(_label)
@@ -3410,6 +3519,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             && _accessibilityFocusBlockType == AccessibilityFocusBlockType.None
             && _traversalParentIdentifier is null
             && _traversalChildIdentifier is null
+            && !_excludeSemantics
+            && !_blockUserActions
             && !_mergeDescendants)
         {
             return;
@@ -3421,6 +3532,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         }
 
         configuration.IsSemanticBoundary = _container;
+        configuration.IsBlockingUserActions = _blockUserActions;
         configuration.AccessibilityFocusBlockType = _accessibilityFocusBlockType;
         configuration.Role = _role;
         configuration.InputType = _inputType;

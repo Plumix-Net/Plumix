@@ -136,10 +136,24 @@ internal static class RenderCustomClipDebug
     /// <remarks>Flutter's <c>_RenderCustomClip.debugPaintSize</c> scissors placement.</remarks>
     internal static void PaintScissors(PaintingContext context, Point offset, double clipWidth)
     {
+        PaintScissorsAt(context, offset, clipWidth / 8.0);
+    }
+
+    /// <summary>Draws the scissors glyph at an explicit horizontal offset from the clip origin.</summary>
+    /// <remarks>
+    /// Each Flutter clip render object places the glyph differently: <c>RenderClipRect</c> at
+    /// <c>width / 8</c>, <c>RenderClipRRect</c>/<c>RenderClipRSuperellipse</c> at the top-left
+    /// corner's x radius, <c>RenderClipOval</c> centred, and <c>RenderClipPath</c> at zero.
+    /// </remarks>
+    internal static void PaintScissorsAt(PaintingContext context, Point offset, double dx)
+    {
         context.Canvas.DrawTextLayout(
             DebugText,
-            new Point(offset.X + (clipWidth / 8.0), offset.Y - (FontSize * 1.1)));
+            new Point(offset.X + dx, offset.Y - (FontSize * 1.1)));
     }
+
+    /// <summary>The measured width of the scissors glyph, for the centred placements.</summary>
+    internal static double DebugTextWidth => DebugText.Width;
 }
 
 public abstract class RenderCustomClip<T> : RenderProxyBox
@@ -201,10 +215,6 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
 
             _clipBehavior = value;
             MarkNeedsPaint();
-            // Plumix-only: `RenderClipRect`/`RenderClipRRect` derive `AlwaysNeedsCompositing` from
-            // the clip behavior, so the compositing bits have to be recomputed with it.
-            MarkNeedsCompositingBitsUpdate();
-            MarkNeedsSemanticsUpdate();
         }
     }
 
@@ -244,7 +254,7 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
         base.PerformLayout();
         if (!hadSize || oldSize != Size)
         {
-            MarkNeedsClip();
+            InvalidateClip();
         }
     }
 
@@ -278,7 +288,8 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
             return;
         }
 
-        base.DebugPaintSize(context, offset);
+        // Dart's `_RenderCustomClip.debugPaintSize` deliberately does not chain to
+        // `RenderBox.debugPaintSize`, so a clip node never draws the standard size rectangle.
         if (ClipBehavior == Clip.None)
         {
             return;
@@ -293,6 +304,9 @@ public abstract class RenderCustomClip<T> : RenderProxyBox
 
 public sealed class RenderClipOval : RenderCustomClip<Rect>
 {
+    private Rect? _cachedRect;
+    private Path? _cachedPath;
+
     public RenderClipOval(
         RenderBox? child = null,
         CustomClipper<Rect>? clipper = null,
@@ -305,11 +319,6 @@ public sealed class RenderClipOval : RenderCustomClip<Rect>
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
         Rect clip = EffectiveClip;
-        if (clip.Width <= 0 || clip.Height <= 0)
-        {
-            return false;
-        }
-
         Point center = clip.Center;
         double normalizedX = (position.X - center.X) / clip.Width;
         double normalizedY = (position.Y - center.Y) / clip.Height;
@@ -349,11 +358,16 @@ public sealed class RenderClipOval : RenderCustomClip<Rect>
     }
 
     /// <remarks>Flutter's <c>RenderClipOval._getClipPath</c>.</remarks>
-    private static Path GetClipPath(Rect rect)
+    private Path GetClipPath(Rect rect)
     {
-        var path = new Path();
-        path.AddOval(rect);
-        return path;
+        if (_cachedRect != rect)
+        {
+            _cachedRect = rect;
+            _cachedPath = new Path();
+            _cachedPath.AddOval(rect);
+        }
+
+        return _cachedPath!;
     }
 
     /// <inheritdoc />
@@ -364,7 +378,10 @@ public sealed class RenderClipOval : RenderCustomClip<Rect>
             new Rect(clip.Position + offset, clip.Size),
             brush: null,
             pen: RenderCustomClipDebug.DebugPen);
-        RenderCustomClipDebug.PaintScissors(context, offset, clip.Width);
+        RenderCustomClipDebug.PaintScissorsAt(
+            context,
+            offset,
+            (clip.Width - RenderCustomClipDebug.DebugTextWidth) / 2.0);
     }
 }
 
@@ -428,6 +445,114 @@ public sealed class RenderClipPath : RenderCustomClip<Path>
     {
         Path clip = EffectiveClip;
         context.Canvas.DrawGeometry(null, RenderCustomClipDebug.DebugPen, clip.ToGeometry(), geometryOffset: offset);
-        RenderCustomClipDebug.PaintScissors(context, offset, clip.GetBounds().Width);
+        RenderCustomClipDebug.PaintScissorsAt(context, offset, 0.0);
+    }
+}
+
+/// <summary>
+/// Clips its child to an iOS-style rounded superellipse.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>RenderClipRSuperellipse</c>. Hit testing is performed against the bounding box of
+/// the superellipse, not its contour, exactly as Dart documents.
+/// </remarks>
+public sealed class RenderClipRSuperellipse : RenderCustomClip<RSuperellipse>
+{
+    private BorderRadiusGeometry _borderRadius;
+    private TextDirection? _textDirection;
+
+    public RenderClipRSuperellipse(
+        RenderBox? child = null,
+        BorderRadiusGeometry? borderRadius = null,
+        CustomClipper<RSuperellipse>? clipper = null,
+        Clip clipBehavior = Clip.AntiAlias,
+        TextDirection? textDirection = null) : base(child, clipper, clipBehavior)
+    {
+        _borderRadius = borderRadius ?? Rendering.BorderRadius.Zero;
+        _textDirection = textDirection;
+    }
+
+    /// <summary>The border radius of the rounded corners.</summary>
+    public BorderRadiusGeometry BorderRadius
+    {
+        get => _borderRadius;
+        set
+        {
+            if (_borderRadius == value)
+            {
+                return;
+            }
+
+            _borderRadius = value;
+            MarkNeedsClip();
+        }
+    }
+
+    /// <summary>The text direction with which to resolve a directional <see cref="BorderRadius"/>.</summary>
+    public TextDirection? TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            if (_textDirection == value)
+            {
+                return;
+            }
+
+            _textDirection = value;
+            MarkNeedsClip();
+        }
+    }
+
+    /// <inheritdoc />
+    protected override RSuperellipse DefaultClip => _borderRadius
+        .Resolve(_textDirection ?? Plumix.UI.TextDirection.Ltr)
+        .ToRSuperellipse(new Rect(new Point(0, 0), Size));
+
+    /// <inheritdoc />
+    public override bool HitTest(BoxHitTestResult result, Point position)
+    {
+        if (Clipper is not null && !EffectiveClip.OuterRect.Contains(position))
+        {
+            return false;
+        }
+
+        return base.HitTest(result, position);
+    }
+
+    /// <inheritdoc />
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is null)
+        {
+            Layer = null;
+            return;
+        }
+
+        if (ClipBehavior == Clip.None)
+        {
+            context.PaintChild(Child, offset);
+            Layer = null;
+            return;
+        }
+
+        RSuperellipse clip = EffectiveClip;
+        Layer = context.PushClipRSuperellipse(
+            NeedsCompositing,
+            offset,
+            clip.OuterRect,
+            clip,
+            base.Paint,
+            ClipBehavior,
+            Layer as ClipRSuperellipseLayer);
+    }
+
+    /// <inheritdoc />
+    protected override void DebugPaintClip(PaintingContext context, Point offset)
+    {
+        RSuperellipse clip = EffectiveClip;
+        context.Canvas.DrawRSuperellipse(clip.Shift(offset), brush: null, pen: RenderCustomClipDebug.DebugPen);
+        RenderCustomClipDebug.PaintScissorsAt(context, offset, clip.TopLeft.X);
     }
 }

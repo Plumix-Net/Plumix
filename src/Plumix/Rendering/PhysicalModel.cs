@@ -7,16 +7,153 @@ using Plumix.Painting;
 
 namespace Plumix.Rendering;
 
-// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderPhysicalModel)
+// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart
+// (_RenderPhysicalModelBase, RenderPhysicalModel, RenderPhysicalShape)
 
-public sealed class RenderPhysicalModel : RenderProxyBox
+/// <summary>The elevation, colour and shadow shared by the two physical-model render objects.</summary>
+/// <remarks>Flutter's private <c>_RenderPhysicalModelBase&lt;T&gt;</c>.</remarks>
+public abstract class RenderPhysicalModelBase<T> : RenderCustomClip<T>
 {
-    private BoxShape _shape;
-    private Clip _clipBehavior;
-    private BorderRadius? _borderRadius;
     private double _elevation;
     private Color _color;
     private Color _shadowColor;
+
+    protected RenderPhysicalModelBase(
+        RenderBox? child,
+        double elevation,
+        Color color,
+        Color shadowColor,
+        CustomClipper<T>? clipper = null,
+        Clip clipBehavior = Clip.None) : base(child, clipper, clipBehavior)
+    {
+        ValidateElevation(elevation);
+        _elevation = elevation;
+        _color = color;
+        _shadowColor = shadowColor;
+    }
+
+    /// <summary>The z-coordinate at which to place this material.</summary>
+    public double Elevation
+    {
+        get => _elevation;
+        set
+        {
+            ValidateElevation(value);
+            if (_elevation.Equals(value))
+            {
+                return;
+            }
+
+            bool didNeedCompositing = AlwaysNeedsCompositing;
+            _elevation = value;
+            if (didNeedCompositing != AlwaysNeedsCompositing)
+            {
+                MarkNeedsCompositingBitsUpdate();
+            }
+
+            MarkNeedsPaint();
+        }
+    }
+
+    /// <summary>The shadow colour.</summary>
+    public Color ShadowColor
+    {
+        get => _shadowColor;
+        set
+        {
+            if (_shadowColor == value)
+            {
+                return;
+            }
+
+            _shadowColor = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    /// <summary>The background colour.</summary>
+    public Color Color
+    {
+        get => _color;
+        set
+        {
+            if (_color == value)
+            {
+                return;
+            }
+
+            _color = value;
+            MarkNeedsPaint();
+        }
+    }
+
+    /// <summary>
+    /// Draws the elevation shadow of <paramref name="geometry"/>, honouring
+    /// <see cref="RenderingDebug.DisableShadows"/>.
+    /// </summary>
+    /// <returns>Whether the caller should still paint its own surface fill.</returns>
+    /// <remarks>Flutter inlines this in both <c>paint</c> methods.</remarks>
+    private protected void PaintShadow(PaintingContext context, Path path, Point offset)
+    {
+        if (Constants.KDebugMode && RenderingDebug.DisableShadows)
+        {
+            if (_elevation > 0.0)
+            {
+                context.Canvas.DrawPath(
+                    path,
+                    brush: null,
+                    pen: new Pen(new SolidColorBrush(_shadowColor), _elevation * 2.0));
+            }
+
+            return;
+        }
+
+        if (_elevation != 0.0)
+        {
+            context.Canvas.DrawShadow(
+                path,
+                _shadowColor,
+                _elevation,
+                transparentOccluder: _color.A != byte.MaxValue,
+                geometryOffset: offset);
+        }
+    }
+
+    private static void ValidateElevation(double elevation)
+    {
+        if (Constants.KDebugMode && !(elevation >= 0.0))
+        {
+            throw new AssertionError("Elevation must be non-negative.");
+        }
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter passes <c>color</c> (not <c>shadowColor</c>) as the value of the "shadowColor"
+    /// property; the port keeps the upstream behaviour so diagnostics dumps match.
+    /// </remarks>
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder description)
+    {
+        base.DebugFillProperties(description);
+        description.Add(new DoubleProperty("elevation", Elevation));
+        description.Add(new ColorProperty("color", Color));
+        description.Add(new ColorProperty("shadowColor", Color));
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's physical render objects inherit <c>_RenderCustomClip.debugPaintSize</c>, which paints
+    /// nothing of its own.
+    /// </remarks>
+    protected override void DebugPaintClip(PaintingContext context, Point offset)
+    {
+    }
+}
+
+public sealed class RenderPhysicalModel : RenderPhysicalModelBase<RRect>
+{
+    private BoxShape _shape;
+    private BorderRadius? _borderRadius;
 
     public RenderPhysicalModel(
         Color color,
@@ -25,16 +162,16 @@ public sealed class RenderPhysicalModel : RenderProxyBox
         Clip clipBehavior = Clip.None,
         BorderRadius? borderRadius = null,
         double elevation = 0.0,
-        Color? shadowColor = null)
+        Color? shadowColor = null) : base(
+            child,
+            elevation,
+            color,
+            shadowColor ?? Colors.Black,
+            clipper: null,
+            clipBehavior: clipBehavior)
     {
-        ValidateElevation(elevation);
-        _color = color;
         _shape = shape;
-        _clipBehavior = clipBehavior;
         _borderRadius = borderRadius;
-        _elevation = elevation;
-        _shadowColor = shadowColor ?? Colors.Black;
-        Child = child;
     }
 
     public BoxShape Shape
@@ -48,22 +185,7 @@ public sealed class RenderPhysicalModel : RenderProxyBox
             }
 
             _shape = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Clip ClipBehavior
-    {
-        get => _clipBehavior;
-        set
-        {
-            if (_clipBehavior == value)
-            {
-                return;
-            }
-
-            _clipBehavior = value;
-            MarkNeedsPaint();
+            MarkNeedsClip();
         }
     }
 
@@ -78,56 +200,40 @@ public sealed class RenderPhysicalModel : RenderProxyBox
             }
 
             _borderRadius = value;
-            MarkNeedsPaint();
+            MarkNeedsClip();
         }
     }
 
-    public double Elevation
+    /// <inheritdoc />
+    protected override RRect DefaultClip
     {
-        get => _elevation;
-        set
+        get
         {
-            ValidateElevation(value);
-            if (Math.Abs(_elevation - value) < 0.0001)
+            var rect = new Rect(new Point(0, 0), Size);
+            return _shape switch
             {
-                return;
-            }
-
-            _elevation = value;
-            MarkNeedsPaint();
+                BoxShape.Rectangle => (_borderRadius ?? Rendering.BorderRadius.Zero).ToRRect(rect),
+                _ => RRect.FromRectXY(rect, rect.Width / 2.0, rect.Height / 2.0),
+            };
         }
     }
 
-    public Color Color
+    /// <inheritdoc />
+    public override bool HitTest(BoxHitTestResult result, Point position)
     {
-        get => _color;
-        set
+        if (Clipper is not null)
         {
-            if (_color == value)
+            RRect clip = EffectiveClip;
+            if (!Rendering.Layer.ContainsRoundedRect(clip.Rect, clip.Radii, position))
             {
-                return;
+                return false;
             }
-
-            _color = value;
-            MarkNeedsPaint();
         }
+
+        return base.HitTest(result, position);
     }
 
-    public Color ShadowColor
-    {
-        get => _shadowColor;
-        set
-        {
-            if (_shadowColor == value)
-            {
-                return;
-            }
-
-            _shadowColor = value;
-            MarkNeedsPaint();
-        }
-    }
-
+    /// <inheritdoc />
     public override void Paint(PaintingContext context, Point offset)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -137,97 +243,51 @@ public sealed class RenderPhysicalModel : RenderProxyBox
             return;
         }
 
-        var rect = new Rect(new Point(0, 0), Size);
-        double radius = _shape == BoxShape.Circle
-            ? Math.Min(rect.Width, rect.Height) / 2.0
-            : Math.Min(_borderRadius?.Radius ?? 0.0, Math.Min(rect.Width, rect.Height) / 2.0);
-        BoxShadows shadows = BuildShadow();
-        context.Canvas.DrawRectangle(
-            new SolidColorBrush(_color),
-            null,
-            new Rect(rect.Position + offset, rect.Size),
-            radius,
-            radius,
-            shadows);
+        RRect clip = EffectiveClip;
+        var offsetPath = new Path();
+        offsetPath.AddRRect(clip.Shift(offset));
+        PaintShadow(context, offsetPath, new Point(0, 0));
 
-        if (_clipBehavior == Clip.None)
+        bool usesSaveLayer = ClipBehavior == Clip.AntiAliasWithSaveLayer;
+        if (!usesSaveLayer)
         {
-            Layer = null;
-            context.PaintChild(Child, offset);
-            return;
-        }
-
-        if (_shape == BoxShape.Circle)
-        {
-            var ovalPath = new Plumix.UI.Path();
-            ovalPath.AddOval(rect);
-            Layer = context.PushClipPath(
-                NeedsCompositing,
-                offset,
-                rect,
-                ovalPath,
-                (clippedContext, clippedOffset) => clippedContext.PaintChild(Child, clippedOffset),
-                _clipBehavior,
-                Layer as ClipPathLayer);
-            return;
+            context.Canvas.DrawPath(offsetPath, new SolidColorBrush(Color), pen: null);
         }
 
         Layer = context.PushClipRRect(
             NeedsCompositing,
             offset,
-            rect,
-            RRect.FromRectAndCorners(rect, _borderRadius ?? Plumix.Rendering.BorderRadius.Zero),
-            (clippedContext, clippedOffset) => clippedContext.PaintChild(Child, clippedOffset),
-            _clipBehavior,
+            new Rect(new Point(0, 0), Size),
+            clip,
+            (clippedContext, clippedOffset) =>
+            {
+                if (usesSaveLayer)
+                {
+                    // Dart fills the whole clip with `Canvas.drawPaint`; inside the pushed clip,
+                    // filling the layout box is the same region.
+                    clippedContext.Canvas.DrawRectangle(
+                        new SolidColorBrush(Color),
+                        null,
+                        new Rect(clippedOffset, Size));
+                }
+
+                base.Paint(clippedContext, clippedOffset);
+            },
+            ClipBehavior,
             Layer as ClipRRectLayer);
-    }
-
-    private BoxShadows BuildShadow()
-    {
-        if (_elevation <= 0.0 || _shadowColor.A == 0)
-        {
-            return default;
-        }
-
-        if (Constants.KDebugMode && RenderingDebug.DisablePhysicalShapeLayers)
-        {
-            return default;
-        }
-
-        var shadow = new BoxShadow(
-            color: _shadowColor,
-            offset: new Point(0.0, _elevation * 0.5),
-            blurRadius: Math.Max(1.0, _elevation * 2.0));
-        return new BoxShadows(shadow.ToAvalonia());
-    }
-
-    private static void ValidateElevation(double elevation)
-    {
-        if (!double.IsFinite(elevation) || elevation < 0.0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be finite and non-negative.");
-        }
     }
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder description)
     {
         base.DebugFillProperties(description);
-        description.Add(new DoubleProperty("elevation", Elevation));
-        description.Add(new ColorProperty("color", Color));
-        description.Add(new ColorProperty("shadowColor", Color));
         description.Add(new DiagnosticsProperty<BoxShape>("shape", Shape));
         description.Add(new DiagnosticsProperty<BorderRadius?>("borderRadius", BorderRadius));
     }
 }
 
-// Dart parity source: flutter/packages/flutter/lib/src/rendering/proxy_box.dart (RenderPhysicalShape)
-public sealed class RenderPhysicalShape : RenderCustomClip<Path>
+public sealed class RenderPhysicalShape : RenderPhysicalModelBase<Path>
 {
-    private double _elevation;
-    private Color _color;
-    private Color _shadowColor;
-
     public RenderPhysicalShape(
         CustomClipper<Path> clipper,
         Color color,
@@ -235,70 +295,16 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
         Clip clipBehavior = Clip.None,
         double elevation = 0.0,
         Color? shadowColor = null) : base(
-            child: child,
+            child,
+            elevation,
+            color,
+            shadowColor ?? Colors.Black,
             clipper: clipper ?? throw new ArgumentNullException(nameof(clipper)),
             clipBehavior: clipBehavior)
     {
-        ValidateElevation(elevation);
-        _elevation = elevation;
-        _color = color;
-        _shadowColor = shadowColor ?? Colors.Black;
-    }
-
-    public double Elevation
-    {
-        get => _elevation;
-        set
-        {
-            ValidateElevation(value);
-            if (_elevation == value)
-            {
-                return;
-            }
-
-            _elevation = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color Color
-    {
-        get => _color;
-        set
-        {
-            if (_color == value)
-            {
-                return;
-            }
-
-            _color = value;
-            MarkNeedsPaint();
-        }
-    }
-
-    public Color ShadowColor
-    {
-        get => _shadowColor;
-        set
-        {
-            if (_shadowColor == value)
-            {
-                return;
-            }
-
-            _shadowColor = value;
-            MarkNeedsPaint();
-        }
     }
 
     /// <inheritdoc />
-    protected override void DebugPaintClip(PaintingContext context, Point offset)
-    {
-        Path clip = EffectiveClip;
-        context.Canvas.DrawGeometry(null, RenderCustomClipDebug.DebugPen, clip.ToGeometry(), geometryOffset: offset);
-        RenderCustomClipDebug.PaintScissors(context, offset, clip.GetBounds().Width);
-    }
-
     protected override Path DefaultClip
     {
         get
@@ -309,6 +315,7 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
         }
     }
 
+    /// <inheritdoc />
     public override bool HitTest(BoxHitTestResult result, Point position)
     {
         if (Clipper is not null && !EffectiveClip.Contains(position))
@@ -319,6 +326,7 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
         return base.HitTest(result, position);
     }
 
+    /// <inheritdoc />
     public override void Paint(PaintingContext context, Point offset)
     {
         ArgumentNullException.ThrowIfNull(context);
@@ -328,56 +336,41 @@ public sealed class RenderPhysicalShape : RenderCustomClip<Path>
             return;
         }
 
-        Plumix.UI.Path clip = EffectiveClip;
-        Geometry geometry = clip.ToGeometry();
-        bool physicalShapesDisabled = Constants.KDebugMode && RenderingDebug.DisablePhysicalShapeLayers;
-        if (_elevation > 0.0 && _shadowColor.A > 0 && !physicalShapesDisabled)
-        {
-            context.Canvas.DrawShadow(
-                geometry,
-                _shadowColor,
-                _elevation,
-                transparentOccluder: _color.A != byte.MaxValue,
-                geometryOffset: offset);
-        }
+        Path clip = EffectiveClip;
+        Path offsetPath = clip.Shift(offset);
+        PaintShadow(context, offsetPath, new Point(0, 0));
 
-        context.Canvas.DrawGeometry(
-            new SolidColorBrush(_color),
-            null,
-            geometry,
-            geometryOffset: offset);
-        if (ClipBehavior == Clip.None)
+        bool usesSaveLayer = ClipBehavior == Clip.AntiAliasWithSaveLayer;
+        if (!usesSaveLayer)
         {
-            Layer = null;
-            base.Paint(context, offset);
-            return;
+            context.Canvas.DrawPath(offsetPath, new SolidColorBrush(Color), pen: null);
         }
 
         Layer = context.PushClipPath(
             NeedsCompositing,
             offset,
-            clip.GetBounds(),
+            new Rect(new Point(0, 0), Size),
             clip,
-            base.Paint,
+            (clippedContext, clippedOffset) =>
+            {
+                if (usesSaveLayer)
+                {
+                    clippedContext.Canvas.DrawRectangle(
+                        new SolidColorBrush(Color),
+                        null,
+                        new Rect(clippedOffset, Size));
+                }
+
+                base.Paint(clippedContext, clippedOffset);
+            },
             ClipBehavior,
             Layer as ClipPathLayer);
-    }
-
-    private static void ValidateElevation(double elevation)
-    {
-        if (!double.IsFinite(elevation) || elevation < 0.0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(elevation), "Elevation must be finite and non-negative.");
-        }
     }
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder description)
     {
         base.DebugFillProperties(description);
-        description.Add(new DoubleProperty("elevation", Elevation));
-        description.Add(new ColorProperty("color", Color));
-        description.Add(new ColorProperty("shadowColor", Color));
         description.Add(new DiagnosticsProperty<CustomClipper<Path>>("clipper", Clipper));
     }
 }

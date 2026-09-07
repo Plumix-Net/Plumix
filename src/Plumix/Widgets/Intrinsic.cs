@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -35,11 +37,9 @@ public sealed class IntrinsicWidth : SingleChildRenderObjectWidget
 
     private static double? ValidateWidgetStep(double? value, string parameterName)
     {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value < 0.0))
+        if (Constants.KDebugMode && value is not (null or >= 0.0))
         {
-            throw new ArgumentOutOfRangeException(
-                parameterName,
-                "Intrinsic steps must be non-negative and finite.");
+            throw new AssertionError($"{parameterName} must be non-negative.");
         }
 
         return value;
@@ -98,52 +98,81 @@ public sealed class RenderIntrinsicWidth : RenderProxyBox
         }
     }
 
-    protected override void PerformLayout()
+    private static void ValidateRenderStep(double? value, string parameterName)
+    {
+        if (Constants.KDebugMode && value is not (null or > 0.0))
+        {
+            throw new AssertionError($"{parameterName} must be greater than zero.");
+        }
+    }
+
+    private static double ApplyStep(double input, double? step)
+    {
+        Debug.Assert(double.IsFinite(input));
+        return step is null ? input : Math.Ceiling(input / step.Value) * step.Value;
+    }
+
+    protected override double ComputeMinIntrinsicWidth(double height) => GetMaxIntrinsicWidth(height);
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        return Child is null ? 0.0 : ApplyStep(Child.GetMaxIntrinsicWidth(height), _stepWidth);
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width)
     {
         if (Child is null)
         {
-            Size = Constraints.Smallest;
-            return;
+            return 0.0;
         }
 
-        if (Constraints.HasTightWidth && (!_stepHeight.HasValue || Constraints.HasTightHeight))
-        {
-            Child.Layout(Constraints, parentUsesSize: true);
-            Size = Constraints.Constrain(Child.Size);
-            ((BoxParentData)Child.parentData!).offset = default;
-            return;
-        }
-
-        double? width = null;
-        if (!Constraints.HasTightWidth)
-        {
-            double intrinsicWidth = Child.GetMaxIntrinsicWidth(Constraints.MaxHeight);
-            width = Constraints.ConstrainWidth(ApplyStep(intrinsicWidth, _stepWidth));
-        }
-
-        double? height = null;
-        if (_stepHeight.HasValue && !Constraints.HasTightHeight)
-        {
-            double intrinsicHeight = Child.GetMaxIntrinsicHeight(width ?? Constraints.MaxWidth);
-            height = Constraints.ConstrainHeight(ApplyStep(intrinsicHeight, _stepHeight));
-        }
-
-        var finalConstraints = Constraints.Tighten(width: width, height: height);
-        Child.Layout(finalConstraints, parentUsesSize: true);
-        Size = Constraints.Constrain(Child.Size);
-        ((BoxParentData)Child.parentData!).offset = default;
+        double probe = double.IsFinite(width) ? width : GetMaxIntrinsicWidth(double.PositiveInfinity);
+        return ApplyStep(Child.GetMinIntrinsicHeight(probe), _stepHeight);
     }
 
-    private static double ApplyStep(double value, double? step) =>
-        step.HasValue ? Math.Ceiling(value / step.Value) * step.Value : value;
-
-    private static void ValidateRenderStep(double? value, string parameterName)
+    protected override double ComputeMaxIntrinsicHeight(double width)
     {
-        if (value.HasValue && (!double.IsFinite(value.Value) || value.Value <= 0.0))
+        if (Child is null)
         {
-            throw new ArgumentOutOfRangeException(
-                parameterName,
-                "Render intrinsic steps must be positive and finite.");
+            return 0.0;
+        }
+
+        double probe = double.IsFinite(width) ? width : GetMaxIntrinsicWidth(double.PositiveInfinity);
+        return ApplyStep(Child.GetMaxIntrinsicHeight(probe), _stepHeight);
+    }
+
+    private BoxConstraints ChildConstraints(RenderBox child, BoxConstraints constraints)
+    {
+        double? width = constraints.HasTightWidth
+            ? null
+            : ApplyStep(child.GetMaxIntrinsicWidth(constraints.MaxHeight), _stepWidth);
+        double? height = _stepHeight is null
+            ? null
+            : ApplyStep(child.GetMaxIntrinsicHeight(constraints.MaxWidth), _stepHeight);
+        return constraints.Tighten(width: width, height: height);
+    }
+
+    private Size ComputeSize(BoxConstraints constraints, Func<RenderBox, BoxConstraints, Size> layoutChild)
+    {
+        RenderBox? child = Child;
+        return child is null ? constraints.Smallest : layoutChild(child, ChildConstraints(child, constraints));
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) =>
+        ComputeSize(constraints, ChildLayoutHelper.DryLayoutChild);
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        RenderBox? child = Child;
+        return child?.GetDryBaseline(ChildConstraints(child, constraints), baseline);
+    }
+
+    protected override void PerformLayout()
+    {
+        Size = ComputeSize(Constraints, ChildLayoutHelper.LayoutChild);
+        if (Child != null)
+        {
+            ((BoxParentData)Child.parentData!).offset = default;
         }
     }
 
@@ -163,26 +192,58 @@ public sealed class RenderIntrinsicHeight : RenderProxyBox
         Child = child;
     }
 
-    protected override void PerformLayout()
+    protected override double ComputeMinIntrinsicWidth(double height)
     {
         if (Child is null)
         {
-            Size = Constraints.Smallest;
-            return;
+            return 0.0;
         }
 
-        if (Constraints.HasTightHeight)
+        double probe = double.IsFinite(height) ? height : Child.GetMaxIntrinsicHeight(double.PositiveInfinity);
+        Debug.Assert(double.IsFinite(probe));
+        return Child.GetMinIntrinsicWidth(probe);
+    }
+
+    protected override double ComputeMaxIntrinsicWidth(double height)
+    {
+        if (Child is null)
         {
-            Child.Layout(Constraints, parentUsesSize: true);
-            Size = Constraints.Constrain(Child.Size);
-            ((BoxParentData)Child.parentData!).offset = default;
-            return;
+            return 0.0;
         }
 
-        double intrinsicHeight = Child.GetMaxIntrinsicHeight(Constraints.MaxWidth);
-        double height = Constraints.ConstrainHeight(intrinsicHeight);
-        Child.Layout(Constraints.Tighten(height: height), parentUsesSize: true);
-        Size = Constraints.Constrain(Child.Size);
-        ((BoxParentData)Child.parentData!).offset = default;
+        double probe = double.IsFinite(height) ? height : Child.GetMaxIntrinsicHeight(double.PositiveInfinity);
+        Debug.Assert(double.IsFinite(probe));
+        return Child.GetMaxIntrinsicWidth(probe);
+    }
+
+    protected override double ComputeMinIntrinsicHeight(double width) => GetMaxIntrinsicHeight(width);
+
+    private static BoxConstraints ChildConstraints(RenderBox child, BoxConstraints constraints) =>
+        constraints.HasTightHeight
+            ? constraints
+            : constraints.Tighten(height: child.GetMaxIntrinsicHeight(constraints.MaxWidth));
+
+    private Size ComputeSize(BoxConstraints constraints, Func<RenderBox, BoxConstraints, Size> layoutChild)
+    {
+        RenderBox? child = Child;
+        return child is null ? constraints.Smallest : layoutChild(child, ChildConstraints(child, constraints));
+    }
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) =>
+        ComputeSize(constraints, ChildLayoutHelper.DryLayoutChild);
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        RenderBox? child = Child;
+        return child?.GetDryBaseline(ChildConstraints(child, constraints), baseline);
+    }
+
+    protected override void PerformLayout()
+    {
+        Size = ComputeSize(Constraints, ChildLayoutHelper.LayoutChild);
+        if (Child != null)
+        {
+            ((BoxParentData)Child.parentData!).offset = default;
+        }
     }
 }

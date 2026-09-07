@@ -25,6 +25,13 @@ public static class ColorUtilities
     }
 
     /// <summary>
+    /// Dart's <c>Color.getAlphaFromOpacity</c>: the 8-bit alpha for a 0..1 opacity, clamped and
+    /// rounded exactly as dart:ui does.
+    /// </summary>
+    public static int GetAlphaFromOpacity(double opacity) =>
+        (int)Math.Round(Math.Clamp(opacity, 0.0, 1.0) * 255.0, MidpointRounding.AwayFromZero);
+
+    /// <summary>
     /// Dart's <c>Color.withValues(alpha:)</c> (spelled <c>Color.withOpacity</c> before 3.27): the
     /// same color at the given alpha.
     /// </summary>

@@ -137,6 +137,14 @@ public static class RenderingDebug
     /// <remarks>Flutter's <c>debugDisablePhysicalShapeLayers</c>.</remarks>
     public static bool DisablePhysicalShapeLayers { get; set; }
 
+    /// <summary>Causes elevation shadows to be drawn as a stroked outline instead.</summary>
+    /// <remarks>
+    /// Flutter's <c>debugDisableShadows</c> (<c>painting/debug.dart</c>), read by
+    /// <see cref="RenderPhysicalModel"/> and <see cref="RenderPhysicalShape"/>. Flutter uses it so
+    /// golden tests do not depend on the platform's shadow rasterization.
+    /// </remarks>
+    public static bool DisableShadows { get; set; }
+
     /// <summary>Causes all opacity effects from the layer tree to be ignored.</summary>
     /// <remarks>
     /// Flutter's <c>debugDisableOpacityLayers</c>. The optimization that skips painting the child
@@ -203,6 +211,7 @@ public static class RenderingDebug
             || OnProfilePaint is not null
             || DisableClipLayers
             || DisablePhysicalShapeLayers
+            || DisableShadows
             || DisableOpacityLayers)
         {
             throw new FlutterError(reason);
@@ -322,6 +331,7 @@ public static class RenderingDebug
         OnProfilePaint = null;
         DisableClipLayers = false;
         DisablePhysicalShapeLayers = false;
+        DisableShadows = false;
         DisableOpacityLayers = false;
     }
 

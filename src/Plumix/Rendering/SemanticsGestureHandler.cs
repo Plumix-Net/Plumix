@@ -78,19 +78,14 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
     }
 
     /// <summary>The fraction of the render object a semantic scroll action moves.</summary>
+    /// <remarks>
+    /// Flutter's <c>scrollFactor</c> is a plain mutable field: assigning it schedules no semantics
+    /// update, because the value is only read when an action fires.
+    /// </remarks>
     public double ScrollFactor
     {
         get => _scrollFactor;
-        set
-        {
-            if (value.Equals(_scrollFactor))
-            {
-                return;
-            }
-
-            _scrollFactor = value;
-            MarkNeedsSemanticsUpdate();
-        }
+        set => _scrollFactor = value;
     }
 
     private void SetGestureCallback<T>(ref T? field, T? value) where T : class
@@ -165,9 +160,10 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
         }
 
         var localCenter = new Point(Size.Width / 2.0, Size.Height / 2.0);
+        Point globalPosition = LocalToGlobal(localCenter);
         drag(new DragUpdateDetails(
-            GlobalPosition: LocalToGlobal(localCenter),
-            LocalPosition: localCenter,
+            GlobalPosition: globalPosition,
+            LocalPosition: globalPosition,
             Delta: new Point(primaryDelta, 0.0),
             PrimaryDelta: primaryDelta));
     }
@@ -180,9 +176,10 @@ public class RenderSemanticsGestureHandler : RenderProxyBoxWithHitTestBehavior
         }
 
         var localCenter = new Point(Size.Width / 2.0, Size.Height / 2.0);
+        Point globalPosition = LocalToGlobal(localCenter);
         drag(new DragUpdateDetails(
-            GlobalPosition: LocalToGlobal(localCenter),
-            LocalPosition: localCenter,
+            GlobalPosition: globalPosition,
+            LocalPosition: globalPosition,
             Delta: new Point(0.0, primaryDelta),
             PrimaryDelta: primaryDelta));
     }

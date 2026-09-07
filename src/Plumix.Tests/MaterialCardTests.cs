@@ -349,11 +349,11 @@ public sealed class MaterialCardTests
                 child: new SizedBox(width: 80, height: 32))));
         foregroundHarness.Pump(new Size(220, 140));
 
-        Assert.NotNull(FindDescendant<RenderStack>(foregroundHarness.RenderView));
         var foregroundBorders = FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView)
             .Where(box => box.Decoration.Border is not null)
             .ToArray();
         Assert.Single(foregroundBorders);
+        Assert.Equal(DecorationPosition.Foreground, foregroundBorders[0].Position);
 
         using var backgroundHarness = new WidgetRenderHarness(
             BuildThemedCard(new Card(
@@ -362,11 +362,11 @@ public sealed class MaterialCardTests
                 child: new SizedBox(width: 80, height: 32))));
         backgroundHarness.Pump(new Size(220, 140));
 
-        Assert.Null(FindDescendant<RenderStack>(backgroundHarness.RenderView));
         var backgroundBorders = FindDescendants<RenderDecoratedBox>(backgroundHarness.RenderView)
             .Where(box => box.Decoration.Border is not null)
             .ToArray();
         Assert.Single(backgroundBorders);
+        Assert.Equal(DecorationPosition.Background, backgroundBorders[0].Position);
     }
 
     [Fact]
@@ -437,10 +437,11 @@ public sealed class MaterialCardTests
         foregroundHarness.Pump(new Size(220, 140));
 
         Assert.NotNull(FindDescendant<RenderClipPath>(foregroundHarness.RenderView));
-        Assert.Single(FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView)
+        var foregroundBorders = FindDescendants<RenderDecoratedBox>(foregroundHarness.RenderView)
             .Where(box => box.Decoration.Border is not null)
-            .ToArray());
-        Assert.NotNull(FindDescendant<RenderStack>(foregroundHarness.RenderView));
+            .ToArray();
+        Assert.Single(foregroundBorders);
+        Assert.Equal(DecorationPosition.Foreground, foregroundBorders[0].Position);
 
         using var backgroundHarness = new WidgetRenderHarness(
             BuildThemedCard(new MaterialSurface(

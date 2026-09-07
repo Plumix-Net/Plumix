@@ -38,7 +38,7 @@ public sealed class CupertinoDialogTests : IDisposable
         Assert.Equal(Avalonia.Media.FontWeight.SemiBold, title.FontWeight);
         RenderParagraph content = FindParagraph(harness.RenderView, "Content")!;
         Assert.Equal(13.0, content.FontSize);
-        Assert.Equal(270.0, FindDescendants<RenderClipPath>(harness.RenderView).First().Size.Width);
+        Assert.Equal(270.0, FindDescendants<RenderClipRSuperellipse>(harness.RenderView).First().Size.Width);
         // The content section paints the translucent light dialog fill.
         Assert.Contains(FindDescendants<RenderColoredBox>(harness.RenderView), box =>
             box.Color == Color.FromUInt32(0xCCF2F2F2));
@@ -249,7 +249,7 @@ public sealed class CupertinoDialogTests : IDisposable
             textScaleFactor: 3.0));
         harness.Pump(new Size(600, 600));
 
-        Assert.Equal(310.0, FindDescendants<RenderClipPath>(harness.RenderView).First().Size.Width);
+        Assert.Equal(310.0, FindDescendants<RenderClipRSuperellipse>(harness.RenderView).First().Size.Width);
     }
 
     [Fact]

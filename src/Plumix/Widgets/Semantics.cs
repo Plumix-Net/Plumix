@@ -52,6 +52,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
+        bool excludeSemantics = false,
+        bool blockUserActions = false,
         SemanticsRole role = SemanticsRole.None,
         SemanticsInputType inputType = SemanticsInputType.None,
         SemanticsHitTestBehavior hitTestBehavior = SemanticsHitTestBehavior.Defer,
@@ -110,6 +112,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         LiveRegion = liveRegion;
         Container = container;
         ExplicitChildNodes = explicitChildNodes;
+        ExcludeSemantics = excludeSemantics;
+        BlockUserActions = blockUserActions;
         Role = role;
         InputType = inputType;
         HitTestBehavior = hitTestBehavior;
@@ -180,6 +184,12 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     public bool Container { get; }
 
     public bool ExplicitChildNodes { get; }
+
+    /// <summary>Whether to drop all the semantics of the descendants.</summary>
+    public bool ExcludeSemantics { get; }
+
+    /// <summary>Whether to block user interactions for the descendant semantics nodes.</summary>
+    public bool BlockUserActions { get; }
 
     public SemanticsRole Role { get; }
 
@@ -270,6 +280,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
             liveRegion: LiveRegion,
             container: Container,
             explicitChildNodes: ExplicitChildNodes,
+            excludeSemantics: ExcludeSemantics,
+            blockUserActions: BlockUserActions,
             sortKey: SortKey,
             traversalParentIdentifier: TraversalParentIdentifier,
             traversalChildIdentifier: TraversalChildIdentifier,
@@ -318,6 +330,8 @@ public sealed class Semantics : SingleChildRenderObjectWidget
         semantics.LiveRegion = LiveRegion;
         semantics.Container = Container;
         semantics.ExplicitChildNodes = ExplicitChildNodes;
+        semantics.ExcludeSemantics = ExcludeSemantics;
+        semantics.BlockUserActions = BlockUserActions;
         semantics.SortKey = SortKey;
         semantics.TraversalParentIdentifier = TraversalParentIdentifier;
         semantics.TraversalChildIdentifier = TraversalChildIdentifier;
@@ -328,23 +342,14 @@ public sealed class Semantics : SingleChildRenderObjectWidget
 
 }
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (MergeSemantics)
-public sealed class MergeSemantics : StatelessWidget
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (MergeSemantics)
+public sealed class MergeSemantics : SingleChildRenderObjectWidget
 {
-    public MergeSemantics(Widget child, Key? key = null) : base(key)
+    public MergeSemantics(Widget? child = null, Key? key = null) : base(child, key)
     {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return new Semantics(
-            child: Child,
-            container: true,
-            mergeDescendants: true);
-    }
+    public override RenderObject CreateRenderObject(BuildContext context) => new RenderMergeSemantics();
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (ExcludeSemantics)

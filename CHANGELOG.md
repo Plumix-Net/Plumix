@@ -8,6 +8,21 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `RenderAnimatedOpacity` + the shared animated-opacity mixin; `FadeTransition` is now a render-object widget.
+- Added `RenderClipRSuperellipse`/`RenderMergeSemantics`; their widgets now build them (`proxy_box.dart`).
+- Added `Semantics.ExcludeSemantics`/`BlockUserActions` and the matching render-object setters (`object.dart`).
+- Breaking: `RenderOpacity` keys visibility on the rounded 8-bit alpha and paints nothing at alpha 0 (`proxy_box.dart`).
+- Breaking: every `RenderCustomClip` subclass defaults to `Clip.AntiAlias` (`proxy_box.dart`).
+- Breaking: `RenderClipRRect` rejects corner hits only when a clipper is installed (`proxy_box.dart`).
+- Breaking: `RenderAbsorbPointer` swallows the hit without adding itself to the path (`proxy_box.dart`).
+- Breaking: `RenderPointerListener` extends `RenderProxyBoxWithHitTestBehavior` and sizes to `constraints.biggest`.
+- Breaking: `RenderPhysicalModel` is a `RenderCustomClip<RRect>`; a circle clips to an ellipse (`proxy_box.dart`).
+- Breaking: `RenderTransform` derives `AlwaysNeedsCompositing` from `filterQuality` and drops `PaintsChild`.
+- Breaking: `RenderBaseline` extends `RenderShiftedBox` and gains dry layout/baseline (`shifted_box.dart`).
+- Added dry layout, dry baselines and the missing intrinsics to the aspect-ratio, limited and intrinsic boxes.
+- Added `RenderProxyBox.ComputeSizeForNoChild`, `Size.Contains`, `BoxConstraints.HasInfinite*`, `RRect.FromRectXY`.
+- Breaking: `RenderDecoratedBox` hit-tests its decoration, disposes its painter and repaints on detach.
+- Breaking: `Material`'s foreground outline is a foreground `DecoratedBox`, not a sibling above the contents.
 - Breaking: inherited lookups match the exact widget runtime type over a per-element scope map (`framework.dart`).
 - Breaking: `BuildContext` is an interface `Element` implements, so a context *is* its element (`framework.dart`).
 - Breaking: `Element.Rebuild(force)` is non-virtual; subclasses override `PerformRebuild` (`framework.dart`).

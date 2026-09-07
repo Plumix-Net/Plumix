@@ -218,6 +218,12 @@ public readonly record struct BoxConstraints(
 
     public bool HasBoundedHeight => double.IsFinite(MaxHeight);
 
+    /// Whether the width constraint is infinite (so any finite width is too small).
+    public bool HasInfiniteWidth => MinWidth >= double.PositiveInfinity;
+
+    /// Whether the height constraint is infinite (so any finite height is too small).
+    public bool HasInfiniteHeight => MinHeight >= double.PositiveInfinity;
+
     /// A box constraints with the width and height constraints flipped.
     public BoxConstraints Flipped => new(
         MinWidth: MinHeight,

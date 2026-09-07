@@ -366,22 +366,64 @@ public sealed class ClipWidgetsTests
     [Fact]
     public void RenderClipRRect_ResolvesADirectionalBorderRadiusThroughTextDirection()
     {
-        var child = new SizedBoxRenderBox(new Size(40, 40));
+        // A repaint-boundary child forces `PushClipRRect` down its layer path, so the resolved
+        // clip is observable on the pushed `ClipRRectLayer`.
+        var child = new RenderRepaintBoundary { Child = new SizedBoxRenderBox(new Size(40, 40)) };
         var render = new RenderClipRRect(
             child,
             borderRadius: BorderRadiusDirectional.Only(topStart: 12.0),
             textDirection: TextDirection.Ltr);
+        var view = new RenderView { Child = render };
+        var pipeline = new PipelineOwner(view);
+        pipeline.Attach(view);
+        pipeline.FlushLayout(new Size(40, 40));
+        pipeline.FlushCompositingBits();
+
+        // The default clip rounds the top-left corner in LTR ...
+        render.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        var ltrLayer = Assert.IsType<ClipRRectLayer>(render.DebugLayer);
+        Assert.Equal(12.0, ltrLayer.ClipRRect.TopLeft.X);
+        Assert.Equal(0.0, ltrLayer.ClipRRect.TopRight.X);
+
+        // ... and the top-right corner in RTL.
+        render.TextDirection = TextDirection.Rtl;
+        render.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        var rtlLayer = Assert.IsType<ClipRRectLayer>(render.DebugLayer);
+        Assert.Equal(0.0, rtlLayer.ClipRRect.TopLeft.X);
+        Assert.Equal(12.0, rtlLayer.ClipRRect.TopRight.X);
+    }
+
+    [Fact]
+    public void RenderClipRRect_RejectsCornerHitsOnlyWhenAClipperIsInstalled()
+    {
+        // Dart's `RenderClipRRect.hitTest` guards the rounded-corner rejection on `_clipper != null`;
+        // with the default clip the corner pixel still hits.
+        var child = new SizedBoxRenderBox(new Size(40, 40));
+        var render = new RenderClipRRect(child, borderRadius: BorderRadius.Circular(12.0));
         LayoutRoot(render, new Size(40, 40));
 
         Assert.True(render.HitTest(new BoxHitTestResult(), new Point(20, 20)));
-        // The rounded top-left corner rejects the corner pixel in LTR ...
-        Assert.False(render.HitTest(new BoxHitTestResult(), new Point(0.5, 0.5)));
-        Assert.True(render.HitTest(new BoxHitTestResult(), new Point(39.5, 0.5)));
-
-        // ... and the rounded corner moves to the top-right in RTL.
-        render.TextDirection = TextDirection.Rtl;
         Assert.True(render.HitTest(new BoxHitTestResult(), new Point(0.5, 0.5)));
-        Assert.False(render.HitTest(new BoxHitTestResult(), new Point(39.5, 0.5)));
+
+        render.Clipper = new FixedRoundedRectClipper(
+            RRect.FromRectAndRadius(new Rect(0, 0, 40, 40), new Radius(12.0, 12.0)));
+
+        Assert.True(render.HitTest(new BoxHitTestResult(), new Point(20, 20)));
+        Assert.False(render.HitTest(new BoxHitTestResult(), new Point(0.5, 0.5)));
+    }
+
+    private sealed class FixedRoundedRectClipper : CustomClipper<RRect>
+    {
+        private readonly RRect _clip;
+
+        public FixedRoundedRectClipper(RRect clip)
+        {
+            _clip = clip;
+        }
+
+        public override RRect GetClip(Size size) => _clip;
+
+        public override bool ShouldReclip(CustomClipper<RRect> oldClipper) => false;
     }
 
     [Fact]

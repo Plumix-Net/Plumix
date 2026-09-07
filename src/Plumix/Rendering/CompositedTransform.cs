@@ -224,17 +224,6 @@ public sealed class RenderFollowerLayer : RenderProxyBox
             (hitResult, transformed) => base.HitTestChildren(hitResult, transformed));
     }
 
-    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
-    {
-        if (Child == null || (_link.Leader == null && !_showWhenUnlinked))
-        {
-            return;
-        }
-
-        var childParentData = (BoxParentData)Child.parentData!;
-        visitor(Child);
-    }
-
     public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
     {
         transform.Multiply(GetCurrentTransform());
@@ -286,25 +275,18 @@ public sealed class RenderFollowerLayer : RenderProxyBox
             return null;
         }
 
-        Point leaderPoint = AlongSize(_leaderAnchor, _link.LeaderSize.Value) + _offset;
-        Point followerPoint = AlongSize(_followerAnchor, Size);
+        Point leaderPoint = _leaderAnchor.AlongSize(_link.LeaderSize.Value) + _offset;
+        Point followerPoint = _followerAnchor.AlongSize(Size);
         result.Multiply(leaderToRoot);
         result.TranslateByDouble(leaderPoint.X, leaderPoint.Y, 0, 1);
         result.TranslateByDouble(-followerPoint.X, -followerPoint.Y, 0, 1);
         return result;
     }
 
-    private static Point AlongSize(Alignment alignment, Size size)
-    {
-        return new Point(
-            size.Width * (alignment.X + 1.0) / 2.0,
-            size.Height * (alignment.Y + 1.0) / 2.0);
-    }
-
+    /// <remarks>Flutter's follower setters call <c>markNeedsPaint()</c> only.</remarks>
     private void MarkTransformDirty()
     {
         MarkNeedsPaint();
-        MarkNeedsSemanticsUpdate();
     }
 
     /// <inheritdoc />

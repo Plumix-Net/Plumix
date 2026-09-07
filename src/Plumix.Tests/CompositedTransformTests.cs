@@ -131,9 +131,11 @@ public sealed class CompositedTransformTests
         Assert.Equal(Matrix4.Identity(), follower.GetCurrentTransform());
         Assert.False(follower.HitTest(new BoxHitTestResult(), new Point(5, 5)));
 
+        // Dart's `RenderFollowerLayer` has no `visitChildrenForSemantics` override, so an unlinked,
+        // hidden follower still contributes its child's semantics.
         int semanticsVisits = 0;
         follower.VisitChildrenForSemantics(_ => semanticsVisits++);
-        Assert.Equal(0, semanticsVisits);
+        Assert.Equal(1, semanticsVisits);
 
         FollowerLayer followerLayer = Assert.Single(FindLayers<FollowerLayer>(pipeline.RootLayer));
         Assert.False(followerLayer.ShowWhenUnlinked);

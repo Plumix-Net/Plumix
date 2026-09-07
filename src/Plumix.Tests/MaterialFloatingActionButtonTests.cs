@@ -953,7 +953,7 @@ public sealed class MaterialFloatingActionButtonTests
     private static RawMaterialButton RequireBuiltButton(Widget? builtWidget)
     {
         var mergeSemantics = Assert.IsType<MergeSemantics>(builtWidget);
-        Widget child = mergeSemantics.Child;
+        Widget child = mergeSemantics.Child!;
         if (child is Hero hero)
         {
             child = hero.Child;

@@ -384,9 +384,14 @@ public sealed class AnimatedSwitcherTests : IDisposable
         var values = new List<double>();
         Visit(root, renderObject =>
         {
-            if (renderObject is RenderOpacity opacity)
+            switch (renderObject)
             {
-                values.Add(Math.Round(opacity.Opacity, 6));
+                case RenderOpacity opacity:
+                    values.Add(Math.Round(opacity.Opacity, 6));
+                    break;
+                case RenderAnimatedOpacity animatedOpacity:
+                    values.Add(Math.Round(animatedOpacity.Opacity.Value, 6));
+                    break;
             }
         });
         values.Sort();

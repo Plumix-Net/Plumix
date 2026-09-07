@@ -130,13 +130,18 @@ public sealed class TransformWidgetTests
     [InlineData(double.PositiveInfinity)]
     [InlineData(double.NegativeInfinity)]
     [InlineData(0.0)]
-    public void PaintsChild_IsFalseForSingularAndNonFiniteTransforms(double scaleX)
+    public void Paint_DropsTheLayerForSingularAndNonFiniteTransforms(double scaleX)
     {
+        // Dart's `RenderTransform` does not override `paintsChild`; the singular check lives in
+        // `paint`, which clears the layer and paints nothing.
         Matrix4 matrix = Matrix4.Identity();
         matrix.Storage[0] = scaleX;
         RenderTransform transform = Laid(matrix);
 
-        Assert.False(transform.PaintsChild(transform.Child!));
+        Assert.True(transform.PaintsChild(transform.Child!));
+
+        transform.Paint(new PaintingContext(new ContainerLayer()), new Point(0, 0));
+        Assert.Null(transform.DebugLayer);
     }
 
     [Fact]

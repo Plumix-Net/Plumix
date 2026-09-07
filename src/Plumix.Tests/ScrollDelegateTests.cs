@@ -140,7 +140,7 @@ public sealed class ScrollDelegateTests
     /// Flutter's `slivers_test.dart` "Can override ErrorWidget.build": a throwing item builder is
     /// reported through `FlutterError.reportError` and replaced by `ErrorWidget.builder`'s result.
     /// </remarks>
-    [Fact]
+    [DebugOnlyFact]
     public void ThrowingBuilder_ReportsTheErrorAndBuildsTheErrorWidget()
     {
         FlutterExceptionHandler? previousOnError = FlutterError.OnError;
@@ -293,7 +293,7 @@ public sealed class ScrollDelegateTests
     /// Dart asserts `separatorBuilder cannot return null.` inside `SliverList.separated`'s builder,
     /// which `SliverChildBuilderDelegate.build` then catches and routes through `_createErrorWidget`.
     /// </remarks>
-    [Fact]
+    [DebugOnlyFact]
     public void Separated_RejectsANullSeparator()
     {
         FlutterExceptionHandler? previousOnError = FlutterError.OnError;

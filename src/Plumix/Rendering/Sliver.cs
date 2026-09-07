@@ -1826,64 +1826,35 @@ public sealed class RenderSliverOpacity : RenderProxySliver
 
 public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
 {
-    private Animation<double> _opacity;
-    private double _currentOpacity;
-    private bool _alwaysIncludeSemantics;
+    private readonly RenderAnimatedOpacityMixin _animatedOpacity;
 
     public RenderSliverAnimatedOpacity(
         Animation<double> opacity,
         bool alwaysIncludeSemantics = false,
         RenderSliver? sliver = null) : base(sliver)
     {
-        _opacity = opacity ?? throw new ArgumentNullException(nameof(opacity));
-        _currentOpacity = NormalizeOpacity(opacity.Value);
-        _alwaysIncludeSemantics = alwaysIncludeSemantics;
+        _animatedOpacity = new RenderAnimatedOpacityMixin(this, () => Child != null);
+        Opacity = opacity;
+        AlwaysIncludeSemantics = alwaysIncludeSemantics;
     }
 
     public Animation<double> Opacity
     {
-        get => _opacity;
-        set
-        {
-            ArgumentNullException.ThrowIfNull(value);
-            if (ReferenceEquals(_opacity, value))
-            {
-                return;
-            }
-
-            if (Attached)
-            {
-                _opacity.RemoveListener(HandleOpacityChanged);
-                value.AddListener(HandleOpacityChanged);
-            }
-
-            _opacity = value;
-            UpdateOpacity();
-        }
+        get => _animatedOpacity.Opacity;
+        set => _animatedOpacity.Opacity = value;
     }
 
     public bool AlwaysIncludeSemantics
     {
-        get => _alwaysIncludeSemantics;
-        set
-        {
-            if (_alwaysIncludeSemantics == value)
-            {
-                return;
-            }
-
-            _alwaysIncludeSemantics = value;
-            MarkNeedsSemanticsUpdate();
-        }
+        get => _animatedOpacity.AlwaysIncludeSemantics;
+        set => _animatedOpacity.AlwaysIncludeSemantics = value;
     }
 
-    public override bool IsRepaintBoundary => Child != null && _currentOpacity > 0.0;
-
-    protected override bool AlwaysNeedsCompositing => Child != null && _currentOpacity > 0.0;
+    public override bool IsRepaintBoundary => _animatedOpacity.IsRepaintBoundary;
 
     public override void Paint(PaintingContext ctx, Point offset)
     {
-        if (_currentOpacity == 0.0)
+        if (_animatedOpacity.Alpha == 0)
         {
             return;
         }
@@ -1891,82 +1862,39 @@ public sealed class RenderSliverAnimatedOpacity : RenderProxySliver
         base.Paint(ctx, offset);
     }
 
-    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer)
-    {
-        return oldLayer as OpacityLayer ?? new OpacityLayer();
-    }
+    protected override OffsetLayer CreateCompositedLayer(OffsetLayer? oldLayer) =>
+        _animatedOpacity.UpdateCompositedLayer(oldLayer);
 
-    protected override void UpdateCompositedLayer(OffsetLayer layer)
-    {
-        if (layer is OpacityLayer opacityLayer)
-        {
-            opacityLayer.Opacity = _currentOpacity;
-        }
-    }
+    protected override void UpdateCompositedLayer(OffsetLayer layer) =>
+        _animatedOpacity.UpdateCompositedLayer(layer);
 
     protected override void OnAttach()
     {
         base.OnAttach();
-        _opacity.AddListener(HandleOpacityChanged);
-        UpdateOpacity();
+        _animatedOpacity.OnAttach();
     }
 
     protected override void OnDetach()
     {
-        _opacity.RemoveListener(HandleOpacityChanged);
+        _animatedOpacity.OnDetach();
         base.OnDetach();
     }
 
+    public override bool PaintsChild(RenderObject child) => _animatedOpacity.PaintsChild();
+
     internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
     {
-        if (_currentOpacity > 0.0 || _alwaysIncludeSemantics)
+        if (_animatedOpacity.IncludesChildInSemantics())
         {
             base.VisitChildrenForSemantics(visitor);
         }
-    }
-
-    private void HandleOpacityChanged()
-    {
-        UpdateOpacity();
-    }
-
-    private void UpdateOpacity()
-    {
-        double normalized = NormalizeOpacity(_opacity.Value);
-        if (Math.Abs(_currentOpacity - normalized) <= 0.000001)
-        {
-            return;
-        }
-
-        bool compositingChanged = (_currentOpacity > 0.0) != (normalized > 0.0);
-        bool semanticsVisibilityChanged = (_currentOpacity == 0.0) != (normalized == 0.0);
-        _currentOpacity = normalized;
-        if (compositingChanged)
-        {
-            MarkNeedsCompositingBitsUpdate();
-        }
-
-        MarkNeedsCompositedLayerUpdate();
-        if (semanticsVisibilityChanged && !_alwaysIncludeSemantics)
-        {
-            MarkNeedsSemanticsUpdate();
-        }
-    }
-
-    private static double NormalizeOpacity(double value)
-    {
-        return double.IsNaN(value) ? 0.0 : Math.Clamp(value, 0.0, 1.0);
     }
 
     /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
-        properties.Add(new DiagnosticsProperty<Animation<double>>("opacity", Opacity));
-        properties.Add(new FlagProperty(
-            "alwaysIncludeSemantics",
-            AlwaysIncludeSemantics,
-            ifTrue: "alwaysIncludeSemantics"));
+        _animatedOpacity.DebugFillProperties(properties);
     }
 }
 

@@ -247,6 +247,32 @@ public sealed partial class Canvas
         Point geometryOffset = default)
     {
         ArgumentNullException.ThrowIfNull(geometry);
+        DrawShadowCore(() => geometry, color, elevation, transparentOccluder, geometryOffset);
+    }
+
+    /// <summary>
+    /// <see cref="DrawShadow(Geometry, Color, double, bool, Point)"/> over a <see cref="Path"/>, whose
+    /// backend geometry is built on playback so recording needs no render backend.
+    /// </summary>
+    public void DrawShadow(
+        Path path,
+        Color color,
+        double elevation,
+        bool transparentOccluder,
+        Point geometryOffset = default)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+        Geometry? geometry = null;
+        DrawShadowCore(() => geometry ??= path.ToGeometry(), color, elevation, transparentOccluder, geometryOffset);
+    }
+
+    private void DrawShadowCore(
+        Func<Geometry> geometrySource,
+        Color color,
+        double elevation,
+        bool transparentOccluder,
+        Point geometryOffset)
+    {
         if (elevation <= 0.0 || color.A == 0)
         {
             return;
@@ -254,6 +280,7 @@ public sealed partial class Canvas
 
         AddDrawCommand(context =>
         {
+            Geometry geometry = geometrySource();
             Point effectiveOffset = geometryOffset + new Vector(0.0, elevation * 0.5);
             using var transform = context.PushTransform(Matrix.CreateTranslation(
                 effectiveOffset.X,
