@@ -342,17 +342,12 @@ public sealed class CupertinoMenuAnchorState : State, WidgetsBindingObserver
 
 internal sealed class CupertinoMenuAnchorScope : InheritedWidget
 {
-    public CupertinoMenuAnchorScope(bool hasLeading, Widget child) : base()
+    public CupertinoMenuAnchorScope(bool hasLeading, Widget child) : base(child)
     {
         HasLeading = hasLeading;
-        Child = child;
     }
 
     public bool HasLeading { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         ((CupertinoMenuAnchorScope)oldWidget).HasLeading != HasLeading;
@@ -1612,17 +1607,12 @@ internal sealed class CupertinoMenuSwipeRegionState : State
 
 internal sealed class CupertinoMenuSwipeRegionScope : InheritedWidget
 {
-    public CupertinoMenuSwipeRegionScope(CupertinoMenuSwipeRegionState state, Widget child) : base()
+    public CupertinoMenuSwipeRegionScope(CupertinoMenuSwipeRegionState state, Widget child) : base(child)
     {
         State = state;
-        Child = child;
     }
 
     public CupertinoMenuSwipeRegionState State { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !ReferenceEquals(((CupertinoMenuSwipeRegionScope)oldWidget).State, State);

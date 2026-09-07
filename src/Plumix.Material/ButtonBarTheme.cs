@@ -147,17 +147,12 @@ public sealed record ButtonBarThemeData
 
 public sealed class ButtonBarTheme : InheritedWidget
 {
-    public ButtonBarTheme(ButtonBarThemeData data, Widget child, Key? key = null) : base(key)
+    public ButtonBarTheme(ButtonBarThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public ButtonBarThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

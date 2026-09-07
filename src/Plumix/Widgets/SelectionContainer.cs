@@ -204,16 +204,14 @@ public sealed class SelectionContainerState : State, ISelectable
 /// An inherited widget that hosts a [ISelectionRegistrar] for the subtree.
 public sealed class SelectionRegistrarScope : InheritedWidget
 {
-    public SelectionRegistrarScope(ISelectionRegistrar registrar, Widget child, Key? key = null) : base(key)
+    public SelectionRegistrarScope(ISelectionRegistrar registrar, Widget child, Key? key = null) : base(child, key)
     {
         Registrar = registrar ?? throw new ArgumentNullException(nameof(registrar));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
-    private SelectionRegistrarScope(Widget child, Key? key) : base(key)
+    private SelectionRegistrarScope(Widget child, Key? key) : base(child, key)
     {
         Registrar = null;
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     internal static SelectionRegistrarScope Disabled(Widget child, Key? key = null) => new(child, key);
@@ -222,10 +220,6 @@ public sealed class SelectionRegistrarScope : InheritedWidget
     public ISelectionRegistrar? Registrar { get; }
 
     /// The subtree this registrar applies to.
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((SelectionRegistrarScope)oldWidget).Registrar, Registrar);

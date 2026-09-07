@@ -8,6 +8,10 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `InheritedWidget` is a `ProxyWidget` carrying a `child`, and `InheritedElement` a `ProxyElement`.
+- Breaking: `Theme` is a `StatelessWidget` that builds `InheritedMaterialTheme`, as Dart's `_InheritedTheme` (theme.dart).
+- Breaking: `MediaQuery.PlatformBrightnessOf` falls back to `PlatformBrightness.Light` instead of throwing (media_query.dart).
+- Added `Theme.BrightnessOf`/`MaybeBrightnessOf` (`material_ui/lib/src/theme.dart`).
 - Breaking: `ComponentElement` lands as the base of `StatelessElement`/`StatefulElement`/`ProxyElement`.
 - Breaking: a throwing `build()` is reported and replaced by `ErrorWidget.Builder` instead of propagating.
 - Breaking: `ProxyElement` is abstract with an abstract `NotifyClients`; `ProxyWidget.CreateElement` is abstract.

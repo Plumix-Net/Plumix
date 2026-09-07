@@ -59,17 +59,12 @@ public sealed partial record TimePickerThemeData(
 
 public sealed class TimePickerTheme : InheritedTheme
 {
-    public TimePickerTheme(TimePickerThemeData data, Widget child, Key? key = null) : base(key)
+    public TimePickerTheme(TimePickerThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public TimePickerThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child) => new TimePickerTheme(Data, child);
 

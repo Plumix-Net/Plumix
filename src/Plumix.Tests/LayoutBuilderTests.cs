@@ -563,17 +563,12 @@ public sealed class LayoutBuilderTests
 
     private sealed class TestInheritedValue : InheritedWidget
     {
-        private readonly Widget _child;
-
-        public TestInheritedValue(int value, Widget child)
+        public TestInheritedValue(int value, Widget child) : base(child)
         {
             Value = value;
-            _child = child;
         }
 
         public int Value { get; }
-
-        public override Widget Build(BuildContext context) => _child;
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
             Value != ((TestInheritedValue)oldWidget).Value;

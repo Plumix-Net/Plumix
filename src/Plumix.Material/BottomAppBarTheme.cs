@@ -60,17 +60,12 @@ public sealed record BottomAppBarThemeData(
 
 public sealed class BottomAppBarTheme : InheritedTheme
 {
-    public BottomAppBarTheme(BottomAppBarThemeData data, Widget child, Key? key = null) : base(key)
+    public BottomAppBarTheme(BottomAppBarThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public BottomAppBarThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child)
     {

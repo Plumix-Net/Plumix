@@ -289,17 +289,12 @@ public sealed class SliverVisibility : StatelessWidget
 
 internal sealed class VisibilityScope : InheritedWidget
 {
-    public VisibilityScope(bool isVisible, Widget child) : base(key: null)
+    public VisibilityScope(bool isVisible, Widget child) : base(child, key: null)
     {
         IsVisible = isVisible;
-        Child = child;
     }
 
     public bool IsVisible { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

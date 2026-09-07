@@ -59,21 +59,16 @@ internal sealed class ScaffoldMessengerScope : InheritedWidget
         SnackBar? snackBar,
         MaterialBanner? materialBanner,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Messenger = messenger;
         SnackBar = snackBar;
         MaterialBanner = materialBanner;
-        Child = child;
     }
 
     public ScaffoldMessengerState Messenger { get; }
     public SnackBar? SnackBar { get; }
     public MaterialBanner? MaterialBanner { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (ScaffoldMessengerScope)oldWidget;

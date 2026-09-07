@@ -69,17 +69,12 @@ public sealed class CupertinoTheme : StatelessWidget
 /// <summary>Provides a <see cref="CupertinoTheme"/> to the widgets below it.</summary>
 public sealed class InheritedCupertinoTheme : InheritedTheme
 {
-    public InheritedCupertinoTheme(CupertinoTheme theme, Widget child, Key? key = null) : base(key)
+    public InheritedCupertinoTheme(CupertinoTheme theme, Widget child, Key? key = null) : base(child, key)
     {
         Theme = theme ?? throw new ArgumentNullException(nameof(theme));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public CupertinoTheme Theme { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child)
     {

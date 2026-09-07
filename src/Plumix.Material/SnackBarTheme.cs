@@ -202,17 +202,12 @@ public partial class SnackBarThemeData
 /// Applies a snack bar theme to descendant [SnackBar] widgets.
 public sealed class SnackBarTheme : InheritedTheme
 {
-    public SnackBarTheme(SnackBarThemeData data, Widget child, Key? key = null) : base(key)
+    public SnackBarTheme(SnackBarThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public SnackBarThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child) => new SnackBarTheme(Data, child);
 

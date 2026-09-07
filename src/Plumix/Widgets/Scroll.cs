@@ -413,17 +413,14 @@ public sealed class PrimaryScrollController : InheritedWidget
         Widget child,
         IReadOnlySet<TargetPlatform>? automaticallyInheritForPlatforms = null,
         Axis? scrollDirection = Axis.Vertical,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Controller = controller;
-        Child = child ?? throw new ArgumentNullException(nameof(child));
         AutomaticallyInheritForPlatforms = automaticallyInheritForPlatforms ?? MobilePlatforms;
         ScrollDirection = scrollDirection;
     }
 
     public ScrollController? Controller { get; }
-
-    public Widget Child { get; }
 
     public IReadOnlySet<TargetPlatform> AutomaticallyInheritForPlatforms { get; }
 
@@ -462,8 +459,6 @@ public sealed class PrimaryScrollController : InheritedWidget
         return MaybeOf(context)
                ?? throw new InvalidOperationException("PrimaryScrollController not found in context.");
     }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

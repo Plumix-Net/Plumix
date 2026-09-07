@@ -63,23 +63,18 @@ public sealed class SelectableRegionSelectionStatusScope : InheritedWidget
     internal SelectableRegionSelectionStatusScope(
         IValueListenable<SelectableRegionSelectionStatus> selectionStatusNotifier,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         SelectionStatusNotifier = selectionStatusNotifier;
-        Child = child;
     }
 
     /// The [SelectableRegionSelectionStatus] of the ancestor [SelectableRegion].
     public IValueListenable<SelectableRegionSelectionStatus> SelectionStatusNotifier { get; }
 
-    public Widget Child { get; }
-
     public static IValueListenable<SelectableRegionSelectionStatus>? MaybeOf(BuildContext context)
     {
         return context.DependOnInherited<SelectableRegionSelectionStatusScope>()?.SelectionStatusNotifier;
     }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

@@ -960,17 +960,12 @@ internal sealed class ParentInkResponseProvider : InheritedWidget
 {
     public ParentInkResponseProvider(
         IParentInkResponseState state,
-        Widget child) : base()
+        Widget child) : base(child)
     {
         State = state;
-        Child = child;
     }
 
     public IParentInkResponseState State { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 }

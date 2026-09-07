@@ -300,22 +300,17 @@ public sealed class ScrollConfiguration : InheritedWidget
     public ScrollConfiguration(
         ScrollBehavior behavior,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Behavior = behavior ?? throw new ArgumentNullException(nameof(behavior));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public ScrollBehavior Behavior { get; }
-
-    public Widget Child { get; }
 
     public static ScrollBehavior Of(BuildContext context)
     {
         return context.DependOnInherited<ScrollConfiguration>()?.Behavior ?? new ScrollBehavior();
     }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

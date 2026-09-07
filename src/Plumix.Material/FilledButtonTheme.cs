@@ -41,25 +41,17 @@ public sealed class FilledButtonTheme : InheritedTheme
     public FilledButtonTheme(
         FilledButtonThemeData data,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public FilledButtonThemeData Data { get; }
-
-    public Widget Child { get; }
 
     public static FilledButtonThemeData Of(BuildContext context)
     {
         var localTheme = context.DependOnInherited<FilledButtonTheme>();
         return localTheme is not null ? localTheme.Data : Theme.Of(context).FilledButtonTheme;
-    }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
     }
 
     public override Widget Wrap(BuildContext context, Widget child)

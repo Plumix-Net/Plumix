@@ -1739,202 +1739,6 @@ public class StatefulElement : ComponentElement
     }
 }
 
-public class InheritedElement : ComponentElement
-{
-    private readonly Dictionary<Element, object?> _dependents = [];
-
-    public InheritedElement(InheritedWidget widget) : base(widget)
-    {
-    }
-
-    private protected override void UpdateInheritance()
-    {
-        ImmutableDictionary<Type, InheritedElement> incomingWidgets =
-            Parent?.InheritedElements ?? ImmutableDictionary<Type, InheritedElement>.Empty;
-        InheritedElements = incomingWidgets.SetItem(Widget.GetType(), this);
-    }
-
-    protected override Widget Build() => ((InheritedWidget)Widget).Build(this);
-
-    public override void Update(Widget newWidget)
-    {
-        var old = (InheritedWidget)Widget;
-        base.Update(newWidget);
-        Updated(old);
-        Rebuild(force: true);
-    }
-
-    /// <summary>
-    /// Dart's <c>InheritedElement.updated</c>: notify the dependents only when the widget says the
-    /// change is observable.
-    /// </summary>
-    protected virtual void Updated(InheritedWidget oldWidget)
-    {
-        if (((InheritedWidget)Widget).InvokeUpdateShouldNotify(oldWidget))
-        {
-            NotifyClients(oldWidget);
-        }
-    }
-
-    /// <summary>Dart's <c>InheritedElement.debugDeactivated</c>: every dependent must have unregistered.</summary>
-    public override void DebugDeactivated()
-    {
-        base.DebugDeactivated();
-        if (Constants.KDebugMode && _dependents.Count > 0)
-        {
-            throw new AssertionError(
-                $"{Diagnostics.ObjectRuntimeType(this, "InheritedElement")} still has "
-                + $"{_dependents.Count} dependent(s) after being deactivated.");
-        }
-    }
-
-    protected object? GetDependencies(Element dependent)
-    {
-        _dependents.TryGetValue(dependent, out object? dependencies);
-        return dependencies;
-    }
-
-    protected void SetDependencies(Element dependent, object? value)
-    {
-        _dependents[dependent] = value;
-    }
-
-    public virtual void UpdateDependencies(Element dependent, object? aspect)
-    {
-        SetDependencies(dependent, value: null);
-    }
-
-    public virtual void RemoveDependent(Element dependent)
-    {
-        _dependents.Remove(dependent);
-    }
-
-    protected void NotifyClients(InheritedWidget oldWidget)
-    {
-        if (_dependents.Count == 0)
-        {
-            return;
-        }
-
-        foreach (var dependent in _dependents.Keys.ToArray())
-        {
-            NotifyDependent(oldWidget, dependent);
-        }
-    }
-
-    public virtual void NotifyDependent(InheritedWidget _, Element dependent)
-    {
-        dependent.DidChangeDependencies();
-    }
-
-    public override void Unmount()
-    {
-        base.Unmount();
-        _dependents.Clear();
-    }
-}
-
-public sealed class InheritedModelElement<TAspect> : InheritedElement
-{
-    public InheritedModelElement(InheritedModel<TAspect> widget) : base(widget)
-    {
-    }
-
-    private InheritedModel<TAspect> InheritedModelWidget => (InheritedModel<TAspect>)Widget;
-
-    public override void UpdateDependencies(Element dependent, object? aspect)
-    {
-        var dependencies = GetDependencies(dependent) as HashSet<TAspect>;
-        if (dependencies != null && dependencies.Count == 0)
-        {
-            return;
-        }
-
-        if (aspect == null)
-        {
-            SetDependencies(dependent, new HashSet<TAspect>());
-            return;
-        }
-
-        if (aspect is not TAspect typedAspect)
-        {
-            throw new InvalidOperationException($"InheritedModel aspect must be of type {typeof(TAspect).Name}.");
-        }
-
-        dependencies ??= [];
-        dependencies.Add(typedAspect);
-        SetDependencies(dependent, dependencies);
-    }
-
-    public override void NotifyDependent(InheritedWidget oldWidget, Element dependent)
-    {
-        var dependencies = GetDependencies(dependent) as HashSet<TAspect>;
-        if (dependencies == null)
-        {
-            return;
-        }
-
-        if (dependencies.Count == 0
-            || InheritedModelWidget.InvokeUpdateShouldNotifyDependent((InheritedModel<TAspect>)oldWidget, dependencies))
-        {
-            dependent.DidChangeDependencies();
-        }
-    }
-}
-
-public sealed class InheritedNotifierElement<TNotifier> : InheritedElement where TNotifier : class, IListenable
-{
-    private bool _dirty;
-
-    public InheritedNotifierElement(InheritedNotifier<TNotifier> widget) : base(widget)
-    {
-    }
-
-    private InheritedNotifier<TNotifier> InheritedNotifierWidget => (InheritedNotifier<TNotifier>)Widget;
-
-    protected override void OnMount()
-    {
-        InheritedNotifierWidget.Notifier?.AddListener(HandleUpdate);
-        base.OnMount();
-    }
-
-    public override void Update(Widget newWidget)
-    {
-        var oldNotifier = InheritedNotifierWidget.Notifier;
-        var newNotifier = ((InheritedNotifier<TNotifier>)newWidget).Notifier;
-        if (!ReferenceEquals(oldNotifier, newNotifier))
-        {
-            oldNotifier?.RemoveListener(HandleUpdate);
-            newNotifier?.AddListener(HandleUpdate);
-        }
-
-        base.Update(newWidget);
-    }
-
-    protected override void PerformRebuild()
-    {
-        if (_dirty)
-        {
-            NotifyClients(InheritedNotifierWidget);
-            _dirty = false;
-        }
-
-        base.PerformRebuild();
-    }
-
-    public override void Unmount()
-    {
-        InheritedNotifierWidget.Notifier?.RemoveListener(HandleUpdate);
-        base.Unmount();
-    }
-
-    private void HandleUpdate()
-    {
-        _dirty = true;
-        MarkNeedsBuild();
-    }
-}
-
 /// <summary>
 /// An <see cref="Element"/> that uses a <see cref="ProxyWidget"/> as its configuration and simply
 /// inflates that widget's child. Dart parity: <c>ProxyElement</c>.
@@ -2059,5 +1863,193 @@ public sealed class ParentDataElement<T> : ParentDataElementBase where T : IPare
         {
             ApplyParentDataToChild(RenderObjectAttachingChild);
         }
+    }
+}
+
+public class InheritedElement : ProxyElement
+{
+    private readonly Dictionary<Element, object?> _dependents = [];
+
+    public InheritedElement(InheritedWidget widget) : base(widget)
+    {
+    }
+
+    private protected override void UpdateInheritance()
+    {
+        ImmutableDictionary<Type, InheritedElement> incomingWidgets =
+            Parent?.InheritedElements ?? ImmutableDictionary<Type, InheritedElement>.Empty;
+        InheritedElements = incomingWidgets.SetItem(Widget.GetType(), this);
+    }
+
+    /// <summary>
+    /// Dart's <c>InheritedElement.updated</c>: notify the dependents only when the widget says the
+    /// change is observable.
+    /// </summary>
+    protected override void Updated(ProxyWidget oldWidget)
+    {
+        if (((InheritedWidget)Widget).InvokeUpdateShouldNotify((InheritedWidget)oldWidget))
+        {
+            base.Updated(oldWidget);
+        }
+    }
+
+    /// <summary>Dart's <c>InheritedElement.debugDeactivated</c>: every dependent must have unregistered.</summary>
+    public override void DebugDeactivated()
+    {
+        base.DebugDeactivated();
+        if (Constants.KDebugMode && _dependents.Count > 0)
+        {
+            throw new AssertionError(
+                $"{Diagnostics.ObjectRuntimeType(this, "InheritedElement")} still has "
+                + $"{_dependents.Count} dependent(s) after being deactivated.");
+        }
+    }
+
+    protected object? GetDependencies(Element dependent)
+    {
+        _dependents.TryGetValue(dependent, out object? dependencies);
+        return dependencies;
+    }
+
+    protected void SetDependencies(Element dependent, object? value)
+    {
+        _dependents[dependent] = value;
+    }
+
+    public virtual void UpdateDependencies(Element dependent, object? aspect)
+    {
+        SetDependencies(dependent, value: null);
+    }
+
+    public virtual void RemoveDependent(Element dependent)
+    {
+        _dependents.Remove(dependent);
+    }
+
+    /// <summary>Dart's <c>InheritedElement.notifyClients</c>.</summary>
+    protected override void NotifyClients(ProxyWidget oldWidget)
+    {
+        if (_dependents.Count == 0)
+        {
+            return;
+        }
+
+        var inheritedOldWidget = (InheritedWidget)oldWidget;
+        foreach (var dependent in _dependents.Keys.ToArray())
+        {
+            NotifyDependent(inheritedOldWidget, dependent);
+        }
+    }
+
+    public virtual void NotifyDependent(InheritedWidget _, Element dependent)
+    {
+        dependent.DidChangeDependencies();
+    }
+
+    public override void Unmount()
+    {
+        base.Unmount();
+        _dependents.Clear();
+    }
+}
+
+public sealed class InheritedModelElement<TAspect> : InheritedElement
+{
+    public InheritedModelElement(InheritedModel<TAspect> widget) : base(widget)
+    {
+    }
+
+    private InheritedModel<TAspect> InheritedModelWidget => (InheritedModel<TAspect>)Widget;
+
+    public override void UpdateDependencies(Element dependent, object? aspect)
+    {
+        var dependencies = GetDependencies(dependent) as HashSet<TAspect>;
+        if (dependencies != null && dependencies.Count == 0)
+        {
+            return;
+        }
+
+        if (aspect == null)
+        {
+            SetDependencies(dependent, new HashSet<TAspect>());
+            return;
+        }
+
+        if (aspect is not TAspect typedAspect)
+        {
+            throw new InvalidOperationException($"InheritedModel aspect must be of type {typeof(TAspect).Name}.");
+        }
+
+        dependencies ??= [];
+        dependencies.Add(typedAspect);
+        SetDependencies(dependent, dependencies);
+    }
+
+    public override void NotifyDependent(InheritedWidget oldWidget, Element dependent)
+    {
+        var dependencies = GetDependencies(dependent) as HashSet<TAspect>;
+        if (dependencies == null)
+        {
+            return;
+        }
+
+        if (dependencies.Count == 0
+            || InheritedModelWidget.InvokeUpdateShouldNotifyDependent((InheritedModel<TAspect>)oldWidget, dependencies))
+        {
+            dependent.DidChangeDependencies();
+        }
+    }
+}
+
+public sealed class InheritedNotifierElement<TNotifier> : InheritedElement where TNotifier : class, IListenable
+{
+    private bool _dirty;
+
+    public InheritedNotifierElement(InheritedNotifier<TNotifier> widget) : base(widget)
+    {
+    }
+
+    private InheritedNotifier<TNotifier> InheritedNotifierWidget => (InheritedNotifier<TNotifier>)Widget;
+
+    protected override void OnMount()
+    {
+        InheritedNotifierWidget.Notifier?.AddListener(HandleUpdate);
+        base.OnMount();
+    }
+
+    public override void Update(Widget newWidget)
+    {
+        var oldNotifier = InheritedNotifierWidget.Notifier;
+        var newNotifier = ((InheritedNotifier<TNotifier>)newWidget).Notifier;
+        if (!ReferenceEquals(oldNotifier, newNotifier))
+        {
+            oldNotifier?.RemoveListener(HandleUpdate);
+            newNotifier?.AddListener(HandleUpdate);
+        }
+
+        base.Update(newWidget);
+    }
+
+    protected override void PerformRebuild()
+    {
+        if (_dirty)
+        {
+            NotifyClients(InheritedNotifierWidget);
+            _dirty = false;
+        }
+
+        base.PerformRebuild();
+    }
+
+    public override void Unmount()
+    {
+        InheritedNotifierWidget.Notifier?.RemoveListener(HandleUpdate);
+        base.Unmount();
+    }
+
+    private void HandleUpdate()
+    {
+        _dirty = true;
+        MarkNeedsBuild();
     }
 }

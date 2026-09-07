@@ -13,17 +13,15 @@ public sealed class DefaultSelectionStyle : InheritedTheme
         Color? cursorColor = null,
         Color? selectionColor = null,
         MouseCursor? mouseCursor = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
         CursorColor = cursorColor;
         SelectionColor = selectionColor;
         MouseCursor = mouseCursor;
     }
 
-    private DefaultSelectionStyle(Key? key = null) : base(key)
+    private DefaultSelectionStyle(Key? key = null) : base(new FallbackNullWidget(), key)
     {
-        Child = new FallbackNullWidget();
     }
 
     public static DefaultSelectionStyle Fallback(Key? key = null)
@@ -32,8 +30,6 @@ public sealed class DefaultSelectionStyle : InheritedTheme
     }
 
     public static Color DefaultColor { get; } = Color.FromArgb(0x80, 0x80, 0x80, 0x80);
-
-    public Widget Child { get; }
 
     public Color? CursorColor { get; }
 
@@ -64,11 +60,6 @@ public sealed class DefaultSelectionStyle : InheritedTheme
     public static DefaultSelectionStyle Of(BuildContext context)
     {
         return context.DependOnInherited<DefaultSelectionStyle>() ?? Fallback();
-    }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
     }
 
     public override Widget Wrap(BuildContext context, Widget child)

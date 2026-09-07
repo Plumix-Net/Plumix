@@ -260,7 +260,7 @@ public sealed class DefaultTextStyle : InheritedTheme
         TextOverflow overflow = TextOverflow.Clip,
         int? maxLines = null,
         TextWidthBasis textWidthBasis = TextWidthBasis.Parent,
-        TextHeightBehavior? textHeightBehavior = null) : base(key)
+        TextHeightBehavior? textHeightBehavior = null) : base(child, key)
     {
         if (maxLines is <= 0)
         {
@@ -268,7 +268,6 @@ public sealed class DefaultTextStyle : InheritedTheme
         }
 
         Style = style;
-        Child = child;
         TextAlign = textAlign;
         SoftWrap = softWrap;
         Overflow = overflow;
@@ -278,8 +277,6 @@ public sealed class DefaultTextStyle : InheritedTheme
     }
 
     public TextStyle Style { get; }
-
-    public Widget Child { get; }
 
     public TextAlign? TextAlign { get; }
 
@@ -292,8 +289,6 @@ public sealed class DefaultTextStyle : InheritedTheme
     public TextWidthBasis TextWidthBasis { get; }
 
     public TextHeightBehavior? TextHeightBehavior { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child)
     {

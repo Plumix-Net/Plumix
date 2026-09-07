@@ -62,17 +62,12 @@ public sealed partial record ToggleButtonsThemeData(
 
 public sealed class ToggleButtonsTheme : InheritedTheme
 {
-    public ToggleButtonsTheme(ToggleButtonsThemeData data, Widget child, Key? key = null) : base(key)
+    public ToggleButtonsTheme(ToggleButtonsThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public ToggleButtonsThemeData Data { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     public override Widget Wrap(BuildContext context, Widget child)
     {
         return new ToggleButtonsTheme(Data, child);

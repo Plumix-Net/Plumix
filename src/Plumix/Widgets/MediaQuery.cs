@@ -368,17 +368,12 @@ public sealed class MediaQuery : InheritedModel<object>
     public MediaQuery(
         MediaQueryData data,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Data = data;
-        Child = child;
     }
 
     public MediaQueryData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
@@ -459,8 +454,13 @@ public sealed class MediaQuery : InheritedModel<object>
 
     public static double HeightOf(BuildContext context) => SizeOf(context).Height;
 
+    /// <summary>
+    /// Dart's <c>MediaQuery.platformBrightnessOf</c>: unlike the other <c>...Of</c> accessors this
+    /// one falls back to <see cref="PlatformBrightness.Light"/> instead of throwing when no
+    /// <see cref="MediaQuery"/> ancestor exists.
+    /// </summary>
     public static PlatformBrightness PlatformBrightnessOf(BuildContext context) =>
-        Of(context).PlatformBrightness;
+        MaybePlatformBrightnessOf(context) ?? PlatformBrightness.Light;
 
     public static PlatformBrightness? MaybePlatformBrightnessOf(BuildContext context) =>
         MaybeOf(context)?.PlatformBrightness;

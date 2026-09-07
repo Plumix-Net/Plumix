@@ -23,17 +23,12 @@ public sealed partial record DropdownMenuThemeData(
 /// </summary>
 public sealed class DropdownMenuTheme : InheritedTheme
 {
-    public DropdownMenuTheme(DropdownMenuThemeData data, Widget child, Key? key = null) : base(key)
+    public DropdownMenuTheme(DropdownMenuThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public DropdownMenuThemeData Data { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     public override Widget Wrap(BuildContext context, Widget child) => new DropdownMenuTheme(Data, child);
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>

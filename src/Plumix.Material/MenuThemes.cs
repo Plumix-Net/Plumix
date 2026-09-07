@@ -83,17 +83,12 @@ public class MenuButtonThemeData : IDiagnosticable
 /// </summary>
 public class MenuBarTheme : InheritedTheme
 {
-    public MenuBarTheme(MenuBarThemeData data, Widget child, Key? key = null) : base(key)
+    public MenuBarTheme(MenuBarThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public MenuBarThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child) => new MenuBarTheme(Data, child);
 
@@ -110,17 +105,12 @@ public class MenuBarTheme : InheritedTheme
 /// </summary>
 public class MenuButtonTheme : InheritedTheme
 {
-    public MenuButtonTheme(MenuButtonThemeData data, Widget child, Key? key = null) : base(key)
+    public MenuButtonTheme(MenuButtonThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public MenuButtonThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child) =>
         new MenuButtonTheme(Data, child);

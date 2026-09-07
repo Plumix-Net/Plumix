@@ -742,17 +742,12 @@ internal sealed class NavigationRailIndicatorInkWell : InkResponse
 
 internal sealed class NavigationRailExtendedAnimationScope : InheritedWidget
 {
-    public NavigationRailExtendedAnimationScope(double value, Widget child) : base()
+    public NavigationRailExtendedAnimationScope(double value, Widget child) : base(child)
     {
         Value = value;
-        Child = child;
     }
 
     public double Value { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return Math.Abs(((NavigationRailExtendedAnimationScope)oldWidget).Value - Value) > double.Epsilon;

@@ -163,24 +163,16 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
 
     private sealed class TestTheme : InheritedTheme
     {
-        public TestTheme(int value, Widget child)
+        public TestTheme(int value, Widget child) : base(child)
         {
             Value = value;
-            Child = child;
         }
 
         public int Value { get; }
 
-        public Widget Child { get; }
-
         public static int Of(BuildContext context)
         {
             return context.DependOnInherited<TestTheme>()?.Value ?? -1;
-        }
-
-        public override Widget Build(BuildContext context)
-        {
-            return Child;
         }
 
         public override Widget Wrap(BuildContext context, Widget child)

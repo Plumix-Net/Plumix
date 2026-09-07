@@ -88,17 +88,12 @@ public sealed partial record ScrollbarThemeData
 
 public sealed class ScrollbarTheme : InheritedTheme
 {
-    public ScrollbarTheme(ScrollbarThemeData data, Widget child, Key? key = null) : base(key)
+    public ScrollbarTheme(ScrollbarThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public ScrollbarThemeData Data { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     public override Widget Wrap(BuildContext context, Widget child) => new ScrollbarTheme(Data, child);
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>

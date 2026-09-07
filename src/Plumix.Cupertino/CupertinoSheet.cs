@@ -250,17 +250,12 @@ internal sealed class CupertinoSheetStretchControllerProvider : InheritedWidget
     public CupertinoSheetStretchControllerProvider(
         AnimationController controller,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Controller = controller;
-        Child = child;
     }
 
     public AnimationController Controller { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 }
@@ -464,14 +459,9 @@ public sealed class CupertinoSheetRoute<T> : PageRoute, ICupertinoSheetRoute
 
 internal sealed class CupertinoSheetScope : InheritedWidget
 {
-    public CupertinoSheetScope(Widget child, Key? key = null) : base(key)
+    public CupertinoSheetScope(Widget child, Key? key = null) : base(child, key)
     {
-        Child = child;
     }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 }

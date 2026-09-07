@@ -443,17 +443,12 @@ internal sealed class DrawerControllerScope : InheritedWidget
     public DrawerControllerScope(
         DrawerController controller,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Controller = controller ?? throw new ArgumentNullException(nameof(controller));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public DrawerController Controller { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

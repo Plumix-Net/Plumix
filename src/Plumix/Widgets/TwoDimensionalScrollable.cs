@@ -140,17 +140,12 @@ internal sealed class TwoDimensionalScrollableScope : InheritedWidget
     public TwoDimensionalScrollableScope(
         TwoDimensionalScrollableState twoDimensionalScrollable,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         TwoDimensionalScrollable = twoDimensionalScrollable;
-        Child = child;
     }
 
     public TwoDimensionalScrollableState TwoDimensionalScrollable { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 }

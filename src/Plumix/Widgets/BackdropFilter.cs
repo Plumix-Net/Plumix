@@ -10,20 +10,12 @@ public sealed class BackdropGroup : InheritedWidget
     public BackdropGroup(
         Widget child,
         BackdropKey? backdropKey = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
         BackdropKey = backdropKey ?? new BackdropKey();
     }
 
-    public Widget Child { get; }
-
     public BackdropKey BackdropKey { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

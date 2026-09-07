@@ -7,14 +7,9 @@ namespace Plumix.Widgets;
 
 public sealed class LookupBoundary : InheritedWidget
 {
-    public LookupBoundary(Widget child, Key? key = null) : base(key)
+    public LookupBoundary(Widget child, Key? key = null) : base(child, key)
     {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public static T? DependOnInheritedWidgetOfExactType<T>(BuildContext context, object? aspect = null)
         where T : InheritedWidget

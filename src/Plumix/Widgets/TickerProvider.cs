@@ -137,13 +137,12 @@ internal sealed class EffectiveTickerMode : InheritedWidget
         bool forceFrames,
         ValueNotifier<bool> notifier,
         ValueNotifier<TickerModeData> valuesNotifier,
-        Widget child) : base(key: null)
+        Widget child) : base(child, key: null)
     {
         Enabled = enabled;
         ForceFrames = forceFrames;
         Notifier = notifier;
         ValuesNotifier = valuesNotifier;
-        Child = child;
     }
 
     public bool Enabled { get; }
@@ -155,10 +154,6 @@ internal sealed class EffectiveTickerMode : InheritedWidget
     public ValueNotifier<TickerModeData> ValuesNotifier { get; }
 
     public TickerModeData Values => ValuesNotifier.Value;
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

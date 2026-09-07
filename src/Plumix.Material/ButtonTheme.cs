@@ -267,17 +267,12 @@ public sealed class ButtonTheme : InheritedWidget
     {
     }
 
-    public ButtonTheme(ButtonThemeData data, Widget child, Key? key = null) : base(key)
+    public ButtonTheme(ButtonThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public ButtonThemeData Data { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((ButtonTheme)oldWidget).Data, Data);
 

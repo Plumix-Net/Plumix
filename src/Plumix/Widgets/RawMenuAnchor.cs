@@ -113,20 +113,15 @@ public sealed class DismissMenuAction : DismissAction
 
 internal sealed class MenuControllerScope : InheritedWidget
 {
-    public MenuControllerScope(MenuController controller, bool isOpen, Widget child) : base()
+    public MenuControllerScope(MenuController controller, bool isOpen, Widget child) : base(child)
     {
         Controller = controller;
         IsOpen = isOpen;
-        Child = child;
     }
 
     public MenuController Controller { get; }
 
     public bool IsOpen { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         ((MenuControllerScope)oldWidget).IsOpen != IsOpen;

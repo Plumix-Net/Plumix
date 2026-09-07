@@ -95,17 +95,12 @@ public sealed partial record PopupMenuThemeData
 
 public sealed class PopupMenuTheme : InheritedTheme
 {
-    public PopupMenuTheme(PopupMenuThemeData data, Widget child, Key? key = null) : base(key)
+    public PopupMenuTheme(PopupMenuThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public PopupMenuThemeData Data { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     public override Widget Wrap(BuildContext context, Widget child) => new PopupMenuTheme(Data, child);
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>

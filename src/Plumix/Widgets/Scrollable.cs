@@ -960,11 +960,10 @@ internal sealed class ScrollableScope : InheritedWidget
         Scrollable.ScrollableState scrollable,
         ScrollPosition position,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Scrollable = scrollable;
         Position = position;
-        Child = child;
     }
 
     public Scrollable.ScrollableState Scrollable { get; }
@@ -972,10 +971,6 @@ internal sealed class ScrollableScope : InheritedWidget
     public ScrollPosition Position { get; }
 
     /// <summary>The subtree this scope wraps.</summary>
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(Position, ((ScrollableScope)oldWidget).Position);

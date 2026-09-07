@@ -894,17 +894,12 @@ public sealed class ShortcutRegistrar : StatefulWidget
 
 internal sealed class ShortcutRegistrarScope : InheritedWidget
 {
-    public ShortcutRegistrarScope(ShortcutRegistry registry, Widget child)
+    public ShortcutRegistrarScope(ShortcutRegistry registry, Widget child) : base(child)
     {
         Registry = registry;
-        Child = child;
     }
 
     public ShortcutRegistry Registry { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

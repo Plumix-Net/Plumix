@@ -44,18 +44,13 @@ public sealed class FlutterView
 /// </summary>
 public sealed class View : InheritedWidget
 {
-    public View(FlutterView view, Widget child, Key? key = null) : base(key)
+    public View(FlutterView view, Widget child, Key? key = null) : base(child, key)
     {
         ViewHandle = view ?? throw new ArgumentNullException(nameof(view));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     /// <summary>The platform view this widget exposes.</summary>
     public FlutterView ViewHandle { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

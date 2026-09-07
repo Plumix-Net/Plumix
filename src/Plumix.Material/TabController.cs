@@ -218,20 +218,15 @@ public sealed class TabController : ChangeNotifier
 // Dart parity source: material_ui/lib/src/tab_controller.dart (_TabControllerScope)
 internal sealed class TabControllerScope : InheritedWidget
 {
-    public TabControllerScope(TabController controller, bool enabled, Widget child, Key? key = null) : base(key)
+    public TabControllerScope(TabController controller, bool enabled, Widget child, Key? key = null) : base(child, key)
     {
         Controller = controller;
         Enabled = enabled;
-        Child = child;
     }
 
     public TabController Controller { get; }
 
     public bool Enabled { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

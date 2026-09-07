@@ -937,21 +937,17 @@ public sealed class HeroControllerScope : InheritedWidget
     public HeroControllerScope(
         HeroController controller,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Controller = controller ?? throw new ArgumentNullException(nameof(controller));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
-    private HeroControllerScope(Widget child, Key? key) : base(key)
+    private HeroControllerScope(Widget child, Key? key) : base(child, key)
     {
         Controller = null;
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public HeroController? Controller { get; }
-
-    public Widget Child { get; }
 
     /// <summary>Dart's `HeroControllerScope.none`: hides an ancestor controller from the subtree.</summary>
     public static HeroControllerScope None(Widget child, Key? key = null) => new(child, key);
@@ -968,8 +964,6 @@ public sealed class HeroControllerScope : InheritedWidget
                    "HeroControllerScope.Of() was called with a context that does not contain a "
                    + "HeroControllerScope widget.");
     }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

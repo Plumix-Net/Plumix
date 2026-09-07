@@ -79,17 +79,12 @@ public sealed partial record DialogThemeData
 /// </summary>
 public sealed class DialogTheme : InheritedTheme
 {
-    public DialogTheme(DialogThemeData data, Widget child, Key? key = null) : base(key)
+    public DialogTheme(DialogThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public DialogThemeData Data { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     public override Widget Wrap(BuildContext context, Widget child) => new DialogTheme(Data, child);
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>

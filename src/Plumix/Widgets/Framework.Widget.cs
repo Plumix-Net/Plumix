@@ -63,10 +63,15 @@ public abstract class ProxyWidget : Widget
 {
     protected ProxyWidget(Widget child, Key? key = null) : base(key)
     {
-        Child = child;
+        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
-    public Widget Child { get; }
+    /// <summary>
+    /// The widget below this widget in the tree. Dart's <c>ProxyWidget.child</c>; virtual because
+    /// Dart declares it as a getter that subclasses such as <c>TextSelectionTheme</c> override to
+    /// insert a wrapper without changing their public API.
+    /// </summary>
+    public virtual Widget Child { get; }
 }
 
 internal interface IParentDataWidget
@@ -588,13 +593,11 @@ public abstract class State : Diagnosticable, ITickerProvider
 }
 
 // Inherited widgets
-public abstract class InheritedWidget : Widget
+public abstract class InheritedWidget : ProxyWidget
 {
-    protected InheritedWidget(Key? key = null) : base(key)
+    protected InheritedWidget(Widget child, Key? key = null) : base(child, key)
     {
     }
-
-    public abstract Widget Build(BuildContext context);
 
     protected abstract bool UpdateShouldNotify(InheritedWidget oldWidget);
 
@@ -605,7 +608,7 @@ public abstract class InheritedWidget : Widget
 
 public abstract class InheritedModel<TAspect> : InheritedWidget
 {
-    protected InheritedModel(Key? key = null) : base(key)
+    protected InheritedModel(Widget child, Key? key = null) : base(child, key)
     {
     }
 
@@ -684,17 +687,12 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
 
 public abstract class InheritedNotifier<TNotifier> : InheritedWidget where TNotifier : class, IListenable
 {
-    protected InheritedNotifier(TNotifier? notifier, Widget child, Key? key = null) : base(key)
+    protected InheritedNotifier(TNotifier? notifier, Widget child, Key? key = null) : base(child, key)
     {
         Notifier = notifier;
-        Child = child;
     }
 
     public TNotifier? Notifier { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         => !ReferenceEquals(((InheritedNotifier<TNotifier>)oldWidget).Notifier, Notifier);

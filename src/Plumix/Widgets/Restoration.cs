@@ -65,18 +65,13 @@ public sealed class RestorationScope : StatefulWidget
 /// </summary>
 public sealed class UnmanagedRestorationScope : InheritedWidget
 {
-    public UnmanagedRestorationScope(Widget child, RestorationBucket? bucket = null, Key? key = null) : base(key)
+    public UnmanagedRestorationScope(Widget child, RestorationBucket? bucket = null, Key? key = null) : base(child, key)
     {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
         Bucket = bucket;
     }
 
-    public Widget Child { get; }
-
     /// <summary>The bucket made available to descendants, or null to disable restoration below.</summary>
     public RestorationBucket? Bucket { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

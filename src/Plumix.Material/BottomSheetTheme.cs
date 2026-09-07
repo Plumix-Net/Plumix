@@ -146,17 +146,12 @@ public sealed partial record BottomSheetThemeData
 
 public sealed class BottomSheetTheme : InheritedTheme
 {
-    public BottomSheetTheme(BottomSheetThemeData data, Widget child, Key? key = null) : base(key)
+    public BottomSheetTheme(BottomSheetThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public BottomSheetThemeData Data { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     public override Widget Wrap(BuildContext context, Widget child)
     {
         return new BottomSheetTheme(Data, child);

@@ -323,23 +323,15 @@ internal sealed class RadioGroupStateScope<T> : InheritedWidget
     public RadioGroupStateScope(
         RadioGroupRegistry<T> registry,
         T? groupValue,
-        Widget child) : base()
+        Widget child) : base(child)
     {
         Registry = registry;
         GroupValue = groupValue;
-        Child = child;
     }
 
     public RadioGroupRegistry<T> Registry { get; }
 
     public T? GroupValue { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

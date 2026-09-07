@@ -10,20 +10,12 @@ public sealed class Directionality : InheritedWidget
     public Directionality(
         TextDirection textDirection,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         TextDirection = textDirection;
-        Child = child;
     }
 
     public TextDirection TextDirection { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

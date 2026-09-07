@@ -20,7 +20,7 @@ public sealed class ThemeDataTween : Tween<ThemeData>
     }
 }
 
-public sealed class Theme : InheritedTheme
+public sealed class Theme : StatelessWidget
 {
     // Dart's `Theme._kFallbackTheme`: `ThemeData.fallback()`, which is `ThemeData.light()`.
     private static readonly ThemeData KFallbackTheme = ThemeData.Light;
@@ -38,55 +38,12 @@ public sealed class Theme : InheritedTheme
 
     public Widget Child { get; }
 
-    public override Widget Build(BuildContext context)
-    {
-        ThemeData localized = Localize(Data, context);
-        return new CupertinoTheme(
-            // If a CupertinoThemeData doesn't exist, we're using a MaterialBasedCupertinoThemeData
-            // here instead of a CupertinoThemeData because it defers some properties to the
-            // Material ThemeData.
-            data: InheritedCupertinoThemeData(context, localized),
-            child: WrapsWidgetThemes(context, localized, Child));
-    }
-
-    // Dart's `Theme._inheritedCupertinoThemeData`.
-    private static CupertinoThemeData InheritedCupertinoThemeData(BuildContext context, ThemeData data)
-    {
-        InheritedCupertinoTheme? inheritedTheme = context.DependOnInherited<InheritedCupertinoTheme>();
-        return (inheritedTheme?.Theme.Data ?? new MaterialBasedCupertinoThemeData(data))
-            .ResolveFrom(context);
-    }
-
-    // Dart's `Theme._wrapsWidgetThemes`: the inherited themes in the widgets library cannot infer
-    // their values from a Material `Theme`, so the subtree is wrapped in the widget-library themes
-    // that carry them. The text style is not among them - `Material` installs it.
-    private static Widget WrapsWidgetThemes(BuildContext context, ThemeData data, Widget child)
-    {
-        DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
-        return new IconTheme(
-            data: data.IconTheme,
-            child: new DefaultSelectionStyle(
-                selectionColor: data.TextSelectionTheme.SelectionColor ?? selectionStyle.SelectionColor,
-                cursorColor: data.TextSelectionTheme.CursorColor ?? selectionStyle.CursorColor,
-                child: child));
-    }
-
-    public override Widget Wrap(BuildContext context, Widget child)
-    {
-        return new Theme(Data, child);
-    }
-
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
-    {
-        return !Equals(((Theme)oldWidget).Data, Data);
-    }
-
     public static ThemeData Of(BuildContext context)
     {
-        Theme? inheritedTheme = context.DependOnInherited<Theme>();
+        InheritedMaterialTheme? inheritedTheme = context.DependOnInherited<InheritedMaterialTheme>();
         InheritedCupertinoTheme? inheritedCupertinoTheme =
             context.DependOnInherited<InheritedCupertinoTheme>();
-        ThemeData data = inheritedTheme?.Data
+        ThemeData data = inheritedTheme?.Theme.Data
                          ?? (inheritedCupertinoTheme is not null
                              ? new CupertinoBasedMaterialThemeData(
                                  inheritedCupertinoTheme.Theme.Data).MaterialTheme
@@ -94,10 +51,99 @@ public sealed class Theme : InheritedTheme
         return Localize(data, context);
     }
 
+    // Dart's `Theme._inheritedCupertinoThemeData`.
+    private CupertinoThemeData InheritedCupertinoThemeData(BuildContext context)
+    {
+        InheritedCupertinoTheme? inheritedTheme = context.DependOnInherited<InheritedCupertinoTheme>();
+        return (inheritedTheme?.Theme.Data ?? new MaterialBasedCupertinoThemeData(Data))
+            .ResolveFrom(context);
+    }
+
+    /// <summary>
+    /// Dart's <c>Theme.brightnessOf</c>: the brightness descendant Material widgets should use,
+    /// falling back to <see cref="MediaQuery.PlatformBrightnessOf"/> when no ancestor theme
+    /// declares one.
+    /// </summary>
+    public static Brightness BrightnessOf(BuildContext context)
+    {
+        InheritedMaterialTheme? inheritedTheme = context.DependOnInherited<InheritedMaterialTheme>();
+        return inheritedTheme?.Theme.Data.Brightness ?? ToBrightness(MediaQuery.PlatformBrightnessOf(context));
+    }
+
+    /// <summary>
+    /// Dart's <c>Theme.maybeBrightnessOf</c>: like <see cref="BrightnessOf"/>, but null when
+    /// neither an ancestor theme nor a <see cref="MediaQuery"/> declares a brightness.
+    /// </summary>
+    public static Brightness? MaybeBrightnessOf(BuildContext context)
+    {
+        InheritedMaterialTheme? inheritedTheme = context.DependOnInherited<InheritedMaterialTheme>();
+        PlatformBrightness? platformBrightness = MediaQuery.MaybePlatformBrightnessOf(context);
+        return inheritedTheme?.Theme.Data.Brightness
+               ?? (platformBrightness is null ? null : ToBrightness(platformBrightness.Value));
+    }
+
+    // Dart has one `Brightness`; Plumix splits the platform value out as `PlatformBrightness`, so
+    // the `MediaQuery` fallback has to be mapped back onto the Material enum.
+    private static Brightness ToBrightness(PlatformBrightness brightness) =>
+        brightness == PlatformBrightness.Dark ? Brightness.Dark : Brightness.Light;
+
+    // Dart's `Theme._wrapsWidgetThemes`: the inherited themes in the widgets library cannot infer
+    // their values from a Material `Theme`, so the subtree is wrapped in the widget-library themes
+    // that carry them. The text style is not among them - `Material` installs it.
+    private Widget WrapsWidgetThemes(BuildContext context, Widget child)
+    {
+        DefaultSelectionStyle selectionStyle = DefaultSelectionStyle.Of(context);
+        return new IconTheme(
+            data: Data.IconTheme,
+            child: new DefaultSelectionStyle(
+                selectionColor: Data.TextSelectionTheme.SelectionColor ?? selectionStyle.SelectionColor,
+                cursorColor: Data.TextSelectionTheme.CursorColor ?? selectionStyle.CursorColor,
+                child: child));
+    }
+
+    public override Widget Build(BuildContext context)
+    {
+        return new InheritedMaterialTheme(
+            theme: this,
+            child: new CupertinoTheme(
+                // If a CupertinoThemeData doesn't exist, we're using a MaterialBasedCupertinoThemeData
+                // here instead of a CupertinoThemeData because it defers some properties to the
+                // Material ThemeData.
+                data: InheritedCupertinoThemeData(context),
+                child: WrapsWidgetThemes(context, Child)));
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<ThemeData>("data", Data, showName: false));
+    }
+
     private static ThemeData Localize(ThemeData data, BuildContext context)
     {
         ScriptCategory category = MaterialLocalizations.Of(context).ScriptCategory;
         return ThemeData.Localize(data, data.Typography.GeometryThemeFor(category));
+    }
+}
+
+/// <summary>Provides a <see cref="Theme"/> to the widgets below it. Dart's <c>_InheritedTheme</c>.</summary>
+public sealed class InheritedMaterialTheme : InheritedTheme
+{
+    public InheritedMaterialTheme(Theme theme, Widget child, Key? key = null) : base(child, key)
+    {
+        Theme = theme ?? throw new ArgumentNullException(nameof(theme));
+    }
+
+    public Theme Theme { get; }
+
+    public override Widget Wrap(BuildContext context, Widget child)
+    {
+        return new Theme(Theme.Data, child);
+    }
+
+    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    {
+        return !Equals(((InheritedMaterialTheme)oldWidget).Theme.Data, Theme.Data);
     }
 }
 

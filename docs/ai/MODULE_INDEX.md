@@ -45,6 +45,9 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Then per target control: control file + its theme file + its `src/Plumix.Tests/Material*Tests.cs` + demo pages (`src/Sample/Plumix.Sample/Demos/Material/*`, `dart_sample/lib/demos/material/*`).
 - Material color/typography work enters through `ColorScheme.cs`, `Typography.cs`, and `ThemeData.cs`, with focused
   coverage in `MaterialColorSchemeTests.cs`, `MaterialColorsTests.cs` and `MaterialThemeAnimationTests.cs`.
+- The `Theme` widget itself is a `StatelessWidget` that installs `InheritedMaterialTheme` (Dart's
+  `_InheritedTheme`); that split, `Theme.Of` and `BrightnessOf`/`MaybeBrightnessOf` are covered by
+  `MaterialThemeWidgetTests.cs`.
 - The palette itself is `MaterialColor.cs` (swatch types) plus the generated `Colors.g.cs`
   (`scripts/generate_material_colors.py`), on top of core `src/Plumix/Painting/ColorSwatch.cs`.
   `Plumix.Material.Colors` shadows `Avalonia.Media.Colors`; projects importing both alias one of

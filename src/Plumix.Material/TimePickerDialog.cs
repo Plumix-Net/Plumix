@@ -84,7 +84,7 @@ internal sealed class TimePickerModel : InheritedModel<TimePickerAspect>
         TimePickerThemeData theme,
         TimePickerDefaults defaultTheme,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         EntryMode = entryMode;
         HourMinuteMode = hourMinuteMode;
@@ -99,7 +99,6 @@ internal sealed class TimePickerModel : InheritedModel<TimePickerAspect>
         Orientation = orientation;
         Theme = theme;
         DefaultTheme = defaultTheme;
-        Child = child;
     }
 
     public TimePickerEntryMode EntryMode { get; }
@@ -115,10 +114,6 @@ internal sealed class TimePickerModel : InheritedModel<TimePickerAspect>
     public Orientation Orientation { get; }
     public TimePickerThemeData Theme { get; }
     public TimePickerDefaults DefaultTheme { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     private static TimePickerModel Of(BuildContext context, TimePickerAspect aspect) =>
         InheritFrom<TimePickerModel>(context, aspect)
         ?? throw new InvalidOperationException("No TimePickerModel found in context.");

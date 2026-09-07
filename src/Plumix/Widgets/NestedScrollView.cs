@@ -277,17 +277,12 @@ internal sealed class NestedScrollViewCustomScrollView : CustomScrollView
 internal sealed class InheritedNestedScrollView : InheritedWidget
 {
     public InheritedNestedScrollView(NestedScrollViewState state, Widget child, Key? key = null)
-        : base(key)
+        : base(child, key)
     {
         State = state;
-        Child = child;
     }
 
     public NestedScrollViewState State { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

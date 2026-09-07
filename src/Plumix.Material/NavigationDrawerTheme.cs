@@ -96,17 +96,12 @@ public sealed class NavigationDrawerTheme : InheritedTheme
     public NavigationDrawerTheme(
         NavigationDrawerThemeData data,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public NavigationDrawerThemeData Data { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     public override Widget Wrap(BuildContext context, Widget child)
     {
         return new NavigationDrawerTheme(Data, child);

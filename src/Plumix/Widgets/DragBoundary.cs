@@ -18,14 +18,9 @@ public abstract class DragBoundaryDelegate<T>
 /// <summary>Provides the bounds used to constrain descendant drag operations.</summary>
 public sealed class DragBoundary : InheritedWidget
 {
-    public DragBoundary(Widget child, Key? key = null) : base(key)
+    public DragBoundary(Widget child, Key? key = null) : base(child, key)
     {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public static DragBoundaryDelegate<Rect> ForRectOf(
         BuildContext context,

@@ -870,20 +870,12 @@ public sealed class MaterialLocalizationsScope : InheritedWidget
     public MaterialLocalizationsScope(
         MaterialLocalizations localizations,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Localizations = localizations ?? throw new ArgumentNullException(nameof(localizations));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public MaterialLocalizations Localizations { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

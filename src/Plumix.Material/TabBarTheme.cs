@@ -175,7 +175,7 @@ public sealed class TabBarTheme : InheritedTheme
         TabAlignment? tabAlignment = null,
         TextScaler? textScaler = null,
         TabIndicatorAnimation? indicatorAnimation = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child ?? new SizedBox(), key)
     {
         bool hasIndividualProperty = indicator is not null
                                      || indicatorColor is not null
@@ -217,10 +217,7 @@ public sealed class TabBarTheme : InheritedTheme
         _tabAlignment = tabAlignment;
         _textScaler = textScaler;
         _indicatorAnimation = indicatorAnimation;
-        Child = child ?? new SizedBox();
     }
-
-    public Widget Child { get; }
 
     public Decoration? Indicator => _data is not null ? _data.Indicator : _indicator;
 
@@ -278,8 +275,6 @@ public sealed class TabBarTheme : InheritedTheme
         TabAlignment: _tabAlignment,
         TextScaler: _textScaler,
         IndicatorAnimation: _indicatorAnimation);
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child) => new TabBarTheme(Data, child);
 

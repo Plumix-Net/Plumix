@@ -1001,17 +1001,12 @@ public sealed class SliverReorderableListState : State
 
 internal sealed class ReorderableListScope : InheritedWidget
 {
-    public ReorderableListScope(SliverReorderableListState listState, Widget child)
+    public ReorderableListScope(SliverReorderableListState listState, Widget child) : base(child)
     {
         ListState = listState;
-        Child = child;
     }
 
     public SliverReorderableListState ListState { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

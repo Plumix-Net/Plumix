@@ -140,17 +140,12 @@ public sealed partial record TooltipThemeData
 
 public sealed class TooltipTheme : InheritedTheme
 {
-    public TooltipTheme(TooltipThemeData data, Widget child, Key? key = null) : base(key)
+    public TooltipTheme(TooltipThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public TooltipThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child) => new TooltipTheme(Data, child);
 

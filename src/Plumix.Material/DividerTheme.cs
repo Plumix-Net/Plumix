@@ -38,20 +38,12 @@ public sealed class DividerTheme : InheritedTheme
     public DividerTheme(
         DividerThemeData data,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public DividerThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
 
     public override Widget Wrap(BuildContext context, Widget child)
     {

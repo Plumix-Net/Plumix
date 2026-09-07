@@ -81,17 +81,12 @@ public class MenuThemeData : IDiagnosticable
 /// </summary>
 public class MenuTheme : InheritedTheme
 {
-    public MenuTheme(MenuThemeData data, Widget child, Key? key = null) : base(key)
+    public MenuTheme(MenuThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public MenuThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child) => new MenuTheme(Data, child);
 

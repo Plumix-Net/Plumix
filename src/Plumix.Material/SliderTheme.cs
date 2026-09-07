@@ -212,24 +212,16 @@ public sealed class SliderTheme : InheritedTheme
     public SliderTheme(
         SliderThemeData data,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public SliderThemeData Data { get; }
 
-    public Widget Child { get; }
-
     public override Widget Wrap(BuildContext context, Widget child)
     {
         return new SliderTheme(Data, child);
-    }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)

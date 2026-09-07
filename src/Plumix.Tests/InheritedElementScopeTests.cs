@@ -295,17 +295,12 @@ public sealed class InheritedElementScopeTests
 
     private class BaseScope : InheritedWidget
     {
-        public BaseScope(int value, Widget child, Key? key = null) : base(key)
+        public BaseScope(int value, Widget child, Key? key = null) : base(child, key)
         {
             Value = value;
-            Child = child;
         }
 
         public int Value { get; }
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context) => Child;
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {

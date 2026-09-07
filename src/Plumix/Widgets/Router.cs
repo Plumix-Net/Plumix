@@ -535,14 +535,13 @@ internal sealed class RouterScope : InheritedWidget
         object routerDelegate,
         RouterStateBase routerState,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         RouteInformationProvider = routeInformationProvider;
         BackButtonDispatcher = backButtonDispatcher;
         RouteInformationParser = routeInformationParser;
         RouterDelegate = routerDelegate;
         RouterState = routerState;
-        Child = child;
     }
 
     public RouteInformationProvider? RouteInformationProvider { get; }
@@ -554,10 +553,6 @@ internal sealed class RouterScope : InheritedWidget
     public object RouterDelegate { get; }
 
     public RouterStateBase RouterState { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

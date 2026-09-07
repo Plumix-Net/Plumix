@@ -94,17 +94,12 @@ public sealed record NavigationBarThemeData(
 
 public sealed class NavigationBarTheme : InheritedTheme
 {
-    public NavigationBarTheme(NavigationBarThemeData data, Widget child, Key? key = null) : base(key)
+    public NavigationBarTheme(NavigationBarThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public NavigationBarThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child)
     {

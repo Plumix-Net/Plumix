@@ -141,7 +141,7 @@ public sealed class ListTileTheme : InheritedTheme
         double? minVerticalPadding = null,
         double? minLeadingWidth = null,
         ListTileControlAffinity? controlAffinity = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         ArgumentNullException.ThrowIfNull(child);
         if (data is not null
@@ -162,7 +162,6 @@ public sealed class ListTileTheme : InheritedTheme
             throw new ArgumentException("ListTileTheme data cannot be combined with legacy override fields.");
         }
 
-        Child = child;
         _data = data;
         _dense = dense;
         _shape = shape;
@@ -180,8 +179,6 @@ public sealed class ListTileTheme : InheritedTheme
         _minLeadingWidth = minLeadingWidth;
         _controlAffinity = controlAffinity;
     }
-
-    public Widget Child { get; }
 
     public ListTileThemeData Data => _data ?? new ListTileThemeData(
         Dense: _dense,
@@ -227,8 +224,6 @@ public sealed class ListTileTheme : InheritedTheme
     public double? MinLeadingWidth => _data?.MinLeadingWidth ?? _minLeadingWidth;
 
     public ListTileControlAffinity? ControlAffinity => _data?.ControlAffinity ?? _controlAffinity;
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child)
     {

@@ -175,22 +175,17 @@ internal sealed class CupertinoPageScaffoldState : State, WidgetsBindingObserver
 /// <summary>Exposes the resolved page-scaffold background color to descendants.</summary>
 public sealed class CupertinoPageScaffoldBackgroundColor : InheritedWidget
 {
-    public CupertinoPageScaffoldBackgroundColor(Color color, Widget child, Key? key = null) : base(key)
+    public CupertinoPageScaffoldBackgroundColor(Color color, Widget child, Key? key = null) : base(child, key)
     {
         Color = color;
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public Color Color { get; }
-
-    public Widget Child { get; }
 
     public static Color? MaybeOf(BuildContext context)
     {
         return context.DependOnInherited<CupertinoPageScaffoldBackgroundColor>()?.Color;
     }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

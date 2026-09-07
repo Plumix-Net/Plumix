@@ -514,12 +514,11 @@ internal sealed class LocalizationsScope : InheritedWidget
         IReadOnlyList<LocalizationsDelegate> delegates,
         IReadOnlyDictionary<Type, object> resources,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Locale = locale;
         Delegates = delegates;
         Resources = resources;
-        Child = child;
     }
 
     public Locale Locale { get; }
@@ -527,10 +526,6 @@ internal sealed class LocalizationsScope : InheritedWidget
     public IReadOnlyList<LocalizationsDelegate> Delegates { get; }
 
     public IReadOnlyDictionary<Type, object> Resources { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

@@ -106,7 +106,7 @@ public sealed class CardTheme : InheritedWidget
         Thickness? margin = null,
         ShapeBorder? shape = null,
         CardThemeData? data = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child ?? new SizedBox(), key)
     {
         bool hasLegacyProperties = clipBehavior.HasValue
                                    || color.HasValue
@@ -130,7 +130,6 @@ public sealed class CardTheme : InheritedWidget
             Elevation: elevation,
             Margin: margin,
             Shape: shape);
-        Child = child ?? new SizedBox();
     }
 
     public CardTheme(
@@ -144,8 +143,6 @@ public sealed class CardTheme : InheritedWidget
     }
 
     public CardThemeData Data { get; }
-
-    public Widget Child { get; }
 
     public Clip? ClipBehavior => Data.ClipBehavior;
 
@@ -178,11 +175,6 @@ public sealed class CardTheme : InheritedWidget
             elevation: elevation ?? Elevation,
             margin: margin ?? Margin,
             shape: shape ?? Shape);
-    }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
     }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)

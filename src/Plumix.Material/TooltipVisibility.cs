@@ -26,17 +26,12 @@ public sealed class TooltipVisibility : StatelessWidget
 
     private sealed class TooltipVisibilityScope : InheritedWidget
     {
-        public TooltipVisibilityScope(bool visible, Widget child) : base(key: null)
+        public TooltipVisibilityScope(bool visible, Widget child) : base(child, key: null)
         {
             Visible = visible;
-            Child = child;
         }
 
         public bool Visible { get; }
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context) => Child;
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
             ((TooltipVisibilityScope)oldWidget).Visible != Visible;

@@ -584,23 +584,18 @@ internal sealed class ActionsScope : InheritedWidget
         IReadOnlyDictionary<Type, FlutterAction> actionsMap,
         Widget child,
         ActionDispatcher? dispatcher,
-        int version) : base()
+        int version) : base(child)
     {
         ActionsMap = actionsMap;
-        Child = child;
         Dispatcher = dispatcher;
         Version = version;
     }
 
     public IReadOnlyDictionary<Type, FlutterAction> ActionsMap { get; }
 
-    public Widget Child { get; }
-
     public ActionDispatcher? Dispatcher { get; }
 
     public int Version { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

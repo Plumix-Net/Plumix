@@ -1305,17 +1305,12 @@ public sealed class RouterTests : IDisposable
 
         internal sealed class ProbeScope : InheritedWidget
         {
-            public ProbeScope(int value, Widget child, Key? key = null) : base(key)
+            public ProbeScope(int value, Widget child, Key? key = null) : base(child, key)
             {
                 Value = value;
-                Child = child;
             }
 
             public int Value { get; }
-
-            public Widget Child { get; }
-
-            public override Widget Build(BuildContext context) => Child;
 
             protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
             {

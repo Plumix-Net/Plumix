@@ -137,17 +137,12 @@ public sealed record BadgeThemeData(
 
 public sealed class BadgeTheme : InheritedTheme
 {
-    public BadgeTheme(BadgeThemeData data, Widget child, Key? key = null) : base(key)
+    public BadgeTheme(BadgeThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public BadgeThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child)
     {

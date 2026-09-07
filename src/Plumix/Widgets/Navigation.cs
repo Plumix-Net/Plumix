@@ -2141,20 +2141,12 @@ internal sealed class NavigatorScope : InheritedWidget
     public NavigatorScope(
         NavigatorState navigator,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Navigator = navigator;
-        Child = child;
     }
 
     public NavigatorState Navigator { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
@@ -2172,14 +2164,13 @@ internal sealed class RouteScope : InheritedModel<ModalRouteAspect>
         bool impliesAppBarDismissal,
         bool opaque,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Route = route;
         IsCurrent = isCurrent;
         CanPop = canPop;
         ImpliesAppBarDismissal = impliesAppBarDismissal;
         Opaque = opaque;
-        Child = child;
     }
 
     public Route Route { get; }
@@ -2191,13 +2182,6 @@ internal sealed class RouteScope : InheritedModel<ModalRouteAspect>
     public bool ImpliesAppBarDismissal { get; }
 
     public bool Opaque { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

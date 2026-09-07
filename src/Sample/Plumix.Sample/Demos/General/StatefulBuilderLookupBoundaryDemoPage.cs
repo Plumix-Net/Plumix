@@ -65,17 +65,12 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
 
     private sealed class DemoLookupScope : InheritedWidget
     {
-        public DemoLookupScope(string label, Widget child, Key? key = null) : base(key)
+        public DemoLookupScope(string label, Widget child, Key? key = null) : base(child, key)
         {
             Label = label;
-            Child = child;
         }
 
         public string Label { get; }
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context) => Child;
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {

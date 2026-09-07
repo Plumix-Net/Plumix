@@ -134,21 +134,13 @@ internal sealed class ScrollNotificationObserverScope : InheritedWidget
 {
     public ScrollNotificationObserverScope(
         ScrollNotificationObserverState scrollNotificationObserverState,
-        Widget child)
+        Widget child) : base(child)
     {
         ScrollNotificationObserverState =
             scrollNotificationObserverState ?? throw new ArgumentNullException(nameof(scrollNotificationObserverState));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public ScrollNotificationObserverState ScrollNotificationObserverState { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
-    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

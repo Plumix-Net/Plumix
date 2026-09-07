@@ -43,17 +43,12 @@ public sealed partial record CarouselViewThemeData(
 
 public sealed class CarouselViewTheme : InheritedTheme
 {
-    public CarouselViewTheme(CarouselViewThemeData data, Widget child, Key? key = null) : base(key)
+    public CarouselViewTheme(CarouselViewThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public CarouselViewThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child) => new CarouselViewTheme(Data, child);
 

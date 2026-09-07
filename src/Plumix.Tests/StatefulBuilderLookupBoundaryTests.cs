@@ -235,17 +235,12 @@ public sealed class StatefulBuilderLookupBoundaryTests
 
     private sealed class IntScope : InheritedWidget
     {
-        public IntScope(int value, Widget child)
+        public IntScope(int value, Widget child) : base(child)
         {
             Value = value;
-            Child = child;
         }
 
         public int Value { get; }
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context) => Child;
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {

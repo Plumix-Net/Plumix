@@ -221,20 +221,15 @@ public sealed class InheritedModelTests
 
     private sealed class ABModel : InheritedModel<ABAspect>
     {
-        public ABModel(int a, int b, Widget child) : base()
+        public ABModel(int a, int b, Widget child) : base(child)
         {
             A = a;
             B = b;
-            Child = child;
         }
 
         public int A { get; }
 
         public int B { get; }
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context) => Child;
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
@@ -254,21 +249,16 @@ public sealed class InheritedModelTests
     {
         private readonly HashSet<ABAspect> _supportedAspects;
 
-        public ShadowingABModel(int a, int b, IEnumerable<ABAspect> supportedAspects, Widget child) : base()
+        public ShadowingABModel(int a, int b, IEnumerable<ABAspect> supportedAspects, Widget child) : base(child)
         {
             A = a;
             B = b;
             _supportedAspects = [..supportedAspects];
-            Child = child;
         }
 
         public int A { get; }
 
         public int B { get; }
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context) => Child;
 
         protected override bool IsSupportedAspect(object aspect)
         {

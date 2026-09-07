@@ -6,7 +6,7 @@ namespace Plumix.Widgets;
 
 public abstract class InheritedTheme : InheritedWidget
 {
-    protected InheritedTheme(Key? key = null) : base(key)
+    protected InheritedTheme(Widget child, Key? key = null) : base(child, key)
     {
     }
 

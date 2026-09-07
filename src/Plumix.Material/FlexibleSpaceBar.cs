@@ -328,7 +328,7 @@ public sealed class FlexibleSpaceBarSettings : InheritedWidget
         bool? isScrolledUnder,
         bool? hasLeading,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         if (!double.IsFinite(toolbarOpacity) || toolbarOpacity < 0 || toolbarOpacity > 1)
             throw new ArgumentOutOfRangeException(nameof(toolbarOpacity));
@@ -344,7 +344,6 @@ public sealed class FlexibleSpaceBarSettings : InheritedWidget
         CurrentExtent = currentExtent;
         IsScrolledUnder = isScrolledUnder;
         HasLeading = hasLeading;
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public double ToolbarOpacity { get; }
@@ -353,8 +352,6 @@ public sealed class FlexibleSpaceBarSettings : InheritedWidget
     public double CurrentExtent { get; }
     public bool? IsScrolledUnder { get; }
     public bool? HasLeading { get; }
-    public Widget Child { get; }
-    public override Widget Build(BuildContext context) => Child;
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => !EqualsSettings((FlexibleSpaceBarSettings)oldWidget);
     public static FlexibleSpaceBarSettings Of(BuildContext context) =>
         context.DependOnInherited<FlexibleSpaceBarSettings>()

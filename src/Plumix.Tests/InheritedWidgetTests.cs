@@ -65,6 +65,105 @@ public sealed class InheritedWidgetTests
         Assert.Equal(1, InheritedTracker.PassiveBuildCount);
     }
 
+    [Fact]
+    public void InheritedWidget_IsAProxyWidgetThatCarriesItsChild()
+    {
+        // Dart's `InheritedWidget extends ProxyWidget`, so the child is the `ProxyWidget.child`
+        // field rather than something the widget builds.
+        var child = new SizedBox(width: 1, height: 1);
+        var scope = new IntScope(value: 1, child: child);
+
+        Assert.IsAssignableFrom<ProxyWidget>(scope);
+        Assert.Same(child, scope.Child);
+        Assert.Same(child, ((ProxyWidget)scope).Child);
+    }
+
+    [Fact]
+    public void InheritedElement_IsAProxyElement()
+    {
+        // Dart's `InheritedElement extends ProxyElement`; `ParentDataElement` is the sibling that
+        // shares the same base.
+        Element element = new IntScope(value: 1, child: new SizedBox()).CreateElement();
+
+        Assert.IsType<InheritedElement>(element);
+        Assert.IsAssignableFrom<ProxyElement>(element);
+        Assert.IsAssignableFrom<ComponentElement>(element);
+    }
+
+    [Fact]
+    public void InheritedWidget_ChildOverride_IsWhatTheElementInflates()
+    {
+        // Dart's `TextSelectionTheme` overrides the `child` getter to slip a wrapper into the
+        // subtree without changing its constructor; `ProxyElement.build` reads the getter, so the
+        // wrapper is what gets inflated.
+        var owner = new BuildOwner();
+        var leaf = new SizedBox(width: 3, height: 4);
+
+        var root = new TestRootElement(new WrappingScope(value: 1, child: leaf));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var scopeElement = (InheritedElement)FirstChildOf(root)!;
+        Element wrapper = FirstChildOf(scopeElement)!;
+        Assert.IsType<Center>(wrapper.Widget);
+        Assert.Same(leaf, FirstChildOf(wrapper)!.Widget);
+
+        root.Unmount();
+    }
+
+    [Fact]
+    public void InheritedWidget_UpdateShouldNotifyFalse_StillRebuildsTheChild()
+    {
+        // `ProxyElement.update` calls `rebuild(force: true)` whether or not `updated` notified the
+        // dependents, so a new child instance is inflated even when nothing depends on the scope.
+        var owner = new BuildOwner();
+        var firstChild = new SizedBox(width: 1, height: 1);
+
+        var root = new TestRootElement(new ConditionalScope(value: 1, shouldNotify: false, child: firstChild));
+        root.Attach(owner);
+        root.Mount(parent: null, newSlot: null);
+        owner.FlushBuild();
+
+        var scopeElement = (InheritedElement)FirstChildOf(root)!;
+        Assert.Same(firstChild, FirstChildOf(scopeElement)!.Widget);
+
+        var secondChild = new SizedBox(width: 2, height: 2);
+        root.Update(new ConditionalScope(value: 2, shouldNotify: false, child: secondChild));
+        owner.FlushBuild();
+
+        Assert.Same(secondChild, FirstChildOf(scopeElement)!.Widget);
+
+        root.Unmount();
+    }
+
+    private static Element? FirstChildOf(Element element)
+    {
+        Element? first = null;
+        element.VisitChildren(child => first ??= child);
+        return first;
+    }
+
+    private sealed class WrappingScope : InheritedWidget
+    {
+        private readonly Widget _child;
+
+        public WrappingScope(int value, Widget child) : base(child)
+        {
+            Value = value;
+            _child = child;
+        }
+
+        public int Value { get; }
+
+        public override Widget Child => new Center(child: _child);
+
+        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        {
+            return Value != ((WrappingScope)oldWidget).Value;
+        }
+    }
+
     private sealed class TestRootElement : Element, IRenderObjectHost
     {
         private Element? _child;
@@ -145,17 +244,12 @@ public sealed class InheritedWidgetTests
 
     private sealed class IntScope : InheritedWidget
     {
-        public IntScope(int value, Widget child) : base()
+        public IntScope(int value, Widget child) : base(child)
         {
             Value = value;
-            Child = child;
         }
 
         public int Value { get; }
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context) => Child;
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
@@ -165,20 +259,15 @@ public sealed class InheritedWidgetTests
 
     private sealed class ConditionalScope : InheritedWidget
     {
-        public ConditionalScope(int value, bool shouldNotify, Widget child) : base()
+        public ConditionalScope(int value, bool shouldNotify, Widget child) : base(child)
         {
             Value = value;
             ShouldNotify = shouldNotify;
-            Child = child;
         }
 
         public int Value { get; }
 
         public bool ShouldNotify { get; }
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context) => Child;
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {

@@ -296,20 +296,15 @@ internal sealed class ScaffoldScope : InheritedWidget
         bool hasDrawer,
         ScaffoldGeometryNotifier geometryNotifier,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         HasDrawer = hasDrawer;
         GeometryNotifier = geometryNotifier ?? throw new ArgumentNullException(nameof(geometryNotifier));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public bool HasDrawer { get; }
 
     public ScaffoldGeometryNotifier GeometryNotifier { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

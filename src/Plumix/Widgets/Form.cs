@@ -213,19 +213,14 @@ public sealed class FormState : State
 
 internal sealed class FormScope : InheritedWidget
 {
-    public FormScope(FormState formState, int generation, Widget child) : base()
+    public FormScope(FormState formState, int generation, Widget child) : base(child)
     {
         FormState = formState;
         Generation = generation;
-        Child = child;
     }
 
     public FormState FormState { get; }
     public int Generation { get; }
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
-
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         Generation != ((FormScope)oldWidget).Generation;
 }

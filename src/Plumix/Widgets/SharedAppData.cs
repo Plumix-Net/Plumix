@@ -100,21 +100,13 @@ public sealed class SharedAppData : StatefulWidget
         public SharedAppModel(
             SharedAppDataState state,
             IReadOnlyDictionary<object, object?> data,
-            Widget child) : base()
+            Widget child) : base(child)
         {
             State = state;
             _data = data;
-            Child = child;
         }
 
         public SharedAppDataState State { get; }
-
-        public Widget Child { get; }
-
-        public override Widget Build(BuildContext context)
-        {
-            return Child;
-        }
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {

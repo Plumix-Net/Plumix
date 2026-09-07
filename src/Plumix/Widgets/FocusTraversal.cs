@@ -1243,17 +1243,12 @@ public sealed class OrderedTraversalPolicy : DirectionalFocusTraversalPolicy
 /// <summary>Dart parity source: <c>FocusTraversalOrder</c>.</summary>
 public sealed class FocusTraversalOrder : InheritedWidget
 {
-    public FocusTraversalOrder(FocusOrder order, Widget child, Key? key = null) : base(key)
+    public FocusTraversalOrder(FocusOrder order, Widget child, Key? key = null) : base(child, key)
     {
         Order = order;
-        Child = child;
     }
 
     public FocusOrder Order { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 

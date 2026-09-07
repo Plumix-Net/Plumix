@@ -1050,23 +1050,18 @@ public sealed class DragTargetTests
 
     private sealed class ProbeScope : InheritedWidget
     {
-        public ProbeScope(int value, Widget child)
+        public ProbeScope(int value, Widget child) : base(child)
         {
             Value = value;
-            Child = child;
         }
 
         public int Value { get; }
-
-        public Widget Child { get; }
 
         public static int Of(BuildContext context)
         {
             return context.DependOnInherited<ProbeScope>()?.Value
                    ?? throw new InvalidOperationException("ProbeScope not found.");
         }
-
-        public override Widget Build(BuildContext context) => Child;
 
         protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {

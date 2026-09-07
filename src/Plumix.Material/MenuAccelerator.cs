@@ -16,20 +16,15 @@ public sealed class MenuAcceleratorCallbackBinding : InheritedWidget
         Widget child,
         Action? onInvoke = null,
         bool hasSubmenu = false,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
         OnInvoke = onInvoke;
         HasSubmenu = hasSubmenu;
     }
 
-    public Widget Child { get; }
-
     public Action? OnInvoke { get; }
 
     public bool HasSubmenu { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

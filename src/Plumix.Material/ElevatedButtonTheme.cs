@@ -41,25 +41,17 @@ public sealed class ElevatedButtonTheme : InheritedTheme
     public ElevatedButtonTheme(
         ElevatedButtonThemeData data,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public ElevatedButtonThemeData Data { get; }
-
-    public Widget Child { get; }
 
     public static ElevatedButtonThemeData Of(BuildContext context)
     {
         var localTheme = context.DependOnInherited<ElevatedButtonTheme>();
         return localTheme is not null ? localTheme.Data : Theme.Of(context).ElevatedButtonTheme;
-    }
-
-    public override Widget Build(BuildContext context)
-    {
-        return Child;
     }
 
     public override Widget Wrap(BuildContext context, Widget child)

@@ -830,14 +830,9 @@ public sealed class DropdownMenuItem<T> : DropdownMenuItemContainer
 
 public sealed class DropdownButtonHideUnderline : InheritedWidget
 {
-    public DropdownButtonHideUnderline(Widget child, Key? key = null) : base(key)
+    public DropdownButtonHideUnderline(Widget child, Key? key = null) : base(child, key)
     {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 

@@ -525,7 +525,7 @@ public sealed class InputDecorationTheme : InheritedTheme
         bool? alignLabelWithHint = null,
         BoxConstraints? constraints = null,
         VisualDensity? visualDensity = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child ?? new SizedBox(), key)
     {
         bool hasFieldArgument = labelStyle is not null || floatingLabelStyle is not null
             || helperStyle is not null || helperMaxLines is not null || hintStyle is not null
@@ -586,10 +586,7 @@ public sealed class InputDecorationTheme : InheritedTheme
         _alignLabelWithHint = alignLabelWithHint ?? false;
         _constraints = constraints;
         _visualDensity = visualDensity;
-        Child = child ?? new SizedBox();
     }
-
-    public Widget Child { get; }
 
     public InputDecorationThemeData Data => _data ?? new InputDecorationThemeData(
         labelStyle: _labelStyle,
@@ -674,8 +671,6 @@ public sealed class InputDecorationTheme : InheritedTheme
     public bool AlignLabelWithHint => _data is not null ? _data.AlignLabelWithHint : _alignLabelWithHint;
     public BoxConstraints? Constraints => _data is not null ? _data.Constraints : _constraints;
     public VisualDensity? VisualDensity => _data is not null ? _data.VisualDensity : _visualDensity;
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child) => new InputDecorationTheme(Data, child);
 

@@ -475,20 +475,15 @@ public class MenuAnchorState : State
 /// <summary>Publishes the nearest Material menu anchor and its animation status to descendants.</summary>
 internal sealed class MenuAnchorScope : InheritedWidget
 {
-    public MenuAnchorScope(MenuAnchorState state, AnimationStatus animationStatus, Widget child) : base()
+    public MenuAnchorScope(MenuAnchorState state, AnimationStatus animationStatus, Widget child) : base(child)
     {
         State = state;
         AnimationStatus = animationStatus;
-        Child = child;
     }
 
     public MenuAnchorState State { get; }
 
     public AnimationStatus AnimationStatus { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         ((MenuAnchorScope)oldWidget).AnimationStatus != AnimationStatus;

@@ -157,17 +157,12 @@ public sealed class AutofillGroupState : State, IAutofillScope
 /// <summary>Carries the ambient <see cref="AutofillGroupState"/> down the tree.</summary>
 internal sealed class AutofillScopeInherited : InheritedWidget
 {
-    internal AutofillScopeInherited(Widget child, AutofillGroupState? scope, Key? key = null) : base(key)
+    internal AutofillScopeInherited(Widget child, AutofillGroupState? scope, Key? key = null) : base(child, key)
     {
-        Child = child;
         Scope = scope;
     }
 
-    internal Widget Child { get; }
-
     internal AutofillGroupState? Scope { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !ReferenceEquals(((AutofillScopeInherited)oldWidget).Scope, Scope);

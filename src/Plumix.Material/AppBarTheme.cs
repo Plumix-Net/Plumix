@@ -32,7 +32,7 @@ public sealed class AppBarTheme : InheritedTheme
         SystemUiOverlayStyle? systemOverlayStyle = null,
         Thickness? actionsPadding = null,
         AppBarThemeData? data = null,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child ?? new SizedBox(), key)
     {
         if (color is not null && backgroundColor is not null)
         {
@@ -84,12 +84,9 @@ public sealed class AppBarTheme : InheritedTheme
             SurfaceTintColor: surfaceTintColor,
             Shape: shape,
             BackgroundColorState: backgroundColor ?? color);
-        Child = child ?? new SizedBox();
     }
 
     public AppBarThemeData Data { get; }
-
-    public Widget Child { get; }
 
     public Color? BackgroundColor => Data.BackgroundColor;
 
@@ -177,8 +174,6 @@ public sealed class AppBarTheme : InheritedTheme
             systemOverlayStyle: systemOverlayStyle ?? SystemOverlayStyle,
             actionsPadding: actionsPadding ?? ActionsPadding);
     }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child)
     {

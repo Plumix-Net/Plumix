@@ -131,17 +131,12 @@ public sealed partial record ChipThemeData(
 
 public sealed class ChipTheme : InheritedTheme
 {
-    public ChipTheme(ChipThemeData data, Widget child, Key? key = null) : base(key)
+    public ChipTheme(ChipThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
     }
 
     public ChipThemeData Data { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     public override Widget Wrap(BuildContext context, Widget child)
     {

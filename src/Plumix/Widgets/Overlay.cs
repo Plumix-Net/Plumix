@@ -1918,20 +1918,15 @@ internal sealed class RenderTheaterMarker : InheritedWidget
         RenderOverlayTheater theater,
         OverlayEntryWidgetState entryState,
         Widget child,
-        Key? key = null) : base(key)
+        Key? key = null) : base(child, key)
     {
         Theater = theater;
         EntryState = entryState;
-        Child = child;
     }
 
     public RenderOverlayTheater Theater { get; }
 
     public OverlayEntryWidgetState EntryState { get; }
-
-    public Widget Child { get; }
-
-    public override Widget Build(BuildContext context) => Child;
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {

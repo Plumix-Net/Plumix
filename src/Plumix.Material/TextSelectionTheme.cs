@@ -38,22 +38,23 @@ public sealed partial record TextSelectionThemeData(
 
 public sealed class TextSelectionTheme : InheritedTheme
 {
-    public TextSelectionTheme(TextSelectionThemeData data, Widget child, Key? key = null) : base(key)
+    public TextSelectionTheme(TextSelectionThemeData data, Widget child, Key? key = null) : base(child, key)
     {
         Data = data ?? throw new ArgumentNullException(nameof(data));
-        Child = child ?? throw new ArgumentNullException(nameof(child));
+        _child = child ?? throw new ArgumentNullException(nameof(child));
     }
+
+    private readonly Widget _child;
 
     public TextSelectionThemeData Data { get; }
-    public Widget Child { get; }
 
-    public override Widget Build(BuildContext context)
-    {
-        return new DefaultSelectionStyle(
-            child: Child,
-            cursorColor: Data.CursorColor,
-            selectionColor: Data.SelectionColor);
-    }
+    // Dart overrides the `child` getter to insert `DefaultSelectionStyle` into the subtree without
+    // breaking the public API. It relies on an implementation detail of `ProxyWidget`, and is only
+    // done here because `TextSelectionTheme` is const in Dart.
+    public override Widget Child => new DefaultSelectionStyle(
+        child: _child,
+        cursorColor: Data.CursorColor,
+        selectionColor: Data.SelectionColor);
 
     public override Widget Wrap(BuildContext context, Widget child)
     {
