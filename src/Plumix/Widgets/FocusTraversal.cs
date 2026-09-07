@@ -1391,6 +1391,8 @@ public sealed class FocusTraversalGroup : StatefulWidget
         public override void Dispose()
         {
             _focusNode?.Dispose();
+
+            base.Dispose();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)

@@ -259,6 +259,8 @@ internal sealed class TextSelectionControlsToolbar : StatefulWidget
         public override void Dispose()
         {
             CurrentWidget.ClipboardStatus?.RemoveListener(HandleClipboardStatusChanged);
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

@@ -336,6 +336,8 @@ public sealed class DefaultTabController : StatefulWidget
         {
             _controller?.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context) => new TabControllerScope(

@@ -55,7 +55,7 @@ public sealed class NavigatorPagesTests : IDisposable
     public void Pages_EmptyList_Throws()
     {
         var host = new PagesHost([]);
-        Assert.Throws<InvalidOperationException>(() => new Harness(host).Dispose());
+        BuildErrors.Throws<InvalidOperationException>(() => new Harness(host).Dispose());
     }
 
     [Fact]
@@ -203,7 +203,7 @@ public sealed class NavigatorPagesTests : IDisposable
         host.Pages.Clear();
         host.Pages.Add(new TestPage("second", key: new ValueKey<string>("2")));
 
-        Assert.Throws<InvalidOperationException>(harness.Rebuild);
+        BuildErrors.Throws<InvalidOperationException>(harness.Rebuild);
     }
 
     [Fact]

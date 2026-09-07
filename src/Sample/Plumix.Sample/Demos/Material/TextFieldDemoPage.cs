@@ -188,6 +188,8 @@ public sealed class TextFieldDemoPage : StatefulWidget
         public override void Dispose()
         {
             _email.Dispose(); _password.Dispose(); _notes.Dispose(); _readOnly.Dispose(); _formName.Dispose();
+
+            base.Dispose();
         }
 
         private void ValidateForm()

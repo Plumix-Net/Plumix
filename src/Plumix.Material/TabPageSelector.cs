@@ -125,6 +125,8 @@ public sealed class TabPageSelector : StatefulWidget
         {
             _animation?.Dispose();
             _animation = null;
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

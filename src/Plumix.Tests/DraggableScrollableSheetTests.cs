@@ -202,14 +202,14 @@ public sealed class DraggableScrollableSheetTests
     [InlineData(new[] { 0.6, 0.6, 0.8 })] // not strictly ascending
     public void SnapSizes_InvalidTargetsThrow(double[] snapSizes)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() =>
+        BuildErrors.Throws<ArgumentOutOfRangeException>(() =>
             new SheetHarness(snap: true, snapSizes: snapSizes, maxChildSize: 0.8).Dispose());
     }
 
     [Fact]
     public void SnapSizes_ErrorMessagePointsAtTheInvalidEntry()
     {
-        var error = Assert.Throws<ArgumentOutOfRangeException>(() =>
+        var error = BuildErrors.Throws<ArgumentOutOfRangeException>(() =>
             new SheetHarness(snap: true, snapSizes: [0.5, 0.4], maxChildSize: 1.0).Dispose());
 
         Assert.Contains(">>> 0.4 <<<", error.Message, StringComparison.Ordinal);
@@ -575,7 +575,7 @@ public sealed class DraggableScrollableSheetTests
     {
         using var harness = new SheetHarness();
 
-        Assert.Throws<InvalidOperationException>(() =>
+        BuildErrors.Throws<InvalidOperationException>(() =>
             new SheetHarness(controller: harness.Controller).Dispose());
     }
 

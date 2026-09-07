@@ -230,6 +230,8 @@ internal sealed class RawAutocompleteState<T> : State
         DetachFocusNode();
         DetachTextEditingController();
         _highlightedOptionIndex.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

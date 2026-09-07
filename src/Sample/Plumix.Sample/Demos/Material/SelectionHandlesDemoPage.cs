@@ -38,6 +38,8 @@ internal sealed class SelectionHandlesDemoPageState : State
         _overlay?.Dispose();
         _overlay = null;
         _fieldController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

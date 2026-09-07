@@ -32,6 +32,8 @@ internal sealed class ScrollbarDemoPageState : State
     {
         _materialController.Dispose();
         _rawController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

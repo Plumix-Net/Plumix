@@ -191,6 +191,8 @@ internal sealed class GlowingOverscrollIndicatorState : State
         _controllers.Dispose();
         _leadingController.Dispose();
         _trailingController.Dispose();
+
+        base.Dispose();
     }
 
     private bool HandleScrollNotification(ScrollNotification notification)
@@ -347,6 +349,8 @@ internal sealed class StretchingOverscrollIndicatorState : State
     public override void Dispose()
     {
         _stretchController.Dispose();
+
+        base.Dispose();
     }
 
     private Widget BuildStretch(BuildContext context, Widget? child)

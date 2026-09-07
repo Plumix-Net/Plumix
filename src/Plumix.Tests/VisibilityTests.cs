@@ -434,6 +434,8 @@ public sealed class VisibilityTests
         public override void Dispose()
         {
             _onDispose();
+
+            base.Dispose();
         }
     }
 

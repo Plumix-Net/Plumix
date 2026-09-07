@@ -445,6 +445,8 @@ internal sealed class NavigationBarDestinationTileState : State
     public override void Dispose()
     {
         DisposeController();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

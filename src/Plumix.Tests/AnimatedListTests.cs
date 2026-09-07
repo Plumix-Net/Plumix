@@ -590,6 +590,8 @@ public sealed class AnimatedListTests : IDisposable
             {
                 StateIds.Remove(CurrentWidget.Id);
             }
+
+            base.Dispose();
         }
     }
 

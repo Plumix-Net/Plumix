@@ -187,6 +187,8 @@ public sealed class Expansible : StatefulWidget
         {
             CurrentWidget.Controller.RemoveListener(HandleControllerChanged);
             DisposeAnimation();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

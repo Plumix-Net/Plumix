@@ -26,7 +26,12 @@ internal sealed class DataTableDemoPageState : State
     private bool _showCheckboxes = true;
     private int _rowsPerPage = 5;
 
-    public override void Dispose() => _source.Dispose();
+    public override void Dispose()
+    {
+        _source.Dispose();
+
+        base.Dispose();
+    }
 
     public override Widget Build(BuildContext context)
     {

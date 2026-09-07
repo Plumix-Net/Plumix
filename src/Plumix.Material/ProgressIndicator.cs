@@ -172,6 +172,8 @@ public sealed class LinearProgressIndicator : ProgressIndicator
                 _internalController.Dispose();
                 _internalController = null;
             }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -1039,6 +1041,8 @@ public class CircularProgressIndicator : ProgressIndicator
                 _internalController.Dispose();
                 _internalController = null;
             }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

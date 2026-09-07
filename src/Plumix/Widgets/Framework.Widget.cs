@@ -1,4 +1,5 @@
-﻿using Plumix.Foundation;
+﻿using System.Runtime.CompilerServices;
+using Plumix.Foundation;
 using Plumix.Rendering;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/framework.dart (approximate)
@@ -66,14 +67,20 @@ public abstract class ProxyWidget : Widget
     }
 
     public Widget Child { get; }
-
-    public override Element CreateElement() => new ProxyElement(this);
 }
 
 internal interface IParentDataWidget
 {
     bool DebugIsValidRenderObject(RenderObject renderObject);
     void ApplyParentData(RenderObject renderObject);
+    Type DebugTypicalAncestorWidgetType { get; }
+    string DebugTypicalAncestorWidgetDescription { get; }
+    Type DebugParentDataType { get; }
+
+    IEnumerable<DiagnosticsNode> DebugDescribeIncorrectParentDataType(
+        IParentData? parentData,
+        RenderObjectWidget? parentDataCreator,
+        DiagnosticsNode? ownershipChain);
 }
 
 public abstract class ParentDataWidget<T> : ProxyWidget, IParentDataWidget where T : IParentData
@@ -116,12 +123,83 @@ public abstract class ParentDataWidget<T> : ProxyWidget, IParentDataWidget where
     {
         ApplyParentData(renderObject);
     }
+
+    Type IParentDataWidget.DebugParentDataType => typeof(T);
+
+    /// <summary>
+    /// Dart's <c>ParentDataWidget._debugDescribeIncorrectParentDataType</c>: the body of the
+    /// "Incorrect use of ParentDataWidget" report, naming the parent data this widget wanted to
+    /// write, what the render object accepts instead, and the ancestor it was expected to sit under.
+    /// </summary>
+    IEnumerable<DiagnosticsNode> IParentDataWidget.DebugDescribeIncorrectParentDataType(
+        IParentData? parentData,
+        RenderObjectWidget? parentDataCreator,
+        DiagnosticsNode? ownershipChain)
+    {
+        string parentDataType = Diagnostics.DescribeType(typeof(T));
+        string description =
+            $"The ParentDataWidget {this} wants to apply ParentData of type {parentDataType} to a RenderObject";
+        string self = Diagnostics.ObjectRuntimeType(this, "ParentDataWidget");
+
+        var information = new List<DiagnosticsNode>
+        {
+            parentData is null
+                ? new ErrorDescription($"{description}, which has not been set up to receive any ParentData.")
+                : new ErrorDescription(
+                    $"{description}, which has been set up to accept ParentData of incompatible type "
+                    + $"{Diagnostics.DescribeType(parentData.GetType())}."),
+            new ErrorHint(
+                $"Usually, this means that the {self} widget has the wrong ancestor RenderObjectWidget. "
+                + $"Typically, {self} widgets are placed directly inside "
+                + $"{DebugTypicalAncestorWidgetDescription} widgets."),
+        };
+
+        if (parentDataCreator is not null)
+        {
+            information.Add(new ErrorHint(
+                $"The offending {self} is currently placed inside a "
+                + $"{Diagnostics.ObjectRuntimeType(parentDataCreator, "RenderObjectWidget")} widget."));
+        }
+
+        if (ownershipChain is not null)
+        {
+            information.Add(new ErrorDescription(
+                "The ownership chain for the RenderObject that received the incompatible parent data was:\n  "
+                + ownershipChain));
+        }
+
+        return information;
+    }
+}
+
+/// <summary>
+/// Dart's private <c>_StateLifecycle</c>: the phases a <see cref="State"/> passes through. Tracked in
+/// debug builds only, and used to reject <c>SetState</c> and inherited lookups outside their window.
+/// </summary>
+internal enum StateLifecycle
+{
+    /// <summary>The object is created. <c>InitState</c> is called at this time.</summary>
+    Created,
+
+    /// <summary>
+    /// <c>InitState</c> has returned but the state is not ready to build.
+    /// <c>DidChangeDependencies</c> is called at this time.
+    /// </summary>
+    Initialized,
+
+    /// <summary>The state is ready to build and <c>Dispose</c> has not been called yet.</summary>
+    Ready,
+
+    /// <summary><c>Dispose</c> has been called; the state can never build again.</summary>
+    Defunct
 }
 
 public abstract class State : Diagnosticable, ITickerProvider
 {
     private HashSet<Ticker>? _tickers;
     private IValueListenable<TickerModeData>? _tickerModeNotifier;
+    private StatefulWidget? _widget;
+    private StateLifecycle _debugLifecycleState = StateLifecycle.Created;
 
     internal StatefulElement Element = null!;
     public BuildContext Context
@@ -130,16 +208,148 @@ public abstract class State : Diagnosticable, ITickerProvider
         {
             if (!Mounted)
             {
-                throw new InvalidOperationException(
-                    "This State no longer has a context because its Element was unmounted.");
+                throw new FlutterError(
+                    "This widget has been unmounted, so the State no longer has a context (and should be "
+                    + "considered defunct). \n"
+                    + "Consider canceling any active work during \"dispose\" or using the \"mounted\" getter "
+                    + "to determine if the State is still active.");
             }
 
             return Element;
         }
     }
 
-    public bool Mounted => Element is not null && Element.Mounted;
-    protected StatefulWidget StateWidget => (StatefulWidget)Element.Widget;
+    /// <summary>
+    /// Whether this state is currently in the tree. Dart's <c>State.mounted</c> is
+    /// <c>_element != null</c>: it goes false the moment the element is unmounted, not when the
+    /// element merely deactivates.
+    /// </summary>
+    public bool Mounted => Element is not null;
+
+    protected StatefulWidget StateWidget => _widget ?? (StatefulWidget)Element.Widget;
+
+    internal void AttachElement(StatefulElement element, StatefulWidget widget)
+    {
+        if (Constants.KDebugMode && Element is not null)
+        {
+            throw new AssertionError(
+                $"The createState function for {widget} returned an old or invalid state instance, "
+                + "which is already attached to an element, violating the contract for createState.");
+        }
+
+        Element = element;
+        if (Constants.KDebugMode && _widget is not null)
+        {
+            throw new AssertionError(
+                $"The createState function for {widget} returned an old or invalid state instance: "
+                + $"{_widget}, which is not null, violating the contract for createState.");
+        }
+
+        _widget = widget;
+    }
+
+    internal void SetWidget(StatefulWidget widget) => _widget = widget;
+
+    internal void DetachElement()
+    {
+        Element = null!;
+        _widget = null;
+    }
+
+    /// <summary>Dart's <c>StatefulElement._firstBuild</c> calling <c>state.initState()</c>.</summary>
+    internal void RunInitState()
+    {
+        if (Constants.KDebugMode && _debugLifecycleState != StateLifecycle.Created)
+        {
+            throw new AssertionError($"{GetType().Name}.InitState() was called more than once.");
+        }
+
+        InitState();
+        if (Constants.KDebugMode)
+        {
+            _debugLifecycleState = StateLifecycle.Initialized;
+        }
+    }
+
+    internal void MarkReady()
+    {
+        if (Constants.KDebugMode)
+        {
+            _debugLifecycleState = StateLifecycle.Ready;
+        }
+    }
+
+    internal void DebugAssertDisposedCalledSuper()
+    {
+        if (Constants.KDebugMode && _debugLifecycleState != StateLifecycle.Defunct)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary($"{GetType().Name}.Dispose failed to call base.Dispose."),
+                new ErrorDescription(
+                    "Dispose() implementations must always call their base class Dispose() method, to "
+                    + "ensure that all the resources used by the widget are fully released."),
+            ]);
+        }
+    }
+
+    /// <summary>
+    /// Dart's <c>StatefulElement.dependOnInheritedElement</c> guards: an inherited lookup is illegal
+    /// before <c>InitState</c> completed and after <c>Dispose</c> ran.
+    /// </summary>
+    internal void DebugCheckCanDependOnInherited(InheritedElement ancestor, Element dependent)
+    {
+        if (!Constants.KDebugMode)
+        {
+            return;
+        }
+
+        string targetType = Diagnostics.DescribeType(ancestor.Widget.GetType());
+        if (_debugLifecycleState == StateLifecycle.Created)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary(
+                    $"DependOnInherited<{targetType}>() or DependOnInheritedElement() was called before "
+                    + $"{GetType().Name}.InitState() completed."),
+                new ErrorDescription(
+                    "When an inherited widget changes, for example if the value of Theme.Of() changes, its "
+                    + "dependent widgets are rebuilt. If the dependent widget's reference to the inherited "
+                    + "widget is in a constructor or an InitState() method, then the rebuilt dependent "
+                    + "widget will not reflect the changes in the inherited widget."),
+                new ErrorHint(
+                    "Typically references to inherited widgets should occur in widget Build() methods. "
+                    + "Alternatively, initialization based on inherited widgets can be placed in the "
+                    + "DidChangeDependencies method, which is called after InitState and whenever the "
+                    + "dependencies change thereafter."),
+            ]);
+        }
+
+        if (_debugLifecycleState == StateLifecycle.Defunct)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary(
+                    $"DependOnInherited<{targetType}>() or DependOnInheritedElement() was called after "
+                    + $"Dispose(): {dependent}"),
+                new ErrorDescription(
+                    "This error happens if you call DependOnInherited() on the BuildContext for a widget "
+                    + "that no longer appears in the widget tree (e.g., whose parent widget no longer "
+                    + "includes the widget in its build). This error can occur when code calls "
+                    + "DependOnInherited() from a timer or an animation callback."),
+                new ErrorHint(
+                    "The preferred solution is to cancel the timer or stop listening to the animation in "
+                    + "the Dispose() callback. Another solution is to check the \"Mounted\" property of "
+                    + "this object before calling DependOnInherited() to ensure the object is still in the "
+                    + "tree."),
+                new ErrorHint(
+                    "This error might indicate a memory leak if DependOnInherited() is being called "
+                    + "because another object is retaining a reference to this State object after it has "
+                    + "been removed from the tree. To avoid memory leaks, consider breaking the reference "
+                    + "to this object during Dispose()."),
+            ]);
+        }
+    }
 
     public virtual void InitState()
     {
@@ -163,6 +373,17 @@ public abstract class State : Diagnosticable, ITickerProvider
 
     public virtual void Dispose()
     {
+        if (Constants.KDebugMode)
+        {
+            if (_debugLifecycleState != StateLifecycle.Ready)
+            {
+                throw new AssertionError(
+                    $"{GetType().Name}.Dispose() was called while the state was in the "
+                    + $"{_debugLifecycleState} phase.");
+            }
+
+            _debugLifecycleState = StateLifecycle.Defunct;
+        }
     }
 
     public Ticker CreateTicker(TickerCallback onTick)
@@ -262,10 +483,104 @@ public abstract class State : Diagnosticable, ITickerProvider
 
     public abstract Widget Build(BuildContext context);
 
+    /// <summary>
+    /// Dart's <c>State.setState</c>. The two debug guards run before the callback (defunct state,
+    /// state still in its constructor) and the third after it (an accidentally asynchronous callback).
+    /// </summary>
     protected void SetState(Action updater)
     {
+        ArgumentNullException.ThrowIfNull(updater);
+        DebugCheckCanSetState();
         updater();
+        DebugCheckSetStateCallbackWasSynchronous(updater);
         Element.MarkNeedsBuild();
+    }
+
+    /// <summary>
+    /// Dart inspects the callback's return value and rejects a <c>Future</c>, which catches a closure
+    /// accidentally marked <c>async</c>. A C# <see cref="Action"/> cannot return a value, so the same
+    /// mistake shows up as an <c>async void</c> lambda; this reads the compiler's state-machine marker
+    /// to find it.
+    /// </summary>
+    private void DebugCheckSetStateCallbackWasSynchronous(Action updater)
+    {
+        if (!Constants.KDebugMode
+            || !updater.Method.IsDefined(typeof(AsyncStateMachineAttribute), inherit: false))
+        {
+            return;
+        }
+
+        throw new FlutterError(
+        [
+            new ErrorSummary("setState() callback argument returned a Future."),
+            new ErrorDescription(
+                $"The setState() method on {this} was called with a closure or method that returned a "
+                + "Future. Maybe it is marked as \"async\"."),
+            new ErrorHint(
+                "Instead of performing asynchronous work inside a call to setState(), first execute the "
+                + "work (without updating the widget state), and then synchronously update the state "
+                + "inside a call to setState()."),
+        ]);
+    }
+
+    private void DebugCheckCanSetState()
+    {
+        if (!Constants.KDebugMode)
+        {
+            return;
+        }
+
+        if (_debugLifecycleState == StateLifecycle.Defunct)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary($"setState() called after dispose(): {this}"),
+                new ErrorDescription(
+                    "This error happens if you call setState() on a State object for a widget that no "
+                    + "longer appears in the widget tree (e.g., whose parent widget no longer includes the "
+                    + "widget in its build). This error can occur when code calls setState() from a timer, "
+                    + "from an animation callback, or after an asynchronous operation (such as an awaited "
+                    + "network request or other Future) completes after the widget has been removed from "
+                    + "the tree."),
+                new ErrorHint(
+                    "The preferred solution is to cancel the timer or stop listening to the animation in "
+                    + "the dispose() callback. Another solution is to check the \"mounted\" property of "
+                    + "this object before calling setState() to ensure the object is still in the tree."),
+                new ErrorHint(
+                    "This error might indicate a memory leak if setState() is being called because another "
+                    + "object is retaining a reference to this State object after it has been removed from "
+                    + "the tree. To avoid memory leaks, consider breaking the reference to this object "
+                    + "during dispose()."),
+            ]);
+        }
+
+        if (_debugLifecycleState == StateLifecycle.Created && !Mounted)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary($"setState() called in constructor: {this}"),
+                new ErrorHint(
+                    "This happens when you call setState() on a State object for a widget that hasn't been "
+                    + "inserted into the widget tree yet. It is not necessary to call setState() in the "
+                    + "constructor, since the state is already assumed to be dirty when it is initially "
+                    + "created."),
+            ]);
+        }
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        if (Constants.KDebugMode)
+        {
+            properties.Add(new EnumProperty<StateLifecycle>(
+                "lifecycle state",
+                _debugLifecycleState,
+                defaultValue: StateLifecycle.Ready));
+        }
+
+        properties.Add(new ObjectFlagProperty<StatefulWidget>("_widget", _widget, ifNull: "no widget"));
+        properties.Add(new ObjectFlagProperty<StatefulElement>("_element", Element, ifNull: "not mounted"));
     }
 
     // helper for external callers

@@ -374,7 +374,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
     [Fact]
     public void BackButton_ThrowsWhenRouteCannotBePopped()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        BuildErrors.Throws<InvalidOperationException>(() =>
         {
             using var harness = new WidgetRenderHarness(Wrap(new CupertinoNavigationBarBackButton()));
             harness.Pump(new Size(400, 600));

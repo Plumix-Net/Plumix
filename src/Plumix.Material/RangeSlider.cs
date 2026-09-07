@@ -174,6 +174,8 @@ public sealed class RangeSlider : StatefulWidget
         {
             StartFocusNode.Dispose();
             EndFocusNode.Dispose();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

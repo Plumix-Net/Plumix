@@ -460,6 +460,8 @@ public sealed class FadeInImage : StatefulWidget
         public override void Dispose()
         {
             DisposeAnimations();
+
+            base.Dispose();
         }
 
         private void StartTransition()

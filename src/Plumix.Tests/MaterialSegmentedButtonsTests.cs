@@ -15,10 +15,10 @@ public sealed class MaterialSegmentedButtonsTests
     [Fact]
     public void ToggleButtons_ValidatesParallelListsAndFocusNodesAtBuild()
     {
-        Assert.Throws<ArgumentException>(() => new ToggleButtons(
+        BuildErrors.Throws<ArgumentException>(() => new ToggleButtons(
             children: [new Text("One")],
             isSelected: []));
-        Assert.Throws<ArgumentException>(() => new WidgetRenderHarness(Wrap(
+        BuildErrors.Throws<ArgumentException>(() => new WidgetRenderHarness(Wrap(
             ThemeData.Light,
             new ToggleButtons(
                 children: [new Text("One")],

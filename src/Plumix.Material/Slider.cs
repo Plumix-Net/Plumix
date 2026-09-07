@@ -256,6 +256,8 @@ public sealed class Slider : StatefulWidget
         public override void Dispose()
         {
             DetachFocusNode(disposeOwned: true);
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

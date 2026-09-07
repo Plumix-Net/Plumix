@@ -78,6 +78,8 @@ public sealed class CupertinoExpansionTile : StatefulWidget
             {
                 _tileController!.Dispose();
             }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

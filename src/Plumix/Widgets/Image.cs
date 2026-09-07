@@ -426,6 +426,8 @@ public sealed class Image : StatefulWidget
             _completerHandle?.Dispose();
             _completerHandle = null;
             ReplaceImage(null);
+
+            base.Dispose();
         }
 
         private void ResolveImage()

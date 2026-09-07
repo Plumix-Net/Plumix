@@ -293,6 +293,8 @@ internal sealed class NavigationDrawerDestinationTileState : State
     public override void Dispose()
     {
         DisposeController();
+
+        base.Dispose();
     }
 
     private void CreateController(double value)

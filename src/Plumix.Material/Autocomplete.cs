@@ -243,6 +243,8 @@ internal sealed class AutocompleteOptionsListState<T> : State
     public override void Dispose()
     {
         _scrollController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

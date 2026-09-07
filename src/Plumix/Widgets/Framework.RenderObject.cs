@@ -181,15 +181,36 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         }
     }
 
+    /// <summary>
+    /// Dart's <c>RenderObjectElement._updateParentData</c>. When the widget cannot write to this
+    /// render object's parent data, the mismatch is <em>reported</em> rather than thrown — the tree is
+    /// already broken, and activating an <c>ErrorWidget</c> here would only pile on further failures —
+    /// and the parent data is left untouched.
+    /// </summary>
     internal void UpdateParentData(IParentDataWidget parentDataWidget)
     {
         var renderObject = RequireRenderObject();
-        if (!parentDataWidget.DebugIsValidRenderObject(renderObject))
+        bool applyParentData = true;
+        if (Constants.KDebugMode && !parentDataWidget.DebugIsValidRenderObject(renderObject))
         {
-            return;
+            applyParentData = false;
+            var error = new FlutterError(
+            [
+                new ErrorSummary("Incorrect use of ParentDataWidget."),
+                .. parentDataWidget.DebugDescribeIncorrectParentDataType(
+                    parentData: renderObject.parentData,
+                    parentDataCreator: _ancestorRenderObjectHostElement is RenderObjectElement ancestorElement
+                        ? (RenderObjectWidget)ancestorElement.Widget
+                        : null,
+                    ownershipChain: new ErrorDescription(DebugGetCreatorChain(10))),
+            ]);
+            FrameworkErrors.ReportException(new ErrorSummary("while applying parent data."), error);
         }
 
-        parentDataWidget.ApplyParentData(renderObject);
+        if (applyParentData)
+        {
+            parentDataWidget.ApplyParentData(renderObject);
+        }
     }
 
     protected RenderObject RequireRenderObject()
@@ -239,16 +260,98 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         return (null, null);
     }
 
-    private void ApplyParentDataFromAncestors()
+    /// <summary>
+    /// Dart's <c>RenderObjectElement._findAncestorParentDataElements</c>: collects every
+    /// <see cref="ParentDataElementBase"/> between this element and its ancestor render object, in
+    /// nearest-first order, and in debug builds reports the two ways that set can be illegal — two
+    /// ancestors of the same widget type, or two ancestors writing the same parent-data type.
+    /// </summary>
+    private List<ParentDataElementBase> FindAncestorParentDataElements()
     {
-        for (var ancestor = Parent;
-             ancestor != null && !ReferenceEquals(ancestor, _ancestorRenderObjectHostElement);
-             ancestor = ancestor.Parent)
+        var result = new List<ParentDataElementBase>();
+        var debugAncestorTypes = new HashSet<Type>();
+        var debugParentDataTypes = new HashSet<Type>();
+        var debugAncestorCulprits = new List<Type>();
+
+        Element? ancestor = Parent;
+        while (ancestor != null && ancestor is not RenderObjectElement)
         {
             if (ancestor is ParentDataElementBase parentDataElement)
             {
-                UpdateParentData(parentDataElement.ParentDataWidget);
+                if (Constants.KDebugMode
+                    && (!debugAncestorTypes.Add(parentDataElement.GetType())
+                        || !debugParentDataTypes.Add(parentDataElement.DebugParentDataType)))
+                {
+                    debugAncestorCulprits.Add(parentDataElement.GetType());
+                }
+
+                result.Add(parentDataElement);
             }
+
+            ancestor = ancestor.Parent;
+        }
+
+        if (Constants.KDebugMode && result.Count > 0 && ancestor != null)
+        {
+            DebugCheckCompetingAncestors(result, debugAncestorTypes, debugParentDataTypes, debugAncestorCulprits);
+        }
+
+        return result;
+    }
+
+    /// <summary>Dart's <c>RenderObjectElement._debugCheckCompetingAncestors</c>.</summary>
+    private void DebugCheckCompetingAncestors(
+        List<ParentDataElementBase> result,
+        HashSet<Type> debugAncestorTypes,
+        HashSet<Type> debugParentDataTypes,
+        List<Type> debugAncestorCulprits)
+    {
+        if (debugAncestorTypes.Count == result.Count && debugParentDataTypes.Count == result.Count)
+        {
+            return;
+        }
+
+        var information = new List<DiagnosticsNode>
+        {
+            new ErrorSummary("Incorrect use of ParentDataWidget."),
+            new ErrorDescription("Competing ParentDataWidgets are providing parent data to the same RenderObject:"),
+        };
+
+        foreach (ParentDataElementBase ancestor in result.Where(
+                     element => debugAncestorCulprits.Contains(element.GetType())))
+        {
+            IParentDataWidget widget = ancestor.ParentDataWidget;
+            information.Add(new ErrorDescription(
+                $"- {ancestor.Widget}, which writes ParentData of type "
+                + $"{Diagnostics.DescribeType(ancestor.DebugParentDataType)}, (typically placed directly "
+                + $"inside a {Diagnostics.DescribeType(widget.DebugTypicalAncestorWidgetType)} widget)"));
+        }
+
+        information.Add(new ErrorDescription(
+            "A RenderObject can receive parent data from multiple ParentDataWidgets, but the Type of "
+            + "ParentData must be unique to prevent one overwriting another."));
+        information.Add(new ErrorHint(
+            "Usually, this indicates that one or more of the offending ParentDataWidgets listed above isn't "
+            + "placed inside a dedicated compatible ancestor widget that it isn't sharing with another "
+            + "ParentDataWidget of the same type."));
+        information.Add(new ErrorHint(
+            "Otherwise, separating aspects of ParentData to prevent conflicts can be done using mixins, "
+            + "mixing them all in on the full ParentData Object, such as KeepAlive does with "
+            + "KeepAliveParentDataMixin."));
+        information.Add(new ErrorDescription(
+            "The ownership chain for the RenderObject that received the parent data was:\n  "
+            + DebugGetCreatorChain(10)));
+
+        FrameworkErrors.ReportException(
+            new ErrorSummary("while looking for parent data."),
+            new FlutterError(information));
+    }
+
+    private void ApplyParentDataFromAncestors()
+    {
+        foreach (ParentDataElementBase parentDataElement in FindAncestorParentDataElements())
+        {
+            UpdateParentData(parentDataElement.ParentDataWidget);
         }
     }
 

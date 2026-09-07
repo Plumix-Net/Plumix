@@ -195,6 +195,8 @@ public sealed class AnimatedSwitcher : StatefulWidget
             }
 
             _outgoingEntries.Clear();
+
+            base.Dispose();
         }
 
         private void AddEntryForNewChild(bool animate)
@@ -491,6 +493,8 @@ public sealed class AnimatedCrossFade : StatefulWidget
             _firstAnimation = null;
             _secondAnimation = null;
             _controller = null;
+
+            base.Dispose();
         }
 
         private MappedDoubleAnimation InitAnimation(Curve curve, bool inverted)

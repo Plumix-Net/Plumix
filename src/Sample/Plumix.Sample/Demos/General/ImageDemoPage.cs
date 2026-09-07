@@ -272,6 +272,8 @@ internal sealed class ImageDemoPageState : State
         }
 
         _rawInfo?.Dispose();
+
+        base.Dispose();
     }
 
     private Widget ControlButton(string label, Action update)

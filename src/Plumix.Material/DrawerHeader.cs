@@ -281,6 +281,8 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
             _controller!.Dispose();
             _animation = null;
             _controller = null;
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

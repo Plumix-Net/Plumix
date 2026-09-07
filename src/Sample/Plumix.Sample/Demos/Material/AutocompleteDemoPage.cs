@@ -108,6 +108,8 @@ internal sealed class AutocompleteDemoPageState : State
         _materialFocusNode.Dispose();
         _rawController.Dispose();
         _rawFocusNode.Dispose();
+
+        base.Dispose();
     }
 
     private static IEnumerable<string> FilterTerms(TextEditingValue value)

@@ -84,6 +84,8 @@ internal sealed class KeyboardListenerDemoPageState : State
         _rawFocusNode.Dispose();
         _shortcutFocusNode.Dispose();
         _excludedFocusNode.Dispose();
+
+        base.Dispose();
     }
 
     private Widget BuildKeyboardListenerProbe()

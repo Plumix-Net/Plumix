@@ -24,6 +24,8 @@ internal sealed class CupertinoExpansionTileDemoPageState : State
     {
         _fadeController.Dispose();
         _scrollController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

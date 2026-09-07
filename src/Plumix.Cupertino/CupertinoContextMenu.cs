@@ -142,6 +142,8 @@ public sealed class CupertinoContextMenu : StatefulWidget
             _openController.Completed -= HandleOpenControllerCompleted;
             _openController.Dismissed -= HandleOpenControllerDismissed;
             _openController.Dispose();
+
+            base.Dispose();
         }
 
         private void HandlePointerDown(PointerDownEvent @event)
@@ -510,6 +512,8 @@ public sealed class CupertinoContextMenu : StatefulWidget
             _moveController.Changed -= HandleAnimationChanged;
             _sheetController.Dispose();
             _moveController.Dispose();
+
+            base.Dispose();
         }
 
         private Widget BuildLayout(BuildContext context)
@@ -706,6 +710,8 @@ public sealed class CupertinoContextMenu : StatefulWidget
         public override void Dispose()
         {
             _scrollController.Dispose();
+
+            base.Dispose();
         }
     }
 

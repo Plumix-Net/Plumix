@@ -1571,6 +1571,8 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
             {
                 external.TabBarState = null;
             }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -2219,6 +2221,8 @@ public sealed class TabBarView : StatefulWidget
 
             _controller = null;
             _pageController?.Dispose();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

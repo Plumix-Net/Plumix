@@ -378,6 +378,8 @@ internal sealed class SearchPageState<T> : State
         Current.SearchDelegate.DetachPage(this);
         _focusNode.RemoveListener(HandleFocusChanged);
         _focusNode.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

@@ -176,6 +176,8 @@ internal sealed class SearchDemoPageState : State
         _controller.Dispose();
         _standaloneController.Dispose();
         _legacyDelegate?.Dispose();
+
+        base.Dispose();
     }
 
     private async ValueTask<IReadOnlyList<Widget>> BuildSuggestions(BuildContext context, SearchController controller)

@@ -93,6 +93,8 @@ public sealed class RefreshProgressIndicator : CircularProgressIndicator
                 _activeValueColor.RemoveListener(HandleChanged);
                 _activeValueColor = null;
             }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -489,6 +491,8 @@ public sealed class RefreshIndicatorState : State
         _positionController = null;
         _scaleController?.Dispose();
         _scaleController = null;
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

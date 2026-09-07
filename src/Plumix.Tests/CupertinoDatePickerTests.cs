@@ -271,7 +271,7 @@ public sealed class CupertinoDatePickerTests : IDisposable
             mode: CupertinoDatePickerMode.Date,
             initialDateTime: initialDate)));
         dateHarness.Pump(ViewSize);
-        Assert.Throws<InvalidOperationException>(() => dateHarness.PumpWidget(Wrap(new CupertinoDatePicker(
+        BuildErrors.Throws<InvalidOperationException>(() => dateHarness.PumpWidget(Wrap(new CupertinoDatePicker(
             _ => { },
             mode: CupertinoDatePickerMode.MonthYear,
             initialDateTime: initialDate))));
@@ -280,7 +280,7 @@ public sealed class CupertinoDatePickerTests : IDisposable
             _ => { },
             mode: CupertinoTimerPickerMode.Hm)));
         timerHarness.Pump(ViewSize);
-        Assert.Throws<InvalidOperationException>(() => timerHarness.PumpWidget(Wrap(new CupertinoTimerPicker(
+        BuildErrors.Throws<InvalidOperationException>(() => timerHarness.PumpWidget(Wrap(new CupertinoTimerPicker(
             _ => { },
             mode: CupertinoTimerPickerMode.Hms))));
     }

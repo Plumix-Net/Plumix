@@ -167,6 +167,8 @@ public sealed class ExpansionTile : StatefulWidget
             _announcementCancellation?.Dispose();
             _announcementCancellation = null;
             DetachController();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

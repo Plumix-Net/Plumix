@@ -91,6 +91,8 @@ public sealed class AnimatedSize : StatefulWidget
             _controller!.Completed -= HandleCompleted;
             _controller.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         private void HandleCompleted() => CurrentWidget.OnEnd?.Invoke();

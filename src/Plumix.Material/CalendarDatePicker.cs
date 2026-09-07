@@ -121,6 +121,8 @@ public sealed class CalendarDatePicker : StatefulWidget
             _gridFocus?.Dispose();
             _pageController = null;
             _gridFocus = null;
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -610,12 +612,16 @@ internal sealed class CalendarDay : StatefulWidget
 
         public override void Dispose()
         {
-            if (_states is null) return;
-            _states.RemoveListener(HandleStatesChanged);
-            _states.Dispose();
-            _states = null;
-            _focusNode?.Dispose();
-            _focusNode = null;
+            if (_states is not null)
+            {
+                _states.RemoveListener(HandleStatesChanged);
+                _states.Dispose();
+                _states = null;
+                _focusNode?.Dispose();
+                _focusNode = null;
+            }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -753,6 +759,8 @@ public sealed class YearPicker : StatefulWidget
         {
             _scrollController?.Dispose();
             _scrollController = null;
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -857,10 +865,14 @@ internal sealed class CalendarYear : StatefulWidget
 
         public override void Dispose()
         {
-            if (_states is null) return;
-            _states.RemoveListener(HandleStateChanged);
-            _states.Dispose();
-            _states = null;
+            if (_states is not null)
+            {
+                _states.RemoveListener(HandleStateChanged);
+                _states.Dispose();
+                _states = null;
+            }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

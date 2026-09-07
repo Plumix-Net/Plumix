@@ -135,6 +135,8 @@ internal sealed class DateRangePickerDialogState : State
     {
         _startController.Dispose();
         _endController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)
@@ -538,6 +540,8 @@ internal sealed class CalendarDateRangePickerState : State
     {
         _controller?.Dispose();
         _controller = null;
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

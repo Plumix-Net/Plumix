@@ -306,6 +306,8 @@ public sealed class FocusableActionDetectorTests : IDisposable
             public override void Dispose()
             {
                 DisposeCount++;
+
+                base.Dispose();
             }
         }
     }

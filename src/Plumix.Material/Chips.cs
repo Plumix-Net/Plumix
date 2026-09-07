@@ -983,6 +983,8 @@ public sealed class RawChip : StatefulWidget
             DisposeAvatarDrawerController();
             DisposeDeleteController();
             DisposeEnableController();
+
+            base.Dispose();
         }
 
         private Widget? BuildDelete(

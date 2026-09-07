@@ -266,6 +266,8 @@ public class InkResponse : StatefulWidget
             _highlights.Clear();
             _activationController?.Dispose();
             _activationController = null;
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

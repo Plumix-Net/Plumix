@@ -189,7 +189,7 @@ public sealed class MaterialDropdownTests : IDisposable
             value => value.Padding == new Thickness(16, 0, 4, 0));
         Assert.Empty(UnderlineBorders(harness));
 
-        Assert.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(
+        BuildErrors.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(
             new DropdownButton<string>(
                 items,
                 _ => { },

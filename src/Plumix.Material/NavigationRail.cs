@@ -201,6 +201,8 @@ internal sealed class NavigationRailState : State
             _extendedController.Dispose();
             _extendedController = null;
         }
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)
@@ -449,6 +451,8 @@ internal sealed class NavigationRailDestinationTileState : State
             _selectionController.Dispose();
             _selectionController = null;
         }
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

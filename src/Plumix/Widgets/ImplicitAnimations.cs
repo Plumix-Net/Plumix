@@ -135,6 +135,8 @@ public sealed class AnimatedOpacity : StatefulWidget
             _controller.Completed -= HandleCompleted;
             _controller.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         private double Evaluate(double t) => _begin + ((_end - _begin) * t);
@@ -240,6 +242,8 @@ public sealed class SliverAnimatedOpacity : StatefulWidget
             _opacityAnimation = null;
             _animation = null;
             _controller = null;
+
+            base.Dispose();
         }
 
         private double Evaluate(double t) => _begin + ((_end - _begin) * t);
@@ -329,6 +333,8 @@ public sealed class AnimatedSlide : StatefulWidget
             _controller.Completed -= HandleCompleted;
             _controller.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         private Vector Evaluate(double t)
@@ -430,6 +436,8 @@ public sealed class AnimatedScale : StatefulWidget
         public override void Dispose()
         {
             DisposeController();
+
+            base.Dispose();
         }
 
         private void CreateController()
@@ -548,6 +556,8 @@ public sealed class AnimatedRotation : StatefulWidget
         public override void Dispose()
         {
             DisposeController();
+
+            base.Dispose();
         }
 
         private void CreateController()
@@ -717,6 +727,8 @@ public sealed class AnimatedContainer : StatefulWidget
         public override void Dispose()
         {
             DisposeController();
+
+            base.Dispose();
         }
 
         private void CreateController(TimeSpan duration)
@@ -906,6 +918,8 @@ public sealed class AnimatedPadding : StatefulWidget
         public override void Dispose()
         {
             DisposeController();
+
+            base.Dispose();
         }
 
         private void CreateController()
@@ -1061,6 +1075,8 @@ public sealed class AnimatedAlign : StatefulWidget
         public override void Dispose()
         {
             DisposeController();
+
+            base.Dispose();
         }
 
         private void CreateController()
@@ -1267,6 +1283,8 @@ public sealed class AnimatedPositioned : StatefulWidget
         public override void Dispose()
         {
             DisposeController();
+
+            base.Dispose();
         }
 
         private void UpdateTweens(AnimatedPositionedValues current, AnimatedPositionedValues target)
@@ -1432,6 +1450,8 @@ public sealed class AnimatedPositionedDirectional : StatefulWidget
         public override void Dispose()
         {
             DisposeController();
+
+            base.Dispose();
         }
 
         private void UpdateTweens(AnimatedPositionedValues current, AnimatedPositionedValues target)
@@ -1596,6 +1616,8 @@ public sealed class AnimatedDefaultTextStyle : StatefulWidget
             _controller.Completed -= HandleCompleted;
             _controller.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         private TextStyle Evaluate(double t) => TextStyle.Lerp(_begin, _end, t);
@@ -1729,6 +1751,8 @@ public sealed class AnimatedPhysicalModel : StatefulWidget
             _controller.Completed -= HandleCompleted;
             _controller.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         private AnimatedPhysicalModelValues ValuesFromWidget()
@@ -1912,6 +1936,8 @@ public sealed class AnimatedFractionallySizedBox : StatefulWidget
             _controller.Completed -= HandleCompleted;
             _controller.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         private Alignment EvaluateAlignment(double t)

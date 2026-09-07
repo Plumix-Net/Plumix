@@ -491,6 +491,8 @@ public sealed class InputDecorator : StatefulWidget
             _floatingLabelAnimation.Dispose();
             _shakingLabelController.Dispose();
             _borderGap.Dispose();
+
+            base.Dispose();
         }
 
         private void HandleChange() => SetState(() => { });
@@ -1112,6 +1114,8 @@ internal sealed class HelperError : StatefulWidget
         {
             _controller.RemoveListener(HandleChange);
             _controller.Dispose();
+
+            base.Dispose();
         }
 
         private void HandleChange() => SetState(() => { });
@@ -1310,6 +1314,8 @@ internal sealed class BorderContainer : StatefulWidget
             _borderAnimation.Dispose();
             _hoverColorController.Dispose();
             _hoverAnimation.Dispose();
+
+            base.Dispose();
         }
 
         private void HandleChange() => SetState(() => { });

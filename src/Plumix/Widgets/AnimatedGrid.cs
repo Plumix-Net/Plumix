@@ -337,6 +337,8 @@ public sealed class SliverAnimatedGridState : State
 
         _incomingItems.Clear();
         _outgoingItems.Clear();
+
+        base.Dispose();
     }
 
     private Widget BuildItem(BuildContext context, int itemIndex)

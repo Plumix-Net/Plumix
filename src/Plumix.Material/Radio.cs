@@ -295,6 +295,8 @@ public sealed class Radio<T> : StatefulWidget
             _painter?.Dispose();
             _painter = null;
             DetachFocusNode(disposeOwned: true);
+
+            base.Dispose();
         }
 
         private Widget BuildRadioPaint(

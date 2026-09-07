@@ -408,6 +408,8 @@ public sealed class DraggableScrollableActuator : StatefulWidget
         public override void Dispose()
         {
             _notifier.Dispose();
+
+            base.Dispose();
         }
     }
 }
@@ -533,6 +535,8 @@ internal sealed class DraggableScrollableSheetState : State
         }
 
         _scrollController.Dispose();
+
+        base.Dispose();
     }
 
     private List<double> ImpliedSnapSizes()

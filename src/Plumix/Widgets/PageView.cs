@@ -764,6 +764,8 @@ public sealed class PageView : StatefulWidget
             {
                 _controller.Dispose();
             }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

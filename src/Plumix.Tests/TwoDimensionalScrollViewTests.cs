@@ -20,7 +20,7 @@ public sealed class TwoDimensionalScrollViewTests
     [Fact]
     public void TwoDimensionalScrollView_AssertsTheAxisDirectionsDoNotConflict()
     {
-        Assert.Throws<AssertionError>(() =>
+        BuildErrors.Throws<AssertionError>(() =>
         {
             var harness = new TwoDimensionalRenderHarness(new SimpleBuilderTableView(
                 TwoDimensionalHarness.BuilderDelegate(),
@@ -28,7 +28,7 @@ public sealed class TwoDimensionalScrollViewTests
             harness.Pump(Surface);
         });
 
-        Assert.Throws<AssertionError>(() =>
+        BuildErrors.Throws<AssertionError>(() =>
         {
             var harness = new TwoDimensionalRenderHarness(new SimpleBuilderTableView(
                 TwoDimensionalHarness.BuilderDelegate(),
@@ -239,7 +239,7 @@ public sealed class TwoDimensionalScrollViewTests
         var controller = new ScrollController();
         var mainAxisController = new ScrollController();
 
-        AssertionError error = Assert.Throws<AssertionError>(() =>
+        AssertionError error = BuildErrors.Throws<AssertionError>(() =>
         {
             var harness = new TwoDimensionalRenderHarness(new PrimaryScrollController(
                 controller: controller,

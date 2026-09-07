@@ -8,6 +8,19 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `ComponentElement` lands as the base of `StatelessElement`/`StatefulElement`/`ProxyElement`.
+- Breaking: a throwing `build()` is reported and replaced by `ErrorWidget.Builder` instead of propagating.
+- Breaking: `ProxyElement` is abstract with an abstract `NotifyClients`; `ProxyWidget.CreateElement` is abstract.
+- Breaking: `State.Dispose()` must call `base.Dispose()`, and an unmounted `State` nulls its widget and element.
+- Breaking: `State.SetState` rejects a call after `Dispose()`, from a constructor, or with an `async` callback.
+- Breaking: `State.Context` throws a `FlutterError`, and `State.Mounted` tracks the element, not its lifecycle state.
+- Breaking: `ObjectKey`/`GlobalObjectKey` compare their value by identity, as Dart's `identical` does.
+- Breaking: `IndexedSlot` gains value equality, so a multi-child rebuild no longer moves every child every frame.
+- Added `ElementLifecycleState.Failed`: a subtree that throws in `Deactivate`/`Mount` is neither active nor defunct.
+- Added Flutter's ParentData diagnostics: the incorrect-ancestor and competing-`ParentDataWidget` reports.
+- Added `BuildOwner.LockState`/`DebugBuilding` and Dart's three duplicate-`GlobalKey` reports from `FinalizeTree`.
+- Added `widgets/debug.dart`'s switches as `WidgetsDebug`, plus `DebugWidgetBuilderValue` (`debug.dart`).
+- Added `LabeledGlobalKey.ToString`, `Element.DebugExpectsRenderObjectForSlot` and `DebugDeactivated`.
 - `Scrollable` auto-scrolls and re-anchors a text selection dragged past its edge (`scrollable.dart`).
 - Breaking: `EdgeDraggingAutoScroller` drops its viewport provider and hops to a scroll-origin-anchored target.
 - Breaking: `ScrollPosition` splits into the abstract base and `ScrollPositionWithSingleContext` (`scroll_position`).

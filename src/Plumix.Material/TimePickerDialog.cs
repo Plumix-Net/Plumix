@@ -1181,6 +1181,8 @@ internal sealed class HourMinuteTextFieldState : State
     {
         _controller.Dispose();
         _focusNode.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)
@@ -1499,6 +1501,8 @@ internal sealed class DialState : State
     {
         _controller?.Dispose();
         _controller = null;
+
+        base.Dispose();
     }
 
     private static double Nearest(double target, double a, double b) =>
@@ -1855,6 +1859,8 @@ internal sealed class TimePickerBodyState : State
     {
         _vibrateTimer?.Dispose();
         _vibrateTimer = null;
+
+        base.Dispose();
     }
 
     private void Vibrate()

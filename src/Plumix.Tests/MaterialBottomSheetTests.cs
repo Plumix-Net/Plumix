@@ -1108,7 +1108,7 @@ public sealed class MaterialBottomSheetTests : IDisposable
         harness.Pump(new Size(500, 400));
 
         rebuild!(() => sheet = new SizedBox(height: 100, child: new Text("Static")));
-        var error = Assert.Throws<InvalidOperationException>(() => harness.Pump(new Size(500, 400)));
+        var error = BuildErrors.Throws<InvalidOperationException>(() => harness.Pump(new Size(500, 400)));
         Assert.Contains("PersistentBottomSheetController", error.Message, StringComparison.Ordinal);
     }
 

@@ -711,6 +711,8 @@ public sealed class DataTable : StatelessWidget
                 _orientationController.Dispose();
                 _opacityController = null;
                 _orientationController = null;
+
+                base.Dispose();
             }
 
             private void HandleChanged() => SetState(() => { });

@@ -892,10 +892,16 @@ public sealed class RawGestureDetectorState : State
             }
         }
 
-        properties.Add(new EnumProperty<HitTestBehavior>(
-            "behavior",
-            CurrentWidget.Behavior,
-            defaultValue: DiagnosticsDefaults.NullValue));
+        // Dart reads `widget.behavior` unconditionally here. An unmounted State has no widget
+        // (Dart nulls `_widget` in `Element.unmount` too), so the property is skipped once the
+        // detector is disposed rather than throwing while producing a diagnostic dump.
+        if (Mounted)
+        {
+            properties.Add(new EnumProperty<HitTestBehavior>(
+                "behavior",
+                CurrentWidget.Behavior,
+                defaultValue: DiagnosticsDefaults.NullValue));
+        }
     }
 }
 

@@ -180,7 +180,12 @@ public sealed class PaginatedDataTableState : State
 
     public override void Reassemble() => UpdateCaches();
 
-    public override void Dispose() => CurrentWidget.Source.RemoveListener(HandleDataSourceChanged);
+    public override void Dispose()
+    {
+        CurrentWidget.Source.RemoveListener(HandleDataSourceChanged);
+
+        base.Dispose();
+    }
 
     public void PageTo(int rowIndex)
     {

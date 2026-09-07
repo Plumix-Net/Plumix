@@ -1652,6 +1652,8 @@ public sealed class EditableText : StatefulWidget
             DetachController();
             DetachFocusNode(disposeOwned: true);
             _cursorTicker.Dispose();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

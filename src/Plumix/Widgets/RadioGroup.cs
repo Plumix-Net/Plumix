@@ -88,6 +88,8 @@ public sealed class RadioGroup<T> : StatefulWidget
         {
             _shortcutManager.Dispose();
             _registry.Dispose();
+
+            base.Dispose();
         }
 
         private sealed class RegistryImpl : RadioGroupRegistry<T>

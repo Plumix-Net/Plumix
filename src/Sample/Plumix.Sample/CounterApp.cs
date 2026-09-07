@@ -21,6 +21,8 @@ public sealed class CounterApp : StatefulWidget
         public override void Dispose()
         {
             _model.Dispose();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

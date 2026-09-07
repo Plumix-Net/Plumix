@@ -296,6 +296,8 @@ public sealed class AutomaticKeepAlive : StatefulWidget
             }
 
             _releaseCallbacks.Clear();
+
+            base.Dispose();
         }
 
         private bool HandleKeepAliveNotification(KeepAliveNotification notification)

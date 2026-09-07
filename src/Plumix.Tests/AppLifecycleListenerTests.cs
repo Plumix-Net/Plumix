@@ -1,3 +1,4 @@
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -148,7 +149,7 @@ public sealed class AppLifecycleListenerTests
 
         Assert.False(state.Mounted);
         Assert.Null(state.Handle.Context);
-        Assert.Throws<InvalidOperationException>(() => _ = state.Context);
+        BuildErrors.Throws<FlutterError>(() => _ = state.Context);
     }
 
     [Fact]
@@ -244,6 +245,8 @@ public sealed class AppLifecycleListenerTests
             {
                 Handle?.Dispose();
             }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

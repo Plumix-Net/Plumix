@@ -81,6 +81,14 @@ internal sealed class NotificationListenerElement<TNotification> : ProxyElement,
 
     private NotificationListener<TNotification> TypedWidget => (NotificationListener<TNotification>)Widget;
 
+    /// <summary>
+    /// Dart's <c>_NotificationElement.notifyClients</c> is intentionally empty: the notification tree
+    /// does not need to notify clients when its configuration changes.
+    /// </summary>
+    protected override void NotifyClients(ProxyWidget oldWidget)
+    {
+    }
+
     bool INotificationListener.OnNotification(Notification notification)
     {
         if (notification is not TNotification typedNotification)

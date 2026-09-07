@@ -27,6 +27,8 @@ internal sealed class RadioExpansionTileDemoPageState : State
     public override void Dispose()
     {
         _expansionController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

@@ -38,6 +38,8 @@ internal sealed class AutofillGroupDemoPageState : State
         _usernameController.Dispose();
         _passwordController.Dispose();
         _emailController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

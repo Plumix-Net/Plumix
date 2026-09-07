@@ -333,6 +333,8 @@ public sealed class Material : StatefulWidget
         public override void Dispose()
         {
             DisposeController();
+
+            base.Dispose();
         }
 
         private MaterialVisual Evaluate()

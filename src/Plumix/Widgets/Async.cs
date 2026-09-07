@@ -219,6 +219,8 @@ public abstract class StreamBuilderBase<T, TSummary> : StatefulWidget
         public override void Dispose()
         {
             Unsubscribe();
+
+            base.Dispose();
         }
 
         private void Subscribe()
@@ -430,6 +432,8 @@ public sealed class FutureBuilder<T> : StatefulWidget
         public override void Dispose()
         {
             Unsubscribe();
+
+            base.Dispose();
         }
 
         private void Subscribe()

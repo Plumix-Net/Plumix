@@ -656,7 +656,7 @@ public sealed class MaterialSnackBarTests : IDisposable
     [Fact]
     public void SnackBar_MarginAndWidthRejectFixedBehaviorWithDartsThreeMessages()
     {
-        InvalidOperationException fromConstructor = Assert.Throws<InvalidOperationException>(
+        InvalidOperationException fromConstructor = BuildErrors.Throws<InvalidOperationException>(
             () => Show(ThemeData.Light, Bar(margin: new Thickness(8), behavior: SnackBarBehavior.Fixed)));
         Assert.Contains("was set in the SnackBar constructor.", fromConstructor.Message, StringComparison.Ordinal);
 
@@ -664,14 +664,14 @@ public sealed class MaterialSnackBarTests : IDisposable
         {
             SnackBarTheme = new SnackBarThemeData(behavior: SnackBarBehavior.Fixed),
         };
-        InvalidOperationException fromTheme = Assert.Throws<InvalidOperationException>(
+        InvalidOperationException fromTheme = BuildErrors.Throws<InvalidOperationException>(
             () => Show(themed, Bar(margin: new Thickness(8))));
         Assert.Contains(
             "was set by the inherited SnackBarThemeData.",
             fromTheme.Message,
             StringComparison.Ordinal);
 
-        InvalidOperationException byDefault = Assert.Throws<InvalidOperationException>(
+        InvalidOperationException byDefault = BuildErrors.Throws<InvalidOperationException>(
             () => Show(ThemeData.Light, Bar(margin: new Thickness(8))));
         Assert.Contains("was set by default.", byDefault.Message, StringComparison.Ordinal);
         Assert.Contains("Margin can only be used with floating behavior.", byDefault.Message, StringComparison.Ordinal);
@@ -680,7 +680,7 @@ public sealed class MaterialSnackBarTests : IDisposable
         {
             SnackBarTheme = new SnackBarThemeData(behavior: SnackBarBehavior.Fixed),
         };
-        InvalidOperationException width = Assert.Throws<InvalidOperationException>(
+        InvalidOperationException width = BuildErrors.Throws<InvalidOperationException>(
             () => Show(widthTheme, Bar(width: 200)));
         Assert.Contains("Width can only be used with floating behavior.", width.Message, StringComparison.Ordinal);
     }

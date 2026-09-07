@@ -218,6 +218,8 @@ internal sealed class SelectableTextState : State
     {
         DetachFocusNode();
         _controller.Dispose();
+
+        base.Dispose();
     }
 
     private void AttachFocusNode(FocusNode? focusNode)

@@ -124,6 +124,8 @@ public sealed class RepeatingAnimationBuilder<T> : StatefulWidget
             _controller!.Dispose();
             _curvedAnimation = null;
             _controller = null;
+
+            base.Dispose();
         }
     }
 }

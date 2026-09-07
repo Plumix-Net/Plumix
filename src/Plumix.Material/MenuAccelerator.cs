@@ -246,6 +246,8 @@ internal sealed class MenuAcceleratorLabelState : State
         _displayLabel = string.Empty;
         _binding = null;
         _menuController = null;
+
+        base.Dispose();
     }
 
     private bool HandleKeyEvent(KeyEvent keyEvent)

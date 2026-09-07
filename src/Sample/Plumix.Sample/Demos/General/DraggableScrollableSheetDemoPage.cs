@@ -29,6 +29,8 @@ public sealed class DraggableScrollableSheetDemoPage : StatefulWidget
         {
             _controller.RemoveListener(HandleSizeChanged);
             _controller.Dispose();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

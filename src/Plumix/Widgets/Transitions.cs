@@ -47,6 +47,8 @@ public abstract class AnimatedWidget : StatefulWidget
         public override void Dispose()
         {
             CurrentWidget.Listenable.RemoveListener(HandleChanged);
+
+            base.Dispose();
         }
 
         private void HandleChanged()

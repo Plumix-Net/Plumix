@@ -132,6 +132,8 @@ public sealed class DrawerControllerState : State
         _controller.RemoveStatusListener(HandleAnimationStatusChanged);
         _controller.Dispose();
         _focusScopeNode.Dispose();
+
+        base.Dispose();
     }
 
     public void Open()

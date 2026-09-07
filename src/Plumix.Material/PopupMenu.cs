@@ -277,10 +277,14 @@ internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
 
     public override void Dispose()
     {
-        if (_controller is null) return;
-        _controller.Changed -= HandleAnimationChanged;
-        _controller.Dispose();
-        _controller = null;
+        if (_controller is not null)
+        {
+            _controller.Changed -= HandleAnimationChanged;
+            _controller.Dispose();
+            _controller = null;
+        }
+
+        base.Dispose();
     }
 
     protected override void HandleTap()

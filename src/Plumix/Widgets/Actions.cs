@@ -269,6 +269,8 @@ public sealed class ActionListener : StatefulWidget
         public override void Dispose()
         {
             Current.Action.RemoveActionListener(HandleActionChanged);
+
+            base.Dispose();
         }
 
         private void HandleActionChanged(FlutterAction action)
@@ -549,6 +551,8 @@ public sealed class Actions : StatefulWidget
             }
 
             _listenedActions.Clear();
+
+            base.Dispose();
         }
 
         private void UpdateActionListeners()
@@ -745,6 +749,8 @@ public sealed class FocusableActionDetector : StatefulWidget
         public override void Dispose()
         {
             FocusManager.Instance.RemoveHighlightModeListener(HandleFocusHighlightModeChange);
+
+            base.Dispose();
         }
 
         private bool CanRequestFocus =>

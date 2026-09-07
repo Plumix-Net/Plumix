@@ -255,6 +255,8 @@ internal sealed class CupertinoTextSelectionControlsToolbar : StatefulWidget
         public override void Dispose()
         {
             Current.ClipboardStatus?.RemoveListener(HandleClipboardStatusChanged);
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

@@ -214,6 +214,8 @@ public sealed class CupertinoMenuAnchorState : State, WidgetsBindingObserver
         _menuScopeNode.Dispose();
         _swipeScale.Dispose();
         _internalMenuController = null;
+
+        base.Dispose();
     }
 
     private bool EffectiveSwipeEnabled =>
@@ -1106,6 +1108,8 @@ public sealed class CupertinoMenuItemState : State, CupertinoMenuSwipeTarget
     {
         _internalFocusNode?.Dispose();
         _internalFocusNode = null;
+
+        base.Dispose();
     }
 
     public bool SwipeEnter()
@@ -1688,6 +1692,8 @@ internal sealed class CupertinoMenuSwipeSurfaceState : State
     {
         _region?.Detach(this);
         _region = null;
+
+        base.Dispose();
     }
 
     internal double DistanceTo(Point position)

@@ -752,18 +752,18 @@ public sealed class MaterialTabsTests
     public void TabBar_TabAlignmentValidationAndScrollableDefaults()
     {
         using var controller = new TabController(2);
-        Assert.Throws<ArgumentException>(() => new WidgetRenderHarness(Wrap(new TabBar(
+        BuildErrors.Throws<ArgumentException>(() => new WidgetRenderHarness(Wrap(new TabBar(
             controller: controller,
             isScrollable: true,
             tabAlignment: TabAlignment.Fill,
             tabs: [new Tab(text: "One"), new Tab(text: "Two")]))));
 
-        Assert.Throws<ArgumentException>(() => new WidgetRenderHarness(Wrap(new TabBar(
+        BuildErrors.Throws<ArgumentException>(() => new WidgetRenderHarness(Wrap(new TabBar(
             controller: controller,
             tabAlignment: TabAlignment.Start,
             tabs: [new Tab(text: "One"), new Tab(text: "Two")]))));
 
-        Assert.Throws<ArgumentException>(() => new WidgetRenderHarness(Wrap(new TabBar(
+        BuildErrors.Throws<ArgumentException>(() => new WidgetRenderHarness(Wrap(new TabBar(
             controller: controller,
             tabAlignment: TabAlignment.StartOffset,
             tabs: [new Tab(text: "One"), new Tab(text: "Two")]))));
@@ -961,11 +961,11 @@ public sealed class MaterialTabsTests
         Assert.Equal(48, FindDescendant<RenderConstrainedBox>(harness.RenderView)!.Size.Height, precision: 3);
 
         using var controller = new TabController(2);
-        Assert.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(new TabBar(
+        BuildErrors.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(new TabBar(
             controller: controller,
             tabs: [new Tab(text: "Only")]))));
 
-        Assert.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(new TabBarView(
+        BuildErrors.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(new TabBarView(
             controller: controller,
             children: [new SizedBox()]))));
     }
@@ -1329,9 +1329,10 @@ public sealed class MaterialTabsTests
     [Fact]
     public void TabPageSelector_ValidatesControllerAndHandlesZeroArea()
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new TabPageSelector(indicatorSize: 0));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new TabPageSelector(indicatorSize: double.PositiveInfinity));
-        Assert.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(new TabPageSelector())));
+        BuildErrors.Throws<ArgumentOutOfRangeException>(() => new TabPageSelector(indicatorSize: 0));
+        BuildErrors.Throws<ArgumentOutOfRangeException>(
+            () => new TabPageSelector(indicatorSize: double.PositiveInfinity));
+        BuildErrors.Throws<InvalidOperationException>(() => new WidgetRenderHarness(Wrap(new TabPageSelector())));
 
         using var controller = new TabController(2);
         using var harness = new WidgetRenderHarness(Wrap(new TabPageSelector(controller: controller)));

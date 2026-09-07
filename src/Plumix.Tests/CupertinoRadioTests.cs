@@ -82,7 +82,7 @@ public sealed class CupertinoRadioTests
     [Fact]
     public void Enabled_True_WithoutCallbackOrRegistry_Throws()
     {
-        Assert.Throws<InvalidOperationException>(() =>
+        BuildErrors.Throws<InvalidOperationException>(() =>
         {
             using var harness = new CupertinoThemeTestHarness(Wrap(
                 new CupertinoRadio<string>(value: "a", groupValue: "b", enabled: true)));

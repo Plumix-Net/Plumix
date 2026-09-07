@@ -259,7 +259,7 @@ public sealed class MaterialScaffoldTests
                 child: new Drawer(
                     child: new SizedBox(width: 24, height: 12))));
 
-        var exception = Assert.Throws<ArgumentOutOfRangeException>(() =>
+        var exception = BuildErrors.Throws<ArgumentOutOfRangeException>(() =>
         {
             root.Attach(owner);
             root.Mount(parent: null, newSlot: null);

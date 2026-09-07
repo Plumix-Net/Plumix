@@ -82,7 +82,7 @@ public sealed class MaterialRadioListTileTests
     {
         using var harness = new ListTileControlHarness(new SizedBox());
 
-        Assert.ThrowsAny<Exception>(() => harness.Update(new RadioListTile<int>(
+        BuildErrors.ThrowsAny<Exception>(() => harness.Update(new RadioListTile<int>(
             value: 1,
             enabled: true,
             title: new Text("Orphan"))));

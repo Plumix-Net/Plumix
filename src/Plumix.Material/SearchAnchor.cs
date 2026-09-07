@@ -374,6 +374,8 @@ public class SearchAnchor : StatefulWidget
             {
                 _internalSearchController?.Dispose();
             }
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -952,6 +954,8 @@ internal sealed class SearchViewContent : StatefulWidget
             _viewDividerFade?.Dispose();
             _viewListFade?.Dispose();
             _refreshGeneration++;
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -1277,6 +1281,8 @@ public sealed class SearchBar : StatefulWidget
             _internalFocusNode?.Dispose();
             _internalStatesController.RemoveListener(HandleStatesChanged);
             _internalStatesController.Dispose();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

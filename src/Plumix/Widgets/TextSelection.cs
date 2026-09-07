@@ -1147,6 +1147,8 @@ internal sealed class SelectionToolbarWrapper : StatefulWidget
         {
             CurrentWidget.Visibility?.RemoveListener(HandleVisibilityChanged);
             _controller!.Dispose();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -1259,6 +1261,8 @@ internal sealed class SelectionHandleOverlay : StatefulWidget
         {
             CurrentWidget.Visibility?.RemoveListener(HandleVisibilityChanged);
             _controller!.Dispose();
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

@@ -34,6 +34,8 @@ public sealed class PageViewDemoPage : StatefulWidget
         {
             _controller?.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

@@ -1,8 +1,33 @@
-﻿using Plumix.Foundation;
+﻿using System.Runtime.CompilerServices;
+using Plumix.Foundation;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/framework.dart (approximate)
 
 namespace Plumix.Widgets;
+
+/// <summary>
+/// Dart's private <c>_reportException</c> from <c>widgets/framework.dart</c>: builds the
+/// <see cref="FlutterErrorDetails"/> for a failure inside the widgets library, reports it through
+/// <see cref="FlutterError.ReportError"/>, and hands the details back so the caller can feed them to
+/// <see cref="ErrorWidget.Builder"/>.
+/// </summary>
+internal static class FrameworkErrors
+{
+    public static FlutterErrorDetails ReportException(
+        DiagnosticsNode context,
+        Exception exception,
+        InformationCollector? informationCollector = null)
+    {
+        var details = new FlutterErrorDetails(
+            exception: exception,
+            stack: exception.StackTrace,
+            library: "widgets library",
+            context: context,
+            informationCollector: informationCollector);
+        FlutterError.ReportError(details);
+        return details;
+    }
+}
 
 /// <summary>
 /// A key that takes its identity from the object used as its value.
@@ -17,7 +42,32 @@ namespace Plumix.Widgets;
 ///    keys.
 /// </summary>
 /// <param name="Value"></param>
-public record ObjectKey(object? Value) : LocalKey;
+public record ObjectKey(object? Value) : LocalKey
+{
+    // Dart compares with `identical(other.value, value)` and hashes `identityHashCode(value)`, so an
+    // ObjectKey ties a widget to one *instance*. The record-generated members would instead use the
+    // value's own Equals/GetHashCode, which makes two keys over equal-but-distinct objects
+    // interchangeable and silently reuses the wrong element.
+    public virtual bool Equals(ObjectKey? other)
+    {
+        return other is not null
+            && other.GetType() == GetType()
+            && ReferenceEquals(other.Value, Value);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(GetType(), RuntimeHelpers.GetHashCode(Value));
+    }
+
+    public override string ToString()
+    {
+        string identity = Diagnostics.DescribeIdentity(Value);
+        return GetType() == typeof(ObjectKey)
+            ? $"[{identity}]"
+            : $"[{Diagnostics.ObjectRuntimeType(this, "ObjectKey")} {identity}]";
+    }
+}
 
 /// <summary>
 /// A key that is unique across the entire app.
@@ -149,7 +199,20 @@ public record LabeledGlobalKey<T>(string? DebugLabel) : GlobalKey<T> where T : S
     // in one tree.
     public virtual bool Equals(LabeledGlobalKey<T>? other) => ReferenceEquals(this, other);
 
-    public override int GetHashCode() => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(this);
+    public override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
+
+    /// <summary>
+    /// Ports Dart's <c>LabeledGlobalKey.toString</c>: <c>[GlobalKey#hash label]</c> for the class
+    /// itself, <c>[describeIdentity(this) label]</c> for a subclass. The record-generated printer
+    /// would render the debug label as a property bag instead.
+    /// </summary>
+    public override string ToString()
+    {
+        string label = DebugLabel is null ? string.Empty : $" {DebugLabel}";
+        return GetType() == typeof(LabeledGlobalKey<T>)
+            ? $"[GlobalKey#{Diagnostics.ShortHash(this)}{label}]"
+            : $"[{Diagnostics.DescribeIdentity(this)}{label}]";
+    }
 }
 
 /// <summary>
@@ -180,6 +243,18 @@ public record LabeledGlobalKey<T>(string? DebugLabel) : GlobalKey<T> where T : S
 /// <typeparam name="T"></typeparam>
 public record GlobalObjectKey<T>(object Value) : GlobalKey<T> where T : State
 {
+    // Dart compares with `identical(other.value, value)` and hashes `identityHashCode(value)`, so the
+    // key follows one instance. The record-generated members would defer to the value's own
+    // Equals/GetHashCode and make two keys over equal-but-distinct objects collide.
+    public virtual bool Equals(GlobalObjectKey<T>? other)
+    {
+        return other is not null
+            && other.GetType() == GetType()
+            && ReferenceEquals(other.Value, Value);
+    }
+
+    public override int GetHashCode() => RuntimeHelpers.GetHashCode(Value);
+
     /// <summary>
     /// Ports Dart's `GlobalObjectKey.toString`: the key's own type plus the identity of its value,
     /// never the value's own `toString`. The record-generated printer would render `Value` in full,

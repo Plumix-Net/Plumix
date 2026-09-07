@@ -79,7 +79,7 @@ public sealed class DirectionalPositionedTableCellTests
             ])));
 
         root.Attach(owner);
-        Assert.Throws<ArgumentException>(() => root.Mount(parent: null, newSlot: null));
+        BuildErrors.Throws<ArgumentException>(() => root.Mount(parent: null, newSlot: null));
     }
 
     [Fact]

@@ -397,7 +397,10 @@ public sealed class ScaffoldMessengerState : State
             _materialBannerAnimation.Dispose();
             _materialBannerAnimation = null;
         }
+
         _scaffolds.Clear();
+
+        base.Dispose();
     }
 
     private void HandleSnackBarStatusChanged(AnimationStatus status)

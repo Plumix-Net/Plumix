@@ -235,6 +235,8 @@ public abstract class RawMenuAnchorBaseState : State
         _parent = null;
         _anchorChildren.Clear();
         MenuController.Detach(this);
+
+        base.Dispose();
     }
 
     public sealed override Widget Build(BuildContext context)

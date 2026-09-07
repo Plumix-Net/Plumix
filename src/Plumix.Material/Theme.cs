@@ -182,6 +182,8 @@ public sealed class AnimatedTheme : StatefulWidget
             _controller.Completed -= HandleCompleted;
             _controller.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         private void HandleChanged()

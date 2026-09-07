@@ -246,6 +246,8 @@ public class MenuAnchorState : State
         _animationController.RemoveStatusListener(HandleAnimationStatusChanged);
         _animationController.Stop();
         _animationController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)
@@ -691,6 +693,8 @@ internal sealed class MenuPanelState : State
     public override void Dispose()
     {
         _scrollController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)
@@ -1396,6 +1400,8 @@ public sealed class MenuItemButtonState : State
     {
         ButtonFocusNode.RemoveListener(HandleFocusChanged);
         _internalFocusNode.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)
@@ -1451,8 +1457,11 @@ public sealed class MenuItemButtonState : State
             _anchor?.RootAnchor.MenuController.Close();
         }
 
-        // Delay the callback until the menu has finished closing, as Flutter does.
-        Scheduler.AddPostFrameCallback(_ => Current.OnPressed?.Invoke());
+        // Delay the callback until the menu has finished closing, as Flutter does. The state can be
+        // unmounted by the close above, and an unmounted State has no widget to read the callback
+        // from, so the callback is captured before the frame boundary.
+        Action? onPressed = Current.OnPressed;
+        Scheduler.AddPostFrameCallback(_ => onPressed?.Invoke());
     }
 
     private void HandlePointerHover()
@@ -1907,6 +1916,8 @@ public sealed class SubmenuButtonState : State
     {
         CancelDelayedOpen();
         _internalFocusNode.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

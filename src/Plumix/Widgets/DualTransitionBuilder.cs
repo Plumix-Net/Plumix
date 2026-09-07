@@ -83,6 +83,8 @@ public sealed class DualTransitionBuilder : StatefulWidget
             CurrentWidget.Animation.RemoveStatusListener(HandleAnimationStatusChanged);
             _forwardAnimation.Parent = null;
             _reverseAnimation.Parent = null;
+
+            base.Dispose();
         }
 
         private void HandleAnimationStatusChanged(AnimationStatus animationStatus)

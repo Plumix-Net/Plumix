@@ -335,7 +335,7 @@ public sealed class RadioGroupRawRadioTests : IDisposable
     [Fact]
     public void RadioGroup_RejectsMultipleClientsWithSelectedValue()
     {
-        Assert.Throws<InvalidOperationException>(() => new WidgetRenderHarness(
+        BuildErrors.Throws<InvalidOperationException>(() => new WidgetRenderHarness(
             new Theme(
                 data: ThemeData.Light,
                 child: new Directionality(
@@ -537,6 +537,8 @@ public sealed class RadioGroupRawRadioTests : IDisposable
             FirstFocus.Dispose();
             SecondFocus.Dispose();
             ThirdFocus.Dispose();
+
+            base.Dispose();
         }
     }
 

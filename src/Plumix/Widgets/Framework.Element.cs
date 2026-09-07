@@ -7,6 +7,29 @@ using Plumix.Rendering;
 
 namespace Plumix.Widgets;
 
+/// <summary>
+/// Dart's private <c>_NullWidget</c>: the configuration of the shared placeholder element that
+/// pre-fills the result list in <see cref="Element.UpdateChildren"/>.
+/// </summary>
+internal sealed class NullWidget : Widget
+{
+    public override Element CreateElement() => throw new NotImplementedException();
+}
+
+/// <summary>
+/// Dart's private <c>_NullElement</c>: a single shared placeholder used to fill a
+/// <c>List&lt;Element&gt;</c> before the real elements are known, so a hole left by a bug shows up as
+/// this element rather than as a null.
+/// </summary>
+internal sealed class NullElement : Element
+{
+    private NullElement() : base(new NullWidget())
+    {
+    }
+
+    public static readonly NullElement Instance = new();
+}
+
 public sealed class IndexedSlot<T>
 {
     public IndexedSlot(int index, T? value)
@@ -18,6 +41,22 @@ public sealed class IndexedSlot<T>
     public int Index { get; }
 
     public T? Value { get; }
+
+    /// <summary>
+    /// Dart's <c>IndexedSlot.operator ==</c>: equal when the runtime type, the index and the
+    /// (identity of the) previous sibling all match. Without it every rebuild hands
+    /// <see cref="Element.UpdateChild"/> a slot that compares unequal to the one already stored, so
+    /// every child of a multi-child render object is moved on every rebuild.
+    /// </summary>
+    public override bool Equals(object? obj)
+    {
+        return obj is IndexedSlot<T> other
+            && other.Index == Index
+            && EqualityComparer<T?>.Default.Equals(other.Value, Value);
+    }
+
+    /// <summary>Dart's <c>IndexedSlot.hashCode</c>: <c>Object.hash(index, value)</c>.</summary>
+    public override int GetHashCode() => HashCode.Combine(Index, Value);
 }
 
 /// <summary>
@@ -125,6 +164,14 @@ internal enum ElementLifecycleState
     Initial,
     Active,
     Inactive,
+
+    /// <summary>
+    /// The element hit an unrecoverable error while being rebuilt or while being incorporated into
+    /// the tree, so its subtree is inconsistent and must never be re-incorporated. Dart's
+    /// <c>_ElementLifecycle.failed</c>: final and irreversible, and reached on a best-effort basis
+    /// without surfacing further errors.
+    /// </summary>
+    Failed,
     Defunct
 }
 
@@ -134,6 +181,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
     private ElementLifecycleState _lifecycleState = ElementLifecycleState.Initial;
     private HashSet<InheritedElement>? _dependencies;
+    private HashSet<Element>? _debugForgottenChildrenWithGlobalKey;
     private bool _hadUnsatisfiedDependencies;
 
     /// <summary>
@@ -148,7 +196,26 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
     public Widget Widget { get; private set; }
     public Element? Parent { get; private set; }
-    public int Depth { get; private set; }
+    private int _depth;
+
+    /// <summary>
+    /// An integer guaranteed to be greater than the parent's. Dart's <c>Element.depth</c> throws
+    /// before the element is mounted, because the value is only assigned by <see cref="Mount"/>.
+    /// </summary>
+    public int Depth
+    {
+        get
+        {
+            if (Constants.KDebugMode && _lifecycleState == ElementLifecycleState.Initial)
+            {
+                throw new FlutterError("Depth is only available when element has been mounted.");
+            }
+
+            return _depth;
+        }
+
+        private set => _depth = value;
+    }
     public object? Slot { get; private set; }
 
     internal int SequenceId { get; } = Interlocked.Increment(ref _nextElementId);
@@ -158,6 +225,9 @@ public abstract class Element : DiagnosticableTree, BuildContext
     /// starts out true because a freshly created element has never been built.
     /// </summary>
     public bool Dirty { get; private set; } = true;
+
+    /// <summary>Dart's <c>Element._debugBuiltOnce</c>, read by <c>debugPrintRebuildDirtyWidgets</c>.</summary>
+    private bool _debugBuiltOnce;
 
     public BuildOwner? Owner { get; private set; }
 
@@ -323,7 +393,18 @@ public abstract class Element : DiagnosticableTree, BuildContext
         Owner?.UnscheduleBuild(this);
         Dirty = false;
 
-        OnDeactivate();
+        try
+        {
+            OnDeactivate();
+        }
+        catch (Exception)
+        {
+            // Dart's _InactiveElements._deactivateRecursively forces the whole subtree into the
+            // failed state and rethrows, so a throwing deactivate() leaves the element neither
+            // active nor defunct, and it never reaches the inactive list.
+            DeactivateFailedSubtreeRecursively(this);
+            throw;
+        }
 
         VisitChildren(child => child.DeactivateRecursively(isRoot: false));
         RemoveDependencies();
@@ -335,6 +416,16 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
         InheritedElements = null;
         _lifecycleState = ElementLifecycleState.Inactive;
+
+        if (Constants.KDebugMode)
+        {
+            DebugDeactivated();
+            if (WidgetsDebug.DebugPrintGlobalKeyedWidgetLifecycle && Widget.Key is GlobalKey)
+            {
+                Print.DebugPrint($"Deactivated {this}");
+            }
+        }
+
         Owner?.TrackInactive(this);
     }
 
@@ -382,7 +473,36 @@ public abstract class Element : DiagnosticableTree, BuildContext
             return;
         }
 
-        PerformRebuild();
+        if (Constants.KDebugMode)
+        {
+            WidgetsDebug.DebugOnRebuildDirtyWidget?.Invoke(this, _debugBuiltOnce);
+            if (WidgetsDebug.DebugPrintRebuildDirtyWidgets)
+            {
+                Print.DebugPrint(_debugBuiltOnce ? $"Rebuilding {this}" : $"Building {this}");
+            }
+
+            _debugBuiltOnce = true;
+        }
+
+        BuildOwner? owner = Owner;
+        Element? previousBuildTarget = owner?.DebugCurrentBuildTarget;
+        if (owner is not null)
+        {
+            owner.DebugCurrentBuildTarget = this;
+        }
+
+        try
+        {
+            PerformRebuild();
+        }
+        finally
+        {
+            if (owner is not null)
+            {
+                owner.DebugElementWasRebuilt(this);
+                owner.DebugCurrentBuildTarget = previousBuildTarget;
+            }
+        }
     }
 
     /// <summary>
@@ -398,6 +518,13 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
     public virtual void MarkNeedsBuild()
     {
+        if (_lifecycleState != ElementLifecycleState.Active)
+        {
+            return;
+        }
+
+        DebugCheckCanMarkNeedsBuild();
+
         if (Dirty)
         {
             return;
@@ -405,6 +532,47 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
         Dirty = true;
         Owner?.ScheduleBuild(this);
+    }
+
+    /// <summary>
+    /// Dart's debug block inside <c>Element.markNeedsBuild</c>: dirtying an element that the current
+    /// build will not reach afterwards, or dirtying anything at all while the tree is locked, is a
+    /// mistake the framework can name precisely.
+    /// </summary>
+    private void DebugCheckCanMarkNeedsBuild()
+    {
+        if (!Constants.KDebugMode || Owner is not { } owner)
+        {
+            return;
+        }
+
+        // Dart also rejects a markNeedsBuild() during build when the element is not a descendant of
+        // the element currently being built. That branch is not armed yet: Plumix has no per-BuildScope
+        // dirty list, and `TransitionRoute.HandleStatusChanged` re-enters `NavigatorState.SetState`
+        // from an animation status callback that can run inside a build. See docs/ai/BACKLOG.md.
+        if (owner.DebugStateLocked)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary("setState() or markNeedsBuild() called when widget tree was locked."),
+                new ErrorDescription(
+                    $"This {Diagnostics.DescribeType(Widget.GetType())} widget cannot be marked as needing to "
+                    + "build because the framework is locked."),
+                DescribeElement("The widget on which setState() or markNeedsBuild() was called was"),
+            ]);
+        }
+    }
+
+    /// <summary>Dart's <c>Element._debugIsDescendantOf</c>.</summary>
+    private bool IsDescendantOf(Element target)
+    {
+        Element? element = this;
+        while (element != null && element.Depth > target.Depth)
+        {
+            element = element.Parent;
+        }
+
+        return ReferenceEquals(element, target);
     }
 
     /// Called whenever the application is reassembled during debugging, for
@@ -426,6 +594,16 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
     public virtual void Update(Widget newWidget)
     {
+        if (Constants.KDebugMode && _debugForgottenChildrenWithGlobalKey is { Count: > 0 } forgotten)
+        {
+            foreach (Element child in forgotten)
+            {
+                Owner?.DebugRemoveGlobalKeyReservationFor(this, child);
+            }
+
+            forgotten.Clear();
+        }
+
         var oldGlobalKey = Widget.Key as GlobalKey;
         var newGlobalKey = newWidget.Key as GlobalKey;
 
@@ -450,8 +628,17 @@ public abstract class Element : DiagnosticableTree, BuildContext
         }
     }
 
+    /// <summary>
+    /// Dart's <c>Element.forgetChild</c>. The reservation of a forgotten global-keyed child cannot be
+    /// released here — the child is only really gone once this element is updated — so it is parked
+    /// until <see cref="Update"/> runs.
+    /// </summary>
     public virtual void ForgetChild(Element child)
     {
+        if (Constants.KDebugMode && child.Widget.Key is GlobalKey)
+        {
+            (_debugForgottenChildrenWithGlobalKey ??= []).Add(child);
+        }
     }
 
     public virtual void UpdateSlotForChild(Element child, object? newSlot)
@@ -505,21 +692,31 @@ public abstract class Element : DiagnosticableTree, BuildContext
         var owner = Owner ?? throw new InvalidOperationException("Element is not attached to BuildOwner.");
 
         var inactiveElement = owner.RetakeInactiveElement(this, newWidget);
-        if (inactiveElement != null)
+        Element newChild = inactiveElement ?? newWidget.CreateElement();
+        try
         {
-            inactiveElement.ActivateWithParent(this, newSlot);
-            if (!ReferenceEquals(inactiveElement.Widget, newWidget))
+            if (inactiveElement != null)
             {
-                inactiveElement.Update(newWidget);
+                inactiveElement.ActivateWithParent(this, newSlot);
+                if (!ReferenceEquals(inactiveElement.Widget, newWidget))
+                {
+                    inactiveElement.Update(newWidget);
+                }
+
+                return inactiveElement;
             }
 
-            return inactiveElement;
+            newChild.Attach(owner);
+            newChild.Mount(this, newSlot);
+            return newChild;
         }
-
-        var element = newWidget.CreateElement();
-        element.Attach(owner);
-        element.Mount(this, newSlot);
-        return element;
+        catch (Exception)
+        {
+            // Dart's inflateWidget: attempt some clean-up if activation or mount fails, so the tree
+            // is left in a reasonable state, then rethrow.
+            DeactivateFailedChildSilently(newChild);
+            throw;
+        }
     }
 
     public virtual Element? UpdateChild(Element? child, Widget? newWidget, object? newSlot)
@@ -543,6 +740,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
                     UpdateSlotForChild(child, newSlot);
                 }
 
+                DebugReserveGlobalKey(child, newWidget, child);
                 return child;
             }
 
@@ -554,13 +752,40 @@ public abstract class Element : DiagnosticableTree, BuildContext
                 }
 
                 child.Update(newWidget);
+                Owner?.DebugElementWasRebuilt(child);
+                DebugReserveGlobalKey(child, newWidget, child);
                 return child;
             }
 
             DeactivateChild(child);
         }
 
-        return InflateWidget(newWidget, newSlot);
+        Element inflated = InflateWidget(newWidget, newSlot);
+        DebugReserveGlobalKey(child, newWidget, inflated);
+        return inflated;
+    }
+
+    /// <summary>
+    /// Dart's trailing assert in <c>Element.updateChild</c>: release the reservation the outgoing
+    /// child held, then reserve the incoming widget's global key against this parent, so
+    /// <c>BuildOwner.finalizeTree</c> can spot a key claimed by two parents in one frame.
+    /// </summary>
+    private void DebugReserveGlobalKey(Element? oldChild, Widget newWidget, Element newChild)
+    {
+        if (!Constants.KDebugMode)
+        {
+            return;
+        }
+
+        if (oldChild is not null)
+        {
+            Owner?.DebugRemoveGlobalKeyReservationFor(this, oldChild);
+        }
+
+        if (newWidget.Key is GlobalKey globalKey)
+        {
+            Owner?.DebugReserveGlobalKeyFor(this, newChild, globalKey);
+        }
     }
 
     public List<Element> UpdateChildren(
@@ -592,6 +817,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
         int oldChildrenBottom = oldChildren.Count - 1;
 
         var newChildren = new Element[newWidgets.Count];
+        Array.Fill(newChildren, NullElement.Instance);
 
         Element? previousChild = null;
 
@@ -703,6 +929,13 @@ public abstract class Element : DiagnosticableTree, BuildContext
             }
         }
 
+        if (Constants.KDebugMode && Array.IndexOf(newChildren, NullElement.Instance) >= 0)
+        {
+            throw new AssertionError(
+                "UpdateChildren left a placeholder in the child list: every slot must be filled by the "
+                + "six-phase diff.");
+        }
+
         return [..newChildren];
     }
 
@@ -760,11 +993,38 @@ public abstract class Element : DiagnosticableTree, BuildContext
         return inheritedElements.TryGetValue(widgetType, out InheritedElement? element) ? element : null;
     }
 
-    public virtual RenderObject? RenderObject => null;
+    /// <summary>
+    /// The render object at or below this element. Dart's <c>Element.renderObject</c> walks down
+    /// <see cref="RenderObjectAttachingChild"/> until it reaches a <see cref="RenderObjectElement"/>,
+    /// and gives up at a defunct element or when the chain runs out (an element outside a view).
+    /// </summary>
+    public virtual RenderObject? RenderObject
+    {
+        get
+        {
+            Element? current = this;
+            while (current is not null)
+            {
+                if (current._lifecycleState == ElementLifecycleState.Defunct)
+                {
+                    break;
+                }
+
+                if (current is RenderObjectElement renderObjectElement)
+                {
+                    return renderObjectElement.RenderObject;
+                }
+
+                current = current.RenderObjectAttachingChild;
+            }
+
+            return null;
+        }
+    }
 
     public virtual Element? RenderObjectAttachingChild => null;
 
-    public InheritedWidget DependOnInheritedElement(InheritedElement ancestor, object? aspect = null)
+    public virtual InheritedWidget DependOnInheritedElement(InheritedElement ancestor, object? aspect = null)
     {
         _dependencies ??= [];
         _dependencies.Add(ancestor);
@@ -902,6 +1162,18 @@ public abstract class Element : DiagnosticableTree, BuildContext
     public void VisitChildElements(Action<Element> visitor)
     {
         ArgumentNullException.ThrowIfNull(visitor);
+        if (Constants.KDebugMode && Owner is { DebugStateLocked: true })
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary("visitChildElements() called during build."),
+                new ErrorDescription(
+                    "The BuildContext.visitChildElements() method can't be called during build because the "
+                    + "child list is still being updated at that point, so the children might not be "
+                    + "constructed yet, or might be old children that are going to be replaced."),
+            ]);
+        }
+
         VisitChildren(visitor);
     }
 
@@ -1088,6 +1360,90 @@ public abstract class Element : DiagnosticableTree, BuildContext
         return children;
     }
 
+    /// <summary>
+    /// Dart's <c>Element.doesDependOnInheritedElement</c>: whether
+    /// <see cref="DependOnInheritedElement"/> was previously called with <paramref name="ancestor"/>.
+    /// </summary>
+    protected bool DoesDependOnInheritedElement(InheritedElement ancestor)
+        => _dependencies?.Contains(ancestor) ?? false;
+
+    /// <summary>
+    /// Dart's <c>Element.debugDeactivated</c>: called in debug builds after this element's children
+    /// have been deactivated.
+    /// </summary>
+    public virtual void DebugDeactivated()
+    {
+        if (Constants.KDebugMode && _lifecycleState != ElementLifecycleState.Inactive)
+        {
+            throw new AssertionError($"{ToStringShort()} was expected to be inactive when deactivated.");
+        }
+    }
+
+    /// <summary>
+    /// Dart's <c>Element.debugExpectsRenderObjectForSlot</c>: whether the element occupying
+    /// <paramref name="slot"/> is expected to attach its render object to an ancestor. Elements that
+    /// host an independent render tree in a slot return false for that slot.
+    /// </summary>
+    public virtual bool DebugExpectsRenderObjectForSlot(object? slot) => true;
+
+    /// <summary>
+    /// Dart's <c>Element._deactivateFailedSubtreeRecursively</c>: force a subtree that threw during
+    /// activation or rebuild into <see cref="ElementLifecycleState.Failed"/>, best effort, never
+    /// surfacing an additional error.
+    /// </summary>
+    private static void DeactivateFailedSubtreeRecursively(Element element)
+    {
+        try
+        {
+            element.OnDeactivate();
+        }
+        catch (Exception)
+        {
+            // Dart calls _ensureDeactivated() here; the state assignment below covers it.
+        }
+
+        element.EnsureDeactivated();
+        element._lifecycleState = ElementLifecycleState.Failed;
+        try
+        {
+            element.VisitChildren(DeactivateFailedSubtreeRecursively);
+        }
+        catch (Exception)
+        {
+            // Keep walking siblings even when one child's visitChildren throws.
+        }
+    }
+
+    /// <summary>
+    /// Dart's <c>Element._deactivateFailedChildSilently</c>: used by <see cref="InflateWidget"/> when
+    /// mounting or activating a child threw, so the tree is left in a reasonable state.
+    /// </summary>
+    private void DeactivateFailedChildSilently(Element child)
+    {
+        try
+        {
+            child.Parent = null;
+            child.DetachRenderObject();
+            DeactivateFailedSubtreeRecursively(child);
+        }
+        catch (Exception)
+        {
+            // Do not rethrow.
+        }
+    }
+
+    /// <summary>
+    /// Dart's <c>Element._ensureDeactivated</c>: drops the inherited dependencies and marks the
+    /// element inactive, even when <c>deactivate()</c> itself threw. The dependency set is
+    /// deliberately kept so <see cref="ActivateRecursively"/> can tell it had dependencies.
+    /// </summary>
+    private void EnsureDeactivated()
+    {
+        RemoveDependencies();
+        InheritedElements = null;
+        _lifecycleState = ElementLifecycleState.Inactive;
+    }
+
     private void RemoveDependencies()
     {
         if (_dependencies == null || _dependencies.Count == 0)
@@ -1138,48 +1494,106 @@ internal sealed class ElementDiagnosticableTreeNode : DiagnosticableTreeNode
     }
 }
 
-public sealed class StatelessElement : Element
+/// <summary>
+/// An <see cref="Element"/> that composes other elements: it has exactly one child, produced by
+/// <see cref="Build"/>. Dart parity: <c>ComponentElement</c>, the shared base of
+/// <see cref="StatelessElement"/>, <see cref="StatefulElement"/> and <see cref="ProxyElement"/>.
+/// </summary>
+public abstract class ComponentElement : Element
 {
     private Element? _child;
 
-    public StatelessElement(StatelessWidget widget) : base(widget)
+    protected ComponentElement(Widget widget) : base(widget)
     {
     }
-
-    public override RenderObject? RenderObject => _child?.RenderObject;
 
     public override Element? RenderObjectAttachingChild => _child;
 
     protected override void OnMount()
     {
         base.OnMount();
+        if (_child is not null)
+        {
+            throw new AssertionError("A ComponentElement must not have a child before it is mounted.");
+        }
+
+        FirstBuild();
+        if (_child is null)
+        {
+            throw new AssertionError("A ComponentElement must have a child once it has been mounted.");
+        }
+    }
+
+    /// <summary>Dart's <c>ComponentElement._firstBuild</c>.</summary>
+    private protected virtual void FirstBuild()
+    {
         Rebuild();
     }
 
+    /// <summary>
+    /// Produces the child widget. Dart's <c>ComponentElement.build</c>: subclasses delegate to
+    /// <c>StatelessWidget.build</c>, <c>State.build</c> or <c>ProxyWidget.child</c>.
+    /// </summary>
+    protected abstract Widget Build();
+
+    /// <summary>
+    /// Dart's <c>ComponentElement.performRebuild</c>. A throwing <see cref="Build"/> is reported and
+    /// replaced by <see cref="ErrorWidget.Builder"/> rather than propagating, and the dirty flag is
+    /// cleared only after <see cref="Build"/> ran, so a <see cref="Element.MarkNeedsBuild"/> issued
+    /// during the build is ignored instead of scheduling a second pass.
+    /// </summary>
     protected override void PerformRebuild()
     {
-        Widget childWidget;
-        DebugDoingBuild = true;
+        Widget built;
         try
         {
-            childWidget = ((StatelessWidget)Widget).Build(this);
+            DebugDoingBuild = true;
+            built = Build();
+            DebugDoingBuild = false;
+            WidgetsDebug.DebugWidgetBuilderValue(Widget, built);
+        }
+        catch (Exception exception)
+        {
+            DebugDoingBuild = false;
+            built = ErrorWidget.Builder(ReportBuildException(exception));
         }
         finally
         {
-            DebugDoingBuild = false;
-
-            // Dart clears the dirty flag only after build() has run, so a MarkNeedsBuild made while
-            // building is swallowed instead of scheduling a second pass.
             base.PerformRebuild();
         }
 
-        _child = UpdateChild(_child, childWidget, Slot);
+        try
+        {
+            _child = UpdateChild(_child, built, Slot);
+        }
+        catch (Exception exception)
+        {
+            built = ErrorWidget.Builder(ReportBuildException(exception));
+            try
+            {
+                if (_child is not null)
+                {
+                    DeactivateChild(_child);
+                }
+            }
+            catch (Exception)
+            {
+                // Dart swallows this: the old subtree is already broken, and reporting a second
+                // failure here would bury the original one.
+            }
+
+            _child = UpdateChild(null, built, Slot);
+        }
     }
 
-    public override void Update(Widget newWidget)
+    private FlutterErrorDetails ReportBuildException(Exception exception)
     {
-        base.Update(newWidget);
-        Rebuild(force: true);
+        return FrameworkErrors.ReportException(
+            new ErrorDescription($"building {this}"),
+            exception,
+            informationCollector: () => Constants.KDebugMode
+                ? [new DiagnosticsDebugCreator(new DebugCreator(this))]
+                : []);
     }
 
     public override void VisitChildren(Action<Element> visitor)
@@ -1192,6 +1606,7 @@ public sealed class StatelessElement : Element
 
     public override void ForgetChild(Element child)
     {
+        base.ForgetChild(child);
         if (ReferenceEquals(child, _child))
         {
             _child = null;
@@ -1210,29 +1625,41 @@ public sealed class StatelessElement : Element
     }
 }
 
-public sealed class StatefulElement : Element
+public class StatelessElement : ComponentElement
 {
-    private Element? _child;
+    public StatelessElement(StatelessWidget widget) : base(widget)
+    {
+    }
+
+    protected override Widget Build() => ((StatelessWidget)Widget).Build(this);
+
+    public override void Update(Widget newWidget)
+    {
+        base.Update(newWidget);
+        Rebuild(force: true);
+    }
+}
+
+public class StatefulElement : ComponentElement
+{
     private bool _didChangeDependencies;
 
-    public State State { get; }
+    public State State { get; private set; }
 
     public StatefulElement(StatefulWidget widget) : base(widget)
     {
         State = widget.CreateState();
-        State.Element = this;
+        State.AttachElement(this, widget);
     }
 
-    public override RenderObject? RenderObject => _child?.RenderObject;
+    protected override Widget Build() => State.Build(this);
 
-    public override Element? RenderObjectAttachingChild => _child;
-
-    protected override void OnMount()
+    private protected override void FirstBuild()
     {
-        base.OnMount();
-        State.InitState();
+        State.RunInitState();
         State.DidChangeDependencies();
-        Rebuild();
+        State.MarkReady();
+        base.FirstBuild();
     }
 
     protected override void OnActivate()
@@ -1240,6 +1667,7 @@ public sealed class StatefulElement : Element
         base.OnActivate();
         State.ActivateTickerProvider();
         State.Activate();
+        MarkNeedsBuild();
     }
 
     protected override void OnDeactivate()
@@ -1256,25 +1684,14 @@ public sealed class StatefulElement : Element
             _didChangeDependencies = false;
         }
 
-        Widget widget;
-        DebugDoingBuild = true;
-        try
-        {
-            widget = State.Build(this);
-        }
-        finally
-        {
-            DebugDoingBuild = false;
-            base.PerformRebuild();
-        }
-
-        _child = UpdateChild(_child, widget, Slot);
+        base.PerformRebuild();
     }
 
     public override void Update(Widget newWidget)
     {
         var old = (StatefulWidget)Widget;
         base.Update(newWidget);
+        State.SetWidget((StatefulWidget)newWidget);
         State.DidUpdateWidget(old);
         Rebuild(force: true);
     }
@@ -1291,27 +1708,15 @@ public sealed class StatefulElement : Element
         base.Reassemble();
     }
 
-    public override void VisitChildren(Action<Element> visitor)
+    public override InheritedWidget DependOnInheritedElement(InheritedElement ancestor, object? aspect = null)
     {
-        if (_child != null)
-        {
-            visitor(_child);
-        }
+        State.DebugCheckCanDependOnInherited(ancestor, this);
+        return base.DependOnInheritedElement(ancestor, aspect);
     }
 
-    public override void ForgetChild(Element child)
-    {
-        if (ReferenceEquals(child, _child))
-        {
-            _child = null;
-        }
-    }
-
-    /// <inheritdoc />
     public override DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null)
         => new ElementDiagnosticableTreeNode(name, this, style, stateful: true);
 
-    /// <inheritdoc />
     public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
     {
         base.DebugFillProperties(properties);
@@ -1320,38 +1725,28 @@ public sealed class StatefulElement : Element
 
     public override void Unmount()
     {
-        if (_child != null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
+        base.Unmount();
         try
         {
             State.Dispose();
+            State.DebugAssertDisposedCalledSuper();
         }
         finally
         {
             State.DisposeTickerProvider();
+            State.DetachElement();
         }
-        base.Unmount();
     }
 }
 
-public class InheritedElement : Element
+public class InheritedElement : ComponentElement
 {
-    private Element? _child;
     private readonly Dictionary<Element, object?> _dependents = [];
 
     public InheritedElement(InheritedWidget widget) : base(widget)
     {
     }
 
-    /// <summary>
-    /// Adds this element to the inherited scope under the exact runtime type of its widget, so a
-    /// lookup for a base type does not find it and a lookup for a subclass does not find a base.
-    /// </summary>
-    /// <remarks>Flutter's <c>InheritedElement._updateInheritance</c>.</remarks>
     private protected override void UpdateInheritance()
     {
         ImmutableDictionary<Type, InheritedElement> incomingWidgets =
@@ -1359,43 +1754,38 @@ public class InheritedElement : Element
         InheritedElements = incomingWidgets.SetItem(Widget.GetType(), this);
     }
 
-    public override RenderObject? RenderObject => _child?.RenderObject;
-
-    public override Element? RenderObjectAttachingChild => _child;
-
-    protected override void OnMount()
-    {
-        base.OnMount();
-        Rebuild();
-    }
-
-    protected override void PerformRebuild()
-    {
-        Widget child;
-        DebugDoingBuild = true;
-        try
-        {
-            child = ((InheritedWidget)Widget).Build(this);
-        }
-        finally
-        {
-            DebugDoingBuild = false;
-            base.PerformRebuild();
-        }
-
-        _child = UpdateChild(_child, child, Slot);
-    }
+    protected override Widget Build() => ((InheritedWidget)Widget).Build(this);
 
     public override void Update(Widget newWidget)
     {
         var old = (InheritedWidget)Widget;
         base.Update(newWidget);
-        if (((InheritedWidget)newWidget).InvokeUpdateShouldNotify(old))
-        {
-            NotifyClients(old);
-        }
-
+        Updated(old);
         Rebuild(force: true);
+    }
+
+    /// <summary>
+    /// Dart's <c>InheritedElement.updated</c>: notify the dependents only when the widget says the
+    /// change is observable.
+    /// </summary>
+    protected virtual void Updated(InheritedWidget oldWidget)
+    {
+        if (((InheritedWidget)Widget).InvokeUpdateShouldNotify(oldWidget))
+        {
+            NotifyClients(oldWidget);
+        }
+    }
+
+    /// <summary>Dart's <c>InheritedElement.debugDeactivated</c>: every dependent must have unregistered.</summary>
+    public override void DebugDeactivated()
+    {
+        base.DebugDeactivated();
+        if (Constants.KDebugMode && _dependents.Count > 0)
+        {
+            throw new AssertionError(
+                $"{Diagnostics.ObjectRuntimeType(this, "InheritedElement")} still has "
+                + $"{_dependents.Count} dependent(s) after being deactivated.");
+        }
     }
 
     protected object? GetDependencies(Element dependent)
@@ -1437,32 +1827,10 @@ public class InheritedElement : Element
         dependent.DidChangeDependencies();
     }
 
-    public override void VisitChildren(Action<Element> visitor)
-    {
-        if (_child != null)
-        {
-            visitor(_child);
-        }
-    }
-
-    public override void ForgetChild(Element child)
-    {
-        if (ReferenceEquals(child, _child))
-        {
-            _child = null;
-        }
-    }
-
     public override void Unmount()
     {
-        if (_child != null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
-        _dependents.Clear();
         base.Unmount();
+        _dependents.Clear();
     }
 }
 
@@ -1567,30 +1935,17 @@ public sealed class InheritedNotifierElement<TNotifier> : InheritedElement where
     }
 }
 
-public class ProxyElement : Element
+/// <summary>
+/// An <see cref="Element"/> that uses a <see cref="ProxyWidget"/> as its configuration and simply
+/// inflates that widget's child. Dart parity: <c>ProxyElement</c>.
+/// </summary>
+public abstract class ProxyElement : ComponentElement
 {
-    private Element? _child;
-
-    public ProxyElement(ProxyWidget widget) : base(widget)
+    protected ProxyElement(ProxyWidget widget) : base(widget)
     {
     }
 
-    public override RenderObject? RenderObject => _child?.RenderObject;
-
-    public override Element? RenderObjectAttachingChild => _child;
-
-    protected override void OnMount()
-    {
-        base.OnMount();
-        Rebuild();
-    }
-
-    protected override void PerformRebuild()
-    {
-        Widget child = ((ProxyWidget)Widget).Child;
-        base.PerformRebuild();
-        _child = UpdateChild(_child, child, Slot);
-    }
+    protected override Widget Build() => ((ProxyWidget)Widget).Child;
 
     public override void Update(Widget newWidget)
     {
@@ -1600,48 +1955,38 @@ public class ProxyElement : Element
         Rebuild(force: true);
     }
 
+    /// <summary>
+    /// Dart's <c>ProxyElement.updated</c>: called when the widget changed, before this element is
+    /// rebuilt. The default forwards to <see cref="NotifyClients"/>.
+    /// </summary>
     protected virtual void Updated(ProxyWidget oldWidget)
     {
+        NotifyClients(oldWidget);
     }
 
-    public override void VisitChildren(Action<Element> visitor)
-    {
-        if (_child != null)
-        {
-            visitor(_child);
-        }
-    }
-
-    public override void ForgetChild(Element child)
-    {
-        if (ReferenceEquals(child, _child))
-        {
-            _child = null;
-        }
-    }
-
-    public override void Unmount()
-    {
-        if (_child != null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
-        base.Unmount();
-    }
+    /// <summary>Dart's <c>ProxyElement.notifyClients</c>.</summary>
+    protected abstract void NotifyClients(ProxyWidget oldWidget);
 }
 
-internal abstract class ParentDataElementBase : ProxyElement
+/// <summary>
+/// The non-generic half of <see cref="ParentDataElement{T}"/>, so that
+/// <see cref="RenderObjectElement"/> can walk its parent-data ancestors without knowing the
+/// <c>ParentData</c> type argument. C#-only: Dart reaches the same members through
+/// <c>ParentDataElement&lt;ParentData&gt;</c>.
+/// </summary>
+public abstract class ParentDataElementBase : ProxyElement
 {
-    protected ParentDataElementBase(ProxyWidget widget) : base(widget)
+    private protected ParentDataElementBase(ProxyWidget widget) : base(widget)
     {
     }
 
     internal abstract IParentDataWidget ParentDataWidget { get; }
+
+    /// <summary>Dart's <c>ParentDataElement.debugParentDataType</c>.</summary>
+    internal abstract Type DebugParentDataType { get; }
 }
 
-internal sealed class ParentDataElement<T> : ParentDataElementBase where T : IParentData
+public sealed class ParentDataElement<T> : ParentDataElementBase where T : IParentData
 {
     public ParentDataElement(ParentDataWidget<T> widget) : base(widget)
     {
@@ -1649,15 +1994,49 @@ internal sealed class ParentDataElement<T> : ParentDataElementBase where T : IPa
 
     internal override IParentDataWidget ParentDataWidget => (IParentDataWidget)Widget;
 
-    protected override void PerformRebuild()
+    internal override Type DebugParentDataType
     {
-        base.PerformRebuild();
+        get
+        {
+            if (!Constants.KDebugMode)
+            {
+                throw new NotSupportedException("DebugParentDataType is only supported in debug builds");
+            }
+
+            return typeof(T);
+        }
+    }
+
+    protected override void NotifyClients(ProxyWidget oldWidget)
+    {
         ApplyParentData((ParentDataWidget<T>)Widget);
     }
 
-    protected override void Updated(ProxyWidget oldWidget)
+    /// <summary>
+    /// Dart's <c>ParentDataElement.applyWidgetOutOfTurn</c>: applies the parent data of a widget that
+    /// is not this element's configuration, outside the build phase. Only legal for widgets whose
+    /// <see cref="ParentDataWidget{T}.DebugCanApplyOutOfTurn"/> is true, and only when the widget
+    /// wraps the same child.
+    /// </summary>
+    public void ApplyWidgetOutOfTurn(ParentDataWidget<T> newWidget)
     {
-        ApplyParentData((ParentDataWidget<T>)Widget);
+        if (Constants.KDebugMode)
+        {
+            if (!newWidget.DebugCanApplyOutOfTurn())
+            {
+                throw new AssertionError(
+                    $"{Diagnostics.ObjectRuntimeType(newWidget, "ParentDataWidget")} does not allow its parent "
+                    + "data to be applied out of turn.");
+            }
+
+            if (!ReferenceEquals(newWidget.Child, ((ParentDataWidget<T>)Widget).Child))
+            {
+                throw new AssertionError(
+                    "applyWidgetOutOfTurn can only be used with a widget that wraps the same child.");
+            }
+        }
+
+        ApplyParentData(newWidget);
     }
 
     private void ApplyParentData(ParentDataWidget<T> widget)

@@ -107,6 +107,8 @@ public sealed class ExpandIcon : StatefulWidget
             _iconTurns = null;
             _curvedAnimation = null;
             _controller = null;
+
+            base.Dispose();
         }
 
         private void HandlePressed()

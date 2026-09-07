@@ -51,6 +51,8 @@ internal sealed class AnimatedIconDemoPageState : State
     public override void Dispose()
     {
         _controller.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

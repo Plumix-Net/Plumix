@@ -369,6 +369,8 @@ public sealed class CarouselViewState : State
         Controller.RemoveListener(HandleScroll);
         Controller.DetachCarousel(this);
         _internalController?.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

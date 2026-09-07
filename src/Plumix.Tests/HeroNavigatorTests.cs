@@ -863,7 +863,7 @@ public sealed class HeroNavigatorTests
         {
             var viewportSize = new Size(320, 240);
 
-            var exception = Assert.Throws<InvalidOperationException>(() =>
+            var exception = BuildErrors.Throws<InvalidOperationException>(() =>
             {
                 using var harness = new WidgetRenderHarness(
                     new Navigator(

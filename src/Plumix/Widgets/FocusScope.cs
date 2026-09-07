@@ -289,6 +289,8 @@ internal class FocusState : State
         FocusNode.RemoveListener(HandleFocusChanged);
         FocusAttachment!.Detach();
         _internalNode?.Dispose();
+
+        base.Dispose();
     }
 
     public override void DidChangeDependencies()

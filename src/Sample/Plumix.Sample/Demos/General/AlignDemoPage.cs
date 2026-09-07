@@ -105,6 +105,8 @@ internal sealed class AlignDemoPageState : State
         _builderCounter.Dispose();
         _explicitTransitionsController.Dispose();
         _scrollController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

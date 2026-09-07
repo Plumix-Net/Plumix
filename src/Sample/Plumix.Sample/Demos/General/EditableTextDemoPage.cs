@@ -33,6 +33,8 @@ internal sealed class EditableTextDemoPageState : State
     {
         _nameController.Dispose();
         _notesController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

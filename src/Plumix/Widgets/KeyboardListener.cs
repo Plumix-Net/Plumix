@@ -130,6 +130,8 @@ public sealed class RawKeyboardListener : StatefulWidget
         {
             CurrentWidget.FocusNode.RemoveListener(HandleFocusChanged);
             DetachKeyboardIfAttached();
+
+            base.Dispose();
         }
 
         private void HandleFocusChanged()

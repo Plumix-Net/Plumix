@@ -440,6 +440,8 @@ public sealed class SliverReorderableListState : State
         _proxyAnimation.Dismissed -= HandleProxyAnimationDismissed;
         _proxyAnimation.Dispose();
         _proxyAnimation = null;
+
+        base.Dispose();
     }
 
     public void CancelReorder()
@@ -1120,6 +1122,8 @@ internal sealed class ReorderableItemState : State
     {
         _listState?.UnregisterItem(Index, this);
         DisposeOffsetAnimation();
+
+        base.Dispose();
     }
 
     internal void SetDragging(bool dragging)

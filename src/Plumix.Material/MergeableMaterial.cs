@@ -135,6 +135,8 @@ public sealed class MergeableMaterial : StatefulWidget
             }
 
             _animationTuples.Clear();
+
+            base.Dispose();
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)

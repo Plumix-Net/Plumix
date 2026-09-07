@@ -681,6 +681,8 @@ public sealed class Shortcuts : StatefulWidget
         public override void Dispose()
         {
             _internalManager?.Dispose();
+
+            base.Dispose();
         }
 
         private KeyEventResult HandleKeyEvent(FocusNode node, KeyEvent @event)
@@ -879,6 +881,8 @@ public sealed class ShortcutRegistrar : StatefulWidget
             _registry.RemoveListener(HandleShortcutsChanged);
             _registry.Dispose();
             _manager.Dispose();
+
+            base.Dispose();
         }
 
         private void HandleShortcutsChanged()

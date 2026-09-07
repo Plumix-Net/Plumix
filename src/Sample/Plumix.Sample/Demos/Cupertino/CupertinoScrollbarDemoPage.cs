@@ -36,6 +36,8 @@ internal sealed class CupertinoScrollbarDemoPageState : State
         _fadingController.Dispose();
         _alwaysVisibleController.Dispose();
         _leftController.Dispose();
+
+        base.Dispose();
     }
 
     public override Widget Build(BuildContext context)

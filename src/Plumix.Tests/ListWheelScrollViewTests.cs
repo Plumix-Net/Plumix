@@ -868,7 +868,7 @@ public sealed class ListWheelScrollViewTests
     {
         // Flutter: "FixedExtentScrollController can only be used with ListWheelScrollViews".
         var controller = new FixedExtentScrollController();
-        Exception error = Assert.ThrowsAny<Exception>(() => Harness(
+        Exception error = BuildErrors.ThrowsAny<Exception>(() => Harness(
             ListView.Builder(
                 controller: controller,
                 itemCount: 3,

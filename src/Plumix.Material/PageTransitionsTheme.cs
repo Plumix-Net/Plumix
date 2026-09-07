@@ -484,6 +484,8 @@ public sealed class ZoomPageTransitionsBuilder : PageTransitionsBuilder
             {
                 CurrentWidget.Animation.RemoveStatusListener(HandleStatusChanged);
                 _controller.Dispose();
+
+                base.Dispose();
             }
 
             private void HandleStatusChanged(AnimationStatus status)
@@ -967,6 +969,8 @@ internal sealed class PredictiveBackGestureDetector : StatefulWidget
         public override void Dispose()
         {
             WidgetsBinding.Instance.RemoveObserver(this);
+
+            base.Dispose();
         }
 
         private Widget BuildSharedElementTransition(BuildContext context)

@@ -28,6 +28,8 @@ public sealed class ListWheelScrollViewDemoPage : StatefulWidget
         {
             _controller?.Dispose();
             _controller = null;
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

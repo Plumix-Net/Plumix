@@ -109,6 +109,8 @@ public sealed class TweenAnimationBuilder<T> : StatefulWidget
             _controller.Dispose();
             _controller = null;
             _currentTween = null;
+
+            base.Dispose();
         }
 
         private void HandleChanged()

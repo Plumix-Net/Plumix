@@ -360,6 +360,8 @@ public sealed class ElementLifecycleTests
             }
 
             KeyedTracker.DisposedStateIds.Add(_stateId);
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -496,6 +498,8 @@ public sealed class ElementLifecycleTests
             }
 
             NestedBranchTracker.DisposedStateIds.Add(_stateId);
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -559,6 +563,8 @@ public sealed class ElementLifecycleTests
             }
 
             NestedBranchTracker.DisposedStateIds.Add(_stateId);
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -612,6 +618,8 @@ public sealed class ElementLifecycleTests
             }
 
             MixedTracker.DisposedStateIds.Add(_stateId);
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)
@@ -649,6 +657,8 @@ public sealed class ElementLifecycleTests
         public override void Dispose()
         {
             LifecycleTracker.Events.Add("dispose");
+
+            base.Dispose();
         }
 
         public override Widget Build(BuildContext context)

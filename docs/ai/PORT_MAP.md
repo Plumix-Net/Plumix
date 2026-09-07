@@ -421,6 +421,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/container.dart` | `src/Plumix/Widgets/Container.cs` | `src/Plumix.Tests/ContainerTests.cs` | `dart_sample/lib/demos/general/container_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/ContainerDemoPage.cs` |
 | `widgets/context_menu_button_item.dart` | `src/Plumix/Widgets/ContextMenu.cs` | `src/Plumix.Tests/ContextMenuControllerTests.cs`<br>`src/Plumix.Tests/CupertinoContextMenuTests.cs` | `dart_sample/lib/demos/cupertino/context_menu_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/ContextMenuDemoPage.cs` |
 | `widgets/context_menu_controller.dart` | `src/Plumix/Widgets/ContextMenu.cs` | `src/Plumix.Tests/ContextMenuControllerTests.cs`<br>`src/Plumix.Tests/CupertinoContextMenuTests.cs` | `dart_sample/lib/demos/cupertino/context_menu_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/ContextMenuDemoPage.cs` |
+| `widgets/debug.dart` | `src/Plumix/Widgets/Debug.cs` | `src/Plumix.Tests/DebugPaintingWidgetsTests.cs`<br>`src/Plumix.Tests/RenderingDebugTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`dart_sample/lib/demos/general/rendering_debug_flags_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RenderingDebugFlagsDemoPage.cs` |
 | `widgets/decorated_sliver.dart` | `src/Plumix/Widgets/SliverDecoratedPinned.cs` | — | — |
 | `widgets/default_selection_style.dart` | `src/Plumix/Widgets/DefaultSelectionStyle.cs` | `src/Plumix.Tests/TitleDefaultSelectionStyleTests.cs` | — |
 | `widgets/default_text_editing_shortcuts.dart` | `src/Plumix/Widgets/DefaultTextEditingShortcuts.cs` | `src/Plumix.Tests/DefaultTextEditingShortcutsTests.cs` | — |
@@ -440,7 +441,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/focus_scope.dart` | `src/Plumix/Widgets/FocusScope.cs` | `src/Plumix.Tests/FocusScopeTests.cs` | — |
 | `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | `dart_sample/lib/demos/general/focus_traversal_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FocusTraversalDemoPage.cs` |
 | `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/CupertinoFormRowTests.cs`<br>`src/Plumix.Tests/CupertinoFormSectionTests.cs`<br>`src/Plumix.Tests/CupertinoTextFormFieldRowTests.cs`<br>`src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`dart_sample/lib/demos/general/transform_demo_page.dart` |
-| `widgets/framework.dart` | `src/Plumix/Widgets/ErrorWidget.cs`<br>`src/Plumix/Widgets/Framework.BuildOwner.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Element.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.RenderObject.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Widget.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.cs` _(reference) (approximate)_ | `src/Plumix.Tests/ErrorWidgetTests.cs`<br>`src/Plumix.Tests/FrameworkElementApiTests.cs` | — |
+| `widgets/framework.dart` | `src/Plumix/Widgets/ErrorWidget.cs`<br>`src/Plumix/Widgets/Framework.BuildOwner.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Element.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.RenderObject.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.Widget.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.cs` _(reference) (approximate)_ | `src/Plumix.Tests/ErrorWidgetTests.cs`<br>`src/Plumix.Tests/FrameworkElementApiTests.cs`<br>`src/Plumix.Tests/FrameworkParityTests.cs` | — |
 | `widgets/gesture_detector.dart` | `src/Plumix/Widgets/GestureDetector.cs`<br>`src/Plumix/Widgets/GestureRecognizerFactory.cs` | `src/Plumix.Tests/GestureDetectorTests.cs` | — |
 | `widgets/grid_paper.dart` | `src/Plumix/Widgets/GridPaper.cs` | — | — |
 | `widgets/heroes.dart` | `src/Plumix/Widgets/Hero.cs` | `src/Plumix.Tests/HeroNavigatorTests.cs` | `dart_sample/lib/demos/general/hero_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/HeroDemoPage.cs` |
@@ -635,8 +636,8 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 524
-- C# files carrying a marker: 683
+- Flutter files mapped: 525
+- C# files carrying a marker: 684
 - C# files without a marker: 33
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 39

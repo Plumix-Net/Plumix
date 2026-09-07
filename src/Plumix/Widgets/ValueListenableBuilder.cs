@@ -60,6 +60,8 @@ public sealed class ValueListenableBuilder<T> : StatefulWidget
         public override void Dispose()
         {
             CurrentWidget.ValueListenable.RemoveListener(HandleValueChanged);
+
+            base.Dispose();
         }
 
         private void HandleValueChanged()

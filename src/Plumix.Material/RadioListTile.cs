@@ -498,6 +498,8 @@ public sealed class RadioListTile<T> : StatefulWidget
         {
             SetRegistry(null);
             DetachFocusNode(disposeOwned: true);
+
+            base.Dispose();
         }
 
         private void SetRegistry(RadioGroupRegistry<T>? registry)
