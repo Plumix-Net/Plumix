@@ -93,6 +93,31 @@ public interface BuildContext
 
     /// <summary>Starts bubbling <paramref name="notification"/> at this context.</summary>
     void DispatchNotification(Notification notification);
+
+    /// <summary>
+    /// Returns a description of the <see cref="Element"/> associated with this build context.
+    /// <paramref name="name"/> is typically something like "The element being rebuilt was".
+    /// </summary>
+    DiagnosticsNode DescribeElement(
+        string name,
+        DiagnosticsTreeStyle style = DiagnosticsTreeStyle.ErrorProperty);
+
+    /// <summary>
+    /// Returns a description of the <see cref="Widget"/> associated with this build context.
+    /// <paramref name="name"/> is typically something like "The widget being rebuilt was".
+    /// </summary>
+    DiagnosticsNode DescribeWidget(
+        string name,
+        DiagnosticsTreeStyle style = DiagnosticsTreeStyle.ErrorProperty);
+
+    /// <summary>
+    /// Describes a widget type that is missing from this build context's ancestry, together with
+    /// the ancestors that were searched.
+    /// </summary>
+    List<DiagnosticsNode> DescribeMissingAncestor(Type expectedAncestorType);
+
+    /// <summary>Describes the ownership chain from this element back towards the root.</summary>
+    DiagnosticsNode DescribeOwnershipChain(string name);
 }
 
 internal enum ElementLifecycleState
@@ -103,7 +128,7 @@ internal enum ElementLifecycleState
     Defunct
 }
 
-public abstract class Element : BuildContext
+public abstract class Element : DiagnosticableTree, BuildContext
 {
     private static int _nextElementId;
 
@@ -681,12 +706,36 @@ public abstract class Element : BuildContext
         return [..newChildren];
     }
 
+    /// <summary>
+    /// Asserts that this element is still active, so that an ancestor lookup made from it reads a
+    /// stable tree. Every ancestor lookup on <see cref="BuildContext"/> runs it first, which is what
+    /// makes a lookup from <c>State.Dispose</c> an error rather than a silent stale read.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>Element._debugCheckStateIsActiveForAncestorLookup</c>, which returns
+    /// <c>true</c> only so that it can sit inside an <c>assert(...)</c>; C# has no such wrapper, so
+    /// this one returns nothing.
+    /// </remarks>
+    private void DebugCheckStateIsActiveForAncestorLookup()
+    {
+        if (Constants.KDebugMode && _lifecycleState != ElementLifecycleState.Active)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary("Looking up a deactivated widget's ancestor is unsafe."),
+                new ErrorDescription(
+                    "At this point the state of the widget's element tree is no longer stable."),
+                new ErrorHint(
+                    "To safely refer to a widget's ancestor in its Dispose() method, save a reference "
+                    + "to the ancestor by calling DependOnInherited() in the widget's "
+                    + "DidChangeDependencies() method."),
+            ]);
+        }
+    }
+
     public virtual T? DependOnInherited<T>(object? aspect = null) where T : InheritedWidget
     {
-        if (!IsActive)
-        {
-            throw new InvalidOperationException("Cannot lookup inherited widgets from an inactive element.");
-        }
+        DebugCheckStateIsActiveForAncestorLookup();
 
         if (LookupInheritedElement(typeof(T)) is { } ancestor)
         {
@@ -734,13 +783,18 @@ public abstract class Element : BuildContext
     {
         if (Constants.KDebugMode && _lifecycleState != ElementLifecycleState.Active)
         {
-            throw new AssertionError(
-                "Cannot get renderObject of inactive element.\n"
-                + "In order for an element to have a valid renderObject, it must be active, which "
-                + "means it is part of the tree.\n"
-                + $"Instead, this element is in the {_lifecycleState} state.\n"
-                + "If you called this method from a State object, consider guarding it with "
-                + "State.Mounted.");
+            throw new FlutterError(
+            [
+                new ErrorSummary("Cannot get renderObject of inactive element."),
+                new ErrorDescription(
+                    "In order for an element to have a valid renderObject, it must be active, which "
+                    + "means it is part of the tree."),
+                new ErrorDescription($"Instead, this element is in the {_lifecycleState} state."),
+                new ErrorHint(
+                    "If you called this method from a State object, consider guarding it with "
+                    + "State.Mounted."),
+                DescribeElement("The findRenderObject() method was called for the following element"),
+            ]);
         }
 
         return RenderObject;
@@ -762,11 +816,7 @@ public abstract class Element : BuildContext
     /// </summary>
     public InheritedElement? GetElementForInheritedWidgetOfExactType<T>() where T : InheritedWidget
     {
-        if (!IsActive)
-        {
-            throw new InvalidOperationException("Cannot lookup inherited widgets from an inactive element.");
-        }
-
+        DebugCheckStateIsActiveForAncestorLookup();
         return LookupInheritedElement(typeof(T));
     }
 
@@ -776,6 +826,7 @@ public abstract class Element : BuildContext
     /// </summary>
     public T? FindAncestorWidgetOfExactType<T>() where T : Widget
     {
+        DebugCheckStateIsActiveForAncestorLookup();
         for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
         {
             if (ancestor.Widget.GetType() == typeof(T))
@@ -791,6 +842,7 @@ public abstract class Element : BuildContext
     public void VisitAncestorElements(Func<Element, bool> visitor)
     {
         ArgumentNullException.ThrowIfNull(visitor);
+        DebugCheckStateIsActiveForAncestorLookup();
         for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
         {
             if (!visitor(ancestor))
@@ -803,6 +855,7 @@ public abstract class Element : BuildContext
     /// <summary>Returns the nearest ancestor state of type <typeparamref name="T"/>.</summary>
     public T? FindAncestorStateOfType<T>() where T : State
     {
+        DebugCheckStateIsActiveForAncestorLookup();
         for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
         {
             if (ancestor is StatefulElement statefulElement && statefulElement.State is T state)
@@ -817,6 +870,7 @@ public abstract class Element : BuildContext
     /// <summary>Returns the furthest ancestor state assignable to <typeparamref name="T"/>.</summary>
     public T? FindRootAncestorStateOfType<T>() where T : State
     {
+        DebugCheckStateIsActiveForAncestorLookup();
         T? result = null;
         for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
         {
@@ -832,6 +886,7 @@ public abstract class Element : BuildContext
     /// <summary>Returns the nearest ancestor render object assignable to <typeparamref name="T"/>.</summary>
     public T? FindAncestorRenderObjectOfType<T>() where T : RenderObject
     {
+        DebugCheckStateIsActiveForAncestorLookup();
         for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
         {
             if (ancestor is RenderObjectElement { RenderObject: T renderObject })
@@ -858,6 +913,181 @@ public abstract class Element : BuildContext
         _ = notification.Dispatch(this);
     }
 
+    /// <summary>
+    /// Whether this element has been unmounted. Only meaningful in debug builds, where the
+    /// lifecycle state is tracked.
+    /// </summary>
+    /// <remarks>Flutter's <c>Element.debugIsDefunct</c>.</remarks>
+    public bool DebugIsDefunct =>
+        Constants.KDebugMode && _lifecycleState == ElementLifecycleState.Defunct;
+
+    /// <summary>Whether this element is part of the tree. Debug builds only.</summary>
+    /// <remarks>Flutter's <c>Element.debugIsActive</c>.</remarks>
+    public bool DebugIsActive =>
+        Constants.KDebugMode && _lifecycleState == ElementLifecycleState.Active;
+
+    /// <summary>
+    /// Describes what caused this element to be created, by naming each element from this one up to
+    /// <paramref name="limit"/> ancestors, joined with a leftwards arrow. A chain that was cut short
+    /// ends in a midline ellipsis.
+    /// </summary>
+    /// <remarks>Flutter's <c>Element.debugGetCreatorChain</c>.</remarks>
+    public string DebugGetCreatorChain(int limit)
+    {
+        var chain = new List<string>();
+        Element? node = this;
+        while (chain.Count < limit && node != null)
+        {
+            chain.Add(node.ToStringShort());
+            node = node.Parent;
+        }
+
+        if (node != null)
+        {
+            chain.Add("\u22ef");
+        }
+
+        return string.Join(" \u2190 ", chain);
+    }
+
+    /// <summary>The parent chain from this element back to the root of the tree.</summary>
+    /// <remarks>Flutter's <c>Element.debugGetDiagnosticChain</c>.</remarks>
+    public List<Element> DebugGetDiagnosticChain()
+    {
+        var chain = new List<Element> { this };
+        Element? node = Parent;
+        while (node != null)
+        {
+            chain.Add(node);
+            node = node.Parent;
+        }
+
+        return chain;
+    }
+
+    /// <inheritdoc />
+    public List<DiagnosticsNode> DescribeMissingAncestor(Type expectedAncestorType)
+    {
+        ArgumentNullException.ThrowIfNull(expectedAncestorType);
+
+        var information = new List<DiagnosticsNode>();
+        var ancestors = new List<Element>();
+        VisitAncestorElements(element =>
+        {
+            ancestors.Add(element);
+            return true;
+        });
+
+        string ancestorName = Diagnostics.DescribeType(expectedAncestorType);
+        information.Add(new DiagnosticsProperty<Element>(
+            $"The specific widget that could not find a {ancestorName} ancestor was",
+            this,
+            style: DiagnosticsTreeStyle.ErrorProperty));
+
+        if (ancestors.Count > 0)
+        {
+            information.Add(DescribeElements("The ancestors of this widget were", ancestors));
+        }
+        else
+        {
+            information.Add(new ErrorDescription(
+                "This widget is the root of the tree, so it has no ancestors, let alone a "
+                + $"\"{ancestorName}\" ancestor."));
+        }
+
+        return information;
+    }
+
+    /// <summary>Returns a block naming each of <paramref name="elements"/>.</summary>
+    /// <remarks>Flutter's <c>Element.describeElements</c>.</remarks>
+    public static DiagnosticsNode DescribeElements(string name, IEnumerable<Element> elements)
+    {
+        ArgumentNullException.ThrowIfNull(elements);
+
+        return new DiagnosticsBlock(
+            name: name,
+            children: elements.Select(element => new DiagnosticsProperty<Element>(string.Empty, element)),
+            allowTruncate: true);
+    }
+
+    /// <inheritdoc />
+    public DiagnosticsNode DescribeElement(
+        string name,
+        DiagnosticsTreeStyle style = DiagnosticsTreeStyle.ErrorProperty)
+    {
+        return new DiagnosticsProperty<Element>(name, this, style: style);
+    }
+
+    /// <inheritdoc />
+    public DiagnosticsNode DescribeWidget(
+        string name,
+        DiagnosticsTreeStyle style = DiagnosticsTreeStyle.ErrorProperty)
+    {
+        return new DiagnosticsProperty<Element>(name, this, style: style);
+    }
+
+    /// <inheritdoc />
+    public DiagnosticsNode DescribeOwnershipChain(string name)
+    {
+        return new StringProperty(name, DebugGetCreatorChain(10));
+    }
+
+    /// <inheritdoc />
+    public override string ToStringShort() =>
+        DebugIsDefunct ? $"{Diagnostics.DescribeIdentity(this)}(DEFUNCT)" : Widget.ToStringShort();
+
+    /// <inheritdoc />
+    public override DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null)
+        => new ElementDiagnosticableTreeNode(name, this, style);
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.DefaultDiagnosticsTreeStyle = DiagnosticsTreeStyle.Dense;
+        if (_lifecycleState != ElementLifecycleState.Initial)
+        {
+            properties.Add(new ObjectFlagProperty<int>("depth", Depth, ifNull: "no depth"));
+        }
+
+        // Dart nulls out `Element._widget` in unmount(); Plumix keeps the field, so the defunct
+        // state is what stands in for "no widget" here and in ToStringShort.
+        Widget? widget = DebugIsDefunct ? null : Widget;
+        properties.Add(new ObjectFlagProperty<Widget>("widget", widget, ifNull: "no widget"));
+        properties.Add(new DiagnosticsProperty<Key>(
+            "key",
+            widget?.Key,
+            showName: false,
+            defaultValue: DiagnosticsDefaults.NullValue,
+            level: DiagnosticLevel.Hidden));
+        widget?.DebugFillProperties(properties);
+        properties.Add(new FlagProperty("dirty", value: Dirty, ifTrue: "dirty"));
+        if (_dependencies is not { Count: > 0 } dependencies)
+        {
+            return;
+        }
+
+        List<InheritedElement> sorted = [.. dependencies];
+        sorted.Sort((a, b) => string.CompareOrdinal(a.ToStringShort(), b.ToStringShort()));
+        string description = "["
+            + string.Join(
+                ", ",
+                sorted.Select(element => element.Widget.ToDiagnosticsNode(style: DiagnosticsTreeStyle.Sparse)))
+            + "]";
+        properties.Add(new DiagnosticsProperty<HashSet<InheritedElement>>(
+            "dependencies",
+            dependencies,
+            description: description));
+    }
+
+    /// <inheritdoc />
+    public override List<DiagnosticsNode> DebugDescribeChildren()
+    {
+        var children = new List<DiagnosticsNode>();
+        VisitChildren(child => children.Add(child.ToDiagnosticsNode()));
+        return children;
+    }
+
     private void RemoveDependencies()
     {
         if (_dependencies == null || _dependencies.Count == 0)
@@ -869,6 +1099,42 @@ public abstract class Element : BuildContext
         {
             dependency.RemoveDependent(this);
         }
+    }
+}
+
+/// <summary>
+/// The <see cref="DiagnosticsNode"/> an <see cref="Element"/> describes itself with: a tree node
+/// that also reports the widget's runtime type and whether the element is stateful, so a tooling
+/// client can tell the two apart without walking the properties.
+/// </summary>
+/// <remarks>Flutter's private <c>_ElementDiagnosticableTreeNode</c>.</remarks>
+internal sealed class ElementDiagnosticableTreeNode : DiagnosticableTreeNode
+{
+    public ElementDiagnosticableTreeNode(
+        string? name,
+        Element value,
+        DiagnosticsTreeStyle? style,
+        bool stateful = false)
+        : base(name, value, style)
+    {
+        Stateful = stateful;
+    }
+
+    /// <summary>Whether the element this node describes is a <see cref="StatefulElement"/>.</summary>
+    public bool Stateful { get; }
+
+    /// <inheritdoc />
+    public override Dictionary<string, object?> ToJsonMap(DiagnosticsSerializationDelegate serializationDelegate)
+    {
+        Dictionary<string, object?> json = base.ToJsonMap(serializationDelegate);
+        var element = (Element)TypedValue;
+        if (!element.DebugIsDefunct)
+        {
+            json["widgetRuntimeType"] = Diagnostics.DescribeType(element.Widget.GetType());
+        }
+
+        json["stateful"] = Stateful;
+        return json;
     }
 }
 
@@ -1039,6 +1305,17 @@ public sealed class StatefulElement : Element
         {
             _child = null;
         }
+    }
+
+    /// <inheritdoc />
+    public override DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null)
+        => new ElementDiagnosticableTreeNode(name, this, style, stateful: true);
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<State>("state", State, defaultValue: DiagnosticsDefaults.NullValue));
     }
 
     public override void Unmount()

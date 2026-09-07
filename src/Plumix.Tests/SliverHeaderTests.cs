@@ -122,7 +122,10 @@ public sealed class SliverHeaderTests
     [Fact]
     public void ScrollPosition_ReportsUserDirectionAndScrollingTransitions()
     {
-        var position = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
+        var position = new ScrollPosition(
+            new ClampingScrollPhysics(),
+            new TestScrollContext(),
+            keepScrollOffset: false);
         position.ApplyViewportDimension(100.0);
         position.ApplyContentDimensions(0.0, 1000.0);
         position.JumpTo(200.0);

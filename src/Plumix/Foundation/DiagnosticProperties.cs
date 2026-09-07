@@ -1332,7 +1332,7 @@ public class DiagnosticableNode<T> : DiagnosticsNode
 /// <summary>
 /// [DiagnosticsNode] for an instance of [IDiagnosticableTree].
 /// </summary>
-public sealed class DiagnosticableTreeNode : DiagnosticableNode<IDiagnosticableTree>
+public class DiagnosticableTreeNode : DiagnosticableNode<IDiagnosticableTree>
 {
     /// Creates a [DiagnosticsNode] for an [IDiagnosticableTree] value.
     public DiagnosticableTreeNode(string? name, IDiagnosticableTree value, DiagnosticsTreeStyle? style)

@@ -400,8 +400,28 @@ public sealed class MediaQuery : InheritedModel<object>
 
     public static MediaQueryData Of(BuildContext context)
     {
-        return MaybeOf(context)
-               ?? throw new InvalidOperationException("No MediaQuery ancestor found for the given BuildContext.");
+        ArgumentNullException.ThrowIfNull(context);
+
+        if (MaybeOf(context) is { } data)
+        {
+            return data;
+        }
+
+        // Flutter reports this through debugCheckHasMediaQuery, which names the widget and its
+        // ownership chain rather than only the missing ancestor type.
+        throw new FlutterError(
+        [
+            new ErrorSummary("No MediaQuery widget ancestor found."),
+            new ErrorDescription(
+                $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require a MediaQuery "
+                + "widget ancestor."),
+            context.DescribeWidget("The specific widget that could not find a MediaQuery ancestor was"),
+            context.DescribeOwnershipChain("The ownership chain for the affected widget is"),
+            new ErrorHint(
+                "No MediaQuery ancestor could be found starting from the context that was passed to "
+                + "MediaQuery.Of(). This can happen because the context used is not a descendant of "
+                + "a View widget, which introduces a MediaQuery."),
+        ]);
     }
 
     public static MediaQueryData? MaybeOf(BuildContext context)

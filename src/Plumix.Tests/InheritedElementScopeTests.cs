@@ -213,7 +213,7 @@ public sealed class InheritedElementScopeTests
         root.Unmount();
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void InheritedScope_IsDroppedWhenTheElementLeavesTheTree()
     {
         Element? reader = null;
@@ -232,8 +232,8 @@ public sealed class InheritedElementScopeTests
         owner.FlushBuild();
 
         Assert.Null(reader.InheritedElements);
-        Assert.Throws<InvalidOperationException>(() => reader.DependOnInherited<BaseScope>());
-        Assert.Throws<InvalidOperationException>(
+        Assert.Throws<FlutterError>(() => reader.DependOnInherited<BaseScope>());
+        Assert.Throws<FlutterError>(
             () => reader.GetElementForInheritedWidgetOfExactType<BaseScope>());
 
         root.Unmount();

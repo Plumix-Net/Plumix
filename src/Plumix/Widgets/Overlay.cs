@@ -840,10 +840,8 @@ public sealed class Overlay : StatefulWidget
             }
             if (!ReferenceEquals(context.Widget, debugRequiredFor))
             {
-                information.Add(new DiagnosticsProperty<Element>(
-                    "The context from which that widget was searching for an overlay was",
-                    (Element)context,
-                    style: DiagnosticsTreeStyle.ErrorProperty));
+                information.Add(context.DescribeElement(
+                    "The context from which that widget was searching for an overlay was"));
             }
             throw new FlutterError(information);
         }
@@ -1944,9 +1942,24 @@ internal sealed class RenderTheaterMarker : InheritedWidget
     /// <remarks>Flutter's <c>_RenderTheaterMarker.of</c>.</remarks>
     internal static RenderTheaterMarker Of(BuildContext context, bool targetRootOverlay = false)
     {
-        return MaybeOf(context, targetRootOverlay)
-               ?? throw new InvalidOperationException(
-                   "No Overlay widget found. An OverlayPortal requires an Overlay widget ancestor.");
+        if (MaybeOf(context, targetRootOverlay) is { } marker)
+        {
+            return marker;
+        }
+
+        throw new FlutterError(
+        [
+            new ErrorSummary("No Overlay widget found."),
+            new ErrorDescription(
+                $"{Diagnostics.DescribeType(context.Widget.GetType())} widgets require an Overlay "
+                + "widget ancestor.\n"
+                + "An overlay lets widgets float on top of other widget children."),
+            new ErrorHint(
+                "To introduce an Overlay widget, you can either directly include one, or use a "
+                + "widget that contains an Overlay itself, such as a Navigator, WidgetApp, "
+                + "MaterialApp, or CupertinoApp."),
+            .. context.DescribeMissingAncestor(typeof(Overlay)),
+        ]);
     }
 
     /// <remarks>Flutter's <c>_RenderTheaterMarker.maybeOf</c>.</remarks>

@@ -424,7 +424,7 @@ public sealed class SemanticsPropertiesTests
         Assert.NotNull(new SemanticsProperties(link: true, linkUrl: new Uri("https://example.com/")).LinkUrl);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void Properties_DebugFillPropertiesEmitsTheDartList()
     {
         var properties = new SemanticsProperties(

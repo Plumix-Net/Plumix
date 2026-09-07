@@ -1074,7 +1074,6 @@ public class Scrollable : StatefulWidget
             }
 
             _position.RemoveListener(HandlePositionChanged);
-            SaveScrollOffset();
             _attachedController?.Detach(_position);
             _position.Dispose();
             _fallbackController?.Dispose();

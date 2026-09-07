@@ -105,10 +105,24 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
             DebugDoingBuild = false;
         }
 
+        DebugUpdateRenderObjectOwner();
         AttachRenderObject(Slot);
 
         // Dart's RenderObjectElement.mount clears the dirty flag itself rather than building.
         base.PerformRebuild();
+    }
+
+    /// <summary>
+    /// Stamps this element onto the render object as its <see cref="RenderObject.DebugCreator"/>, so
+    /// an error reported from the render tree can name the widget that produced it. Debug only.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderObjectElement._debugUpdateRenderObjectOwner</c>.</remarks>
+    private void DebugUpdateRenderObjectOwner()
+    {
+        if (Constants.KDebugMode && _renderObject is not null)
+        {
+            _renderObject.DebugCreator = new DebugCreator(this);
+        }
     }
 
     protected override void OnDeactivate()
@@ -127,6 +141,7 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
     public override void Update(Widget newWidget)
     {
         base.Update(newWidget);
+        DebugUpdateRenderObjectOwner();
         PerformRenderObjectRebuild();
     }
 
@@ -193,7 +208,18 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         (_ancestorRenderObjectHost, _ancestorRenderObjectHostElement) = FindAncestorRenderObjectHost();
         if (_ancestorRenderObjectHost == null)
         {
-            throw new InvalidOperationException($"RenderObject host not found for {GetType().Name}.");
+            throw new FlutterError(
+            [
+                new ErrorSummary(
+                    $"The render object for {ToStringShort()} cannot find ancestor render object "
+                    + "to attach to."),
+                new ErrorDescription(
+                    "The ownership chain for the RenderObject in question was:\n  "
+                    + DebugGetCreatorChain(10)),
+                new ErrorHint(
+                    "Try wrapping your widget in a View widget or any other widget that is backed "
+                    + "by a RenderTreeRootElement to serve as the root of the render tree."),
+            ]);
         }
 
         _ancestorRenderObjectHost.InsertRenderObjectChild(RequireRenderObject(), newSlot);
@@ -670,4 +696,27 @@ public sealed class SlottedRenderObjectElement<TSlot> : RenderObjectElement
     {
         return slot ?? throw new InvalidOperationException("A slotted render child requires a non-null slot.");
     }
+}
+
+/// <summary>
+/// A wrapper for the <see cref="Element"/> that created a <see cref="RenderObject"/>. Setting one
+/// as <see cref="RenderObject.DebugCreator"/> is what lets a rendering-library error name the
+/// widget chain that produced the offending render object.
+/// </summary>
+/// <remarks>Flutter's <c>DebugCreator</c>.</remarks>
+public sealed class DebugCreator
+{
+    /// <summary>Creates a creator marker for <paramref name="element"/>.</summary>
+    public DebugCreator(Element element)
+    {
+        ArgumentNullException.ThrowIfNull(element);
+
+        Element = element;
+    }
+
+    /// <summary>The element that created the render object.</summary>
+    public Element Element { get; }
+
+    /// <inheritdoc />
+    public override string ToString() => Element.DebugGetCreatorChain(12);
 }

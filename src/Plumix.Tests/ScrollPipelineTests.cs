@@ -1262,7 +1262,11 @@ public sealed class ScrollPipelineTests
         try
         {
             var context = new TestScrollContext(AxisDirection.Right, devicePixelRatio: 3.0);
-            using var position = new ScrollPosition(new ClampingScrollPhysics(), context, initialPixels: 20);
+            using var position = new ScrollPosition(
+                new ClampingScrollPhysics(),
+                context,
+                initialPixels: 20,
+                keepScrollOffset: false);
             Assert.Same(context, position.Context);
             Assert.Equal(AxisDirection.Right, position.AxisDirection);
             Assert.Equal(3.0, position.DevicePixelRatio);

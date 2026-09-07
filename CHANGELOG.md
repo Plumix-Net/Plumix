@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `Element.DebugGetCreatorChain`/`DebugGetDiagnosticChain` and `DebugCreator`, stamped on every render object.
+- Breaking: `Element` derives from `DiagnosticableTree`; `BuildContext` gains the four `Describe*` members.
+- Breaking: ancestor lookups from a deactivated element throw, so `Dispose()` can no longer walk the tree.
+- Breaking: the scroll offset reaches `PageStorage` from `ScrollPosition.DidEndScroll`, not from `Dispose`.
+- Breaking: `MediaQuery.Of` and the two `Overlay` lookups report a `FlutterError` naming the widget and its chain.
 - Added `SemanticsProperties`, `AttributedString`/`AttributedStringProperty`, `SemanticsHintOverrides` (`semantics.dart`).
 - Added `SliverSemantics`/`RenderSliverSemanticsAnnotations` over the shared annotations mixin (`proxy_sliver.dart`).
 - Added the semantics text-editing actions, `identifier`, `headingLevel`, `linkUrl`, `controlsNodes`, value lengths.

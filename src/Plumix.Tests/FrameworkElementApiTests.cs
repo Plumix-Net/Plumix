@@ -379,8 +379,13 @@ public sealed class FrameworkElementApiTests
         Element probe = FindProbeElement(root);
         root.Unmount();
 
-        AssertionError error = Assert.Throws<AssertionError>(() => probe.FindRenderObject());
+        FlutterError error = Assert.Throws<FlutterError>(() => probe.FindRenderObject());
         Assert.Contains("Cannot get renderObject of inactive element.", error.Message);
+        // The element that was asked is named in the report, as Dart's describeElement does.
+        Assert.Contains(
+            "The findRenderObject() method was called for the following element",
+            error.Message);
+        Assert.Contains("(DEFUNCT)", error.Message);
     }
 
     [Fact]

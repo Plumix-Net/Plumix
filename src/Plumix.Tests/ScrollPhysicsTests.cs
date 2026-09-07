@@ -745,7 +745,10 @@ public sealed class ScrollPhysicsTests
     [Fact]
     public void ScrollPosition_PointerScroll_NeverOverscrollsUnderBouncingPhysics()
     {
-        using var position = new ScrollPosition(new BouncingScrollPhysics(), new TestScrollContext());
+        using var position = new ScrollPosition(
+            new BouncingScrollPhysics(),
+            new TestScrollContext(),
+            keepScrollOffset: false);
         position.ApplyViewportDimension(100);
         position.ApplyContentDimensions(0, 500);
 

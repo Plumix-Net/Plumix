@@ -1616,6 +1616,10 @@ public class ScrollPosition : ViewportOffset, IScrollMetrics, IScrollActivityDel
         }
 
         SaveOffset();
+        if (KeepScrollOffset)
+        {
+            SaveScrollOffset();
+        }
     }
 
     /// <summary>
