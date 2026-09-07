@@ -78,8 +78,22 @@ public sealed class Visibility : StatelessWidget
 
     public static bool Of(BuildContext context)
     {
-        return ((Element)context).DependOnInheritedAncestors<VisibilityScope>()
-            .All(scope => scope.IsVisible);
+        bool isVisible = true;
+        BuildContext ancestorContext = context;
+        InheritedElement? ancestor = ancestorContext.GetElementForInheritedWidgetOfExactType<VisibilityScope>();
+        while (isVisible && ancestor != null)
+        {
+            var scope = (VisibilityScope)context.DependOnInheritedElement(ancestor);
+            isVisible = scope.IsVisible;
+            ancestor.VisitAncestorElements(parent =>
+            {
+                ancestorContext = parent;
+                return false;
+            });
+            ancestor = ancestorContext.GetElementForInheritedWidgetOfExactType<VisibilityScope>();
+        }
+
+        return isVisible;
     }
 
     public override Widget Build(BuildContext context)

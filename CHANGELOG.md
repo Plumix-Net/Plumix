@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: inherited lookups match the exact widget runtime type over a per-element scope map (`framework.dart`).
 - Breaking: `BuildContext` is an interface `Element` implements, so a context *is* its element (`framework.dart`).
 - Breaking: `Element.Rebuild(force)` is non-virtual; subclasses override `PerformRebuild` (`framework.dart`).
 - Breaking: `Element.IsMounted` is `Mounted`; `Dirty` starts true, cleared only by `PerformRebuild` (`framework.dart`).

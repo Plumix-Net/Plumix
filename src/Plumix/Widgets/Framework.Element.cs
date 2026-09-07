@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
@@ -46,22 +47,33 @@ public interface BuildContext
     /// <summary>The render object of this element, or of the nearest descendant that has one.</summary>
     RenderObject? FindRenderObject();
 
-    /// <summary>Registers this context with the nearest <typeparamref name="T"/> ancestor and returns it.</summary>
+    /// <summary>
+    /// Registers this context with the nearest ancestor whose widget's runtime type is exactly
+    /// <typeparamref name="T"/> and returns that widget. A subclass of <typeparamref name="T"/> does
+    /// not match, and neither does a base class of it.
+    /// </summary>
     T? DependOnInherited<T>(object? aspect = null) where T : InheritedWidget;
 
     /// <summary>Registers this context as depending on <paramref name="ancestor"/>.</summary>
     InheritedWidget DependOnInheritedElement(InheritedElement ancestor, object? aspect = null);
 
     /// <summary>
-    /// Finds the nearest ancestor <typeparamref name="T"/> without registering a dependency.
-    /// Use this when you want to read a value once without subscribing to future changes.
+    /// Finds the nearest ancestor whose widget's runtime type is exactly <typeparamref name="T"/>
+    /// without registering a dependency. Use this to read a value once without subscribing to
+    /// future changes.
     /// </summary>
     T? GetInherited<T>() where T : InheritedWidget;
 
-    /// <summary>Returns the nearest inherited element of the exact requested widget type.</summary>
+    /// <summary>
+    /// Returns the nearest inherited element whose widget's runtime type is exactly
+    /// <typeparamref name="T"/>, without creating a dependency.
+    /// </summary>
     InheritedElement? GetElementForInheritedWidgetOfExactType<T>() where T : InheritedWidget;
 
-    /// <summary>Returns the nearest ancestor widget of the requested type without creating a dependency.</summary>
+    /// <summary>
+    /// Returns the nearest ancestor widget whose runtime type is exactly <typeparamref name="T"/>,
+    /// without creating a dependency. A subclass of <typeparamref name="T"/> does not match.
+    /// </summary>
     T? FindAncestorWidgetOfExactType<T>() where T : Widget;
 
     /// <summary>Returns the nearest ancestor state of type <typeparamref name="T"/>.</summary>
@@ -98,6 +110,16 @@ public abstract class Element : BuildContext
     private ElementLifecycleState _lifecycleState = ElementLifecycleState.Initial;
     private HashSet<InheritedElement>? _dependencies;
     private bool _hadUnsatisfiedDependencies;
+
+    /// <summary>
+    /// The inherited elements in scope at this element, keyed by the exact runtime type of their
+    /// widget. Rebuilt by <see cref="UpdateInheritance"/> on mount and activation, and dropped on
+    /// deactivation. Dart parity: <c>Element._inheritedElements</c>, a
+    /// <c>PersistentHashMap&lt;Type, InheritedElement&gt;</c> — an immutable map is the same
+    /// contract, since the only writes are whole-field assignments and every element in a subtree
+    /// shares the map instance its nearest <see cref="InheritedElement"/> ancestor produced.
+    /// </summary>
+    internal ImmutableDictionary<Type, InheritedElement>? InheritedElements { get; private protected set; }
 
     public Widget Widget { get; private set; }
     public Element? Parent { get; private set; }
@@ -156,7 +178,19 @@ public abstract class Element : BuildContext
             Owner?.RegisterGlobalKey(globalKey, this);
         }
 
+        UpdateInheritance();
+
         OnMount();
+    }
+
+    /// <summary>
+    /// Recomputes <see cref="InheritedElements"/> from the parent's. The base implementation shares
+    /// the parent's map verbatim; <see cref="InheritedElement"/> overrides it to add itself.
+    /// </summary>
+    /// <remarks>Flutter's <c>Element._updateInheritance</c>.</remarks>
+    private protected virtual void UpdateInheritance()
+    {
+        InheritedElements = Parent?.InheritedElements;
     }
 
     internal void ActivateWithParent(Element parent, object? newSlot)
@@ -179,6 +213,7 @@ public abstract class Element : BuildContext
         _lifecycleState = ElementLifecycleState.Active;
         _dependencies?.Clear();
         _hadUnsatisfiedDependencies = false;
+        UpdateInheritance();
 
         OnActivate();
 
@@ -273,6 +308,7 @@ public abstract class Element : BuildContext
             Parent = null;
         }
 
+        InheritedElements = null;
         _lifecycleState = ElementLifecycleState.Inactive;
         Owner?.TrackInactive(this);
     }
@@ -652,42 +688,27 @@ public abstract class Element : BuildContext
             throw new InvalidOperationException("Cannot lookup inherited widgets from an inactive element.");
         }
 
-        for (var ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        if (LookupInheritedElement(typeof(T)) is { } ancestor)
         {
-            if (ancestor is InheritedElement inheritedElement && inheritedElement.Widget is T typedWidget)
-            {
-                _ = DependOnInheritedElement(inheritedElement, aspect);
-                return typedWidget;
-            }
+            return (T)DependOnInheritedElement(ancestor, aspect);
         }
 
         _hadUnsatisfiedDependencies = true;
         return null;
     }
 
-    internal IReadOnlyList<T> DependOnInheritedAncestors<T>() where T : InheritedWidget
+    /// <summary>
+    /// Reads <see cref="InheritedElements"/> for <paramref name="widgetType"/>, which must be the
+    /// exact runtime type of the sought widget. Dart parity: <c>_inheritedElements?[T]</c>.
+    /// </summary>
+    private InheritedElement? LookupInheritedElement(Type widgetType)
     {
-        if (!IsActive)
+        if (InheritedElements is not { } inheritedElements)
         {
-            throw new InvalidOperationException("Cannot lookup inherited widgets from an inactive element.");
+            return null;
         }
 
-        var widgets = new List<T>();
-        for (var ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (ancestor is InheritedElement inheritedElement && inheritedElement.Widget is T typedWidget)
-            {
-                _ = DependOnInheritedElement(inheritedElement, aspect: null);
-                widgets.Add(typedWidget);
-            }
-        }
-
-        if (widgets.Count == 0)
-        {
-            _hadUnsatisfiedDependencies = true;
-        }
-
-        return widgets;
+        return inheritedElements.TryGetValue(widgetType, out InheritedElement? element) ? element : null;
     }
 
     public virtual RenderObject? RenderObject => null;
@@ -726,44 +747,40 @@ public abstract class Element : BuildContext
     }
 
     /// <summary>
-    /// Finds the nearest ancestor <typeparamref name="T"/> without registering a dependency.
-    /// Use this when you want to read a value once without subscribing to future changes.
+    /// Finds the nearest ancestor whose widget's runtime type is exactly <typeparamref name="T"/>
+    /// without registering a dependency. Use this to read a value once without subscribing to
+    /// future changes.
     /// </summary>
     public T? GetInherited<T>() where T : InheritedWidget
     {
-        for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (ancestor is InheritedElement && ancestor.Widget is T typedWidget)
-            {
-                return typedWidget;
-            }
-        }
-
-        return null;
+        return GetElementForInheritedWidgetOfExactType<T>()?.Widget as T;
     }
 
-    /// <summary>Returns the nearest inherited element of the exact requested widget type.</summary>
+    /// <summary>
+    /// Returns the nearest inherited element whose widget's runtime type is exactly
+    /// <typeparamref name="T"/>, without creating a dependency.
+    /// </summary>
     public InheritedElement? GetElementForInheritedWidgetOfExactType<T>() where T : InheritedWidget
     {
-        for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        if (!IsActive)
         {
-            if (ancestor is InheritedElement inheritedElement && ancestor.Widget.GetType() == typeof(T))
-            {
-                return inheritedElement;
-            }
+            throw new InvalidOperationException("Cannot lookup inherited widgets from an inactive element.");
         }
 
-        return null;
+        return LookupInheritedElement(typeof(T));
     }
 
-    /// <summary>Returns the nearest ancestor widget of the requested type without creating a dependency.</summary>
+    /// <summary>
+    /// Returns the nearest ancestor widget whose runtime type is exactly <typeparamref name="T"/>,
+    /// without creating a dependency. A subclass of <typeparamref name="T"/> does not match.
+    /// </summary>
     public T? FindAncestorWidgetOfExactType<T>() where T : Widget
     {
         for (Element? ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
         {
-            if (ancestor.Widget is T widget)
+            if (ancestor.Widget.GetType() == typeof(T))
             {
-                return widget;
+                return (T)ancestor.Widget;
             }
         }
 
@@ -1051,6 +1068,18 @@ public class InheritedElement : Element
 
     public InheritedElement(InheritedWidget widget) : base(widget)
     {
+    }
+
+    /// <summary>
+    /// Adds this element to the inherited scope under the exact runtime type of its widget, so a
+    /// lookup for a base type does not find it and a lookup for a subclass does not find a base.
+    /// </summary>
+    /// <remarks>Flutter's <c>InheritedElement._updateInheritance</c>.</remarks>
+    private protected override void UpdateInheritance()
+    {
+        ImmutableDictionary<Type, InheritedElement> incomingWidgets =
+            Parent?.InheritedElements ?? ImmutableDictionary<Type, InheritedElement>.Empty;
+        InheritedElements = incomingWidgets.SetItem(Widget.GetType(), this);
     }
 
     public override RenderObject? RenderObject => _child?.RenderObject;

@@ -335,7 +335,7 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
         List<InheritedElement> results)
         where TModel : InheritedModel<TAspect>
     {
-        var model = GetNearestAncestorModel<TModel>(contextElement);
+        InheritedElement? model = contextElement.GetElementForInheritedWidgetOfExactType<TModel>();
         if (model == null)
         {
             return;
@@ -349,22 +349,22 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
             return;
         }
 
-        FindModels<TModel>(model, aspect, results);
-    }
-
-    private static InheritedElement? GetNearestAncestorModel<TModel>(Element contextElement)
-        where TModel : InheritedModel<TAspect>
-    {
-        for (var ancestor = contextElement.Parent; ancestor != null; ancestor = ancestor.Parent)
+        // The model's own scope contains itself, so hop to its parent before looking again.
+        Element? modelParent = null;
+        model.VisitAncestorElements(ancestor =>
         {
-            if (ancestor is InheritedElement inheritedElement && inheritedElement.Widget is TModel)
-            {
-                return inheritedElement;
-            }
+            modelParent = ancestor;
+            return false;
+        });
+
+        if (modelParent == null)
+        {
+            return;
         }
 
-        return null;
+        FindModels<TModel>(modelParent, aspect, results);
     }
+
 }
 
 public abstract class InheritedNotifier<TNotifier> : InheritedWidget where TNotifier : class, IListenable
