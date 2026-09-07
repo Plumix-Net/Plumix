@@ -71,7 +71,7 @@ public sealed class IntrinsicWidgetsTests
 
         Assert.Equal(new Size(112.0, 30.0), intrinsic.Size);
         Assert.Equal(intrinsic.Size, child.Size);
-        Assert.Equal(default, ((BoxParentData)child.parentData!).offset);
+        Assert.IsType<ParentData>(child.parentData);
     }
 
     [Fact]

@@ -702,6 +702,49 @@ internal sealed class RenderDeferredLayoutBox : RenderProxyBox
     }
 
     /// <remarks>
+    /// Flutter's <c>_RenderTheaterMixin.paint</c>: the overlay child is a stack child, so it paints
+    /// at the offset its parent data carries. The mixin is applied after
+    /// <c>RenderProxyBoxMixin</c>, so it is this version that wins.
+    /// </remarks>
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is { } child)
+        {
+            context.PaintChild(child, ((StackParentData)child.parentData!).offset + offset);
+        }
+    }
+
+    /// <remarks>Flutter's <c>_RenderTheaterMixin.hitTestChildren</c>.</remarks>
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        if (Child is not { } child)
+        {
+            return false;
+        }
+
+        var childParentData = (StackParentData)child.parentData!;
+        return result.AddWithPaintOffset(
+            childParentData.offset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
+    }
+
+    /// <remarks>Flutter's <c>_RenderTheaterMixin.computeDistanceToActualBaseline</c>.</remarks>
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
+    {
+        if (Child is not { } child)
+        {
+            return null;
+        }
+
+        double? childBaseline = child.GetDistanceToBaseline(baseline, onlyReal: true);
+        return childBaseline is null
+            ? null
+            : childBaseline + ((StackParentData)child.parentData!).offset.Y;
+    }
+
+    /// <remarks>
     /// Flutter's <c>_RenderDeferredLayoutBox.debugLayoutParent</c>: mutation permissions are checked
     /// against the layout surrogate, not the theater, because that is the node that lays this one out.
     /// </remarks>
@@ -861,6 +904,49 @@ internal sealed class RenderOverlayPortalLayoutBuilder : RenderProxyBox, IRender
         {
             child.parentData = new StackParentData();
         }
+    }
+
+    /// <remarks>
+    /// Flutter's <c>_RenderTheaterMixin.paint</c>: the overlay child is a stack child, so it paints
+    /// at the offset its parent data carries. The mixin is applied after
+    /// <c>RenderProxyBoxMixin</c>, so it is this version that wins.
+    /// </remarks>
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        if (Child is { } child)
+        {
+            context.PaintChild(child, ((StackParentData)child.parentData!).offset + offset);
+        }
+    }
+
+    /// <remarks>Flutter's <c>_RenderTheaterMixin.hitTestChildren</c>.</remarks>
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        if (Child is not { } child)
+        {
+            return false;
+        }
+
+        var childParentData = (StackParentData)child.parentData!;
+        return result.AddWithPaintOffset(
+            childParentData.offset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
+    }
+
+    /// <remarks>Flutter's <c>_RenderTheaterMixin.computeDistanceToActualBaseline</c>.</remarks>
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline)
+    {
+        if (Child is not { } child)
+        {
+            return null;
+        }
+
+        double? childBaseline = child.GetDistanceToBaseline(baseline, onlyReal: true);
+        return childBaseline is null
+            ? null
+            : childBaseline + ((StackParentData)child.parentData!).offset.Y;
     }
 
     protected override void PerformResize()

@@ -174,7 +174,6 @@ internal sealed class RenderLayoutBuilder : RenderProxyBox, IRenderObjectWithLay
         {
             Child.Layout(constraints, parentUsesSize: true);
             Size = constraints.Constrain(Child.Size);
-            ((BoxParentData)Child.parentData!).offset = new Point();
         }
         else
         {

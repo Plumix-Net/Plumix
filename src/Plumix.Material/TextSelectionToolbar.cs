@@ -349,6 +349,15 @@ internal sealed class RenderTextSelectionToolbarTrailingEdgeAlign : RenderProxyB
         }
     }
 
+    public override void SetupParentData(RenderObject child)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        if (child.parentData is not ToolbarItemsParentData)
+        {
+            child.parentData = new ToolbarItemsParentData();
+        }
+    }
+
     protected override void PerformLayout()
     {
         if (Child is null)
@@ -367,9 +376,41 @@ internal sealed class RenderTextSelectionToolbarTrailingEdgeAlign : RenderProxyB
             ? Child.Size.Width
             : _closedWidth.Value;
         Size = Constraints.Constrain(new Size(width, Child.Size.Height));
-        ((BoxParentData)Child.parentData!).offset = new Point(
+
+        // Set the offset in the parent data such that the child will be aligned to the trailing
+        // edge, depending on the text direction.
+        ((ToolbarItemsParentData)Child.parentData!).offset = new Point(
             TextDirection == TextDirection.Rtl ? 0.0 : Size.Width - Child.Size.Width,
             0.0);
+    }
+
+    // Paint at the offset set in the parent data.
+    public override void Paint(PaintingContext context, Point offset)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+        RenderBox child = Child!;
+        var childParentData = (ToolbarItemsParentData)child.parentData!;
+        context.PaintChild(child, childParentData.offset + offset);
+    }
+
+    // Include the parent data offset in the hit test.
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        RenderBox child = Child!;
+        var childParentData = (ToolbarItemsParentData)child.parentData!;
+        return result.AddWithPaintOffset(
+            childParentData.offset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
+    }
+
+    /// <inheritdoc />
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        ArgumentNullException.ThrowIfNull(child);
+        ArgumentNullException.ThrowIfNull(transform);
+        Point childOffset = ((ToolbarItemsParentData)child.parentData!).offset;
+        transform.TranslateByDouble(childOffset.X, childOffset.Y, 0, 1);
     }
 }
 

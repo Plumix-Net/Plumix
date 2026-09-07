@@ -218,32 +218,22 @@ internal sealed class BadgePositioner : SingleChildRenderObjectWidget
     }
 }
 
-internal sealed class RenderBadgePositioner : RenderProxyBox
+internal sealed class RenderBadgePositioner : RenderAligningShiftedBox
 {
-    private AlignmentGeometry _alignment;
     private Vector _offset;
     private double _widthOffset;
     private bool _hasLabel;
-    private TextDirection _textDirection;
 
     public RenderBadgePositioner(
         AlignmentGeometry alignment,
         Vector offset,
         double widthOffset,
         bool hasLabel,
-        TextDirection textDirection)
+        TextDirection textDirection) : base(alignment, textDirection)
     {
-        _alignment = alignment;
         _offset = offset;
         _widthOffset = widthOffset;
         _hasLabel = hasLabel;
-        _textDirection = textDirection;
-    }
-
-    public AlignmentGeometry Alignment
-    {
-        get => _alignment;
-        set { if (_alignment != value) { _alignment = value; MarkNeedsLayout(); } }
     }
 
     public Vector Offset
@@ -264,12 +254,6 @@ internal sealed class RenderBadgePositioner : RenderProxyBox
         set { if (_hasLabel != value) { _hasLabel = value; MarkNeedsLayout(); } }
     }
 
-    public TextDirection TextDirection
-    {
-        get => _textDirection;
-        set { if (_textDirection != value) { _textDirection = value; MarkNeedsLayout(); } }
-    }
-
     protected override void PerformLayout()
     {
         if (!Constraints.HasBoundedWidth || !Constraints.HasBoundedHeight)
@@ -285,8 +269,7 @@ internal sealed class RenderBadgePositioner : RenderProxyBox
 
         Child.Layout(BoxConstraints.Unbounded, parentUsesSize: true);
         var alignmentSpace = new Size(Size.Width - WidthOffset, Size.Height);
-        Alignment resolvedAlignment = Alignment.Resolve(TextDirection);
-        var location = resolvedAlignment.AlongOffset(alignmentSpace, new Size()) + Offset;
+        var location = ResolvedAlignment.AlongOffset(alignmentSpace, new Size()) + Offset;
         if (HasLabel)
         {
             location -= new Vector(0, Child.Size.Height / 2.0);
@@ -355,6 +338,5 @@ internal sealed class RenderBadgeHorizontalStadium : RenderProxyBox
         }
 
         Size = target;
-        ((BoxParentData)Child.parentData!).offset = new Point();
     }
 }

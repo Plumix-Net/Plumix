@@ -1068,7 +1068,7 @@ internal sealed class PopupMenuPositionLayout : SingleChildRenderObjectWidget
     }
 }
 
-internal sealed class RenderPopupMenuPositionLayout : RenderProxyBox
+internal sealed class RenderPopupMenuPositionLayout : RenderShiftedBox
 {
     private RelativeRect _position;
     private Thickness _safePadding;
@@ -1079,7 +1079,7 @@ internal sealed class RenderPopupMenuPositionLayout : RenderProxyBox
         RelativeRect position,
         Thickness safePadding,
         IReadOnlyList<DisplayFeature> displayFeatures,
-        TextDirection textDirection)
+        TextDirection textDirection) : base(null)
     {
         _position = position;
         _safePadding = safePadding;

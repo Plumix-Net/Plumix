@@ -605,12 +605,22 @@ internal sealed class FloatingActionButtonChildOverflowBox : SingleChildRenderOb
 
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderFloatingActionButtonChildOverflowBox();
+        return new RenderFloatingActionButtonChildOverflowBox(Directionality.Of(context));
+    }
+
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        ((RenderFloatingActionButtonChildOverflowBox)renderObject).TextDirection = Directionality.Of(context);
     }
 }
 
-internal sealed class RenderFloatingActionButtonChildOverflowBox : RenderProxyBox
+internal sealed class RenderFloatingActionButtonChildOverflowBox : RenderAligningShiftedBox
 {
+    public RenderFloatingActionButtonChildOverflowBox(TextDirection? textDirection = null)
+        : base(Plumix.Rendering.Alignment.Center, textDirection)
+    {
+    }
+
     protected override double ComputeMinIntrinsicWidth(double height) => 0.0;
 
     protected override double ComputeMinIntrinsicHeight(double width) => 0.0;
@@ -645,7 +655,7 @@ internal sealed class RenderFloatingActionButtonChildOverflowBox : RenderProxyBo
         Size = new Size(
             Math.Max(Constraints.MinWidth, Math.Min(Constraints.MaxWidth, childSize.Width)),
             Math.Max(Constraints.MinHeight, Math.Min(Constraints.MaxHeight, childSize.Height)));
-        ((BoxParentData)Child.parentData!).offset = Plumix.Rendering.Alignment.Center.AlongOffset(Size, childSize);
+        AlignChild();
     }
 }
 

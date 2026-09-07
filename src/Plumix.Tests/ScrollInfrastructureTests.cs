@@ -1,3 +1,4 @@
+using Avalonia;
 using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -566,6 +567,98 @@ public sealed class ScrollInfrastructureTests
         Assert.NotNull(rootSliver);
         Assert.NotNull(childSliver);
         Assert.IsType<SliverGrid>(childSliver);
+    }
+
+    /// <remarks>
+    /// Dart parity: <c>_RenderSingleChildViewport</c> shifts its child through a computed
+    /// <c>_paintOffset</c>, not through parent data — it inherits <c>RenderProxyBoxMixin</c>'s bare
+    /// <c>ParentData</c> and overrides paint, hit testing and <c>applyPaintTransform</c> itself.
+    /// </remarks>
+    [Fact]
+    public void RenderSingleChildViewport_ShiftsItsChildThroughAComputedPaintOffset()
+    {
+        var child = new FixedContentBox(new Size(80, 300));
+        var viewport = new RenderSingleChildViewport(
+            AxisDirection.Down,
+            ViewportOffset.Fixed(120.0),
+            child);
+        viewport.Layout(BoxConstraints.Tight(new Size(80, 100)));
+
+        Assert.Equal(new Size(80, 100), viewport.Size);
+        Assert.Equal(new Size(80, 300), child.Size);
+
+        // The child keeps the proxy's bare parent data: the scroll offset never lands there.
+        Assert.IsType<ParentData>(child.parentData);
+        Assert.IsNotType<BoxParentData>(child.parentData);
+
+        var transform = Matrix4.Identity();
+        viewport.ApplyPaintTransform(child, transform);
+        Assert.Equal(new Point(10, -110), MatrixUtils.TransformPoint(transform, new Point(10, 10)));
+    }
+
+    /// <remarks>
+    /// Dart parity: <c>_RenderSingleChildViewport.hitTestChildren</c> pushes <c>_paintOffset</c>, so a
+    /// scrolled child is hit at its painted position.
+    /// </remarks>
+    [Fact]
+    public void RenderSingleChildViewport_HitTestsItsChildAtTheScrolledPosition()
+    {
+        var child = new FixedContentBox(new Size(80, 300));
+        var viewport = new RenderSingleChildViewport(
+            AxisDirection.Down,
+            ViewportOffset.Fixed(120.0),
+            child);
+        viewport.Layout(BoxConstraints.Tight(new Size(80, 100)));
+
+        var result = new BoxHitTestResult();
+        Assert.True(viewport.HitTest(result, new Point(10, 10)));
+
+        BoxHitTestEntry childEntry = result.Path
+            .OfType<BoxHitTestEntry>()
+            .First(entry => ReferenceEquals(entry.Target, child));
+        Assert.Equal(new Point(10, 130), childEntry.LocalPosition);
+    }
+
+    /// <remarks>
+    /// Dart parity: the class deliberately does not override
+    /// <c>computeDistanceToActualBaseline</c> — "as you scroll, it would shift in its parent if the
+    /// parent was baseline-aligned, which makes no sense".
+    /// </remarks>
+    [Fact]
+    public void RenderSingleChildViewport_ReportsNoBaseline()
+    {
+        var child = new FixedContentBox(new Size(80, 300), baseline: 24.0);
+        var viewport = new RenderSingleChildViewport(
+            AxisDirection.Down,
+            ViewportOffset.Fixed(0.0),
+            child);
+        viewport.Layout(BoxConstraints.Tight(new Size(80, 100)));
+
+        Assert.Null(viewport.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
+    }
+
+    private sealed class FixedContentBox : RenderBox
+    {
+        private readonly Size _size;
+        private readonly double? _baseline;
+
+        public FixedContentBox(Size size, double? baseline = null)
+        {
+            _size = size;
+            _baseline = baseline;
+        }
+
+        protected override Size ComputeDryLayout(BoxConstraints constraints) => constraints.Constrain(_size);
+
+        protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) => _baseline;
+
+        protected override void PerformLayout() => Size = Constraints.Constrain(_size);
+
+        protected override bool HitTestSelf(Point position) => true;
+
+        public override void Paint(PaintingContext context, Point offset)
+        {
+        }
     }
 
     private sealed class NotificationEmitterWidget : StatelessWidget

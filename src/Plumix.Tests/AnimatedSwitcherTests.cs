@@ -234,7 +234,9 @@ public sealed class AnimatedSwitcherTests : IDisposable
 
         var animatedSize = FindRenderObject<RenderAnimatedSize>(root.ChildElement!.RenderObject!);
         Assert.NotNull(animatedSize);
-        Assert.Equal(new Alignment(expectedX, 1.0), animatedSize!.Alignment);
+        Assert.Equal(AlignmentDirectional.BottomEnd, animatedSize!.Alignment);
+        Assert.Equal(direction, animatedSize.TextDirection);
+        Assert.Equal(new Alignment(expectedX, 1.0), animatedSize.Alignment.Resolve(animatedSize.TextDirection));
 
         root.Unmount();
     }

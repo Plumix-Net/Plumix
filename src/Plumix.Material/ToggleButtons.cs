@@ -472,7 +472,7 @@ internal sealed class SelectToggleButton : SingleChildRenderObjectWidget
     }
 }
 
-internal sealed class RenderSelectToggleButton : RenderProxyBox
+internal sealed class RenderSelectToggleButton : RenderShiftedBox
 {
     private BorderSide _leadingBorderSide;
     private BorderSide _borderSide;
@@ -493,7 +493,7 @@ internal sealed class RenderSelectToggleButton : RenderProxyBox
         bool isLastButton,
         Axis direction,
         VerticalDirection verticalDirection,
-        TextDirection textDirection)
+        TextDirection textDirection) : base(null)
     {
         _leadingBorderSide = leadingBorderSide;
         _borderSide = borderSide;
@@ -998,12 +998,12 @@ internal sealed class ToggleButtonInputPadding : SingleChildRenderObjectWidget
     }
 }
 
-internal sealed class RenderToggleButtonInputPadding : RenderProxyBox
+internal sealed class RenderToggleButtonInputPadding : RenderShiftedBox
 {
     private Size _minSize;
     private Axis _direction;
 
-    public RenderToggleButtonInputPadding(Size minSize, Axis direction)
+    public RenderToggleButtonInputPadding(Size minSize, Axis direction) : base(null)
     {
         _minSize = minSize;
         _direction = direction;

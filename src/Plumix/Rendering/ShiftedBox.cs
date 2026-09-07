@@ -379,7 +379,7 @@ public abstract class RenderAligningShiftedBox : RenderShiftedBox
     }
 
     /// <summary>Positions the (already laid out) child according to <see cref="Alignment"/>.</summary>
-    protected void AlignChild()
+    protected virtual void AlignChild()
     {
         RenderBox child = Child
             ?? throw new AssertionError("AlignChild requires a child.");

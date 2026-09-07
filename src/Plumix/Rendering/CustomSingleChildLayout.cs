@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.UI;
 
 namespace Plumix.Rendering;
 
@@ -25,16 +26,15 @@ public abstract class SingleChildLayoutDelegate
 }
 
 /// <summary>Defers its size and child placement to a <see cref="SingleChildLayoutDelegate"/>.</summary>
-public sealed class RenderCustomSingleChildLayoutBox : RenderProxyBox
+public sealed class RenderCustomSingleChildLayoutBox : RenderShiftedBox
 {
     private SingleChildLayoutDelegate _layoutDelegate;
 
     public RenderCustomSingleChildLayoutBox(
         SingleChildLayoutDelegate layoutDelegate,
-        RenderBox? child = null)
+        RenderBox? child = null) : base(child)
     {
         _layoutDelegate = layoutDelegate ?? throw new ArgumentNullException(nameof(layoutDelegate));
-        Child = child;
     }
 
     public SingleChildLayoutDelegate LayoutDelegate
@@ -76,9 +76,48 @@ public sealed class RenderCustomSingleChildLayoutBox : RenderProxyBox
         base.OnDetach();
     }
 
+    private Size GetSize(BoxConstraints constraints) => constraints.Constrain(_layoutDelegate.GetSize(constraints));
+
+    protected override double ComputeMinIntrinsicWidth(double height) => FiniteOrZero(
+        GetSize(BoxConstraints.TightForFinite(height: height)).Width);
+
+    protected override double ComputeMaxIntrinsicWidth(double height) => FiniteOrZero(
+        GetSize(BoxConstraints.TightForFinite(height: height)).Width);
+
+    protected override double ComputeMinIntrinsicHeight(double width) => FiniteOrZero(
+        GetSize(BoxConstraints.TightForFinite(width: width)).Height);
+
+    protected override double ComputeMaxIntrinsicHeight(double width) => FiniteOrZero(
+        GetSize(BoxConstraints.TightForFinite(width: width)).Height);
+
+    private static double FiniteOrZero(double value) => double.IsFinite(value) ? value : 0.0;
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) => GetSize(constraints);
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline)
+    {
+        RenderBox? child = Child;
+        if (child is null)
+        {
+            return null;
+        }
+
+        BoxConstraints childConstraints = _layoutDelegate.GetConstraintsForChild(constraints);
+        double? result = child.GetDryBaseline(childConstraints, baseline);
+        if (result is null)
+        {
+            return null;
+        }
+
+        Size childSize = childConstraints.IsTight
+            ? childConstraints.Smallest
+            : child.GetDryLayout(childConstraints);
+        return result + _layoutDelegate.GetPositionForChild(GetSize(constraints), childSize).Y;
+    }
+
     protected override void PerformLayout()
     {
-        Size = Constraints.Constrain(_layoutDelegate.GetSize(Constraints));
+        Size = GetSize(Constraints);
         if (Child is null)
         {
             return;

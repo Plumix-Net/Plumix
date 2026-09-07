@@ -13,12 +13,11 @@ internal enum RenderAnimatedSizeState
     Unstable,
 }
 
-internal sealed class RenderAnimatedSize : RenderProxyBox
+internal sealed class RenderAnimatedSize : RenderAligningShiftedBox
 {
     private AnimationController _controller;
     private TimeSpan _duration;
     private TimeSpan? _reverseDuration;
-    private Alignment _alignment;
     private Clip _clipBehavior;
     private RenderAnimatedSizeState _state = RenderAnimatedSizeState.Start;
     private Size _beginSize;
@@ -29,13 +28,14 @@ internal sealed class RenderAnimatedSize : RenderProxyBox
         AnimationController controller,
         TimeSpan duration,
         TimeSpan? reverseDuration,
-        Alignment alignment,
-        Clip clipBehavior)
+        AlignmentGeometry alignment,
+        Clip clipBehavior,
+        TextDirection? textDirection = null,
+        RenderBox? child = null) : base(alignment, textDirection, child)
     {
         _controller = controller;
         _duration = duration;
         _reverseDuration = reverseDuration;
-        _alignment = alignment;
         _clipBehavior = clipBehavior;
     }
 
@@ -70,21 +70,6 @@ internal sealed class RenderAnimatedSize : RenderProxyBox
     {
         get => _reverseDuration;
         set => _reverseDuration = value;
-    }
-
-    public Alignment Alignment
-    {
-        get => _alignment;
-        set
-        {
-            if (_alignment == value)
-            {
-                return;
-            }
-
-            _alignment = value;
-            MarkNeedsLayout();
-        }
     }
 
     public Clip ClipBehavior
@@ -163,7 +148,7 @@ internal sealed class RenderAnimatedSize : RenderProxyBox
         }
 
         Size = Constraints.Constrain(EvaluateSize());
-        ((BoxParentData)Child.parentData!).offset = Alignment.AlongOffset(Size, Child.Size);
+        AlignChild();
         _hasVisualOverflow = Size.Width < _endSize.Width || Size.Height < _endSize.Height;
     }
 

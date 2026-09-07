@@ -258,7 +258,7 @@ public sealed class UnconstrainedLimitedBoxTests
             textDirection: null,
             constraintsTransform: ConstraintsTransformBox.Unmodified,
             child: new FixedSizeRenderBox(new Size(10, 10)));
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<ArgumentNullException>(() =>
             directional.Layout(BoxConstraints.Tight(new Size(40, 20))));
     }
 

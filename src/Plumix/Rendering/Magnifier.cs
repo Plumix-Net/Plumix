@@ -153,7 +153,6 @@ public sealed class RenderMagnifier : RenderProxyBox
         }
 
         Child.Layout(BoxConstraints.Tight(Size));
-        ((BoxParentData)Child.parentData!).offset = new Point(0, 0);
     }
 
     public override void Paint(PaintingContext context, Point offset)

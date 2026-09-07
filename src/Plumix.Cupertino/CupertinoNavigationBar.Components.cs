@@ -444,14 +444,13 @@ internal sealed class LargeTitleWidget : SingleChildRenderObjectWidget
     }
 }
 
-/// <summary>Dart's `_RenderLargeTitle` (a `RenderShiftedBox` in Flutter).</summary>
-internal sealed class RenderLargeTitle : RenderProxyBox
+internal sealed class RenderLargeTitle : RenderShiftedBox
 {
     private Alignment _alignment;
     private double _height;
     private double _scale = 1.0;
 
-    public RenderLargeTitle(Alignment alignment, double height)
+    public RenderLargeTitle(Alignment alignment, double height) : base(null)
     {
         _alignment = alignment;
         _height = height;

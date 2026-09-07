@@ -352,7 +352,7 @@ internal sealed class CupertinoTextSelectionToolbarShape : SingleChildRenderObje
 /// Dart's `_RenderCupertinoTextSelectionToolbarShape` (a `RenderShiftedBox` in Flutter; Plumix folds
 /// that role into <see cref="RenderProxyBox"/>).
 /// </summary>
-internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
+internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderShiftedBox
 {
     private Point _anchorAbove;
     private Point _anchorBelow;
@@ -361,7 +361,8 @@ internal sealed class RenderCupertinoTextSelectionToolbarShape : RenderProxyBox
     public RenderCupertinoTextSelectionToolbarShape(
         Point anchorAbove,
         Point anchorBelow,
-        Color? shadowColor)
+        Color? shadowColor,
+        RenderBox? child = null) : base(child)
     {
         _anchorAbove = anchorAbove;
         _anchorBelow = anchorBelow;

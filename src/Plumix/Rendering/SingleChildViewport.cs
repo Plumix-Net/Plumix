@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.UI;
 
 namespace Plumix.Rendering;
 
@@ -191,9 +192,6 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         MaxScrollExtent = Math.Max(0, childExtent - viewportExtent);
         Offset.ApplyViewportDimension(viewportExtent);
         Offset.ApplyContentDimensions(0, MaxScrollExtent);
-        // Out-of-range offsets are kept: physics that allow overscroll (iOS bouncing) shift the child
-        // instead of being clamped back into range.
-        ((BoxParentData)Child.parentData!).offset = ResolvePaintOffset(OffsetPixels);
     }
 
     private readonly LayerHandle<ClipRectLayer> _clipRectLayer = new();
@@ -214,12 +212,41 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
             offset,
             new Rect(new Point(0, 0), Size),
             (clippedContext, clippedOffset) =>
-            {
-                Point childOffset = ((BoxParentData)child.parentData!).offset;
-                clippedContext.PaintChild(child, clippedOffset + childOffset);
-            },
+                clippedContext.PaintChild(child, clippedOffset + PaintOffset),
             oldLayer: _clipRectLayer.Layer);
     }
+
+    /// <summary>Dart's <c>_RenderSingleChildViewport._paintOffset</c>: the child is shifted by the
+    /// scroll offset at paint time rather than through its parent data. Out-of-range offsets are
+    /// kept: physics that allow overscroll (iOS bouncing) shift the child instead of being clamped.
+    /// </summary>
+    private Point PaintOffset => ResolvePaintOffset(OffsetPixels);
+
+    /// <inheritdoc />
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        ArgumentNullException.ThrowIfNull(transform);
+        Point paintOffset = PaintOffset;
+        transform.TranslateByDouble(paintOffset.X, paintOffset.Y, 0, 1);
+    }
+
+    protected override bool HitTestChildren(BoxHitTestResult result, Point position)
+    {
+        RenderBox? child = Child;
+        if (child is null)
+        {
+            return false;
+        }
+
+        return result.AddWithPaintOffset(
+            PaintOffset,
+            position,
+            (hitResult, transformed) => child.HitTest(hitResult, transformed));
+    }
+
+    // Dart does not override computeDistanceToActualBaseline here: as you scroll, the box would
+    // shift inside a baseline-aligned parent, which makes no sense.
+    protected override double? ComputeDistanceToActualBaseline(TextBaseline baseline) => null;
 
     private Point ResolvePaintOffset(double pixels)
     {

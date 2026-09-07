@@ -65,33 +65,11 @@ internal sealed class AppBarTitleBox : SingleChildRenderObjectWidget
 /// Ports Flutter's private <c>_RenderAppBarTitleBox</c>: lays the title out with unbounded height,
 /// reports the constrained size, and centers the child so an over-tall title overflows symmetrically.
 /// </summary>
-internal sealed class RenderAppBarTitleBox : RenderProxyBox
+internal sealed class RenderAppBarTitleBox : RenderAligningShiftedBox
 {
-    private TextDirection _textDirection;
-
     public RenderAppBarTitleBox(TextDirection textDirection, RenderBox? child = null)
+        : base(Plumix.Rendering.Alignment.Center, textDirection, child)
     {
-        _textDirection = textDirection;
-        Child = child;
-    }
-
-    /// <summary>
-    /// Only meaningful for the resolved alignment, which <c>_RenderAppBarTitleBox</c> pins to
-    /// <see cref="Alignment.Center"/> — a direction-agnostic value. Kept for parity with Dart.
-    /// </summary>
-    public TextDirection TextDirection
-    {
-        get => _textDirection;
-        set
-        {
-            if (_textDirection == value)
-            {
-                return;
-            }
-
-            _textDirection = value;
-            MarkNeedsLayout();
-        }
     }
 
     protected override void PerformLayout()
@@ -105,7 +83,7 @@ internal sealed class RenderAppBarTitleBox : RenderProxyBox
 
         Child.Layout(innerConstraints, parentUsesSize: true);
         Size = Constraints.Constrain(Child.Size);
-        ((BoxParentData)Child.parentData!).offset = Alignment.Center.AlongOffset(Size, Child.Size);
+        AlignChild();
     }
 
     protected override Size ComputeDryLayout(BoxConstraints constraints)

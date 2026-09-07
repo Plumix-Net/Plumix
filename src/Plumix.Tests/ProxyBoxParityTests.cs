@@ -374,6 +374,176 @@ public sealed class ProxyBoxParityTests
         Assert.True(physical.DebugNeedsPaint);
     }
 
+    [Fact]
+    public void RenderProxyBox_GivesItsChildABareParentData()
+    {
+        // Flutter's `RenderProxyBoxMixin.setupParentData`: "We don't actually use the offset argument
+        // in BoxParentData, so let's avoid allocating it at all."
+        var child = new HitTestBox(new Size(30, 20));
+        var proxy = new RenderOpacity(child: child);
+        LayoutRoot(proxy, new Size(100, 100));
+
+        Assert.IsType<ParentData>(child.parentData);
+        Assert.IsNotType<BoxParentData>(child.parentData);
+    }
+
+    [Fact]
+    public void RenderProxyBox_ContributesNoPaintTransformForItsChild()
+    {
+        // `RenderProxyBoxMixin.applyPaintTransform` has an empty body, so a proxy never adds a frame
+        // to the transform from a descendant up to it.
+        var child = new HitTestBox(new Size(30, 20));
+        var proxy = new RenderOpacity(child: child);
+        LayoutRoot(proxy, new Size(100, 100));
+
+        var transform = Matrix4.Identity();
+        proxy.ApplyPaintTransform(child, transform);
+        Assert.Equal(Matrix4.Identity().Storage, transform.Storage);
+        Assert.Equal(new Point(4, 7), MatrixUtils.TransformPoint(child.GetTransformTo(proxy), new Point(4, 7)));
+    }
+
+    [Fact]
+    public void RenderProxyBox_HitTestAddsNoOffsetFrameForItsChild()
+    {
+        // Dart hit-tests the child at the incoming position, with no `addWithPaintOffset` frame.
+        var child = new HitTestBox(new Size(30, 20));
+        var proxy = new RenderOpacity(child: child);
+        LayoutRoot(proxy, new Size(100, 100));
+
+        var result = new BoxHitTestResult();
+        Assert.True(proxy.HitTest(result, new Point(4, 7)));
+
+        BoxHitTestEntry childEntry = result.Path
+            .OfType<BoxHitTestEntry>()
+            .First(entry => ReferenceEquals(entry.Target, child));
+        Assert.Equal(new Point(4, 7), childEntry.LocalPosition);
+        Assert.Equal(Matrix4.Identity().Storage, childEntry.Transform!.Storage);
+    }
+
+    [Fact]
+    public void RenderProxyBox_TakesTheChildSizeWithoutReconstrainingIt()
+    {
+        // Dart: `size = (child?..layout(constraints, parentUsesSize: true))?.size ?? ...`. The child's
+        // size is adopted verbatim; the proxy does not re-apply its own constraints on top.
+        var child = new OversizedBox(new Size(140, 90));
+        var proxy = new RenderOpacity(child: child);
+        LayoutRoot(proxy, new Size(100, 60));
+
+        Assert.Equal(new Size(140, 90), child.Size);
+        Assert.Equal(new Size(140, 90), proxy.Size);
+    }
+
+    [Fact]
+    public void RenderProxyBox_ReportsTheChildBaselineWithoutAnOffset()
+    {
+        var child = new BaselineBox(new Size(30, 20), baseline: 12.0);
+        var proxy = new RenderOpacity(child: child);
+        LayoutRoot(proxy, new Size(100, 100));
+
+        Assert.Equal(12.0, proxy.GetDistanceToBaseline(TextBaseline.Alphabetic, onlyReal: true));
+    }
+
+    [Fact]
+    public void RenderCustomSingleChildLayoutBox_ShiftsItsChildThroughBoxParentData()
+    {
+        // Dart's `RenderCustomSingleChildLayoutBox extends RenderShiftedBox`: unlike a proxy, it does
+        // position its child, so the child keeps a `BoxParentData` and the hit test pushes its offset.
+        var child = new HitTestBox(new Size(20, 10));
+        var box = new RenderCustomSingleChildLayoutBox(new OffsetLayoutDelegate(new Point(30, 15)), child);
+        LayoutRoot(box, new Size(100, 60));
+
+        var childParentData = Assert.IsType<BoxParentData>(child.parentData);
+        Assert.Equal(new Point(30, 15), childParentData.offset);
+
+        var result = new BoxHitTestResult();
+        Assert.True(box.HitTest(result, new Point(35, 20)));
+        BoxHitTestEntry childEntry = result.Path
+            .OfType<BoxHitTestEntry>()
+            .First(entry => ReferenceEquals(entry.Target, child));
+        Assert.Equal(new Point(5, 5), childEntry.LocalPosition);
+    }
+
+    [Fact]
+    public void RenderCustomSingleChildLayoutBox_TakesItsIntrinsicsAndDryLayoutFromTheDelegate()
+    {
+        // Dart takes every intrinsic dimension and the dry layout from `_getSize`, not from the child.
+        var child = new BaselineBox(new Size(20, 10), baseline: 6.0);
+        var box = new RenderCustomSingleChildLayoutBox(new OffsetLayoutDelegate(new Point(30, 15)), child);
+
+        var constraints = new BoxConstraints(MaxWidth: 100.0, MaxHeight: 60.0);
+        Assert.Equal(new Size(80, 40), box.GetDryLayout(constraints));
+        Assert.Equal(80.0, box.GetMinIntrinsicWidth(60.0));
+        Assert.Equal(80.0, box.GetMaxIntrinsicWidth(60.0));
+        Assert.Equal(40.0, box.GetMinIntrinsicHeight(100.0));
+        Assert.Equal(40.0, box.GetMaxIntrinsicHeight(100.0));
+
+        // The dry baseline is the child's, shifted by the position the delegate reports.
+        Assert.Equal(6.0 + 15.0, box.GetDryBaseline(constraints, TextBaseline.Alphabetic));
+    }
+
+    [Fact]
+    public void RenderConstraintsTransformBox_AlignsThroughTheSharedShiftedBoxMachinery()
+    {
+        var child = new HitTestBox(new Size(10, 10));
+        var box = new RenderConstraintsTransformBox(
+            alignment: Plumix.Rendering.Alignment.BottomRight,
+            textDirection: null,
+            constraintsTransform: ConstraintsTransformBox.Unconstrained,
+            child: child);
+        box.Layout(BoxConstraints.Tight(new Size(40, 20)));
+
+        var childParentData = Assert.IsType<BoxParentData>(child.parentData);
+        Assert.Equal(new Point(30, 10), childParentData.offset);
+        Assert.False(box.IsOverflowing);
+    }
+
+    [Fact]
+    public void RenderConstraintsTransformBox_TransformsTheConstraintsForIntrinsicsAndDryQueries()
+    {
+        // Dart routes `computeDryLayout`, `computeDryBaseline` and all four intrinsics through
+        // `constraintsTransform` before delegating to the child.
+        var child = new BaselineBox(new Size(70, 30), baseline: 8.0);
+        var box = new RenderConstraintsTransformBox(
+            alignment: Plumix.Rendering.Alignment.BottomCenter,
+            textDirection: null,
+            constraintsTransform: ConstraintsTransformBox.Unconstrained,
+            child: child);
+
+        // The child is measured unconstrained (70x30) but the box constrains itself back to 40x20,
+        // so the baseline is the child's, shifted by the bottom-centre alignment offset.
+        var constraints = new BoxConstraints(MaxWidth: 40.0, MaxHeight: 20.0);
+        Assert.Equal(new Size(40, 20), box.GetDryLayout(constraints));
+        Assert.Equal(8.0 + 20.0 - 30.0, box.GetDryBaseline(constraints, TextBaseline.Alphabetic));
+
+        // Every intrinsic query is asked about the transformed constraint, not the incoming one.
+        var intrinsicChild = new WidthFromHeightBox(9.0);
+        var capped = new RenderConstraintsTransformBox(
+            alignment: Plumix.Rendering.Alignment.Center,
+            textDirection: null,
+            constraintsTransform: c => new BoxConstraints(MaxWidth: 6.0, MaxHeight: 12.0),
+            child: intrinsicChild);
+        Assert.Equal(24.0, capped.GetMinIntrinsicWidth(20.0));
+        Assert.Equal(24.0, capped.GetMaxIntrinsicWidth(20.0));
+        Assert.Equal(9.0, capped.GetMinIntrinsicHeight(40.0));
+    }
+
+    [Fact]
+    public void RenderConstraintsTransformBox_ReportsOverflowAndClipsWhenAsked()
+    {
+        var child = new HitTestBox(new Size(70, 30));
+        var box = new RenderConstraintsTransformBox(
+            alignment: Plumix.Rendering.Alignment.Center,
+            textDirection: null,
+            constraintsTransform: ConstraintsTransformBox.Unconstrained,
+            child: child,
+            clipBehavior: Clip.HardEdge);
+        box.Layout(BoxConstraints.Tight(new Size(40, 20)));
+
+        Assert.Equal(new Size(40, 20), box.Size);
+        Assert.True(box.IsOverflowing);
+        Assert.Contains("OVERFLOWING", box.ToStringShort(), StringComparison.Ordinal);
+    }
+
     private static RenderObject? FindFirstRenderObject(Element element)
     {
         RenderObject? found = null;
@@ -465,6 +635,44 @@ public sealed class ProxyBoxParityTests
         public override void Paint(PaintingContext context, Point offset)
         {
         }
+    }
+
+    /// <summary>A child that ignores the constraints it is given and takes a fixed size.</summary>
+    private sealed class OversizedBox : RenderBox
+    {
+        private readonly Size _desiredSize;
+
+        public OversizedBox(Size desiredSize)
+        {
+            _desiredSize = desiredSize;
+        }
+
+        protected override Size ComputeDryLayout(BoxConstraints constraints) => _desiredSize;
+
+        protected override void PerformLayout() => Size = _desiredSize;
+
+        public override void Paint(PaintingContext context, Point offset)
+        {
+        }
+    }
+
+    /// <summary>A delegate that reports a fixed size and a fixed child position.</summary>
+    private sealed class OffsetLayoutDelegate : SingleChildLayoutDelegate
+    {
+        private readonly Point _position;
+
+        public OffsetLayoutDelegate(Point position)
+        {
+            _position = position;
+        }
+
+        public override Size GetSize(BoxConstraints constraints) => new(80, 40);
+
+        public override BoxConstraints GetConstraintsForChild(BoxConstraints constraints) => constraints.Loosen();
+
+        public override Point GetPositionForChild(Size size, Size childSize) => _position;
+
+        public override bool ShouldRelayout(SingleChildLayoutDelegate oldDelegate) => false;
     }
 
     private sealed class PaintCountingBox : RenderBox

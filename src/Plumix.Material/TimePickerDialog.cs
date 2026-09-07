@@ -672,12 +672,12 @@ internal sealed class DayPeriodInputPadding : SingleChildRenderObjectWidget
     }
 }
 
-internal sealed class RenderDayPeriodInputPadding : RenderProxyBox
+internal sealed class RenderDayPeriodInputPadding : RenderShiftedBox
 {
     private Size _minSize;
     private Orientation _orientation;
 
-    public RenderDayPeriodInputPadding(Size minSize, Orientation orientation)
+    public RenderDayPeriodInputPadding(Size minSize, Orientation orientation) : base(null)
     {
         _minSize = minSize;
         _orientation = orientation;

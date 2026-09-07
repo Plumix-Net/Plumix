@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `RenderProxyBox` gives its child a bare `ParentData` and paints at its own offset (`proxy_box.dart`).
+- Breaking: the shifting proxy subclasses re-base on `RenderShiftedBox`/`RenderAligningShiftedBox` (`shifted_box.dart`).
+- Breaking: `RenderAnimatedSize` takes an unresolved `AlignmentGeometry` plus a `TextDirection` (`animated_size.dart`).
+- `RenderCustomSingleChildLayoutBox`/`RenderConstraintsTransformBox` gain their own intrinsics and dry queries.
+- `RenderSingleChildViewport` shifts its child through a computed paint offset (`single_child_scroll_view.dart`).
 - Added `Element.DebugGetCreatorChain`/`DebugGetDiagnosticChain` and `DebugCreator`, stamped on every render object.
 - Breaking: `Element` derives from `DiagnosticableTree`; `BuildContext` gains the four `Describe*` members.
 - Breaking: ancestor lookups from a deactivated element throw, so `Dispose()` can no longer walk the tree.

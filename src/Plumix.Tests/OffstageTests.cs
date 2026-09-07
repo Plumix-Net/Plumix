@@ -43,7 +43,10 @@ public sealed class OffstageTests
         pipeline.FlushLayout(new Size(100, 80));
 
         Assert.Equal(new Size(50, 30), offstage.Size);
-        Assert.Equal(new Point(0, 0), ((BoxParentData)child.parentData!).offset);
+
+        // Dart's `RenderProxyBoxMixin.setupParentData` gives the child a bare `ParentData`: a proxy
+        // never offsets its child, so there is no offset to allocate.
+        Assert.IsType<ParentData>(child.parentData);
 
         var result = new BoxHitTestResult();
         Assert.True(offstage.HitTest(result, new Point(10, 10)));

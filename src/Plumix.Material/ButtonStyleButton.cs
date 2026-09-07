@@ -640,14 +640,13 @@ internal sealed class InputPadding : SingleChildRenderObjectWidget
 }
 
 /// <summary>Dart parity: `_RenderInputPadding`.</summary>
-internal sealed class RenderInputPadding : RenderProxyBox
+internal sealed class RenderInputPadding : RenderShiftedBox
 {
     private Size _minSize;
 
-    public RenderInputPadding(Size minSize, RenderBox? child = null)
+    public RenderInputPadding(Size minSize, RenderBox? child = null) : base(child)
     {
         _minSize = minSize;
-        Child = child;
     }
 
     public Size MinSize

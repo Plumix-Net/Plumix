@@ -437,7 +437,7 @@ internal sealed class BottomSheetLayoutWithSizeListener : SingleChildRenderObjec
     }
 }
 
-internal sealed class RenderBottomSheetLayoutWithSizeListener : RenderProxyBox
+internal sealed class RenderBottomSheetLayoutWithSizeListener : RenderShiftedBox
 {
     private Size _lastSize;
     private double _animationValue;
@@ -448,7 +448,7 @@ internal sealed class RenderBottomSheetLayoutWithSizeListener : RenderProxyBox
         Action<Size> onChildSizeChanged,
         double animationValue,
         bool isScrollControlled,
-        double scrollControlDisabledMaxHeightRatio)
+        double scrollControlDisabledMaxHeightRatio) : base(null)
     {
         OnChildSizeChanged = onChildSizeChanged;
         _animationValue = animationValue;

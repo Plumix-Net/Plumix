@@ -131,8 +131,9 @@ internal sealed class AnimatedSizeRenderObjectWidget : SingleChildRenderObjectWi
             controller: Controller,
             duration: Duration,
             reverseDuration: ReverseDuration,
-            alignment: ResolveAlignment(context),
-            clipBehavior: ClipBehavior);
+            alignment: Alignment,
+            clipBehavior: ClipBehavior,
+            textDirection: Directionality.MaybeOf(context));
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -141,15 +142,8 @@ internal sealed class AnimatedSizeRenderObjectWidget : SingleChildRenderObjectWi
         animatedSize.Controller = Controller;
         animatedSize.Duration = Duration;
         animatedSize.ReverseDuration = ReverseDuration;
-        animatedSize.Alignment = ResolveAlignment(context);
+        animatedSize.Alignment = Alignment;
+        animatedSize.TextDirection = Directionality.MaybeOf(context);
         animatedSize.ClipBehavior = ClipBehavior;
-    }
-
-    private Alignment ResolveAlignment(BuildContext context)
-    {
-        TextDirection direction = Alignment.IsDirectional
-            ? Directionality.Of(context)
-            : TextDirection.Ltr;
-        return Alignment.Resolve(direction);
     }
 }

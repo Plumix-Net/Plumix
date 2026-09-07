@@ -341,12 +341,13 @@ internal sealed class FloatingActionButtonPosition : SingleChildRenderObjectWidg
     }
 }
 
-internal sealed class RenderFloatingActionButtonPosition : RenderProxyBox
+internal sealed class RenderFloatingActionButtonPosition : RenderShiftedBox
 {
     private ScaffoldPrelayoutGeometry _geometry;
     private FloatingActionButtonLocation _location;
 
     public RenderFloatingActionButtonPosition(ScaffoldPrelayoutGeometry geometry, FloatingActionButtonLocation location)
+        : base(null)
     {
         _geometry = geometry;
         _location = location;

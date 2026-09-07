@@ -170,10 +170,6 @@ public sealed class RenderIntrinsicWidth : RenderProxyBox
     protected override void PerformLayout()
     {
         Size = ComputeSize(Constraints, ChildLayoutHelper.LayoutChild);
-        if (Child != null)
-        {
-            ((BoxParentData)Child.parentData!).offset = default;
-        }
     }
 
     /// <inheritdoc />
@@ -241,9 +237,5 @@ public sealed class RenderIntrinsicHeight : RenderProxyBox
     protected override void PerformLayout()
     {
         Size = ComputeSize(Constraints, ChildLayoutHelper.LayoutChild);
-        if (Child != null)
-        {
-            ((BoxParentData)Child.parentData!).offset = default;
-        }
     }
 }

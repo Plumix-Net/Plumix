@@ -1437,58 +1437,30 @@ internal sealed class CupertinoAlignMidpoint : SingleChildRenderObjectWidget
     public AlignmentGeometry Alignment { get; }
 
     public override RenderObject CreateRenderObject(BuildContext context) =>
-        new RenderCupertinoAlignMidpoint(Alignment.Resolve(Directionality.Of(context)));
+        new RenderCupertinoAlignMidpoint(Alignment, Directionality.MaybeOf(context));
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
-        ((RenderCupertinoAlignMidpoint)renderObject).Alignment = Alignment.Resolve(Directionality.Of(context));
+        var midpoint = (RenderCupertinoAlignMidpoint)renderObject;
+        midpoint.Alignment = Alignment;
+        midpoint.TextDirection = Directionality.MaybeOf(context);
     }
 }
 
-internal sealed class RenderCupertinoAlignMidpoint : RenderProxyBox
+internal sealed class RenderCupertinoAlignMidpoint : RenderPositionedBox
 {
-    private Alignment _alignment;
-
-    public RenderCupertinoAlignMidpoint(Alignment alignment)
+    public RenderCupertinoAlignMidpoint(AlignmentGeometry alignment, TextDirection? textDirection = null)
+        : base(alignment: alignment, textDirection: textDirection)
     {
-        _alignment = alignment;
     }
 
-    public Alignment Alignment
+    protected override void AlignChild()
     {
-        get => _alignment;
-        set
-        {
-            if (_alignment == value)
-            {
-                return;
-            }
-
-            _alignment = value;
-            MarkNeedsLayout();
-        }
-    }
-
-    protected override void PerformLayout()
-    {
-        if (Child is null)
-        {
-            Size = Constraints.Smallest;
-            return;
-        }
-
-        Child.Layout(Constraints.Loosen(), parentUsesSize: true);
-        Size = Constraints.Constrain(Child.Size);
-        Point midpoint = _alignment.AlongSize(Size);
-        double dx = Math.Clamp(midpoint.X - (Child.Size.Width / 2.0), 0.0, Size.Width - Child.Size.Width);
-        double dy = Math.Clamp(midpoint.Y - (Child.Size.Height / 2.0), 0.0, Size.Height - Child.Size.Height);
-        ((BoxParentData)Child.parentData!).offset = new Point(dx, dy);
-    }
-
-    protected override Size ComputeDryLayout(BoxConstraints constraints)
-    {
-        Size childSize = Child?.GetDryLayout(constraints.Loosen()) ?? default;
-        return constraints.Constrain(childSize);
+        RenderBox child = Child ?? throw new AssertionError("AlignChild requires a child.");
+        Point midpoint = ResolvedAlignment.AlongSize(Size);
+        double dx = Math.Clamp(midpoint.X - (child.Size.Width / 2.0), 0.0, Size.Width - child.Size.Width);
+        double dy = Math.Clamp(midpoint.Y - (child.Size.Height / 2.0), 0.0, Size.Height - child.Size.Height);
+        ((BoxParentData)child.parentData!).offset = new Point(dx, dy);
     }
 }
 

@@ -1788,7 +1788,6 @@ public sealed class SemanticsTreeTests
         {
             Child!.Layout(Constraints, parentUsesSize: true);
             Size = Constraints.Constrain(Child.Size);
-            ((BoxParentData)Child.parentData!).offset = new Point(0, 0);
         }
 
         public override void Paint(PaintingContext ctx, Point offset)

@@ -419,10 +419,9 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
         context.Canvas.DrawGeometry(new SolidColorBrush(Color), null, geometry, geometryOffset: offset);
 
         if (Child is null) return;
-        var childOffset = ((BoxParentData)Child.parentData!).offset + offset;
         if (ClipBehavior == Clip.None)
         {
-            context.PaintChild(Child, childOffset);
+            context.PaintChild(Child, offset);
             return;
         }
 
@@ -431,8 +430,7 @@ internal sealed class RenderBottomAppBarSurface : RenderProxyBox
             offset,
             host,
             geometry,
-            (clipped, clippedOffset) =>
-                clipped.PaintChild(Child, clippedOffset + ((BoxParentData)Child.parentData!).offset),
+            (clipped, clippedOffset) => clipped.PaintChild(Child, clippedOffset),
             ClipBehavior,
             Layer as ClipGeometryLayer);
     }
