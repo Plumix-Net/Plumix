@@ -392,8 +392,7 @@ public sealed class CarouselViewState : State
                 reverse: Current.Reverse,
                 controller: Controller,
                 physics: physics,
-                cacheExtent: 0,
-                cacheExtentStyle: CacheExtentStyle.Viewport,
+                scrollCacheExtent: ScrollCacheExtent.Viewport(0.0),
                 clipBehavior: Clip.AntiAlias);
         });
     }

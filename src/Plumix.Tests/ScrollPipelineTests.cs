@@ -29,13 +29,15 @@ public sealed class ScrollPipelineTests
         harness.Pump(new Size(200, 240));
         Assert.True(focusNode.HasFocus);
 
+        // Dragging upwards scrolls the content forward; a downward drag at offset zero only
+        // overscrolls, which dispatches no ScrollUpdateNotification and so dismisses nothing.
         DateTime now = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(
             harness.RenderView,
             new PointerDownEvent(
                 700,
                 PointerDeviceKind.Touch,
-                new Point(80, 100),
+                new Point(80, 140),
                 PointerButtons.Primary,
                 now));
         GestureBinding.Instance.HandlePointerEvent(
@@ -43,7 +45,7 @@ public sealed class ScrollPipelineTests
             new PointerMoveEvent(
                 700,
                 PointerDeviceKind.Touch,
-                new Point(80, 140),
+                new Point(80, 100),
                 PointerButtons.Primary,
                 true,
                 now.AddMilliseconds(16)));
@@ -55,7 +57,7 @@ public sealed class ScrollPipelineTests
             new PointerUpEvent(
                 700,
                 PointerDeviceKind.Touch,
-                new Point(80, 140),
+                new Point(80, 100),
                 PointerButtons.None,
                 now.AddMilliseconds(32)));
         focusNode.Dispose();

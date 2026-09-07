@@ -126,9 +126,11 @@ public sealed class MaterialReorderableListTests
         BuildContext itemContext = itemKey.CurrentContext!;
         Scrollable scrollable = Assert.IsType<Scrollable>(
             itemContext.FindAncestorWidgetOfExactType<Scrollable>());
-        Assert.Equal(0.25, scrollable.Anchor);
+        CustomScrollView scrollView = Assert.IsType<CustomScrollView>(
+            itemContext.FindAncestorWidgetOfExactType<CustomScrollView>());
+        Assert.Equal(0.25, scrollView.Anchor);
         Assert.Equal(DragStartBehavior.Down, scrollable.DragStartBehavior);
-        Assert.Equal(ScrollViewKeyboardDismissBehavior.OnDrag, scrollable.KeyboardDismissBehavior);
+        Assert.Equal(ScrollViewKeyboardDismissBehavior.OnDrag, scrollView.KeyboardDismissBehavior);
         Assert.Equal("reorderable-items", scrollable.RestorationId);
         Assert.Equal(Clip.None, scrollable.ClipBehavior);
 

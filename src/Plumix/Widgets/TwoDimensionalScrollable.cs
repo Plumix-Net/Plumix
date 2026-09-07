@@ -306,7 +306,7 @@ internal sealed class VerticalOuterDimension : Scrollable
 {
     public VerticalOuterDimension(
         GlobalObjectKey<Scrollable.ScrollableState> horizontalKey,
-        Func<BuildContext, ViewportOffset, Widget> viewportBuilder,
+        ViewportBuilder viewportBuilder,
         AxisDirection axisDirection,
         ScrollController? controller = null,
         ScrollPhysics? physics = null,
@@ -327,12 +327,12 @@ internal sealed class VerticalOuterDimension : Scrollable
             dragStartBehavior: dragStartBehavior,
             restorationId: restorationId,
             hitTestBehavior: hitTestBehavior,
+            viewportBuilder: viewportBuilder,
             key: key)
     {
         Debug.Assert(axisDirection is AxisDirection.Up or AxisDirection.Down);
         DiagonalDragBehavior = diagonalDragBehavior;
         HorizontalKey = horizontalKey;
-        ViewportBuilder = viewportBuilder;
     }
 
     public DiagonalDragBehavior DiagonalDragBehavior { get; }
@@ -552,9 +552,9 @@ internal sealed class VerticalOuterDimensionState : Scrollable.ScrollableState
                         instance.OnUpdate = HandleDragUpdate;
                         instance.OnEnd = HandleDragEnd;
                         instance.OnCancel = HandleDragCancel;
-                        instance.MinFlingDistance = EffectivePhysics.MinFlingDistance;
-                        instance.MinFlingVelocity = EffectivePhysics.MinFlingVelocity;
-                        instance.MaxFlingVelocity = EffectivePhysics.MaxFlingVelocity;
+                        instance.MinFlingDistance = ResolvedPhysics?.MinFlingDistance;
+                        instance.MinFlingVelocity = ResolvedPhysics?.MinFlingVelocity;
+                        instance.MaxFlingVelocity = ResolvedPhysics?.MaxFlingVelocity;
                         instance.VelocityTrackerBuilder = Configuration.VelocityTrackerBuilder(Context);
                         instance.DragStartBehavior = CurrentWidget.DragStartBehavior;
                         instance.GestureSettings = MediaQuery.MaybeGestureSettingsOf(Context);
@@ -565,7 +565,7 @@ internal sealed class VerticalOuterDimensionState : Scrollable.ScrollableState
         // disposed by the RawGestureDetector, so no pointer up will arrive to cancel them.
         HandleDragCancel();
         _lastCanDrag = value;
-        _lastAxis = CurrentWidget.Axis;
+        _lastAxisDirection = CurrentWidget.Axis;
         _gestureDetectorKey.CurrentState?.ReplaceGestureRecognizers(_gestureRecognizers);
     }
 
@@ -586,7 +586,7 @@ internal sealed class HorizontalInnerDimension : Scrollable
 {
     public HorizontalInnerDimension(
         GlobalObjectKey<Scrollable.ScrollableState> verticalOuterKey,
-        Func<BuildContext, ViewportOffset, Widget> viewportBuilder,
+        ViewportBuilder viewportBuilder,
         AxisDirection axisDirection,
         ScrollController? controller = null,
         ScrollPhysics? physics = null,
@@ -607,12 +607,12 @@ internal sealed class HorizontalInnerDimension : Scrollable
             dragStartBehavior: dragStartBehavior,
             restorationId: restorationId,
             hitTestBehavior: hitTestBehavior,
+            viewportBuilder: viewportBuilder,
             key: key)
     {
         Debug.Assert(axisDirection is AxisDirection.Left or AxisDirection.Right);
         VerticalOuterKey = verticalOuterKey;
         DiagonalDragBehavior = diagonalDragBehavior;
-        ViewportBuilder = viewportBuilder;
     }
 
     public GlobalObjectKey<Scrollable.ScrollableState> VerticalOuterKey { get; }
@@ -689,7 +689,7 @@ internal sealed class HorizontalInnerDimensionState : Scrollable.ScrollableState
         // disposed by the RawGestureDetector, so no pointer up will arrive to cancel them.
         HandleDragCancel();
         _lastCanDrag = value;
-        _lastAxis = CurrentWidget.Axis;
+        _lastAxisDirection = CurrentWidget.Axis;
         _gestureDetectorKey.CurrentState?.ReplaceGestureRecognizers(_gestureRecognizers);
     }
 

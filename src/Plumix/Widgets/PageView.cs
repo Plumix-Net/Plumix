@@ -780,11 +780,15 @@ public sealed class PageView : StatefulWidget
             ScrollPhysics physics = new ForceImplicitScrollPhysics(widget.AllowImplicitScrolling)
                 .ApplyTo(widget.PageSnapping ? KPagePhysics.ApplyTo(tail) : tail);
 
+            AxisDirection axisDirection =
+                ScrollDirectionUtils.GetAxisDirectionFromAxisReverseAndDirectionality(
+                    context,
+                    widget.ScrollDirection,
+                    widget.Reverse);
             return new NotificationListener<ScrollNotification>(
                 onNotification: HandleScrollNotification,
                 child: new Scrollable(
-                    axis: widget.ScrollDirection,
-                    reverse: widget.Reverse,
+                    axisDirection: axisDirection,
                     controller: _controller,
                     physics: physics,
                     dragStartBehavior: widget.DragStartBehavior,
@@ -792,17 +796,20 @@ public sealed class PageView : StatefulWidget
                     hitTestBehavior: widget.HitTestBehavior,
                     scrollBehavior: widget.ScrollBehavior
                                     ?? ScrollConfiguration.Of(context).CopyWith(scrollbars: false),
-                    cacheExtent: widget.ScrollCacheExtent.Value,
-                    cacheExtentStyle: widget.ScrollCacheExtent.Style,
                     clipBehavior: widget.ClipBehavior,
-                    slivers:
-                    [
-                        new SliverFillViewport(
-                            widget.ChildrenDelegate,
-                            viewportFraction: _controller.ViewportFraction,
-                            padEnds: widget.PadEnds,
-                            allowImplicitScrolling: widget.AllowImplicitScrolling),
-                    ]));
+                    viewportBuilder: (viewportContext, position) => new Viewport(
+                        scrollCacheExtent: widget.ScrollCacheExtent,
+                        axisDirection: axisDirection,
+                        offset: position,
+                        clipBehavior: widget.ClipBehavior,
+                        slivers:
+                        [
+                            new SliverFillViewport(
+                                widget.ChildrenDelegate,
+                                viewportFraction: _controller.ViewportFraction,
+                                padEnds: widget.PadEnds,
+                                allowImplicitScrolling: widget.AllowImplicitScrolling),
+                        ])));
         }
 
         private void InitController()

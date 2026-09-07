@@ -312,8 +312,7 @@ public sealed class AnimatedListState : State
             controller: widget.Controller,
             primary: widget.Primary,
             physics: widget.Physics,
-            cacheExtent: widget.ScrollCacheExtent?.Value ?? 250.0,
-            cacheExtentStyle: widget.ScrollCacheExtent?.Style ?? CacheExtentStyle.Pixel,
+            scrollCacheExtent: widget.ScrollCacheExtent,
             shrinkWrap: widget.ShrinkWrap,
             clipBehavior: widget.ClipBehavior);
     }

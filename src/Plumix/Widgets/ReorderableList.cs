@@ -246,8 +246,8 @@ public sealed class ReorderableListState : State
             controller: effectiveController,
             primary: widget.Primary,
             physics: widget.Physics,
-            cacheExtent: widget.ScrollCacheExtent?.Value ?? widget.CacheExtent ?? 250.0,
-            cacheExtentStyle: widget.ScrollCacheExtent?.Style ?? CacheExtentStyle.Pixel,
+            cacheExtent: widget.CacheExtent,
+            scrollCacheExtent: widget.ScrollCacheExtent,
             shrinkWrap: widget.ShrinkWrap);
     }
 

@@ -837,9 +837,8 @@ public sealed class ListWheelScrollView : StatefulWidget
                     restorationId: widget.RestorationId,
                     hitTestBehavior: widget.HitTestBehavior,
                     scrollBehavior: scrollBehavior,
-                    dragStartBehavior: widget.DragStartBehavior)
-                {
-                    ViewportBuilder = (viewportContext, offset) => new ListWheelViewport(
+                    dragStartBehavior: widget.DragStartBehavior,
+                    viewportBuilder: (viewportContext, offset) => new ListWheelViewport(
                         itemExtent: widget.ItemExtent,
                         offset: offset,
                         childDelegate: widget.ChildDelegate,
@@ -851,8 +850,7 @@ public sealed class ListWheelScrollView : StatefulWidget
                         overAndUnderCenterOpacity: widget.OverAndUnderCenterOpacity,
                         squeeze: widget.Squeeze,
                         renderChildrenOutsideViewport: widget.RenderChildrenOutsideViewport,
-                        clipBehavior: widget.ClipBehavior),
-                });
+                        clipBehavior: widget.ClipBehavior)));
         }
     }
 }
@@ -866,6 +864,7 @@ internal sealed class FixedExtentScrollable : Scrollable
 {
     public FixedExtentScrollable(
         double itemExtent,
+        ViewportBuilder viewportBuilder,
         ScrollController? controller = null,
         ScrollPhysics? physics = null,
         string? restorationId = null,
@@ -873,6 +872,7 @@ internal sealed class FixedExtentScrollable : Scrollable
         HitTestBehavior hitTestBehavior = HitTestBehavior.Opaque,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start)
         : base(
+            viewportBuilder: viewportBuilder,
             controller: controller,
             physics: physics,
             restorationId: restorationId,

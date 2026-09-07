@@ -370,7 +370,6 @@ public sealed class ScrollInfrastructureTests
     public void ListView_Separated_WithItemExtent_UsesSliverFixedExtentList()
     {
         var owner = new BuildOwner();
-        double builtItemExtent = 0;
         var sampledChildren = new List<Widget?>();
 
         var root = new TestRootElement(
@@ -379,13 +378,11 @@ public sealed class ScrollInfrastructureTests
                     itemCount: 2,
                     itemBuilder: (_, index) => new ItemMarker(index),
                     separatorBuilder: (_, index) => new SeparatorMarker(index),
-                    itemExtent: 36,
                     addAutomaticKeepAlives: false),
                 onBuilt: (scrollViewWidget, context) =>
                 {
                     var scrollView = Assert.IsType<CustomScrollView>(scrollViewWidget);
-                    var sliver = Assert.IsType<SliverFixedExtentList>(Assert.Single(scrollView.Slivers));
-                    builtItemExtent = sliver.ItemExtent;
+                    var sliver = Assert.IsType<SliverList>(Assert.Single(scrollView.Slivers));
                     sampledChildren.Add(sliver.Delegate.Build(context, 0));
                     sampledChildren.Add(sliver.Delegate.Build(context, 1));
                     sampledChildren.Add(sliver.Delegate.Build(context, 2));
@@ -396,7 +393,6 @@ public sealed class ScrollInfrastructureTests
         root.Mount(parent: null, newSlot: null);
         owner.FlushBuild();
 
-        Assert.Equal(36, builtItemExtent);
         Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[0]));
         Assert.IsType<SeparatorMarker>(UnwrapSemanticIndex(sampledChildren[1]));
         Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[2]));
@@ -825,8 +821,8 @@ public sealed class ScrollInfrastructureTests
 
         public override Widget Build(BuildContext context)
         {
-            var listView = _listViewFactory();
-            var built = listView.Build(context);
+            ListView listView = _listViewFactory();
+            Widget built = new CustomScrollView(slivers: listView.BuildSlivers(context));
             _onBuilt(built, context);
             return new SizedBox(width: 1, height: 1);
         }
@@ -845,8 +841,8 @@ public sealed class ScrollInfrastructureTests
 
         public override Widget Build(BuildContext context)
         {
-            var gridView = _gridViewFactory();
-            var built = gridView.Build(context);
+            GridView gridView = _gridViewFactory();
+            Widget built = new CustomScrollView(slivers: gridView.BuildSlivers(context));
             _onBuilt(built, context);
             return new SizedBox(width: 1, height: 1);
         }

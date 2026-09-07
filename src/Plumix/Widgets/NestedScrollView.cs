@@ -253,9 +253,7 @@ internal sealed class NestedScrollViewCustomScrollView : CustomScrollView
 
     public SliverOverlapAbsorberHandle Handle { get; }
 
-    protected override bool HasCustomViewport => true;
-
-    protected override Widget BuildViewport(
+    public override Widget BuildViewport(
         BuildContext context,
         ViewportOffset offset,
         AxisDirection axisDirection,

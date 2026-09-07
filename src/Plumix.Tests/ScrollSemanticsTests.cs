@@ -166,9 +166,12 @@ public sealed class ScrollSemanticsTests
             TextDirection.Ltr,
             ListView.Separated(
                 itemCount: 10,
-                itemBuilder: static (_, index) => new Semantics(label: $"item {index}", container: true),
-                separatorBuilder: static (_, _) => new Semantics(label: "separator", container: true),
-                itemExtent: ItemHeight,
+                itemBuilder: static (_, index) => new SizedBox(
+                    height: ItemHeight,
+                    child: new Semantics(label: $"item {index}", container: true)),
+                separatorBuilder: static (_, _) => new SizedBox(
+                    height: ItemHeight,
+                    child: new Semantics(label: "separator", container: true)),
                 controller: controller)));
         harness.Pump(Surface);
 
@@ -287,12 +290,14 @@ public sealed class ScrollSemanticsTests
             new Scrollable(
                 controller: controller,
                 excludeFromSemantics: true,
-                slivers: [
-                    SliverFixedExtentList.Builder(
-                        static (_, index) => new Semantics(label: $"item {index}", container: true),
-                        ItemHeight,
-                        20)
-                ])));
+                viewportBuilder: (_, offset) => new Viewport(
+                    offset: offset,
+                    slivers: [
+                        SliverFixedExtentList.Builder(
+                            static (_, index) => new Semantics(label: $"item {index}", container: true),
+                            ItemHeight,
+                            20),
+                    ]))));
         harness.Pump(Surface);
 
         Assert.Null(FindScrollingNode(harness.SemanticsRoot));

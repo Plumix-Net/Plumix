@@ -668,10 +668,16 @@ public sealed class NestedScrollViewTests : IDisposable
         Assert.Equal(0.0, key.CurrentState!.OuterController.Offset, precision: 6);
     }
 
+    /// <remarks>
+    /// A default vertical <see cref="ListView"/> (no controller, no explicit <c>primary</c>) resolves
+    /// <see cref="AlwaysScrollableScrollPhysics"/> in <c>ScrollView</c>'s constructor, so the body of
+    /// a <see cref="NestedScrollView"/> accepts drags even when its content fits. Only the scroll
+    /// extent tells the two cases apart.
+    /// </remarks>
     [Fact]
-    public void EmptyHeader_WithAShortBodyRefusesDragsAndWithALongBodyAcceptsThem()
+    public void EmptyHeader_BodyAcceptsDragsEvenWhenItsContentFits()
     {
-        foreach ((int itemCount, bool expected) in new[] { (1, false), (30, true) })
+        foreach ((int itemCount, bool hasScrollableContent) in new[] { (1, false), (30, true) })
         {
             var key = NewKey();
             var harness = new WidgetRenderHarness(BuildNestedScrollView(
@@ -684,7 +690,8 @@ public sealed class NestedScrollViewTests : IDisposable
             ScrollPosition outer = key.CurrentState.OuterController.Position;
             bool canDrag = outer.Physics.ShouldAcceptUserOffset(outer)
                            || inner.Physics.ShouldAcceptUserOffset(inner);
-            Assert.Equal(expected, canDrag);
+            Assert.True(canDrag);
+            Assert.Equal(hasScrollableContent, inner.MaxScrollExtent > 0.0);
         }
     }
 

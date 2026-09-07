@@ -93,7 +93,7 @@ public sealed class ScrollAction : ContextAction<ScrollIntent>
     {
         if (state.IncrementCalculator is { } calculator)
         {
-            return calculator(new ScrollIncrementDetails(type, state.Metrics));
+            return calculator(new ScrollIncrementDetails(type, state.Position.CopyWith()));
         }
 
         return type switch
@@ -141,7 +141,7 @@ public sealed class ScrollAction : ContextAction<ScrollIntent>
             }
         }
 
-        if (!state.EffectivePhysics.ShouldAcceptUserOffset(state.Position))
+        if (state.ResolvedPhysics?.ShouldAcceptUserOffset(state.Position) != true)
         {
             return null;
         }
@@ -201,7 +201,7 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
     public void StartAutoScrollIfNecessary(Rect dragTarget)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (!_scrollable.EffectivePhysics.ShouldAcceptUserOffset(_scrollable.Position))
+        if (_scrollable.ResolvedPhysics?.ShouldAcceptUserOffset(_scrollable.Position) != true)
         {
             StopAutoScroll();
             return;

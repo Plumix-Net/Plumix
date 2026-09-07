@@ -8,6 +8,15 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `Scrollable` takes a required `viewportBuilder` plus an `axisDirection`; `ScrollView` owns the rest.
+- Breaking: `ScrollView`/`BoxScrollView` land and `CustomScrollView`/`ListView`/`GridView` derive from them.
+- Breaking: a vertical `ScrollView` with no controller and no `primary` resolves `AlwaysScrollableScrollPhysics`.
+- Breaking: `BoxScrollView` consumes the main-axis `MediaQuery` padding and republishes the cross-axis half.
+- Breaking: `ListView`/`GridView` take `cacheExtent`/`scrollCacheExtent` instead of `cacheExtent`/`cacheExtentStyle`.
+- Added `ListView.Custom`/`GridView.Custom`, `ListView.PrototypeItem`/`ItemExtentBuilder` and the missing view params.
+- Breaking: `Scrollable.Of`/`MaybeOf` resolve through a `_ScrollableScope` inherited widget and register a dependency.
+- `Scrollable` adopts the restoration bucket: the offset is persisted through `RestorableValue`, not only `PageStorage`.
+- Added `SliverWithKeepAliveWidget`, `SliverEnsureSemantics` and the sliver widgets' diagnostics (`sliver.dart`).
 - Breaking: `RenderProxyBox` gives its child a bare `ParentData` and paints at its own offset (`proxy_box.dart`).
 - Breaking: the shifting proxy subclasses re-base on `RenderShiftedBox`/`RenderAligningShiftedBox` (`shifted_box.dart`).
 - Breaking: `RenderAnimatedSize` takes an unresolved `AlignmentGeometry` plus a `TextDirection` (`animated_size.dart`).
