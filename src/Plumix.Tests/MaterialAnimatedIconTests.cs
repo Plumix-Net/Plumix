@@ -80,7 +80,7 @@ public sealed class MaterialAnimatedIconTests
         Assert.Equal(0.75, painter.Scale, 10);
         Assert.Equal(Color.FromArgb(128, color.R, color.G, color.B), painter.Color);
         Assert.True(painter.ShouldMirror);
-        Assert.Equal("Open navigation", semantics.Label);
+        Assert.Equal("Open navigation", semantics.Properties.Label);
     }
 
     [Fact]

@@ -317,9 +317,7 @@ public sealed class SegmentedButtonState<T> : State
                 enabled: enabled,
                 focusable: enabled,
                 onTap: enabled ? () => HandlePressed(capturedValue) : null,
-                flags: widget.MultiSelectionEnabled
-                    ? SemanticsFlags.None
-                    : SemanticsFlags.IsInMutuallyExclusiveGroup);
+                inMutuallyExclusiveGroup: widget.MultiSelectionEnabled ? null : true);
             children.Add(new MergeSemantics(button));
             segmentEnabled.Add(enabled);
         }

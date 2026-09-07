@@ -318,7 +318,7 @@ public sealed class FadeInImage : StatefulWidget
                 result = new Semantics(
                     child: result,
                     label: CurrentWidget.ImageSemanticLabel ?? string.Empty,
-                    flags: SemanticsFlags.IsImage,
+                    image: true,
                     container: CurrentWidget.ImageSemanticLabel is not null);
             }
 

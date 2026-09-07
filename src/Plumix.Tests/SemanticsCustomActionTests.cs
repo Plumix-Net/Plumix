@@ -94,17 +94,21 @@ public sealed class SemanticsCustomActionTests
         var innerAction = new CustomSemanticsAction("merged inner");
 
         var inner = new RenderSemanticsAnnotations(
-            customSemanticsActions: new Dictionary<CustomSemanticsAction, Action>
+                        new SemanticsProperties(
+                            customSemanticsActions: new Dictionary<CustomSemanticsAction,
+                            Action>
             {
                 [innerAction] = () => innerCount += 1,
-            },
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            }),
+                        child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var outer = new RenderSemanticsAnnotations(
-            customSemanticsActions: new Dictionary<CustomSemanticsAction, Action>
+                        new SemanticsProperties(
+                            customSemanticsActions: new Dictionary<CustomSemanticsAction,
+                            Action>
             {
                 [outerAction] = () => outerCount += 1,
-            },
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            }),
+                        child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         (SemanticsOwner owner, SemanticsNode mergedNode) = BuildMerged(inner, outer);
 
         Assert.True(owner.PerformCustomAction(mergedNode.Id, innerAction));
@@ -122,17 +126,21 @@ public sealed class SemanticsCustomActionTests
         int count = 0;
         var action = new CustomSemanticsAction("merged unknown id");
         var first = new RenderSemanticsAnnotations(
-            customSemanticsActions: new Dictionary<CustomSemanticsAction, Action>
+                        new SemanticsProperties(
+                            customSemanticsActions: new Dictionary<CustomSemanticsAction,
+                            Action>
             {
                 [action] = () => count += 1,
-            },
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            }),
+                        child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var second = new RenderSemanticsAnnotations(
-            customSemanticsActions: new Dictionary<CustomSemanticsAction, Action>
+                         new SemanticsProperties(
+                             customSemanticsActions: new Dictionary<CustomSemanticsAction,
+                             Action>
             {
                 [new CustomSemanticsAction("merged unknown id sibling")] = static () => { },
-            },
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            }),
+                         child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         (SemanticsOwner owner, SemanticsNode mergedNode) = BuildMerged(first, second);
 
         Assert.False(owner.PerformAction(mergedNode.Id, SemanticsActions.CustomAction, int.MaxValue));
@@ -145,10 +153,10 @@ public sealed class SemanticsCustomActionTests
     {
         (SemanticsOwner owner, SemanticsNode _) = BuildMerged(
             new RenderSemanticsAnnotations(
-                label: "unknown node",
+                new SemanticsProperties(label: "unknown node"),
                 child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))),
             new RenderSemanticsAnnotations(
-                label: "unknown node sibling",
+                new SemanticsProperties(label: "unknown node sibling"),
                 child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))));
 
         Assert.False(owner.PerformAction(-1, SemanticsActions.Tap));
@@ -163,17 +171,21 @@ public sealed class SemanticsCustomActionTests
         var leftAction = new CustomSemanticsAction("position left");
         var rightAction = new CustomSemanticsAction("position right");
         var left = new RenderSemanticsAnnotations(
-            customSemanticsActions: new Dictionary<CustomSemanticsAction, Action>
+                       new SemanticsProperties(
+                           customSemanticsActions: new Dictionary<CustomSemanticsAction,
+                           Action>
             {
                 [leftAction] = () => leftCount += 1,
-            },
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            }),
+                       child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var right = new RenderSemanticsAnnotations(
-            customSemanticsActions: new Dictionary<CustomSemanticsAction, Action>
+                        new SemanticsProperties(
+                            customSemanticsActions: new Dictionary<CustomSemanticsAction,
+                            Action>
             {
                 [rightAction] = () => rightCount += 1,
-            },
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            }),
+                        child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         (SemanticsOwner owner, SemanticsNode mergedNode) = BuildMerged(left, right);
 
         Assert.True(owner.PerformActionAt(
@@ -196,10 +208,10 @@ public sealed class SemanticsCustomActionTests
     {
         (SemanticsOwner owner, SemanticsNode mergedNode) = BuildMerged(
             new RenderSemanticsAnnotations(
-                label: "lookup first",
+                new SemanticsProperties(label: "lookup first"),
                 child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))),
             new RenderSemanticsAnnotations(
-                label: "lookup second",
+                new SemanticsProperties(label: "lookup second"),
                 child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))));
 
         Assert.Same(mergedNode, owner.GetSemanticsNode(mergedNode.Id));
@@ -210,11 +222,11 @@ public sealed class SemanticsCustomActionTests
     public void GetRectOfSemanticsNode_ReturnsTheNodeBoxInViewCoordinates()
     {
         var first = new RenderSemanticsAnnotations(
-            label: "rect first",
+            new SemanticsProperties(label: "rect first"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var second = new RenderSemanticsAnnotations(
-            label: "rect second",
+            new SemanticsProperties(label: "rect second"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(30, 10))));
         var row = new RenderFlex(
@@ -242,9 +254,10 @@ public sealed class SemanticsCustomActionTests
     {
         int tapCount = 0;
         var annotations = new RenderSemanticsAnnotations(
-            label: "listener",
+            new SemanticsProperties(
+                label: "listener",
+                onTap: () => tapCount += 1),
             container: true,
-            onTap: () => tapCount += 1,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var renderView = new RenderView { Child = annotations };
         var pipeline = new PipelineOwner(renderView);
@@ -284,10 +297,8 @@ public sealed class SemanticsCustomActionTests
         RenderBox first,
         RenderBox second)
     {
-        var merge = new RenderSemanticsAnnotations(
-            container: true,
-            mergeDescendants: true,
-            child: new RenderFlex(
+        var merge = new RenderMergeSemantics(
+            new RenderFlex(
                 children: [first, second],
                 direction: Axis.Horizontal,
                 textDirection: TextDirection.Ltr));

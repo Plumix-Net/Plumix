@@ -8,6 +8,15 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Added `SemanticsProperties`, `AttributedString`/`AttributedStringProperty`, `SemanticsHintOverrides` (`semantics.dart`).
+- Added `SliverSemantics`/`RenderSliverSemanticsAnnotations` over the shared annotations mixin (`proxy_sliver.dart`).
+- Added the semantics text-editing actions, `identifier`, `headingLevel`, `linkUrl`, `controlsNodes`, value lengths.
+- Added `SemanticsValidationResult` and `UnicodeMarks` (`semantics.dart`, `unicode.dart`).
+- Breaking: `Semantics`/`RenderSemanticsAnnotations` carry one `SemanticsProperties` instead of a setter per annotation.
+- Breaking: `Semantics` drops `flags`/`mergeDescendants`; use the named booleans and `MergeSemantics` (`basic.dart`).
+- Breaking: `SemanticsFlags` is `long`-backed, gains the read-only/obscured/multiline/keyboard-key/required bits.
+- Breaking: `SemanticsFlags.IsInvalid` is gone; `FormField` reports `SemanticsValidationResult` instead (`form.dart`).
+- Breaking: `SemanticsConfiguration.Absorb` lets the absorbed child's action handler win (`semantics.dart`).
 - Added `MouseTracker`/`MouseTrackerAnnotation`: per-device enter/exit diffing per event/frame (`mouse_tracker.dart`).
 - Added `RenderMouseRegion` with `opaque`/`hitTestBehavior`/`validForMouseTracker` (`proxy_box.dart`).
 - Added `PointerAddedEvent`/`PointerRemovedEvent`, `PointerEvent.Device`/`ViewId`, enter/exit `FromMouseEvent`.

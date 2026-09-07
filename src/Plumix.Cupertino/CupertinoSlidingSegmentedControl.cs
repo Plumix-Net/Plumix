@@ -212,7 +212,8 @@ internal sealed class CupertinoSlidingSegmentedControlState<T> : State where T :
                 cursor: PlatformDefaults.IsWeb ? SystemMouseCursors.Click : MouseCursor.Defer,
                 child: child);
             var semantics = new Semantics(
-                flags: SemanticsFlags.IsButton | SemanticsFlags.IsInMutuallyExclusiveGroup,
+                button: true,
+                inMutuallyExclusiveGroup: true,
                 selected: ValuesEqual(Current.GroupValue, entry.Key),
                 onTap: () =>
                 {

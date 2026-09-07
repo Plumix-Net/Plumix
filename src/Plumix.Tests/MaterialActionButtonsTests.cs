@@ -366,9 +366,9 @@ public sealed class MaterialActionButtonsTests
             harness.Pump(new Size(80, 80));
 
             int labels = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
-                .Count(semantics => semantics.Label == "Back");
+                .Count(semantics => semantics.Properties.Label == "Back");
             int tooltips = FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
-                .Count(semantics => semantics.Tooltip == "Back");
+                .Count(semantics => semantics.Properties.Tooltip == "Back");
             Assert.Equal(1, labels);
             Assert.Equal(1, tooltips);
         }

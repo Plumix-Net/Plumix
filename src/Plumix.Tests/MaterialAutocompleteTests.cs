@@ -224,7 +224,7 @@ public sealed class MaterialAutocompleteTests : IDisposable
                 optionsMaxHeight: 96)))));
         harness.Pump(new Size(480, 320));
         Assert.Contains(FindDescendants<RenderSemanticsAnnotations>(harness.RenderView), semantics =>
-            semantics.Flags.HasFlag(SemanticsFlags.IsTextField));
+            semantics.Properties.TextField == true);
 
         focusNode.RequestFocus();
         harness.Pump(new Size(480, 320));

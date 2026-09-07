@@ -399,7 +399,7 @@ public sealed class Image : StatefulWidget
                 result = new Semantics(
                     child: result,
                     label: CurrentWidget.SemanticLabel ?? string.Empty,
-                    flags: SemanticsFlags.IsImage,
+                    image: true,
                     container: CurrentWidget.SemanticLabel is not null);
             }
 

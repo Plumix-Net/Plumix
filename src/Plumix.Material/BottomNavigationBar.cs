@@ -362,7 +362,7 @@ internal sealed class BottomNavigationTile : StatelessWidget
             flex: size,
             child: new Semantics(
                 selected: Selected,
-                flags: SemanticsFlags.IsButton,
+                button: true,
                 container: true,
                 child: new Stack(
                     children:

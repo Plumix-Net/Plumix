@@ -95,7 +95,7 @@ public sealed class DirectionalPositionedTableCellTests
         var cell = Assert.IsType<RenderSemanticsAnnotations>(table.Row(0)[0]);
         var parentData = Assert.IsType<TableCellParentData>(cell.parentData);
         Assert.Equal(TableCellVerticalAlignment.Top, parentData.VerticalAlignment);
-        Assert.Equal(SemanticsRole.Cell, cell.Role);
+        Assert.Equal(SemanticsRole.Cell, cell.Properties.Role);
 
         root.Update(BuildTableCell(TableCellVerticalAlignment.Bottom));
         owner.FlushBuild();

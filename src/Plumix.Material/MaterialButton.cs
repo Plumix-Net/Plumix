@@ -412,7 +412,7 @@ public sealed class RawMaterialButton : StatefulWidget
 
             return new Semantics(
                 container: true,
-                flags: SemanticsFlags.IsButton,
+                button: true,
                 enabled: widget.Enabled,
                 child: new InputPadding(minSize: minSize, child: result));
         }

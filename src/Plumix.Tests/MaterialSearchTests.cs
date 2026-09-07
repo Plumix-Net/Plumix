@@ -99,7 +99,7 @@ public sealed class MaterialSearchTests : IDisposable
         Assert.Equal(theme.ColorScheme.OnSurface, field.Style?.Color);
         Assert.Contains(
             harness.FindWidgets<Semantics>(),
-            semantics => semantics.InputType == SemanticsInputType.Search);
+            semantics => semantics.Properties.InputType == SemanticsInputType.Search);
         Assert.NotNull(FindParagraph(harness.RenderView, "Search mail"));
     }
 
@@ -708,7 +708,7 @@ public sealed class MaterialSearchTests : IDisposable
             switcher => switcher.Duration == TimeSpan.FromMilliseconds(300));
         Assert.Contains(
             harness.FindWidgets<Semantics>(),
-            semantics => semantics.InputType == SemanticsInputType.Search);
+            semantics => semantics.Properties.InputType == SemanticsInputType.Search);
         Assert.Contains(
             FlattenSemantics(harness.SemanticsRoot),
             node => node.InputType == SemanticsInputType.Search);

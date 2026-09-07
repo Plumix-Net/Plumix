@@ -257,7 +257,7 @@ internal sealed class AutocompleteOptionsListState<T> : State
             {
                 T option = Current.Options[index];
                 return new Semantics(
-                    flags: SemanticsFlags.IsButton,
+                    button: true,
                     child: new InkWell(
                         key: KeyForOption(option),
                         onTap: () => Current.OnSelected(option),

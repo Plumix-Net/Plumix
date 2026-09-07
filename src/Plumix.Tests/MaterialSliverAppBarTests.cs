@@ -135,7 +135,7 @@ public sealed class MaterialSliverAppBarTests
             Assert.Single(FindDescendants<RenderTransform>(android.RenderView)).Alignment);
         Assert.Contains(
             FindDescendants<RenderSemanticsAnnotations>(android.RenderView),
-            semantics => semantics.Flags.HasFlag(SemanticsFlags.NamesRoute));
+            semantics => semantics.Properties.NamesRoute == true);
 
         using var ios = new WidgetRenderHarness(Wrap(
             new FlexibleSpaceBarSettings(
@@ -154,7 +154,7 @@ public sealed class MaterialSliverAppBarTests
             Assert.Single(FindDescendants<RenderTransform>(ios.RenderView)).Alignment);
         Assert.DoesNotContain(
             FindDescendants<RenderSemanticsAnnotations>(ios.RenderView),
-            semantics => semantics.Flags.HasFlag(SemanticsFlags.NamesRoute));
+            semantics => semantics.Properties.NamesRoute == true);
     }
 
     [Fact]

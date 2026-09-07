@@ -395,18 +395,16 @@ internal class FocusState : State
             onPointerDown: HandlePointerDown);
         if (Widget.IncludeSemantics)
         {
-            SemanticsFlags flags = _couldRequestFocus ? SemanticsFlags.IsFocusable : SemanticsFlags.None;
-            if (_couldRequestFocus && _hadPrimaryFocus)
-            {
-                flags |= SemanticsFlags.IsFocused;
-            }
-
-            child = new Semantics(child: child, flags: flags)
-            {
-                OnFocus = PlatformDefaults.TargetPlatform != TargetPlatform.IOS && _couldRequestFocus
+            child = new Semantics(
+                child: child,
+                // Automatically request the focus for a focusable widget when it receives an input
+                // focus action from the semantics. Losing focus needs nothing: another node gaining
+                // focus takes it from this one.
+                onFocus: PlatformDefaults.TargetPlatform != TargetPlatform.IOS && _couldRequestFocus
                     ? RequestSemanticFocus
                     : null,
-            };
+                focusable: _couldRequestFocus,
+                focused: _couldRequestFocus ? _hadPrimaryFocus : null);
         }
 
         return new FocusInheritedScope(FocusNode, child);

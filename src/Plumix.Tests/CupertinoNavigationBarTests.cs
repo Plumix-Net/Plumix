@@ -321,7 +321,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
             harness.Pump(new Size(400, 600));
             Assert.Contains(
                 harness.FindWidgets<Semantics>(),
-                semantics => (semantics.Flags & SemanticsFlags.IsHeader) != 0);
+                semantics => semantics.Properties.Header == true);
         }
 
         using (var harness = new WidgetRenderHarness(Wrap(TopAligned(
@@ -330,7 +330,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
             harness.Pump(new Size(400, 600));
             Assert.Contains(
                 harness.FindWidgets<Semantics>(),
-                semantics => (semantics.Flags & SemanticsFlags.IsHeader) != 0);
+                semantics => semantics.Properties.Header == true);
         }
     }
 

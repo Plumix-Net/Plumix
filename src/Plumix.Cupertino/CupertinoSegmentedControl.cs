@@ -145,7 +145,8 @@ internal sealed class CupertinoSegmentedControlState<T> : State where T : notnul
             }
 
             Widget child = new Semantics(
-                flags: SemanticsFlags.IsButton | SemanticsFlags.IsInMutuallyExclusiveGroup,
+                button: true,
+                inMutuallyExclusiveGroup: true,
                 selected: EqualityComparer<T?>.Default.Equals(CurrentWidget.GroupValue, value),
                 child: new Center(child: CurrentWidget.Children[value]));
             child = new DefaultTextStyle(

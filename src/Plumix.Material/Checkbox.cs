@@ -360,7 +360,7 @@ public sealed class Checkbox : StatefulWidget
                 autofocus: CurrentWidget.Autofocus);
             return new Semantics(
                 label: CurrentWidget.SemanticLabel,
-                flags: IsInteractive ? SemanticsFlags.IsEnabled : SemanticsFlags.None,
+                enabled: IsInteractive ? true : null,
                 @checked: CurrentWidget.Value ?? false,
                 mixed: CurrentWidget.Tristate ? CurrentWidget.Value is null : null,
                 onTap: IsInteractive ? HandleTap : null,

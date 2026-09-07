@@ -112,6 +112,7 @@ public sealed class SemanticsTraversalTests
         }
 
         var annotated = new RenderSemanticsAnnotations(
+            new SemanticsProperties(),
             textDirection: direction,
             explicitChildNodes: true,
             child: row);
@@ -124,6 +125,7 @@ public sealed class SemanticsTraversalTests
     {
         var row = new RenderFlex(children: [.. children], direction: Axis.Horizontal, textDirection: TextDirection.Ltr);
         var root = new RenderSemanticsAnnotations(
+            new SemanticsProperties(),
             textDirection: textDirection,
             explicitChildNodes: true,
             child: row);

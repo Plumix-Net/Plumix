@@ -692,7 +692,7 @@ public sealed class TableTests
         SemanticsNode row = Assert.Single(tableNode.Children);
         SemanticsNode wrapper = row.Children[0];
 
-        plain.Label = "Renamed";
+        plain.Properties = new SemanticsProperties(label: "Renamed");
         pipeline.FlushSemantics();
 
         SemanticsNode rebuiltRow = Assert.Single(FindNodeWithRole(pipeline, SemanticsRole.Table).Children);
@@ -753,8 +753,9 @@ public sealed class TableTests
     private static RenderSemanticsAnnotations SemanticsCell(string label, SemanticsRole role, Size? size = null)
     {
         return new RenderSemanticsAnnotations(
-            label: label,
-            role: role,
+            new SemanticsProperties(
+                label: label,
+                role: role),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(size ?? new Size(20, 10))));
     }

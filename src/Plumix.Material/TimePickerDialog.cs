@@ -631,7 +631,8 @@ internal sealed class AmPmButton : StatelessWidget
         return new Semantics(
             selected: isIOS ? Selected : null,
             @checked: isIOS ? null : Selected,
-            flags: SemanticsFlags.IsInMutuallyExclusiveGroup | SemanticsFlags.IsButton,
+            inMutuallyExclusiveGroup: true,
+            button: true,
             child: new Padding(
                 Padding,
                 new Plumix.Material.Material(

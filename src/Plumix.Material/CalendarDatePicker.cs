@@ -143,7 +143,8 @@ public sealed class CalendarDatePicker : StatefulWidget
 
             Widget title = new Semantics(
                 label: localizations.SelectYearSemanticsLabel,
-                flags: SemanticsFlags.IsButton | SemanticsFlags.IsEnabled,
+                button: true,
+                enabled: true,
                 onTap: ToggleMode,
                 container: true,
                 child: new InkWell(
@@ -244,7 +245,8 @@ public sealed class CalendarDatePicker : StatefulWidget
                     [
                         new Semantics(
                             label: localizations.PreviousMonthTooltip,
-                            flags: SemanticsFlags.IsButton | (previousEnabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None),
+                            button: true,
+                            enabled: previousEnabled ? true : null,
                             onTap: previousEnabled ? PreviousMonth : null,
                             child: new Tooltip(
                                 message: previousEnabled ? localizations.PreviousMonthTooltip : string.Empty,
@@ -254,7 +256,8 @@ public sealed class CalendarDatePicker : StatefulWidget
                                     onPressed: previousEnabled ? PreviousMonth : null))),
                         new Semantics(
                             label: localizations.NextMonthTooltip,
-                            flags: SemanticsFlags.IsButton | (nextEnabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None),
+                            button: true,
+                            enabled: nextEnabled ? true : null,
                             onTap: nextEnabled ? NextMonth : null,
                             child: new Tooltip(
                                 message: nextEnabled ? localizations.NextMonthTooltip : string.Empty,
@@ -657,9 +660,9 @@ internal sealed class CalendarDay : StatefulWidget
 
             Widget result = new Semantics(
                 label: $"{MaterialLocalizations.Of(context).FormatDecimal(widget.Day.Day)}, {widget.CalendarDelegate.FormatFullDate(widget.Day, MaterialLocalizations.Of(context))}{(widget.IsToday ? $", {MaterialLocalizations.Of(context).CurrentDateLabel}" : string.Empty)}",
-                flags: SemanticsFlags.IsButton
-                       | (widget.IsDisabled ? SemanticsFlags.None : SemanticsFlags.IsEnabled)
-                       | (widget.IsSelected ? SemanticsFlags.IsSelected : SemanticsFlags.None),
+                button: true,
+                enabled: widget.IsDisabled ? null : true,
+                selected: widget.IsSelected ? true : null,
                 onTap: widget.IsDisabled ? null : () => widget.OnChanged(widget.Day),
                 child: new Center(
                     child: new Container(
@@ -906,9 +909,9 @@ internal sealed class CalendarYear : StatefulWidget
                         Shape: ShapeBorderGeometry.BoxShapeOf(shape)),
                     child: new Semantics(
                         label: widget.CalendarDelegate.FormatYear(widget.Year, localizations),
-                        flags: SemanticsFlags.IsButton
-                               | (widget.IsDisabled ? SemanticsFlags.None : SemanticsFlags.IsEnabled)
-                               | (widget.IsSelected ? SemanticsFlags.IsSelected : SemanticsFlags.None),
+                        button: true,
+                        enabled: widget.IsDisabled ? null : true,
+                        selected: widget.IsSelected ? true : null,
                         onTap: widget.OnChanged,
                         child: new DefaultTextStyle(style, new Text(widget.CalendarDelegate.FormatYear(widget.Year, localizations))))));
             if (!widget.IsDisabled)

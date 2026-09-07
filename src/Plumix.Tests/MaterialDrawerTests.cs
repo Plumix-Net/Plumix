@@ -184,16 +184,16 @@ public sealed class MaterialDrawerTests
             using (var androidHarness = new WidgetRenderHarness(Root(androidTheme, new Drawer())))
             {
                 Semantics semantics = Assert.Single(androidHarness.FindWidgets<Semantics>());
-                Assert.Equal(DefaultMaterialLocalizations.Instance.DrawerLabel, semantics.Label);
-                Assert.True(semantics.ScopesRoute);
-                Assert.True(semantics.NamesRoute);
+                Assert.Equal(DefaultMaterialLocalizations.Instance.DrawerLabel, semantics.Properties.Label);
+                Assert.True(semantics.Properties.ScopesRoute);
+                Assert.True(semantics.Properties.NamesRoute);
                 Assert.True(semantics.ExplicitChildNodes);
             }
 
             PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.IOS;
             var iosTheme = ThemeData.Light with { Platform = TargetPlatform.Android };
             using var iosHarness = new WidgetRenderHarness(Root(iosTheme, new Drawer()));
-            Assert.Null(Assert.Single(iosHarness.FindWidgets<Semantics>()).Label);
+            Assert.Null(Assert.Single(iosHarness.FindWidgets<Semantics>()).Properties.Label);
         }
         finally
         {

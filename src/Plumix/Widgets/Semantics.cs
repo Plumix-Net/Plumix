@@ -2,7 +2,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/basic.dart (Semantics subset)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (Semantics, SliverSemantics)
 
 namespace Plumix.Widgets;
 
@@ -27,162 +27,39 @@ public enum SemanticsRole
     ColumnHeader,
 }
 
-public sealed class Semantics : SingleChildRenderObjectWidget
+/// <summary>
+/// The shared base of <see cref="Semantics"/> and <see cref="SliverSemantics"/>: it carries the
+/// <see cref="SemanticsProperties"/> and the four render-object switches, and resolves the reading
+/// direction from the ambient <see cref="Directionality"/> when the properties do not name one.
+/// </summary>
+/// <remarks>Flutter's private <c>_SemanticsBase</c>.</remarks>
+public abstract class SemanticsBase : SingleChildRenderObjectWidget
 {
-    public Semantics(
+    /// <remarks>Flutter's <c>_SemanticsBase.fromProperties</c>.</remarks>
+    protected SemanticsBase(
+        SemanticsProperties properties,
         Widget? child = null,
-        string? label = null,
-        string? hint = null,
-        string? onTapHint = null,
-        string? tooltip = null,
-        string? value = null,
-        string? minValue = null,
-        string? maxValue = null,
-        string? increasedValue = null,
-        string? decreasedValue = null,
-        SemanticsFlags flags = SemanticsFlags.None,
-        Action? onTap = null,
-        Action? onLongPress = null,
-        Action? onDismiss = null,
-        Action? onExpand = null,
-        Action? onCollapse = null,
-        Action? onIncrease = null,
-        Action? onDecrease = null,
-        IReadOnlyDictionary<CustomSemanticsAction, Action>? customSemanticsActions = null,
-        bool liveRegion = false,
         bool container = false,
         bool explicitChildNodes = false,
         bool excludeSemantics = false,
         bool blockUserActions = false,
-        SemanticsRole role = SemanticsRole.None,
-        SemanticsInputType inputType = SemanticsInputType.None,
-        SemanticsHitTestBehavior hitTestBehavior = SemanticsHitTestBehavior.Defer,
-        bool scopesRoute = false,
-        bool namesRoute = false,
-        bool? expanded = null,
-        bool? @checked = null,
-        bool? mixed = null,
-        bool? selected = null,
-        bool? enabled = null,
-        bool? focusable = null,
-        SemanticsSortKey? sortKey = null,
-        object? traversalParentIdentifier = null,
-        object? traversalChildIdentifier = null,
-        TextDirection? textDirection = null,
-        SemanticsTag? tagForChildren = null,
-        Key? key = null,
-        bool mergeDescendants = false,
-        AccessibilityFocusBlockType accessibilityFocusBlockType = AccessibilityFocusBlockType.None,
-        bool? toggled = null) : base(child, key)
+        Key? key = null) : base(child, key)
     {
-        AccessibilityFocusBlockType = accessibilityFocusBlockType;
-        TagForChildren = tagForChildren;
-        Label = label;
-        Hint = hint;
-        OnTapHint = onTapHint;
-        Tooltip = tooltip;
-        Value = value;
-        MinValue = minValue;
-        MaxValue = maxValue;
-        IncreasedValue = increasedValue;
-        DecreasedValue = decreasedValue;
-        Flags = flags
-                | (scopesRoute ? SemanticsFlags.ScopesRoute : SemanticsFlags.None)
-                | (namesRoute ? SemanticsFlags.NamesRoute : SemanticsFlags.None)
-                | (expanded.HasValue ? SemanticsFlags.HasExpandedState : SemanticsFlags.None)
-                | (expanded == true ? SemanticsFlags.IsExpanded : SemanticsFlags.None)
-                | (@checked.HasValue ? SemanticsFlags.HasCheckedState : SemanticsFlags.None)
-                | (@checked == true ? SemanticsFlags.IsChecked : SemanticsFlags.None)
-                | (mixed == true ? SemanticsFlags.IsCheckStateMixed : SemanticsFlags.None)
-                | (toggled.HasValue ? SemanticsFlags.HasToggledState : SemanticsFlags.None)
-                | (toggled == true ? SemanticsFlags.IsToggled : SemanticsFlags.None)
-                | (selected.HasValue ? SemanticsFlags.HasSelectedState : SemanticsFlags.None)
-                | (selected == true ? SemanticsFlags.IsSelected : SemanticsFlags.None)
-                | (enabled.HasValue ? SemanticsFlags.HasEnabledState : SemanticsFlags.None)
-                | (enabled == true ? SemanticsFlags.IsEnabled : SemanticsFlags.None)
-                | (focusable == true ? SemanticsFlags.IsFocusable : SemanticsFlags.None);
-        OnTap = onTap;
-        OnLongPress = onLongPress;
-        OnDismiss = onDismiss;
-        OnExpand = onExpand;
-        OnCollapse = onCollapse;
-        OnIncrease = onIncrease;
-        OnDecrease = onDecrease;
-        CustomSemanticsActions = customSemanticsActions;
-        LiveRegion = liveRegion;
+        ArgumentNullException.ThrowIfNull(properties);
+        Properties = properties;
         Container = container;
         ExplicitChildNodes = explicitChildNodes;
         ExcludeSemantics = excludeSemantics;
         BlockUserActions = blockUserActions;
-        Role = role;
-        InputType = inputType;
-        HitTestBehavior = hitTestBehavior;
-        ScopesRoute = scopesRoute;
-        NamesRoute = namesRoute;
-        Expanded = expanded;
-        Checked = @checked;
-        Mixed = mixed;
-        Toggled = toggled;
-        Selected = selected;
-        Enabled = enabled;
-        Focusable = focusable;
-        SortKey = sortKey;
-        TraversalParentIdentifier = traversalParentIdentifier;
-        TraversalChildIdentifier = traversalChildIdentifier;
-        TextDirection = textDirection;
-        MergeDescendants = mergeDescendants;
     }
 
-    public string? Label { get; }
+    /// <summary>All the annotations this widget contributes to the semantics tree.</summary>
+    public SemanticsProperties Properties { get; }
 
-    public string? Hint { get; }
-
-    public string? OnTapHint { get; }
-
-    public string? Tooltip { get; }
-
-    public string? Value { get; }
-
-    public string? MinValue { get; }
-
-    public string? MaxValue { get; }
-
-    public string? IncreasedValue { get; }
-
-    public string? DecreasedValue { get; }
-
-    public SemanticsFlags Flags { get; }
-
-    public Action? OnTap { get; }
-
-    public Action? OnLongPress { get; }
-
-    public Action? OnDismiss { get; }
-
-    /// <summary>Handler for <c>SemanticsAction.expand</c>, invoked to expand a collapsed node.</summary>
-    public Action? OnExpand { get; }
-
-    /// <summary>Handler for <c>SemanticsAction.collapse</c>, invoked to collapse an expanded node.</summary>
-    public Action? OnCollapse { get; }
-
-    public Action? OnIncrease { get; }
-
-    public Action? OnDecrease { get; }
-
-    public IReadOnlyDictionary<CustomSemanticsAction, Action>? CustomSemanticsActions { get; }
-
-    public Action? OnFocus { get; init; }
-
-    /// <summary>Handler for <c>SemanticsAction.didGainAccessibilityFocus</c>.</summary>
-    public Action? OnDidGainAccessibilityFocus { get; init; }
-
-    /// <summary>Handler for <c>SemanticsAction.didLoseAccessibilityFocus</c>.</summary>
-    public Action? OnDidLoseAccessibilityFocus { get; init; }
-
-    public bool LiveRegion { get; }
-
+    /// <summary>Whether this widget introduces a semantics node of its own.</summary>
     public bool Container { get; }
 
+    /// <summary>Whether the descendants must each produce their own semantics node.</summary>
     public bool ExplicitChildNodes { get; }
 
     /// <summary>Whether to drop all the semantics of the descendants.</summary>
@@ -191,155 +68,317 @@ public sealed class Semantics : SingleChildRenderObjectWidget
     /// <summary>Whether to block user interactions for the descendant semantics nodes.</summary>
     public bool BlockUserActions { get; }
 
-    public SemanticsRole Role { get; }
+    /// <remarks>Flutter's private <c>_SemanticsBase._getTextDirection</c>.</remarks>
+    private protected TextDirection? GetTextDirection(BuildContext context)
+    {
+        if (Properties.TextDirection is not null)
+        {
+            return Properties.TextDirection;
+        }
 
-    public SemanticsInputType InputType { get; }
+        bool containsText =
+            Properties.AttributedLabel is not null
+            || Properties.Label is not null
+            || Properties.Value is not null
+            || Properties.AttributedValue is not null
+            || Properties.IncreasedValue is not null
+            || Properties.AttributedIncreasedValue is not null
+            || Properties.DecreasedValue is not null
+            || Properties.AttributedDecreasedValue is not null
+            || Properties.Hint is not null
+            || Properties.AttributedHint is not null
+            || Properties.Tooltip is not null;
 
-    public SemanticsHitTestBehavior HitTestBehavior { get; }
+        return containsText ? Directionality.MaybeOf(context) : null;
+    }
+}
 
-    public bool ScopesRoute { get; }
-
-    public bool NamesRoute { get; }
-
-    public bool? Expanded { get; }
-
-    public bool? Checked { get; }
-
-    public bool? Mixed { get; }
-
-    public bool? Toggled { get; }
-
-    public bool? Selected { get; }
-
-    public bool? Enabled { get; }
-
-    public bool? Focusable { get; }
-
-    public SemanticsSortKey? SortKey { get; }
-
+/// <summary>
+/// Annotates its box child's subtree with the semantics described by <see cref="SemanticsProperties"/>.
+/// </summary>
+/// <remarks>Flutter's <c>Semantics</c>.</remarks>
+public sealed class Semantics : SemanticsBase
+{
     /// <summary>
-    /// Identifies this node as the traversal parent that nodes carrying the matching
-    /// <see cref="TraversalChildIdentifier"/> are traversed under, wherever they sit in paint order.
+    /// Builds a <see cref="SemanticsProperties"/> out of the individual annotations and annotates
+    /// <paramref name="child"/> with it.
     /// </summary>
-    /// <remarks>
-    /// Flutter's <c>SemanticsProperties.traversalParentIdentifier</c>. The value must be unique
-    /// across the whole semantics tree.
-    /// </remarks>
-    public object? TraversalParentIdentifier { get; }
+    public Semantics(
+        Widget? child = null,
+        bool container = false,
+        bool explicitChildNodes = false,
+        bool excludeSemantics = false,
+        bool blockUserActions = false,
+        bool? enabled = null,
+        bool? @checked = null,
+        bool? mixed = null,
+        bool? selected = null,
+        bool? toggled = null,
+        bool? button = null,
+        bool? slider = null,
+        bool? keyboardKey = null,
+        bool? link = null,
+        Uri? linkUrl = null,
+        bool? header = null,
+        int? headingLevel = null,
+        bool? textField = null,
+        bool? readOnly = null,
+        bool? focusable = null,
+        bool? focused = null,
+        AccessibilityFocusBlockType? accessibilityFocusBlockType = null,
+        bool? inMutuallyExclusiveGroup = null,
+        bool? obscured = null,
+        bool? multiline = null,
+        bool? scopesRoute = null,
+        bool? namesRoute = null,
+        bool? hidden = null,
+        bool? image = null,
+        bool? liveRegion = null,
+        bool? expanded = null,
+        bool? isRequired = null,
+        int? maxValueLength = null,
+        int? currentValueLength = null,
+        string? identifier = null,
+        object? traversalParentIdentifier = null,
+        object? traversalChildIdentifier = null,
+        string? label = null,
+        AttributedString? attributedLabel = null,
+        string? value = null,
+        AttributedString? attributedValue = null,
+        string? increasedValue = null,
+        AttributedString? attributedIncreasedValue = null,
+        string? decreasedValue = null,
+        AttributedString? attributedDecreasedValue = null,
+        string? hint = null,
+        AttributedString? attributedHint = null,
+        string? tooltip = null,
+        string? onTapHint = null,
+        string? onLongPressHint = null,
+        TextDirection? textDirection = null,
+        SemanticsSortKey? sortKey = null,
+        SemanticsTag? tagForChildren = null,
+        Action? onTap = null,
+        Action? onLongPress = null,
+        Action? onScrollLeft = null,
+        Action? onScrollRight = null,
+        Action? onScrollUp = null,
+        Action? onScrollDown = null,
+        Action? onIncrease = null,
+        Action? onDecrease = null,
+        Action? onCopy = null,
+        Action? onCut = null,
+        Action? onPaste = null,
+        Action? onDismiss = null,
+        MoveCursorHandler? onMoveCursorForwardByCharacter = null,
+        MoveCursorHandler? onMoveCursorBackwardByCharacter = null,
+        SetSelectionHandler? onSetSelection = null,
+        SetTextHandler? onSetText = null,
+        Action? onDidGainAccessibilityFocus = null,
+        Action? onDidLoseAccessibilityFocus = null,
+        Action? onFocus = null,
+        Action? onExpand = null,
+        Action? onCollapse = null,
+        IReadOnlyDictionary<CustomSemanticsAction, Action>? customSemanticsActions = null,
+        SemanticsRole? role = null,
+        IReadOnlySet<string>? controlsNodes = null,
+        SemanticsValidationResult validationResult = SemanticsValidationResult.None,
+        SemanticsHitTestBehavior? hitTestBehavior = null,
+        SemanticsInputType? inputType = null,
+        string? minValue = null,
+        string? maxValue = null,
+        Key? key = null)
+        : this(
+            properties: new SemanticsProperties(
+                enabled: enabled,
+                @checked: @checked,
+                mixed: mixed,
+                expanded: expanded,
+                toggled: toggled,
+                selected: selected,
+                button: button,
+                link: link,
+                header: header,
+                textField: textField,
+                slider: slider,
+                keyboardKey: keyboardKey,
+                readOnly: readOnly,
+                focusable: focusable,
+                focused: focused,
+                accessibilityFocusBlockType: accessibilityFocusBlockType,
+                inMutuallyExclusiveGroup: inMutuallyExclusiveGroup,
+                hidden: hidden,
+                obscured: obscured,
+                multiline: multiline,
+                scopesRoute: scopesRoute,
+                namesRoute: namesRoute,
+                image: image,
+                liveRegion: liveRegion,
+                isRequired: isRequired,
+                maxValueLength: maxValueLength,
+                currentValueLength: currentValueLength,
+                identifier: identifier,
+                traversalParentIdentifier: traversalParentIdentifier,
+                traversalChildIdentifier: traversalChildIdentifier,
+                label: label,
+                attributedLabel: attributedLabel,
+                value: value,
+                attributedValue: attributedValue,
+                increasedValue: increasedValue,
+                attributedIncreasedValue: attributedIncreasedValue,
+                decreasedValue: decreasedValue,
+                attributedDecreasedValue: attributedDecreasedValue,
+                hint: hint,
+                attributedHint: attributedHint,
+                tooltip: tooltip,
+                headingLevel: headingLevel,
+                hintOverrides: onTapHint is not null || onLongPressHint is not null
+                    ? new SemanticsHintOverrides(onTapHint: onTapHint, onLongPressHint: onLongPressHint)
+                    : null,
+                textDirection: textDirection,
+                sortKey: sortKey,
+                tagForChildren: tagForChildren,
+                linkUrl: linkUrl,
+                onTap: onTap,
+                onLongPress: onLongPress,
+                onScrollLeft: onScrollLeft,
+                onScrollRight: onScrollRight,
+                onScrollUp: onScrollUp,
+                onScrollDown: onScrollDown,
+                onIncrease: onIncrease,
+                onDecrease: onDecrease,
+                onCopy: onCopy,
+                onCut: onCut,
+                onPaste: onPaste,
+                onMoveCursorForwardByCharacter: onMoveCursorForwardByCharacter,
+                onMoveCursorBackwardByCharacter: onMoveCursorBackwardByCharacter,
+                onSetSelection: onSetSelection,
+                onSetText: onSetText,
+                onDidGainAccessibilityFocus: onDidGainAccessibilityFocus,
+                onDidLoseAccessibilityFocus: onDidLoseAccessibilityFocus,
+                onFocus: onFocus,
+                onDismiss: onDismiss,
+                onExpand: onExpand,
+                onCollapse: onCollapse,
+                customSemanticsActions: customSemanticsActions,
+                role: role,
+                controlsNodes: controlsNodes,
+                validationResult: validationResult,
+                hitTestBehavior: hitTestBehavior,
+                inputType: inputType,
+                maxValue: maxValue,
+                minValue: minValue),
+            child: child,
+            container: container,
+            explicitChildNodes: explicitChildNodes,
+            excludeSemantics: excludeSemantics,
+            blockUserActions: blockUserActions,
+            key: key)
+    {
+    }
 
-    /// <summary>
-    /// Names the <see cref="TraversalParentIdentifier"/> this subtree is traversed under.
-    /// </summary>
-    /// <remarks>
-    /// Flutter's <c>SemanticsProperties.traversalChildIdentifier</c>. Several nodes may share one
-    /// value; they all graft onto the same traversal parent, in paint order.
-    /// </remarks>
-    public object? TraversalChildIdentifier { get; }
+    /// <summary>Annotates <paramref name="child"/> with an already built value object.</summary>
+    /// <remarks>Flutter's <c>Semantics.fromProperties</c>.</remarks>
+    public Semantics(
+        SemanticsProperties properties,
+        Widget? child = null,
+        bool container = false,
+        bool explicitChildNodes = false,
+        bool excludeSemantics = false,
+        bool blockUserActions = false,
+        Key? key = null)
+        : base(
+            properties,
+            child,
+            container: container,
+            explicitChildNodes: explicitChildNodes,
+            excludeSemantics: excludeSemantics,
+            blockUserActions: blockUserActions,
+            key: key)
+    {
+    }
 
-    /// <summary>
-    /// The reading direction for this subtree's semantics, and the direction the default traversal
-    /// sort walks siblings in.
-    /// </summary>
-    public TextDirection? TextDirection { get; }
-
-    /// The tag attached to every semantics node created below this widget.
-    public SemanticsTag? TagForChildren { get; }
-
-    public bool MergeDescendants { get; }
-
-    /// <summary>
-    /// Whether assistive technologies may move accessibility focus onto this node, its subtree, or
-    /// both. Blocking focus also stops the node reporting itself as keyboard focusable.
-    /// </summary>
-    public AccessibilityFocusBlockType AccessibilityFocusBlockType { get; }
-
+    /// <inheritdoc />
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        var semantics = new RenderSemanticsAnnotations(
-            label: Label,
-            hint: Hint,
-            onTapHint: OnTapHint,
-            tooltip: Tooltip,
-            value: Value,
-            minValue: MinValue,
-            maxValue: MaxValue,
-            increasedValue: IncreasedValue,
-            decreasedValue: DecreasedValue,
-            role: Role,
-            inputType: InputType,
-            hitTestBehavior: HitTestBehavior,
-            flags: Flags,
-            onTap: OnTap,
-            onLongPress: OnLongPress,
-            onDismiss: OnDismiss,
-            onExpand: OnExpand,
-            onCollapse: OnCollapse,
-            onIncrease: OnIncrease,
-            onDecrease: OnDecrease,
-            customSemanticsActions: CustomSemanticsActions,
-            liveRegion: LiveRegion,
+        return new RenderSemanticsAnnotations(
+            properties: Properties,
             container: Container,
             explicitChildNodes: ExplicitChildNodes,
             excludeSemantics: ExcludeSemantics,
             blockUserActions: BlockUserActions,
-            sortKey: SortKey,
-            traversalParentIdentifier: TraversalParentIdentifier,
-            traversalChildIdentifier: TraversalChildIdentifier,
-            textDirection: TextDirection,
-            mergeDescendants: MergeDescendants,
-            tagForChildren: TagForChildren,
-            accessibilityFocusBlockType: AccessibilityFocusBlockType);
-        semantics.OnFocus = OnFocus;
-        semantics.OnDidGainAccessibilityFocus = OnDidGainAccessibilityFocus;
-        semantics.OnDidLoseAccessibilityFocus = OnDidLoseAccessibilityFocus;
-        return semantics;
+            textDirection: GetTextDirection(context));
     }
 
+    /// <inheritdoc />
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var semantics = (RenderSemanticsAnnotations)renderObject;
-
-        // Flutter assigns one `SemanticsProperties` value object and invalidates the semantics once;
-        // Plumix has a setter per property, so the batch keeps the configuration from being
-        // re-collected halfway through, before the callbacks below have been assigned.
-        using RenderSemanticsAnnotations.PropertyBatch batch = semantics.BeginPropertyBatch();
-        semantics.Label = Label;
-        semantics.Hint = Hint;
-        semantics.OnTapHint = OnTapHint;
-        semantics.Tooltip = Tooltip;
-        semantics.Value = Value;
-        semantics.MinValue = MinValue;
-        semantics.MaxValue = MaxValue;
-        semantics.IncreasedValue = IncreasedValue;
-        semantics.DecreasedValue = DecreasedValue;
-        semantics.Role = Role;
-        semantics.InputType = InputType;
-        semantics.HitTestBehavior = HitTestBehavior;
-        semantics.Flags = Flags;
-        semantics.OnTap = OnTap;
-        semantics.OnLongPress = OnLongPress;
-        semantics.OnDismiss = OnDismiss;
-        semantics.OnExpand = OnExpand;
-        semantics.OnCollapse = OnCollapse;
-        semantics.OnIncrease = OnIncrease;
-        semantics.OnDecrease = OnDecrease;
-        semantics.CustomSemanticsActions = CustomSemanticsActions;
-        semantics.OnFocus = OnFocus;
-        semantics.OnDidGainAccessibilityFocus = OnDidGainAccessibilityFocus;
-        semantics.OnDidLoseAccessibilityFocus = OnDidLoseAccessibilityFocus;
-        semantics.LiveRegion = LiveRegion;
         semantics.Container = Container;
         semantics.ExplicitChildNodes = ExplicitChildNodes;
         semantics.ExcludeSemantics = ExcludeSemantics;
         semantics.BlockUserActions = BlockUserActions;
-        semantics.SortKey = SortKey;
-        semantics.TraversalParentIdentifier = TraversalParentIdentifier;
-        semantics.TraversalChildIdentifier = TraversalChildIdentifier;
-        semantics.MergeDescendants = MergeDescendants;
-        semantics.TagForChildren = TagForChildren;
-        semantics.AccessibilityFocusBlockType = AccessibilityFocusBlockType;
+        semantics.Properties = Properties;
+        semantics.TextDirection = GetTextDirection(context);
     }
 
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<bool>("container", Container));
+        properties.Add(new DiagnosticsProperty<SemanticsProperties>("properties", Properties));
+        Properties.DebugFillProperties(properties);
+    }
+}
+
+/// <summary>
+/// The sliver counterpart of <see cref="Semantics"/>: annotates a sliver subtree instead of a box one.
+/// </summary>
+/// <remarks>Flutter's <c>SliverSemantics</c>.</remarks>
+public sealed class SliverSemantics : SemanticsBase
+{
+    public SliverSemantics(
+        Widget sliver,
+        SemanticsProperties properties,
+        bool container = false,
+        bool explicitChildNodes = false,
+        bool excludeSemantics = false,
+        bool blockUserActions = false,
+        Key? key = null)
+        : base(
+            properties,
+            sliver,
+            container: container,
+            explicitChildNodes: explicitChildNodes,
+            excludeSemantics: excludeSemantics,
+            blockUserActions: blockUserActions,
+            key: key)
+    {
+    }
+
+    /// <inheritdoc />
+    public override RenderObject CreateRenderObject(BuildContext context)
+    {
+        return new RenderSliverSemanticsAnnotations(
+            properties: Properties,
+            container: Container,
+            explicitChildNodes: ExplicitChildNodes,
+            excludeSemantics: ExcludeSemantics,
+            blockUserActions: BlockUserActions,
+            textDirection: GetTextDirection(context));
+    }
+
+    /// <inheritdoc />
+    public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
+    {
+        var semantics = (RenderSliverSemanticsAnnotations)renderObject;
+        semantics.Container = Container;
+        semantics.ExplicitChildNodes = ExplicitChildNodes;
+        semantics.ExcludeSemantics = ExcludeSemantics;
+        semantics.BlockUserActions = BlockUserActions;
+        semantics.Properties = Properties;
+        semantics.TextDirection = GetTextDirection(context);
+    }
 }
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/basic.dart (MergeSemantics)

@@ -85,11 +85,11 @@ public sealed class ModalBarrierTests
             Assert.NotNull(gesture.OnSecondaryTap);
             Assert.Equal(BoxConstraints.Expand(), constraints.Constraints);
             Assert.Equal(Colors.SlateBlue, coloredBox.Color);
-            Assert.Equal("Close the overlay", semantics.OnTapHint);
+            Assert.Equal("Close the overlay", semantics.Properties.HintOverrides?.OnTapHint);
 
             // Only platforms that support dismissing the barrier expose it to semantics.
             Assert.Equal(!semanticsSupported, exclude.Excluding);
-            Assert.Equal(semanticsSupported ? "Close overlay" : null, semantics.Label);
+            Assert.Equal(semanticsSupported ? "Close overlay" : null, semantics.Properties.Label);
 
             gesture.OnTap!();
             gesture.OnSecondaryTap!();
@@ -141,7 +141,7 @@ public sealed class ModalBarrierTests
     {
         var notifier = new ValueNotifier<Thickness>(new Thickness(10, 5, 20, 15));
         var label = new RenderSemanticsAnnotations(
-            label: "Barrier",
+            new SemanticsProperties(label: "Barrier"),
             child: new RenderConstrainedBox(BoxConstraints.Expand()));
         var clipper = new RenderSemanticsClipper(notifier, label);
         var renderView = new RenderView { Child = clipper };
@@ -172,10 +172,10 @@ public sealed class ModalBarrierTests
     public void BlockSemantics_DropsPreviouslyPaintedSiblingSemantics()
     {
         var behind = new RenderSemanticsAnnotations(
-            label: "Behind",
+            new SemanticsProperties(label: "Behind"),
             child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 30, height: 20)));
         var foreground = new RenderSemanticsAnnotations(
-            label: "Foreground",
+            new SemanticsProperties(label: "Foreground"),
             child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 30, height: 20)));
         var block = new RenderBlockSemantics(child: foreground);
         var stack = new RenderStack(children: [behind, block], textDirection: TextDirection.Ltr);

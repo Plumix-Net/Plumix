@@ -287,19 +287,14 @@ public sealed class RawRadioState<T> : ToggleableState, RadioClient<T>
             focusNode: FocusNode,
             autofocus: CurrentWidget.Autofocus);
 
-        SemanticsFlags flags = SemanticsFlags.IsInMutuallyExclusiveGroup;
-        if (IsInteractive)
-        {
-            flags |= SemanticsFlags.IsEnabled;
-        }
-
         bool applePlatform = PlatformDefaults.TargetPlatform is TargetPlatform.IOS or TargetPlatform.MacOS;
         string? hint = applePlatform && !Selected
             ? Localizations.MaybeOf<WidgetsLocalizations>(context)?.RadioButtonUnselectedLabel
             : null;
         return new Semantics(
             child: result,
-            flags: flags,
+            inMutuallyExclusiveGroup: true,
+            enabled: IsInteractive ? true : null,
             hint: hint,
             onTap: IsInteractive ? HandleTap : null,
             @checked: Selected,

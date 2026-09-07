@@ -495,7 +495,7 @@ internal sealed class SliverAppBarDelegate : SliverPersistentHeaderDelegate
 
         Widget? flexibleSpace = _flexibleSpace;
         if (toolbarTitle is null && flexibleSpace is not null && !_widget.ExcludeHeaderSemantics)
-            flexibleSpace = new Semantics(flags: SemanticsFlags.IsHeader, child: flexibleSpace);
+            flexibleSpace = new Semantics(header: true, child: flexibleSpace);
 
         return new FlexibleSpaceBarSettings(
             toolbarOpacity: toolbarOpacity,

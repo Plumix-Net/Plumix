@@ -517,7 +517,7 @@ internal sealed class NavigationBarDestinationTileState : State
         // Dart parity: `_NavigationBarDestinationSemantics`.
         return new Semantics(
             enabled: destination.Enabled,
-            flags: SemanticsFlags.IsButton,
+            button: true,
             child: new Stack(
                 alignment: Alignment.Center,
                 children:
@@ -701,7 +701,7 @@ internal sealed class NavigationBarCustomDestinationTile : StatelessWidget
 
         return new Semantics(
             enabled: true,
-            flags: SemanticsFlags.IsButton,
+            button: true,
             child: new Stack(
                 alignment: Alignment.Center,
                 children:

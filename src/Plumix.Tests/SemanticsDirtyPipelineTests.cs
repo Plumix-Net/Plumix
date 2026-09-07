@@ -20,10 +20,11 @@ public sealed class SemanticsDirtyPipelineTests
         RenderBox? child = null)
     {
         return new RenderSemanticsAnnotations(
-            label: label,
+            new SemanticsProperties(
+                label: label,
+                traversalParentIdentifier: traversalParentIdentifier,
+                traversalChildIdentifier: traversalChildIdentifier),
             container: true,
-            traversalParentIdentifier: traversalParentIdentifier,
-            traversalChildIdentifier: traversalChildIdentifier,
             child: child ?? new RenderConstrainedBox(BoxConstraints.Tight(size)));
     }
 
@@ -77,7 +78,7 @@ public sealed class SemanticsDirtyPipelineTests
         (PipelineOwner pipeline, List<SemanticsUpdate> updates) = Pump(row, new Size(100, 40));
         Assert.Single(updates);
 
-        second.Label = "changed";
+        second.Properties = new SemanticsProperties(label: "changed");
         pipeline.FlushLayout(new Size(100, 40));
         pipeline.FlushSemantics();
 

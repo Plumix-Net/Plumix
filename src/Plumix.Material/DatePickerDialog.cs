@@ -279,7 +279,8 @@ internal sealed class DatePickerDialogState : State
         excludeFromSemantics: true,
         child: new Semantics(
             label: tooltip,
-            flags: SemanticsFlags.IsButton | SemanticsFlags.IsEnabled,
+            button: true,
+            enabled: true,
             onTap: HandleEntryModeToggle,
             child: new IconButton(icon: icon, color: color, onPressed: HandleEntryModeToggle)));
 

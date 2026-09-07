@@ -945,11 +945,11 @@ public sealed class MaterialTabsTests
 
         IReadOnlyList<RenderSemanticsAnnotations> annotations =
             FindDescendants<RenderSemanticsAnnotations>(harness.RenderView);
-        Assert.Contains(annotations, node => node.Role == SemanticsRole.TabBar);
-        Assert.Equal(2, annotations.Count(node => node.Role == SemanticsRole.Tab));
-        Assert.Contains(annotations, node => node.Label == "Tab 1 of 2");
-        Assert.Contains(annotations, node => node.Label == "Tab 2 of 2"
-                                     && node.Flags.HasFlag(SemanticsFlags.IsSelected));
+        Assert.Contains(annotations, node => node.Properties.Role == SemanticsRole.TabBar);
+        Assert.Equal(2, annotations.Count(node => node.Properties.Role == SemanticsRole.Tab));
+        Assert.Contains(annotations, node => node.Properties.Label == "Tab 1 of 2");
+        Assert.Contains(annotations, node => node.Properties.Label == "Tab 2 of 2"
+                                     && node.Properties.Selected == true);
     }
 
     [Fact]
@@ -1051,7 +1051,7 @@ public sealed class MaterialTabsTests
         Assert.Equal(
             1,
             FindDescendants<RenderSemanticsAnnotations>(harness.RenderView)
-                .Count(node => node.Role == SemanticsRole.TabPanel));
+                .Count(node => node.Properties.Role == SemanticsRole.TabPanel));
     }
 
     [Fact]
@@ -1322,7 +1322,7 @@ public sealed class MaterialTabsTests
 
         Assert.Contains(
             FindDescendants<RenderSemanticsAnnotations>(harness.RenderView),
-            semantics => semantics.Label == "Tab 2 of 3");
+            semantics => semantics.Properties.Label == "Tab 2 of 3");
         Assert.Equal([0, 255, 0], SelectorAlphas(harness.RenderView));
     }
 

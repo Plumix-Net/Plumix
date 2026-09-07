@@ -14,14 +14,16 @@ public sealed class SemanticsTreeTests
     public void OrdinalSortKeys_ReorderSemanticSiblingsWithoutChangingPaintOrder()
     {
         var later = new RenderSemanticsAnnotations(
-            label: "Later",
+            new SemanticsProperties(
+                label: "Later",
+                sortKey: new OrdinalSortKey(1.0)),
             container: true,
-            sortKey: new OrdinalSortKey(1.0),
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var earlier = new RenderSemanticsAnnotations(
-            label: "Earlier",
+            new SemanticsProperties(
+                label: "Earlier",
+                sortKey: new OrdinalSortKey(0.0)),
             container: true,
-            sortKey: new OrdinalSortKey(0.0),
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var row = new RenderFlex(
             children: [later, earlier],
@@ -51,6 +53,7 @@ public sealed class SemanticsTreeTests
     public void HitTestBehavior_DefaultsToDeferAndReachesTheNode()
     {
         var annotations = new RenderSemanticsAnnotations(
+            new SemanticsProperties(),
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var renderView = new RenderView { Child = annotations };
         var pipeline = new PipelineOwner(renderView);
@@ -62,7 +65,8 @@ public sealed class SemanticsTreeTests
         Assert.Equal(SemanticsHitTestBehavior.Defer, pipeline.SemanticsOwner!.RootNode!.HitTestBehavior);
         Assert.Empty(pipeline.SemanticsOwner!.RootNode!.Children);
 
-        annotations.HitTestBehavior = SemanticsHitTestBehavior.Opaque;
+        annotations.Properties = new SemanticsProperties(
+            hitTestBehavior: SemanticsHitTestBehavior.Opaque);
         pipeline.FlushSemantics();
 
         var root = pipeline.SemanticsOwner!.RootNode;
@@ -1604,7 +1608,7 @@ public sealed class SemanticsTreeTests
         var tag = new SemanticsTag("affix");
         int taggedConfigurations = 0;
         var tagged = new RenderSemanticsAnnotations(
-            tagForChildren: tag,
+            new SemanticsProperties(tagForChildren: tag),
             child: new FixedSemanticBox("Tagged", new Size(12, 8)));
         var row = new RenderFlex(
             children: [tagged, new FixedSemanticBox("Plain", new Size(12, 8))],

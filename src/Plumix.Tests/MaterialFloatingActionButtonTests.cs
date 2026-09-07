@@ -803,7 +803,7 @@ public sealed class MaterialFloatingActionButtonTests
         Assert.Null(FindParagraphByText(renderRoot, "Create item"));
         Assert.Contains(
             FindDescendants<RenderSemanticsAnnotations>(renderRoot),
-            semantics => semantics.Tooltip == "Create item");
+            semantics => semantics.Properties.Tooltip == "Create item");
     }
 
     [Fact]

@@ -590,10 +590,8 @@ public class IconButton : StatelessWidget
         }
 
         return new Semantics(
-            flags: SemanticsFlags.IsButton
-                   | (OnPressed is not null
-                       ? SemanticsFlags.IsEnabled
-                       : SemanticsFlags.None),
+            button: true,
+            enabled: OnPressed is not null ? true : null,
             child: result);
     }
 

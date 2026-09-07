@@ -553,7 +553,7 @@ public sealed class ButtonStyleState : State
         result = new InputPadding(minSize: minSize, child: result);
         return new Semantics(
             container: true,
-            flags: widget.IsSemanticButton == true ? SemanticsFlags.IsButton : SemanticsFlags.None,
+            button: widget.IsSemanticButton == true ? true : null,
             enabled: widget.Enabled,
             child: result);
     }

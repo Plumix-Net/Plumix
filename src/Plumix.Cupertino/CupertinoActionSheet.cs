@@ -371,7 +371,7 @@ internal sealed class CupertinoActionSheetActionState : State, ISlideTarget
                         focusNode: Current.FocusNode,
                         onShowFocusHighlight: OnShowFocusHighlight,
                         child: new Semantics(
-                            flags: SemanticsFlags.IsButton,
+                            button: true,
                             onTap: Current.OnPressed,
                             child: content)))));
     }

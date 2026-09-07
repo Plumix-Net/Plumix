@@ -367,7 +367,7 @@ internal sealed class PersistentNavigationBar : StatelessWidget
         {
             middle = new DefaultTextStyle(
                 style: CupertinoTheme.Of(context).TextTheme.NavTitleTextStyle,
-                child: new Semantics(flags: SemanticsFlags.IsHeader, child: middle));
+                child: new Semantics(header: true, child: middle));
             // When the middle's visibility can change on the fly like with large title slivers,
             // wrap with animated opacity.
             middle = MiddleVisible == null
@@ -754,7 +754,7 @@ internal sealed class LargeTitleNavigationBarSliverDelegate : SliverPersistentHe
                                     : 0.0,
                                 duration: NavBarStatics.NavBarTitleFadeDuration,
                                 child: new Semantics(
-                                    flags: SemanticsFlags.IsHeader,
+                                    header: true,
                                     child: new DefaultTextStyle(
                                         style: CupertinoTheme.Of(context).TextTheme.NavLargeTitleTextStyle,
                                         maxLines: 1,

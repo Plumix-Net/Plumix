@@ -428,7 +428,9 @@ public class FormFieldState<T> : FormFieldState
         }
 
         return new Semantics(
-            flags: HasError ? SemanticsFlags.IsInvalid : SemanticsFlags.None,
+            validationResult: HasError
+                ? SemanticsValidationResult.Invalid
+                : SemanticsValidationResult.Valid,
             child: CurrentField.Builder(this));
     }
 

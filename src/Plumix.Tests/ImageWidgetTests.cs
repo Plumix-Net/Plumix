@@ -146,8 +146,8 @@ public sealed class ImageWidgetTests : IDisposable
         Assert.Equal(Color.FromArgb(128, 255, 0, 0), image.Color);
 
         var semantics = Assert.IsType<Semantics>(harness.FindWidget<Semantics>());
-        Assert.Equal("Photo icon", semantics.Label);
-        Assert.False(semantics.Flags.HasFlag(SemanticsFlags.IsImage));
+        Assert.Equal("Photo icon", semantics.Properties.Label);
+        Assert.Null(semantics.Properties.Image);
 
         using var emptyHarness = new WidgetRenderHarness(new ImageIcon(null, semanticLabel: "Empty icon"));
         var box = Assert.IsType<SizedBox>(emptyHarness.FindWidget<SizedBox>());

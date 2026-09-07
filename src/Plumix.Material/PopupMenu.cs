@@ -191,8 +191,8 @@ public class PopupMenuItemState<T> : State
 
     protected virtual Widget BuildSemantics(Widget child) => new Semantics(
         role: SemanticsRole.MenuItem,
-        flags: SemanticsFlags.IsButton
-               | (CurrentWidget.Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None),
+        button: true,
+        enabled: CurrentWidget.Enabled ? true : null,
         onTap: CurrentWidget.Enabled ? HandleTap : null,
         child: child);
 
@@ -298,8 +298,8 @@ internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
 
     protected override Widget BuildSemantics(Widget child) => new Semantics(
         role: SemanticsRole.MenuItemCheckbox,
-        flags: SemanticsFlags.IsButton
-               | (CheckedWidget.Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None),
+        button: true,
+        enabled: CheckedWidget.Enabled ? true : null,
         onTap: CheckedWidget.Enabled ? HandleTap : null,
         @checked: CheckedWidget.Checked,
         child: child);

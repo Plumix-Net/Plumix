@@ -308,7 +308,9 @@ public sealed class ProxyBoxParityTests
     [Fact]
     public void RenderSemanticsAnnotations_ExcludeSemanticsAndBlockUserActions()
     {
-        var annotations = new RenderSemanticsAnnotations(child: new DesiredSizeBox(new Size(10, 10)))
+        var annotations = new RenderSemanticsAnnotations(
+            new SemanticsProperties(),
+            child: new DesiredSizeBox(new Size(10, 10)))
         {
             ExcludeSemantics = true,
             BlockUserActions = true,

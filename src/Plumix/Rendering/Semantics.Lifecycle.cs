@@ -214,11 +214,21 @@ public sealed partial class SemanticsNode
     /// </remarks>
     private bool IsDifferentFromCurrentSemanticAnnotation(SemanticsConfiguration config)
     {
-        return Label != config.Label
-               || Hint != config.Hint
-               || Value != config.Value
-               || IncreasedValue != config.IncreasedValue
-               || DecreasedValue != config.DecreasedValue
+        return AttributedLabel != config.AttributedLabel
+               || AttributedHint != config.AttributedHint
+               || AttributedValue != config.AttributedValue
+               || AttributedIncreasedValue != config.AttributedIncreasedValue
+               || AttributedDecreasedValue != config.AttributedDecreasedValue
+               || HintOverrides != config.HintOverrides
+               || Identifier != config.Identifier
+               || HeadingLevel != config.HeadingLevel
+               || LinkUrl != config.LinkUrl
+               || MaxValueLength != config.MaxValueLength
+               || CurrentValueLength != config.CurrentValueLength
+               || ValidationResult != config.ValidationResult
+               || TextSelection != config.TextSelection
+               || PlatformViewId != config.PlatformViewId
+               || !SetEquals(ControlsNodes, config.ControlsNodes)
                || Tooltip != config.Tooltip
                || Flags != config.Flags
                || TextDirection != config.TextDirection
@@ -237,6 +247,17 @@ public sealed partial class SemanticsNode
                || MinValue != config.MinValue
                || MaxValue != config.MaxValue
                || !MapEquals(_customActionHandlers, config.CustomActionHandlers);
+    }
+
+    /// <remarks>Flutter's <c>setEquals</c> from `foundation/collections.dart`.</remarks>
+    private static bool SetEquals(IReadOnlySet<string>? a, IReadOnlySet<string>? b)
+    {
+        if (ReferenceEquals(a, b))
+        {
+            return true;
+        }
+
+        return a is not null && b is not null && a.Count == b.Count && a.SetEquals(b);
     }
 
     /// <remarks>Flutter's <c>mapEquals</c> from `foundation/collections.dart`.</remarks>

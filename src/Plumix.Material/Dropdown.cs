@@ -797,7 +797,7 @@ public abstract class DropdownMenuItemContainer : StatelessWidget
     public AlignmentGeometry Alignment { get; }
 
     public override Widget Build(BuildContext context) => new Semantics(
-        flags: SemanticsFlags.IsButton,
+        button: true,
         child: new ConstrainedBox(
             new BoxConstraints(MinHeight: DropdownConstants.MenuItemHeight),
             new Align(alignment: Alignment, child: Child)));
@@ -1243,7 +1243,7 @@ internal sealed class DropdownButtonState<T> : State
         {
             InputDecoration effectiveDecoration = BuildFormFieldDecoration(context, widget, effectiveSuffixIcon);
             return new Semantics(
-                flags: ChildHasButtonSemantic(hintIndex) ? SemanticsFlags.None : SemanticsFlags.IsButton,
+                button: ChildHasButtonSemantic(hintIndex) ? null : true,
                 expanded: _isMenuExpanded,
                 child: new Actions(
                     _actionMap,
@@ -1267,7 +1267,7 @@ internal sealed class DropdownButtonState<T> : State
         }
 
         return new Semantics(
-            flags: ChildHasButtonSemantic(hintIndex) ? SemanticsFlags.None : SemanticsFlags.IsButton,
+            button: ChildHasButtonSemantic(hintIndex) ? null : true,
             expanded: _isMenuExpanded,
             child: new Actions(
                 _actionMap,

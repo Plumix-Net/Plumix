@@ -72,7 +72,7 @@ public sealed class CupertinoSwitchTests
         Assert.Equal(1.0, Assert.Single(harness.FindWidgets<Opacity>()).Value);
         Assert.Contains(harness.FindWidgets<FocusableActionDetector>(), detector => detector.Enabled);
         Assert.Contains(harness.FindWidgets<GestureDetector>(), detector => detector.ExcludeFromSemantics);
-        Assert.Contains(harness.FindWidgets<Semantics>(), semantics => semantics.Toggled == true);
+        Assert.Contains(harness.FindWidgets<Semantics>(), semantics => semantics.Properties.Toggled == true);
     }
 
     [Fact]

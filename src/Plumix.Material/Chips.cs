@@ -923,7 +923,7 @@ public sealed class RawChip : StatefulWidget
                 child: new Center(widthFactor: 1.0, heightFactor: 1.0, child: result));
 
             return new Semantics(
-                flags: widget.TapEnabled ? SemanticsFlags.IsButton : SemanticsFlags.None,
+                button: widget.TapEnabled ? true : null,
                 container: true,
                 selected: widget.Selected,
                 enabled: widget.TapEnabled ? widget.CanTapBody : null,

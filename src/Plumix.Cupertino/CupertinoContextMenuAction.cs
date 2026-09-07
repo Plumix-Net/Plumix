@@ -77,7 +77,7 @@ public sealed class CupertinoContextMenuAction : StatefulWidget
             Widget content = new ConstrainedBox(
                 constraints: new BoxConstraints(MinHeight: 43.0),
                 child: new Semantics(
-                    flags: SemanticsFlags.IsButton,
+                    button: true,
                     child: new ColoredBox(
                         color: CupertinoDynamicColor.Resolve(
                             _isPressed ? BackgroundColorPressed : CupertinoContextMenu.BackgroundColor,

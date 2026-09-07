@@ -64,8 +64,8 @@ public sealed class MaterialTextFieldTests : IDisposable
         Assert.False(FocusManager.Instance.HandleTextInput("x"));
         Assert.Equal("secret", controller.Text);
         var semantics = Assert.Single(FindDescendants<RenderSemanticsAnnotations>(harness.RenderView), value =>
-            value.Flags.HasFlag(SemanticsFlags.IsTextField));
-        Assert.False(semantics.Flags.HasFlag(SemanticsFlags.IsEnabled));
+            value.Properties.TextField == true);
+        Assert.Null(semantics.Properties.Enabled);
     }
 
     [Fact]

@@ -420,9 +420,8 @@ internal sealed class CupertinoDialogActionState : State, ISlideTarget
                 child: new ConstrainedBox(
                     new BoxConstraints(MaxWidth: fontSizeRatio * (dialogWidth - (2.0 * padding))),
                     new Semantics(
-                        flags: SemanticsFlags.IsButton,
+                        button: true,
                         onTap: Current.OnPressed,
-                        mergeDescendants: true,
                         child: new DefaultTextStyle(
                             style,
                             Current.Child,

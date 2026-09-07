@@ -287,7 +287,7 @@ public class DiagnosticsProperty<T> : DiagnosticsNode
     }
 
     /// Whether the property [Value] differs from [DefaultValue].
-    public bool IsInteresting =>
+    public virtual bool IsInteresting =>
         ReferenceEquals(DefaultValue, DiagnosticsDefaults.NoDefaultValue) || !Equals(Value, DefaultValue);
 
     /// The [DiagnosticLevel] the property was constructed with.

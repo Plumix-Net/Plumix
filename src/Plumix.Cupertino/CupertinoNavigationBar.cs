@@ -590,7 +590,7 @@ internal sealed class CupertinoNavigationBarState : State
                             0.0,
                             NavBarStatics.NavBarBottomPadding),
                         child: new Semantics(
-                            flags: SemanticsFlags.IsHeader,
+                            header: true,
                             child: new DefaultTextStyle(
                                 style: theme.TextTheme.NavLargeTitleTextStyle,
                                 maxLines: 1,
@@ -729,7 +729,7 @@ public sealed class CupertinoNavigationBarBackButton : StatelessWidget
             child: new Semantics(
                 container: true,
                 label: CupertinoLocalizations.Of(context).BackButtonLabel,
-                flags: SemanticsFlags.IsButton,
+                button: true,
                 child: new ExcludeSemantics(
                     child: new DefaultTextStyle(
                         style: actionTextStyle,

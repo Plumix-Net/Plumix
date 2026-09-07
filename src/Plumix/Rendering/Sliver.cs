@@ -1497,6 +1497,98 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
     public override List<DiagnosticsNode> DebugDescribeChildren() => DebugDescribeSingleChild(Child);
 }
 
+/// <summary>
+/// Adds the <see cref="SemanticsProperties"/> it is given to the semantics of its sliver child.
+/// </summary>
+/// <remarks>
+/// Flutter's <c>RenderSliverSemanticsAnnotations</c>. It shares every behavior with
+/// <see cref="RenderSemanticsAnnotations"/> — in Dart through <c>SemanticsAnnotationsMixin</c>, here
+/// through the same <see cref="SemanticsAnnotations"/> helper — and differs only in its base class.
+/// </remarks>
+public sealed class RenderSliverSemanticsAnnotations : RenderProxySliver
+{
+    private readonly SemanticsAnnotations _annotations;
+
+    public RenderSliverSemanticsAnnotations(
+        SemanticsProperties properties,
+        bool container = false,
+        bool explicitChildNodes = false,
+        bool excludeSemantics = false,
+        bool blockUserActions = false,
+        TextDirection? textDirection = null,
+        RenderSliver? child = null) : base(child)
+    {
+        _annotations = new SemanticsAnnotations(
+            MarkNeedsSemanticsUpdate,
+            properties,
+            container: container,
+            explicitChildNodes: explicitChildNodes,
+            excludeSemantics: excludeSemantics,
+            blockUserActions: blockUserActions,
+            textDirection: textDirection);
+    }
+
+    /// <summary>All the annotations this render object contributes.</summary>
+    public SemanticsProperties Properties
+    {
+        get => _annotations.Properties;
+        set => _annotations.Properties = value;
+    }
+
+    /// <summary>Whether this annotation introduces a semantics node of its own.</summary>
+    public bool Container
+    {
+        get => _annotations.Container;
+        set => _annotations.Container = value;
+    }
+
+    /// <summary>Whether the descendants must each produce their own semantics node.</summary>
+    public bool ExplicitChildNodes
+    {
+        get => _annotations.ExplicitChildNodes;
+        set => _annotations.ExplicitChildNodes = value;
+    }
+
+    /// <summary>Whether to drop all of the child's semantics.</summary>
+    public bool ExcludeSemantics
+    {
+        get => _annotations.ExcludeSemantics;
+        set => _annotations.ExcludeSemantics = value;
+    }
+
+    /// <summary>Whether the user actions of this subtree are blocked.</summary>
+    public bool BlockUserActions
+    {
+        get => _annotations.BlockUserActions;
+        set => _annotations.BlockUserActions = value;
+    }
+
+    /// <summary>The reading direction for this subtree's semantic strings.</summary>
+    public TextDirection? TextDirection
+    {
+        get => _annotations.TextDirection;
+        set => _annotations.TextDirection = value;
+    }
+
+    /// <inheritdoc />
+    internal override void VisitChildrenForSemantics(Action<RenderObject> visitor)
+    {
+        if (_annotations.ExcludeSemantics)
+        {
+            return;
+        }
+
+        base.VisitChildrenForSemantics(visitor);
+    }
+
+    /// <inheritdoc />
+    protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
+    {
+        base.DescribeSemanticsConfiguration(configuration);
+        _annotations.DescribeSemanticsConfiguration(configuration);
+    }
+}
+
 public sealed class RenderSliverIgnorePointer : RenderProxySliver
 {
     private bool _ignoring;

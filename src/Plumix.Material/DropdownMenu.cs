@@ -829,7 +829,7 @@ public sealed class DropdownMenuState<T> : State
         var localizations = MaterialLocalizations.Of(context);
 
         Widget textField = new Semantics(
-            flags: isButton ? SemanticsFlags.IsButton : SemanticsFlags.None,
+            button: isButton ? true : null,
             hint: Theme.Of(context).Platform == TargetPlatform.IOS
                 ? controller.IsOpen ? localizations.CollapsedHint : localizations.ExpandedHint
                 : null,

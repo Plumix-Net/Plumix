@@ -252,7 +252,7 @@ public abstract class ToggleableState : State
             child: result);
 
         return new Semantics(
-            flags: IsInteractive ? SemanticsFlags.IsEnabled : SemanticsFlags.None,
+            enabled: IsInteractive ? true : null,
             onTap: IsInteractive ? HandleTap : null,
             child: result);
     }

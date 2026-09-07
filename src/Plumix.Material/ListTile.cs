@@ -325,10 +325,10 @@ public sealed class ListTile : StatelessWidget
             decoration: new ShapeDecoration(effectiveShape, effectiveTileColor),
             child: content);
         content = new Semantics(
-            flags: (Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None)
-                   | (InternalAddSemanticForOnTap && (OnTap is not null || OnLongPress is not null)
-                       ? SemanticsFlags.IsButton
-                       : SemanticsFlags.None),
+            enabled: Enabled ? true : null,
+            button: InternalAddSemanticForOnTap && (OnTap is not null || OnLongPress is not null)
+                ? true
+                : null,
             selected: Selected,
             child: content);
 

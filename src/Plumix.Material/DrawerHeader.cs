@@ -321,7 +321,7 @@ public sealed class UserAccountsDrawerHeader : StatefulWidget
                     id: DropdownIconId,
                     child: new Semantics(
                         container: true,
-                        flags: SemanticsFlags.IsButton,
+                        button: true,
                         onTap: widget.OnTap,
                         child: new SizedBox(
                             width: 56.0,

@@ -224,7 +224,7 @@ public sealed class ToggleButtons : StatelessWidget
                     container: true,
                     @checked: IsSelected[index],
                     onTap: semanticsTap,
-                    flags: enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None));
+                    enabled: enabled ? true : null));
             buttons.Add(button);
         }
 

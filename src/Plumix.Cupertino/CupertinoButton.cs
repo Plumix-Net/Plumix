@@ -552,7 +552,7 @@ public sealed class CupertinoButton : StatefulWidget
                         behavior: HitTestBehavior.Opaque,
                         gestures: BuildGestures(enabled, gestureSettings),
                         child: new Semantics(
-                            flags: SemanticsFlags.IsButton,
+                            button: true,
                             child: new ConstrainedBox(
                                 new BoxConstraints(
                                     MinWidth: minimumSize?.Width ?? fallbackMinSize,

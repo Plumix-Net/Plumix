@@ -346,7 +346,7 @@ internal sealed class DragHandle : StatelessWidget
             onExit: _ => HandleHover(false),
             child: new Semantics(
                 label: MaterialLocalizations.Of(context).ModalBarrierDismissLabel,
-                flags: SemanticsFlags.IsButton,
+                button: true,
                 container: true,
                 onTap: OnSemanticsTap,
                 child: new SizedBox(

@@ -60,7 +60,7 @@ public enum SemanticsInputType
 }
 
 [Flags]
-public enum SemanticsFlags
+public enum SemanticsFlags : long
 {
     None = 0,
     IsButton = 1 << 0,
@@ -81,7 +81,6 @@ public enum SemanticsFlags
     ScopesRoute = 1 << 17,
     NamesRoute = 1 << 18,
     HasCheckedState = 1 << 19,
-    IsInvalid = 1 << 20,
     IsFocusable = 1 << 21,
     IsCheckStateMixed = 1 << 22,
     HasEnabledState = 1 << 23,
@@ -104,6 +103,34 @@ public enum SemanticsFlags
     /// <em>inequality</em>, so a blocked node never merges with an unblocked one.
     /// </remarks>
     IsAccessibilityFocusBlocked = 1 << 28,
+
+    /// <summary>Whether the node's value is hidden from view, as in a password field.</summary>
+    /// <remarks>Flutter's <c>SemanticsFlags.isObscured</c>.</remarks>
+    IsObscured = 1L << 15,
+
+    /// <summary>Whether the node's value spans several lines.</summary>
+    /// <remarks>Flutter's <c>SemanticsFlags.isMultiline</c>.</remarks>
+    IsMultiline = 1L << 16,
+
+    /// <summary>Whether an editable node rejects edits.</summary>
+    /// <remarks>Flutter's <c>SemanticsFlags.isReadOnly</c>.</remarks>
+    IsReadOnly = 1L << 29,
+
+    /// <summary>Whether the node represents a key on a keyboard.</summary>
+    /// <remarks>Flutter's <c>SemanticsFlags.isKeyboardKey</c>.</remarks>
+    IsKeyboardKey = 1L << 30,
+
+    /// <summary>
+    /// Whether the node must be filled in before its form can be submitted. Paired with
+    /// <see cref="HasRequiredState"/> so the annotation can also say "this control has no required
+    /// state", which is what Dart's tri-state <c>isRequired</c> encodes.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsFlags.isRequired</c>.</remarks>
+    IsRequired = 1L << 31,
+
+    /// <summary>Whether the node reports a required/optional state at all.</summary>
+    /// <remarks>Flutter's <c>SemanticsFlags.hasRequiredState</c>.</remarks>
+    HasRequiredState = 1L << 32,
 }
 
 /// <summary>
@@ -192,6 +219,45 @@ public enum SemanticsActions
     /// </summary>
     /// <remarks>Flutter's <c>SemanticsAction.customAction</c>.</remarks>
     CustomAction = 1 << 14,
+
+    /// <summary>Move the text cursor one character forward. The argument is the extend-selection flag.</summary>
+    /// <remarks>Flutter's <c>SemanticsAction.moveCursorForwardByCharacter</c>.</remarks>
+    MoveCursorForwardByCharacter = 1 << 17,
+
+    /// <summary>Move the text cursor one character backward.</summary>
+    /// <remarks>Flutter's <c>SemanticsAction.moveCursorBackwardByCharacter</c>.</remarks>
+    MoveCursorBackwardByCharacter = 1 << 18,
+
+    /// <summary>Move the text cursor one word forward.</summary>
+    /// <remarks>Flutter's <c>SemanticsAction.moveCursorForwardByWord</c>.</remarks>
+    MoveCursorForwardByWord = 1 << 19,
+
+    /// <summary>Move the text cursor one word backward.</summary>
+    /// <remarks>Flutter's <c>SemanticsAction.moveCursorBackwardByWord</c>.</remarks>
+    MoveCursorBackwardByWord = 1 << 20,
+
+    /// <summary>
+    /// Set the node's text selection. The argument is a <see cref="Widgets.TextSelection"/>, or a
+    /// <c>base</c>/<c>extent</c> integer map coming off a platform channel.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsAction.setSelection</c>.</remarks>
+    SetSelection = 1 << 21,
+
+    /// <summary>Replace the node's text. The argument is the new <see cref="string"/>.</summary>
+    /// <remarks>Flutter's <c>SemanticsAction.setText</c>.</remarks>
+    SetText = 1 << 22,
+
+    /// <summary>Copy the node's selected content to the clipboard.</summary>
+    /// <remarks>Flutter's <c>SemanticsAction.copy</c>.</remarks>
+    Copy = 1 << 23,
+
+    /// <summary>Cut the node's selected content to the clipboard.</summary>
+    /// <remarks>Flutter's <c>SemanticsAction.cut</c>.</remarks>
+    Cut = 1 << 24,
+
+    /// <summary>Paste the clipboard's content over the node's selection.</summary>
+    /// <remarks>Flutter's <c>SemanticsAction.paste</c>.</remarks>
+    Paste = 1 << 25,
 }
 
 /// <summary>
@@ -389,15 +455,154 @@ public sealed class SemanticsConfiguration
     public bool IsBlockingSemanticsOfPreviouslyPaintedNodes { get; set; }
     public bool IsBlockingUserActions { get; set; }
     public ChildSemanticsConfigurationsDelegate? ChildConfigurationsDelegate { get; set; }
-    public string? Label { get; set; }
-    public string? Hint { get; set; }
-    public string? OnTapHint { get; set; }
+    /// <summary>
+    /// The node's label, as plain text. Assigning it replaces <see cref="AttributedLabel"/> and
+    /// therefore drops any string attributes, exactly as Dart's <c>label</c> setter does.
+    /// </summary>
+    /// <remarks>
+    /// Dart backs the unset state with <c>AttributedString('')</c>; Plumix keeps its own <c>null</c>
+    /// convention for "this configuration says nothing about the label".
+    /// </remarks>
+    public string? Label
+    {
+        get => AttributedLabel?.String;
+        set => AttributedLabel = value is null ? null : new AttributedString(value);
+    }
+
+    /// <summary>The node's label with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.attributedLabel</c>.</remarks>
+    public AttributedString? AttributedLabel { get; set; }
+
+    /// <summary>The node's hint, as plain text.</summary>
+    public string? Hint
+    {
+        get => AttributedHint?.String;
+        set => AttributedHint = value is null ? null : new AttributedString(value);
+    }
+
+    /// <summary>The node's hint with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.attributedHint</c>.</remarks>
+    public AttributedString? AttributedHint { get; set; }
+
+    /// <summary>
+    /// Replacement wording an assistive technology announces for the tap and long-press actions.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsConfiguration.hintOverrides</c>. Dart's setter silently ignores a
+    /// <c>null</c> assignment, so an override can be added but never cleared; Plumix matches that.
+    /// </remarks>
+    public SemanticsHintOverrides? HintOverrides
+    {
+        get => _hintOverrides;
+        set
+        {
+            if (value is null)
+            {
+                return;
+            }
+
+            _hintOverrides = value;
+        }
+    }
+
+    private SemanticsHintOverrides? _hintOverrides;
+
+    /// <summary>The tap hint from <see cref="HintOverrides"/>, if any.</summary>
+    public string? OnTapHint => _hintOverrides?.OnTapHint;
+
+    /// <summary>The long-press hint from <see cref="HintOverrides"/>, if any.</summary>
+    public string? OnLongPressHint => _hintOverrides?.OnLongPressHint;
+
     public string? Tooltip { get; set; }
-    public string? Value { get; set; }
-    public string? IncreasedValue { get; set; }
-    public string? DecreasedValue { get; set; }
+
+    /// <summary>The node's value, as plain text.</summary>
+    public string? Value
+    {
+        get => AttributedValue?.String;
+        set => AttributedValue = value is null ? null : new AttributedString(value);
+    }
+
+    /// <summary>The node's value with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.attributedValue</c>.</remarks>
+    public AttributedString? AttributedValue { get; set; }
+
+    /// <summary>The value the node will read after <see cref="OnIncrease"/> runs.</summary>
+    public string? IncreasedValue
+    {
+        get => AttributedIncreasedValue?.String;
+        set => AttributedIncreasedValue = value is null ? null : new AttributedString(value);
+    }
+
+    /// <summary>The increased value with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.attributedIncreasedValue</c>.</remarks>
+    public AttributedString? AttributedIncreasedValue { get; set; }
+
+    /// <summary>The value the node will read after <see cref="OnDecrease"/> runs.</summary>
+    public string? DecreasedValue
+    {
+        get => AttributedDecreasedValue?.String;
+        set => AttributedDecreasedValue = value is null ? null : new AttributedString(value);
+    }
+
+    /// <summary>The decreased value with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.attributedDecreasedValue</c>.</remarks>
+    public AttributedString? AttributedDecreasedValue { get; set; }
+
     public string? MinValue { get; set; }
     public string? MaxValue { get; set; }
+
+    /// <summary>
+    /// A stable identifier UI testing frameworks address the node by. It is never announced to the
+    /// user, and setting it makes the annotating render object introduce its own semantics node.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.identifier</c>.</remarks>
+    public string? Identifier { get; set; }
+
+    /// <summary>The heading level, 1 to 6, or <c>0</c> when the node is not a heading.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.headingLevel</c>.</remarks>
+    public int HeadingLevel
+    {
+        get => _headingLevel;
+        set
+        {
+            if (value < 0 || value > 6)
+            {
+                throw new ArgumentOutOfRangeException(nameof(value), "Heading level must be between 0 and 6");
+            }
+
+            _headingLevel = value;
+        }
+    }
+
+    private int _headingLevel;
+
+    /// <summary>The URL a link node navigates to.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.linkUrl</c>.</remarks>
+    public Uri? LinkUrl { get; set; }
+
+    /// <summary>The maximum number of characters the node's value accepts.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.maxValueLength</c>.</remarks>
+    public int? MaxValueLength { get; set; }
+
+    /// <summary>The number of characters the node's value currently holds.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.currentValueLength</c>.</remarks>
+    public int? CurrentValueLength { get; set; }
+
+    /// <summary>The <see cref="Identifier"/>s of the nodes whose visibility this node controls.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.controlsNodes</c>.</remarks>
+    public IReadOnlySet<string>? ControlsNodes { get; set; }
+
+    /// <summary>The node's form-validation outcome.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.validationResult</c>.</remarks>
+    public SemanticsValidationResult ValidationResult { get; set; } = SemanticsValidationResult.None;
+
+    /// <summary>The node's current text selection, for editable nodes.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.textSelection</c>.</remarks>
+    public TextSelection? TextSelection { get; set; }
+
+    /// <summary>The id of the platform view this node stands for.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.platformViewId</c>.</remarks>
+    public int? PlatformViewId { get; set; }
     public SemanticsRole Role { get; set; }
     public SemanticsInputType InputType { get; set; }
     public SemanticsHitTestBehavior HitTestBehavior { get; set; } = SemanticsHitTestBehavior.Defer;
@@ -477,6 +682,211 @@ public sealed class SemanticsConfiguration
             : Flags & ~SemanticsFlags.IsSlider;
     }
 
+    /// <summary>Whether the node is a button.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isButton</c>.</remarks>
+    public bool IsButton
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsButton);
+        set => SetFlag(SemanticsFlags.IsButton, value);
+    }
+
+    /// <summary>Whether the node is a link.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isLink</c>.</remarks>
+    public bool IsLink
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsLink);
+        set => SetFlag(SemanticsFlags.IsLink, value);
+    }
+
+    /// <summary>Whether the node is a header for the content that follows it.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isHeader</c>.</remarks>
+    public bool IsHeader
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsHeader);
+        set => SetFlag(SemanticsFlags.IsHeader, value);
+    }
+
+    /// <summary>Whether the node is an editable text field.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isTextField</c>.</remarks>
+    public bool IsTextField
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsTextField);
+        set => SetFlag(SemanticsFlags.IsTextField, value);
+    }
+
+    /// <summary>Whether an editable node rejects edits.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isReadOnly</c>.</remarks>
+    public bool IsReadOnly
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsReadOnly);
+        set => SetFlag(SemanticsFlags.IsReadOnly, value);
+    }
+
+    /// <summary>Whether the node's value is hidden from view, as in a password field.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isObscured</c>.</remarks>
+    public bool IsObscured
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsObscured);
+        set => SetFlag(SemanticsFlags.IsObscured, value);
+    }
+
+    /// <summary>Whether the node's value spans several lines.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isMultiline</c>.</remarks>
+    public bool IsMultiline
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsMultiline);
+        set => SetFlag(SemanticsFlags.IsMultiline, value);
+    }
+
+    /// <summary>Whether the node represents a key on a keyboard.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isKeyboardKey</c>.</remarks>
+    public bool IsKeyboardKey
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsKeyboardKey);
+        set => SetFlag(SemanticsFlags.IsKeyboardKey, value);
+    }
+
+    /// <summary>Whether the node is an image.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isImage</c>.</remarks>
+    public bool IsImage
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsImage);
+        set => SetFlag(SemanticsFlags.IsImage, value);
+    }
+
+    /// <summary>Whether the node belongs to a group where only one member may be selected.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isInMutuallyExclusiveGroup</c>.</remarks>
+    public bool IsInMutuallyExclusiveGroup
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsInMutuallyExclusiveGroup);
+        set => SetFlag(SemanticsFlags.IsInMutuallyExclusiveGroup, value);
+    }
+
+    /// <summary>Whether the node introduces a route scope.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.scopesRoute</c>.</remarks>
+    public bool ScopesRoute
+    {
+        get => Flags.HasFlag(SemanticsFlags.ScopesRoute);
+        set => SetFlag(SemanticsFlags.ScopesRoute, value);
+    }
+
+    /// <summary>Whether the node's label names the route it is inside.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.namesRoute</c>.</remarks>
+    public bool NamesRoute
+    {
+        get => Flags.HasFlag(SemanticsFlags.NamesRoute);
+        set => SetFlag(SemanticsFlags.NamesRoute, value);
+    }
+
+    /// <summary>Whether changes to the node's content should be announced as they happen.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.liveRegion</c>.</remarks>
+    public bool LiveRegion
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsLiveRegion);
+        set => SetFlag(SemanticsFlags.IsLiveRegion, value);
+    }
+
+    /// <summary>Whether the node is selected, or <c>null</c> when it has no selected state.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isSelected</c>, a tri-state <c>bool?</c>.</remarks>
+    public bool? IsSelected
+    {
+        get => Flags.HasFlag(SemanticsFlags.HasSelectedState)
+            ? Flags.HasFlag(SemanticsFlags.IsSelected)
+            : null;
+        set => SetTristate(SemanticsFlags.HasSelectedState, SemanticsFlags.IsSelected, value);
+    }
+
+    /// <summary>Whether an expandable node is expanded, or <c>null</c> when it has no such state.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isExpanded</c>.</remarks>
+    public bool? IsExpanded
+    {
+        get => Flags.HasFlag(SemanticsFlags.HasExpandedState)
+            ? Flags.HasFlag(SemanticsFlags.IsExpanded)
+            : null;
+        set => SetTristate(SemanticsFlags.HasExpandedState, SemanticsFlags.IsExpanded, value);
+    }
+
+    /// <summary>Whether a switch-like node is on, or <c>null</c> when it has no toggled state.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isToggled</c>.</remarks>
+    public bool? IsToggled
+    {
+        get => Flags.HasFlag(SemanticsFlags.HasToggledState)
+            ? Flags.HasFlag(SemanticsFlags.IsToggled)
+            : null;
+        set => SetTristate(SemanticsFlags.HasToggledState, SemanticsFlags.IsToggled, value);
+    }
+
+    /// <summary>Whether the node must be filled in before its form can be submitted.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isRequired</c>.</remarks>
+    public bool? IsRequired
+    {
+        get => Flags.HasFlag(SemanticsFlags.HasRequiredState)
+            ? Flags.HasFlag(SemanticsFlags.IsRequired)
+            : null;
+        set => SetTristate(SemanticsFlags.HasRequiredState, SemanticsFlags.IsRequired, value);
+    }
+
+    /// <summary>
+    /// Whether the node is checked, or <c>null</c> when it has no checked state. Dart's setter only
+    /// writes the flags for a non-null value, so assigning <c>null</c> leaves them alone.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isChecked</c>.</remarks>
+    public bool? IsChecked
+    {
+        get => Flags.HasFlag(SemanticsFlags.HasCheckedState)
+            ? Flags.HasFlag(SemanticsFlags.IsChecked)
+            : null;
+        set
+        {
+            if (value is null)
+            {
+                return;
+            }
+
+            Flags |= SemanticsFlags.HasCheckedState;
+            SetFlag(SemanticsFlags.IsChecked, value.Value);
+            if (value.Value)
+            {
+                Flags &= ~SemanticsFlags.IsCheckStateMixed;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Whether a checkbox-like node is in its indeterminate state. Dart only writes the flag for a
+    /// <c>true</c> value; <c>false</c> and <c>null</c> leave the current state alone.
+    /// </summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.isCheckStateMixed</c>.</remarks>
+    public bool? IsCheckStateMixed
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsCheckStateMixed);
+        set
+        {
+            if (value != true)
+            {
+                return;
+            }
+
+            Flags |= SemanticsFlags.HasCheckedState | SemanticsFlags.IsCheckStateMixed;
+            Flags &= ~SemanticsFlags.IsChecked;
+        }
+    }
+
+    private void SetFlag(SemanticsFlags flag, bool value) =>
+        Flags = value ? Flags | flag : Flags & ~flag;
+
+    private void SetTristate(SemanticsFlags stateFlag, SemanticsFlags valueFlag, bool? value)
+    {
+        if (value is null)
+        {
+            Flags &= ~(stateFlag | valueFlag);
+            return;
+        }
+
+        Flags |= stateFlag;
+        SetFlag(valueFlag, value.Value);
+    }
+
     /// <summary>Whether the node is enabled, for controls that can be disabled.</summary>
     /// <remarks>
     /// Flutter's <c>SemanticsConfiguration.isEnabled</c> is a <c>bool?</c>: <c>null</c> means "this control
@@ -500,6 +910,31 @@ public sealed class SemanticsConfiguration
             Flags = value.Value
                 ? Flags | SemanticsFlags.IsEnabled
                 : Flags & ~SemanticsFlags.IsEnabled;
+        }
+    }
+
+    /// <summary>Whether the node can hold input focus at all.</summary>
+    /// <remarks>
+    /// Flutter's deprecated <c>SemanticsConfiguration.isFocusable</c>: assigning <c>false</c> clears
+    /// the focus state entirely, while <c>true</c> only introduces it when there is none, so it never
+    /// overwrites an <see cref="IsFocused"/> that was set first.
+    /// </remarks>
+    public bool IsFocusable
+    {
+        get => Flags.HasFlag(SemanticsFlags.IsFocusable);
+        set
+        {
+            if (!value)
+            {
+                Flags &= ~(SemanticsFlags.IsFocusable | SemanticsFlags.IsFocused);
+                return;
+            }
+
+            if (!Flags.HasFlag(SemanticsFlags.IsFocusable))
+            {
+                Flags |= SemanticsFlags.IsFocusable;
+                Flags &= ~SemanticsFlags.IsFocused;
+            }
         }
     }
 
@@ -783,6 +1218,236 @@ public sealed class SemanticsConfiguration
         }
     }
 
+    /// <summary>Activates the node, as a tap or a screen-reader double tap would.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onTap</c>.</remarks>
+    public Action? OnTap
+    {
+        get => _onTap;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Tap, value);
+            _onTap = value;
+        }
+    }
+
+    /// <summary>Long-presses the node.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onLongPress</c>.</remarks>
+    public Action? OnLongPress
+    {
+        get => _onLongPress;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.LongPress, value);
+            _onLongPress = value;
+        }
+    }
+
+    /// <summary>Dismisses the node, as a swipe-away gesture would.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onDismiss</c>.</remarks>
+    public Action? OnDismiss
+    {
+        get => _onDismiss;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Dismiss, value);
+            _onDismiss = value;
+        }
+    }
+
+    /// <summary>Expands a collapsed node.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onExpand</c>.</remarks>
+    public Action? OnExpand
+    {
+        get => _onExpand;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Expand, value);
+            _onExpand = value;
+        }
+    }
+
+    /// <summary>Collapses an expanded node.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onCollapse</c>.</remarks>
+    public Action? OnCollapse
+    {
+        get => _onCollapse;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Collapse, value);
+            _onCollapse = value;
+        }
+    }
+
+    /// <summary>Copies the node's selected content to the clipboard.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onCopy</c>.</remarks>
+    public Action? OnCopy
+    {
+        get => _onCopy;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Copy, value);
+            _onCopy = value;
+        }
+    }
+
+    /// <summary>Cuts the node's selected content to the clipboard.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onCut</c>.</remarks>
+    public Action? OnCut
+    {
+        get => _onCut;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Cut, value);
+            _onCut = value;
+        }
+    }
+
+    /// <summary>Pastes the clipboard's content over the node's selection.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onPaste</c>.</remarks>
+    public Action? OnPaste
+    {
+        get => _onPaste;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.Paste, value);
+            _onPaste = value;
+        }
+    }
+
+    /// <summary>Moves the text cursor one character forward.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onMoveCursorForwardByCharacter</c>.</remarks>
+    public MoveCursorHandler? OnMoveCursorForwardByCharacter
+    {
+        get => _onMoveCursorForwardByCharacter;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(
+                SemanticsActions.MoveCursorForwardByCharacter,
+                args => value(ResolveExtendSelectionArgument(args)));
+            _onMoveCursorForwardByCharacter = value;
+        }
+    }
+
+    /// <summary>Moves the text cursor one character backward.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onMoveCursorBackwardByCharacter</c>.</remarks>
+    public MoveCursorHandler? OnMoveCursorBackwardByCharacter
+    {
+        get => _onMoveCursorBackwardByCharacter;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(
+                SemanticsActions.MoveCursorBackwardByCharacter,
+                args => value(ResolveExtendSelectionArgument(args)));
+            _onMoveCursorBackwardByCharacter = value;
+        }
+    }
+
+    /// <summary>Moves the text cursor one word forward.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsConfiguration.onMoveCursorForwardByWord</c>. Dart's setter assigns the
+    /// by-character backing field by mistake; Plumix stores the by-word handler, so reading the
+    /// property back returns what was assigned.
+    /// </remarks>
+    public MoveCursorHandler? OnMoveCursorForwardByWord
+    {
+        get => _onMoveCursorForwardByWord;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(
+                SemanticsActions.MoveCursorForwardByWord,
+                args => value(ResolveExtendSelectionArgument(args)));
+            _onMoveCursorForwardByWord = value;
+        }
+    }
+
+    /// <summary>Moves the text cursor one word backward.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onMoveCursorBackwardByWord</c>.</remarks>
+    public MoveCursorHandler? OnMoveCursorBackwardByWord
+    {
+        get => _onMoveCursorBackwardByWord;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(
+                SemanticsActions.MoveCursorBackwardByWord,
+                args => value(ResolveExtendSelectionArgument(args)));
+            _onMoveCursorBackwardByWord = value;
+        }
+    }
+
+    /// <summary>Sets the node's text selection.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onSetSelection</c>.</remarks>
+    public SetSelectionHandler? OnSetSelection
+    {
+        get => _onSetSelection;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.SetSelection, args => value(ResolveSelectionArgument(args)));
+            _onSetSelection = value;
+        }
+    }
+
+    /// <summary>Replaces the node's text.</summary>
+    /// <remarks>Flutter's <c>SemanticsConfiguration.onSetText</c>.</remarks>
+    public SetTextHandler? OnSetText
+    {
+        get => _onSetText;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            AddActionHandler(SemanticsActions.SetText, args => value(ResolveTextArgument(args)));
+            _onSetText = value;
+        }
+    }
+
+    private static bool ResolveExtendSelectionArgument(object? args) => args is true;
+
+    private static TextSelection ResolveSelectionArgument(object? args)
+    {
+        switch (args)
+        {
+            case TextSelection selection:
+                return selection;
+            case IReadOnlyDictionary<string, int> map
+                when map.TryGetValue("base", out int baseOffset) && map.TryGetValue("extent", out int extent):
+                return new TextSelection(baseOffset, extent);
+            default:
+                throw new ArgumentException(
+                    "SemanticsActions.SetSelection requires a TextSelection or a base/extent map.",
+                    nameof(args));
+        }
+    }
+
+    private static string ResolveTextArgument(object? args) =>
+        args as string
+        ?? throw new ArgumentException("SemanticsActions.SetText requires a string.", nameof(args));
+
+    private Action? _onTap;
+    private Action? _onLongPress;
+    private Action? _onDismiss;
+    private Action? _onExpand;
+    private Action? _onCollapse;
+    private Action? _onCopy;
+    private Action? _onCut;
+    private Action? _onPaste;
+    private MoveCursorHandler? _onMoveCursorForwardByCharacter;
+    private MoveCursorHandler? _onMoveCursorBackwardByCharacter;
+    private MoveCursorHandler? _onMoveCursorForwardByWord;
+    private MoveCursorHandler? _onMoveCursorBackwardByWord;
+    private SetSelectionHandler? _onSetSelection;
+    private SetTextHandler? _onSetText;
     private Action? _onFocus;
     private Action? _onDidGainAccessibilityFocus;
     private Action? _onDidLoseAccessibilityFocus;
@@ -862,15 +1527,24 @@ public sealed class SemanticsConfiguration
             IsBlockingUserActions = IsBlockingUserActions,
             _accessibilityFocusBlockType = _accessibilityFocusBlockType,
             ChildConfigurationsDelegate = ChildConfigurationsDelegate,
-            Label = Label,
-            Hint = Hint,
-            OnTapHint = OnTapHint,
+            AttributedLabel = AttributedLabel,
+            AttributedHint = AttributedHint,
+            _hintOverrides = _hintOverrides,
             Tooltip = Tooltip,
-            Value = Value,
-            IncreasedValue = IncreasedValue,
-            DecreasedValue = DecreasedValue,
+            AttributedValue = AttributedValue,
+            AttributedIncreasedValue = AttributedIncreasedValue,
+            AttributedDecreasedValue = AttributedDecreasedValue,
             MinValue = MinValue,
             MaxValue = MaxValue,
+            Identifier = Identifier,
+            _headingLevel = _headingLevel,
+            LinkUrl = LinkUrl,
+            MaxValueLength = MaxValueLength,
+            CurrentValueLength = CurrentValueLength,
+            ControlsNodes = ControlsNodes,
+            ValidationResult = ValidationResult,
+            TextSelection = TextSelection,
+            PlatformViewId = PlatformViewId,
             Role = Role,
             InputType = InputType,
             HitTestBehavior = HitTestBehavior,
@@ -892,6 +1566,21 @@ public sealed class SemanticsConfiguration
             _onShowOnScreen = _onShowOnScreen,
             _onDidGainAccessibilityFocus = _onDidGainAccessibilityFocus,
             _onDidLoseAccessibilityFocus = _onDidLoseAccessibilityFocus,
+            _onFocus = _onFocus,
+            _onTap = _onTap,
+            _onLongPress = _onLongPress,
+            _onDismiss = _onDismiss,
+            _onExpand = _onExpand,
+            _onCollapse = _onCollapse,
+            _onCopy = _onCopy,
+            _onCut = _onCut,
+            _onPaste = _onPaste,
+            _onMoveCursorForwardByCharacter = _onMoveCursorForwardByCharacter,
+            _onMoveCursorBackwardByCharacter = _onMoveCursorBackwardByCharacter,
+            _onMoveCursorForwardByWord = _onMoveCursorForwardByWord,
+            _onMoveCursorBackwardByWord = _onMoveCursorBackwardByWord,
+            _onSetSelection = _onSetSelection,
+            _onSetText = _onSetText,
             _traversalParentIdentifier = _traversalParentIdentifier,
             _traversalChildIdentifier = _traversalChildIdentifier
         };
@@ -927,6 +1616,21 @@ public sealed class SemanticsConfiguration
         _onShowOnScreen = null;
         _onDidGainAccessibilityFocus = null;
         _onDidLoseAccessibilityFocus = null;
+        _onFocus = null;
+        _onTap = null;
+        _onLongPress = null;
+        _onDismiss = null;
+        _onExpand = null;
+        _onCollapse = null;
+        _onCopy = null;
+        _onCut = null;
+        _onPaste = null;
+        _onMoveCursorForwardByCharacter = null;
+        _onMoveCursorBackwardByCharacter = null;
+        _onMoveCursorForwardByWord = null;
+        _onMoveCursorBackwardByWord = null;
+        _onSetSelection = null;
+        _onSetText = null;
     }
 
     /// <summary>The shared empty configuration Flutter calls <c>_kEmptyConfig</c>.</summary>
@@ -958,7 +1662,17 @@ public sealed class SemanticsConfiguration
         || HasActionHandlers
         || HasCustomActionHandlers
         || TraversalParentIdentifier is not null
-        || TraversalChildIdentifier is not null;
+        || TraversalChildIdentifier is not null
+        || !string.IsNullOrEmpty(Identifier)
+        || HeadingLevel != 0
+        || LinkUrl is not null
+        || MaxValueLength.HasValue
+        || CurrentValueLength.HasValue
+        || ControlsNodes is not null
+        || ValidationResult != SemanticsValidationResult.None
+        || TextSelection.HasValue
+        || PlatformViewId.HasValue
+        || _hintOverrides is not null;
 
     internal bool IsCompatibleWith(SemanticsConfiguration? other)
     {
@@ -1017,8 +1731,79 @@ public sealed class SemanticsConfiguration
             return false;
         }
 
+        if (PlatformViewId.HasValue && other.PlatformViewId.HasValue)
+        {
+            return false;
+        }
+
+        if (MaxValueLength.HasValue && other.MaxValueLength.HasValue)
+        {
+            return false;
+        }
+
+        if (CurrentValueLength.HasValue && other.CurrentValueLength.HasValue)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrEmpty(Value) && !string.IsNullOrEmpty(other.Value))
+        {
+            return false;
+        }
+
+        if (MinValue is not null && other.MinValue is not null)
+        {
+            return false;
+        }
+
+        if (MaxValue is not null && other.MaxValue is not null)
+        {
+            return false;
+        }
+
         return true;
     }
+
+    /// <summary>
+    /// Joins two labels or hints the way Flutter's private <c>_concatAttributedString</c> does:
+    /// wrapping the child in an explicit bidi run when the two disagree on reading direction, then
+    /// separating them with a newline.
+    /// </summary>
+    private static AttributedString? ConcatAttributedString(
+        AttributedString? thisString,
+        TextDirection? thisDirection,
+        AttributedString? otherString,
+        TextDirection? otherDirection)
+    {
+        if (otherString is null || otherString.String.Length == 0)
+        {
+            return thisString;
+        }
+
+        if (thisDirection != otherDirection && otherDirection is not null)
+        {
+            string embedding = otherDirection == UI.TextDirection.Rtl
+                ? UnicodeMarks.RightToLeftEmbedding
+                : UnicodeMarks.LeftToRightEmbedding;
+            otherString = new AttributedString(embedding)
+                .Concat(otherString)
+                .Concat(new AttributedString(UnicodeMarks.PopDirectionalFormatting));
+        }
+
+        if (thisString is null || thisString.String.Length == 0)
+        {
+            return otherString;
+        }
+
+        return thisString.Concat(new AttributedString("\n")).Concat(otherString);
+    }
+
+    /// <summary>
+    /// Merges two heading levels the way Flutter's private <c>_mergeHeadingLevels</c> does: the
+    /// parent's level wins unless the parent is not a heading at all.
+    /// </summary>
+    internal static int MergeHeadingLevels(int sourceLevel, int targetLevel) =>
+        targetLevel == 0 ? sourceLevel : targetLevel;
 
     internal void Absorb(SemanticsConfiguration child)
     {
@@ -1071,24 +1856,54 @@ public sealed class SemanticsConfiguration
             HitTestBehavior = child.HitTestBehavior;
         }
 
-        // Flutter's `_concatAttributedString` separates the two labels with a newline.
-        if (!string.IsNullOrWhiteSpace(child.Label))
+        LinkUrl ??= child.LinkUrl;
+        TextSelection ??= child.TextSelection;
+        PlatformViewId ??= child.PlatformViewId;
+        MaxValueLength ??= child.MaxValueLength;
+        CurrentValueLength ??= child.CurrentValueLength;
+        _hintOverrides ??= child._hintOverrides;
+        _headingLevel = MergeHeadingLevels(sourceLevel: child._headingLevel, targetLevel: _headingLevel);
+        if (string.IsNullOrEmpty(Identifier))
         {
-            Label = string.IsNullOrWhiteSpace(Label) ? child.Label : $"{Label}\n{child.Label}";
+            Identifier = child.Identifier;
         }
 
-        Value ??= child.Value;
-        IncreasedValue ??= child.IncreasedValue;
-        DecreasedValue ??= child.DecreasedValue;
+        // Flutter's `_concatAttributedString` separates the two labels with a newline, wrapping the
+        // child in a bidi embedding when the two disagree on reading direction.
+        AttributedLabel = ConcatAttributedString(
+            AttributedLabel,
+            TextDirection,
+            child.AttributedLabel,
+            child.TextDirection);
+
+        // Values are taken, never concatenated: two annotated values make the configurations
+        // incompatible in the first place.
+        AttributedValue ??= child.AttributedValue;
+        AttributedIncreasedValue ??= child.AttributedIncreasedValue;
+        AttributedDecreasedValue ??= child.AttributedDecreasedValue;
         MinValue ??= child.MinValue;
         MaxValue ??= child.MaxValue;
 
-        if (!string.IsNullOrWhiteSpace(child.Hint))
+        AttributedHint = ConcatAttributedString(
+            AttributedHint,
+            TextDirection,
+            child.AttributedHint,
+            child.TextDirection);
+
+        if (ControlsNodes is null)
         {
-            Hint = string.IsNullOrWhiteSpace(Hint) ? child.Hint : $"{Hint}\n{child.Hint}";
+            ControlsNodes = child.ControlsNodes;
+        }
+        else if (child.ControlsNodes is not null)
+        {
+            ControlsNodes = new HashSet<string>(ControlsNodes.Union(child.ControlsNodes));
         }
 
-        OnTapHint ??= child.OnTapHint;
+        if (child.ValidationResult == SemanticsValidationResult.Invalid
+            || ValidationResult == SemanticsValidationResult.None)
+        {
+            ValidationResult = child.ValidationResult;
+        }
 
         if (!string.IsNullOrWhiteSpace(child.Tooltip))
         {
@@ -1108,7 +1923,8 @@ public sealed class SemanticsConfiguration
                     continue;
                 }
 
-                _actionHandlers.TryAdd(pair.Key, pair.Value);
+                // Dart's `_actions.addAll(child._actions)` lets the absorbed child win.
+                _actionHandlers[pair.Key] = pair.Value;
             }
         }
 
@@ -1118,7 +1934,7 @@ public sealed class SemanticsConfiguration
             _customActionHandlers ??= [];
             foreach (var pair in child.CustomActionHandlers)
             {
-                _customActionHandlers.TryAdd(pair.Key, pair.Value);
+                _customActionHandlers[pair.Key] = pair.Value;
             }
         }
     }
@@ -1327,15 +2143,91 @@ public sealed partial class SemanticsNode
 
     private static bool IsZeroTransform(Matrix4? transform) => transform is { } value && value.IsZero();
 
-    public string? Label { get; internal set; }
-    public string? Hint { get; internal set; }
-    public string? OnTapHint { get; internal set; }
+    /// <summary>The node's label, as plain text.</summary>
+    public string? Label => AttributedLabel?.String;
+
+    /// <summary>The node's label with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.attributedLabel</c>.</remarks>
+    public AttributedString? AttributedLabel { get; internal set; }
+
+    /// <summary>The node's hint, as plain text.</summary>
+    public string? Hint => AttributedHint?.String;
+
+    /// <summary>The node's hint with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.attributedHint</c>.</remarks>
+    public AttributedString? AttributedHint { get; internal set; }
+
+    /// <summary>Replacement wording for the standard tap and long-press hints.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.hintOverrides</c>.</remarks>
+    public SemanticsHintOverrides? HintOverrides { get; internal set; }
+
+    /// <summary>The tap hint from <see cref="HintOverrides"/>, if any.</summary>
+    public string? OnTapHint => HintOverrides?.OnTapHint;
+
+    /// <summary>The long-press hint from <see cref="HintOverrides"/>, if any.</summary>
+    public string? OnLongPressHint => HintOverrides?.OnLongPressHint;
+
     public string? Tooltip { get; internal set; }
-    public string? Value { get; internal set; }
-    public string? IncreasedValue { get; internal set; }
-    public string? DecreasedValue { get; internal set; }
+
+    /// <summary>The node's value, as plain text.</summary>
+    public string? Value => AttributedValue?.String;
+
+    /// <summary>The node's value with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.attributedValue</c>.</remarks>
+    public AttributedString? AttributedValue { get; internal set; }
+
+    /// <summary>The value the node will read after its increase action runs.</summary>
+    public string? IncreasedValue => AttributedIncreasedValue?.String;
+
+    /// <summary>The increased value with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.attributedIncreasedValue</c>.</remarks>
+    public AttributedString? AttributedIncreasedValue { get; internal set; }
+
+    /// <summary>The value the node will read after its decrease action runs.</summary>
+    public string? DecreasedValue => AttributedDecreasedValue?.String;
+
+    /// <summary>The decreased value with its string attributes.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.attributedDecreasedValue</c>.</remarks>
+    public AttributedString? AttributedDecreasedValue { get; internal set; }
+
     public string? MinValue { get; internal set; }
     public string? MaxValue { get; internal set; }
+
+    /// <summary>A stable identifier UI testing frameworks address the node by.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.identifier</c>.</remarks>
+    public string? Identifier { get; internal set; }
+
+    /// <summary>The heading level, 1 to 6, or <c>0</c> when the node is not a heading.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.headingLevel</c>.</remarks>
+    public int HeadingLevel { get; internal set; }
+
+    /// <summary>The URL a link node navigates to.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.linkUrl</c>.</remarks>
+    public Uri? LinkUrl { get; internal set; }
+
+    /// <summary>The maximum number of characters the node's value accepts.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.maxValueLength</c>.</remarks>
+    public int? MaxValueLength { get; internal set; }
+
+    /// <summary>The number of characters the node's value currently holds.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.currentValueLength</c>.</remarks>
+    public int? CurrentValueLength { get; internal set; }
+
+    /// <summary>The <see cref="Identifier"/>s of the nodes whose visibility this node controls.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.controlsNodes</c>.</remarks>
+    public IReadOnlySet<string>? ControlsNodes { get; internal set; }
+
+    /// <summary>The node's form-validation outcome.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.validationResult</c>.</remarks>
+    public SemanticsValidationResult ValidationResult { get; internal set; }
+
+    /// <summary>The node's current text selection, for editable nodes.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.textSelection</c>.</remarks>
+    public TextSelection? TextSelection { get; internal set; }
+
+    /// <summary>The id of the platform view this node stands for.</summary>
+    /// <remarks>Flutter's <c>SemanticsNode.platformViewId</c>.</remarks>
+    public int? PlatformViewId { get; internal set; }
     public SemanticsRole Role { get; internal set; }
     public SemanticsInputType InputType { get; internal set; }
     public SemanticsHitTestBehavior HitTestBehavior { get; internal set; } = SemanticsHitTestBehavior.Defer;
@@ -1413,15 +2305,24 @@ public sealed partial class SemanticsNode
 
         bool mergeAllDescendantsIntoThisNodeValueChanged =
             MergeAllDescendantsIntoThisNode != config.IsMergingSemanticsOfDescendants;
-        Label = config.Label;
-        Hint = config.Hint;
-        OnTapHint = config.OnTapHint;
+        AttributedLabel = config.AttributedLabel;
+        AttributedHint = config.AttributedHint;
+        HintOverrides = config.HintOverrides;
         Tooltip = config.Tooltip;
-        Value = config.Value;
-        IncreasedValue = config.IncreasedValue;
-        DecreasedValue = config.DecreasedValue;
+        AttributedValue = config.AttributedValue;
+        AttributedIncreasedValue = config.AttributedIncreasedValue;
+        AttributedDecreasedValue = config.AttributedDecreasedValue;
         MinValue = config.MinValue;
         MaxValue = config.MaxValue;
+        Identifier = config.Identifier;
+        HeadingLevel = config.HeadingLevel;
+        LinkUrl = config.LinkUrl;
+        MaxValueLength = config.MaxValueLength;
+        CurrentValueLength = config.CurrentValueLength;
+        ControlsNodes = config.ControlsNodes;
+        ValidationResult = config.ValidationResult;
+        TextSelection = config.TextSelection;
+        PlatformViewId = config.PlatformViewId;
         Role = config.Role;
         InputType = config.InputType;
         HitTestBehavior = config.HitTestBehavior;
@@ -1571,7 +2472,8 @@ public sealed partial class SemanticsNode
     {
         foreach (var pair in _actionHandlers)
         {
-            target.TryAdd(pair.Key, pair.Value);
+            // Dart's `_actions.addAll(child._actions)` lets the later handler win.
+            target[pair.Key] = pair.Value;
         }
     }
 

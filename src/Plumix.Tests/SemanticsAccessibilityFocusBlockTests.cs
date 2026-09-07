@@ -16,13 +16,14 @@ public sealed class SemanticsAccessibilityFocusBlockTests
     {
         // The second child explicitly declares `None`; `BlockSubtree` from the parent still wins.
         var first = new RenderSemanticsAnnotations(
-            label: "subtree child 0",
+            new SemanticsProperties(label: "subtree child 0"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var second = new RenderSemanticsAnnotations(
-            label: "subtree child 1",
+            new SemanticsProperties(
+                label: "subtree child 1",
+                accessibilityFocusBlockType: AccessibilityFocusBlockType.None),
             container: true,
-            accessibilityFocusBlockType: AccessibilityFocusBlockType.None,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         SemanticsNode container = BuildContainer(
             AccessibilityFocusBlockType.BlockSubtree,
@@ -40,11 +41,11 @@ public sealed class SemanticsAccessibilityFocusBlockTests
     public void BlockNode_IsNotAppliedToTheSubtree()
     {
         var first = new RenderSemanticsAnnotations(
-            label: "node child 0",
+            new SemanticsProperties(label: "node child 0"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var second = new RenderSemanticsAnnotations(
-            label: "node child 1",
+            new SemanticsProperties(label: "node child 1"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         SemanticsNode container = BuildContainer(AccessibilityFocusBlockType.BlockNode, first, second);
@@ -59,18 +60,19 @@ public sealed class SemanticsAccessibilityFocusBlockTests
     public void BlockNode_DoesNotMergeUpOrMergeDown()
     {
         var first = new RenderSemanticsAnnotations(
-            label: "semantics label 1",
+            new SemanticsProperties(label: "semantics label 1"),
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var second = new RenderSemanticsAnnotations(
-            label: "semantics label 2",
+            new SemanticsProperties(label: "semantics label 2"),
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var blocked = new RenderSemanticsAnnotations(
-            label: "semantics label 0",
-            accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockNode,
-            child: new RenderFlex(
-                children: [first, second],
-                direction: Axis.Horizontal,
-                textDirection: TextDirection.Ltr));
+                      new SemanticsProperties(
+                          label: "semantics label 0",
+                          accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockNode),
+                      child: new RenderFlex(
+            children: [first, second],
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr));
         SemanticsNode root = BuildRoot(blocked);
 
         SemanticsNode blockedNode = Assert.Single(root.Children);
@@ -86,18 +88,19 @@ public sealed class SemanticsAccessibilityFocusBlockTests
     public void BlockSubtree_DoesNotMergeUpButAbsorbsItsDescendants()
     {
         var first = new RenderSemanticsAnnotations(
-            label: "semantics label 1",
+            new SemanticsProperties(label: "semantics label 1"),
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var second = new RenderSemanticsAnnotations(
-            label: "semantics label 2",
+            new SemanticsProperties(label: "semantics label 2"),
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var blocked = new RenderSemanticsAnnotations(
-            label: "semantics label 0",
-            accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockSubtree,
-            child: new RenderFlex(
-                children: [first, second],
-                direction: Axis.Horizontal,
-                textDirection: TextDirection.Ltr));
+                      new SemanticsProperties(
+                          label: "semantics label 0",
+                          accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockSubtree),
+                      child: new RenderFlex(
+            children: [first, second],
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr));
         SemanticsNode root = BuildRoot(blocked);
 
         SemanticsNode blockedNode = Assert.Single(root.Children);
@@ -111,10 +114,11 @@ public sealed class SemanticsAccessibilityFocusBlockTests
     public void BlockedNode_AlsoBlocksKeyboardFocus()
     {
         var blocked = new RenderSemanticsAnnotations(
-            label: "focused and blocked",
+            new SemanticsProperties(
+                label: "focused and blocked",
+                focused: true,
+                accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockSubtree),
             container: true,
-            flags: SemanticsFlags.IsFocusable | SemanticsFlags.IsFocused,
-            accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockSubtree,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         SemanticsNode root = BuildRoot(blocked);
 
@@ -128,11 +132,11 @@ public sealed class SemanticsAccessibilityFocusBlockTests
     public void UpdatingBlockTypeOnTheParentUpdatesTheChildrenSemantics()
     {
         var child = new RenderSemanticsAnnotations(
-            label: "updated child",
+            new SemanticsProperties(label: "updated child"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var parent = new RenderSemanticsAnnotations(
-            label: "updated parent",
+            new SemanticsProperties(label: "updated parent"),
             container: true,
             child: child);
         var renderView = new RenderView { Child = parent };
@@ -146,7 +150,9 @@ public sealed class SemanticsAccessibilityFocusBlockTests
         Assert.False(parentNode.Flags.HasFlag(SemanticsFlags.IsAccessibilityFocusBlocked));
         Assert.False(childNode.Flags.HasFlag(SemanticsFlags.IsAccessibilityFocusBlocked));
 
-        parent.AccessibilityFocusBlockType = AccessibilityFocusBlockType.BlockSubtree;
+        parent.Properties = new SemanticsProperties(
+            label: "updated parent",
+            accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockSubtree);
         pipeline.FlushLayout(new Size(320, 120));
         pipeline.FlushSemantics();
 
@@ -162,18 +168,17 @@ public sealed class SemanticsAccessibilityFocusBlockTests
         // `MergeSemantics` folds nodes through the node tree, not through `Absorb`, so a blocked and
         // an unblocked child still end up on one node that reports the block.
         var blocked = new RenderSemanticsAnnotations(
-            label: "node1",
+            new SemanticsProperties(
+                label: "node1",
+                accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockNode),
             container: true,
-            accessibilityFocusBlockType: AccessibilityFocusBlockType.BlockNode,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var plain = new RenderSemanticsAnnotations(
-            label: "node2",
+            new SemanticsProperties(label: "node2"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
-        var merge = new RenderSemanticsAnnotations(
-            container: true,
-            mergeDescendants: true,
-            child: new RenderFlex(
+        var merge = new RenderMergeSemantics(
+            new RenderFlex(
                 children: [blocked, plain],
                 direction: Axis.Horizontal,
                 textDirection: TextDirection.Ltr));
@@ -243,14 +248,15 @@ public sealed class SemanticsAccessibilityFocusBlockTests
         params RenderBox[] children)
     {
         var container = new RenderSemanticsAnnotations(
-            label: "container",
-            container: true,
-            explicitChildNodes: true,
-            accessibilityFocusBlockType: blockType,
-            child: new RenderFlex(
-                children: [.. children],
-                direction: Axis.Horizontal,
-                textDirection: TextDirection.Ltr));
+                        new SemanticsProperties(
+                            label: "container",
+                            accessibilityFocusBlockType: blockType),
+                        container: true,
+                        explicitChildNodes: true,
+                        child: new RenderFlex(
+            children: [.. children],
+            direction: Axis.Horizontal,
+            textDirection: TextDirection.Ltr));
         return Assert.Single(BuildRoot(container).Children);
     }
 

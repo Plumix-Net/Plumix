@@ -14,7 +14,7 @@ public sealed class RenderObjectSemanticsDiagnosticsTests
     public void DebugDumpRenderObjectSemanticsTree_DescribesOwnersNodesAndBoundaries()
     {
         var leaf = new RenderSemanticsAnnotations(
-            label: "diagnostics leaf",
+            new SemanticsProperties(label: "diagnostics leaf"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var renderView = new RenderView { Child = leaf };
@@ -45,13 +45,13 @@ public sealed class RenderObjectSemanticsDiagnosticsTests
         // The wrapper is annotated but not a boundary, so `isBlockingPreviousSibling` recurses into
         // its subtree, finds the block, and reports it on the node the wrapper forms.
         var wrapper = new RenderSemanticsAnnotations(
-            label: "diagnostics blocker",
-            child: new RenderBlockSemantics(blocking: true)
+                          new SemanticsProperties(label: "diagnostics blocker"),
+                          child: new RenderBlockSemantics(blocking: true)
             {
                 Child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
             });
         var behind = new RenderSemanticsAnnotations(
-            label: "diagnostics behind",
+            new SemanticsProperties(label: "diagnostics behind"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
         var row = new RenderFlex(

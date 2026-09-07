@@ -817,10 +817,8 @@ internal sealed class CupertinoTextFieldState : RestorationState
         return new Semantics(
             enabled: Current.Enabled,
             onTap: Current.Enabled && !Current.ReadOnly ? HandleSemanticTap : null,
-            child: content)
-        {
-            OnFocus = Current.Enabled ? HandleSemanticFocus : null,
-        };
+            onFocus: Current.Enabled ? HandleSemanticFocus : null,
+            child: content);
     }
 
     public override void Dispose()
@@ -939,7 +937,7 @@ internal sealed class CupertinoTextFieldState : RestorationState
             ? Color.FromUInt32(0x33FFFFFF)
             : Color.FromUInt32(0x33000000);
         return new Semantics(
-            flags: SemanticsFlags.IsButton,
+            button: true,
             label: label,
             onTap: Current.Enabled ? HandleClear : null,
             child: new GestureDetector(

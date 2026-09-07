@@ -1751,9 +1751,9 @@ public sealed class EditableText : StatefulWidget
 
             return new Semantics(
                 label: Widget.SemanticsLabel,
-                flags: SemanticsFlags.IsTextField
-                       | (Widget.Enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None)
-                       | (_focusNode.HasFocus ? SemanticsFlags.IsFocused : SemanticsFlags.None),
+                textField: true,
+                enabled: Widget.Enabled ? true : null,
+                focused: _focusNode.HasFocus ? true : null,
                 onTap: Widget.Enabled ? () => _focusNode.RequestFocus() : null,
                 child: result);
         }

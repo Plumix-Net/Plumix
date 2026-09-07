@@ -575,7 +575,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
                 if (!widget.ExcludeHeaderSemantics)
                 {
                     title = new Semantics(
-                        flags: SemanticsFlags.IsHeader,
+                        header: true,
                         namesRoute: PlatformDefaults.TargetPlatform
                             is not (TargetPlatform.IOS or TargetPlatform.MacOS),
                         child: title);

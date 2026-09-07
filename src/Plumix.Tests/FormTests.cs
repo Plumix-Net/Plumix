@@ -81,7 +81,9 @@ public sealed class FormTests : IDisposable
         Assert.False(fieldState!.IsValid);
         Assert.False(fieldState.Validate());
         Assert.Equal("Server error", fieldState.ErrorText);
-        Assert.NotNull(FindSemantics(semantics, node => node.Flags.HasFlag(SemanticsFlags.IsInvalid)));
+        Assert.NotNull(FindSemantics(
+            semantics,
+            node => node.ValidationResult == SemanticsValidationResult.Invalid));
     }
 
     [Fact]
