@@ -209,7 +209,7 @@ public sealed class ScrollMetricsTests
     [Fact]
     public void ScrollPosition_ImplementsTheMetricsContract()
     {
-        using var position = new ScrollPosition(
+        using var position = new ScrollPositionWithSingleContext(
             new ClampingScrollPhysics(),
             new TestScrollContext(AxisDirection.Right, devicePixelRatio: 2.0),
             initialPixels: 25);
@@ -235,7 +235,7 @@ public sealed class ScrollMetricsTests
     [Fact]
     public void ScrollPosition_CopyWithSnapshotsTheLiveMetrics()
     {
-        using var position = new ScrollPosition(
+        using var position = new ScrollPositionWithSingleContext(
             new ClampingScrollPhysics(),
             new TestScrollContext(AxisDirection.Up, devicePixelRatio: 2.5),
             initialPixels: 25);

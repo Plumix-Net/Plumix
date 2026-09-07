@@ -232,7 +232,7 @@ public sealed class NestedScrollViewTests : IDisposable
         Assert.False(NeedsLayout(injector));
 
         var viewport = new RenderNestedScrollViewViewport(
-            new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext()),
+            new ScrollPositionWithSingleContext(new ClampingScrollPhysics(), new TestScrollContext()),
             handle);
         viewport.MarkNeedsLayout();
 
@@ -589,18 +589,25 @@ public sealed class NestedScrollViewTests : IDisposable
         harness.Pump(new Size(800, ViewportExtent));
         directions.Clear();
 
-        ScrollDragController drag = StartDrag(key);
+        IDrag drag = StartDrag(key);
         drag.Update(new DragUpdateDetails(new Point(0, 0), new Point(0, 0), new Point(0, -20), -20));
         drag.End(new DragEndDetails(0.0));
         harness.Pump(new Size(800, ViewportExtent));
-        Assert.Equal([ScrollDirection.Reverse, ScrollDirection.Idle], directions);
+        // Two idle reports, as in Flutter: ScrollPositionWithSingleContext.BeginActivity resets the
+        // position's own direction when the idle activity starts, and _NestedScrollPosition.GoIdle
+        // then resets the coordinator's, which reports to the outer position again.
+        Assert.Equal(
+            [ScrollDirection.Reverse, ScrollDirection.Idle, ScrollDirection.Idle],
+            directions);
 
         directions.Clear();
         drag = StartDrag(key);
         drag.Update(new DragUpdateDetails(new Point(0, 0), new Point(0, 0), new Point(0, 20), 20));
         drag.End(new DragEndDetails(0.0));
         harness.Pump(new Size(800, ViewportExtent));
-        Assert.Equal([ScrollDirection.Forward, ScrollDirection.Idle], directions);
+        Assert.Equal(
+            [ScrollDirection.Forward, ScrollDirection.Idle, ScrollDirection.Idle],
+            directions);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -750,7 +757,7 @@ public sealed class NestedScrollViewTests : IDisposable
             .GetValue(state)!;
     }
 
-    private static ScrollDragController StartDrag(LabeledGlobalKey<NestedScrollViewState> key)
+    private static IDrag StartDrag(LabeledGlobalKey<NestedScrollViewState> key)
     {
         ScrollPosition outer = key.CurrentState!.OuterController.Position;
         outer.Hold();
@@ -759,7 +766,7 @@ public sealed class NestedScrollViewTests : IDisposable
 
     private static void Drag(LabeledGlobalKey<NestedScrollViewState> key, double delta)
     {
-        ScrollDragController drag = StartDrag(key);
+        IDrag drag = StartDrag(key);
         drag.Update(new DragUpdateDetails(
             new Point(0, 0),
             new Point(0, 0),
@@ -770,7 +777,7 @@ public sealed class NestedScrollViewTests : IDisposable
 
     private static void PointerScroll(LabeledGlobalKey<NestedScrollViewState> key, double delta)
     {
-        key.CurrentState!.OuterController.Position.ApplyPointerScrollDelta(delta);
+        key.CurrentState!.OuterController.Position.PointerScroll(delta);
     }
 
     private static SliverConstraints Constraints(

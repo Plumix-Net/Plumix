@@ -1367,7 +1367,7 @@ public sealed class CarouselScrollPosition(
     bool infinite = false,
     int? itemCount = null,
     ScrollPosition? oldPosition = null)
-    : ScrollPosition(
+    : ScrollPositionWithSingleContext(
         physics: physics,
         context: context,
         initialPixels: null,

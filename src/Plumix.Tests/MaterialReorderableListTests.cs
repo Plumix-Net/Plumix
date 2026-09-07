@@ -174,15 +174,19 @@ public sealed class MaterialReorderableListTests
     public void ReorderableListView_RestorationIdPersistsOffsetInPageStorage()
     {
         var bucket = new PageStorageBucket();
+        // Flutter keys a PageStorage round-trip off the PageStorageKeys in the context chain, not
+        // off restorationId (which drives the RestorationMixin instead). The identity key sits on a
+        // wrapper so a rebuild recreates the list element while the storage key stays put.
         Widget Build(string identity) => new PageStorage(
             bucket,
-            ReorderableListView.Builder(
-                (_, index) => new SizedBox(height: 20, key: new ValueKey<int>(index)),
-                10,
-                onReorderItem: (_, _) => { },
-                buildDefaultDragHandles: false,
-                itemExtent: 20,
-                restorationId: "reorderable-items",
+            new KeyedSubtree(
+                ReorderableListView.Builder(
+                    (_, index) => new SizedBox(height: 20, key: new ValueKey<int>(index)),
+                    10,
+                    onReorderItem: (_, _) => { },
+                    buildDefaultDragHandles: false,
+                    itemExtent: 20,
+                    key: new PageStorageKey<string>("reorderable-items")),
                 key: new ValueKey<string>(identity)));
 
         using WidgetRenderHarness harness = new(Wrap(Build("first")));

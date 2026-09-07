@@ -858,7 +858,7 @@ internal sealed class DraggableScrollableSheetScrollController : ScrollControlle
     }
 }
 
-internal sealed class DraggableScrollableSheetScrollPosition : ScrollPosition
+internal sealed class DraggableScrollableSheetScrollPosition : ScrollPositionWithSingleContext
 {
     private readonly HashSet<AnimationController> _ballisticControllers = [];
     private readonly Func<DraggableSheetExtent> _getExtent;
@@ -900,7 +900,7 @@ internal sealed class DraggableScrollableSheetScrollPosition : ScrollPosition
         }
     }
 
-    internal override void BeginActivity(ScrollActivity activity)
+    public override void BeginActivity(ScrollActivity? activity)
     {
         // Any new activity supersedes the sheet's own ballistic and snap animations.
         foreach (var ballisticController in _ballisticControllers.ToArray())

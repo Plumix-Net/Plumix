@@ -82,7 +82,8 @@ public sealed class ScrollStartNotification : ScrollNotification
     public ScrollStartNotification(
         IScrollMetrics metrics,
         DragStartDetails? dragDetails = null,
-        int depth = 0) : base(metrics, depth)
+        int depth = 0,
+        BuildContext? sourceContext = null) : base(metrics, depth, sourceContext)
     {
         DragDetails = dragDetails;
     }
@@ -143,7 +144,8 @@ public sealed class OverscrollNotification : ScrollNotification
         double overscroll,
         DragUpdateDetails? dragDetails = null,
         double velocity = 0.0,
-        int depth = 0) : base(metrics, depth)
+        int depth = 0,
+        BuildContext? sourceContext = null) : base(metrics, depth, sourceContext)
     {
         if (!double.IsFinite(overscroll) || Math.Abs(overscroll) <= double.Epsilon)
         {
@@ -189,7 +191,8 @@ public sealed class ScrollEndNotification : ScrollNotification
     public ScrollEndNotification(
         IScrollMetrics metrics,
         DragEndDetails? dragDetails = null,
-        int depth = 0) : base(metrics, depth)
+        int depth = 0,
+        BuildContext? sourceContext = null) : base(metrics, depth, sourceContext)
     {
         DragDetails = dragDetails;
     }
@@ -211,7 +214,8 @@ public sealed class UserScrollNotification : ScrollNotification
     public UserScrollNotification(
         IScrollMetrics metrics,
         ScrollDirection direction,
-        int depth = 0) : base(metrics, depth)
+        int depth = 0,
+        BuildContext? sourceContext = null) : base(metrics, depth, sourceContext)
     {
         Direction = direction;
     }
@@ -533,7 +537,7 @@ public class ScrollController : ChangeNotifier
         IScrollContext context,
         ScrollPosition? oldPosition)
     {
-        return new ScrollPosition(
+        return new ScrollPositionWithSingleContext(
             physics: physics,
             context: context,
             initialPixels: InitialScrollOffset,

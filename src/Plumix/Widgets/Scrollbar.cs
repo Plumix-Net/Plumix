@@ -1718,7 +1718,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
         double targetScrollOffset = TargetScrollOffsetForPointerScroll(delta);
         if (delta != 0.0 && targetScrollOffset != _cachedController!.Position.Pixels)
         {
-            _cachedController.Position.ApplyPointerScrollDelta(delta);
+            _cachedController.Position.PointerScroll(delta);
         }
     }
 

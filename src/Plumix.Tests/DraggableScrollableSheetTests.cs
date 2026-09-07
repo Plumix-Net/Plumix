@@ -1082,8 +1082,8 @@ public sealed class DraggableScrollableSheetTests
 
             // A real drag runs under a drag activity, which is what keeps the relayout the resizing
             // sheet causes from resetting the position to idle on every frame.
-            Position.BeginDrag();
-            Position.ApplyUserOffset(delta);
+            IDrag drag = Position.StartDrag();
+            drag.DragBy(delta);
             Pump();
         }
 

@@ -92,7 +92,7 @@ public sealed class ListWheelScrollViewTests
     [Fact]
     public void RenderListWheelViewport_ValidatesItsSetters()
     {
-        var offset = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
+        var offset = new ScrollPositionWithSingleContext(new ClampingScrollPhysics(), new TestScrollContext());
         var viewport = new RenderListWheelViewport(new NoChildManager(), offset, itemExtent: 10);
         Assert.Equal(Clip.None, viewport.ClipBehavior);
         Assert.Throws<ArgumentOutOfRangeException>(() => viewport.DiameterRatio = 0);
@@ -109,7 +109,7 @@ public sealed class ListWheelScrollViewTests
     [Fact]
     public void RenderListWheelViewport_IsSizedByParent_AndTakesTheBiggestConstraint()
     {
-        var offset = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
+        var offset = new ScrollPositionWithSingleContext(new ClampingScrollPhysics(), new TestScrollContext());
         var viewport = new RenderListWheelViewport(new NoChildManager(), offset, itemExtent: 10);
 
         Assert.Equal(new Size(100, 80), viewport.GetDryLayout(BoxConstraints.Loose(new Size(100, 80))));
@@ -1161,7 +1161,7 @@ public sealed class ListWheelScrollViewTests
         Assert.True(friction!.X(double.PositiveInfinity) > 300.0);
 
         // Wrong position type is rejected.
-        var plain = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
+        var plain = new ScrollPositionWithSingleContext(new ClampingScrollPhysics(), new TestScrollContext());
         Assert.Throws<InvalidOperationException>(() => physics.CreateBallisticSimulation(plain, 100.0));
         Assert.IsType<FixedExtentScrollPhysics>(physics);
         Assert.IsType<ClampingScrollPhysics>(physics.Parent);

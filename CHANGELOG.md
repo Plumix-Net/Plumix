@@ -8,6 +8,12 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `ScrollPosition` splits into the abstract base and `ScrollPositionWithSingleContext` (`scroll_position`).
+- Breaking: `ScrollActivity` dispatches the scroll notifications instead of `ScrollableState` (`scroll_activity.dart`).
+- Breaking: `ScrollPosition.PointerScroll` replaces `ApplyPointerScrollDelta`, and `JumpToWithoutSettling` lands.
+- Breaking: `BeginActivity` pairs `DidStartScroll`/`DidEndScroll` and resets `UserScrollDirection` to idle.
+- Breaking: the ballistic/driven activities run on an `AnimationController`; `DrivenScrollActivity.FromSimulation` adds.
+- Breaking: `ScrollPosition.SaveScrollOffset` keys `PageStorage` off the context chain, not off `restorationId`.
 - Breaking: `Scrollable` takes a required `viewportBuilder` plus an `axisDirection`; `ScrollView` owns the rest.
 - Breaking: `ScrollView`/`BoxScrollView` land and `CustomScrollView`/`ListView`/`GridView` derive from them.
 - Breaking: a vertical `ScrollView` with no controller and no `primary` resolves `AlwaysScrollableScrollPhysics`.

@@ -242,7 +242,7 @@ internal sealed class PagePosition(
     bool keepPage = true,
     double viewportFraction = 1.0,
     ScrollPosition? oldPosition = null)
-    : ScrollPosition(
+    : ScrollPositionWithSingleContext(
         physics: physics,
         context: context,
         initialPixels: null,
@@ -353,21 +353,21 @@ internal sealed class PagePosition(
     public double GetPixelsFromPage(double page) =>
         (page * ViewportDimension * ViewportFraction) + InitialPageOffset;
 
-    public override void SaveScrollOffset()
+    protected override void SaveScrollOffset()
     {
-        WriteStorageOffset(_cachedPage ?? PageForStorage());
+        BuildContext context = Context.StorageContext;
+        PageStorage.MaybeOf(context)?.WriteState(context, _cachedPage ?? PageForStorage());
     }
 
-    public override void RestoreScrollOffset()
+    protected override void RestoreScrollOffset()
     {
-        if (HasPixels)
+        if (!HasPixels)
         {
-            return;
-        }
-
-        if (ReadStorageOffset() is { } page)
-        {
-            _pageToUseOnStartup = page;
+            BuildContext context = Context.StorageContext;
+            if (PageStorage.MaybeOf(context)?.ReadState(context) is double page)
+            {
+                _pageToUseOnStartup = page;
+            }
         }
     }
 

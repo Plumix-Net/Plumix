@@ -1070,7 +1070,7 @@ internal sealed class DragAnimation : AnimationWithParentMixin<double>
 }
 
 // Dart parity source: material_ui/lib/src/tabs.dart (_TabBarScrollPosition)
-internal sealed class TabBarScrollPosition : ScrollPosition
+internal sealed class TabBarScrollPosition : ScrollPositionWithSingleContext
 {
     private readonly ITabBarScrollHost _tabBar;
     private bool _viewportDimensionWasNonZero;
@@ -1099,7 +1099,7 @@ internal sealed class TabBarScrollPosition : ScrollPosition
         if (!_viewportDimensionWasNonZero || _needsPixelsCorrection)
         {
             _needsPixelsCorrection = false;
-            _ = CorrectPixels(_tabBar.InitialScrollOffset(ViewportDimension, minScrollExtent, maxScrollExtent));
+            CorrectPixels(_tabBar.InitialScrollOffset(ViewportDimension, minScrollExtent, maxScrollExtent));
             result = false;
         }
 

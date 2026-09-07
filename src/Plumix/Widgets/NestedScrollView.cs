@@ -983,7 +983,7 @@ internal sealed class NestedScrollController : ScrollController
         IScrollContext context,
         ScrollPosition? oldPosition)
     {
-        return new NestedScrollPosition(
+        return NestedScrollPosition.Create(
             _coordinator,
             physics,
             context,
@@ -1022,12 +1022,34 @@ internal sealed class NestedScrollController : ScrollController
 /// One of the scroll positions a <see cref="NestedScrollCoordinator"/> drives; every scroll it
 /// receives is forwarded to the coordinator, which splits it across the whole nested view.
 /// </summary>
-internal sealed class NestedScrollPosition : ScrollPosition
+/// <remarks>
+/// The coordinator is a primary-constructor capture rather than a field assigned in the constructor
+/// body: Dart's initializer list runs before <c>super()</c>, so <c>_coordinator</c> is already set
+/// when the base constructor calls the overridden <see cref="RestoreScrollOffset"/>. C# runs the
+/// base constructor first, and only primary-constructor captures are assigned before it.
+/// </remarks>
+internal sealed class NestedScrollPosition(
+    NestedScrollCoordinator coordinator,
+    ScrollPhysics physics,
+    IScrollContext context,
+    double initialPixels = 0.0,
+    bool keepScrollOffset = true,
+    ScrollPosition? oldPosition = null,
+    string? debugLabel = null)
+    : ScrollPositionWithSingleContext(physics, context, initialPixels, keepScrollOffset, oldPosition, debugLabel)
 {
-    private readonly NestedScrollCoordinator _coordinator;
+    private readonly NestedScrollCoordinator _coordinator = coordinator;
     private ScrollController? _parent;
 
-    public NestedScrollPosition(
+    /// <summary>
+    /// Creates a position and runs the tail of Dart's constructor body.
+    /// </summary>
+    /// <remarks>
+    /// A C# primary constructor has no body, so the <c>saveScrollOffset()</c> Dart runs after the
+    /// base constructor — "in case we did not restore but could, so that we do not restore it
+    /// later" — happens here instead.
+    /// </remarks>
+    public static NestedScrollPosition Create(
         NestedScrollCoordinator coordinator,
         ScrollPhysics physics,
         IScrollContext context,
@@ -1035,11 +1057,17 @@ internal sealed class NestedScrollPosition : ScrollPosition
         bool keepScrollOffset = true,
         ScrollPosition? oldPosition = null,
         string? debugLabel = null)
-        : base(physics, context, initialPixels, keepScrollOffset, oldPosition, debugLabel)
     {
-        _coordinator = coordinator;
-        // In case we did not restore but could, so that we do not restore it later.
-        SaveScrollOffset();
+        var position = new NestedScrollPosition(
+            coordinator,
+            physics,
+            context,
+            initialPixels,
+            keepScrollOffset,
+            oldPosition,
+            debugLabel);
+        position.SaveScrollOffset();
+        return position;
     }
 
     public void SetParent(ScrollController? value)
@@ -1049,7 +1077,7 @@ internal sealed class NestedScrollPosition : ScrollPosition
         _parent?.Attach(this);
     }
 
-    public override void RestoreScrollOffset()
+    protected override void RestoreScrollOffset()
     {
         if (_coordinator.CanScrollBody)
         {
@@ -1094,7 +1122,7 @@ internal sealed class NestedScrollPosition : ScrollPosition
         _coordinator.JumpTo(_coordinator.UnnestOffset(pixels, this));
     }
 
-    public override void ApplyPointerScrollDelta(double delta)
+    public override void PointerScroll(double delta)
     {
         _coordinator.PointerScroll(delta);
     }

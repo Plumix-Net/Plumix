@@ -705,7 +705,7 @@ internal sealed class CupertinoSheetScrollController : ScrollController
     }
 }
 
-internal sealed class CupertinoSheetScrollPosition : ScrollPosition
+internal sealed class CupertinoSheetScrollPosition : ScrollPositionWithSingleContext
 {
     private readonly Action _onDragStart;
     private readonly Action<double> _onDragUpdate;

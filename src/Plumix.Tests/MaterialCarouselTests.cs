@@ -415,8 +415,8 @@ public sealed class MaterialCarouselTests
         Assert.Equal(3, controller.LeadingItem);
         Assert.Contains(3, reported);
 
-        controller.AnimateToItem(1, TimeSpan.Zero);
-        harness.Pump();
+        controller.AnimateToItem(1, TimeSpan.FromMilliseconds(100));
+        harness.PumpAnimation(TimeSpan.FromMilliseconds(100));
         Assert.Equal(1, controller.LeadingItem);
         Assert.Contains(1, reported);
     }
@@ -457,8 +457,8 @@ public sealed class MaterialCarouselTests
             onIndexChanged: reported.Add));
         harness.Pump();
 
-        controller.AnimateToItem(4, TimeSpan.Zero);
-        harness.Pump();
+        controller.AnimateToItem(4, TimeSpan.FromMilliseconds(100));
+        harness.PumpAnimation(TimeSpan.FromMilliseconds(100));
         Assert.Equal(3, controller.LeadingItem);
         Assert.Contains(3, reported);
     }
@@ -587,6 +587,22 @@ public sealed class MaterialCarouselTests
         public RenderView RenderView { get; }
 
         public void Pump() => Pump(_surface);
+
+        /// <summary>
+        /// Runs frames until a ticker-driven scroll activity has finished. Flutter asserts on a
+        /// zero-duration <c>animateTo</c>, so an animation has to be pumped rather than collapsed.
+        /// </summary>
+        public void PumpAnimation(TimeSpan duration)
+        {
+            double start = Scheduler.CurrentSeconds;
+            const double frame = 1.0 / 60.0;
+            int frames = (int)Math.Ceiling(duration.TotalSeconds / frame) + 2;
+            for (int step = 1; step <= frames; step++)
+            {
+                Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(start + (step * frame)));
+                Pump();
+            }
+        }
 
         public void Pump(Size size)
         {

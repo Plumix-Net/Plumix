@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
@@ -122,7 +123,7 @@ public sealed class SliverHeaderTests
     [Fact]
     public void ScrollPosition_ReportsUserDirectionAndScrollingTransitions()
     {
-        var position = new ScrollPosition(
+        var position = new ScrollPositionWithSingleContext(
             new ClampingScrollPhysics(),
             new TestScrollContext(),
             keepScrollOffset: false);
@@ -132,22 +133,29 @@ public sealed class SliverHeaderTests
         var values = new List<bool>();
         position.IsScrollingNotifier.AddListener(() => values.Add(position.IsScrollingNotifier.Value));
 
-        position.BeginDrag();
+        IDrag drag = position.StartDrag();
         position.ApplyUserOffset(25.0);
 
         Assert.Equal(ScrollDirection.Forward, position.UserScrollDirection);
         Assert.Equal(175.0, position.Pixels);
-        position.EndDrag(0.0);
+        drag.EndDrag();
         Assert.Equal([true, false], values);
 
-        position.BeginDrag();
+        drag = position.StartDrag();
         position.ApplyUserOffset(-25.0);
         Assert.Equal(ScrollDirection.Reverse, position.UserScrollDirection);
-        position.EndDrag(0.0);
+        drag.EndDrag();
 
         values.Clear();
-        position.ApplyPointerScrollDelta(-25.0);
-        Assert.Equal(ScrollDirection.Forward, position.UserScrollDirection);
+        // A pointer scroll reports its direction while the offset moves and settles back to idle,
+        // because it ends with GoBallistic(0.0) exactly as Flutter's `pointerScroll` does.
+        ScrollDirection? directionWhileScrolling = null;
+        void Capture() => directionWhileScrolling ??= position.UserScrollDirection;
+        position.AddListener(Capture);
+        position.PointerScroll(-25.0);
+        position.RemoveListener(Capture);
+        Assert.Equal(ScrollDirection.Forward, directionWhileScrolling);
+        Assert.Equal(ScrollDirection.Idle, position.UserScrollDirection);
         Assert.Equal([true, false], values);
         Assert.InRange(Curves.EaseInOut(0.25), 0.1290, 0.1293);
         position.Dispose();
@@ -189,24 +197,32 @@ public sealed class SliverHeaderTests
     [Fact]
     public void RenderSliverFloatingHeader_SnapsWithOverlayOrScrollLayoutExtent()
     {
-        var position = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext());
+        var position = new ScrollPositionWithSingleContext(new ClampingScrollPhysics(), new TestScrollContext());
         position.ApplyViewportDimension(100.0);
         position.ApplyContentDimensions(0.0, 1000.0);
         position.JumpTo(200.0);
-        position.BeginDrag();
-        position.ApplyUserOffset(25.0);
-        position.EndDrag(0.0);
 
         var overlay = CreatePartiallyVisibleFloatingHeader(FloatingHeaderSnapMode.Overlay);
-        overlay.IsScrollingUpdate(position);
+        var scroll = CreatePartiallyVisibleFloatingHeader(FloatingHeaderSnapMode.Scroll);
+        // SliverFloatingHeader hooks IsScrollingUpdate to IsScrollingNotifier. When that flips to
+        // false the position still reports the direction the drag had, because
+        // ScrollPositionWithSingleContext.BeginActivity resets it to idle only after the base call
+        // has already updated the notifier.
+        position.IsScrollingNotifier.AddListener(() =>
+        {
+            overlay.IsScrollingUpdate(position);
+            scroll.IsScrollingUpdate(position);
+        });
+        IDrag drag = position.StartDrag();
+        position.ApplyUserOffset(25.0);
+        drag.EndDrag();
+
         overlay.LayoutWithSliverConstraints(CreateConstraints(
             scrollOffset: 175.0,
             userScrollDirection: ScrollDirection.Forward));
         Assert.Equal(200.0, overlay.Geometry.PaintExtent);
         Assert.Equal(25.0, overlay.Geometry.LayoutExtent);
 
-        var scroll = CreatePartiallyVisibleFloatingHeader(FloatingHeaderSnapMode.Scroll);
-        scroll.IsScrollingUpdate(position);
         scroll.LayoutWithSliverConstraints(CreateConstraints(
             scrollOffset: 175.0,
             userScrollDirection: ScrollDirection.Forward));

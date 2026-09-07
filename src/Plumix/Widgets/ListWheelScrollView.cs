@@ -366,7 +366,7 @@ internal static class FixedExtentMath
 /// which reports its offset in items as well as pixels (Dart's
 /// <c>_FixedExtentScrollPosition</c>, which <c>implements FixedExtentMetrics</c>).
 /// </summary>
-internal sealed class FixedExtentScrollPosition : ScrollPosition
+internal sealed class FixedExtentScrollPosition : ScrollPositionWithSingleContext
 {
     public FixedExtentScrollPosition(
         ScrollPhysics physics,

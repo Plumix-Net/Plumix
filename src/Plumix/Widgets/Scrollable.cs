@@ -318,7 +318,6 @@ public class Scrollable : StatefulWidget
         private ScrollController? _fallbackScrollController;
         private DeviceGestureSettings? _mediaQueryGestureSettings;
         private double _devicePixelRatio = 1.0;
-        private bool _isApplyingDrag;
 
         private protected IReadOnlyDictionary<Type, IGestureRecognizerFactory> _gestureRecognizers =
             RawGestureDetector.NoGestures;
@@ -327,7 +326,7 @@ public class Scrollable : StatefulWidget
         private protected Axis? _lastAxisDirection;
 
         private IScrollHoldController? _hold;
-        private ScrollDragController? _drag;
+        private IDrag? _drag;
 
         private protected Scrollable CurrentWidget => (Scrollable)Element.Widget;
 
@@ -439,8 +438,6 @@ public class Scrollable : StatefulWidget
             ScrollPosition? oldPosition = _position;
             if (oldPosition is not null)
             {
-                oldPosition.RemoveListener(HandlePositionChanged);
-                SaveScrollOffset(oldPosition, CurrentWidget.RestorationId);
                 EffectiveScrollController.Detach(oldPosition);
                 // It's important that we not dispose the old position until after the viewport has
                 // had a chance to unregister its listeners from the old position. So, schedule a
@@ -448,18 +445,9 @@ public class Scrollable : StatefulWidget
                 Scheduler.ScheduleMicrotask(oldPosition.Dispose);
             }
 
-            // The restoration id must be known before the constructor absorbs the old position and
-            // any subclass constructor reads storage (NestedScrollPosition does).
             _position = EffectiveScrollController.CreateScrollPosition(_physics!, this, oldPosition);
-            _position.RestorationId = CurrentWidget.RestorationId;
             Debug.Assert(_position is not null);
             EffectiveScrollController.Attach(Position);
-            if (oldPosition is null)
-            {
-                _position.RestoreScrollOffset();
-            }
-
-            _position.AddListener(HandlePositionChanged);
         }
 
         public override void InitState()
@@ -564,7 +552,6 @@ public class Scrollable : StatefulWidget
                 _fallbackScrollController?.Dispose();
             }
 
-            _position?.RemoveListener(HandlePositionChanged);
             _position?.Dispose();
             _persistedScrollOffset.Dispose();
             base.Dispose();
@@ -706,26 +693,26 @@ public class Scrollable : StatefulWidget
 
         private protected virtual void HandleDragStart(DragStartDetails details)
         {
-            // _hold might be null if the drag started without a preceding down event, for example
-            // when user code called jumpTo in between.
+            // It's possible for _hold to become null between _handleDragDown and _handleDragStart,
+            // for example if some user code calls JumpTo or similar.
             _drag = Position.Drag(details, DisposeDrag);
-            if (_hold is not null)
-            {
-                DisposeHold();
-            }
-
-            new ScrollStartNotification(CurrentMetrics(), dragDetails: details).Dispatch(NotificationContext);
+            Debug.Assert(_drag is not null);
+            Debug.Assert(_hold is null);
         }
 
         private protected virtual void HandleDragUpdate(DragUpdateDetails details)
         {
-            ApplyDragOffset(details);
+            // _drag might be null if the drag activity ended and called _disposeDrag.
+            Debug.Assert(_hold is null || _drag is null);
+            _drag?.Update(details);
         }
 
         private protected virtual void HandleDragEnd(DragEndDetails details)
         {
+            // _drag might be null if the drag activity ended and called _disposeDrag.
+            Debug.Assert(_hold is null || _drag is null);
             _drag?.End(details);
-            new ScrollEndNotification(CurrentMetrics(), dragDetails: details).Dispatch(NotificationContext);
+            Debug.Assert(_drag is null);
         }
 
         private protected virtual void HandleDragCancel()
@@ -737,101 +724,11 @@ public class Scrollable : StatefulWidget
                 return;
             }
 
-            bool wasScrolling = _hold is not null || _drag is not null;
+            Debug.Assert(_hold is null || _drag is null);
             _hold?.Cancel();
             _drag?.Cancel();
-            if (wasScrolling)
-            {
-                new ScrollEndNotification(CurrentMetrics()).Dispatch(NotificationContext);
-            }
-        }
-
-        /// <summary>
-        /// Hands the drag delta to the controller and reports the resulting scroll and overscroll.
-        /// </summary>
-        /// <remarks>
-        /// Flutter's <c>_handleDragUpdate</c> is only <c>_drag?.update(details)</c>: its
-        /// <c>ScrollActivity</c>s dispatch the update and overscroll notifications. Plumix's
-        /// activity layer (`rendering/scroll_position.dart`, ported as adapted) does not, so the
-        /// scrollable dispatches them here. See `docs/ai/DIVERGENCES.md`.
-        /// </remarks>
-        private void ApplyDragOffset(DragUpdateDetails details)
-        {
-            if (_drag is null)
-            {
-                return;
-            }
-
-            IScrollMetrics before = Position.CopyWith();
-            double applied;
-            _isApplyingDrag = true;
-            try
-            {
-                // The controller owns the motion-start threshold and axis reversal; it reports the
-                // offset it actually handed to the position.
-                applied = _drag.Update(details);
-            }
-            finally
-            {
-                _isApplyingDrag = false;
-            }
-
-            if (applied == 0.0)
-            {
-                // The motion-start threshold swallowed this update; nothing moved and nothing
-                // overscrolled, so no notification is due.
-                return;
-            }
-
-            double intendedScrollDelta = -Position.Physics.ApplyPhysicsToUserOffset(before, applied);
-            double actualScrollDelta = Position.Pixels - before.Pixels;
-            if (Math.Abs(actualScrollDelta) > 0.0001)
-            {
-                new ScrollUpdateNotification(
-                    CurrentMetrics(),
-                    dragDetails: details,
-                    scrollDelta: actualScrollDelta).Dispatch(NotificationContext);
-                SetState(static () => { });
-            }
-
-            double overscroll = intendedScrollDelta - actualScrollDelta;
-            if (Math.Abs(overscroll) > 0.0001)
-            {
-                new OverscrollNotification(
-                    CurrentMetrics(),
-                    overscroll: overscroll,
-                    dragDetails: details).Dispatch(NotificationContext);
-            }
-        }
-
-        private void HandlePositionChanged()
-        {
-            SaveScrollOffset(Position, CurrentWidget.RestorationId);
-            // Dart persists the restorable offset from `ScrollPosition.didEndScroll`; Plumix's
-            // adapted activity layer only reaches that path for pointer scrolls, so the offset is
-            // tracked here instead (see `docs/ai/DIVERGENCES.md`). The manager is not flushed on
-            // every tick — only `SaveOffset` does that, exactly like Dart.
-            if (_persistedScrollOffsetRegistered)
-            {
-                _persistedScrollOffset.Value = Position.Pixels;
-            }
-
-            if (_isApplyingDrag)
-            {
-                return;
-            }
-
-            // A correction applied while the fresh dimensions were handed to the position never
-            // reaches this point: Flutter's `correctPixels`/`correctBy` deliberately notify nobody.
-            new ScrollUpdateNotification(CurrentMetrics()).Dispatch(NotificationContext);
-        }
-
-        private static void SaveScrollOffset(ScrollPosition position, string? restorationId)
-        {
-            string? current = position.RestorationId;
-            position.RestorationId = restorationId;
-            position.SaveScrollOffset();
-            position.RestorationId = current;
+            Debug.Assert(_hold is null);
+            Debug.Assert(_drag is null);
         }
 
         private double TargetScrollOffsetForPointerScroll(double delta)
@@ -878,7 +775,7 @@ public class Scrollable : StatefulWidget
                     break;
                 }
                 case PointerScrollInertiaCancelEvent:
-                    Position.ApplyPointerScrollDelta(0.0);
+                    Position.PointerScroll(0.0);
                     // Don't use the pointer signal resolver, all hit-tested scrollables should stop.
                     break;
             }
@@ -893,7 +790,7 @@ public class Scrollable : StatefulWidget
             {
                 // The start/update/end notifications are dispatched by the position itself, exactly
                 // like Flutter's `ScrollPositionWithSingleContext.pointerScroll`.
-                Position.ApplyPointerScrollDelta(delta);
+                Position.PointerScroll(delta);
                 // Tell the host this scrollable handled the event, so the platform default (for
                 // example native page scrolling on the web) does not also run.
                 scroll.Respond(allowPlatformDefault: false);
@@ -921,8 +818,6 @@ public class Scrollable : StatefulWidget
         {
             return HardwareKeyboard.Instance.IsLogicalKeyPressed(key);
         }
-
-        private IScrollMetrics CurrentMetrics() => Position.CopyWith();
 
         /// <summary>
         /// Wraps the scrollable in the decorations the ambient <see cref="ScrollBehavior"/> supplies:

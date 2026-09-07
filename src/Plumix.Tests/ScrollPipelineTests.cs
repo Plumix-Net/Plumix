@@ -68,7 +68,7 @@ public sealed class ScrollPipelineTests
     [Fact]
     public void ScrollPosition_JumpForcesTheRequestedOffsetBeforeBallisticSettling()
     {
-        using var position = new ScrollPosition(
+        using var position = new ScrollPositionWithSingleContext(
             new ClampingScrollPhysics(),
             new TestScrollContext(),
             initialPixels: 10);
@@ -90,12 +90,15 @@ public sealed class ScrollPipelineTests
         Scheduler.ResetForTests();
         try
         {
-            var position = new ScrollPosition(new ClampingScrollPhysics(), new TestScrollContext(), initialPixels: 40);
+            var position = new ScrollPositionWithSingleContext(
+                new ClampingScrollPhysics(),
+                new TestScrollContext(),
+                initialPixels: 40);
             position.ApplyViewportDimension(120);
             position.ApplyContentDimensions(0, 800);
 
-            position.BeginDrag();
-            position.EndDrag(primaryPointerVelocity: -1200);
+            IDrag drag = position.StartDrag();
+            drag.EndDrag(primaryVelocity: -1200);
             Assert.IsType<BallisticScrollActivity>(position.Activity);
             position.Dispose();
         }
@@ -1088,7 +1091,7 @@ public sealed class ScrollPipelineTests
             Assert.NotNull(itemContext);
             Assert.False(Scrollable.RecommendDeferredLoadingForContext(itemContext!));
 
-            ScrollPosition position = controller.PrimaryPosition!;
+            var position = (ScrollPositionWithSingleContext)controller.PrimaryPosition!;
 
             // Park the position mid-list so a fling in either direction has somewhere to go.
             controller.JumpTo(200.0);
@@ -1174,7 +1177,7 @@ public sealed class ScrollPipelineTests
         try
         {
             var context = new TestScrollContext();
-            using var position = new ScrollPosition(new ClampingScrollPhysics(), context);
+            using var position = new ScrollPositionWithSingleContext(new ClampingScrollPhysics(), context);
             position.ApplyViewportDimension(100);
             position.ApplyContentDimensions(0, 1000);
 
@@ -1232,7 +1235,7 @@ public sealed class ScrollPipelineTests
         try
         {
             var context = new TestScrollContext();
-            using var position = new ScrollPosition(new BouncingScrollPhysics(), context);
+            using var position = new ScrollPositionWithSingleContext(new BouncingScrollPhysics(), context);
             position.ApplyViewportDimension(100);
             position.ApplyContentDimensions(0, 1000);
 
@@ -1264,7 +1267,7 @@ public sealed class ScrollPipelineTests
         try
         {
             var context = new TestScrollContext(AxisDirection.Right, devicePixelRatio: 3.0);
-            using var position = new ScrollPosition(
+            using var position = new ScrollPositionWithSingleContext(
                 new ClampingScrollPhysics(),
                 context,
                 initialPixels: 20,
@@ -1286,11 +1289,12 @@ public sealed class ScrollPipelineTests
             position.ApplyContentDimensions(0, 0);
             Assert.False(context.CanDrag);
 
-            // Ending a scroll persists the offset through the context (restoration hook).
+            // Ending a scroll persists the offset through the context (restoration hook): every
+            // JumpTo runs a start/update/end cycle of its own, exactly as Flutter's does.
             position.ApplyContentDimensions(0, 1000);
             position.JumpTo(40);
             position.DidEndScroll();
-            Assert.Equal(40.0, Assert.Single(context.SavedOffsets));
+            Assert.Equal([0.0, 40.0, 40.0], context.SavedOffsets);
         }
         finally
         {
@@ -1304,8 +1308,12 @@ public sealed class ScrollPipelineTests
         Scheduler.ResetForTests();
         try
         {
-            var oldContext = new TestScrollContext();
-            var oldPosition = new ScrollPosition(new ClampingScrollPhysics(), oldContext, initialPixels: 30);
+            // Dart asserts a position only absorbs one that shares its ScrollContext.
+            var context = new TestScrollContext();
+            var oldPosition = new ScrollPositionWithSingleContext(
+                new ClampingScrollPhysics(),
+                context,
+                initialPixels: 30);
             oldPosition.ApplyViewportDimension(100);
             oldPosition.ApplyContentDimensions(0, 1000);
             oldPosition.Drag(new DragStartDetails(new Point(0, 0), Kind: PointerDeviceKind.Touch));
@@ -1313,8 +1321,7 @@ public sealed class ScrollPipelineTests
             ScrollActivity ballistic = oldPosition.Activity;
             Assert.IsType<BallisticScrollActivity>(ballistic);
 
-            var context = new TestScrollContext();
-            using var position = new ScrollPosition(
+            using var position = new ScrollPositionWithSingleContext(
                 new ClampingScrollPhysics(),
                 context,
                 initialPixels: 0,
@@ -1325,7 +1332,9 @@ public sealed class ScrollPipelineTests
             Assert.Equal(30.0, position.Pixels);
             Assert.Same(ballistic, position.Activity);
             Assert.True(context.IgnorePointer);
-            Assert.IsType<IdleScrollActivity>(oldPosition.Activity);
+            // Absorb moves the activity out rather than replacing it: the old position is left
+            // without one and must be disposed straight away.
+            Assert.Null(oldPosition.Activity);
             oldPosition.Dispose();
         }
         finally
