@@ -751,7 +751,6 @@ public sealed class SliverReorderableListState : State
             ?? throw new InvalidOperationException("A SliverReorderableList requires a Scrollable ancestor.");
         _autoScroller = new EdgeDraggingAutoScroller(
             scrollable,
-            () => TryGetViewportBounds(out Rect bounds) ? bounds : null,
             CurrentWidget.AutoScrollerVelocityScalar,
             HandleAutoScroll);
         return _autoScroller;
@@ -765,6 +764,8 @@ public sealed class SliverReorderableListState : State
         }
 
         UpdateInsertionIndex();
+        // Dart's `_handleScrollableAutoScrolled`: keep scrolling while the drag is in progress.
+        _autoScroller?.StartAutoScrollIfNecessary(DragTargetRect());
         _overlayEntry?.MarkNeedsBuild();
         if (Mounted)
         {
@@ -776,26 +777,6 @@ public sealed class SliverReorderableListState : State
     {
         _autoScroller?.Dispose();
         _autoScroller = null;
-    }
-
-    private bool TryGetViewportBounds(out Rect bounds)
-    {
-        RenderObject? renderObject = Context.FindRenderObject();
-        while (renderObject is not null && renderObject is not RenderViewport)
-        {
-            renderObject = renderObject.Parent;
-        }
-
-        if (renderObject is not RenderBox viewport || !viewport.HasSize
-            || !viewport.TryGetTransformFromRoot(out Matrix4 transform))
-        {
-            bounds = default;
-            return false;
-        }
-
-        Point topLeft = MatrixUtils.TransformPoint(transform, new Point());
-        bounds = new Rect(topLeft, viewport.Size);
-        return true;
     }
 
     private void ResetDrag()

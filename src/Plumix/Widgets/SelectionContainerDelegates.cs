@@ -890,7 +890,10 @@ public abstract class MultiSelectableSelectionContainerDelegate : SelectionConta
             effectiveEndHandle = hideEndHandle ? null : _endHandleLayer;
         }
 
-        if (CurrentSelectionStartIndex == -1 || CurrentSelectionEndIndex == -1)
+        // `GetSelectionGeometry` reports `SelectionStatus.None` for an empty selectable list, so the
+        // handle owners have to be released for it too: the selection indices are not reset when the
+        // last selectable goes away, and indexing with them would then be out of range.
+        if (CurrentSelectionStartIndex == -1 || CurrentSelectionEndIndex == -1 || Selectables.Count == 0)
         {
             if (_startHandleLayerOwner is not null)
             {

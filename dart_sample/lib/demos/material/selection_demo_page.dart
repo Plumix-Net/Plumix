@@ -19,6 +19,7 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
   String _singleSelection = 'none';
   String _areaSelection = 'none';
   String _listenerDetails = 'none';
+  String _scrollableSelection = 'none';
 
   @override
   void initState() {
@@ -215,6 +216,45 @@ class _SelectionDemoPageState extends State<SelectionDemoPage> {
           ),
           Text(
             'SelectionListener: $_listenerDetails',
+            style: const TextStyle(fontSize: 13),
+          ),
+          const Divider(),
+          const Text(
+            'Selection inside a scrollable',
+            style: TextStyle(fontSize: 18, color: Colors.black),
+          ),
+          const Text(
+            'Drag a selection past the top or bottom edge of the list: the scrollable auto '
+            'scrolls while the drag continues, keeps the selection anchored to the content, '
+            'and restores it for rows that scroll back into view.',
+            style: TextStyle(fontSize: 14, color: Color(0x8A000000)),
+          ),
+          SelectionArea(
+            onSelectionChanged: (SelectedContent? content) {
+              setState(() => _scrollableSelection = content?.plainText ?? 'none');
+            },
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFFBF2),
+                border: Border.all(color: const Color(0xFFE0C08A)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: SizedBox(
+                height: 160,
+                child: ListView.builder(
+                  itemCount: 40,
+                  itemExtent: 28,
+                  itemBuilder: (BuildContext context, int index) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    child: Text('Row $index of the scrollable selection probe'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Text(
+            'Scrollable selection: $_scrollableSelection',
+            maxLines: 3,
             style: const TextStyle(fontSize: 13),
           ),
           const Divider(),

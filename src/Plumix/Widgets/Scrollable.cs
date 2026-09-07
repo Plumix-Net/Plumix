@@ -876,7 +876,20 @@ public class Scrollable : StatefulWidget
                         child: result));
             }
 
-            return BuildChrome(context, result);
+            result = BuildChrome(context, result);
+
+            // Selection is only enabled when there is a parent registrar.
+            ISelectionRegistrar? registrar = SelectionContainer.MaybeOf(context);
+            if (registrar is not null)
+            {
+                result = new ScrollableSelectionHandler(
+                    state: this,
+                    position: Position,
+                    registrar: registrar,
+                    child: result);
+            }
+
+            return result;
         }
 
         /// <summary>

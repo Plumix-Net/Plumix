@@ -24,6 +24,7 @@ internal sealed class SelectionDemoPageState : State
     private string _singleSelection = "none";
     private string _areaSelection = "none";
     private string _listenerDetails = "none";
+    private string _scrollableSelection = "none";
 
     public override void InitState()
     {
@@ -166,6 +167,33 @@ internal sealed class SelectionDemoPageState : State
                                         ])))))),
                     new Text($"Area selection: {_areaSelection}", fontSize: 13, maxLines: 3),
                     new Text($"SelectionListener: {_listenerDetails}", fontSize: 13),
+                    new Divider(),
+                    new Text("Selection inside a scrollable", fontSize: 18, color: Colors.Black),
+                    new Text(
+                        "Drag a selection past the top or bottom edge of the list: the scrollable auto "
+                        + "scrolls while the drag continues, keeps the selection anchored to the content, "
+                        + "and restores it for rows that scroll back into view.",
+                        fontSize: 14,
+                        color: Color.Parse("#8A000000")),
+                    new SelectionArea(
+                        onSelectionChanged: content => SetState(() =>
+                            _scrollableSelection = content?.PlainText ?? "none"),
+                        child: new DecoratedBox(
+                            decoration: new BoxDecoration(
+                                Color: Color.Parse("#FFFFFBF2"),
+                                Border: Plumix.Rendering.Border.FromBorderSide(
+                                    new BorderSide(Color.Parse("#FFE0C08A"))),
+                                BorderRadius: BorderRadius.Circular(12)),
+                            child: new SizedBox(
+                                height: 160,
+                                child: ListView.Builder(
+                                    itemCount: 40,
+                                    itemExtent: 28,
+                                    itemBuilder: (context, index) => new Padding(
+                                        insets: new Thickness(12, 4),
+                                        child: new Text(
+                                            $"Row {index} of the scrollable selection probe")))))),
+                    new Text($"Scrollable selection: {_scrollableSelection}", fontSize: 13, maxLines: 3),
                     new Divider(),
                     new Text("DefaultSelectionStyle scope", fontSize: 18, color: Colors.Black),
                     new DefaultSelectionStyle(

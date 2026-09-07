@@ -301,6 +301,9 @@ internal sealed class RestorationHarness : IDisposable
 
     public RenderView RenderView { get; }
 
+    /// The harness's own root element, so a test can walk the whole mounted tree.
+    public Element RootElement => _root;
+
     public void FlushBuild() => _owner.FlushBuild();
 
     public void Update(Widget widget)
@@ -316,6 +319,10 @@ internal sealed class RestorationHarness : IDisposable
         _pipeline.FlushLayout(size);
         _pipeline.FlushCompositingBits();
         _pipeline.FlushPaint();
+
+        // Flutter's `WidgetsBinding.drawFrame` finalizes the tree after the render phase, so the
+        // children a sliver dropped during layout are unmounted before post-frame callbacks run.
+        _owner.FinalizeTree();
     }
 
     public T? FindWidget<T>() where T : Widget => FindWidget<T>(_root);

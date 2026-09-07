@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- `Scrollable` auto-scrolls and re-anchors a text selection dragged past its edge (`scrollable.dart`).
+- Breaking: `EdgeDraggingAutoScroller` drops its viewport provider and hops to a scroll-origin-anchored target.
 - Breaking: `ScrollPosition` splits into the abstract base and `ScrollPositionWithSingleContext` (`scroll_position`).
 - Breaking: `ScrollActivity` dispatches the scroll notifications instead of `ScrollableState` (`scroll_activity.dart`).
 - Breaking: `ScrollPosition.PointerScroll` replaces `ApplyPointerScrollDelta`, and `JumpToWithoutSettling` lands.

@@ -1,5 +1,8 @@
+using System.Diagnostics;
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 
 namespace Plumix.Widgets;
 
@@ -158,27 +161,39 @@ public sealed class ScrollAction : ContextAction<ScrollIntent>
 }
 
 /// <summary>Continuously scrolls a viewport while a dragged rectangle extends beyond an edge.</summary>
+/// <remarks>
+/// Dart drives the scroll from an <c>async</c> loop that awaits a 20-pixel
+/// <c>position.animateTo</c> hop per iteration; Plumix drives the same geometry from a
+/// <see cref="Ticker"/> at the equivalent velocity (see <c>docs/ai/DIVERGENCES.md</c>). The drag
+/// target is anchored to the scroll origin exactly as Dart anchors it, so an auto scroll that is
+/// no longer being fed a fresh target stops once the content has scrolled far enough to bring the
+/// anchored target back inside the viewport.
+/// </remarks>
 public sealed class EdgeDraggingAutoScroller : IDisposable
 {
-    private const double MaxOverDrag = 20.0;
+    private const double OverDragMax = 20.0;
 
     private readonly Scrollable.ScrollableState _scrollable;
-    private readonly Func<Rect?> _viewportRectProvider;
     private readonly Action? _onScrollViewScrolled;
     private readonly Ticker _ticker;
-    private TimeSpan _lastElapsed;
-    private Rect _dragTarget;
+    private Rect _dragTargetRelatedToScrollOrigin;
     private bool _disposed;
+
+    // Dart's `_scroll` loop advances in discrete hops: each iteration picks an offset at most
+    // `OverDragMax` away and animates to it linearly over `1000 / velocityScalar` milliseconds,
+    // then re-resolves. The ticker reproduces one hop at a time so the scroll lands exactly on the
+    // resolved offset (and therefore exactly on a scroll extent) instead of approaching it.
+    private bool _hopInFlight;
+    private double _hopStartPixels;
+    private double _hopTargetPixels;
+    private TimeSpan _hopStartElapsed;
 
     public EdgeDraggingAutoScroller(
         Scrollable.ScrollableState scrollable,
-        Func<Rect?> viewportRectProvider,
-        double velocityScalar = 50.0,
+        double velocityScalar,
         Action? onScrollViewScrolled = null)
     {
         _scrollable = scrollable ?? throw new ArgumentNullException(nameof(scrollable));
-        _viewportRectProvider = viewportRectProvider
-                                ?? throw new ArgumentNullException(nameof(viewportRectProvider));
         if (!double.IsFinite(velocityScalar) || velocityScalar <= 0.0)
         {
             throw new ArgumentOutOfRangeException(nameof(velocityScalar));
@@ -189,11 +204,19 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
         _ticker = _scrollable.CreateTicker(HandleTick);
     }
 
+    /// <summary>The [Scrollable] this auto scroller drives.</summary>
+    public Scrollable.ScrollableState Scrollable => _scrollable;
+
+    /// <summary>The velocity scalar per pixel over scroll, in logical pixels per second.</summary>
     public double VelocityScalar { get; }
 
+    /// <summary>Whether the auto scroll is in progress.</summary>
     public bool IsAutoScrolling => _ticker.IsActive;
 
     /// Starts the auto scroll if `dragTarget` is close to the edge.
+    ///
+    /// The `dragTarget` is given in global coordinates and stored relative to the scroll origin,
+    /// so it stays anchored to the content while the viewport moves under it.
     ///
     /// If the scrollable's resolved physics refuses user-driven scrolling (for example
     /// [NeverScrollableScrollPhysics]), no auto scroll is started and any in-flight auto
@@ -201,28 +224,34 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
     public void StartAutoScrollIfNecessary(Rect dragTarget)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (_scrollable.ResolvedPhysics?.ShouldAcceptUserOffset(_scrollable.Position) != true)
+        ScrollPhysics? physics = _scrollable.ResolvedPhysics;
+        if (physics is not null && !physics.ShouldAcceptUserOffset(_scrollable.Position))
         {
             StopAutoScroll();
             return;
         }
 
-        _dragTarget = dragTarget;
-        if (ResolveScrollVelocity() == 0.0)
+        Point deltaToOrigin = _scrollable.DeltaToScrollOrigin;
+        _dragTargetRelatedToScrollOrigin =
+            dragTarget.Translate(new Vector(deltaToOrigin.X, deltaToOrigin.Y));
+        if (!TryResolveTargetOffset(out double _))
         {
             StopAutoScroll();
             return;
         }
 
+        // A hop already in flight keeps its target, exactly as Dart's in-flight `animateTo` does;
+        // the fresh drag target is picked up by the next iteration.
         if (!_ticker.IsActive)
         {
-            _lastElapsed = TimeSpan.Zero;
+            _hopInFlight = false;
             _ticker.Start();
         }
     }
 
     public void StopAutoScroll()
     {
+        _hopInFlight = false;
         _ticker.Stop();
     }
 
@@ -239,73 +268,111 @@ public sealed class EdgeDraggingAutoScroller : IDisposable
 
     private void HandleTick(TimeSpan elapsed)
     {
-        ScrollPosition position = _scrollable.Position;
-
-        // The ticker reports time since it started; auto-scrolling advances by the frame delta.
-        double frameSeconds = (elapsed - _lastElapsed).TotalSeconds;
-        _lastElapsed = elapsed;
-
-        double velocity = ResolveScrollVelocity();
-        if (velocity == 0.0)
+        if (!_hopInFlight)
         {
-            StopAutoScroll();
+            if (!TryResolveTargetOffset(out double resolved))
+            {
+                StopAutoScroll();
+                return;
+            }
+
+            _hopStartPixels = _scrollable.Position.Pixels;
+            _hopTargetPixels = resolved;
+            _hopStartElapsed = elapsed;
+            _hopInFlight = true;
+        }
+
+        double hopMilliseconds = 1000.0 / VelocityScalar;
+        double t = Math.Clamp((elapsed - _hopStartElapsed).TotalMilliseconds / hopMilliseconds, 0.0, 1.0);
+        _scrollable.Position.JumpTo(_hopStartPixels + ((_hopTargetPixels - _hopStartPixels) * t));
+        if (t < 1.0)
+        {
             return;
         }
 
-        // The frame that gives the ticker its start timestamp reports no elapsed time; it must not be
-        // read as "the scrollable cannot move any further".
-        if (frameSeconds <= 0.0)
-        {
-            return;
-        }
-
-        double nextOffset = Math.Clamp(
-            position.Pixels + (velocity * frameSeconds),
-            position.MinScrollExtent,
-            position.MaxScrollExtent);
-        if (Math.Abs(nextOffset - position.Pixels) < 0.0001)
-        {
-            StopAutoScroll();
-            return;
-        }
-
-        position.JumpTo(nextOffset);
+        _hopInFlight = false;
         _onScrollViewScrolled?.Invoke();
     }
 
-    private double ResolveScrollVelocity()
+    /// Dart's `_scroll` body: the offset the scrollable should move toward, or none when the
+    /// anchored drag target no longer sits outside the viewport.
+    private bool TryResolveTargetOffset(out double newOffset)
     {
-        Rect? viewportValue = _viewportRectProvider();
-        if (!viewportValue.HasValue)
+        newOffset = 0.0;
+        if (_scrollable.Context.FindRenderObject() is not RenderBox scrollRenderBox
+            || !scrollRenderBox.HasSize)
         {
-            return 0.0;
+            return false;
         }
+
+        Matrix4 transform = scrollRenderBox.GetTransformTo(null);
+        Rect globalRect = MatrixUtils.TransformRect(
+            transform,
+            new Rect(0, 0, scrollRenderBox.Size.Width, scrollRenderBox.Size.Height));
+        Debug.Assert(
+            globalRect.Size.Width + Constants.PrecisionErrorTolerance >= _dragTargetRelatedToScrollOrigin.Width
+            && globalRect.Size.Height + Constants.PrecisionErrorTolerance >= _dragTargetRelatedToScrollOrigin.Height,
+            "Drag target size is larger than scrollable size, which may cause bouncing");
 
         ScrollPosition position = _scrollable.Position;
-        Rect viewport = viewportValue.Value;
         AxisDirection direction = _scrollable.AxisDirection;
-        bool vertical = direction is AxisDirection.Up or AxisDirection.Down;
-        double viewportStart = vertical ? viewport.Top : viewport.Left;
-        double viewportEnd = vertical ? viewport.Bottom : viewport.Right;
-        double targetStart = vertical ? _dragTarget.Top : _dragTarget.Left;
-        double targetEnd = vertical ? _dragTarget.Bottom : _dragTarget.Right;
-        double leadingOverDrag = Math.Min(Math.Max(viewportStart - targetStart, 0.0), MaxOverDrag);
-        double trailingOverDrag = Math.Min(Math.Max(targetEnd - viewportEnd, 0.0), MaxOverDrag);
-        double overDrag = leadingOverDrag > 0.0 ? -leadingOverDrag : trailingOverDrag;
-        if (Math.Abs(overDrag) < 1.0)
+        Axis scrollDirection = ScrollDirectionUtils.AxisDirectionToAxis(direction);
+        Point deltaToOrigin = _scrollable.DeltaToScrollOrigin;
+        Point viewportOrigin = globalRect.TopLeft + new Vector(deltaToOrigin.X, deltaToOrigin.Y);
+        double viewportStart = OffsetExtent(viewportOrigin, scrollDirection);
+        double viewportEnd = viewportStart + SizeExtent(globalRect.Size, scrollDirection);
+
+        double proxyStart = OffsetExtent(_dragTargetRelatedToScrollOrigin.TopLeft, scrollDirection);
+        double proxyEnd = OffsetExtent(_dragTargetRelatedToScrollOrigin.BottomRight, scrollDirection);
+        bool resolved = false;
+        switch (direction)
         {
-            return 0.0;
+            case AxisDirection.Up:
+            case AxisDirection.Left:
+                if (proxyEnd > viewportEnd && position.Pixels > position.MinScrollExtent)
+                {
+                    double overDrag = Math.Min(proxyEnd - viewportEnd, OverDragMax);
+                    newOffset = Math.Max(position.MinScrollExtent, position.Pixels - overDrag);
+                    resolved = true;
+                }
+                else if (proxyStart < viewportStart && position.Pixels < position.MaxScrollExtent)
+                {
+                    double overDrag = Math.Min(viewportStart - proxyStart, OverDragMax);
+                    newOffset = Math.Min(position.MaxScrollExtent, position.Pixels + overDrag);
+                    resolved = true;
+                }
+
+                break;
+            case AxisDirection.Right:
+            case AxisDirection.Down:
+                if (proxyStart < viewportStart && position.Pixels > position.MinScrollExtent)
+                {
+                    double overDrag = Math.Min(viewportStart - proxyStart, OverDragMax);
+                    newOffset = Math.Max(position.MinScrollExtent, position.Pixels - overDrag);
+                    resolved = true;
+                }
+                else if (proxyEnd > viewportEnd && position.Pixels < position.MaxScrollExtent)
+                {
+                    double overDrag = Math.Min(proxyEnd - viewportEnd, OverDragMax);
+                    newOffset = Math.Min(position.MaxScrollExtent, position.Pixels + overDrag);
+                    resolved = true;
+                }
+
+                break;
         }
 
-        if (direction is AxisDirection.Up or AxisDirection.Left)
+        if (!resolved || Math.Abs(newOffset - position.Pixels) < 1.0)
         {
-            overDrag = -overDrag;
+            newOffset = 0.0;
+            return false;
         }
 
-        double target = Math.Clamp(
-            position.Pixels + overDrag,
-            position.MinScrollExtent,
-            position.MaxScrollExtent);
-        return Math.Abs(target - position.Pixels) < 1.0 ? 0.0 : overDrag * VelocityScalar;
+        return true;
     }
+
+    private static double OffsetExtent(Point offset, Axis scrollDirection) =>
+        scrollDirection == Axis.Horizontal ? offset.X : offset.Y;
+
+    private static double SizeExtent(Size size, Axis scrollDirection) =>
+        scrollDirection == Axis.Horizontal ? size.Width : size.Height;
 }
