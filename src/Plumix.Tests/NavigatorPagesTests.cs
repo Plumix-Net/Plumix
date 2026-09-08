@@ -25,13 +25,11 @@ public sealed class NavigatorPagesTests : IDisposable
     public NavigatorPagesTests()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     [Fact]

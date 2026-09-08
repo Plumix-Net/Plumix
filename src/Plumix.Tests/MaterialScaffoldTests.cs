@@ -17,7 +17,6 @@ public sealed class MaterialScaffoldTests
 {
     public MaterialScaffoldTests()
     {
-        NavigatorBackButtonDispatcher.ResetForTests();
         SystemChrome.ResetSystemUiOverlayStyleForTests();
     }
 

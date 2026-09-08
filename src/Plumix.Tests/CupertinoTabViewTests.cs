@@ -17,13 +17,11 @@ public sealed class CupertinoTabViewTests : IDisposable
     public CupertinoTabViewTests()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     [Fact]

@@ -20,13 +20,11 @@ public sealed class MaterialThemeAnimationTests : IDisposable
     public MaterialThemeAnimationTests()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     [Fact]

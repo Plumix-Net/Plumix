@@ -192,7 +192,7 @@ public class PlumixHost : Control
             return;
         }
 
-        if (Navigator.TryHandleBackButton())
+        if (WidgetsBinding.Instance.HandlePopRoute())
         {
             e.Handled = true;
         }

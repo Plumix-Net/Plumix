@@ -23,13 +23,11 @@ public sealed class NavigationNotificationTests : IDisposable
     public NavigationNotificationTests()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     [Fact]

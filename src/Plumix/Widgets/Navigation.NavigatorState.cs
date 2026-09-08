@@ -16,8 +16,6 @@ public sealed partial class NavigatorState : RestorationState
     private readonly HistoryProperty _serializableHistory = new();
     private readonly RestorableInt _rawNextPagelessRestorationScopeId = new(0);
     private readonly List<NavigatorObserver> _observers = [];
-    private readonly Func<bool> _backButtonHandler;
-
     private readonly List<NavigatorObserver> _effectiveObservers = [];
 
     private GlobalKey<OverlayState> _overlayKey;
@@ -32,7 +30,6 @@ public sealed partial class NavigatorState : RestorationState
     {
         // Identity-based key: a label-based GlobalKey is a record and would collide across navigators.
         _overlayKey = new GlobalObjectKey<OverlayState>(this);
-        _backButtonHandler = HandleBackButton;
     }
 
     /// <summary>The focus node the navigator installs above its overlay; routes focus its enclosing scope.</summary>
@@ -96,7 +93,6 @@ public sealed partial class NavigatorState : RestorationState
         UpdateHeroController(scope?.Controller);
         ValidatePagesApi();
         _history.AddListener(HandleHistoryChanged);
-        NavigatorBackButtonDispatcher.AddHandler(_backButtonHandler);
     }
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -140,8 +136,6 @@ public sealed partial class NavigatorState : RestorationState
         {
             observer.Navigator = this;
         }
-
-        NavigatorBackButtonDispatcher.AddHandler(_backButtonHandler);
     }
 
     public override void Deactivate()
@@ -155,13 +149,11 @@ public sealed partial class NavigatorState : RestorationState
         }
 
         _effectiveObservers.Clear();
-        NavigatorBackButtonDispatcher.RemoveHandler(_backButtonHandler);
         base.Deactivate();
     }
 
     public override void Dispose()
     {
-        NavigatorBackButtonDispatcher.RemoveHandler(_backButtonHandler);
         _history.RemoveListener(HandleHistoryChanged);
         StopUserGesture();
         UpdateHeroController(null);
@@ -1577,8 +1569,6 @@ public sealed partial class NavigatorState : RestorationState
 
         return RouteNamed(routeName, arguments, allowNull: false)!;
     }
-
-    private bool HandleBackButton() => MaybePop();
 
     /// <summary>Dart's `NavigatorState._updateHeroController`.</summary>
     private void UpdateHeroController(HeroController? newHeroController)

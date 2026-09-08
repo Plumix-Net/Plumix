@@ -12,8 +12,6 @@ namespace Plumix.Tests;
 [Collection(SchedulerTestCollection.Name)]
 public sealed class WillPopScopeTests
 {
-    public WillPopScopeTests() => NavigatorBackButtonDispatcher.ResetForTests();
-
     [Fact]
     public void WillPopScope_VetoesThePopWhileItsCallbackReturnsFalse()
     {

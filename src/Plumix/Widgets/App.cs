@@ -575,9 +575,19 @@ public sealed class WidgetsApp : StatefulWidget
 
         public Task<bool> DidPopRoute()
         {
-            // In router mode the back-button dispatcher owns the pop; outside it, Plumix keeps routing the
-            // host back button through the navigator handler stack so the innermost navigator still wins.
-            return Task.FromResult(false);
+            // The back button dispatcher should handle the pop route if we use a router.
+            if (UsesRouterWithDelegates || !UsesNavigator)
+            {
+                return Task.FromResult(false);
+            }
+
+            NavigatorState? navigator = (CurrentWidget.NavigatorKey ?? _navigatorKey).CurrentState;
+            if (navigator is null)
+            {
+                return Task.FromResult(false);
+            }
+
+            return Task.FromResult(navigator.MaybePop());
         }
 
         public Task<bool> DidPushRouteInformation(RouteInformation routeInformation)

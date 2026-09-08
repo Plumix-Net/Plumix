@@ -16,13 +16,11 @@ public sealed class CupertinoNavigationBarTests : IDisposable
     public CupertinoNavigationBarTests()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     [Fact]

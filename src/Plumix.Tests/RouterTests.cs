@@ -29,7 +29,6 @@ public sealed class RouterTests : IDisposable
     private static void ResetEnvironment()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
         WidgetsBinding.Instance.ResetObserversForTests();
         SystemNavigator.ResetForTests();
     }
@@ -533,7 +532,6 @@ public sealed class RouterTests : IDisposable
         Task<bool> Callback() => Task.FromResult(true);
         dispatcher.AddCallback(Callback);
         Assert.True(WidgetsBinding.Instance.HandlePopRoute());
-        Assert.True(Navigator.TryHandleBackButton());
 
         dispatcher.RemoveCallback(Callback);
         Assert.False(WidgetsBinding.Instance.HandlePopRoute());
@@ -1044,6 +1042,36 @@ public sealed class RouterTests : IDisposable
         Assert.IsType<PlatformRouteInformationProvider>(router!.RouteInformationProvider);
         Assert.IsType<RootBackButtonDispatcher>(router.BackButtonDispatcher);
         Assert.Equal("router", router.RestorationScopeId);
+    }
+
+    /// <summary>
+    /// Dart's <c>app_test.dart</c> "WidgetsApp.router works": in router mode <c>WidgetsApp.didPopRoute</c>
+    /// abstains, so the pop reaches the router delegate through the root back-button dispatcher instead
+    /// of a navigator.
+    /// </summary>
+    [Fact]
+    public void WidgetsAppRouter_SystemBack_ReachesTheRouterDelegateInsteadOfANavigator()
+    {
+        int delegatePops = 0;
+        var routerDelegate = new SimpleRouterDelegate(
+            (_, _) => new SizedBox(),
+            onPopRoute: () =>
+            {
+                delegatePops += 1;
+                return Task.FromResult(true);
+            });
+
+        WidgetsApp app = WidgetsApp.Router(
+            color: Avalonia.Media.Colors.Blue,
+            debugShowCheckedModeBanner: false,
+            routerDelegate: routerDelegate,
+            routeInformationParser: new SimpleRouteInformationParser());
+
+        using var harness = new RestorationHarness(app);
+        Pump(harness);
+
+        Assert.True(WidgetsBinding.Instance.HandlePopRoute());
+        Assert.Equal(1, delegatePops);
     }
 
     [Fact]

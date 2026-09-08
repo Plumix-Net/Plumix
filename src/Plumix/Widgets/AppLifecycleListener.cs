@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Plumix.Foundation;
 using Plumix.UI;
 
 namespace Plumix.Widgets;
@@ -238,20 +239,48 @@ public class WidgetsBinding
 
     /// <summary>
     /// Flutter's <c>WidgetsBinding.handlePopRoute</c>: offers the pop to every observer in registration order
-    /// and stops at the first one that handles it.
+    /// and stops at the first one that handles it. When no observer handles it, the platform is asked to pop
+    /// the application off its own navigation stack.
     /// </summary>
     public bool HandlePopRoute()
     {
         foreach (WidgetsBindingObserver observer in _observers.ToArray())
         {
-            Task<bool> handled = observer.DidPopRoute();
-            if (handled.IsCompletedSuccessfully && handled.Result)
+            try
             {
-                return true;
+                Task<bool> handled = observer.DidPopRoute();
+                if (handled.IsCompletedSuccessfully && handled.Result)
+                {
+                    return true;
+                }
+            }
+            catch (Exception exception)
+            {
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception: exception,
+                    library: "widgets library",
+                    context: new ErrorDescription(
+                        "while dispatching notifications for WidgetsBindingObserver.DidPopRoute")));
             }
         }
 
+        _ = ReportPopFailure(SystemNavigator.Pop());
         return false;
+    }
+
+    private static async Task ReportPopFailure(Task pop)
+    {
+        try
+        {
+            await pop.ConfigureAwait(false);
+        }
+        catch (Exception exception)
+        {
+            FlutterError.ReportError(new FlutterErrorDetails(
+                exception: exception,
+                library: "widgets library",
+                context: new ErrorDescription("while popping route")));
+        }
     }
 
     /// <summary>
@@ -263,10 +292,21 @@ public class WidgetsBinding
         ArgumentNullException.ThrowIfNull(routeInformation);
         foreach (WidgetsBindingObserver observer in _observers.ToArray())
         {
-            Task<bool> handled = observer.DidPushRouteInformation(routeInformation);
-            if (handled.IsCompletedSuccessfully && handled.Result)
+            try
             {
-                return true;
+                Task<bool> handled = observer.DidPushRouteInformation(routeInformation);
+                if (handled.IsCompletedSuccessfully && handled.Result)
+                {
+                    return true;
+                }
+            }
+            catch (Exception exception)
+            {
+                FlutterError.ReportError(new FlutterErrorDetails(
+                    exception: exception,
+                    library: "widgets library",
+                    context: new ErrorDescription(
+                        "while dispatching notifications for WidgetsBindingObserver.DidPushRouteInformation")));
             }
         }
 
@@ -312,7 +352,7 @@ public class WidgetsBinding
         _backGestureObservers.Clear();
         if (observers.Length == 0)
         {
-            return Navigator.TryHandleBackButton();
+            return HandlePopRoute();
         }
 
         foreach (WidgetsBindingObserver observer in observers)

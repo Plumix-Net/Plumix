@@ -22,13 +22,11 @@ public sealed class ModalRouteAspectTests : IDisposable
     public ModalRouteAspectTests()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     [Fact]

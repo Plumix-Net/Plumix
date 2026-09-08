@@ -1,5 +1,6 @@
 using Avalonia.Media;
 using Plumix.Cupertino;
+using Plumix.Foundation;
 using Plumix.Material;
 using Plumix.Rendering;
 using Plumix.UI;
@@ -19,7 +20,6 @@ public sealed class ApplicationWidgetsTests : IDisposable
     public ApplicationWidgetsTests()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
         SystemChrome.ResetApplicationSwitcherDescriptionForTests();
         SystemChrome.ResetSystemUiOverlayStyleForTests();
     }
@@ -27,7 +27,6 @@ public sealed class ApplicationWidgetsTests : IDisposable
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
         SystemChrome.ResetApplicationSwitcherDescriptionForTests();
         SystemChrome.ResetSystemUiOverlayStyleForTests();
     }
@@ -567,6 +566,142 @@ public sealed class ApplicationWidgetsTests : IDisposable
         finally
         {
             PlatformDefaults.DebugTargetPlatformOverride = null;
+        }
+    }
+
+    /// <summary>
+    /// Dart's <c>navigator_test.dart</c> "navigating around a single Navigator with system back":
+    /// <c>WidgetsApp.didPopRoute</c> pops the root navigator, and once nothing is left to pop the
+    /// binding falls through to <c>SystemNavigator.pop</c>, exactly as <c>handlePopRoute</c> does.
+    /// </summary>
+    [Fact]
+    public void WidgetsApp_SystemBack_PopsTheRootNavigator_ThenAsksThePlatformToPopTheApp()
+    {
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
+        var owner = new BuildOwner();
+        NavigatorState? navigator = null;
+        var root = new TestRootElement(new WidgetsApp(
+            color: Colors.Blue,
+            debugShowCheckedModeBanner: false,
+            pageRouteBuilder: (settings, builder) => new BuilderPageRoute(
+                context => builder(context),
+                settings),
+            home: new Builder(context =>
+            {
+                navigator = Navigator.Of(context);
+                return new SizedBox();
+            })));
+        MountAndFlush(root, owner);
+
+        navigator!.Push(new BuilderPageRoute(_ => new SizedBox(), new RouteSettings(Name: "second")));
+        PumpNotifications(owner);
+        Assert.Equal("second", navigator.CurrentRoute?.Settings.Name);
+
+        Assert.True(WidgetsBinding.Instance.HandlePopRoute());
+        PumpNotifications(owner);
+        Assert.Equal("/", navigator.CurrentRoute?.Settings.Name);
+        Assert.DoesNotContain("SystemNavigator.pop", platform.Methods);
+
+        // The root route bubbles, so no observer handles the pop and the platform is asked to pop the app.
+        Assert.False(WidgetsBinding.Instance.HandlePopRoute());
+        Assert.Contains("SystemNavigator.pop", platform.Methods);
+        root.Unmount();
+    }
+
+    /// <summary>
+    /// Dart's <c>navigator_test.dart</c> "navigating around nested Navigators": in Navigator mode
+    /// <c>WidgetsApp</c> only ever calls <c>maybePop</c> on the root navigator, so a nested navigator
+    /// gets the back press through <see cref="NavigatorPopHandler{T}"/> — its <see cref="PopScope{T}"/>
+    /// reports <c>canPop: false</c> while the inner stack can pop, which makes the outer route's
+    /// disposition <c>doNotPop</c> and hands the pop to the callback.
+    /// </summary>
+    [Fact]
+    public void WidgetsApp_SystemBack_PopsTheNestedNavigatorFirst_ThroughNavigatorPopHandler()
+    {
+        var owner = new BuildOwner();
+        NavigatorState? outerNavigator = null;
+        NavigatorState? innerNavigator = null;
+        var root = new TestRootElement(new WidgetsApp(
+            color: Colors.Blue,
+            debugShowCheckedModeBanner: false,
+            pageRouteBuilder: (settings, builder) => new BuilderPageRoute(
+                context => builder(context),
+                settings),
+            home: new Builder(context =>
+            {
+                outerNavigator = Navigator.Of(context);
+                return new NavigatorPopHandler<object?>(
+                    onPopWithResult: _ => innerNavigator!.Pop(),
+                    child: new Navigator(
+                        initialRoute: new BuilderPageRoute(
+                            innerContext =>
+                            {
+                                innerNavigator = Navigator.Of(innerContext);
+                                return new SizedBox();
+                            },
+                            new RouteSettings(Name: "inner-root"))));
+            })));
+        MountAndFlush(root, owner);
+        PumpNotifications(owner);
+
+        Assert.NotNull(innerNavigator);
+        innerNavigator!.Push(new BuilderPageRoute(_ => new SizedBox(), new RouteSettings(Name: "inner-second")));
+        PumpNotifications(owner);
+        Assert.Equal("inner-second", innerNavigator.CurrentRoute?.Settings.Name);
+
+        // The inner navigator can pop, so the outer route refuses the pop and the handler pops the inner one.
+        Assert.True(WidgetsBinding.Instance.HandlePopRoute());
+        PumpNotifications(owner);
+        Assert.Equal("inner-root", innerNavigator.CurrentRoute?.Settings.Name);
+        Assert.Equal("/", outerNavigator!.CurrentRoute?.Settings.Name);
+
+        // With the inner stack back at its root the outer route bubbles again.
+        Assert.False(WidgetsBinding.Instance.HandlePopRoute());
+        root.Unmount();
+    }
+
+    /// <summary>
+    /// Dart's <c>binding_test.dart</c> "didPopRoute": an observer that throws is reported and the
+    /// dispatch continues with the remaining observers.
+    /// </summary>
+    [Fact]
+    public void WidgetsBinding_HandlePopRoute_ReportsAThrowingObserver_AndKeepsDispatching()
+    {
+        var throwing = new ThrowingPopRouteObserver();
+        var handling = new HandlingPopRouteObserver();
+        var reported = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = details => reported.Add(details);
+        WidgetsBinding.Instance.AddObserver(throwing);
+        WidgetsBinding.Instance.AddObserver(handling);
+        try
+        {
+            Assert.True(WidgetsBinding.Instance.HandlePopRoute());
+            Assert.Equal(1, handling.Calls);
+            FlutterErrorDetails details = Assert.Single(reported);
+            Assert.Equal("widgets library", details.Library);
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+            _ = WidgetsBinding.Instance.RemoveObserver(throwing);
+            _ = WidgetsBinding.Instance.RemoveObserver(handling);
+        }
+    }
+
+    private sealed class ThrowingPopRouteObserver : WidgetsBindingObserver
+    {
+        public Task<bool> DidPopRoute() => throw new InvalidOperationException("observer failed");
+    }
+
+    private sealed class HandlingPopRouteObserver : WidgetsBindingObserver
+    {
+        public int Calls { get; private set; }
+
+        public Task<bool> DidPopRoute()
+        {
+            Calls += 1;
+            return Task.FromResult(true);
         }
     }
 

@@ -20,14 +20,12 @@ public sealed class MaterialPageTransitionsTests : IDisposable
     public MaterialPageTransitionsTests()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
         GestureBinding.Instance.ResetForTests();
     }
 

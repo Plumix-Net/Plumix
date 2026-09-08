@@ -16,7 +16,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_WithSharedHeroTag_ShowsBothRoutesDuringFlight_ThenSettlesToDestination()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -64,7 +63,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -72,7 +70,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Pop_WithSharedHeroTag_KeepsPoppedRouteDuringFlight_ThenDisposesIt()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -118,7 +115,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -126,7 +122,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_UsesDestinationHeroCreateRectTween_ForFlightBounds()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -197,7 +192,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -205,7 +199,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_UsesDestinationHeroFlightShuttleBuilder_WhenBothHeroesProvideBuilder()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -256,7 +249,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -264,7 +256,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_UsesSourceHeroFlightShuttleBuilder_AsFallbackWhenDestinationBuilderIsMissing()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -307,7 +298,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -315,7 +305,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_WithDisabledDestinationHeroMode_DoesNotStartHeroFlight()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -357,7 +346,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -365,7 +353,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_WithNestedNavigatorHeroes_ShowsBothRoutesDuringFlight()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -408,7 +395,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -416,7 +402,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Pop_FromUserGesture_SkipsHeroFlight_WhenTransitionOnUserGesturesDisabled()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -462,7 +447,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -470,7 +454,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Pop_FromUserGesture_UsesHeroFlight_WhenBothHeroesAllowGestureTransition()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -516,7 +499,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -524,7 +506,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_UsesSourceHeroPlaceholderBuilder_DuringFlight()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -576,7 +557,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -584,7 +564,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Pop_UsesDestinationHeroPlaceholderBuilder_DuringFlight()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -645,7 +624,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -653,7 +631,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_DefaultHeroPlaceholder_UsesOffstageChildForSourceHero()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -691,7 +668,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -699,7 +675,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Pop_DefaultHeroPlaceholder_DoesNotUseOffstageChild()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -739,7 +714,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -747,7 +721,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_PushFlight_InterruptedByPop_DivertsActiveHeroFlight()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -810,7 +783,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -818,7 +790,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_WithDuplicateHeroTagsInRouteSubtree_ThrowsInvalidOperationException()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -849,7 +820,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -857,7 +827,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_InitialRoute_WithNestedHero_ThrowsInvalidOperationException()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -877,7 +846,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -885,7 +853,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_SamplesFlightRectThroughDestinationHeroCurve()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -935,7 +902,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -943,7 +909,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_DefaultHeroCurveIsFastOutSlowIn()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -990,7 +955,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -998,7 +962,6 @@ public sealed class HeroNavigatorTests
     public void HeroController_CreateRectTween_IsUsedWhenTheHeroSuppliesNone_AndLosesToTheDestinationHero()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -1061,7 +1024,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -1069,7 +1031,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_WithoutAHeroControllerScope_DoesNotFly()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -1110,7 +1071,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -1118,7 +1078,6 @@ public sealed class HeroNavigatorTests
     public void Navigator_Push_WithNoMatchingTagOnTheDestination_DoesNotFly()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -1156,7 +1115,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
@@ -1164,7 +1122,6 @@ public sealed class HeroNavigatorTests
     public void HeroController_Dispose_DetachesFromTheNavigatorAndDropsInFlightHeroes()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -1204,7 +1161,6 @@ public sealed class HeroNavigatorTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 

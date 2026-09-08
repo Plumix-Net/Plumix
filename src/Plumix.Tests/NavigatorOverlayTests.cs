@@ -25,13 +25,11 @@ public sealed class NavigatorOverlayTests : IDisposable
     public NavigatorOverlayTests()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     public void Dispose()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
     }
 
     [Fact]

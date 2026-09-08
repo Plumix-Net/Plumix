@@ -856,7 +856,6 @@ public sealed class MaterialFloatingActionButtonTests
     public void FloatingActionButtonDemoPage_SecondaryProbesDoNotRegisterDuplicateDefaultHeroes()
     {
         Scheduler.ResetForTests();
-        NavigatorBackButtonDispatcher.ResetForTests();
 
         try
         {
@@ -883,7 +882,6 @@ public sealed class MaterialFloatingActionButtonTests
         finally
         {
             Scheduler.ResetForTests();
-            NavigatorBackButtonDispatcher.ResetForTests();
         }
     }
 
