@@ -41,6 +41,16 @@ public static class WidgetsDebug
     /// </summary>
     public static bool DebugPrintGlobalKeyedWidgetLifecycle { get; set; }
 
+    /// <summary>
+    /// Plumix-only: arms Dart's closing assert in <c>BuildScope._flushDirtyElements</c>, which reports
+    /// a dirty active element the flush walked past. Dart asserts unconditionally, and can, because
+    /// <c>Element.markNeedsBuild</c> rejects dirtying an element outside the subtree currently being
+    /// built — the only way an element can end up to the left of the cursor's rewind point. Plumix has
+    /// that check disarmed (see <c>docs/ai/BACKLOG.md</c>), so the closing assert is opt-in until it
+    /// can be armed with it.
+    /// </summary>
+    public static bool DebugCheckMissedDirtyElements { get; set; }
+
     /// <summary>Dart's <c>debugProfileBuildsEnabled</c>: adds a timeline event for every widget built.</summary>
     public static bool DebugProfileBuildsEnabled { get; set; }
 

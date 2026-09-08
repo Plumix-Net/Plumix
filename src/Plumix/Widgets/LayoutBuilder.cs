@@ -31,9 +31,50 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
     private Element? _child;
     private BoxConstraints? _previousConstraints;
     private bool _needsBuild = true;
+    private bool _deferredCallbackScheduled;
+
+    // Dart's `late final BuildScope _buildScope = BuildScope(scheduleRebuild: _scheduleRebuild)`.
+    // A LayoutBuilder builds its children during layout, so its descendants must not be rebuilt by
+    // the ambient build pass; they get their own scope, flushed from RebuildWithConstraints.
+    private readonly BuildScope _ownBuildScope;
 
     public LayoutBuilderElement(LayoutBuilder widget) : base(widget)
     {
+        _ownBuildScope = new BuildScope(ScheduleRebuild);
+    }
+
+    /// <inheritdoc />
+    public override BuildScope BuildScope => _ownBuildScope;
+
+    /// <summary>
+    /// Dart's <c>_LayoutBuilderElement._scheduleRebuild</c>: asks the render object to run its layout
+    /// callback again. Marking the render object dirty outside a frame would dirty the render tree
+    /// during the idle phase, so the request is deferred to the start of the next frame instead.
+    /// </summary>
+    private void ScheduleRebuild()
+    {
+        if (_deferredCallbackScheduled)
+        {
+            return;
+        }
+
+        bool deferMarkNeedsLayout = Scheduler.Phase
+            is SchedulerPhase.Idle or SchedulerPhase.PostFrameCallbacks;
+        if (!deferMarkNeedsLayout)
+        {
+            LayoutRenderObject.ScheduleLayoutCallback();
+            return;
+        }
+
+        _deferredCallbackScheduled = true;
+        Scheduler.ScheduleFrameCallback(_ =>
+        {
+            _deferredCallbackScheduled = false;
+            if (Mounted)
+            {
+                LayoutRenderObject.ScheduleLayoutCallback();
+            }
+        });
     }
 
     private LayoutBuilder LayoutBuilderWidget => (LayoutBuilder)Widget;
@@ -80,16 +121,27 @@ internal sealed class LayoutBuilderElement : RenderObjectElement
 
     private void RebuildWithConstraints(BoxConstraints constraints)
     {
-        if (!_needsBuild && _previousConstraints == constraints)
+        void UpdateChildCallback()
         {
-            return;
+            try
+            {
+                Widget built = LayoutBuilderWidget.Builder(this, constraints)
+                    ?? throw new InvalidOperationException("LayoutBuilder.Builder must return a widget.");
+                _child = UpdateChild(_child, built, null);
+            }
+            finally
+            {
+                _needsBuild = false;
+                _previousConstraints = constraints;
+            }
         }
 
-        Widget built = LayoutBuilderWidget.Builder(this, constraints)
-            ?? throw new InvalidOperationException("LayoutBuilder.Builder must return a widget.");
-        _child = UpdateChild(_child, built, null);
-        _needsBuild = false;
-        _previousConstraints = constraints;
+        // Dart runs the builder inside `owner.buildScope(this, callback)`, and enters the scope even
+        // when nothing needs building: descendants dirtied since the last layout live in this scope's
+        // dirty list and nothing else will ever flush them. `BuildScope` returns immediately when the
+        // callback is null and the list is empty.
+        Action? callback = _needsBuild || _previousConstraints != constraints ? UpdateChildCallback : null;
+        Owner!.BuildScope(this, callback);
     }
 
     public override void VisitChildren(Action<Element> visitor)

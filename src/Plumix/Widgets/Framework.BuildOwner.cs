@@ -9,18 +9,29 @@ namespace Plumix.Widgets;
 /// </summary>
 public sealed class BuildOwner
 {
-    // Flutter parity: a list plus a membership set, not a depth-ordered set. An element's depth changes when
-    // it is reparented, which would corrupt an ordered container it is already sitting in.
-    private readonly List<Element> _dirty = [];
-    private readonly HashSet<Element> _dirtyMembership = [];
-    private bool _dirtyNeedsResorting;
     private readonly HashSet<Element> _tracked = [];
     private readonly HashSet<Element> _inactive = [];
     private readonly Dictionary<GlobalKey, Element> _globalKeyRegistry = [];
 
-    private bool _scheduled;
+    private bool _scheduledFlushDirtyElements;
     private bool _building;
     public Action? OnBuildScheduled { get; set; }
+
+    /// <summary>
+    /// The scope every element attached to this owner starts in. Dart creates it in
+    /// <c>RootElementMixin.assignOwner</c>; Plumix keeps it on the owner, because an owner drives
+    /// exactly one root element. It has no <see cref="Widgets.BuildScope.ScheduleRebuild"/>:
+    /// <see cref="OnBuildScheduled"/> already asks the host for a frame.
+    /// </summary>
+    public BuildScope RootBuildScope { get; } = new();
+
+    /// <summary>
+    /// The element mounted without a parent, used as the debug build root of the parameterless
+    /// <see cref="BuildScope()"/>. Dart reads it from <c>WidgetsBinding.rootElement</c>.
+    /// </summary>
+    private Element? _rootElement;
+
+    internal void RegisterRootElement(Element element) => _rootElement = element;
 
     /// <summary>Whether this owner is currently executing a build-scope callback or flushing dirty elements.</summary>
     /// <remarks>Flutter's <c>BuildOwner.debugBuilding</c>, which Plumix keeps outside the debug-only surface.</remarks>
@@ -135,7 +146,6 @@ public sealed class BuildOwner
     {
         _tracked.Remove(element);
         _inactive.Remove(element);
-        UnscheduleBuild(element);
     }
 
     /// <summary>
@@ -231,45 +241,72 @@ public sealed class BuildOwner
         element.DeactivateRecursively();
     }
 
+    /// <summary>
+    /// Adds <paramref name="element"/> to its <see cref="Widgets.BuildScope"/>'s dirty list and asks
+    /// for a frame if none is pending.
+    /// </summary>
+    /// <remarks>Dart's <c>BuildOwner.scheduleBuildFor</c>.</remarks>
     public void ScheduleBuild(Element element)
     {
+        ArgumentNullException.ThrowIfNull(element);
         if (!element.IsActive)
         {
             return;
         }
 
-        if (_dirtyMembership.Add(element))
+        DebugCheckCanScheduleBuildFor(element);
+        BuildScope buildScope = element.BuildScope;
+
+        if (Constants.KDebugMode && WidgetsDebug.DebugPrintScheduleBuildForStacks)
         {
-            _dirty.Add(element);
-        }
-        else
-        {
-            // Already queued. It may have been rebuilt already in the current scope, so ask the scope to
-            // re-sort and rewind onto it (Flutter's `_dirtyElementsNeedsResorting`).
-            _dirtyNeedsResorting = true;
+            string suffix = element.InDirtyList ? " (ALREADY IN LIST)" : string.Empty;
+            Print.DebugPrint($"scheduleBuildFor() called for {element}{suffix}");
         }
 
-        if (_scheduled || _building)
+        if (!_scheduledFlushDirtyElements && OnBuildScheduled != null)
+        {
+            _scheduledFlushDirtyElements = true;
+            OnBuildScheduled();
+        }
+
+        buildScope.ScheduleBuildFor(element);
+    }
+
+    /// <summary>
+    /// Dart's first debug guard at the top of <c>BuildOwner.scheduleBuildFor</c>. The second one —
+    /// "called on an Element that is already in the dirty list" — is not armed: it reads
+    /// <c>_debugBuilding</c>, and Plumix's element-level test harnesses drive updates by calling
+    /// <see cref="Element.Rebuild"/> directly instead of through <see cref="BuildScope(Element, Action?)"/>,
+    /// so the flag is false during legitimate reactivations. See docs/ai/BACKLOG.md.
+    /// </summary>
+    private void DebugCheckCanScheduleBuildFor(Element element)
+    {
+        if (!Constants.KDebugMode)
         {
             return;
         }
 
-        _scheduled = true;
-        OnBuildScheduled?.Invoke();
-    }
-
-    internal void UnscheduleBuild(Element element)
-    {
-        // The list entry is left behind as a tombstone: the build scope skips inactive or clean elements,
-        // and removing by value from an ordered container whose key (depth) may have changed is unsafe.
-        _dirtyMembership.Remove(element);
+        if (!element.Dirty)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary("scheduleBuildFor() called for a widget that is not marked as dirty."),
+                element.DescribeElement("The method was called for the following element"),
+                new ErrorDescription(
+                    "This element is not current marked as dirty. Make sure to set the dirty flag before "
+                    + "calling scheduleBuildFor()."),
+                new ErrorHint(
+                    "If you did not attempt to call scheduleBuildFor() yourself, then this probably "
+                    + "indicates a bug in the widgets framework."),
+            ]);
+        }
     }
 
     public void MarkSubtreeNeedsBuild(Element root)
     {
-        foreach (var element in _tracked.Where(x => x.IsActive && IsDescendantOf(x, root)))
+        foreach (var element in _tracked.Where(x => x.IsActive && IsDescendantOf(x, root)).ToArray())
         {
-            ScheduleBuild(element);
+            element.MarkNeedsBuild();
         }
     }
 
@@ -297,32 +334,21 @@ public sealed class BuildOwner
         root.Reassemble();
     }
 
+    /// <summary>
+    /// Flushes <see cref="RootBuildScope"/> and unmounts whatever the rebuilds left inactive.
+    /// </summary>
+    /// <remarks>
+    /// Plumix-only entry point: Dart's <c>buildScope</c> always takes a context, which the hosts
+    /// reach through <c>WidgetsBinding.drawFrame</c>'s <c>buildOwner.buildScope(rootElement!)</c>.
+    /// </remarks>
     internal void BuildScope()
     {
-        if (_building)
-        {
-            throw new InvalidOperationException("BuildOwner.buildScope must not be re-entered.");
-        }
-
-        _scheduled = false;
-
-        using IDisposable buildPhase = Scheduler.BuildScope();
-
-        _building = true;
-        try
-        {
-            FlushDirtyElements();
-            FinalizeInactiveElements();
-        }
-        finally
-        {
-            _building = false;
-        }
+        RunBuildScope(RootBuildScope, _rootElement, callback: null, finalizeInactive: true);
     }
 
     /// <summary>
     /// Establishes <paramref name="context"/> as the target of a build-scope callback, then flushes
-    /// elements dirtied by that callback.
+    /// the dirty elements of that context's <see cref="Widgets.BuildScope"/>.
     /// </summary>
     /// <remarks>Flutter's <c>BuildOwner.buildScope(Element, [VoidCallback])</c>.</remarks>
     public void BuildScope(Element context, Action? callback = null)
@@ -333,27 +359,77 @@ public sealed class BuildOwner
             throw new InvalidOperationException("The build-scope context belongs to a different BuildOwner.");
         }
 
-        if (callback == null && _dirty.Count == 0)
+        BuildScope buildScope = context.BuildScope;
+        if (callback == null && buildScope.DirtyElements.Count == 0)
         {
             return;
         }
 
+        RunBuildScope(buildScope, context, callback, finalizeInactive: false);
+    }
+
+    private void RunBuildScope(BuildScope buildScope, Element? context, Action? callback, bool finalizeInactive)
+    {
         if (_building)
         {
             throw new InvalidOperationException("BuildOwner.buildScope must not be re-entered.");
         }
 
-        _scheduled = false;
+        if (Constants.KDebugMode && WidgetsDebug.DebugPrintBuildScope)
+        {
+            Print.DebugPrint(
+                $"buildScope called with context {context}; its build scope's dirty list is: "
+                + $"[{string.Join(", ", buildScope.DirtyElements)}]");
+        }
+
         using IDisposable buildPhase = Scheduler.BuildScope();
+
+        _debugStateLockLevel += 1;
         _building = true;
+
+        // Dart forces `_scheduledFlushDirtyElements` true for the duration so that a markNeedsBuild
+        // made during the build cannot ask the host for another frame, and false afterwards so the
+        // next one can.
+        _scheduledFlushDirtyElements = true;
+        buildScope.Building = true;
         try
         {
-            callback?.Invoke();
-            FlushDirtyElements();
+            if (callback != null)
+            {
+                Element? previousBuildTarget = DebugCurrentBuildTarget;
+                DebugCurrentBuildTarget = context;
+                try
+                {
+                    callback();
+                }
+                finally
+                {
+                    DebugCurrentBuildTarget = previousBuildTarget;
+                    if (context != null)
+                    {
+                        DebugElementWasRebuilt(context);
+                    }
+                }
+            }
+
+            buildScope.FlushDirtyElements(context);
+
+            if (finalizeInactive)
+            {
+                FinalizeInactiveElements();
+            }
         }
         finally
         {
+            buildScope.Building = false;
+            _scheduledFlushDirtyElements = false;
             _building = false;
+            _debugStateLockLevel -= 1;
+
+            if (Constants.KDebugMode && WidgetsDebug.DebugPrintBuildScope)
+            {
+                Print.DebugPrint("buildScope finished");
+            }
         }
     }
 
@@ -368,14 +444,18 @@ public sealed class BuildOwner
     /// can leave elements dirty when layout starts. Rebuilding one of those mid-layout re-dirties a
     /// render subtree whose ancestor is already being laid out; that ancestor then clears its own
     /// flag and the subtree stays dirty under a clean parent. Deferring the pre-existing entries to
-    /// the next build keeps the lazy child mutation itself faithful to Dart.
+    /// the next build keeps the lazy child mutation itself faithful to Dart. `LayoutBuilder` needs no
+    /// such deferral: it owns a <see cref="Widgets.BuildScope"/>, so its list only ever holds its own
+    /// descendants.
     /// </remarks>
     internal void BuildScopeDuringLayout(Element context, Action callback)
     {
+        ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(callback);
-        Element[] deferred = [.. _dirty];
-        _dirty.Clear();
-        _dirtyMembership.Clear();
+
+        BuildScope buildScope = context.BuildScope;
+        Element[] deferred = [.. buildScope.DirtyElements];
+        buildScope.TakeDirtyElements();
         try
         {
             BuildScope(context, callback);
@@ -384,56 +464,22 @@ public sealed class BuildOwner
         {
             foreach (Element element in deferred)
             {
-                if (element.IsActive && ReferenceEquals(element.Owner, this) && element.Dirty
-                    && _dirtyMembership.Add(element))
+                if (element.IsActive && ReferenceEquals(element.Owner, this) && element.Dirty)
                 {
-                    _dirty.Add(element);
-                    _dirtyNeedsResorting = true;
+                    element.BuildScope.ScheduleBuildFor(element);
                 }
             }
         }
     }
 
-    private void FlushDirtyElements()
-    {
-        // Flutter parity (`BuildOwner.buildScope`): process the dirty list in order of increasing depth so
-        // parents rebuild before children; elements cleaned by an ancestor's rebuild are skipped via the
-        // Dirty check instead of rebuilding twice. The list is re-sorted whenever it grew or an element was
-        // re-dirtied, and the cursor rewinds onto whatever became dirty behind it.
-        _dirty.Sort(ElementDepthComparer.Instance.Compare);
-        _dirtyNeedsResorting = false;
-        int dirtyCount = _dirty.Count;
-        int index = 0;
-        while (index < dirtyCount)
-        {
-            Element element = _dirty[index];
-            if (element.IsActive && element.Owner == this && element.Dirty)
-            {
-                element.Rebuild();
-            }
-
-            index += 1;
-            if (dirtyCount >= _dirty.Count && !_dirtyNeedsResorting)
-            {
-                continue;
-            }
-
-            _dirty.Sort(ElementDepthComparer.Instance.Compare);
-            _dirtyNeedsResorting = false;
-            dirtyCount = _dirty.Count;
-            while (index > 0 && _dirty[index - 1].Dirty)
-            {
-                index -= 1;
-            }
-        }
-
-        _dirty.Clear();
-        _dirtyMembership.Clear();
-    }
-
     internal void FlushBuild()
     {
         Scheduler.FlushMicrotasks();
+
+        // Dart runs the transient frame callbacks before the build phase of every frame, and
+        // `LayoutBuilder`'s scope defers its rebuild request to one. A harness pump produces no
+        // frame, so drain them here or that rebuild is dropped.
+        Scheduler.RunScheduledFrameCallbacksOutsideFrame();
         BuildScope();
 
         // Test harnesses use FlushBuild as their pump boundary. Production frame flow calls
@@ -709,37 +755,6 @@ public sealed class BuildOwner
             }
 
             element.Unmount();
-        }
-    }
-
-    private sealed class ElementDepthComparer : IComparer<Element>
-    {
-        public static readonly ElementDepthComparer Instance = new();
-
-        public int Compare(Element? x, Element? y)
-        {
-            if (ReferenceEquals(x, y))
-            {
-                return 0;
-            }
-
-            if (x is null)
-            {
-                return -1;
-            }
-
-            if (y is null)
-            {
-                return 1;
-            }
-
-            int depthCompare = x.Depth.CompareTo(y.Depth);
-            if (depthCompare != 0)
-            {
-                return depthCompare;
-            }
-
-            return x.SequenceId.CompareTo(y.SequenceId);
         }
     }
 }

@@ -226,6 +226,66 @@ public abstract class Element : DiagnosticableTree, BuildContext
     /// </summary>
     public bool Dirty { get; private set; } = true;
 
+    /// <summary>
+    /// Whether this element sits in <see cref="Widgets.BuildScope"/>'s dirty list. Dart's
+    /// <c>Element._inDirtyList</c>: membership is a flag on the element rather than a side set,
+    /// because the list keeps tombstones for elements that were deactivated or moved to another
+    /// scope mid-flush and must not enqueue them a second time.
+    /// </summary>
+    internal bool InDirtyList { get; set; }
+
+    private BuildScope? _parentBuildScope;
+
+    /// <summary>
+    /// The <see cref="Widgets.BuildScope"/> this element is rebuilt in. Dart's
+    /// <c>Element.buildScope</c>: the parent's scope by default, so a whole tree normally shares the
+    /// one the root was attached with. An override must return the same instance every time — the
+    /// scope of a mounted element is not allowed to change identity.
+    /// </summary>
+    public virtual BuildScope BuildScope =>
+        _parentBuildScope ?? throw new FlutterError("BuildScope is only available once the element is attached.");
+
+    /// <summary>
+    /// Dart's <c>Element._sort</c>: shallow before deep, and at equal depth clean before dirty, so a
+    /// cursor walking the dirty list never has a still-dirty element behind it.
+    /// </summary>
+    internal static int Sort(Element a, Element b)
+    {
+        int diff = a.Depth - b.Depth;
+        if (diff != 0)
+        {
+            return diff;
+        }
+
+        bool isBDirty = b.Dirty;
+        if (a.Dirty != isBDirty)
+        {
+            return isBDirty ? -1 : 1;
+        }
+
+        // Dart returns 0 here and leaves the order to its sort. `List<T>.Sort` is not stable, so the
+        // creation order is the final tiebreak; it keeps a rebuild pass reproducible.
+        return a.SequenceId.CompareTo(b.SequenceId);
+    }
+
+    /// <summary>
+    /// Dart's <c>Element._updateBuildScopeRecursively</c>: after a reparent, re-reads the scope from
+    /// the new parent and pushes the change down until a subtree already agrees with its parent.
+    /// Clearing <see cref="InDirtyList"/> is what lets the element join the new scope's list; the
+    /// stale entry left in the old one is skipped and dropped when that scope flushes.
+    /// </summary>
+    private void UpdateBuildScopeRecursively()
+    {
+        if (ReferenceEquals(BuildScope, Parent?.BuildScope))
+        {
+            return;
+        }
+
+        InDirtyList = false;
+        _parentBuildScope = Parent?.BuildScope;
+        VisitChildren(static child => child.UpdateBuildScopeRecursively());
+    }
+
     /// <summary>Dart's <c>Element._debugBuiltOnce</c>, read by <c>debugPrintRebuildDirtyWidgets</c>.</summary>
     private bool _debugBuiltOnce;
 
@@ -253,6 +313,11 @@ public abstract class Element : DiagnosticableTree, BuildContext
         }
 
         Owner = owner;
+
+        // Dart's RootElementMixin.assignOwner creates the root BuildScope; Plumix keeps one per
+        // BuildOwner, since an owner drives exactly one root element. Mount overwrites this with the
+        // parent's scope for every element that is not the root.
+        _parentBuildScope ??= owner.RootBuildScope;
         Owner.RegisterElement(this);
     }
 
@@ -266,7 +331,13 @@ public abstract class Element : DiagnosticableTree, BuildContext
         Parent = parent;
         Slot = newSlot;
         Depth = (parent?.Depth ?? 0) + 1;
+        _parentBuildScope = parent?.BuildScope ?? _parentBuildScope;
         _lifecycleState = ElementLifecycleState.Active;
+
+        if (parent is null)
+        {
+            Owner?.RegisterRootElement(this);
+        }
 
         if (Widget.Key is GlobalKey globalKey)
         {
@@ -290,6 +361,12 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
     internal void ActivateWithParent(Element parent, object? newSlot)
     {
+        // Dart's _activateWithParent reparents, refreshes the depth and the build scope, and only
+        // then activates: activate() ends by scheduling a dirty element, and it has to land in the
+        // scope it is moving into rather than the one it is leaving.
+        Parent = parent;
+        Depth = parent.Depth + 1;
+        UpdateBuildScopeRecursively();
         ActivateRecursively(parent, newSlot);
         AttachRenderObject(newSlot);
     }
@@ -390,8 +467,12 @@ public abstract class Element : DiagnosticableTree, BuildContext
             return;
         }
 
-        Owner?.UnscheduleBuild(this);
+        // Dart leaves `_dirty` (and therefore `_inDirtyList`) alone here and lets the next flush
+        // drop the entry. Plumix clears both, because a deactivated element must not be rebuilt and
+        // its scope's dirty list keeps only a tombstone that the flush skips; re-activating the
+        // element enqueues it again from `ActivateRecursively`.
         Dirty = false;
+        InDirtyList = false;
 
         try
         {
@@ -444,7 +525,6 @@ public abstract class Element : DiagnosticableTree, BuildContext
             Owner?.UnregisterGlobalKey(key, this);
         }
 
-        Owner?.UnscheduleBuild(this);
         Owner?.UnregisterElement(this);
 
         _dependencies = null;
@@ -453,6 +533,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
         Parent = null;
         Slot = null;
         Dirty = false;
+        InDirtyList = false;
         _lifecycleState = ElementLifecycleState.Defunct;
     }
 
@@ -546,10 +627,17 @@ public abstract class Element : DiagnosticableTree, BuildContext
             return;
         }
 
-        // Dart also rejects a markNeedsBuild() during build when the element is not a descendant of
-        // the element currently being built. That branch is not armed yet: Plumix has no per-BuildScope
-        // dirty list, and `TransitionRoute.HandleStatusChanged` re-enters `NavigatorState.SetState`
-        // from an animation status callback that can run inside a build. See docs/ai/BACKLOG.md.
+        if (owner.DebugBuilding)
+        {
+            // Dart also rejects a markNeedsBuild() during build when the element is not a descendant
+            // of the element currently being built (`DebugIsDescendantOf(owner.DebugCurrentBuildTarget)`).
+            // That branch is not armed yet: `TransitionRoute.HandleStatusChanged` re-enters
+            // `NavigatorState.SetState` from an animation status callback that can run inside a
+            // build. See docs/ai/BACKLOG.md. Returning here keeps the state-lock branch below from
+            // firing for every legal setState during a build, since a build scope locks the tree.
+            return;
+        }
+
         if (owner.DebugStateLocked)
         {
             throw new FlutterError(
@@ -564,7 +652,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
     }
 
     /// <summary>Dart's <c>Element._debugIsDescendantOf</c>.</summary>
-    private bool IsDescendantOf(Element target)
+    internal bool DebugIsDescendantOf(Element target)
     {
         Element? element = this;
         while (element != null && element.Depth > target.Depth)

@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `BuildScope` lands; `BuildOwner.BuildScope(context)` flushes only that context's scope (framework.dart).
+- Breaking: `LayoutBuilder`/`SliverLayoutBuilder` own a `BuildScope` and flush it from layout (layout_builder.dart).
+- Breaking: `BuildOwner.ScheduleBuild` reports Dart's "widget that is not marked as dirty" error (framework.dart).
 - Breaking: `InheritedWidget` is a `ProxyWidget` carrying a `child`, and `InheritedElement` a `ProxyElement`.
 - Breaking: `Theme` is a `StatelessWidget` that builds `InheritedMaterialTheme`, as Dart's `_InheritedTheme` (theme.dart).
 - Breaking: `MediaQuery.PlatformBrightnessOf` falls back to `PlatformBrightness.Light` instead of throwing (media_query.dart).

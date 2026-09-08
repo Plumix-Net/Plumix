@@ -452,6 +452,22 @@ public static class Scheduler
         }
     }
 
+    /// <summary>
+    /// Runs the callbacks queued by <see cref="ScheduleFrameCallback"/>, without ticking any
+    /// <see cref="Ticker"/>. Plumix-only: a widget-test harness pumps by flushing the build, layout
+    /// and paint phases by hand instead of producing a frame, so the transient callbacks a real
+    /// frame would run first have to be drained explicitly (see <c>BuildOwner.FlushBuild</c>).
+    /// </summary>
+    internal static void RunScheduledFrameCallbacksOutsideFrame()
+    {
+        if (_handlingFrame)
+        {
+            return;
+        }
+
+        RunTransientFrameCallbacks(CurrentFrameTimeStamp);
+    }
+
     private static void RunTransientFrameCallbacks(TimeSpan timestamp)
     {
         if (_transientCallbacks.Count == 0)
