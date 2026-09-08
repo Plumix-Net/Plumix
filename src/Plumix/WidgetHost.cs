@@ -5,7 +5,7 @@ using Plumix.Widgets;
 
 namespace Plumix;
 
-public sealed class WidgetHost : PlumixHost
+public sealed class WidgetHost : PlumixHost, IRootRenderObjectHost
 {
     private readonly BuildOwner _owner = new();
     private RootElement? _rootElement;
@@ -48,17 +48,46 @@ public sealed class WidgetHost : PlumixHost
             return;
         }
 
-        var effectiveRootWidget = BuildRootWidget(_rootWidget);
+        AttachRootWidget(_rootWidget);
+    }
 
-        if (_rootElement == null)
+    /// <summary>
+    /// Wraps <paramref name="rootWidget"/> in a <see cref="Widgets.RootWidget"/> and attaches it to
+    /// <see cref="BuildOwner"/>, creating the root element the first time.
+    /// </summary>
+    /// <remarks>Dart's <c>WidgetsBinding.attachRootWidget</c>.</remarks>
+    private void AttachRootWidget(Widget rootWidget)
+    {
+        AttachToBuildOwner(new RootWidget(
+            child: BuildRootWidget(rootWidget),
+            debugShortDescription: "[root]",
+            renderObjectHost: this));
+    }
+
+    /// <summary>Dart's <c>WidgetsBinding.attachToBuildOwner</c>.</summary>
+    private void AttachToBuildOwner(RootWidget widget)
+    {
+        bool isBootstrapFrame = _rootElement is null;
+        _rootElement = widget.Attach(_owner, _rootElement);
+        if (isBootstrapFrame)
         {
-            _rootElement = new RootElement(this, effectiveRootWidget);
-            _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            ScheduleVisualUpdate();
         }
-        else
+    }
+
+    /// <inheritdoc />
+    void IRootRenderObjectHost.AttachRootRenderObject(RenderObject? child)
+    {
+        switch (child)
         {
-            _rootElement.Update(effectiveRootWidget);
+            case null:
+                SetRootChild(null);
+                return;
+            case RenderBox renderBox:
+                SetRootChild(renderBox);
+                return;
+            default:
+                throw new InvalidOperationException("RootElement can host only RenderBox.");
         }
     }
 
@@ -93,7 +122,7 @@ public sealed class WidgetHost : PlumixHost
         }
 
         _lastMediaQueryData = nextData;
-        _rootElement.Update(BuildRootWidget(_rootWidget));
+        AttachRootWidget(_rootWidget);
     }
 
     private Widget BuildRootWidget(Widget rootWidget)
@@ -108,102 +137,5 @@ public sealed class WidgetHost : PlumixHost
             child: new MediaQuery(
                 data: data,
                 child: rootWidget));
-    }
-
-    private sealed class RootElement : Element, IRenderObjectHost
-    {
-        private readonly WidgetHost _host;
-        private Element? _child;
-
-        public RootElement(WidgetHost host, Widget widget) : base(widget)
-        {
-            _host = host;
-        }
-
-        public override RenderObject? RenderObject => _child?.RenderObject;
-
-        public override Element? RenderObjectAttachingChild => _child;
-
-        protected override void OnMount()
-        {
-            base.OnMount();
-            Rebuild();
-        }
-
-        protected override void PerformRebuild()
-        {
-            base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
-        }
-
-        public override void Update(Widget newWidget)
-        {
-            base.Update(newWidget);
-            Rebuild(force: true);
-        }
-
-        public override void ForgetChild(Element child)
-        {
-            if (ReferenceEquals(child, _child))
-            {
-                _child = null;
-            }
-        }
-
-        public override void VisitChildren(Action<Element> visitor)
-        {
-            if (_child != null)
-            {
-                visitor(_child);
-            }
-        }
-
-        public void InsertRenderObjectChild(RenderObject child, object? slot)
-        {
-            if (slot != null)
-            {
-                throw new InvalidOperationException("RootElement expects null slot.");
-            }
-
-            if (child is RenderBox renderBox)
-            {
-                _host.SetRootChild(renderBox);
-                return;
-            }
-
-            throw new InvalidOperationException("RootElement can host only RenderBox.");
-        }
-
-        public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
-        {
-            if (!Equals(oldSlot, newSlot))
-            {
-                throw new InvalidOperationException("RootElement does not support non-null slot moves.");
-            }
-        }
-
-        public void RemoveRenderObjectChild(RenderObject child, object? slot)
-        {
-            if (slot != null)
-            {
-                throw new InvalidOperationException("RootElement expects null slot.");
-            }
-
-            if (child is RenderBox renderBox && ReferenceEquals(_host.RootChild, renderBox))
-            {
-                _host.SetRootChild(null);
-            }
-        }
-
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

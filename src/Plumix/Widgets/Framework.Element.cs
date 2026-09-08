@@ -631,10 +631,11 @@ public abstract class Element : DiagnosticableTree, BuildContext
         {
             // Dart also rejects a markNeedsBuild() during build when the element is not a descendant
             // of the element currently being built (`DebugIsDescendantOf(owner.DebugCurrentBuildTarget)`).
-            // That branch is not armed yet: `TransitionRoute.HandleStatusChanged` re-enters
-            // `NavigatorState.SetState` from an animation status callback that can run inside a
-            // build. See docs/ai/BACKLOG.md. Returning here keeps the state-lock branch below from
-            // firing for every legal setState during a build, since a build scope locks the tree.
+            // That branch is not armed yet: `ModalRoute.HandlePopEntryChanged` re-enters `SetState` on
+            // the `Navigator`/`ModalScope` above the element being built, where Dart dispatches a
+            // `NavigationNotification` from a post-frame callback instead. See docs/ai/BACKLOG.md.
+            // Returning here keeps the state-lock branch below from firing for every legal setState
+            // during a build, since a build scope locks the tree.
             return;
         }
 

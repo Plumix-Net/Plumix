@@ -61,7 +61,7 @@ public sealed class AspectRatioTests
                 child: new SizedBox(width: 10, height: 10)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderAspectRatio = RequireRenderObject<RenderAspectRatio>(root.ChildElement);
@@ -90,7 +90,7 @@ public sealed class AspectRatioTests
             ]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var row = RequireRenderObject<RenderFlex>(root.ChildElement);
@@ -239,7 +239,7 @@ public sealed class AspectRatioTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

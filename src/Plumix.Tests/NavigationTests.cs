@@ -29,7 +29,7 @@ public sealed class NavigationTests
                     captureState: state => navigatorState ??= state)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(navigatorState);
@@ -69,7 +69,7 @@ public sealed class NavigationTests
                     captureState: state => navigatorState ??= state)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(navigatorState);
@@ -101,7 +101,7 @@ public sealed class NavigationTests
                 observers: [observer]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.Push(BuildRoute(
@@ -147,7 +147,7 @@ public sealed class NavigationTests
             new Navigator(initialRoute: initialRoute));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedRoute);
@@ -203,7 +203,7 @@ public sealed class NavigationTests
                 observers: [routeObserver]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(navigatorState);
@@ -274,7 +274,7 @@ public sealed class NavigationTests
                 observers: [routeObserver]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.PushNamed("/details");
@@ -337,7 +337,7 @@ public sealed class NavigationTests
                 observers: [routeObserver]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(rootRoute);
@@ -368,7 +368,7 @@ public sealed class NavigationTests
                     captureState: state => navigatorState ??= state)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.Push(BuildRoute(
@@ -409,7 +409,7 @@ public sealed class NavigationTests
                     settings: new RouteSettings(Name: "outer-root"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(innerNavigatorState);
@@ -447,7 +447,7 @@ public sealed class NavigationTests
                     captureState: state => outerNavigatorState ??= state)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(outerNavigatorState);
@@ -500,7 +500,7 @@ public sealed class NavigationTests
                     settings: new RouteSettings(Name: "/"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(navigatorState);
@@ -533,7 +533,7 @@ public sealed class NavigationTests
                 observers: [observer]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.Push(BuildRoute(
@@ -571,7 +571,7 @@ public sealed class NavigationTests
                 observers: [observer]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.StartUserGesture();
@@ -608,7 +608,7 @@ public sealed class NavigationTests
                 observers: [observer]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.Push(BuildRoute(
@@ -673,7 +673,7 @@ public sealed class NavigationTests
                 initialRouteName: "/"));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(navigatorState);
@@ -730,7 +730,7 @@ public sealed class NavigationTests
                 initialRouteName: "/"));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(rootContext is not null);
@@ -790,7 +790,7 @@ public sealed class NavigationTests
                 initialRouteName: "/"));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.PushReplacementNamed("/replacement");
@@ -815,7 +815,7 @@ public sealed class NavigationTests
                     captureState: state => navigatorState ??= state)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.Push(BuildRoute("a", name => currentPageName = name, _ => { }));
@@ -870,7 +870,7 @@ public sealed class NavigationTests
                 initialRouteName: "/"));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.PushNamed("/a");
@@ -928,7 +928,7 @@ public sealed class NavigationTests
                 observers: [observer]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.PushNamed("/a");
@@ -991,7 +991,7 @@ public sealed class NavigationTests
                 initialRouteName: "/"));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.PushNamed("/a");
@@ -1051,7 +1051,7 @@ public sealed class NavigationTests
                 initialRouteName: "/"));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.PushNamed("/a");
@@ -1088,7 +1088,7 @@ public sealed class NavigationTests
                     settings: new RouteSettings(Name: "/"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(navigatorState);
@@ -1126,7 +1126,7 @@ public sealed class NavigationTests
                 initialRouteData: RouteData.FromLocation("/details?id=42&tab=main", arguments: "payload")));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal("/details", currentPageName);
@@ -1177,7 +1177,7 @@ public sealed class NavigationTests
 
         var root = new TestRootElement(new Navigator(initialRoute));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         navigatorState!.Push(detailsRoute);
@@ -1346,7 +1346,7 @@ public sealed class NavigationTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

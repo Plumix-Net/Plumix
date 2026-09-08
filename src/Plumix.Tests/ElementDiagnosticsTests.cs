@@ -146,7 +146,7 @@ public sealed class ElementDiagnosticsTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new SizedBox());
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         List<DiagnosticsNode> information = root.DescribeMissingAncestor(typeof(TestInherited));
@@ -195,7 +195,7 @@ public sealed class ElementDiagnosticsTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new SizedBox(key: new ValueKey<string>("box")));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Element child = root.ChildElement!;
@@ -248,7 +248,7 @@ public sealed class ElementDiagnosticsTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new SizedBox());
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Element child = root.ChildElement!;
         root.Unmount();
@@ -312,7 +312,7 @@ public sealed class ElementDiagnosticsTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new SizedBox());
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Element child = root.ChildElement!;
         root.Unmount();
@@ -534,7 +534,7 @@ public sealed class ElementDiagnosticsTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)
@@ -606,7 +606,7 @@ public sealed class ElementDiagnosticsTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)
@@ -657,7 +657,7 @@ public sealed class ElementDiagnosticsTests
             _pipeline.Attach(RenderView);
             _root = new RootElement(RenderView, widget);
             _root.Attach(_owner);
-            _root.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 

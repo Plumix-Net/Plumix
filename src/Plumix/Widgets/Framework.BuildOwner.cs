@@ -254,14 +254,9 @@ public sealed class BuildOwner
             return;
         }
 
-        DebugCheckCanScheduleBuildFor(element);
+        DebugCheckElementIsDirty(element);
         BuildScope buildScope = element.BuildScope;
-
-        if (Constants.KDebugMode && WidgetsDebug.DebugPrintScheduleBuildForStacks)
-        {
-            string suffix = element.InDirtyList ? " (ALREADY IN LIST)" : string.Empty;
-            Print.DebugPrint($"scheduleBuildFor() called for {element}{suffix}");
-        }
+        DebugCheckElementIsNotAlreadyQueued(element, buildScope);
 
         if (!_scheduledFlushDirtyElements && OnBuildScheduled != null)
         {
@@ -270,36 +265,77 @@ public sealed class BuildOwner
         }
 
         buildScope.ScheduleBuildFor(element);
+
+        if (Constants.KDebugMode && WidgetsDebug.DebugPrintScheduleBuildForStacks)
+        {
+            Print.DebugPrint(
+                $"...the build scope's dirty list is now: [{string.Join(", ", buildScope.DirtyElements)}]");
+        }
     }
 
-    /// <summary>
-    /// Dart's first debug guard at the top of <c>BuildOwner.scheduleBuildFor</c>. The second one —
-    /// "called on an Element that is already in the dirty list" — is not armed: it reads
-    /// <c>_debugBuilding</c>, and Plumix's element-level test harnesses drive updates by calling
-    /// <see cref="Element.Rebuild"/> directly instead of through <see cref="BuildScope(Element, Action?)"/>,
-    /// so the flag is false during legitimate reactivations. See docs/ai/BACKLOG.md.
-    /// </summary>
-    private void DebugCheckCanScheduleBuildFor(Element element)
+    /// <summary>Dart's first debug guard at the top of <c>BuildOwner.scheduleBuildFor</c>.</summary>
+    private static void DebugCheckElementIsDirty(Element element)
     {
         if (!Constants.KDebugMode)
         {
             return;
         }
 
-        if (!element.Dirty)
+        if (WidgetsDebug.DebugPrintScheduleBuildForStacks)
         {
-            throw new FlutterError(
-            [
-                new ErrorSummary("scheduleBuildFor() called for a widget that is not marked as dirty."),
-                element.DescribeElement("The method was called for the following element"),
-                new ErrorDescription(
-                    "This element is not current marked as dirty. Make sure to set the dirty flag before "
-                    + "calling scheduleBuildFor()."),
-                new ErrorHint(
-                    "If you did not attempt to call scheduleBuildFor() yourself, then this probably "
-                    + "indicates a bug in the widgets framework."),
-            ]);
+            string suffix = element.InDirtyList ? " (ALREADY IN LIST)" : string.Empty;
+            Print.DebugPrint($"scheduleBuildFor() called for {element}{suffix}");
         }
+
+        if (element.Dirty)
+        {
+            return;
+        }
+
+        throw new FlutterError(
+        [
+            new ErrorSummary("scheduleBuildFor() called for a widget that is not marked as dirty."),
+            element.DescribeElement("The method was called for the following element"),
+            new ErrorDescription(
+                "This element is not current marked as dirty. Make sure to set the dirty flag before "
+                + "calling scheduleBuildFor()."),
+            new ErrorHint(
+                "If you did not attempt to call scheduleBuildFor() yourself, then this probably "
+                + "indicates a bug in the widgets framework."),
+        ]);
+    }
+
+    /// <summary>
+    /// Dart's second debug guard in <c>BuildOwner.scheduleBuildFor</c>: re-queueing an element that
+    /// is already in the dirty list is legal only during a flush, where it is the re-sort request.
+    /// </summary>
+    private void DebugCheckElementIsNotAlreadyQueued(Element element, BuildScope buildScope)
+    {
+        if (!Constants.KDebugMode || !element.InDirtyList)
+        {
+            return;
+        }
+
+        if (WidgetsDebug.DebugPrintScheduleBuildForStacks)
+        {
+            Print.DebugPrint(
+                "BuildOwner.scheduleBuildFor() called; the dirty list for the current build scope is: "
+                + $"[{string.Join(", ", buildScope.DirtyElements)}]");
+        }
+
+        if (_building)
+        {
+            return;
+        }
+
+        throw new FlutterError(
+        [
+            new ErrorSummary("BuildOwner.scheduleBuildFor() called inappropriately."),
+            new ErrorHint(
+                "The BuildOwner.scheduleBuildFor() method called on an Element "
+                + "that is already in the dirty list."),
+            element.DescribeElement("the dirty Element was"),
+        ]);
     }
 
     public void MarkSubtreeNeedsBuild(Element root)

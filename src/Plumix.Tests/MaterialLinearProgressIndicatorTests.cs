@@ -554,7 +554,7 @@ public sealed class MaterialLinearProgressIndicatorTests
 
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -611,7 +611,7 @@ public sealed class MaterialLinearProgressIndicatorTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)

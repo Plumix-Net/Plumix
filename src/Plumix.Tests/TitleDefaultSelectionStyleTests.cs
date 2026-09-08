@@ -38,7 +38,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
             color: Color.FromArgb(0xFF, 0x12, 0x34, 0x56),
             child: new SizedBox()));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(
@@ -86,7 +86,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
                     return new SizedBox();
                 }))));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(resolved);
@@ -127,7 +127,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
                         resolvedSelectionColor = selection;
                     }))));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(1, resolvedThemeValue);
@@ -209,7 +209,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

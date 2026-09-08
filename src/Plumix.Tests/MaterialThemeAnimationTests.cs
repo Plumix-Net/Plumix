@@ -232,7 +232,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             onEnd: () => completed++));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Assert.Equal(begin.PrimaryColor, observedTheme!.PrimaryColor);
 
@@ -315,7 +315,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         var owner = new BuildOwner();
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(navigator);
@@ -454,7 +454,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

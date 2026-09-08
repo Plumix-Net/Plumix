@@ -89,7 +89,7 @@ public sealed class TextInputTests : IDisposable
                 autofocus: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var host = new PlumixHost();
@@ -125,7 +125,7 @@ public sealed class TextInputTests : IDisposable
                 autofocus: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
@@ -166,7 +166,7 @@ public sealed class TextInputTests : IDisposable
                 multiline: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("ab"));
@@ -320,7 +320,7 @@ public sealed class TextInputTests : IDisposable
                 placeholder: "Type here"));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(string.Empty, controller.Text);
@@ -345,7 +345,7 @@ public sealed class TextInputTests : IDisposable
                 autofocus: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextCompositionUpdate("ni"));
@@ -384,7 +384,7 @@ public sealed class TextInputTests : IDisposable
                 autofocus: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
@@ -418,7 +418,7 @@ public sealed class TextInputTests : IDisposable
                 autofocus: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("alpha beta gamma"));
@@ -462,7 +462,7 @@ public sealed class TextInputTests : IDisposable
                 multiline: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("one\ntwo\nthree"));
@@ -494,7 +494,7 @@ public sealed class TextInputTests : IDisposable
                 autofocus: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("alpha"));
@@ -554,7 +554,7 @@ public sealed class TextInputTests : IDisposable
                 autofocus: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("abcd"));
@@ -587,7 +587,7 @@ public sealed class TextInputTests : IDisposable
                 autofocus: true));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         bool textHandled = FocusManager.Instance.HandleTextInput("x");
@@ -616,7 +616,7 @@ public sealed class TextInputTests : IDisposable
                 onChanged: value => changes.Add(value)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(FocusManager.Instance.HandleTextInput("a"));
@@ -650,7 +650,7 @@ public sealed class TextInputTests : IDisposable
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

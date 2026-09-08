@@ -17,7 +17,7 @@ public sealed class ElementLifecycleTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new KeyedListHost([1, 2, 3]));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var initial = KeyedTracker.CurrentStateIdByItem.ToDictionary(static pair => pair.Key, static pair => pair.Value);
@@ -50,7 +50,7 @@ public sealed class ElementLifecycleTests
 
         var root = new TestRootElement(new GlobalReparentHost(moveToLeft: true, identity));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(["init"], LifecycleTracker.Events);
@@ -80,7 +80,7 @@ public sealed class ElementLifecycleTests
 
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(["init"], LifecycleTracker.Events);
@@ -104,7 +104,7 @@ public sealed class ElementLifecycleTests
 
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         root.Update(new GlobalPlacementHost(includeGlobal: false, moveToLeft: true, identity));
@@ -129,7 +129,7 @@ public sealed class ElementLifecycleTests
 
         var root = new TestRootElement(new GlobalPlacementHost(includeGlobal: true, moveToLeft: true, identity));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         root.Update(new GlobalPlacementHost(includeGlobal: true, moveToLeft: false, identity));
@@ -155,7 +155,7 @@ public sealed class ElementLifecycleTests
                 insets: new Avalonia.Thickness(4),
                 child: new LifecycleRecorderWidget(new ValueKey<string>("nested"))));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         root.Update(new SizedBox(width: 1, height: 1));
@@ -176,7 +176,7 @@ public sealed class ElementLifecycleTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new MixedKeyedUnkeyedHost(reorder: false));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var initialKeyed = MixedTracker.CurrentKeyedStateIdByName.ToDictionary(
@@ -211,7 +211,7 @@ public sealed class ElementLifecycleTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new NestedMixedAcrossParentsHost(reorder: false));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         string initialKeyedBranchState = NestedBranchTracker.CurrentKeyedStateIdByName["branch-keyed"];
@@ -268,7 +268,7 @@ public sealed class ElementLifecycleTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

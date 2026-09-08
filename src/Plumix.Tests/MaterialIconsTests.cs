@@ -202,7 +202,7 @@ public sealed class MaterialIconsTests
                 textDirection: TextDirection.Ltr,
                 child: new Icon(icon, size: 128.0)));
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
@@ -220,7 +220,7 @@ public sealed class MaterialIconsTests
             textDirection: TextDirection.Rtl,
             child: new Icon(Icons.ArrowBack)));
         directionalRoot.Attach(owner);
-        directionalRoot.Mount(parent: null, newSlot: null);
+        owner.BuildScope(directionalRoot, () => directionalRoot.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Assert.NotNull(FindDescendant<RenderTransform>(directionalRoot.ChildElement!.RenderObject));
 
@@ -228,7 +228,7 @@ public sealed class MaterialIconsTests
             textDirection: TextDirection.Rtl,
             child: new Icon(Icons.Add)));
         plainRoot.Attach(owner);
-        plainRoot.Mount(parent: null, newSlot: null);
+        owner.BuildScope(plainRoot, () => plainRoot.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Assert.Null(FindDescendant<RenderTransform>(plainRoot.ChildElement!.RenderObject));
     }
@@ -291,7 +291,7 @@ public sealed class MaterialIconsTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

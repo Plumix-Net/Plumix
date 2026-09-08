@@ -453,7 +453,7 @@ public sealed class CupertinoScrollbarTests
             _pipeline.Attach(RenderView);
             _root = new HarnessRootElement(RenderView, widget);
             _root.Attach(_owner);
-            _root.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -482,7 +482,11 @@ public sealed class CupertinoScrollbarTests
         public override Element? RenderObjectAttachingChild => _child;
         protected override void OnMount() { base.OnMount(); Rebuild(); }
         protected override void PerformRebuild() { base.PerformRebuild(); _child = UpdateChild(_child, Widget, Slot); }
-        public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
+        public override void Update(Widget newWidget)
+        {
+            base.Update(newWidget);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
+        }
         public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
         public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
 

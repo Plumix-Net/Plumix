@@ -53,7 +53,7 @@ public sealed class SampleCounterStateTests
 
         var root = new TestRootElement(new CounterScope(model, new CounterCountProbeWidget()));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal([0], CounterScopeTracker.SeenCounts);
@@ -91,7 +91,7 @@ public sealed class SampleCounterStateTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

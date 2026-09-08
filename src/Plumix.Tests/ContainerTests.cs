@@ -21,7 +21,7 @@ public sealed class ContainerTests
                 child: new SizedBox(width: 8, height: 6)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
@@ -39,7 +39,7 @@ public sealed class ContainerTests
                 child: new SizedBox(width: 8, height: 6)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var align = RequireRenderObject<RenderPositionedBox>(root.ChildElement);
@@ -57,7 +57,7 @@ public sealed class ContainerTests
                 child: new SizedBox(width: 8, height: 6)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = RequireRenderObject<RenderPadding>(root.ChildElement);
@@ -76,7 +76,7 @@ public sealed class ContainerTests
                 child: new SizedBox(width: 8, height: 6)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrained = RequireRenderObject<RenderConstrainedBox>(root.ChildElement);
@@ -95,7 +95,7 @@ public sealed class ContainerTests
                 child: new SizedBox(width: 8, height: 6)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrained = RequireRenderObject<RenderConstrainedBox>(root.ChildElement);
@@ -115,7 +115,7 @@ public sealed class ContainerTests
                 child: new SizedBox(width: 8, height: 6)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var transform = RequireRenderObject<RenderTransform>(root.ChildElement);
@@ -137,7 +137,7 @@ public sealed class ContainerTests
                     child: new SizedBox(width: 8, height: 6))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var margin = RequireRenderObject<RenderPadding>(root.ChildElement);
@@ -182,7 +182,7 @@ public sealed class ContainerTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

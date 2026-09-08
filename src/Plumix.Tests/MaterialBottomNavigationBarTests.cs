@@ -1148,7 +1148,7 @@ public sealed class MaterialBottomNavigationBarTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new Directionality(TextDirection.Ltr, child: widget));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         return new MountedScope(root);
     }
@@ -1512,7 +1512,7 @@ public sealed class MaterialBottomNavigationBarTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)
@@ -1583,7 +1583,7 @@ public sealed class MaterialBottomNavigationBarTests
                 RenderView,
                 new Directionality(TextDirection.Ltr, child: rootWidget));
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -1646,7 +1646,7 @@ public sealed class MaterialBottomNavigationBarTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)

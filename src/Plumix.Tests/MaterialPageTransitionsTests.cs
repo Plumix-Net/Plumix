@@ -355,7 +355,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
                     new Navigator(initialRoute))));
         var root = new TestRootElement(rootWidget);
         root.Attach(root.TestOwner);
-        root.Mount(parent: null, newSlot: null);
+        root.TestOwner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         root.TestOwner.FlushBuild();
         Settle(root.TestOwner);
         return root;
@@ -555,7 +555,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)
@@ -611,7 +611,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
             _pipeline.Attach(RenderView);
             _root = new RenderRootElement(RenderView, widget);
             _root.Attach(_owner);
-            _root.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -667,7 +667,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void VisitChildren(Action<Element> visitor)

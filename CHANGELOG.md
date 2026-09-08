@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `RootWidget`/`RootElement` land and `WidgetHost` composes them instead of a private root (binding.dart).
+- Breaking: `BuildOwner.ScheduleBuild` reports Dart's "already in the dirty list" error (framework.dart).
 - Fixed `FutureBuilder` calling `SetState` from the completing thread, which could strand a dirty element (async.dart).
 - Breaking: `BuildScope` lands; `BuildOwner.BuildScope(context)` flushes only that context's scope (framework.dart).
 - Breaking: `LayoutBuilder`/`SliverLayoutBuilder` own a `BuildScope` and flush it from layout (layout_builder.dart).

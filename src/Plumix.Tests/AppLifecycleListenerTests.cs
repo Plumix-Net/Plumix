@@ -214,7 +214,7 @@ public sealed class AppLifecycleListenerTests
         var owner = new BuildOwner();
         var root = new TestRootElement(widget);
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         return root;
     }
@@ -335,7 +335,7 @@ public sealed class AppLifecycleListenerTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

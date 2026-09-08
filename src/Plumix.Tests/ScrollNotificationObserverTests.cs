@@ -305,7 +305,7 @@ public sealed class ScrollNotificationObserverTests
             _pipeline.Attach(renderView);
             _root = new HarnessRootElement(renderView, widget);
             _root.Attach(_owner);
-            _root.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -363,7 +363,7 @@ public sealed class ScrollNotificationObserverTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void VisitChildren(Action<Element> visitor)

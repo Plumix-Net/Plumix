@@ -288,7 +288,7 @@ public sealed class CupertinoSheetTests : IDisposable
                 new Directionality(TextDirection.Ltr, widget));
         var root = new TestRootElement(wrapped);
         root.Attach(root.TestOwner);
-        root.Mount(parent: null, newSlot: null);
+        root.TestOwner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         root.TestOwner.FlushBuild();
         return root;
     }
@@ -353,7 +353,7 @@ public sealed class CupertinoSheetTests : IDisposable
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

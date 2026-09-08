@@ -170,7 +170,7 @@ public sealed class FocusTests : IDisposable
         ]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         first.RequestFocus();
@@ -421,7 +421,7 @@ public sealed class FocusTests : IDisposable
                 child: new SizedBox(width: 20, height: 10)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(focusNode.HasFocus);
@@ -449,7 +449,7 @@ public sealed class FocusTests : IDisposable
                 child: new SizedBox(width: 12, height: 12)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         bool handled = FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Space));
@@ -473,7 +473,7 @@ public sealed class FocusTests : IDisposable
             ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Same(first, FocusManager.Instance.PrimaryFocus);
@@ -887,7 +887,7 @@ public sealed class FocusTests : IDisposable
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

@@ -53,7 +53,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -83,7 +83,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -113,7 +113,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: null)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -133,7 +133,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -152,7 +152,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -172,7 +172,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -301,7 +301,7 @@ public sealed class MaterialCheckboxTests
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             focusNode.RequestFocus();
@@ -338,7 +338,7 @@ public sealed class MaterialCheckboxTests
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             focusNode.RequestFocus();
@@ -375,7 +375,7 @@ public sealed class MaterialCheckboxTests
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             focusNode.RequestFocus();
@@ -409,7 +409,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -433,7 +433,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -462,7 +462,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -491,7 +491,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -530,7 +530,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
@@ -554,7 +554,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -578,7 +578,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CupertinoCheckboxPainter painter = FindCupertinoCheckboxPainter(root.ChildElement);
@@ -687,7 +687,7 @@ public sealed class MaterialCheckboxTests
                         onChanged: _ => { }))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         // brightness == dark and value == false is exactly the painter's dark-gradient condition.
@@ -712,7 +712,7 @@ public sealed class MaterialCheckboxTests
                         onChanged: _ => { }))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         // An enabled checked checkbox paints the dark fill color flat, never the gradient.
@@ -737,7 +737,7 @@ public sealed class MaterialCheckboxTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -796,7 +796,7 @@ public sealed class MaterialCheckboxTests
                 child: new Checkbox(value: true, onChanged: _ => { })));
 
         checkedRoot.Attach(owner);
-        checkedRoot.Mount(parent: null, newSlot: null);
+        owner.BuildScope(checkedRoot, () => checkedRoot.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter checkedPainter = FindCheckboxPainter(checkedRoot.ChildElement);
@@ -810,7 +810,7 @@ public sealed class MaterialCheckboxTests
                 data: theme,
                 child: new Checkbox(value: false, onChanged: _ => { })));
         uncheckedRoot.Attach(owner);
-        uncheckedRoot.Mount(parent: null, newSlot: null);
+        owner.BuildScope(uncheckedRoot, () => uncheckedRoot.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter uncheckedPainter = FindCheckboxPainter(uncheckedRoot.ChildElement);
@@ -893,7 +893,7 @@ public sealed class MaterialCheckboxTests
                     side: new BorderSide(Colors.Red, 4))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -923,7 +923,7 @@ public sealed class MaterialCheckboxTests
                     isError: true)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -945,7 +945,7 @@ public sealed class MaterialCheckboxTests
                     fillColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -963,7 +963,7 @@ public sealed class MaterialCheckboxTests
                 child: new Checkbox(value: true, onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         CheckboxPainter painter = FindCheckboxPainter(root.ChildElement);
@@ -1121,7 +1121,7 @@ public sealed class MaterialCheckboxTests
 
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -1178,7 +1178,7 @@ public sealed class MaterialCheckboxTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)
@@ -1307,7 +1307,7 @@ public sealed class MaterialCheckboxTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

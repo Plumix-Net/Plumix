@@ -31,7 +31,7 @@ public sealed class MaterialRadioTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -60,7 +60,7 @@ public sealed class MaterialRadioTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -87,7 +87,7 @@ public sealed class MaterialRadioTests
                     onChanged: null)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -122,7 +122,7 @@ public sealed class MaterialRadioTests
                     }))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -149,7 +149,7 @@ public sealed class MaterialRadioTests
                     onChanged: _ => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -178,7 +178,7 @@ public sealed class MaterialRadioTests
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             focusNode.RequestFocus();
@@ -217,7 +217,7 @@ public sealed class MaterialRadioTests
                         onChanged: value => nextValue = value)));
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             focusNode.RequestFocus();
@@ -710,7 +710,7 @@ public sealed class MaterialRadioTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)
@@ -779,7 +779,7 @@ public sealed class MaterialRadioTests
 
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -828,7 +828,7 @@ public sealed class MaterialRadioTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)

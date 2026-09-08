@@ -1038,7 +1038,7 @@ public sealed class DraggableScrollableSheetTests
             _pipeline.Attach(RenderView);
             _rootElement = new HarnessRootElement(RenderView, BuildTree());
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
             Pump();
         }
@@ -1258,7 +1258,7 @@ public sealed class DraggableScrollableSheetTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)

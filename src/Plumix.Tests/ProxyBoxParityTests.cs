@@ -207,7 +207,7 @@ public sealed class ProxyBoxParityTests
         var animation = new AnimationValue(0.5);
         var root = new TestRootElement(new FadeTransition(animation, new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject? renderObject = FindFirstRenderObject(root);
@@ -249,7 +249,7 @@ public sealed class ProxyBoxParityTests
                 clipBehavior: Clip.HardEdge,
                 child: new SizedBox(width: 20, height: 20))));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var clip = Assert.IsType<RenderClipRSuperellipse>(FindFirstRenderObject(root));
@@ -299,7 +299,7 @@ public sealed class ProxyBoxParityTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new MergeSemantics(new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.IsType<RenderMergeSemantics>(FindFirstRenderObject(root));
@@ -791,7 +791,7 @@ public sealed class ProxyBoxParityTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

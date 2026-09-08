@@ -239,7 +239,7 @@ public sealed class BasicWidgetsParityTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new Directionality(TextDirection.Ltr, widget));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         List<Widget> widgets = [];
@@ -297,7 +297,7 @@ public sealed class BasicWidgetsParityTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

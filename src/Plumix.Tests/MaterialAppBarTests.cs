@@ -220,7 +220,7 @@ public sealed class MaterialAppBarTests
         var root = new TestRootElement(BuildScrollProbe(background, context => emitter = context));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Assert.Equal(Colors.Goldenrod, MaterialColor(root));
 
@@ -243,7 +243,7 @@ public sealed class MaterialAppBarTests
         var root = new TestRootElement(BuildScrollProbe(background, context => emitter = context));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         // AxisDirection.Up: scrolled under while content remains *after* the viewport.
@@ -293,7 +293,7 @@ public sealed class MaterialAppBarTests
                     }))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Dispatch(emitter!, AxisDirection.Down, pixels: 12);
@@ -352,7 +352,7 @@ public sealed class MaterialAppBarTests
                             body: new SizedBox())))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Contains(FindWidgets<EndDrawerButton>(root.ChildElement), _ => true);
@@ -371,7 +371,7 @@ public sealed class MaterialAppBarTests
         var root = new TestRootElement(Wrap(new AppBar(primary: false, title: new Text("T"), titleTextStyle: style)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         DefaultTextStyle titleStyle = Assert.Single(
@@ -419,7 +419,7 @@ public sealed class MaterialAppBarTests
             toolbarHeight: 72)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Single(
@@ -440,7 +440,7 @@ public sealed class MaterialAppBarTests
             toolbarOpacity: 0.5)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         // The toolbar is never wrapped in an Opacity: the fade lands on the text colors and icon theme.
@@ -466,7 +466,7 @@ public sealed class MaterialAppBarTests
             bottomOpacity: 0.5)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Opacity opacity = Assert.Single(FindWidgets<Opacity>(root.ChildElement));
@@ -538,7 +538,7 @@ public sealed class MaterialAppBarTests
         var root = new TestRootElement(Wrap(new AppBar(primary: false, title: new Text("Title"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         MaterialWidget material = FindWidgets<MaterialWidget>(root.ChildElement)[0];
@@ -618,7 +618,7 @@ public sealed class MaterialAppBarTests
             ThemeData.Light with { UseMaterial3 = useMaterial3 }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         return Assert.Single(FindWidgets<AnnotatedRegion<SystemUiOverlayStyle>>(root.ChildElement)).Value;
@@ -638,7 +638,7 @@ public sealed class MaterialAppBarTests
             ThemeData.Light with { AppBarTheme = appBarTheme }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         IReadOnlyList<IconTheme> themes = FindWidgets<IconTheme>(root.ChildElement);
@@ -654,7 +654,7 @@ public sealed class MaterialAppBarTests
             ThemeData.Light with { AppBarTheme = appBarTheme }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Assert.NotNull(captured);
         return captured!;
@@ -738,7 +738,7 @@ public sealed class MaterialAppBarTests
 
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -787,7 +787,7 @@ public sealed class MaterialAppBarTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)
@@ -858,7 +858,7 @@ public sealed class MaterialAppBarTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

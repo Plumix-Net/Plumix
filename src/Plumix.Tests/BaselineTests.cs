@@ -24,7 +24,7 @@ public sealed class BaselineTests
             child: new SizedBox(width: 20, height: 10)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var baseline = RequireRenderObject<RenderBaseline>(root.ChildElement);
@@ -125,7 +125,7 @@ public sealed class BaselineTests
             child: new SizedBox(width: 20, height: 10)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RequireRenderObject<RenderIgnoreBaseline>(root.ChildElement);
@@ -215,7 +215,7 @@ public sealed class BaselineTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

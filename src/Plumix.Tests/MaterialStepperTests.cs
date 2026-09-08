@@ -518,7 +518,11 @@ public sealed class MaterialStepperTests : IDisposable
                 base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
-            public override void Update(Widget newWidget) { base.Update(newWidget); Rebuild(force: true); }
+            public override void Update(Widget newWidget)
+            {
+                base.Update(newWidget);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
+            }
             public void UpdateRoot(Widget widget) => Update(widget);
             public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }

@@ -214,7 +214,7 @@ public sealed class CustomMultiChildLayoutTests
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
     }
 

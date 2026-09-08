@@ -138,7 +138,7 @@ internal static class EmptyBuildContext
                 return new SizedBox();
             }));
             root.Attach(Owner);
-            root.Mount(parent: null, newSlot: null);
+            Owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             Owner.FlushBuild();
             _instance = captured!;
             return _instance;
@@ -164,7 +164,7 @@ internal static class EmptyBuildContext
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)
@@ -223,7 +223,7 @@ internal sealed class ScrollNotificationRecorder : IScrollContext, ITickerProvid
                 return new SizedBox();
             })));
         root.Attach(_owner);
-        root.Mount(parent: null, newSlot: null);
+        _owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         _owner.FlushBuild();
         _root = root;
         NotificationContext = captured!;
@@ -308,7 +308,7 @@ internal sealed class ScrollNotificationRecorder : IScrollContext, ITickerProvid
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

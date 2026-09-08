@@ -618,7 +618,7 @@ public sealed class OverlayPortalTests
             _root = new TestRootElement(
                 new Directionality(TextDirection.Ltr, new Overlay(initialEntries: entries)));
             _root.Attach(_owner);
-            _root.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
             _renderView = new RenderView
             {
@@ -737,7 +737,7 @@ public sealed class OverlayPortalTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

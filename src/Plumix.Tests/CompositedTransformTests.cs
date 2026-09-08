@@ -26,7 +26,7 @@ public sealed class CompositedTransformTests
                 child: new SizedBox(width: 20, height: 10)));
 
         targetRoot.Attach(targetOwner);
-        targetRoot.Mount(parent: null, newSlot: null);
+        targetOwner.BuildScope(targetRoot, () => targetRoot.Mount(parent: null, newSlot: null));
         targetOwner.FlushBuild();
 
         RenderLeaderLayer target = RequireRenderObject<RenderLeaderLayer>(targetRoot.ChildElement);
@@ -48,7 +48,7 @@ public sealed class CompositedTransformTests
                 child: new SizedBox(width: 20, height: 10)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderFollowerLayer follower = RequireRenderObject<RenderFollowerLayer>(root.ChildElement);
@@ -305,7 +305,7 @@ public sealed class CompositedTransformTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

@@ -24,7 +24,7 @@ public sealed class IntrinsicWidgetsTests
         var root = new TestRootElement(widget);
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(0.0, widget.StepWidth);
@@ -82,7 +82,7 @@ public sealed class IntrinsicWidgetsTests
             child: new SizedBox(width: 20.0, height: 10.0)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RequireRenderObject<RenderIntrinsicHeight>(root.ChildElement);
@@ -226,7 +226,7 @@ public sealed class IntrinsicWidgetsTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

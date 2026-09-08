@@ -32,7 +32,7 @@ public sealed class TextWidgetTests
                 textDirection: TextDirection.Rtl));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
@@ -138,7 +138,7 @@ public sealed class TextWidgetTests
                 child: new Text("alpha")));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
@@ -224,7 +224,7 @@ public sealed class TextWidgetTests
                 child: new Text("alpha")));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
@@ -242,7 +242,7 @@ public sealed class TextWidgetTests
                     child: new Text("alpha"))));
         var materialOwner = new BuildOwner();
         materialRoot.Attach(materialOwner);
-        materialRoot.Mount(parent: null, newSlot: null);
+        materialOwner.BuildScope(materialRoot, () => materialRoot.Mount(parent: null, newSlot: null));
         materialOwner.FlushBuild();
 
         var materialParagraph = FindDescendant<RenderParagraph>(materialRoot.ChildElement!.RenderObject);
@@ -262,7 +262,7 @@ public sealed class TextWidgetTests
             child: new Text("scaled", fontSize: 12)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
@@ -278,7 +278,7 @@ public sealed class TextWidgetTests
         var root = new TestRootElement(new Text("scaled", fontSize: 12, textScaleFactor: 1.5));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = RequireRenderObject<RenderParagraph>(root.ChildElement);
@@ -308,7 +308,7 @@ public sealed class TextWidgetTests
                 child: new Icon(icon: Plumix.Material.Icons.Add)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
@@ -335,7 +335,7 @@ public sealed class TextWidgetTests
                     color: Colors.MediumPurple)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
@@ -357,7 +357,7 @@ public sealed class TextWidgetTests
                     color: explicitColor)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
@@ -378,7 +378,7 @@ public sealed class TextWidgetTests
                 child: new Icon(icon: Plumix.Material.Icons.Add))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(root.ChildElement!.RenderObject);
@@ -394,7 +394,7 @@ public sealed class TextWidgetTests
         var root = new TestRootElement(new Icon(icon: null, size: 18));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(root.ChildElement!.RenderObject);
@@ -418,7 +418,7 @@ public sealed class TextWidgetTests
                     size: 24)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var transform = FindDescendant<RenderTransform>(root.ChildElement!.RenderObject);
@@ -504,7 +504,7 @@ public sealed class TextWidgetTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

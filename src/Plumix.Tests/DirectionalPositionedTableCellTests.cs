@@ -41,7 +41,7 @@ public sealed class DirectionalPositionedTableCellTests
         var owner = new BuildOwner();
         var root = new TestRootElement(BuildDirectionalStack(TextDirection.Ltr));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var stack = FindRenderObject<RenderStack>(root);
@@ -88,7 +88,7 @@ public sealed class DirectionalPositionedTableCellTests
         var owner = new BuildOwner();
         var root = new TestRootElement(BuildTableCell(TableCellVerticalAlignment.Top));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var table = FindRenderObject<RenderTable>(root);
@@ -334,7 +334,7 @@ public sealed class DirectionalPositionedTableCellTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

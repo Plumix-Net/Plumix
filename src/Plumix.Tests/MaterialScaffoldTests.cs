@@ -49,7 +49,7 @@ public sealed class MaterialScaffoldTests
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         // Dart's `ScaffoldState.build` roots the scaffold in `Material(color: ...)`, so the background is
@@ -74,7 +74,7 @@ public sealed class MaterialScaffoldTests
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         MaterialWidget background = FindWidgets<MaterialWidget>(root.ChildElement)[0];
@@ -92,7 +92,7 @@ public sealed class MaterialScaffoldTests
                     child: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrained = FindConstrainedBox(
@@ -144,7 +144,7 @@ public sealed class MaterialScaffoldTests
                     child: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrained = FindConstrainedBox(
@@ -196,7 +196,7 @@ public sealed class MaterialScaffoldTests
                     child: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrained = FindConstrainedBox(
@@ -237,7 +237,7 @@ public sealed class MaterialScaffoldTests
                     child: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrained = FindConstrainedBox(
@@ -262,7 +262,7 @@ public sealed class MaterialScaffoldTests
         var exception = BuildErrors.Throws<ArgumentOutOfRangeException>(() =>
         {
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
         });
 
@@ -283,7 +283,7 @@ public sealed class MaterialScaffoldTests
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
@@ -314,7 +314,7 @@ public sealed class MaterialScaffoldTests
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
@@ -336,7 +336,7 @@ public sealed class MaterialScaffoldTests
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
@@ -360,7 +360,7 @@ public sealed class MaterialScaffoldTests
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         string menuGlyph = char.ConvertFromUtf32(Icons.Menu.CodePoint);
@@ -389,7 +389,7 @@ public sealed class MaterialScaffoldTests
                 bucket: RestorationBucket.Root(manager, rawData),
                 child: RestorableScaffold(context => scaffoldContext = context, restorationId: "scaffold")));
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             var state = Scaffold.Of(scaffoldContext!);
@@ -416,7 +416,7 @@ public sealed class MaterialScaffoldTests
             bucket: RestorationBucket.Root(manager, snapshot),
             child: RestorableScaffold(context => restoredContext = context, restorationId: "scaffold")));
         restarted.Attach(restartOwner);
-        restarted.Mount(parent: null, newSlot: null);
+        restartOwner.BuildScope(restarted, () => restarted.Mount(parent: null, newSlot: null));
         restartOwner.FlushBuild();
 
         var restored = Scaffold.Of(restoredContext!);
@@ -442,7 +442,7 @@ public sealed class MaterialScaffoldTests
                 bucket: RestorationBucket.Root(manager, rawData),
                 child: RestorableScaffold(context => scaffoldContext = context, restorationId: null)));
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             Scaffold.Of(scaffoldContext!).OpenDrawer();
@@ -462,7 +462,7 @@ public sealed class MaterialScaffoldTests
             bucket: RestorationBucket.Root(manager, snapshot),
             child: RestorableScaffold(context => restoredContext = context, restorationId: null)));
         restarted.Attach(restartOwner);
-        restarted.Mount(parent: null, newSlot: null);
+        restartOwner.BuildScope(restarted, () => restarted.Mount(parent: null, newSlot: null));
         restartOwner.FlushBuild();
 
         Assert.False(Scaffold.Of(restoredContext!).IsDrawerOpen);
@@ -497,7 +497,7 @@ public sealed class MaterialScaffoldTests
                         child: new SizedBox(width: 24, height: 12)))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(scaffoldContext is not null);
@@ -533,7 +533,7 @@ public sealed class MaterialScaffoldTests
                         child: new SizedBox(width: 24, height: 12)))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(scaffoldContext is not null);
@@ -561,7 +561,7 @@ public sealed class MaterialScaffoldTests
                         child: new SizedBox(width: 24, height: 12)))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(scaffoldContext is not null);
@@ -597,7 +597,7 @@ public sealed class MaterialScaffoldTests
                         child: new SizedBox(width: 24, height: 12)))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(scaffoldContext is not null);
@@ -625,7 +625,7 @@ public sealed class MaterialScaffoldTests
                         child: new SizedBox(width: 24, height: 12)))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(scaffoldContext is not null);
@@ -2006,7 +2006,7 @@ public sealed class MaterialScaffoldTests
                         settings: new RouteSettings(Name: "/")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(scaffoldContext is not null);
@@ -2064,7 +2064,7 @@ public sealed class MaterialScaffoldTests
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject scaffoldRoot = RequireRenderObject(root.ChildElement);
@@ -2098,7 +2098,7 @@ public sealed class MaterialScaffoldTests
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject scaffoldRoot = RequireRenderObject(root.ChildElement);
@@ -2134,7 +2134,7 @@ public sealed class MaterialScaffoldTests
                     body: new SizedBox(width: 24, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject scaffoldRoot = RequireRenderObject(root.ChildElement);
@@ -2165,7 +2165,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2196,7 +2196,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2228,7 +2228,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2253,7 +2253,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text(string.Empty))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2280,7 +2280,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2306,7 +2306,7 @@ public sealed class MaterialScaffoldTests
                     backgroundColor: Colors.DarkOliveGreen)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2331,7 +2331,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2357,7 +2357,7 @@ public sealed class MaterialScaffoldTests
                     foregroundColor: Colors.CadetBlue)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2386,7 +2386,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Demo"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(
@@ -2421,7 +2421,7 @@ public sealed class MaterialScaffoldTests
                     systemOverlayStyle: widgetStyle)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(
@@ -2441,7 +2441,7 @@ public sealed class MaterialScaffoldTests
                     centerTitle: true)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
@@ -2464,7 +2464,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Centered by theme"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
@@ -2489,7 +2489,7 @@ public sealed class MaterialScaffoldTests
                     centerTitle: false)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
@@ -2516,7 +2516,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
@@ -2544,7 +2544,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
@@ -2568,7 +2568,7 @@ public sealed class MaterialScaffoldTests
                     leading: new SizedBox(width: 12, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2597,7 +2597,7 @@ public sealed class MaterialScaffoldTests
                     leadingWidth: 64)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2646,7 +2646,7 @@ public sealed class MaterialScaffoldTests
                     initialRouteName: "/")));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(rootContext is not null);
@@ -2684,7 +2684,7 @@ public sealed class MaterialScaffoldTests
                         settings: new RouteSettings(Name: "/")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         string arrowBackGlyph = char.ConvertFromUtf32(
@@ -2741,7 +2741,7 @@ public sealed class MaterialScaffoldTests
                     initialRouteName: "/")));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(rootContext is not null);
@@ -2797,7 +2797,7 @@ public sealed class MaterialScaffoldTests
                     initialRouteName: "/")));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(rootContext is not null);
@@ -2829,7 +2829,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2863,7 +2863,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2890,7 +2890,7 @@ public sealed class MaterialScaffoldTests
                     child: new AppBar(title: new Text("Title")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2919,7 +2919,7 @@ public sealed class MaterialScaffoldTests
                         primary: false))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2949,7 +2949,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -2988,7 +2988,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3027,7 +3027,7 @@ public sealed class MaterialScaffoldTests
                     leading: new CaptureIconThemeWidget(themeData => capturedTheme = themeData))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3053,7 +3053,7 @@ public sealed class MaterialScaffoldTests
                     leading: new CaptureIconThemeWidget(themeData => capturedTheme = themeData))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3080,7 +3080,7 @@ public sealed class MaterialScaffoldTests
                     leading: new CaptureIconThemeWidget(themeData => capturedTheme = themeData))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3112,7 +3112,7 @@ public sealed class MaterialScaffoldTests
                     leading: new CaptureIconThemeWidget(themeData => capturedTheme = themeData))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3138,7 +3138,7 @@ public sealed class MaterialScaffoldTests
                     leading: new CaptureIconThemeWidget(themeData => capturedTheme = themeData))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3170,7 +3170,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3201,7 +3201,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3231,7 +3231,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3265,7 +3265,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3297,7 +3297,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3324,7 +3324,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3350,7 +3350,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -3381,7 +3381,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(snapshot);
@@ -3405,7 +3405,7 @@ public sealed class MaterialScaffoldTests
                     titleSpacing: 24)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
@@ -3427,7 +3427,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new SizedBox(width: 40, height: 12))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
@@ -3451,7 +3451,7 @@ public sealed class MaterialScaffoldTests
                     titleSpacing: 30)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         NavigationToolbar toolbar = Assert.Single(FindWidgets<NavigationToolbar>(root.ChildElement));
@@ -3473,7 +3473,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3497,7 +3497,7 @@ public sealed class MaterialScaffoldTests
                     toolbarHeight: 64)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3514,7 +3514,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3535,7 +3535,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3562,7 +3562,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3592,7 +3592,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Title"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3627,7 +3627,7 @@ public sealed class MaterialScaffoldTests
                         FontWeight: FontWeight.Normal))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3662,7 +3662,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3701,7 +3701,7 @@ public sealed class MaterialScaffoldTests
                     ])));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject appBarBackground = RequireRenderObject(root.ChildElement);
@@ -3735,7 +3735,7 @@ public sealed class MaterialScaffoldTests
                 child: new AppBar(title: new Text("Invalid"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(0, ResolvedToolbarHeight(root.ChildElement?.RenderObject));
@@ -3756,7 +3756,7 @@ public sealed class MaterialScaffoldTests
                     leading: new SizedBox(width: 8, height: 8))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var leading = FindConstrainedBox(
@@ -3780,7 +3780,7 @@ public sealed class MaterialScaffoldTests
                     child: new AppBar(title: new Text("Local theme")))));
 
         localRoot.Attach(localOwner);
-        localRoot.Mount(parent: null, newSlot: null);
+        localOwner.BuildScope(localRoot, () => localRoot.Mount(parent: null, newSlot: null));
         localOwner.FlushBuild();
         Assert.Contains(
             FindWidgets<MaterialWidget>(localRoot.ChildElement),
@@ -3797,7 +3797,7 @@ public sealed class MaterialScaffoldTests
                         backgroundColor: Colors.DarkGreen))));
 
         widgetRoot.Attach(widgetOwner);
-        widgetRoot.Mount(parent: null, newSlot: null);
+        widgetOwner.BuildScope(widgetRoot, () => widgetRoot.Mount(parent: null, newSlot: null));
         widgetOwner.FlushBuild();
         Assert.Contains(
             FindWidgets<MaterialWidget>(widgetRoot.ChildElement),
@@ -3824,7 +3824,7 @@ public sealed class MaterialScaffoldTests
                         capture: context => captured = AppBarTheme.Of(context)))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(localData, captured);
@@ -3919,7 +3919,7 @@ public sealed class MaterialScaffoldTests
                             capture: context => captured = DrawerController.Of(context))))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(captured);
@@ -3947,7 +3947,7 @@ public sealed class MaterialScaffoldTests
                         child: new Drawer(child: new Text("End shape"))))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(root.ChildElement?.RenderObject);
@@ -4134,7 +4134,7 @@ public sealed class MaterialScaffoldTests
                                 child: new Drawer(child: new Text("History drawer"))))))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Route? initialRoute = navigatorKey.CurrentState!.CurrentRoute;
@@ -4164,7 +4164,7 @@ public sealed class MaterialScaffoldTests
                         capture: context => scaffoldContext = context))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Scaffold.Of(scaffoldContext!).OpenEndDrawer();
         SettleDrawerAnimation(owner);
@@ -4202,7 +4202,7 @@ public sealed class MaterialScaffoldTests
                         ]))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(emitterContext);
@@ -4534,7 +4534,7 @@ public sealed class MaterialScaffoldTests
                 RenderView,
                 new Directionality(TextDirection.Ltr, rootWidget));
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -4583,7 +4583,7 @@ public sealed class MaterialScaffoldTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)
@@ -4730,7 +4730,7 @@ public sealed class MaterialScaffoldTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

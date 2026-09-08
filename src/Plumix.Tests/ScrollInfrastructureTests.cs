@@ -32,7 +32,7 @@ public sealed class ScrollInfrastructureTests
                 context)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(3.0, notification!.Metrics.Pixels);
@@ -58,7 +58,7 @@ public sealed class ScrollInfrastructureTests
                 child: new NotificationEmitterWidget()));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(1, handled);
@@ -77,7 +77,7 @@ public sealed class ScrollInfrastructureTests
                 child: new PrimaryControllerProbe(controller => resolved = controller)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Same(injected, resolved);
@@ -118,7 +118,7 @@ public sealed class ScrollInfrastructureTests
                     }))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(vertical);
@@ -137,7 +137,7 @@ public sealed class ScrollInfrastructureTests
                 new PrimaryControllerProbe(_ => builds += 1)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         controller.Signal();
         owner.FlushBuild();
@@ -159,7 +159,7 @@ public sealed class ScrollInfrastructureTests
                         slivers: [new SliverToBoxAdapter(new SizedBox(width: 10, height: 100))]))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(controller.HasClients);
@@ -184,7 +184,7 @@ public sealed class ScrollInfrastructureTests
                         ]))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(1, controller.CreatedPositions);
@@ -212,7 +212,7 @@ public sealed class ScrollInfrastructureTests
                 })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Same(behavior, inherited);
@@ -275,7 +275,7 @@ public sealed class ScrollInfrastructureTests
                     () => dispatched = true)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(dispatched);
@@ -298,7 +298,7 @@ public sealed class ScrollInfrastructureTests
                 child: new KeepAliveClientProbeWidget(keepAlive: true)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Assert.Equal(1, notifications);
 
@@ -343,7 +343,7 @@ public sealed class ScrollInfrastructureTests
                 }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(built);
@@ -390,7 +390,7 @@ public sealed class ScrollInfrastructureTests
                 }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.IsType<ItemMarker>(UnwrapSemanticIndex(sampledChildren[0]));
@@ -424,7 +424,7 @@ public sealed class ScrollInfrastructureTests
                 }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(rootSliver);
@@ -458,7 +458,7 @@ public sealed class ScrollInfrastructureTests
                 }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(sampledDelegate);
@@ -491,7 +491,7 @@ public sealed class ScrollInfrastructureTests
                 }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var fixedDelegate = Assert.IsType<SliverGridDelegateWithFixedCrossAxisCount>(sampledDelegate);
@@ -523,7 +523,7 @@ public sealed class ScrollInfrastructureTests
                 }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var maxExtentDelegate = Assert.IsType<SliverGridDelegateWithMaxCrossAxisExtent>(sampledDelegate);
@@ -557,7 +557,7 @@ public sealed class ScrollInfrastructureTests
                 }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(rootSliver);
@@ -974,7 +974,7 @@ public sealed class ScrollInfrastructureTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

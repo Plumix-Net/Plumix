@@ -228,7 +228,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
     private static void MountAndFlush(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
     }
 

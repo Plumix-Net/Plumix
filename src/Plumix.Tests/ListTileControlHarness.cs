@@ -33,7 +33,7 @@ internal sealed class ListTileControlHarness : IDisposable
         _pipeline.Attach(RenderView);
         _root = new RootElement(RenderView, Wrap(tile, theme, width, height));
         _root.Attach(_owner);
-        _root.Mount(parent: null, newSlot: null);
+        _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
         _owner.FlushBuild();
     }
 
@@ -231,7 +231,7 @@ internal sealed class ListTileControlHarness : IDisposable
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void ForgetChild(Element child)

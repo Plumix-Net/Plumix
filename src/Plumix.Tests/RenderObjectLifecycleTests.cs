@@ -169,7 +169,7 @@ public sealed class RenderObjectLifecycleTests
         var owner = new BuildOwner();
         var root = new TestRootElement(widget);
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         TestRenderBox renderObject = Assert.IsType<TestRenderBox>(widget.CreatedRenderObject);
@@ -190,7 +190,7 @@ public sealed class RenderObjectLifecycleTests
         var owner = new BuildOwner();
         var root = new TestRootElement(outerWidget);
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         TrackingRenderBox outer = Assert.IsType<TrackingRenderBox>(outerWidget.CreatedRenderObject);
@@ -299,7 +299,7 @@ public sealed class RenderObjectLifecycleTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void ForgetChild(Element child)

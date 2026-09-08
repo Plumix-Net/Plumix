@@ -158,7 +158,7 @@ public sealed class FramePipelineTests
 
             var element = new ProbeElement();
             element.Attach(owner);
-            element.Mount(parent: null, newSlot: null);
+            owner.BuildScope(element, () => element.Mount(parent: null, newSlot: null));
 
             // An element is born dirty and clears the flag by building once during mount, so the
             // first build is not the scheduler's work.

@@ -20,7 +20,7 @@ internal sealed class FocusLayoutHarness : IDisposable
         _pipeline.Attach(RenderView);
         _rootElement = new HarnessRootElement(RenderView, widget);
         _rootElement.Attach(_owner);
-        _rootElement.Mount(parent: null, newSlot: null);
+        _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
         _owner.FlushBuild();
         Scheduler.FlushMicrotasks();
     }
@@ -92,7 +92,7 @@ internal sealed class FocusLayoutHarness : IDisposable
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void ForgetChild(Element child)

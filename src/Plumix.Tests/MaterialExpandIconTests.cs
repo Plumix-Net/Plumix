@@ -413,7 +413,7 @@ public sealed class MaterialExpandIconTests : IDisposable
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public void UpdateRoot(Widget widget)

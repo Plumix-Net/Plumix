@@ -88,7 +88,7 @@ public sealed class FrameworkParityTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new RecordingFlex([new ProbeWidget(), new ProbeWidget()]));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RecordingFlexRenderBox render = Assert.IsType<RecordingFlexRenderBox>(root.RenderObject);
@@ -115,7 +115,7 @@ public sealed class FrameworkParityTests
         FlutterError.OnError = reported.Add;
         try
         {
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
         }
         finally
@@ -140,7 +140,7 @@ public sealed class FrameworkParityTests
             var owner = new BuildOwner();
             var root = new TestRootElement(new SelfReturningBuilder());
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
         });
 
@@ -156,7 +156,7 @@ public sealed class FrameworkParityTests
         var owner = new BuildOwner();
         var root = new TestRootElement(widget);
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         ProbeState state = widget.CreatedState!;
@@ -185,7 +185,7 @@ public sealed class FrameworkParityTests
         var owner = new BuildOwner();
         var root = new TestRootElement(widget);
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var error = Assert.Throws<FlutterError>(() => widget.CreatedState!.PokeAsynchronously());
@@ -209,7 +209,7 @@ public sealed class FrameworkParityTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new RudeDisposeWidget());
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var error = Assert.Throws<FlutterError>(() =>
@@ -228,7 +228,7 @@ public sealed class FrameworkParityTests
         var owner = new BuildOwner();
         var root = new TestRootElement(widget);
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Element probe = FindDescendant(root, element => element is StatefulElement)!;
@@ -251,7 +251,7 @@ public sealed class FrameworkParityTests
         var owner = new BuildOwner();
         var root = new TestRootElement(widget);
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Element probe = FindDescendant(root, element => element is StatefulElement)!;
@@ -284,7 +284,7 @@ public sealed class FrameworkParityTests
             var owner = new BuildOwner();
             var root = new TestRootElement(new RecordingFlex([new TestParentDataWidget(7.0, new ProbeWidget())]));
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
         });
 
@@ -304,7 +304,7 @@ public sealed class FrameworkParityTests
             var root = new TestRootElement(new SlotHost(
                 new TestParentDataWidget(1.0, new TestParentDataWidget(2.0, new ProbeWidget()))));
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
         });
 
@@ -330,7 +330,7 @@ public sealed class FrameworkParityTests
                 new ProbeWidget(key: key),
             ]));
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
             owner.FinalizeTree();
         });
@@ -354,7 +354,7 @@ public sealed class FrameworkParityTests
                 new SlotHost(new ProbeWidget(key: key), key: new ValueKey<int>(2)),
             ]));
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
             owner.FinalizeTree();
         }
@@ -388,7 +388,7 @@ public sealed class FrameworkParityTests
             var owner = new BuildOwner();
             var root = new TestRootElement(new ProbeWidget(key: new LabeledGlobalKey<State>("k")));
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
             log.Clear();
 

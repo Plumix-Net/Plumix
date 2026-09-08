@@ -20,7 +20,7 @@ public sealed class InheritedWidgetTests
 
         var root = new TestRootElement(new IntScope(value: 1, child: stableChildTree));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal([1], InheritedTracker.DependentBuildValues);
@@ -47,7 +47,7 @@ public sealed class InheritedWidgetTests
 
         var root = new TestRootElement(new ConditionalScope(value: 1, shouldNotify: true, child: stableChildTree));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         root.Update(new ConditionalScope(value: 2, shouldNotify: false, child: stableChildTree));
@@ -101,7 +101,7 @@ public sealed class InheritedWidgetTests
 
         var root = new TestRootElement(new WrappingScope(value: 1, child: leaf));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var scopeElement = (InheritedElement)FirstChildOf(root)!;
@@ -122,7 +122,7 @@ public sealed class InheritedWidgetTests
 
         var root = new TestRootElement(new ConditionalScope(value: 1, shouldNotify: false, child: firstChild));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var scopeElement = (InheritedElement)FirstChildOf(root)!;
@@ -187,7 +187,7 @@ public sealed class InheritedWidgetTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

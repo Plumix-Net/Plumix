@@ -56,7 +56,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Tap me"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -83,7 +83,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Tap me"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -110,7 +110,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -139,7 +139,7 @@ public sealed class MaterialButtonsTests
                     child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -344,7 +344,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Filled"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -375,7 +375,7 @@ public sealed class MaterialButtonsTests
                 })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         ButtonStyle style = Assert.IsType<ButtonStyle>(captured);
@@ -424,7 +424,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Filled tonal"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -602,7 +602,7 @@ public sealed class MaterialButtonsTests
 
         var root = new TestRootElement(BuildButton(() => { }));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -657,7 +657,7 @@ public sealed class MaterialButtonsTests
 
         var root = new TestRootElement(BuildButton(() => { }));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         statesController.Update(MaterialState.Pressed, true);
@@ -734,7 +734,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Foreground icon"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedIconTheme);
@@ -768,7 +768,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Original"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(foregroundStates.HasFlag(MaterialState.Focused));
@@ -802,7 +802,7 @@ public sealed class MaterialButtonsTests
                         ]))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(Colors.Black, capturedIconTheme!.Color);
@@ -867,7 +867,7 @@ public sealed class MaterialButtonsTests
                     child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -893,7 +893,7 @@ public sealed class MaterialButtonsTests
                     child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -917,7 +917,7 @@ public sealed class MaterialButtonsTests
                     child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -939,7 +939,7 @@ public sealed class MaterialButtonsTests
                     child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         // Dart's `ElevatedButton.styleFrom` builds `iconColor` with `defaultColor`, which resolves null when
@@ -965,7 +965,7 @@ public sealed class MaterialButtonsTests
                     child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         // Dart's `OutlinedButton.styleFrom` builds `iconColor` with `defaultColor`, which resolves null when
@@ -994,7 +994,7 @@ public sealed class MaterialButtonsTests
                     child: new CaptureIconThemeWidget(iconTheme => capturedTheme = iconTheme))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -1014,7 +1014,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Min size"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1036,7 +1036,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Min size"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1058,7 +1058,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1080,7 +1080,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1102,7 +1102,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1125,7 +1125,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1149,7 +1149,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1173,7 +1173,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1195,7 +1195,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Spacing"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1219,7 +1219,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Spacing")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1243,7 +1243,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Spacing")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1267,7 +1267,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Spacing"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var row = FindDescendant<RenderFlex>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1290,7 +1290,7 @@ public sealed class MaterialButtonsTests
                     iconAlignment: IconAlignment.End)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -1313,7 +1313,7 @@ public sealed class MaterialButtonsTests
                     style: TextButton.StyleFrom(iconAlignment: IconAlignment.End))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -1338,7 +1338,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Icon alignment")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -1362,7 +1362,7 @@ public sealed class MaterialButtonsTests
                     iconAlignment: IconAlignment.End)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -1387,7 +1387,7 @@ public sealed class MaterialButtonsTests
                         iconAlignment: IconAlignment.Start))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -1414,7 +1414,7 @@ public sealed class MaterialButtonsTests
                         iconAlignment: IconAlignment.End))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -1483,7 +1483,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled text background"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1537,7 +1537,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1558,7 +1558,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1580,7 +1580,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1602,7 +1602,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1625,7 +1625,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1649,7 +1649,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1675,7 +1675,7 @@ public sealed class MaterialButtonsTests
                             label: new Text("Padding"))))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1700,7 +1700,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Icon alignment")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -1721,7 +1721,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Min size"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1743,7 +1743,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1764,7 +1764,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1786,7 +1786,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1808,7 +1808,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1831,7 +1831,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1855,7 +1855,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1879,7 +1879,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1904,7 +1904,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Icon alignment")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -1925,7 +1925,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Min size"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1947,7 +1947,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1968,7 +1968,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -1989,7 +1989,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2011,7 +2011,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2033,7 +2033,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2055,7 +2055,7 @@ public sealed class MaterialButtonsTests
                     label: new Text("Padding"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2078,7 +2078,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2102,7 +2102,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Padding")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2128,7 +2128,7 @@ public sealed class MaterialButtonsTests
                             label: new Text("Padding"))))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var padding = FindDescendant<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2151,7 +2151,7 @@ public sealed class MaterialButtonsTests
                     iconAlignment: IconAlignment.End)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -2176,7 +2176,7 @@ public sealed class MaterialButtonsTests
                         label: new Text("Icon alignment")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         AssertIconRowOrder(
@@ -2197,7 +2197,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Typography"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2224,7 +2224,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Foreground precedence"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2253,7 +2253,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Primary"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -2288,7 +2288,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Primary"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -2320,7 +2320,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Surface tint"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2347,7 +2347,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Theme surface tint"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2374,7 +2374,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Surface tint off"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2405,7 +2405,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Theme surface tint off"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2425,7 +2425,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Shadow"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2447,7 +2447,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled shadow"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2468,7 +2468,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Filled elevation"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -2523,7 +2523,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Text shadow"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2547,7 +2547,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Text shadow fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2574,7 +2574,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Text shadow fallback M2"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2599,7 +2599,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Outlined shadow"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2623,7 +2623,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Outlined shadow fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2650,7 +2650,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Outlined shadow fallback M2"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2674,7 +2674,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Filled shadow"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2696,7 +2696,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Filled shadow fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2729,7 +2729,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Outline"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2773,7 +2773,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Outline m2 border"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2807,7 +2807,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Outline m2 focus border"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         focusNode.RequestFocus();
@@ -2838,7 +2838,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Outline fg"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2867,7 +2867,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Outlined"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2891,7 +2891,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled outlined background"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2920,7 +2920,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled outlined background override"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -2948,7 +2948,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Filled"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -2982,7 +2982,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Filled tonal"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -3014,7 +3014,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled filled"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -3047,7 +3047,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled filled background fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3070,7 +3070,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Styled foreground"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3092,7 +3092,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Aligned"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var align = FindDescendant<RenderPositionedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3119,7 +3119,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Theme aligned"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var align = FindDescendant<RenderPositionedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3147,7 +3147,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Widget aligned"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var align = FindDescendant<RenderPositionedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3169,7 +3169,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Styled size"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3192,7 +3192,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Zero min size"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3215,7 +3215,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Max size"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3242,7 +3242,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Fixed size"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3267,7 +3267,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Fixed height only"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3292,7 +3292,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Styled side"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3321,7 +3321,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Theme fg"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3349,7 +3349,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Widget fg"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3376,7 +3376,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Theme bg"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3403,7 +3403,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Theme side"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3436,7 +3436,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Local theme fg")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3468,7 +3468,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Widget over local")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3498,7 +3498,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Local clears theme")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3529,7 +3529,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Local elevated bg")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3560,7 +3560,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Local outlined side")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3591,7 +3591,7 @@ public sealed class MaterialButtonsTests
                         child: new Text("Local filled bg")))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3618,7 +3618,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Merge semantics"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -3674,7 +3674,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("StyleFrom"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3709,7 +3709,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled text-style fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3743,7 +3743,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Enabled text-style"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3836,7 +3836,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Overlay all"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var initialDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3899,7 +3899,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled styleFrom"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -3929,7 +3929,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled foreground fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3957,7 +3957,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled background fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -3984,7 +3984,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Enabled foreground"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4010,7 +4010,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Enabled background"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4039,7 +4039,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Resolver fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4068,7 +4068,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Elevated fg fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4097,7 +4097,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Outlined fg fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4127,7 +4127,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Filled fg fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4157,7 +4157,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Background resolver fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4187,7 +4187,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Side resolver fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4218,7 +4218,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled side fallback"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4440,7 +4440,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Disabled"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -4499,7 +4499,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Hover"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var initialDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4583,7 +4583,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Focus hover"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4666,7 +4666,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Keyboard pressed overlay"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4714,7 +4714,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("NumPad Enter"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4767,7 +4767,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Ctrl+Space ignored"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -4901,7 +4901,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("M2 outlined overlay"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         focusNode.RequestFocus();
@@ -5032,7 +5032,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Rounded splash"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -5072,7 +5072,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Rounded splash"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -5092,7 +5092,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Rounded splash"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var clip = FindDescendant<RenderClipRRect>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -5140,7 +5140,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("External focus node"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var initialDecorated = FindInkPaint(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -5176,7 +5176,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Autofocus mount"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(focusNode.HasFocus);
@@ -5204,7 +5204,7 @@ public sealed class MaterialButtonsTests
                     child: new Text("Autofocus update"))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.False(focusNode.HasFocus);
@@ -5270,7 +5270,7 @@ public sealed class MaterialButtonsTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -5344,7 +5344,7 @@ public sealed class MaterialButtonsTests
                             iconTheme => capturedTheme = iconTheme))));
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             Assert.NotNull(capturedTheme);
@@ -5376,7 +5376,7 @@ public sealed class MaterialButtonsTests
                     iconTheme => capturedTheme = iconTheme)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(
@@ -5402,7 +5402,7 @@ public sealed class MaterialButtonsTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -5424,7 +5424,7 @@ public sealed class MaterialButtonsTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindDescendant<RenderConstrainedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -5450,7 +5450,7 @@ public sealed class MaterialButtonsTests
                         iconSize: 30))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -5480,7 +5480,7 @@ public sealed class MaterialButtonsTests
                         onPressed: () => { }))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -5507,7 +5507,7 @@ public sealed class MaterialButtonsTests
                     style: IconButton.StyleFrom(foregroundColor: Colors.OrangeRed))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -5529,7 +5529,7 @@ public sealed class MaterialButtonsTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -5551,7 +5551,7 @@ public sealed class MaterialButtonsTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var unselectedDecorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -5693,7 +5693,7 @@ public sealed class MaterialButtonsTests
                     onPressed: null)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -5723,7 +5723,7 @@ public sealed class MaterialButtonsTests
                     onPressed: null)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(statesController.Value.HasFlag(MaterialState.Selected));
@@ -5766,7 +5766,7 @@ public sealed class MaterialButtonsTests
                             onPressed: () => { })))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(capturedTheme);
@@ -6106,7 +6106,7 @@ public sealed class MaterialButtonsTests
 
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -6188,7 +6188,7 @@ public sealed class MaterialButtonsTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)
@@ -6333,7 +6333,7 @@ public sealed class MaterialButtonsTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

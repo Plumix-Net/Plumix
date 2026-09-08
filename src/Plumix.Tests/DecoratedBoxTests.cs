@@ -45,7 +45,7 @@ public sealed class DecoratedBoxTests
                 child: new SizedBox(width: 10, height: 10)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderDecorated = RequireRenderObject<RenderDecoratedBox>(root.ChildElement);
@@ -91,7 +91,7 @@ public sealed class DecoratedBoxTests
                 child: new SizedBox(width: 8, height: 8)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = RequireRenderObject<RenderDecoratedBox>(root.ChildElement);
@@ -149,7 +149,7 @@ public sealed class DecoratedBoxTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

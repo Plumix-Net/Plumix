@@ -878,7 +878,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
                 child: rootWidget);
             _rootElement = new HarnessRootElement(RenderView, appRoot);
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -948,7 +948,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)

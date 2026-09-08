@@ -374,7 +374,7 @@ public sealed class VisibilityTests
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
     }
 
@@ -528,7 +528,7 @@ public sealed class VisibilityTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

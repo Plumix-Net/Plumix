@@ -1093,7 +1093,11 @@ public sealed class MaterialChipTests : IDisposable
                 base.PerformRebuild();
                 _child = UpdateChild(_child, Widget, Slot);
             }
-            public override void Update(Widget widget) { base.Update(widget); Rebuild(force: true); }
+            public override void Update(Widget widget)
+            {
+                base.Update(widget);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
+            }
             public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
             public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _view.Child = (RenderBox)child;

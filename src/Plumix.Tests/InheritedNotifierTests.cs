@@ -20,7 +20,7 @@ public sealed class InheritedNotifierTests
 
         var root = new TestRootElement(new IntInheritedNotifier(notifier, stableChildTree));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal([0], InheritedNotifierTracker.SeenValues);
@@ -44,7 +44,7 @@ public sealed class InheritedNotifierTests
 
         var root = new TestRootElement(new IntInheritedNotifier(notifierA, stableChildTree));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         root.Update(new IntInheritedNotifier(notifierB, stableChildTree));
@@ -72,7 +72,7 @@ public sealed class InheritedNotifierTests
 
         var root = new TestRootElement(new IntInheritedNotifier(notifier: null, stableChildTree));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal([-1], InheritedNotifierTracker.SeenValues);
@@ -108,7 +108,7 @@ public sealed class InheritedNotifierTests
 
         var root = new TestRootElement(new SharedGlobalPlacementHost(includeGlobal: true, moveToLeft: true, globalWidget));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal([0], InheritedNotifierTracker.CountingSeenValues);
@@ -153,7 +153,7 @@ public sealed class InheritedNotifierTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

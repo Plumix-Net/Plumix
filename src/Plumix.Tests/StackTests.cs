@@ -92,7 +92,7 @@ public sealed class StackTests
                 ]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var stack = RequireRenderObject<RenderStack>(root.ChildElement);
@@ -131,7 +131,7 @@ public sealed class StackTests
         var owner = new BuildOwner();
         var root = new TestRootElement(BuildDirectionalStacks(TextDirection.Ltr));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var stack = RequireRenderObject<RenderStack>(root.ChildElement);
@@ -237,7 +237,7 @@ public sealed class StackTests
             index: 0,
             textDirection: TextDirection.Ltr));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var stack = RequireRenderObject<RenderIndexedStack>(root.ChildElement);
@@ -265,7 +265,7 @@ public sealed class StackTests
             index: 1,
             textDirection: TextDirection.Ltr));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var element = Assert.IsType<IndexedStackElement>(root.ChildElement);
@@ -314,7 +314,7 @@ public sealed class StackTests
         var owner = new BuildOwner();
         var contextRoot = new TestRootElement(new SizedBox());
         contextRoot.Attach(owner);
-        contextRoot.Mount(parent: null, newSlot: null);
+        owner.BuildScope(contextRoot, () => contextRoot.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Assert.Throws<AssertionError>(() => directional.CreateRenderObject(contextRoot));
         contextRoot.Unmount();
@@ -420,7 +420,7 @@ public sealed class StackTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

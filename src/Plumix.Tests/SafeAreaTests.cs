@@ -63,7 +63,7 @@ public sealed class SafeAreaTests
                     sliver: new SliverToBoxAdapter(new MediaQueryProbeWidget()))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
@@ -92,7 +92,7 @@ public sealed class SafeAreaTests
                     sliver: new SliverToBoxAdapter(new MediaQueryProbeWidget()))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
@@ -125,7 +125,7 @@ public sealed class SafeAreaTests
                     sliver: new SliverToBoxAdapter(new SizedBox(height: 50)))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var outerPadding = RequireRenderObject<RenderSliverPadding>(root.ChildElement);
@@ -159,7 +159,7 @@ public sealed class SafeAreaTests
                     child: new MediaQueryProbeWidget())));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
@@ -184,7 +184,7 @@ public sealed class SafeAreaTests
                     child: new MediaQueryProbeWidget())));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
@@ -213,7 +213,7 @@ public sealed class SafeAreaTests
                     child: new MediaQueryProbeWidget())));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var outerPadding = RequireRenderObject<RenderPadding>(root.ChildElement);
@@ -237,7 +237,7 @@ public sealed class SafeAreaTests
                         child: new SizedBox(width: 40, height: 30)))));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
@@ -266,7 +266,7 @@ public sealed class SafeAreaTests
             child: child));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var outer = RequireRenderObject<RenderPadding>(root.ChildElement);
@@ -507,7 +507,7 @@ public sealed class SafeAreaTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

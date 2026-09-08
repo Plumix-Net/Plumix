@@ -107,7 +107,7 @@ public sealed class SliverHeaderTests
             maxExtentPrototype: new SizedBox(height: 120),
             child: new SizedBox(height: 200)));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var header = Assert.IsType<RenderSliverResizingHeader>(root.ChildElement!.RenderObject);
@@ -301,7 +301,7 @@ public sealed class SliverHeaderTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

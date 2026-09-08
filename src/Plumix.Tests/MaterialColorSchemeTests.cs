@@ -337,7 +337,7 @@ public sealed class MaterialColorSchemeTests
                     }))));
         var owner = new BuildOwner();
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(localized);

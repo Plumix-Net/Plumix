@@ -22,7 +22,7 @@ public sealed class MetaDataIndexedSemanticsTests
         var owner = new BuildOwner();
         var root = new TestRootElement(initial);
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderMetaData = RequireRenderObject<RenderMetaData>(root.ChildElement);
@@ -89,7 +89,7 @@ public sealed class MetaDataIndexedSemanticsTests
                 index: 3,
                 child: new SizedBox(width: 20, height: 10)));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var indexed = RequireRenderObject<RenderIndexedSemantics>(root.ChildElement);
@@ -240,7 +240,7 @@ public sealed class MetaDataIndexedSemanticsTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

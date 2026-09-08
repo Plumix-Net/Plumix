@@ -191,7 +191,7 @@ public sealed class FrameworkElementApiTests
         var owner = new BuildOwner();
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(["mount", "rebuild"], log.Events);
@@ -222,7 +222,7 @@ public sealed class FrameworkElementApiTests
         var root = new ProbeRootElement(
             new LifecycleProbe(log, new SizedBox(width: 10, height: 10), new ValueKey<int>(1)));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         log.Events.Clear();
@@ -249,7 +249,7 @@ public sealed class FrameworkElementApiTests
         Assert.True(root.Dirty);
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.False(root.Dirty);
@@ -263,7 +263,7 @@ public sealed class FrameworkElementApiTests
         var owner = new BuildOwner();
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox(width: 10, height: 10)));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Element probe = FindProbeElement(root);
@@ -294,7 +294,7 @@ public sealed class FrameworkElementApiTests
 
         var owner = new BuildOwner();
         element.Attach(owner);
-        element.Mount(parent: null, newSlot: null);
+        owner.BuildScope(element, () => element.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         element.Unmount();
 
@@ -318,7 +318,7 @@ public sealed class FrameworkElementApiTests
         }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(1, builds);
@@ -341,7 +341,7 @@ public sealed class FrameworkElementApiTests
         }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.True(insideBuild, "BuildContext.DebugDoingBuild must be true inside Build().");
@@ -355,7 +355,7 @@ public sealed class FrameworkElementApiTests
         var owner = new BuildOwner();
         var root = new ProbeRootElement(new DoingBuildProbe(log));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         root.Update(new DoingBuildProbe(log));
@@ -373,7 +373,7 @@ public sealed class FrameworkElementApiTests
         var owner = new BuildOwner();
         var root = new ProbeRootElement(new LifecycleProbe(log, new SizedBox()));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Element probe = FindProbeElement(root);
@@ -404,7 +404,7 @@ public sealed class FrameworkElementApiTests
         }));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(captured);
@@ -585,7 +585,7 @@ public sealed class FrameworkElementApiTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

@@ -310,7 +310,7 @@ public sealed class TapRegionTests
             // Stack's default alignment is AlignmentDirectional.topStart, which needs a direction.
             _root = new TestRootElement(new Directionality(TextDirection.Ltr, widget));
             _root.Attach(_owner);
-            _root.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
             _renderView = new RenderView
             {

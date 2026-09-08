@@ -283,8 +283,11 @@ public sealed class BuildScopeTests
         Assert.Same(scope, moved.Element.BuildScope);
         Assert.Contains(moved.Element, scope.DirtyElements);
 
+        // The reparenting rebuild cleaned the element, but its entry stays in the new scope's list
+        // until that scope is flushed. Dirtying it again has to happen inside a build scope: Dart's
+        // scheduleBuildFor rejects re-queueing an already-listed element from outside one.
         int builds = moved.Builds;
-        moved.Bump();
+        owner.BuildScope(root, moved.Bump);
         owner.FlushBuild();
         Assert.Equal(builds, moved.Builds);
         Assert.True(moved.Element.Dirty, "still dirty after the ambient flush");
@@ -441,7 +444,7 @@ public sealed class BuildScopeTests
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
     }
 
@@ -591,7 +594,7 @@ public sealed class BuildScopeTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

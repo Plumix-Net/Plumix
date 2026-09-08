@@ -1282,7 +1282,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             GestureBinding.Instance.ResetForTests();
             _root = new TestRootElement(widget);
             _root.Attach(_owner);
-            _root.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
             _renderView = new RenderView
             {

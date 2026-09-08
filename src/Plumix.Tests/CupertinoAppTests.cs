@@ -222,7 +222,7 @@ public sealed class CupertinoAppTests : IDisposable
     private static void MountAndFlush(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
     }
 
@@ -291,7 +291,7 @@ public sealed class CupertinoAppTests : IDisposable
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

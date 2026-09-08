@@ -18,7 +18,7 @@ public sealed class InheritedModelTests
 
         var root = new TestRootElement(new ABModel(a: 1, b: 10, child: stableChildTree));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(1, InheritedModelTracker.AspectABuildCount);
@@ -47,7 +47,7 @@ public sealed class InheritedModelTests
 
         var root = new TestRootElement(new ABModel(a: 1, b: 10, child: stableChildTree));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(1, InheritedModelTracker.UnqualifiedBuildCount);
@@ -70,7 +70,7 @@ public sealed class InheritedModelTests
 
         var root = new TestRootElement(new ABModel(a: 1, b: 10, child: stableChildTree));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal(1, InheritedModelTracker.MultiAspectBuildCount);
@@ -106,7 +106,7 @@ public sealed class InheritedModelTests
 
         var root = new TestRootElement(BuildTree(outerA: 10, outerB: 100, innerA: 1, innerB: 1000));
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.Equal([1], InheritedModelTracker.ShadowASeenValues);
@@ -158,7 +158,7 @@ public sealed class InheritedModelTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

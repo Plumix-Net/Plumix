@@ -432,7 +432,7 @@ public sealed class MaterialLegacyButtonTests
             _pipeline.Attach(RenderView);
             _root = new RootElement(RenderView, widget);
             _root.Attach(_owner);
-            _root.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -491,7 +491,7 @@ public sealed class MaterialLegacyButtonTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

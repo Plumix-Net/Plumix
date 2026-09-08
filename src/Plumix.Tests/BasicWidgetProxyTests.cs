@@ -27,7 +27,7 @@ public sealed class BasicWidgetProxyTests
                 child: new SizedBox(width: 16, height: 16)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderOpacity = RequireRenderObject<RenderOpacity>(root.ChildElement);
@@ -70,7 +70,7 @@ public sealed class BasicWidgetProxyTests
                 child: new SizedBox(width: 20, height: 12)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderTransform = RequireRenderObject<RenderTransform>(root.ChildElement);
@@ -102,7 +102,7 @@ public sealed class BasicWidgetProxyTests
                 child: new SizedBox(width: 20, height: 12)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var translation = RequireRenderObject<RenderFractionalTranslation>(root.ChildElement);
@@ -155,7 +155,7 @@ public sealed class BasicWidgetProxyTests
                 child: new SizedBox(width: 80, height: 30)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var rotated = RequireRenderObject<RenderRotatedBox>(root.ChildElement);
@@ -222,7 +222,7 @@ public sealed class BasicWidgetProxyTests
                 child: new SizedBox(width: 40, height: 50)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderClipRect = RequireRenderObject<RenderClipRect>(root.ChildElement);
@@ -251,7 +251,7 @@ public sealed class BasicWidgetProxyTests
                 child: new SizedBox(width: 40, height: 50)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderClipRRect = RequireRenderObject<RenderClipRRect>(root.ChildElement);
@@ -279,7 +279,7 @@ public sealed class BasicWidgetProxyTests
                 child: new SizedBox(width: 16, height: 16)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var ignorePointer = RequireRenderObject<RenderIgnorePointer>(root.ChildElement);
@@ -309,7 +309,7 @@ public sealed class BasicWidgetProxyTests
                 child: new SizedBox(width: 16, height: 16)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var absorbPointer = RequireRenderObject<RenderAbsorbPointer>(root.ChildElement);
@@ -346,7 +346,7 @@ public sealed class BasicWidgetProxyTests
             ]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var wrap = RequireRenderObject<RenderWrap>(root.ChildElement);
@@ -409,7 +409,7 @@ public sealed class BasicWidgetProxyTests
         var owner = new BuildOwner();
         var root = new TestRootElement(widget);
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderFlow = RequireRenderObject<RenderFlow>(root.ChildElement);
@@ -457,7 +457,7 @@ public sealed class BasicWidgetProxyTests
             children: [new SizedBox(width: 10, height: 10)]));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var flex = RequireRenderObject<RenderFlex>(root.ChildElement);
@@ -555,7 +555,7 @@ public sealed class BasicWidgetProxyTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)

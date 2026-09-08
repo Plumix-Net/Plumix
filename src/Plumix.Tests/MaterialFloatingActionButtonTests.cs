@@ -33,7 +33,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -76,7 +76,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onBuilt: widget => capturedBuiltWidget = widget)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RawMaterialButton button = RequireBuiltButton(capturedBuiltWidget);
@@ -101,7 +101,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -130,7 +130,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -150,7 +150,7 @@ public sealed class MaterialFloatingActionButtonTests
                     clipBehavior: Clip.HardEdge)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -192,7 +192,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onBuilt: widget => capturedBuiltWidget = widget)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var mergeSemantics = Assert.IsType<MergeSemantics>(capturedBuiltWidget);
@@ -215,7 +215,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onBuilt: widget => capturedBuiltWidget = widget)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         Assert.NotNull(first.HeroTag);
@@ -241,7 +241,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onBuilt: widget => capturedBuiltWidget = widget)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var mergeSemantics = Assert.IsType<MergeSemantics>(capturedBuiltWidget);
@@ -260,7 +260,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         // `_EffectiveMouseCursor` falls through to `WidgetStateMouseCursor.adaptiveClickable`, which
@@ -287,7 +287,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -315,7 +315,7 @@ public sealed class MaterialFloatingActionButtonTests
                         onPressed: () => pressedCount += 1)));
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -366,7 +366,7 @@ public sealed class MaterialFloatingActionButtonTests
                         enableFeedback: false)));
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -419,7 +419,7 @@ public sealed class MaterialFloatingActionButtonTests
                         onPressed: () => pressedCount += 1)));
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             var focusListener = FindFocusPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -460,7 +460,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindSizingConstrainedBox(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -484,7 +484,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var constrainedBox = FindSizingConstrainedBox(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -510,7 +510,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -538,7 +538,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var paddings = FindDescendants<RenderPadding>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -567,7 +567,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -667,7 +667,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onBuilt: widget => capturedBuiltWidget = widget)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RawMaterialButton button = RequireBuiltButton(capturedBuiltWidget);
@@ -699,7 +699,7 @@ public sealed class MaterialFloatingActionButtonTests
                     backgroundColor: Colors.Purple)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -775,7 +775,7 @@ public sealed class MaterialFloatingActionButtonTests
                     elevation: 5)));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var decorated = FindDescendant<RenderDecoratedBox>(RequireRenderObject<RenderObject>(root.ChildElement));
@@ -796,7 +796,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         var renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -820,7 +820,7 @@ public sealed class MaterialFloatingActionButtonTests
                     onPressed: () => { })));
 
         root.Attach(owner);
-        root.Mount(parent: null, newSlot: null);
+        owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
         RenderObject renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -873,7 +873,7 @@ public sealed class MaterialFloatingActionButtonTests
             var owner = new BuildOwner();
 
             root.Attach(owner);
-            root.Mount(parent: null, newSlot: null);
+            owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
 
             RenderObject renderRoot = RequireRenderObject<RenderObject>(root.ChildElement);
@@ -1165,7 +1165,7 @@ public sealed class MaterialFloatingActionButtonTests
             _pipeline.Attach(RenderView);
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
-            _rootElement.Mount(parent: null, newSlot: null);
+            _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
         }
 
@@ -1220,7 +1220,7 @@ public sealed class MaterialFloatingActionButtonTests
             public override void Update(Widget newWidget)
             {
                 base.Update(newWidget);
-                Rebuild(force: true);
+                Owner!.BuildScope(this, () => Rebuild(force: true));
             }
 
             public override void ForgetChild(Element child)
@@ -1292,7 +1292,7 @@ public sealed class MaterialFloatingActionButtonTests
         public override void Update(Widget newWidget)
         {
             base.Update(newWidget);
-            Rebuild(force: true);
+            Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 
         public override void VisitChildren(Action<Element> visitor)
