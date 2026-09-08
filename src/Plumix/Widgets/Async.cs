@@ -455,30 +455,43 @@ public sealed class FutureBuilder<T> : StatefulWidget
 
         private async Task ObserveFuture(Task<T> future, object callbackIdentity)
         {
-            await Task.Yield();
             try
             {
-                T data = await future;
-                if (!Mounted || !ReferenceEquals(_activeCallbackIdentity, callbackIdentity))
-                {
-                    return;
-                }
-
-                SetState(() => _snapshot = AsyncSnapshot<T>.WithData(ConnectionState.Done, data));
+                T data = await future.ConfigureAwait(false);
+                Deliver(callbackIdentity, AsyncSnapshot<T>.WithData(ConnectionState.Done, data), error: null);
             }
             catch (Exception error)
             {
+                Deliver(callbackIdentity, AsyncSnapshot<T>.WithError(ConnectionState.Done, error), error);
+            }
+        }
+
+        /// <summary>
+        /// Hands the finished snapshot back to the framework the way Dart's `Future.then` does: as a
+        /// microtask on the one thread that owns the element tree.
+        /// </summary>
+        /// <remarks>
+        /// A `Task` continuation resumes on whatever thread completed it, which in a widget test is a
+        /// thread-pool thread. Calling <see cref="State.SetState"/> from there races the pump thread
+        /// inside `BuildScope._flushDirtyElements`: the element can be appended to the dirty list
+        /// after the flush copied it out but before it is cleared, leaving `Element.InDirtyList` set
+        /// on an element no list holds, which silently never rebuilds again.
+        /// </remarks>
+        private void Deliver(object callbackIdentity, AsyncSnapshot<T> snapshot, Exception? error)
+        {
+            Scheduler.ScheduleMicrotask(() =>
+            {
                 if (!Mounted || !ReferenceEquals(_activeCallbackIdentity, callbackIdentity))
                 {
                     return;
                 }
 
-                SetState(() => _snapshot = AsyncSnapshot<T>.WithError(ConnectionState.Done, error));
-                if (DebugRethrowError)
+                SetState(() => _snapshot = snapshot);
+                if (error is not null && DebugRethrowError)
                 {
                     _ = Task.FromException(error);
                 }
-            }
+            });
         }
 
         private void Unsubscribe()

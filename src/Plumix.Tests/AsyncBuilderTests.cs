@@ -282,6 +282,62 @@ public sealed class AsyncBuilderTests : IDisposable
         }
     }
 
+    [Fact]
+    public void FutureBuilder_CompletedOnAForeignThread_ReportsTheCompletionAsAMicrotask()
+    {
+        // Regression: the completion used to call SetState from whichever thread completed the task,
+        // which races the framework thread inside `BuildScope.FlushDirtyElements`. Losing that race
+        // appended the element to the dirty list after the flush had copied it out but before the
+        // list was cleared, leaving `Element.InDirtyList` set on an element no list held — after
+        // which the element silently never rebuilt again. Dart cannot hit this: `Future.then` runs
+        // its callback as a microtask on the single thread that owns the element tree.
+        var completion = new TaskCompletionSource<int>();
+        var snapshots = new List<AsyncSnapshot<int>>();
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new FutureBuilder<int>(
+            completion.Task,
+            (_, snapshot) => Capture(snapshot, snapshots)));
+        Mount(root, owner);
+        // The harness root carries the same widget instance, so match the state-bearing element.
+        Element builderElement = FindElement(
+            root,
+            element => element is StatefulElement && element.Widget is FutureBuilder<int>);
+
+        AssertSnapshot(snapshots[^1], ConnectionState.Waiting, data: 0);
+        Assert.False(builderElement.Dirty);
+
+        // No RunContinuationsAsynchronously, so the observer resumes inline on the worker: the
+        // completion travels the whole way to the framework on a thread that does not own the tree.
+        var worker = new Thread(() => completion.SetResult(7));
+        worker.Start();
+        worker.Join();
+
+        Assert.False(builderElement.Dirty);
+
+        Scheduler.FlushMicrotasks();
+        Assert.True(builderElement.Dirty);
+
+        owner.FlushBuild();
+        AssertSnapshot(snapshots[^1], ConnectionState.Done, data: 7);
+        root.Unmount();
+    }
+
+    private static Element FindElement(Element root, Func<Element, bool> predicate)
+    {
+        if (predicate(root))
+        {
+            return root;
+        }
+
+        Element? found = null;
+        root.VisitChildren(child =>
+        {
+            found ??= FindElement(child, predicate);
+        });
+
+        return found ?? throw new InvalidOperationException("No element matched the predicate.");
+    }
+
     private static Widget Capture<T>(AsyncSnapshot<T> snapshot, List<AsyncSnapshot<T>> snapshots)
     {
         snapshots.Add(snapshot);

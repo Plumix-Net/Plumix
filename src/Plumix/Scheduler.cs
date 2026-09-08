@@ -31,6 +31,10 @@ public static class Scheduler
     private static readonly List<Action<TimeSpan>> _persistentFrameCallbacks = [];
     private static readonly Queue<Action<TimeSpan>> _postFrameCallbacks = [];
     private static readonly Queue<Action> _microtasks = [];
+
+    // The only Plumix queue a foreign thread may reach: a `Task` continuation resumes on whatever
+    // thread completed it, and `ScheduleMicrotask` is how it hands work back to the framework thread.
+    private static readonly object MicrotaskSync = new();
     private static readonly List<TaskEntry> _taskQueue = [];
     private static readonly Stopwatch _sw = Stopwatch.StartNew();
 
@@ -137,23 +141,44 @@ public static class Scheduler
     {
         ArgumentNullException.ThrowIfNull(callback);
 
-        _microtasks.Enqueue(callback);
-        if (_microtaskDrainScheduled)
+        bool scheduleDrain;
+        lock (MicrotaskSync)
         {
-            return;
+            _microtasks.Enqueue(callback);
+            scheduleDrain = !_microtaskDrainScheduled;
+            _microtaskDrainScheduled = true;
         }
 
-        _microtaskDrainScheduled = true;
-        Dispatcher.UIThread.Post(FlushMicrotasks, DispatcherPriority.Send);
+        if (scheduleDrain)
+        {
+            Dispatcher.UIThread.Post(FlushMicrotasks, DispatcherPriority.Send);
+        }
     }
 
     /// <summary>Drains every microtask queued by <see cref="ScheduleMicrotask"/>.</summary>
     public static void FlushMicrotasks()
     {
-        _microtaskDrainScheduled = false;
-        while (_microtasks.Count > 0)
+        lock (MicrotaskSync)
         {
-            _microtasks.Dequeue()();
+            _microtaskDrainScheduled = false;
+        }
+
+        while (true)
+        {
+            Action callback;
+            lock (MicrotaskSync)
+            {
+                if (_microtasks.Count == 0)
+                {
+                    return;
+                }
+
+                callback = _microtasks.Dequeue();
+            }
+
+            // Outside the lock: a microtask may queue another one, and it runs framework code that
+            // must never hold a lock a foreign thread can block on.
+            callback();
         }
     }
 

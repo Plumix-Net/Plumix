@@ -850,28 +850,7 @@ public sealed class MaterialAboutTests : IDisposable
         }
 
         harness.Pump(size);
-        string diag = string.Join(" | ", FindDescendants<RenderParagraph>(harness.RenderView)
-            .Select(paragraph => paragraph.PlainText))
-            + $" || pool threads={ThreadPool.ThreadCount} pending={ThreadPool.PendingWorkItemCount}"
-            + $" completed={ThreadPool.CompletedWorkItemCount} min={GetMin()}"
-            + " || dirty=" + string.Join(",", DirtyElements(harness.RootElement));
-        Assert.True(condition(), "Asynchronous license data did not reach the expected state. Paragraphs: " + diag);
-    }
-
-    private static List<string> DirtyElements(Element? root)
-    {
-        var result = new List<string>();
-        if (root is null) return result;
-        if (root.Dirty) result.Add($"{root.Widget.GetType().Name}(dirty,inList={root.InDirtyList})");
-        root.VisitChildren(child => result.AddRange(DirtyElements(child)));
-        return result;
-    }
-
-    private static string GetMin()
-    {
-        ThreadPool.GetMinThreads(out int worker, out int io);
-        ThreadPool.GetAvailableThreads(out int availableWorker, out int availableIo);
-        return $"{worker}/{io} available={availableWorker}/{availableIo}";
+        Assert.True(condition(), "Asynchronous license data did not reach the expected state.");
     }
 
     private static void TapText(WidgetRenderHarness harness, double width, string text)
