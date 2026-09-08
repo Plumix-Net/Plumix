@@ -544,7 +544,6 @@ public abstract class Route
     /// </summary>
     protected internal virtual void ChangedInternalState()
     {
-        Navigator?.NotifyRouteChanged();
     }
 
     /// <summary>
@@ -553,7 +552,6 @@ public abstract class Route
     /// </summary>
     protected internal virtual void ChangedExternalState()
     {
-        Navigator?.NotifyRouteChanged();
     }
 
     public abstract Widget BuildPage(BuildContext context);
@@ -839,7 +837,6 @@ public abstract class TransitionRoute : OverlayRoute
             NotifyPushSettled();
         }
 
-        NotifyRouteChanged();
         if (_handlingPopGesture && status is AnimationStatus.Completed or AnimationStatus.Dismissed)
         {
             StopPopGestureIfNeeded();
@@ -1084,8 +1081,13 @@ public abstract class ModalRoute : TransitionRoute
     protected internal override void ChangedInternalState()
     {
         base.ChangedInternalState();
-        SetState(static () => { });
-        _modalBarrier?.MarkNeedsBuild();
+        // No need to mark dirty if this method is called during build phase.
+        if (Scheduler.Phase != SchedulerPhase.PersistentCallbacks)
+        {
+            SetState(static () => { });
+            _modalBarrier?.MarkNeedsBuild();
+        }
+
         if (_modalScope is not null && _modalScope.Owner is not null)
         {
             _modalScope.MaintainState = MaintainState;
@@ -1151,8 +1153,8 @@ public abstract class ModalRoute : TransitionRoute
         }
 
         _popEntries.Add(popEntry);
-        popEntry.CanPopNotifier.AddListener(HandlePopEntryChanged);
-        HandlePopEntryChanged();
+        popEntry.CanPopNotifier.AddListener(MaybeDispatchNavigationNotification);
+        MaybeDispatchNavigationNotification();
     }
 
 #pragma warning disable CS0618 // Flutter's deprecated scoped will-pop surface.
@@ -1175,7 +1177,7 @@ public abstract class ModalRoute : TransitionRoute
         _willPopCallbacks.Add(callback);
         if (_willPopCallbacks.Count == 1)
         {
-            NotifyRouteChanged();
+            MaybeDispatchNavigationNotification();
         }
     }
 
@@ -1196,7 +1198,7 @@ public abstract class ModalRoute : TransitionRoute
         _willPopCallbacks.Remove(callback);
         if (_willPopCallbacks.Count == 0)
         {
-            NotifyRouteChanged();
+            MaybeDispatchNavigationNotification();
         }
     }
 
@@ -1235,15 +1237,15 @@ public abstract class ModalRoute : TransitionRoute
             return;
         }
 
-        popEntry.CanPopNotifier.RemoveListener(HandlePopEntryChanged);
-        HandlePopEntryChanged();
+        popEntry.CanPopNotifier.RemoveListener(MaybeDispatchNavigationNotification);
+        MaybeDispatchNavigationNotification();
     }
 
     public override void Dispose()
     {
         foreach (var popEntry in _popEntries.ToArray())
         {
-            popEntry.CanPopNotifier.RemoveListener(HandlePopEntryChanged);
+            popEntry.CanPopNotifier.RemoveListener(MaybeDispatchNavigationNotification);
         }
 
         _popEntries.Clear();
@@ -1269,6 +1271,7 @@ public abstract class ModalRoute : TransitionRoute
         UpdateReceivedTransition(nextRoute);
         base.DidPopNext(nextRoute);
         ChangedInternalState();
+        MaybeDispatchNavigationNotification();
     }
 
     /// <summary>
@@ -1345,9 +1348,42 @@ public abstract class ModalRoute : TransitionRoute
                ?? originalTransitions;
     }
 
-    private void HandlePopEntryChanged()
+    /// <summary>
+    /// Dart's <c>ModalRoute._maybeDispatchNavigationNotification</c>: only the current route reports,
+    /// and the notification is dispatched from the route's page subtree, deferred to a post-frame
+    /// callback unless the post-frame callbacks are already running.
+    /// </summary>
+    private void MaybeDispatchNavigationNotification()
     {
-        NotifyRouteChanged();
+        if (!IsCurrent)
+        {
+            return;
+        }
+
+#pragma warning disable CS0618 // The deprecated scoped will-pop callbacks still count as a pop handler.
+        bool hasWillPopCallbacks = _willPopCallbacks.Count > 0;
+#pragma warning restore CS0618
+        // CanHandlePop indicates that the originator of the notification can handle a pop. In the case
+        // of PopScope, it handles pops when CanPop is false. Hence the seemingly backward logic here.
+        var notification = new NavigationNotification(
+            canHandlePop: PopDisposition == RoutePopDisposition.DoNotPop || hasWillPopCallbacks);
+
+        // Avoid dispatching a notification in the middle of a build.
+        if (Scheduler.Phase == SchedulerPhase.PostFrameCallbacks)
+        {
+            notification.Dispatch(SubtreeContext);
+            return;
+        }
+
+        Scheduler.AddPostFrameCallback(_ =>
+        {
+            if (SubtreeContext is not { Mounted: true } context)
+            {
+                return;
+            }
+
+            notification.Dispatch(context);
+        });
     }
 
     private void UpdateReceivedTransition(Route? nextRoute)

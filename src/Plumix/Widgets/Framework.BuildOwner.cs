@@ -15,6 +15,7 @@ public sealed class BuildOwner
 
     private bool _scheduledFlushDirtyElements;
     private bool _building;
+    private int _debugBuildingThreadId;
     public Action? OnBuildScheduled { get; set; }
 
     /// <summary>
@@ -54,6 +55,16 @@ public sealed class BuildOwner
     /// <c>BuildOwner.debugBuilding</c>.
     /// </summary>
     public bool DebugBuilding => _building;
+
+    /// <summary>
+    /// The managed thread that entered the build scope currently running, or 0 when none is running.
+    /// Dart has no counterpart: an isolate owns its element tree outright, so
+    /// <c>BuildOwner._debugBuilding</c> can only ever be read by the thread that set it. Plumix's
+    /// debug checks read it to tell a genuine <c>setState() during build</c> apart from a foreign
+    /// thread racing the build (see <c>docs/ai/DIVERGENCES.md</c>).
+    /// </summary>
+    internal bool DebugBuildingOnThisThread =>
+        _building && _debugBuildingThreadId == Environment.CurrentManagedThreadId;
 
     /// <summary>Dart's <c>BuildOwner._debugStateLocked</c>.</summary>
     internal bool DebugStateLocked => _debugStateLockLevel > 0;
@@ -422,6 +433,7 @@ public sealed class BuildOwner
 
         _debugStateLockLevel += 1;
         _building = true;
+        _debugBuildingThreadId = Environment.CurrentManagedThreadId;
 
         // Dart forces `_scheduledFlushDirtyElements` true for the duration so that a markNeedsBuild
         // made during the build cannot ask the host for another frame, and false afterwards so the
@@ -460,6 +472,7 @@ public sealed class BuildOwner
             buildScope.Building = false;
             _scheduledFlushDirtyElements = false;
             _building = false;
+            _debugBuildingThreadId = 0;
             _debugStateLockLevel -= 1;
 
             if (Constants.KDebugMode && WidgetsDebug.DebugPrintBuildScope)

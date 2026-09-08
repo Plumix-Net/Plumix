@@ -9,7 +9,7 @@ namespace Plumix.Widgets;
 
 public sealed partial class NavigatorState : RestorationState
 {
-    private readonly List<RouteEntry> _history = [];
+    private readonly RouteHistory _history = new();
     private readonly HashSet<RouteEntry> _entriesWaitingForSubtreeDisposal = [];
     private readonly List<NavigatorObservation> _observedRouteAdditions = [];
     private readonly Queue<NavigatorObservation> _observedRouteDeletions = new();
@@ -25,8 +25,6 @@ public sealed partial class NavigatorState : RestorationState
     private int _userGestureCount;
     private RouteEntry? _lastTopmostRoute;
     private string? _lastAnnouncedRouteName;
-    private bool? _lastCanHandlePop;
-    private bool _navigationNotificationPending;
     private bool _flushingHistory;
     private bool _updatingPage;
 
@@ -97,6 +95,7 @@ public sealed partial class NavigatorState : RestorationState
             as HeroControllerScope;
         UpdateHeroController(scope?.Controller);
         ValidatePagesApi();
+        _history.AddListener(HandleHistoryChanged);
         NavigatorBackButtonDispatcher.AddHandler(_backButtonHandler);
     }
 
@@ -163,6 +162,7 @@ public sealed partial class NavigatorState : RestorationState
     public override void Dispose()
     {
         NavigatorBackButtonDispatcher.RemoveHandler(_backButtonHandler);
+        _history.RemoveListener(HandleHistoryChanged);
         StopUserGesture();
         UpdateHeroController(null);
         FocusNode.Dispose();
@@ -186,25 +186,83 @@ public sealed partial class NavigatorState : RestorationState
 
     public override Widget Build(BuildContext context)
     {
-        bool routeBlocksPop = !CanPop && CurrentRoute?.PopDisposition == RoutePopDisposition.DoNotPop;
-        ScheduleNavigationNotification(CanPop || routeBlocksPop);
         // Hides the HeroControllerScope for the widget subtree so that a nested navigator underneath
         // does not pick up the hero controller above this level.
-        return HeroControllerScope.None(new NavigatorScope(
-            this,
-            new FocusTraversalGroup(
-                policy: FocusTraversalGroup.MaybeOf(context),
-                child: new Focus(
-                    focusNode: FocusNode,
-                    autofocus: true,
-                    skipTraversal: true,
-                    includeSemantics: false,
-                    child: new UnmanagedRestorationScope(
-                        bucket: Bucket,
-                        child: new Overlay(
-                            initialEntries: Overlay is null ? AllRouteOverlayEntries() : [],
-                            clipBehavior: CurrentWidget.ClipBehavior,
-                            key: _overlayKey))))));
+        return HeroControllerScope.None(new NotificationListener<NavigationNotification>(
+            onNotification: HandleNavigationNotification,
+            child: new NavigatorScope(
+                this,
+                new FocusTraversalGroup(
+                    policy: FocusTraversalGroup.MaybeOf(context),
+                    child: new Focus(
+                        focusNode: FocusNode,
+                        autofocus: true,
+                        skipTraversal: true,
+                        includeSemantics: false,
+                        child: new UnmanagedRestorationScope(
+                            bucket: Bucket,
+                            child: new Overlay(
+                                initialEntries: Overlay is null ? AllRouteOverlayEntries() : [],
+                                clipBehavior: CurrentWidget.ClipBehavior,
+                                key: _overlayKey)))))));
+    }
+
+    /// <summary>
+    /// Dart's <c>NotificationListener&lt;NavigationNotification&gt;</c> in <c>NavigatorState.build</c>:
+    /// a notification that already reports a handled pop, or a navigator that cannot handle one, passes
+    /// through untouched; otherwise this navigator absorbs it and re-dispatches an upgraded one from its
+    /// own context, which sits above this listener.
+    /// </summary>
+    private bool HandleNavigationNotification(NavigationNotification notification)
+    {
+        // If the state of this Navigator does not change whether or not the whole framework can pop,
+        // propagate the Notification as-is.
+        if (notification.CanHandlePop || !GetNavigatorCanHandlePop())
+        {
+            return false;
+        }
+
+        // Otherwise, dispatch a new Notification with the correct canPop and stop the propagation of
+        // the old Notification.
+        new NavigationNotification(canHandlePop: true).Dispatch(Context);
+        return true;
+    }
+
+    /// <summary>Dart's <c>NavigatorState._getNavigatorCanHandlePop</c>.</summary>
+    private bool GetNavigatorCanHandlePop()
+    {
+        if (CanPop)
+        {
+            return true;
+        }
+
+        RouteEntry? lastEntry = GetRouteBefore(_history.Count - 1, RouteEntry.IsPresentPredicate);
+        return lastEntry is not null && lastEntry.Route.PopDisposition == RoutePopDisposition.DoNotPop;
+    }
+
+    /// <summary>
+    /// Dart's <c>NavigatorState._handleHistoryChanged</c>: every structural change to the route stack
+    /// dispatches a <see cref="NavigationNotification"/>, deferred to a post-frame callback unless the
+    /// post-frame callbacks are already running, so nothing is dispatched in the middle of a build.
+    /// </summary>
+    private void HandleHistoryChanged()
+    {
+        // Avoid dispatching a notification in the middle of a build.
+        if (Scheduler.Phase == SchedulerPhase.PostFrameCallbacks)
+        {
+            new NavigationNotification(GetNavigatorCanHandlePop()).Dispatch(Context);
+            return;
+        }
+
+        Scheduler.AddPostFrameCallback(_ =>
+        {
+            if (!Mounted)
+            {
+                return;
+            }
+
+            new NavigationNotification(GetNavigatorCanHandlePop()).Dispatch(Context);
+        });
     }
 
     // -------------------------------------------------------------------------------------------------
@@ -923,7 +981,7 @@ public sealed partial class NavigatorState : RestorationState
 
     private void FlushWithLock(bool rearrangeOverlay = true)
     {
-        SetState(() => FlushHistoryUpdates(rearrangeOverlay));
+        FlushHistoryUpdates(rearrangeOverlay);
     }
 
     /// <summary>Flutter's <c>NavigatorState._flushHistoryUpdates</c>.</summary>
@@ -1284,14 +1342,6 @@ public sealed partial class NavigatorState : RestorationState
         return index < _history.Count ? _history[index] : null;
     }
 
-    internal void NotifyRouteChanged()
-    {
-        if (Element.IsActive)
-        {
-            SetState(() => { });
-        }
-    }
-
     internal void FinalizeRoute(Route route)
     {
         RouteEntry? entry = _history.FirstOrDefault(candidate => ReferenceEquals(candidate.Route, route));
@@ -1529,32 +1579,6 @@ public sealed partial class NavigatorState : RestorationState
     }
 
     private bool HandleBackButton() => MaybePop();
-
-    private void ScheduleNavigationNotification(bool canHandlePop)
-    {
-        if (_lastCanHandlePop == canHandlePop)
-        {
-            return;
-        }
-
-        _lastCanHandlePop = canHandlePop;
-        if (_navigationNotificationPending)
-        {
-            return;
-        }
-
-        _navigationNotificationPending = true;
-        Scheduler.AddPostFrameCallback(_ =>
-        {
-            _navigationNotificationPending = false;
-            if (!Mounted)
-            {
-                return;
-            }
-
-            new NavigationNotification(_lastCanHandlePop ?? false).Dispatch(Context);
-        });
-    }
 
     /// <summary>Dart's `NavigatorState._updateHeroController`.</summary>
     private void UpdateHeroController(HeroController? newHeroController)

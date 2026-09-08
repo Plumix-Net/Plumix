@@ -209,55 +209,75 @@ public sealed class BuildScopeTests
     }
 
     [Fact]
-    public void BuildScope_MissedDirtyElements_ReportTheDartErrorWhenTheCheckIsArmed()
+    public void MarkNeedsBuild_DuringBuild_RejectsAnElementOutsideTheSubtreeBeingBuilt()
     {
-        bool previous = WidgetsDebug.DebugCheckMissedDirtyElements;
-        WidgetsDebug.DebugCheckMissedDirtyElements = true;
-        try
-        {
-            var owner = new BuildOwner();
-            ProbeState? outer = null;
-            ProbeState? middle = null;
-            ProbeState? deep = null;
-            var root = new TestRootElement(new Probe(
-                "outer",
-                state => outer = state,
-                child: new Probe(
-                    "middle",
-                    state => middle = state,
-                    child: new Probe("deep", state => deep = state))));
-            Mount(root, owner);
+        var owner = new BuildOwner();
+        ProbeState? middle = null;
+        ProbeState? deep = null;
+        var root = new TestRootElement(new Probe(
+            "outer",
+            _ => { },
+            child: new Probe(
+                "middle",
+                state => middle = state,
+                child: new Probe("deep", state => deep = state))));
+        Mount(root, owner);
 
-            // Dirtying a shallower element from a deeper element's build is what Dart's
-            // markNeedsBuild check forbids. The cursor has already cleaned `deep`, so the rewind
-            // stops at it and never reaches `middle` again.
-            bool once = true;
-            deep!.OnBuild = () =>
+        // Dirtying a shallower element from a deeper element's build is what Dart's markNeedsBuild
+        // check forbids: the cursor has already cleaned `deep`, so the rewind stops at it and never
+        // reaches `middle` again. Without the check this is exactly how the closing
+        // `buildScope missed some dirty elements` assert would be reached.
+        bool once = true;
+        deep!.OnBuild = () =>
+        {
+            if (once)
             {
-                if (once)
-                {
-                    once = false;
-                    middle!.Bump();
-                }
-            };
-            outer!.Bump();
-            middle!.Bump();
-            deep.Bump();
+                once = false;
+                middle!.Bump();
+            }
+        };
+        deep.Bump();
 
-            FlutterError error = Assert.Throws<FlutterError>(owner.FlushBuild);
-            Assert.Contains("buildScope missed some dirty elements.", error.Message);
-            Assert.Contains("the dirty list should have been resorted but was not", error.Message);
-        }
-        finally
-        {
-            WidgetsDebug.DebugCheckMissedDirtyElements = previous;
-        }
+        // `ComponentElement.PerformRebuild` reports a failing build rather than letting it escape.
+        FlutterError error = BuildErrors.Throws<FlutterError>(owner.FlushBuild);
+        Assert.Contains("setState() or markNeedsBuild() called during build.", error.Message);
+        Assert.Contains("the framework is already in the process of building widgets", error.Message);
+        Assert.Contains("The widget on which setState() or markNeedsBuild() was called was", error.Message);
+        Assert.Contains(
+            "The widget which was currently being built when the offending call was made was",
+            error.Message);
     }
 
     [Fact]
-    public void MissedDirtyElementsCheck_IsDisarmedByDefault()
+    public void MarkNeedsBuild_DuringBuild_AllowsADescendantOfTheElementBeingBuilt()
     {
-        Assert.False(WidgetsDebug.DebugCheckMissedDirtyElements);
+        var owner = new BuildOwner();
+        ProbeState? outer = null;
+        ProbeState? deep = null;
+        var root = new TestRootElement(new Probe(
+            "outer",
+            state => outer = state,
+            child: new Probe(
+                "middle",
+                _ => { },
+                child: new Probe("deep", state => deep = state))));
+        Mount(root, owner);
+
+        int deepBuildsBefore = deep!.Builds;
+        bool once = true;
+        outer!.OnBuild = () =>
+        {
+            if (once)
+            {
+                once = false;
+                deep!.Bump();
+            }
+        };
+        outer.Bump();
+        owner.FlushBuild();
+
+        // The dirty descendant is reached by the same build, so no error and it did rebuild.
+        Assert.True(deep!.Builds > deepBuildsBefore);
     }
 
     [Fact]

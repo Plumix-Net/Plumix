@@ -393,14 +393,21 @@ public class FormFieldState<T> : FormFieldState
     public override void DidChangeDependencies()
     {
         base.DidChangeDependencies();
-        var form = Form.MaybeOf(Context);
-        if (form?.CurrentAutovalidateMode == AutovalidateMode.Always
-            && CurrentField.Enabled
-            && !HasError
-            && !IsValid)
+        if (Form.MaybeOf(Context)?.CurrentAutovalidateMode != AutovalidateMode.Always)
         {
-            Validate();
+            return;
         }
+
+        // Dart defers to a post-frame callback: `IsValid` runs the field's validator, which is free
+        // to call `setState` on an ancestor, and this hook runs in the middle of a build.
+        Scheduler.AddPostFrameCallback(_ =>
+        {
+            // If the form is already validated, don't validate again.
+            if (Mounted && CurrentField.Enabled && !HasError && !IsValid)
+            {
+                Validate();
+            }
+        });
     }
 
     public override Widget Build(BuildContext context)

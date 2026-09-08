@@ -548,7 +548,10 @@ public sealed class MaterialDropdownTests : IDisposable
                         ThemeData.Light,
                         new Overlay(initialEntries:
                         [
-                            new OverlayEntry(_ => new Navigator(new BuilderPageRoute(_ =>
+                            // A MaterialPageRoute, as in Flutter's own test: its CanTransitionTo
+                            // rejects the popup route, so the page keeps its dismissed secondary
+                            // animation while the menu is open.
+                            new OverlayEntry(_ => new Navigator(new MaterialPageRoute(_ =>
                                 new DropdownButton<string>(
                                     items: [new DropdownMenuItem<string>(new Text("One"), value: "one")],
                                     onChanged: _ => { },

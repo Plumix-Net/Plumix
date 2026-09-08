@@ -217,7 +217,7 @@ public sealed class BuildScope
     /// <summary>Dart's closing assert in <c>_flushDirtyElements</c>.</summary>
     private void DebugAssertNoMissedElements(Element? debugBuildRoot)
     {
-        if (!Constants.KDebugMode || !WidgetsDebug.DebugCheckMissedDirtyElements)
+        if (!Constants.KDebugMode)
         {
             return;
         }

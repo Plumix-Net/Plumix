@@ -8,6 +8,13 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `NavigationNotification` is dispatched post-frame by the route history and `ModalRoute` (navigator.dart).
+- Breaking: `Element.MarkNeedsBuild` reports Dart's "setState() called during build" error (framework.dart).
+- Breaking: the "buildScope missed some dirty elements" assert is armed; `DebugCheckMissedDirtyElements` is gone.
+- Breaking: `Route.ChangedInternalState`/`ChangedExternalState` no longer rebuild the `Navigator` (navigator.dart).
+- Breaking: `WidgetsApp` reports `SystemNavigator.setFrameworkHandlesBack` once the app lifecycle is known (app.dart).
+- Breaking: `AutomaticKeepAlive` applies its `KeepAlive` out of turn instead of `SetState` (automatic_keep_alive.dart).
+- `FormField` defers its always-autovalidate pass to a post-frame callback, as Dart does (form.dart).
 - Breaking: `RootWidget`/`RootElement` land and `WidgetHost` composes them instead of a private root (binding.dart).
 - Breaking: `BuildOwner.ScheduleBuild` reports Dart's "already in the dirty list" error (framework.dart).
 - Fixed `FutureBuilder` calling `SetState` from the completing thread, which could strand a dirty element (async.dart).

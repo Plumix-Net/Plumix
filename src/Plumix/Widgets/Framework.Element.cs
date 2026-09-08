@@ -629,14 +629,36 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
         if (owner.DebugBuilding)
         {
-            // Dart also rejects a markNeedsBuild() during build when the element is not a descendant
-            // of the element currently being built (`DebugIsDescendantOf(owner.DebugCurrentBuildTarget)`).
-            // That branch is not armed yet: `ModalRoute.HandlePopEntryChanged` re-enters `SetState` on
-            // the `Navigator`/`ModalScope` above the element being built, where Dart dispatches a
-            // `NavigationNotification` from a post-frame callback instead. See docs/ai/BACKLOG.md.
-            // Returning here keeps the state-lock branch below from firing for every legal setState
-            // during a build, since a build scope locks the tree.
-            return;
+            // A foreign thread reaching this while the framework thread builds is the threading
+            // divergence, not a `setState() during build` mistake; see docs/ai/DIVERGENCES.md.
+            if (!owner.DebugBuildingOnThisThread
+                || owner.DebugCurrentBuildTarget is not { } buildTarget)
+            {
+                return;
+            }
+
+            // A dirty descendant of the element being built is always reached again by this build, so
+            // dirtying it is legal; anything else would be skipped for the rest of this build phase.
+            if (DebugIsDescendantOf(buildTarget))
+            {
+                return;
+            }
+
+            List<DiagnosticsNode> information =
+            [
+                new ErrorSummary("setState() or markNeedsBuild() called during build."),
+                new ErrorDescription(
+                    $"This {Diagnostics.DescribeType(Widget.GetType())} widget cannot be marked as needing to "
+                    + "build because the framework is already in the process of building widgets. A widget "
+                    + "can be marked as needing to be built during the build phase only if one of its "
+                    + "ancestors is currently building. This exception is allowed because the framework "
+                    + "builds parent widgets before children, which means a dirty descendant will always be "
+                    + "built. Otherwise, the framework might not visit this widget during this build phase."),
+                DescribeElement("The widget on which setState() or markNeedsBuild() was called was"),
+                buildTarget.DescribeWidget(
+                    "The widget which was currently being built when the offending call was made was"),
+            ];
+            throw new FlutterError(information);
         }
 
         if (owner.DebugStateLocked)

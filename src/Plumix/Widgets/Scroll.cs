@@ -275,17 +275,29 @@ public sealed class AutomaticKeepAlive : StatefulWidget
     private sealed class AutomaticKeepAliveState : State
     {
         private readonly Dictionary<KeepAliveHandle, Action> _releaseCallbacks = [];
+
+        // In order to apply parent data out of turn, the child of the KeepAlive widget must be the
+        // same across frames.
+        private Widget _child = null!;
         private bool _keepingAlive;
 
         private AutomaticKeepAlive CurrentWidget => (AutomaticKeepAlive)Element.Widget;
 
+        public override void InitState()
+        {
+            base.InitState();
+            UpdateChild();
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            base.DidUpdateWidget(oldWidget);
+            UpdateChild();
+        }
+
         public override Widget Build(BuildContext context)
         {
-            return new NotificationListener<KeepAliveNotification>(
-                onNotification: HandleKeepAliveNotification,
-                child: new KeepAlive(
-                    keepAlive: _keepingAlive,
-                    child: CurrentWidget.Child));
+            return new KeepAlive(keepAlive: _keepingAlive, child: _child);
         }
 
         public override void Dispose()
@@ -300,6 +312,13 @@ public sealed class AutomaticKeepAlive : StatefulWidget
             base.Dispose();
         }
 
+        private void UpdateChild()
+        {
+            _child = new NotificationListener<KeepAliveNotification>(
+                onNotification: HandleKeepAliveNotification,
+                child: CurrentWidget.Child);
+        }
+
         private bool HandleKeepAliveNotification(KeepAliveNotification notification)
         {
             var handle = notification.Handle;
@@ -312,10 +331,48 @@ public sealed class AutomaticKeepAlive : StatefulWidget
 
             if (!_keepingAlive)
             {
-                SetState(() => _keepingAlive = true);
+                // Dart's `_addClient`: the keep-alive flag is applied to the child `KeepAlive`
+                // element out of turn rather than through `setState`, because this runs from a
+                // notification dispatched while the subtree below is building.
+                _keepingAlive = true;
+                if (GetChildElement() is { } childElement)
+                {
+                    // If the child already exists, update it synchronously.
+                    UpdateParentDataOfChild(childElement);
+                }
+                else
+                {
+                    // If the child doesn't exist yet, we got called during the very first build of
+                    // this subtree. Wait until the end of the frame to update the child when the
+                    // child is guaranteed to be present.
+                    Scheduler.AddPostFrameCallback(_ =>
+                    {
+                        if (!Mounted || GetChildElement() is not { } lateChildElement)
+                        {
+                            return;
+                        }
+
+                        UpdateParentDataOfChild(lateChildElement);
+                    });
+                }
             }
 
-            return true;
+            return false;
+        }
+
+        /// <summary>Dart's <c>_AutomaticKeepAliveState._getChildElement</c>.</summary>
+        private ParentDataElement<IKeepAliveParentData>? GetChildElement()
+        {
+            // Dart uses `Element.visitChildren` rather than `context.visitChildElements`, because
+            // this may run during build; the only child is always the `KeepAlive` this state built.
+            Element? childElement = null;
+            Element.VisitChildren(child => childElement = child);
+            return childElement as ParentDataElement<IKeepAliveParentData>;
+        }
+
+        private void UpdateParentDataOfChild(ParentDataElement<IKeepAliveParentData> childElement)
+        {
+            childElement.ApplyWidgetOutOfTurn((KeepAlive)Build(Context));
         }
 
         private void HandleReleased(KeepAliveHandle handle)
@@ -326,10 +383,29 @@ public sealed class AutomaticKeepAlive : StatefulWidget
             }
 
             handle.RemoveListener(callback);
-            if (_releaseCallbacks.Count == 0 && _keepingAlive)
+            if (_releaseCallbacks.Count > 0 || !_keepingAlive)
             {
-                SetState(() => _keepingAlive = false);
+                return;
             }
+
+            if (Scheduler.Phase < SchedulerPhase.PersistentCallbacks)
+            {
+                // Build/layout haven't started yet so let's just schedule this for the next frame.
+                SetState(() => _keepingAlive = false);
+                return;
+            }
+
+            // We were probably notified by a descendant when it was yanked out of our subtree. We
+            // are in the middle of build or layout, so the only way to clean this up is to schedule
+            // another build for it.
+            _keepingAlive = false;
+            Scheduler.ScheduleMicrotask(() =>
+            {
+                if (Mounted && _releaseCallbacks.Count == 0)
+                {
+                    SetState(static () => { });
+                }
+            });
         }
     }
 }

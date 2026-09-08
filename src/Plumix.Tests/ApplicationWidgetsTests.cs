@@ -526,6 +526,60 @@ public sealed class ApplicationWidgetsTests : IDisposable
         root.Unmount();
     }
 
+    [Fact]
+    public void WidgetsApp_TellsThePlatformWhoHandlesBack_OnlyOnceTheAppIsReady()
+    {
+        PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
+        using var platform = new MockMethodCallHandler(SystemChannels.Platform);
+        try
+        {
+            var owner = new BuildOwner();
+            NavigatorState? navigator = null;
+            var root = new TestRootElement(new WidgetsApp(
+                color: Colors.Blue,
+                debugShowCheckedModeBanner: false,
+                pageRouteBuilder: (settings, builder) => new BuilderPageRoute(
+                    context => builder(context),
+                    settings),
+                home: new Builder(context =>
+                {
+                    navigator = Navigator.Of(context);
+                    return new SizedBox();
+                })));
+            // The binding's lifecycle state is process-global, so pin it before the app reads it.
+            WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Detached);
+            MountAndFlush(root, owner);
+            PumpNotifications(owner);
+
+            // Dart's `_defaultOnNavigationNotification` absorbs the notification without reaching the
+            // engine while the lifecycle state is unknown or detached.
+            Assert.DoesNotContain("SystemNavigator.setFrameworkHandlesBack", platform.Methods);
+
+            WidgetsBinding.Instance.HandleAppLifecycleStateChanged(AppLifecycleState.Resumed);
+            navigator!.Push(new BuilderPageRoute(_ => new SizedBox(), new RouteSettings(Name: "second")));
+            PumpNotifications(owner);
+
+            MethodCall call = Assert.Single(
+                platform.Log.Where(entry => entry.Method == "SystemNavigator.setFrameworkHandlesBack"));
+            Assert.Equal(true, call.Arguments);
+            root.Unmount();
+        }
+        finally
+        {
+            PlatformDefaults.DebugTargetPlatformOverride = null;
+        }
+    }
+
+    private static void PumpNotifications(BuildOwner owner)
+    {
+        for (int index = 0; index < 3; index++)
+        {
+            owner.FlushBuild();
+            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(Scheduler.CurrentSeconds + 0.01));
+            owner.FlushBuild();
+        }
+    }
+
     private static void MountAndFlush(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);

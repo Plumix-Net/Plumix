@@ -532,6 +532,7 @@ public sealed class WidgetsApp : StatefulWidget
 
         private PlatformRouteInformationProvider? _defaultRouteInformationProvider;
         private RootBackButtonDispatcher? _defaultBackButtonDispatcher;
+        private AppLifecycleState? _appLifecycleState;
 
         private WidgetsApp CurrentWidget => (WidgetsApp)StateWidget;
 
@@ -553,6 +554,7 @@ public sealed class WidgetsApp : StatefulWidget
         public override void InitState()
         {
             base.InitState();
+            _appLifecycleState = WidgetsBinding.Instance.LifecycleState;
             WidgetsBinding.Instance.AddObserver(this);
             UpdateRouting();
         }
@@ -818,7 +820,27 @@ public sealed class WidgetsApp : StatefulWidget
                 : KeyEventResult.Ignored;
         }
 
-        private static bool DefaultNavigationNotification(NavigationNotification notification) => true;
+        public void DidChangeAppLifecycleState(AppLifecycleState state)
+        {
+            _appLifecycleState = state;
+        }
+
+        /// <summary>
+        /// Dart's <c>_WidgetsAppState._defaultOnNavigationNotification</c>: the terminal consumer of
+        /// a <see cref="NavigationNotification"/>, which tells the platform whether the framework
+        /// will handle the next back gesture. It always absorbs the notification.
+        /// </summary>
+        private bool DefaultNavigationNotification(NavigationNotification notification)
+        {
+            if (_appLifecycleState is null or AppLifecycleState.Detached)
+            {
+                // Avoid updating the engine when the app isn't ready.
+                return true;
+            }
+
+            _ = SystemNavigator.SetFrameworkHandlesBack(notification.CanHandlePop);
+            return true;
+        }
 
         private static Color Opaque(Color color)
         {
