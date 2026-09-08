@@ -1426,7 +1426,7 @@ public sealed class HeroNavigatorTests
             // a Navigator picks up through HeroControllerScope.
             HeroController = heroController ?? new HeroController();
             rootWidget = new HeroControllerScope(controller: HeroController, child: rootWidget);
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
 

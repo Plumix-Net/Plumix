@@ -2,6 +2,7 @@ using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/test/rendering/pipeline_owner_tree_test.dart
 
@@ -123,11 +124,13 @@ public sealed class PipelineOwnerTreeTests
         var manifold = new HostPipelineManifold();
         var log = new List<string>();
 
-        var rootView = new RenderView { Child = new LoggingRenderBox(() => log.Add("paint parent")) };
+        var rootView = new RenderView(
+            new FlutterView(new Size(800, 600))) { Child = new LoggingRenderBox(() => log.Add("paint parent")) };
         var root = new PipelineOwner(rootView);
         root.Attach(rootView);
 
-        var childView = new RenderView { Child = new LoggingRenderBox(() => log.Add("paint child")) };
+        var childView = new RenderView(
+            new FlutterView(new Size(800, 600))) { Child = new LoggingRenderBox(() => log.Add("paint child")) };
         var child = new PipelineOwner(childView);
         child.Attach(childView);
 

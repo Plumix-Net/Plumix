@@ -25,7 +25,7 @@ public delegate void PipelineOwnerVisitor(PipelineOwner child);
 /// attached to a <see cref="PipelineManifold"/>, which tells it whether semantics are being produced
 /// and how to ask for a frame.
 /// </remarks>
-public sealed class PipelineOwner : DiagnosticableTree
+public class PipelineOwner : DiagnosticableTree
 {
     /// <summary>Creates a pipeline owner that is not yet driving any render tree.</summary>
     /// <remarks>Flutter's <c>PipelineOwner</c> constructor.</remarks>
@@ -42,25 +42,30 @@ public sealed class PipelineOwner : DiagnosticableTree
     }
 
     /// <summary>
-    /// Creates the single-view pipeline a Plumix host drives, rooted at <paramref name="root"/> and
-    /// producing semantics unconditionally.
+    /// Creates the single-view pipeline a Plumix host drives for <paramref name="root"/>, producing
+    /// semantics unconditionally.
     /// </summary>
     /// <remarks>
     /// Plumix-only convenience constructor. Flutter builds the same thing out of a
     /// <c>PipelineOwner</c>, a <c>RenderView</c> and a <c>PipelineManifold</c> fed by
     /// <c>SemanticsBinding.semanticsEnabled</c>; no Plumix host reports platform accessibility state
     /// yet (see <c>docs/ai/BACKLOG.md</c>), so this constructor takes a <see cref="SemanticsHandle"/>
-    /// it never closes and semantics stay on for the lifetime of the owner.
+    /// it never closes and semantics stay on for the lifetime of the owner. The view is not attached
+    /// here: a host's <c>View</c> widget (or <see cref="Attach(RenderObject)"/> for a render-only
+    /// tree) sets <see cref="RootNode"/> later, exactly as Flutter's deprecated binding-owned
+    /// <c>renderView</c> is only attached once the implicit <c>View</c> mounts. The view is given a
+    /// configuration from its <see cref="FlutterView"/> if it has none yet, so
+    /// <see cref="RenderView.PrepareInitialFrame"/> can run without a <c>RendererBinding</c>.
     /// </remarks>
     public PipelineOwner(RenderView root)
         : this(onSemanticsUpdate: static _ => { })
     {
         ArgumentNullException.ThrowIfNull(root);
+        if (!root.HasConfiguration)
+        {
+            root.Configuration = ViewConfiguration.FromView(root.FlutterView);
+        }
 
-        // Deliberately not through the `RootNode` setter: Plumix hosts and tests attach the root in a
-        // second step (`Attach(RenderObject)`), and `RenderObject.Attach` rejects a second attach.
-        _rootNode = root;
-        root.ScheduleInitialPaint(_rootLayer);
         ViewSemanticsHandle = EnsureSemantics();
     }
 
@@ -69,10 +74,11 @@ public sealed class PipelineOwner : DiagnosticableTree
 
     /// <summary>The <see cref="RenderView"/> this owner drives.</summary>
     /// <remarks>
-    /// Plumix-only shorthand for <see cref="RootNode"/> on an owner built with the single-view
-    /// constructor. Flutter reaches the same object through <c>pipelineOwner.rootNode as RenderView</c>.
+    /// Plumix-only shorthand for <see cref="RootNode"/> on an owner that manages a view. Flutter
+    /// reaches the same object through <c>pipelineOwner.rootNode as RenderView</c>.
     /// </remarks>
-    public RenderView Root => (RenderView)_rootNode!;
+    public RenderView Root => _rootNode as RenderView
+        ?? throw new InvalidOperationException("This PipelineOwner is not managing a RenderView.");
 
     /// <summary>Called when a render object of this pipeline wants to update its appearance.</summary>
     /// <remarks>
@@ -115,7 +121,7 @@ public sealed class PipelineOwner : DiagnosticableTree
 
     /// <summary>The unique object managed by this pipeline that has no parent.</summary>
     /// <remarks>Flutter's <c>PipelineOwner.rootNode</c>.</remarks>
-    public RenderObject? RootNode
+    public virtual RenderObject? RootNode
     {
         get => _rootNode;
         set
@@ -131,7 +137,17 @@ public sealed class PipelineOwner : DiagnosticableTree
         }
     }
 
-    internal OffsetLayer RootLayer => _rootLayer;
+    /// <summary>
+    /// The layer <see cref="CompositeFrame"/> draws. Flutter composites <c>RenderView.layer</c>
+    /// directly; Plumix's owner keeps a handle to the same layer because the host hands it an
+    /// Avalonia drawing context rather than a scene builder. <see cref="RenderView"/> keeps it in
+    /// step from <c>ScheduleInitialPaint</c> and <c>ReplaceRootLayer</c>.
+    /// </summary>
+    internal OffsetLayer RootLayer
+    {
+        get => _rootLayer;
+        set => _rootLayer = value;
+    }
 
     private bool _needsLayout;
     private bool _needsCompositingBitsUpdate;
@@ -210,16 +226,30 @@ public sealed class PipelineOwner : DiagnosticableTree
         }
     }
 
+    /// <summary>
+    /// Makes <paramref name="obj"/> the <see cref="RootNode"/> of this owner and, for a
+    /// <see cref="RenderView"/>, prepares its initial frame.
+    /// </summary>
+    /// <remarks>
+    /// Plumix-only. Flutter's <c>_RawViewElement.mount</c> does the same two steps
+    /// (<c>rootNode = renderObject</c>, <c>renderObject.prepareInitialFrame()</c>) for a view that
+    /// a <c>View</c> widget publishes; hosts and tests that drive a bare render tree use this.
+    /// </remarks>
     public void Attach(RenderObject obj)
     {
-        obj.Attach(this);
-
-        if (ReferenceEquals(obj, _rootNode) && obj is RenderView { HasRelayoutBoundaryState: false } view)
+        ArgumentNullException.ThrowIfNull(obj);
+        if (!ReferenceEquals(_rootNode, obj))
         {
-            // Dart's `RenderView.prepareInitialFrame` runs `scheduleInitialLayout` right after the
-            // root is attached; without it the root never enters the owner's dirty list, because
-            // `RenderObject.attach` deliberately skips a node that has never been laid out.
-            view.ScheduleInitialLayout();
+            RootNode = obj;
+        }
+        else if (!obj.Attached)
+        {
+            obj.Attach(this);
+        }
+
+        if (obj is RenderView { HasRelayoutBoundaryState: false } view)
+        {
+            view.PrepareInitialFrame();
         }
     }
 
@@ -459,8 +489,7 @@ public sealed class PipelineOwner : DiagnosticableTree
             // whenever the platform view's metrics change; Plumix hosts hand the size to the frame
             // instead, so the owner keeps the configuration in step here.
             BoxConstraints logicalConstraints = new BoxConstraints(0, viewSize.Width, 0, viewSize.Height);
-            double devicePixelRatio = configuredView.FlutterView?.DevicePixelRatio
-                ?? (configuredView.HasConfiguration ? configuredView.Configuration.DevicePixelRatio : 1.0);
+            double devicePixelRatio = configuredView.FlutterView.DevicePixelRatio;
             configuredView.Configuration = new ViewConfiguration(
                 physicalConstraints: logicalConstraints * devicePixelRatio,
                 logicalConstraints: logicalConstraints,
@@ -478,7 +507,9 @@ public sealed class PipelineOwner : DiagnosticableTree
             _debugDoingChildLayout = true;
             foreach (PipelineOwner child in _children.ToArray())
             {
-                child.FlushLayoutCore(rootSize);
+                // A child owner's view is configured from its own `FlutterView`, never from the
+                // size the host handed this owner.
+                child.FlushLayoutCore(null);
             }
 
             Debug.Assert(
@@ -495,11 +526,13 @@ public sealed class PipelineOwner : DiagnosticableTree
 
     private void FlushLayoutNodes(Size? rootSize)
     {
-        BoxConstraints? constraints = rootSize is null
-            ? null
-            : _rootNode is RenderView { HasConfiguration: true } configuredRootView
-                ? configuredRootView.Configuration.LogicalConstraints
-                : new BoxConstraints(0, rootSize.Value.Width, 0, rootSize.Value.Height);
+        // Dart's `RenderView.constraints` is its `configuration.logicalConstraints`, so a configured
+        // view lays out from its configuration whether or not the host handed the frame a size.
+        BoxConstraints? constraints = _rootNode is RenderView { HasConfiguration: true } configuredRootView
+            ? configuredRootView.Configuration.LogicalConstraints
+            : rootSize is { } size
+                ? new BoxConstraints(0, size.Width, 0, size.Height)
+                : null;
         _shouldMergeDirtyNodes = false;
 
         while (_nodesNeedingLayout.Count > 0)
@@ -662,6 +695,11 @@ public sealed class PipelineOwner : DiagnosticableTree
     public void UpdateSystemUiOverlayStyle(Size viewportSize)
     {
         if (viewportSize.Width <= 0.0 || viewportSize.Height <= 0.0)
+        {
+            return;
+        }
+
+        if (_rootNode is RenderView { AutomaticSystemUiAdjustment: false })
         {
             return;
         }

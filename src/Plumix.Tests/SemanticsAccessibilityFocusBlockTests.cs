@@ -2,6 +2,7 @@ using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity sources (accessibility focus blocking regression tests):
 // flutter/packages/flutter/lib/src/semantics/semantics.dart
@@ -139,7 +140,7 @@ public sealed class SemanticsAccessibilityFocusBlockTests
             new SemanticsProperties(label: "updated parent"),
             container: true,
             child: child);
-        var renderView = new RenderView { Child = parent };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = parent };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(320, 120));
@@ -262,7 +263,7 @@ public sealed class SemanticsAccessibilityFocusBlockTests
 
     private static SemanticsNode BuildRoot(RenderBox child)
     {
-        var renderView = new RenderView { Child = child };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = child };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(320, 120));

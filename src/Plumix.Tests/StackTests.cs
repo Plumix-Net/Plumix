@@ -18,7 +18,7 @@ public sealed class StackTests
         var constrained = new RenderConstrainedBox(
             additionalConstraints: BoxConstraints.TightFor(width: 100, height: 80),
             child: stack);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = constrained
         };
@@ -41,7 +41,7 @@ public sealed class StackTests
         var parentData = (StackParentData)child.parentData!;
         parentData.Left = 5;
         parentData.Top = 7;
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = stack
         };
@@ -63,7 +63,7 @@ public sealed class StackTests
         var parentData = (StackParentData)child.parentData!;
         parentData.Right = 6;
         parentData.Bottom = 4;
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = stack
         };

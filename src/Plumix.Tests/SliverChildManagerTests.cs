@@ -248,7 +248,7 @@ public sealed class SliverChildManagerTests
         var viewport = new RenderViewport(offset: viewportOffset, scrollCacheExtent: ScrollCacheExtent.Pixels(0));
         viewport.Insert(sliver);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 400));
@@ -282,7 +282,7 @@ public sealed class SliverChildManagerTests
                 offset: new TestViewportOffset(),
                 scrollCacheExtent: ScrollCacheExtent.Pixels(0));
             viewport.Insert(sliver);
-            var root = new RenderView { Child = viewport };
+            var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
             var pipeline = new PipelineOwner(root);
             pipeline.Attach(root);
             pipeline.FlushLayout(new Size(100, 400));
@@ -688,7 +688,7 @@ public sealed class SliverChildManagerTests
             offset: new TestViewportOffset(),
             scrollCacheExtent: ScrollCacheExtent.Pixels(0));
         viewport.Insert(sliver);
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 300));
@@ -728,7 +728,7 @@ public sealed class SliverChildManagerTests
             offset: new TestViewportOffset(),
             scrollCacheExtent: ScrollCacheExtent.Pixels(0));
         viewport.Insert(sliver);
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 300));
@@ -854,7 +854,7 @@ public sealed class SliverChildManagerTests
 
         public WidgetRenderHarness(Widget rootWidget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
 

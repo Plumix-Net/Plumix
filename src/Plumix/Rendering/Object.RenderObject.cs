@@ -999,7 +999,7 @@ public abstract partial class RenderObject : DiagnosticableTree, IRenderObject, 
 
     /// <summary>Schedules the initial semantics pass for the root render object.</summary>
     /// <remarks>Flutter's <c>RenderObject.scheduleInitialSemantics</c>.</remarks>
-    public void ScheduleInitialSemantics()
+    public virtual void ScheduleInitialSemantics()
     {
         EnsureNotDisposedMutation();
         Debug.Assert(Attached);

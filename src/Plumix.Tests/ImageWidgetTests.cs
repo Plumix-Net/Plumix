@@ -279,7 +279,7 @@ public sealed class ImageWidgetTests : IDisposable
             matchTextDirection: true,
             textDirection: Plumix.UI.TextDirection.Rtl,
             fit: BoxFit.Contain);
-        var renderView = new RenderView { Child = renderImage };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = renderImage };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(40, 20));
@@ -510,7 +510,7 @@ public sealed class ImageWidgetTests : IDisposable
 
         public WidgetRenderHarness(Widget widget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             Pipeline = new PipelineOwner(RenderView);
             Pipeline.Attach(RenderView);
             _root = new HarnessRootElement(RenderView, widget);

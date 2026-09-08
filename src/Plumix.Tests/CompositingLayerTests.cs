@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
 using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/layer.dart (parity regression tests)
 
@@ -13,7 +14,7 @@ public sealed class CompositingLayerTests
     [Fact]
     public void RenderView_UsesPipelineRootLayer_AsItsCompositedLayer()
     {
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = new TestLeafRenderBox()
         };
@@ -32,7 +33,7 @@ public sealed class CompositingLayerTests
     public void ReplaceRootLayer_RepaintsTreeIntoNewRootLayer()
     {
         var leaf = new TestLeafRenderBox();
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = leaf
         };
@@ -57,7 +58,7 @@ public sealed class CompositingLayerTests
     public void ReplaceRootLayer_WithSameLayer_DoesNotRepaintTree()
     {
         var leaf = new TestLeafRenderBox();
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = leaf
         };
@@ -84,7 +85,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var boundary = new TestRepaintBoundaryRenderBox(leaf);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = boundary
         };
@@ -111,7 +112,7 @@ public sealed class CompositingLayerTests
         var leaf = new TestLeafRenderBox();
         var boundary = new TestRepaintBoundaryRenderBox(leaf);
         var parent = new TestParentPainterRenderBox(boundary);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = parent
         };
@@ -142,7 +143,7 @@ public sealed class CompositingLayerTests
         var leaf = new TestLeafRenderBox();
         var boundary = new TestRepaintBoundaryRenderBox(leaf);
         var parent = new TestParentPainterRenderBox(boundary);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = parent
         };
@@ -172,7 +173,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var boundary = new TestLayerUpdatingBoundaryRenderBox(leaf);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = boundary
         };
@@ -202,7 +203,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var boundary = new TestLayerUpdatingBoundaryRenderBox(leaf);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = boundary
         };
@@ -232,7 +233,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var opacity = new RenderOpacity(opacity: 0.9, child: leaf);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = opacity
         };
@@ -262,7 +263,7 @@ public sealed class CompositingLayerTests
     public void RenderOpacity_CompositingTracksVisibilityWithoutAnotherLayout()
     {
         var opacity = new RenderOpacity(opacity: 1.0, child: new TestLeafRenderBox());
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = opacity
         };
@@ -291,7 +292,7 @@ public sealed class CompositingLayerTests
     public void InitialAttach_InitializesAlwaysNeedsCompositingWithoutLayoutInvalidation()
     {
         var child = new AlwaysCompositingRenderBox();
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = child
         };
@@ -320,7 +321,7 @@ public sealed class CompositingLayerTests
             alignment: null,
             child: leaf,
             filterQuality: FilterQuality.Low);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
         };
@@ -359,7 +360,7 @@ public sealed class CompositingLayerTests
             Matrix4.RotationZ(Math.PI / 2.0),
             alignment: Alignment.Center,
             child: leaf);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
         };
@@ -385,7 +386,7 @@ public sealed class CompositingLayerTests
         var leaf = new CompositingLeafRenderBox();
         var clipper = new FixedRectClipper(new Rect(0, 0, 32, 32));
         var clipRect = new RenderClipRect(leaf, clipper: clipper);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = clipRect
         };
@@ -416,7 +417,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var coloredBox = new RenderColoredBox(Colors.CadetBlue, child: leaf);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = coloredBox
         };
@@ -442,7 +443,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var boundary = new TestRepaintBoundaryRenderBox(leaf);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = boundary
         };
@@ -482,7 +483,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var toggle = new ToggleBoundaryRenderBox(initialBoundary: true, child: leaf);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = toggle
         };
@@ -513,7 +514,7 @@ public sealed class CompositingLayerTests
     {
         var leaf = new TestLeafRenderBox();
         var toggle = new ToggleBoundaryRenderBox(initialBoundary: false, child: leaf);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = toggle
         };

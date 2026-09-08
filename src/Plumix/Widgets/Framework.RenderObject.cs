@@ -227,37 +227,56 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
 
         base.UpdateSlot(newSlot);
         (_ancestorRenderObjectHost, _ancestorRenderObjectHostElement) = FindAncestorRenderObjectHost();
-        if (_ancestorRenderObjectHost == null)
+        if (_ancestorRenderObjectHost == null && Constants.KDebugMode)
         {
-            throw new FlutterError(
-            [
-                new ErrorSummary(
-                    $"The render object for {ToStringShort()} cannot find ancestor render object "
-                    + "to attach to."),
-                new ErrorDescription(
-                    "The ownership chain for the RenderObject in question was:\n  "
-                    + DebugGetCreatorChain(10)),
-                new ErrorHint(
-                    "Try wrapping your widget in a View widget or any other widget that is backed "
-                    + "by a RenderTreeRootElement to serve as the root of the render tree."),
-            ]);
+            // Dart reports this from an assert and carries on with no ancestor: the render object
+            // simply never joins a tree.
+            FlutterError.ReportError(new FlutterErrorDetails(
+                new FlutterError(
+                [
+                    new ErrorSummary(
+                        $"The render object for {ToStringShort()} cannot find ancestor render object "
+                        + "to attach to."),
+                    new ErrorDescription(
+                        "The ownership chain for the RenderObject in question was:\n  "
+                        + DebugGetCreatorChain(10)),
+                    new ErrorHint(
+                        "Try wrapping your widget in a View widget or any other widget that is backed "
+                        + "by a RenderTreeRootElement to serve as the root of the render tree."),
+                ]),
+                library: "widgets library"));
         }
 
-        _ancestorRenderObjectHost.InsertRenderObjectChild(RequireRenderObject(), newSlot);
+        _ancestorRenderObjectHost?.InsertRenderObjectChild(RequireRenderObject(), newSlot);
         ApplyParentDataFromAncestors();
     }
 
-    private (IRenderObjectHost? host, Element? hostElement) FindAncestorRenderObjectHost()
+    /// <summary>
+    /// Dart's <c>RenderObjectElement._findAncestorRenderObjectElement</c>: the nearest ancestor
+    /// that hosts render objects, unless an ancestor on the way says (through
+    /// <see cref="Element.DebugExpectsRenderObjectForSlot"/>) that the render object occupying this
+    /// element's slot is not expected to attach to it — a <see cref="RootElement"/>, or the view
+    /// slots of a <see cref="ViewAnchor"/>/<see cref="ViewCollection"/>.
+    /// </summary>
+    internal (IRenderObjectHost? host, Element? hostElement) FindAncestorRenderObjectHost()
     {
-        for (var ancestor = Parent; ancestor != null; ancestor = ancestor.Parent)
+        Element? ancestor = Parent;
+        while (ancestor != null && ancestor is not IRenderObjectHost)
         {
-            if (ancestor is IRenderObjectHost host)
+            if (Constants.KDebugMode && !ancestor.DebugExpectsRenderObjectForSlot(Slot))
             {
-                return (host, ancestor);
+                ancestor = null;
             }
+
+            ancestor = ancestor?.Parent;
         }
 
-        return (null, null);
+        if (Constants.KDebugMode && ancestor?.DebugExpectsRenderObjectForSlot(Slot) == false)
+        {
+            ancestor = null;
+        }
+
+        return ancestor is IRenderObjectHost host ? (host, ancestor) : (null, null);
     }
 
     /// <summary>

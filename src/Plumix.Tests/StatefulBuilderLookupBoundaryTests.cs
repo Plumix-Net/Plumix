@@ -171,68 +171,6 @@ public sealed class StatefulBuilderLookupBoundaryTests
         Assert.Equal(0, visits);
     }
 
-    [Fact]
-    public void View_OfAndMaybeOfReturnTheExactVisibleView()
-    {
-        var view = new FlutterView(new Size(800, 600), devicePixelRatio: 2.0, viewId: 7);
-        FlutterView? required = null;
-        FlutterView? optional = null;
-        using var harness = new WidgetHarness(
-            new View(
-                view,
-                new Builder(context =>
-                {
-                    required = View.Of(context);
-                    optional = View.MaybeOf(context);
-                    return new SizedBox(width: 1, height: 1);
-                })));
-
-        Assert.Same(view, required);
-        Assert.Same(view, optional);
-    }
-
-    [Fact]
-    public void View_LookupBoundaryHidesTheOuterView()
-    {
-        FlutterView? optional = null;
-        InvalidOperationException? error = null;
-        using var harness = new WidgetHarness(
-            new View(
-                new FlutterView(new Size(800, 600)),
-                new LookupBoundary(
-                    child: new Builder(context =>
-                    {
-                        optional = View.MaybeOf(context);
-                        error = Assert.Throws<InvalidOperationException>(() => View.Of(context));
-                        return new SizedBox(width: 1, height: 1);
-                    }))));
-
-        Assert.Null(optional);
-        Assert.Contains("hidden by a LookupBoundary", error!.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void View_NotifiesDependentsOnlyWhenTheViewIdentityChanges()
-    {
-        int builds = 0;
-        var first = new FlutterView(new Size(800, 600));
-        var second = new FlutterView(new Size(1024, 768));
-        var probe = new Builder(context =>
-        {
-            _ = View.Of(context);
-            builds += 1;
-            return new SizedBox(width: 1, height: 1);
-        });
-        using var harness = new WidgetHarness(new View(first, probe));
-
-        first.UpdateMetrics(new Size(900, 700), devicePixelRatio: 1.0, viewId: 0);
-        harness.Update(new View(first, probe));
-        Assert.Equal(1, builds);
-
-        harness.Update(new View(second, probe));
-        Assert.Equal(2, builds);
-    }
-
     private sealed class IntScope : InheritedWidget
     {
         public IntScope(int value, Widget child) : base(child)
@@ -377,7 +315,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
 
         public WidgetHarness(Widget widget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
             _root = new RootElement(RenderView, widget);

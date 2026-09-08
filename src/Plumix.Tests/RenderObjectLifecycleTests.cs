@@ -2,6 +2,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
+using Avalonia;
 
 // Dart parity sources:
 // - flutter/packages/flutter/lib/src/rendering/object.dart
@@ -35,7 +36,7 @@ public sealed class RenderObjectLifecycleTests
     public void RenderObject_Detach_RetainsItsLayer()
     {
         var renderObject = new TestRenderBox();
-        var root = new RenderView();
+        var root = new RenderView(new FlutterView(new Size(800, 600)));
         var owner = new PipelineOwner(root);
         var layer = new OffsetLayer();
         renderObject._layer = layer;
@@ -276,7 +277,7 @@ public sealed class RenderObjectLifecycleTests
     private sealed class TestRootElement : Element, IRenderObjectHost
     {
         private Element? _child;
-        private readonly RenderView _renderView = new();
+        private readonly RenderView _renderView = new(new FlutterView(new Size(800, 600)));
 
         public TestRootElement(Widget childWidget) : base(childWidget)
         {

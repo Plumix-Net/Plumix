@@ -15,7 +15,7 @@ internal sealed class FocusLayoutHarness : IDisposable
 
     public FocusLayoutHarness(Widget widget)
     {
-        RenderView = new RenderView();
+        RenderView = new RenderView(new FlutterView(new Size(800, 600)));
         _pipeline = new PipelineOwner(RenderView);
         _pipeline.Attach(RenderView);
         _rootElement = new HarnessRootElement(RenderView, widget);

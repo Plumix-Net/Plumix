@@ -28,7 +28,13 @@ public class PlumixHost : Control
         });
     }
 
-    private readonly RenderView _root = new();
+    private static int s_nextViewId = -1;
+
+    // Dart's engine numbers its views and hands the implicit one id 0; every Plumix host is a view of
+    // its own, so ids are taken from a process-wide counter (the `RendererBinding` registry is keyed
+    // by them).
+    private readonly FlutterView _view = new(new Size(0, 0), 1.0, Interlocked.Increment(ref s_nextViewId));
+    private readonly ReusableRenderView _root;
     private readonly PipelineOwner _pipeline;
     private readonly GestureBinding _gestureBinding = GestureBinding.Instance;
     private readonly PlumixTextInputMethodClient _textInputClient;
@@ -85,10 +91,16 @@ public class PlumixHost : Control
 
     public PlumixHost()
     {
+        // Dart's deprecated `RendererBinding.pipelineOwner`/`renderView` pair, per host: the view is
+        // attached when the implicit `View` widget mounts (or by `SetRootChild` for a render-only
+        // tree), and the semantics feed goes through the `FlutterView` like `RenderView.updateSemantics`.
+        _root = new ReusableRenderView(_view);
         _pipeline = new PipelineOwner(_root);
         _pipeline.OnNeedVisualUpdate = ScheduleVisualUpdate;
-        _pipeline.OnSemanticsUpdate = update => SemanticsUpdateProduced?.Invoke(update);
-        _pipeline.Attach(_root);
+        _pipeline.OnSemanticsOwnerCreated = () => (_pipeline.RootNode as RenderView)?.ScheduleInitialSemantics();
+        _pipeline.OnSemanticsOwnerDisposed = () => (_pipeline.RootNode as RenderView)?.ClearSemantics();
+        _pipeline.OnSemanticsUpdate = _view.UpdateSemantics;
+        _view.SemanticsUpdated += update => SemanticsUpdateProduced?.Invoke(update);
         _textInputClient = new PlumixTextInputMethodClient(this);
         _ownerThread = Thread.CurrentThread;
         _panZoom = new TrackpadPanZoomSynthesizer(DispatchPointerEvent);
@@ -105,19 +117,34 @@ public class PlumixHost : Control
     internal RenderBox? RootChild => _root.Child;
 
     /// <summary>
-    /// The platform view the root render view renders into. Flutter's <c>RenderView</c> takes one in
-    /// its constructor; Plumix's hosts create it lazily once the view metrics are known.
+    /// The platform view this host renders into. Flutter's engine owns it and the binding hands it
+    /// to the implicit <c>View</c>; the host keeps its metrics in step from <see cref="OnMetricsChanged"/>.
     /// </summary>
-    internal FlutterView? RootFlutterView
-    {
-        get => _root.FlutterView;
-        set => _root.FlutterView = value;
-    }
+    public FlutterView RootFlutterView => _view;
+
+    /// <summary>
+    /// The host's own <see cref="RenderView"/>: Flutter's deprecated <c>RendererBinding.renderView</c>.
+    /// </summary>
+    protected ReusableRenderView RootRenderView => _root;
+
+    /// <summary>
+    /// The host's own <see cref="PipelineOwner"/>: Flutter's deprecated <c>RendererBinding.pipelineOwner</c>.
+    /// </summary>
+    protected PipelineOwner Pipeline => _pipeline;
 
     public SemanticsNode? SemanticsRoot => _pipeline.SemanticsOwner?.RootNode;
 
+    /// <summary>
+    /// Renders a bare render tree, without a widget layer. The host's view is attached to its
+    /// pipeline the first time this is called.
+    /// </summary>
     public void SetRootChild(RenderBox? child)
     {
+        if (_pipeline.RootNode is null)
+        {
+            _pipeline.Attach(_root);
+        }
+
         _root.Child = child;
         _pipeline.RequestLayout();
         _pipeline.RequestPaint();
@@ -402,11 +429,14 @@ public class PlumixHost : Control
         AttachPlatformChannelHandler();
         AttachTextInputConfigurationListener();
         AttachMetricSources();
+        PlatformDispatcher.Instance.ViewFocusChangeRequested -= HandleViewFocusChangeRequested;
+        PlatformDispatcher.Instance.ViewFocusChangeRequested += HandleViewFocusChangeRequested;
         OnMetricsChanged();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
+        PlatformDispatcher.Instance.ViewFocusChangeRequested -= HandleViewFocusChangeRequested;
         DetachMetricSources();
         DetachPlatformChannelHandler();
         DetachFeedbackListener();
@@ -423,8 +453,72 @@ public class PlumixHost : Control
     {
     }
 
+    /// <summary>
+    /// Called when the host's size, scale or insets changed. Writes the new metrics to
+    /// <see cref="RootFlutterView"/>, as the engine does, and runs Flutter's
+    /// <c>handleMetricsChanged</c> chain: the renderer binding reconfigures the registered views and
+    /// the widgets binding tells its observers.
+    /// </summary>
     protected virtual void OnMetricsChanged()
     {
+        MediaQueryData data = GetMediaQueryData();
+        double scale = data.DevicePixelRatio;
+        _view.UpdateMetrics(
+            physicalSize: data.PhysicalSize,
+            devicePixelRatio: scale,
+            padding: ToViewPadding(data.Padding, scale),
+            viewInsets: ToViewPadding(data.ViewInsets, scale),
+            viewPadding: ToViewPadding(data.ViewPadding, scale),
+            systemGestureInsets: ToViewPadding(data.SystemGestureInsets, scale),
+            gestureSettings: data.GestureSettings,
+            displayFeatures: data.DisplayFeatures,
+            displayCornerRadii: data.DisplayCornerRadii);
+        WidgetsBinding.Instance.HandleMetricsChanged();
+    }
+
+    /// <summary>Logical insets to the physical pixels a <see cref="FlutterView"/> reports.</summary>
+    private static Thickness ToViewPadding(Thickness logical, double devicePixelRatio)
+    {
+        return new Thickness(
+            logical.Left * devicePixelRatio,
+            logical.Top * devicePixelRatio,
+            logical.Right * devicePixelRatio,
+            logical.Bottom * devicePixelRatio);
+    }
+
+    /// <summary>
+    /// Flutter's engine answers <c>PlatformDispatcher.requestViewFocusChange</c> by moving native
+    /// focus to the view's window; the host that owns the view takes keyboard focus.
+    /// </summary>
+    private void HandleViewFocusChangeRequested(ViewFocusEvent @event)
+    {
+        if (@event.ViewId != _view.ViewId || @event.State != ViewFocusState.Focused || IsFocused)
+        {
+            return;
+        }
+
+        Focus();
+    }
+
+    /// <inheritdoc />
+    /// <remarks>
+    /// The platform's half of view focus: Flutter's engine reports the window gaining focus through
+    /// <c>PlatformDispatcher.onViewFocusChange</c>; the host reports its Avalonia keyboard focus.
+    /// Avalonia does not say which way focus travelled, so the direction is undefined.
+    /// </remarks>
+    protected override void OnGotFocus(FocusChangedEventArgs e)
+    {
+        base.OnGotFocus(e);
+        WidgetsBinding.Instance.HandleViewFocusChanged(
+            new ViewFocusEvent(_view.ViewId, ViewFocusState.Focused, ViewFocusDirection.Undefined));
+    }
+
+    /// <inheritdoc />
+    protected override void OnLostFocus(FocusChangedEventArgs e)
+    {
+        base.OnLostFocus(e);
+        WidgetsBinding.Instance.HandleViewFocusChanged(
+            new ViewFocusEvent(_view.ViewId, ViewFocusState.Unfocused, ViewFocusDirection.Undefined));
     }
 
     private void AttachTextInputConfigurationListener()
@@ -511,7 +605,8 @@ public class PlumixHost : Control
             ViewInsets: viewInsets,
             ViewPadding: viewPadding,
             PlatformBrightness: ResolvePlatformBrightness(),
-            HighContrast: ResolveHighContrast());
+            HighContrast: ResolveHighContrast(),
+            ViewId: _view.ViewId);
     }
 
     protected void ScheduleVisualUpdate()
@@ -539,7 +634,10 @@ public class PlumixHost : Control
     /// application to reassemble, e.g. after a hot reload.
     protected virtual void PerformReassemble()
     {
-        _root.Reassemble();
+        if (_pipeline.RootNode is { } root)
+        {
+            root.Reassemble();
+        }
     }
 
     private void HandleSchedulerDrawFrame(TimeSpan timestamp)
@@ -593,7 +691,7 @@ public class PlumixHost : Control
     /// </remarks>
     public Rect? GetRectOfSemanticsNodeInViewCoordinates(int viewId, int nodeId)
     {
-        if (viewId != GetMediaQueryData().ViewId)
+        if (viewId != _view.ViewId)
         {
             return null;
         }
@@ -1210,6 +1308,12 @@ public class PlumixHost : Control
 
     private void DispatchPointerEvent(PointerEvent @event)
     {
+        if (!_root.Attached)
+        {
+            // Dart's `hitTestInView` finds no `RenderView` for a view that has no render tree yet.
+            return;
+        }
+
         _gestureBinding.HandlePointerEvent(_root, @event);
     }
 

@@ -3,6 +3,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 namespace Plumix.Tests;
 
@@ -19,7 +20,7 @@ public class RenderObjectPipelineParityTests
         var leaf = new SizeRenderBox(new Size(10, 10));
         var inner = new PassThroughRenderBox(leaf);
         var outer = new PassThroughRenderBox(inner);
-        var view = new RenderView { Child = outer };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = outer };
 
         Assert.True(outer.Depth > view.Depth);
         Assert.True(inner.Depth > outer.Depth);
@@ -31,7 +32,7 @@ public class RenderObjectPipelineParityTests
     {
         var leaf = new SizeRenderBox(new Size(10, 10));
         var inner = new PassThroughRenderBox(leaf);
-        var view = new RenderView { Child = inner };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = inner };
         var pipeline = new PipelineOwner(view);
 
         pipeline.Attach(view);
@@ -46,7 +47,7 @@ public class RenderObjectPipelineParityTests
     public void Attach_RejectsAChildThatIsAlreadyAttached()
     {
         var child = new SizeRenderBox(new Size(10, 10));
-        var owner = new PipelineOwner(new RenderView());
+        var owner = new PipelineOwner(new RenderView(new FlutterView(new Size(800, 600))));
         child.Attach(owner);
         var parent = new ToggleVisitingRenderBox(child) { VisitsChild = true };
 
@@ -57,7 +58,7 @@ public class RenderObjectPipelineParityTests
     public void Detach_RejectsAChildThatIsAlreadyDetached()
     {
         var child = new SizeRenderBox(new Size(10, 10));
-        var owner = new PipelineOwner(new RenderView());
+        var owner = new PipelineOwner(new RenderView(new FlutterView(new Size(800, 600))));
         var parent = new ToggleVisitingRenderBox(child);
         parent.Attach(owner);
         parent.VisitsChild = true;
@@ -70,7 +71,7 @@ public class RenderObjectPipelineParityTests
     {
         var child = new SizeRenderBox(new Size(10, 10));
         var parent = new PassThroughRenderBox(child);
-        var view = new RenderView { Child = parent };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = parent };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
         pipeline.FlushLayout(new Size(100, 100));
@@ -91,7 +92,7 @@ public class RenderObjectPipelineParityTests
         // Flutter's `attach` skips the layout branch when `_isRelayoutBoundary` is null, because
         // `scheduleInitialLayout` owns the bootstrap.
         var child = new SizeRenderBox(new Size(10, 10));
-        var view = new RenderView { Child = child };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = child };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
 
@@ -103,7 +104,7 @@ public class RenderObjectPipelineParityTests
     [Fact]
     public void ScheduleInitialLayout_MakesTheRootItsOwnRelayoutBoundary()
     {
-        var view = new RenderView { Child = new SizeRenderBox(new Size(10, 10)) };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = new SizeRenderBox(new Size(10, 10)) };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
 
@@ -137,7 +138,7 @@ public class RenderObjectPipelineParityTests
     {
         // "We don't add ourselves to `_nodesNeedingPaint` in this case, because the root is always
         // told to paint regardless." — `RenderObject.markNeedsPaint`.
-        var view = new RenderView { Child = new SizeRenderBox(new Size(10, 10)) };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = new SizeRenderBox(new Size(10, 10)) };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
         pipeline.FlushLayout(new Size(100, 100));
@@ -159,7 +160,7 @@ public class RenderObjectPipelineParityTests
             children: [first, second],
             direction: Axis.Horizontal,
             textDirection: TextDirection.Ltr);
-        var view = new RenderView { Child = row };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = row };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
         pipeline.FlushLayout(new Size(100, 100));
@@ -192,7 +193,7 @@ public class RenderObjectPipelineParityTests
     {
         var leaf = new SizeRenderBox(new Size(10, 10));
         var boundary = new CountingRepaintBoundary(leaf);
-        var view = new RenderView { Child = boundary };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = boundary };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
         pipeline.FlushLayout(new Size(100, 100));

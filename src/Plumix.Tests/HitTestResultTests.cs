@@ -3,6 +3,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/hit_test.dart (parity regression tests,
 // ported from flutter/packages/flutter/test/gestures/hit_test_test.dart)
@@ -370,7 +371,7 @@ public sealed class HitTestResultTests
 
     private static PipelineOwner BuildPipeline(RenderBox child)
     {
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = child
         };

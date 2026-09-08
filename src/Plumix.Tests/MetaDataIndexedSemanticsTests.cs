@@ -110,7 +110,7 @@ public sealed class MetaDataIndexedSemanticsTests
     {
         var item = new FixedSemanticBox("Item", new Size(40, 20));
         var indexed = new RenderIndexedSemantics(index: 4, child: item);
-        var renderView = new RenderView { Child = indexed };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = indexed };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -140,7 +140,7 @@ public sealed class MetaDataIndexedSemanticsTests
         var indexed = new RenderIndexedSemantics(
             index: 5,
             child: new FixedHitTestBox(new Size(40, 20), hitSelf: false));
-        var renderView = new RenderView { Child = indexed };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = indexed };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 

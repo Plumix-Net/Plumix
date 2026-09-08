@@ -19,7 +19,7 @@ public sealed class DecoratedBoxTests
                 Border: Plumix.Rendering.Border.FromBorderSide(new BorderSide(Colors.MidnightBlue, 2)),
                 BorderRadius: BorderRadius.Circular(8)),
             child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = decorated
         };

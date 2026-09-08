@@ -9,18 +9,11 @@ namespace Plumix.Widgets;
 /// The widget at the root of the widget tree.
 /// </summary>
 /// <remarks>
-/// <para>
 /// Dart's <c>RootWidget</c>. <see cref="Attach"/> inflates it and bootstraps the element tree
 /// against a <see cref="BuildOwner"/>; the hosts reach it through
 /// <c>WidgetHost.AttachRootWidget</c>, which is Plumix's <c>WidgetsBinding.attachRootWidget</c>.
-/// </para>
-/// <para>
-/// Plumix adds <see cref="RenderObjectHost"/>. Flutter's root element expects its child to be a
-/// <c>View</c> whose element is a <c>RenderTreeRootElement</c> and therefore publishes the render
-/// tree itself (<c>debugExpectsRenderObjectForSlot</c> returns <see langword="false"/> there).
-/// Plumix's <see cref="View"/> is still a plain <see cref="InheritedWidget"/>, so the root element
-/// is the render-object host instead — see <c>docs/ai/DIVERGENCES.md</c>.
-/// </para>
+/// The root hosts no render object of its own: the <see cref="View"/> below it publishes the render
+/// tree through a <see cref="RenderTreeRootElement"/>.
 /// </remarks>
 public class RootWidget : Widget
 {
@@ -28,13 +21,11 @@ public class RootWidget : Widget
     public RootWidget(
         Widget? child = null,
         string? debugShortDescription = null,
-        IRootRenderObjectHost? renderObjectHost = null,
         Key? key = null)
         : base(key)
     {
         Child = child;
         DebugShortDescription = debugShortDescription;
-        RenderObjectHost = renderObjectHost;
     }
 
     /// <summary>The widget below this widget in the tree.</summary>
@@ -42,12 +33,6 @@ public class RootWidget : Widget
 
     /// <summary>A short description of this widget used by debugging aids.</summary>
     public string? DebugShortDescription { get; }
-
-    /// <summary>
-    /// Plumix-only: where <see cref="RootElement"/> publishes the render object its child creates.
-    /// <see langword="null"/> for element-tree-only trees, which then have no render tree at all.
-    /// </summary>
-    public IRootRenderObjectHost? RenderObjectHost { get; }
 
     /// <inheritdoc />
     public override Element CreateElement() => new RootElement(this);
@@ -87,27 +72,16 @@ public class RootWidget : Widget
 }
 
 /// <summary>
-/// Where a <see cref="RootElement"/> publishes the render object built by its child.
-/// </summary>
-/// <remarks>
-/// Plumix-only. Flutter has no counterpart because its root element never hosts a render object:
-/// the <c>View</c> below it does, through <c>RenderTreeRootElement</c>.
-/// </remarks>
-public interface IRootRenderObjectHost
-{
-    /// <summary>Called when the root element's child produced (or dropped) its render object.</summary>
-    void AttachRootRenderObject(RenderObject? child);
-}
-
-/// <summary>
 /// The root of the element tree.
 /// </summary>
 /// <remarks>
 /// Dart's <c>RootElement</c>, folded together with <c>RootElementMixin</c> — C# has no mixins, and
 /// Dart's only other mixin user (<c>RootRenderObjectElement</c>) is deprecated and unused. It can
-/// be used only as the root of an element tree: its parent must be <see langword="null"/>.
+/// be used only as the root of an element tree: its parent must be <see langword="null"/>. It does
+/// not expect a render object from its child (<see cref="DebugExpectsRenderObjectForSlot"/> is
+/// <see langword="false"/>): a render tree below it must be rooted by a <see cref="View"/>.
 /// </remarks>
-public class RootElement : Element, IRenderObjectHost
+public class RootElement : Element
 {
     private Element? _child;
 
@@ -227,6 +201,10 @@ public class RootElement : Element, IRenderObjectHost
         base.Unmount();
     }
 
+    /// <inheritdoc />
+    /// <remarks>Dart's <c>RootElement.debugExpectsRenderObjectForSlot</c>.</remarks>
+    public override bool DebugExpectsRenderObjectForSlot(object? slot) => false;
+
     /// <summary>Dart's <c>RootElement._rebuild</c>.</summary>
     /// <remarks>
     /// A build failure is reported rather than replaced by an <c>ErrorWidget</c>: there is no view
@@ -247,35 +225,5 @@ public class RootElement : Element, IRenderObjectHost
                 context: new ErrorDescription("attaching to the render tree")));
             _child = null;
         }
-    }
-
-    private IRootRenderObjectHost? Host => ((RootWidget)Widget).RenderObjectHost;
-
-    void IRenderObjectHost.InsertRenderObjectChild(RenderObject child, object? slot)
-    {
-        if (slot is not null)
-        {
-            throw new AssertionError("RootElement expects a null slot.");
-        }
-
-        Host?.AttachRootRenderObject(child);
-    }
-
-    void IRenderObjectHost.MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
-    {
-        if (!Equals(oldSlot, newSlot))
-        {
-            throw new AssertionError("RootElement does not support slot moves.");
-        }
-    }
-
-    void IRenderObjectHost.RemoveRenderObjectChild(RenderObject child, object? slot)
-    {
-        if (slot is not null)
-        {
-            throw new AssertionError("RootElement expects a null slot.");
-        }
-
-        Host?.AttachRootRenderObject(null);
     }
 }

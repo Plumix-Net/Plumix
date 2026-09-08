@@ -949,7 +949,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             clipBehavior: Clip.AntiAlias,
             elevation: 4,
             shadowColor: Colors.Black);
-        var renderView = new RenderView { Child = physical };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = physical };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 

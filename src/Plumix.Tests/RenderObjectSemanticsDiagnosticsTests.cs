@@ -2,6 +2,7 @@ using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart
 // (_RenderObjectSemantics.debugFillProperties / debugDescribeChildren, debugDumpRenderObjectSemanticsTree)
@@ -17,7 +18,7 @@ public sealed class RenderObjectSemanticsDiagnosticsTests
             new SemanticsProperties(label: "diagnostics leaf"),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
-        var renderView = new RenderView { Child = leaf };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = leaf };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(320, 120));
@@ -58,7 +59,7 @@ public sealed class RenderObjectSemanticsDiagnosticsTests
             children: [behind, wrapper],
             direction: Axis.Horizontal,
             textDirection: TextDirection.Ltr);
-        var renderView = new RenderView { Child = row };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = row };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(320, 120));

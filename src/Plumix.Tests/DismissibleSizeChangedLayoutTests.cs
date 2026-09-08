@@ -391,7 +391,7 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
 
     private static RenderView BuildRenderView(RenderBox child, Size size)
     {
-        var renderView = new RenderView { Child = child };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = child };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(size);
@@ -454,7 +454,7 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
 
         public WidgetRenderHarness(Widget rootWidget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
             _rootElement = new HarnessRootElement(RenderView, rootWidget);

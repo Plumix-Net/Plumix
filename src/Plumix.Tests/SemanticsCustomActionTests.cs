@@ -2,6 +2,7 @@ using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity sources (custom-action dispatch regression tests):
 // flutter/packages/flutter/lib/src/semantics/semantics.dart
@@ -233,7 +234,7 @@ public sealed class SemanticsCustomActionTests
             children: [first, second],
             direction: Axis.Horizontal,
             textDirection: TextDirection.Ltr);
-        var renderView = new RenderView { Child = row };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = row };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(320, 120));
@@ -259,7 +260,7 @@ public sealed class SemanticsCustomActionTests
                 onTap: () => tapCount += 1),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
-        var renderView = new RenderView { Child = annotations };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = annotations };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(320, 120));
@@ -302,7 +303,7 @@ public sealed class SemanticsCustomActionTests
                 children: [first, second],
                 direction: Axis.Horizontal,
                 textDirection: TextDirection.Ltr));
-        var renderView = new RenderView { Child = merge };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = merge };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(320, 120));

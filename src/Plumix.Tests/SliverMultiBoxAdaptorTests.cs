@@ -2,6 +2,7 @@ using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Ported from flutter/packages/flutter/test/rendering/slivers_block_test.dart.
 
@@ -317,7 +318,7 @@ public sealed class SliverMultiBoxAdaptorTests
 
     private static PipelineOwner Layout(RenderViewport viewport)
     {
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(800, 600));

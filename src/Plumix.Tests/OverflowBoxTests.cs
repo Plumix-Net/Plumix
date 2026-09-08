@@ -17,7 +17,7 @@ public sealed class OverflowBoxTests
             maxHeight: 70,
             fit: OverflowBoxFit.Max,
             child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = overflow
         };
@@ -41,7 +41,7 @@ public sealed class OverflowBoxTests
             maxHeight: 44,
             fit: OverflowBoxFit.DeferToChild,
             child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = overflow
         };
@@ -63,7 +63,7 @@ public sealed class OverflowBoxTests
             requestedSize: new Size(90, 44),
             alignment: Alignment.Center,
             child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = sizedOverflow
         };

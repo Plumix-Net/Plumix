@@ -54,7 +54,7 @@ public sealed class DecoratedPinnedSliverTests
         var decorated = new RenderDecoratedSliver(decoration, position, sliver: child);
         var viewport = new RenderViewport(offset: new TestViewportOffset(30.0));
         viewport.Insert(decorated);
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
 
@@ -80,7 +80,7 @@ public sealed class DecoratedPinnedSliverTests
             offset: new TestViewportOffset(40.0),
             scrollCacheExtent: ScrollCacheExtent.Pixels(50.0));
         viewport.Insert(decorated);
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
 
@@ -198,7 +198,7 @@ public sealed class DecoratedPinnedSliverTests
         var viewport = new RenderViewport(offset: new TestViewportOffset(80));
         viewport.Insert(header);
         viewport.Insert(body, after: header);
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
 

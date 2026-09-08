@@ -5,6 +5,7 @@ using Plumix.Foundation;
 using Plumix.UI;
 using Xunit;
 using Path = Plumix.UI.Path;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart
 // (RenderObject.applyPaintTransform/getTransformTo/localToGlobal/globalToLocal);
@@ -19,7 +20,7 @@ public sealed class PaintTransformTests
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
         var padded = new RenderPadding(new Thickness(12, 7, 0, 0), child);
-        var renderView = new RenderView { Child = padded };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = padded };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));
@@ -38,7 +39,7 @@ public sealed class PaintTransformTests
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
         var scaled = new RenderTransform(Matrix4.Diagonal3Values(2.0, 3.0, 1.0)) { Child = child };
         var padded = new RenderPadding(new Thickness(5, 9, 0, 0), scaled);
-        var renderView = new RenderView { Child = padded };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = padded };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(200, 200));
@@ -58,7 +59,7 @@ public sealed class PaintTransformTests
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)));
         var padded = new RenderPadding(new Thickness(4, 6, 0, 0), child);
         var excluded = new RenderExcludeSemantics(child: padded);
-        var renderView = new RenderView { Child = excluded };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = excluded };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));
@@ -76,7 +77,7 @@ public sealed class PaintTransformTests
             children: [first, second],
             direction: Axis.Horizontal,
             textDirection: TextDirection.Ltr);
-        var renderView = new RenderView { Child = row };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = row };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));
@@ -89,7 +90,7 @@ public sealed class PaintTransformTests
 
         // A render object in a different tree is still an error.
         var orphan = new RenderConstrainedBox(BoxConstraints.Tight(new Size(5, 5)));
-        var orphanView = new RenderView { Child = orphan };
+        var orphanView = new RenderView(new FlutterView(new Size(800, 600))) { Child = orphan };
         var orphanPipeline = new PipelineOwner(orphanView);
         orphanPipeline.Attach(orphanView);
         orphanPipeline.FlushLayout(new Size(50, 50));
@@ -101,7 +102,7 @@ public sealed class PaintTransformTests
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(0, 0)));
         var fitted = new RenderFittedBox(BoxFit.Contain) { Child = child };
-        var renderView = new RenderView { Child = fitted };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = fitted };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));
@@ -119,7 +120,7 @@ public sealed class PaintTransformTests
     {
         var child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(40, 20)));
         var translated = new RenderFractionalTranslation(new Vector(0.5, -1.0)) { Child = child };
-        var renderView = new RenderView { Child = translated };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = translated };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));

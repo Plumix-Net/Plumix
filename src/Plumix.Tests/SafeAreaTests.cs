@@ -8,6 +8,7 @@ using Xunit;
 
 namespace Plumix.Tests;
 
+[Collection(SchedulerTestCollection.Name)]
 public sealed class SafeAreaTests
 {
     [Fact]

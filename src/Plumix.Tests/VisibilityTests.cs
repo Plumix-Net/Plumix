@@ -230,7 +230,7 @@ public sealed class VisibilityTests
     {
         var child = new HitTestRenderBox(new Size(40, 30));
         var visibility = new RenderVisibility(visible: false, maintainSemantics: false, child: child);
-        var renderView = new RenderView { Child = visibility };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = visibility };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -275,7 +275,7 @@ public sealed class VisibilityTests
         var offstage = new RenderSliverOffstage(offstage: true, sliver: child);
         var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(offstage);
-        var renderView = new RenderView { Child = viewport };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -334,7 +334,7 @@ public sealed class VisibilityTests
             sliver: ignore);
         var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(visibility);
-        var renderView = new RenderView { Child = viewport };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 

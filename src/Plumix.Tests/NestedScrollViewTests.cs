@@ -797,7 +797,7 @@ public sealed class NestedScrollViewTests : IDisposable
 
     private static void Attach(RenderObject renderObject)
     {
-        var view = new RenderView();
+        var view = new RenderView(new FlutterView(new Size(800, 600)));
         var pipeline = new PipelineOwner(view);
         renderObject.Attach(pipeline);
     }
@@ -824,7 +824,7 @@ public sealed class NestedScrollViewTests : IDisposable
 
         public WidgetRenderHarness(Widget rootWidget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
 

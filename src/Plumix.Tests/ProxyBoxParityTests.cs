@@ -569,7 +569,7 @@ public sealed class ProxyBoxParityTests
 
     private static void LayoutRoot(RenderBox render, Size size)
     {
-        var view = new RenderView { Child = render };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = render };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
         pipeline.FlushLayout(size);

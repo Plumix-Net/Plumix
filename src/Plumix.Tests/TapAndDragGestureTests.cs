@@ -3,6 +3,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/gestures/tap_and_drag.dart
 // Mirrors flutter/packages/flutter/test/gestures/tap_and_drag_test.dart.
@@ -341,7 +342,7 @@ public sealed class TapAndDragGestureTests : IDisposable
             },
             behavior: HitTestBehavior.Opaque,
             child: new SolidHitTestBox(new Size(400, 400)));
-        var root = new RenderView { Child = listener };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = listener };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(400, 400));

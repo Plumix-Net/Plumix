@@ -92,7 +92,7 @@ public sealed class SemanticsTraversalTests
 
     private static SemanticsNode Compile(RenderBox child, Size size)
     {
-        var renderView = new RenderView { Child = child };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = child };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(size);

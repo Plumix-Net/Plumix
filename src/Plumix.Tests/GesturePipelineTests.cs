@@ -4,6 +4,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/gestures/binding.dart; flutter/packages/flutter/lib/src/gestures/arena.dart; flutter/packages/flutter/lib/src/gestures/recognizer.dart (parity regression tests)
 
@@ -880,7 +881,7 @@ public sealed class GesturePipelineTests
 
     private static PipelineOwner BuildPipeline(RenderBox child)
     {
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = child
         };

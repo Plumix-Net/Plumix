@@ -940,7 +940,7 @@ public sealed class MaterialDatePickerTests : IDisposable
 
         public WidgetRenderHarness(Widget rootWidget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
             _rootElement = new HarnessRootElement(RenderView, rootWidget);

@@ -121,32 +121,39 @@ public sealed class RootWidgetTests
     }
 
     [Fact]
-    public void RootElement_PublishesItsChildRenderObjectToTheHost()
+    public void RootElement_DoesNotExpectARenderObjectFromItsChild()
     {
         var owner = new BuildOwner();
-        var host = new RecordingHost();
-        RootElement root = new RootWidget(
-            child: new SizedBox(width: 5, height: 6),
-            renderObjectHost: host).Attach(owner);
+        RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
 
-        Assert.NotNull(host.Child);
-        Assert.Same(root.ChildElement!.RenderObject, host.Child);
-        Assert.Same(host.Child, root.RenderObject);
+        Assert.False(root.DebugExpectsRenderObjectForSlot(null));
     }
 
     [Fact]
-    public void RootElement_ClearsTheHostWhenTheChildRenderObjectGoesAway()
+    public void RootElement_ReportsARenderObjectChildThatHasNoViewToAttachTo()
     {
-        var owner = new BuildOwner();
-        var host = new RecordingHost();
-        RootElement root = new RootWidget(
-            child: new SizedBox(width: 5, height: 6),
-            renderObjectHost: host).Attach(owner);
-        Assert.NotNull(host.Child);
+        var reported = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = reported.Add;
+        try
+        {
+            var owner = new BuildOwner();
+            RootElement root = new RootWidget(child: new SizedBox(width: 5, height: 6)).Attach(owner);
 
-        root.Unmount();
-
-        Assert.Null(host.Child);
+            // Dart's `runWidget` without a `View`: the render object is created but never attached.
+            Assert.NotNull(root.ChildElement);
+            Assert.NotNull(root.RenderObject);
+            Assert.False(root.RenderObject!.Attached);
+            FlutterErrorDetails details = Assert.Single(reported);
+            Assert.Contains(
+                "Try wrapping your widget in a View widget",
+                details.Exception.ToString(),
+                StringComparison.Ordinal);
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
     }
 
     [Fact]
@@ -191,7 +198,10 @@ public sealed class RootWidgetTests
             owner.FlushBuild();
 
             Assert.Null(root.ChildElement);
-            FlutterErrorDetails details = Assert.Single(reported);
+            // The probe's render object also reports that it has no View to attach to.
+            FlutterErrorDetails details = Assert.Single(
+                reported,
+                report => report.Context?.ToDescription() == "attaching to the render tree");
             Assert.Equal("widgets library", details.Library);
             Assert.Equal("attaching to the render tree", details.Context!.ToDescription());
         }
@@ -243,13 +253,6 @@ public sealed class RootWidgetTests
         owner.BuildScope(root, () => owner.ScheduleBuild(state.Element));
 
         Assert.False(state.Element.Dirty);
-    }
-
-    private sealed class RecordingHost : IRootRenderObjectHost
-    {
-        public RenderObject? Child { get; private set; }
-
-        public void AttachRootRenderObject(RenderObject? child) => Child = child;
     }
 
     // ComponentElement.PerformRebuild catches a throwing Build() and substitutes an ErrorWidget, so

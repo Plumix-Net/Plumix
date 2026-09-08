@@ -6,6 +6,7 @@ using Plumix.Foundation;
 using System.Collections;
 using System.Reflection;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/object.dart; flutter/packages/flutter/lib/src/rendering/box.dart (parity regression tests)
 
@@ -73,7 +74,7 @@ public sealed class RenderingParityTests
             additionalConstraints: new BoxConstraints(MinWidth: 10, MaxWidth: 120, MinHeight: 5, MaxHeight: 80),
             child: child);
         var parent = new ParentUsesSizeRenderBox(constrained);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = parent
         };
@@ -97,7 +98,7 @@ public sealed class RenderingParityTests
         var child = new CountingRenderBox();
         var padding = new RenderPadding(new Thickness(8, 10, 12, 14), child);
         var parent = new ParentUsesSizeRenderBox(padding);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = parent
         };
@@ -123,7 +124,7 @@ public sealed class RenderingParityTests
             direction: Axis.Horizontal,
             textDirection: TextDirection.Ltr);
         var parent = new ParentUsesSizeRenderBox(flex);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = parent
         };
@@ -148,7 +149,7 @@ public sealed class RenderingParityTests
             mainAxisSize: MainAxisSize.Max,
             textDirection: TextDirection.Ltr);
         var parent = new ParentUsesSizeRenderBox(flex);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = parent
         };
@@ -173,7 +174,7 @@ public sealed class RenderingParityTests
             mainAxisAlignment: MainAxisAlignment.Start,
             textDirection: TextDirection.Ltr);
         var parent = new ParentUsesSizeRenderBox(flex);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = parent
         };
@@ -198,7 +199,7 @@ public sealed class RenderingParityTests
             crossAxisAlignment: CrossAxisAlignment.Center,
             textDirection: TextDirection.Ltr);
         var parent = new ParentUsesSizeRenderBox(flex);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = parent
         };
@@ -233,7 +234,7 @@ public sealed class RenderingParityTests
     {
         var child = new CountingRenderBox();
         var parent = new BoundaryParentRenderBox(child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = parent
         };
@@ -258,7 +259,7 @@ public sealed class RenderingParityTests
     public void RequestLayoutOnRoot_WithChangedViewport_RelayoutsTree()
     {
         var child = new CountingRenderBox();
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = child
         };
@@ -442,7 +443,7 @@ public sealed class RenderingParityTests
             ],
             textDirection: TextDirection.Ltr);
 
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = flex
         };

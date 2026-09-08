@@ -4,6 +4,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 namespace Plumix.Tests;
 
@@ -47,7 +48,7 @@ public sealed class FlowRepaintBoundaryTests
                 context.PaintChild(1, translation, opacity: 0.0);
             });
         var flow = new RenderFlow(flowDelegate, children: [first, second]);
-        var renderView = new RenderView { Child = flow };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = flow };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -83,7 +84,7 @@ public sealed class FlowRepaintBoundaryTests
             childConstraints: BoxConstraints.Loose(new Size(20, 20)),
             repaint: repaint);
         var flow = new RenderFlow(flowDelegate, children: [child]);
-        var renderView = new RenderView { Child = flow };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = flow };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -109,7 +110,7 @@ public sealed class FlowRepaintBoundaryTests
             size: new Size(80, 60),
             childConstraints: BoxConstraints.Loose(new Size(20, 20)));
         var flow = new RenderFlow(initial, children: [child], clipBehavior: Clip.None);
-        var renderView = new RenderView { Child = flow };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = flow };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(80, 60));
@@ -171,7 +172,7 @@ public sealed class FlowRepaintBoundaryTests
     {
         var child = new TestRenderBox(new Size(24, 16));
         var boundary = new RenderRepaintBoundary(child);
-        var renderView = new RenderView { Child = boundary };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = boundary };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 

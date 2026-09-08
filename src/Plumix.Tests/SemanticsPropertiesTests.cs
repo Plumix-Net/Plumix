@@ -627,7 +627,7 @@ public sealed class SemanticsPropertiesTests
             new SemanticsProperties(label: "tappable", onTap: () => { }),
             container: true,
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
-        var renderView = new RenderView { Child = render };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = render };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(ViewSize);

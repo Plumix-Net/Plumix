@@ -282,7 +282,7 @@ public sealed class StateStorageWidgetsTests
 
         public WidgetRenderHarness(Widget widget)
         {
-            var renderView = new RenderView();
+            var renderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(renderView);
             _pipeline.Attach(renderView);
             _root = new HarnessRootElement(

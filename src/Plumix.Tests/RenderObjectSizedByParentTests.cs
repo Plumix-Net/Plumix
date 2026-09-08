@@ -3,6 +3,7 @@ using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity sources:
 // - flutter/packages/flutter/lib/src/rendering/object.dart (sizedByParent, performResize,
@@ -369,7 +370,7 @@ public sealed class RenderObjectSizedByParentTests
     /// </remarks>
     private static PipelineOwner LayoutAttached(RenderBox box, Size size)
     {
-        var view = new RenderView { Child = box };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = box };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
         pipeline.FlushLayout(size);

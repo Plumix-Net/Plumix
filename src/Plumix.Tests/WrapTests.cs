@@ -2,6 +2,7 @@ using Avalonia;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 namespace Plumix.Tests;
 
@@ -75,7 +76,7 @@ public sealed class WrapTests
     private static void Layout(RenderBox child, Size size)
     {
         var constrained = new RenderConstrainedBox(BoxConstraints.Tight(size), child);
-        var root = new RenderView { Child = constrained };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = constrained };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(size);

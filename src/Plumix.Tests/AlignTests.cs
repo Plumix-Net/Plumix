@@ -16,7 +16,7 @@ public sealed class AlignTests
         var align = new RenderPositionedBox(
             alignment: Alignment.Center,
             child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = align
         };
@@ -37,7 +37,7 @@ public sealed class AlignTests
         var align = new RenderPositionedBox(
             alignment: Alignment.TopRight,
             child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = align
         };
@@ -59,7 +59,7 @@ public sealed class AlignTests
             widthFactor: 2,
             heightFactor: 3,
             child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = align
         };

@@ -195,7 +195,7 @@ public sealed class BasicWidgetProxyTests
         rotated.ApplyPaintTransform(rotated.Child!, semanticsTransform);
         Assert.Equal(expectedTransform, semanticsTransform);
 
-        var renderView = new RenderView { Child = rotated };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = rotated };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(30, 80));

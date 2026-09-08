@@ -12,7 +12,7 @@ public sealed class OffstageTests
     {
         var child = new HitTestRenderBox(new Size(50, 30));
         var offstage = new RenderOffstage(offstage: true, child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = offstage
         };
@@ -33,7 +33,7 @@ public sealed class OffstageTests
     {
         var child = new HitTestRenderBox(new Size(50, 30));
         var offstage = new RenderOffstage(offstage: false, child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = offstage
         };
@@ -57,7 +57,7 @@ public sealed class OffstageTests
     {
         var child = new HitTestRenderBox(new Size(60, 40));
         var offstage = new RenderOffstage(offstage: false, child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = offstage
         };

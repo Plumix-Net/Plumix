@@ -113,7 +113,7 @@ public sealed class ColoredBoxTests
 
     private static OffsetLayer Paint(RenderBox root, Size size)
     {
-        var renderView = new RenderView { Child = root };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = root };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(size);

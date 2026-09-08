@@ -17,7 +17,7 @@ public sealed class UnconstrainedLimitedBoxTests
         var unconstrained = new RenderUnconstrainedBox(
             alignment: Alignment.Center,
             child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = unconstrained
         };
@@ -39,7 +39,7 @@ public sealed class UnconstrainedLimitedBoxTests
             alignment: Alignment.TopLeft,
             constrainedAxis: Axis.Horizontal,
             child: child);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = unconstrained
         };
@@ -199,7 +199,7 @@ public sealed class UnconstrainedLimitedBoxTests
             constraintsTransform: ConstraintsTransformBox.Unconstrained,
             child: child,
             clipBehavior: Clip.AntiAlias);
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform,
         };

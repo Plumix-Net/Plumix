@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
 using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/semantics/semantics.dart (parity regression tests)
 
@@ -29,7 +30,7 @@ public sealed class SemanticsTreeTests
             children: [later, earlier],
             direction: Axis.Horizontal,
             textDirection: TextDirection.Ltr);
-        var renderView = new RenderView { Child = row };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = row };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -55,7 +56,7 @@ public sealed class SemanticsTreeTests
         var annotations = new RenderSemanticsAnnotations(
             new SemanticsProperties(),
             child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
-        var renderView = new RenderView { Child = annotations };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = annotations };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -112,7 +113,7 @@ public sealed class SemanticsTreeTests
             foreground: Colors.White,
             fontSize: 14);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = button
         };
@@ -143,7 +144,7 @@ public sealed class SemanticsTreeTests
             foreground: Colors.White,
             fontSize: 14);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = button
         };
@@ -182,7 +183,7 @@ public sealed class SemanticsTreeTests
             foreground: Colors.White,
             fontSize: 14);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = button
         };
@@ -221,7 +222,7 @@ public sealed class SemanticsTreeTests
             action: SemanticsActions.LongPress,
             handler: () => longPressCount += 1);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = box
         };
@@ -256,7 +257,7 @@ public sealed class SemanticsTreeTests
                 direction: Axis.Horizontal,
                 textDirection: TextDirection.Ltr));
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = merge
         };
@@ -287,7 +288,7 @@ public sealed class SemanticsTreeTests
                 direction: Axis.Horizontal,
                 textDirection: TextDirection.Ltr));
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = merge
         };
@@ -329,7 +330,7 @@ public sealed class SemanticsTreeTests
                 direction: Axis.Horizontal,
                 textDirection: TextDirection.Ltr));
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = merge
         };
@@ -353,7 +354,7 @@ public sealed class SemanticsTreeTests
     public void ExcludeSemantics_RemovesSubtreeFromSemanticsTree()
     {
         var excluded = new ExcludeSemanticsRenderBox(new RenderParagraph("Hidden"));
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = excluded
         };
@@ -439,7 +440,7 @@ public sealed class SemanticsTreeTests
             foreground: Colors.White,
             fontSize: 14);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = button
         };
@@ -460,7 +461,7 @@ public sealed class SemanticsTreeTests
     {
         var leaf = new CountingSemanticLeafRenderBox("A");
         var boundary = new CountingSemanticBoundaryRenderBox(leaf);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = boundary
         };
@@ -498,7 +499,7 @@ public sealed class SemanticsTreeTests
             direction: Axis.Horizontal,
             textDirection: TextDirection.Ltr);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = row
         };
@@ -525,7 +526,7 @@ public sealed class SemanticsTreeTests
             direction: Axis.Horizontal,
             textDirection: TextDirection.Ltr);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = row
         };
@@ -560,7 +561,7 @@ public sealed class SemanticsTreeTests
             direction: Axis.Horizontal,
             textDirection: TextDirection.Ltr);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = row
         };
@@ -601,7 +602,7 @@ public sealed class SemanticsTreeTests
             IncludeSecondInSemantics = false
         };
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = row
         };
@@ -635,7 +636,7 @@ public sealed class SemanticsTreeTests
     {
         var leaf = new FixedSemanticBox("Moved", new Size(12, 8));
         var transform = new RenderTransform(Matrix4.TranslationValues(30, 12, 0.0), leaf);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
         };
@@ -657,7 +658,7 @@ public sealed class SemanticsTreeTests
     {
         var leaf = new FixedSemanticBox("Moved", new Size(12, 8));
         var transform = new RenderTransform(Matrix4.TranslationValues(10, 6, 0.0), leaf);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
         };
@@ -691,7 +692,7 @@ public sealed class SemanticsTreeTests
         var transform = new RenderTransform(Matrix4.TranslationValues(40, 0, 0.0), leaf);
         var clip = new RenderClipRect(transform, clipper: new FixedRectClipper(new Rect(0, 0, 20, 20)));
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = clip
         };
@@ -715,7 +716,7 @@ public sealed class SemanticsTreeTests
         var clipper = new FixedRectClipper(new Rect(0, 0, 64, 32));
         var clip = new RenderClipRect(transform, clipper: clipper);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = clip
         };
@@ -749,7 +750,7 @@ public sealed class SemanticsTreeTests
             SemanticsClipRect = new Rect(0, 0, 64, 20)
         };
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = clip
         };
@@ -778,7 +779,7 @@ public sealed class SemanticsTreeTests
             SemanticsClipRect = new Rect(0, 0, 64, 20)
         };
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = clip
         };
@@ -799,7 +800,7 @@ public sealed class SemanticsTreeTests
     {
         var leaf = new FixedSemanticBox("State", new Size(12, 8));
         var transform = new RenderTransform(Matrix4.Identity(), leaf);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
         };
@@ -833,7 +834,7 @@ public sealed class SemanticsTreeTests
     {
         var descendant = new RenderTransform(Matrix4.Identity(), new FixedSemanticBox("Leaf", new Size(12, 8)));
         var ancestor = new MutableSemanticBoundaryRenderBox("Ancestor", descendant);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = ancestor
         };
@@ -862,7 +863,7 @@ public sealed class SemanticsTreeTests
             child: new FixedSemanticBox("Leaf", new Size(12, 8)),
             hasChildConfigurationsDelegate: false);
         var ancestor = new MutableSemanticBoundaryRenderBox("Ancestor", boundary);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = ancestor
         };
@@ -889,7 +890,7 @@ public sealed class SemanticsTreeTests
             child: new FixedSemanticBox("Leaf", new Size(12, 8)),
             hasChildConfigurationsDelegate: true);
         var ancestor = new MutableSemanticBoundaryRenderBox("Ancestor", boundary);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = ancestor
         };
@@ -928,7 +929,7 @@ public sealed class SemanticsTreeTests
                 new List<SemanticsConfiguration>(childConfigurations),
                 new List<List<SemanticsConfiguration>>()));
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = delegated
         };
@@ -964,7 +965,7 @@ public sealed class SemanticsTreeTests
                     new List<SemanticsConfiguration>(childConfigurations)
                 }));
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = delegated
         };
@@ -1004,7 +1005,7 @@ public sealed class SemanticsTreeTests
                     new List<SemanticsConfiguration>(childConfigurations)
                 }));
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = delegated
         };
@@ -1044,7 +1045,7 @@ public sealed class SemanticsTreeTests
                 new List<List<SemanticsConfiguration>>());
         });
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = delegated
         };
@@ -1082,7 +1083,7 @@ public sealed class SemanticsTreeTests
                 new List<List<SemanticsConfiguration>> { group });
         });
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = delegated
         };
@@ -1120,7 +1121,7 @@ public sealed class SemanticsTreeTests
         });
         var transform = new RenderTransform(Matrix4.Identity(), delegated);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
         };
@@ -1152,7 +1153,7 @@ public sealed class SemanticsTreeTests
         var delegated = new MutableSyntheticSiblingGroupRenderBox(
             child: new MergingSemanticBox("Child", new Size(10, 10)),
             conflictingActions: false);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = delegated
         };
@@ -1199,7 +1200,7 @@ public sealed class SemanticsTreeTests
             parentTapConflict: false);
         var transform = new RenderTransform(Matrix4.Identity(), delegated);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
         };
@@ -1240,7 +1241,7 @@ public sealed class SemanticsTreeTests
             new MergingSemanticBox("Synthetic Geo", new Size(10, 8)));
         var transform = new RenderTransform(Matrix4.TranslationValues(10, 6, 0.0), delegated);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = transform
         };
@@ -1280,7 +1281,7 @@ public sealed class SemanticsTreeTests
             SemanticsClipRect = new Rect(0, 0, 120, 40)
         };
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = clip
         };
@@ -1344,7 +1345,7 @@ public sealed class SemanticsTreeTests
                 new List<List<SemanticsConfiguration>>()),
             explicitChildNodes: true);
 
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = delegated
         };
@@ -1381,7 +1382,7 @@ public sealed class SemanticsTreeTests
 
     private static PipelineOwner BuildPipelineForSemantics(RenderBox child)
     {
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = child
         };
@@ -1639,7 +1640,7 @@ public sealed class SemanticsTreeTests
             return builder.Build();
         });
 
-        var renderView = new RenderView { Child = delegated };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = delegated };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(220, 120));

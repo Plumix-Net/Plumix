@@ -1,11 +1,12 @@
+using System.Diagnostics;
 using Avalonia;
-using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.Foundation;
 using Plumix.UI;
 using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/view.dart (approximate)
+// RenderView is a RenderBox and the host composites the owner's root layer; see docs/ai/DIVERGENCES.md.
 
 namespace Plumix;
 
@@ -33,7 +34,7 @@ public class ViewConfiguration : IEquatable<ViewConfiguration>
     public static ViewConfiguration FromView(FlutterView view)
     {
         ArgumentNullException.ThrowIfNull(view);
-        BoxConstraints physicalConstraints = BoxConstraints.Tight(view.PhysicalSize);
+        BoxConstraints physicalConstraints = view.PhysicalConstraints;
         double devicePixelRatio = view.DevicePixelRatio;
         return new ViewConfiguration(
             physicalConstraints: physicalConstraints,
@@ -105,10 +106,47 @@ public class ViewConfiguration : IEquatable<ViewConfiguration>
         => $"{LogicalConstraints} at {DoubleProperty.FormatDouble(DevicePixelRatio)}x";
 }
 
-public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
+/// <summary>A callback <see cref="RenderView.DebugAddPaintCallback"/> registers; runs after the view painted.</summary>
+/// <remarks>Flutter's <c>DebugPaintCallback</c>.</remarks>
+public delegate void DebugPaintCallback(PaintingContext context, Point offset, RenderView renderView);
+
+/// <summary>
+/// The root of the render tree: the object that bridges the render tree and a platform view.
+/// </summary>
+/// <remarks>
+/// <para>
+/// Flutter's <c>RenderView</c>. It is constructed for a <see cref="FlutterView"/>, laid out against
+/// its <see cref="Configuration"/> once <see cref="PrepareInitialFrame"/> bootstrapped layout and
+/// paint, and is always a repaint boundary.
+/// </para>
+/// <para>
+/// Plumix's view is a <see cref="RenderBox"/> rather than a bare <c>RenderObject</c>, so the box
+/// hit-test protocol reaches it directly; its root layer is a plain <see cref="OffsetLayer"/>
+/// because the render tree is kept in logical pixels and the host applies the device pixel ratio
+/// when it composites the owner's layer — see <c>docs/ai/DIVERGENCES.md</c>.
+/// </para>
+/// </remarks>
+public class RenderView : RenderBox, IRenderObjectSingleChildContainer
 {
+    private static readonly List<DebugPaintCallback> DebugPaintCallbacks = [];
+
     private RenderBox? _child;
     private ViewConfiguration? _configuration;
+    private Matrix4? _rootTransform;
+
+    /// <summary>Creates the root of the render tree for <paramref name="view"/>.</summary>
+    /// <remarks>Flutter's <c>RenderView</c> constructor.</remarks>
+    public RenderView(FlutterView view, RenderBox? child = null, ViewConfiguration? configuration = null)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        FlutterView = view;
+        if (configuration is not null)
+        {
+            Configuration = configuration;
+        }
+
+        Child = child;
+    }
 
     public override bool IsRepaintBoundary => true;
 
@@ -116,9 +154,12 @@ public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
     /// The constraints and pixel density used for the root layout.
     /// </summary>
     /// <remarks>
-    /// Flutter's <c>RenderView.configuration</c>. Plumix's hosts drive the frame themselves (see the
-    /// <c>PipelineOwner.RequestLayout</c> row in <c>docs/ai/DIVERGENCES.md</c>), so the owner keeps
-    /// this in step with the size it is asked to lay the view out under.
+    /// Flutter's <c>RenderView.configuration</c>. Until <see cref="PrepareInitialFrame"/> has run the
+    /// value is only stored; afterwards a change relays the view out and, when
+    /// <see cref="ViewConfiguration.ShouldUpdateMatrix"/> says so, replaces the root layer. Plumix's
+    /// hosts drive the frame themselves (see the <c>PipelineOwner.RequestLayout</c> row in
+    /// <c>docs/ai/DIVERGENCES.md</c>), so the owner keeps this in step with the size it is asked to
+    /// lay the view out under.
     /// </remarks>
     public ViewConfiguration Configuration
     {
@@ -133,17 +174,38 @@ public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
                 return;
             }
 
+            ViewConfiguration? oldConfiguration = _configuration;
             _configuration = value;
+            if (_rootTransform is null)
+            {
+                // [prepareInitialFrame] has not been called yet, nothing to do for now.
+                return;
+            }
+
+            if (oldConfiguration is null || value.ShouldUpdateMatrix(oldConfiguration))
+            {
+                ReplaceRootLayer(UpdateMatricesAndCreateNewRootLayer());
+            }
+
+            Debug.Assert(_rootTransform is not null);
             MarkNeedsLayout();
         }
     }
 
     /// <summary>Whether a <see cref="Configuration"/> has been set.</summary>
+    /// <remarks>Flutter's <c>RenderView.hasConfiguration</c>.</remarks>
     public bool HasConfiguration => _configuration is not null;
 
-    /// <summary>The platform view this render view renders into, when a host has supplied one.</summary>
-    /// <remarks>Flutter's <c>RenderView.flutterView</c>, which is required rather than optional there.</remarks>
-    public FlutterView? FlutterView { get; set; }
+    /// <summary>The platform view this render view renders into.</summary>
+    /// <remarks>Flutter's <c>RenderView.flutterView</c>.</remarks>
+    public FlutterView FlutterView { get; }
+
+    /// <summary>
+    /// Whether Flutter should automatically compute the desired system UI overlay style from the
+    /// painted <see cref="SystemUiOverlayStyle"/> annotations after each frame.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderView.automaticSystemUiAdjustment</c>.</remarks>
+    public bool AutomaticSystemUiAdjustment { get; set; } = true;
 
     public RenderBox? Child
     {
@@ -177,6 +239,87 @@ public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
         set => Child = (RenderBox?)value;
     }
 
+    /// <summary>
+    /// Bootstraps the render pipeline by preparing the first frame: schedules the initial layout
+    /// and creates the root layer, which is then scheduled for its initial paint.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>RenderView.prepareInitialFrame</c>. Must be called once, after the view is
+    /// attached to a <see cref="PipelineOwner"/> and given a <see cref="Configuration"/>.
+    /// </remarks>
+    public virtual void PrepareInitialFrame()
+    {
+        if (Owner is null)
+        {
+            throw new AssertionError("attach the RenderView to a PipelineOwner before calling prepareInitialFrame");
+        }
+
+        if (_rootTransform is not null)
+        {
+            throw new AssertionError("prepareInitialFrame must only be called once");
+        }
+
+        if (!HasConfiguration)
+        {
+            throw new AssertionError("set a configuration before calling prepareInitialFrame");
+        }
+
+        ScheduleInitialLayout();
+        ScheduleInitialPaint(UpdateMatricesAndCreateNewRootLayer());
+        Debug.Assert(_rootTransform is not null);
+    }
+
+    /// <summary>Flutter's <c>RenderView._updateMatricesAndCreateNewRootLayer</c>.</summary>
+    private OffsetLayer UpdateMatricesAndCreateNewRootLayer()
+    {
+        Debug.Assert(HasConfiguration);
+        _rootTransform = Configuration.ToMatrix();
+        var rootLayer = new OffsetLayer();
+        rootLayer.Attach(this);
+        return rootLayer;
+    }
+
+    /// <summary>Flutter's <c>RenderObject.scheduleInitialPaint</c>, which only the root of a tree calls.</summary>
+    internal void ScheduleInitialPaint(OffsetLayer rootLayer)
+    {
+        Debug.Assert(rootLayer.Attached);
+        Debug.Assert(Attached);
+        Debug.Assert(Parent is null);
+        Debug.Assert(Owner?.DebugDoingPaint != true);
+        Debug.Assert(IsRepaintBoundary);
+        Debug.Assert(_layer is null);
+        _layer = rootLayer;
+        Owner!.RootLayer = rootLayer;
+        Owner.RequestPaintFor(this);
+    }
+
+    /// <summary>Flutter's <c>RenderObject.replaceRootLayer</c>, which only the root of a tree calls.</summary>
+    internal void ReplaceRootLayer(OffsetLayer rootLayer)
+    {
+        if (ReferenceEquals(_layer, rootLayer))
+        {
+            return;
+        }
+
+        if (_layer is Layer oldRootLayer && oldRootLayer.Attached)
+        {
+            oldRootLayer.Detach();
+        }
+
+        if (!rootLayer.Attached)
+        {
+            rootLayer.Attach(this);
+        }
+
+        _layer = rootLayer;
+        if (Owner is not null)
+        {
+            Owner.RootLayer = rootLayer;
+        }
+
+        MarkNeedsPaint();
+    }
+
     public override void SetupParentData(RenderObject child)
     {
         if (child.parentData is not BoxParentData)
@@ -201,18 +344,25 @@ public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
         }
     }
 
+    /// <inheritdoc />
+    /// <remarks>
+    /// Flutter's <c>RenderView.performLayout</c>: with tight constraints the view has that size and
+    /// the child cannot influence it; with loose constraints the view takes the child's size, or
+    /// the smallest allowed size when there is no child.
+    /// </remarks>
     protected override void PerformLayout()
     {
-        if (_child != null)
+        Debug.Assert(_rootTransform is not null);
+        bool sizedByChild = !Constraints.IsTight;
+        _child?.Layout(Constraints, parentUsesSize: sizedByChild);
+        Size = sizedByChild && _child is not null ? _child.Size : Constraints.Smallest;
+        if (_child is not null)
         {
-            _child.Layout(Constraints, parentUsesSize: true);
-            Size = Constraints.Constrain(_child.Size);
             ((BoxParentData)_child.parentData!).offset = new Point(0, 0);
         }
-        else
-        {
-            Size = Constraints.Constrain(new Size());
-        }
+
+        Debug.Assert(double.IsFinite(Size.Width) && double.IsFinite(Size.Height));
+        Debug.Assert(Constraints.IsSatisfiedBy(Size));
     }
 
     /// <inheritdoc />
@@ -222,9 +372,10 @@ public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
     /// </remarks>
     protected override Size ComputeDryLayout(BoxConstraints constraints)
     {
-        return _child is null
-            ? constraints.Constrain(new Size())
-            : constraints.Constrain(_child.GetDryLayout(constraints));
+        bool sizedByChild = !constraints.IsTight;
+        return sizedByChild && _child is not null
+            ? _child.GetDryLayout(constraints)
+            : constraints.Smallest;
     }
 
     public override void Paint(PaintingContext ctx, Point offset)
@@ -232,6 +383,42 @@ public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
         if (_child != null)
         {
             ctx.PaintChild(_child, offset);
+        }
+
+        if (Constants.KDebugMode && DebugPaintCallbacks.Count > 0)
+        {
+            foreach (DebugPaintCallback callback in DebugPaintCallbacks.ToArray())
+            {
+                if (DebugPaintCallbacks.Contains(callback))
+                {
+                    callback(ctx, offset, this);
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Registers a callback that paints on top of every <see cref="RenderView"/>, for debugging
+    /// aids such as the widget inspector.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderView.debugAddPaintCallback</c>; a no-op outside debug mode.</remarks>
+    public static void DebugAddPaintCallback(DebugPaintCallback callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        if (Constants.KDebugMode)
+        {
+            DebugPaintCallbacks.Add(callback);
+        }
+    }
+
+    /// <summary>Removes a callback registered with <see cref="DebugAddPaintCallback"/>.</summary>
+    /// <remarks>Flutter's <c>RenderView.debugRemovePaintCallback</c>; a no-op outside debug mode.</remarks>
+    public static void DebugRemovePaintCallback(DebugPaintCallback callback)
+    {
+        ArgumentNullException.ThrowIfNull(callback);
+        if (Constants.KDebugMode)
+        {
+            DebugPaintCallbacks.Remove(callback);
         }
     }
 
@@ -248,37 +435,6 @@ public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
     protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
     {
         configuration.IsSemanticBoundary = true;
-    }
-
-    internal void ScheduleInitialPaint(OffsetLayer rootLayer)
-    {
-        if (!rootLayer.Attached)
-        {
-            rootLayer.Attach(this);
-        }
-
-        _layer = rootLayer;
-    }
-
-    internal void ReplaceRootLayer(OffsetLayer rootLayer)
-    {
-        if (ReferenceEquals(_layer, rootLayer))
-        {
-            return;
-        }
-
-        if (_layer is Layer oldRootLayer && oldRootLayer.Attached)
-        {
-            oldRootLayer.Detach();
-        }
-
-        if (!rootLayer.Attached)
-        {
-            rootLayer.Attach(this);
-        }
-
-        _layer = rootLayer;
-        MarkNeedsPaint();
     }
 
     /// <inheritdoc />
@@ -299,11 +455,11 @@ public sealed class RenderView : RenderBox, IRenderObjectSingleChildContainer
 
         properties.Add(new DiagnosticsProperty<Size?>(
             "view size",
-            FlutterView?.PhysicalSize,
+            FlutterView.PhysicalSize,
             tooltip: "in physical pixels"));
         properties.Add(new DoubleProperty(
             "device pixel ratio",
-            FlutterView?.DevicePixelRatio,
+            FlutterView.DevicePixelRatio,
             tooltip: "physical pixels per logical pixel"));
         properties.Add(new DiagnosticsProperty<ViewConfiguration>(
             "configuration",

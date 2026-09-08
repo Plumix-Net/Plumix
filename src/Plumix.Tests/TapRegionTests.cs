@@ -312,7 +312,7 @@ public sealed class TapRegionTests
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
-            _renderView = new RenderView
+            _renderView = new RenderView(new FlutterView(new Size(800, 600)))
             {
                 Child = Assert.IsAssignableFrom<RenderBox>(_root.ChildElement?.RenderObject),
             };

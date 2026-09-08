@@ -23,7 +23,7 @@ internal sealed class MouseTrackingHarness : IDisposable
     public MouseTrackingHarness(Widget widget, Size? size = null)
     {
         _size = size ?? new Size(200, 200);
-        RenderView = new RenderView();
+        RenderView = new RenderView(new FlutterView(new Size(800, 600)));
         _pipeline = new PipelineOwner(RenderView);
         _pipeline.Attach(RenderView);
         _rootElement = new HarnessRootElement(RenderView, new Directionality(TextDirection.Ltr, child: widget));

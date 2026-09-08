@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Plumix.Rendering;
 using Xunit;
 using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/rendering/layer.dart (parity regression tests)
 
@@ -14,7 +15,7 @@ public sealed class LayerV2Tests
     public void PushClipRect_CreatesClipRectLayer_WhenCompositingIsNeeded()
     {
         var leaf = new TestClipPainterRenderBox(needsCompositing: true);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = leaf
         };
@@ -35,7 +36,7 @@ public sealed class LayerV2Tests
     public void PushClipRect_ClipsOnTheCanvas_WhenCompositingIsNotNeeded()
     {
         var leaf = new TestClipPainterRenderBox(needsCompositing: false);
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = leaf
         };
@@ -108,7 +109,7 @@ public sealed class LayerV2Tests
     public void PushClipRRect_CreatesClipRRectLayer_WhenCompositingIsNeeded()
     {
         var leaf = new TestClipRRectPainterRenderBox();
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = leaf
         };
@@ -171,7 +172,7 @@ public sealed class LayerV2Tests
     {
         var clip = new RenderClipRRect(
             child: new TestCompositingRenderBox());
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = clip
         };
@@ -200,7 +201,7 @@ public sealed class LayerV2Tests
     public void PushOpacityAndTransform_CreateNestedLayerTree()
     {
         var leaf = new TestOpacityTransformPainterRenderBox();
-        var renderView = new RenderView
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = leaf
         };

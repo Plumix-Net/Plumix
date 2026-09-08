@@ -32,7 +32,7 @@ public sealed class SemanticsDirtyPipelineTests
         RenderBox child,
         Size viewSize)
     {
-        var renderView = new RenderView { Child = child };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = child };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         var updates = new List<SemanticsUpdate>();

@@ -59,7 +59,7 @@ public sealed class CustomMultiChildLayoutTests
         var layoutDelegate = new RelayoutDelegate(relayout);
         var layout = new RenderCustomMultiChildLayoutBox(layoutDelegate, [child]);
         ((MultiChildLayoutParentData)child.parentData!).Id = TestSlot.Leader;
-        var renderView = new RenderView { Child = layout };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = layout };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 60));
@@ -78,7 +78,7 @@ public sealed class CustomMultiChildLayoutTests
         var first = new ConfigurableDelegate(width: 80, shouldRelayout: false);
         var layout = new RenderCustomMultiChildLayoutBox(first, [child]);
         ((MultiChildLayoutParentData)child.parentData!).Id = TestSlot.Leader;
-        var renderView = new RenderView { Child = layout };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = layout };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(120, 60));

@@ -222,7 +222,7 @@ public sealed class SliverGroupTests
     {
         var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(sliver);
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(size);

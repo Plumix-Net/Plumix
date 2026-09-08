@@ -110,6 +110,14 @@ public readonly record struct BoxConstraints(
 
     public bool IsTight => HasTightWidth && HasTightHeight;
 
+    /// <summary>Whether <paramref name="size"/> satisfies these constraints.</summary>
+    /// <remarks>Flutter's <c>BoxConstraints.isSatisfiedBy</c>.</remarks>
+    public bool IsSatisfiedBy(Size size)
+    {
+        return MinWidth <= size.Width && size.Width <= MaxWidth
+               && MinHeight <= size.Height && size.Height <= MaxHeight;
+    }
+
     public bool IsNormalized => MinWidth >= 0.0 && MinWidth <= MaxWidth && MinHeight >= 0.0 && MinHeight <= MaxHeight;
 
     /// <inheritdoc />

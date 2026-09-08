@@ -221,7 +221,7 @@ public sealed class FramePipelineTests
     [Fact]
     public void PipelineOwner_FlushLayout_SkipsCompositingAndTriggersSemantics()
     {
-        var renderView = new RenderView();
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)));
         var child = new ProbeRenderBox();
         renderView.Child = child;
 

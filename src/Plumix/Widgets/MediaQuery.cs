@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
@@ -320,6 +321,55 @@ public sealed record MediaQueryData
             displayFeatures: []);
     }
 
+    /// <summary>
+    /// Creates data for a <see cref="MediaQuery"/> from <paramref name="view"/>: view-specific values
+    /// (size, insets, features) come from the view, platform-specific values from
+    /// <paramref name="platformData"/> when given.
+    /// </summary>
+    /// <remarks>
+    /// Flutter's <c>MediaQueryData.fromView</c>. With no <paramref name="platformData"/>, Flutter
+    /// reads the platform values from <c>view.platformDispatcher</c>; Plumix has no platform
+    /// dispatcher, so they fall back to the defaults, except <see cref="DisableAnimations"/>, which
+    /// <see cref="WidgetsBinding.AccessibilityFeatures"/> carries.
+    /// </remarks>
+    public static MediaQueryData FromView(FlutterView view, MediaQueryData? platformData = null)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        double devicePixelRatio = view.DevicePixelRatio;
+        return new MediaQueryData(
+            Size: new Size(view.PhysicalSize.Width / devicePixelRatio, view.PhysicalSize.Height / devicePixelRatio),
+            DevicePixelRatio: devicePixelRatio,
+            Padding: FromViewPadding(view.Padding, devicePixelRatio),
+            ViewInsets: FromViewPadding(view.ViewInsets, devicePixelRatio),
+            SystemGestureInsets: FromViewPadding(view.SystemGestureInsets, devicePixelRatio),
+            ViewPadding: FromViewPadding(view.ViewPadding, devicePixelRatio),
+            TextScaler: platformData?.TextScaler,
+            AccessibleNavigation: platformData?.AccessibleNavigation ?? false,
+            AlwaysUse24HourFormat: platformData?.AlwaysUse24HourFormat ?? false,
+            DisableAnimations: platformData?.DisableAnimations
+                               ?? WidgetsBinding.Instance.AccessibilityFeatures.DisableAnimations,
+            InvertColors: platformData?.InvertColors ?? false,
+            NavigationMode: platformData?.NavigationMode ?? NavigationMode.Traditional,
+            PlatformBrightness: platformData?.PlatformBrightness ?? PlatformBrightness.Light,
+            HighContrast: platformData?.HighContrast ?? false,
+            SupportsAnnounce: platformData?.SupportsAnnounce ?? false,
+            ViewId: view.ViewId,
+            DisplayCornerRadii: view.DisplayCornerRadii,
+            DisplayFeatures: view.DisplayFeatures,
+            OnOffSwitchLabels: platformData?.OnOffSwitchLabels ?? false,
+            GestureSettings: view.GestureSettings);
+    }
+
+    /// <summary>Dart's <c>EdgeInsets.fromViewPadding</c>: physical insets to logical pixels.</summary>
+    private static Thickness FromViewPadding(Thickness padding, double devicePixelRatio)
+    {
+        return new Thickness(
+            padding.Left / devicePixelRatio,
+            padding.Top / devicePixelRatio,
+            padding.Right / devicePixelRatio,
+            padding.Bottom / devicePixelRatio);
+    }
+
     public static Thickness ComputePadding(Thickness viewPadding, Thickness viewInsets)
     {
         return new Thickness(
@@ -374,6 +424,18 @@ public sealed class MediaQuery : InheritedModel<object>
     }
 
     public MediaQueryData Data { get; }
+
+    /// <summary>
+    /// Wraps <paramref name="child"/> in a <see cref="MediaQuery"/> built from <paramref name="view"/>:
+    /// the view-specific data comes from the view, the platform-specific data from the surrounding
+    /// <see cref="MediaQuery"/> when there is one. The injected query updates when the view's
+    /// metrics change.
+    /// </summary>
+    /// <remarks>Flutter's <c>MediaQuery.fromView</c>.</remarks>
+    public static Widget FromView(FlutterView view, Widget child, Key? key = null)
+    {
+        return new MediaQueryFromView(view: view, child: child, key: key);
+    }
 
     protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
@@ -599,5 +661,131 @@ public sealed class MediaQuery : InheritedModel<object>
                 removeRight: removeRight,
                 removeBottom: removeBottom),
             child: child);
+    }
+}
+
+/// <summary>Flutter's <c>_MediaQueryFromView</c>: the widget behind <see cref="MediaQuery.FromView"/>.</summary>
+internal sealed class MediaQueryFromView : StatefulWidget
+{
+    public MediaQueryFromView(FlutterView view, Widget child, bool ignoreParentData = false, Key? key = null)
+        : base(key)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        ArgumentNullException.ThrowIfNull(child);
+        View = view;
+        IgnoreParentData = ignoreParentData;
+        Child = child;
+    }
+
+    public FlutterView View { get; }
+
+    public bool IgnoreParentData { get; }
+
+    public Widget Child { get; }
+
+    public override State CreateState() => new MediaQueryFromViewState();
+
+    /// <summary>Flutter's <c>_MediaQueryFromViewState</c>.</summary>
+    private sealed class MediaQueryFromViewState : State, WidgetsBindingObserver
+    {
+        private MediaQueryData? _parentData;
+        private MediaQueryData? _data;
+
+        private MediaQueryFromView TypedWidget => (MediaQueryFromView)StateWidget;
+
+        public override void InitState()
+        {
+            base.InitState();
+            WidgetsBinding.Instance.AddObserver(this);
+        }
+
+        public override void DidChangeDependencies()
+        {
+            base.DidChangeDependencies();
+            UpdateParentData();
+            UpdateData();
+            Debug.Assert(_data is not null);
+        }
+
+        public override void DidUpdateWidget(StatefulWidget oldWidget)
+        {
+            base.DidUpdateWidget(oldWidget);
+            var old = (MediaQueryFromView)oldWidget;
+            if (TypedWidget.IgnoreParentData != old.IgnoreParentData)
+            {
+                UpdateParentData();
+            }
+
+            if (_data is null || !ReferenceEquals(old.View, TypedWidget.View))
+            {
+                UpdateData();
+            }
+
+            Debug.Assert(_data is not null);
+        }
+
+        private void UpdateParentData()
+        {
+            _parentData = TypedWidget.IgnoreParentData ? null : MediaQuery.MaybeOf(Context);
+            _data = null; // UpdateData must be called again after changing parent data.
+        }
+
+        private void UpdateData()
+        {
+            MediaQueryData newData = MediaQueryData.FromView(TypedWidget.View, platformData: _parentData);
+            if (!Equals(newData, _data))
+            {
+                SetState(() => _data = newData);
+            }
+        }
+
+        public void DidChangeAccessibilityFeatures()
+        {
+            // If we have a parent, it dictates our accessibility features. If we don't have a parent,
+            // we get our accessibility features straight from the platform and need to update our
+            // data in response to the platform changing its accessibility features setting.
+            if (_parentData is null)
+            {
+                UpdateData();
+            }
+        }
+
+        public void DidChangeMetrics()
+        {
+            UpdateData();
+        }
+
+        public void DidChangeTextScaleFactor()
+        {
+            // If we have a parent, it dictates our text scale factor. If we don't have a parent, we
+            // get our text scale factor from the platform and need to update our data in response to
+            // the platform changing its text scale factor setting.
+            if (_parentData is null)
+            {
+                UpdateData();
+            }
+        }
+
+        public void DidChangePlatformBrightness()
+        {
+            // If we have a parent, it dictates our platform brightness. If we don't have a parent, we
+            // get our platform brightness from the platform and need to update our data in response
+            // to the platform changing its platform brightness setting.
+            if (_parentData is null)
+            {
+                UpdateData();
+            }
+        }
+
+        public override void Dispose()
+        {
+            WidgetsBinding.Instance.RemoveObserver(this);
+            base.Dispose();
+        }
+
+        public override Widget Build(BuildContext context)
+        {
+            return new MediaQuery(data: _data!, child: TypedWidget.Child);
+        }
     }
 }

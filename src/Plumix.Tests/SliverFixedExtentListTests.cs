@@ -296,7 +296,7 @@ public sealed class SliverFixedExtentListTests
             crossAxisDirection: AxisDirection.Right,
             scrollCacheExtent: cacheExtent is null ? null : ScrollCacheExtent.Pixels(cacheExtent.Value),
             children: [sliver]);
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         return pipeline;

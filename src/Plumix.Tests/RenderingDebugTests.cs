@@ -5,6 +5,8 @@ using Plumix.Painting;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Avalonia;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/debug.dart
 
@@ -296,7 +298,7 @@ public sealed class RenderingDebugTests : IDisposable
     {
         RenderingDebug.PaintPointersEnabled = true;
         var probe = new DebugPaintProbeRenderBox();
-        var renderView = new RenderView { Child = probe };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = probe };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         Repaint(pipeline, new Size(40.0, 40.0));
@@ -455,7 +457,7 @@ public sealed class RenderingDebugTests : IDisposable
     public void RepaintBoundaryMetrics_CountAStandaloneRepaintAsAsymmetric()
     {
         var boundary = new RenderRepaintBoundary(new DebugPaintProbeRenderBox());
-        var renderView = new RenderView { Child = boundary };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = boundary };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(40.0, 40.0));
@@ -739,7 +741,7 @@ public sealed class RenderingDebugTests : IDisposable
 
     private static OffsetLayer Paint(RenderBox root, Size size)
     {
-        var renderView = new RenderView { Child = root };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = root };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(size);

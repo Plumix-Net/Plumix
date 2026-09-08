@@ -3,6 +3,7 @@ using Plumix;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 namespace Plumix.Tests;
 
@@ -340,7 +341,7 @@ public class ViewportPortTests
         viewport.Insert(new FixedSliver(120));
         viewport.Insert(new FixedSliver(150), after: viewport.LastChild);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 600));
@@ -358,7 +359,7 @@ public class ViewportPortTests
         var viewport = new RenderShrinkWrappingViewport(offset: offset);
         viewport.Insert(new FixedSliver(900));
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
@@ -389,7 +390,7 @@ public class ViewportPortTests
         viewport.Insert(first);
         viewport.Insert(second, after: first);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 600));
@@ -424,7 +425,7 @@ public class ViewportPortTests
             return existing.Owner;
         }
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(size);

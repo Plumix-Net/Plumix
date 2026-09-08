@@ -172,7 +172,7 @@ public sealed class AnnotatedRegionTests
             value: "first",
             sized: true,
             child: new PaintTrackingRenderBox());
-        var renderView = new RenderView { Child = annotated };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = annotated };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -197,7 +197,7 @@ public sealed class AnnotatedRegionTests
     public void PipelineOwner_SamplesPaintedSystemUiStylesAtBothSystemBars()
     {
         SystemChrome.ResetSystemUiOverlayStyleForTests();
-        var renderView = new RenderView();
+        var renderView = new RenderView(new FlutterView(new Size(800, 600)));
         var pipeline = new PipelineOwner(renderView);
         var fullScreen = new AnnotatedRegionLayer<SystemUiOverlayStyle>(
             value: new SystemUiOverlayStyle(

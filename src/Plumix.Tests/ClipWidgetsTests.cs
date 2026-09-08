@@ -159,7 +159,7 @@ public sealed class ClipWidgetsTests
         var clipper = new ListeningOvalClipper(reclip);
         var child = new HitTestBox(new Size(80, 50));
         var oval = new RenderClipOval(child: child, clipper: clipper);
-        var root = new RenderView { Child = oval };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = oval };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(80, 50));
@@ -194,7 +194,7 @@ public sealed class ClipWidgetsTests
         {
             Child = clip,
         };
-        var root = new RenderView { Child = padding };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = padding };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 60));
@@ -220,7 +220,7 @@ public sealed class ClipWidgetsTests
         {
             Child = clip,
         };
-        var root = new RenderView { Child = padding };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = padding };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 60));
@@ -373,7 +373,7 @@ public sealed class ClipWidgetsTests
             child,
             borderRadius: BorderRadiusDirectional.Only(topStart: 12.0),
             textDirection: TextDirection.Ltr);
-        var view = new RenderView { Child = render };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = render };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
         pipeline.FlushLayout(new Size(40, 40));
@@ -471,7 +471,7 @@ public sealed class ClipWidgetsTests
 
     private static void LayoutRoot(RenderBox render, Size size)
     {
-        var view = new RenderView { Child = render };
+        var view = new RenderView(new FlutterView(new Size(800, 600))) { Child = render };
         var pipeline = new PipelineOwner(view);
         pipeline.Attach(view);
         pipeline.FlushLayout(size);
@@ -504,7 +504,7 @@ public sealed class ClipWidgetsTests
 
     private static PipelineOwner BuildPipeline(RenderBox child, Size size)
     {
-        var root = new RenderView { Child = child };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = child };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(size);

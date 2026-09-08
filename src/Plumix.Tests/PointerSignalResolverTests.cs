@@ -3,6 +3,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/test/gestures/pointer_signal_resolver_test.dart (parity regression tests)
 
@@ -87,7 +88,7 @@ public sealed class PointerSignalResolverTests
                     binding.PointerSignalResolver.Register(signal, _ => log.Add("outer")),
                 behavior: HitTestBehavior.Translucent,
                 child: inner);
-            var root = new RenderView { Child = outer };
+            var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = outer };
             var pipeline = new PipelineOwner(root);
             pipeline.Attach(root);
             pipeline.FlushLayout(new Size(200.0, 200.0));

@@ -403,7 +403,7 @@ public sealed class RenderObjectDiagnosticsTests
     [DebugOnlyFact]
     public void PipelineOwner_DebugDumpRenderTree_DumpsFromTheRoot()
     {
-        var root = new RenderView { Child = new SizedBox(new Size(10, 10)) };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = new SizedBox(new Size(10, 10)) };
         var owner = new PipelineOwner(root);
         owner.Attach(root);
 
@@ -489,7 +489,7 @@ public sealed class RenderObjectDiagnosticsTests
 
     private static void Layout(RenderBox box, BoxConstraints constraints)
     {
-        var root = new RenderView { Child = box };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = box };
         var owner = new PipelineOwner(root);
         owner.Attach(root);
         box.Layout(constraints, parentUsesSize: true);

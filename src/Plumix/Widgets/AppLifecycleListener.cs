@@ -27,6 +27,31 @@ public interface WidgetsBindingObserver
     {
     }
 
+    /// <summary>Called when the application's dimensions change, e.g. a window resize.</summary>
+    /// <remarks>Flutter's <c>WidgetsBindingObserver.didChangeMetrics</c>.</remarks>
+    void DidChangeMetrics()
+    {
+    }
+
+    /// <summary>Called when the platform's text scale factor changes.</summary>
+    /// <remarks>Flutter's <c>WidgetsBindingObserver.didChangeTextScaleFactor</c>.</remarks>
+    void DidChangeTextScaleFactor()
+    {
+    }
+
+    /// <summary>Called when the platform brightness changes.</summary>
+    /// <remarks>Flutter's <c>WidgetsBindingObserver.didChangePlatformBrightness</c>.</remarks>
+    void DidChangePlatformBrightness()
+    {
+    }
+
+    /// <summary>Called when a view gained or lost focus on the platform.</summary>
+    /// <remarks>Flutter's <c>WidgetsBindingObserver.didChangeViewFocus</c>.</remarks>
+    void DidChangeViewFocus(ViewFocusEvent @event)
+    {
+        _ = @event;
+    }
+
     /// <summary>
     /// Called when the host reports that the user tapped the status bar. Only iOS and macOS report it;
     /// scaffolds use it to scroll their primary scrollable back to the top.
@@ -131,6 +156,58 @@ public class WidgetsBinding
                 Debug.WriteLine(
                     $"Exception while dispatching {nameof(WidgetsBindingObserver.DidChangeAccessibilityFeatures)}: "
                     + exception);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Called when the platform's view metrics changed: the renderer binding reconfigures every
+    /// registered <see cref="RenderView"/>, then the observers hear <c>DidChangeMetrics</c>.
+    /// </summary>
+    /// <remarks>Flutter's <c>WidgetsBinding.handleMetricsChanged</c> over <c>RendererBinding</c>'s.</remarks>
+    public void HandleMetricsChanged()
+    {
+        RendererBinding.Instance.HandleMetricsChanged();
+        Dispatch(static observer => observer.DidChangeMetrics(), nameof(WidgetsBindingObserver.DidChangeMetrics));
+    }
+
+    /// <summary>Called when the platform's text scale factor changed.</summary>
+    /// <remarks>Flutter's <c>WidgetsBinding.handleTextScaleFactorChanged</c>.</remarks>
+    public void HandleTextScaleFactorChanged()
+    {
+        Dispatch(
+            static observer => observer.DidChangeTextScaleFactor(),
+            nameof(WidgetsBindingObserver.DidChangeTextScaleFactor));
+    }
+
+    /// <summary>Called when the platform brightness changed.</summary>
+    /// <remarks>Flutter's <c>WidgetsBinding.handlePlatformBrightnessChanged</c>.</remarks>
+    public void HandlePlatformBrightnessChanged()
+    {
+        Dispatch(
+            static observer => observer.DidChangePlatformBrightness(),
+            nameof(WidgetsBindingObserver.DidChangePlatformBrightness));
+    }
+
+    /// <summary>Called when a view gained or lost focus on the platform.</summary>
+    /// <remarks>Flutter's <c>WidgetsBinding._handleViewFocusChanged</c>, which the platform dispatcher feeds.</remarks>
+    public void HandleViewFocusChanged(ViewFocusEvent @event)
+    {
+        ArgumentNullException.ThrowIfNull(@event);
+        Dispatch(observer => observer.DidChangeViewFocus(@event), nameof(WidgetsBindingObserver.DidChangeViewFocus));
+    }
+
+    private void Dispatch(Action<WidgetsBindingObserver> callback, string name)
+    {
+        foreach (WidgetsBindingObserver observer in _observers.ToArray())
+        {
+            try
+            {
+                callback(observer);
+            }
+            catch (Exception exception)
+            {
+                Debug.WriteLine($"Exception while dispatching {name}: " + exception);
             }
         }
     }

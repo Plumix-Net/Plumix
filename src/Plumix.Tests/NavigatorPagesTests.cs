@@ -551,7 +551,7 @@ public sealed class NavigatorPagesTests : IDisposable
 
         public Harness(Widget rootWidget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
             _root = new HarnessRootElement(RenderView, rootWidget);

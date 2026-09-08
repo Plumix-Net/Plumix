@@ -1,17 +1,26 @@
-using Plumix.Rendering;
 using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/binding.dart; flutter/packages/flutter/lib/src/rendering/binding.dart (host integration, adapted)
 
 namespace Plumix;
 
-public sealed class WidgetHost : PlumixHost, IRootRenderObjectHost
+/// <summary>
+/// A host that runs a widget tree: Plumix's <c>WidgetsBinding</c> half of the binding, per host.
+/// </summary>
+/// <remarks>
+/// <see cref="RootWidget"/> is attached the way <c>runApp</c> does it: wrapped in the implicit
+/// <see cref="View"/> over the host's own pipeline owner and render view
+/// (<c>WidgetsBinding.wrapWithDefaultView</c>), then in a <see cref="Widgets.RootWidget"/>
+/// (<c>attachRootWidget</c>). The platform-level <see cref="MediaQueryData"/> the host computes
+/// sits above the view, where Flutter's <c>MediaQuery.fromView</c> picks it up as the platform
+/// data; the view-level data comes from <see cref="PlumixHost.RootFlutterView"/>.
+/// </remarks>
+public sealed class WidgetHost : PlumixHost
 {
     private readonly BuildOwner _owner = new();
     private RootElement? _rootElement;
     private Widget? _rootWidget;
     private MediaQueryData? _lastMediaQueryData;
-    private FlutterView? _view;
 
     public WidgetHost()
     {
@@ -41,9 +50,10 @@ public sealed class WidgetHost : PlumixHost, IRootRenderObjectHost
             {
                 _rootElement.Unmount();
                 _rootElement = null;
+                Pipeline.RootLayer.RemoveAllChildren();
+                ScheduleVisualUpdate();
             }
 
-            SetRootChild(null);
             _lastMediaQueryData = null;
             return;
         }
@@ -52,16 +62,15 @@ public sealed class WidgetHost : PlumixHost, IRootRenderObjectHost
     }
 
     /// <summary>
-    /// Wraps <paramref name="rootWidget"/> in a <see cref="Widgets.RootWidget"/> and attaches it to
-    /// <see cref="BuildOwner"/>, creating the root element the first time.
+    /// Wraps <paramref name="rootWidget"/> in the implicit view and a <see cref="Widgets.RootWidget"/>
+    /// and attaches it to the <see cref="BuildOwner"/>, creating the root element the first time.
     /// </summary>
-    /// <remarks>Dart's <c>WidgetsBinding.attachRootWidget</c>.</remarks>
+    /// <remarks>Dart's <c>WidgetsBinding.attachRootWidget</c> over <c>wrapWithDefaultView</c>.</remarks>
     private void AttachRootWidget(Widget rootWidget)
     {
         AttachToBuildOwner(new RootWidget(
-            child: BuildRootWidget(rootWidget),
-            debugShortDescription: "[root]",
-            renderObjectHost: this));
+            child: WrapWithDefaultView(rootWidget),
+            debugShortDescription: "[root]"));
     }
 
     /// <summary>Dart's <c>WidgetsBinding.attachToBuildOwner</c>.</summary>
@@ -72,22 +81,6 @@ public sealed class WidgetHost : PlumixHost, IRootRenderObjectHost
         if (isBootstrapFrame)
         {
             ScheduleVisualUpdate();
-        }
-    }
-
-    /// <inheritdoc />
-    void IRootRenderObjectHost.AttachRootRenderObject(RenderObject? child)
-    {
-        switch (child)
-        {
-            case null:
-                SetRootChild(null);
-                return;
-            case RenderBox renderBox:
-                SetRootChild(renderBox);
-                return;
-            default:
-                throw new InvalidOperationException("RootElement can host only RenderBox.");
         }
     }
 
@@ -125,17 +118,17 @@ public sealed class WidgetHost : PlumixHost, IRootRenderObjectHost
         AttachRootWidget(_rootWidget);
     }
 
-    private Widget BuildRootWidget(Widget rootWidget)
+    /// <summary>Dart's <c>WidgetsBinding.wrapWithDefaultView</c>, over this host's implicit view.</summary>
+    private Widget WrapWithDefaultView(Widget rootWidget)
     {
         var data = GetMediaQueryData();
         _lastMediaQueryData = data;
-        _view ??= new FlutterView(data.PhysicalSize, data.DevicePixelRatio, data.ViewId);
-        _view.UpdateMetrics(data.PhysicalSize, data.DevicePixelRatio, data.ViewId);
-        RootFlutterView = _view;
-        return new View(
-            view: _view,
-            child: new MediaQuery(
-                data: data,
-                child: rootWidget));
+        return new MediaQuery(
+            data: data,
+            child: new View(
+                view: RootFlutterView,
+                child: rootWidget,
+                deprecatedDoNotUseWillBeRemovedWithoutNoticePipelineOwner: Pipeline,
+                deprecatedDoNotUseWillBeRemovedWithoutNoticeRenderView: RootRenderView));
     }
 }

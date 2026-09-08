@@ -3,6 +3,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 namespace Plumix.Tests;
 
@@ -257,7 +258,7 @@ public sealed class MultiDragGestureRecognizerTests
 
     private static TestPipeline BuildPipeline(RenderBox child)
     {
-        var root = new RenderView { Child = child };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = child };
         var owner = new PipelineOwner(root);
         owner.Attach(root);
         owner.RequestLayout();

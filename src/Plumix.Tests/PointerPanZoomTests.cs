@@ -3,6 +3,7 @@ using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 using Xunit;
+using Plumix.Widgets;
 
 // Dart parity source (reference): flutter/packages/flutter/test/gestures/events_test.dart; flutter/packages/flutter/test/gestures/gesture_binding_test.dart (parity regression tests)
 
@@ -261,7 +262,7 @@ public sealed class PointerPanZoomTests
 
     private static PipelineOwner BuildPipeline(RenderBox child)
     {
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = child
         };

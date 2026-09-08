@@ -368,7 +368,7 @@ public sealed class LayoutBuilderTests
         Mount(root, owner);
 
         var host = Assert.IsType<RenderSkipLayoutHost>(root.ChildElement!.RenderObject);
-        var renderView = new RenderView { Child = host };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = host };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(200, 100));
@@ -406,7 +406,7 @@ public sealed class LayoutBuilderTests
         Mount(root, owner);
 
         var host = Assert.IsType<RenderSkipLayoutHost>(root.ChildElement!.RenderObject);
-        var renderView = new RenderView { Child = host };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = host };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 

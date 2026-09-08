@@ -89,7 +89,7 @@ public sealed class CompositedTransformTests
             followerAnchor: Alignment.Center,
             child: followerChild);
         RenderStack stack = CreatePositionedStack(target, follower);
-        var renderView = new RenderView { Child = stack };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = stack };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -119,7 +119,7 @@ public sealed class CompositedTransformTests
         var link = new LayerLink();
         var child = new HitTestRenderBox(new Size(20, 10), hitTestSelf: true);
         var follower = new RenderFollowerLayer(link, showWhenUnlinked: false, child: child);
-        var renderView = new RenderView { Child = follower };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = follower };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -167,7 +167,7 @@ public sealed class CompositedTransformTests
             textDirection: TextDirection.Ltr);
         Position(transformedTarget, left: 30, top: 40, width: 40, height: 20);
         Position(transformedFollower, left: 150, top: 100, width: 20, height: 10);
-        var renderView = new RenderView { Child = stack };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = stack };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -191,7 +191,7 @@ public sealed class CompositedTransformTests
         var firstLink = new LayerLink();
         var secondLink = new LayerLink();
         var target = new RenderLeaderLayer(firstLink, new HitTestRenderBox(new Size(32, 18)));
-        var renderView = new RenderView { Child = target };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = target };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 

@@ -17,7 +17,7 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
 
     public CupertinoThemeTestHarness(Widget widget)
     {
-        RenderView = new RenderView();
+        RenderView = new RenderView(new FlutterView(new Size(800, 600)));
         _pipeline = new PipelineOwner(RenderView);
         _pipeline.Attach(RenderView);
         _root = new RootElement(RenderView, widget);

@@ -98,7 +98,7 @@ public sealed class SliverOpacityTests : IDisposable
         var opacity = new RenderSliverOpacity(opacity: 0.0, sliver: child);
         var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(opacity);
-        var renderView = new RenderView { Child = viewport };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 
@@ -137,7 +137,7 @@ public sealed class SliverOpacityTests : IDisposable
         var opacity = new RenderSliverAnimatedOpacity(controller, sliver: child);
         var viewport = new RenderViewport(offset: ViewportOffset.Zero());
         viewport.Insert(opacity);
-        var renderView = new RenderView { Child = viewport };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
 

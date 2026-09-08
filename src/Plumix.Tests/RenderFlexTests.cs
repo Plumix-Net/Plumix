@@ -1230,7 +1230,7 @@ public sealed class RenderFlexTests
         public ConstraintsHost(RenderBox child)
         {
             Child = child;
-            _root = new RenderView { Child = this };
+            _root = new RenderView(new FlutterView(new Size(800, 600))) { Child = this };
             _pipeline = new PipelineOwner(_root);
             _pipeline.Attach(_root);
         }
@@ -1365,7 +1365,7 @@ public sealed class RenderFlexTests
 
         public FlexHarness(Widget rootWidget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
 

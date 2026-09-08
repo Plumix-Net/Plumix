@@ -726,7 +726,7 @@ public sealed class TableTests
         RenderSemanticsAnnotations plain = SemanticsCell("Plain", SemanticsRole.None);
         var table = new RenderTable(textDirection: TextDirection.Ltr);
         table.SetFlatChildren(1, [plain]);
-        var renderView = new RenderView { Child = table };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = table };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(new Size(100, 100));
@@ -739,7 +739,7 @@ public sealed class TableTests
         // Re-hosting the table must not resurrect nodes whose ids came from the previous owner.
         // A render object can only have one parent, so it is dropped from the first view first.
         renderView.Child = null;
-        var rehostedView = new RenderView { Child = table };
+        var rehostedView = new RenderView(new FlutterView(new Size(800, 600))) { Child = table };
         var rehostedPipeline = new PipelineOwner(rehostedView);
         rehostedPipeline.Attach(rehostedView);
         rehostedPipeline.FlushLayout(new Size(100, 100));
@@ -764,7 +764,7 @@ public sealed class TableTests
         RenderTable table,
         Size viewSize)
     {
-        var renderView = new RenderView { Child = table };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = table };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(viewSize);
@@ -1042,7 +1042,7 @@ public sealed class TableTests
 
     private static void PaintThroughPipeline(RenderTable table, Size viewSize)
     {
-        var renderView = new RenderView { Child = table };
+        var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = table };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
         pipeline.FlushLayout(viewSize);

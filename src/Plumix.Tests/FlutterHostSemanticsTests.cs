@@ -91,7 +91,7 @@ public sealed class PlumixHostSemanticsTests
         SemanticsNode? button = FindFirstNode(root!, static node => node.Label == "Measure me");
         Assert.NotNull(button);
 
-        Rect? rect = host.GetRectOfSemanticsNodeInViewCoordinates(viewId: 0, nodeId: button!.Id);
+        Rect? rect = host.GetRectOfSemanticsNodeInViewCoordinates(host.RootFlutterView.ViewId, button!.Id);
         Assert.NotNull(rect);
         Assert.Equal(button.GlobalRect, rect!.Value);
 

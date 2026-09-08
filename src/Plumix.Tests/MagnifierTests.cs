@@ -354,7 +354,7 @@ public sealed class MagnifierTests : IDisposable
 
         public WidgetRenderHarness(Widget rootWidget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             Pipeline = new PipelineOwner(RenderView);
             Pipeline.Attach(RenderView);
             _rootElement = new HarnessRootElement(RenderView, rootWidget);

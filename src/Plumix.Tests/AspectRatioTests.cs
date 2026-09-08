@@ -175,7 +175,7 @@ public sealed class AspectRatioTests
         secondaryParentData.flex = 1;
         secondaryParentData.fit = FlexFit.Tight;
 
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = row
         };

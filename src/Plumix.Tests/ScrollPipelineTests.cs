@@ -140,7 +140,7 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(new RenderSliverToBoxAdapter(child));
 
-        var root = new RenderView
+        var root = new RenderView(new FlutterView(new Size(800, 600)))
         {
             Child = viewport
         };
@@ -167,7 +167,7 @@ public sealed class ScrollPipelineTests
         viewport.Insert(first);
         viewport.Insert(second, after: first);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 150));
@@ -191,7 +191,7 @@ public sealed class ScrollPipelineTests
         viewport.Insert(first);
         viewport.Insert(second, after: first);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
@@ -212,7 +212,7 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(correcting);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
@@ -229,7 +229,7 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(innerSliver);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 100));
@@ -275,7 +275,7 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(sliverPadding);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 100));
@@ -301,7 +301,7 @@ public sealed class ScrollPipelineTests
             offset: viewportOffset,
             axisDirection: AxisDirection.Up);
         viewport.Insert(new RenderSliverToBoxAdapter(child));
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
 
@@ -328,7 +328,7 @@ public sealed class ScrollPipelineTests
         // Every sliver laid out before the center child grows in the reverse direction.
         viewport.Center = center;
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 120));
@@ -351,7 +351,7 @@ public sealed class ScrollPipelineTests
             scrollCacheExtent: ScrollCacheExtent.Pixels(0));
         viewport.Insert(sliverList);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
@@ -382,7 +382,7 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(sliverList);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
 
@@ -418,7 +418,7 @@ public sealed class ScrollPipelineTests
             scrollCacheExtent: ScrollCacheExtent.Pixels(250));
         viewport.Insert(sliverList);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
 
@@ -537,7 +537,7 @@ public sealed class ScrollPipelineTests
             scrollCacheExtent: ScrollCacheExtent.Pixels(100));
         viewport.Insert(sliverList);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
@@ -565,7 +565,7 @@ public sealed class ScrollPipelineTests
             scrollCacheExtent: ScrollCacheExtent.Viewport(1));
         viewport.Insert(sliverList);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
@@ -587,7 +587,7 @@ public sealed class ScrollPipelineTests
             scrollCacheExtent: ScrollCacheExtent.Pixels(0));
         viewport.Insert(sliverList);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
@@ -618,7 +618,7 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(sliverList);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
 
@@ -828,7 +828,7 @@ public sealed class ScrollPipelineTests
             scrollCacheExtent: ScrollCacheExtent.Pixels(0));
         viewport.Insert(sliverGrid);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
         pipeline.FlushLayout(new Size(100, 200));
@@ -874,7 +874,7 @@ public sealed class ScrollPipelineTests
         var viewport = new RenderViewport(offset: viewportOffset);
         viewport.Insert(sliverGrid);
 
-        var root = new RenderView { Child = viewport };
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
         var pipeline = new PipelineOwner(root);
         pipeline.Attach(root);
 
@@ -1068,10 +1068,10 @@ public sealed class ScrollPipelineTests
         {
             var controller = new ScrollController();
             BuildContext? itemContext = null;
-            var harness = new WidgetRenderHarness(
+            using var harness = new ViewWidgetHarness(
                 new View(
                     // The raw view is 200 x 400 physical pixels, so the threshold is 400 logical px/s.
-                    view: new FlutterView(new Size(200, 400), devicePixelRatio: 2.0),
+                    view: new FlutterView(new Size(200, 400), devicePixelRatio: 2.0, viewId: 6001),
                     child: new MediaQuery(
                         // A nested override must not change the raw-view heuristic threshold.
                         data: new MediaQueryData(Size: new Size(5, 5)),
@@ -1122,9 +1122,9 @@ public sealed class ScrollPipelineTests
         {
             var controller = new ScrollController();
             BuildContext? itemContext = null;
-            var harness = new WidgetRenderHarness(
+            using var harness = new ViewWidgetHarness(
                 new View(
-                    view: new FlutterView(new Size(200, 400)),
+                    view: new FlutterView(new Size(200, 400), viewId: 6002),
                     child: ListView.Builder(
                         itemCount: 40,
                         itemExtent: 40,
@@ -1713,6 +1713,37 @@ public sealed class ScrollPipelineTests
         return found;
     }
 
+    /// <summary>
+    /// Mounts a widget tree the way <c>runWidget</c> does — a <see cref="RootWidget"/> with no
+    /// render-object host — so a <see cref="View"/> at the top publishes its own render tree under
+    /// the <see cref="RendererBinding.RootPipelineOwner"/> and sizes it from its <see cref="FlutterView"/>.
+    /// </summary>
+    private sealed class ViewWidgetHarness : IDisposable
+    {
+        private readonly BuildOwner _owner = new();
+        private readonly RootElement _root;
+
+        public ViewWidgetHarness(Widget rootWidget)
+        {
+            _root = new RootWidget(child: rootWidget).Attach(_owner);
+            _owner.FlushBuild();
+        }
+
+        /// <summary>The size is the view's own; the argument only documents the expected logical size.</summary>
+        public void Pump(Size size)
+        {
+            _ = size;
+            _owner.FlushBuild();
+            PipelineOwner root = RendererBinding.Instance.RootPipelineOwner;
+            root.FlushLayout();
+            root.FlushCompositingBits();
+            root.FlushPaint();
+            _owner.FinalizeTree();
+        }
+
+        public void Dispose() => _root.Unmount();
+    }
+
     private sealed class WidgetRenderHarness
     {
         private readonly BuildOwner _owner = new();
@@ -1721,7 +1752,7 @@ public sealed class ScrollPipelineTests
 
         public WidgetRenderHarness(Widget rootWidget)
         {
-            RenderView = new RenderView();
+            RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
 
