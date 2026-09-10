@@ -457,7 +457,7 @@ internal sealed class CupertinoSliverRefreshControlState : State
         }
 
         _refreshTask = callback();
-        _ = CompleteRefreshTaskAsync(_refreshTask);
+        Scheduler.RunAsync(() => CompleteRefreshTaskAsync(_refreshTask));
         SetState(() => _hasSliverLayoutExtent = true);
     }
 

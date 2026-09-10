@@ -134,7 +134,7 @@ public sealed class MaterialCircleAvatarTests : IDisposable
                 child: new Text("initials"))));
 
         harness.Pump(new Size(100, 100));
-        Assert.IsType<InvalidOperationException>(await error.Task.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.IsType<InvalidOperationException>(await EventLoopPump.WaitFor(error.Task));
         harness.Pump(new Size(100, 100));
 
         var decorations = FindDescendants<RenderDecoratedBox>(harness.RenderView);

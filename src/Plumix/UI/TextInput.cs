@@ -587,7 +587,7 @@ public static class TextInput
     {
         try
         {
-            return await HandleTextInputInvocation(call).ConfigureAwait(false);
+            return await HandleTextInputInvocation(call);
         }
         catch (Exception exception)
         {

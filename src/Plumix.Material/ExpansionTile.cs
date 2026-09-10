@@ -437,8 +437,8 @@ public sealed class ExpansionTile : StatefulWidget
         {
             try
             {
-                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken).ConfigureAwait(false);
-                await SemanticsService.SendAnnouncement(viewId, stateHint, direction).ConfigureAwait(false);
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+                await SemanticsService.SendAnnouncement(viewId, stateHint, direction);
             }
             catch (OperationCanceledException)
             {

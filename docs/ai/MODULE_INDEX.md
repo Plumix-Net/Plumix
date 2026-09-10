@@ -233,11 +233,16 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/UI/PlatformDispatcher.cs` (frame slots, warm-up frame, timings), `src/Plumix/UI/ViewFocus.cs`
   - `src/Plumix/UI/SystemChrome.cs`
   - `src/Plumix/Scheduler.cs`, `src/Plumix/SchedulerDebug.cs`, `src/Plumix/UI/FrameTiming.cs`
+  - `src/Plumix/FrameworkSynchronizationContext.cs`
   - `src/Plumix/PipelineOwner.cs`
   - `src/Plumix/RenderView.cs`
+- Framework `async` work runs on the framework thread: start every fire-and-forget body with
+  `Scheduler.RunAsync(Body)` (never a bare `_ = BodyAsync()`) and do not write `ConfigureAwait(false)`
+  on an await whose continuation touches framework state.
 - Primary Tests:
   - `src/Plumix.Tests/SchedulerBindingTests.cs`
   - `src/Plumix.Tests/FramePipelineTests.cs`
+  - `src/Plumix.Tests/FrameworkThreadAffinityTests.cs`
   - `src/Plumix.Tests/ViewTests.cs`
   - `src/Plumix.Tests/RendererBindingTests.cs`
   - `src/Plumix.Tests/RenderingParityTests.cs`

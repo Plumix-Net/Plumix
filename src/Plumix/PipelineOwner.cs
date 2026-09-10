@@ -483,6 +483,7 @@ public class PipelineOwner : DiagnosticableTree
 
     private void FlushLayoutCore(Size? rootSize)
     {
+        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
         if (rootSize is { } viewSize && _rootNode is RenderView configuredView)
         {
             // Flutter's `RendererBinding` writes the `ViewConfiguration` onto the `RenderView`
@@ -603,6 +604,7 @@ public class PipelineOwner : DiagnosticableTree
     /// <remarks>Flutter's <c>PipelineOwner.flushCompositingBits</c>.</remarks>
     public void FlushCompositingBits()
     {
+        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
         if (_needsCompositingBitsUpdate)
         {
             FlushCompositingBitsNodes();
@@ -663,6 +665,7 @@ public class PipelineOwner : DiagnosticableTree
 
     public void FlushPaint()
     {
+        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
         DebugDoingPaint = true;
         try
         {
@@ -903,6 +906,7 @@ public class PipelineOwner : DiagnosticableTree
     /// <remarks>Flutter's <c>PipelineOwner.flushSemantics</c>.</remarks>
     public void FlushSemantics()
     {
+        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
         if (_semanticsOwner is null)
         {
             return;

@@ -1621,7 +1621,7 @@ public sealed class EditableText : StatefulWidget
                 {
                     if (!string.IsNullOrEmpty(TextEditingValue.Text))
                     {
-                        _ = RequestSpellCheckAsync();
+                        Scheduler.RunAsync(() => RequestSpellCheckAsync());
                     }
                 }
                 else
@@ -2583,7 +2583,7 @@ public sealed class EditableText : StatefulWidget
                 HideToolbar();
             }
             _selectionOverlay?.Update(_controller.Value);
-            _ = RequestSpellCheckAsync();
+            Scheduler.RunAsync(() => RequestSpellCheckAsync());
             SetState(static () => { });
         }
 
@@ -2779,7 +2779,7 @@ public sealed class EditableText : StatefulWidget
                             ?? Locale.FromCultureInfo(CultureInfo.CurrentUICulture);
             IReadOnlyList<SuggestionSpan>? suggestions = await service
                 .FetchSpellCheckSuggestions(locale, _controller.Text)
-                .ConfigureAwait(false);
+                ;
             if (!Mounted || request != _spellCheckRequest || suggestions is null) return;
             _spellCheckResults = new SpellCheckResults(_controller.Text, suggestions);
             SetState(static () => { });

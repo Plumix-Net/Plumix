@@ -223,11 +223,7 @@ public sealed class CupertinoRefreshTests
 
     private static async Task WaitUntilAsync(Func<bool> predicate)
     {
-        for (int attempt = 0; attempt < 500 && !predicate(); attempt++)
-        {
-            await Task.Delay(2);
-        }
-
+        await EventLoopPump.WaitUntil(predicate, TimeSpan.FromSeconds(5));
         Assert.True(predicate());
     }
 

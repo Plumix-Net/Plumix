@@ -265,7 +265,7 @@ public class WidgetsBinding
         {
             try
             {
-                if (await observer.DidRequestAppExit().ConfigureAwait(false) == AppExitResponse.Cancel)
+                if (await observer.DidRequestAppExit() == AppExitResponse.Cancel)
                 {
                     didCancel = true;
                 }
@@ -345,7 +345,7 @@ public class WidgetsBinding
             }
         }
 
-        _ = ReportPopFailure(SystemNavigator.Pop());
+        Scheduler.RunAsync(() => ReportPopFailure(SystemNavigator.Pop()));
         return false;
     }
 
@@ -353,7 +353,7 @@ public class WidgetsBinding
     {
         try
         {
-            await pop.ConfigureAwait(false);
+            await pop;
         }
         catch (Exception exception)
         {

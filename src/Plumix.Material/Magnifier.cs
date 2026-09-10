@@ -154,14 +154,14 @@ public sealed class TextMagnifier : StatefulWidget
             _positionAnimationCancellation?.Cancel();
             _positionAnimationCancellation?.Dispose();
             _positionAnimationCancellation = new CancellationTokenSource();
-            _ = ClearPositionAnimationWindowAsync(_positionAnimationCancellation.Token);
+            Scheduler.RunAsync(() => ClearPositionAnimationWindowAsync(_positionAnimationCancellation.Token));
         }
 
         private async Task ClearPositionAnimationWindowAsync(CancellationToken cancellationToken)
         {
             try
             {
-                await Task.Delay(JumpBetweenLinesAnimationDuration, cancellationToken).ConfigureAwait(false);
+                await Task.Delay(JumpBetweenLinesAnimationDuration, cancellationToken);
             }
             catch (OperationCanceledException)
             {

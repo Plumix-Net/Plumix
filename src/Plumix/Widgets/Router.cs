@@ -418,7 +418,7 @@ internal sealed class RouterState<T> : RouterStateBase
             return;
         }
 
-        _ = AwaitParsedRouteInformationAsync(parsed, transaction, delegateRouteSetter);
+        Scheduler.RunAsync(() => AwaitParsedRouteInformationAsync(parsed, transaction, delegateRouteSetter));
     }
 
     private async Task AwaitParsedRouteInformationAsync(
@@ -449,7 +449,7 @@ internal sealed class RouterState<T> : RouterStateBase
             return;
         }
 
-        _ = AwaitRouteSetAsync(applied, transaction);
+        Scheduler.RunAsync(() => AwaitRouteSetAsync(applied, transaction));
     }
 
     private async Task AwaitRouteSetAsync(Task applied, object? transaction)

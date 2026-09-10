@@ -376,10 +376,9 @@ public sealed class MaterialPopupMenuTests : IDisposable
 
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.ArrowDown)));
         Assert.True(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Enter)));
-        // `Route` completes its pop future with `RunContinuationsAsynchronously`, so
-        // `_PopupMenuButtonState.HandleResult` — and the `SetState` that clears the expanded flag —
-        // runs on a pool thread. Await it before pumping, or the `SetState` races the build scope.
-        await selectedCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        // `_PopupMenuButtonState.HandleResult` resumes as a microtask on the framework thread, so
+        // the `SetState` that clears the expanded flag lands at the next event-loop turn.
+        await EventLoopPump.WaitFor(selectedCompletion.Task);
         Assert.Equal("three", selected);
         PumpAnimation();
         harness.Pump(new Size(500, 360));
@@ -398,7 +397,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
         var barrier = FindSemantics(menuSemantics, node => HasLabelPart(node, "Dismiss menu"));
         Assert.NotNull(barrier);
         Assert.True(barrier!.PerformAction(SemanticsActions.Tap));
-        await canceledCompletion.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await EventLoopPump.WaitFor(canceledCompletion.Task);
         Assert.Equal(1, canceled);
         PumpAnimation();
         harness.Pump(new Size(500, 360));

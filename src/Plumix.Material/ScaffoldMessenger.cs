@@ -430,7 +430,7 @@ public sealed class ScaffoldMessengerState : State
     {
         try
         {
-            await Task.Delay(snackBar.Duration, cancellationToken).ConfigureAwait(false);
+            await Task.Delay(snackBar.Duration, cancellationToken);
         }
         catch (OperationCanceledException)
         {

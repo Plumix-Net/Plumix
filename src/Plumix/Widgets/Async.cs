@@ -446,7 +446,7 @@ public sealed class FutureBuilder<T> : StatefulWidget
 
             object callbackIdentity = new object();
             _activeCallbackIdentity = callbackIdentity;
-            _ = ObserveFuture(future, callbackIdentity);
+            Scheduler.RunAsync(() => ObserveFuture(future, callbackIdentity));
             if (_snapshot.ConnectionState != ConnectionState.Done)
             {
                 _snapshot = _snapshot.InState(ConnectionState.Waiting);
@@ -457,7 +457,7 @@ public sealed class FutureBuilder<T> : StatefulWidget
         {
             try
             {
-                T data = await future.ConfigureAwait(false);
+                T data = await future;
                 Deliver(callbackIdentity, AsyncSnapshot<T>.WithData(ConnectionState.Done, data), error: null);
             }
             catch (Exception error)

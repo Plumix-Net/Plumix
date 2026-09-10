@@ -66,7 +66,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         stream.SetCompleter(new OneFrameImageStreamCompleter(completion.Task));
 
         completion.SetResult(new ImageInfo(image, scale: 2, debugLabel: "queued"));
-        await firstCall.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await EventLoopPump.WaitFor(firstCall.Task);
 
         bool synchronousCall = false;
         var secondListener = new ImageStreamListener((info, synchronous) =>
@@ -107,12 +107,12 @@ public sealed class ImageProviderDecorationTests : IDisposable
         var error = new TaskCompletionSource<Exception>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         var stream = provider.Resolve(ImageConfiguration.Empty);
-        await Task.Delay(20);
+        await EventLoopPump.WaitUntil(() => stream.Completer is not null);
         stream.AddListener(new ImageStreamListener(
             (_, _) => { },
             OnError: (exception, _) => error.TrySetResult(exception)));
 
-        var exception = await error.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        var exception = await EventLoopPump.WaitFor(error.Task);
         Assert.IsType<InvalidOperationException>(exception);
     }
 
@@ -126,7 +126,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         int calls = 0;
 
         var stream = provider.Resolve(ImageConfiguration.Empty);
-        await Task.Delay(20);
+        await EventLoopPump.WaitUntil(() => stream.Completer is not null);
         stream.AddListener(new ImageStreamListener(
             (_, _) => { },
             OnError: (exception, _) =>
@@ -135,7 +135,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
                 error.TrySetResult(exception);
             }));
 
-        Assert.IsType<InvalidOperationException>(await error.Task.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.IsType<InvalidOperationException>(await EventLoopPump.WaitFor(error.Task));
         Assert.Equal(1, calls);
         Assert.True(ImageCache.Shared.StatusForKey("failed").Pending);
     }
@@ -150,10 +150,10 @@ public sealed class ImageProviderDecorationTests : IDisposable
 
         cache.PutIfAbsent("a", () => a);
         cache.PutIfAbsent("b", () => b);
-        Assert.True(SpinWait.SpinUntil(() => cache.CurrentSize == 2, TimeSpan.FromSeconds(2)));
+        Assert.True(EventLoopPump.SpinUntil(() => cache.CurrentSize == 2));
         cache.PutIfAbsent("a", () => a);
         cache.PutIfAbsent("c", () => c);
-        Assert.True(SpinWait.SpinUntil(() => cache.CurrentSize == 2, TimeSpan.FromSeconds(2)));
+        Assert.True(EventLoopPump.SpinUntil(() => cache.CurrentSize == 2));
 
         Assert.True(cache.ContainsKey("a"));
         Assert.False(cache.ContainsKey("b"));
@@ -173,9 +173,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
 
         completion.SetResult(new ImageInfo(new FakeImage(new Size(2, 3))));
         var completedStatus = new ImageCacheStatus(Pending: false, KeepAlive: true, Live: false);
-        Assert.True(SpinWait.SpinUntil(
-            () => cache.StatusForKey("image") == completedStatus,
-            TimeSpan.FromSeconds(2)));
+        Assert.True(EventLoopPump.SpinUntil(() => cache.StatusForKey("image") == completedStatus));
         Assert.Equal(completedStatus, cache.StatusForKey("image"));
 
         cache.PutIfAbsent("image", () => throw new Exception("must not reload"));
@@ -385,7 +383,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
             shape: BoxShape.Circle);
         firstCompletion.SetResult(new ImageInfo(new FakeImage(new Size(10, 10))));
         secondCompletion.SetResult(new ImageInfo(new FakeImage(new Size(10, 10))));
-        Assert.True(SpinWait.SpinUntil(() => repaintCount >= 2, TimeSpan.FromSeconds(2)));
+        Assert.True(EventLoopPump.SpinUntil(() => repaintCount >= 2));
 
         var root = new ContainerLayer();
         var lerpContext = new PaintingContext(root);
@@ -421,7 +419,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
         Assert.Empty(root.Children);
 
         completion.SetResult(new ImageInfo(image));
-        await repaint.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        await EventLoopPump.WaitFor(repaint.Task);
         painter.Paint(
             context,
             new Rect(0, 0, 40, 20),
@@ -445,7 +443,7 @@ public sealed class ImageProviderDecorationTests : IDisposable
             configuration: new ImageConfiguration(TextDirection: TextDirection.Ltr));
         render.Layout(BoxConstraints.Tight(new Size(20, 20)));
         render.Paint(new PaintingContext(new ContainerLayer()), new Point());
-        Assert.True(SpinWait.SpinUntil(() => first.LastCompleter?.HasListeners == true, TimeSpan.FromSeconds(2)));
+        Assert.True(EventLoopPump.SpinUntil(() => first.LastCompleter?.HasListeners == true));
 
         render.Decoration = new BoxDecoration(Image: new DecorationImage(second));
 

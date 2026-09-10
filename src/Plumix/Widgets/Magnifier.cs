@@ -90,7 +90,7 @@ public sealed class MagnifierController
 
         Task completion = WaitForStatus(controller, AnimationStatus.Completed);
         controller.Forward();
-        await completion.ConfigureAwait(false);
+        await completion;
     }
 
     public async Task Hide(bool removeFromOverlay = true)
@@ -105,7 +105,7 @@ public sealed class MagnifierController
         {
             Task completion = WaitForStatus(controller, AnimationStatus.Dismissed);
             controller.Reverse();
-            await completion.ConfigureAwait(false);
+            await completion;
         }
 
         if (removeFromOverlay)

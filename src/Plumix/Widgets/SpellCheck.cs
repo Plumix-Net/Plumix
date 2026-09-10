@@ -26,7 +26,7 @@ public sealed class DefaultSpellCheckService : ISpellCheckService
         IReadOnlyList<SuggestionSpan>? received;
         try
         {
-            received = await PlatformHandler(locale, text).ConfigureAwait(false);
+            received = await PlatformHandler(locale, text);
         }
         catch
         {

@@ -86,6 +86,10 @@ public static class Scheduler
     private static TimeSpan _epochStart = TimeSpan.Zero;
     private static TimeSpan _lastRawTimeStamp = TimeSpan.Zero;
     private static double _timeDilation = 1.0;
+    [ThreadStatic]
+    private static int _frameworkThreadDepth;
+
+    private static int _frameworkThreadId;
     private static int _debugFrameNumber;
     private static string? _debugBanner;
     private static TaskCompletionSource? _nextFrameCompleter;
@@ -445,6 +449,45 @@ public static class Scheduler
     }
 
     /// <summary>
+    /// Whether the calling thread is the one that owns the framework — the thread the frame
+    /// pipeline, the build scope and the microtask queue run on.
+    /// </summary>
+    /// <remarks>
+    /// C#-only: Dart has no counterpart, because an isolate owns its trees outright. The framework
+    /// claims the thread the first time it enters <see cref="EnterFrameworkThread"/>.
+    /// </remarks>
+    public static bool IsFrameworkThread =>
+        Volatile.Read(ref _frameworkThreadId) == Environment.CurrentManagedThreadId;
+
+    /// <summary>
+    /// Claims the calling thread as the framework thread for the lifetime of the returned scope and
+    /// installs <see cref="FrameworkSynchronizationContext"/> on it, so an <c>await</c> inside the
+    /// framework code that runs in the scope resumes as a microtask on this thread rather than on a
+    /// thread-pool thread. Nested scopes are no-ops.
+    /// </summary>
+    /// <remarks>C#-only infrastructure; see <c>docs/ai/DIVERGENCES.md</c>.</remarks>
+    internal static FrameworkThreadScope EnterFrameworkThread() => new();
+
+    /// <summary>
+    /// Starts framework <c>async</c> work on the framework thread and discards the task the way a
+    /// Dart <c>unawaited</c> call does: <paramref name="body"/> runs up to its first <c>await</c>
+    /// inside <see cref="EnterFrameworkThread"/>, so every continuation of it resumes as a microtask
+    /// on this thread instead of on a thread-pool thread.
+    /// </summary>
+    /// <remarks>
+    /// C#-only infrastructure. Use it at every fire-and-forget start of framework <c>async</c> work
+    /// that a caller outside the frame pipeline can reach — a public <c>State</c> method, say — since
+    /// the awaits inside inherit whatever context the starting thread had.
+    /// </remarks>
+    public static void RunAsync(Func<Task> body)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+
+        using FrameworkThreadScope scope = EnterFrameworkThread();
+        _ = body();
+    }
+
+    /// <summary>
     /// Runs <paramref name="callback"/> at the end of the current event-loop turn, before the next
     /// frame. Dart parity source: <c>dart:async scheduleMicrotask</c>.
     /// </summary>
@@ -469,6 +512,7 @@ public static class Scheduler
     /// <summary>Drains every microtask queued by <see cref="ScheduleMicrotask"/>.</summary>
     public static void FlushMicrotasks()
     {
+        using FrameworkThreadScope scope = EnterFrameworkThread();
         lock (MicrotaskSync)
         {
             _microtaskDrainScheduled = false;
@@ -843,6 +887,7 @@ public static class Scheduler
     /// </remarks>
     public static void HandleBeginFrame(TimeSpan? rawTimeStamp)
     {
+        using FrameworkThreadScope scope = EnterFrameworkThread();
         _firstRawTimeStampInEpoch ??= rawTimeStamp;
         _currentFrameTimeStamp = AdjustForEpoch(rawTimeStamp ?? _lastRawTimeStamp);
         if (rawTimeStamp is not null)
@@ -895,6 +940,7 @@ public static class Scheduler
     /// <remarks>Dart's <c>SchedulerBinding.handleDrawFrame</c>.</remarks>
     public static void HandleDrawFrame()
     {
+        using FrameworkThreadScope scope = EnterFrameworkThread();
         TimeSpan timestamp = _currentFrameTimeStamp ?? AdjustForEpoch(_lastRawTimeStamp);
         try
         {
@@ -1008,6 +1054,8 @@ public static class Scheduler
         {
             return;
         }
+
+        using FrameworkThreadScope scope = EnterFrameworkThread();
 
         TimeSpan timestamp = _currentFrameTimeStamp ?? AdjustForEpoch(_lastRawTimeStamp);
         Dictionary<int, FrameCallbackEntry> callbacks = _transientCallbacks;
@@ -1277,6 +1325,40 @@ public static class Scheduler
             PlatformDispatcher.Instance.OnBeginFrame?.Invoke(TimeSpan.FromSeconds(CurrentSeconds));
             FlushMicrotasks();
             PlatformDispatcher.Instance.OnDrawFrame?.Invoke();
+        }
+    }
+
+    /// <summary>
+    /// The scope <see cref="EnterFrameworkThread"/> returns: it claims the thread, swaps in the
+    /// framework synchronization context and restores the previous one when it ends.
+    /// </summary>
+    internal readonly struct FrameworkThreadScope : IDisposable
+    {
+        private readonly SynchronizationContext? _previous;
+        private readonly bool _outermost;
+
+        public FrameworkThreadScope()
+        {
+            _outermost = _frameworkThreadDepth == 0;
+            _frameworkThreadDepth += 1;
+            if (!_outermost)
+            {
+                _previous = null;
+                return;
+            }
+
+            _previous = SynchronizationContext.Current;
+            SynchronizationContext.SetSynchronizationContext(FrameworkSynchronizationContext.Instance);
+            Volatile.Write(ref _frameworkThreadId, Environment.CurrentManagedThreadId);
+        }
+
+        public void Dispose()
+        {
+            _frameworkThreadDepth -= 1;
+            if (_outermost)
+            {
+                SynchronizationContext.SetSynchronizationContext(_previous);
+            }
         }
     }
 

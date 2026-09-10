@@ -547,7 +547,7 @@ public sealed class PopupMenuButtonState<T> : State
             popUpAnimationStyle: widget.PopUpAnimationStyle,
             requestFocus: widget.RequestFocus);
         SetState(() => _isMenuExpanded = true);
-        _ = HandleResult(task);
+        Scheduler.RunAsync(() => HandleResult(task));
     }
 
     private async Task HandleResult(Task<T?> task)

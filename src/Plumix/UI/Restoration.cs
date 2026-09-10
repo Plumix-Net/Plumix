@@ -120,12 +120,12 @@ public class RestorationManager : ChangeNotifier
             return;
         }
 
-        _ = AwaitRootBucketFromEngine(pending);
+        Scheduler.RunAsync(() => AwaitRootBucketFromEngine(pending));
     }
 
     private async Task AwaitRootBucketFromEngine(Task<object?> pending)
     {
-        object? update = await pending.ConfigureAwait(false);
+        object? update = await pending;
         ParseAndHandleRestorationUpdateFromEngine(update);
     }
 

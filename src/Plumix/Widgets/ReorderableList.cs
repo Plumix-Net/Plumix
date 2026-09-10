@@ -1,6 +1,5 @@
 using Avalonia;
 using Avalonia.Media;
-using Avalonia.Threading;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -397,7 +396,7 @@ public sealed class SliverReorderableListState : State
 
         if (oldList.AutoScrollerVelocityScalar != CurrentWidget.AutoScrollerVelocityScalar)
         {
-            DisposeAutoScroller();
+            DropAutoScroller();
         }
     }
 
@@ -435,7 +434,7 @@ public sealed class SliverReorderableListState : State
     public override void Dispose()
     {
         ResetDrag();
-        DisposeAutoScroller();
+        DropAutoScroller();
         _proxyAnimation!.Changed -= HandleProxyAnimationChanged;
         _proxyAnimation.Dismissed -= HandleProxyAnimationDismissed;
         _proxyAnimation.Dispose();
@@ -775,9 +774,9 @@ public sealed class SliverReorderableListState : State
         }
     }
 
-    private void DisposeAutoScroller()
+    private void DropAutoScroller()
     {
-        _autoScroller?.Dispose();
+        _autoScroller?.StopAutoScroll();
         _autoScroller = null;
     }
 
@@ -1419,7 +1418,9 @@ internal sealed class ReorderDragRecognizer : GestureRecognizer, IGestureArenaMe
                 return;
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() =>
+            // Dart's `Timer` callback runs on the isolate, so the deadline hands the work back to
+            // the framework thread instead of resolving the arena entry from the pool.
+            Scheduler.ScheduleMicrotask(() =>
             {
                 if (_pointer != pointer || token.IsCancellationRequested)
                 {

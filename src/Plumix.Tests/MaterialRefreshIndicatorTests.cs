@@ -327,7 +327,7 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         await WaitForStatusAsync(state, RefreshIndicatorStatus.Refresh);
 
         gate.SetResult();
-        await first;
+        await EventLoopPump.WaitFor(first);
     }
 
     [Fact]
@@ -384,20 +384,16 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         emitter.Dispatch(new OverscrollNotification(metrics, overscroll: -80, hasDragDetails: true));
     }
 
-    // Status transitions that follow an awaited refresh future or an awaited Task.Yield resume on the thread
-    // pool, so the test thread has to wait for them instead of assuming a fixed number of yields.
+    // A status transition that follows an awaited refresh future or an awaited Task.Yield resumes as a
+    // microtask on the framework thread, so the test has to turn the event loop to observe it.
     private static async Task WaitForStatusAsync(RefreshIndicatorState state, RefreshIndicatorStatus expected)
     {
-        for (int attempt = 0; attempt < 500 && state.Status != expected; attempt++)
-        {
-            await Task.Delay(2);
-        }
-
+        await EventLoopPump.WaitUntil(() => state.Status == expected);
         Assert.Equal(expected, state.Status);
     }
 
-    // The dismiss animation is started from one of those thread-pool continuations, so it can begin after the
-    // first pump; keep pumping until the indicator resets to idle.
+    // The dismiss animation is started from one of those microtasks, so it can begin after the first
+    // pump; keep pumping until the indicator resets to idle.
     private static async Task PumpUntilIdleAsync(
         WidgetRenderHarness harness,
         RefreshIndicatorState state,
@@ -406,8 +402,12 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
         for (int attempt = 0; attempt < 100 && state.Status is not null; attempt++)
         {
             PumpAnimation(harness, step);
-            if (state.Status is null) break;
-            await Task.Delay(2);
+            if (state.Status is null)
+            {
+                break;
+            }
+
+            await EventLoopPump.Turn();
         }
 
         Assert.Null(state.Status);

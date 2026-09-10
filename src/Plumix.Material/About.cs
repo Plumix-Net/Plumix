@@ -422,7 +422,7 @@ internal sealed class PackagesViewState : State
     private static async Task<LicenseData> LoadLicensesAsync()
     {
         var data = new LicenseData();
-        await foreach (var license in LicenseRegistry.Licenses().ConfigureAwait(false))
+        await foreach (var license in LicenseRegistry.Licenses())
         {
             data.AddLicense(license);
         }
@@ -687,7 +687,7 @@ internal sealed class PackageLicensePageState : State
     public override void InitState()
     {
         base.InitState();
-        _ = InitLicensesAsync();
+        Scheduler.RunAsync(() => InitLicensesAsync());
     }
 
     private async Task InitLicensesAsync()

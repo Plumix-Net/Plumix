@@ -794,10 +794,10 @@ public sealed class SelectionOverlay : IDisposable
             return;
         }
 
-        _ = _magnifierController.Show(
+        Scheduler.RunAsync(() => _magnifierController.Show(
             Context,
             _ => builtMagnifier,
-            below: MagnifierConfiguration.ShouldDisplayHandlesInMagnifier ? null : _startHandle);
+            below: MagnifierConfiguration.ShouldDisplayHandlesInMagnifier ? null : _startHandle));
     }
 
     /// <summary>
@@ -821,12 +821,12 @@ public sealed class SelectionOverlay : IDisposable
             return;
         }
 
-        _ = _magnifierController.Hide();
+        Scheduler.RunAsync(() => _magnifierController.Hide());
     }
 
     public void Hide()
     {
-        _ = _magnifierController.Hide();
+        Scheduler.RunAsync(() => _magnifierController.Hide());
         HideHandles();
         if (_toolbar is not null || _contextMenuController.IsShown)
         {

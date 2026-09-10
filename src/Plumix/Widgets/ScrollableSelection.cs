@@ -569,7 +569,6 @@ internal sealed class ScrollableSelectionContainerDelegate : MultiSelectableSele
         // subscription is dropped here instead. Same observable behavior, different teardown order.
         _position.RemoveListener(ScheduleLayoutChange);
         _autoScroller.StopAutoScroll();
-        _autoScroller.Dispose();
         base.Dispose();
     }
 

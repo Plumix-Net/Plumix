@@ -397,7 +397,7 @@ public sealed class OneFrameImageStreamCompleter : ImageStreamCompleter
     public OneFrameImageStreamCompleter(Task<ImageInfo> image, string? debugLabel = null)
     {
         DebugLabel = debugLabel;
-        _ = CompleteAsync(image ?? throw new ArgumentNullException(nameof(image)));
+        Scheduler.RunAsync(() => CompleteAsync(image ?? throw new ArgumentNullException(nameof(image))));
     }
 
     private async Task CompleteAsync(Task<ImageInfo> image)
@@ -405,7 +405,7 @@ public sealed class OneFrameImageStreamCompleter : ImageStreamCompleter
         await Task.Yield();
         try
         {
-            SetImage(await image.ConfigureAwait(false));
+            SetImage(await image);
         }
         catch (Exception exception)
         {

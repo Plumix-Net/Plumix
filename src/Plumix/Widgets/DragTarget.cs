@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Threading;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
@@ -960,7 +959,9 @@ internal class DraggableGestureRecognizer : GestureRecognizer, IGestureArenaMemb
                 return;
             }
 
-            await Dispatcher.UIThread.InvokeAsync(() => HandleDelayPassed(pointer, tracker));
+            // Dart's `Timer` callback runs on the isolate, so the timer hands the work back to the
+            // framework thread instead of touching the drag state from the pool.
+            Scheduler.ScheduleMicrotask(() => HandleDelayPassed(pointer, tracker));
         });
     }
 

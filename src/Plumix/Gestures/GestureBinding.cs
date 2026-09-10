@@ -51,6 +51,7 @@ public sealed class GestureBinding
 
     public void HandlePointerEvent(RenderView root, PointerEvent @event)
     {
+        using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
         ArgumentNullException.ThrowIfNull(root);
         // Dart resolves the view from `PointerEvent.viewId`; Plumix's hosts pass the root they own,
         // so the tracker's own hit tests (which run outside an event) reuse the last one seen.

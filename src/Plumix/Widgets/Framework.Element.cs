@@ -615,10 +615,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
         if (owner.DebugBuilding)
         {
-            // A foreign thread reaching this while the framework thread builds is the threading
-            // divergence, not a `setState() during build` mistake; see docs/ai/DIVERGENCES.md.
-            if (!owner.DebugBuildingOnThisThread
-                || owner.DebugCurrentBuildTarget is not { } buildTarget)
+            if (owner.DebugCurrentBuildTarget is not { } buildTarget)
             {
                 return;
             }

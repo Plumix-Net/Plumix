@@ -187,7 +187,7 @@ public class PlumixHost : Control
         if (IsPasteShortcut(e))
         {
             e.Handled = true;
-            _ = HandleSystemPasteShortcutAsync();
+            Scheduler.RunAsync(() => HandleSystemPasteShortcutAsync());
             return;
         }
 
@@ -207,7 +207,7 @@ public class PlumixHost : Control
             e.Handled = true;
             if (IsCopyOrCutShortcut(e))
             {
-                _ = PushFrameworkClipboardToSystemAsync();
+                Scheduler.RunAsync(() => PushFrameworkClipboardToSystemAsync());
             }
 
             return;

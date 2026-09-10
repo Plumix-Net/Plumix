@@ -118,7 +118,7 @@ public class PlatformBinaryMessenger : BinaryMessenger
 
     private static async Task Respond(Task<ByteData?> reply, PlatformMessageResponseCallback? callback)
     {
-        ByteData? data = await reply.ConfigureAwait(false);
+        ByteData? data = await reply;
         callback?.Invoke(data);
     }
 }

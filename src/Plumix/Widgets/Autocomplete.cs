@@ -200,7 +200,7 @@ internal sealed class RawAutocompleteState<T> : State
         {
             Scheduler.AddPostFrameCallback(timestamp =>
             {
-                _ = UpdateOptionsAsync();
+                Scheduler.RunAsync(() => UpdateOptionsAsync());
             });
         }
     }
@@ -336,7 +336,7 @@ internal sealed class RawAutocompleteState<T> : State
         _hasFocus = hasFocus;
         if (hasFocus && _lastFieldText is null)
         {
-            _ = UpdateOptionsAsync();
+            Scheduler.RunAsync(() => UpdateOptionsAsync());
             return;
         }
 
@@ -345,7 +345,7 @@ internal sealed class RawAutocompleteState<T> : State
 
     private void HandleControllerChanged()
     {
-        _ = UpdateOptionsAsync();
+        Scheduler.RunAsync(() => UpdateOptionsAsync());
     }
 
     private async Task UpdateOptionsAsync()
@@ -373,7 +373,7 @@ internal sealed class RawAutocompleteState<T> : State
         IReadOnlyList<T> options = result?.ToArray() ?? [];
         if (_options.Count == 0 != (options.Count == 0))
         {
-            _ = AnnounceSemanticsAsync(options.Count > 0);
+            Scheduler.RunAsync(() => AnnounceSemanticsAsync(options.Count > 0));
         }
 
         _options = options;

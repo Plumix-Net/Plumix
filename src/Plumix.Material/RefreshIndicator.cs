@@ -711,14 +711,14 @@ public sealed class RefreshIndicatorState : State
     {
         _pendingRefresh = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         SetStatus(RefreshIndicatorStatus.Snap);
-        _ = SnapAndRefreshAsync();
+        Scheduler.RunAsync(() => SnapAndRefreshAsync());
     }
 
     private async Task SnapAndRefreshAsync()
     {
         await _positionController!
             .AnimateTo(1.0 / DragSizeFactorLimit, SnapDuration)
-            .Task.ConfigureAwait(false);
+            .Task;
         if (!Mounted || _status != RefreshIndicatorStatus.Snap)
         {
             return;
@@ -727,7 +727,7 @@ public sealed class RefreshIndicatorState : State
         SetStatus(RefreshIndicatorStatus.Refresh);
         try
         {
-            await CurrentWidget.OnRefresh().ConfigureAwait(false);
+            await CurrentWidget.OnRefresh();
         }
         catch
         {
@@ -737,13 +737,13 @@ public sealed class RefreshIndicatorState : State
         _pendingRefresh?.TrySetResult();
         if (Mounted && _status == RefreshIndicatorStatus.Refresh)
         {
-            await DismissAsync(RefreshIndicatorStatus.Done).ConfigureAwait(false);
+            await DismissAsync(RefreshIndicatorStatus.Done);
         }
     }
 
     private void BeginDismiss(RefreshIndicatorStatus status)
     {
-        _ = DismissAsync(status);
+        Scheduler.RunAsync(() => DismissAsync(status));
     }
 
     private async Task DismissAsync(RefreshIndicatorStatus status)
@@ -757,11 +757,11 @@ public sealed class RefreshIndicatorState : State
         SetStatus(status);
         if (status == RefreshIndicatorStatus.Done)
         {
-            await _scaleController!.AnimateTo(1.0, ScaleDuration).Task.ConfigureAwait(false);
+            await _scaleController!.AnimateTo(1.0, ScaleDuration).Task;
         }
         else
         {
-            await _positionController!.AnimateTo(0.0, ScaleDuration).Task.ConfigureAwait(false);
+            await _positionController!.AnimateTo(0.0, ScaleDuration).Task;
         }
 
         if (Mounted && _status == status)

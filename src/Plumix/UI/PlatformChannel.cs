@@ -40,7 +40,7 @@ public class BasicMessageChannel<T>
     public async Task<T?> Send(T message)
     {
         Task<ByteData?>? reply = BinaryMessenger.Send(Name, Codec.EncodeMessage(message));
-        return Codec.DecodeMessage(reply is null ? null : await reply.ConfigureAwait(false));
+        return Codec.DecodeMessage(reply is null ? null : await reply);
     }
 
     /// <summary>Sets a callback for receiving messages from the platform plugins on this channel.</summary>
@@ -55,7 +55,7 @@ public class BasicMessageChannel<T>
 
         BinaryMessenger.SetMessageHandler(Name, async message =>
         {
-            T? reply = await handler(Codec.DecodeMessage(message)).ConfigureAwait(false);
+            T? reply = await handler(Codec.DecodeMessage(message));
             return Codec.EncodeMessage(reply!);
         });
     }
@@ -102,7 +102,7 @@ public class MethodChannel
     /// <summary>An <see cref="InvokeMethod{T}"/> that returns a list of <typeparamref name="T"/>.</summary>
     public async Task<List<T>?> InvokeListMethod<T>(string method, object? arguments = null)
     {
-        object? result = await InvokeMethod<object>(method, arguments).ConfigureAwait(false);
+        object? result = await InvokeMethod<object>(method, arguments);
         if (result is null)
         {
             return null;
@@ -124,7 +124,7 @@ public class MethodChannel
         object? arguments = null)
         where TKey : notnull
     {
-        object? result = await InvokeMethod<object>(method, arguments).ConfigureAwait(false);
+        object? result = await InvokeMethod<object>(method, arguments);
         if (result is null)
         {
             return null;
@@ -173,7 +173,7 @@ public class MethodChannel
         ArgumentNullException.ThrowIfNull(method);
         ByteData input = Codec.EncodeMethodCall(new MethodCall(method, arguments));
         Task<ByteData?>? send = BinaryMessenger.Send(Name, input);
-        ByteData? result = send is null ? null : await send.ConfigureAwait(false);
+        ByteData? result = send is null ? null : await send;
         if (result is null)
         {
             if (missingOk)
@@ -193,7 +193,7 @@ public class MethodChannel
         MethodCall call = Codec.DecodeMethodCall(message);
         try
         {
-            return Codec.EncodeSuccessEnvelope(await handler(call).ConfigureAwait(false));
+            return Codec.EncodeSuccessEnvelope(await handler(call));
         }
         catch (PlatformException exception)
         {
@@ -295,7 +295,7 @@ public class EventChannel
 
             try
             {
-                await methodChannel.InvokeMethod<object>("listen", arguments).ConfigureAwait(false);
+                await methodChannel.InvokeMethod<object>("listen", arguments);
             }
             catch (Exception exception)
             {
@@ -308,7 +308,7 @@ public class EventChannel
             BinaryMessenger.SetMessageHandler(Name, null);
             try
             {
-                await methodChannel.InvokeMethod<object>("cancel", arguments).ConfigureAwait(false);
+                await methodChannel.InvokeMethod<object>("cancel", arguments);
             }
             catch (Exception exception)
             {

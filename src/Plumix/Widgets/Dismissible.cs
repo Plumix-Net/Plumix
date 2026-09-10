@@ -419,7 +419,7 @@ public sealed class Dismissible : StatefulWidget
             _dragUnderway = false;
             if (_moveController.Value >= 1.0)
             {
-                _ = HandleMoveCompletedAsync();
+                Scheduler.RunAsync(() => HandleMoveCompletedAsync());
                 return;
             }
 
@@ -514,7 +514,7 @@ public sealed class Dismissible : StatefulWidget
         {
             if (status == AnimationStatus.Completed && !_dragUnderway)
             {
-                _ = HandleMoveCompletedAsync();
+                Scheduler.RunAsync(() => HandleMoveCompletedAsync());
             }
 
             if (Mounted)

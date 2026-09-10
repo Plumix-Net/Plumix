@@ -442,7 +442,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/focus_scope.dart` | `src/Plumix/Widgets/FocusScope.cs` | `src/Plumix.Tests/FocusScopeTests.cs` | — |
 | `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | `dart_sample/lib/demos/general/focus_traversal_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FocusTraversalDemoPage.cs` |
 | `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/CupertinoFormRowTests.cs`<br>`src/Plumix.Tests/CupertinoFormSectionTests.cs`<br>`src/Plumix.Tests/CupertinoTextFormFieldRowTests.cs`<br>`src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`dart_sample/lib/demos/general/transform_demo_page.dart` |
-| `widgets/framework.dart` | `src/Plumix/Widgets/ErrorWidget.cs`<br>`src/Plumix/Widgets/Framework.BuildOwner.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.BuildScope.cs`<br>`src/Plumix/Widgets/Framework.Element.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.InactiveElements.cs`<br>`src/Plumix/Widgets/Framework.RenderObject.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.RenderTreeRootElement.cs`<br>`src/Plumix/Widgets/Framework.Widget.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.cs` _(reference) (approximate)_ | `src/Plumix.Tests/ErrorWidgetTests.cs`<br>`src/Plumix.Tests/FrameworkElementApiTests.cs`<br>`src/Plumix.Tests/FrameworkParityTests.cs` | — |
+| `widgets/framework.dart` | `src/Plumix/Widgets/ErrorWidget.cs`<br>`src/Plumix/Widgets/Framework.BuildOwner.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.BuildScope.cs`<br>`src/Plumix/Widgets/Framework.Element.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.InactiveElements.cs`<br>`src/Plumix/Widgets/Framework.RenderObject.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.RenderTreeRootElement.cs`<br>`src/Plumix/Widgets/Framework.Widget.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.cs` _(reference) (approximate)_ | `src/Plumix.Tests/ErrorWidgetTests.cs`<br>`src/Plumix.Tests/FrameworkElementApiTests.cs`<br>`src/Plumix.Tests/FrameworkParityTests.cs`<br>`src/Plumix.Tests/FrameworkThreadAffinityTests.cs` | — |
 | `widgets/gesture_detector.dart` | `src/Plumix/Widgets/GestureDetector.cs`<br>`src/Plumix/Widgets/GestureRecognizerFactory.cs` | `src/Plumix.Tests/GestureDetectorTests.cs` | — |
 | `widgets/grid_paper.dart` | `src/Plumix/Widgets/GridPaper.cs` | — | — |
 | `widgets/heroes.dart` | `src/Plumix/Widgets/Hero.cs` | `src/Plumix.Tests/HeroNavigatorTests.cs` | `dart_sample/lib/demos/general/hero_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/HeroDemoPage.cs` |
@@ -565,6 +565,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/Foundation/Intl/PluralRules.cs`
 - `src/Plumix/Foundation/Intl/StringStack.cs`
 - `src/Plumix/Foundation/TypedData.cs`
+- `src/Plumix/FrameworkSynchronizationContext.cs`
 - `src/Plumix/Gestures/GestureTimer.cs`
 - `src/Plumix/HostKeyboardMap.cs`
 - `src/Plumix/Painting/ColorUtilities.cs`
@@ -644,7 +645,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 - Flutter files mapped: 526
 - C# files carrying a marker: 695
-- C# files without a marker: 37
+- C# files without a marker: 38
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 40
 

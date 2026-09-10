@@ -2175,7 +2175,7 @@ public sealed class SubmenuButtonState : State
         }
 
         _hoverOpenCancellation = new CancellationTokenSource();
-        _ = DelayOpenAsync(Current.HoverOpenDelay, _hoverOpenCancellation.Token);
+        Scheduler.RunAsync(() => DelayOpenAsync(Current.HoverOpenDelay, _hoverOpenCancellation.Token));
     }
 
     private async Task DelayOpenAsync(TimeSpan delay, CancellationToken cancellationToken)
