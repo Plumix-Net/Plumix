@@ -138,8 +138,8 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
         var theme = ThemeData.Light with
         {
             RadioTheme = new RadioThemeData(
-                FillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Selected) ? selectedColor : null))
+                FillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Selected) ? selectedColor : null))
         };
         using var harness = new WidgetRenderHarness(
             BuildThemed(
@@ -451,7 +451,7 @@ public sealed class MaterialRadioExpansionTileTests : IDisposable
     [Fact]
     public void ExpansionTile_SourceDefaultsAndHeaderParameters_AreForwarded()
     {
-        var statesController = new Plumix.Material.WidgetStatesController();
+        var statesController = new WidgetStatesController();
         var density = new VisualDensity(-2.0, -1.0);
         var splash = Color.Parse("#FF123456");
         var tile = new ExpansionTile(

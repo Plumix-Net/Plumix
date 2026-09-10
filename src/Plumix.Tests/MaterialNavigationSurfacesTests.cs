@@ -146,12 +146,12 @@ public sealed class MaterialNavigationSurfacesTests
             IndicatorColor: Colors.Black,
             IndicatorShape: new RoundedRectangleBorder(
                 new BorderSide(Colors.Black, 1), Plumix.Rendering.BorderRadius.Circular(4)),
-            LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
+            LabelTextStyle: WidgetStateProperty<TextStyle?>.All(
                 new TextStyle(Color: Colors.Black, FontSize: 10)),
-            IconTheme: MaterialStateProperty<IconThemeData?>.All(
+            IconTheme: WidgetStateProperty<IconThemeData?>.All(
                 new IconThemeData(Color: Colors.Black, Size: 16)),
             LabelBehavior: NavigationDestinationLabelBehavior.AlwaysHide,
-            OverlayColor: MaterialStateProperty<Color?>.All(Colors.Black),
+            OverlayColor: WidgetStateProperty<Color?>.All(Colors.Black),
             LabelPadding: new Thickness(0, 2, 0, 0));
         NavigationBarThemeData end = begin.CopyWith(
             height: 80,
@@ -162,16 +162,16 @@ public sealed class MaterialNavigationSurfacesTests
             indicatorColor: Colors.White,
             indicatorShape: new RoundedRectangleBorder(
                 new BorderSide(Colors.White, 3), Plumix.Rendering.BorderRadius.Circular(12)),
-            labelTextStyle: MaterialStateProperty<TextStyle?>.All(
+            labelTextStyle: WidgetStateProperty<TextStyle?>.All(
                 new TextStyle(Color: Colors.White, FontSize: 20)),
-            iconTheme: MaterialStateProperty<IconThemeData?>.All(
+            iconTheme: WidgetStateProperty<IconThemeData?>.All(
                 new IconThemeData(Color: Colors.White, Size: 24)),
             labelBehavior: NavigationDestinationLabelBehavior.AlwaysShow,
-            overlayColor: MaterialStateProperty<Color?>.All(Colors.White),
+            overlayColor: WidgetStateProperty<Color?>.All(Colors.White),
             labelPadding: new Thickness(0, 6, 0, 0));
 
         NavigationBarThemeData midpoint = NavigationBarThemeData.Lerp(begin, end, 0.5)!;
-        MaterialState states = MaterialState.Selected | MaterialState.Hovered;
+        IReadOnlySet<WidgetState> states = new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Hovered };
 
         Assert.Equal(70, midpoint.Height);
         Assert.Equal(2, midpoint.Elevation);
@@ -394,9 +394,9 @@ public sealed class MaterialNavigationSurfacesTests
             IndicatorShape: new RoundedRectangleBorder(
                 new BorderSide(Colors.Black, 1), Plumix.Rendering.BorderRadius.Circular(4)),
             IndicatorSize: new Size(200, 40),
-            LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
+            LabelTextStyle: WidgetStateProperty<TextStyle?>.All(
                 new TextStyle(Color: Colors.Black, FontSize: 10)),
-            IconTheme: MaterialStateProperty<IconThemeData?>.All(
+            IconTheme: WidgetStateProperty<IconThemeData?>.All(
                 new IconThemeData(Color: Colors.Black, Size: 16)));
         NavigationDrawerThemeData end = begin.CopyWith(
             tileHeight: 64,
@@ -408,13 +408,13 @@ public sealed class MaterialNavigationSurfacesTests
             indicatorShape: new RoundedRectangleBorder(
                 new BorderSide(Colors.White, 3), Plumix.Rendering.BorderRadius.Circular(12)),
             indicatorSize: new Size(300, 60),
-            labelTextStyle: MaterialStateProperty<TextStyle?>.All(
+            labelTextStyle: WidgetStateProperty<TextStyle?>.All(
                 new TextStyle(Color: Colors.White, FontSize: 20)),
-            iconTheme: MaterialStateProperty<IconThemeData?>.All(
+            iconTheme: WidgetStateProperty<IconThemeData?>.All(
                 new IconThemeData(Color: Colors.White, Size: 24)));
 
         NavigationDrawerThemeData midpoint = NavigationDrawerThemeData.Lerp(begin, end, 0.5)!;
-        MaterialState states = MaterialState.Selected | MaterialState.Hovered;
+        IReadOnlySet<WidgetState> states = new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Hovered };
 
         Assert.Equal(56, midpoint.TileHeight);
         Assert.Equal(Color.FromRgb(127, 127, 127), midpoint.BackgroundColor);
@@ -467,9 +467,9 @@ public sealed class MaterialNavigationSurfacesTests
             IndicatorColor: Colors.Purple,
             TileHeight: 60,
             IndicatorSize: new Size(260, 48),
-            LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
+            LabelTextStyle: WidgetStateProperty<TextStyle?>.All(
                 new TextStyle(Color: Colors.CadetBlue, FontSize: 13)),
-            IconTheme: MaterialStateProperty<IconThemeData?>.All(
+            IconTheme: WidgetStateProperty<IconThemeData?>.All(
                 new IconThemeData(Color: Colors.Gold, Size: 21)));
         using var harness = new WidgetRenderHarness(Wrap(
             global,

@@ -62,15 +62,15 @@ internal sealed class SearchDemoPageState : State
         {
             SearchBarTheme = _useThemeOverrides
                 ? new SearchBarThemeData(
-                    BackgroundColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFEAF6F7")),
-                    Elevation: MaterialStateProperty<double?>.All(1),
-                    Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                    BackgroundColor: WidgetStateProperty<Color?>.All(Color.Parse("#FFEAF6F7")),
+                    Elevation: WidgetStateProperty<double?>.All(1),
+                    Shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                         Plumix.Rendering.BorderRadius.Circular(18))),
-                    Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Color.Parse("#FF00695C"))),
-                    Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
+                    Side: WidgetStateProperty<BorderSide?>.All(new BorderSide(Color.Parse("#FF00695C"))),
+                    Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(
                         EdgeInsetsGeometry.Symmetric(horizontal: 12)),
                     Constraints: new BoxConstraints(MinWidth: 280, MaxWidth: 520, MinHeight: 52),
-                    HintStyle: MaterialStateProperty<TextStyle?>.All(new TextStyle(Color: Color.Parse("#FF00695C"))))
+                    HintStyle: WidgetStateProperty<TextStyle?>.All(new TextStyle(Color: Color.Parse("#FF00695C"))))
                 : new SearchBarThemeData(),
             SearchViewTheme = _useThemeOverrides
                 ? new SearchViewThemeData(

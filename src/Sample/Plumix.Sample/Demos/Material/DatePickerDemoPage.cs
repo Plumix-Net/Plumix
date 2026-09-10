@@ -33,10 +33,10 @@ public sealed class DatePickerDemoPage : StatefulWidget
             var baseTheme = Theme.Of(context);
             var pickerTheme = _useThemeOverride
                 ? new DatePickerThemeData(
-                    DayBackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Selected) ? Color.Parse("#FF006C4C") : null),
-                    YearBackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Selected) ? Color.Parse("#FF6750A4") : null),
+                    DayBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Selected) ? Color.Parse("#FF006C4C") : null),
+                    YearBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Selected) ? Color.Parse("#FF6750A4") : null),
                     TodayBorder: new BorderSide(Color.Parse("#FF006C4C"), 2),
                     RangeSelectionBackgroundColor: Color.Parse("#FFCDE8DE"))
                 : new DatePickerThemeData();

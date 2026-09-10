@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
 using Plumix.UI;
+using Plumix.Widgets;
 using Path = Plumix.UI.Path;
 
 namespace Plumix.Material;
@@ -515,7 +516,7 @@ public record ShapedInputBorder : InputBorder
 // side is applied, exactly as Flutter treats a WidgetStateProperty<InputBorder>.
 public interface IStateInputBorder
 {
-    InputBorder Resolve(MaterialState states);
+    InputBorder Resolve(IReadOnlySet<WidgetState> states);
 }
 
 public abstract record MaterialStateOutlineInputBorder : OutlineInputBorder, IStateInputBorder
@@ -527,19 +528,19 @@ public abstract record MaterialStateOutlineInputBorder : OutlineInputBorder, ISt
     {
     }
 
-    public abstract InputBorder Resolve(MaterialState states);
+    public abstract InputBorder Resolve(IReadOnlySet<WidgetState> states);
 
-    public static MaterialStateOutlineInputBorder ResolveWith(Func<MaterialState, InputBorder> resolver) =>
+    public static MaterialStateOutlineInputBorder ResolveWith(Func<IReadOnlySet<WidgetState>, InputBorder> resolver) =>
         new ResolverMaterialStateOutlineInputBorder(resolver);
 
     private sealed record ResolverMaterialStateOutlineInputBorder : MaterialStateOutlineInputBorder
     {
-        private readonly Func<MaterialState, InputBorder> _resolver;
+        private readonly Func<IReadOnlySet<WidgetState>, InputBorder> _resolver;
 
-        public ResolverMaterialStateOutlineInputBorder(Func<MaterialState, InputBorder> resolver) =>
+        public ResolverMaterialStateOutlineInputBorder(Func<IReadOnlySet<WidgetState>, InputBorder> resolver) =>
             _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
 
-        public override InputBorder Resolve(MaterialState states) =>
+        public override InputBorder Resolve(IReadOnlySet<WidgetState> states) =>
             _resolver(states)
             ?? throw new InvalidOperationException("A state input-border resolver cannot return null.");
     }
@@ -553,19 +554,20 @@ public abstract record MaterialStateUnderlineInputBorder : UnderlineInputBorder,
     {
     }
 
-    public abstract InputBorder Resolve(MaterialState states);
+    public abstract InputBorder Resolve(IReadOnlySet<WidgetState> states);
 
-    public static MaterialStateUnderlineInputBorder ResolveWith(Func<MaterialState, InputBorder> resolver) =>
+    public static MaterialStateUnderlineInputBorder ResolveWith(
+        Func<IReadOnlySet<WidgetState>, InputBorder> resolver) =>
         new ResolverMaterialStateUnderlineInputBorder(resolver);
 
     private sealed record ResolverMaterialStateUnderlineInputBorder : MaterialStateUnderlineInputBorder
     {
-        private readonly Func<MaterialState, InputBorder> _resolver;
+        private readonly Func<IReadOnlySet<WidgetState>, InputBorder> _resolver;
 
-        public ResolverMaterialStateUnderlineInputBorder(Func<MaterialState, InputBorder> resolver) =>
+        public ResolverMaterialStateUnderlineInputBorder(Func<IReadOnlySet<WidgetState>, InputBorder> resolver) =>
             _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
 
-        public override InputBorder Resolve(MaterialState states) =>
+        public override InputBorder Resolve(IReadOnlySet<WidgetState> states) =>
             _resolver(states)
             ?? throw new InvalidOperationException("A state input-border resolver cannot return null.");
     }

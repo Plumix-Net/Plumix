@@ -21,7 +21,7 @@ public sealed class ElevatedButton : ButtonStyleButton
         FocusNode? focusNode = null,
         bool autofocus = false,
         Clip? clipBehavior = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Key? key = null) : this(
             child: child,
             onPressed: onPressed,
@@ -48,7 +48,7 @@ public sealed class ElevatedButton : ButtonStyleButton
         FocusNode? focusNode,
         bool autofocus,
         Clip? clipBehavior,
-        MaterialStatesController? statesController,
+        WidgetStatesController? statesController,
         bool addPadding,
         Key? key) : base(
             onPressed: onPressed,
@@ -80,7 +80,7 @@ public sealed class ElevatedButton : ButtonStyleButton
         FocusNode? focusNode = null,
         bool autofocus = false,
         Clip clipBehavior = Clip.None,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         IconAlignment? iconAlignment = null,
         Key? key = null)
     {
@@ -138,7 +138,7 @@ public sealed class ElevatedButton : ButtonStyleButton
         ButtonLayerBuilder? foregroundBuilder = null)
     {
         return new ButtonStyle(
-            TextStyle: MaterialStateProperty<TextStyle?>.All(textStyle),
+            TextStyle: WidgetStateProperty<TextStyle?>.All(textStyle),
             BackgroundColor: DefaultColor(backgroundColor, disabledBackgroundColor),
             ForegroundColor: DefaultColor(foregroundColor, disabledForegroundColor),
             OverlayColor: DefaultOverlayColor(foregroundColor, overlayColor),
@@ -202,7 +202,7 @@ public sealed class ElevatedButton : ButtonStyleButton
             return buttonStyle;
         }
 
-        double defaultFontSize = buttonStyle.TextStyle?.Resolve(MaterialState.None)?.FontSize ?? 14.0;
+        double defaultFontSize = buttonStyle.TextStyle?.Resolve(new HashSet<WidgetState>())?.FontSize ?? 14.0;
         double effectiveTextScale = EffectiveTextScale(context, defaultFontSize);
         EdgeInsetsGeometry iconPadding = theme.UseMaterial3
             ? ScaledPadding(
@@ -215,30 +215,30 @@ public sealed class ElevatedButton : ButtonStyleButton
                 EdgeInsetsGeometry.Symmetric(horizontal: 8),
                 EdgeInsetsGeometry.DirectionalOnly(start: 8, end: 4),
                 effectiveTextScale);
-        return buttonStyle.CopyWith(padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(iconPadding));
+        return buttonStyle.CopyWith(padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(iconPadding));
     }
 
     /// Dart's `styleFrom` elevation table: disabled 0, pressed +6, hovered/focused +2, else the value.
-    private static MaterialStateProperty<double?>? ElevationTable(double? elevation)
+    private static WidgetStateProperty<double?>? ElevationTable(double? elevation)
     {
         if (elevation is not { } value)
         {
             return null;
         }
 
-        return MaterialStateProperty<double?>.ResolveWith(states =>
+        return WidgetStateProperty<double?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Disabled))
+            if (states.Contains(WidgetState.Disabled))
             {
                 return 0.0;
             }
 
-            if (states.HasFlag(MaterialState.Pressed))
+            if (states.Contains(WidgetState.Pressed))
             {
                 return value + 6;
             }
 
-            if (states.HasFlag(MaterialState.Hovered) || states.HasFlag(MaterialState.Focused))
+            if (states.Contains(WidgetState.Hovered) || states.Contains(WidgetState.Focused))
             {
                 return value + 2;
             }
@@ -262,32 +262,32 @@ public sealed class ElevatedButton : ButtonStyleButton
     private static ButtonStyle ElevatedButtonDefaultsM3(BuildContext context, ThemeData theme, ColorScheme colors)
     {
         return new ButtonStyle(
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
-            BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
+            TextStyle: WidgetStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            BackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled)
                     ? WithOpacity(colors.OnSurface, 0.12)
                     : colors.SurfaceContainerLow),
-            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : colors.Primary),
+            ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : colors.Primary),
             OverlayColor: StateOverlay(colors.Primary),
-            ShadowColor: MaterialStateProperty<Color?>.All(colors.Shadow),
-            SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            Elevation: MaterialStateProperty<double?>.ResolveWith(states =>
+            ShadowColor: WidgetStateProperty<Color?>.All(colors.Shadow),
+            SurfaceTintColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            Elevation: WidgetStateProperty<double?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Disabled))
+                if (states.Contains(WidgetState.Disabled))
                 {
                     return 0.0;
                 }
 
-                return states.HasFlag(MaterialState.Hovered) ? 3.0 : 1.0;
+                return states.Contains(WidgetState.Hovered) ? 3.0 : 1.0;
             }),
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(ScaledPaddingOf(context, theme)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(64.0, 40.0)),
-            MaximumSize: MaterialStateProperty<Size?>.All(InfiniteSize),
-            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : colors.Primary),
-            IconSize: MaterialStateProperty<double?>.All(18.0),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
+            Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(ScaledPaddingOf(context, theme)),
+            MinimumSize: WidgetStateProperty<Size?>.All(new Size(64.0, 40.0)),
+            MaximumSize: WidgetStateProperty<Size?>.All(InfiniteSize),
+            IconColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : colors.Primary),
+            IconSize: WidgetStateProperty<double?>.All(18.0),
+            Shape: WidgetStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
             MouseCursor: AdaptiveClickableCursor,
             VisualDensity: theme.VisualDensity,
             TapTargetSize: theme.MaterialTapTargetSize,

@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Plumix.Foundation;
 using Plumix.Widgets;
 
 namespace Plumix.Material;
@@ -7,8 +9,7 @@ namespace Plumix.Material;
 /// <summary>
 /// Dart parity: `MaterialStateMixin`. C# has no mixins, so the members ship as an abstract
 /// <see cref="State"/> subclass: every `State` Dart declares `with MaterialStateMixin` derives from
-/// this instead. The managed set is Material's `[Flags] MaterialState` rather than Dart's
-/// `Set&lt;WidgetState&gt;` (`docs/ai/DIVERGENCES.md`), so `materialStates` is a flag mask.
+/// this instead.
 /// </summary>
 public abstract class MaterialStateMixin : State
 {
@@ -16,17 +17,17 @@ public abstract class MaterialStateMixin : State
     /// Dart's `materialStates`: the managed set of active states, designed to be passed to
     /// `WidgetStateProperty.resolve`.
     /// </summary>
-    protected MaterialState MaterialStates { get; set; } = MaterialState.None;
+    protected HashSet<WidgetState> MaterialStates { get; set; } = [];
 
     /// <summary>
     /// Dart's `updateMaterialState`: a callback factory that mutates <see cref="MaterialStates"/>
     /// and calls `setState`, forwarding to <paramref name="onChanged"/> only on a real change.
     /// </summary>
-    protected Action<bool> UpdateMaterialState(MaterialState key, Action<bool>? onChanged = null)
+    protected Action<bool> UpdateMaterialState(WidgetState key, Action<bool>? onChanged = null)
     {
         return value =>
         {
-            if (MaterialStates.HasFlag(key) == value)
+            if (MaterialStates.Contains(key) == value)
             {
                 return;
             }
@@ -37,7 +38,7 @@ public abstract class MaterialStateMixin : State
     }
 
     /// Dart's `setMaterialState`.
-    protected void SetMaterialState(MaterialState state, bool isSet)
+    protected void SetMaterialState(WidgetState state, bool isSet)
     {
         if (isSet)
         {
@@ -50,45 +51,55 @@ public abstract class MaterialStateMixin : State
     }
 
     /// Dart's `addMaterialState`.
-    protected void AddMaterialState(MaterialState state)
+    protected void AddMaterialState(WidgetState state)
     {
-        if (MaterialStates.HasFlag(state))
+        if (MaterialStates.Add(state))
         {
-            return;
+            SetState(() => { });
         }
-
-        SetState(() => MaterialStates |= state);
     }
 
     /// Dart's `removeMaterialState`.
-    protected void RemoveMaterialState(MaterialState state)
+    protected void RemoveMaterialState(WidgetState state)
     {
-        if ((MaterialStates & state) == MaterialState.None)
+        if (MaterialStates.Remove(state))
         {
-            return;
+            SetState(() => { });
         }
-
-        SetState(() => MaterialStates &= ~state);
     }
 
     /// Dart's `isDisabled`.
-    protected bool IsDisabled => MaterialStates.HasFlag(MaterialState.Disabled);
+    protected bool IsDisabled => MaterialStates.Contains(WidgetState.Disabled);
 
     /// Dart's `isDragged`.
-    protected bool IsDragged => MaterialStates.HasFlag(MaterialState.Dragged);
+    protected bool IsDragged => MaterialStates.Contains(WidgetState.Dragged);
 
     /// Dart's `isErrored`.
-    protected bool IsErrored => MaterialStates.HasFlag(MaterialState.Error);
+    protected bool IsErrored => MaterialStates.Contains(WidgetState.Error);
 
     /// Dart's `isFocused`.
-    protected bool IsFocused => MaterialStates.HasFlag(MaterialState.Focused);
+    protected bool IsFocused => MaterialStates.Contains(WidgetState.Focused);
 
     /// Dart's `isHovered`.
-    protected bool IsHovered => MaterialStates.HasFlag(MaterialState.Hovered);
+    protected bool IsHovered => MaterialStates.Contains(WidgetState.Hovered);
 
     /// Dart's `isPressed`.
-    protected bool IsPressed => MaterialStates.HasFlag(MaterialState.Pressed);
+    protected bool IsPressed => MaterialStates.Contains(WidgetState.Pressed);
+
+    /// Dart's `isScrolledUnder`.
+    protected bool IsScrolledUnder => MaterialStates.Contains(WidgetState.ScrolledUnder);
 
     /// Dart's `isSelected`.
-    protected bool IsSelected => MaterialStates.HasFlag(MaterialState.Selected);
+    protected bool IsSelected => MaterialStates.Contains(WidgetState.Selected);
+
+    /// <inheritdoc />
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        ArgumentNullException.ThrowIfNull(properties);
+        properties.Add(new DiagnosticsProperty<IReadOnlySet<WidgetState>>(
+            "materialStates",
+            MaterialStates,
+            defaultValue: new HashSet<WidgetState>()));
+    }
 }

@@ -20,7 +20,7 @@ public sealed record DataColumn
         string? tooltip = null,
         bool numeric = false,
         DataColumnSortCallback? onSort = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
         MainAxisAlignment? headingRowAlignment = null)
     {
         Label = label ?? throw new ArgumentNullException(nameof(label));
@@ -37,7 +37,7 @@ public sealed record DataColumn
     public string? Tooltip { get; }
     public bool Numeric { get; }
     public DataColumnSortCallback? OnSort { get; }
-    public MaterialStateProperty<MouseCursor?>? MouseCursor { get; }
+    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
     public MainAxisAlignment? HeadingRowAlignment { get; }
 }
 
@@ -50,8 +50,8 @@ public sealed record DataRow
         Action<bool?>? onSelectChanged = null,
         Action? onLongPress = null,
         Action<bool>? onHover = null,
-        MaterialStateProperty<Color?>? color = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null)
+        WidgetStateProperty<Color?>? color = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null)
     {
         Cells = cells ?? throw new ArgumentNullException(nameof(cells));
         Key = key;
@@ -70,8 +70,8 @@ public sealed record DataRow
         Action<bool?>? onSelectChanged = null,
         Action? onLongPress = null,
         Action<bool>? onHover = null,
-        MaterialStateProperty<Color?>? color = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null) => new(
+        WidgetStateProperty<Color?>? color = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null) => new(
             cells,
             key: new ValueKey<int?>(index),
             selected: selected,
@@ -87,8 +87,8 @@ public sealed record DataRow
     public Action? OnLongPress { get; }
     public Action<bool>? OnHover { get; }
     public IReadOnlyList<DataCell> Cells { get; }
-    public MaterialStateProperty<Color?>? Color { get; }
-    public MaterialStateProperty<MouseCursor?>? MouseCursor { get; }
+    public WidgetStateProperty<Color?>? Color { get; }
+    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
 }
 
 public sealed record DataCell
@@ -136,12 +136,12 @@ public sealed class DataTable : StatelessWidget
         bool sortAscending = true,
         Action<bool?>? onSelectAll = null,
         Decoration? decoration = null,
-        MaterialStateProperty<Color?>? dataRowColor = null,
+        WidgetStateProperty<Color?>? dataRowColor = null,
         double? dataRowHeight = null,
         double? dataRowMinHeight = null,
         double? dataRowMaxHeight = null,
         TextStyle? dataTextStyle = null,
-        MaterialStateProperty<Color?>? headingRowColor = null,
+        WidgetStateProperty<Color?>? headingRowColor = null,
         double? headingRowHeight = null,
         TextStyle? headingTextStyle = null,
         double? horizontalMargin = null,
@@ -202,12 +202,12 @@ public sealed class DataTable : StatelessWidget
     public bool SortAscending { get; }
     public Action<bool?>? OnSelectAll { get; }
     public Decoration? Decoration { get; }
-    public MaterialStateProperty<Color?>? DataRowColor { get; }
+    public WidgetStateProperty<Color?>? DataRowColor { get; }
     public double? DataRowMinHeight { get; }
     public double? DataRowMaxHeight { get; }
     public double? DataRowHeight => DataRowMinHeight == DataRowMaxHeight ? DataRowMinHeight : null;
     public TextStyle? DataTextStyle { get; }
-    public MaterialStateProperty<Color?>? HeadingRowColor { get; }
+    public WidgetStateProperty<Color?>? HeadingRowColor { get; }
     public double? HeadingRowHeight { get; }
     public TextStyle? HeadingTextStyle { get; }
     public double? HorizontalMargin { get; }
@@ -261,10 +261,10 @@ public sealed class DataTable : StatelessWidget
                               ?? dataTableTheme.DataTextStyle
                               ?? globalDataTableTheme.DataTextStyle
                               ?? theme.TextTheme.BodyMedium;
-        MaterialStateProperty<Color?>? effectiveDataRowColor = DataRowColor
+        WidgetStateProperty<Color?>? effectiveDataRowColor = DataRowColor
                                                                 ?? dataTableTheme.DataRowColor
                                                                 ?? globalDataTableTheme.DataRowColor;
-        MaterialStateProperty<Color?>? effectiveHeadingRowColor = HeadingRowColor
+        WidgetStateProperty<Color?>? effectiveHeadingRowColor = HeadingRowColor
                                                                    ?? dataTableTheme.HeadingRowColor
                                                                    ?? globalDataTableTheme.HeadingRowColor;
         bool anySelectable = Rows.Any(row => row.OnSelectChanged is not null);
@@ -313,7 +313,7 @@ public sealed class DataTable : StatelessWidget
                 effectiveHeadingRowColor,
                 textDirection));
         }
-        Color? headingColor = effectiveHeadingRowColor?.Resolve(MaterialState.None);
+        Color? headingColor = effectiveHeadingRowColor?.Resolve(new HashSet<WidgetState>());
         var headingBorder = ShowBottomBorder
             ? new Plumix.Rendering.Border(bottom: divider)
             : null;
@@ -325,11 +325,20 @@ public sealed class DataTable : StatelessWidget
         foreach (var row in Rows)
         {
             var children = new List<Widget>();
-            MaterialState colorStates = (row.Selected ? MaterialState.Selected : MaterialState.None)
-                                        | (anySelectable && row.OnSelectChanged is null
-                                            ? MaterialState.Disabled
-                                            : MaterialState.None);
-            MaterialState cursorStates = row.Selected ? MaterialState.Selected : MaterialState.None;
+            var colorStates = new HashSet<WidgetState>();
+            if (row.Selected)
+            {
+                colorStates.Add(WidgetState.Selected);
+            }
+
+            if (anySelectable && row.OnSelectChanged is null)
+            {
+                colorStates.Add(WidgetState.Disabled);
+            }
+
+            IReadOnlySet<WidgetState> cursorStates = row.Selected
+                ? new HashSet<WidgetState> { WidgetState.Selected }
+                : new HashSet<WidgetState>();
             if (displayCheckbox)
             {
                 children.Add(BuildCheckbox(
@@ -410,7 +419,7 @@ public sealed class DataTable : StatelessWidget
         double height,
         TextStyle style,
         DataTableThemeData tableTheme,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         TextDirection textDirection)
     {
         bool sorted = SortColumnIndex == columnIndex;
@@ -456,7 +465,9 @@ public sealed class DataTable : StatelessWidget
         {
             label = new Tooltip(column.Tooltip, child: label);
         }
-        MaterialState states = column.OnSort is null ? MaterialState.Disabled : MaterialState.None;
+        IReadOnlySet<WidgetState> states = column.OnSort is null
+            ? new HashSet<WidgetState> { WidgetState.Disabled }
+            : new HashSet<WidgetState>();
         Widget inkWell = new InkWell(
             onTap: column.OnSort is null
                 ? null
@@ -476,7 +487,7 @@ public sealed class DataTable : StatelessWidget
         double minHeight,
         double maxHeight,
         TextStyle style,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         MouseCursor? cursor,
         TextDirection textDirection)
     {
@@ -536,7 +547,7 @@ public sealed class DataTable : StatelessWidget
         bool tristate,
         Action? onRowTap,
         Action<bool?>? onChanged,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null)
     {
         ThemeData theme = Theme.Of(context);

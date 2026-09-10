@@ -334,13 +334,14 @@ public sealed class MaterialStepperTests : IDisposable
         Assert.NotNull(FindParagraph(harness.RenderView, continueLabel));
         Assert.NotNull(FindParagraph(harness.RenderView, cancelLabel));
         TextButton continueButton = harness.FindWidgets<TextButton>()[0];
-        Assert.Equal(dark ? onSurface : onPrimary, continueButton.Style!.ForegroundColor!.Resolve(MaterialState.None));
-        Assert.Equal(dark ? null : primary, continueButton.Style.BackgroundColor!.Resolve(MaterialState.None));
-        Assert.Null(continueButton.Style.ForegroundColor.Resolve(MaterialState.Disabled));
-        Assert.Null(continueButton.Style.BackgroundColor.Resolve(MaterialState.Disabled));
+        Assert.Equal(dark ? onSurface : onPrimary, continueButton.Style!.ForegroundColor!.Resolve(
+            new HashSet<WidgetState>()));
+        Assert.Equal(dark ? null : primary, continueButton.Style.BackgroundColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Null(continueButton.Style.ForegroundColor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
+        Assert.Null(continueButton.Style.BackgroundColor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
         Assert.Equal(
             new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(2)),
-            continueButton.Style.Shape!.Resolve(MaterialState.None));
+            continueButton.Style.Shape!.Resolve(new HashSet<WidgetState>()));
     }
 
     [Fact]

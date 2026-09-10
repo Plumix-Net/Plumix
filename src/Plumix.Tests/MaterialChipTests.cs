@@ -75,7 +75,7 @@ public sealed class MaterialChipTests : IDisposable
     [Fact]
     public void ChipThemeData_CopyWithRetainsUnspecifiedFieldsAndOverridesSelectedFields()
     {
-        var color = MaterialStateProperty<Color?>.All(Colors.CadetBlue);
+        var color = WidgetStateProperty<Color?>.All(Colors.CadetBlue);
         var original = new ChipThemeData(
             Color: color,
             BackgroundColor: Colors.Black,
@@ -118,7 +118,7 @@ public sealed class MaterialChipTests : IDisposable
     public void ChipThemeData_LerpMatchesFlutterContinuousDiscreteAndNullEndpointRules()
     {
         var begin = new ChipThemeData(
-            Color: MaterialStateProperty<Color?>.All(Colors.Black),
+            Color: WidgetStateProperty<Color?>.All(Colors.Black),
             BackgroundColor: Colors.Black,
             DeleteIconColor: Colors.Black,
             DisabledColor: Colors.Black,
@@ -142,7 +142,7 @@ public sealed class MaterialChipTests : IDisposable
             AvatarBoxConstraints: new BoxConstraints(MinWidth: 4, MaxWidth: 8),
             DeleteIconBoxConstraints: new BoxConstraints(MinHeight: 6, MaxHeight: 10));
         var end = new ChipThemeData(
-            Color: MaterialStateProperty<Color?>.All(Colors.White),
+            Color: WidgetStateProperty<Color?>.All(Colors.White),
             BackgroundColor: Colors.White,
             DeleteIconColor: Colors.White,
             DisabledColor: Colors.White,
@@ -171,7 +171,7 @@ public sealed class MaterialChipTests : IDisposable
 
         ChipThemeData midpoint = ChipThemeData.Lerp(begin, end, 0.5)!;
         Color middleGray = Color.FromArgb(0xff, 0x7f, 0x7f, 0x7f);
-        Assert.Equal(middleGray, midpoint.Color!.Resolve(MaterialState.Pressed));
+        Assert.Equal(middleGray, midpoint.Color!.Resolve(new HashSet<WidgetState> { WidgetState.Pressed }));
         Assert.Equal(middleGray, midpoint.BackgroundColor);
         Assert.Equal(middleGray, midpoint.DeleteIconColor);
         Assert.Equal(middleGray, midpoint.CheckmarkColor);
@@ -349,7 +349,9 @@ public sealed class MaterialChipTests : IDisposable
                     onSelected: _ => { },
                     selectedColor: Colors.Gold,
                     labelStyle: new TextStyle(Color: Colors.Navy),
-                    shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(3))))));
+                    shape: WidgetStateProperty<Plumix.Rendering.ShapeBorder?>.All(
+                        new RoundedRectangleBorder(
+                            borderRadius: Plumix.Rendering.BorderRadius.Circular(3)))))));
         widgetHarness.Pump(new Size(320, 120));
 
         var widget = FindChipDecoration(widgetHarness.RenderView);
@@ -361,10 +363,10 @@ public sealed class MaterialChipTests : IDisposable
     [Fact]
     public void WidgetStateColorOverridesLegacyColorsAndHandlesDisabledSelectedCombination()
     {
-        var stateColor = MaterialStateProperty<Color?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Disabled) && states.HasFlag(MaterialState.Selected)
+        var stateColor = WidgetStateProperty<Color?>.ResolveWith(states =>
+            states.Contains(WidgetState.Disabled) && states.Contains(WidgetState.Selected)
                 ? Colors.Crimson
-                : states.HasFlag(MaterialState.Selected)
+                : states.Contains(WidgetState.Selected)
                     ? Colors.Gold
                     : Colors.CadetBlue);
         using var harness = new WidgetRenderHarness(Root(
@@ -884,12 +886,12 @@ public sealed class MaterialChipTests : IDisposable
     [Fact]
     public void RawChip_StatefulShapeAndSideResolveSelectedAndDisabledStates()
     {
-        var shape = MaterialStateProperty<ShapeBorder?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Selected)
+        var shape = WidgetStateProperty<ShapeBorder?>.ResolveWith(states =>
+            states.Contains(WidgetState.Selected)
                 ? new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(13))
                 : new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(3)));
-        var side = MaterialStateProperty<BorderSide?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Disabled)
+        var side = WidgetStateProperty<BorderSide?>.ResolveWith(states =>
+            states.Contains(WidgetState.Disabled)
                 ? new BorderSide(Colors.Crimson, 2)
                 : new BorderSide(Colors.CadetBlue, 1));
         using var harness = new WidgetRenderHarness(Root(

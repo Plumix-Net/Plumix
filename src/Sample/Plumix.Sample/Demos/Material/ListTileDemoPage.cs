@@ -35,8 +35,8 @@ internal sealed class ListTileDemoPageState : State
         {
             content = new ListTileTheme(
                 data: new ListTileThemeData(
-                    TextColor: Color.Parse("#FF27526B"),
-                    IconColor: Color.Parse("#FF7A4021"),
+                    TextColor: WidgetStateProperty<Color?>.All(Color.Parse("#FF27526B")),
+                    IconColor: WidgetStateProperty<Color?>.All(Color.Parse("#FF7A4021")),
                     TileColor: Color.Parse("#FFF5F9EE"),
                     SelectedTileColor: Color.Parse("#FFE4EEFF"),
                     Dense: _dense),

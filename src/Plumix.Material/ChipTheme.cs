@@ -9,7 +9,7 @@ namespace Plumix.Material;
 // Dart parity source: material_ui/lib/src/chip_theme.dart
 
 public sealed partial record ChipThemeData(
-    MaterialStateProperty<Color?>? Color = null,
+    WidgetStateProperty<Color?>? Color = null,
     Color? BackgroundColor = null,
     Color? DeleteIconColor = null,
     Color? DisabledColor = null,
@@ -38,7 +38,7 @@ public sealed partial record ChipThemeData(
     }
 
     public ChipThemeData CopyWith(
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Color? deleteIconColor = null,
         Color? disabledColor = null,

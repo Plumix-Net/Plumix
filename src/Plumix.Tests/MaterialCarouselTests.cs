@@ -39,7 +39,7 @@ public sealed class MaterialCarouselTests
             elevation: 10.0,
             shape: new StadiumBorder(),
             itemClipBehavior: Clip.HardEdge,
-            overlayColor: MaterialStateProperty<Color?>.All(Colors.Purple)));
+            overlayColor: WidgetStateProperty<Color?>.All(Colors.Purple)));
         harness.Pump();
 
         MaterialSurface surface = harness.FindWidgets<MaterialSurface>()[0];
@@ -50,7 +50,7 @@ public sealed class MaterialCarouselTests
         Assert.Equal(new Thickness(20), harness.FindWidgets<Padding>()[0].Insets);
 
         InkWell ink = harness.FindWidgets<InkWell>()[0];
-        Assert.Equal(Colors.Purple, ink.OverlayColor!.Resolve(MaterialState.Focused));
+        Assert.Equal(Colors.Purple, ink.OverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Focused }));
     }
 
     [Fact]
@@ -61,10 +61,13 @@ public sealed class MaterialCarouselTests
 
         Color onSurface = ThemeData.Light.ColorScheme.OnSurface;
         InkWell ink = harness.FindWidgets<InkWell>()[0];
-        Assert.Equal((byte)Math.Round(onSurface.A * 0.1), ink.OverlayColor!.Resolve(MaterialState.Pressed)!.Value.A);
-        Assert.Equal((byte)Math.Round(onSurface.A * 0.08), ink.OverlayColor.Resolve(MaterialState.Hovered)!.Value.A);
-        Assert.Equal((byte)Math.Round(onSurface.A * 0.1), ink.OverlayColor.Resolve(MaterialState.Focused)!.Value.A);
-        Assert.Null(ink.OverlayColor.Resolve(MaterialState.None));
+        Assert.Equal((byte)Math.Round(onSurface.A * 0.1), ink.OverlayColor!.Resolve(
+            new HashSet<WidgetState> { WidgetState.Pressed })!.Value.A);
+        Assert.Equal((byte)Math.Round(onSurface.A * 0.08), ink.OverlayColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Hovered })!.Value.A);
+        Assert.Equal((byte)Math.Round(onSurface.A * 0.1), ink.OverlayColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Focused })!.Value.A);
+        Assert.Null(ink.OverlayColor.Resolve(new HashSet<WidgetState>()));
     }
 
     [Fact]

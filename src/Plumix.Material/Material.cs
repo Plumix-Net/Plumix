@@ -228,9 +228,9 @@ public sealed class Material : StatefulWidget
                    "Material.of() called with a context that does not contain a Material ancestor.");
     }
 
-    public override State CreateState() => new MaterialState();
+    public override State CreateState() => new IReadOnlySet<WidgetState>();
 
-    private sealed class MaterialState : State
+    private sealed class IReadOnlySet<WidgetState> : State
     {
         private AnimationController? _controller;
         private MaterialVisual? _begin;

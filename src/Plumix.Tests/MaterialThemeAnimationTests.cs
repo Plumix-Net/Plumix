@@ -157,34 +157,34 @@ public sealed class MaterialThemeAnimationTests : IDisposable
             tooltipTheme: new TooltipThemeData(Height: 8),
             sliderTheme: new SliderThemeData(TrackHeight: 2),
             switchTheme: new SwitchThemeData(
-                ThumbColor: MaterialStateProperty<Color?>.All(Colors.Black),
-                MouseCursor: MaterialStateProperty<MouseCursor?>.All(switchCursorBegin)),
+                ThumbColor: WidgetStateProperty<Color?>.All(Colors.Black),
+                MouseCursor: WidgetStateProperty<MouseCursor?>.All(switchCursorBegin)),
             datePickerTheme: new DatePickerThemeData(RangePickerElevation: 4),
             snackBarTheme: new SnackBarThemeData(elevation: 2),
             menuBarTheme: new MenuBarThemeData(
-                new MenuStyle(elevation: MaterialStateProperty<double?>.All(2))));
+                new MenuStyle(elevation: WidgetStateProperty<double?>.All(2))));
         var end = new ThemeData(
             dividerTheme: new DividerThemeData(Space: 12),
             tooltipTheme: new TooltipThemeData(Height: 24),
             sliderTheme: new SliderThemeData(TrackHeight: 10),
             switchTheme: new SwitchThemeData(
-                ThumbColor: MaterialStateProperty<Color?>.All(Colors.White),
-                MouseCursor: MaterialStateProperty<MouseCursor?>.All(switchCursorEnd)),
+                ThumbColor: WidgetStateProperty<Color?>.All(Colors.White),
+                MouseCursor: WidgetStateProperty<MouseCursor?>.All(switchCursorEnd)),
             datePickerTheme: new DatePickerThemeData(RangePickerElevation: 12),
             snackBarTheme: new SnackBarThemeData(elevation: 10),
             menuBarTheme: new MenuBarThemeData(
-                new MenuStyle(elevation: MaterialStateProperty<double?>.All(10))));
+                new MenuStyle(elevation: WidgetStateProperty<double?>.All(10))));
 
         ThemeData result = ThemeData.Lerp(begin, end, 0.25);
 
         Assert.Equal(6, result.DividerTheme.Space);
         Assert.Equal(12, result.TooltipTheme.Height);
         Assert.Equal(4, result.SliderTheme.TrackHeight);
-        Assert.Equal(Color.FromRgb(63, 63, 63), result.SwitchTheme.ThumbColor!.Resolve(MaterialState.None));
-        Assert.Equal(switchCursorBegin, result.SwitchTheme.MouseCursor!.Resolve(MaterialState.None));
+        Assert.Equal(Color.FromRgb(63, 63, 63), result.SwitchTheme.ThumbColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(switchCursorBegin, result.SwitchTheme.MouseCursor!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(6, result.DatePickerTheme.RangePickerElevation);
         Assert.Equal(4, result.SnackBarTheme.Elevation);
-        Assert.Equal(4, result.MenuBarTheme.Style!.Elevation!.Resolve(MaterialState.None));
+        Assert.Equal(4, result.MenuBarTheme.Style!.Elevation!.Resolve(new HashSet<WidgetState>()));
     }
 
     [Fact]

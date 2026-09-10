@@ -131,29 +131,29 @@ public sealed class SegmentedButton<T> : StatefulWidget
                 backgroundColor,
                 disabledBackgroundColor,
                 selectedBackgroundColor),
-            ShadowColor: shadowColor.HasValue ? MaterialStateProperty<Color?>.All(shadowColor) : null,
+            ShadowColor: shadowColor.HasValue ? WidgetStateProperty<Color?>.All(shadowColor) : null,
             SurfaceTintColor: surfaceTintColor.HasValue
-                ? MaterialStateProperty<Color?>.All(surfaceTintColor)
+                ? WidgetStateProperty<Color?>.All(surfaceTintColor)
                 : null,
             OverlayColor: BuildOverlayColor(foregroundColor, selectedForegroundColor, overlayColor),
-            Elevation: elevation.HasValue ? MaterialStateProperty<double?>.All(elevation) : null,
+            Elevation: elevation.HasValue ? WidgetStateProperty<double?>.All(elevation) : null,
             IconColor: iconColor.HasValue || disabledIconColor.HasValue
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled) ? disabledIconColor : iconColor)
+                ? WidgetStateProperty<Color?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Disabled) ? disabledIconColor : iconColor)
                 : null,
-            IconSize: iconSize.HasValue ? MaterialStateProperty<double?>.All(iconSize) : null,
-            Side: side.HasValue ? MaterialStateProperty<BorderSide?>.All(side) : null,
-            Padding: padding.HasValue ? MaterialStateProperty<EdgeInsetsGeometry?>.All(padding) : null,
-            Shape: shape is not null ? MaterialStateProperty<OutlinedBorder?>.All(shape) : null,
-            MinimumSize: minimumSize.HasValue ? MaterialStateProperty<Size?>.All(minimumSize) : null,
-            FixedSize: fixedSize.HasValue ? MaterialStateProperty<Size?>.All(fixedSize) : null,
-            MaximumSize: maximumSize.HasValue ? MaterialStateProperty<Size?>.All(maximumSize) : null,
+            IconSize: iconSize.HasValue ? WidgetStateProperty<double?>.All(iconSize) : null,
+            Side: side.HasValue ? WidgetStateProperty<BorderSide?>.All(side) : null,
+            Padding: padding.HasValue ? WidgetStateProperty<EdgeInsetsGeometry?>.All(padding) : null,
+            Shape: shape is not null ? WidgetStateProperty<OutlinedBorder?>.All(shape) : null,
+            MinimumSize: minimumSize.HasValue ? WidgetStateProperty<Size?>.All(minimumSize) : null,
+            FixedSize: fixedSize.HasValue ? WidgetStateProperty<Size?>.All(fixedSize) : null,
+            MaximumSize: maximumSize.HasValue ? WidgetStateProperty<Size?>.All(maximumSize) : null,
             Alignment: alignment,
             TapTargetSize: tapTargetSize,
-            TextStyle: textStyle is not null ? MaterialStateProperty<TextStyle?>.All(textStyle) : null,
+            TextStyle: textStyle is not null ? WidgetStateProperty<TextStyle?>.All(textStyle) : null,
             MouseCursor: enabledMouseCursor is not null || disabledMouseCursor is not null
-                ? MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled) ? disabledMouseCursor : enabledMouseCursor)
+                ? WidgetStateProperty<MouseCursor?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Disabled) ? disabledMouseCursor : enabledMouseCursor)
                 : null,
             VisualDensity: visualDensity,
             AnimationDuration: animationDuration,
@@ -163,7 +163,7 @@ public sealed class SegmentedButton<T> : StatefulWidget
 
     public override State CreateState() => new SegmentedButtonState<T>();
 
-    private static MaterialStateProperty<Color?>? BuildStateColor(
+    private static WidgetStateProperty<Color?>? BuildStateColor(
         Color? enabled,
         Color? disabled,
         Color? selected)
@@ -173,15 +173,15 @@ public sealed class SegmentedButton<T> : StatefulWidget
             return null;
         }
 
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Disabled)
+        return WidgetStateProperty<Color?>.ResolveWith(states =>
+            states.Contains(WidgetState.Disabled)
                 ? disabled
-                : states.HasFlag(MaterialState.Selected)
+                : states.Contains(WidgetState.Selected)
                     ? selected
                     : enabled);
     }
 
-    private static MaterialStateProperty<Color?>? BuildOverlayColor(
+    private static WidgetStateProperty<Color?>? BuildOverlayColor(
         Color? foreground,
         Color? selectedForeground,
         Color? overlay)
@@ -192,22 +192,22 @@ public sealed class SegmentedButton<T> : StatefulWidget
         }
         if (overlay is { A: 0 })
         {
-            return MaterialStateProperty<Color?>.All(Colors.Transparent);
+            return WidgetStateProperty<Color?>.All(Colors.Transparent);
         }
 
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
+        return WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             Color? stateColor = overlay
-                                ?? (states.HasFlag(MaterialState.Selected) ? selectedForeground : foreground);
+                                ?? (states.Contains(WidgetState.Selected) ? selectedForeground : foreground);
             if (!stateColor.HasValue)
             {
                 return null;
             }
-            if (states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused))
+            if (states.Contains(WidgetState.Pressed) || states.Contains(WidgetState.Focused))
             {
                 return NavigationSurfaceUtilities.WithOpacity(stateColor.Value, 0.10);
             }
-            if (states.HasFlag(MaterialState.Hovered))
+            if (states.Contains(WidgetState.Hovered))
             {
                 return NavigationSurfaceUtilities.WithOpacity(stateColor.Value, 0.08);
             }
@@ -224,7 +224,7 @@ public sealed class SegmentedButtonState<T> : State
 
     private SegmentedButton<T> CurrentWidget => (SegmentedButton<T>)StateWidget;
 
-    public Dictionary<ButtonSegment<T>, MaterialStatesController> StatesControllers { get; } = [];
+    public Dictionary<ButtonSegment<T>, WidgetStatesController> StatesControllers { get; } = [];
 
     public override void DidUpdateWidget(StatefulWidget oldWidget)
     {
@@ -236,7 +236,7 @@ public sealed class SegmentedButtonState<T> : State
                 continue;
             }
 
-            MaterialStatesController controller = StatesControllers[segment];
+            WidgetStatesController controller = StatesControllers[segment];
             StatesControllers.Remove(segment);
             controller.Dispose();
         }
@@ -254,7 +254,7 @@ public sealed class SegmentedButtonState<T> : State
         Widget? selectedIcon = widget.ShowSelectedIcon
             ? widget.SelectedIcon ?? segmentedTheme.SelectedIcon ?? new Icon(Icons.Check)
             : null;
-        MaterialState groupStates = ResolveGroupStates(widget);
+        IReadOnlySet<WidgetState> groupStates = ResolveGroupStates(widget);
         OutlinedBorder enabledShape = ResolveValue(
             static style => style.Shape,
             groupStates,
@@ -269,13 +269,13 @@ public sealed class SegmentedButtonState<T> : State
             defaults) ?? BorderSide.None;
         OutlinedBorder disabledShape = ResolveValue(
             static style => style.Shape,
-            MaterialState.Disabled,
+            new HashSet<WidgetState> { WidgetState.Disabled },
             widget.Style,
             segmentedTheme.Style,
             defaults) ?? new RoundedRectangleBorder();
         BorderSide disabledSide = ResolveValue(
             static style => style.Side,
-            MaterialState.Disabled,
+            new HashSet<WidgetState> { WidgetState.Disabled },
             widget.Style,
             segmentedTheme.Style,
             defaults) ?? BorderSide.None;
@@ -288,9 +288,9 @@ public sealed class SegmentedButtonState<T> : State
         {
             bool selected = widget.Selected.Contains(segment.Value);
             bool enabled = widget.OnSelectionChanged is not null && segment.Enabled;
-            MaterialStatesController controller = StatesControllers.GetValueOrDefault(segment)
+            WidgetStatesController controller = StatesControllers.GetValueOrDefault(segment)
                 ?? AddStatesController(segment);
-            controller.Update(MaterialState.Selected, selected);
+            controller.Update(WidgetState.Selected, selected);
             Widget label = segment.Label ?? segment.Icon ?? new SizedBox();
             Widget? icon = selected && widget.ShowSelectedIcon
                 ? selectedIcon
@@ -372,7 +372,7 @@ public sealed class SegmentedButtonState<T> : State
 
     public override void Dispose()
     {
-        foreach (MaterialStatesController controller in StatesControllers.Values)
+        foreach (WidgetStatesController controller in StatesControllers.Values)
         {
             controller.Dispose();
         }
@@ -380,27 +380,31 @@ public sealed class SegmentedButtonState<T> : State
         base.Dispose();
     }
 
-    private MaterialStatesController AddStatesController(ButtonSegment<T> segment)
+    private WidgetStatesController AddStatesController(ButtonSegment<T> segment)
     {
-        var controller = new MaterialStatesController();
+        var controller = new WidgetStatesController();
         StatesControllers.Add(segment, controller);
         return controller;
     }
 
-    private MaterialState ResolveGroupStates(SegmentedButton<T> widget)
+    private IReadOnlySet<WidgetState> ResolveGroupStates(SegmentedButton<T> widget)
     {
-        MaterialState states = widget.OnSelectionChanged is null ? MaterialState.Disabled : MaterialState.None;
+        var states = new HashSet<WidgetState>();
+        if (widget.OnSelectionChanged is null)
+        {
+            states.Add(WidgetState.Disabled);
+        }
         if (_hovering)
         {
-            states |= MaterialState.Hovered;
+            states.Add(WidgetState.Hovered);
         }
         if (_focused)
         {
-            states |= MaterialState.Focused;
+            states.Add(WidgetState.Focused);
         }
         if (widget.Selected.Count > 0)
         {
-            states |= MaterialState.Selected;
+            states.Add(WidgetState.Selected);
         }
         return states;
     }
@@ -462,7 +466,7 @@ public sealed class SegmentedButtonState<T> : State
         ThemeData theme,
         ButtonStyle? segmentedThemeStyle,
         ButtonStyle defaults,
-        MaterialState states)
+        IReadOnlySet<WidgetState> states)
     {
         SegmentedButton<T> widget = CurrentWidget;
         VisualDensity density = widget.Style?.VisualDensity
@@ -498,44 +502,44 @@ public sealed class SegmentedButtonState<T> : State
     {
         ColorScheme colors = theme.ColorScheme;
         return new ButtonStyle(
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
-            BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
+            TextStyle: WidgetStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            BackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled)
                     ? null
-                    : states.HasFlag(MaterialState.Selected)
+                    : states.Contains(WidgetState.Selected)
                         ? colors.SecondaryContainer
                         : null),
-            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
+            ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled)
                     ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.38)
-                    : states.HasFlag(MaterialState.Selected)
+                    : states.Contains(WidgetState.Selected)
                         ? colors.OnSecondaryContainer
                         : colors.OnSurface),
-            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                Color stateColor = states.HasFlag(MaterialState.Selected)
+                Color stateColor = states.Contains(WidgetState.Selected)
                     ? colors.OnSecondaryContainer
                     : colors.OnSurface;
-                if (states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused))
+                if (states.Contains(WidgetState.Pressed) || states.Contains(WidgetState.Focused))
                 {
                     return NavigationSurfaceUtilities.WithOpacity(stateColor, 0.10);
                 }
-                if (states.HasFlag(MaterialState.Hovered))
+                if (states.Contains(WidgetState.Hovered))
                 {
                     return NavigationSurfaceUtilities.WithOpacity(stateColor, 0.08);
                 }
                 return null;
             }),
-            SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            Elevation: MaterialStateProperty<double?>.All(0.0),
-            IconSize: MaterialStateProperty<double?>.All(18.0),
-            Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
+            SurfaceTintColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            Elevation: WidgetStateProperty<double?>.All(0.0),
+            IconSize: WidgetStateProperty<double?>.All(18.0),
+            Side: WidgetStateProperty<BorderSide?>.ResolveWith(states =>
                 new BorderSide(
-                    states.HasFlag(MaterialState.Disabled)
+                    states.Contains(WidgetState.Disabled)
                         ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.12)
                         : colors.Outline)),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(0.0, 40.0)));
+            Shape: WidgetStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
+            MinimumSize: WidgetStateProperty<Size?>.All(new Size(0.0, 40.0)));
     }
 
     private static ButtonStyle SegmentStyleFor(ButtonStyle? style)
@@ -557,12 +561,12 @@ public sealed class SegmentedButtonState<T> : State
             EnableFeedback: style?.EnableFeedback,
             Alignment: style?.Alignment,
             SplashFactory: style?.SplashFactory,
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder()));
+            Shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder()));
     }
 
     private static TValue? ResolveValue<TValue>(
-        Func<ButtonStyle, MaterialStateProperty<TValue?>?> selector,
-        MaterialState states,
+        Func<ButtonStyle, WidgetStateProperty<TValue?>?> selector,
+        IReadOnlySet<WidgetState> states,
         params ButtonStyle?[] styles) where TValue : struct
     {
         foreach (ButtonStyle? style in styles)
@@ -577,8 +581,8 @@ public sealed class SegmentedButtonState<T> : State
     }
 
     private static TValue? ResolveValue<TValue>(
-        Func<ButtonStyle, MaterialStateProperty<TValue?>?> selector,
-        MaterialState states,
+        Func<ButtonStyle, WidgetStateProperty<TValue?>?> selector,
+        IReadOnlySet<WidgetState> states,
         params ButtonStyle?[] styles) where TValue : class
     {
         foreach (ButtonStyle? style in styles)

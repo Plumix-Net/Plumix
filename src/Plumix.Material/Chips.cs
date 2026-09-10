@@ -43,12 +43,12 @@ public sealed class ActionChip : StatelessWidget
         Thickness? labelPadding = null,
         double? pressElevation = null,
         string? tooltip = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Color? disabledColor = null,
         Thickness? padding = null,
@@ -77,12 +77,12 @@ public sealed class ActionChip : StatelessWidget
         Thickness? labelPadding,
         double? pressElevation,
         string? tooltip,
-        MaterialStateProperty<BorderSide?>? side,
-        MaterialStateProperty<ShapeBorder?>? shape,
+        WidgetStateProperty<BorderSide?>? side,
+        WidgetStateProperty<ShapeBorder?>? shape,
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
-        MaterialStateProperty<Color?>? color,
+        WidgetStateProperty<Color?>? color,
         Color? backgroundColor,
         Color? disabledColor,
         Thickness? padding,
@@ -136,12 +136,12 @@ public sealed class ActionChip : StatelessWidget
         Thickness? labelPadding = null,
         double? pressElevation = null,
         string? tooltip = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Color? disabledColor = null,
         Thickness? padding = null,
@@ -170,12 +170,12 @@ public sealed class ActionChip : StatelessWidget
     public Action? OnPressed { get; }
     public double? PressElevation { get; }
     public string? Tooltip { get; }
-    public MaterialStateProperty<BorderSide?>? Side { get; }
-    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
+    public WidgetStateProperty<BorderSide?>? Side { get; }
+    public WidgetStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
-    public MaterialStateProperty<Color?>? Color { get; }
+    public WidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Color? DisabledColor { get; }
     public Thickness? Padding { get; }
@@ -254,12 +254,12 @@ public sealed class ChoiceChip : StatelessWidget
         Color? selectedColor = null,
         Color? disabledColor = null,
         string? tooltip = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -296,12 +296,12 @@ public sealed class ChoiceChip : StatelessWidget
         Color? selectedColor,
         Color? disabledColor,
         string? tooltip,
-        MaterialStateProperty<BorderSide?>? side,
-        MaterialStateProperty<ShapeBorder?>? shape,
+        WidgetStateProperty<BorderSide?>? side,
+        WidgetStateProperty<ShapeBorder?>? shape,
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
-        MaterialStateProperty<Color?>? color,
+        WidgetStateProperty<Color?>? color,
         Color? backgroundColor,
         Thickness? padding,
         VisualDensity? visualDensity,
@@ -375,12 +375,12 @@ public sealed class ChoiceChip : StatelessWidget
         Color? selectedColor = null,
         Color? disabledColor = null,
         string? tooltip = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -417,12 +417,12 @@ public sealed class ChoiceChip : StatelessWidget
     public Color? DisabledColor { get; }
     public Color? SelectedColor { get; }
     public string? Tooltip { get; }
-    public MaterialStateProperty<BorderSide?>? Side { get; }
-    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
+    public WidgetStateProperty<BorderSide?>? Side { get; }
+    public WidgetStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
-    public MaterialStateProperty<Color?>? Color { get; }
+    public WidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Thickness? Padding { get; }
     public VisualDensity? VisualDensity { get; }
@@ -498,14 +498,14 @@ public sealed class RawChip : StatefulWidget
         bool? showCheckmark = null,
         Color? checkmarkColor = null,
         string? tooltip = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
         Color? disabledColor = null,
         Color? selectedColor = null,
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -550,14 +550,14 @@ public sealed class RawChip : StatefulWidget
         bool? showCheckmark,
         Color? checkmarkColor,
         string? tooltip,
-        MaterialStateProperty<BorderSide?>? side,
-        MaterialStateProperty<ShapeBorder?>? shape,
+        WidgetStateProperty<BorderSide?>? side,
+        WidgetStateProperty<ShapeBorder?>? shape,
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
         Color? disabledColor,
         Color? selectedColor,
-        MaterialStateProperty<Color?>? color,
+        WidgetStateProperty<Color?>? color,
         Color? backgroundColor,
         Thickness? padding,
         VisualDensity? visualDensity,
@@ -650,14 +650,14 @@ public sealed class RawChip : StatefulWidget
     public bool? ShowCheckmark { get; }
     public Color? CheckmarkColor { get; }
     public string? Tooltip { get; }
-    public MaterialStateProperty<BorderSide?>? Side { get; }
-    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
+    public WidgetStateProperty<BorderSide?>? Side { get; }
+    public WidgetStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
     public Color? DisabledColor { get; }
     public Color? SelectedColor { get; }
-    public MaterialStateProperty<Color?>? Color { get; }
+    public WidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Thickness? Padding { get; }
     public VisualDensity? VisualDensity { get; }
@@ -700,7 +700,7 @@ public sealed class RawChip : StatefulWidget
         private double _deleteProgress;
         private AnimationController? _enableController;
         private double _enableProgress;
-        private readonly MaterialStatesController _statesController = new();
+        private readonly WidgetStatesController _statesController = new();
         private bool _isTapping;
 
         private RawChip CurrentWidget => (RawChip)StateWidget;
@@ -713,8 +713,8 @@ public sealed class RawChip : StatefulWidget
 
         public override void InitState()
         {
-            _statesController.Update(MaterialState.Disabled, !CurrentWidget.IsEnabled);
-            _statesController.Update(MaterialState.Selected, CurrentWidget.Selected);
+            _statesController.Update(WidgetState.Disabled, !CurrentWidget.IsEnabled);
+            _statesController.Update(WidgetState.Selected, CurrentWidget.Selected);
             _statesController.AddListener(HandleStatesChanged);
 
             _selectionController = CreateController(
@@ -747,8 +747,8 @@ public sealed class RawChip : StatefulWidget
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
             var oldChip = (RawChip)oldWidget;
-            _statesController.Update(MaterialState.Disabled, !CurrentWidget.IsEnabled);
-            _statesController.Update(MaterialState.Selected, CurrentWidget.Selected);
+            _statesController.Update(WidgetState.Disabled, !CurrentWidget.IsEnabled);
+            _statesController.Update(WidgetState.Selected, CurrentWidget.Selected);
             if (oldChip.IsEnabled != CurrentWidget.IsEnabled)
             {
                 if (CurrentWidget.IsEnabled)
@@ -828,7 +828,7 @@ public sealed class RawChip : StatefulWidget
                                    ?? defaults.CheckmarkColor
                                    ?? ResolveDefaultCheckmarkColor(theme.Brightness, widget.Avatar is not null);
 
-            MaterialState states = _statesController.Value;
+            IReadOnlySet<WidgetState> states = _statesController.Value;
             ShapeBorder resolvedShape = ResolveShape(states, widget, chipTheme, defaults);
             double elevation = widget.Elevation ?? chipTheme.Elevation ?? defaults.Elevation ?? 0;
             double pressElevation = widget.PressElevation ?? chipTheme.PressElevation ?? defaults.PressElevation ?? 0;
@@ -893,7 +893,7 @@ public sealed class RawChip : StatefulWidget
                 shape: resolvedShape,
                 clipBehavior: widget.ClipBehavior,
                 child: new InkWell(
-                    onFocusChange: value => _statesController.Update(MaterialState.Focused, value),
+                    onFocusChange: value => _statesController.Update(WidgetState.Focused, value),
                     focusNode: widget.FocusNode,
                     autofocus: widget.Autofocus,
                     canRequestFocus: widget.IsEnabled,
@@ -901,7 +901,7 @@ public sealed class RawChip : StatefulWidget
                     onTapDown: CanTap ? _ => HandleTapDown() : null,
                     onTapCancel: CanTap ? HandleTapCancel : null,
                     onHover: CanTap
-                        ? value => _statesController.Update(MaterialState.Hovered, value)
+                        ? value => _statesController.Update(WidgetState.Hovered, value)
                         : null,
                     mouseCursor: widget.MouseCursor,
                     hoverColor: (widget.Color ?? chipTheme.Color) is null ? null : Colors.Transparent,
@@ -943,7 +943,7 @@ public sealed class RawChip : StatefulWidget
                 return;
             }
 
-            _statesController.Update(MaterialState.Pressed, true);
+            _statesController.Update(WidgetState.Pressed, true);
             SetState(() => _isTapping = true);
         }
 
@@ -955,7 +955,7 @@ public sealed class RawChip : StatefulWidget
                 return;
             }
 
-            _statesController.Update(MaterialState.Pressed, false);
+            _statesController.Update(WidgetState.Pressed, false);
             SetState(() => _isTapping = false);
         }
 
@@ -967,7 +967,7 @@ public sealed class RawChip : StatefulWidget
                 return;
             }
 
-            _statesController.Update(MaterialState.Pressed, false);
+            _statesController.Update(WidgetState.Pressed, false);
             SetState(() => _isTapping = false);
             RawChip widget = CurrentWidget;
             // Only one of these can be set, so only one will be called.
@@ -1090,17 +1090,17 @@ public sealed class RawChip : StatefulWidget
                         enabled
                             ? selected ? theme.ColorScheme.OnSecondaryContainer : theme.ColorScheme.OnSurfaceVariant
                             : theme.ColorScheme.OnSurface),
-                    Color = MaterialStateProperty<Color?>.ResolveWith(states =>
+                    Color = WidgetStateProperty<Color?>.ResolveWith(states =>
                     {
-                        if (states.HasFlag(MaterialState.Selected) && states.HasFlag(MaterialState.Disabled))
+                        if (states.Contains(WidgetState.Selected) && states.Contains(WidgetState.Disabled))
                         {
                             return WithOpacity(theme.ColorScheme.OnSurface, 0.12);
                         }
-                        if (states.HasFlag(MaterialState.Disabled))
+                        if (states.Contains(WidgetState.Disabled))
                         {
                             return elevated ? WithOpacity(theme.ColorScheme.OnSurface, 0.12) : null;
                         }
-                        if (states.HasFlag(MaterialState.Selected))
+                        if (states.Contains(WidgetState.Selected))
                         {
                             return theme.ColorScheme.SecondaryContainer;
                         }
@@ -1135,14 +1135,14 @@ public sealed class RawChip : StatefulWidget
                         enabled
                             ? selected ? theme.ColorScheme.OnSecondaryContainer : theme.ColorScheme.OnSurfaceVariant
                             : theme.ColorScheme.OnSurface),
-                    Color = MaterialStateProperty<Color?>.ResolveWith(states =>
+                    Color = WidgetStateProperty<Color?>.ResolveWith(states =>
                     {
-                        if (states.HasFlag(MaterialState.Selected) && states.HasFlag(MaterialState.Disabled))
+                        if (states.Contains(WidgetState.Selected) && states.Contains(WidgetState.Disabled))
                         {
                             return WithOpacity(theme.ColorScheme.OnSurface, 0.12);
                         }
-                        if (states.HasFlag(MaterialState.Disabled)) return null;
-                        return states.HasFlag(MaterialState.Selected)
+                        if (states.Contains(WidgetState.Disabled)) return null;
+                        return states.Contains(WidgetState.Selected)
                             ? theme.ColorScheme.SecondaryContainer
                             : null;
                     }),
@@ -1172,8 +1172,8 @@ public sealed class RawChip : StatefulWidget
                     Elevation = elevated && enabled ? 1 : 0,
                     ShadowColor = elevated ? theme.ShadowColor : Colors.Transparent,
                     LabelStyle = theme.TextTheme.LabelLarge.CopyWith(color: theme.ColorScheme.OnSurface),
-                    Color = MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Disabled)
+                    Color = WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Disabled)
                             ? elevated ? WithOpacity(theme.ColorScheme.OnSurface, 0.12) : null
                             : elevated ? theme.ColorScheme.SurfaceContainerLow : null),
                     Side = !elevated
@@ -1203,7 +1203,7 @@ public sealed class RawChip : StatefulWidget
         }
 
         private Color? ResolveBackground(
-            MaterialState states,
+            IReadOnlySet<WidgetState> states,
             RawChip widget,
             ChipThemeData chipTheme,
             ChipThemeData defaults)
@@ -1227,14 +1227,14 @@ public sealed class RawChip : StatefulWidget
             var disabledColor = widget.DisabledColor ?? chipTheme.DisabledColor ?? defaults.DisabledColor;
             var stateDefault = defaults.Color?.Resolve(states);
 
-            var target = states.HasFlag(MaterialState.Selected)
+            var target = states.Contains(WidgetState.Selected)
                 ? selectedColor ?? stateDefault
-                : states.HasFlag(MaterialState.Disabled)
+                : states.Contains(WidgetState.Disabled)
                     ? disabledColor ?? stateDefault
                     : normalColor ?? stateDefault;
-            var unselected = states.HasFlag(MaterialState.Disabled)
-                ? disabledColor ?? defaults.Color?.Resolve(MaterialState.Disabled)
-                : normalColor ?? defaults.Color?.Resolve(MaterialState.None);
+            var unselected = states.Contains(WidgetState.Disabled)
+                ? disabledColor ?? defaults.Color?.Resolve(new HashSet<WidgetState> { WidgetState.Disabled })
+                : normalColor ?? defaults.Color?.Resolve(new HashSet<WidgetState>());
 
             if (selectedColor.HasValue
                 && (_selectionController?.IsAnimating == true || _selectionProgress is > 0 and < 1))
@@ -1251,7 +1251,7 @@ public sealed class RawChip : StatefulWidget
         }
 
         private static Color ResolveLabelColor(
-            MaterialState states,
+            IReadOnlySet<WidgetState> states,
             RawChip widget,
             ChipThemeData chipTheme,
             ChipThemeData defaults,
@@ -1263,7 +1263,7 @@ public sealed class RawChip : StatefulWidget
             {
                 resolved = widgetColor;
             }
-            else if (states.HasFlag(MaterialState.Selected) && chipTheme.SecondaryLabelStyle?.Color is { } secondary)
+            else if (states.Contains(WidgetState.Selected) && chipTheme.SecondaryLabelStyle?.Color is { } secondary)
             {
                 resolved = secondary;
             }
@@ -1271,7 +1271,7 @@ public sealed class RawChip : StatefulWidget
             {
                 resolved = labelStyle.Color
                            ?? defaults.LabelStyle?.Color
-                           ?? (states.HasFlag(MaterialState.Disabled)
+                           ?? (states.Contains(WidgetState.Disabled)
                                ? theme.ColorScheme.OnSurface
                                : theme.ColorScheme.OnSurfaceVariant);
             }
@@ -1280,7 +1280,7 @@ public sealed class RawChip : StatefulWidget
         }
 
         private static BorderSide? ResolveSide(
-            MaterialState states,
+            IReadOnlySet<WidgetState> states,
             RawChip widget,
             ChipThemeData chipTheme,
             ChipThemeData defaults)
@@ -1298,7 +1298,7 @@ public sealed class RawChip : StatefulWidget
             }
             if (widget.DefaultsKind is ChipDefaultsKind.Choice or ChipDefaultsKind.Filter or ChipDefaultsKind.Input
                 && widget.Variant == ChipVariant.Flat
-                && states.HasFlag(MaterialState.Selected))
+                && states.Contains(WidgetState.Selected))
             {
                 return new BorderSide(Colors.Transparent, 0);
             }
@@ -1306,7 +1306,7 @@ public sealed class RawChip : StatefulWidget
         }
 
         private static ShapeBorder ResolveShape(
-            MaterialState states,
+            IReadOnlySet<WidgetState> states,
             RawChip widget,
             ChipThemeData chipTheme,
             ChipThemeData defaults)

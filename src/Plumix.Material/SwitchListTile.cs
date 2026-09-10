@@ -32,17 +32,17 @@ public sealed class SwitchListTile : StatelessWidget
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
         ImageErrorListener? onInactiveThumbImageError = null,
-        MaterialStateProperty<Color?>? thumbColor = null,
-        MaterialStateProperty<Color?>? trackColor = null,
-        MaterialStateProperty<Color?>? trackOutlineColor = null,
-        MaterialStateProperty<Icon?>? thumbIcon = null,
+        WidgetStateProperty<Color?>? thumbColor = null,
+        WidgetStateProperty<Color?>? trackColor = null,
+        WidgetStateProperty<Color?>? trackOutlineColor = null,
+        WidgetStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         MouseCursor? mouseCursor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         FocusNode? focusNode = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Action<bool>? onFocusChange = null,
         bool autofocus = false,
         Color? tileColor = null,
@@ -128,17 +128,17 @@ public sealed class SwitchListTile : StatelessWidget
         ImageErrorListener? onActiveThumbImageError,
         ImageProvider? inactiveThumbImage,
         ImageErrorListener? onInactiveThumbImageError,
-        MaterialStateProperty<Color?>? thumbColor,
-        MaterialStateProperty<Color?>? trackColor,
-        MaterialStateProperty<Color?>? trackOutlineColor,
-        MaterialStateProperty<Icon?>? thumbIcon,
+        WidgetStateProperty<Color?>? thumbColor,
+        WidgetStateProperty<Color?>? trackColor,
+        WidgetStateProperty<Color?>? trackOutlineColor,
+        WidgetStateProperty<Icon?>? thumbIcon,
         MaterialTapTargetSize? materialTapTargetSize,
         DragStartBehavior dragStartBehavior,
         MouseCursor? mouseCursor,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         double? splashRadius,
         FocusNode? focusNode,
-        MaterialStatesController? statesController,
+        WidgetStatesController? statesController,
         Action<bool>? onFocusChange,
         bool autofocus,
         Color? tileColor,
@@ -247,17 +247,17 @@ public sealed class SwitchListTile : StatelessWidget
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
         ImageErrorListener? onInactiveThumbImageError = null,
-        MaterialStateProperty<Color?>? thumbColor = null,
-        MaterialStateProperty<Color?>? trackColor = null,
-        MaterialStateProperty<Color?>? trackOutlineColor = null,
-        MaterialStateProperty<Icon?>? thumbIcon = null,
+        WidgetStateProperty<Color?>? thumbColor = null,
+        WidgetStateProperty<Color?>? trackColor = null,
+        WidgetStateProperty<Color?>? trackOutlineColor = null,
+        WidgetStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         MouseCursor? mouseCursor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         FocusNode? focusNode = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Action<bool>? onFocusChange = null,
         bool autofocus = false,
         bool? applyCupertinoTheme = null,
@@ -365,17 +365,17 @@ public sealed class SwitchListTile : StatelessWidget
     /// <summary>An optional error callback for errors emitted when loading <see cref="InactiveThumbImage"/>.</summary>
     public ImageErrorListener? OnInactiveThumbImageError { get; }
 
-    /// <summary>The color of this switch's thumb, in all <see cref="MaterialState"/>s.</summary>
-    public MaterialStateProperty<Color?>? ThumbColor { get; }
+    /// <summary>The color of this switch's thumb, in all <see cref="WidgetState"/>s.</summary>
+    public WidgetStateProperty<Color?>? ThumbColor { get; }
 
-    /// <summary>The color of this switch's track, in all <see cref="MaterialState"/>s.</summary>
-    public MaterialStateProperty<Color?>? TrackColor { get; }
+    /// <summary>The color of this switch's track, in all <see cref="WidgetState"/>s.</summary>
+    public WidgetStateProperty<Color?>? TrackColor { get; }
 
-    /// <summary>The outline color of this switch's track, in all <see cref="MaterialState"/>s.</summary>
-    public MaterialStateProperty<Color?>? TrackOutlineColor { get; }
+    /// <summary>The outline color of this switch's track, in all <see cref="WidgetState"/>s.</summary>
+    public WidgetStateProperty<Color?>? TrackOutlineColor { get; }
 
-    /// <summary>The icon to use on the thumb of this switch, in all <see cref="MaterialState"/>s.</summary>
-    public MaterialStateProperty<Icon?>? ThumbIcon { get; }
+    /// <summary>The icon to use on the thumb of this switch, in all <see cref="WidgetState"/>s.</summary>
+    public WidgetStateProperty<Icon?>? ThumbIcon { get; }
 
     /// <summary>Configures the minimum size of the tap target. Defaults to <see cref="MaterialTapTargetSize.ShrinkWrap"/>.</summary>
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
@@ -387,7 +387,7 @@ public sealed class SwitchListTile : StatelessWidget
     public MouseCursor? MouseCursor { get; }
 
     /// <summary>The color for the switch's <see cref="Plumix.Material.Material"/>.</summary>
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
 
     /// <summary>The splash radius of the circular ink response.</summary>
     public double? SplashRadius { get; }
@@ -396,7 +396,7 @@ public sealed class SwitchListTile : StatelessWidget
     public FocusNode? FocusNode { get; }
 
     /// <summary>Controls the interactive states of the backing <see cref="ListTile"/>.</summary>
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
 
     /// <summary>Handler called when the focus changes.</summary>
     public Action<bool>? OnFocusChange { get; }
@@ -544,7 +544,9 @@ public sealed class SwitchListTile : StatelessWidget
 
         ThemeData theme = Theme.Of(context);
         SwitchThemeData switchTheme = SwitchTheme.Of(context);
-        MaterialState states = Selected ? MaterialState.Selected : MaterialState.None;
+        IReadOnlySet<WidgetState> states = Selected
+            ? new HashSet<WidgetState> { WidgetState.Selected }
+            : new HashSet<WidgetState>();
         Color effectiveActiveColor = ActiveThumbColor
                                      #pragma warning disable CS0618 // Mirrors Flutter's deprecated activeColor.
                                      ?? ActiveColor

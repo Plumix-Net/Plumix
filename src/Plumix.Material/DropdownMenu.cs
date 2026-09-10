@@ -258,7 +258,7 @@ public sealed class DropdownMenuState<T> : State
     private double? _leadingPadding;
     private bool _menuHasEnabledItem;
     private TextEditingController? _localTextEditingController;
-    private MaterialStatesController? _highlightedItemStatesController;
+    private WidgetStatesController? _highlightedItemStatesController;
     private FocusNode? _localTrailingIconButtonFocusNode;
 
     private DropdownMenu<T> Current => (DropdownMenu<T>)StateWidget;
@@ -480,7 +480,7 @@ public sealed class DropdownMenuState<T> : State
                 .Resolve(textDirection);
             var effectiveStyle = entry.Style
                                  ?? new ButtonStyle(
-                                     Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(itemPadding));
+                                     Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(itemPadding));
 
             var themeStyle = MenuButtonTheme.Of(Context).Style;
             var effectiveForegroundColor = entry.Style?.ForegroundColor ?? themeStyle?.ForegroundColor;
@@ -494,23 +494,30 @@ public sealed class DropdownMenuState<T> : State
                 // Dart recreates the controller so the highlighted item reports `focused` without
                 // owning real focus (focus stays on the text field).
                 _highlightedItemStatesController?.Dispose();
-                _highlightedItemStatesController = new MaterialStatesController(MaterialState.Focused);
+                _highlightedItemStatesController = new WidgetStatesController([WidgetState.Focused]);
 
                 var defaultStyle = new MenuItemButton().DefaultStyleOf(Context);
+
+                // Dart's local `resolveFocusedColor`.
+                static Color? ResolveFocusedColor(WidgetStateProperty<Color?>? colorStateProperty) =>
+                    colorStateProperty?.Resolve(new HashSet<WidgetState> { WidgetState.Focused });
+
                 Color focusedForegroundColor =
-                    (effectiveForegroundColor ?? defaultStyle.ForegroundColor!).Resolve(MaterialState.Focused)!.Value;
+                    ResolveFocusedColor(effectiveForegroundColor ?? defaultStyle.ForegroundColor!)!.Value;
                 Color focusedIconColor =
-                    (effectiveIconColor ?? defaultStyle.IconColor!).Resolve(MaterialState.Focused)!.Value;
+                    ResolveFocusedColor(effectiveIconColor ?? defaultStyle.IconColor!)!.Value;
                 Color focusedOverlayColor =
-                    (effectiveOverlayColor ?? defaultStyle.OverlayColor!).Resolve(MaterialState.Focused)!.Value;
-                Color focusedBackgroundColor = effectiveBackgroundColor?.Resolve(MaterialState.Focused)
+                    ResolveFocusedColor(effectiveOverlayColor ?? defaultStyle.OverlayColor!)!.Value;
+                // For the background color Dart cannot rely on the transparent default style, so it
+                // falls back to `onSurface` at 0.12.
+                Color focusedBackgroundColor = ResolveFocusedColor(effectiveBackgroundColor)
                                                ?? Theme.Of(Context).ColorScheme.OnSurface.WithOpacity(0.12);
                 effectiveStyle = effectiveStyle with
                 {
-                    BackgroundColor = MaterialStateProperty<Color?>.All(focusedBackgroundColor),
-                    ForegroundColor = MaterialStateProperty<Color?>.All(focusedForegroundColor),
-                    IconColor = MaterialStateProperty<Color?>.All(focusedIconColor),
-                    OverlayColor = MaterialStateProperty<Color?>.All(focusedOverlayColor),
+                    BackgroundColor = WidgetStateProperty<Color?>.All(focusedBackgroundColor),
+                    ForegroundColor = WidgetStateProperty<Color?>.All(focusedForegroundColor),
+                    IconColor = WidgetStateProperty<Color?>.All(focusedIconColor),
+                    OverlayColor = WidgetStateProperty<Color?>.All(focusedOverlayColor),
                 };
             }
             else
@@ -725,7 +732,7 @@ public sealed class DropdownMenuState<T> : State
         if (Current.MenuHeight is { } menuHeight)
         {
             effectiveMenuStyle = effectiveMenuStyle.CopyWith(
-                maximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, menuHeight)));
+                maximumSize: WidgetStateProperty<Size?>.All(new Size(double.PositiveInfinity, menuHeight)));
         }
 
         var baseTextStyle = Current.TextStyle ?? dropdownMenuTheme.TextStyle ?? defaults.TextStyle;
@@ -797,7 +804,7 @@ public sealed class DropdownMenuState<T> : State
     private static MenuStyle WithMinimumWidth(MenuStyle style, double width)
     {
         MenuStyle? mutated = null;
-        mutated = style.CopyWith(minimumSize: MaterialStateProperty<Size?>.ResolveWith(states =>
+        mutated = style.CopyWith(minimumSize: WidgetStateProperty<Size?>.ResolveWith(states =>
         {
             double? maxWidth = mutated!.MaximumSize?.Resolve(states)?.Width;
             return new Size(Math.Min(width, maxWidth ?? width), 0.0);

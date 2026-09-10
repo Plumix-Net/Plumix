@@ -280,7 +280,7 @@ public sealed class MaterialFloatingActionButtonTests
                 data: ThemeData.Light with
                 {
                     FloatingActionButtonTheme = new FloatingActionButtonThemeData(
-                        MouseCursor: MaterialStateProperty<MouseCursor?>.All(themeCursor)),
+                        MouseCursor: WidgetStateProperty<MouseCursor?>.All(themeCursor)),
                 },
                 child: new FloatingActionButton(
                     child: new Icon(Icons.Add),
@@ -586,8 +586,8 @@ public sealed class MaterialFloatingActionButtonTests
     [Fact]
     public void FloatingActionButtonThemeData_CopyWithAndLerp_MatchSourceContracts()
     {
-        var cursorA = MaterialStateProperty<MouseCursor?>.All(new SystemMouseCursor("a"));
-        var cursorB = MaterialStateProperty<MouseCursor?>.All(new SystemMouseCursor("b"));
+        var cursorA = WidgetStateProperty<MouseCursor?>.All(new SystemMouseCursor("a"));
+        var cursorB = WidgetStateProperty<MouseCursor?>.All(new SystemMouseCursor("b"));
         var a = new FloatingActionButtonThemeData(
             ForegroundColor: Colors.Red,
             Elevation: 2,
@@ -653,8 +653,8 @@ public sealed class MaterialFloatingActionButtonTests
         {
             FloatingActionButtonTheme = new FloatingActionButtonThemeData(
                 Shape: new StadiumBorder(new BorderSide(Colors.Red, 2)),
-                MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(
-                    states => states.HasFlag(MaterialState.Disabled) ? disabledCursor : enabledCursor)),
+                MouseCursor: WidgetStateProperty<MouseCursor?>.ResolveWith(
+                    states => states.Contains(WidgetState.Disabled) ? disabledCursor : enabledCursor)),
         };
         var owner = new BuildOwner();
         var root = new TestRootElement(
@@ -673,8 +673,8 @@ public sealed class MaterialFloatingActionButtonTests
         RawMaterialButton button = RequireBuiltButton(capturedBuiltWidget);
         Assert.Equal(new StadiumBorder(new BorderSide(Colors.Red, 2)), button.Shape);
         var cursor = Assert.IsAssignableFrom<WidgetStateMouseCursor>(button.MouseCursor);
-        Assert.Equal(enabledCursor, cursor.Resolve(MaterialStateSet.Of(MaterialState.None)));
-        Assert.Equal(disabledCursor, cursor.Resolve(MaterialStateSet.Of(MaterialState.Disabled)));
+        Assert.Equal(enabledCursor, cursor.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(disabledCursor, cursor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
     }
 
     [Fact]

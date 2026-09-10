@@ -25,9 +25,9 @@ public sealed partial record PopupMenuThemeData
         Color? ShadowColor = null,
         Color? SurfaceTintColor = null,
         TextStyle? TextStyle = null,
-        MaterialStateProperty<TextStyle?>? LabelTextStyle = null,
+        WidgetStateProperty<TextStyle?>? LabelTextStyle = null,
         bool? EnableFeedback = null,
-        MaterialStateProperty<MouseCursor?>? MouseCursor = null,
+        WidgetStateProperty<MouseCursor?>? MouseCursor = null,
         PopupMenuPosition? Position = null,
         Color? IconColor = null,
         double? IconSize = null)
@@ -54,9 +54,9 @@ public sealed partial record PopupMenuThemeData
     public Color? ShadowColor { get; init; }
     public Color? SurfaceTintColor { get; init; }
     public TextStyle? TextStyle { get; init; }
-    public MaterialStateProperty<TextStyle?>? LabelTextStyle { get; init; }
+    public WidgetStateProperty<TextStyle?>? LabelTextStyle { get; init; }
     public bool? EnableFeedback { get; init; }
-    public MaterialStateProperty<MouseCursor?>? MouseCursor { get; init; }
+    public WidgetStateProperty<MouseCursor?>? MouseCursor { get; init; }
     public PopupMenuPosition? Position { get; init; }
     public Color? IconColor { get; init; }
     public double? IconSize { get; init; }
@@ -69,9 +69,9 @@ public sealed partial record PopupMenuThemeData
         Color? shadowColor = null,
         Color? surfaceTintColor = null,
         TextStyle? textStyle = null,
-        MaterialStateProperty<TextStyle?>? labelTextStyle = null,
+        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
         bool? enableFeedback = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
         PopupMenuPosition? position = null,
         Color? iconColor = null,
         double? iconSize = null)

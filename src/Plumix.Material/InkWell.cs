@@ -36,7 +36,7 @@ public class InkResponse : StatefulWidget
         Color? focusColor = null,
         Color? hoverColor = null,
         Color? highlightColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         Color? splashColor = null,
         bool enableFeedback = true,
         bool excludeFromSemantics = false,
@@ -44,7 +44,7 @@ public class InkResponse : StatefulWidget
         bool canRequestFocus = true,
         Action<bool>? onFocusChange = null,
         bool autofocus = false,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         TimeSpan? hoverDuration = null,
         Key? key = null,
         InteractiveInkFeatureFactory? splashFactory = null) : base(key)
@@ -118,7 +118,7 @@ public class InkResponse : StatefulWidget
     public Color? FocusColor { get; }
     public Color? HoverColor { get; }
     public Color? HighlightColor { get; }
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
     public Color? SplashColor { get; }
     public bool EnableFeedback { get; }
     public bool ExcludeFromSemantics { get; }
@@ -126,7 +126,7 @@ public class InkResponse : StatefulWidget
     public bool CanRequestFocus { get; }
     public Action<bool>? OnFocusChange { get; }
     public bool Autofocus { get; }
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
     public TimeSpan? HoverDuration { get; }
     public InteractiveInkFeatureFactory? SplashFactory { get; }
 
@@ -143,7 +143,7 @@ public class InkResponse : StatefulWidget
         private static readonly Point CenterOrigin = new(double.NaN, double.NaN);
         private FocusNode? _focusNode;
         private bool _ownsFocusNode;
-        private MaterialStatesController? _statesController;
+        private WidgetStatesController? _statesController;
         private bool _ownsStatesController;
         private bool _pressed;
         private bool _hovered;
@@ -277,9 +277,10 @@ public class InkResponse : StatefulWidget
             _resolvedSplashFactory = widget.SplashFactory ?? theme.SplashFactory;
             _textDirection = Directionality.Of(context);
             _navigationMode = MediaQuery.MaybeNavigationModeOf(context) ?? NavigationMode.Traditional;
-            var states = _statesController?.Value ?? MaterialState.None;
+            var states = _statesController?.Value ?? new HashSet<WidgetState>();
             UpdateHighlights(theme, states);
-            var splashColor = widget.OverlayColor?.Resolve(states | MaterialState.Pressed)
+            var splashColor = widget.OverlayColor?.Resolve(
+                                  new HashSet<WidgetState>(states) { WidgetState.Pressed })
                               ?? widget.SplashColor
                               ?? theme.SplashColor;
             _resolvedSplashColor = splashColor;
@@ -371,24 +372,25 @@ public class InkResponse : StatefulWidget
 
         private Color ResolveHighlightColor(
             ThemeData theme,
-            MaterialState states,
+            IReadOnlySet<WidgetState> states,
             InkHighlightKind kind)
         {
-            MaterialState nonHighlightStates = states
-                                               & ~(MaterialState.Pressed
-                                                   | MaterialState.Hovered
-                                                   | MaterialState.Focused);
+            var nonHighlightStates = new HashSet<WidgetState>(states);
+            nonHighlightStates.Remove(WidgetState.Pressed);
+            nonHighlightStates.Remove(WidgetState.Hovered);
+            nonHighlightStates.Remove(WidgetState.Focused);
             return kind switch
             {
                 InkHighlightKind.Pressed => CurrentWidget.OverlayColor?.Resolve(
-                                                nonHighlightStates | MaterialState.Pressed)
+                                                new HashSet<WidgetState>(nonHighlightStates) { WidgetState.Pressed })
                                             ?? CurrentWidget.HighlightColor
                                             ?? theme.HighlightColor,
                 InkHighlightKind.Hover => CurrentWidget.OverlayColor?.Resolve(
-                                              nonHighlightStates | MaterialState.Hovered)
+                                              new HashSet<WidgetState>(nonHighlightStates) { WidgetState.Hovered })
                                           ?? CurrentWidget.HoverColor
                                           ?? theme.HoverColor,
-                _ => CurrentWidget.OverlayColor?.Resolve(nonHighlightStates | MaterialState.Focused)
+                _ => CurrentWidget.OverlayColor?.Resolve(
+                         new HashSet<WidgetState>(nonHighlightStates) { WidgetState.Focused })
                      ?? CurrentWidget.FocusColor
                      ?? theme.FocusColor,
             };
@@ -629,7 +631,7 @@ public class InkResponse : StatefulWidget
             bool focused = _focusNode?.HasFocus ?? false;
             if (_focused == focused) return;
             SetState(() => _focused = focused);
-            _statesController?.Update(MaterialState.Focused, focused);
+            _statesController?.Update(WidgetState.Focused, focused);
             CurrentWidget.OnFocusChange?.Invoke(focused);
         }
 
@@ -641,9 +643,9 @@ public class InkResponse : StatefulWidget
             }
         }
 
-        private void AttachStatesController(MaterialStatesController? externalController)
+        private void AttachStatesController(WidgetStatesController? externalController)
         {
-            _statesController = externalController ?? new MaterialStatesController();
+            _statesController = externalController ?? new WidgetStatesController();
             _ownsStatesController = externalController is null;
             _statesController.AddListener(HandleStatesChanged);
         }
@@ -659,9 +661,9 @@ public class InkResponse : StatefulWidget
 
         private void HandleStatesChanged() => SetState(() => { });
 
-        private void SyncDisabledState() => _statesController?.Update(MaterialState.Disabled, !Enabled);
+        private void SyncDisabledState() => _statesController?.Update(WidgetState.Disabled, !Enabled);
 
-        private void UpdateHighlights(ThemeData theme, MaterialState states)
+        private void UpdateHighlights(ThemeData theme, IReadOnlySet<WidgetState> states)
         {
             TimeSpan hoverDuration = CurrentWidget.HoverDuration ?? TimeSpan.FromMilliseconds(50.0);
             EnsureHighlight(
@@ -770,7 +772,7 @@ public class InkResponse : StatefulWidget
         {
             if (_pressed == value) return;
             SetState(() => _pressed = value);
-            _statesController?.Update(MaterialState.Pressed, value);
+            _statesController?.Update(WidgetState.Pressed, value);
             _parentState?.ChildPressedChanged(this, value || _pressedChildren.Count > 0);
             CurrentWidget.OnHighlightChanged?.Invoke(value);
             if (!value && notifyCancel) CurrentWidget.OnTapCancel?.Invoke();
@@ -803,15 +805,16 @@ public class InkResponse : StatefulWidget
         {
             get
             {
-                MaterialState states = _statesController?.Value ?? MaterialState.None;
+                var states = new HashSet<WidgetState>(
+                    _statesController?.Value ?? new HashSet<WidgetState>());
                 if (!Enabled)
                 {
-                    states |= MaterialState.Disabled;
+                    states.Add(WidgetState.Disabled);
                 }
 
                 MouseCursor candidate = CurrentWidget.MouseCursor ?? WidgetStateMouseCursor.Clickable;
                 return (candidate is WidgetStateMouseCursor stateCursor
-                           ? stateCursor.Resolve(MaterialStateSet.Of(states))
+                           ? stateCursor.Resolve(states)
                            : candidate)
                        ?? SystemMouseCursors.Basic;
             }
@@ -821,7 +824,7 @@ public class InkResponse : StatefulWidget
         {
             if (_hovered == value) return;
             SetState(() => _hovered = value);
-            _statesController?.Update(MaterialState.Hovered, value);
+            _statesController?.Update(WidgetState.Hovered, value);
             if (value)
             {
                 if (notify && Enabled)
@@ -1000,10 +1003,10 @@ public sealed class InkWell : InkResponse
         Action<TapDownDetails>? onSecondaryTapDown = null,
         Action? onSecondaryTapCancel = null,
         Action<bool>? onHighlightChanged = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? radius = null,
         ShapeBorder? customBorder = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         TimeSpan? hoverDuration = null,
         InteractiveInkFeatureFactory? splashFactory = null)
         : base(
@@ -1059,7 +1062,7 @@ public sealed class TableRowInkWell : InkResponse
         Action<bool>? onHover = null,
         Action? onSecondaryTap = null,
         Action<TapDownDetails>? onSecondaryTapDown = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null,
         Key? key = null)
         : base(

@@ -440,7 +440,9 @@ public sealed class ReorderableListView : StatefulWidget
 
         private MouseCursor ResolveMouseCursor()
         {
-            MaterialState states = _dragging.Value ? MaterialState.Dragged : MaterialState.None;
+            IReadOnlySet<WidgetState> states = _dragging.Value
+                ? new HashSet<WidgetState> { WidgetState.Dragged }
+                : new HashSet<WidgetState>();
             MouseCursor? cursor = CurrentWidget.MouseCursor is WidgetStateMouseCursor stateCursor
                 ? stateCursor.Resolve(states)
                 : CurrentWidget.MouseCursor;

@@ -590,12 +590,12 @@ public sealed partial record ListTileThemeData
             Shape: MaterialThemeLerp.Shape(a?.Shape, b?.Shape, t),
             Style: t < 0.5 ? a?.Style : b?.Style,
             SelectedColor: MaterialThemeLerp.Color(a?.SelectedColor, b?.SelectedColor, t),
-            IconColor: MaterialStateProperty<Color?>.Lerp(
+            IconColor: WidgetStateProperty<Color?>.Lerp(
                 a?.IconColor,
                 b?.IconColor,
                 t,
                 MaterialThemeLerp.Color),
-            TextColor: MaterialStateProperty<Color?>.Lerp(
+            TextColor: WidgetStateProperty<Color?>.Lerp(
                 a?.TextColor,
                 b?.TextColor,
                 t,
@@ -623,7 +623,7 @@ public sealed partial record ListTileThemeData
             MinLeadingWidth: MaterialThemeLerp.Double(a?.MinLeadingWidth, b?.MinLeadingWidth, t),
             MinTileHeight: MaterialThemeLerp.Double(a?.MinTileHeight, b?.MinTileHeight, t),
             EnableFeedback: t < 0.5 ? a?.EnableFeedback : b?.EnableFeedback,
-            MouseCursor: MaterialStateProperty<MouseCursor?>.Lerp(
+            MouseCursor: WidgetStateProperty<MouseCursor?>.Lerp(
                 a?.MouseCursor,
                 b?.MouseCursor,
                 t,

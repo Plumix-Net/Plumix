@@ -151,8 +151,8 @@ public sealed class MaterialListTileTests
         var theme = ThemeData.Light with
         {
             ListTileTheme = new ListTileThemeData(
-                TextColor: themedText,
-                IconColor: themedIcon,
+                TextColor: WidgetStateProperty<Color?>.All(themedText),
+                IconColor: WidgetStateProperty<Color?>.All(themedIcon),
                 TileColor: themedTile)
         };
 
@@ -189,7 +189,7 @@ public sealed class MaterialListTileTests
         var widgetColor = Color.Parse("#FF9A5B00");
         ThemeData theme = ThemeData.Light with
         {
-            ListTileTheme = new ListTileThemeData(TextColor: globalColor)
+            ListTileTheme = new ListTileThemeData(TextColor: WidgetStateProperty<Color?>.All(globalColor))
         };
         using var harness = new WidgetRenderHarness(BuildThemedTile(
             new Column(children:
@@ -197,11 +197,13 @@ public sealed class MaterialListTileTests
                 new ListTile(title: new Text("Global")),
                 new ListTileTheme(
                     child: new ListTile(title: new Text("Local")),
-                    data: new ListTileThemeData(TextColor: localColor)),
+                    data: new ListTileThemeData(TextColor: WidgetStateProperty<Color?>.All(localColor))),
                 ListTileTheme.Merge(
                     child: new ListTile(title: new Text("Merged")),
-                    textColor: mergedColor),
-                new ListTile(title: new Text("Widget"), textColor: widgetColor),
+                    textColor: WidgetStateProperty<Color?>.All(mergedColor)),
+                new ListTile(
+                    title: new Text("Widget"),
+                    textColor: WidgetStateProperty<Color?>.All(widgetColor)),
             ]),
             theme));
 
@@ -263,8 +265,8 @@ public sealed class MaterialListTileTests
     public void ListTile_StateColors_ResolveDisabledAndSelectedTogether()
     {
         var disabledSelected = Color.Parse("#FF8B1E3F");
-        MaterialStateProperty<Color?> stateColor = MaterialStateProperty<Color?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Disabled) && states.HasFlag(MaterialState.Selected)
+        WidgetStateProperty<Color?> stateColor = WidgetStateProperty<Color?>.ResolveWith(states =>
+            states.Contains(WidgetState.Disabled) && states.Contains(WidgetState.Selected)
                 ? disabledSelected
                 : Colors.Teal);
         using var harness = new WidgetRenderHarness(
@@ -290,14 +292,14 @@ public sealed class MaterialListTileTests
     {
         var start = new ListTileThemeData(
             Dense: true,
-            IconColor: MaterialStateProperty<Color?>.All(Colors.Black),
-            TextColor: MaterialStateProperty<Color?>.All(Colors.Red),
+            IconColor: WidgetStateProperty<Color?>.All(Colors.Black),
+            TextColor: WidgetStateProperty<Color?>.All(Colors.Red),
             ContentPadding: EdgeInsetsGeometry.DirectionalOnly(start: 8, end: 12),
             MinTileHeight: 48);
         ListTileThemeData copy = start.CopyWith(minTileHeight: 64);
         var end = new ListTileThemeData(
-            IconColor: MaterialStateProperty<Color?>.All(Colors.White),
-            TextColor: MaterialStateProperty<Color?>.All(Colors.Blue),
+            IconColor: WidgetStateProperty<Color?>.All(Colors.White),
+            TextColor: WidgetStateProperty<Color?>.All(Colors.Blue),
             ContentPadding: EdgeInsetsGeometry.DirectionalOnly(start: 16, end: 24),
             MinTileHeight: 72);
 
@@ -308,10 +310,10 @@ public sealed class MaterialListTileTests
         ListTileThemeData lerped = Assert.IsType<ListTileThemeData>(ListTileThemeData.Lerp(start, end, 0.5));
         Assert.Equal(
             MaterialThemeLerp.Color(Colors.Black, Colors.White, 0.5),
-            lerped.IconColor!.Resolve(MaterialState.Selected));
+            lerped.IconColor!.Resolve(new HashSet<WidgetState> { WidgetState.Selected }));
         Assert.Equal(
             MaterialThemeLerp.Color(Colors.Red, Colors.Blue, 0.5),
-            lerped.TextColor!.Resolve(MaterialState.Disabled));
+            lerped.TextColor!.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
         Assert.Equal(12, lerped.ContentPadding!.Value.Start, 3);
         Assert.Equal(18, lerped.ContentPadding.Value.End, 3);
         Assert.Equal(60, lerped.MinTileHeight);
@@ -474,8 +476,8 @@ public sealed class MaterialListTileTests
         var theme = ThemeData.Light with
         {
             ListTileTheme = new ListTileThemeData(
-                TextColor: Color.Parse("#FF27526B"),
-                IconColor: Color.Parse("#FF7A4021"),
+                TextColor: WidgetStateProperty<Color?>.All(Color.Parse("#FF27526B")),
+                IconColor: WidgetStateProperty<Color?>.All(Color.Parse("#FF7A4021")),
                 TileColor: Color.Parse("#FFF5F9EE"),
                 SelectedTileColor: Color.Parse("#FFE4EEFF"))
         };

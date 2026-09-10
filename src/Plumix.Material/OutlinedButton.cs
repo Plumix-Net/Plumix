@@ -21,7 +21,7 @@ public sealed class OutlinedButton : ButtonStyleButton
         FocusNode? focusNode = null,
         bool autofocus = false,
         Clip? clipBehavior = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Key? key = null) : this(
             child: child,
             onPressed: onPressed,
@@ -48,7 +48,7 @@ public sealed class OutlinedButton : ButtonStyleButton
         FocusNode? focusNode,
         bool autofocus,
         Clip? clipBehavior,
-        MaterialStatesController? statesController,
+        WidgetStatesController? statesController,
         bool addPadding,
         Key? key) : base(
             onPressed: onPressed,
@@ -80,7 +80,7 @@ public sealed class OutlinedButton : ButtonStyleButton
         FocusNode? focusNode = null,
         bool autofocus = false,
         Clip? clipBehavior = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         IconAlignment? iconAlignment = null,
         Key? key = null)
     {
@@ -205,14 +205,14 @@ public sealed class OutlinedButton : ButtonStyleButton
             return buttonStyle;
         }
 
-        double defaultFontSize = buttonStyle.TextStyle?.Resolve(MaterialState.None)?.FontSize ?? 14.0;
+        double defaultFontSize = buttonStyle.TextStyle?.Resolve(new HashSet<WidgetState>())?.FontSize ?? 14.0;
         double effectiveTextScale = EffectiveTextScale(context, defaultFontSize);
         EdgeInsetsGeometry iconPadding = ScaledPadding(
             EdgeInsetsGeometry.DirectionalOnly(start: 16, end: 24),
             EdgeInsetsGeometry.DirectionalOnly(start: 8, end: 12),
             EdgeInsetsGeometry.DirectionalOnly(start: 4, end: 6),
             effectiveTextScale);
-        return buttonStyle.CopyWith(padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(iconPadding));
+        return buttonStyle.CopyWith(padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(iconPadding));
     }
 
     private static EdgeInsetsGeometry ScaledPaddingOf(BuildContext context, ThemeData theme)
@@ -230,32 +230,32 @@ public sealed class OutlinedButton : ButtonStyleButton
     private static ButtonStyle OutlinedButtonDefaultsM3(BuildContext context, ThemeData theme, ColorScheme colors)
     {
         return new ButtonStyle(
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
-            BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : colors.Primary),
+            TextStyle: WidgetStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            BackgroundColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : colors.Primary),
             OverlayColor: StateOverlay(colors.Primary),
-            ShadowColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            Elevation: MaterialStateProperty<double?>.All(0.0),
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(ScaledPaddingOf(context, theme)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(64.0, 40.0)),
-            MaximumSize: MaterialStateProperty<Size?>.All(InfiniteSize),
-            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : colors.Primary),
-            IconSize: MaterialStateProperty<double?>.All(18.0),
-            Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
+            ShadowColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            SurfaceTintColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            Elevation: WidgetStateProperty<double?>.All(0.0),
+            Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(ScaledPaddingOf(context, theme)),
+            MinimumSize: WidgetStateProperty<Size?>.All(new Size(64.0, 40.0)),
+            MaximumSize: WidgetStateProperty<Size?>.All(InfiniteSize),
+            IconColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : colors.Primary),
+            IconSize: WidgetStateProperty<double?>.All(18.0),
+            Side: WidgetStateProperty<BorderSide?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Disabled))
+                if (states.Contains(WidgetState.Disabled))
                 {
                     return new BorderSide(WithOpacity(colors.OnSurface, 0.12));
                 }
 
-                return states.HasFlag(MaterialState.Focused)
+                return states.Contains(WidgetState.Focused)
                     ? new BorderSide(colors.Primary)
                     : new BorderSide(colors.Outline);
             }),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
+            Shape: WidgetStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
             MouseCursor: AdaptiveClickableCursor,
             VisualDensity: theme.VisualDensity,
             TapTargetSize: theme.MaterialTapTargetSize,

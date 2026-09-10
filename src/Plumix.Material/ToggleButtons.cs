@@ -25,7 +25,7 @@ public sealed class ToggleButtons : StatelessWidget
         Color? color = null,
         Color? selectedColor = null,
         Color? disabledColor = null,
-        MaterialStateProperty<Color?>? fillColor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
         Color? focusColor = null,
         Color? highlightColor = null,
         Color? hoverColor = null,
@@ -86,7 +86,7 @@ public sealed class ToggleButtons : StatelessWidget
     public Color? Color { get; }
     public Color? SelectedColor { get; }
     public Color? DisabledColor { get; }
-    public MaterialStateProperty<Color?>? FillColor { get; }
+    public WidgetStateProperty<Color?>? FillColor { get; }
     public Color? FocusColor { get; }
     public Color? HighlightColor { get; }
     public Color? HoverColor { get; }
@@ -130,9 +130,15 @@ public sealed class ToggleButtons : StatelessWidget
         {
             bool selected = enabled && IsSelected[index];
             Color foreground = ResolveForegroundColor(colorScheme, toggleTheme, selected, enabled);
-            var states = enabled
-                ? selected ? MaterialState.Selected : MaterialState.None
-                : MaterialState.Disabled;
+            var states = new HashSet<WidgetState>();
+            if (!enabled)
+            {
+                states.Add(WidgetState.Disabled);
+            }
+            else if (selected)
+            {
+                states.Add(WidgetState.Selected);
+            }
             Color background = ResolveFillColor(colorScheme, toggleTheme, states);
             BorderSide leadingSide = ResolveLeadingBorderSide(
                 colorScheme,
@@ -163,29 +169,29 @@ public sealed class ToggleButtons : StatelessWidget
                 textDirection);
             BorderRadius clipRadius = DeflateRadius(edgeRadius, effectiveBorderWidth / 2.0);
             int capturedIndex = index;
-            var overlay = MaterialStateProperty<Color?>.ResolveWith(buttonStates =>
+            var overlay = WidgetStateProperty<Color?>.ResolveWith(buttonStates =>
                 ResolveOverlayColor(colorScheme, toggleTheme, selected, enabled, buttonStates));
             var style = new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(foreground),
-                BackgroundColor: MaterialStateProperty<Color?>.All(background),
+                ForegroundColor: WidgetStateProperty<Color?>.All(foreground),
+                BackgroundColor: WidgetStateProperty<Color?>.All(background),
                 OverlayColor: overlay,
-                Elevation: MaterialStateProperty<double?>.All(0.0),
-                IconColor: MaterialStateProperty<Color?>.All(foreground),
-                IconSize: MaterialStateProperty<double?>.All(24.0),
-                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(default),
-                Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                Elevation: WidgetStateProperty<double?>.All(0.0),
+                IconColor: WidgetStateProperty<Color?>.All(foreground),
+                IconSize: WidgetStateProperty<double?>.All(24.0),
+                Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(default),
+                Shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     Plumix.Rendering.BorderRadius.Zero)),
-                MinimumSize: MaterialStateProperty<Size?>.All(minimumSize),
+                MinimumSize: WidgetStateProperty<Size?>.All(minimumSize),
                 MaximumSize: maximumSize.HasValue
-                    ? MaterialStateProperty<Size?>.All(maximumSize.Value)
+                    ? WidgetStateProperty<Size?>.All(maximumSize.Value)
                     : null,
                 Alignment: Alignment.Center,
                 TapTargetSize: MaterialTapTargetSize.ShrinkWrap,
-                TextStyle: MaterialStateProperty<TextStyle?>.All(
+                TextStyle: WidgetStateProperty<TextStyle?>.All(
                     effectiveTextStyle.CopyWith(color: foreground)),
                 MouseCursor: MouseCursor is null
                     ? null
-                    : MaterialStateProperty<MouseCursor?>.All(MouseCursor),
+                    : WidgetStateProperty<MouseCursor?>.All(MouseCursor),
                 VisualDensity: VisualDensity.Standard,
                 AnimationDuration: ButtonStyleState.ThemeChangeDuration,
                 EnableFeedback: true,
@@ -279,13 +285,13 @@ public sealed class ToggleButtons : StatelessWidget
     private Color ResolveFillColor(
         ColorScheme colorScheme,
         ToggleButtonsThemeData toggleTheme,
-        MaterialState states)
+        IReadOnlySet<WidgetState> states)
     {
-        MaterialStateProperty<Color?>? fill = FillColor ?? toggleTheme.FillColor;
+        WidgetStateProperty<Color?>? fill = FillColor ?? toggleTheme.FillColor;
         if (fill is not null)
         {
-            Color? resolved = fill is MaterialStatePropertyAll<Color?>
-                ? states.HasFlag(MaterialState.Selected) ? fill.Resolve(states) : null
+            Color? resolved = fill is WidgetStatePropertyAll<Color?>
+                ? states.Contains(WidgetState.Selected) ? fill.Resolve(states) : null
                 : fill.Resolve(states);
             if (resolved.HasValue)
             {
@@ -293,7 +299,7 @@ public sealed class ToggleButtons : StatelessWidget
             }
         }
 
-        return states.HasFlag(MaterialState.Selected)
+        return states.Contains(WidgetState.Selected)
             ? WithOpacity(colorScheme.Primary, 0.12)
             : WithOpacity(colorScheme.Surface, 0.0);
     }
@@ -331,15 +337,15 @@ public sealed class ToggleButtons : StatelessWidget
         ToggleButtonsThemeData toggleTheme,
         bool selected,
         bool enabled,
-        MaterialState states)
+        IReadOnlySet<WidgetState> states)
     {
-        if (!enabled || states.HasFlag(MaterialState.Disabled))
+        if (!enabled || states.Contains(WidgetState.Disabled))
         {
             return null;
         }
 
         Color stateColor = selected ? colorScheme.Primary : colorScheme.OnSurface;
-        if (states.HasFlag(MaterialState.Pressed))
+        if (states.Contains(WidgetState.Pressed))
         {
             return SplashColor
                    ?? toggleTheme.SplashColor
@@ -347,12 +353,12 @@ public sealed class ToggleButtons : StatelessWidget
                    ?? WithOpacity(stateColor, 0.16);
         }
 
-        if (states.HasFlag(MaterialState.Hovered))
+        if (states.Contains(WidgetState.Hovered))
         {
             return HoverColor ?? toggleTheme.HoverColor ?? WithOpacity(stateColor, 0.04);
         }
 
-        if (states.HasFlag(MaterialState.Focused))
+        if (states.Contains(WidgetState.Focused))
         {
             return FocusColor ?? toggleTheme.FocusColor ?? WithOpacity(stateColor, 0.12);
         }

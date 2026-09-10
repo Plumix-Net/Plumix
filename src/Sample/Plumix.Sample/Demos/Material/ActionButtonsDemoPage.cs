@@ -88,7 +88,7 @@ public sealed class ActionButtonsDemoPage : StatefulWidget
                         child: new BackButton(
                             color: Colors.Red,
                             style: new ButtonStyle(
-                                IconColor: MaterialStateProperty<Color?>.All(Colors.Purple)),
+                                IconColor: WidgetStateProperty<Color?>.All(Colors.Purple)),
                             onPressed: () => SetState(() => _backCount++))),
                 ]);
         }

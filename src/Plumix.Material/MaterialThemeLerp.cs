@@ -208,9 +208,9 @@ internal static class MaterialThemeLerp
             MaxHeight: LerpConstraint(a.Value.MaxHeight, b.Value.MaxHeight, t));
     }
 
-    public static MaterialStateProperty<T?>? StateProperty<T>(
-        MaterialStateProperty<T?>? a,
-        MaterialStateProperty<T?>? b,
+    public static WidgetStateProperty<T?>? StateProperty<T>(
+        WidgetStateProperty<T?>? a,
+        WidgetStateProperty<T?>? b,
         double t,
         Func<T?, T?, double, T?> lerp)
     {
@@ -219,7 +219,7 @@ internal static class MaterialThemeLerp
             return null;
         }
 
-        return MaterialStateProperty<T?>.ResolveWith(states =>
+        return WidgetStateProperty<T?>.ResolveWith(states =>
         {
             T? aValue = a is null ? default : a.Resolve(states);
             T? bValue = b is null ? default : b.Resolve(states);
@@ -227,73 +227,73 @@ internal static class MaterialThemeLerp
         });
     }
 
-    public static MaterialStateProperty<double?>? DoubleStateProperty(
-        MaterialStateProperty<double?>? a,
-        MaterialStateProperty<double?>? b,
+    public static WidgetStateProperty<double?>? DoubleStateProperty(
+        WidgetStateProperty<double?>? a,
+        WidgetStateProperty<double?>? b,
         double t)
     {
         return StateProperty(a, b, t, Double);
     }
 
-    public static MaterialStateProperty<BorderSide?>? BorderSideStateProperty(
-        MaterialStateProperty<BorderSide?>? a,
-        MaterialStateProperty<BorderSide?>? b,
+    public static WidgetStateProperty<BorderSide?>? BorderSideStateProperty(
+        WidgetStateProperty<BorderSide?>? a,
+        WidgetStateProperty<BorderSide?>? b,
         double t)
     {
         return StateProperty(a, b, t, BorderSide);
     }
 
-    public static MaterialStateProperty<Size?>? SizeStateProperty(
-        MaterialStateProperty<Size?>? a,
-        MaterialStateProperty<Size?>? b,
+    public static WidgetStateProperty<Size?>? SizeStateProperty(
+        WidgetStateProperty<Size?>? a,
+        WidgetStateProperty<Size?>? b,
         double t)
     {
         return StateProperty(a, b, t, Size);
     }
 
-    public static MaterialStateProperty<Thickness?>? ThicknessStateProperty(
-        MaterialStateProperty<Thickness?>? a,
-        MaterialStateProperty<Thickness?>? b,
+    public static WidgetStateProperty<Thickness?>? ThicknessStateProperty(
+        WidgetStateProperty<Thickness?>? a,
+        WidgetStateProperty<Thickness?>? b,
         double t)
     {
         return StateProperty(a, b, t, Thickness);
     }
 
-    public static MaterialStateProperty<EdgeInsetsGeometry?>? EdgeInsetsStateProperty(
-        MaterialStateProperty<EdgeInsetsGeometry?>? a,
-        MaterialStateProperty<EdgeInsetsGeometry?>? b,
+    public static WidgetStateProperty<EdgeInsetsGeometry?>? EdgeInsetsStateProperty(
+        WidgetStateProperty<EdgeInsetsGeometry?>? a,
+        WidgetStateProperty<EdgeInsetsGeometry?>? b,
         double t)
     {
         return StateProperty(a, b, t, EdgeInsetsGeometry.Lerp);
     }
 
-    public static MaterialStateProperty<TextStyle?>? TextStyleStateProperty(
-        MaterialStateProperty<TextStyle?>? a,
-        MaterialStateProperty<TextStyle?>? b,
+    public static WidgetStateProperty<TextStyle?>? TextStyleStateProperty(
+        WidgetStateProperty<TextStyle?>? a,
+        WidgetStateProperty<TextStyle?>? b,
         double t)
     {
         return StateProperty(a, b, t, TextStyle);
     }
 
-    public static MaterialStateProperty<ShapeBorder?>? ShapeStateProperty(
-        MaterialStateProperty<ShapeBorder?>? a,
-        MaterialStateProperty<ShapeBorder?>? b,
+    public static WidgetStateProperty<ShapeBorder?>? ShapeStateProperty(
+        WidgetStateProperty<ShapeBorder?>? a,
+        WidgetStateProperty<ShapeBorder?>? b,
         double t)
     {
         return StateProperty(a, b, t, Shape);
     }
 
-    public static MaterialStateProperty<OutlinedBorder?>? OutlinedBorderStateProperty(
-        MaterialStateProperty<OutlinedBorder?>? a,
-        MaterialStateProperty<OutlinedBorder?>? b,
+    public static WidgetStateProperty<OutlinedBorder?>? OutlinedBorderStateProperty(
+        WidgetStateProperty<OutlinedBorder?>? a,
+        WidgetStateProperty<OutlinedBorder?>? b,
         double t)
     {
         return StateProperty(a, b, t, OutlinedBorder.Lerp);
     }
 
-    public static MaterialStateProperty<Color?>? ColorStateProperty(
-        MaterialStateProperty<Color?>? a,
-        MaterialStateProperty<Color?>? b,
+    public static WidgetStateProperty<Color?>? ColorStateProperty(
+        WidgetStateProperty<Color?>? a,
+        WidgetStateProperty<Color?>? b,
         double t)
     {
         if (a is null && b is null)
@@ -301,7 +301,7 @@ internal static class MaterialThemeLerp
             return null;
         }
 
-        return MaterialStateProperty<Color?>.ResolveWith(
+        return WidgetStateProperty<Color?>.ResolveWith(
             states => Color(a?.Resolve(states), b?.Resolve(states), t));
     }
 

@@ -103,8 +103,8 @@ internal sealed class MaterialSwitchDemoPageState : State
                                         new Switch(
                                             value: _iconed,
                                             onChanged: value => SetState(() => _iconed = value),
-                                            thumbIcon: MaterialStateProperty<Icon?>.ResolveWith(
-                                                states => states.HasFlag(MaterialState.Selected)
+                                            thumbIcon: WidgetStateProperty<Icon?>.ResolveWith(
+                                                states => states.Contains(WidgetState.Selected)
                                                     ? new Icon(Icons.Check)
                                                     : new Icon(Icons.Close)))),
                                     BuildRow(
@@ -113,10 +113,10 @@ internal sealed class MaterialSwitchDemoPageState : State
                                             value: _outlined,
                                             onChanged: value => SetState(() => _outlined = value),
                                             trackOutlineColor:
-                                                MaterialStateProperty<Color?>.All(
+                                                WidgetStateProperty<Color?>.All(
                                                     Color.Parse("#FF1565C0")),
                                             trackOutlineWidth:
-                                                MaterialStateProperty<double?>.All(3.0))),
+                                                WidgetStateProperty<double?>.All(3.0))),
                                     BuildRow(
                                         "Adaptive",
                                         Switch.Adaptive(

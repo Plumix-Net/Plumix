@@ -42,10 +42,10 @@ public sealed class InkResponseDemoPage : StatefulWidget
         public override Widget Build(BuildContext context)
         {
             var overlay = _customOverlay
-                ? MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Pressed) ? Color.Parse("#556750A4")
-                    : states.HasFlag(MaterialState.Hovered) ? Color.Parse("#336750A4")
-                    : states.HasFlag(MaterialState.Focused) ? Color.Parse("#446750A4")
+                ? WidgetStateProperty<Color?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Pressed) ? Color.Parse("#556750A4")
+                    : states.Contains(WidgetState.Hovered) ? Color.Parse("#336750A4")
+                    : states.Contains(WidgetState.Focused) ? Color.Parse("#446750A4")
                     : null)
                 : null;
 
@@ -94,7 +94,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                     ]));
         }
 
-        private Widget BuildInkResponse(MaterialStateProperty<Color?>? overlay)
+        private Widget BuildInkResponse(WidgetStateProperty<Color?>? overlay)
         {
             return new Column(
                 spacing: 8,
@@ -119,7 +119,7 @@ public sealed class InkResponseDemoPage : StatefulWidget
                 ]);
         }
 
-        private Widget BuildInkWell(MaterialStateProperty<Color?>? overlay)
+        private Widget BuildInkWell(WidgetStateProperty<Color?>? overlay)
         {
             return new Column(
                 spacing: 8,

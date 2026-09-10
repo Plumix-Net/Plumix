@@ -142,7 +142,7 @@ public sealed class TextFieldDemoPage : StatefulWidget
                             activeIndicatorBorder: WidgetStateBorderSide.ResolveWith(ResolveStateIndicator)),
                         child: new IconButtonTheme(
                             new IconButtonThemeData(new ButtonStyle(
-                                ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(ResolveAffixColor))),
+                                ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(ResolveAffixColor))),
                             new TextField(
                                 enabled: _enabled,
                                 decoration: new InputDecoration(
@@ -215,18 +215,18 @@ public sealed class TextFieldDemoPage : StatefulWidget
             SetState(() => _formStatus = "reset");
         }
 
-        private static InputBorder ResolveStateBorder(MaterialState states)
+        private static InputBorder ResolveStateBorder(IReadOnlySet<WidgetState> states)
         {
-            Color color = states.HasFlag(MaterialState.Disabled)
+            Color color = states.Contains(WidgetState.Disabled)
                 ? Colors.Gray
-                : states.HasFlag(MaterialState.Error)
+                : states.Contains(WidgetState.Error)
                     ? Colors.Crimson
-                    : states.HasFlag(MaterialState.Focused)
+                    : states.Contains(WidgetState.Focused)
                         ? Colors.DodgerBlue
-                        : states.HasFlag(MaterialState.Hovered)
+                        : states.Contains(WidgetState.Hovered)
                             ? Colors.MediumSeaGreen
                             : Colors.SlateGray;
-            double width = states.HasFlag(MaterialState.Focused) ? 3 : 1;
+            double width = states.Contains(WidgetState.Focused) ? 3 : 1;
             return new OutlineInputBorder(new BorderSide(color, width), BorderRadius.Circular(10));
         }
 
@@ -251,8 +251,8 @@ public sealed class TextFieldDemoPage : StatefulWidget
                 : Colors.SlateGray,
             states.Contains(WidgetState.Focused) ? 3 : 1);
 
-        private static Color? ResolveAffixColor(MaterialState states) =>
-            states.HasFlag(MaterialState.Error) ? Colors.Crimson : Colors.Indigo;
+        private static Color? ResolveAffixColor(IReadOnlySet<WidgetState> states) =>
+            states.Contains(WidgetState.Error) ? Colors.Crimson : Colors.Indigo;
 
         private static Widget Control(string label, Action action) => new TextButton(new Text(label, fontSize: 12), action);
     }

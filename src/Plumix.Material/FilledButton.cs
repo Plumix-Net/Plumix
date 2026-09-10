@@ -28,7 +28,7 @@ public sealed class FilledButton : ButtonStyleButton
         FocusNode? focusNode = null,
         bool autofocus = false,
         Clip clipBehavior = Clip.None,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Key? key = null) : this(
             child: child,
             onPressed: onPressed,
@@ -56,7 +56,7 @@ public sealed class FilledButton : ButtonStyleButton
         FocusNode? focusNode,
         bool autofocus,
         Clip clipBehavior,
-        MaterialStatesController? statesController,
+        WidgetStatesController? statesController,
         FilledButtonVariant variant,
         bool addPadding,
         Key? key) : base(
@@ -91,7 +91,7 @@ public sealed class FilledButton : ButtonStyleButton
         FocusNode? focusNode = null,
         bool autofocus = false,
         Clip clipBehavior = Clip.None,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Key? key = null)
     {
         return new FilledButton(
@@ -122,7 +122,7 @@ public sealed class FilledButton : ButtonStyleButton
         FocusNode? focusNode = null,
         bool autofocus = false,
         Clip clipBehavior = Clip.None,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         IconAlignment? iconAlignment = null,
         Key? key = null)
     {
@@ -155,7 +155,7 @@ public sealed class FilledButton : ButtonStyleButton
         FocusNode? focusNode = null,
         bool autofocus = false,
         Clip clipBehavior = Clip.None,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         IconAlignment? iconAlignment = null,
         Key? key = null)
     {
@@ -209,7 +209,7 @@ public sealed class FilledButton : ButtonStyleButton
         ButtonLayerBuilder? foregroundBuilder = null)
     {
         return new ButtonStyle(
-            TextStyle: MaterialStateProperty<TextStyle?>.All(textStyle),
+            TextStyle: WidgetStateProperty<TextStyle?>.All(textStyle),
             BackgroundColor: DefaultColor(backgroundColor, disabledBackgroundColor),
             ForegroundColor: DefaultColor(foregroundColor, disabledForegroundColor),
             OverlayColor: DefaultOverlayColor(foregroundColor, overlayColor),
@@ -259,7 +259,7 @@ public sealed class FilledButton : ButtonStyleButton
             return buttonStyle;
         }
 
-        double defaultFontSize = buttonStyle.TextStyle?.Resolve(MaterialState.None)?.FontSize ?? 14.0;
+        double defaultFontSize = buttonStyle.TextStyle?.Resolve(new HashSet<WidgetState>())?.FontSize ?? 14.0;
         double effectiveTextScale = EffectiveTextScale(context, defaultFontSize);
         EdgeInsetsGeometry iconPadding = theme.UseMaterial3
             ? ScaledPadding(
@@ -272,7 +272,7 @@ public sealed class FilledButton : ButtonStyleButton
                 EdgeInsetsGeometry.Symmetric(horizontal: 8),
                 EdgeInsetsGeometry.DirectionalOnly(start: 8, end: 4),
                 effectiveTextScale);
-        return buttonStyle.CopyWith(padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(iconPadding));
+        return buttonStyle.CopyWith(padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(iconPadding));
     }
 
     private static FilledButton IconVariant(
@@ -286,7 +286,7 @@ public sealed class FilledButton : ButtonStyleButton
         FocusNode? focusNode,
         bool autofocus,
         Clip clipBehavior,
-        MaterialStatesController? statesController,
+        WidgetStatesController? statesController,
         IconAlignment? iconAlignment,
         FilledButtonVariant variant,
         Key? key)
@@ -334,23 +334,23 @@ public sealed class FilledButton : ButtonStyleButton
         Color foreground)
     {
         return new ButtonStyle(
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
-            BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled) ? WithOpacity(colors.OnSurface, 0.12) : background),
-            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : foreground),
+            TextStyle: WidgetStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            BackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled) ? WithOpacity(colors.OnSurface, 0.12) : background),
+            ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : foreground),
             OverlayColor: StateOverlay(foreground),
-            ShadowColor: MaterialStateProperty<Color?>.All(colors.Shadow),
-            SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            Elevation: MaterialStateProperty<double?>.ResolveWith(states =>
-                !states.HasFlag(MaterialState.Disabled) && states.HasFlag(MaterialState.Hovered) ? 1.0 : 0.0),
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(ScaledPaddingOf(context, theme)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(64.0, 40.0)),
-            MaximumSize: MaterialStateProperty<Size?>.All(InfiniteSize),
-            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : foreground),
-            IconSize: MaterialStateProperty<double?>.All(18.0),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
+            ShadowColor: WidgetStateProperty<Color?>.All(colors.Shadow),
+            SurfaceTintColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            Elevation: WidgetStateProperty<double?>.ResolveWith(states =>
+                !states.Contains(WidgetState.Disabled) && states.Contains(WidgetState.Hovered) ? 1.0 : 0.0),
+            Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(ScaledPaddingOf(context, theme)),
+            MinimumSize: WidgetStateProperty<Size?>.All(new Size(64.0, 40.0)),
+            MaximumSize: WidgetStateProperty<Size?>.All(InfiniteSize),
+            IconColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled) ? WithOpacity(colors.OnSurface, 0.38) : foreground),
+            IconSize: WidgetStateProperty<double?>.All(18.0),
+            Shape: WidgetStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
             MouseCursor: AdaptiveClickableCursor,
             VisualDensity: theme.VisualDensity,
             TapTargetSize: theme.MaterialTapTargetSize,

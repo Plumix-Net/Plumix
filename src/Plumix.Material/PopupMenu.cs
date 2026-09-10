@@ -90,7 +90,7 @@ public class PopupMenuItem<T> : PopupMenuEntry<T>
         double height = 48,
         Thickness? padding = null,
         TextStyle? textStyle = null,
-        MaterialStateProperty<TextStyle?>? labelTextStyle = null,
+        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
         MouseCursor? mouseCursor = null,
         Key? key = null) : base(key)
     {
@@ -112,7 +112,7 @@ public class PopupMenuItem<T> : PopupMenuEntry<T>
     public override double Height { get; }
     public Thickness? Padding { get; }
     public TextStyle? TextStyle { get; }
-    public MaterialStateProperty<TextStyle?>? LabelTextStyle { get; }
+    public WidgetStateProperty<TextStyle?>? LabelTextStyle { get; }
     public MouseCursor? MouseCursor { get; }
     internal override bool IsEnabled => Enabled;
 
@@ -135,7 +135,9 @@ public class PopupMenuItemState<T> : State
         PopupMenuItem<T> widget = CurrentWidget;
         ThemeData theme = Theme.Of(context);
         PopupMenuThemeData popupTheme = PopupMenuTheme.Of(context);
-        MaterialState states = widget.Enabled ? MaterialState.None : MaterialState.Disabled;
+        IReadOnlySet<WidgetState> states = widget.Enabled
+            ? new HashSet<WidgetState>()
+            : new HashSet<WidgetState> { WidgetState.Disabled };
         TextStyle style;
         if (theme.UseMaterial3)
         {
@@ -209,15 +211,21 @@ public class PopupMenuItemState<T> : State
     {
         return WidgetStateMouseCursor.ResolveWith(states =>
         {
-            MaterialState effectiveStates = widget.Enabled
-                ? MaterialStateSet.Flags(states) & ~MaterialState.Disabled
-                : MaterialStateSet.Flags(states) | MaterialState.Disabled;
+            var effectiveStates = new HashSet<WidgetState>(states);
+            if (widget.Enabled)
+            {
+                effectiveStates.Remove(WidgetState.Disabled);
+            }
+            else
+            {
+                effectiveStates.Add(WidgetState.Disabled);
+            }
             MouseCursor? widgetCursor = widget.MouseCursor is WidgetStateMouseCursor stateCursor
                 ? stateCursor.Resolve(effectiveStates)
                 : widget.MouseCursor;
             return widgetCursor
                    ?? theme.MouseCursor?.Resolve(effectiveStates)
-                   ?? (effectiveStates.HasFlag(MaterialState.Disabled)
+                   ?? (effectiveStates.Contains(WidgetState.Disabled)
                        ? SystemMouseCursors.Basic
                        : SystemMouseCursors.Click);
         });
@@ -237,7 +245,7 @@ public sealed class CheckedPopupMenuItem<T> : PopupMenuItem<T>
         bool enabled = true,
         double height = 48,
         Thickness? padding = null,
-        MaterialStateProperty<TextStyle?>? labelTextStyle = null,
+        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
         MouseCursor? mouseCursor = null,
         Key? key = null)
         : base(
@@ -312,7 +320,9 @@ internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
     {
         ThemeData theme = Theme.Of(Context);
         PopupMenuThemeData popupTheme = PopupMenuTheme.Of(Context);
-        MaterialState states = CheckedWidget.Checked ? MaterialState.Selected : MaterialState.None;
+        IReadOnlySet<WidgetState> states = CheckedWidget.Checked
+            ? new HashSet<WidgetState> { WidgetState.Selected }
+            : new HashSet<WidgetState>();
         TextStyle effectiveLabelTextStyle = CheckedWidget.LabelTextStyle?.Resolve(states)
                                             ?? popupTheme.LabelTextStyle?.Resolve(states)
                                             ?? (theme.UseMaterial3
@@ -330,7 +340,7 @@ internal sealed class CheckedPopupMenuItemState<T> : PopupMenuItemState<T>
                     title: CheckedWidget.Child,
                     leading: leading,
                     titleTextStyle: effectiveLabelTextStyle,
-                    textColor: effectiveLabelTextStyle.Color,
+                    textColor: WidgetStateProperty<Color?>.All(effectiveLabelTextStyle.Color),
                     contentPadding: EdgeInsetsGeometry.Zero)));
     }
 

@@ -859,9 +859,9 @@ public sealed class MaterialTabsTests
         var theme = ThemeData.Light with
         {
             TabBarTheme = new TabBarThemeData(
-                MouseCursor: MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Text),
+                MouseCursor: WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Text),
                 SplashBorderRadius: BorderRadius.Circular(20),
-                OverlayColor: MaterialStateProperty<Color?>.All(Colors.Orange)),
+                OverlayColor: WidgetStateProperty<Color?>.All(Colors.Orange)),
         };
         using var controller = new TabController(2);
         using var harness = new WidgetRenderHarness(
@@ -871,7 +871,7 @@ public sealed class MaterialTabsTests
         InkWell inkWell = FindWidgets<InkWell>(harness.RenderView).First();
         Assert.Equal(SystemMouseCursors.Text, inkWell.MouseCursor);
         Assert.Equal(BorderRadius.Circular(20), inkWell.BorderRadius);
-        Assert.Equal(Colors.Orange, inkWell.OverlayColor!.Resolve(MaterialState.Hovered));
+        Assert.Equal(Colors.Orange, inkWell.OverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Hovered }));
         Assert.True(inkWell.EnableFeedback);
     }
 
@@ -888,19 +888,21 @@ public sealed class MaterialTabsTests
         IReadOnlyList<InkWell> primaryWells = FindWidgets<InkWell>(primary.RenderView);
         Assert.Equal(
             WithOpacity(colors.Primary, 0.08),
-            primaryWells[0].OverlayColor!.Resolve(MaterialState.Selected | MaterialState.Hovered));
+            primaryWells[0].OverlayColor!.Resolve(
+                new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Hovered }));
         Assert.Equal(
             WithOpacity(colors.Primary, 0.1),
-            primaryWells[0].OverlayColor!.Resolve(MaterialState.Selected | MaterialState.Pressed));
+            primaryWells[0].OverlayColor!.Resolve(
+                new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Pressed }));
         Assert.Equal(
             WithOpacity(colors.OnSurface, 0.08),
-            primaryWells[1].OverlayColor!.Resolve(MaterialState.Hovered));
-        Assert.Null(primaryWells[1].OverlayColor!.Resolve(MaterialState.None));
+            primaryWells[1].OverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Hovered }));
+        Assert.Null(primaryWells[1].OverlayColor!.Resolve(new HashSet<WidgetState>()));
         // The ink well only reports interaction states, so each tab's own selected state has to be
         // folded in by the default overlay itself.
         Assert.Equal(
             WithOpacity(colors.Primary, 0.08),
-            primaryWells[0].OverlayColor!.Resolve(MaterialState.Hovered));
+            primaryWells[0].OverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Hovered }));
 
         using var secondaryController = new TabController(2);
         using var secondary = new WidgetRenderHarness(Wrap(TabBar.Secondary(
@@ -910,10 +912,11 @@ public sealed class MaterialTabsTests
         IReadOnlyList<InkWell> secondaryWells = FindWidgets<InkWell>(secondary.RenderView);
         Assert.Equal(
             WithOpacity(colors.OnSurface, 0.08),
-            secondaryWells[0].OverlayColor!.Resolve(MaterialState.Selected | MaterialState.Hovered));
+            secondaryWells[0].OverlayColor!.Resolve(
+                new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Hovered }));
         Assert.Equal(
             WithOpacity(colors.OnSurface, 0.1),
-            secondaryWells[1].OverlayColor!.Resolve(MaterialState.Pressed));
+            secondaryWells[1].OverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Pressed }));
     }
 
     [Fact]

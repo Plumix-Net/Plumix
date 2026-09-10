@@ -522,7 +522,7 @@ public sealed class MaterialInputDecoratorTests
     [Fact]
     public void InputDecorator_StateInputBorderResolvesOnlyFromTheBorderSlot()
     {
-        MaterialState receivedStates = MaterialState.None;
+        IReadOnlySet<WidgetState> receivedStates = new HashSet<WidgetState>();
         MaterialStateOutlineInputBorder border = MaterialStateOutlineInputBorder.ResolveWith(states =>
         {
             receivedStates = states;
@@ -536,7 +536,9 @@ public sealed class MaterialInputDecoratorTests
             child: new Text("value")));
         harness.Pump();
 
-        Assert.Equal(MaterialState.Focused | MaterialState.Hovered | MaterialState.Error, receivedStates);
+        Assert.Equal(
+            new HashSet<WidgetState> { WidgetState.Focused, WidgetState.Hovered, WidgetState.Error },
+            receivedStates);
         InputBorderPainter painter = Painter(harness);
         Assert.Equal(Colors.OrangeRed, painter.Border.BorderSide.Color);
         // A resolved state border is used verbatim: no default indicator side is applied on top.
@@ -546,7 +548,7 @@ public sealed class MaterialInputDecoratorTests
     [Fact]
     public void InputDecorator_DisabledStateMasksHover()
     {
-        MaterialState receivedStates = MaterialState.None;
+        IReadOnlySet<WidgetState> receivedStates = new HashSet<WidgetState>();
         MaterialStateUnderlineInputBorder border = MaterialStateUnderlineInputBorder.ResolveWith(states =>
         {
             receivedStates = states;
@@ -560,7 +562,7 @@ public sealed class MaterialInputDecoratorTests
             child: new Text("")));
         harness.Pump();
 
-        Assert.Equal(MaterialState.Disabled, receivedStates);
+        Assert.Equal(new HashSet<WidgetState> { WidgetState.Disabled }, receivedStates);
         Assert.Equal(Colors.SlateGray, Painter(harness).Border.BorderSide.Color);
     }
 
@@ -1142,8 +1144,8 @@ public sealed class MaterialInputDecoratorTests
     {
         ColorScheme colors = ThemeData.Light.ColorScheme;
         var iconButtonTheme = new IconButtonThemeData(
-            new ButtonStyle(ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(
-                states => states.HasFlag(MaterialState.Error) ? Colors.Orange : Colors.Purple)));
+            new ButtonStyle(ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(
+                states => states.Contains(WidgetState.Error) ? Colors.Orange : Colors.Purple)));
 
         (Color Prefix, Color Suffix) Resolve(bool error, InputDecoration decoration)
         {

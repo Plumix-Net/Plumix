@@ -17,17 +17,17 @@ namespace Plumix.Material;
 public class MenuStyle : IDiagnosticable
 {
     public MenuStyle(
-        MaterialStateProperty<Color?>? backgroundColor = null,
-        MaterialStateProperty<Color?>? shadowColor = null,
-        MaterialStateProperty<Color?>? surfaceTintColor = null,
-        MaterialStateProperty<double?>? elevation = null,
-        MaterialStateProperty<EdgeInsetsGeometry?>? padding = null,
-        MaterialStateProperty<Size?>? minimumSize = null,
-        MaterialStateProperty<Size?>? fixedSize = null,
-        MaterialStateProperty<Size?>? maximumSize = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<OutlinedBorder?>? shape = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        WidgetStateProperty<Color?>? backgroundColor = null,
+        WidgetStateProperty<Color?>? shadowColor = null,
+        WidgetStateProperty<Color?>? surfaceTintColor = null,
+        WidgetStateProperty<double?>? elevation = null,
+        WidgetStateProperty<EdgeInsetsGeometry?>? padding = null,
+        WidgetStateProperty<Size?>? minimumSize = null,
+        WidgetStateProperty<Size?>? fixedSize = null,
+        WidgetStateProperty<Size?>? maximumSize = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<OutlinedBorder?>? shape = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
         VisualDensity? visualDensity = null,
         AlignmentGeometry? alignment = null)
     {
@@ -47,37 +47,37 @@ public class MenuStyle : IDiagnosticable
     }
 
     /// <summary>The menu's background fill color.</summary>
-    public virtual MaterialStateProperty<Color?>? BackgroundColor { get; }
+    public virtual WidgetStateProperty<Color?>? BackgroundColor { get; }
 
     /// <summary>The shadow color of the menu's <see cref="Material"/>.</summary>
-    public virtual MaterialStateProperty<Color?>? ShadowColor { get; }
+    public virtual WidgetStateProperty<Color?>? ShadowColor { get; }
 
     /// <summary>The surface tint color of the menu's <see cref="Material"/>.</summary>
-    public virtual MaterialStateProperty<Color?>? SurfaceTintColor { get; }
+    public virtual WidgetStateProperty<Color?>? SurfaceTintColor { get; }
 
     /// <summary>The elevation of the menu's <see cref="Material"/>.</summary>
-    public virtual MaterialStateProperty<double?>? Elevation { get; }
+    public virtual WidgetStateProperty<double?>? Elevation { get; }
 
     /// <summary>The padding between the menu's boundary and its child.</summary>
-    public virtual MaterialStateProperty<EdgeInsetsGeometry?>? Padding { get; }
+    public virtual WidgetStateProperty<EdgeInsetsGeometry?>? Padding { get; }
 
     /// <summary>The minimum size of the menu itself.</summary>
-    public virtual MaterialStateProperty<Size?>? MinimumSize { get; }
+    public virtual WidgetStateProperty<Size?>? MinimumSize { get; }
 
     /// <summary>The menu's size; infinite dimensions are ignored.</summary>
-    public virtual MaterialStateProperty<Size?>? FixedSize { get; }
+    public virtual WidgetStateProperty<Size?>? FixedSize { get; }
 
     /// <summary>The maximum size of the menu itself.</summary>
-    public virtual MaterialStateProperty<Size?>? MaximumSize { get; }
+    public virtual WidgetStateProperty<Size?>? MaximumSize { get; }
 
     /// <summary>The color and weight of the menu's outline, combined with <see cref="Shape"/>.</summary>
-    public virtual MaterialStateProperty<BorderSide?>? Side { get; }
+    public virtual WidgetStateProperty<BorderSide?>? Side { get; }
 
     /// <summary>The shape of the menu's underlying <see cref="Material"/>.</summary>
-    public virtual MaterialStateProperty<OutlinedBorder?>? Shape { get; }
+    public virtual WidgetStateProperty<OutlinedBorder?>? Shape { get; }
 
     /// <summary>The cursor for a mouse pointer hovering over this menu's ink well.</summary>
-    public virtual MaterialStateProperty<MouseCursor?>? MouseCursor { get; }
+    public virtual WidgetStateProperty<MouseCursor?>? MouseCursor { get; }
 
     /// <summary>Defines how compact the menu's layout will be.</summary>
     public virtual VisualDensity? VisualDensity { get; }
@@ -87,17 +87,17 @@ public class MenuStyle : IDiagnosticable
 
     /// <summary>Returns a copy of this style with the given fields replaced by the new values.</summary>
     public MenuStyle CopyWith(
-        MaterialStateProperty<Color?>? backgroundColor = null,
-        MaterialStateProperty<Color?>? shadowColor = null,
-        MaterialStateProperty<Color?>? surfaceTintColor = null,
-        MaterialStateProperty<double?>? elevation = null,
-        MaterialStateProperty<EdgeInsetsGeometry?>? padding = null,
-        MaterialStateProperty<Size?>? minimumSize = null,
-        MaterialStateProperty<Size?>? fixedSize = null,
-        MaterialStateProperty<Size?>? maximumSize = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<OutlinedBorder?>? shape = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        WidgetStateProperty<Color?>? backgroundColor = null,
+        WidgetStateProperty<Color?>? shadowColor = null,
+        WidgetStateProperty<Color?>? surfaceTintColor = null,
+        WidgetStateProperty<double?>? elevation = null,
+        WidgetStateProperty<EdgeInsetsGeometry?>? padding = null,
+        WidgetStateProperty<Size?>? minimumSize = null,
+        WidgetStateProperty<Size?>? fixedSize = null,
+        WidgetStateProperty<Size?>? maximumSize = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<OutlinedBorder?>? shape = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
         VisualDensity? visualDensity = null,
         AlignmentGeometry? alignment = null)
     {
@@ -204,47 +204,47 @@ public class MenuStyle : IDiagnosticable
     {
         ArgumentNullException.ThrowIfNull(properties);
         object nullDefault = DiagnosticsDefaults.NullValue;
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
             "backgroundColor",
             BackgroundColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
             "shadowColor",
             ShadowColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Color?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Color?>?>(
             "surfaceTintColor",
             SurfaceTintColor,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<double?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<double?>?>(
             "elevation",
             Elevation,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<EdgeInsetsGeometry?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<EdgeInsetsGeometry?>?>(
             "padding",
             Padding,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Size?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Size?>?>(
             "minimumSize",
             MinimumSize,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Size?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Size?>?>(
             "fixedSize",
             FixedSize,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Size?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Size?>?>(
             "maximumSize",
             MaximumSize,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<BorderSide?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<BorderSide?>?>(
             "side",
             Side,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<OutlinedBorder?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<OutlinedBorder?>?>(
             "shape",
             Shape,
             defaultValue: nullDefault));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<MouseCursor?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<MouseCursor?>?>(
             "mouseCursor",
             MouseCursor,
             defaultValue: nullDefault));

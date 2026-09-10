@@ -35,8 +35,8 @@ public sealed partial record ListTileThemeData(
     ShapeBorder? Shape = null,
     ListTileStyle? Style = null,
     Color? SelectedColor = null,
-    MaterialStateProperty<Color?>? IconColor = null,
-    MaterialStateProperty<Color?>? TextColor = null,
+    WidgetStateProperty<Color?>? IconColor = null,
+    WidgetStateProperty<Color?>? TextColor = null,
     TextStyle? TitleTextStyle = null,
     TextStyle? SubtitleTextStyle = null,
     TextStyle? LeadingAndTrailingTextStyle = null,
@@ -48,7 +48,7 @@ public sealed partial record ListTileThemeData(
     double? MinLeadingWidth = null,
     double? MinTileHeight = null,
     bool? EnableFeedback = null,
-    MaterialStateProperty<MouseCursor?>? MouseCursor = null,
+    WidgetStateProperty<MouseCursor?>? MouseCursor = null,
     VisualDensity? VisualDensity = null,
     ListTileTitleAlignment? TitleAlignment = null,
     ListTileControlAffinity? ControlAffinity = null,
@@ -59,8 +59,8 @@ public sealed partial record ListTileThemeData(
         ShapeBorder? shape = null,
         ListTileStyle? style = null,
         Color? selectedColor = null,
-        MaterialStateProperty<Color?>? iconColor = null,
-        MaterialStateProperty<Color?>? textColor = null,
+        WidgetStateProperty<Color?>? iconColor = null,
+        WidgetStateProperty<Color?>? textColor = null,
         TextStyle? titleTextStyle = null,
         TextStyle? subtitleTextStyle = null,
         TextStyle? leadingAndTrailingTextStyle = null,
@@ -72,7 +72,7 @@ public sealed partial record ListTileThemeData(
         double? minLeadingWidth = null,
         double? minTileHeight = null,
         bool? enableFeedback = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
         VisualDensity? visualDensity = null,
         ListTileTitleAlignment? titleAlignment = null,
         ListTileControlAffinity? controlAffinity = null,
@@ -111,13 +111,13 @@ public sealed class ListTileTheme : InheritedTheme
     private readonly ShapeBorder? _shape;
     private readonly ListTileStyle? _style;
     private readonly Color? _selectedColor;
-    private readonly MaterialStateProperty<Color?>? _iconColor;
-    private readonly MaterialStateProperty<Color?>? _textColor;
+    private readonly WidgetStateProperty<Color?>? _iconColor;
+    private readonly WidgetStateProperty<Color?>? _textColor;
     private readonly EdgeInsetsGeometry? _contentPadding;
     private readonly Color? _tileColor;
     private readonly Color? _selectedTileColor;
     private readonly bool? _enableFeedback;
-    private readonly MaterialStateProperty<MouseCursor?>? _mouseCursor;
+    private readonly WidgetStateProperty<MouseCursor?>? _mouseCursor;
     private readonly double? _horizontalTitleGap;
     private readonly double? _minVerticalPadding;
     private readonly double? _minLeadingWidth;
@@ -130,13 +130,13 @@ public sealed class ListTileTheme : InheritedTheme
         ShapeBorder? shape = null,
         ListTileStyle? style = null,
         Color? selectedColor = null,
-        MaterialStateProperty<Color?>? iconColor = null,
-        MaterialStateProperty<Color?>? textColor = null,
+        WidgetStateProperty<Color?>? iconColor = null,
+        WidgetStateProperty<Color?>? textColor = null,
         EdgeInsetsGeometry? contentPadding = null,
         Color? tileColor = null,
         Color? selectedTileColor = null,
         bool? enableFeedback = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
         double? horizontalTitleGap = null,
         double? minVerticalPadding = null,
         double? minLeadingWidth = null,
@@ -205,9 +205,9 @@ public sealed class ListTileTheme : InheritedTheme
 
     public Color? SelectedColor => _data?.SelectedColor ?? _selectedColor;
 
-    public MaterialStateProperty<Color?>? IconColor => _data?.IconColor ?? _iconColor;
+    public WidgetStateProperty<Color?>? IconColor => _data?.IconColor ?? _iconColor;
 
-    public MaterialStateProperty<Color?>? TextColor => _data?.TextColor ?? _textColor;
+    public WidgetStateProperty<Color?>? TextColor => _data?.TextColor ?? _textColor;
 
     public EdgeInsetsGeometry? ContentPadding => _data?.ContentPadding ?? _contentPadding;
 
@@ -262,8 +262,8 @@ public sealed class ListTileTheme : InheritedTheme
         ShapeBorder? shape = null,
         ListTileStyle? style = null,
         Color? selectedColor = null,
-        MaterialStateProperty<Color?>? iconColor = null,
-        MaterialStateProperty<Color?>? textColor = null,
+        WidgetStateProperty<Color?>? iconColor = null,
+        WidgetStateProperty<Color?>? textColor = null,
         TextStyle? titleTextStyle = null,
         TextStyle? subtitleTextStyle = null,
         TextStyle? leadingAndTrailingTextStyle = null,
@@ -276,7 +276,7 @@ public sealed class ListTileTheme : InheritedTheme
         double? minLeadingWidth = null,
         double? minTileHeight = null,
         ListTileTitleAlignment? titleAlignment = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
         VisualDensity? visualDensity = null,
         ListTileControlAffinity? controlAffinity = null,
         bool? isThreeLine = null,

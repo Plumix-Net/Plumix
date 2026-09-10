@@ -110,7 +110,7 @@ public sealed class MaterialRangeSliderTests
     [Fact]
     public void RangeSlider_ExtendedApi_StoresFlutterParityValues()
     {
-        var cursor = MaterialStateProperty<MouseCursor?>.All(new SystemMouseCursor("range-slider"));
+        var cursor = WidgetStateProperty<MouseCursor?>.All(new SystemMouseCursor("range-slider"));
         var slider = new RangeSlider(
             values: new RangeValues(0.2, 0.8),
             onChanged: _ => { },

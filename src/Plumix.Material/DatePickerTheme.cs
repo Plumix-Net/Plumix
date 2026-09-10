@@ -19,18 +19,18 @@ public partial record DatePickerThemeData(
     TextStyle? HeaderHelpStyle = null,
     TextStyle? WeekdayStyle = null,
     TextStyle? DayStyle = null,
-    MaterialStateProperty<Color?>? DayForegroundColor = null,
-    MaterialStateProperty<Color?>? DayBackgroundColor = null,
-    MaterialStateProperty<Color?>? DayOverlayColor = null,
-    MaterialStateProperty<OutlinedBorder?>? DayShape = null,
-    MaterialStateProperty<Color?>? TodayForegroundColor = null,
-    MaterialStateProperty<Color?>? TodayBackgroundColor = null,
+    WidgetStateProperty<Color?>? DayForegroundColor = null,
+    WidgetStateProperty<Color?>? DayBackgroundColor = null,
+    WidgetStateProperty<Color?>? DayOverlayColor = null,
+    WidgetStateProperty<OutlinedBorder?>? DayShape = null,
+    WidgetStateProperty<Color?>? TodayForegroundColor = null,
+    WidgetStateProperty<Color?>? TodayBackgroundColor = null,
     BorderSide? TodayBorder = null,
     TextStyle? YearStyle = null,
-    MaterialStateProperty<Color?>? YearForegroundColor = null,
-    MaterialStateProperty<Color?>? YearBackgroundColor = null,
-    MaterialStateProperty<Color?>? YearOverlayColor = null,
-    MaterialStateProperty<OutlinedBorder?>? YearShape = null,
+    WidgetStateProperty<Color?>? YearForegroundColor = null,
+    WidgetStateProperty<Color?>? YearBackgroundColor = null,
+    WidgetStateProperty<Color?>? YearOverlayColor = null,
+    WidgetStateProperty<OutlinedBorder?>? YearShape = null,
     Color? RangePickerBackgroundColor = null,
     double? RangePickerElevation = null,
     Color? RangePickerShadowColor = null,
@@ -41,7 +41,7 @@ public partial record DatePickerThemeData(
     TextStyle? RangePickerHeaderHeadlineStyle = null,
     TextStyle? RangePickerHeaderHelpStyle = null,
     Color? RangeSelectionBackgroundColor = null,
-    MaterialStateProperty<Color?>? RangeSelectionOverlayColor = null,
+    WidgetStateProperty<Color?>? RangeSelectionOverlayColor = null,
     Color? DividerColor = null,
     InputDecorationThemeData? InputDecorationTheme = null,
     ButtonStyle? CancelButtonStyle = null,
@@ -62,18 +62,18 @@ public partial record DatePickerThemeData(
         TextStyle? headerHelpStyle = null,
         TextStyle? weekdayStyle = null,
         TextStyle? dayStyle = null,
-        MaterialStateProperty<Color?>? dayForegroundColor = null,
-        MaterialStateProperty<Color?>? dayBackgroundColor = null,
-        MaterialStateProperty<Color?>? dayOverlayColor = null,
-        MaterialStateProperty<OutlinedBorder?>? dayShape = null,
-        MaterialStateProperty<Color?>? todayForegroundColor = null,
-        MaterialStateProperty<Color?>? todayBackgroundColor = null,
+        WidgetStateProperty<Color?>? dayForegroundColor = null,
+        WidgetStateProperty<Color?>? dayBackgroundColor = null,
+        WidgetStateProperty<Color?>? dayOverlayColor = null,
+        WidgetStateProperty<OutlinedBorder?>? dayShape = null,
+        WidgetStateProperty<Color?>? todayForegroundColor = null,
+        WidgetStateProperty<Color?>? todayBackgroundColor = null,
         BorderSide? todayBorder = null,
         TextStyle? yearStyle = null,
-        MaterialStateProperty<Color?>? yearForegroundColor = null,
-        MaterialStateProperty<Color?>? yearBackgroundColor = null,
-        MaterialStateProperty<Color?>? yearOverlayColor = null,
-        MaterialStateProperty<OutlinedBorder?>? yearShape = null,
+        WidgetStateProperty<Color?>? yearForegroundColor = null,
+        WidgetStateProperty<Color?>? yearBackgroundColor = null,
+        WidgetStateProperty<Color?>? yearOverlayColor = null,
+        WidgetStateProperty<OutlinedBorder?>? yearShape = null,
         Color? rangePickerBackgroundColor = null,
         double? rangePickerElevation = null,
         Color? rangePickerShadowColor = null,
@@ -84,7 +84,7 @@ public partial record DatePickerThemeData(
         TextStyle? rangePickerHeaderHeadlineStyle = null,
         TextStyle? rangePickerHeaderHelpStyle = null,
         Color? rangeSelectionBackgroundColor = null,
-        MaterialStateProperty<Color?>? rangeSelectionOverlayColor = null,
+        WidgetStateProperty<Color?>? rangeSelectionOverlayColor = null,
         Color? dividerColor = null,
         InputDecorationThemeData? inputDecorationTheme = null,
         ButtonStyle? cancelButtonStyle = null,
@@ -184,8 +184,8 @@ internal sealed record DatePickerDefaultsM2 : DatePickerThemeData
     private DatePickerDefaultsM2(
         ColorScheme colors,
         TextTheme textTheme,
-        MaterialStateProperty<Color?> dayBackground,
-        MaterialStateProperty<Color?> dayOverlay) : base(
+        WidgetStateProperty<Color?> dayBackground,
+        WidgetStateProperty<Color?> dayOverlay) : base(
         Elevation: 24.0,
         Shape: new RoundedRectangleBorder(
             borderRadius: Plumix.Rendering.BorderRadius.Circular(4.0)),
@@ -199,12 +199,12 @@ internal sealed record DatePickerDefaultsM2 : DatePickerThemeData
         DayForegroundColor: DatePickerDefaultUtilities.ResolveDayForeground(colors),
         DayBackgroundColor: dayBackground,
         DayOverlayColor: dayOverlay,
-        DayShape: MaterialStateProperty<OutlinedBorder?>.All(new CircleBorder()),
+        DayShape: WidgetStateProperty<OutlinedBorder?>.All(new CircleBorder()),
         TodayForegroundColor: DatePickerDefaultUtilities.ResolveTodayForeground(colors, material3: false),
         TodayBackgroundColor: dayBackground,
         TodayBorder: new BorderSide(colors.Primary),
         YearStyle: textTheme.BodyLarge,
-        YearShape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
+        YearShape: WidgetStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
         RangePickerBackgroundColor: colors.Surface,
         RangePickerElevation: 0.0,
         RangePickerShadowColor: Colors.Transparent,
@@ -225,7 +225,7 @@ internal sealed record DatePickerDefaultsM2 : DatePickerThemeData
     {
     }
 
-    private static MaterialStateProperty<Color?> ResolveDayOverlay(ColorScheme colors) =>
+    private static WidgetStateProperty<Color?> ResolveDayOverlay(ColorScheme colors) =>
         DatePickerDefaultUtilities.ResolveOverlay(
             colors,
             selectedPressedOpacity: 0.38,
@@ -253,8 +253,8 @@ internal sealed record DatePickerDefaultsM3 : DatePickerThemeData
     private DatePickerDefaultsM3(
         ColorScheme colors,
         TextTheme textTheme,
-        MaterialStateProperty<Color?> dayBackground,
-        MaterialStateProperty<Color?> dayOverlay) : base(
+        WidgetStateProperty<Color?> dayBackground,
+        WidgetStateProperty<Color?> dayOverlay) : base(
         BackgroundColor: colors.SurfaceContainerHigh,
         Elevation: 6.0,
         ShadowColor: Colors.Transparent,
@@ -270,7 +270,7 @@ internal sealed record DatePickerDefaultsM3 : DatePickerThemeData
         DayForegroundColor: DatePickerDefaultUtilities.ResolveDayForeground(colors),
         DayBackgroundColor: dayBackground,
         DayOverlayColor: dayOverlay,
-        DayShape: MaterialStateProperty<OutlinedBorder?>.All(new CircleBorder()),
+        DayShape: WidgetStateProperty<OutlinedBorder?>.All(new CircleBorder()),
         TodayForegroundColor: DatePickerDefaultUtilities.ResolveTodayForeground(colors, material3: true),
         TodayBackgroundColor: dayBackground,
         TodayBorder: new BorderSide(colors.Primary),
@@ -278,7 +278,7 @@ internal sealed record DatePickerDefaultsM3 : DatePickerThemeData
         YearForegroundColor: ResolveYearForeground(colors),
         YearBackgroundColor: dayBackground,
         YearOverlayColor: dayOverlay,
-        YearShape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
+        YearShape: WidgetStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
         RangePickerElevation: 0.0,
         RangePickerShadowColor: Colors.Transparent,
         RangePickerSurfaceTintColor: Colors.Transparent,
@@ -296,7 +296,7 @@ internal sealed record DatePickerDefaultsM3 : DatePickerThemeData
     {
     }
 
-    private static MaterialStateProperty<Color?> ResolveDayOverlay(ColorScheme colors) =>
+    private static WidgetStateProperty<Color?> ResolveDayOverlay(ColorScheme colors) =>
         DatePickerDefaultUtilities.ResolveOverlay(
             colors,
             selectedPressedOpacity: 0.10,
@@ -304,11 +304,11 @@ internal sealed record DatePickerDefaultsM3 : DatePickerThemeData
             unselectedPressedOpacity: 0.10,
             unselectedFocusedOpacity: 0.10);
 
-    private static MaterialStateProperty<Color?> ResolveYearForeground(ColorScheme colors) =>
-        MaterialStateProperty<Color?>.ResolveWith(states =>
+    private static WidgetStateProperty<Color?> ResolveYearForeground(ColorScheme colors) =>
+        WidgetStateProperty<Color?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Selected)) return colors.OnPrimary;
-            if (states.HasFlag(MaterialState.Disabled))
+            if (states.Contains(WidgetState.Selected)) return colors.OnPrimary;
+            if (states.Contains(WidgetState.Disabled))
             {
                 return DatePickerDefaultUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38);
             }
@@ -316,20 +316,20 @@ internal sealed record DatePickerDefaultsM3 : DatePickerThemeData
             return colors.OnSurfaceVariant;
         });
 
-    private static MaterialStateProperty<Color?> ResolveRangeOverlay(ColorScheme colors) =>
-        MaterialStateProperty<Color?>.ResolveWith(states =>
+    private static WidgetStateProperty<Color?> ResolveRangeOverlay(ColorScheme colors) =>
+        WidgetStateProperty<Color?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Pressed))
+            if (states.Contains(WidgetState.Pressed))
             {
                 return DatePickerDefaultUtilities.WithOpacity(colors.OnPrimaryContainer, 0.10);
             }
 
-            if (states.HasFlag(MaterialState.Hovered))
+            if (states.Contains(WidgetState.Hovered))
             {
                 return DatePickerDefaultUtilities.WithOpacity(colors.OnPrimaryContainer, 0.08);
             }
 
-            if (states.HasFlag(MaterialState.Focused))
+            if (states.Contains(WidgetState.Focused))
             {
                 return DatePickerDefaultUtilities.WithOpacity(colors.OnPrimaryContainer, 0.10);
             }
@@ -339,24 +339,24 @@ internal sealed record DatePickerDefaultsM3 : DatePickerThemeData
 
 internal static class DatePickerDefaultUtilities
 {
-    public static MaterialStateProperty<Color?> ResolveDayForeground(ColorScheme colors) =>
-        MaterialStateProperty<Color?>.ResolveWith(states =>
+    public static WidgetStateProperty<Color?> ResolveDayForeground(ColorScheme colors) =>
+        WidgetStateProperty<Color?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Selected)) return colors.OnPrimary;
-            if (states.HasFlag(MaterialState.Disabled)) return WithOpacity(colors.OnSurface, 0.38);
+            if (states.Contains(WidgetState.Selected)) return colors.OnPrimary;
+            if (states.Contains(WidgetState.Disabled)) return WithOpacity(colors.OnSurface, 0.38);
             return colors.OnSurface;
         });
 
-    public static MaterialStateProperty<Color?> ResolveDayBackground(ColorScheme colors) =>
-        MaterialStateProperty<Color?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Selected) ? colors.Primary : null);
+    public static WidgetStateProperty<Color?> ResolveDayBackground(ColorScheme colors) =>
+        WidgetStateProperty<Color?>.ResolveWith(states =>
+            states.Contains(WidgetState.Selected) ? colors.Primary : null);
 
-    public static MaterialStateProperty<Color?> ResolveTodayForeground(
+    public static WidgetStateProperty<Color?> ResolveTodayForeground(
         ColorScheme colors,
-        bool material3) => MaterialStateProperty<Color?>.ResolveWith(states =>
+        bool material3) => WidgetStateProperty<Color?>.ResolveWith(states =>
     {
-        if (states.HasFlag(MaterialState.Selected)) return colors.OnPrimary;
-        if (states.HasFlag(MaterialState.Disabled))
+        if (states.Contains(WidgetState.Selected)) return colors.OnPrimary;
+        if (states.Contains(WidgetState.Disabled))
         {
             return WithOpacity(material3 ? colors.Primary : colors.OnSurface, 0.38);
         }
@@ -364,22 +364,22 @@ internal static class DatePickerDefaultUtilities
         return colors.Primary;
     });
 
-    public static MaterialStateProperty<Color?> ResolveOverlay(
+    public static WidgetStateProperty<Color?> ResolveOverlay(
         ColorScheme colors,
         double selectedPressedOpacity,
         double selectedFocusedOpacity,
         double unselectedPressedOpacity,
-        double unselectedFocusedOpacity) => MaterialStateProperty<Color?>.ResolveWith(states =>
+        double unselectedFocusedOpacity) => WidgetStateProperty<Color?>.ResolveWith(states =>
     {
-        bool selected = states.HasFlag(MaterialState.Selected);
+        bool selected = states.Contains(WidgetState.Selected);
         Color baseColor = selected ? colors.OnPrimary : colors.OnSurfaceVariant;
-        if (states.HasFlag(MaterialState.Pressed))
+        if (states.Contains(WidgetState.Pressed))
         {
             return WithOpacity(baseColor, selected ? selectedPressedOpacity : unselectedPressedOpacity);
         }
 
-        if (states.HasFlag(MaterialState.Hovered)) return WithOpacity(baseColor, 0.08);
-        if (states.HasFlag(MaterialState.Focused))
+        if (states.Contains(WidgetState.Hovered)) return WithOpacity(baseColor, 0.08);
+        if (states.Contains(WidgetState.Focused))
         {
             return WithOpacity(baseColor, selected ? selectedFocusedOpacity : unselectedFocusedOpacity);
         }

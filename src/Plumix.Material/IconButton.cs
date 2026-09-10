@@ -47,7 +47,7 @@ public class IconButton : StatelessWidget
         string? tooltip = null,
         bool? enableFeedback = null,
         MouseCursor? mouseCursor = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Key? key = null) : this(
             icon: icon,
             onPressed: onPressed,
@@ -106,7 +106,7 @@ public class IconButton : StatelessWidget
         string? tooltip = null,
         bool? enableFeedback = null,
         MouseCursor? mouseCursor = null,
-        MaterialStatesController? statesController = null) : base(key)
+        WidgetStatesController? statesController = null) : base(key)
     {
         Icon = icon ?? throw new ArgumentNullException(nameof(icon));
         OnPressed = onPressed;
@@ -198,7 +198,7 @@ public class IconButton : StatelessWidget
 
     public MouseCursor? MouseCursor { get; }
 
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
 
     public static IconButton Filled(
         Widget icon,
@@ -225,7 +225,7 @@ public class IconButton : StatelessWidget
         string? tooltip = null,
         bool? enableFeedback = null,
         MouseCursor? mouseCursor = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Key? key = null)
     {
         return new IconButton(
@@ -283,7 +283,7 @@ public class IconButton : StatelessWidget
         string? tooltip = null,
         bool? enableFeedback = null,
         MouseCursor? mouseCursor = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Key? key = null)
     {
         return new IconButton(
@@ -341,7 +341,7 @@ public class IconButton : StatelessWidget
         string? tooltip = null,
         bool? enableFeedback = null,
         MouseCursor? mouseCursor = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Key? key = null)
     {
         return new IconButton(
@@ -414,10 +414,10 @@ public class IconButton : StatelessWidget
             ForegroundColor: CreateDefaultColorResolver(foregroundColor, disabledForegroundColor),
             BackgroundColor: CreateDefaultColorResolver(backgroundColor, disabledBackgroundColor),
             ShadowColor: shadowColor.HasValue
-                ? MaterialStateProperty<Color?>.All(shadowColor.Value)
+                ? WidgetStateProperty<Color?>.All(shadowColor.Value)
                 : null,
             SurfaceTintColor: surfaceTintColor.HasValue
-                ? MaterialStateProperty<Color?>.All(surfaceTintColor.Value)
+                ? WidgetStateProperty<Color?>.All(surfaceTintColor.Value)
                 : null,
             OverlayColor: CreateStyleFromOverlayResolver(
                 foregroundColor,
@@ -427,28 +427,28 @@ public class IconButton : StatelessWidget
                 highlightColor),
             SplashFactory: splashFactory,
             Elevation: elevation.HasValue
-                ? MaterialStateProperty<double?>.All(elevation.Value)
+                ? WidgetStateProperty<double?>.All(elevation.Value)
                 : null,
             IconSize: iconSize.HasValue
-                ? MaterialStateProperty<double?>.All(iconSize.Value)
+                ? WidgetStateProperty<double?>.All(iconSize.Value)
                 : null,
             Side: side.HasValue
-                ? MaterialStateProperty<BorderSide?>.All(side.Value)
+                ? WidgetStateProperty<BorderSide?>.All(side.Value)
                 : null,
             Padding: padding.HasValue
-                ? MaterialStateProperty<EdgeInsetsGeometry?>.All(padding.Value)
+                ? WidgetStateProperty<EdgeInsetsGeometry?>.All(padding.Value)
                 : null,
             Shape: shape.HasValue
-                ? MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: shape.Value))
+                ? WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: shape.Value))
                 : null,
             MinimumSize: minimumSize.HasValue
-                ? MaterialStateProperty<Size?>.All(minimumSize.Value)
+                ? WidgetStateProperty<Size?>.All(minimumSize.Value)
                 : null,
             FixedSize: fixedSize.HasValue
-                ? MaterialStateProperty<Size?>.All(fixedSize.Value)
+                ? WidgetStateProperty<Size?>.All(fixedSize.Value)
                 : null,
             MaximumSize: maximumSize.HasValue
-                ? MaterialStateProperty<Size?>.All(maximumSize.Value)
+                ? WidgetStateProperty<Size?>.All(maximumSize.Value)
                 : null,
             MouseCursor: CreateMouseCursorResolver(
                 enabledMouseCursor,
@@ -619,29 +619,29 @@ public class IconButton : StatelessWidget
         IconButtonVariant variant)
     {
         return new ButtonStyle(
-            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                 ResolveDefaultForegroundColor(theme, variant, isToggleable, states)),
-            BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            BackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                 ResolveDefaultBackgroundColor(theme, variant, isToggleable, states)),
-            ShadowColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            ShadowColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            SurfaceTintColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                 ResolveDefaultOverlayColor(theme, variant, isToggleable, states)),
-            Elevation: MaterialStateProperty<double?>.All(0),
-            IconSize: MaterialStateProperty<double?>.All(24),
+            Elevation: WidgetStateProperty<double?>.All(0),
+            IconSize: WidgetStateProperty<double?>.All(24),
             Side: variant == IconButtonVariant.Outlined
-                ? MaterialStateProperty<BorderSide?>.ResolveWith(states =>
+                ? WidgetStateProperty<BorderSide?>.ResolveWith(states =>
                     ResolveOutlinedBorderSide(theme, states))
                 : null,
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(new Thickness(8)),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: 
+            Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(new Thickness(8)),
+            Shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius: 
                 Plumix.Rendering.BorderRadius.Circular(9999))),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(40, 40)),
-            MaximumSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, double.PositiveInfinity)),
+            MinimumSize: WidgetStateProperty<Size?>.All(new Size(40, 40)),
+            MaximumSize: WidgetStateProperty<Size?>.All(new Size(double.PositiveInfinity, double.PositiveInfinity)),
             Alignment: Plumix.Rendering.Alignment.Center,
             TapTargetSize: theme.MaterialTapTargetSize,
-            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(
-                states => ResolveAdaptiveCursor(!states.HasFlag(MaterialState.Disabled))),
+            MouseCursor: WidgetStateProperty<MouseCursor?>.ResolveWith(
+                states => ResolveAdaptiveCursor(!states.Contains(WidgetState.Disabled))),
             VisualDensity: Plumix.Material.VisualDensity.Standard,
             AnimationDuration: TimeSpan.FromMilliseconds(200),
             EnableFeedback: true,
@@ -652,14 +652,14 @@ public class IconButton : StatelessWidget
         ThemeData theme,
         IconButtonVariant variant,
         bool isToggleable,
-        MaterialState states)
+        IReadOnlySet<WidgetState> states)
     {
-        if (states.HasFlag(MaterialState.Disabled))
+        if (states.Contains(WidgetState.Disabled))
         {
             return theme.ColorScheme.OnSurface.WithOpacity(0.38);
         }
 
-        bool isSelected = states.HasFlag(MaterialState.Selected);
+        bool isSelected = states.Contains(WidgetState.Selected);
         return variant switch
         {
             IconButtonVariant.Filled => isSelected
@@ -685,10 +685,10 @@ public class IconButton : StatelessWidget
         ThemeData theme,
         IconButtonVariant variant,
         bool isToggleable,
-        MaterialState states)
+        IReadOnlySet<WidgetState> states)
     {
-        bool isDisabled = states.HasFlag(MaterialState.Disabled);
-        bool isSelected = states.HasFlag(MaterialState.Selected);
+        bool isDisabled = states.Contains(WidgetState.Disabled);
+        bool isSelected = states.Contains(WidgetState.Selected);
 
         return variant switch
         {
@@ -721,14 +721,14 @@ public class IconButton : StatelessWidget
         ThemeData theme,
         IconButtonVariant variant,
         bool isToggleable,
-        MaterialState states)
+        IReadOnlySet<WidgetState> states)
     {
-        if (states.HasFlag(MaterialState.Disabled))
+        if (states.Contains(WidgetState.Disabled))
         {
             return Colors.Transparent;
         }
 
-        if (states.HasFlag(MaterialState.Selected))
+        if (states.Contains(WidgetState.Selected))
         {
             var selectedOverlay = variant switch
             {
@@ -744,17 +744,17 @@ public class IconButton : StatelessWidget
 
         if (variant == IconButtonVariant.Outlined)
         {
-            if (states.HasFlag(MaterialState.Pressed))
+            if (states.Contains(WidgetState.Pressed))
             {
                 return theme.ColorScheme.OnSurface.WithOpacity(0.10);
             }
 
-            if (states.HasFlag(MaterialState.Hovered))
+            if (states.Contains(WidgetState.Hovered))
             {
                 return theme.ColorScheme.OnSurfaceVariant.WithOpacity(0.08);
             }
 
-            if (states.HasFlag(MaterialState.Focused))
+            if (states.Contains(WidgetState.Focused))
             {
                 return theme.ColorScheme.OnSurfaceVariant.WithOpacity(0.08);
             }
@@ -776,14 +776,14 @@ public class IconButton : StatelessWidget
         return ResolveStateLayerColor(overlayColor, states);
     }
 
-    private static BorderSide? ResolveOutlinedBorderSide(ThemeData theme, MaterialState states)
+    private static BorderSide? ResolveOutlinedBorderSide(ThemeData theme, IReadOnlySet<WidgetState> states)
     {
-        if (states.HasFlag(MaterialState.Selected))
+        if (states.Contains(WidgetState.Selected))
         {
             return null;
         }
 
-        if (states.HasFlag(MaterialState.Disabled))
+        if (states.Contains(WidgetState.Disabled))
         {
             return new BorderSide(
                 theme.ColorScheme.OnSurface.WithOpacity(0.12),
@@ -795,20 +795,20 @@ public class IconButton : StatelessWidget
 
     private static Color ResolveStateLayerColor(
         Color baseColor,
-        MaterialState states,
+        IReadOnlySet<WidgetState> states,
         double focusedOpacity = 0.10)
     {
-        if (states.HasFlag(MaterialState.Pressed))
+        if (states.Contains(WidgetState.Pressed))
         {
             return baseColor.WithOpacity(0.10);
         }
 
-        if (states.HasFlag(MaterialState.Hovered))
+        if (states.Contains(WidgetState.Hovered))
         {
             return baseColor.WithOpacity(0.08);
         }
 
-        if (states.HasFlag(MaterialState.Focused))
+        if (states.Contains(WidgetState.Focused))
         {
             return baseColor.WithOpacity(focusedOpacity);
         }
@@ -816,7 +816,7 @@ public class IconButton : StatelessWidget
         return Colors.Transparent;
     }
 
-    private static MaterialStateProperty<Color?>? CreateDefaultColorResolver(
+    private static WidgetStateProperty<Color?>? CreateDefaultColorResolver(
         Color? enabledColor,
         Color? disabledColor)
     {
@@ -825,13 +825,13 @@ public class IconButton : StatelessWidget
             return null;
         }
 
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Disabled)
+        return WidgetStateProperty<Color?>.ResolveWith(states =>
+            states.Contains(WidgetState.Disabled)
                 ? disabledColor
                 : enabledColor);
     }
 
-    private static MaterialStateProperty<Color?>? CreateStyleFromOverlayResolver(
+    private static WidgetStateProperty<Color?>? CreateStyleFromOverlayResolver(
         Color? foregroundColor,
         Color? overlayColor,
         Color? focusColor,
@@ -849,17 +849,17 @@ public class IconButton : StatelessWidget
 
         if (overlayColor.HasValue && overlayColor.Value.A == 0)
         {
-            return MaterialStateProperty<Color?>.All(overlayColor.Value);
+            return WidgetStateProperty<Color?>.All(overlayColor.Value);
         }
 
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
+        return WidgetStateProperty<Color?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Disabled))
+            if (states.Contains(WidgetState.Disabled))
             {
                 return null;
             }
 
-            if (states.HasFlag(MaterialState.Pressed))
+            if (states.Contains(WidgetState.Pressed))
             {
                 if (highlightColor.HasValue)
                 {
@@ -871,7 +871,7 @@ public class IconButton : StatelessWidget
                     : null;
             }
 
-            if (states.HasFlag(MaterialState.Hovered))
+            if (states.Contains(WidgetState.Hovered))
             {
                 if (hoverColor.HasValue)
                 {
@@ -883,7 +883,7 @@ public class IconButton : StatelessWidget
                     : null;
             }
 
-            if (states.HasFlag(MaterialState.Focused))
+            if (states.Contains(WidgetState.Focused))
             {
                 if (focusColor.HasValue)
                 {
@@ -899,7 +899,7 @@ public class IconButton : StatelessWidget
         });
     }
 
-    private static MaterialStateProperty<MouseCursor?>? CreateMouseCursorResolver(
+    private static WidgetStateProperty<MouseCursor?>? CreateMouseCursorResolver(
         MouseCursor? enabledMouseCursor,
         MouseCursor? disabledMouseCursor)
     {
@@ -908,8 +908,8 @@ public class IconButton : StatelessWidget
             return null;
         }
 
-        return MaterialStateProperty<MouseCursor?>.ResolveWith(
-            states => states.HasFlag(MaterialState.Disabled)
+        return WidgetStateProperty<MouseCursor?>.ResolveWith(
+            states => states.Contains(WidgetState.Disabled)
                 ? disabledMouseCursor
                 : enabledMouseCursor);
     }
@@ -938,7 +938,7 @@ internal sealed class SelectableIconButton : StatefulWidget
         FocusNode? focusNode = null,
         Action? onLongPress = null,
         Action<bool>? onHover = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         string? tooltip = null,
         Key? key = null) : base(key)
     {
@@ -964,18 +964,18 @@ internal sealed class SelectableIconButton : StatefulWidget
     public FocusNode? FocusNode { get; }
     public Action? OnLongPress { get; }
     public Action<bool>? OnHover { get; }
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
     public string? Tooltip { get; }
 
     public override State CreateState() => new SelectableIconButtonState();
 
     private sealed class SelectableIconButtonState : State
     {
-        private MaterialStatesController? _internalStatesController;
+        private WidgetStatesController? _internalStatesController;
 
         private SelectableIconButton CurrentWidget => (SelectableIconButton)StateWidget;
 
-        private MaterialStatesController StatesController =>
+        private WidgetStatesController StatesController =>
             CurrentWidget.StatesController ?? _internalStatesController!;
 
         private bool IsSelected => CurrentWidget.IsSelected ?? false;
@@ -985,10 +985,10 @@ internal sealed class SelectableIconButton : StatefulWidget
             base.InitState();
             if (CurrentWidget.StatesController is null)
             {
-                _internalStatesController = new MaterialStatesController();
+                _internalStatesController = new WidgetStatesController();
             }
 
-            StatesController.Update(MaterialState.Selected, IsSelected);
+            StatesController.Update(WidgetState.Selected, IsSelected);
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
@@ -1008,7 +1008,7 @@ internal sealed class SelectableIconButton : StatefulWidget
 
             if (old.IsSelected != CurrentWidget.IsSelected)
             {
-                StatesController.Update(MaterialState.Selected, IsSelected);
+                StatesController.Update(WidgetState.Selected, IsSelected);
             }
         }
 
@@ -1041,10 +1041,10 @@ internal sealed class SelectableIconButton : StatefulWidget
         {
             if (CurrentWidget.StatesController is null)
             {
-                _internalStatesController = new MaterialStatesController();
+                _internalStatesController = new WidgetStatesController();
             }
 
-            StatesController.Update(MaterialState.Selected, IsSelected);
+            StatesController.Update(WidgetState.Selected, IsSelected);
         }
     }
 }
@@ -1062,7 +1062,7 @@ internal sealed class IconButtonM3 : ButtonStyleButton
         Action<bool>? onHover = null,
         Action? onLongPress = null,
         bool autofocus = false,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         string? tooltip = null,
         Key? key = null) : base(
             onPressed: onPressed,

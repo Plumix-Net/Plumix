@@ -46,9 +46,9 @@ internal sealed class SwitchDemoPageState : State
                 : MaterialTapTargetSize.Padded,
             SwitchTheme = new SwitchThemeData(
                 ThumbIcon: _showThumbIcons
-                    ? MaterialStateProperty<Icon?>.ResolveWith(states =>
+                    ? WidgetStateProperty<Icon?>.ResolveWith(states =>
                     {
-                        return states.HasFlag(MaterialState.Selected)
+                        return states.Contains(WidgetState.Selected)
                             ? new Icon(Icons.Check, size: 14)
                             : new Icon(Icons.Close, size: 14);
                     })
@@ -122,41 +122,41 @@ internal sealed class SwitchDemoPageState : State
                                 toggle: new Switch(
                                     value: _value,
                                     onChanged: _enabled ? OnValueChanged : null,
-                                    thumbColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                    thumbColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                     {
-                                        if (states.HasFlag(MaterialState.Disabled))
+                                        if (states.Contains(WidgetState.Disabled))
                                         {
                                             return Color.Parse("#6100695C");
                                         }
 
-                                        if (states.HasFlag(MaterialState.Selected))
+                                        if (states.Contains(WidgetState.Selected))
                                         {
                                             return Color.Parse("#FFE8F5E9");
                                         }
 
                                         return Color.Parse("#FFB2DFDB");
                                     }),
-                                    trackColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                    trackColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                     {
-                                        if (states.HasFlag(MaterialState.Disabled))
+                                        if (states.Contains(WidgetState.Disabled))
                                         {
                                             return Color.Parse("#3300695C");
                                         }
 
-                                        if (states.HasFlag(MaterialState.Selected))
+                                        if (states.Contains(WidgetState.Selected))
                                         {
                                             return Color.Parse("#FF00695C");
                                         }
 
                                         return Color.Parse("#FFB0BEC5");
                                     }),
-                                    trackOutlineColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                    trackOutlineColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                     {
-                                        return states.HasFlag(MaterialState.Selected)
+                                        return states.Contains(WidgetState.Selected)
                                             ? Colors.Transparent
                                             : Color.Parse("#FF455A64");
                                     }),
-                                    trackOutlineWidth: MaterialStateProperty<double?>.All(2)),
+                                    trackOutlineWidth: WidgetStateProperty<double?>.All(2)),
                                 title: "Custom colors",
                                 subtitle: "thumb/track/outline overrides"),
                         ])),

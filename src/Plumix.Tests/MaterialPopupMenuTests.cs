@@ -104,8 +104,8 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public void CheckedPopupMenuItem_UsesCheckmarkSelectedStyleAndCheckboxSemantics()
     {
-        var labelStyle = MaterialStateProperty<TextStyle?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Selected)
+        var labelStyle = WidgetStateProperty<TextStyle?>.ResolveWith(states =>
+            states.Contains(WidgetState.Selected)
                 ? new TextStyle(FontSize: 24, Color: Colors.Red)
                 : new TextStyle(FontSize: 20, Color: Colors.Orange));
         using var checkedHarness = new WidgetRenderHarness(Wrap(
@@ -738,10 +738,10 @@ public sealed class MaterialPopupMenuTests : IDisposable
     [Fact]
     public void PopupMenuItem_ResolvesThemeCursorFromHoveredAndDisabledStates()
     {
-        var cursor = MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Disabled)
+        var cursor = WidgetStateProperty<MouseCursor?>.ResolveWith(states =>
+            states.Contains(WidgetState.Disabled)
                 ? SystemMouseCursors.Grab
-                : states.HasFlag(MaterialState.Hovered)
+                : states.Contains(WidgetState.Hovered)
                     ? SystemMouseCursors.Text
                     : SystemMouseCursors.Click);
         using var enabled = new WidgetRenderHarness(Wrap(

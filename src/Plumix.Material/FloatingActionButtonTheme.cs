@@ -30,7 +30,7 @@ public sealed record FloatingActionButtonThemeData(
     double? ExtendedIconLabelSpacing = null,
     Thickness? ExtendedPadding = null,
     TextStyle? ExtendedTextStyle = null,
-    MaterialStateProperty<MouseCursor?>? MouseCursor = null)
+    WidgetStateProperty<MouseCursor?>? MouseCursor = null)
 {
     public FloatingActionButtonThemeData CopyWith(
         Color? foregroundColor = null,
@@ -53,7 +53,7 @@ public sealed record FloatingActionButtonThemeData(
         double? extendedIconLabelSpacing = null,
         Thickness? extendedPadding = null,
         TextStyle? extendedTextStyle = null,
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null)
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null)
     {
         return new FloatingActionButtonThemeData(
             ForegroundColor: foregroundColor ?? ForegroundColor,

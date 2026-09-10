@@ -572,7 +572,7 @@ internal sealed class CalendarDay : StatefulWidget
 {
     public CalendarDay(DateTime day, bool isDisabled, bool isSelected, bool isToday, bool isFocused,
         Action<DateTime> onChanged, CalendarDelegate<DateTime> calendarDelegate,
-        MaterialStateProperty<Color?>? overlayColor = null) : base(new ValueKey<DateTime>(day))
+        WidgetStateProperty<Color?>? overlayColor = null) : base(new ValueKey<DateTime>(day))
     {
         Day = day;
         IsDisabled = isDisabled;
@@ -591,18 +591,18 @@ internal sealed class CalendarDay : StatefulWidget
     public bool IsFocused { get; }
     public Action<DateTime> OnChanged { get; }
     public CalendarDelegate<DateTime> CalendarDelegate { get; }
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
     public override State CreateState() => new CalendarDayState();
 
     private sealed class CalendarDayState : State
     {
-        private MaterialStatesController? _states;
+        private WidgetStatesController? _states;
         private FocusNode? _focusNode;
         private CalendarDay CurrentWidget => (CalendarDay)StateWidget;
 
         public override void InitState()
         {
-            _states = new MaterialStatesController();
+            _states = new WidgetStatesController();
             _states.AddListener(HandleStatesChanged);
             _focusNode = new FocusNode { SkipTraversal = true };
             SyncStates();
@@ -640,7 +640,7 @@ internal sealed class CalendarDay : StatefulWidget
                   ?? defaults.TodayBackgroundColor?.Resolve(states)
                 : local.DayBackgroundColor?.Resolve(states)
                   ?? defaults.DayBackgroundColor?.Resolve(states);
-            var overlay = widget.OverlayColor ?? MaterialStateProperty<Color?>.ResolveWith(
+            var overlay = widget.OverlayColor ?? WidgetStateProperty<Color?>.ResolveWith(
                 overlayStates => local.DayOverlayColor?.Resolve(overlayStates)
                                  ?? defaults.DayOverlayColor?.Resolve(overlayStates));
             OutlinedBorder shape = local.DayShape?.Resolve(states)
@@ -695,9 +695,9 @@ internal sealed class CalendarDay : StatefulWidget
 
         private void SyncStates()
         {
-            _states?.Update(MaterialState.Disabled, CurrentWidget.IsDisabled);
-            _states?.Update(MaterialState.Selected, CurrentWidget.IsSelected);
-            _states?.Update(MaterialState.Focused, CurrentWidget.IsFocused);
+            _states?.Update(WidgetState.Disabled, CurrentWidget.IsDisabled);
+            _states?.Update(WidgetState.Selected, CurrentWidget.IsSelected);
+            _states?.Update(WidgetState.Focused, CurrentWidget.IsFocused);
         }
 
         private void HandleStatesChanged() => SetState(() => { });
@@ -851,12 +851,12 @@ internal sealed class CalendarYear : StatefulWidget
 
     private sealed class CalendarYearState : State
     {
-        private MaterialStatesController? _states;
+        private WidgetStatesController? _states;
         private CalendarYear CurrentWidget => (CalendarYear)StateWidget;
 
         public override void InitState()
         {
-            _states = new MaterialStatesController();
+            _states = new WidgetStatesController();
             _states.AddListener(HandleStateChanged);
             SyncStates();
         }
@@ -891,10 +891,10 @@ internal sealed class CalendarYear : StatefulWidget
                   ?? defaults.TodayBackgroundColor?.Resolve(states)
                 : local.YearBackgroundColor?.Resolve(states)
                   ?? defaults.YearBackgroundColor?.Resolve(states);
-            MaterialStateProperty<Color?>? overlay = local.YearOverlayColor is null
+            WidgetStateProperty<Color?>? overlay = local.YearOverlayColor is null
                                                         && defaults.YearOverlayColor is null
                 ? null
-                : MaterialStateProperty<Color?>.ResolveWith(
+                : WidgetStateProperty<Color?>.ResolveWith(
                     overlayStates => local.YearOverlayColor?.Resolve(overlayStates)
                                      ?? defaults.YearOverlayColor?.Resolve(overlayStates));
             OutlinedBorder shape = local.YearShape?.Resolve(states)
@@ -940,8 +940,8 @@ internal sealed class CalendarYear : StatefulWidget
 
         private void SyncStates()
         {
-            _states?.Update(MaterialState.Disabled, CurrentWidget.IsDisabled);
-            _states?.Update(MaterialState.Selected, CurrentWidget.IsSelected);
+            _states?.Update(WidgetState.Disabled, CurrentWidget.IsDisabled);
+            _states?.Update(WidgetState.Selected, CurrentWidget.IsSelected);
         }
 
         private void HandleStateChanged() => SetState(() => { });

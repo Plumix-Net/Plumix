@@ -100,7 +100,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         Assert.Equal(new DropdownMenuThemeData(), new DropdownMenuThemeData() with { });
         Assert.Equal(new DropdownMenuThemeData().GetHashCode(), (new DropdownMenuThemeData() with { }).GetHashCode());
 
-        var menuStyle = new MenuStyle(elevation: MaterialStateProperty<double?>.All(4));
+        var menuStyle = new MenuStyle(elevation: WidgetStateProperty<double?>.All(4));
         var decorationTheme = new InputDecorationThemeData(filled: true);
         var textStyle = new TextStyle(FontSize: 21);
         Assert.Equal(
@@ -140,10 +140,10 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         Assert.Equal(theme.ColorScheme.OnSurface.WithOpacity(0.38), captured.DisabledColor);
 
         var menuStyle = captured.MenuStyle!;
-        Assert.Equal(new Size(112, 0), menuStyle.MinimumSize!.Resolve(MaterialState.None));
+        Assert.Equal(new Size(112, 0), menuStyle.MinimumSize!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(
             new Size(double.PositiveInfinity, double.PositiveInfinity),
-            menuStyle.MaximumSize!.Resolve(MaterialState.None));
+            menuStyle.MaximumSize!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(VisualDensity.Standard, menuStyle.VisualDensity);
         // The menu surface keeps resolving through `MenuAnchor`'s own defaults, exactly as in Dart:
         // `_DropdownMenuDefaultsM3` sets none of these.
@@ -226,20 +226,20 @@ public sealed class MaterialDropdownMenuTests : IDisposable
             new DropdownMenuEntry<string>(
                 "one",
                 "One",
-                style: new ButtonStyle(BackgroundColor: MaterialStateProperty<Color?>.All(entryBackground))),
+                style: new ButtonStyle(BackgroundColor: WidgetStateProperty<Color?>.All(entryBackground))),
         };
         var theme = ThemeData.Light with
         {
             MenuButtonTheme = new MenuButtonThemeData(new ButtonStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Red),
-                ForegroundColor: MaterialStateProperty<Color?>.All(themeForeground))),
+                BackgroundColor: WidgetStateProperty<Color?>.All(Colors.Red),
+                ForegroundColor: WidgetStateProperty<Color?>.All(themeForeground))),
         };
 
         using var harness = Open(new DropdownMenu<string>(entries), out _, out _, theme);
         var style = Assert.Single(RealItems(harness)).Style!;
         // Entry level wins for background; the application theme still supplies foreground.
-        Assert.Equal(entryBackground, style.BackgroundColor!.Resolve(MaterialState.None));
-        Assert.Equal(themeForeground, style.ForegroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(entryBackground, style.BackgroundColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(themeForeground, style.ForegroundColor!.Resolve(new HashSet<WidgetState>()));
     }
 
     // ---- Enabled / disabled ----
@@ -367,7 +367,7 @@ public sealed class MaterialDropdownMenuTests : IDisposable
         var anchor = Assert.Single(FindWidgets<MenuAnchor>(harness.RootElement));
         Assert.Equal(
             new Size(double.PositiveInfinity, 100),
-            anchor.Style!.MaximumSize!.Resolve(MaterialState.None));
+            anchor.Style!.MaximumSize!.Resolve(new HashSet<WidgetState>()));
     }
 
     [Fact]

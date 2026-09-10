@@ -14,7 +14,7 @@ public class MenuThemeData : IDiagnosticable
 {
     public MenuThemeData(
         MenuStyle? style = null,
-        MaterialStateProperty<Widget?>? submenuIcon = null)
+        WidgetStateProperty<Widget?>? submenuIcon = null)
     {
         Style = style;
         SubmenuIcon = submenuIcon;
@@ -27,7 +27,7 @@ public class MenuThemeData : IDiagnosticable
     /// If provided, replaces the default <see cref="SubmenuButton"/> arrow icon. Resolves in the
     /// disabled, hovered and focused states.
     /// </summary>
-    public virtual MaterialStateProperty<Widget?>? SubmenuIcon { get; }
+    public virtual WidgetStateProperty<Widget?>? SubmenuIcon { get; }
 
     /// <summary>Linearly interpolates between two menu themes.</summary>
     public static MenuThemeData? Lerp(MenuThemeData? a, MenuThemeData? b, double t)
@@ -66,7 +66,7 @@ public class MenuThemeData : IDiagnosticable
             "style",
             Style,
             defaultValue: DiagnosticsDefaults.NullValue));
-        properties.Add(new DiagnosticsProperty<MaterialStateProperty<Widget?>?>(
+        properties.Add(new DiagnosticsProperty<WidgetStateProperty<Widget?>?>(
             "submenuIcon",
             SubmenuIcon,
             defaultValue: DiagnosticsDefaults.NullValue));

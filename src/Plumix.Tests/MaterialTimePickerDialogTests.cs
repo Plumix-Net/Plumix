@@ -511,8 +511,8 @@ public sealed class MaterialTimePickerDialogTests : IDisposable
         var separatorColor = Color.Parse("#FF00FF00");
         using var harness = CreateHarness(new TimePickerTheme(
             new TimePickerThemeData(
-                TimeSelectorSeparatorColor: MaterialStateProperty<Color?>.All(separatorColor),
-                TimeSelectorSeparatorTextStyle: MaterialStateProperty<TextStyle?>.All(
+                TimeSelectorSeparatorColor: WidgetStateProperty<Color?>.All(separatorColor),
+                TimeSelectorSeparatorTextStyle: WidgetStateProperty<TextStyle?>.All(
                     new TextStyle(FontSize: 35))),
             DialogRoute(new TimePickerDialog(new TimeOfDay(7, 0)))));
         harness.Pump(ViewSize);

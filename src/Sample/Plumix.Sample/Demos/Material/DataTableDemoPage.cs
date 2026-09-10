@@ -43,7 +43,7 @@ internal sealed class DataTableDemoPageState : State
                 : baseTheme.ColorScheme,
             DataTableTheme = _useThemeOverrides
                 ? new DataTableThemeData(
-                    headingRowColor: MaterialStateProperty<Color?>.All(Color.Parse("#FFE8DEF8")),
+                    headingRowColor: WidgetStateProperty<Color?>.All(Color.Parse("#FFE8DEF8")),
                     dataRowMinHeight: 44,
                     dataRowMaxHeight: 52,
                     horizontalMargin: 16,

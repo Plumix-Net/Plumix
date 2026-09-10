@@ -321,7 +321,7 @@ internal sealed class DialTimeSelectorControl : StatelessWidget
     {
         var theme = TimePickerModel.ThemeOf(context);
         var defaultTheme = TimePickerModel.DefaultThemeOf(context);
-        var states = IsSelected ? MaterialState.Selected : MaterialState.None;
+        var states = IsSelected ? new HashSet<WidgetState> { WidgetState.Selected } : new HashSet<WidgetState>();
         var backgroundColor = (theme.HourMinuteColor ?? defaultTheme.HourMinuteColor).Resolve(states);
         var textColor = (theme.HourMinuteTextColor ?? defaultTheme.HourMinuteTextColor).Resolve(states);
         var effectiveStyle = (theme.HourMinuteTextStyle ?? defaultTheme.HourMinuteTextStyle)
@@ -431,7 +431,7 @@ internal sealed class TimeSelectorSeparator : StatelessWidget
         TimePickerDefaults defaultTheme = useMaterial3
             ? new TimePickerDefaultsM3(context, entryMode)
             : new TimePickerDefaultsM2(context);
-        var states = MaterialState.None;
+        var states = new HashSet<WidgetState>();
         var separatorColor = (theme.TimeSelectorSeparatorColor ?? defaultTheme.TimeSelectorSeparatorColor)
             ?.Resolve(states) ?? (theme.HourMinuteTextColor ?? defaultTheme.HourMinuteTextColor).Resolve(states);
         var separatorStyle = (theme.TimeSelectorSeparatorTextStyle ?? defaultTheme.TimeSelectorSeparatorTextStyle)
@@ -616,7 +616,7 @@ internal sealed class AmPmButton : StatelessWidget
     {
         var theme = TimePickerModel.ThemeOf(context);
         var defaultTheme = TimePickerModel.DefaultThemeOf(context);
-        var states = Selected ? MaterialState.Selected : MaterialState.None;
+        var states = Selected ? new HashSet<WidgetState> { WidgetState.Selected } : new HashSet<WidgetState>();
         var backgroundColor = (theme.DayPeriodColor ?? defaultTheme.DayPeriodColor).Resolve(states);
         var textColor = (theme.DayPeriodTextColor ?? defaultTheme.DayPeriodTextColor).Resolve(states);
         var textStyle = (theme.DayPeriodTextStyle ?? defaultTheme.DayPeriodTextStyle)
@@ -1198,13 +1198,13 @@ internal sealed class HourMinuteTextFieldState : State
             ? new WidgetStateColor(themeFill)
             : pickerTheme.HourMinuteColor ?? defaultTheme.HourMinuteColor;
         var focusedStates = _focusNode.HasFocus
-            ? MaterialState.Focused | MaterialState.Selected
-            : MaterialState.None;
+            ? new HashSet<WidgetState> { WidgetState.Focused, WidgetState.Selected }
+            : new HashSet<WidgetState>();
         var fillColor = theme.UseMaterial3
             ? startingFillColor.Resolve(focusedStates)
             : _focusNode.HasFocus
                 ? Colors.Transparent
-                : startingFillColor.Resolve(MaterialState.None);
+                : startingFillColor.Resolve(new HashSet<WidgetState>());
 
         inputDecoration = inputDecoration with { HintText = hintText, FillColor = fillColor };
 
@@ -1247,15 +1247,15 @@ internal sealed class HourMinuteTextFieldState : State
 internal static class WidgetStateColorExtensions
 {
     /// Bridges Material's flags enum onto the core `WidgetState` set the state color resolves against.
-    internal static Color Resolve(this WidgetStateColor color, MaterialState states)
+    internal static Color Resolve(this WidgetStateColor color, IReadOnlySet<WidgetState> states)
     {
         var set = new HashSet<WidgetState>();
-        if (states.HasFlag(MaterialState.Hovered)) set.Add(WidgetState.Hovered);
-        if (states.HasFlag(MaterialState.Focused)) set.Add(WidgetState.Focused);
-        if (states.HasFlag(MaterialState.Pressed)) set.Add(WidgetState.Pressed);
-        if (states.HasFlag(MaterialState.Disabled)) set.Add(WidgetState.Disabled);
-        if (states.HasFlag(MaterialState.Selected)) set.Add(WidgetState.Selected);
-        if (states.HasFlag(MaterialState.Dragged)) set.Add(WidgetState.Dragged);
+        if (states.Contains(WidgetState.Hovered)) set.Add(WidgetState.Hovered);
+        if (states.Contains(WidgetState.Focused)) set.Add(WidgetState.Focused);
+        if (states.Contains(WidgetState.Pressed)) set.Add(WidgetState.Pressed);
+        if (states.Contains(WidgetState.Disabled)) set.Add(WidgetState.Disabled);
+        if (states.Contains(WidgetState.Selected)) set.Add(WidgetState.Selected);
+        if (states.Contains(WidgetState.Dragged)) set.Add(WidgetState.Dragged);
         return color.Resolve(set);
     }
 }
@@ -1736,8 +1736,9 @@ internal sealed class DialState : State
         var defaultTheme = TimePickerModel.DefaultThemeOf(context);
         var dialTextColor = pickerTheme.DialTextColor ?? defaultTheme.DialTextColor;
         var dialTextStyle = pickerTheme.DialTextStyle ?? defaultTheme.DialTextStyle;
-        var primaryStyle = dialTextStyle.CopyWith(color: dialTextColor.Resolve(MaterialState.None));
-        var selectedStyle = dialTextStyle.CopyWith(color: dialTextColor.Resolve(MaterialState.Selected));
+        var primaryStyle = dialTextStyle.CopyWith(color: dialTextColor.Resolve(new HashSet<WidgetState>()));
+        var selectedStyle = dialTextStyle.CopyWith(color: dialTextColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Selected }));
 
         IReadOnlyList<TappableLabel> primaryLabels;
         IReadOnlyList<TappableLabel> selectedLabels;
@@ -1775,7 +1776,7 @@ internal sealed class DialState : State
                     backgroundColor: pickerTheme.DialBackgroundColor ?? defaultTheme.DialBackgroundColor,
                     handColor: pickerTheme.DialHandColor ?? defaultTheme.DialHandColor,
                     handWidth: defaultTheme.HandWidth,
-                    dotColor: dialTextColor.Resolve(MaterialState.Selected),
+                    dotColor: dialTextColor.Resolve(new HashSet<WidgetState> { WidgetState.Selected }),
                     dotRadius: defaultTheme.DotRadius,
                     centerRadius: defaultTheme.CenterRadius,
                     theta: _theta!.Value,

@@ -518,15 +518,15 @@ public sealed class InputDecorator : StatefulWidget
 
         /// The only four states an `InputDecorator` ever produces; `pressed`, `selected`, `dragged` and
         /// `scrolledUnder` are never part of the set.
-        private MaterialState WidgetStates
+        private IReadOnlySet<WidgetState> WidgetStates
         {
             get
             {
-                MaterialState states = MaterialState.None;
-                if (!Decoration.Enabled) states |= MaterialState.Disabled;
-                if (Current.IsFocused) states |= MaterialState.Focused;
-                if (IsHovering) states |= MaterialState.Hovered;
-                if (HasError) states |= MaterialState.Error;
+                var states = new HashSet<WidgetState>();
+                if (!Decoration.Enabled) states.Add(WidgetState.Disabled);
+                if (Current.IsFocused) states.Add(WidgetState.Focused);
+                if (IsHovering) states.Add(WidgetState.Hovered);
+                if (HasError) states.Add(WidgetState.Error);
                 return states;
             }
         }
@@ -535,8 +535,8 @@ public sealed class InputDecorator : StatefulWidget
         {
             var themeData = Theme.Of(context);
             InputDecoration decoration = Decoration;
-            MaterialState states = WidgetStates;
-            IReadOnlySet<Plumix.Widgets.WidgetState> stateSet = MaterialStateSet.Of(states);
+            IReadOnlySet<WidgetState> states = WidgetStates;
+            IReadOnlySet<Plumix.Widgets.WidgetState> stateSet = states;
             InputDecorationThemeData defaults = InputDecoratorDefaults.Resolve(themeData);
             IconButtonThemeData iconButtonTheme = IconButtonTheme.Of(context);
             var textDirection = Directionality.Of(context);
@@ -892,7 +892,7 @@ public sealed class InputDecorator : StatefulWidget
         private InputBorder ResolveBorder(
             ThemeData themeData,
             InputDecorationThemeData defaults,
-            MaterialState states,
+            IReadOnlySet<WidgetState> states,
             IReadOnlySet<Plumix.Widgets.WidgetState> stateSet,
             BuildContext context)
         {
@@ -917,7 +917,7 @@ public sealed class InputDecorator : StatefulWidget
         private InputBorder GetDefaultBorder(
             ThemeData themeData,
             InputDecorationThemeData defaults,
-            MaterialState states,
+            IReadOnlySet<WidgetState> states,
             IReadOnlySet<Plumix.Widgets.WidgetState> stateSet,
             BuildContext context)
         {
@@ -1486,18 +1486,18 @@ internal sealed class InputDecoratorDefaultsM3 : InputDecorationThemeData
         InputDecoratorDefaults.WithOpacity(Colors_.OnSurface, opacity);
 
     /// The shared error/focused/hovered chain both border sides use; only the enabled color differs.
-    private BorderSide? ResolveSide(MaterialState states, Color enabledColor, Color disabledColor)
+    private BorderSide? ResolveSide(IReadOnlySet<WidgetState> states, Color enabledColor, Color disabledColor)
     {
-        if (states.HasFlag(MaterialState.Disabled)) return new BorderSide(disabledColor);
-        if (states.HasFlag(MaterialState.Error))
+        if (states.Contains(WidgetState.Disabled)) return new BorderSide(disabledColor);
+        if (states.Contains(WidgetState.Error))
         {
-            if (states.HasFlag(MaterialState.Focused)) return new BorderSide(Colors_.Error, 2.0);
-            if (states.HasFlag(MaterialState.Hovered)) return new BorderSide(Colors_.OnErrorContainer);
+            if (states.Contains(WidgetState.Focused)) return new BorderSide(Colors_.Error, 2.0);
+            if (states.Contains(WidgetState.Hovered)) return new BorderSide(Colors_.OnErrorContainer);
             return new BorderSide(Colors_.Error);
         }
 
-        if (states.HasFlag(MaterialState.Focused)) return new BorderSide(Colors_.Primary, 2.0);
-        if (states.HasFlag(MaterialState.Hovered)) return new BorderSide(Colors_.OnSurface);
+        if (states.Contains(WidgetState.Focused)) return new BorderSide(Colors_.Primary, 2.0);
+        if (states.Contains(WidgetState.Hovered)) return new BorderSide(Colors_.OnSurface);
         return new BorderSide(enabledColor);
     }
 
@@ -1522,10 +1522,10 @@ internal sealed class InputDecoratorDefaultsM3 : InputDecorationThemeData
         states.Contains(WidgetState.Disabled) ? Disabled(0.04) : Colors_.SurfaceContainerHighest);
 
     public override WidgetStateBorderSide ActiveIndicatorBorder => WidgetStateBorderSide.ResolveWith(
-        states => ResolveSide(MaterialStateSet.Flags(states), Colors_.OnSurfaceVariant, Disabled(0.38)));
+        states => ResolveSide(states, Colors_.OnSurfaceVariant, Disabled(0.38)));
 
     public override WidgetStateBorderSide OutlineBorder => WidgetStateBorderSide.ResolveWith(
-        states => ResolveSide(MaterialStateSet.Flags(states), Colors_.Outline, Disabled(0.12)));
+        states => ResolveSide(states, Colors_.Outline, Disabled(0.12)));
 
     /// Flutter's M3 `iconColor` is a plain color, not a state-resolving one.
     public override WidgetStateColor IconColor => new(Colors_.OnSurfaceVariant);

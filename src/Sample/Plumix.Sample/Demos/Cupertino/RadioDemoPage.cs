@@ -136,39 +136,39 @@ internal sealed class RadioDemoPageState : State
                                                 enabled: _enabled,
                                                 toggleable: _toggleable,
                                                 activeColor: Color.Parse("#FF00695C"),
-                                                fillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                                fillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                                 {
-                                                    if (states.HasFlag(MaterialState.Disabled))
+                                                    if (states.Contains(WidgetState.Disabled))
                                                     {
                                                         return Color.Parse("#6100695C");
                                                     }
 
-                                                    if (states.HasFlag(MaterialState.Selected))
+                                                    if (states.Contains(WidgetState.Selected))
                                                     {
                                                         return Color.Parse("#FF00695C");
                                                     }
 
                                                     return Color.Parse("#FF455A64");
                                                 }),
-                                                backgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                                backgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                                 {
-                                                    return states.HasFlag(MaterialState.Selected)
+                                                    return states.Contains(WidgetState.Selected)
                                                         ? Color.Parse("#1400695C")
                                                         : Colors.Transparent;
                                                 }),
-                                                overlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                                overlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                                 {
-                                                    if (states.HasFlag(MaterialState.Pressed))
+                                                    if (states.Contains(WidgetState.Pressed))
                                                     {
                                                         return Color.Parse("#3300695C");
                                                     }
 
-                                                    if (states.HasFlag(MaterialState.Hovered))
+                                                    if (states.Contains(WidgetState.Hovered))
                                                     {
                                                         return Color.Parse("#2200695C");
                                                     }
 
-                                                    if (states.HasFlag(MaterialState.Focused))
+                                                    if (states.Contains(WidgetState.Focused))
                                                     {
                                                         return Color.Parse("#2900695C");
                                                     }
@@ -176,7 +176,7 @@ internal sealed class RadioDemoPageState : State
                                                     return null;
                                                 }),
                                                 side: new BorderSide(Color.Parse("#FF00695C"), 2),
-                                                innerRadius: MaterialStateProperty<double?>.All(5)),
+                                                innerRadius: WidgetStateProperty<double?>.All(5)),
                                             title: "Custom colors",
                                             subtitle: "fill/overlay/side/background overrides"),
                                     ])),
@@ -207,7 +207,7 @@ internal sealed class RadioDemoPageState : State
                                                     enabled: _enabled,
                                                     toggleable: _toggleable,
                                                     activeColor: Color.Parse("#FF00695C"),
-                                                    fillColor: MaterialStateProperty<Color?>.All(
+                                                    fillColor: WidgetStateProperty<Color?>.All(
                                                         Color.Parse("#FF8E24AA")),
                                                     useCupertinoCheckmarkStyle: _adaptiveUseCheckmarkStyle),
                                                 title: "Adaptive style probe",

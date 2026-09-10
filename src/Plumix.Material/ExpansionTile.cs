@@ -225,8 +225,8 @@ public sealed class ExpansionTile : StatefulWidget
                 : null;
 
             Widget child = ListTileTheme.Merge(
-                iconColor: MaterialStateProperty<Color?>.All(iconColor),
-                textColor: MaterialStateProperty<Color?>.All(textColor),
+                iconColor: WidgetStateProperty<Color?>.All(iconColor),
+                textColor: WidgetStateProperty<Color?>.All(textColor),
                 child: new ListTile(
                     enabled: CurrentWidget.Enabled,
                     onTap: _controller!.IsExpanded ? _controller.Collapse : _controller.Expand,

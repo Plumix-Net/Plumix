@@ -33,7 +33,7 @@ public abstract class ButtonStyleButton : StatefulWidget
         bool autofocus,
         Clip? clipBehavior,
         Widget? child,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         bool? isSemanticButton = true,
         string? tooltip = null,
         Key? key = null) : base(key)
@@ -68,7 +68,7 @@ public abstract class ButtonStyleButton : StatefulWidget
 
     public Clip? ClipBehavior { get; }
 
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
 
     public bool? IsSemanticButton { get; }
 
@@ -97,32 +97,32 @@ public abstract class ButtonStyleButton : StatefulWidget
     }
 
     /// Dart's `ButtonStyleButton.allOrNull`.
-    public static MaterialStateProperty<T?>? AllOrNull<T>(T? value)
+    public static WidgetStateProperty<T?>? AllOrNull<T>(T? value)
         where T : class
     {
-        return value is null ? null : MaterialStateProperty<T?>.All(value);
+        return value is null ? null : WidgetStateProperty<T?>.All(value);
     }
 
     /// Dart's `ButtonStyleButton.allOrNull` for value types.
-    public static MaterialStateProperty<T?>? AllOrNullValue<T>(T? value)
+    public static WidgetStateProperty<T?>? AllOrNullValue<T>(T? value)
         where T : struct
     {
-        return value is null ? null : MaterialStateProperty<T?>.All(value);
+        return value is null ? null : WidgetStateProperty<T?>.All(value);
     }
 
     /// <summary>
     /// Dart's `ButtonStyleButton.defaultColor`: a property that resolves <paramref name="disabled"/>
     /// for the disabled state and <paramref name="enabled"/> otherwise, or null when both are null.
     /// </summary>
-    public static MaterialStateProperty<Color?>? DefaultColor(Color? enabled, Color? disabled)
+    public static WidgetStateProperty<Color?>? DefaultColor(Color? enabled, Color? disabled)
     {
         if ((enabled ?? disabled) is null)
         {
             return null;
         }
 
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Disabled) ? disabled : enabled);
+        return WidgetStateProperty<Color?>.ResolveWith(states =>
+            states.Contains(WidgetState.Disabled) ? disabled : enabled);
     }
 
     /// <summary>
@@ -171,12 +171,12 @@ public abstract class ButtonStyleButton : StatefulWidget
     internal static Size InfiniteSize { get; } = new(double.PositiveInfinity, double.PositiveInfinity);
 
     /// <summary>
-    /// Dart's `WidgetStateMouseCursor.adaptiveClickable`, adapted to the `[Flags] MaterialState`
-    /// spelling `ButtonStyle.mouseCursor` uses (`docs/ai/DIVERGENCES.md`).
+    /// Dart's `WidgetStateMouseCursor.adaptiveClickable`, wrapped as the `WidgetStateProperty`
+    /// `ButtonStyle.mouseCursor` is declared against.
     /// </summary>
-    internal static MaterialStateProperty<MouseCursor?> AdaptiveClickableCursor { get; } =
-        MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
-            WidgetStateMouseCursor.AdaptiveClickable.Resolve(MaterialStateSet.Of(states)));
+    internal static WidgetStateProperty<MouseCursor?> AdaptiveClickableCursor { get; } =
+        WidgetStateProperty<MouseCursor?>.ResolveWith(states =>
+            WidgetStateMouseCursor.AdaptiveClickable.Resolve(states));
 
     /// Dart's `Color.withOpacity`.
     internal static Color WithOpacity(Color color, double opacity)
@@ -190,11 +190,11 @@ public abstract class ButtonStyleButton : StatefulWidget
     /// applies in every state when no disabled colour is given, otherwise the two split on
     /// `WidgetState.disabled`.
     /// </summary>
-    internal static MaterialStateProperty<Color?>? SingleValueOrDefaultColor(Color? enabled, Color? disabled)
+    internal static WidgetStateProperty<Color?>? SingleValueOrDefaultColor(Color? enabled, Color? disabled)
     {
         if (enabled is not null && disabled is null)
         {
-            return MaterialStateProperty<Color?>.All(enabled);
+            return WidgetStateProperty<Color?>.All(enabled);
         }
 
         return DefaultColor(enabled, disabled);
@@ -205,7 +205,7 @@ public abstract class ButtonStyleButton : StatefulWidget
     /// the overlay colour verbatim when it is fully transparent (which defeats every highlight), and
     /// otherwise pressed 0.1 / hovered 0.08 / focused 0.1 over `overlayColor ?? foregroundColor`.
     /// </summary>
-    internal static MaterialStateProperty<Color?>? DefaultOverlayColor(Color? foregroundColor, Color? overlayColor)
+    internal static WidgetStateProperty<Color?>? DefaultOverlayColor(Color? foregroundColor, Color? overlayColor)
     {
         if (foregroundColor is null && overlayColor is null)
         {
@@ -214,28 +214,28 @@ public abstract class ButtonStyleButton : StatefulWidget
 
         if (overlayColor is { A: 0 })
         {
-            return MaterialStateProperty<Color?>.All(overlayColor);
+            return WidgetStateProperty<Color?>.All(overlayColor);
         }
 
         return StateOverlay(overlayColor ?? foregroundColor!.Value);
     }
 
     /// <summary>Dart's default overlay table: pressed 0.1, hovered 0.08, focused 0.1, otherwise null.</summary>
-    internal static MaterialStateProperty<Color?> StateOverlay(Color color)
+    internal static WidgetStateProperty<Color?> StateOverlay(Color color)
     {
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
+        return WidgetStateProperty<Color?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Pressed))
+            if (states.Contains(WidgetState.Pressed))
             {
                 return WithOpacity(color, 0.1);
             }
 
-            if (states.HasFlag(MaterialState.Hovered))
+            if (states.Contains(WidgetState.Hovered))
             {
                 return WithOpacity(color, 0.08);
             }
 
-            if (states.HasFlag(MaterialState.Focused))
+            if (states.Contains(WidgetState.Focused))
             {
                 return WithOpacity(color, 0.1);
             }
@@ -248,12 +248,12 @@ public abstract class ButtonStyleButton : StatefulWidget
     /// Dart's `styleFrom` cursor map: always a non-null property, which may resolve to null so the
     /// next style layer can supply the cursor.
     /// </summary>
-    internal static MaterialStateProperty<MouseCursor?> StyleFromMouseCursor(
+    internal static WidgetStateProperty<MouseCursor?> StyleFromMouseCursor(
         MouseCursor? enabledMouseCursor,
         MouseCursor? disabledMouseCursor)
     {
-        return MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Disabled) ? disabledMouseCursor : enabledMouseCursor);
+        return WidgetStateProperty<MouseCursor?>.ResolveWith(states =>
+            states.Contains(WidgetState.Disabled) ? disabledMouseCursor : enabledMouseCursor);
     }
 
     /// <summary>
@@ -267,7 +267,7 @@ public abstract class ButtonStyleButton : StatefulWidget
         Widget label,
         IconAlignment iconAlignment)
     {
-        double defaultFontSize = buttonStyle?.TextStyle?.Resolve(MaterialState.None)?.FontSize ?? 14.0;
+        double defaultFontSize = buttonStyle?.TextStyle?.Resolve(new HashSet<WidgetState>())?.FontSize ?? 14.0;
         double scale = Math.Clamp(MediaQuery.TextScalerOf(context).Scale(defaultFontSize) / 14.0, 1.0, 2.0) - 1.0;
         return new Row(
             children: iconAlignment == IconAlignment.Start
@@ -287,11 +287,11 @@ public sealed class ButtonStyleState : State
     private AnimationController? _controller;
     private double? _elevation;
     private Color? _backgroundColor;
-    private MaterialStatesController? _internalStatesController;
+    private WidgetStatesController? _internalStatesController;
 
     private ButtonStyleButton CurrentWidget => (ButtonStyleButton)StateWidget;
 
-    private MaterialStatesController StatesController =>
+    private WidgetStatesController StatesController =>
         CurrentWidget.StatesController ?? _internalStatesController!;
 
     public override void InitState()
@@ -318,10 +318,10 @@ public sealed class ButtonStyleState : State
 
         if (CurrentWidget.Enabled != previous.Enabled)
         {
-            StatesController.Update(MaterialState.Disabled, !CurrentWidget.Enabled);
+            StatesController.Update(WidgetState.Disabled, !CurrentWidget.Enabled);
             if (!CurrentWidget.Enabled)
             {
-                StatesController.Update(MaterialState.Pressed, false);
+                StatesController.Update(WidgetState.Pressed, false);
             }
         }
     }
@@ -340,7 +340,7 @@ public sealed class ButtonStyleState : State
         ButtonStyle? widgetStyle = widget.Style;
         ButtonStyle? themeStyle = widget.ThemeStyleOf(context);
         ButtonStyle defaultStyle = widget.DefaultStyleOf(context);
-        MaterialState states = StatesController.Value;
+        IReadOnlySet<WidgetState> states = StatesController.Value;
         ThemeData theme = Theme.Of(context);
         IconThemeData iconTheme = IconTheme.Of(context);
 
@@ -356,7 +356,7 @@ public sealed class ButtonStyleState : State
             return getProperty(widgetStyle) ?? getProperty(themeStyle) ?? getProperty(defaultStyle);
         }
 
-        TValue? ResolveClass<TValue>(Func<ButtonStyle?, MaterialStateProperty<TValue?>?> getProperty)
+        TValue? ResolveClass<TValue>(Func<ButtonStyle?, WidgetStateProperty<TValue?>?> getProperty)
             where TValue : class
         {
             return EffectiveClass<TValue>(style => getProperty(style) is { } property
@@ -364,7 +364,7 @@ public sealed class ButtonStyleState : State
                 : null);
         }
 
-        TValue? ResolveStruct<TValue>(Func<ButtonStyle?, MaterialStateProperty<TValue?>?> getProperty)
+        TValue? ResolveStruct<TValue>(Func<ButtonStyle?, WidgetStateProperty<TValue?>?> getProperty)
             where TValue : struct
         {
             return EffectiveStruct<TValue>(style => getProperty(style) is { } property
@@ -420,10 +420,10 @@ public sealed class ButtonStyleState : State
         // build-time state set.
         MouseCursor mouseCursor = WidgetStateMouseCursor.ResolveWith(cursorStates =>
         {
-            MaterialState flags = MaterialStateSet.Flags(cursorStates);
+            IReadOnlySet<WidgetState> flags = cursorStates;
             return EffectiveClass<MouseCursor>(style => style?.MouseCursor?.Resolve(flags));
         });
-        MaterialStateProperty<Color?> overlayColor = MaterialStateProperty<Color?>.ResolveWith(
+        WidgetStateProperty<Color?> overlayColor = WidgetStateProperty<Color?>.ResolveWith(
             overlayStates => EffectiveStruct<Color>(style => style?.OverlayColor?.Resolve(overlayStates)));
 
         Vector densityAdjustment = resolvedVisualDensity.BaseSizeAdjustment;
@@ -567,10 +567,10 @@ public sealed class ButtonStyleState : State
     {
         if (CurrentWidget.StatesController is null)
         {
-            _internalStatesController = new MaterialStatesController();
+            _internalStatesController = new WidgetStatesController();
         }
 
-        StatesController.Update(MaterialState.Disabled, !CurrentWidget.Enabled);
+        StatesController.Update(WidgetState.Disabled, !CurrentWidget.Enabled);
         StatesController.AddListener(HandleStatesControllerChange);
     }
 

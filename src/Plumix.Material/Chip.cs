@@ -20,12 +20,12 @@ public sealed class Chip : StatelessWidget
         Action? onDeleted = null,
         Color? deleteIconColor = null,
         string? deleteButtonTooltipMessage = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -81,12 +81,12 @@ public sealed class Chip : StatelessWidget
     public Action? OnDeleted { get; }
     public Color? DeleteIconColor { get; }
     public string? DeleteButtonTooltipMessage { get; }
-    public MaterialStateProperty<BorderSide?>? Side { get; }
-    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
+    public WidgetStateProperty<BorderSide?>? Side { get; }
+    public WidgetStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
-    public MaterialStateProperty<Color?>? Color { get; }
+    public WidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Thickness? Padding { get; }
     public VisualDensity? VisualDensity { get; }

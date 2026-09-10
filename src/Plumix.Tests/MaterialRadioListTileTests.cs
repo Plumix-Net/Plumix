@@ -126,10 +126,10 @@ public sealed class MaterialRadioListTileTests
     public void RadioArguments_AreForwardedToTheRadio()
     {
         var side = WidgetStateBorderSide.ResolveWith(_ => new BorderSide(color: Colors.Red, width: 3));
-        MaterialStateProperty<Color?> background = MaterialStateProperty<Color?>.All(Colors.Green);
-        MaterialStateProperty<double?> innerRadius = MaterialStateProperty<double?>.All(6.0);
-        MaterialStateProperty<Color?> fill = MaterialStateProperty<Color?>.All(Colors.Blue);
-        MaterialStateProperty<Color?> overlay = MaterialStateProperty<Color?>.All(Colors.Purple);
+        WidgetStateProperty<Color?> background = WidgetStateProperty<Color?>.All(Colors.Green);
+        WidgetStateProperty<double?> innerRadius = WidgetStateProperty<double?>.All(6.0);
+        WidgetStateProperty<Color?> fill = WidgetStateProperty<Color?>.All(Colors.Blue);
+        WidgetStateProperty<Color?> overlay = WidgetStateProperty<Color?>.All(Colors.Purple);
         using var harness = new ListTileControlHarness(new RadioListTile<int>(
             value: 1,
             groupValue: 1,
@@ -288,8 +288,8 @@ public sealed class MaterialRadioListTileTests
         var themedFill = bare with
         {
             RadioTheme = new RadioThemeData(
-                FillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Selected) ? themed : null))
+                FillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Selected) ? themed : null))
         };
 
         Assert.Equal(active, TitleColor(active, themedFill));
@@ -317,7 +317,7 @@ public sealed class MaterialRadioListTileTests
     [Fact]
     public void TileArguments_AreForwardedToTheListTile()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var focusNode = new FocusNode();
         var shape = new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(12));
         using var harness = new ListTileControlHarness(new RadioListTile<int>(
@@ -439,7 +439,7 @@ public sealed class MaterialRadioListTileTests
     [Fact]
     public void StatesController_IsDrivenByTheTile()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         using var harness = new ListTileControlHarness(new RadioListTile<int>(
             value: 1,
             groupValue: 1,
@@ -450,9 +450,9 @@ public sealed class MaterialRadioListTileTests
         harness.Pump();
         Assert.Same(statesController, harness.FindWidget<ListTile>()!.StatesController);
 
-        statesController.Update(MaterialState.Pressed, true);
+        statesController.Update(WidgetState.Pressed, true);
         harness.Pump();
-        Assert.True(statesController.Value.HasFlag(MaterialState.Pressed));
+        Assert.True(statesController.Value.Contains(WidgetState.Pressed));
     }
 
     /// "RadioListTile does not crash at zero area".

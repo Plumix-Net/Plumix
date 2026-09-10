@@ -75,7 +75,7 @@ public sealed class MaterialSegmentedButtonsTests
             ToggleButtonsTheme = new ToggleButtonsThemeData(
                 Color: Colors.Purple,
                 SelectedColor: Colors.Orange,
-                FillColor: Colors.DarkGreen,
+                FillColor: WidgetStateProperty<Color?>.All(Colors.DarkGreen),
                 BorderWidth: 3,
                 BorderRadius: BorderRadius.Circular(12)),
         };
@@ -107,10 +107,10 @@ public sealed class MaterialSegmentedButtonsTests
     [Fact]
     public void ToggleButtons_StatefulFillAndAdjacentSelectedBorderResolveByState()
     {
-        var statefulFill = MaterialStateProperty<Color?>.ResolveWith(states =>
+        var statefulFill = WidgetStateProperty<Color?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Disabled)) return Colors.Orange;
-            if (states.HasFlag(MaterialState.Selected)) return Colors.DarkGreen;
+            if (states.Contains(WidgetState.Disabled)) return Colors.Orange;
+            if (states.Contains(WidgetState.Selected)) return Colors.DarkGreen;
             return Colors.SteelBlue;
         });
         var theme = ThemeData.Light with
@@ -418,7 +418,7 @@ public sealed class MaterialSegmentedButtonsTests
         harness.Pump(new Size(360, 120));
 
         SegmentedButtonState<int> state = harness.FindState<SegmentedButtonState<int>>();
-        MaterialStatesController retainedController = state.StatesControllers[retained];
+        WidgetStatesController retainedController = state.StatesControllers[retained];
         Assert.Contains(
             harness.FindWidgets<Plumix.Material.Material>(),
             material => material.Type == MaterialType.Transparency);
@@ -435,7 +435,7 @@ public sealed class MaterialSegmentedButtonsTests
         Assert.Equal(2, state.StatesControllers.Count);
         Assert.False(state.StatesControllers.ContainsKey(first));
         Assert.Same(retainedController, state.StatesControllers[retained]);
-        Assert.True(state.StatesControllers[retained].Value.HasFlag(MaterialState.Selected));
+        Assert.True(state.StatesControllers[retained].Value.Contains(WidgetState.Selected));
         Assert.True(state.StatesControllers.ContainsKey(added));
     }
 
@@ -552,27 +552,30 @@ public sealed class MaterialSegmentedButtonsTests
             shape: new StadiumBorder(),
             splashFactory: NoSplash.SplashFactory);
 
-        Assert.Equal(Colors.Purple, style.ForegroundColor!.Resolve(MaterialState.None));
-        Assert.Equal(Colors.Gold, style.ForegroundColor.Resolve(MaterialState.Selected));
-        Assert.Equal(Colors.Gray, style.ForegroundColor.Resolve(MaterialState.Disabled));
-        Assert.Equal(Colors.Beige, style.BackgroundColor!.Resolve(MaterialState.None));
-        Assert.Equal(Colors.DarkGreen, style.BackgroundColor.Resolve(MaterialState.Selected));
-        Assert.Equal(Colors.Black, style.BackgroundColor.Resolve(MaterialState.Disabled));
+        Assert.Equal(Colors.Purple, style.ForegroundColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(Colors.Gold, style.ForegroundColor.Resolve(new HashSet<WidgetState> { WidgetState.Selected }));
+        Assert.Equal(Colors.Gray, style.ForegroundColor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
+        Assert.Equal(Colors.Beige, style.BackgroundColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(Colors.DarkGreen, style.BackgroundColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Selected }));
+        Assert.Equal(Colors.Black, style.BackgroundColor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
         Assert.Equal(
             NavigationSurfaceUtilities.WithOpacity(Colors.Red, 0.08),
-            style.OverlayColor!.Resolve(MaterialState.Hovered));
+            style.OverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Hovered }));
         Assert.Equal(
             NavigationSurfaceUtilities.WithOpacity(Colors.Red, 0.10),
-            style.OverlayColor.Resolve(MaterialState.Selected | MaterialState.Pressed));
-        Assert.Equal(Colors.Blue, style.IconColor!.Resolve(MaterialState.None));
-        Assert.Equal(Colors.Orange, style.IconColor.Resolve(MaterialState.Disabled));
-        Assert.Equal(32.0, style.IconSize!.Resolve(MaterialState.None));
-        Assert.IsType<StadiumBorder>(style.Shape!.Resolve(MaterialState.None));
+            style.OverlayColor.Resolve(new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Pressed }));
+        Assert.Equal(Colors.Blue, style.IconColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(Colors.Orange, style.IconColor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
+        Assert.Equal(32.0, style.IconSize!.Resolve(new HashSet<WidgetState>()));
+        Assert.IsType<StadiumBorder>(style.Shape!.Resolve(new HashSet<WidgetState>()));
         Assert.Same(NoSplash.SplashFactory, style.SplashFactory);
 
         ButtonStyle transparent = SegmentedButton<int>.StyleFrom(overlayColor: MaterialColors.Transparent);
-        Assert.Equal(MaterialColors.Transparent, transparent.OverlayColor!.Resolve(MaterialState.Hovered));
-        Assert.Equal(MaterialColors.Transparent, transparent.OverlayColor.Resolve(MaterialState.Pressed));
+        Assert.Equal(MaterialColors.Transparent, transparent.OverlayColor!.Resolve(
+            new HashSet<WidgetState> { WidgetState.Hovered }));
+        Assert.Equal(MaterialColors.Transparent, transparent.OverlayColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Pressed }));
     }
 
     [Fact]
@@ -630,13 +633,13 @@ public sealed class MaterialSegmentedButtonsTests
     [Fact]
     public void SegmentedButton_GroupBorderResolvesSelectedAndDisabledStateSides()
     {
-        var side = MaterialStateProperty<BorderSide?>.ResolveWith(states =>
+        var side = WidgetStateProperty<BorderSide?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Disabled))
+            if (states.Contains(WidgetState.Disabled))
             {
                 return new BorderSide(Colors.Gray);
             }
-            if (states.HasFlag(MaterialState.Selected))
+            if (states.Contains(WidgetState.Selected))
             {
                 return new BorderSide(Colors.Gold);
             }

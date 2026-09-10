@@ -25,8 +25,8 @@ public sealed class ListTile : StatelessWidget
         ShapeBorder? shape = null,
         ListTileStyle? style = null,
         Color? selectedColor = null,
-        MaterialStateProperty<Color?>? iconColor = null,
-        MaterialStateProperty<Color?>? textColor = null,
+        WidgetStateProperty<Color?>? iconColor = null,
+        WidgetStateProperty<Color?>? textColor = null,
         TextStyle? titleTextStyle = null,
         TextStyle? subtitleTextStyle = null,
         TextStyle? leadingAndTrailingTextStyle = null,
@@ -51,7 +51,7 @@ public sealed class ListTile : StatelessWidget
         double? minTileHeight = null,
         ListTileTitleAlignment? titleAlignment = null,
         bool internalAddSemanticForOnTap = true,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Key? key = null) : base(key)
     {
         if (isThreeLine == true && subtitle is null)
@@ -108,8 +108,8 @@ public sealed class ListTile : StatelessWidget
     public ShapeBorder? Shape { get; }
     public ListTileStyle? Style { get; }
     public Color? SelectedColor { get; }
-    public MaterialStateProperty<Color?>? IconColor { get; }
-    public MaterialStateProperty<Color?>? TextColor { get; }
+    public WidgetStateProperty<Color?>? IconColor { get; }
+    public WidgetStateProperty<Color?>? TextColor { get; }
     public TextStyle? TitleTextStyle { get; }
     public TextStyle? SubtitleTextStyle { get; }
     public TextStyle? LeadingAndTrailingTextStyle { get; }
@@ -134,7 +134,7 @@ public sealed class ListTile : StatelessWidget
     public double? MinTileHeight { get; }
     public ListTileTitleAlignment? TitleAlignment { get; }
     public bool InternalAddSemanticForOnTap { get; }
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
 
     public static IReadOnlyList<Widget> DivideTiles(
         IEnumerable<Widget> tiles,
@@ -188,8 +188,16 @@ public sealed class ListTile : StatelessWidget
                                         ?? theme.ListTileTheme.SelectedTileColor
                                         ?? defaults.TileColor!.Value;
         Color effectiveTileColor = Selected ? selectedBackgroundColor : backgroundColor;
-        MaterialState states = (Enabled ? MaterialState.None : MaterialState.Disabled)
-                               | (Selected ? MaterialState.Selected : MaterialState.None);
+        var states = new HashSet<WidgetState>();
+        if (!Enabled)
+        {
+            states.Add(WidgetState.Disabled);
+        }
+
+        if (Selected)
+        {
+            states.Add(WidgetState.Selected);
+        }
 
         Color? preDefaultIconColor = ResolveContentColor(IconColor, SelectedColor, null, null, states)
                                      ?? ResolveContentColor(
@@ -207,7 +215,7 @@ public sealed class ListTile : StatelessWidget
         Color? defaultIconColor = ResolveContentColor(
             null,
             defaults.SelectedColor,
-            defaults.IconColor?.Resolve(MaterialState.None),
+            defaults.IconColor?.Resolve(new HashSet<WidgetState>()),
             theme.DisabledColor,
             states);
         Color? effectiveIconButtonColor = preDefaultIconColor
@@ -231,7 +239,7 @@ public sealed class ListTile : StatelessWidget
                                     ?? ResolveContentColor(
                                         null,
                                         defaults.SelectedColor,
-                                        defaults.TextColor?.Resolve(MaterialState.None),
+                                        defaults.TextColor?.Resolve(new HashSet<WidgetState>()),
                                         theme.DisabledColor,
                                         states);
 
@@ -263,12 +271,12 @@ public sealed class ListTile : StatelessWidget
                                             ?? tileTheme.ContentPadding
                                             ?? defaults.ContentPadding!.Value)
             .Resolve(textDirection);
-        MaterialState mouseStates = !Enabled || (OnTap is null && OnLongPress is null)
-            ? MaterialState.Disabled
-            : MaterialState.None;
+        IReadOnlySet<WidgetState> mouseStates = !Enabled || (OnTap is null && OnLongPress is null)
+            ? new HashSet<WidgetState> { WidgetState.Disabled }
+            : new HashSet<WidgetState>();
         MouseCursor effectiveMouseCursor = MouseCursor
                                            ?? tileTheme.MouseCursor?.Resolve(mouseStates)
-                                           ?? (mouseStates.HasFlag(MaterialState.Disabled)
+                                           ?? (mouseStates.Contains(WidgetState.Disabled)
                                                ? SystemMouseCursors.Basic
                                                : SystemMouseCursors.Click);
         ListTileTitleAlignment effectiveTitleAlignment = TitleAlignment
@@ -280,10 +288,10 @@ public sealed class ListTile : StatelessWidget
             Plumix.Rendering.BorderRadius.Circular(0.0));
         ButtonStyle effectiveIconButtonStyle = iconButtonTheme.Style is null
             ? new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(effectiveIconButtonColor))
+                ForegroundColor: WidgetStateProperty<Color?>.All(effectiveIconButtonColor))
             : iconButtonTheme.Style with
             {
-                ForegroundColor = MaterialStateProperty<Color?>.All(effectiveIconButtonColor)
+                ForegroundColor = WidgetStateProperty<Color?>.All(effectiveIconButtonColor)
             };
 
         Widget content = new ListTileRenderWidget(
@@ -351,23 +359,23 @@ public sealed class ListTile : StatelessWidget
     }
 
     private static Color? ResolveContentColor(
-        MaterialStateProperty<Color?>? explicitColor,
+        WidgetStateProperty<Color?>? explicitColor,
         Color? selectedColor,
         Color? enabledColor,
         Color? disabledColor,
-        MaterialState states)
+        IReadOnlySet<WidgetState> states)
     {
         if (explicitColor is not null)
         {
             return explicitColor.Resolve(states);
         }
 
-        if (states.HasFlag(MaterialState.Disabled))
+        if (states.Contains(WidgetState.Disabled))
         {
             return disabledColor;
         }
 
-        return states.HasFlag(MaterialState.Selected) ? selectedColor : enabledColor;
+        return states.Contains(WidgetState.Selected) ? selectedColor : enabledColor;
     }
 
     private static Widget? WrapSlot(Widget? child, TextStyle style)
@@ -387,7 +395,7 @@ public sealed class ListTile : StatelessWidget
             return new ListTileThemeData(
                 Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(0.0)),
                 SelectedColor: theme.ColorScheme.Primary,
-                IconColor: MaterialStateProperty<Color?>.All(theme.ColorScheme.OnSurfaceVariant),
+                IconColor: WidgetStateProperty<Color?>.All(theme.ColorScheme.OnSurfaceVariant),
                 TitleTextStyle: theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurface),
                 SubtitleTextStyle: theme.TextTheme.BodyMedium.CopyWith(color: theme.ColorScheme.OnSurfaceVariant),
                 LeadingAndTrailingTextStyle:
@@ -405,7 +413,7 @@ public sealed class ListTile : StatelessWidget
             Shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(0.0)),
             SelectedColor: theme.ColorScheme.Primary,
             IconColor: theme.Brightness == Brightness.Light
-                ? MaterialStateProperty<Color?>.All(M2LightDefaultIconColor)
+                ? WidgetStateProperty<Color?>.All(M2LightDefaultIconColor)
                 : null,
             TitleTextStyle: titleStyle,
             SubtitleTextStyle: theme.TextTheme.BodyMedium.CopyWith(color: theme.TextTheme.BodySmall.Color),

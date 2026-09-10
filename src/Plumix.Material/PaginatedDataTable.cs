@@ -51,7 +51,7 @@ public sealed class PaginatedDataTable : StatefulWidget
         double? checkboxHorizontalMargin = null,
         ScrollController? controller = null,
         bool? primary = null,
-        MaterialStateProperty<Color?>? headingRowColor = null,
+        WidgetStateProperty<Color?>? headingRowColor = null,
         bool showEmptyRows = true,
         Key? key = null) : base(key)
     {
@@ -135,7 +135,7 @@ public sealed class PaginatedDataTable : StatefulWidget
     public double? CheckboxHorizontalMargin { get; }
     public ScrollController? Controller { get; }
     public bool? Primary { get; }
-    public MaterialStateProperty<Color?>? HeadingRowColor { get; }
+    public WidgetStateProperty<Color?>? HeadingRowColor { get; }
     public bool ShowEmptyRows { get; }
 
     public override State CreateState() => new PaginatedDataTableState();

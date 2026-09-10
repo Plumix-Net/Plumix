@@ -36,15 +36,15 @@ public sealed class Switch : StatelessWidget
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
         ImageErrorListener? onInactiveThumbImageError = null,
-        MaterialStateProperty<Color?>? thumbColor = null,
-        MaterialStateProperty<Color?>? trackColor = null,
-        MaterialStateProperty<Color?>? trackOutlineColor = null,
-        MaterialStateProperty<double?>? trackOutlineWidth = null,
-        MaterialStateProperty<Icon?>? thumbIcon = null,
+        WidgetStateProperty<Color?>? thumbColor = null,
+        WidgetStateProperty<Color?>? trackColor = null,
+        WidgetStateProperty<Color?>? trackOutlineColor = null,
+        WidgetStateProperty<double?>? trackOutlineWidth = null,
+        WidgetStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         MouseCursor? mouseCursor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
         double? splashRadius = null,
@@ -100,15 +100,15 @@ public sealed class Switch : StatelessWidget
         ImageErrorListener? onActiveThumbImageError,
         ImageProvider? inactiveThumbImage,
         ImageErrorListener? onInactiveThumbImageError,
-        MaterialStateProperty<Color?>? thumbColor,
-        MaterialStateProperty<Color?>? trackColor,
-        MaterialStateProperty<Color?>? trackOutlineColor,
-        MaterialStateProperty<double?>? trackOutlineWidth,
-        MaterialStateProperty<Icon?>? thumbIcon,
+        WidgetStateProperty<Color?>? thumbColor,
+        WidgetStateProperty<Color?>? trackColor,
+        WidgetStateProperty<Color?>? trackOutlineColor,
+        WidgetStateProperty<double?>? trackOutlineWidth,
+        WidgetStateProperty<Icon?>? thumbIcon,
         MaterialTapTargetSize? materialTapTargetSize,
         DragStartBehavior dragStartBehavior,
         MouseCursor? mouseCursor,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         Color? focusColor,
         Color? hoverColor,
         double? splashRadius,
@@ -178,15 +178,15 @@ public sealed class Switch : StatelessWidget
         ImageErrorListener? onActiveThumbImageError = null,
         ImageProvider? inactiveThumbImage = null,
         ImageErrorListener? onInactiveThumbImageError = null,
-        MaterialStateProperty<Color?>? thumbColor = null,
-        MaterialStateProperty<Color?>? trackColor = null,
-        MaterialStateProperty<Color?>? trackOutlineColor = null,
-        MaterialStateProperty<double?>? trackOutlineWidth = null,
-        MaterialStateProperty<Icon?>? thumbIcon = null,
+        WidgetStateProperty<Color?>? thumbColor = null,
+        WidgetStateProperty<Color?>? trackColor = null,
+        WidgetStateProperty<Color?>? trackOutlineColor = null,
+        WidgetStateProperty<double?>? trackOutlineWidth = null,
+        WidgetStateProperty<Icon?>? thumbIcon = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         MouseCursor? mouseCursor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
         double? splashRadius = null,
@@ -253,15 +253,15 @@ public sealed class Switch : StatelessWidget
 
     public ImageErrorListener? OnInactiveThumbImageError { get; }
 
-    public MaterialStateProperty<Color?>? ThumbColor { get; }
+    public WidgetStateProperty<Color?>? ThumbColor { get; }
 
-    public MaterialStateProperty<Color?>? TrackColor { get; }
+    public WidgetStateProperty<Color?>? TrackColor { get; }
 
-    public MaterialStateProperty<Color?>? TrackOutlineColor { get; }
+    public WidgetStateProperty<Color?>? TrackOutlineColor { get; }
 
-    public MaterialStateProperty<double?>? TrackOutlineWidth { get; }
+    public WidgetStateProperty<double?>? TrackOutlineWidth { get; }
 
-    public MaterialStateProperty<Icon?>? ThumbIcon { get; }
+    public WidgetStateProperty<Icon?>? ThumbIcon { get; }
 
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
 
@@ -269,7 +269,7 @@ public sealed class Switch : StatelessWidget
 
     public MouseCursor? MouseCursor { get; }
 
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
 
     public Color? FocusColor { get; }
 
@@ -411,15 +411,15 @@ internal sealed class MaterialSwitch : StatefulWidget
         ImageErrorListener? onActiveThumbImageError,
         ImageProvider? inactiveThumbImage,
         ImageErrorListener? onInactiveThumbImageError,
-        MaterialStateProperty<Color?>? thumbColor,
-        MaterialStateProperty<Color?>? trackColor,
-        MaterialStateProperty<Color?>? trackOutlineColor,
-        MaterialStateProperty<double?>? trackOutlineWidth,
-        MaterialStateProperty<Icon?>? thumbIcon,
+        WidgetStateProperty<Color?>? thumbColor,
+        WidgetStateProperty<Color?>? trackColor,
+        WidgetStateProperty<Color?>? trackOutlineColor,
+        WidgetStateProperty<double?>? trackOutlineWidth,
+        WidgetStateProperty<Icon?>? thumbIcon,
         MaterialTapTargetSize? materialTapTargetSize,
         DragStartBehavior dragStartBehavior,
         MouseCursor? mouseCursor,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         Color? focusColor,
         Color? hoverColor,
         double? splashRadius,
@@ -486,15 +486,15 @@ internal sealed class MaterialSwitch : StatefulWidget
 
     public ImageErrorListener? OnInactiveThumbImageError { get; }
 
-    public MaterialStateProperty<Color?>? ThumbColor { get; }
+    public WidgetStateProperty<Color?>? ThumbColor { get; }
 
-    public MaterialStateProperty<Color?>? TrackColor { get; }
+    public WidgetStateProperty<Color?>? TrackColor { get; }
 
-    public MaterialStateProperty<Color?>? TrackOutlineColor { get; }
+    public WidgetStateProperty<Color?>? TrackOutlineColor { get; }
 
-    public MaterialStateProperty<double?>? TrackOutlineWidth { get; }
+    public WidgetStateProperty<double?>? TrackOutlineWidth { get; }
 
-    public MaterialStateProperty<Icon?>? ThumbIcon { get; }
+    public WidgetStateProperty<Icon?>? ThumbIcon { get; }
 
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
 
@@ -502,7 +502,7 @@ internal sealed class MaterialSwitch : StatefulWidget
 
     public MouseCursor? MouseCursor { get; }
 
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
 
     public Color? FocusColor { get; }
 
@@ -627,13 +627,14 @@ internal sealed class MaterialSwitchState : ToggleableState
             ? CupertinoDynamicColor.Resolve(overrideColor, context)
             : theme.ColorScheme.Primary;
 
-        MaterialState baseStates = ToMaterialState(CurrentWidgetStates);
-        MaterialState activeStates = baseStates | MaterialState.Selected;
-        MaterialState inactiveStates = baseStates & ~MaterialState.Selected;
-        MaterialState focusedStates = baseStates | MaterialState.Focused;
-        MaterialState hoveredStates = baseStates | MaterialState.Hovered;
-        MaterialState activePressedStates = activeStates | MaterialState.Pressed;
-        MaterialState inactivePressedStates = inactiveStates | MaterialState.Pressed;
+        IReadOnlySet<WidgetState> baseStates = CurrentWidgetStates;
+        var activeStates = new HashSet<WidgetState>(baseStates) { WidgetState.Selected };
+        var inactiveStates = new HashSet<WidgetState>(baseStates);
+        inactiveStates.Remove(WidgetState.Selected);
+        var focusedStates = new HashSet<WidgetState>(baseStates) { WidgetState.Focused };
+        var hoveredStates = new HashSet<WidgetState>(baseStates) { WidgetState.Hovered };
+        var activePressedStates = new HashSet<WidgetState>(activeStates) { WidgetState.Pressed };
+        var inactivePressedStates = new HashSet<WidgetState>(inactiveStates) { WidgetState.Pressed };
 
         Color? activeThumbColor = CurrentWidget.ThumbColor?.Resolve(activeStates)
                                   ?? CurrentWidget.ActiveThumbColor
@@ -718,7 +719,7 @@ internal sealed class MaterialSwitchState : ToggleableState
             ?? defaults.OverlayColor!.Resolve(inactivePressedStates)!.Value;
 
         WidgetStateProperty<MouseCursor> effectiveMouseCursor =
-            MaterialStateProperty<MouseCursor>.ResolveWith(states =>
+            WidgetStateProperty<MouseCursor>.ResolveWith(states =>
                 CurrentWidget.MouseCursor
                 ?? switchTheme.MouseCursor?.Resolve(states)
                 ?? defaults.MouseCursor!.Resolve(states)!);
@@ -804,27 +805,6 @@ internal sealed class MaterialSwitchState : ToggleableState
     internal static double TrackInnerLength(SwitchConfig config)
     {
         return config.TrackWidth - (2.0 * (config.TrackHeight / 2.0));
-    }
-
-    internal static MaterialState ToMaterialState(IReadOnlySet<WidgetState> states)
-    {
-        var result = MaterialState.None;
-        foreach (WidgetState state in states)
-        {
-            result |= state switch
-            {
-                WidgetState.Hovered => MaterialState.Hovered,
-                WidgetState.Focused => MaterialState.Focused,
-                WidgetState.Pressed => MaterialState.Pressed,
-                WidgetState.Disabled => MaterialState.Disabled,
-                WidgetState.Selected => MaterialState.Selected,
-                WidgetState.Dragged => MaterialState.Dragged,
-                WidgetState.Error => MaterialState.Error,
-                _ => MaterialState.None,
-            };
-        }
-
-        return result;
     }
 
     private void UpdateCurve()
@@ -996,7 +976,7 @@ internal abstract class SwitchConfig
 
     public abstract IReadOnlyList<BoxShadow>? ThumbShadow { get; }
 
-    public abstract MaterialStateProperty<Color> IconColor { get; }
+    public abstract WidgetStateProperty<Color> IconColor { get; }
 
     public abstract double? ThumbOffset { get; }
 
@@ -1041,8 +1021,8 @@ internal sealed class SwitchConfigM2 : SwitchConfig
 
     public override IReadOnlyList<BoxShadow>? ThumbShadow => MaterialShadows.ElevationToShadow[1];
 
-    public override MaterialStateProperty<Color> IconColor =>
-        MaterialStateProperty<Color>.All(Colors.Transparent);
+    public override WidgetStateProperty<Color> IconColor =>
+        WidgetStateProperty<Color>.All(Colors.Transparent);
 }
 
 /// Dart's `_SwitchConfigM3`.
@@ -1087,17 +1067,17 @@ internal sealed class SwitchConfigM3 : SwitchConfig
 
     public override IReadOnlyList<BoxShadow>? ThumbShadow => MaterialShadows.ElevationToShadow[0];
 
-    public override MaterialStateProperty<Color> IconColor =>
-        MaterialStateProperty<Color>.ResolveWith(states =>
+    public override WidgetStateProperty<Color> IconColor =>
+        WidgetStateProperty<Color>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Disabled))
+            if (states.Contains(WidgetState.Disabled))
             {
-                return states.HasFlag(MaterialState.Selected)
+                return states.Contains(WidgetState.Selected)
                     ? _colors.OnSurface.WithOpacity(0.38)
                     : _colors.SurfaceContainerHighest.WithOpacity(0.38);
             }
 
-            return states.HasFlag(MaterialState.Selected)
+            return states.Contains(WidgetState.Selected)
                 ? _colors.OnPrimaryContainer
                 : _colors.SurfaceContainerHighest;
         });
@@ -1151,8 +1131,8 @@ internal sealed class SwitchConfigCupertino : SwitchConfig
 
     public override IReadOnlyList<BoxShadow>? ThumbShadow => CupertinoThumbShadow;
 
-    public override MaterialStateProperty<Color> IconColor =>
-        MaterialStateProperty<Color>.ResolveWith(states => states.HasFlag(MaterialState.Disabled)
+    public override WidgetStateProperty<Color> IconColor =>
+        WidgetStateProperty<Color>.ResolveWith(states => states.Contains(WidgetState.Disabled)
             ? _colors.OnSurface.WithOpacity(0.38)
             : _colors.OnPrimaryContainer);
 }
@@ -1169,30 +1149,30 @@ internal static class SwitchDefaults
         ColorScheme colors = theme.ColorScheme;
         bool isDark = theme.Brightness == Brightness.Dark;
         return new SwitchThemeData(
-            ThumbColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            ThumbColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Disabled))
+                if (states.Contains(WidgetState.Disabled))
                 {
                     return isDark ? Colors.Grey.Shade800 : Colors.Grey.Shade400;
                 }
 
-                if (states.HasFlag(MaterialState.Selected))
+                if (states.Contains(WidgetState.Selected))
                 {
                     return colors.Secondary;
                 }
 
                 return isDark ? Colors.Grey.Shade400 : Colors.Grey.Shade50;
             }),
-            TrackColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            TrackColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Disabled))
+                if (states.Contains(WidgetState.Disabled))
                 {
                     return isDark
                         ? Color.FromArgb(0x1A, 0xFF, 0xFF, 0xFF)
                         : Color.FromArgb(0x1F, 0x00, 0x00, 0x00);
                 }
 
-                if (states.HasFlag(MaterialState.Selected))
+                if (states.Contains(WidgetState.Selected))
                 {
                     return Color.FromArgb(
                         0x80,
@@ -1205,17 +1185,17 @@ internal static class SwitchDefaults
                     ? Color.FromArgb(0x4D, 0xFF, 0xFF, 0xFF)
                     : Color.FromArgb(0x52, 0x00, 0x00, 0x00);
             }),
-            TrackOutlineColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
+            TrackOutlineColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
             MaterialTapTargetSize: theme.MaterialTapTargetSize,
-            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(
-                states => WidgetStateMouseCursor.Clickable.Resolve(FromMaterialState(states))),
-            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            MouseCursor: WidgetStateProperty<MouseCursor?>.ResolveWith(
+                states => WidgetStateMouseCursor.Clickable.Resolve(states)),
+            OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Pressed))
+                if (states.Contains(WidgetState.Pressed))
                 {
-                    Color? thumb = states.HasFlag(MaterialState.Disabled)
+                    Color? thumb = states.Contains(WidgetState.Disabled)
                         ? isDark ? Colors.Grey.Shade800 : Colors.Grey.Shade400
-                        : states.HasFlag(MaterialState.Selected)
+                        : states.Contains(WidgetState.Selected)
                             ? colors.Secondary
                             : isDark ? Colors.Grey.Shade400 : Colors.Grey.Shade50;
                     return Color.FromArgb(
@@ -1225,12 +1205,12 @@ internal static class SwitchDefaults
                         thumb.Value.B);
                 }
 
-                if (states.HasFlag(MaterialState.Hovered))
+                if (states.Contains(WidgetState.Hovered))
                 {
                     return theme.HoverColor;
                 }
 
-                if (states.HasFlag(MaterialState.Focused))
+                if (states.Contains(WidgetState.Focused))
                 {
                     return theme.FocusColor;
                 }
@@ -1245,79 +1225,79 @@ internal static class SwitchDefaults
     {
         ColorScheme colors = Theme.Of(context).ColorScheme;
         return new SwitchThemeData(
-            ThumbColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            ThumbColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Disabled))
+                if (states.Contains(WidgetState.Disabled))
                 {
-                    return states.HasFlag(MaterialState.Selected)
+                    return states.Contains(WidgetState.Selected)
                         ? colors.Surface.WithOpacity(1.0)
                         : colors.OnSurface.WithOpacity(0.38);
                 }
 
-                if (states.HasFlag(MaterialState.Selected))
+                if (states.Contains(WidgetState.Selected))
                 {
                     return IsInteracting(states) ? colors.PrimaryContainer : colors.OnPrimary;
                 }
 
                 return IsInteracting(states) ? colors.OnSurfaceVariant : colors.Outline;
             }),
-            TrackColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            TrackColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Disabled))
+                if (states.Contains(WidgetState.Disabled))
                 {
-                    return states.HasFlag(MaterialState.Selected)
+                    return states.Contains(WidgetState.Selected)
                         ? colors.OnSurface.WithOpacity(0.12)
                         : colors.SurfaceContainerHighest.WithOpacity(0.12);
                 }
 
-                return states.HasFlag(MaterialState.Selected)
+                return states.Contains(WidgetState.Selected)
                     ? colors.Primary
                     : colors.SurfaceContainerHighest;
             }),
-            TrackOutlineColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            TrackOutlineColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Selected))
+                if (states.Contains(WidgetState.Selected))
                 {
                     return Colors.Transparent;
                 }
 
-                return states.HasFlag(MaterialState.Disabled)
+                return states.Contains(WidgetState.Disabled)
                     ? colors.OnSurface.WithOpacity(0.12)
                     : colors.Outline;
             }),
-            TrackOutlineWidth: MaterialStateProperty<double?>.All(2.0),
-            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(
-                states => WidgetStateMouseCursor.Clickable.Resolve(FromMaterialState(states))),
-            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            TrackOutlineWidth: WidgetStateProperty<double?>.All(2.0),
+            MouseCursor: WidgetStateProperty<MouseCursor?>.ResolveWith(
+                states => WidgetStateMouseCursor.Clickable.Resolve(states)),
+            OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Selected))
+                if (states.Contains(WidgetState.Selected))
                 {
-                    if (states.HasFlag(MaterialState.Pressed))
+                    if (states.Contains(WidgetState.Pressed))
                     {
                         return colors.Primary.WithOpacity(0.1);
                     }
 
-                    if (states.HasFlag(MaterialState.Hovered))
+                    if (states.Contains(WidgetState.Hovered))
                     {
                         return colors.Primary.WithOpacity(0.08);
                     }
 
-                    return states.HasFlag(MaterialState.Focused)
+                    return states.Contains(WidgetState.Focused)
                         ? colors.Primary.WithOpacity(0.1)
                         : null;
                 }
 
-                if (states.HasFlag(MaterialState.Pressed))
+                if (states.Contains(WidgetState.Pressed))
                 {
                     return colors.OnSurface.WithOpacity(0.1);
                 }
 
-                if (states.HasFlag(MaterialState.Hovered))
+                if (states.Contains(WidgetState.Hovered))
                 {
                     return colors.OnSurface.WithOpacity(0.08);
                 }
 
-                return states.HasFlag(MaterialState.Focused)
+                return states.Contains(WidgetState.Focused)
                     ? colors.OnSurface.WithOpacity(0.1)
                     : null;
             }),
@@ -1332,41 +1312,28 @@ internal static class SwitchDefaults
             CupertinoColors.SecondarySystemFill,
             context);
         return new SwitchThemeData(
-            ThumbColor: MaterialStateProperty<Color?>.All(Colors.White),
-            TrackColor: MaterialStateProperty<Color?>.ResolveWith(
-                states => states.HasFlag(MaterialState.Selected) ? activeTrack : inactiveTrack),
-            TrackOutlineColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Disabled)
+            ThumbColor: WidgetStateProperty<Color?>.All(Colors.White),
+            TrackColor: WidgetStateProperty<Color?>.ResolveWith(
+                states => states.Contains(WidgetState.Selected) ? activeTrack : inactiveTrack),
+            TrackOutlineColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            MouseCursor: WidgetStateProperty<MouseCursor?>.ResolveWith(states =>
+                states.Contains(WidgetState.Disabled)
                     ? SystemMouseCursors.Basic
                     : OperatingSystem.IsBrowser()
                         ? SystemMouseCursors.Click
                         : SystemMouseCursors.Basic),
-            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(
-                states => states.HasFlag(MaterialState.Focused)
+            OverlayColor: WidgetStateProperty<Color?>.ResolveWith(
+                states => states.Contains(WidgetState.Focused)
                     ? MaterialSwitchState.CupertinoFocusColor(activeTrack)
                     : Colors.Transparent),
             SplashRadius: 0.0);
     }
 
-    private static bool IsInteracting(MaterialState states)
+    private static bool IsInteracting(IReadOnlySet<WidgetState> states)
     {
-        return states.HasFlag(MaterialState.Pressed)
-               || states.HasFlag(MaterialState.Hovered)
-               || states.HasFlag(MaterialState.Focused);
-    }
-
-    private static IReadOnlySet<WidgetState> FromMaterialState(MaterialState states)
-    {
-        var result = new HashSet<WidgetState>();
-        if (states.HasFlag(MaterialState.Hovered)) result.Add(WidgetState.Hovered);
-        if (states.HasFlag(MaterialState.Focused)) result.Add(WidgetState.Focused);
-        if (states.HasFlag(MaterialState.Pressed)) result.Add(WidgetState.Pressed);
-        if (states.HasFlag(MaterialState.Disabled)) result.Add(WidgetState.Disabled);
-        if (states.HasFlag(MaterialState.Selected)) result.Add(WidgetState.Selected);
-        if (states.HasFlag(MaterialState.Dragged)) result.Add(WidgetState.Dragged);
-        if (states.HasFlag(MaterialState.Error)) result.Add(WidgetState.Error);
-        return result;
+        return states.Contains(WidgetState.Pressed)
+               || states.Contains(WidgetState.Hovered)
+               || states.Contains(WidgetState.Focused);
     }
 }
 

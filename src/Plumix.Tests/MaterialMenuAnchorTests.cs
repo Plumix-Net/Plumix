@@ -410,10 +410,10 @@ public sealed class MaterialMenuAnchorTests
     public void MenuStylePaddingIsDirectionalGeometryResolvedAgainstTextDirection()
     {
         var style = new MenuStyle(
-            padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
+            padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(
                 EdgeInsetsGeometry.DirectionalOnly(start: 10, top: 12, end: 11, bottom: 13)));
 
-        EdgeInsetsGeometry padding = style.Padding!.Resolve(MaterialState.None)!.Value;
+        EdgeInsetsGeometry padding = style.Padding!.Resolve(new HashSet<WidgetState>())!.Value;
 
         Assert.Equal(new Thickness(10, 12, 11, 13), padding.Resolve(TextDirection.Ltr));
         Assert.Equal(new Thickness(11, 12, 10, 13), padding.Resolve(TextDirection.Rtl));
@@ -497,24 +497,24 @@ public sealed class MaterialMenuAnchorTests
     public void MenuStyle_CopyWithKeepsUnspecifiedFieldsAndMergeLetsTheReceiverWin()
     {
         var baseStyle = new MenuStyle(
-            backgroundColor: MaterialStateProperty<Color?>.All(Colors.Red),
-            elevation: MaterialStateProperty<double?>.All(3.0));
+            backgroundColor: WidgetStateProperty<Color?>.All(Colors.Red),
+            elevation: WidgetStateProperty<double?>.All(3.0));
         var other = new MenuStyle(
-            backgroundColor: MaterialStateProperty<Color?>.All(Colors.Green),
-            shadowColor: MaterialStateProperty<Color?>.All(Colors.Blue),
+            backgroundColor: WidgetStateProperty<Color?>.All(Colors.Green),
+            shadowColor: WidgetStateProperty<Color?>.All(Colors.Blue),
             alignment: AlignmentDirectional.TopEnd);
 
-        MenuStyle copied = baseStyle.CopyWith(elevation: MaterialStateProperty<double?>.All(9.0));
+        MenuStyle copied = baseStyle.CopyWith(elevation: WidgetStateProperty<double?>.All(9.0));
         MenuStyle merged = baseStyle.Merge(other);
 
         // `copyWith` replaces only what it is given; every other field is carried over.
-        Assert.Equal(Colors.Red, copied.BackgroundColor!.Resolve(MaterialState.None));
-        Assert.Equal(9.0, copied.Elevation!.Resolve(MaterialState.None));
+        Assert.Equal(Colors.Red, copied.BackgroundColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(9.0, copied.Elevation!.Resolve(new HashSet<WidgetState>()));
 
         // `merge` fills this style's null fields from the argument; non-null receiver fields win.
-        Assert.Equal(Colors.Red, merged.BackgroundColor!.Resolve(MaterialState.None));
-        Assert.Equal(Colors.Blue, merged.ShadowColor!.Resolve(MaterialState.None));
-        Assert.Equal(3.0, merged.Elevation!.Resolve(MaterialState.None));
+        Assert.Equal(Colors.Red, merged.BackgroundColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(Colors.Blue, merged.ShadowColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(3.0, merged.Elevation!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopEnd, merged.Alignment);
         Assert.Same(baseStyle, baseStyle.Merge(null));
     }
@@ -522,12 +522,12 @@ public sealed class MaterialMenuAnchorTests
     [Fact]
     public void MenuStyle_EqualityComparesEveryFieldUnderTheSourceRuntimeTypeGuard()
     {
-        var left = new MenuStyle(elevation: MaterialStateProperty<double?>.All(3.0));
-        var right = new MenuStyle(elevation: MaterialStateProperty<double?>.All(3.0));
+        var left = new MenuStyle(elevation: WidgetStateProperty<double?>.All(3.0));
+        var right = new MenuStyle(elevation: WidgetStateProperty<double?>.All(3.0));
 
         Assert.Equal(left, right);
         Assert.Equal(left.GetHashCode(), right.GetHashCode());
-        Assert.NotEqual(left, new MenuStyle(elevation: MaterialStateProperty<double?>.All(4.0)));
+        Assert.NotEqual(left, new MenuStyle(elevation: WidgetStateProperty<double?>.All(4.0)));
         Assert.NotEqual(left, new MenuStyle());
     }
 
@@ -535,7 +535,7 @@ public sealed class MaterialMenuAnchorTests
     public void MenuStyle_LerpMatchesTheSourceSpecialCases()
     {
         // Flutter's "MenuStyle lerp special cases".
-        var data = new MenuStyle(elevation: MaterialStateProperty<double?>.All(3.0));
+        var data = new MenuStyle(elevation: WidgetStateProperty<double?>.All(3.0));
 
         Assert.Null(MenuStyle.Lerp(null, null, 0.0));
         Assert.Same(data, MenuStyle.Lerp(data, data, 0.5));
@@ -545,19 +545,19 @@ public sealed class MaterialMenuAnchorTests
     public void MenuStyle_LerpUsesDiscreteSwitchesForCursorDensityAndContinuousColors()
     {
         var a = new MenuStyle(
-            backgroundColor: MaterialStateProperty<Color?>.All(Color.FromArgb(255, 0, 0, 0)),
-            mouseCursor: MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
+            backgroundColor: WidgetStateProperty<Color?>.All(Color.FromArgb(255, 0, 0, 0)),
+            mouseCursor: WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
             visualDensity: VisualDensity.Standard);
         var b = new MenuStyle(
-            backgroundColor: MaterialStateProperty<Color?>.All(Color.FromArgb(255, 255, 255, 255)),
-            mouseCursor: MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Click),
+            backgroundColor: WidgetStateProperty<Color?>.All(Color.FromArgb(255, 255, 255, 255)),
+            mouseCursor: WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Click),
             visualDensity: VisualDensity.Compact);
 
         MenuStyle mid = MenuStyle.Lerp(a, b, 0.5)!;
         MenuStyle late = MenuStyle.Lerp(a, b, 0.75)!;
 
-        Assert.Equal(127, mid.BackgroundColor!.Resolve(MaterialState.None)!.Value.R);
-        Assert.Equal(SystemMouseCursors.Click, mid.MouseCursor!.Resolve(MaterialState.None));
+        Assert.Equal(127, mid.BackgroundColor!.Resolve(new HashSet<WidgetState>())!.Value.R);
+        Assert.Equal(SystemMouseCursors.Click, mid.MouseCursor!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(VisualDensity.Compact, late.VisualDensity);
     }
 
@@ -585,7 +585,7 @@ public sealed class MaterialMenuAnchorTests
     [Fact]
     public void MenuBarThemeData_ExtendsMenuThemeDataButNeverComparesEqualToIt()
     {
-        var style = new MenuStyle(elevation: MaterialStateProperty<double?>.All(3.0));
+        var style = new MenuStyle(elevation: WidgetStateProperty<double?>.All(3.0));
         var bar = new MenuBarThemeData(style);
 
         // Dart declares `MenuBarThemeData extends MenuThemeData` but keeps `MenuThemeData`'s

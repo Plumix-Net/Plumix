@@ -213,15 +213,15 @@ public class SearchAnchor : StatefulWidget
         Action<string>? onChanged = null,
         Action? onClose = null,
         Action? onOpen = null,
-        MaterialStateProperty<double?>? barElevation = null,
-        MaterialStateProperty<Color?>? barBackgroundColor = null,
-        MaterialStateProperty<Color?>? barOverlayColor = null,
-        MaterialStateProperty<BorderSide?>? barSide = null,
-        MaterialStateProperty<OutlinedBorder?>? barShape = null,
-        MaterialStateProperty<EdgeInsetsGeometry?>? barPadding = null,
+        WidgetStateProperty<double?>? barElevation = null,
+        WidgetStateProperty<Color?>? barBackgroundColor = null,
+        WidgetStateProperty<Color?>? barOverlayColor = null,
+        WidgetStateProperty<BorderSide?>? barSide = null,
+        WidgetStateProperty<OutlinedBorder?>? barShape = null,
+        WidgetStateProperty<EdgeInsetsGeometry?>? barPadding = null,
         EdgeInsetsGeometry? viewBarPadding = null,
-        MaterialStateProperty<TextStyle?>? barTextStyle = null,
-        MaterialStateProperty<TextStyle?>? barHintStyle = null,
+        WidgetStateProperty<TextStyle?>? barTextStyle = null,
+        WidgetStateProperty<TextStyle?>? barHintStyle = null,
         ViewBuilder? viewBuilder = null,
         Widget? viewLeading = null,
         IReadOnlyList<Widget>? viewTrailing = null,
@@ -270,7 +270,7 @@ public class SearchAnchor : StatefulWidget
                 side: barSide,
                 shape: barShape,
                 padding: barPadding
-                         ?? MaterialStateProperty<EdgeInsetsGeometry?>.All(
+                         ?? WidgetStateProperty<EdgeInsetsGeometry?>.All(
                              EdgeInsetsGeometry.Symmetric(horizontal: 16.0)),
                 leading: barLeading ?? new Icon(Icons.Search),
                 trailing: barTrailing,
@@ -1021,15 +1021,15 @@ internal sealed class SearchViewContent : StatefulWidget
                 constraints: headerConstraints ?? (Current.ShowFullScreenView
                     ? new BoxConstraints(MinHeight: SearchViewDefaultsM3.FullScreenBarHeight)
                     : null),
-                padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(effectiveBarPadding),
+                padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(effectiveBarPadding),
                 leading: Current.ViewLeading ?? defaultLeading,
                 trailing: Current.ViewTrailing ?? defaultTrailing,
                 hintText: Current.ViewHintText,
-                backgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                overlayColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-                elevation: MaterialStateProperty<double?>.All(0.0),
-                textStyle: MaterialStateProperty<TextStyle?>.All(effectiveTextStyle),
-                hintStyle: MaterialStateProperty<TextStyle?>.All(effectiveHintStyle),
+                backgroundColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+                overlayColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+                elevation: WidgetStateProperty<double?>.All(0.0),
+                textStyle: WidgetStateProperty<TextStyle?>.All(effectiveTextStyle),
+                hintStyle: WidgetStateProperty<TextStyle?>.All(effectiveHintStyle),
                 onChanged: value =>
                 {
                     Current.ViewOnChanged?.Invoke(value);
@@ -1159,16 +1159,16 @@ public sealed class SearchBar : StatefulWidget
         Action<string>? onChanged = null,
         Action<string>? onSubmitted = null,
         BoxConstraints? constraints = null,
-        MaterialStateProperty<double?>? elevation = null,
-        MaterialStateProperty<Color?>? backgroundColor = null,
-        MaterialStateProperty<Color?>? shadowColor = null,
-        MaterialStateProperty<Color?>? surfaceTintColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<OutlinedBorder?>? shape = null,
-        MaterialStateProperty<EdgeInsetsGeometry?>? padding = null,
-        MaterialStateProperty<TextStyle?>? textStyle = null,
-        MaterialStateProperty<TextStyle?>? hintStyle = null,
+        WidgetStateProperty<double?>? elevation = null,
+        WidgetStateProperty<Color?>? backgroundColor = null,
+        WidgetStateProperty<Color?>? shadowColor = null,
+        WidgetStateProperty<Color?>? surfaceTintColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<OutlinedBorder?>? shape = null,
+        WidgetStateProperty<EdgeInsetsGeometry?>? padding = null,
+        WidgetStateProperty<TextStyle?>? textStyle = null,
+        WidgetStateProperty<TextStyle?>? hintStyle = null,
         TextCapitalization? textCapitalization = null,
         bool enabled = true,
         bool autoFocus = false,
@@ -1223,16 +1223,16 @@ public sealed class SearchBar : StatefulWidget
     public Action<string>? OnChanged { get; }
     public Action<string>? OnSubmitted { get; }
     public BoxConstraints? Constraints { get; }
-    public MaterialStateProperty<double?>? Elevation { get; }
-    public MaterialStateProperty<Color?>? BackgroundColor { get; }
-    public MaterialStateProperty<Color?>? ShadowColor { get; }
-    public MaterialStateProperty<Color?>? SurfaceTintColor { get; }
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
-    public MaterialStateProperty<BorderSide?>? Side { get; }
-    public MaterialStateProperty<OutlinedBorder?>? Shape { get; }
-    public MaterialStateProperty<EdgeInsetsGeometry?>? Padding { get; }
-    public MaterialStateProperty<TextStyle?>? TextStyle { get; }
-    public MaterialStateProperty<TextStyle?>? HintStyle { get; }
+    public WidgetStateProperty<double?>? Elevation { get; }
+    public WidgetStateProperty<Color?>? BackgroundColor { get; }
+    public WidgetStateProperty<Color?>? ShadowColor { get; }
+    public WidgetStateProperty<Color?>? SurfaceTintColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<BorderSide?>? Side { get; }
+    public WidgetStateProperty<OutlinedBorder?>? Shape { get; }
+    public WidgetStateProperty<EdgeInsetsGeometry?>? Padding { get; }
+    public WidgetStateProperty<TextStyle?>? TextStyle { get; }
+    public WidgetStateProperty<TextStyle?>? HintStyle { get; }
     public TextCapitalization? TextCapitalization { get; }
     public bool Enabled { get; }
     public bool AutoFocus { get; }
@@ -1251,7 +1251,7 @@ public sealed class SearchBar : StatefulWidget
 
     private sealed class SearchBarState : State
     {
-        private readonly MaterialStatesController _internalStatesController = new();
+        private readonly WidgetStatesController _internalStatesController = new();
         private FocusNode? _internalFocusNode;
         private FocusNode? _attachedFocusNode;
 
@@ -1290,7 +1290,7 @@ public sealed class SearchBar : StatefulWidget
             var theme = Theme.Of(context);
             SearchBarThemeData searchBarTheme = SearchBarTheme.Of(context);
             SearchBarThemeData defaults = SearchBarDefaultsM3.Resolve(theme);
-            MaterialState states = _internalStatesController.Value;
+            IReadOnlySet<WidgetState> states = _internalStatesController.Value;
 
             TextStyle? effectiveTextStyle = Resolve(
                 CurrentWidget.TextStyle, searchBarTheme.TextStyle, defaults.TextStyle, states);
@@ -1310,7 +1310,7 @@ public sealed class SearchBar : StatefulWidget
                 searchBarTheme.SurfaceTintColor,
                 defaults.SurfaceTintColor,
                 states)!.Value;
-            MaterialStateProperty<Color?>? effectiveOverlayColor =
+            WidgetStateProperty<Color?>? effectiveOverlayColor =
                 CurrentWidget.OverlayColor ?? searchBarTheme.OverlayColor ?? defaults.OverlayColor;
             BorderSide? effectiveSide = Resolve(CurrentWidget.Side, searchBarTheme.Side, defaults.Side, states);
             OutlinedBorder? effectiveShape = Resolve(
@@ -1413,17 +1413,17 @@ public sealed class SearchBar : StatefulWidget
         }
 
         private static T? Resolve<T>(
-            MaterialStateProperty<T?>? widgetValue,
-            MaterialStateProperty<T?>? themeValue,
-            MaterialStateProperty<T?>? defaultValue,
-            MaterialState states)
+            WidgetStateProperty<T?>? widgetValue,
+            WidgetStateProperty<T?>? themeValue,
+            WidgetStateProperty<T?>? defaultValue,
+            IReadOnlySet<WidgetState> states)
         {
             return ResolveProperty(widgetValue, states)
                    ?? ResolveProperty(themeValue, states)
                    ?? ResolveProperty(defaultValue, states);
         }
 
-        private static T? ResolveProperty<T>(MaterialStateProperty<T?>? property, MaterialState states)
+        private static T? ResolveProperty<T>(WidgetStateProperty<T?>? property, IReadOnlySet<WidgetState> states)
         {
             return property is null ? default : property.Resolve(states);
         }
@@ -1433,12 +1433,12 @@ public sealed class SearchBar : StatefulWidget
             _attachedFocusNode?.RemoveListener(HandleFocusChanged);
             _attachedFocusNode = FocusNodeInstance;
             _attachedFocusNode.AddListener(HandleFocusChanged);
-            _internalStatesController.Update(MaterialState.Focused, _attachedFocusNode.HasFocus);
+            _internalStatesController.Update(WidgetState.Focused, _attachedFocusNode.HasFocus);
         }
 
         private void HandleFocusChanged()
         {
-            _internalStatesController.Update(MaterialState.Focused, _attachedFocusNode?.HasFocus == true);
+            _internalStatesController.Update(WidgetState.Focused, _attachedFocusNode?.HasFocus == true);
         }
 
         private void HandleStatesChanged()
@@ -1456,34 +1456,34 @@ internal static class SearchBarDefaultsM3
     public static SearchBarThemeData Resolve(ThemeData theme)
     {
         return new SearchBarThemeData(
-            Elevation: MaterialStateProperty<double?>.All(6.0),
-            BackgroundColor: MaterialStateProperty<Color?>.All(theme.ColorScheme.SurfaceContainerHigh),
-            ShadowColor: MaterialStateProperty<Color?>.All(theme.ShadowColor),
-            SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            Elevation: WidgetStateProperty<double?>.All(6.0),
+            BackgroundColor: WidgetStateProperty<Color?>.All(theme.ColorScheme.SurfaceContainerHigh),
+            ShadowColor: WidgetStateProperty<Color?>.All(theme.ShadowColor),
+            SurfaceTintColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Pressed))
+                if (states.Contains(WidgetState.Pressed))
                 {
                     return theme.ColorScheme.OnSurface.WithOpacity(0.1);
                 }
 
-                if (states.HasFlag(MaterialState.Hovered))
+                if (states.Contains(WidgetState.Hovered))
                 {
                     return theme.ColorScheme.OnSurface.WithOpacity(0.08);
                 }
 
-                if (states.HasFlag(MaterialState.Focused))
+                if (states.Contains(WidgetState.Focused))
                 {
                     return Colors.Transparent;
                 }
 
                 return Colors.Transparent;
             }),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(EdgeInsetsGeometry.Symmetric(horizontal: 8.0)),
-            TextStyle: MaterialStateProperty<TextStyle?>.All(
+            Shape: WidgetStateProperty<OutlinedBorder?>.All(new StadiumBorder()),
+            Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(EdgeInsetsGeometry.Symmetric(horizontal: 8.0)),
+            TextStyle: WidgetStateProperty<TextStyle?>.All(
                 theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurface)),
-            HintStyle: MaterialStateProperty<TextStyle?>.All(
+            HintStyle: WidgetStateProperty<TextStyle?>.All(
                 theme.TextTheme.BodyLarge.CopyWith(color: theme.ColorScheme.OnSurfaceVariant)),
             Constraints: new BoxConstraints(MinWidth: 360.0, MaxWidth: 800.0, MinHeight: 56.0),
             TextCapitalization: TextCapitalization.None);

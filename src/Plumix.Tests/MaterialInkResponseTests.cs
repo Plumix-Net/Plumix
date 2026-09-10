@@ -482,7 +482,7 @@ public sealed class MaterialInkResponseTests : IDisposable
     public void InkWell_PrimaryTapCallbacksAndStatesControllerFollowGestureLifecycle()
     {
         var events = new List<string>();
-        var states = new MaterialStatesController();
+        var states = new WidgetStatesController();
         using var harness = CreateHarness(new InkWell(
             statesController: states,
             onTapDown: _ => events.Add("down"),
@@ -495,11 +495,11 @@ public sealed class MaterialInkResponseTests : IDisposable
         var now = DateTime.UtcNow;
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(
             701, PointerDeviceKind.Mouse, new Point(20, 20), PointerButtons.Primary, now));
-        Assert.True(states.Value.HasFlag(MaterialState.Pressed));
+        Assert.True(states.Value.Contains(WidgetState.Pressed));
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerUpEvent(
             701, PointerDeviceKind.Mouse, new Point(20, 20), PointerButtons.None, now.AddMilliseconds(20)));
 
-        Assert.False(states.Value.HasFlag(MaterialState.Pressed));
+        Assert.False(states.Value.Contains(WidgetState.Pressed));
         Assert.Equal(["highlight-on", "down", "up", "highlight-off", "tap"], events);
     }
 
@@ -529,12 +529,12 @@ public sealed class MaterialInkResponseTests : IDisposable
     {
         var hovered = Color.Parse("#2200FF00");
         var pressed = Color.Parse("#330000FF");
-        var controller = new MaterialStatesController();
+        var controller = new WidgetStatesController();
         using var harness = CreateHarness(new InkResponse(
             statesController: controller,
-            overlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Pressed) ? pressed
-                : states.HasFlag(MaterialState.Hovered) ? hovered
+            overlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Pressed) ? pressed
+                : states.Contains(WidgetState.Hovered) ? hovered
                 : null),
             onTap: () => { },
             child: new SizedBox(width: 80, height: 48)));
@@ -545,7 +545,7 @@ public sealed class MaterialInkResponseTests : IDisposable
         hoverListener.OnEnter?.Invoke(new PointerEnterEvent(
             703, PointerDeviceKind.Mouse, new Point(10, 10), PointerButtons.None, DateTime.UtcNow));
         harness.Pump(new Size(120, 80));
-        Assert.True(controller.Value.HasFlag(MaterialState.Hovered));
+        Assert.True(controller.Value.Contains(WidgetState.Hovered));
         Assert.Equal(hovered, Assert.Single(FindDescendants<RenderInkResponsePaint>(harness.RenderView)).HighlightColor);
 
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, new PointerDownEvent(

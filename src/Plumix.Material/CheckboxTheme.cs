@@ -8,29 +8,11 @@ namespace Plumix.Material;
 
 // Dart parity source: material_ui/lib/src/checkbox_theme.dart
 
-// `WidgetStateMouseCursor` and `WidgetStateBorderSide` moved to the core widgets library
-// (`src/Plumix/Widgets/WidgetState.cs`), where Flutter declares them; these extensions keep
-// Material's `[Flags] MaterialState` call sites working against the core set-based resolvers.
-public static class WidgetStateMaterialExtensions
-{
-    public static BorderSide? Resolve(this WidgetStateBorderSide side, MaterialState states)
-    {
-        ArgumentNullException.ThrowIfNull(side);
-        return side.Resolve(MaterialStateSet.Of(states));
-    }
-
-    public static MouseCursor? Resolve(this WidgetStateMouseCursor cursor, MaterialState states)
-    {
-        ArgumentNullException.ThrowIfNull(cursor);
-        return cursor.Resolve(MaterialStateSet.Of(states));
-    }
-}
-
 public sealed partial record CheckboxThemeData(
-    MaterialStateProperty<MouseCursor?>? MouseCursor = null,
-    MaterialStateProperty<Color?>? FillColor = null,
-    MaterialStateProperty<Color?>? CheckColor = null,
-    MaterialStateProperty<Color?>? OverlayColor = null,
+    WidgetStateProperty<MouseCursor?>? MouseCursor = null,
+    WidgetStateProperty<Color?>? FillColor = null,
+    WidgetStateProperty<Color?>? CheckColor = null,
+    WidgetStateProperty<Color?>? OverlayColor = null,
     double? SplashRadius = null,
     MaterialTapTargetSize? MaterialTapTargetSize = null,
     VisualDensity? VisualDensity = null,
@@ -38,10 +20,10 @@ public sealed partial record CheckboxThemeData(
     WidgetStateBorderSide? Side = null)
 {
     public CheckboxThemeData CopyWith(
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
-        MaterialStateProperty<Color?>? fillColor = null,
-        MaterialStateProperty<Color?>? checkColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
+        WidgetStateProperty<Color?>? checkColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,

@@ -109,11 +109,11 @@ public sealed class MaterialSearchTests : IDisposable
         var theme = ThemeData.Light with
         {
             SearchBarTheme = new SearchBarThemeData(
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.LightBlue),
-                Elevation: MaterialStateProperty<double?>.All(2),
-                Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                BackgroundColor: WidgetStateProperty<Color?>.All(Colors.LightBlue),
+                Elevation: WidgetStateProperty<double?>.All(2),
+                Shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     Plumix.Rendering.BorderRadius.Circular(12))),
-                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(
+                Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(
                     EdgeInsetsGeometry.Symmetric(horizontal: 4)),
                 Constraints: new BoxConstraints(MinWidth: 240, MaxWidth: 300, MinHeight: 48))
         };
@@ -136,8 +136,8 @@ public sealed class MaterialSearchTests : IDisposable
         using var widgetOverride = new WidgetRenderHarness(Wrap(
             theme,
             new SearchBar(
-                backgroundColor: MaterialStateProperty<Color?>.All(Colors.Orange),
-                shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                backgroundColor: WidgetStateProperty<Color?>.All(Colors.Orange),
+                shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     Plumix.Rendering.BorderRadius.Circular(20))))));
         widgetOverride.Pump(new Size(500, 100));
         Plumix.Material.Material overriddenSurface = Assert.Single(
@@ -155,7 +155,7 @@ public sealed class MaterialSearchTests : IDisposable
             ThemeData.Light,
             new SearchBar(
                 hintText: "hint",
-                textStyle: MaterialStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Purple)))));
+                textStyle: WidgetStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Purple)))));
         fallback.Pump(new Size(900, 120));
         TextField fallbackField = Assert.Single(fallback.FindWidgets<TextField>());
         Assert.Equal(Colors.Purple, fallbackField.Decoration?.HintStyle?.DefaultValue.Color);
@@ -164,8 +164,8 @@ public sealed class MaterialSearchTests : IDisposable
             ThemeData.Light,
             new SearchBar(
                 hintText: "hint",
-                textStyle: MaterialStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Purple)),
-                hintStyle: MaterialStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Green)))));
+                textStyle: WidgetStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Purple)),
+                hintStyle: WidgetStateProperty<TextStyle?>.All(new TextStyle(Color: Colors.Green)))));
         overridden.Pump(new Size(900, 120));
         TextField overriddenField = Assert.Single(overridden.FindWidgets<TextField>());
         Assert.Equal(Colors.Green, overriddenField.Decoration?.HintStyle?.DefaultValue.Color);
@@ -595,7 +595,7 @@ public sealed class MaterialSearchTests : IDisposable
     [Fact]
     public void SearchThemes_LerpFollowsSourceQuirks()
     {
-        var barTheme = new SearchBarThemeData(Elevation: MaterialStateProperty<double?>.All(3));
+        var barTheme = new SearchBarThemeData(Elevation: WidgetStateProperty<double?>.All(3));
         Assert.Same(barTheme, SearchBarThemeData.Lerp(barTheme, barTheme, 0.3));
 
         var viewTheme = new SearchViewThemeData(Elevation: 1);

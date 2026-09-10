@@ -52,8 +52,8 @@ public sealed class DropdownMenuTheme : InheritedTheme
             TextStyle: theme.TextTheme.BodyLarge,
             InputDecorationTheme: new InputDecorationThemeData(border: new OutlineInputBorder()),
             MenuStyle: new MenuStyle(
-                minimumSize: MaterialStateProperty<Size?>.All(new Size(112.0, 0.0)),
-                maximumSize: MaterialStateProperty<Size?>.All(
+                minimumSize: WidgetStateProperty<Size?>.All(new Size(112.0, 0.0)),
+                maximumSize: WidgetStateProperty<Size?>.All(
                     new Size(double.PositiveInfinity, double.PositiveInfinity)),
                 visualDensity: VisualDensity.Standard),
             DisabledColor: theme.ColorScheme.OnSurface.WithOpacity(0.38));

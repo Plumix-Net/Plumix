@@ -402,7 +402,7 @@ public sealed class MaterialCheckboxTests
                 data: ThemeData.Light with
                 {
                     CheckboxTheme = new CheckboxThemeData(
-                        FillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+                        FillColor: WidgetStateProperty<Color?>.All(Colors.MediumPurple))
                 },
                 child: new Checkbox(
                     value: true,
@@ -425,11 +425,11 @@ public sealed class MaterialCheckboxTests
                 data: ThemeData.Light with
                 {
                     CheckboxTheme = new CheckboxThemeData(
-                        FillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+                        FillColor: WidgetStateProperty<Color?>.All(Colors.MediumPurple))
                 },
                 child: new Checkbox(
                     value: true,
-                    fillColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen),
+                    fillColor: WidgetStateProperty<Color?>.All(Colors.ForestGreen),
                     onChanged: _ => { })));
 
         root.Attach(owner);
@@ -574,7 +574,7 @@ public sealed class MaterialCheckboxTests
                 child: Checkbox.Adaptive(
                     value: true,
                     activeColor: Colors.Orange,
-                    fillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple),
+                    fillColor: WidgetStateProperty<Color?>.All(Colors.MediumPurple),
                     onChanged: _ => { })));
 
         root.Attach(owner);
@@ -942,7 +942,7 @@ public sealed class MaterialCheckboxTests
                 child: new Checkbox(
                     value: false,
                     onChanged: _ => { },
-                    fillColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen))));
+                    fillColor: WidgetStateProperty<Color?>.All(Colors.ForestGreen))));
 
         root.Attach(owner);
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
@@ -977,10 +977,10 @@ public sealed class MaterialCheckboxTests
     public void CheckboxThemeData_CopyWithAndLerp_CoverEveryField()
     {
         var first = new CheckboxThemeData(
-            MouseCursor: MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
-            FillColor: MaterialStateProperty<Color?>.All(Colors.Black),
-            CheckColor: MaterialStateProperty<Color?>.All(Colors.Red),
-            OverlayColor: MaterialStateProperty<Color?>.All(Colors.Blue),
+            MouseCursor: WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
+            FillColor: WidgetStateProperty<Color?>.All(Colors.Black),
+            CheckColor: WidgetStateProperty<Color?>.All(Colors.Red),
+            OverlayColor: WidgetStateProperty<Color?>.All(Colors.Blue),
             SplashRadius: 10,
             MaterialTapTargetSize: MaterialTapTargetSize.Padded,
             VisualDensity: VisualDensity.Compact,
@@ -993,10 +993,10 @@ public sealed class MaterialCheckboxTests
         Assert.Equal(first.Shape, copied.Shape);
 
         var second = new CheckboxThemeData(
-            MouseCursor: MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Click),
-            FillColor: MaterialStateProperty<Color?>.All(Colors.White),
-            CheckColor: MaterialStateProperty<Color?>.All(Colors.Blue),
-            OverlayColor: MaterialStateProperty<Color?>.All(Colors.Red),
+            MouseCursor: WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Click),
+            FillColor: WidgetStateProperty<Color?>.All(Colors.White),
+            CheckColor: WidgetStateProperty<Color?>.All(Colors.Blue),
+            OverlayColor: WidgetStateProperty<Color?>.All(Colors.Red),
             SplashRadius: 20,
             MaterialTapTargetSize: MaterialTapTargetSize.ShrinkWrap,
             VisualDensity: VisualDensity.Standard,
@@ -1009,7 +1009,7 @@ public sealed class MaterialCheckboxTests
         Assert.Equal(MaterialTapTargetSize.ShrinkWrap, midpoint.MaterialTapTargetSize);
         Assert.Equal(VisualDensity.Standard, midpoint.VisualDensity);
         Assert.Equal(4, ShapeBorderGeometry.ResolveRadius(midpoint.Shape).Radius);
-        Assert.Equal(3, midpoint.Side!.Resolve(MaterialState.None)!.Value.Width);
+        Assert.Equal(3, midpoint.Side!.Resolve(new HashSet<WidgetState>())!.Value.Width);
     }
 
     [Fact]

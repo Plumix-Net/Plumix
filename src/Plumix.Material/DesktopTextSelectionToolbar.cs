@@ -114,7 +114,7 @@ public sealed class DesktopTextSelectionToolbarButton : StatelessWidget
             minimumSize: new Size(48.0, 36.0),
             padding: ToolbarButtonPadding) with
         {
-            MouseCursor = MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
+            MouseCursor = WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Basic),
         };
 
         return new SizedBox(

@@ -295,19 +295,19 @@ public sealed class RawMaterialButton : StatefulWidget
         public override void InitState()
         {
             base.InitState();
-            SetMaterialState(MaterialState.Disabled, !CurrentWidget.Enabled);
+            SetMaterialState(WidgetState.Disabled, !CurrentWidget.Enabled);
         }
 
         public override void DidUpdateWidget(StatefulWidget oldWidget)
         {
             base.DidUpdateWidget(oldWidget);
-            SetMaterialState(MaterialState.Disabled, !CurrentWidget.Enabled);
+            SetMaterialState(WidgetState.Disabled, !CurrentWidget.Enabled);
             // If the button is disabled while a press gesture is currently ongoing, InkWell makes a
             // call to handleHighlightChanged. This causes an exception because it calls setState in
             // the middle of a build. To preempt this, manually clear pressed when that happens.
             if (IsDisabled && IsPressed)
             {
-                RemoveMaterialState(MaterialState.Pressed);
+                RemoveMaterialState(WidgetState.Pressed);
             }
         }
 
@@ -378,16 +378,16 @@ public sealed class RawMaterialButton : StatefulWidget
                     child: new InkWell(
                         focusNode: widget.FocusNode,
                         canRequestFocus: widget.Enabled,
-                        onFocusChange: UpdateMaterialState(MaterialState.Focused),
+                        onFocusChange: UpdateMaterialState(WidgetState.Focused),
                         autofocus: widget.Autofocus,
                         onHighlightChanged: UpdateMaterialState(
-                            MaterialState.Pressed,
+                            WidgetState.Pressed,
                             onChanged: widget.OnHighlightChanged),
                         splashColor: widget.SplashColor,
                         highlightColor: widget.HighlightColor,
                         focusColor: widget.FocusColor,
                         hoverColor: widget.HoverColor,
-                        onHover: UpdateMaterialState(MaterialState.Hovered),
+                        onHover: UpdateMaterialState(WidgetState.Hovered),
                         onTap: widget.OnPressed,
                         onLongPress: widget.OnLongPress,
                         enableFeedback: widget.EnableFeedback,
@@ -421,7 +421,7 @@ public sealed class RawMaterialButton : StatefulWidget
         {
             MouseCursor source = cursor ?? WidgetStateMouseCursor.AdaptiveClickable;
             return source is WidgetStateMouseCursor stateful
-                ? stateful.Resolve(MaterialStateSet.Of(MaterialStates)) ?? SystemMouseCursors.Basic
+                ? stateful.Resolve(MaterialStates) ?? SystemMouseCursors.Basic
                 : source;
         }
     }

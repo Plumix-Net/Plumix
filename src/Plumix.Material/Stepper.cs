@@ -575,18 +575,18 @@ public sealed class Stepper : StatefulWidget
                 ? Color.FromArgb(0xB3, 0xFF, 0xFF, 0xFF)
                 : Color.FromArgb(0x8A, 0, 0, 0);
             var continueStyle = new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled)
+                ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Disabled)
                         ? null
                         : theme.Brightness == Brightness.Dark
                             ? theme.ColorScheme.OnSurface
                             : theme.ColorScheme.OnPrimary),
-                BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Disabled) || theme.Brightness == Brightness.Dark
+                BackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Disabled) || theme.Brightness == Brightness.Dark
                         ? null
                         : theme.ColorScheme.Primary),
-                Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(new Thickness(16, 0)),
-                Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
+                Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(new Thickness(16, 0)),
+                Shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder(borderRadius:
                     BorderRadius.Circular(2))));
             return new Padding(
                 new Thickness(0, 16, 0, 0),

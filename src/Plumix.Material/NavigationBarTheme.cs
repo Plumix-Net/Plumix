@@ -16,10 +16,10 @@ public sealed record NavigationBarThemeData(
     Color? SurfaceTintColor = null,
     Color? IndicatorColor = null,
     ShapeBorder? IndicatorShape = null,
-    MaterialStateProperty<TextStyle?>? LabelTextStyle = null,
-    MaterialStateProperty<IconThemeData?>? IconTheme = null,
+    WidgetStateProperty<TextStyle?>? LabelTextStyle = null,
+    WidgetStateProperty<IconThemeData?>? IconTheme = null,
     NavigationDestinationLabelBehavior? LabelBehavior = null,
-    MaterialStateProperty<Color?>? OverlayColor = null,
+    WidgetStateProperty<Color?>? OverlayColor = null,
     Thickness? LabelPadding = null)
 {
     public NavigationBarThemeData CopyWith(
@@ -30,10 +30,10 @@ public sealed record NavigationBarThemeData(
         Color? surfaceTintColor = null,
         Color? indicatorColor = null,
         ShapeBorder? indicatorShape = null,
-        MaterialStateProperty<TextStyle?>? labelTextStyle = null,
-        MaterialStateProperty<IconThemeData?>? iconTheme = null,
+        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
+        WidgetStateProperty<IconThemeData?>? iconTheme = null,
         NavigationDestinationLabelBehavior? labelBehavior = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         Thickness? labelPadding = null)
     {
         return new NavigationBarThemeData(

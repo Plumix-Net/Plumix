@@ -205,12 +205,12 @@ public sealed class MaterialSwitchTests
             ThemeData.Light,
             new SwitchTheme(
                 data: new SwitchThemeData(
-                    ThumbColor: MaterialStateProperty<Color?>.All(Colors.Olive)),
+                    ThumbColor: WidgetStateProperty<Color?>.All(Colors.Olive)),
                 child: new Switch(
                     value: true,
                     onChanged: _ => { },
                     activeThumbColor: Colors.Teal,
-                    thumbColor: MaterialStateProperty<Color?>.All(Colors.Crimson))));
+                    thumbColor: WidgetStateProperty<Color?>.All(Colors.Crimson))));
 
         Assert.Equal(Colors.Crimson, painter.ActiveColor);
     }
@@ -222,7 +222,7 @@ public sealed class MaterialSwitchTests
             ThemeData.Light,
             new SwitchTheme(
                 data: new SwitchThemeData(
-                    ThumbColor: MaterialStateProperty<Color?>.All(Colors.Olive)),
+                    ThumbColor: WidgetStateProperty<Color?>.All(Colors.Olive)),
                 child: new Switch(true, _ => { })));
 
         Assert.Equal(Colors.Olive, painter.ActiveColor);
@@ -235,11 +235,11 @@ public sealed class MaterialSwitchTests
             ThemeData.Light,
             new SwitchTheme(
                 data: new SwitchThemeData(
-                    TrackColor: MaterialStateProperty<Color?>.All(Colors.Olive)),
+                    TrackColor: WidgetStateProperty<Color?>.All(Colors.Olive)),
                 child: new Switch(
                     value: true,
                     onChanged: _ => { },
-                    trackColor: MaterialStateProperty<Color?>.All(Colors.Crimson))));
+                    trackColor: WidgetStateProperty<Color?>.All(Colors.Crimson))));
 
         Assert.Equal(Colors.Crimson, painter.ActiveTrackColor);
     }
@@ -264,12 +264,12 @@ public sealed class MaterialSwitchTests
             ThemeData.Light,
             new SwitchTheme(
                 data: new SwitchThemeData(
-                    TrackOutlineColor: MaterialStateProperty<Color?>.ResolveWith(
-                        states => states.HasFlag(MaterialState.Selected)
+                    TrackOutlineColor: WidgetStateProperty<Color?>.ResolveWith(
+                        states => states.Contains(WidgetState.Selected)
                             ? Colors.Indigo
                             : Colors.Maroon),
-                    TrackOutlineWidth: MaterialStateProperty<double?>.ResolveWith(
-                        states => states.HasFlag(MaterialState.Selected) ? 1.0 : 3.0)),
+                    TrackOutlineWidth: WidgetStateProperty<double?>.ResolveWith(
+                        states => states.Contains(WidgetState.Selected) ? 1.0 : 3.0)),
                 child: new Switch(false, _ => { })));
 
         Assert.Equal(Colors.Maroon, themed.InactiveTrackOutlineColor);
@@ -281,13 +281,13 @@ public sealed class MaterialSwitchTests
             ThemeData.Light,
             new SwitchTheme(
                 data: new SwitchThemeData(
-                    TrackOutlineColor: MaterialStateProperty<Color?>.All(Colors.Maroon),
-                    TrackOutlineWidth: MaterialStateProperty<double?>.All(3.0)),
+                    TrackOutlineColor: WidgetStateProperty<Color?>.All(Colors.Maroon),
+                    TrackOutlineWidth: WidgetStateProperty<double?>.All(3.0)),
                 child: new Switch(
                     value: false,
                     onChanged: _ => { },
-                    trackOutlineColor: MaterialStateProperty<Color?>.All(Colors.Lime),
-                    trackOutlineWidth: MaterialStateProperty<double?>.All(6.0))));
+                    trackOutlineColor: WidgetStateProperty<Color?>.All(Colors.Lime),
+                    trackOutlineWidth: WidgetStateProperty<double?>.All(6.0))));
 
         Assert.Equal(Colors.Lime, overridden.InactiveTrackOutlineColor);
         Assert.Equal(6.0, overridden.InactiveTrackOutlineWidth);
@@ -383,8 +383,8 @@ public sealed class MaterialSwitchTests
             new Switch(
                 value: true,
                 onChanged: _ => { },
-                thumbIcon: MaterialStateProperty<Icon?>.ResolveWith(
-                    states => states.HasFlag(MaterialState.Selected) ? activeIcon : inactiveIcon)));
+                thumbIcon: WidgetStateProperty<Icon?>.ResolveWith(
+                    states => states.Contains(WidgetState.Selected) ? activeIcon : inactiveIcon)));
 
         Assert.Same(activeIcon, painter.ActiveIcon);
         Assert.Same(inactiveIcon, painter.InactiveIcon);
@@ -493,8 +493,8 @@ public sealed class MaterialSwitchTests
     public void Switch_AdaptiveApple_IgnoresAmbientSwitchThemeButNonAppleDoesNot()
     {
         var themeData = new SwitchThemeData(
-            ThumbColor: MaterialStateProperty<Color?>.All(Colors.Brown),
-            TrackColor: MaterialStateProperty<Color?>.All(Colors.Yellow));
+            ThumbColor: WidgetStateProperty<Color?>.All(Colors.Brown),
+            TrackColor: WidgetStateProperty<Color?>.All(Colors.Yellow));
 
         SwitchPainter apple = MountAndFindPainter(
             new ThemeData(platform: TargetPlatform.IOS),
@@ -513,8 +513,8 @@ public sealed class MaterialSwitchTests
     public void Switch_AdaptiveApple_HonorsACustomSwitchThemeDataAdaptation()
     {
         var localTheme = new SwitchThemeData(
-            ThumbColor: MaterialStateProperty<Color?>.All(Colors.Brown),
-            TrackColor: MaterialStateProperty<Color?>.All(Colors.Yellow));
+            ThumbColor: WidgetStateProperty<Color?>.All(Colors.Brown),
+            TrackColor: WidgetStateProperty<Color?>.All(Colors.Yellow));
 
         SwitchPainter apple = MountAndFindPainter(
             new ThemeData(
@@ -801,9 +801,9 @@ public sealed class MaterialSwitchTests
                 child: new Switch(
                     value: true,
                     onChanged: _ => { },
-                    thumbIcon: MaterialStateProperty<Icon?>.All(new Icon(Icons.Check)),
-                    trackOutlineColor: MaterialStateProperty<Color?>.All(Colors.Indigo),
-                    trackOutlineWidth: MaterialStateProperty<double?>.All(3.0))),
+                    thumbIcon: WidgetStateProperty<Icon?>.All(new Icon(Icons.Check)),
+                    trackOutlineColor: WidgetStateProperty<Color?>.All(Colors.Indigo),
+                    trackOutlineWidth: WidgetStateProperty<double?>.All(3.0))),
         ];
 
         foreach (Widget widget in cases)
@@ -849,8 +849,8 @@ public sealed class MaterialSwitchTests
             return theme.Platform switch
             {
                 TargetPlatform.IOS or TargetPlatform.MacOS => new SwitchThemeData(
-                    ThumbColor: MaterialStateProperty<Color?>.All(Plumix.Material.Colors.LightGreen.Shade500),
-                    TrackColor: MaterialStateProperty<Color?>.All(Plumix.Material.Colors.DeepPurple.Shade500)),
+                    ThumbColor: WidgetStateProperty<Color?>.All(Plumix.Material.Colors.LightGreen.Shade500),
+                    TrackColor: WidgetStateProperty<Color?>.All(Plumix.Material.Colors.DeepPurple.Shade500)),
                 _ => defaultValue,
             };
         }

@@ -304,12 +304,12 @@ public sealed class DropdownDemoPage : StatefulWidget
                             child: new MenuAnchor(
                                 controller: _outlinedMenuController,
                                 style: new MenuStyle(
-                                    side: MaterialStateProperty<BorderSide?>.All(
+                                    side: WidgetStateProperty<BorderSide?>.All(
                                         new BorderSide(Colors.MediumVioletRed, 2)),
                                     fixedSize: _outlinedMenuSized
-                                        ? MaterialStateProperty<Size?>.All(new Size(420, 200))
+                                        ? WidgetStateProperty<Size?>.All(new Size(420, 200))
                                         : null,
-                                    maximumSize: MaterialStateProperty<Size?>.All(new Size(220, 120))),
+                                    maximumSize: WidgetStateProperty<Size?>.All(new Size(220, 120))),
                                 menuChildren:
                                 [
                                     new MenuItemButton(child: new Text("Outlined one"), onPressed: () => { }),
@@ -333,17 +333,17 @@ public sealed class DropdownDemoPage : StatefulWidget
                             child: new MenuTheme(
                                 new MenuThemeData(
                                     style: new MenuStyle(
-                                        backgroundColor: MaterialStateProperty<Color?>.All(
+                                        backgroundColor: WidgetStateProperty<Color?>.All(
                                             Color.Parse("#FFFFF3E0"))),
-                                    submenuIcon: MaterialStateProperty<Widget?>.All(
+                                    submenuIcon: WidgetStateProperty<Widget?>.All(
                                         new Icon(Icons.InfoOutline))),
                                 new MenuBarTheme(
                                     new MenuBarThemeData(new MenuStyle(
-                                        backgroundColor: MaterialStateProperty<Color?>.All(
+                                        backgroundColor: WidgetStateProperty<Color?>.All(
                                             Color.Parse("#FFF3E5F5")))),
                                     new MenuButtonTheme(
                                     new MenuButtonThemeData(new ButtonStyle(
-                                        ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkSlateBlue))),
+                                        ForegroundColor: WidgetStateProperty<Color?>.All(Colors.DarkSlateBlue))),
                                     new CallbackShortcuts(
                                         bindings: new Dictionary<ShortcutActivator, Action>
                                         {
@@ -371,7 +371,7 @@ public sealed class DropdownDemoPage : StatefulWidget
                                         new MenuAcceleratorLabel("&File"),
                                         controller: _fileMenuController,
                                         style: new ButtonStyle(
-                                            ForegroundColor: MaterialStateProperty<Color?>.All(Colors.OrangeRed)),
+                                            ForegroundColor: WidgetStateProperty<Color?>.All(Colors.OrangeRed)),
                                         onOpen: () => SetState(() => _menuBarStatus = "file opened"),
                                         onClose: () => SetState(() => _menuBarStatus = "file closed")),
                                     new SubmenuButton(

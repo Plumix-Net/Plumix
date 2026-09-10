@@ -28,12 +28,12 @@ public sealed class FilterChip : StatelessWidget
         Color? disabledColor = null,
         Color? selectedColor = null,
         string? tooltip = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -75,12 +75,12 @@ public sealed class FilterChip : StatelessWidget
         Color? disabledColor,
         Color? selectedColor,
         string? tooltip,
-        MaterialStateProperty<BorderSide?>? side,
-        MaterialStateProperty<ShapeBorder?>? shape,
+        WidgetStateProperty<BorderSide?>? side,
+        WidgetStateProperty<ShapeBorder?>? shape,
         Clip clipBehavior,
         FocusNode? focusNode,
         bool autofocus,
-        MaterialStateProperty<Color?>? color,
+        WidgetStateProperty<Color?>? color,
         Color? backgroundColor,
         Thickness? padding,
         VisualDensity? visualDensity,
@@ -157,12 +157,12 @@ public sealed class FilterChip : StatelessWidget
         Color? disabledColor = null,
         Color? selectedColor = null,
         string? tooltip = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -204,12 +204,12 @@ public sealed class FilterChip : StatelessWidget
     public Color? DisabledColor { get; }
     public Color? SelectedColor { get; }
     public string? Tooltip { get; }
-    public MaterialStateProperty<BorderSide?>? Side { get; }
-    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
+    public WidgetStateProperty<BorderSide?>? Side { get; }
+    public WidgetStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
-    public MaterialStateProperty<Color?>? Color { get; }
+    public WidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Thickness? Padding { get; }
     public VisualDensity? VisualDensity { get; }
@@ -305,12 +305,12 @@ public sealed class InputChip : StatelessWidget
         Color? disabledColor = null,
         Color? selectedColor = null,
         string? tooltip = null,
-        MaterialStateProperty<BorderSide?>? side = null,
-        MaterialStateProperty<ShapeBorder?>? shape = null,
+        WidgetStateProperty<BorderSide?>? side = null,
+        WidgetStateProperty<ShapeBorder?>? shape = null,
         Clip clipBehavior = Clip.None,
         FocusNode? focusNode = null,
         bool autofocus = false,
-        MaterialStateProperty<Color?>? color = null,
+        WidgetStateProperty<Color?>? color = null,
         Color? backgroundColor = null,
         Thickness? padding = null,
         VisualDensity? visualDensity = null,
@@ -393,12 +393,12 @@ public sealed class InputChip : StatelessWidget
     public Color? DisabledColor { get; }
     public Color? SelectedColor { get; }
     public string? Tooltip { get; }
-    public MaterialStateProperty<BorderSide?>? Side { get; }
-    public MaterialStateProperty<ShapeBorder?>? Shape { get; }
+    public WidgetStateProperty<BorderSide?>? Side { get; }
+    public WidgetStateProperty<ShapeBorder?>? Shape { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
     public bool Autofocus { get; }
-    public MaterialStateProperty<Color?>? Color { get; }
+    public WidgetStateProperty<Color?>? Color { get; }
     public Color? BackgroundColor { get; }
     public Thickness? Padding { get; }
     public VisualDensity? VisualDensity { get; }

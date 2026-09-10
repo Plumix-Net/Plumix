@@ -25,15 +25,15 @@ public sealed class CheckboxListTile : StatelessWidget
         Action<bool?>? onChanged,
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
-        MaterialStateProperty<Color?>? fillColor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? hoverColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         bool autofocus = false,
         ShapeBorder? shape = null,
         WidgetStateBorderSide? side = null,
@@ -113,15 +113,15 @@ public sealed class CheckboxListTile : StatelessWidget
         Action<bool?>? onChanged,
         MouseCursor? mouseCursor,
         Color? activeColor,
-        MaterialStateProperty<Color?>? fillColor,
+        WidgetStateProperty<Color?>? fillColor,
         Color? checkColor,
         Color? hoverColor,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         double? splashRadius,
         MaterialTapTargetSize? materialTapTargetSize,
         VisualDensity? visualDensity,
         FocusNode? focusNode,
-        MaterialStatesController? statesController,
+        WidgetStatesController? statesController,
         bool autofocus,
         ShapeBorder? shape,
         WidgetStateBorderSide? side,
@@ -214,15 +214,15 @@ public sealed class CheckboxListTile : StatelessWidget
         Action<bool?>? onChanged,
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
-        MaterialStateProperty<Color?>? fillColor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? hoverColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         bool autofocus = false,
         ShapeBorder? shape = null,
         WidgetStateBorderSide? side = null,
@@ -309,8 +309,8 @@ public sealed class CheckboxListTile : StatelessWidget
     /// <summary>The color to use when this checkbox is checked.</summary>
     public Color? ActiveColor { get; }
 
-    /// <summary>The color that fills the checkbox, in all <see cref="MaterialState"/>s.</summary>
-    public MaterialStateProperty<Color?>? FillColor { get; }
+    /// <summary>The color that fills the checkbox, in all <see cref="WidgetState"/>s.</summary>
+    public WidgetStateProperty<Color?>? FillColor { get; }
 
     /// <summary>The color to use for the check icon when this checkbox is checked.</summary>
     public Color? CheckColor { get; }
@@ -319,7 +319,7 @@ public sealed class CheckboxListTile : StatelessWidget
     public Color? HoverColor { get; }
 
     /// <summary>The color for the checkbox's <see cref="Plumix.Material.Material"/>.</summary>
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
 
     /// <summary>The splash radius of the circular ink response.</summary>
     public double? SplashRadius { get; }
@@ -334,7 +334,7 @@ public sealed class CheckboxListTile : StatelessWidget
     public FocusNode? FocusNode { get; }
 
     /// <summary>Controls the interactive states of the backing <see cref="ListTile"/>.</summary>
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
 
     /// <summary>Whether this widget should focus itself if nothing else is already focused.</summary>
     public bool Autofocus { get; }
@@ -501,7 +501,9 @@ public sealed class CheckboxListTile : StatelessWidget
 
         ThemeData theme = Theme.Of(context);
         CheckboxThemeData checkboxTheme = CheckboxTheme.Of(context);
-        MaterialState states = Selected ? MaterialState.Selected : MaterialState.None;
+        IReadOnlySet<WidgetState> states = Selected
+            ? new HashSet<WidgetState> { WidgetState.Selected }
+            : new HashSet<WidgetState>();
         Color effectiveActiveColor = ActiveColor
                                      ?? checkboxTheme.FillColor?.Resolve(states)
                                      ?? theme.ColorScheme.Secondary;

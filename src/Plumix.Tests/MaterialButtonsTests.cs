@@ -150,7 +150,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void TextButton_ConstructorsExposeCallbacksStateAndSemanticSurface()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var focusNode = new FocusNode();
         bool longPressed = false;
         Action<bool> hover = _ => { };
@@ -207,7 +207,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void ElevatedButton_ConstructorsExposeCallbacksStateAndSemanticSurface()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var focusNode = new FocusNode();
         bool longPressed = false;
         Action<bool> hover = _ => { };
@@ -264,7 +264,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void OutlinedButton_ConstructorsExposeCallbacksStateAndSemanticSurface()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var focusNode = new FocusNode();
         bool longPressed = false;
         Action<bool> hover = _ => { };
@@ -442,7 +442,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void FilledButton_ConstructorsExposeCallbacksClipAndStateSurface()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var focusNode = new FocusNode();
         bool longPressed = false;
         Action longPress = () => longPressed = true;
@@ -521,7 +521,7 @@ public sealed class MaterialButtonsTests
     public void ButtonStyleButton_SemanticsAbsorbFocusInkAndLabelIntoTheTapTargetNode()
     {
         var style = new ButtonStyle(
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(88, 36)),
+            MinimumSize: WidgetStateProperty<Size?>.All(new Size(88, 36)),
             TapTargetSize: MaterialTapTargetSize.Padded);
         Func<Action, Action, ButtonStyleButton>[] factories =
         [
@@ -587,7 +587,7 @@ public sealed class MaterialButtonsTests
     public void FilledButton_DisabledWhileHoveredReportsExitAndClearsHoveredState()
     {
         var owner = new BuildOwner();
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var hoverChanges = new List<bool>();
         Widget BuildButton(Action? onPressed)
         {
@@ -619,8 +619,8 @@ public sealed class MaterialButtonsTests
         root.Update(BuildButton(onPressed: null));
         owner.FlushBuild();
         Assert.Equal([true], hoverChanges);
-        Assert.True(statesController.Value.HasFlag(MaterialState.Hovered));
-        Assert.True(statesController.Value.HasFlag(MaterialState.Disabled));
+        Assert.True(statesController.Value.Contains(WidgetState.Hovered));
+        Assert.True(statesController.Value.Contains(WidgetState.Disabled));
 
         hoverListener = FindHoverPointerListener(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.NotNull(hoverListener);
@@ -634,17 +634,20 @@ public sealed class MaterialButtonsTests
         owner.FlushBuild();
 
         Assert.Equal([true, false], hoverChanges);
-        Assert.False(statesController.Value.HasFlag(MaterialState.Hovered));
-        Assert.True(statesController.Value.HasFlag(MaterialState.Disabled));
+        Assert.False(statesController.Value.Contains(WidgetState.Hovered));
+        Assert.True(statesController.Value.Contains(WidgetState.Disabled));
     }
 
     [Fact]
     public void FilledButton_DisablingPressedButtonAddsDisabledBeforeRemovingPressed()
     {
         var owner = new BuildOwner();
-        var statesController = new MaterialStatesController();
-        var values = new List<MaterialState>();
-        statesController.AddListener(() => values.Add(statesController.Value));
+        var statesController = new WidgetStatesController();
+        var values = new List<IReadOnlySet<WidgetState>>();
+        // `WidgetStatesController` notifies over the same mutable set Dart's does, so each
+        // observation has to be snapshotted to compare the intermediate values.
+        statesController.AddListener(
+            () => values.Add(new HashSet<WidgetState>(statesController.Value)));
         Widget BuildButton(Action? onPressed)
         {
             return new Theme(
@@ -660,22 +663,22 @@ public sealed class MaterialButtonsTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        statesController.Update(MaterialState.Pressed, true);
+        statesController.Update(WidgetState.Pressed, true);
         owner.FlushBuild();
-        Assert.True(statesController.Value.HasFlag(MaterialState.Pressed));
+        Assert.True(statesController.Value.Contains(WidgetState.Pressed));
 
         root.Update(BuildButton(onPressed: null));
         owner.FlushBuild();
 
-        Assert.False(statesController.Value.HasFlag(MaterialState.Pressed));
-        Assert.True(statesController.Value.HasFlag(MaterialState.Disabled));
+        Assert.False(statesController.Value.Contains(WidgetState.Pressed));
+        Assert.True(statesController.Value.Contains(WidgetState.Disabled));
         // Dart adds `disabled` first and only then clears `pressed`, so the intermediate value
         // carries both.
         Assert.True(values.Count >= 3);
-        Assert.True(values[^2].HasFlag(MaterialState.Pressed));
-        Assert.True(values[^2].HasFlag(MaterialState.Disabled));
-        Assert.True(values[^1].HasFlag(MaterialState.Disabled));
-        Assert.False(values[^1].HasFlag(MaterialState.Pressed));
+        Assert.True(values[^2].Contains(WidgetState.Pressed));
+        Assert.True(values[^2].Contains(WidgetState.Disabled));
+        Assert.True(values[^1].Contains(WidgetState.Disabled));
+        Assert.False(values[^1].Contains(WidgetState.Pressed));
     }
 
     [Fact]
@@ -710,8 +713,8 @@ public sealed class MaterialButtonsTests
             backgroundBuilder: backgroundBuilder,
             foregroundBuilder: foregroundBuilder);
 
-        Assert.Same(enabledCursor, style.MouseCursor!.Resolve(MaterialState.None));
-        Assert.Same(disabledCursor, style.MouseCursor.Resolve(MaterialState.Disabled));
+        Assert.Same(enabledCursor, style.MouseCursor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Same(disabledCursor, style.MouseCursor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
         Assert.Equal(density, style.VisualDensity);
         Assert.Equal(duration, style.AnimationDuration);
         Assert.False(style.EnableFeedback);
@@ -745,9 +748,9 @@ public sealed class MaterialButtonsTests
     public void FilledButton_LayerBuildersReceiveStatesAndBackgroundCanDropForeground()
     {
         var owner = new BuildOwner();
-        var statesController = new MaterialStatesController(MaterialState.Focused);
-        MaterialState foregroundStates = MaterialState.None;
-        MaterialState backgroundStates = MaterialState.None;
+        var statesController = new WidgetStatesController([WidgetState.Focused]);
+        IReadOnlySet<WidgetState> foregroundStates = new HashSet<WidgetState>();
+        IReadOnlySet<WidgetState> backgroundStates = new HashSet<WidgetState>();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -771,8 +774,8 @@ public sealed class MaterialButtonsTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        Assert.True(foregroundStates.HasFlag(MaterialState.Focused));
-        Assert.True(backgroundStates.HasFlag(MaterialState.Focused));
+        Assert.True(foregroundStates.Contains(WidgetState.Focused));
+        Assert.True(backgroundStates.Contains(WidgetState.Focused));
         Assert.Null(FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement)));
     }
 
@@ -780,10 +783,10 @@ public sealed class MaterialButtonsTests
     public void FilledButton_TextAndIconColorsAnimateOverConfiguredDuration()
     {
         var owner = new BuildOwner();
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         IconThemeData? capturedIconTheme = null;
-        MaterialStateProperty<Color?> color = MaterialStateProperty<Color?>.ResolveWith(states =>
-            states.HasFlag(MaterialState.Focused) ? Colors.White : Colors.Black);
+        WidgetStateProperty<Color?> color = WidgetStateProperty<Color?>.ResolveWith(states =>
+            states.Contains(WidgetState.Focused) ? Colors.White : Colors.Black);
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -807,7 +810,7 @@ public sealed class MaterialButtonsTests
 
         Assert.Equal(Colors.Black, capturedIconTheme!.Color);
         double now = Scheduler.CurrentSeconds;
-        statesController.Update(MaterialState.Focused, true);
+        statesController.Update(WidgetState.Focused, true);
         owner.FlushBuild();
         AnimationPump.Prime();
         Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(now + 0.1));
@@ -842,8 +845,8 @@ public sealed class MaterialButtonsTests
             animationDuration: duration,
             enableFeedback: false);
 
-        Assert.Same(enabledCursor, style.MouseCursor!.Resolve(MaterialState.None));
-        Assert.Same(disabledCursor, style.MouseCursor.Resolve(MaterialState.Disabled));
+        Assert.Same(enabledCursor, style.MouseCursor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Same(disabledCursor, style.MouseCursor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
         Assert.Equal(density, style.VisualDensity);
         Assert.Equal(duration, style.AnimationDuration);
         Assert.False(style.EnableFeedback);
@@ -2336,7 +2339,7 @@ public sealed class MaterialButtonsTests
         {
             ElevatedButtonTheme = new ElevatedButtonThemeData(
                 style: new ButtonStyle(
-                    SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Red)))
+                    SurfaceTintColor: WidgetStateProperty<Color?>.All(Colors.Red)))
         };
 
         var root = new TestRootElement(
@@ -2391,7 +2394,7 @@ public sealed class MaterialButtonsTests
             UseMaterial3 = false,
             ElevatedButtonTheme = new ElevatedButtonThemeData(
                 style: new ButtonStyle(
-                    SurfaceTintColor: MaterialStateProperty<Color?>.All(Colors.Red)))
+                    SurfaceTintColor: WidgetStateProperty<Color?>.All(Colors.Red)))
         };
 
         var root = new TestRootElement(
@@ -2500,11 +2503,11 @@ public sealed class MaterialButtonsTests
         // hovered/focused +2 and the plain value otherwise; the Material 2 default feeds it 2.
         ButtonStyle style = ElevatedButton.StyleFrom(elevation: 2);
 
-        Assert.Equal(0.0, style.Elevation!.Resolve(MaterialState.Disabled));
-        Assert.Equal(8.0, style.Elevation.Resolve(MaterialState.Pressed));
-        Assert.Equal(4.0, style.Elevation.Resolve(MaterialState.Hovered));
-        Assert.Equal(4.0, style.Elevation.Resolve(MaterialState.Focused));
-        Assert.Equal(2.0, style.Elevation.Resolve(MaterialState.None));
+        Assert.Equal(0.0, style.Elevation!.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
+        Assert.Equal(8.0, style.Elevation.Resolve(new HashSet<WidgetState> { WidgetState.Pressed }));
+        Assert.Equal(4.0, style.Elevation.Resolve(new HashSet<WidgetState> { WidgetState.Hovered }));
+        Assert.Equal(4.0, style.Elevation.Resolve(new HashSet<WidgetState> { WidgetState.Focused }));
+        Assert.Equal(2.0, style.Elevation.Resolve(new HashSet<WidgetState>()));
     }
 
     [Fact]
@@ -2907,8 +2910,8 @@ public sealed class MaterialButtonsTests
         {
             OutlinedButtonTheme = new OutlinedButtonThemeData(
                 new ButtonStyle(
-                    BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Disabled) ? Colors.IndianRed : MaterialColors.Transparent)))
+                    BackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Disabled) ? Colors.IndianRed : MaterialColors.Transparent)))
         };
 
         var root = new TestRootElement(
@@ -3066,7 +3069,7 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        ForegroundColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen)),
+                        ForegroundColor: WidgetStateProperty<Color?>.All(Colors.ForestGreen)),
                     child: new Text("Styled foreground"))));
 
         root.Attach(owner);
@@ -3165,7 +3168,7 @@ public sealed class MaterialButtonsTests
                 child: new ElevatedButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        MinimumSize: MaterialStateProperty<Size?>.All(new Size(180, 56))),
+                        MinimumSize: WidgetStateProperty<Size?>.All(new Size(180, 56))),
                     child: new Text("Styled size"))));
 
         root.Attach(owner);
@@ -3188,7 +3191,7 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        MinimumSize: MaterialStateProperty<Size?>.All(new Size(0, 0))),
+                        MinimumSize: WidgetStateProperty<Size?>.All(new Size(0, 0))),
                     child: new Text("Zero min size"))));
 
         root.Attach(owner);
@@ -3211,7 +3214,7 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        MaximumSize: MaterialStateProperty<Size?>.All(new Size(120, 48))),
+                        MaximumSize: WidgetStateProperty<Size?>.All(new Size(120, 48))),
                     child: new Text("Max size"))));
 
         root.Attach(owner);
@@ -3236,9 +3239,9 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        MinimumSize: MaterialStateProperty<Size?>.All(new Size(64, 40)),
-                        MaximumSize: MaterialStateProperty<Size?>.All(new Size(120, 48)),
-                        FixedSize: MaterialStateProperty<Size?>.All(new Size(200, 80))),
+                        MinimumSize: WidgetStateProperty<Size?>.All(new Size(64, 40)),
+                        MaximumSize: WidgetStateProperty<Size?>.All(new Size(120, 48)),
+                        FixedSize: WidgetStateProperty<Size?>.All(new Size(200, 80))),
                     child: new Text("Fixed size"))));
 
         root.Attach(owner);
@@ -3263,7 +3266,7 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        FixedSize: MaterialStateProperty<Size?>.All(new Size(double.PositiveInfinity, 44))),
+                        FixedSize: WidgetStateProperty<Size?>.All(new Size(double.PositiveInfinity, 44))),
                     child: new Text("Fixed height only"))));
 
         root.Attach(owner);
@@ -3288,7 +3291,7 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Colors.Goldenrod, 2))),
+                        Side: WidgetStateProperty<BorderSide?>.All(new BorderSide(Colors.Goldenrod, 2))),
                     child: new Text("Styled side"))));
 
         root.Attach(owner);
@@ -3310,7 +3313,7 @@ public sealed class MaterialButtonsTests
             PrimaryColor = Colors.OrangeRed,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
             TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
+                ForegroundColor: WidgetStateProperty<Color?>.All(Colors.DarkCyan))
         )};
 
         var root = new TestRootElement(
@@ -3336,7 +3339,7 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
+                ForegroundColor: WidgetStateProperty<Color?>.All(Colors.DarkCyan))
         )};
 
         var root = new TestRootElement(
@@ -3345,7 +3348,7 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        ForegroundColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen)),
+                        ForegroundColor: WidgetStateProperty<Color?>.All(Colors.ForestGreen)),
                     child: new Text("Widget fg"))));
 
         root.Attach(owner);
@@ -3365,7 +3368,7 @@ public sealed class MaterialButtonsTests
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surfaceContainerLow: Colors.Bisque),
             ElevatedButtonTheme = new ElevatedButtonThemeData(style: new ButtonStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+                BackgroundColor: WidgetStateProperty<Color?>.All(Colors.MediumPurple))
         )};
 
         var root = new TestRootElement(
@@ -3392,7 +3395,7 @@ public sealed class MaterialButtonsTests
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outline: Colors.CadetBlue),
             OutlinedButtonTheme = new OutlinedButtonThemeData(style: new ButtonStyle(
-                Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Colors.Goldenrod, 3)))
+                Side: WidgetStateProperty<BorderSide?>.All(new BorderSide(Colors.Goldenrod, 3)))
         )};
 
         var root = new TestRootElement(
@@ -3421,7 +3424,7 @@ public sealed class MaterialButtonsTests
             PrimaryColor = Colors.OrangeRed,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
             TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
+                ForegroundColor: WidgetStateProperty<Color?>.All(Colors.DarkCyan))
         )};
 
         var root = new TestRootElement(
@@ -3430,7 +3433,7 @@ public sealed class MaterialButtonsTests
                 child: new TextButtonTheme(
                     data: new TextButtonThemeData(
                         style: new ButtonStyle(
-                            ForegroundColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen))),
+                            ForegroundColor: WidgetStateProperty<Color?>.All(Colors.ForestGreen))),
                     child: new TextButton(
                         onPressed: () => { },
                         child: new Text("Local theme fg")))));
@@ -3451,7 +3454,7 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
+                ForegroundColor: WidgetStateProperty<Color?>.All(Colors.DarkCyan))
         )};
 
         var root = new TestRootElement(
@@ -3460,11 +3463,11 @@ public sealed class MaterialButtonsTests
                 child: new TextButtonTheme(
                     data: new TextButtonThemeData(
                         style: new ButtonStyle(
-                            ForegroundColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen))),
+                            ForegroundColor: WidgetStateProperty<Color?>.All(Colors.ForestGreen))),
                     child: new TextButton(
                         onPressed: () => { },
                         style: new ButtonStyle(
-                            ForegroundColor: MaterialStateProperty<Color?>.All(Colors.OrangeRed)),
+                            ForegroundColor: WidgetStateProperty<Color?>.All(Colors.OrangeRed)),
                         child: new Text("Widget over local")))));
 
         root.Attach(owner);
@@ -3485,7 +3488,7 @@ public sealed class MaterialButtonsTests
             PrimaryColor = Colors.OrangeRed,
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
             TextButtonTheme = new TextButtonThemeData(style: new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkCyan))
+                ForegroundColor: WidgetStateProperty<Color?>.All(Colors.DarkCyan))
         )};
 
         var root = new TestRootElement(
@@ -3514,7 +3517,7 @@ public sealed class MaterialButtonsTests
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(surfaceContainerLow: Colors.Bisque),
             ElevatedButtonTheme = new ElevatedButtonThemeData(style: new ButtonStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+                BackgroundColor: WidgetStateProperty<Color?>.All(Colors.MediumPurple))
         )};
 
         var root = new TestRootElement(
@@ -3523,7 +3526,7 @@ public sealed class MaterialButtonsTests
                 child: new ElevatedButtonTheme(
                     data: new ElevatedButtonThemeData(
                         style: new ButtonStyle(
-                            BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Gold))),
+                            BackgroundColor: WidgetStateProperty<Color?>.All(Colors.Gold))),
                     child: new ElevatedButton(
                         onPressed: () => { },
                         child: new Text("Local elevated bg")))));
@@ -3545,7 +3548,7 @@ public sealed class MaterialButtonsTests
         {
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(outline: Colors.CadetBlue),
             OutlinedButtonTheme = new OutlinedButtonThemeData(style: new ButtonStyle(
-                Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Colors.Goldenrod, 3)))
+                Side: WidgetStateProperty<BorderSide?>.All(new BorderSide(Colors.Goldenrod, 3)))
         )};
 
         var root = new TestRootElement(
@@ -3554,7 +3557,7 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButtonTheme(
                     data: new OutlinedButtonThemeData(
                         style: new ButtonStyle(
-                            Side: MaterialStateProperty<BorderSide?>.All(new BorderSide(Colors.Crimson, 4)))),
+                            Side: WidgetStateProperty<BorderSide?>.All(new BorderSide(Colors.Crimson, 4)))),
                     child: new OutlinedButton(
                         onPressed: () => { },
                         child: new Text("Local outlined side")))));
@@ -3576,7 +3579,7 @@ public sealed class MaterialButtonsTests
         var theme = ThemeData.Light with
         {
             FilledButtonTheme = new FilledButtonThemeData(style: new ButtonStyle(
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+                BackgroundColor: WidgetStateProperty<Color?>.All(Colors.MediumPurple))
         )};
 
         var root = new TestRootElement(
@@ -3585,7 +3588,7 @@ public sealed class MaterialButtonsTests
                 child: new FilledButtonTheme(
                     data: new FilledButtonThemeData(
                         style: new ButtonStyle(
-                            BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Gold))),
+                            BackgroundColor: WidgetStateProperty<Color?>.All(Colors.Gold))),
                     child: new FilledButton(
                         onPressed: () => { },
                         child: new Text("Local filled bg")))));
@@ -3604,10 +3607,10 @@ public sealed class MaterialButtonsTests
     {
         var owner = new BuildOwner();
         var mergedStyle = new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.Crimson))
+                ForegroundColor: WidgetStateProperty<Color?>.All(Colors.Crimson))
             .Merge(new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.DarkGreen),
-                BackgroundColor: MaterialStateProperty<Color?>.All(Colors.LightGoldenrodYellow)));
+                ForegroundColor: WidgetStateProperty<Color?>.All(Colors.DarkGreen),
+                BackgroundColor: WidgetStateProperty<Color?>.All(Colors.LightGoldenrodYellow)));
 
         var root = new TestRootElement(
             new Theme(
@@ -3692,7 +3695,7 @@ public sealed class MaterialButtonsTests
         {
             TextButtonTheme = new TextButtonThemeData(
                 style: new ButtonStyle(
-                    TextStyle: MaterialStateProperty<TextStyle?>.All(
+                    TextStyle: WidgetStateProperty<TextStyle?>.All(
                         new TextStyle(FontWeight: FontWeight.Bold))))
         };
 
@@ -3702,8 +3705,8 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: null,
                     style: new ButtonStyle(
-                        TextStyle: MaterialStateProperty<TextStyle?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Disabled)
+                        TextStyle: WidgetStateProperty<TextStyle?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Disabled)
                                 ? null
                                 : new TextStyle(FontSize: 18))),
                     child: new Text("Disabled text-style fallback"))));
@@ -3726,7 +3729,7 @@ public sealed class MaterialButtonsTests
         {
             TextButtonTheme = new TextButtonThemeData(
                 style: new ButtonStyle(
-                    TextStyle: MaterialStateProperty<TextStyle?>.All(
+                    TextStyle: WidgetStateProperty<TextStyle?>.All(
                         new TextStyle(FontWeight: FontWeight.Bold))))
         };
 
@@ -3736,8 +3739,8 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        TextStyle: MaterialStateProperty<TextStyle?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Disabled)
+                        TextStyle: WidgetStateProperty<TextStyle?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Disabled)
                                 ? null
                                 : new TextStyle(FontSize: 18))),
                     child: new Text("Enabled text-style"))));
@@ -3832,7 +3835,7 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.All(overlayColor)),
+                        OverlayColor: WidgetStateProperty<Color?>.All(overlayColor)),
                     child: new Text("Overlay all"))));
 
         root.Attach(owner);
@@ -3867,7 +3870,7 @@ public sealed class MaterialButtonsTests
         using WidgetRenderHarness harness = PumpButton(
             new TextButton(
                 onPressed: () => { },
-                style: new ButtonStyle(OverlayColor: MaterialStateProperty<Color?>.All(overlayColor)),
+                style: new ButtonStyle(OverlayColor: WidgetStateProperty<Color?>.All(overlayColor)),
                 child: new Text("Splash tint")));
 
         PressButton(harness);
@@ -4034,8 +4037,8 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Disabled) ? Colors.Gray : null)),
+                        ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Disabled) ? Colors.Gray : null)),
                     child: new Text("Resolver fallback"))));
 
         root.Attach(owner);
@@ -4063,8 +4066,8 @@ public sealed class MaterialButtonsTests
                 child: new ElevatedButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Disabled) ? Colors.Gray : null)),
+                        ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Disabled) ? Colors.Gray : null)),
                     child: new Text("Elevated fg fallback"))));
 
         root.Attach(owner);
@@ -4092,8 +4095,8 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Disabled) ? Colors.Gray : null)),
+                        ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Disabled) ? Colors.Gray : null)),
                     child: new Text("Outlined fg fallback"))));
 
         root.Attach(owner);
@@ -4122,8 +4125,8 @@ public sealed class MaterialButtonsTests
                 child: new FilledButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Disabled) ? Colors.Gray : null)),
+                        ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Disabled) ? Colors.Gray : null)),
                     child: new Text("Filled fg fallback"))));
 
         root.Attach(owner);
@@ -4152,8 +4155,8 @@ public sealed class MaterialButtonsTests
                 child: new ElevatedButton(
                     onPressed: null,
                     style: new ButtonStyle(
-                        BackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Disabled) ? null : Colors.SeaGreen)),
+                        BackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Disabled) ? null : Colors.SeaGreen)),
                     child: new Text("Background resolver fallback"))));
 
         root.Attach(owner);
@@ -4180,8 +4183,8 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButton(
                     onPressed: () => { },
                     style: new ButtonStyle(
-                        Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Disabled)
+                        Side: WidgetStateProperty<BorderSide?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Disabled)
                                 ? new BorderSide(Colors.DarkGray, 3)
                                 : null)),
                     child: new Text("Side resolver fallback"))));
@@ -4211,8 +4214,8 @@ public sealed class MaterialButtonsTests
                 child: new OutlinedButton(
                     onPressed: null,
                     style: new ButtonStyle(
-                        Side: MaterialStateProperty<BorderSide?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Disabled)
+                        Side: WidgetStateProperty<BorderSide?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Disabled)
                                 ? null
                                 : new BorderSide(Colors.Goldenrod, 2))),
                     child: new Text("Disabled side fallback"))));
@@ -4240,8 +4243,8 @@ public sealed class MaterialButtonsTests
             new ElevatedButton(
                 onPressed: () => { },
                 style: new ButtonStyle(
-                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                    OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Pressed) ? pressedOverlay : null)),
                 child: new Text("Overlay resolver fallback")),
             theme);
 
@@ -4266,8 +4269,8 @@ public sealed class MaterialButtonsTests
             new OutlinedButton(
                 onPressed: () => { },
                 style: new ButtonStyle(
-                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                    OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Pressed) ? pressedOverlay : null)),
                 child: new Text("Overlay resolver fallback")),
             theme);
 
@@ -4289,8 +4292,8 @@ public sealed class MaterialButtonsTests
             ColorScheme = ThemeData.Light.ColorScheme.CopyWith(primary: Colors.OrangeRed),
             ElevatedButtonTheme = new ElevatedButtonThemeData(
                 style: new ButtonStyle(
-                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null))),
+                    OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Pressed) ? pressedOverlay : null))),
         };
         using WidgetRenderHarness harness = PumpButton(
             new ElevatedButton(
@@ -4319,8 +4322,8 @@ public sealed class MaterialButtonsTests
             new TextButton(
                 onPressed: () => { },
                 style: new ButtonStyle(
-                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                    OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Pressed) ? pressedOverlay : null)),
                 child: new Text("Overlay resolver fallback")),
             theme);
 
@@ -4345,8 +4348,8 @@ public sealed class MaterialButtonsTests
             new FilledButton(
                 onPressed: () => { },
                 style: new ButtonStyle(
-                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                    OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Pressed) ? pressedOverlay : null)),
                 child: new Text("Overlay resolver fallback")),
             theme);
 
@@ -4366,7 +4369,7 @@ public sealed class MaterialButtonsTests
         using WidgetRenderHarness harness = PumpButton(
             new TextButton(
                 onPressed: () => { },
-                style: new ButtonStyle(OverlayColor: MaterialStateProperty<Color?>.All(overlayColor)),
+                style: new ButtonStyle(OverlayColor: WidgetStateProperty<Color?>.All(overlayColor)),
                 child: new Text("Overlay splash fallback")));
 
         PressButton(harness);
@@ -4385,7 +4388,7 @@ public sealed class MaterialButtonsTests
         using WidgetRenderHarness harness = PumpButton(
             new ElevatedButton(
                 onPressed: () => { },
-                style: new ButtonStyle(OverlayColor: MaterialStateProperty<Color?>.All(overlayColor)),
+                style: new ButtonStyle(OverlayColor: WidgetStateProperty<Color?>.All(overlayColor)),
                 child: new Text("Overlay splash fallback")));
 
         PressButton(harness);
@@ -4404,7 +4407,7 @@ public sealed class MaterialButtonsTests
         using WidgetRenderHarness harness = PumpButton(
             new OutlinedButton(
                 onPressed: () => { },
-                style: new ButtonStyle(OverlayColor: MaterialStateProperty<Color?>.All(overlayColor)),
+                style: new ButtonStyle(OverlayColor: WidgetStateProperty<Color?>.All(overlayColor)),
                 child: new Text("Overlay splash fallback")));
 
         PressButton(harness);
@@ -4550,10 +4553,10 @@ public sealed class MaterialButtonsTests
                 onPressed: () => { },
                 focusNode: focusNode,
                 style: new ButtonStyle(
-                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Pressed)
+                    OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Pressed)
                             ? pressedOverlay
-                            : states.HasFlag(MaterialState.Hovered)
+                            : states.Contains(WidgetState.Hovered)
                                 ? otherOverlay
                                 : null)),
                 child: new Text("Priority")));
@@ -4649,14 +4652,14 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => pressedCount += 1,
                     style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                         {
-                            if (states.HasFlag(MaterialState.Pressed))
+                            if (states.Contains(WidgetState.Pressed))
                             {
                                 return pressedOverlay;
                             }
 
-                            if (states.HasFlag(MaterialState.Focused))
+                            if (states.Contains(WidgetState.Focused))
                             {
                                 return focusedOverlay;
                             }
@@ -4750,14 +4753,14 @@ public sealed class MaterialButtonsTests
                 child: new TextButton(
                     onPressed: () => pressedCount += 1,
                     style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                        OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                         {
-                            if (states.HasFlag(MaterialState.Pressed))
+                            if (states.Contains(WidgetState.Pressed))
                             {
                                 return pressedOverlay;
                             }
 
-                            if (states.HasFlag(MaterialState.Focused))
+                            if (states.Contains(WidgetState.Focused))
                             {
                                 return focusedOverlay;
                             }
@@ -4809,10 +4812,10 @@ public sealed class MaterialButtonsTests
                 onPressed: () => { },
                 focusNode: focusNode,
                 style: new ButtonStyle(
-                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Pressed)
+                    OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Pressed)
                             ? pressedOverlay
-                            : states.HasFlag(MaterialState.Focused)
+                            : states.Contains(WidgetState.Focused)
                                 ? otherOverlay
                                 : null)),
                 child: new Text("Priority")));
@@ -5108,8 +5111,8 @@ public sealed class MaterialButtonsTests
             new TextButton(
                 onPressed: () => { },
                 style: new ButtonStyle(
-                    OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Pressed) ? pressedOverlay : null)),
+                    OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Pressed) ? pressedOverlay : null)),
                 child: new Text("Click")));
 
         PressButton(harness);
@@ -5135,8 +5138,8 @@ public sealed class MaterialButtonsTests
                     onPressed: () => { },
                     focusNode: focusNode,
                     style: new ButtonStyle(
-                        OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                            states.HasFlag(MaterialState.Focused) ? focusedOverlay : null)),
+                        OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                            states.Contains(WidgetState.Focused) ? focusedOverlay : null)),
                     child: new Text("External focus node"))));
 
         root.Attach(owner);
@@ -5610,7 +5613,7 @@ public sealed class MaterialButtonsTests
     [Fact]
     public void IconButton_ConstructorsExposeCompleteDartApiSurface()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var focusNode = new FocusNode();
         Widget selectedIcon = new Icon(Icons.Star);
 
@@ -5660,10 +5663,10 @@ public sealed class MaterialButtonsTests
 
         Assert.Equal(
             SystemMouseCursors.Click,
-            style.MouseCursor!.Resolve(MaterialState.None));
+            style.MouseCursor!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(
             SystemMouseCursors.Basic,
-            style.MouseCursor.Resolve(MaterialState.Disabled));
+            style.MouseCursor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
         Assert.Equal(VisualDensity.Comfortable, style.VisualDensity);
         Assert.Equal(animationDuration, style.AnimationDuration);
         Assert.False(style.EnableFeedback);
@@ -5712,7 +5715,7 @@ public sealed class MaterialButtonsTests
     public void IconButton_ExternalStatesControllerTracksSelectedAndDisabled()
     {
         var owner = new BuildOwner();
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var root = new TestRootElement(
             new Theme(
                 data: ThemeData.Light,
@@ -5726,8 +5729,8 @@ public sealed class MaterialButtonsTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        Assert.True(statesController.Value.HasFlag(MaterialState.Selected));
-        Assert.True(statesController.Value.HasFlag(MaterialState.Disabled));
+        Assert.True(statesController.Value.Contains(WidgetState.Selected));
+        Assert.True(statesController.Value.Contains(WidgetState.Disabled));
 
         root.Update(
             new Theme(
@@ -5739,8 +5742,8 @@ public sealed class MaterialButtonsTests
                     onPressed: () => { })));
         owner.FlushBuild();
 
-        Assert.False(statesController.Value.HasFlag(MaterialState.Selected));
-        Assert.False(statesController.Value.HasFlag(MaterialState.Disabled));
+        Assert.False(statesController.Value.Contains(WidgetState.Selected));
+        Assert.False(statesController.Value.Contains(WidgetState.Disabled));
     }
 
     [Fact]
@@ -5798,8 +5801,8 @@ public sealed class MaterialButtonsTests
 
         Assert.Equal(
             new ColorTween().Evaluate(0.5, Colors.Black, Colors.White),
-            midpoint.Style!.ForegroundColor!.Resolve(MaterialState.None));
-        Assert.Equal(24, midpoint.Style.IconSize!.Resolve(MaterialState.None));
+            midpoint.Style!.ForegroundColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(24, midpoint.Style.IconSize!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(VisualDensity.Standard, midpoint.Style.VisualDensity);
         Assert.Equal(TimeSpan.FromMilliseconds(300), midpoint.Style.AnimationDuration);
         Assert.True(midpoint.Style.EnableFeedback);

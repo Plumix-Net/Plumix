@@ -18,7 +18,7 @@ public delegate Widget? CarouselItemBuilder(BuildContext context, int index);
 public sealed partial record CarouselViewThemeData(
     double? Elevation = null,
     Color? BackgroundColor = null,
-    MaterialStateProperty<Color?>? OverlayColor = null,
+    WidgetStateProperty<Color?>? OverlayColor = null,
     ShapeBorder? Shape = null,
     Thickness? Padding = null,
     Clip? ItemClipBehavior = null)
@@ -26,7 +26,7 @@ public sealed partial record CarouselViewThemeData(
     public CarouselViewThemeData CopyWith(
         double? elevation = null,
         Color? backgroundColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         ShapeBorder? shape = null,
         Thickness? padding = null,
         Clip? itemClipBehavior = null)
@@ -77,7 +77,7 @@ public sealed class CarouselView : StatefulWidget
         double? elevation = null,
         ShapeBorder? shape = null,
         Clip? itemClipBehavior = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         bool itemSnapping = false,
         double shrinkExtent = 0,
         CarouselController? controller = null,
@@ -124,7 +124,7 @@ public sealed class CarouselView : StatefulWidget
         double? elevation,
         ShapeBorder? shape,
         Clip? itemClipBehavior,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         bool itemSnapping,
         double shrinkExtent,
         CarouselController? controller,
@@ -180,7 +180,7 @@ public sealed class CarouselView : StatefulWidget
 
     public Clip? ItemClipBehavior { get; }
 
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
 
     public bool ItemSnapping { get; }
 
@@ -211,7 +211,7 @@ public sealed class CarouselView : StatefulWidget
         double? elevation = null,
         ShapeBorder? shape = null,
         Clip? itemClipBehavior = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         bool itemSnapping = false,
         double shrinkExtent = 0,
         CarouselController? controller = null,
@@ -240,7 +240,7 @@ public sealed class CarouselView : StatefulWidget
         double? elevation = null,
         ShapeBorder? shape = null,
         Clip? itemClipBehavior = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         bool itemSnapping = false,
         double shrinkExtent = 0,
         CarouselController? controller = null,
@@ -269,7 +269,7 @@ public sealed class CarouselView : StatefulWidget
         double? elevation = null,
         ShapeBorder? shape = null,
         Clip? itemClipBehavior = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         bool itemSnapping = false,
         double shrinkExtent = 0,
         CarouselController? controller = null,
@@ -464,7 +464,7 @@ public sealed class CarouselViewState : State
         ShapeBorder effectiveShape = Current.Shape ?? carouselTheme.Shape ?? new RoundedRectangleBorder(
             borderRadius: Plumix.Rendering.BorderRadius.Circular(28.0));
         Clip effectiveClipBehavior = Current.ItemClipBehavior ?? carouselTheme.ItemClipBehavior ?? Clip.AntiAlias;
-        MaterialStateProperty<Color?> effectiveOverlayColor = Current.OverlayColor
+        WidgetStateProperty<Color?> effectiveOverlayColor = Current.OverlayColor
             ?? carouselTheme.OverlayColor
             ?? DefaultOverlayColor(colorScheme.OnSurface);
 
@@ -557,21 +557,21 @@ public sealed class CarouselViewState : State
         return !a.Where((weight, index) => weight != b[index]).Any();
     }
 
-    private static MaterialStateProperty<Color?> DefaultOverlayColor(Color onSurface)
+    private static WidgetStateProperty<Color?> DefaultOverlayColor(Color onSurface)
     {
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
+        return WidgetStateProperty<Color?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Pressed))
+            if (states.Contains(WidgetState.Pressed))
             {
                 return onSurface.WithOpacity(0.1);
             }
 
-            if (states.HasFlag(MaterialState.Hovered))
+            if (states.Contains(WidgetState.Hovered))
             {
                 return onSurface.WithOpacity(0.08);
             }
 
-            if (states.HasFlag(MaterialState.Focused))
+            if (states.Contains(WidgetState.Focused))
             {
                 return onSurface.WithOpacity(0.1);
             }

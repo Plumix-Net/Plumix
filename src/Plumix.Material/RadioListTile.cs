@@ -19,9 +19,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         MouseCursor? mouseCursor = null,
         bool toggleable = false,
         Color? activeColor = null,
-        MaterialStateProperty<Color?>? fillColor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
         Color? hoverColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         Widget? title = null,
@@ -38,7 +38,7 @@ public sealed class RadioListTile<T> : StatefulWidget
         Color? selectedTileColor = null,
         VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Action<bool>? onFocusChange = null,
         bool? enableFeedback = null,
         double? horizontalTitleGap = null,
@@ -49,9 +49,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         ListTileTitleAlignment? titleAlignment = null,
         bool? enabled = null,
         bool internalAddSemanticForOnTap = false,
-        MaterialStateProperty<Color?>? radioBackgroundColor = null,
+        WidgetStateProperty<Color?>? radioBackgroundColor = null,
         WidgetStateBorderSide? radioSide = null,
-        MaterialStateProperty<double?>? radioInnerRadius = null,
+        WidgetStateProperty<double?>? radioInnerRadius = null,
         Key? key = null) : this(
             value,
             groupValue,
@@ -105,9 +105,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         MouseCursor? mouseCursor,
         bool toggleable,
         Color? activeColor,
-        MaterialStateProperty<Color?>? fillColor,
+        WidgetStateProperty<Color?>? fillColor,
         Color? hoverColor,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         double? splashRadius,
         MaterialTapTargetSize? materialTapTargetSize,
         Widget? title,
@@ -124,7 +124,7 @@ public sealed class RadioListTile<T> : StatefulWidget
         Color? selectedTileColor,
         VisualDensity? visualDensity,
         FocusNode? focusNode,
-        MaterialStatesController? statesController,
+        WidgetStatesController? statesController,
         Action<bool>? onFocusChange,
         bool? enableFeedback,
         double? horizontalTitleGap,
@@ -136,9 +136,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         bool? enabled,
         bool internalAddSemanticForOnTap,
         bool useCupertinoCheckmarkStyle,
-        MaterialStateProperty<Color?>? radioBackgroundColor,
+        WidgetStateProperty<Color?>? radioBackgroundColor,
         WidgetStateBorderSide? radioSide,
-        MaterialStateProperty<double?>? radioInnerRadius,
+        WidgetStateProperty<double?>? radioInnerRadius,
         bool adaptive,
         Key? key) : base(key)
     {
@@ -196,9 +196,9 @@ public sealed class RadioListTile<T> : StatefulWidget
     public MouseCursor? MouseCursor { get; }
     public bool Toggleable { get; }
     public Color? ActiveColor { get; }
-    public MaterialStateProperty<Color?>? FillColor { get; }
+    public WidgetStateProperty<Color?>? FillColor { get; }
     public Color? HoverColor { get; }
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
     public double? SplashRadius { get; }
     public MaterialTapTargetSize? MaterialTapTargetSize { get; }
     public Widget? Title { get; }
@@ -215,7 +215,7 @@ public sealed class RadioListTile<T> : StatefulWidget
     public Color? SelectedTileColor { get; }
     public VisualDensity? VisualDensity { get; }
     public FocusNode? FocusNode { get; }
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
     public Action<bool>? OnFocusChange { get; }
     public bool? EnableFeedback { get; }
     public double? HorizontalTitleGap { get; }
@@ -227,9 +227,9 @@ public sealed class RadioListTile<T> : StatefulWidget
     public bool? Enabled { get; }
     public bool InternalAddSemanticForOnTap { get; }
     public bool UseCupertinoCheckmarkStyle { get; }
-    public MaterialStateProperty<Color?>? RadioBackgroundColor { get; }
+    public WidgetStateProperty<Color?>? RadioBackgroundColor { get; }
     public WidgetStateBorderSide? RadioSide { get; }
-    public MaterialStateProperty<double?>? RadioInnerRadius { get; }
+    public WidgetStateProperty<double?>? RadioInnerRadius { get; }
 
     public static RadioListTile<T> Adaptive(
         T value,
@@ -238,9 +238,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         MouseCursor? mouseCursor = null,
         bool toggleable = false,
         Color? activeColor = null,
-        MaterialStateProperty<Color?>? fillColor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
         Color? hoverColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         Widget? title = null,
@@ -257,7 +257,7 @@ public sealed class RadioListTile<T> : StatefulWidget
         Color? selectedTileColor = null,
         VisualDensity? visualDensity = null,
         FocusNode? focusNode = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Action<bool>? onFocusChange = null,
         bool? enableFeedback = null,
         double? horizontalTitleGap = null,
@@ -269,9 +269,9 @@ public sealed class RadioListTile<T> : StatefulWidget
         bool? enabled = null,
         bool useCupertinoCheckmarkStyle = false,
         bool internalAddSemanticForOnTap = false,
-        MaterialStateProperty<Color?>? radioBackgroundColor = null,
+        WidgetStateProperty<Color?>? radioBackgroundColor = null,
         WidgetStateBorderSide? radioSide = null,
-        MaterialStateProperty<double?>? radioInnerRadius = null,
+        WidgetStateProperty<double?>? radioInnerRadius = null,
         Key? key = null)
     {
         return new RadioListTile<T>(
@@ -382,7 +382,7 @@ public sealed class RadioListTile<T> : StatefulWidget
         bool controlIsLeading = affinity is ListTileControlAffinity.Leading or ListTileControlAffinity.Platform;
         var leading = controlIsLeading ? control : Secondary;
         var trailing = controlIsLeading ? Secondary : control;
-        var selectedStates = Selected ? MaterialState.Selected : MaterialState.None;
+        var selectedStates = Selected ? new HashSet<WidgetState> { WidgetState.Selected } : new HashSet<WidgetState>();
         var selectedColor = ActiveColor
                             ?? RadioTheme.Of(context).FillColor?.Resolve(selectedStates)
                             ?? Theme.Of(context).ColorScheme.Secondary;

@@ -864,9 +864,9 @@ public sealed class MaterialDropdownTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             MenuBarTheme = new MenuBarThemeData(new MenuStyle(
-                backgroundColor: MaterialStateProperty<Color?>.All(themeBackground))),
+                backgroundColor: WidgetStateProperty<Color?>.All(themeBackground))),
             MenuButtonTheme = new MenuButtonThemeData(new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.CadetBlue))),
+                ForegroundColor: WidgetStateProperty<Color?>.All(Colors.CadetBlue))),
         };
 
         Widget themedBar = new MenuBar(
@@ -885,7 +885,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var itemController = new MenuController();
         Widget themedItem = new MenuButtonTheme(
             new MenuButtonThemeData(new ButtonStyle(
-                ForegroundColor: MaterialStateProperty<Color?>.All(Colors.ForestGreen))),
+                ForegroundColor: WidgetStateProperty<Color?>.All(Colors.ForestGreen))),
             new MenuAnchor(
                 [new MenuItemButton(child: new Text("Run"), onPressed: () => { })],
                 child: new SizedBox(width: 80, height: 40),
@@ -899,10 +899,10 @@ public sealed class MaterialDropdownTests : IDisposable
             Assert.IsType<SolidColorBrush>(FindParagraph(item.RenderView, "Run")!.Foreground).Color);
 
         Widget localBar = new MenuBarTheme(
-            new MenuBarThemeData(new MenuStyle(backgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+            new MenuBarThemeData(new MenuStyle(backgroundColor: WidgetStateProperty<Color?>.All(localBackground))),
             new MenuButtonTheme(
                 new MenuButtonThemeData(new ButtonStyle(
-                    ForegroundColor: MaterialStateProperty<Color?>.All(Colors.MediumVioletRed))),
+                    ForegroundColor: WidgetStateProperty<Color?>.All(Colors.MediumVioletRed))),
                 new MenuBar(
                     [new SubmenuButton(
                         [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
@@ -920,8 +920,8 @@ public sealed class MaterialDropdownTests : IDisposable
             [new SubmenuButton(
                 [new MenuItemButton(child: new Text("Close"), onPressed: () => { })],
                 new Text("View"),
-                style: new ButtonStyle(ForegroundColor: MaterialStateProperty<Color?>.All(Colors.OrangeRed)))],
-            style: new MenuStyle(backgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)));
+                style: new ButtonStyle(ForegroundColor: WidgetStateProperty<Color?>.All(Colors.OrangeRed)))],
+            style: new MenuStyle(backgroundColor: WidgetStateProperty<Color?>.All(widgetBackground)));
         using var widget = new WidgetRenderHarness(Wrap(widgetBar, theme));
         widget.Pump(new Size(500, 180));
         Assert.Contains(
@@ -941,7 +941,7 @@ public sealed class MaterialDropdownTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             MenuTheme = new MenuThemeData(new MenuStyle(
-                backgroundColor: MaterialStateProperty<Color?>.All(globalBackground))),
+                backgroundColor: WidgetStateProperty<Color?>.All(globalBackground))),
         };
 
         var globalController = new MenuController();
@@ -959,7 +959,7 @@ public sealed class MaterialDropdownTests : IDisposable
         var localController = new MenuController();
         using var local = new WidgetRenderHarness(Wrap(new MenuTheme(
             new MenuThemeData(new MenuStyle(
-                backgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+                backgroundColor: WidgetStateProperty<Color?>.All(localBackground))),
             new MenuAnchor(
                 [new MenuItemButton(child: new Text("Local"), onPressed: () => { })],
                 child: new SizedBox(width: 80, height: 40),
@@ -974,13 +974,13 @@ public sealed class MaterialDropdownTests : IDisposable
         var widgetController = new MenuController();
         using var widget = new WidgetRenderHarness(Wrap(new MenuTheme(
             new MenuThemeData(new MenuStyle(
-                backgroundColor: MaterialStateProperty<Color?>.All(localBackground))),
+                backgroundColor: WidgetStateProperty<Color?>.All(localBackground))),
             new MenuAnchor(
                 [new MenuItemButton(child: new Text("Widget"), onPressed: () => { })],
                 child: new SizedBox(width: 80, height: 40),
                 controller: widgetController,
                 style: new MenuStyle(
-                    backgroundColor: MaterialStateProperty<Color?>.All(widgetBackground)))), theme));
+                    backgroundColor: WidgetStateProperty<Color?>.All(widgetBackground)))), theme));
         widget.Pump(new Size(500, 180));
         widgetController.Open();
         widget.Pump(new Size(500, 180));
@@ -995,13 +995,13 @@ public sealed class MaterialDropdownTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             MenuTheme = new MenuThemeData(
-                submenuIcon: MaterialStateProperty<Widget?>.All(new Text("theme icon"))),
+                submenuIcon: WidgetStateProperty<Widget?>.All(new Text("theme icon"))),
         };
 
         var controller = new MenuController();
         Widget themed = new MenuTheme(
             new MenuThemeData(
-                submenuIcon: MaterialStateProperty<Widget?>.All(new Text("local icon"))),
+                submenuIcon: WidgetStateProperty<Widget?>.All(new Text("local icon"))),
             new MenuAnchor(
                 [
                     new SubmenuButton(
@@ -1010,7 +1010,7 @@ public sealed class MaterialDropdownTests : IDisposable
                     new SubmenuButton(
                         [new MenuItemButton(child: new Text("Save"), onPressed: () => { })],
                         new Text("Widget"),
-                        submenuIcon: MaterialStateProperty<Widget?>.All(new Text("widget icon"))),
+                        submenuIcon: WidgetStateProperty<Widget?>.All(new Text("widget icon"))),
                 ],
                 controller: controller,
                 child: new SizedBox(width: 80, height: 40)));
@@ -1037,11 +1037,11 @@ public sealed class MaterialDropdownTests : IDisposable
                     new SubmenuButton(
                         [new MenuItemButton(child: new Text("Leaf"), onPressed: () => { })],
                         new Text("Nested"),
-                        submenuIcon: MaterialStateProperty<Widget?>.All(new Text("nested arrow"))),
+                        submenuIcon: WidgetStateProperty<Widget?>.All(new Text("nested arrow"))),
                 ],
                 new Text("Top"),
                 controller: controller,
-                submenuIcon: MaterialStateProperty<Widget?>.All(new Text("top arrow"))),
+                submenuIcon: WidgetStateProperty<Widget?>.All(new Text("top arrow"))),
         ]);
         using var harness = new WidgetRenderHarness(Wrap(bar));
         harness.Pump(new Size(500, 260));
@@ -1062,31 +1062,35 @@ public sealed class MaterialDropdownTests : IDisposable
         ButtonStyle style = CaptureMenuButtonDefaults(theme);
         ColorScheme colors = theme.ColorScheme;
 
-        Assert.Equal(MaterialColors.Transparent, style.BackgroundColor!.Resolve(MaterialState.None));
-        Assert.Equal(0.0, style.Elevation!.Resolve(MaterialState.None));
-        Assert.Equal(colors.OnSurface, style.ForegroundColor!.Resolve(MaterialState.None));
+        Assert.Equal(MaterialColors.Transparent, style.BackgroundColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(0.0, style.Elevation!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(colors.OnSurface, style.ForegroundColor!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(
             Opacity(colors.OnSurface, 0.38),
-            style.ForegroundColor.Resolve(MaterialState.Disabled));
-        Assert.Equal(colors.OnSurfaceVariant, style.IconColor!.Resolve(MaterialState.None));
-        Assert.Equal(Opacity(colors.OnSurface, 0.38), style.IconColor.Resolve(MaterialState.Disabled));
-        Assert.Equal(24.0, style.IconSize!.Resolve(MaterialState.None));
-        Assert.Equal(new Size(64.0, 48.0), style.MinimumSize!.Resolve(MaterialState.None));
+            style.ForegroundColor.Resolve(new HashSet<WidgetState> { WidgetState.Disabled }));
+        Assert.Equal(colors.OnSurfaceVariant, style.IconColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(Opacity(colors.OnSurface, 0.38), style.IconColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Disabled }));
+        Assert.Equal(24.0, style.IconSize!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(new Size(64.0, 48.0), style.MinimumSize!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(
             new Size(double.PositiveInfinity, double.PositiveInfinity),
-            style.MaximumSize!.Resolve(MaterialState.None));
+            style.MaximumSize!.Resolve(new HashSet<WidgetState>()));
 
         // Square corners, unlike `TextButton`'s 20-radius stadium-ish default.
-        var shape = Assert.IsType<RoundedRectangleBorder>(style.Shape!.Resolve(MaterialState.None));
+        var shape = Assert.IsType<RoundedRectangleBorder>(style.Shape!.Resolve(new HashSet<WidgetState>()));
         Assert.Equal(BorderRadius.Zero, shape.BorderRadius.Resolve(TextDirection.Ltr));
 
-        Assert.Equal(MaterialColors.Transparent, style.OverlayColor!.Resolve(MaterialState.None));
-        Assert.Equal(Opacity(colors.OnSurface, 0.08), style.OverlayColor.Resolve(MaterialState.Hovered));
-        Assert.Equal(Opacity(colors.OnSurface, 0.1), style.OverlayColor.Resolve(MaterialState.Focused));
-        Assert.Equal(Opacity(colors.OnSurface, 0.1), style.OverlayColor.Resolve(MaterialState.Pressed));
+        Assert.Equal(MaterialColors.Transparent, style.OverlayColor!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(Opacity(colors.OnSurface, 0.08), style.OverlayColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Hovered }));
+        Assert.Equal(Opacity(colors.OnSurface, 0.1), style.OverlayColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Focused }));
+        Assert.Equal(Opacity(colors.OnSurface, 0.1), style.OverlayColor.Resolve(
+            new HashSet<WidgetState> { WidgetState.Pressed }));
 
         // Flutter's "Menu defaults" asserts labelLarge's 14 / 1.43 metrics on the button material.
-        TextStyle? textStyle = style.TextStyle!.Resolve(MaterialState.None);
+        TextStyle? textStyle = style.TextStyle!.Resolve(new HashSet<WidgetState>());
         Assert.Equal(14.0, textStyle!.FontSize);
         Assert.Equal(1.43, textStyle.Height);
         Assert.Equal(theme.VisualDensity, style.VisualDensity);
@@ -1125,7 +1129,7 @@ public sealed class MaterialDropdownTests : IDisposable
 
         Assert.Equal(
             new Thickness(expectedHorizontal, 0.0, expectedHorizontal, 0.0),
-            style.Padding!.Resolve(MaterialState.None));
+            style.Padding!.Resolve(new HashSet<WidgetState>()));
     }
 
     [Theory]
@@ -1625,17 +1629,17 @@ public sealed class MaterialDropdownTests : IDisposable
 
         Assert.Equal(
             new Thickness(4.0, 0.0, 4.0, 0.0),
-            bar.Padding!.Resolve(MaterialState.None)!.Value.Resolve(TextDirection.Ltr));
+            bar.Padding!.Resolve(new HashSet<WidgetState>())!.Value.Resolve(TextDirection.Ltr));
         Assert.Equal(
             new Thickness(0.0, 8.0, 0.0, 8.0),
-            menu.Padding!.Resolve(MaterialState.None)!.Value.Resolve(TextDirection.Ltr));
+            menu.Padding!.Resolve(new HashSet<WidgetState>())!.Value.Resolve(TextDirection.Ltr));
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.BottomStart, bar.Alignment);
         Assert.Equal((AlignmentGeometry)AlignmentDirectional.TopEnd, menu.Alignment);
 
         // Everything else is shared, and min/fixed/max size and side stay unset in both tables.
-        Assert.Equal(3.0, bar.Elevation!.Resolve(MaterialState.None));
-        Assert.Equal(3.0, menu.Elevation!.Resolve(MaterialState.None));
-        Assert.Equal(MaterialColors.Transparent, menu.SurfaceTintColor!.Resolve(MaterialState.None));
+        Assert.Equal(3.0, bar.Elevation!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(3.0, menu.Elevation!.Resolve(new HashSet<WidgetState>()));
+        Assert.Equal(MaterialColors.Transparent, menu.SurfaceTintColor!.Resolve(new HashSet<WidgetState>()));
         foreach (MenuStyle style in new[] { bar, menu })
         {
             Assert.Null(style.MinimumSize);
@@ -1655,7 +1659,7 @@ public sealed class MaterialDropdownTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             MenuBarTheme = new MenuBarThemeData(new MenuStyle(
-                side: MaterialStateProperty<BorderSide?>.All(new BorderSide(outlineColor, 3.0)))),
+                side: WidgetStateProperty<BorderSide?>.All(new BorderSide(outlineColor, 3.0)))),
         };
 
         using var harness = new WidgetRenderHarness(Wrap(
@@ -1681,15 +1685,15 @@ public sealed class MaterialDropdownTests : IDisposable
         ThemeData theme = ThemeData.Light with
         {
             MenuBarTheme = new MenuBarThemeData(new MenuStyle(
-                fixedSize: MaterialStateProperty<Size?>.All(new Size(600.0, 60.0)),
-                maximumSize: MaterialStateProperty<Size?>.All(new Size(250.0, 40.0)))),
+                fixedSize: WidgetStateProperty<Size?>.All(new Size(600.0, 60.0)),
+                maximumSize: WidgetStateProperty<Size?>.All(new Size(250.0, 40.0)))),
         };
 
         BoxConstraints constraints = MenuAnchorState.ResolveMenuConstraints(
             new MenuStyle(
-                fixedSize: MaterialStateProperty<Size?>.All(new Size(600.0, 60.0)),
-                maximumSize: MaterialStateProperty<Size?>.All(new Size(250.0, 40.0))),
-            MaterialState.None,
+                fixedSize: WidgetStateProperty<Size?>.All(new Size(600.0, 60.0)),
+                maximumSize: WidgetStateProperty<Size?>.All(new Size(250.0, 40.0))),
+            new HashSet<WidgetState>(),
             VisualDensity.Standard);
 
         Assert.Equal(250.0, constraints.MaxWidth);
@@ -1713,11 +1717,11 @@ public sealed class MaterialDropdownTests : IDisposable
         // All three menu themes are `InheritedTheme`s in Dart, so a captured theme can be replayed
         // into an overlay or route subtree.
         var menuData = new MenuThemeData(new MenuStyle(
-            elevation: MaterialStateProperty<double?>.All(7.0)));
+            elevation: WidgetStateProperty<double?>.All(7.0)));
         var barData = new MenuBarThemeData(new MenuStyle(
-            elevation: MaterialStateProperty<double?>.All(8.0)));
+            elevation: WidgetStateProperty<double?>.All(8.0)));
         var buttonData = new MenuButtonThemeData(new ButtonStyle(
-            Elevation: MaterialStateProperty<double?>.All(9.0)));
+            Elevation: WidgetStateProperty<double?>.All(9.0)));
         var leaf = new SizedBox();
 
         Assert.Equal(

@@ -299,7 +299,7 @@ public class MenuAnchorState : State
 
     internal static BoxConstraints ResolveMenuConstraints(
         MenuStyle style,
-        MaterialState state,
+        IReadOnlySet<WidgetState> state,
         VisualDensity density)
     {
         Size minimum = style.MinimumSize?.Resolve(state) ?? default;
@@ -553,7 +553,7 @@ internal sealed class Submenu : StatelessWidget
         VisualDensity visualDensity = resolved.VisualDensity ?? theme.VisualDensity;
         AlignmentGeometry alignment = resolved.Alignment ?? AlignmentDirectional.BottomStart;
         var cursor = new MenuMouseCursor(states => resolved.MouseCursor?.Resolve(states));
-        EdgeInsetsGeometry menuPadding = resolved.Padding?.Resolve(MaterialState.None)
+        EdgeInsetsGeometry menuPadding = resolved.Padding?.Resolve(new HashSet<WidgetState>())
                                          ?? EdgeInsetsGeometry.Zero;
         double densityDx = Math.Max(0.0, visualDensity.BaseSizeAdjustment.X);
         EdgeInsetsGeometry resolvedMenuPadding = menuPadding
@@ -701,7 +701,7 @@ internal sealed class MenuPanelState : State
             ? MenuBarTheme.Of(context).Style
             : MenuTheme.Of(context).Style;
         MenuStyle style = (Current.MenuStyle ?? new MenuStyle()).Merge(themeStyle).Merge(defaults);
-        MaterialState states = MaterialState.None;
+        IReadOnlySet<WidgetState> states = new HashSet<WidgetState>();
 
         Color? backgroundColor = style.BackgroundColor?.Resolve(states);
         Color? shadowColor = style.ShadowColor?.Resolve(states);
@@ -798,8 +798,8 @@ internal sealed class MenuBarDefaultsM3 : MenuStyle
     private ColorScheme? _colorScheme;
 
     public MenuBarDefaultsM3(BuildContext context) : base(
-        elevation: MaterialStateProperty<double?>.All(3.0),
-        shape: MaterialStateProperty<OutlinedBorder?>.All(DefaultMenuBorder),
+        elevation: WidgetStateProperty<double?>.All(3.0),
+        shape: WidgetStateProperty<OutlinedBorder?>.All(DefaultMenuBorder),
         alignment: AlignmentDirectional.BottomStart)
     {
         _context = context;
@@ -807,17 +807,17 @@ internal sealed class MenuBarDefaultsM3 : MenuStyle
 
     private ColorScheme ColorRoles => _colorScheme ??= Theme.Of(_context).ColorScheme;
 
-    public override MaterialStateProperty<Color?>? BackgroundColor =>
-        MaterialStateProperty<Color?>.All(ColorRoles.SurfaceContainer);
+    public override WidgetStateProperty<Color?>? BackgroundColor =>
+        WidgetStateProperty<Color?>.All(ColorRoles.SurfaceContainer);
 
-    public override MaterialStateProperty<Color?>? ShadowColor =>
-        MaterialStateProperty<Color?>.All(ColorRoles.Shadow);
+    public override WidgetStateProperty<Color?>? ShadowColor =>
+        WidgetStateProperty<Color?>.All(ColorRoles.Shadow);
 
-    public override MaterialStateProperty<Color?>? SurfaceTintColor =>
-        MaterialStateProperty<Color?>.All(Colors.Transparent);
+    public override WidgetStateProperty<Color?>? SurfaceTintColor =>
+        WidgetStateProperty<Color?>.All(Colors.Transparent);
 
-    public override MaterialStateProperty<EdgeInsetsGeometry?>? Padding =>
-        MaterialStateProperty<EdgeInsetsGeometry?>.All(
+    public override WidgetStateProperty<EdgeInsetsGeometry?>? Padding =>
+        WidgetStateProperty<EdgeInsetsGeometry?>.All(
             EdgeInsetsGeometry.DirectionalSymmetric(
                 horizontal: MenuConstants.TopLevelMenuHorizontalMinPadding));
 
@@ -831,8 +831,8 @@ internal sealed class MenuDefaultsM3 : MenuStyle
     private ColorScheme? _colorScheme;
 
     public MenuDefaultsM3(BuildContext context) : base(
-        elevation: MaterialStateProperty<double?>.All(3.0),
-        shape: MaterialStateProperty<OutlinedBorder?>.All(MenuBarDefaultsM3.DefaultMenuBorder),
+        elevation: WidgetStateProperty<double?>.All(3.0),
+        shape: WidgetStateProperty<OutlinedBorder?>.All(MenuBarDefaultsM3.DefaultMenuBorder),
         alignment: AlignmentDirectional.TopEnd)
     {
         _context = context;
@@ -840,17 +840,17 @@ internal sealed class MenuDefaultsM3 : MenuStyle
 
     private ColorScheme ColorRoles => _colorScheme ??= Theme.Of(_context).ColorScheme;
 
-    public override MaterialStateProperty<Color?>? BackgroundColor =>
-        MaterialStateProperty<Color?>.All(ColorRoles.SurfaceContainer);
+    public override WidgetStateProperty<Color?>? BackgroundColor =>
+        WidgetStateProperty<Color?>.All(ColorRoles.SurfaceContainer);
 
-    public override MaterialStateProperty<Color?>? SurfaceTintColor =>
-        MaterialStateProperty<Color?>.All(Colors.Transparent);
+    public override WidgetStateProperty<Color?>? SurfaceTintColor =>
+        WidgetStateProperty<Color?>.All(Colors.Transparent);
 
-    public override MaterialStateProperty<Color?>? ShadowColor =>
-        MaterialStateProperty<Color?>.All(ColorRoles.Shadow);
+    public override WidgetStateProperty<Color?>? ShadowColor =>
+        WidgetStateProperty<Color?>.All(ColorRoles.Shadow);
 
-    public override MaterialStateProperty<EdgeInsetsGeometry?>? Padding =>
-        MaterialStateProperty<EdgeInsetsGeometry?>.All(
+    public override WidgetStateProperty<EdgeInsetsGeometry?>? Padding =>
+        WidgetStateProperty<EdgeInsetsGeometry?>.All(
             EdgeInsetsGeometry.DirectionalSymmetric(
                 vertical: MenuConstants.MenuVerticalMinPadding));
 
@@ -1179,86 +1179,86 @@ internal static class MenuButtonDefaults
         ThemeData theme = Theme.Of(context);
         ColorScheme colors = theme.ColorScheme;
         return new ButtonStyle(
-            BackgroundColor: MaterialStateProperty<Color?>.All(Colors.Transparent),
-            Elevation: MaterialStateProperty<double?>.All(0.0),
-            ForegroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            BackgroundColor: WidgetStateProperty<Color?>.All(Colors.Transparent),
+            Elevation: WidgetStateProperty<double?>.All(0.0),
+            ForegroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Disabled))
+                if (states.Contains(WidgetState.Disabled))
                 {
                     return colors.OnSurface.WithOpacity(0.38);
                 }
 
-                if (states.HasFlag(MaterialState.Pressed))
+                if (states.Contains(WidgetState.Pressed))
                 {
                     return colors.OnSurface;
                 }
 
-                if (states.HasFlag(MaterialState.Hovered))
+                if (states.Contains(WidgetState.Hovered))
                 {
                     return colors.OnSurface;
                 }
 
-                if (states.HasFlag(MaterialState.Focused))
+                if (states.Contains(WidgetState.Focused))
                 {
                     return colors.OnSurface;
                 }
 
                 return colors.OnSurface;
             }),
-            IconColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            IconColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Disabled))
+                if (states.Contains(WidgetState.Disabled))
                 {
                     return colors.OnSurface.WithOpacity(0.38);
                 }
 
-                if (states.HasFlag(MaterialState.Pressed))
+                if (states.Contains(WidgetState.Pressed))
                 {
                     return colors.OnSurfaceVariant;
                 }
 
-                if (states.HasFlag(MaterialState.Hovered))
+                if (states.Contains(WidgetState.Hovered))
                 {
                     return colors.OnSurfaceVariant;
                 }
 
-                if (states.HasFlag(MaterialState.Focused))
+                if (states.Contains(WidgetState.Focused))
                 {
                     return colors.OnSurfaceVariant;
                 }
 
                 return colors.OnSurfaceVariant;
             }),
-            IconSize: MaterialStateProperty<double?>.All(24.0),
-            MaximumSize: MaterialStateProperty<Size?>.All(
+            IconSize: WidgetStateProperty<double?>.All(24.0),
+            MaximumSize: WidgetStateProperty<Size?>.All(
                 new Size(double.PositiveInfinity, double.PositiveInfinity)),
-            MinimumSize: MaterialStateProperty<Size?>.All(new Size(64.0, 48.0)),
-            MouseCursor: MaterialStateProperty<MouseCursor?>.ResolveWith(states =>
+            MinimumSize: WidgetStateProperty<Size?>.All(new Size(64.0, 48.0)),
+            MouseCursor: WidgetStateProperty<MouseCursor?>.ResolveWith(states =>
                 WidgetStateMouseCursor.AdaptiveClickable.Resolve(states)),
-            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+            OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
             {
-                if (states.HasFlag(MaterialState.Pressed))
+                if (states.Contains(WidgetState.Pressed))
                 {
                     return colors.OnSurface.WithOpacity(0.1);
                 }
 
-                if (states.HasFlag(MaterialState.Hovered))
+                if (states.Contains(WidgetState.Hovered))
                 {
                     return colors.OnSurface.WithOpacity(0.08);
                 }
 
-                if (states.HasFlag(MaterialState.Focused))
+                if (states.Contains(WidgetState.Focused))
                 {
                     return colors.OnSurface.WithOpacity(0.1);
                 }
 
                 return Colors.Transparent;
             }),
-            Padding: MaterialStateProperty<EdgeInsetsGeometry?>.All(ScaledPadding(context)),
-            Shape: MaterialStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder()),
+            Padding: WidgetStateProperty<EdgeInsetsGeometry?>.All(ScaledPadding(context)),
+            Shape: WidgetStateProperty<OutlinedBorder?>.All(new RoundedRectangleBorder()),
             SplashFactory: theme.SplashFactory,
             TapTargetSize: theme.MaterialTapTargetSize,
-            TextStyle: MaterialStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
+            TextStyle: WidgetStateProperty<TextStyle?>.All(theme.TextTheme.LabelLarge),
             VisualDensity: theme.VisualDensity,
             Alignment: AlignmentDirectional.CenterStart,
             AnimationDuration: MenuConstants.ThemeChangeDuration,
@@ -1302,7 +1302,7 @@ public sealed class MenuItemButton : StatefulWidget
         IMenuSerializableShortcut? shortcut = null,
         string? semanticsLabel = null,
         ButtonStyle? style = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Clip clipBehavior = Clip.None,
         Widget? leadingIcon = null,
         Widget? trailingIcon = null,
@@ -1344,7 +1344,7 @@ public sealed class MenuItemButton : StatefulWidget
 
     public string? SemanticsLabel { get; }
     public ButtonStyle? Style { get; }
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
     public Clip ClipBehavior { get; }
     public Widget? LeadingIcon { get; }
     public Widget? TrailingIcon { get; }
@@ -1522,7 +1522,7 @@ public sealed class CheckboxMenuButton : StatelessWidget
         FocusNode? focusNode = null,
         IMenuSerializableShortcut? shortcut = null,
         ButtonStyle? style = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Clip clipBehavior = Clip.None,
         Widget? trailingIcon = null,
         bool closeOnActivate = true,
@@ -1561,7 +1561,7 @@ public sealed class CheckboxMenuButton : StatelessWidget
     public FocusNode? FocusNode { get; }
     public IMenuSerializableShortcut? Shortcut { get; }
     public ButtonStyle? Style { get; }
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
     public Clip ClipBehavior { get; }
     public Widget? TrailingIcon { get; }
     public bool CloseOnActivate { get; }
@@ -1620,7 +1620,7 @@ public sealed class RadioMenuButton<T> : StatelessWidget
         FocusNode? focusNode = null,
         IMenuSerializableShortcut? shortcut = null,
         ButtonStyle? style = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Clip clipBehavior = Clip.None,
         Widget? trailingIcon = null,
         bool closeOnActivate = true,
@@ -1652,7 +1652,7 @@ public sealed class RadioMenuButton<T> : StatelessWidget
     public FocusNode? FocusNode { get; }
     public IMenuSerializableShortcut? Shortcut { get; }
     public ButtonStyle? Style { get; }
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
     public Clip ClipBehavior { get; }
     public Widget? TrailingIcon { get; }
     public bool CloseOnActivate { get; }
@@ -1793,10 +1793,10 @@ public sealed class SubmenuButton : StatefulWidget
         Vector? alignmentOffset = null,
         Clip clipBehavior = Clip.HardEdge,
         FocusNode? focusNode = null,
-        MaterialStatesController? statesController = null,
+        WidgetStatesController? statesController = null,
         Widget? leadingIcon = null,
         Widget? trailingIcon = null,
-        MaterialStateProperty<Widget?>? submenuIcon = null,
+        WidgetStateProperty<Widget?>? submenuIcon = null,
         bool useRootOverlay = false,
         TimeSpan? hoverOpenDelay = null,
         bool animated = false,
@@ -1842,10 +1842,10 @@ public sealed class SubmenuButton : StatefulWidget
     public Vector? AlignmentOffset { get; }
     public Clip ClipBehavior { get; }
     public FocusNode? FocusNode { get; }
-    public MaterialStatesController? StatesController { get; }
+    public WidgetStatesController? StatesController { get; }
     public Widget? LeadingIcon { get; }
     public Widget? TrailingIcon { get; }
-    public MaterialStateProperty<Widget?>? SubmenuIcon { get; }
+    public WidgetStateProperty<Widget?>? SubmenuIcon { get; }
     public bool UseRootOverlay { get; }
     public TimeSpan HoverOpenDelay { get; }
     public bool Animated { get; }
@@ -1918,20 +1918,21 @@ public sealed class SubmenuButtonState : State
     public override Widget Build(BuildContext context)
     {
         Axis parentOrientation = _parentAnchor?.Orientation ?? Axis.Horizontal;
-        MaterialState states = Current.StatesController?.Value ?? MaterialState.None;
+        var states = new HashSet<WidgetState>(
+            Current.StatesController?.Value ?? new HashSet<WidgetState>());
         if (!Current.Enabled)
         {
-            states |= MaterialState.Disabled;
+            states.Add(WidgetState.Disabled);
         }
 
         if (_isHovered)
         {
-            states |= MaterialState.Hovered;
+            states.Add(WidgetState.Hovered);
         }
 
         if (ButtonFocusNode.HasFocus)
         {
-            states |= MaterialState.Focused;
+            states.Add(WidgetState.Focused);
         }
 
         Widget submenuIcon = Current.SubmenuIcon?.Resolve(states)
@@ -2032,7 +2033,7 @@ public sealed class SubmenuButtonState : State
     private Vector ResolveMenuPaddingOffset(BuildContext context)
     {
         Vector offset = Current.AlignmentOffset ?? default;
-        MaterialState states = Current.StatesController?.Value ?? MaterialState.None;
+        IReadOnlySet<WidgetState> states = Current.StatesController?.Value ?? new HashSet<WidgetState>();
         EdgeInsetsGeometry menuPaddingGeometry = Current.MenuStyle?.Padding?.Resolve(states)
                                                  ?? MenuTheme.Of(context).Style?.Padding?.Resolve(states)
                                                  ?? new MenuDefaultsM3(context).Padding!
@@ -2707,8 +2708,8 @@ internal static class MenuButtonStyleComposer
                                ?? defaults?.ForegroundBuilder);
     }
 
-    private static MaterialStateProperty<T>? ComposeStateProperty<T>(
-        params MaterialStateProperty<T>?[] layers)
+    private static WidgetStateProperty<T>? ComposeStateProperty<T>(
+        params WidgetStateProperty<T>?[] layers)
     {
         bool hasAny = false;
         foreach (var layer in layers)
@@ -2725,7 +2726,7 @@ internal static class MenuButtonStyleComposer
             return null;
         }
 
-        return MaterialStateProperty<T>.ResolveWith(states =>
+        return WidgetStateProperty<T>.ResolveWith(states =>
         {
             foreach (var layer in layers)
             {
@@ -2745,7 +2746,7 @@ internal static class MenuButtonStyleComposer
         });
     }
 
-    private static MaterialStateProperty<Color?>? ComposeIconColorProperty(params ButtonStyle?[] layers)
+    private static WidgetStateProperty<Color?>? ComposeIconColorProperty(params ButtonStyle?[] layers)
     {
         bool hasAny = layers.Any(style => style?.IconColor is not null || style?.ForegroundColor is not null);
         if (!hasAny)
@@ -2753,7 +2754,7 @@ internal static class MenuButtonStyleComposer
             return null;
         }
 
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
+        return WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             foreach (ButtonStyle? style in layers)
             {

@@ -279,7 +279,7 @@ public sealed class MaterialActionButtonsTests
     public void BackButton_StyleIconColorOverridesLegacyColor()
     {
         var style = new ButtonStyle(
-            IconColor: MaterialStateProperty<Color?>.All(Colors.Purple));
+            IconColor: WidgetStateProperty<Color?>.All(Colors.Purple));
         using var harness = new WidgetRenderHarness(
             new Theme(
                 ThemeData.Light with { Platform = TargetPlatform.Windows },

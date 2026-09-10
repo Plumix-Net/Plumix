@@ -107,16 +107,16 @@ public sealed class MaterialRadioTests
                 data: ThemeData.Light with
                 {
                     RadioTheme = new RadioThemeData(
-                        FillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+                        FillColor: WidgetStateProperty<Color?>.All(Colors.MediumPurple))
                 },
                 child: new Radio<string>(
                     value: "first",
                     groupValue: "first",
                     onChanged: _ => { },
                     activeColor: Colors.Orange,
-                    fillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                    fillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                     {
-                        return states.HasFlag(MaterialState.Selected)
+                        return states.Contains(WidgetState.Selected)
                             ? Colors.ForestGreen
                             : Colors.SlateGray;
                     }))));
@@ -141,7 +141,7 @@ public sealed class MaterialRadioTests
                 data: ThemeData.Light with
                 {
                     RadioTheme = new RadioThemeData(
-                        FillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))
+                        FillColor: WidgetStateProperty<Color?>.All(Colors.MediumPurple))
                 },
                 child: new Radio<string>(
                     value: "first",
@@ -313,7 +313,7 @@ public sealed class MaterialRadioTests
                     groupValue: "first",
                     onChanged: _ => { },
                     activeColor: Colors.Orange,
-                    fillColor: MaterialStateProperty<Color?>.All(Colors.MediumPurple))));
+                    fillColor: WidgetStateProperty<Color?>.All(Colors.MediumPurple))));
 
         harness.Pump(new Size(220, 120));
 
@@ -421,12 +421,12 @@ public sealed class MaterialRadioTests
                     value: "a",
                     groupValue: "a",
                     onChanged: _ => { },
-                    backgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Selected) ? activeBackground : inactiveBackground),
+                    backgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Selected) ? activeBackground : inactiveBackground),
                     side: WidgetStateBorderSide.ResolveWith(states =>
                         states.Contains(WidgetState.Selected) ? activeSide : inactiveSide),
-                    innerRadius: MaterialStateProperty<double?>.ResolveWith(states =>
-                        states.HasFlag(MaterialState.Selected) ? 6.0 : 2.0))));
+                    innerRadius: WidgetStateProperty<double?>.ResolveWith(states =>
+                        states.Contains(WidgetState.Selected) ? 6.0 : 2.0))));
 
         harness.Pump(new Size(80, 80));
         RadioPainter painter = FindRadioPainter(harness.RenderView);
@@ -491,11 +491,11 @@ public sealed class MaterialRadioTests
     [Fact]
     public void RadioThemeData_CopyWithAndLerp_CoverCompleteThemeSurface()
     {
-        var cursor = MaterialStateProperty<MouseCursor?>.All(SystemMouseCursors.Click);
-        var fill = MaterialStateProperty<Color?>.All(Colors.Red);
-        var overlay = MaterialStateProperty<Color?>.All(Colors.Blue);
-        var background = MaterialStateProperty<Color?>.All(Colors.Green);
-        var innerRadius = MaterialStateProperty<double?>.All(3.0);
+        var cursor = WidgetStateProperty<MouseCursor?>.All(SystemMouseCursors.Click);
+        var fill = WidgetStateProperty<Color?>.All(Colors.Red);
+        var overlay = WidgetStateProperty<Color?>.All(Colors.Blue);
+        var background = WidgetStateProperty<Color?>.All(Colors.Green);
+        var innerRadius = WidgetStateProperty<double?>.All(3.0);
         var side = WidgetStateBorderSide.All(new BorderSide(Colors.Purple, 2.0));
         var data = new RadioThemeData(
             MouseCursor: cursor,
@@ -520,7 +520,7 @@ public sealed class MaterialRadioTests
                 Side: WidgetStateBorderSide.All(new BorderSide(Colors.Blue, 3.0))),
             0.5);
         Assert.Equal(20.0, midpoint.SplashRadius);
-        BorderSide midpointSide = midpoint.Side!.Resolve(MaterialState.None)!.Value;
+        BorderSide midpointSide = midpoint.Side!.Resolve(new HashSet<WidgetState>())!.Value;
         Assert.Equal(2.0, midpointSide.Width);
     }
 
@@ -532,11 +532,11 @@ public sealed class MaterialRadioTests
                 data: ThemeData.Light with
                 {
                     RadioTheme = new RadioThemeData(
-                        FillColor: MaterialStateProperty<Color?>.All(Colors.Red))
+                        FillColor: WidgetStateProperty<Color?>.All(Colors.Red))
                 },
                 child: new RadioTheme(
                     data: new RadioThemeData(
-                        FillColor: MaterialStateProperty<Color?>.All(Colors.Blue)),
+                        FillColor: WidgetStateProperty<Color?>.All(Colors.Blue)),
                     child: new Radio<string>(
                         value: "a",
                         groupValue: "a",
@@ -549,11 +549,11 @@ public sealed class MaterialRadioTests
                 data: ThemeData.Light,
                 child: new RadioTheme(
                     data: new RadioThemeData(
-                        FillColor: MaterialStateProperty<Color?>.All(Colors.Blue)),
+                        FillColor: WidgetStateProperty<Color?>.All(Colors.Blue)),
                     child: new Radio<string>(
                         value: "a",
                         groupValue: "a",
-                        fillColor: MaterialStateProperty<Color?>.All(Colors.Green),
+                        fillColor: WidgetStateProperty<Color?>.All(Colors.Green),
                         onChanged: _ => { }))));
         widgetHarness.Pump(new Size(80, 80));
         Assert.Equal(Colors.Green, FindRadioPainter(widgetHarness.RenderView).ActiveColor);

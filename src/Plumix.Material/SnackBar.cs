@@ -124,7 +124,7 @@ public sealed class SnackBarAction : StatefulWidget
                 : new SnackBarDefaultsM2(context);
             SnackBarThemeData snackBarTheme = SnackBarTheme.Of(context);
 
-            MaterialStateProperty<Color?> ResolveForegroundColor()
+            WidgetStateProperty<Color?> ResolveForegroundColor()
             {
                 // Dart checks `x is WidgetStateColor` down the chain with `else if`, so a plain
                 // widget color short-circuits the theme/defaults probes and falls through.
@@ -145,14 +145,14 @@ public sealed class SnackBarAction : StatefulWidget
                     return Bridge(defaultColor);
                 }
 
-                return MaterialStateProperty<Color?>.ResolveWith(states => states.HasFlag(MaterialState.Disabled)
+                return WidgetStateProperty<Color?>.ResolveWith(states => states.Contains(WidgetState.Disabled)
                     ? widget.DisabledTextColor
                       ?? snackBarTheme.DisabledActionTextColor
                       ?? defaults.DisabledActionTextColor!.Value
                     : (Color)(widget.TextColor ?? snackBarTheme.ActionTextColor ?? defaults.ActionTextColor!));
             }
 
-            MaterialStateProperty<Color?> ResolveBackgroundColor()
+            WidgetStateProperty<Color?> ResolveBackgroundColor()
             {
                 if (widget.BackgroundColor is { IsConstantColor: false } widgetStateColor)
                 {
@@ -164,7 +164,7 @@ public sealed class SnackBarAction : StatefulWidget
                     return Bridge(themeColor);
                 }
 
-                return MaterialStateProperty<Color?>.ResolveWith(states => states.HasFlag(MaterialState.Disabled)
+                return WidgetStateProperty<Color?>.ResolveWith(states => states.Contains(WidgetState.Disabled)
                     ? widget.DisabledBackgroundColor
                       ?? snackBarTheme.DisabledActionBackgroundColor
                       ?? Colors.Transparent
@@ -172,19 +172,19 @@ public sealed class SnackBarAction : StatefulWidget
                         ?? new WidgetStateColor(Colors.Transparent)));
             }
 
-            MaterialStateProperty<Color?> foregroundColor = ResolveForegroundColor();
+            WidgetStateProperty<Color?> foregroundColor = ResolveForegroundColor();
             return new TextButton(
                 child: new Text(widget.Label),
                 onPressed: _haveTriggeredAction ? null : HandlePressed,
-                style: TextButton.StyleFrom(overlayColor: foregroundColor.Resolve(MaterialState.None)) with
+                style: TextButton.StyleFrom(overlayColor: foregroundColor.Resolve(new HashSet<WidgetState>())) with
                 {
                     ForegroundColor = foregroundColor,
                     BackgroundColor = ResolveBackgroundColor(),
                 });
         }
 
-        private static MaterialStateProperty<Color?> Bridge(WidgetStateColor color) =>
-            MaterialStateProperty<Color?>.ResolveWith(states => color.Resolve(states));
+        private static WidgetStateProperty<Color?> Bridge(WidgetStateColor color) =>
+            WidgetStateProperty<Color?>.ResolveWith(states => color.Resolve(states));
     }
 }
 

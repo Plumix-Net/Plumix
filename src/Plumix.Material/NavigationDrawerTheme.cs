@@ -17,8 +17,8 @@ public sealed record NavigationDrawerThemeData(
     Color? IndicatorColor = null,
     ShapeBorder? IndicatorShape = null,
     Size? IndicatorSize = null,
-    MaterialStateProperty<TextStyle?>? LabelTextStyle = null,
-    MaterialStateProperty<IconThemeData?>? IconTheme = null)
+    WidgetStateProperty<TextStyle?>? LabelTextStyle = null,
+    WidgetStateProperty<IconThemeData?>? IconTheme = null)
 {
     public NavigationDrawerThemeData CopyWith(
         double? tileHeight = null,
@@ -29,8 +29,8 @@ public sealed record NavigationDrawerThemeData(
         Color? indicatorColor = null,
         ShapeBorder? indicatorShape = null,
         Size? indicatorSize = null,
-        MaterialStateProperty<TextStyle?>? labelTextStyle = null,
-        MaterialStateProperty<IconThemeData?>? iconTheme = null)
+        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
+        WidgetStateProperty<IconThemeData?>? iconTheme = null)
     {
         return new NavigationDrawerThemeData(
             TileHeight: tileHeight ?? TileHeight,

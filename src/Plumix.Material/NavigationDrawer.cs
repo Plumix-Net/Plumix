@@ -216,8 +216,9 @@ internal sealed class NavigationDrawerDestinationTileState : State
         var theme = Theme.Of(context);
         ColorScheme colors = theme.ColorScheme;
         var drawerTheme = NavigationDrawerTheme.Of(context);
-        var states = destination.Enabled ? MaterialState.None : MaterialState.Disabled;
-        if (widget.Selected) states |= MaterialState.Selected;
+        var states = new HashSet<WidgetState>();
+        if (!destination.Enabled) states.Add(WidgetState.Disabled);
+        if (widget.Selected) states.Add(WidgetState.Selected);
 
         double progress = _controller?.Evaluate() ?? (widget.Selected ? 1 : 0);
         var iconTheme = drawerTheme.IconTheme?.Resolve(states)
@@ -317,23 +318,23 @@ internal sealed class NavigationDrawerDestinationTileState : State
         _controller = null;
     }
 
-    private static IconThemeData ResolveDefaultIconTheme(ThemeData theme, MaterialState states)
+    private static IconThemeData ResolveDefaultIconTheme(ThemeData theme, IReadOnlySet<WidgetState> states)
     {
         ColorScheme colors = theme.ColorScheme;
-        Color color = states.HasFlag(MaterialState.Disabled)
+        Color color = states.Contains(WidgetState.Disabled)
             ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38)
-            : states.HasFlag(MaterialState.Selected)
+            : states.Contains(WidgetState.Selected)
                 ? colors.OnSecondaryContainer
                 : colors.OnSurfaceVariant;
         return new IconThemeData(Color: color, Size: 24);
     }
 
-    private static TextStyle ResolveDefaultLabelStyle(ThemeData theme, MaterialState states)
+    private static TextStyle ResolveDefaultLabelStyle(ThemeData theme, IReadOnlySet<WidgetState> states)
     {
         ColorScheme colors = theme.ColorScheme;
-        Color color = states.HasFlag(MaterialState.Disabled)
+        Color color = states.Contains(WidgetState.Disabled)
             ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38)
-            : states.HasFlag(MaterialState.Selected)
+            : states.Contains(WidgetState.Selected)
                 ? colors.OnSecondaryContainer
                 : colors.OnSurfaceVariant;
         return theme.TextTheme.LabelLarge.CopyWith(color: color);

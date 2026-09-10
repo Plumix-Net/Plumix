@@ -138,11 +138,11 @@ public sealed class MaterialSwitchListTileTests
     [Fact]
     public void SwitchArguments_AreForwardedToTheSwitch()
     {
-        MaterialStateProperty<Color?> thumb = MaterialStateProperty<Color?>.All(Colors.Green);
-        MaterialStateProperty<Color?> track = MaterialStateProperty<Color?>.All(Colors.Blue);
-        MaterialStateProperty<Color?> outline = MaterialStateProperty<Color?>.All(Colors.Red);
-        MaterialStateProperty<Icon?> thumbIcon = MaterialStateProperty<Icon?>.All(new Icon(Icons.Done));
-        MaterialStateProperty<Color?> overlay = MaterialStateProperty<Color?>.All(Colors.Purple);
+        WidgetStateProperty<Color?> thumb = WidgetStateProperty<Color?>.All(Colors.Green);
+        WidgetStateProperty<Color?> track = WidgetStateProperty<Color?>.All(Colors.Blue);
+        WidgetStateProperty<Color?> outline = WidgetStateProperty<Color?>.All(Colors.Red);
+        WidgetStateProperty<Icon?> thumbIcon = WidgetStateProperty<Icon?>.All(new Icon(Icons.Done));
+        WidgetStateProperty<Color?> overlay = WidgetStateProperty<Color?>.All(Colors.Purple);
         using var harness = new ListTileControlHarness(new SwitchListTile(
             value: true,
             onChanged: _ => { },
@@ -266,8 +266,8 @@ public sealed class MaterialSwitchListTileTests
         var themedThumb = bare with
         {
             SwitchTheme = new SwitchThemeData(
-                ThumbColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Selected) ? themed : null))
+                ThumbColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Selected) ? themed : null))
         };
 
         Assert.Equal(activeThumb, TitleColor(activeThumb, active, themedThumb));
@@ -296,7 +296,7 @@ public sealed class MaterialSwitchListTileTests
     [Fact]
     public void TileArguments_AreForwardedToTheListTile()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var focusNode = new FocusNode();
         var shape = new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(12));
         using var harness = new ListTileControlHarness(new SwitchListTile(
@@ -431,7 +431,7 @@ public sealed class MaterialSwitchListTileTests
     [Fact]
     public void StatesController_IsDrivenByTheTile()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         using var harness = new ListTileControlHarness(new SwitchListTile(
             value: false,
             onChanged: _ => { },
@@ -441,9 +441,9 @@ public sealed class MaterialSwitchListTileTests
         harness.Pump();
         Assert.Same(statesController, harness.FindWidget<ListTile>()!.StatesController);
 
-        statesController.Update(MaterialState.Pressed, true);
+        statesController.Update(WidgetState.Pressed, true);
         harness.Pump();
-        Assert.True(statesController.Value.HasFlag(MaterialState.Pressed));
+        Assert.True(statesController.Value.Contains(WidgetState.Pressed));
     }
 
     /// "SwitchListTile does not crash at zero area".

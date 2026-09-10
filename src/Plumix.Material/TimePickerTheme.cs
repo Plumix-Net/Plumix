@@ -31,8 +31,8 @@ public sealed partial record TimePickerThemeData(
     InputDecorationThemeData? InputDecorationTheme = null,
     EdgeInsetsGeometry? Padding = null,
     ShapeBorder? Shape = null,
-    MaterialStateProperty<Color?>? TimeSelectorSeparatorColor = null,
-    MaterialStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle = null)
+    WidgetStateProperty<Color?>? TimeSelectorSeparatorColor = null,
+    WidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle = null)
 {
     private readonly WidgetStateColor? _dayPeriodColor = DayPeriodColor;
 
@@ -146,10 +146,10 @@ internal abstract class TimePickerDefaults
     public abstract ShapeBorder Shape { get; }
 
     /// Null for Material 2, matching Dart, where only `_TimePickerDefaultsM3` overrides it.
-    public virtual MaterialStateProperty<Color?>? TimeSelectorSeparatorColor => null;
+    public virtual WidgetStateProperty<Color?>? TimeSelectorSeparatorColor => null;
 
     /// Null for Material 2, matching Dart, where only `_TimePickerDefaultsM3` overrides it.
-    public virtual MaterialStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle => null;
+    public virtual WidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle => null;
 
     internal static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
         (byte)Math.Round(255 * Math.Clamp(opacity, 0, 1)),
@@ -462,9 +462,9 @@ internal sealed class TimePickerDefaultsM3 : TimePickerDefaults
         new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(28));
 
     // TODO(port): update when Material tokens expose these; taken from the Material 3 time picker spec.
-    public override MaterialStateProperty<Color?>? TimeSelectorSeparatorColor =>
-        MaterialStateProperty<Color?>.All(_colors.OnSurface);
+    public override WidgetStateProperty<Color?>? TimeSelectorSeparatorColor =>
+        WidgetStateProperty<Color?>.All(_colors.OnSurface);
 
-    public override MaterialStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle =>
-        MaterialStateProperty<TextStyle?>.All(_textTheme.DisplayLarge);
+    public override WidgetStateProperty<TextStyle?>? TimeSelectorSeparatorTextStyle =>
+        WidgetStateProperty<TextStyle?>.All(_textTheme.DisplayLarge);
 }

@@ -1304,7 +1304,9 @@ internal sealed class DropdownButtonState<T> : State
     private static MouseCursor ResolveMouseCursor(MouseCursor? cursor, bool enabled)
     {
         MouseCursor source = cursor ?? WidgetStateMouseCursor.AdaptiveClickable;
-        MaterialState states = enabled ? MaterialState.None : MaterialState.Disabled;
+        IReadOnlySet<WidgetState> states = enabled
+            ? new HashSet<WidgetState>()
+            : new HashSet<WidgetState> { WidgetState.Disabled };
         return source is WidgetStateMouseCursor stateful
             ? stateful.Resolve(states) ?? SystemMouseCursors.Basic
             : source;

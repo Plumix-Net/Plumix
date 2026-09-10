@@ -37,9 +37,9 @@ public sealed class PopupMenuDemoPage : StatefulWidget
                         end: 4,
                         bottom: 4),
                     IconColor: Color.Parse("#FFE65100"),
-                    LabelTextStyle: MaterialStateProperty<TextStyle?>.ResolveWith(states =>
+                    LabelTextStyle: WidgetStateProperty<TextStyle?>.ResolveWith(states =>
                         Theme.Of(context).TextTheme.LabelLarge.CopyWith(
-                            color: states.HasFlag(MaterialState.Disabled)
+                            color: states.Contains(WidgetState.Disabled)
                                 ? Color.Parse("#619E9E9E")
                                 : Color.Parse("#FFE65100"))))
                 : new PopupMenuThemeData();

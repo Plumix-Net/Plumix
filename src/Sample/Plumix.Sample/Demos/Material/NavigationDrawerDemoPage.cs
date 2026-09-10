@@ -31,9 +31,9 @@ public sealed class NavigationDrawerDemoPage : StatefulWidget
                         IndicatorColor: Color.Parse("#FFB2DFDB"),
                         TileHeight: 60,
                         IndicatorSize: new Size(270, 48),
-                        LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
+                        LabelTextStyle: WidgetStateProperty<TextStyle?>.All(
                             new TextStyle(Color: Color.Parse("#FF4A148C"), FontSize: 13)),
-                        IconTheme: MaterialStateProperty<IconThemeData?>.All(
+                        IconTheme: WidgetStateProperty<IconThemeData?>.All(
                             new IconThemeData(Color: Color.Parse("#FF00695C"), Size: 22)))
                     : new NavigationDrawerThemeData(),
             };

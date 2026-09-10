@@ -142,8 +142,8 @@ public sealed class MaterialCheckboxListTileTests
     {
         var shape = new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(4));
         var side = WidgetStateBorderSide.ResolveWith(_ => new BorderSide(color: Colors.Red, width: 4));
-        MaterialStateProperty<Color?> fill = MaterialStateProperty<Color?>.All(Colors.Green);
-        MaterialStateProperty<Color?> overlay = MaterialStateProperty<Color?>.All(Colors.Blue);
+        WidgetStateProperty<Color?> fill = WidgetStateProperty<Color?>.All(Colors.Green);
+        WidgetStateProperty<Color?> overlay = WidgetStateProperty<Color?>.All(Colors.Blue);
         using var harness = new ListTileControlHarness(new CheckboxListTile(
             value: true,
             onChanged: _ => { },
@@ -310,8 +310,8 @@ public sealed class MaterialCheckboxListTileTests
         var themedFill = bare with
         {
             CheckboxTheme = new CheckboxThemeData(
-                FillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Selected) ? themed : null))
+                FillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Selected) ? themed : null))
         };
 
         Assert.Equal(active, TitleColor(activeColor: active, theme: themedFill));
@@ -338,7 +338,7 @@ public sealed class MaterialCheckboxListTileTests
     [Fact]
     public void TileArguments_AreForwardedToTheListTile()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         var focusNode = new FocusNode();
         var shape = new RoundedRectangleBorder(borderRadius: BorderRadius.Circular(12));
         using var harness = new ListTileControlHarness(new CheckboxListTile(
@@ -534,7 +534,7 @@ public sealed class MaterialCheckboxListTileTests
     [Fact]
     public void StatesController_IsDrivenByTheTile()
     {
-        var statesController = new MaterialStatesController();
+        var statesController = new WidgetStatesController();
         using var harness = new ListTileControlHarness(new CheckboxListTile(
             value: false,
             onChanged: _ => { },
@@ -544,11 +544,11 @@ public sealed class MaterialCheckboxListTileTests
 
         harness.Pump();
         Assert.Same(statesController, harness.FindWidget<ListTile>()!.StatesController);
-        Assert.False(statesController.Value.HasFlag(MaterialState.Selected));
+        Assert.False(statesController.Value.Contains(WidgetState.Selected));
 
-        statesController.Update(MaterialState.Pressed, true);
+        statesController.Update(WidgetState.Pressed, true);
         harness.Pump();
-        Assert.True(statesController.Value.HasFlag(MaterialState.Pressed));
+        Assert.True(statesController.Value.Contains(WidgetState.Pressed));
     }
 
     /// "CheckboxListTile does not crash at zero area".

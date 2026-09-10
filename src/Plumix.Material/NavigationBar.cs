@@ -67,8 +67,8 @@ public sealed class NavigationBar : StatelessWidget
         ShapeBorder? indicatorShape = null,
         double? height = null,
         NavigationDestinationLabelBehavior? labelBehavior = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
-        MaterialStateProperty<TextStyle?>? labelTextStyle = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<TextStyle?>? labelTextStyle = null,
         Thickness? labelPadding = null,
         bool maintainBottomViewPadding = false,
         Key? key = null) : base(key)
@@ -126,8 +126,8 @@ public sealed class NavigationBar : StatelessWidget
     public ShapeBorder? IndicatorShape { get; }
     public double? Height { get; }
     public NavigationDestinationLabelBehavior? LabelBehavior { get; }
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
-    public MaterialStateProperty<TextStyle?>? LabelTextStyle { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<TextStyle?>? LabelTextStyle { get; }
     public Thickness? LabelPadding { get; }
     public bool MaintainBottomViewPadding { get; }
 
@@ -222,14 +222,14 @@ public sealed class NavigationBar : StatelessWidget
                 Elevation: 0,
                 IndicatorColor: NavigationSurfaceUtilities.WithOpacity(colors.Secondary, 0.24),
                 IndicatorShape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(16)),
-                LabelTextStyle: MaterialStateProperty<TextStyle?>.All(
+                LabelTextStyle: WidgetStateProperty<TextStyle?>.All(
                     theme.TextTheme.LabelSmall.CopyWith(color: colors.OnSurface)),
-                IconTheme: MaterialStateProperty<IconThemeData?>.All(
+                IconTheme: WidgetStateProperty<IconThemeData?>.All(
                     new IconThemeData(Color: colors.OnSurface, Size: 24)),
-                OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                    states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused)
+                OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                    states.Contains(WidgetState.Pressed) || states.Contains(WidgetState.Focused)
                         ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.12)
-                        : states.HasFlag(MaterialState.Hovered)
+                        : states.Contains(WidgetState.Hovered)
                             ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.04)
                             : null),
                 LabelBehavior: NavigationDestinationLabelBehavior.AlwaysShow,
@@ -244,46 +244,46 @@ public sealed class NavigationBar : StatelessWidget
             SurfaceTintColor: Colors.Transparent,
             IndicatorColor: colors.SecondaryContainer,
             IndicatorShape: new StadiumBorder(),
-            LabelTextStyle: MaterialStateProperty<TextStyle?>.ResolveWith(states =>
+            LabelTextStyle: WidgetStateProperty<TextStyle?>.ResolveWith(states =>
                 theme.TextTheme.LabelMedium.CopyWith(color:
-                    states.HasFlag(MaterialState.Disabled)
+                    states.Contains(WidgetState.Disabled)
                         ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38)
-                        : states.HasFlag(MaterialState.Selected)
+                        : states.Contains(WidgetState.Selected)
                             ? colors.OnSurface
                             : colors.OnSurfaceVariant)),
-            IconTheme: MaterialStateProperty<IconThemeData?>.ResolveWith(states =>
+            IconTheme: WidgetStateProperty<IconThemeData?>.ResolveWith(states =>
                 new IconThemeData(
-                    Color: states.HasFlag(MaterialState.Disabled)
+                    Color: states.Contains(WidgetState.Disabled)
                         ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurfaceVariant, 0.38)
-                        : states.HasFlag(MaterialState.Selected)
+                        : states.Contains(WidgetState.Selected)
                             ? colors.OnSecondaryContainer
                             : colors.OnSurfaceVariant,
                     Size: 24)),
-            OverlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Pressed) || states.HasFlag(MaterialState.Focused)
+            OverlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Pressed) || states.Contains(WidgetState.Focused)
                     ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.10)
-                    : states.HasFlag(MaterialState.Hovered)
+                    : states.Contains(WidgetState.Hovered)
                         ? NavigationSurfaceUtilities.WithOpacity(colors.OnSurface, 0.08)
                         : null),
             LabelBehavior: NavigationDestinationLabelBehavior.AlwaysShow,
             LabelPadding: new Thickness(0, 4, 0, 0));
     }
 
-    private static MaterialStateProperty<T?> ComposeReferenceProperty<T>(
-        MaterialStateProperty<T?>? widget,
-        MaterialStateProperty<T?>? localTheme,
-        MaterialStateProperty<T?>? defaults) where T : class
+    private static WidgetStateProperty<T?> ComposeReferenceProperty<T>(
+        WidgetStateProperty<T?>? widget,
+        WidgetStateProperty<T?>? localTheme,
+        WidgetStateProperty<T?>? defaults) where T : class
     {
-        return MaterialStateProperty<T?>.ResolveWith(states =>
+        return WidgetStateProperty<T?>.ResolveWith(states =>
             widget?.Resolve(states) ?? localTheme?.Resolve(states) ?? defaults?.Resolve(states));
     }
 
-    private static MaterialStateProperty<Color?> ComposeColorProperty(
-        MaterialStateProperty<Color?>? widget,
-        MaterialStateProperty<Color?>? localTheme,
-        MaterialStateProperty<Color?>? defaults)
+    private static WidgetStateProperty<Color?> ComposeColorProperty(
+        WidgetStateProperty<Color?>? widget,
+        WidgetStateProperty<Color?>? localTheme,
+        WidgetStateProperty<Color?>? defaults)
     {
-        return MaterialStateProperty<Color?>.ResolveWith(states =>
+        return WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             var value = widget?.Resolve(states);
             if (value.HasValue) return value;
@@ -375,9 +375,9 @@ internal sealed class NavigationBarDestinationTile : StatefulWidget
         NavigationDestinationLabelBehavior labelBehavior,
         Color indicatorColor,
         ShapeBorder indicatorShape,
-        MaterialStateProperty<TextStyle?> labelTextStyle,
-        MaterialStateProperty<IconThemeData?> iconTheme,
-        MaterialStateProperty<Color?> overlayColor,
+        WidgetStateProperty<TextStyle?> labelTextStyle,
+        WidgetStateProperty<IconThemeData?> iconTheme,
+        WidgetStateProperty<Color?> overlayColor,
         Thickness labelPadding,
         double height,
         Key? key = null) : base(key)
@@ -405,9 +405,9 @@ internal sealed class NavigationBarDestinationTile : StatefulWidget
     public NavigationDestinationLabelBehavior LabelBehavior { get; }
     public Color IndicatorColor { get; }
     public ShapeBorder IndicatorShape { get; }
-    public MaterialStateProperty<TextStyle?> LabelTextStyle { get; }
-    public MaterialStateProperty<IconThemeData?> IconTheme { get; }
-    public MaterialStateProperty<Color?> OverlayColor { get; }
+    public WidgetStateProperty<TextStyle?> LabelTextStyle { get; }
+    public WidgetStateProperty<IconThemeData?> IconTheme { get; }
+    public WidgetStateProperty<Color?> OverlayColor { get; }
     public Thickness LabelPadding { get; }
     public double Height { get; }
 
@@ -457,9 +457,15 @@ internal sealed class NavigationBarDestinationTileState : State
         var icon = widget.Selected && destination.SelectedIcon is not null
             ? destination.SelectedIcon
             : destination.Icon;
-        MaterialState states = destination.Enabled
-            ? widget.Selected ? MaterialState.Selected : MaterialState.None
-            : MaterialState.Disabled;
+        var states = new HashSet<WidgetState>();
+        if (!destination.Enabled)
+        {
+            states.Add(WidgetState.Disabled);
+        }
+        else if (widget.Selected)
+        {
+            states.Add(WidgetState.Selected);
+        }
         IconThemeData? iconTheme = widget.IconTheme.Resolve(states);
 
         Widget iconWithIndicator = new Stack(
@@ -560,7 +566,7 @@ internal sealed class NavigationBarIndicatorInkWell : InkResponse
     public NavigationBarIndicatorInkWell(
         GlobalKey iconKey,
         NavigationDestinationLabelBehavior labelBehavior,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         ShapeBorder? customBorder,
         Action? onTap,
         Widget child)
@@ -674,7 +680,7 @@ internal sealed class NavigationBarCustomDestinationTile : StatelessWidget
         string indexLabel,
         Action onTap,
         double height,
-        MaterialStateProperty<Color?> overlayColor,
+        WidgetStateProperty<Color?> overlayColor,
         Key? key = null) : base(key)
     {
         Child = child;
@@ -690,7 +696,7 @@ internal sealed class NavigationBarCustomDestinationTile : StatelessWidget
     public string IndexLabel { get; }
     public Action OnTap { get; }
     public double Height { get; }
-    public MaterialStateProperty<Color?> OverlayColor { get; }
+    public WidgetStateProperty<Color?> OverlayColor { get; }
 
     public override Widget Build(BuildContext context)
     {

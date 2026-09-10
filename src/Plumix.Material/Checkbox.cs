@@ -29,11 +29,11 @@ public sealed class Checkbox : StatefulWidget
         bool tristate = false,
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
-        MaterialStateProperty<Color?>? fillColor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
@@ -74,11 +74,11 @@ public sealed class Checkbox : StatefulWidget
         bool tristate,
         MouseCursor? mouseCursor,
         Color? activeColor,
-        MaterialStateProperty<Color?>? fillColor,
+        WidgetStateProperty<Color?>? fillColor,
         Color? checkColor,
         Color? focusColor,
         Color? hoverColor,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         double? splashRadius,
         MaterialTapTargetSize? materialTapTargetSize,
         VisualDensity? visualDensity,
@@ -130,7 +130,7 @@ public sealed class Checkbox : StatefulWidget
 
     public Color? ActiveColor { get; }
 
-    public MaterialStateProperty<Color?>? FillColor { get; }
+    public WidgetStateProperty<Color?>? FillColor { get; }
 
     public Color? CheckColor { get; }
 
@@ -138,7 +138,7 @@ public sealed class Checkbox : StatefulWidget
 
     public Color? HoverColor { get; }
 
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
 
     public double? SplashRadius { get; }
 
@@ -164,11 +164,11 @@ public sealed class Checkbox : StatefulWidget
         bool tristate = false,
         MouseCursor? mouseCursor = null,
         Color? activeColor = null,
-        MaterialStateProperty<Color?>? fillColor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
         Color? checkColor = null,
         Color? focusColor = null,
         Color? hoverColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
@@ -260,9 +260,9 @@ public sealed class Checkbox : StatefulWidget
             }
 
             CheckboxThemeData checkboxTheme = CheckboxTheme.Of(context);
-            MaterialState states = WithError(ToMaterialState(CurrentWidgetStates));
-            MaterialState activeStates = WithSelected(states, selected: true);
-            MaterialState inactiveStates = WithSelected(states, selected: false);
+            IReadOnlySet<WidgetState> states = WithError(CurrentWidgetStates);
+            IReadOnlySet<WidgetState> activeStates = WithSelected(states, selected: true);
+            IReadOnlySet<WidgetState> inactiveStates = WithSelected(states, selected: false);
 
             Color? nonDefaultActiveColor = ResolveNonDefaultFillColor(
                 checkboxTheme,
@@ -288,12 +288,12 @@ public sealed class Checkbox : StatefulWidget
             Color hoverColor = ResolveLegacyOverlayColor(
                 theme,
                 checkboxTheme,
-                WithInteractionState(states, MaterialState.Hovered),
+                WithInteractionState(states, WidgetState.Hovered),
                 CurrentWidget.HoverColor);
             Color focusColor = ResolveLegacyOverlayColor(
                 theme,
                 checkboxTheme,
-                WithInteractionState(states, MaterialState.Focused),
+                WithInteractionState(states, WidgetState.Focused),
                 CurrentWidget.FocusColor);
             Color reactionColor = IsValueSelected
                 ? activeReactionColor
@@ -408,7 +408,7 @@ public sealed class Checkbox : StatefulWidget
 
         private Color? ResolveNonDefaultFillColor(
             CheckboxThemeData checkboxTheme,
-            MaterialState states)
+            IReadOnlySet<WidgetState> states)
         {
             Color? widgetFill = CurrentWidget.FillColor?.Resolve(states);
             if (widgetFill.HasValue)
@@ -416,8 +416,8 @@ public sealed class Checkbox : StatefulWidget
                 return widgetFill;
             }
 
-            if (!states.HasFlag(MaterialState.Disabled)
-                && states.HasFlag(MaterialState.Selected)
+            if (!states.Contains(WidgetState.Disabled)
+                && states.Contains(WidgetState.Selected)
                 && CurrentWidget.ActiveColor.HasValue)
             {
                 return CurrentWidget.ActiveColor;
@@ -429,7 +429,7 @@ public sealed class Checkbox : StatefulWidget
         private Color ResolveCheckColor(
             ThemeData theme,
             CheckboxThemeData checkboxTheme,
-            MaterialState states)
+            IReadOnlySet<WidgetState> states)
         {
             return CurrentWidget.CheckColor
                    ?? checkboxTheme.CheckColor?.Resolve(states)
@@ -439,7 +439,7 @@ public sealed class Checkbox : StatefulWidget
         private BorderSide? ResolveSide(
             ThemeData theme,
             CheckboxThemeData checkboxTheme,
-            MaterialState states)
+            IReadOnlySet<WidgetState> states)
         {
             BorderSide? widgetSide = CurrentWidget.Side?.Resolve(states);
             if (widgetSide.HasValue)
@@ -454,10 +454,10 @@ public sealed class Checkbox : StatefulWidget
         private Color ResolvePressedOverlayColor(
             ThemeData theme,
             CheckboxThemeData checkboxTheme,
-            MaterialState states,
+            IReadOnlySet<WidgetState> states,
             Color? nonDefaultFillColor)
         {
-            MaterialState pressedStates = WithInteractionState(states, MaterialState.Pressed);
+            IReadOnlySet<WidgetState> pressedStates = WithInteractionState(states, WidgetState.Pressed);
             return CurrentWidget.OverlayColor?.Resolve(pressedStates)
                    ?? checkboxTheme.OverlayColor?.Resolve(pressedStates)
                    ?? (nonDefaultFillColor.HasValue
@@ -468,7 +468,7 @@ public sealed class Checkbox : StatefulWidget
         private Color ResolveLegacyOverlayColor(
             ThemeData theme,
             CheckboxThemeData checkboxTheme,
-            MaterialState states,
+            IReadOnlySet<WidgetState> states,
             Color? legacyColor)
         {
             return CurrentWidget.OverlayColor?.Resolve(states)
@@ -479,19 +479,19 @@ public sealed class Checkbox : StatefulWidget
 
         private MouseCursor ResolveMouseCursor(
             CheckboxThemeData checkboxTheme,
-            MaterialState states)
+            IReadOnlySet<WidgetState> states)
         {
             return ResolveWidgetMouseCursor(CurrentWidget.MouseCursor, states)
                    ?? checkboxTheme.MouseCursor?.Resolve(states)
                    ?? (OperatingSystem.IsBrowser()
-                       && !states.HasFlag(MaterialState.Disabled)
+                       && !states.Contains(WidgetState.Disabled)
                            ? SystemMouseCursors.Click
                            : SystemMouseCursors.Basic);
         }
 
         private static MouseCursor? ResolveWidgetMouseCursor(
             MouseCursor? cursor,
-            MaterialState states)
+            IReadOnlySet<WidgetState> states)
         {
             return cursor is WidgetStateMouseCursor stateCursor
                 ? stateCursor.Resolve(states)
@@ -504,59 +504,49 @@ public sealed class Checkbox : StatefulWidget
                    && theme.Platform is TargetPlatform.IOS or TargetPlatform.MacOS;
         }
 
-        private MaterialState WithError(MaterialState states)
+        private IReadOnlySet<WidgetState> WithError(IReadOnlySet<WidgetState> states)
         {
-            return CurrentWidget.IsError
-                ? states | MaterialState.Error
-                : states & ~MaterialState.Error;
+            var result = new HashSet<WidgetState>(states);
+            if (CurrentWidget.IsError)
+            {
+                result.Add(WidgetState.Error);
+            }
+            else
+            {
+                result.Remove(WidgetState.Error);
+            }
+
+            return result;
         }
 
-        private static MaterialState WithSelected(MaterialState states, bool selected)
+        private static IReadOnlySet<WidgetState> WithSelected(IReadOnlySet<WidgetState> states, bool selected)
         {
-            return selected
-                ? states | MaterialState.Selected
-                : states & ~MaterialState.Selected;
+            var result = new HashSet<WidgetState>(states);
+            if (selected)
+            {
+                result.Add(WidgetState.Selected);
+            }
+            else
+            {
+                result.Remove(WidgetState.Selected);
+            }
+
+            return result;
         }
 
-        private static MaterialState WithInteractionState(
-            MaterialState states,
-            MaterialState interaction)
+        private static IReadOnlySet<WidgetState> WithInteractionState(
+            IReadOnlySet<WidgetState> states,
+            WidgetState interaction)
         {
-            return states | interaction;
+            return new HashSet<WidgetState>(states) { interaction };
         }
 
         private static bool IsSelected(bool? value) => value ?? true;
 
-        private static MaterialState ToMaterialState(IReadOnlySet<WidgetState> states)
+        private static Color ResolveDefaultFillColor(ThemeData theme, IReadOnlySet<WidgetState> states)
         {
-            MaterialState result = MaterialState.None;
-            if (states.Contains(WidgetState.Disabled))
-            {
-                result |= MaterialState.Disabled;
-            }
-            if (states.Contains(WidgetState.Selected))
-            {
-                result |= MaterialState.Selected;
-            }
-            if (states.Contains(WidgetState.Hovered))
-            {
-                result |= MaterialState.Hovered;
-            }
-            if (states.Contains(WidgetState.Focused))
-            {
-                result |= MaterialState.Focused;
-            }
-            if (states.Contains(WidgetState.Pressed))
-            {
-                result |= MaterialState.Pressed;
-            }
-            return result;
-        }
-
-        private static Color ResolveDefaultFillColor(ThemeData theme, MaterialState states)
-        {
-            bool disabled = states.HasFlag(MaterialState.Disabled);
-            bool selected = states.HasFlag(MaterialState.Selected);
+            bool disabled = states.Contains(WidgetState.Disabled);
+            bool selected = states.Contains(WidgetState.Selected);
             if (!theme.UseMaterial3)
             {
                 if (disabled)
@@ -572,37 +562,37 @@ public sealed class Checkbox : StatefulWidget
                     ? WithOpacity(theme.ColorScheme.OnSurface, 0.38)
                     : Colors.Transparent;
             }
-            if (selected && states.HasFlag(MaterialState.Error))
+            if (selected && states.Contains(WidgetState.Error))
             {
                 return theme.ColorScheme.Error;
             }
             return selected ? theme.ColorScheme.Primary : Colors.Transparent;
         }
 
-        private static Color ResolveDefaultCheckColor(ThemeData theme, MaterialState states)
+        private static Color ResolveDefaultCheckColor(ThemeData theme, IReadOnlySet<WidgetState> states)
         {
             if (!theme.UseMaterial3)
             {
                 return Colors.White;
             }
 
-            bool disabled = states.HasFlag(MaterialState.Disabled);
-            bool selected = states.HasFlag(MaterialState.Selected);
+            bool disabled = states.Contains(WidgetState.Disabled);
+            bool selected = states.Contains(WidgetState.Selected);
             if (disabled)
             {
                 return selected ? theme.ColorScheme.Surface : Colors.Transparent;
             }
-            if (selected && states.HasFlag(MaterialState.Error))
+            if (selected && states.Contains(WidgetState.Error))
             {
                 return theme.ColorScheme.OnError;
             }
             return selected ? theme.ColorScheme.OnPrimary : Colors.Transparent;
         }
 
-        private static BorderSide ResolveDefaultSide(ThemeData theme, MaterialState states)
+        private static BorderSide ResolveDefaultSide(ThemeData theme, IReadOnlySet<WidgetState> states)
         {
-            bool disabled = states.HasFlag(MaterialState.Disabled);
-            bool selected = states.HasFlag(MaterialState.Selected);
+            bool disabled = states.Contains(WidgetState.Disabled);
+            bool selected = states.Contains(WidgetState.Selected);
             if (!theme.UseMaterial3)
             {
                 Color color = disabled
@@ -621,45 +611,45 @@ public sealed class Checkbox : StatefulWidget
             {
                 return new BorderSide(Colors.Transparent, 0.0);
             }
-            if (states.HasFlag(MaterialState.Error))
+            if (states.Contains(WidgetState.Error))
             {
                 return new BorderSide(theme.ColorScheme.Error, 2.0);
             }
-            if (states.HasFlag(MaterialState.Pressed)
-                || states.HasFlag(MaterialState.Hovered)
-                || states.HasFlag(MaterialState.Focused))
+            if (states.Contains(WidgetState.Pressed)
+                || states.Contains(WidgetState.Hovered)
+                || states.Contains(WidgetState.Focused))
             {
                 return new BorderSide(theme.ColorScheme.OnSurface, 2.0);
             }
             return new BorderSide(theme.ColorScheme.OnSurfaceVariant, 2.0);
         }
 
-        private static Color ResolveDefaultOverlayColor(ThemeData theme, MaterialState states)
+        private static Color ResolveDefaultOverlayColor(ThemeData theme, IReadOnlySet<WidgetState> states)
         {
             if (!theme.UseMaterial3)
             {
-                if (states.HasFlag(MaterialState.Pressed))
+                if (states.Contains(WidgetState.Pressed))
                 {
                     return WithAlpha(
                         ResolveDefaultFillColor(theme, states),
                         RadialReactionAlpha);
                 }
-                if (states.HasFlag(MaterialState.Hovered))
+                if (states.Contains(WidgetState.Hovered))
                 {
                     return theme.HoverColor;
                 }
-                if (states.HasFlag(MaterialState.Focused))
+                if (states.Contains(WidgetState.Focused))
                 {
                     return theme.FocusColor;
                 }
                 return Colors.Transparent;
             }
 
-            bool error = states.HasFlag(MaterialState.Error);
-            bool selected = states.HasFlag(MaterialState.Selected);
-            bool pressed = states.HasFlag(MaterialState.Pressed);
-            bool hovered = states.HasFlag(MaterialState.Hovered);
-            bool focused = states.HasFlag(MaterialState.Focused);
+            bool error = states.Contains(WidgetState.Error);
+            bool selected = states.Contains(WidgetState.Selected);
+            bool pressed = states.Contains(WidgetState.Pressed);
+            bool hovered = states.Contains(WidgetState.Hovered);
+            bool focused = states.Contains(WidgetState.Focused);
             if (error)
             {
                 if (pressed || focused)

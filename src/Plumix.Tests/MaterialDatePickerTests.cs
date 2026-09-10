@@ -238,10 +238,10 @@ public sealed class MaterialDatePickerTests : IDisposable
         var localDay = Color.Parse("#FF445566");
         var localYear = Color.Parse("#FF778899");
         var localTheme = new DatePickerThemeData(
-            DayBackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Selected) ? localDay : null),
-            YearBackgroundColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                states.HasFlag(MaterialState.Selected) ? localYear : null));
+            DayBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Selected) ? localDay : null),
+            YearBackgroundColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                states.Contains(WidgetState.Selected) ? localYear : null));
 
         using var dayHarness = CreateHarness(new DatePickerTheme(localTheme, new CalendarDatePicker(
             initialDate: new DateTime(2026, 3, 12),
@@ -304,11 +304,11 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.Equal(MaterialColors.Transparent, material3.HeaderBackgroundColor);
         Assert.Equal(onSurfaceVariant, material3.HeaderForegroundColor);
         Assert.Equal(32.0, material3.HeaderHeadlineStyle!.FontSize);
-        Assert.Equal(primary, material3.DayBackgroundColor!.Resolve(MaterialState.Selected));
+        Assert.Equal(primary, material3.DayBackgroundColor!.Resolve(new HashSet<WidgetState> { WidgetState.Selected }));
         Assert.Equal(
             WithOpacity(onPrimary, 0.10),
-            material3.DayOverlayColor!.Resolve(MaterialState.Selected | MaterialState.Pressed));
-        Assert.Equal(onSurfaceVariant, material3.YearForegroundColor!.Resolve(MaterialState.None));
+            material3.DayOverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Pressed }));
+        Assert.Equal(onSurfaceVariant, material3.YearForegroundColor!.Resolve(new HashSet<WidgetState>()));
         Assert.Null(material3.RangePickerBackgroundColor);
         Assert.Equal(MaterialColors.Transparent, material3.RangePickerHeaderBackgroundColor);
         Assert.Equal(onSurfaceVariant, material3.RangePickerHeaderForegroundColor);
@@ -316,7 +316,8 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.Equal(secondaryContainer, material3.RangeSelectionBackgroundColor);
         Assert.Equal(
             WithOpacity(onPrimaryContainer, 0.10),
-            material3.RangeSelectionOverlayColor!.Resolve(MaterialState.Selected | MaterialState.Pressed));
+            material3.RangeSelectionOverlayColor!.Resolve(
+                new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Pressed }));
         Assert.Null(material3.DividerColor);
         Assert.NotNull(material3.CancelButtonStyle);
         Assert.NotNull(material3.ConfirmButtonStyle);
@@ -347,7 +348,7 @@ public sealed class MaterialDatePickerTests : IDisposable
         Assert.Equal(0.0, material2.RangePickerElevation);
         Assert.Equal(
             WithOpacity(onPrimary, 0.38),
-            material2.DayOverlayColor!.Resolve(MaterialState.Selected | MaterialState.Pressed));
+            material2.DayOverlayColor!.Resolve(new HashSet<WidgetState> { WidgetState.Selected, WidgetState.Pressed }));
         Assert.Equal(material2.DayOverlayColor, material2.RangeSelectionOverlayColor);
         Assert.Null(material2.DividerColor);
     }
@@ -357,7 +358,7 @@ public sealed class MaterialDatePickerTests : IDisposable
     {
         var localeA = new Locale("en", countryCode: "GB");
         var localeB = new Locale("fr", countryCode: "FR");
-        var dayShape = MaterialStateProperty<OutlinedBorder?>.All(new CircleBorder());
+        var dayShape = WidgetStateProperty<OutlinedBorder?>.All(new CircleBorder());
         var source = new DatePickerThemeData(
             BackgroundColor: Colors.Beige,
             DayShape: dayShape,

@@ -604,7 +604,7 @@ internal sealed class CalendarDateRangePickerState : State
                 isFocused: false,
                 onChanged: UpdateSelection,
                 calendarDelegate: Current.CalendarDelegate,
-                overlayColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                overlayColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                     dateTheme.RangeSelectionOverlayColor?.Resolve(states)
                     ?? defaults.RangeSelectionOverlayColor?.Resolve(states)));
             if (inRange)

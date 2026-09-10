@@ -109,14 +109,14 @@ internal sealed class CheckboxDemoPageState : State
                                     onChanged: _enabled ? OnCheckedChanged : null,
                                     activeColor: Color.Parse("#FF00695C"),
                                     checkColor: Colors.White,
-                                    fillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
+                                    fillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
                                     {
-                                        if (states.HasFlag(MaterialState.Disabled))
+                                        if (states.Contains(WidgetState.Disabled))
                                         {
                                             return Color.Parse("#6100695C");
                                         }
 
-                                        if (states.HasFlag(MaterialState.Selected))
+                                        if (states.Contains(WidgetState.Selected))
                                         {
                                             return Color.Parse("#FF00695C");
                                         }
@@ -129,11 +129,11 @@ internal sealed class CheckboxDemoPageState : State
                             BuildCheckboxRow(
                                 checkbox: new CheckboxTheme(
                                     data: new CheckboxThemeData(
-                                        FillColor: MaterialStateProperty<Color?>.ResolveWith(states =>
-                                            states.HasFlag(MaterialState.Selected)
+                                        FillColor: WidgetStateProperty<Color?>.ResolveWith(states =>
+                                            states.Contains(WidgetState.Selected)
                                                 ? Color.Parse("#FF7B1FA2")
                                                 : Colors.Transparent),
-                                        CheckColor: MaterialStateProperty<Color?>.All(Colors.White),
+                                        CheckColor: WidgetStateProperty<Color?>.All(Colors.White),
                                         Shape: new RoundedRectangleBorder(borderRadius:
                                             Plumix.Rendering.BorderRadius.Circular(6)),
                                         Side: WidgetStateBorderSide.ResolveWith(states =>

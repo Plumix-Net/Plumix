@@ -134,7 +134,7 @@ public sealed class MaterialDataTableTests : IDisposable
                 columnSpacing: 29.0),
         };
         var local = new DataTableThemeData(
-            headingRowColor: MaterialStateProperty<Color?>.All(Colors.Gold));
+            headingRowColor: WidgetStateProperty<Color?>.All(Colors.Gold));
         using var harness = new WidgetRenderHarness(Wrap(
             new DataTableTheme(local, SimpleTable()),
             global));
@@ -152,13 +152,13 @@ public sealed class MaterialDataTableTests : IDisposable
     {
         Color selected = Colors.ForestGreen;
         Color disabled = Colors.OrangeRed;
-        MaterialStateProperty<Color?> rowColor = MaterialStateProperty<Color?>.ResolveWith(states =>
+        WidgetStateProperty<Color?> rowColor = WidgetStateProperty<Color?>.ResolveWith(states =>
         {
-            if (states.HasFlag(MaterialState.Disabled))
+            if (states.Contains(WidgetState.Disabled))
             {
                 return disabled;
             }
-            return states.HasFlag(MaterialState.Selected) ? selected : null;
+            return states.Contains(WidgetState.Selected) ? selected : null;
         });
         using var harness = new WidgetRenderHarness(Wrap(new DataTable(
             columns: [new DataColumn(new Text("Name"))],
@@ -311,8 +311,8 @@ public sealed class MaterialDataTableTests : IDisposable
                 headingRowHeight: 60,
                 horizontalMargin: 12,
                 columnSpacing: 20,
-                headingRowColor: MaterialStateProperty<Color?>.All(Colors.Gold),
-                dataRowColor: MaterialStateProperty<Color?>.All(Colors.MistyRose)),
+                headingRowColor: WidgetStateProperty<Color?>.All(Colors.Gold),
+                dataRowColor: WidgetStateProperty<Color?>.All(Colors.MistyRose)),
         };
         using var themed = new WidgetRenderHarness(Wrap(
             new DataTableTheme(

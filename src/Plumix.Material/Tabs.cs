@@ -324,7 +324,7 @@ internal abstract class TabBarDefaults
 
     public virtual InteractiveInkFeatureFactory? SplashFactory => null;
 
-    public virtual MaterialStateProperty<Color?>? OverlayColor => null;
+    public virtual WidgetStateProperty<Color?>? OverlayColor => null;
 
     public virtual BorderRadius? SplashBorderRadius => null;
 }
@@ -412,38 +412,38 @@ internal sealed class TabsPrimaryDefaultsM3 : TabBarDefaults
 
     public override InteractiveInkFeatureFactory? SplashFactory => _theme.SplashFactory;
 
-    public override MaterialStateProperty<Color?>? OverlayColor =>
-        MaterialStateProperty<Color?>.ResolveWith(states =>
+    public override WidgetStateProperty<Color?>? OverlayColor =>
+        WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             ColorScheme colors = _theme.ColorScheme;
-            if (states.HasFlag(MaterialState.Selected))
+            if (states.Contains(WidgetState.Selected))
             {
-                if (states.HasFlag(MaterialState.Pressed))
+                if (states.Contains(WidgetState.Pressed))
                 {
                     return TabStyle.WithOpacity(colors.Primary, 0.1);
                 }
 
-                if (states.HasFlag(MaterialState.Hovered))
+                if (states.Contains(WidgetState.Hovered))
                 {
                     return TabStyle.WithOpacity(colors.Primary, 0.08);
                 }
 
-                return states.HasFlag(MaterialState.Focused)
+                return states.Contains(WidgetState.Focused)
                     ? TabStyle.WithOpacity(colors.Primary, 0.1)
                     : null;
             }
 
-            if (states.HasFlag(MaterialState.Pressed))
+            if (states.Contains(WidgetState.Pressed))
             {
                 return TabStyle.WithOpacity(colors.Primary, 0.1);
             }
 
-            if (states.HasFlag(MaterialState.Hovered))
+            if (states.Contains(WidgetState.Hovered))
             {
                 return TabStyle.WithOpacity(colors.OnSurface, 0.08);
             }
 
-            return states.HasFlag(MaterialState.Focused)
+            return states.Contains(WidgetState.Focused)
                 ? TabStyle.WithOpacity(colors.OnSurface, 0.1)
                 : null;
         });
@@ -485,21 +485,21 @@ internal sealed class TabsSecondaryDefaultsM3 : TabBarDefaults
 
     public override InteractiveInkFeatureFactory? SplashFactory => _theme.SplashFactory;
 
-    public override MaterialStateProperty<Color?>? OverlayColor =>
-        MaterialStateProperty<Color?>.ResolveWith(states =>
+    public override WidgetStateProperty<Color?>? OverlayColor =>
+        WidgetStateProperty<Color?>.ResolveWith(states =>
         {
             Color onSurface = _theme.ColorScheme.OnSurface;
-            if (states.HasFlag(MaterialState.Pressed))
+            if (states.Contains(WidgetState.Pressed))
             {
                 return TabStyle.WithOpacity(onSurface, 0.1);
             }
 
-            if (states.HasFlag(MaterialState.Hovered))
+            if (states.Contains(WidgetState.Hovered))
             {
                 return TabStyle.WithOpacity(onSurface, 0.08);
             }
 
-            return states.HasFlag(MaterialState.Focused)
+            return states.Contains(WidgetState.Focused)
                 ? TabStyle.WithOpacity(onSurface, 0.1)
                 : null;
         });
@@ -1171,7 +1171,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
         Color? unselectedLabelColor = null,
         TextStyle? unselectedLabelStyle = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null,
         bool? enableFeedback = null,
         Action<int>? onTap = null,
@@ -1241,7 +1241,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
         Color? unselectedLabelColor,
         TextStyle? unselectedLabelStyle,
         DragStartBehavior dragStartBehavior,
-        MaterialStateProperty<Color?>? overlayColor,
+        WidgetStateProperty<Color?>? overlayColor,
         MouseCursor? mouseCursor,
         bool? enableFeedback,
         Action<int>? onTap,
@@ -1320,7 +1320,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
         Color? unselectedLabelColor = null,
         TextStyle? unselectedLabelStyle = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         MouseCursor? mouseCursor = null,
         bool? enableFeedback = null,
         Action<int>? onTap = null,
@@ -1405,7 +1405,7 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
 
     public DragStartBehavior DragStartBehavior { get; }
 
-    public MaterialStateProperty<Color?>? OverlayColor { get; }
+    public WidgetStateProperty<Color?>? OverlayColor { get; }
 
     public MouseCursor? MouseCursor { get; }
 
@@ -1673,13 +1673,18 @@ public sealed class TabBar : StatefulWidget, IPreferredSizeWidget
             for (int index = 0; index < wrappedTabs.Count; index++)
             {
                 int tabIndex = index;
-                MaterialState selectedState = tabIndex == _currentIndex
-                    ? MaterialState.Selected
-                    : MaterialState.None;
+                IReadOnlySet<WidgetState> selectedState = tabIndex == _currentIndex
+                    ? new HashSet<WidgetState> { WidgetState.Selected }
+                    : new HashSet<WidgetState>();
                 // The default overlay resolves the tab's own selected state on top of the
                 // interaction states the ink well supplies.
-                MaterialStateProperty<Color?> defaultOverlay = MaterialStateProperty<Color?>.ResolveWith(
-                    states => defaults.OverlayColor?.Resolve(states | selectedState));
+                WidgetStateProperty<Color?> defaultOverlay = WidgetStateProperty<Color?>.ResolveWith(
+                    states =>
+                    {
+                        var resolved = new HashSet<WidgetState>(states);
+                        resolved.UnionWith(selectedState);
+                        return defaults.OverlayColor?.Resolve(resolved);
+                    });
                 MouseCursor effectiveMouseCursor = Current.MouseCursor
                                                    ?? tabBarTheme.MouseCursor?.Resolve(selectedState)
                                                    ?? SystemMouseCursors.Click;

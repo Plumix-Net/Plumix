@@ -14,8 +14,7 @@ namespace Plumix.Widgets;
 // stored in a plain `TextStyle?` field. Plumix's `TextStyle` is a sealed record and cannot be
 // subclassed, so this type wraps the style and converts implicitly, exactly as `WidgetStateColor`
 // already does for Avalonia's sealed `Color` and `WidgetStateBorderSide` below for the readonly
-// record struct `BorderSide`. Material call sites keep their `[Flags] MaterialState` signature
-// through extension bridges in `Plumix.Material` (`CheckboxTheme.cs`).
+// record struct `BorderSide`.
 
 /// A text style whose value can depend on the current widget states.
 public sealed class WidgetStateTextStyle : WidgetStateProperty<TextStyle>

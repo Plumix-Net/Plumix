@@ -9,26 +9,26 @@ namespace Plumix.Material;
 // Dart parity source: material_ui/lib/src/radio_theme.dart
 
 public sealed partial record RadioThemeData(
-    MaterialStateProperty<MouseCursor?>? MouseCursor = null,
-    MaterialStateProperty<Color?>? FillColor = null,
-    MaterialStateProperty<Color?>? OverlayColor = null,
+    WidgetStateProperty<MouseCursor?>? MouseCursor = null,
+    WidgetStateProperty<Color?>? FillColor = null,
+    WidgetStateProperty<Color?>? OverlayColor = null,
     double? SplashRadius = null,
     MaterialTapTargetSize? MaterialTapTargetSize = null,
     VisualDensity? VisualDensity = null,
-    MaterialStateProperty<Color?>? BackgroundColor = null,
+    WidgetStateProperty<Color?>? BackgroundColor = null,
     WidgetStateBorderSide? Side = null,
-    MaterialStateProperty<double?>? InnerRadius = null)
+    WidgetStateProperty<double?>? InnerRadius = null)
 {
     public RadioThemeData CopyWith(
-        MaterialStateProperty<MouseCursor?>? mouseCursor = null,
-        MaterialStateProperty<Color?>? fillColor = null,
-        MaterialStateProperty<Color?>? overlayColor = null,
+        WidgetStateProperty<MouseCursor?>? mouseCursor = null,
+        WidgetStateProperty<Color?>? fillColor = null,
+        WidgetStateProperty<Color?>? overlayColor = null,
         double? splashRadius = null,
         MaterialTapTargetSize? materialTapTargetSize = null,
         VisualDensity? visualDensity = null,
-        MaterialStateProperty<Color?>? backgroundColor = null,
+        WidgetStateProperty<Color?>? backgroundColor = null,
         WidgetStateBorderSide? side = null,
-        MaterialStateProperty<double?>? innerRadius = null)
+        WidgetStateProperty<double?>? innerRadius = null)
     {
         return new RadioThemeData(
             MouseCursor: mouseCursor ?? MouseCursor,

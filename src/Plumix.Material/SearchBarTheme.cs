@@ -9,16 +9,16 @@ namespace Plumix.Material;
 // Dart parity source: material_ui/lib/src/search_bar_theme.dart
 
 public sealed partial record SearchBarThemeData(
-    MaterialStateProperty<double?>? Elevation = null,
-    MaterialStateProperty<Color?>? BackgroundColor = null,
-    MaterialStateProperty<Color?>? ShadowColor = null,
-    MaterialStateProperty<Color?>? SurfaceTintColor = null,
-    MaterialStateProperty<Color?>? OverlayColor = null,
-    MaterialStateProperty<BorderSide?>? Side = null,
-    MaterialStateProperty<OutlinedBorder?>? Shape = null,
-    MaterialStateProperty<EdgeInsetsGeometry?>? Padding = null,
-    MaterialStateProperty<TextStyle?>? TextStyle = null,
-    MaterialStateProperty<TextStyle?>? HintStyle = null,
+    WidgetStateProperty<double?>? Elevation = null,
+    WidgetStateProperty<Color?>? BackgroundColor = null,
+    WidgetStateProperty<Color?>? ShadowColor = null,
+    WidgetStateProperty<Color?>? SurfaceTintColor = null,
+    WidgetStateProperty<Color?>? OverlayColor = null,
+    WidgetStateProperty<BorderSide?>? Side = null,
+    WidgetStateProperty<OutlinedBorder?>? Shape = null,
+    WidgetStateProperty<EdgeInsetsGeometry?>? Padding = null,
+    WidgetStateProperty<TextStyle?>? TextStyle = null,
+    WidgetStateProperty<TextStyle?>? HintStyle = null,
     BoxConstraints? Constraints = null,
     TextCapitalization? TextCapitalization = null);
 
