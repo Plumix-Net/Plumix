@@ -1110,13 +1110,13 @@ internal sealed class MasterDetailScaffoldState : State, IPageOpener
 
     public void OpenDetailPage(object arguments)
     {
-        Scheduler.AddPostFrameCallback(_ => _detailArguments.Value = arguments, scheduleFrame: false);
+        Scheduler.AddPostFrameCallback(_ => _detailArguments.Value = arguments);
         MasterDetailFlow.Of(Context).OpenDetailPage(arguments);
     }
 
     public void SetInitialDetailPage(object arguments)
     {
-        Scheduler.AddPostFrameCallback(_ => _detailArguments.Value = arguments, scheduleFrame: false);
+        Scheduler.AddPostFrameCallback(_ => _detailArguments.Value = arguments);
         MasterDetailFlow.Of(Context).SetInitialDetailPage(arguments);
     }
 

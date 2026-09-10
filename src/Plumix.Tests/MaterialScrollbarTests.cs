@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Cupertino;
+using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Material;
 using Plumix.Rendering;
@@ -718,8 +719,11 @@ public sealed class MaterialScrollbarTests
             child: new SizedBox()));
         missingControllerHarness.Pump(ViewportSize);
         double schedulerNow = Scheduler.CurrentSeconds;
-        InvalidOperationException missing = Assert.Throws<InvalidOperationException>(() =>
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01)));
+
+        // Dart's `_invokeFrameCallback` reports a throwing post-frame callback through
+        // `FlutterError.reportError` rather than letting it escape the frame.
+        InvalidOperationException missing = Assert.IsType<InvalidOperationException>(
+            PumpAndCaptureReportedError(TimeSpan.FromSeconds(schedulerNow + 0.01)));
         Assert.Contains("ScrollController", missing.Message);
 
         Scheduler.ResetForTests();
@@ -735,10 +739,27 @@ public sealed class MaterialScrollbarTests
                 ])));
         multipleHarness.Pump(ViewportSize);
         schedulerNow = Scheduler.CurrentSeconds;
-        InvalidOperationException multiple = Assert.Throws<InvalidOperationException>(() =>
-            Scheduler.PumpFrameForTests(TimeSpan.FromSeconds(schedulerNow + 0.01)));
+        InvalidOperationException multiple = Assert.IsType<InvalidOperationException>(
+            PumpAndCaptureReportedError(TimeSpan.FromSeconds(schedulerNow + 0.01)));
         Assert.Contains("more than one ScrollPosition", multiple.Message);
         Scheduler.ResetForTests();
+    }
+
+    private static object PumpAndCaptureReportedError(TimeSpan timestamp)
+    {
+        List<FlutterErrorDetails> reported = [];
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = reported.Add;
+        try
+        {
+            Scheduler.PumpFrameForTests(timestamp);
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
+
+        return Assert.Single(reported).Exception;
     }
 
     [Fact]

@@ -25,7 +25,7 @@ public class Ticker : IDisposable
     private TickerFuture? _future;
     private TimeSpan? _startTime;
     private bool _muted;
-    private bool _scheduled;
+    private int? _animationId;
     private bool _disposed;
 
     /// <summary>
@@ -106,12 +106,10 @@ public class Ticker : IDisposable
     public bool IsActive => _future is not null;
 
     /// <summary>Whether this ticker has already scheduled a frame callback.</summary>
-    protected bool Scheduled => _scheduled;
+    protected bool Scheduled => _animationId is not null;
 
     /// <summary>Whether a tick should be scheduled. If this is true, <see cref="ScheduleTick"/> succeeds.</summary>
     protected bool ShouldScheduleTick => !Muted && IsActive && !Scheduled;
-
-    internal bool IsTickScheduled => _scheduled;
 
     /// <summary>
     /// Starts the clock for this ticker. If the ticker is not <see cref="Muted"/>, this also starts
@@ -187,20 +185,23 @@ public class Ticker : IDisposable
             Scheduler.ScheduleFrame();
         }
 
-        _scheduled = true;
-        Scheduler.AddTicker(this);
+        _animationId = Scheduler.ScheduleFrameCallback(
+            InternalTick,
+            rescheduling: rescheduling,
+            scheduleNewFrame: false,
+            frameOnly: true);
     }
 
     /// <summary>Cancels the frame callback that was requested by <see cref="ScheduleTick"/>, if any.</summary>
     protected virtual void UnscheduleTick()
     {
-        if (!_scheduled)
+        if (_animationId is not int animationId)
         {
             return;
         }
 
-        _scheduled = false;
-        Scheduler.RemoveTicker(this);
+        Scheduler.CancelFrameCallbackWithId(animationId);
+        _animationId = null;
     }
 
     /// <summary>
@@ -261,7 +262,7 @@ public class Ticker : IDisposable
 
     internal void InternalTick(TimeSpan timeStamp)
     {
-        _scheduled = false;
+        _animationId = null;
 
         _startTime ??= timeStamp;
         _onTick(timeStamp - _startTime.Value);

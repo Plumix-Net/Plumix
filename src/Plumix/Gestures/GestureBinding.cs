@@ -157,8 +157,7 @@ public sealed class GestureBinding
             {
                 _mouseTrackerUpdateScheduled = false;
                 MouseTracker.UpdateAllDevices();
-            },
-            scheduleFrame: false);
+            });
     }
 
     /// <summary>

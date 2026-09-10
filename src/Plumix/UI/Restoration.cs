@@ -142,7 +142,7 @@ public class RestorationManager : ChangeNotifier
         _isReplacing = _rootBucketIsValid && enabled;
         if (_isReplacing)
         {
-            Scheduler.AddPostFrameCallback(_ => _isReplacing = false, scheduleFrame: false);
+            Scheduler.AddPostFrameCallback(_ => _isReplacing = false);
         }
 
         RestorationBucket? oldRoot = _rootBucket;
@@ -213,7 +213,7 @@ public class RestorationManager : ChangeNotifier
         }
 
         _serializationScheduled = true;
-        Scheduler.AddPostFrameCallback(_ => DoSerialization(), scheduleFrame: false);
+        Scheduler.AddPostFrameCallback(_ => DoSerialization());
     }
 
     /// <summary>Cancels a pending serialization scheduled for <paramref name="bucket"/>.</summary>

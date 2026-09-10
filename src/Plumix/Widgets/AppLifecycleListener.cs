@@ -217,6 +217,10 @@ public class WidgetsBinding
         foreach (AppLifecycleState generatedState in GenerateStateTransitions(LifecycleState, state))
         {
             LifecycleState = generatedState;
+
+            // Dart's override calls `super.handleAppLifecycleStateChanged` first, which is where the
+            // scheduler enables or disables frames for the new state.
+            Scheduler.HandleAppLifecycleStateChanged(generatedState);
             foreach (WidgetsBindingObserver observer in _observers.ToArray())
             {
                 try

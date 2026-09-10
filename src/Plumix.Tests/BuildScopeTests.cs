@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -444,9 +445,10 @@ public sealed class BuildScopeTests
 
         try
         {
-            // `FramesEnabled` keeps `ScheduleFrame` from arming the real dispatcher timer; the
-            // transient callback is still queued, which is what this test is about.
-            Scheduler.FramesEnabled = false;
+            // Pausing the app disables frames, which keeps `ScheduleFrame` from arming the real
+            // dispatcher timer; the transient callback is still queued, which is what this test is
+            // about.
+            Scheduler.HandleAppLifecycleStateChanged(AppLifecycleState.Paused);
             int before = Scheduler.TransientCallbackCount;
             inner!.Bump();
 

@@ -94,8 +94,8 @@ public sealed class MaterialAboutTests : IDisposable
     public async Task ScheduleTask_CompletesWithTheResultAndSurfacesFailures()
     {
         var completed = Scheduler.ScheduleTask(() => 42, Priority.Animation, debugLabel: "answer");
-        var failing = Scheduler.ScheduleTask<int>(
-            () => throw new InvalidOperationException("boom"),
+        var failing = Scheduler.ScheduleTask(
+            int () => throw new InvalidOperationException("boom"),
             Priority.Animation);
 
         while (Scheduler.HandleEventLoopCallback())

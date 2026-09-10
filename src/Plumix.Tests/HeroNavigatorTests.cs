@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Media;
+using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.UI;
 using Plumix.Widgets;
@@ -812,9 +813,21 @@ public sealed class HeroNavigatorTests
             navigatorState!.Push(BuildDuplicateHeroTagRoute(routeName: "duplicate-tags"));
             harness.Pump(viewportSize);
 
-            var exception = Assert.Throws<InvalidOperationException>(
-                () => PumpHeroTransitionFrame(harness, viewportSize));
+            // The flight is formed from a post-frame callback, and Dart's `_invokeFrameCallback`
+            // reports what one throws through `FlutterError.reportError` instead of rethrowing.
+            List<FlutterErrorDetails> reported = [];
+            FlutterExceptionHandler? previousOnError = FlutterError.OnError;
+            FlutterError.OnError = reported.Add;
+            try
+            {
+                PumpHeroTransitionFrame(harness, viewportSize);
+            }
+            finally
+            {
+                FlutterError.OnError = previousOnError;
+            }
 
+            var exception = Assert.IsType<InvalidOperationException>(Assert.Single(reported).Exception);
             Assert.Contains("multiple heroes", exception.Message, StringComparison.OrdinalIgnoreCase);
         }
         finally

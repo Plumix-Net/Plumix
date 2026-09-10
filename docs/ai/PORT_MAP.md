@@ -369,7 +369,8 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `rendering/viewport.dart` | `src/Plumix/Rendering/Scroll.cs`<br>`src/Plumix/Rendering/Viewport.RenderViewport.cs`<br>`src/Plumix/Rendering/Viewport.Reveal.cs` | `src/Plumix.Tests/CupertinoScrollbarTests.cs`<br>`src/Plumix.Tests/DraggableScrollableSheetTests.cs`<br>`src/Plumix.Tests/ListWheelScrollViewTests.cs`<br>`src/Plumix.Tests/MaterialScrollbarTests.cs`<br>`src/Plumix.Tests/NestedScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollActivityTests.cs`<br>`src/Plumix.Tests/ScrollBehaviorParityTests.cs`<br>`src/Plumix.Tests/ScrollDelegateTests.cs`<br>`src/Plumix.Tests/ScrollInfrastructureTests.cs`<br>`src/Plumix.Tests/ScrollMetricsTests.cs`<br>`src/Plumix.Tests/ScrollNotificationObserverTests.cs`<br>`src/Plumix.Tests/ScrollPhysicsTests.cs`<br>`src/Plumix.Tests/ScrollPipelineTests.cs`<br>`src/Plumix.Tests/ScrollSemanticsTests.cs`<br>`src/Plumix.Tests/ScrollViewTests.cs`<br>`src/Plumix.Tests/ScrollableSelectionTests.cs`<br>`src/Plumix.Tests/ScrollableTests.cs`<br>`src/Plumix.Tests/TwoDimensionalScrollViewTests.cs` | `dart_sample/lib/demos/cupertino/cupertino_scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/draggable_scrollable_sheet_demo_page.dart`<br>`dart_sample/lib/demos/general/list_wheel_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/nested_scroll_view_demo_page.dart`<br>`dart_sample/lib/demos/general/scroll_physics_demo_page.dart`<br>`dart_sample/lib/demos/general/scrollbar_demo_page.dart`<br>`dart_sample/lib/demos/general/two_dimensional_scroll_view_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/Cupertino/CupertinoScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/DraggableScrollableSheetDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ListWheelScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/NestedScrollViewDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/ScrollbarDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/TwoDimensionalScrollViewDemoPage.cs` |
 | `rendering/viewport_offset.dart` | `src/Plumix/Rendering/ViewportOffset.cs` | — | — |
 | `rendering/wrap.dart` | `src/Plumix/Rendering/Wrap.cs` | `src/Plumix.Tests/WrapTests.cs` | — |
-| `scheduler/binding.dart` | `src/Plumix/Scheduler.cs` _(reference) (approximate)_ | — | — |
+| `scheduler/binding.dart` | `src/Plumix/Scheduler.cs` _(adapted)_ | `src/Plumix.Tests/SchedulerBindingTests.cs` | — |
+| `scheduler/debug.dart` | `src/Plumix/SchedulerDebug.cs` | — | — |
 | `scheduler/priority.dart` | `src/Plumix/SchedulerPriority.cs` | — | — |
 | `scheduler/ticker.dart` | `src/Plumix/Ticker.cs` | `src/Plumix.Tests/AnimationControllerTickerTests.cs`<br>`src/Plumix.Tests/TickerProviderTickerModeTests.cs` | — |
 | `semantics/binding.dart` | `src/Plumix/Rendering/Semantics.Binding.cs` | — | — |
@@ -577,6 +578,7 @@ Either C#-only infrastructure (fine — say so in a header comment) or an undocu
 - `src/Plumix/UI/Canvas.Draw.cs`
 - `src/Plumix/UI/Canvas.cs`
 - `src/Plumix/UI/Clip.cs`
+- `src/Plumix/UI/FrameTiming.cs`
 - `src/Plumix/UI/Geometry.cs`
 - `src/Plumix/UI/Matrix4.cs`
 - `src/Plumix/UI/Path.cs`
@@ -618,7 +620,7 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/Rendering/LayoutHelper.cs` — (reference) (adapted helper logic)
 - `src/Plumix/Rendering/Proxy.RenderBox.cs` — (reference) (approximate)
 - `src/Plumix/Rendering/Sliver.cs` — (reference) (approximate)
-- `src/Plumix/Scheduler.cs` — (reference) (approximate)
+- `src/Plumix/Scheduler.cs` — (adapted)
 - `src/Plumix/UI/Feedback.cs` — (reference) (approximate)
 - `src/Plumix/UI/PointerEvents.cs` — (reference) (approximate)
 - `src/Plumix/UI/SystemChrome.cs` — (reference) (approximate)
@@ -640,9 +642,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 525
-- C# files carrying a marker: 692
-- C# files without a marker: 36
+- Flutter files mapped: 526
+- C# files carrying a marker: 693
+- C# files without a marker: 37
 - Markers not resolvable in the pinned checkout: 0
 - C# files with a qualified (non-strict) marker: 40
 

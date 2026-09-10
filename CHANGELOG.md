@@ -8,6 +8,16 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `Scheduler.AddPostFrameCallback` no longer requests a frame and takes a `debugLabel` (binding.dart).
+- Breaking: `Scheduler.FramesEnabled` is read-only, driven by `HandleAppLifecycleStateChanged` (binding.dart).
+- Breaking: `Scheduler.CurrentFrameTimeStamp` is only readable inside a frame; `CurrentSystemFrameTimeStamp` lands.
+- Breaking: `SchedulerPhase.MidFrameMicrotasks` lands between the transient and persistent phases (binding.dart).
+- Breaking: a throwing frame callback is reported through `FlutterError.ReportError` instead of escaping the frame.
+- `Scheduler` gains `TimeDilation`/`ResetEpoch`, `HandleBeginFrame`/`HandleDrawFrame`, `EndOfFrame` (binding.dart).
+- `Scheduler` gains `ScheduleWarmUpFrame`, `LockEvents`/`Locked`/`Unlocked` and the timings callbacks (binding.dart).
+- `Scheduler` gains `RequestPerformanceMode` and the four `DebugAssertNo*` helpers; `SchedulerDebug` lands (debug.dart).
+- `PlatformDispatcher` gains the frame pipeline slots; `FrameTiming`/`FramePhase`/`DartPerformanceMode` land.
+- `Ticker` registers a transient frame callback instead of a scheduler-owned ticker list (ticker.dart).
 - Breaking: `[Flags] MaterialState` is gone; Material resolves the core `WidgetState` set (material_state.dart).
 - Breaking: element deactivation retains dirty state and activation follows Dart scheduling order (framework.dart).
 - Breaking: `CupertinoMenuItem` is stateless over `_CupertinoMenuItemLabel`/interaction handler (menu_anchor.dart).

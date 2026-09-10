@@ -33,8 +33,7 @@ public sealed class FramePipelineTests
                 {
                     Scheduler.EnsureVisualUpdate();
                     phases.Add((Scheduler.Phase, Scheduler.HasScheduledFrame));
-                },
-                scheduleFrame: false);
+                });
 
             Scheduler.PumpFrameForTests(TimeSpan.FromMilliseconds(16));
 

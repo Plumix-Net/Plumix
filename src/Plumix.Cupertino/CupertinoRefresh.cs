@@ -392,8 +392,7 @@ internal sealed class CupertinoSliverRefreshControlState : State
                     {
                         _ = HapticFeedback.MediumImpact();
                         Scheduler.AddPostFrameCallback(
-                            _ => StartRefreshTask(CurrentWidget.OnRefresh),
-                            scheduleFrame: false);
+                            _ => StartRefreshTask(CurrentWidget.OnRefresh));
                     }
 
                     return RefreshIndicatorMode.Armed;
@@ -447,8 +446,7 @@ internal sealed class CupertinoSliverRefreshControlState : State
                 {
                     SetState(() => _hasSliverLayoutExtent = false);
                 }
-            },
-            scheduleFrame: false);
+            });
     }
 
     private void StartRefreshTask(RefreshCallback callback)

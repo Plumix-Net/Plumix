@@ -407,7 +407,7 @@ public abstract class DragGestureRecognizer : OneSequenceGestureRecognizer
             return localDelta;
         }
 
-        TimeSpan currentSystemFrameTimeStamp = Scheduler.CurrentFrameTimeStamp;
+        TimeSpan currentSystemFrameTimeStamp = Scheduler.CurrentSystemFrameTimeStamp;
         if (_frameTimeStamp != currentSystemFrameTimeStamp)
         {
             _moveDeltaBeforeFrame.Clear();
