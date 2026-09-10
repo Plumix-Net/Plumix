@@ -44,6 +44,19 @@ public abstract class WidgetStateProperty<T>
         return new WidgetStatePropertyResolver<T>(resolver);
     }
 
+    /// <summary>
+    /// Resolves by returning the value of the first entry whose constraint the states satisfy.
+    /// </summary>
+    /// <remarks>
+    /// Ports Dart's <c>WidgetStateProperty.fromMap</c>. Dart keys an insertion-ordered <c>Map</c>;
+    /// C# dictionaries carry no order guarantee, so the entries are passed as an ordered list.
+    /// </remarks>
+    public static WidgetStateProperty<T> FromMap(
+        IReadOnlyList<KeyValuePair<WidgetStatesConstraint, T>> map)
+    {
+        return new WidgetStateMapper<T>(map);
+    }
+
     public static WidgetStateProperty<T>? Lerp(
         WidgetStateProperty<T>? a,
         WidgetStateProperty<T>? b,
@@ -159,6 +172,35 @@ internal sealed class WidgetStatePropertyResolver<T> : WidgetStateProperty<T>
     public override T Resolve(IReadOnlySet<WidgetState> states)
     {
         return _resolver(states);
+    }
+}
+
+internal sealed class WidgetStateMapper<T> : WidgetStateProperty<T>
+{
+    private readonly IReadOnlyList<KeyValuePair<WidgetStatesConstraint, T>> _map;
+
+    public WidgetStateMapper(IReadOnlyList<KeyValuePair<WidgetStatesConstraint, T>> map)
+    {
+        _map = map ?? throw new ArgumentNullException(nameof(map));
+    }
+
+    public override T Resolve(IReadOnlySet<WidgetState> states)
+    {
+        for (int index = 0; index < _map.Count; index++)
+        {
+            if (_map[index].Key.IsSatisfiedBy(states))
+            {
+                return _map[index].Value;
+            }
+        }
+
+        if (default(T) is null)
+        {
+            return default!;
+        }
+
+        throw new ArgumentException(
+            $"The current set of widget states ({string.Join(", ", states)}) is not supported by this map.");
     }
 }
 

@@ -73,37 +73,49 @@ public sealed partial class Canvas
         RSuperellipse shadowShape = rsuperellipse
             .Inflate(shadow.SpreadRadius)
             .Shift(shadow.Offset);
-        Geometry geometry = shadowShape.ToPath().ToGeometry();
-        if (shadow.BlurRadius <= 0.0)
+        DrawRSuperellipseBlur(shadowShape, shadow.Color, shadow.BlurSigma);
+    }
+
+    /// <summary>
+    /// Fills <paramref name="rsuperellipse"/> with <paramref name="color"/> under a Gaussian blur of
+    /// <paramref name="blurSigma"/>.
+    /// </summary>
+    /// <remarks>
+    /// Dart's <c>Canvas.drawRSuperellipse</c> with a <c>Paint.maskFilter</c> of
+    /// <c>MaskFilter.blur(BlurStyle.normal, sigma)</c>. Avalonia's path API has no mask-filter paint,
+    /// so concentric strokes sampled from the same Gaussian falloff keep the superellipse contour
+    /// exact while providing a backend-independent blur.
+    /// </remarks>
+    public void DrawRSuperellipseBlur(RSuperellipse rsuperellipse, Color color, double blurSigma)
+    {
+        Geometry geometry = rsuperellipse.ToPath().ToGeometry();
+        if (blurSigma <= 0.0)
         {
-            DrawGeometry(new SolidColorBrush(shadow.Color), null, geometry);
+            DrawGeometry(new SolidColorBrush(color), null, geometry);
             return;
         }
 
-        // Avalonia's path API has no mask-filter paint. Concentric strokes sampled from the same
-        // Gaussian falloff keep the superellipse contour exact while providing backend-independent blur.
-        int steps = Math.Max(2, (int)Math.Ceiling(shadow.BlurRadius * 2.0));
-        double sigma = shadow.BlurSigma;
-        double outerRadius = Math.Max(shadow.BlurRadius, sigma * 3.0);
+        double outerRadius = blurSigma * 3.0;
+        int steps = Math.Max(2, (int)Math.Ceiling(outerRadius));
         double previousOpacity = 0.0;
         for (int step = 0; step < steps; step++)
         {
             double radius = outerRadius * (steps - step) / steps;
-            double targetOpacity = Math.Exp(-(radius * radius) / (2.0 * sigma * sigma));
+            double targetOpacity = Math.Exp(-(radius * radius) / (2.0 * blurSigma * blurSigma));
             double layerOpacity = 1.0 - ((1.0 - targetOpacity) / (1.0 - previousOpacity));
             previousOpacity = targetOpacity;
             byte layerAlpha = (byte)Math.Clamp(
-                (int)Math.Round(shadow.Color.A * layerOpacity),
+                (int)Math.Round(color.A * layerOpacity),
                 0,
                 byte.MaxValue);
-            Color layerColor = Color.FromArgb(layerAlpha, shadow.Color.R, shadow.Color.G, shadow.Color.B);
+            Color layerColor = Color.FromArgb(layerAlpha, color.R, color.G, color.B);
             if (layerColor.A > 0)
             {
                 DrawGeometry(null, new Pen(new SolidColorBrush(layerColor), radius * 2.0), geometry);
             }
         }
 
-        DrawGeometry(new SolidColorBrush(shadow.Color), null, geometry);
+        DrawGeometry(new SolidColorBrush(color), null, geometry);
     }
 
     // Dart parity source: dart:ui Canvas.drawDRRect (the ring between two rounded rectangles).

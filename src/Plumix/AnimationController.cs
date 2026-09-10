@@ -87,6 +87,13 @@ public static class Curves
     // Flutter Curves.easeIn: Cubic(0.42, 0.0, 1.0, 1.0).
     public static double EaseIn(double t) => CubicBezier(t, 0.42, 0.0, 1.0, 1.0);
 
+    /// <summary>
+    /// Dart's <c>Curves.easeIn</c> as a <see cref="Curve"/> object, for the APIs that take one
+    /// (<see cref="CurveTween"/>, <c>CurvedAnimation</c>); <see cref="EaseIn(double)"/> is the same
+    /// curve sampled directly.
+    /// </summary>
+    public static Curve EaseInCurve { get; } = Cubic(0.42, 0.0, 1.0, 1.0);
+
     // Flutter Curves.easeOut: Cubic(0.0, 0.0, 0.58, 1.0).
     public static double EaseOut(double t) => CubicBezier(t, 0.0, 0.0, 0.58, 1.0);
 

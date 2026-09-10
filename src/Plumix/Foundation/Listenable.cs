@@ -94,7 +94,7 @@ public class ChangeNotifier : IListenable, IDisposable
     }
 }
 
-public sealed class ValueNotifier<T> : ChangeNotifier, IValueListenable<T>
+public class ValueNotifier<T> : ChangeNotifier, IValueListenable<T>
 {
     private T _value;
 

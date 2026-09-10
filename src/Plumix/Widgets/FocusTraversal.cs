@@ -1478,7 +1478,7 @@ public sealed class PreviousFocusAction : FlutterAction<PreviousFocusIntent>
 }
 
 /// <summary>Dart parity source: <c>DirectionalFocusIntent</c>.</summary>
-public sealed class DirectionalFocusIntent : Intent
+public class DirectionalFocusIntent : Intent
 {
     public DirectionalFocusIntent(TraversalDirection direction, bool ignoreTextFields = true)
     {

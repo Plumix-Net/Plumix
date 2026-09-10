@@ -8,6 +8,11 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `CupertinoMenuItem` is stateless over `_CupertinoMenuItemLabel`/interaction handler (menu_anchor.dart).
+- Breaking: `CupertinoMenuAnchor`'s overlay is stateful, resolves motion and owns the swipe ticker (menu_anchor.dart).
+- `CupertinoMenuAnchor` gains the `_ShadowPainter`, the divider painter and the swipe render surface (menu_anchor.dart).
+- `WidgetStatesController`, `WidgetStatesConstraint` and `WidgetStateProperty.FromMap` land (widget_state.dart).
+- Added `Canvas.DrawRSuperellipseBlur` and `Curves.EaseInCurve`; `ValueNotifier`/`DirectionalFocusIntent` are open.
 - Breaking: `View`/`RawView`/`ViewAnchor`/`ViewCollection` land over `RenderTreeRootElement` (view.dart).
 - Breaking: `RootElement` hosts no render object; `IRootRenderObjectHost` is gone, a tree needs a `View` (binding.dart).
 - Breaking: `RenderView` takes its `FlutterView` and prepares its first frame; `RendererBinding` lands (view.dart).
