@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: element deactivation retains dirty state and activation follows Dart scheduling order (framework.dart).
 - Breaking: `CupertinoMenuItem` is stateless over `_CupertinoMenuItemLabel`/interaction handler (menu_anchor.dart).
 - Breaking: `CupertinoMenuAnchor`'s overlay is stateful, resolves motion and owns the swipe ticker (menu_anchor.dart).
 - `CupertinoMenuAnchor` gains the `_ShadowPainter`, the divider painter and the swipe render surface (menu_anchor.dart).

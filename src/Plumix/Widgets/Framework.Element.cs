@@ -387,23 +387,18 @@ public abstract class Element : DiagnosticableTree, BuildContext
         _hadUnsatisfiedDependencies = false;
         UpdateInheritance();
 
-        OnActivate();
-
-        VisitChildren(child => child.ActivateRecursively(this, child.Slot));
+        if (Dirty)
+        {
+            Owner?.ScheduleBuild(this);
+        }
 
         if (hadDependencies)
         {
             DidChangeDependencies();
         }
 
-        if (Dirty)
-        {
-            Owner?.ScheduleBuild(this);
-        }
-        else
-        {
-            MarkNeedsBuild();
-        }
+        OnActivate();
+        VisitChildren(child => child.ActivateRecursively(this, child.Slot));
     }
 
     protected virtual void OnMount()
@@ -467,13 +462,6 @@ public abstract class Element : DiagnosticableTree, BuildContext
             return;
         }
 
-        // Dart leaves `_dirty` (and therefore `_inDirtyList`) alone here and lets the next flush
-        // drop the entry. Plumix clears both, because a deactivated element must not be rebuilt and
-        // its scope's dirty list keeps only a tombstone that the flush skips; re-activating the
-        // element enqueues it again from `ActivateRecursively`.
-        Dirty = false;
-        InDirtyList = false;
-
         try
         {
             OnDeactivate();
@@ -532,8 +520,6 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
         Parent = null;
         Slot = null;
-        Dirty = false;
-        InDirtyList = false;
         _lifecycleState = ElementLifecycleState.Defunct;
     }
 

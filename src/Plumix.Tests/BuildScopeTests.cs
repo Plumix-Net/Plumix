@@ -461,6 +461,124 @@ public sealed class BuildScopeTests
         }
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void DeactivationAndUnmount_PreserveDirtyStateUntilTheScopeDropsMembership(bool dirty)
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new SizedBox(width: 1, height: 1));
+        Mount(root, owner);
+        Element child = root.ChildElement!;
+        if (dirty)
+        {
+            child.MarkNeedsBuild();
+        }
+
+        root.DeactivateChild(child);
+        Assert.Equal(dirty, child.Dirty);
+        Assert.Equal(dirty, child.InDirtyList);
+        child.Rebuild(force: true);
+        Assert.Equal(dirty, child.Dirty);
+
+        child.Unmount();
+        Assert.Equal(dirty, child.Dirty);
+        Assert.Equal(dirty, child.InDirtyList);
+        owner.FlushBuild();
+        Assert.Equal(dirty, child.Dirty);
+        Assert.False(child.InDirtyList);
+        Assert.Empty(owner.RootBuildScope.DirtyElements);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ReactivationInTheSameScope_PreservesCleanElementsAndReusesDirtyEntries(bool dirty)
+    {
+        var owner = new BuildOwner();
+        var root = new TestRootElement(new SizedBox(width: 1, height: 1));
+        Mount(root, owner);
+        Element child = root.ChildElement!;
+        if (dirty)
+        {
+            child.MarkNeedsBuild();
+        }
+
+        owner.BuildScope(root, () =>
+        {
+            root.DeactivateChild(child);
+            Assert.Equal(dirty, child.Dirty);
+            child.ActivateWithParent(root, null);
+            Assert.Equal(dirty, child.Dirty);
+            Assert.Equal(dirty, child.InDirtyList);
+            Assert.Equal(dirty ? 1 : 0, owner.RootBuildScope.DirtyElements.Count);
+        });
+
+        Assert.False(child.Dirty);
+        Assert.False(child.InDirtyList);
+    }
+
+    [Fact]
+    public void InactiveDirtyElement_IsNotRebuiltAndIsQueuedAgainWhenReactivatedAfterAFlush()
+    {
+        var owner = new BuildOwner();
+        ProbeState? probe = null;
+        var root = new TestRootElement(new Probe("probe", state => probe = state));
+        Mount(root, owner);
+        Element child = root.ChildElement!;
+        probe!.Bump();
+        root.DeactivateChild(child);
+        owner.RootBuildScope.FlushDirtyElements(root);
+
+        Assert.Equal(1, probe.Builds);
+        Assert.True(child.Dirty);
+        Assert.False(child.InDirtyList);
+
+        owner.BuildScope(root, () =>
+        {
+            child.ActivateWithParent(root, null);
+            Assert.Single(owner.RootBuildScope.DirtyElements);
+        });
+        Assert.Equal(2, probe.Builds);
+        Assert.False(child.Dirty);
+    }
+
+    [Fact]
+    public void Reactivation_NotifiesInheritedDependenciesBeforeStateAndChildrenActivate()
+    {
+        var owner = new BuildOwner();
+        ProbeState? parent = null;
+        ProbeState? child = null;
+        var root = new TestRootElement(new Inherited(
+            1,
+            new Probe(
+                "parent",
+                state => parent = state,
+                child: new Probe("child", state => child = state),
+                dependsOnInherited: true)));
+        Mount(root, owner);
+        Element element = parent!.Element;
+        Element oldParent = element.Parent!;
+        var order = new List<string>();
+        parent.OnActivation = () =>
+        {
+            Assert.True(element.Dirty);
+            Assert.True(element.InDirtyList);
+            order.Add("parent");
+        };
+        child!.OnActivation = () => order.Add("child");
+
+        owner.BuildScope(root, () =>
+        {
+            oldParent.DeactivateChild(element);
+            element.ActivateWithParent(oldParent, null);
+        });
+
+        Assert.Equal(["parent", "child"], order);
+        Assert.Equal(2, parent.Builds);
+        Assert.Equal(2, child.Builds);
+    }
+
     private static void Mount(TestRootElement root, BuildOwner owner)
     {
         root.Attach(owner);
@@ -523,6 +641,14 @@ public sealed class BuildScopeTests
         public int Builds { get; private set; }
 
         public Action? OnBuild { get; set; }
+
+        public Action? OnActivation { get; set; }
+
+        public override void Activate()
+        {
+            base.Activate();
+            OnActivation?.Invoke();
+        }
 
         public void Bump() => SetState(() => _generation++);
 

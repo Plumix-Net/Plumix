@@ -184,10 +184,9 @@ public sealed class BuildScope
             {
                 Element element = _dirtyElements[index];
 
-                // Two kinds of tombstone are skipped and dropped below: an element that migrated to
-                // another scope mid-flush (now that scope's problem), and one that was deactivated
-                // after being queued, which clears `InDirtyList` without touching this list.
-                if (!ReferenceEquals(element.BuildScope, this) || !element.InDirtyList)
+                // A scope migration leaves an entry for the old scope to skip. Inactive elements
+                // keep their membership and reach Rebuild, which ignores their lifecycle state.
+                if (!ReferenceEquals(element.BuildScope, this))
                 {
                     continue;
                 }
