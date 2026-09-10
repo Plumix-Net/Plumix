@@ -8,6 +8,7 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `ScrollPosition` throws when reading uninitialized metrics, matching Dart (scroll_position.dart).
 - Breaking: the framework owns a thread; its `async` work resumes as a `Scheduler` microtask, not on the pool.
 - Breaking: `EdgeDraggingAutoScroller` drops its ticker and `IDisposable` for Dart's loop (scrollable_helpers.dart).
 - Breaking: `SemanticsData` and `SemanticsNode.GetSemanticsData` land; `SemanticsNodeUpdate` carries one (semantics.dart).

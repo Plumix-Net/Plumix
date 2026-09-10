@@ -5,6 +5,7 @@ using Xunit;
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/scroll_metrics.dart (parity regression
 // tests mapped from flutter/packages/flutter/test/widgets/notification_test.dart and
 // flutter/packages/flutter/test/widgets/scroll_notification_test.dart)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/scroll_position.dart
 
 namespace Plumix.Tests;
 
@@ -205,6 +206,77 @@ public sealed class ScrollMetricsTests
     }
 
     // ------------------------------------------------------------------ ScrollPosition
+
+    [Fact]
+    public void ScrollPosition_UninitializedMetricsThrowUntilIndependentlyEstablished()
+    {
+        using var position = new ScrollPositionWithSingleContext(
+            new ClampingScrollPhysics(), new TestScrollContext(), initialPixels: null);
+
+        Assert.False(position.HasPixels);
+        Assert.False(position.HasViewportDimension);
+        Assert.False(position.HasContentDimensions);
+        Assert.Throws<InvalidOperationException>(() => position.Pixels);
+        Assert.Throws<InvalidOperationException>(() => position.ViewportDimension);
+        Assert.Throws<InvalidOperationException>(() => position.MinScrollExtent);
+        Assert.Throws<InvalidOperationException>(() => position.MaxScrollExtent);
+        Assert.Contains("range: null..null", position.ToString());
+
+        position.RestoreOffset(0, initialRestore: true);
+        Assert.True(position.HasPixels);
+        Assert.Equal(0, position.Pixels);
+        Assert.False(position.HasViewportDimension);
+        Assert.False(position.HasContentDimensions);
+
+        Assert.True(position.ApplyViewportDimension(0));
+        Assert.True(position.HasViewportDimension);
+        Assert.Equal(0, position.ViewportDimension);
+        Assert.Throws<InvalidOperationException>(() => position.MinScrollExtent);
+        Assert.Throws<InvalidOperationException>(() => position.MaxScrollExtent);
+
+        Assert.True(position.ApplyContentDimensions(0, 0));
+        Assert.True(position.HasContentDimensions);
+        Assert.Equal(0, position.MinScrollExtent);
+        Assert.Equal(0, position.MaxScrollExtent);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ScrollPosition_AbsorbPreservesMetricAvailability(bool initialized)
+    {
+        var context = new TestScrollContext();
+        using var original = new ScrollPositionWithSingleContext(
+            new ClampingScrollPhysics(), context, initialPixels: null);
+        if (initialized)
+        {
+            original.RestoreOffset(25, initialRestore: true);
+            original.ApplyViewportDimension(40);
+            original.ApplyContentDimensions(0, 100);
+        }
+
+        using var replacement = new ScrollPositionWithSingleContext(
+            new ClampingScrollPhysics(), context, initialPixels: null, oldPosition: original);
+        Assert.Equal(initialized, replacement.HasPixels);
+        Assert.Equal(initialized, replacement.HasViewportDimension);
+        Assert.Equal(initialized, replacement.HasContentDimensions);
+        IScrollMetrics snapshot = replacement.CopyWith();
+        if (initialized)
+        {
+            Assert.Equal(25, snapshot.Pixels);
+            Assert.Equal(40, snapshot.ViewportDimension);
+            Assert.Equal(0, snapshot.MinScrollExtent);
+            Assert.Equal(100, snapshot.MaxScrollExtent);
+        }
+        else
+        {
+            Assert.Throws<InvalidOperationException>(() => replacement.Pixels);
+            Assert.Throws<InvalidOperationException>(() => snapshot.Pixels);
+            Assert.Throws<InvalidOperationException>(() => snapshot.ViewportDimension);
+            Assert.Throws<InvalidOperationException>(() => snapshot.MinScrollExtent);
+            Assert.Throws<InvalidOperationException>(() => snapshot.MaxScrollExtent);
+        }
+    }
 
     [Fact]
     public void ScrollPosition_ImplementsTheMetricsContract()

@@ -124,25 +124,25 @@ public abstract class ScrollPosition : ViewportOffset, IScrollMetrics
     /// The minimum in-range value for <see cref="Pixels"/>.
     /// </summary>
     /// <remarks>
-    /// Flutter throws when the extents have not been established yet; Plumix reports zero and
-    /// exposes <see cref="HasContentDimensions"/> instead (see <c>docs/ai/DIVERGENCES.md</c>).
+    /// Throws if the extents have not been established yet. Check <see cref="HasContentDimensions"/>
+    /// before reading this value prior to layout.
     /// </remarks>
-    public double MinScrollExtent => _minScrollExtent ?? 0.0;
+    public double MinScrollExtent => _minScrollExtent ?? throw Unavailable(nameof(MinScrollExtent));
 
     /// <inheritdoc cref="MinScrollExtent"/>
-    public double MaxScrollExtent => _maxScrollExtent ?? 0.0;
+    public double MaxScrollExtent => _maxScrollExtent ?? throw Unavailable(nameof(MaxScrollExtent));
 
     /// <summary>Whether the min and max scroll extents have been established by a layout.</summary>
     public bool HasContentDimensions => _minScrollExtent != null && _maxScrollExtent != null;
 
-    /// <inheritdoc cref="MinScrollExtent"/>
-    public override double Pixels => _pixels ?? 0.0;
+    /// <summary>The scroll offset. Throws until <see cref="HasPixels"/> is true.</summary>
+    public override double Pixels => _pixels ?? throw Unavailable(nameof(Pixels));
 
     /// <summary>Whether <see cref="Pixels"/> has been established by a layout or a correction.</summary>
     public override bool HasPixels => _pixels != null;
 
-    /// <inheritdoc cref="MinScrollExtent"/>
-    public double ViewportDimension => _viewportDimension ?? 0.0;
+    /// <summary>The viewport extent. Throws until <see cref="HasViewportDimension"/> is true.</summary>
+    public double ViewportDimension => _viewportDimension ?? throw Unavailable(nameof(ViewportDimension));
 
     /// <summary>Whether <see cref="ViewportDimension"/> has been supplied by a layout.</summary>
     public bool HasViewportDimension => _viewportDimension != null;
@@ -924,6 +924,11 @@ public abstract class ScrollPosition : ViewportOffset, IScrollMetrics
         description.Add(
             $"range: {Format(_minScrollExtent)}..{Format(_maxScrollExtent)}");
         description.Add($"viewport: {Format(_viewportDimension)}");
+    }
+
+    private static InvalidOperationException Unavailable(string property)
+    {
+        return new InvalidOperationException($"{property} is not available until it has been established.");
     }
 
     private static string Format(double? value)
