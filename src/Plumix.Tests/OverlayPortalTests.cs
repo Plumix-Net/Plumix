@@ -696,7 +696,7 @@ public sealed class OverlayPortalTests
 
         public void Dispose()
         {
-            _root.Unmount();
+            _root.UnmountRoot();
         }
     }
 
@@ -756,16 +756,6 @@ public sealed class OverlayPortalTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

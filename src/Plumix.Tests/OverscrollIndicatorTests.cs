@@ -546,7 +546,7 @@ public sealed class OverscrollIndicatorTests : IDisposable
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private static void CollectStates<T>(Element element, List<T> states) where T : State
@@ -644,16 +644,6 @@ public sealed class OverscrollIndicatorTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

@@ -311,7 +311,7 @@ public sealed class ModalRouteAspectTests : IDisposable
             _pipeline.FlushPaint();
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private NavigatorState? FindNavigatorState()
         {
@@ -389,16 +389,6 @@ public sealed class ModalRouteAspectTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

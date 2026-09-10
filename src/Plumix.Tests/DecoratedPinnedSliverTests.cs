@@ -37,7 +37,7 @@ public sealed class DecoratedPinnedSliverTests
         Assert.Same(render, updated);
         Assert.Same(second, updated.Decoration);
         Assert.Equal(DecorationPosition.Foreground, updated.Position);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Theory]
@@ -110,7 +110,7 @@ public sealed class DecoratedPinnedSliverTests
         semantics.InvokeDescribeSemanticsConfiguration(configuration);
         Assert.True(configuration.IsSemanticBoundary);
         Assert.True(configuration.ExplicitChildNodes);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -357,16 +357,6 @@ public sealed class DecoratedPinnedSliverTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

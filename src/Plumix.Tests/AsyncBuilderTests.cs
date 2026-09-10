@@ -93,7 +93,7 @@ public sealed class AsyncBuilderTests : IDisposable
         owner.FlushBuild();
         AssertSnapshot(snapshots[^1], ConnectionState.Done, data: 11);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, stream.ListenerCount);
     }
 
@@ -117,7 +117,7 @@ public sealed class AsyncBuilderTests : IDisposable
         owner.FlushBuild();
         Assert.Equal(ConnectionState.None, snapshots[^1].ConnectionState);
         Assert.Same(error, snapshots[^1].Error);
-        root.Unmount();
+        root.UnmountRoot();
 
         StreamBuilder<int> Build(IObservable<int>? source)
         {
@@ -152,7 +152,7 @@ public sealed class AsyncBuilderTests : IDisposable
         second.Emit(8);
         owner.FlushBuild();
         AssertSnapshot(snapshots[^1], ConnectionState.Active, data: 8);
-        root.Unmount();
+        root.UnmountRoot();
 
         StreamBuilder<int> Build(IObservable<int> source)
         {
@@ -180,7 +180,7 @@ public sealed class AsyncBuilderTests : IDisposable
         owner.FlushBuild();
 
         Assert.Equal("initial|connected|data:2|done|disconnected|connected|error:boom", summaries[^1]);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -199,7 +199,7 @@ public sealed class AsyncBuilderTests : IDisposable
         completion.SetResult(12);
         await FlushUntil(owner, () => snapshots[^1].ConnectionState == ConnectionState.Done);
         AssertSnapshot(snapshots[^1], ConnectionState.Done, data: 12);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public sealed class AsyncBuilderTests : IDisposable
         Assert.Equal(ConnectionState.Done, snapshots[^1].ConnectionState);
         Assert.Same(error, snapshots[^1].Error);
         Assert.Contains("ObserveFuture", snapshots[^1].StackTrace);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -244,7 +244,7 @@ public sealed class AsyncBuilderTests : IDisposable
         second.SetResult(9);
         await FlushUntil(owner, () => snapshots[^1].Data == 9);
         AssertSnapshot(snapshots[^1], ConnectionState.Done, data: 9);
-        root.Unmount();
+        root.UnmountRoot();
 
         FutureBuilder<int> Build(Task<int> future)
         {
@@ -270,7 +270,7 @@ public sealed class AsyncBuilderTests : IDisposable
         Assert.DoesNotContain(snapshots, snapshot => snapshot.Data == 1);
 
         int buildCount = snapshots.Count;
-        root.Unmount();
+        root.UnmountRoot();
         second.SetResult(2);
         await Task.Delay(20);
         owner.FlushBuild();
@@ -319,7 +319,7 @@ public sealed class AsyncBuilderTests : IDisposable
 
         owner.FlushBuild();
         AssertSnapshot(snapshots[^1], ConnectionState.Done, data: 7);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static Element FindElement(Element root, Func<Element, bool> predicate)
@@ -499,16 +499,6 @@ public sealed class AsyncBuilderTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

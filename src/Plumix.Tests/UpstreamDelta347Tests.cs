@@ -177,7 +177,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
 
         Assert.Equal(Green, ImageOf(new ImageIcon(provider, color: Green).Build(context!)).Color);
         Assert.Null(ImageOf(new ImageIcon(provider, useOriginalColors: true).Build(context)).Color);
-        root.Unmount();
+        root.UnmountRoot();
 
         static Image ImageOf(Widget built) =>
             Assert.IsType<Image>(Assert.IsType<Semantics>(built).Child);
@@ -269,7 +269,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
         }));
         Mount(root, owner);
         Assert.True(context.Mounted);
-        root.Unmount();
+        root.UnmountRoot();
         Assert.False(context.Mounted);
         Assert.Equal(TickerModeData.Fallback, TickerMode.GetValuesNotifier(context).Value);
     }
@@ -308,7 +308,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
         var richText = new RichText(new TextSpan("hi"));
         var created = (RenderParagraph)richText.CreateRenderObject(context!);
         Assert.Equal(2.5, created.DevicePixelRatio);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)
@@ -452,16 +452,6 @@ public sealed class UpstreamDelta347Tests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

@@ -168,7 +168,7 @@ public sealed class FilterWidgetsTests
         Assert.False(updated.Enabled);
         Assert.Equal(BlendMode.Source, updated.BlendMode);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -239,7 +239,7 @@ public sealed class FilterWidgetsTests
         Assert.Same(updatedImageFilter, updatedImageRenderObject.ImageFilter);
         Assert.False(updatedImageRenderObject.Enabled);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -275,7 +275,7 @@ public sealed class FilterWidgetsTests
         Assert.Same(updatedCallback, updatedRenderObject.ShaderCallback);
         Assert.Equal(BlendMode.SourceIn, updatedRenderObject.BlendMode);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -763,16 +763,6 @@ public sealed class FilterWidgetsTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

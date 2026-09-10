@@ -117,7 +117,7 @@ public sealed class SliverHeaderTests
         header.LayoutWithSliverConstraints(CreateConstraints(scrollOffset: 80.0));
         Assert.Equal(40.0, header.Child!.Size.Height);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -320,16 +320,6 @@ public sealed class SliverHeaderTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

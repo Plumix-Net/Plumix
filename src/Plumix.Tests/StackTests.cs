@@ -148,7 +148,7 @@ public sealed class StackTests
         Assert.Equal(
             Alignment.BottomLeft,
             indexedStack.Alignment.Resolve(indexedStack.TextDirection));
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -248,7 +248,7 @@ public sealed class StackTests
         Assert.Same(stack, child.Parent);
         Assert.Equal(new Size(30, 40), child.Size);
         Assert.Equal(new Point(10, 20), data.offset);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -274,7 +274,7 @@ public sealed class StackTests
 
         Element selected = Assert.Single(onstage);
         Assert.Equal(2.0, Assert.IsType<SizedBox>(selected.Widget).Width);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -317,7 +317,7 @@ public sealed class StackTests
         owner.BuildScope(contextRoot, () => contextRoot.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Assert.Throws<AssertionError>(() => directional.CreateRenderObject(contextRoot));
-        contextRoot.Unmount();
+        contextRoot.UnmountRoot();
     }
 
     private static Widget BuildDirectionalStacks(TextDirection direction) => new Directionality(
@@ -439,16 +439,6 @@ public sealed class StackTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

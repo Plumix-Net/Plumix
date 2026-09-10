@@ -469,7 +469,7 @@ public sealed class CupertinoScrollbarTests
             _pipeline.FlushPaint();
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
     }
 
     private sealed class HarnessRootElement : Element, IRenderObjectHost
@@ -490,16 +490,6 @@ public sealed class CupertinoScrollbarTests
         public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
         public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;
         public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot) { }

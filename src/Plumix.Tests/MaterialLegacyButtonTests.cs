@@ -453,7 +453,7 @@ public sealed class MaterialLegacyButtonTests
             _pipeline.FlushPaint();
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private static T? FindWidget<T>(Element? element) where T : Widget
         {
@@ -504,16 +504,6 @@ public sealed class MaterialLegacyButtonTests
             if (ReferenceEquals(Child, child)) Child = null;
         }
 
-        public override void Unmount()
-        {
-            if (Child is not null)
-            {
-                UnmountChild(Child);
-                Child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot) =>
             _renderView.Child = (RenderBox)child;

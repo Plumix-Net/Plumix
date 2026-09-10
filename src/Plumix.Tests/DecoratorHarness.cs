@@ -75,7 +75,7 @@ internal sealed class DecoratorHarness : IDisposable
         Pump();
     }
 
-    public void Dispose() => _root.Unmount();
+    public void Dispose() => _root.UnmountRoot();
 
     public static Point OffsetOf(RenderBox? box) =>
         box is null ? default : ((BoxParentData)box.parentData!).offset;
@@ -176,15 +176,5 @@ internal sealed class DecoratorHarness : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

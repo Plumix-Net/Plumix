@@ -1404,17 +1404,6 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
         base.ForgetChild(child);
     }
 
-    public override void Unmount()
-    {
-        foreach (Element child in _childElements.Values.Select(static child => child!).ToArray())
-        {
-            UnmountChild(child);
-        }
-
-        _childElements.Clear();
-        base.Unmount();
-    }
-
     /// <inheritdoc />
     public void CreateChild(int index, RenderBox? after)
     {
@@ -1510,7 +1499,6 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
         TypedRenderObject.Remove((RenderBox)child);
     }
 }
-
 
 public sealed class SliverList : SliverMultiBoxAdaptorWidget
 {
@@ -1950,17 +1938,6 @@ internal sealed class SliverPrototypeExtentListElement : SliverMultiBoxAdaptorEl
         }
 
         base.RemoveRenderObjectChild(child, slot);
-    }
-
-    public override void Unmount()
-    {
-        if (_prototype != null)
-        {
-            UnmountChild(_prototype);
-            _prototype = null;
-        }
-
-        base.Unmount();
     }
 }
 

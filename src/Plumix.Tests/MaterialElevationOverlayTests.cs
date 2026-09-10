@@ -100,7 +100,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
 
         Assert.Equal(Color.Parse("#1E69F0AE"), overlayColor);
         Assert.Equal(Color.Parse("#FF1C2C24"), appliedColor);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -210,7 +210,7 @@ public sealed class MaterialElevationOverlayTests : IDisposable
         CollectWidgets(root, decorations);
         DecoratedBox decoration = Assert.Single(decorations);
         ShapeDecoration boxDecoration = Assert.IsType<ShapeDecoration>(decoration.Decoration);
-        root.Unmount();
+        root.UnmountRoot();
         return boxDecoration.Color
                ?? throw new InvalidOperationException("Material did not resolve a surface color.");
     }
@@ -280,15 +280,5 @@ public sealed class MaterialElevationOverlayTests : IDisposable
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

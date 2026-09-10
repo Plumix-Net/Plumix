@@ -487,7 +487,7 @@ public sealed class CupertinoDialogTests : IDisposable
             return _pipeline.SemanticsOwner!.RootNode;
         }
 
-        public void Dispose() => _rootElement.Unmount();
+        public void Dispose() => _rootElement.UnmountRoot();
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {
@@ -544,16 +544,6 @@ public sealed class CupertinoDialogTests : IDisposable
                 if (ReferenceEquals(_renderView.Child, child)) _renderView.Child = null;
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

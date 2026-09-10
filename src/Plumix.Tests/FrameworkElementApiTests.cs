@@ -38,7 +38,6 @@ public sealed class FrameworkElementApiTests
     [InlineData(nameof(Element.AttachRenderObject))]
     [InlineData(nameof(Element.DetachRenderObject))]
     [InlineData(nameof(Element.DeactivateChild))]
-    [InlineData(nameof(Element.UnmountChild))]
     [InlineData(nameof(Element.InflateWidget))]
     [InlineData(nameof(Element.UpdateChild))]
     [InlineData(nameof(Element.UpdateChildren))]
@@ -205,7 +204,7 @@ public sealed class FrameworkElementApiTests
         Assert.Equal(2, log.ChildBuilds);
 
         log.Events.Clear();
-        root.Unmount();
+        root.UnmountRoot();
 
         Assert.Contains("deactivate", log.Events);
         Assert.Contains("unmount", log.Events);
@@ -296,7 +295,7 @@ public sealed class FrameworkElementApiTests
         element.Attach(owner);
         owner.BuildScope(element, () => element.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
-        element.Unmount();
+        element.UnmountRoot();
 
         int builds = log.ChildBuilds;
         element.Rebuild(force: true);
@@ -377,7 +376,7 @@ public sealed class FrameworkElementApiTests
         owner.FlushBuild();
 
         Element probe = FindProbeElement(root);
-        root.Unmount();
+        root.UnmountRoot();
 
         FlutterError error = Assert.Throws<FlutterError>(() => probe.FindRenderObject());
         Assert.Contains("Cannot get renderObject of inactive element.", error.Message);
@@ -547,12 +546,6 @@ public sealed class FrameworkElementApiTests
 
         public override void Unmount()
         {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
             Probe.Log.Events.Add("unmount");
             base.Unmount();
         }
@@ -604,16 +597,6 @@ public sealed class FrameworkElementApiTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

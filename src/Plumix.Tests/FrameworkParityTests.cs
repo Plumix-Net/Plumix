@@ -377,7 +377,7 @@ public sealed class FrameworkParityTests
     }
 
     [Fact]
-    public void DebugPrintGlobalKeyedWidgetLifecycle_LogsDeactivationAndDiscarding()
+    public void DebugPrintGlobalKeyedWidgetLifecycle_LogsDiscardingFromTheInactiveList()
     {
         var log = new List<string>();
         DebugPrintCallback previousPrint = Print.DebugPrint;
@@ -402,7 +402,7 @@ public sealed class FrameworkParityTests
             Print.DebugPrint = previousPrint;
         }
 
-        Assert.Contains(log, line => line.StartsWith("Deactivated ", StringComparison.Ordinal));
+        // Dart prints exactly one line for this transition, from _InactiveElements._unmount.
         Assert.Contains(log, line => line.Contains("from inactive elements list."));
     }
 
@@ -672,16 +672,6 @@ public sealed class FrameworkParityTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

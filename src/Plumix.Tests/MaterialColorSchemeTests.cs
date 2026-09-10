@@ -346,7 +346,7 @@ public sealed class MaterialColorSchemeTests
         Assert.Equal(new FontFamily("Roboto"), localized.TextTheme.BodyMedium.FontFamily);
         Assert.Equal(Color.FromArgb(0xDD, 0, 0, 0), localized.TextTheme.BodyMedium.Color);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -523,15 +523,5 @@ public sealed class MaterialColorSchemeTests
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

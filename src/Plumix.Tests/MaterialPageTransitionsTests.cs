@@ -278,7 +278,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         Settle(root.TestOwner);
         Assert.False(navigator.UserGestureInProgress);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -302,7 +302,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         Assert.NotNull(initialRoute.ReceivedTransition);
         Assert.Contains(FindWidgets<Opacity>(root), opacity => opacity.Value == 0.5);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -584,16 +584,6 @@ public sealed class MaterialPageTransitionsTests : IDisposable
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 
     private sealed class RenderHarness : IDisposable
@@ -633,7 +623,7 @@ public sealed class MaterialPageTransitionsTests : IDisposable
 
         public void Dispose()
         {
-            _root.Unmount();
+            _root.UnmountRoot();
         }
 
         private sealed class RenderRootElement : Element, IRenderObjectHost
@@ -701,16 +691,6 @@ public sealed class MaterialPageTransitionsTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

@@ -83,7 +83,7 @@ public sealed class CupertinoRouteTests : IDisposable
         }
         finally
         {
-            root.Unmount();
+            root.UnmountRoot();
         }
     }
 
@@ -150,7 +150,7 @@ public sealed class CupertinoRouteTests : IDisposable
         }
         finally
         {
-            root.Unmount();
+            root.UnmountRoot();
         }
     }
 
@@ -289,15 +289,5 @@ public sealed class CupertinoRouteTests : IDisposable
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

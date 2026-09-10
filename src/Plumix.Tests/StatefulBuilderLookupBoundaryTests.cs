@@ -341,7 +341,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
 
         public void Dispose()
         {
-            _root.Unmount();
+            _root.UnmountRoot();
         }
 
         private sealed class RootElement : Element, IRenderObjectHost
@@ -388,16 +388,6 @@ public sealed class StatefulBuilderLookupBoundaryTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child != null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
 
             public void InsertRenderObjectChild(RenderObject child, object? slot)
             {

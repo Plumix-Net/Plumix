@@ -46,7 +46,7 @@ public sealed class TickerModeTests : IDisposable
 
         Assert.True(state.Ticker.IsTicking);
         Assert.Equal(1, state.BuildCount);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public sealed class TickerModeTests : IDisposable
         Assert.False(innerState.Ticker.IsTicking);
         Assert.False(outerState.Ticker.ForceFrames);
         Assert.True(innerState.Ticker.ForceFrames);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -116,7 +116,7 @@ public sealed class TickerModeTests : IDisposable
 
         Assert.Equal(new TickerModeData(Enabled: true, ForceFrames: false), values);
         Assert.Contains(new TickerModeData(Enabled: true, ForceFrames: false), notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -142,7 +142,7 @@ public sealed class TickerModeTests : IDisposable
         Assert.Equal(TickerModeData.Fallback, valuesNotifier!.Value);
         Assert.True(enabledNotifier!.Value);
         Assert.Equal(TickerModeData.Fallback, new TickerModeData(Enabled: true, ForceFrames: false));
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -175,7 +175,7 @@ public sealed class TickerModeTests : IDisposable
 
         Assert.Equal(2, state.TickCount);
         Assert.True(state.LastElapsed >= TimeSpan.FromSeconds(1.9));
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -206,7 +206,7 @@ public sealed class TickerModeTests : IDisposable
         owner.FlushBuild();
 
         Assert.True(builds > initialBuilds);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -230,7 +230,7 @@ public sealed class TickerModeTests : IDisposable
 
         Assert.Same(state, childKey.CurrentState);
         Assert.False(state.Ticker.IsTicking);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static Widget BuildNestedModes(
@@ -346,16 +346,6 @@ public sealed class TickerModeTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

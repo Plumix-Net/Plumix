@@ -266,7 +266,7 @@ public sealed class RawTooltipTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
@@ -339,16 +339,6 @@ public sealed class RawTooltipTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

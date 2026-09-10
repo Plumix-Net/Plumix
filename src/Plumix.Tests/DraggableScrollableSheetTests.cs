@@ -1153,7 +1153,7 @@ public sealed class DraggableScrollableSheetTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private Widget BuildTree()
@@ -1297,16 +1297,6 @@ public sealed class DraggableScrollableSheetTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child != null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

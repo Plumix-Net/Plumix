@@ -109,7 +109,7 @@ public sealed class CupertinoAppTests : IDisposable
         Assert.Equal(
             new ApplicationSwitcherDescription("Cupertino shell", 0xFF28323C),
             SystemChrome.CurrentApplicationSwitcherDescription);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -137,7 +137,7 @@ public sealed class CupertinoAppTests : IDisposable
         Assert.IsType<TestCupertinoLocalizations>(localizations);
         Assert.Equal("Custom Select All", localizations!.SelectAllButtonLabel);
         Assert.Same(customScrollBehavior, scrollBehavior);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -160,7 +160,7 @@ public sealed class CupertinoAppTests : IDisposable
         Assert.Equal(
             new ApplicationSwitcherDescription("Dynamic title", 0xFF040506),
             SystemChrome.CurrentApplicationSwitcherDescription);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public sealed class CupertinoAppTests : IDisposable
         MountAndFlush(root, owner);
 
         Assert.True(built);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -322,15 +322,5 @@ public sealed class CupertinoAppTests : IDisposable
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

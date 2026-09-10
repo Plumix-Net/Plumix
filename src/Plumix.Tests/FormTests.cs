@@ -238,7 +238,7 @@ public sealed class FormTests : IDisposable
             return _pipeline.SemanticsOwner!.RootNode;
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private sealed class RootElement : Element, IRenderObjectHost
         {
@@ -263,16 +263,6 @@ public sealed class FormTests : IDisposable
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _view.Child = (RenderBox)child;
             public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot) { }
             public void RemoveRenderObjectChild(RenderObject child, object? slot) { if (ReferenceEquals(_view.Child, child)) _view.Child = null; }
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

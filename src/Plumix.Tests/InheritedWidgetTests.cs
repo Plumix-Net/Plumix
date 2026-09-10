@@ -109,7 +109,7 @@ public sealed class InheritedWidgetTests
         Assert.IsType<Center>(wrapper.Widget);
         Assert.Same(leaf, FirstChildOf(wrapper)!.Widget);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public sealed class InheritedWidgetTests
 
         Assert.Same(secondChild, FirstChildOf(scopeElement)!.Widget);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static Element? FirstChildOf(Element element)
@@ -206,16 +206,6 @@ public sealed class InheritedWidgetTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

@@ -57,7 +57,7 @@ public sealed class SliverOpacityTests : IDisposable
         Assert.Equal(0.75, updated.Opacity);
         Assert.True(updated.AlwaysIncludeSemantics);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -214,7 +214,7 @@ public sealed class SliverOpacityTests : IDisposable
         Assert.Equal(0.2, finished.Opacity.Value, precision: 6);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -329,16 +329,6 @@ public sealed class SliverOpacityTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

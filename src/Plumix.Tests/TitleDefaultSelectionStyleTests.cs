@@ -63,7 +63,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
             SystemChrome.CurrentApplicationSwitcherDescription);
         Assert.Equal(2, notifications);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
         Assert.Null(fallback.CursorColor);
         Assert.Null(fallback.SelectionColor);
         Assert.Null(fallback.MouseCursor);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
 
         Assert.Equal(1, resolvedThemeValue);
         Assert.Equal(Colors.Crimson, resolvedSelectionColor);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private sealed class CaptureAndOverride : StatelessWidget
@@ -228,16 +228,6 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

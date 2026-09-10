@@ -1599,7 +1599,7 @@ public sealed class MaterialTabsTests
         public void Dispose()
         {
             _ = Roots.Remove(RenderView);
-            _root.Unmount();
+            _root.UnmountRoot();
         }
     }
 
@@ -1655,16 +1655,6 @@ public sealed class MaterialTabsTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot) =>
             _renderView.Child = (RenderBox)child;

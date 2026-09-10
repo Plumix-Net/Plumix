@@ -48,7 +48,7 @@ public sealed class WidgetHost : PlumixHost
         {
             if (_rootElement != null)
             {
-                _rootElement.Unmount();
+                _rootElement.UnmountRoot();
                 _rootElement = null;
                 Pipeline.RootLayer.RemoveAllChildren();
                 ScheduleVisualUpdate();

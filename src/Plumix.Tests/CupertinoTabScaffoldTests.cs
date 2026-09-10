@@ -368,6 +368,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
     {
         var rawData = RawRestorationData.Build();
         var manager = new MockRestorationManager();
+        Dictionary<object, object?> serialized;
         using (var first = new CupertinoThemeTestHarness(BuildRoot(
                    new CupertinoTabScaffold(
                        tabBar: BuildTabBar(3),
@@ -380,6 +381,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
             first.Pump(ViewSize);
             manager.DoSerialization();
             Assert.Equal(2, Assert.Single(first.FindWidgets<CupertinoTabBar>()).CurrentIndex);
+            serialized = RawRestorationData.Copy(rawData);
         }
 
         using var restored = new CupertinoThemeTestHarness(BuildRoot(
@@ -387,7 +389,7 @@ public sealed class CupertinoTabScaffoldTests : IDisposable
                 tabBar: BuildTabBar(3),
                 restorationId: "scaffold",
                 tabBuilder: (_, index) => new Text($"Page {index}")),
-            bucket: RestorationBucket.Root(manager, rawData)));
+            bucket: RestorationBucket.Root(manager, serialized)));
         restored.Pump(ViewSize);
 
         Assert.Equal(2, Assert.Single(restored.FindWidgets<CupertinoTabBar>()).CurrentIndex);

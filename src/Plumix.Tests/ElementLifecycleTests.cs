@@ -65,7 +65,7 @@ public sealed class ElementLifecycleTests
         Assert.True(activateIndex > deactivateIndex, "Expected activate after deactivate during GlobalKey move.");
         Assert.DoesNotContain("dispose", LifecycleTracker.Events);
 
-        root.Unmount();
+        root.UnmountRoot();
 
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "dispose"));
     }
@@ -90,7 +90,7 @@ public sealed class ElementLifecycleTests
 
         Assert.Equal(["init"], LifecycleTracker.Events);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "dispose"));
     }
 
@@ -115,7 +115,7 @@ public sealed class ElementLifecycleTests
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "activate"));
         Assert.DoesNotContain("dispose", LifecycleTracker.Events);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "dispose"));
     }
 
@@ -140,7 +140,7 @@ public sealed class ElementLifecycleTests
         Assert.Equal(2, LifecycleTracker.Events.Count(static eventName => eventName == "activate"));
         Assert.DoesNotContain("dispose", LifecycleTracker.Events);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "dispose"));
     }
 
@@ -164,7 +164,7 @@ public sealed class ElementLifecycleTests
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "deactivate"));
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "dispose"));
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(1, LifecycleTracker.Events.Count(static eventName => eventName == "dispose"));
     }
 
@@ -199,7 +199,7 @@ public sealed class ElementLifecycleTests
         Assert.Contains(initialUnkeyed["middle"], MixedTracker.DisposedStateIds);
         Assert.DoesNotContain(initialUnkeyed["tail"], MixedTracker.DisposedStateIds);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public sealed class ElementLifecycleTests
         Assert.DoesNotContain(initialUnkeyed["nested-tail"], MixedTracker.DisposedStateIds);
         Assert.DoesNotContain(initialUnkeyed["root-tail"], MixedTracker.DisposedStateIds);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost
@@ -311,16 +311,6 @@ public sealed class ElementLifecycleTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 
     private sealed class KeyedListHost(IReadOnlyList<int> ids) : StatelessWidget

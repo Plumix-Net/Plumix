@@ -59,7 +59,7 @@ internal sealed class FocusLayoutHarness : IDisposable
 
     public void Dispose()
     {
-        _rootElement.Unmount();
+        _rootElement.UnmountRoot();
         Scheduler.FlushMicrotasks();
     }
 
@@ -111,16 +111,6 @@ internal sealed class FocusLayoutHarness : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot) =>
             _renderView.Child = (RenderBox)child;

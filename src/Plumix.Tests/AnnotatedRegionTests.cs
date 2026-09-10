@@ -50,7 +50,7 @@ public sealed class AnnotatedRegionTests
         Assert.Same(render, updated);
         Assert.Equal("second", updated.Value);
         Assert.False(updated.Sized);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -299,16 +299,6 @@ public sealed class AnnotatedRegionTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

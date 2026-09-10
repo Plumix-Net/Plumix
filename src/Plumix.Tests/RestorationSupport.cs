@@ -109,6 +109,23 @@ internal static class RawRestorationData
         return data;
     }
 
+    /// <summary>
+    /// A deep copy of serialized restoration data, the way Flutter's
+    /// <c>WidgetTester.getRestorationData</c> snapshots it. Tearing a tree down disposes its buckets,
+    /// and <c>RestorationBucket.dispose</c> removes each bucket's data from its parent, so data read
+    /// back after the first tree is gone has to come from a snapshot taken while it was alive.
+    /// </summary>
+    public static Dictionary<object, object?> Copy(IDictionary<object, object?> rawData)
+    {
+        var copy = new Dictionary<object, object?>();
+        foreach (KeyValuePair<object, object?> entry in rawData)
+        {
+            copy[entry.Key] = entry.Value is IDictionary<object, object?> nested ? Copy(nested) : entry.Value;
+        }
+
+        return copy;
+    }
+
     public static Dictionary<object, object?>? Values(IDictionary<object, object?> rawData)
     {
         return rawData.TryGetValue("v", out object? values) ? values as Dictionary<object, object?> : null;
@@ -329,7 +346,7 @@ internal sealed class RestorationHarness : IDisposable
 
     public void Dispose()
     {
-        _root.Unmount();
+        _root.UnmountRoot();
         Scheduler.PumpFrameForTests();
     }
 

@@ -156,7 +156,7 @@ public sealed class ElementDiagnosticsTests
         Assert.Contains("This widget is the root of the tree", information[1].ToString());
         Assert.Contains("\"TestInherited\" ancestor", information[1].ToString());
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     // ---- creator chain -------------------------------------------------------------------
@@ -202,7 +202,7 @@ public sealed class ElementDiagnosticsTests
         Assert.Equal(child.Widget.ToStringShort(), child.ToStringShort());
         Assert.Contains("SizedBox", child.ToStringShort());
 
-        root.Unmount();
+        root.UnmountRoot();
 
         Assert.EndsWith("(DEFUNCT)", child.ToStringShort(), StringComparison.Ordinal);
         Assert.Contains(Diagnostics.ShortHash(child), child.ToStringShort());
@@ -251,7 +251,7 @@ public sealed class ElementDiagnosticsTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Element child = root.ChildElement!;
-        root.Unmount();
+        root.UnmountRoot();
 
         var builder = new DiagnosticPropertiesBuilder();
         child.DebugFillProperties(builder);
@@ -315,7 +315,7 @@ public sealed class ElementDiagnosticsTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
         Element child = root.ChildElement!;
-        root.Unmount();
+        root.UnmountRoot();
 
         Dictionary<string, object?> json =
             child.ToDiagnosticsNode().ToJsonMap(DiagnosticsSerializationDelegate.Create());
@@ -553,16 +553,6 @@ public sealed class ElementDiagnosticsTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {
@@ -705,7 +695,7 @@ public sealed class ElementDiagnosticsTests
             }
 
             _disposed = true;
-            _root.Unmount();
+            _root.UnmountRoot();
         }
     }
 }

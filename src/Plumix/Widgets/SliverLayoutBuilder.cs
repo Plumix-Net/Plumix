@@ -186,12 +186,6 @@ internal sealed class SliverLayoutBuilderElement : RenderObjectElement
     public override void Unmount()
     {
         LayoutRenderObject.ClearCallback();
-        if (_child != null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
         base.Unmount();
     }
 }

@@ -841,27 +841,6 @@ internal sealed class CupertinoTextSelectionToolbarItemsElement : RenderObjectEl
         Items.Remove((RenderBox)child);
     }
 
-    public override void Unmount()
-    {
-        foreach (Element child in _slotToChild.Values.ToList())
-        {
-            UnmountChild(child);
-        }
-
-        foreach (Element child in _children)
-        {
-            if (!_forgottenChildren.Contains(child))
-            {
-                UnmountChild(child);
-            }
-        }
-
-        _slotToChild.Clear();
-        _children.Clear();
-        _forgottenChildren.Clear();
-        base.Unmount();
-    }
-
     private void UpdateChildrenAndSlots()
     {
         MountChild(ToolbarItems.BackButton, CupertinoTextSelectionToolbarItemsSlot.BackButton);

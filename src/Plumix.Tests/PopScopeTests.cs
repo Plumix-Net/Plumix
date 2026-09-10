@@ -87,7 +87,7 @@ public sealed class PopScopeTests : IDisposable
         Assert.Equal("root", navigator.CurrentRoute?.Settings.Name);
         Assert.Equal([(false, "blocked"), (true, "accepted")], invocations);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public sealed class PopScopeTests : IDisposable
         Assert.Equal("forced", callbackResult);
         Assert.Equal("root", navigator.CurrentRoute?.Settings.Name);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -183,7 +183,7 @@ public sealed class PopScopeTests : IDisposable
         Assert.Equal("outer-root", outerNavigator.CurrentRoute?.Settings.Name);
         Assert.Equal(1, callbackCount);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public sealed class PopScopeTests : IDisposable
         Assert.Equal("unsaved", callbackResult);
         Assert.Equal("form", navigator.CurrentRoute?.Settings.Name);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static BuilderPageRoute BuildRoute(string name, Func<BuildContext, Widget> builder)
@@ -351,15 +351,5 @@ public sealed class PopScopeTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

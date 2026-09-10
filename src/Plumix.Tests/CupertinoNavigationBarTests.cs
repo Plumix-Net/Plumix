@@ -916,7 +916,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
             _pipeline.FlushPaint();
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private static void CollectWidgets<T>(Element element, List<T> widgets) where T : Widget
         {
@@ -993,16 +993,6 @@ public sealed class CupertinoNavigationBarTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

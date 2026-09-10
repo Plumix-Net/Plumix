@@ -319,7 +319,7 @@ public sealed class CupertinoPageScaffoldTests : IDisposable
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private static void CollectWidgets<T>(Element element, List<T> widgets) where T : Widget

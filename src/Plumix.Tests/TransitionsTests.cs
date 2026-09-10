@@ -57,7 +57,7 @@ public sealed class TransitionsTests : IDisposable
         translation = Assert.IsType<RenderFractionalTranslation>(root.ChildElement.RenderObject);
         Assert.Equal(new Vector(0.4, 0.75), translation.Translation);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, animation.ListenerCount);
     }
 
@@ -91,7 +91,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0, first.ListenerCount);
         Assert.Equal(1, second.ListenerCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, second.ListenerCount);
     }
 
@@ -189,7 +189,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(new Size(40, 20), clip.Size);
         Assert.Equal(new Point(0, -20), ((BoxParentData)align.Child!.parentData!).offset);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, animation.ListenerCount);
     }
 
@@ -234,7 +234,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0, first.ListenerCount);
         Assert.Equal(1, second.ListenerCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, second.ListenerCount);
     }
 
@@ -309,7 +309,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Null(renderTransform.FilterQuality);
         Assert.Equal(3, callbackCount);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -353,7 +353,7 @@ public sealed class TransitionsTests : IDisposable
         renderTransform = Assert.IsType<RenderTransform>(root.ChildElement.RenderObject);
         Assert.Equal(Matrix4.Diagonal3Values(1.25, 1.25, 1.0), renderTransform.Transform);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, secondAnimation.ListenerCount);
     }
 
@@ -379,7 +379,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(Matrix4.Identity(), renderTransform.Transform);
         Assert.Null(renderTransform.FilterQuality);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Theory]
@@ -400,7 +400,7 @@ public sealed class TransitionsTests : IDisposable
         var renderTransform = Assert.IsType<RenderTransform>(root.ChildElement!.RenderObject);
         Assert.Equal(Matrix4.RotationZ(turns * Math.PI * 2.0), renderTransform.Transform);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -508,7 +508,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0, firstAnimation.ListenerCount);
         Assert.Equal(1, secondAnimation.ListenerCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, secondAnimation.ListenerCount);
     }
 
@@ -552,7 +552,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(new Point(), parentData.offset);
         Assert.Equal(new Size(), renderStack.FirstChild.Size);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -605,7 +605,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0, first.ListenerCount);
         Assert.Equal(1, second.ListenerCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, second.ListenerCount);
     }
 
@@ -678,7 +678,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0, first.ListenerCount);
         Assert.Equal(1, second.ListenerCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, second.ListenerCount);
     }
 
@@ -763,7 +763,7 @@ public sealed class TransitionsTests : IDisposable
         Assert.Equal(0, first.ListenerCount);
         Assert.Equal(1, second.ListenerCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, second.ListenerCount);
     }
 
@@ -942,16 +942,6 @@ public sealed class TransitionsTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

@@ -73,7 +73,7 @@ internal sealed class MouseTrackingHarness : IDisposable
         _owner.FlushBuild();
     }
 
-    public void Dispose() => _rootElement.Unmount();
+    public void Dispose() => _rootElement.UnmountRoot();
 
     public static PointerAddedEvent Added(Point position, int device = 1, PointerDeviceKind kind = PointerDeviceKind.Mouse)
         => new(device, kind, position, timestampUtc: DateTime.UtcNow);
@@ -138,16 +138,6 @@ internal sealed class MouseTrackingHarness : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

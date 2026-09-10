@@ -1084,7 +1084,7 @@ public sealed class NavigationTests
         Assert.Equal(AnimationStatus.Dismissed, rootSecondaryAnimation.Status);
         Assert.Throws<InvalidOperationException>(() => _ = detailsRoute.Animation);
 
-        root.Unmount();
+        root.UnmountRoot();
         Scheduler.ResetForTests();
     }
 
@@ -1257,15 +1257,5 @@ public sealed class NavigationTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

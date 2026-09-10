@@ -483,7 +483,7 @@ public sealed class BuildScopeTests
         child.Rebuild(force: true);
         Assert.Equal(dirty, child.Dirty);
 
-        child.Unmount();
+        child.UnmountRoot();
         Assert.Equal(dirty, child.Dirty);
         Assert.Equal(dirty, child.InDirtyList);
         owner.FlushBuild();

@@ -39,7 +39,7 @@ public sealed class NavigationNotificationTests : IDisposable
         Pump(owner);
 
         Assert.Equal([false], _notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class NavigationNotificationTests : IDisposable
         // change first — a will-pop callback does not change PopDisposition, so the navigator still
         // reports false — then the route reporting that its callback handles the pop.
         Assert.Equal([false, true], _notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -80,7 +80,7 @@ public sealed class NavigationNotificationTests : IDisposable
         // Unlike a will-pop callback, a PopScope moves the route's PopDisposition to DoNotPop, which
         // `_getNavigatorCanHandlePop` reads, so both notifications report a handled pop.
         Assert.Equal([true, true], _notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public sealed class NavigationNotificationTests : IDisposable
 
         Assert.Equal(RoutePopDisposition.Bubble, route.PopDisposition);
         Assert.Equal([false], _notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -140,7 +140,7 @@ public sealed class NavigationNotificationTests : IDisposable
 
         Assert.Equal(RoutePopDisposition.Bubble, route.PopDisposition);
         Assert.Equal([false], _notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -178,7 +178,7 @@ public sealed class NavigationNotificationTests : IDisposable
         Pump(owner);
         Assert.Equal(RoutePopDisposition.Bubble, route.PopDisposition);
         Assert.Equal([false], _notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -201,7 +201,7 @@ public sealed class NavigationNotificationTests : IDisposable
         Assert.Equal(
             RoutePopDisposition.DoNotPop,
             ((ModalRoute)navigator.CurrentRoute!).PopDisposition);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -223,7 +223,7 @@ public sealed class NavigationNotificationTests : IDisposable
         Pump(owner);
 
         Assert.Empty(_notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -249,7 +249,7 @@ public sealed class NavigationNotificationTests : IDisposable
         // re-dispatches `true` from its own context, above its own listener.
         Assert.Contains(true, _notifications);
         Assert.DoesNotContain(false, _notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -278,7 +278,7 @@ public sealed class NavigationNotificationTests : IDisposable
         Assert.Empty(duringBuild);
         Pump(owner);
         Assert.NotEmpty(_notifications);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private bool _canPop;
@@ -385,15 +385,5 @@ public sealed class NavigationNotificationTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

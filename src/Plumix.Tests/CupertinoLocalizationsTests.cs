@@ -133,7 +133,7 @@ public sealed class CupertinoLocalizationsTests : IDisposable
 
         var invalidOperation = Assert.IsType<InvalidOperationException>(missingException);
         Assert.Contains("No CupertinoLocalizations found", invalidOperation.Message);
-        missingRoot.Unmount();
+        missingRoot.UnmountRoot();
 
         CupertinoLocalizations? resolved = null;
         var localizedOwner = new BuildOwner();
@@ -153,7 +153,7 @@ public sealed class CupertinoLocalizationsTests : IDisposable
         MountAndFlush(localizedRoot, localizedOwner);
 
         Assert.Same(DefaultCupertinoLocalizations.Instance, resolved);
-        localizedRoot.Unmount();
+        localizedRoot.UnmountRoot();
     }
 
     [Fact]
@@ -176,7 +176,7 @@ public sealed class CupertinoLocalizationsTests : IDisposable
 
         Assert.IsType<CupertinoLocalizationAr>(cupertino);
         Assert.Equal(TextDirection.Rtl, Assert.IsType<WidgetsLocalizationAr>(widgets).TextDirection);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static void MountAndFlush(TestRootElement root, BuildOwner owner)
@@ -245,15 +245,5 @@ public sealed class CupertinoLocalizationsTests : IDisposable
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

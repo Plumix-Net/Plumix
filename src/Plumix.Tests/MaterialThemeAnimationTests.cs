@@ -264,7 +264,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         Assert.Equal(secondTarget.PrimaryColor, observedTheme.PrimaryColor);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -321,7 +321,7 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         Assert.Equal(TimeSpan.FromMilliseconds(80), route.ReverseTransitionDuration);
         Assert.True(builder.BuildCount > 0);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private sealed class ThemeProbe : StatelessWidget
@@ -483,15 +483,5 @@ public sealed class MaterialThemeAnimationTests : IDisposable
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

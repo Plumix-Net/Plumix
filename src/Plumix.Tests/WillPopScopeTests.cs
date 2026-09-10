@@ -45,7 +45,7 @@ public sealed class WillPopScopeTests
         owner.FlushBuild();
         Assert.Equal("root", navigator.CurrentRoute?.Settings?.Name);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -84,7 +84,7 @@ public sealed class WillPopScopeTests
         Assert.False(guarded.PopGestureEnabled);
         Assert.False(guarded.WillPop());
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [DebugOnlyFact]
@@ -180,16 +180,6 @@ public sealed class WillPopScopeTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }
 

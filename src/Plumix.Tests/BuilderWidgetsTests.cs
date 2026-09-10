@@ -89,7 +89,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Equal(4, builderCalls);
         Assert.Equal(1, child.BuildCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, second.ListenerCount);
 
         ListenableBuilder Build(IListenable listenable)
@@ -135,7 +135,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Equal(2, builderCalls);
         Assert.Equal(1, child.BuildCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, animation.ListenerCount);
     }
 
@@ -192,7 +192,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         owner.FlushBuild();
         Assert.Equal([4, 7, 9, 11], values);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, second.ListenerCount);
 
         ValueListenableBuilder<int> Build(IValueListenable<int> listenable)
@@ -288,7 +288,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Equal(200.0, values[^1], precision: 6);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
 
         TweenAnimationBuilder<double> Build(DoubleTween tween, Curve curve)
         {
@@ -336,7 +336,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Single(values);
         Assert.Equal(0, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -472,7 +472,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.Equal(1.0, forwardAnimation.Value, precision: 6);
         Assert.Equal(0.2, reverseAnimation.Value, precision: 6);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, second.StatusListenerCount);
 
         DualTransitionBuilder Build(Animation<double> animation)
@@ -573,7 +573,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         Assert.True(values.Count > resumedBuildCount);
         Assert.Equal(1, child.BuildCount);
 
-        root.Unmount();
+        root.UnmountRoot();
 
         RepeatingAnimationBuilder<double> Build(bool paused)
         {
@@ -624,7 +624,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         owner.FlushBuild();
         Assert.InRange(values[^1], 0.05, 0.10);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -665,7 +665,7 @@ public sealed class BuilderWidgetsTests : IDisposable
         // 4.25s plus the same phase offset is two full periods and a bit, so the forward leg restarts.
         Assert.InRange(values[^1], 0.18, 0.26);
 
-        root.Unmount();
+        root.UnmountRoot();
 
         RepeatingAnimationBuilder<double> Build(
             TimeSpan duration,
@@ -849,16 +849,6 @@ public sealed class BuilderWidgetsTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

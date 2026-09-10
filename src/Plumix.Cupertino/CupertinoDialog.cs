@@ -572,7 +572,11 @@ internal sealed class ActionSheetGestureDetectorState : State
 
     public override void Dispose()
     {
-        LeaveAllTargets();
+        // Dart tears this down through `_TargetSelectionGestureRecognizer.dispose`, which disposes the
+        // sliding-tap recognizer without cancelling, so no target is told it was left. Calling
+        // `LeaveAllTargets` here would reach child states that `_InactiveElements` has already
+        // disposed, since a subtree is unmounted deepest-first.
+        _currentTargets.Clear();
         base.Dispose();
     }
 

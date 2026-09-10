@@ -393,7 +393,7 @@ public sealed class InlineSpanTests
             return found!;
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private static T? FindDescendant<T>(RenderObject? root) where T : RenderObject
         {

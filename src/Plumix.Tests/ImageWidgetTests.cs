@@ -544,7 +544,7 @@ public sealed class ImageWidgetTests : IDisposable
 
         public void Dispose()
         {
-            _root.Unmount();
+            _root.UnmountRoot();
             Scheduler.PumpFrameForTests();
         }
 

@@ -994,7 +994,7 @@ public sealed class MaterialSearchTests : IDisposable
             _pipeline.FlushSemantics();
         }
 
-        public void Dispose() => _rootElement.Unmount();
+        public void Dispose() => _rootElement.UnmountRoot();
 
         public T FindState<T>() where T : State
         {
@@ -1095,16 +1095,6 @@ public sealed class MaterialSearchTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

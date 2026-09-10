@@ -254,13 +254,6 @@ internal sealed class SliverPersistentHeaderElement : RenderObjectElement
     public override void Unmount()
     {
         HeaderRenderObject.ChildBuilder = null;
-        if (_child != null)
-        {
-            Element mountedChild = _child;
-            _child = null;
-            UnmountChild(mountedChild);
-        }
-
         base.Unmount();
     }
 

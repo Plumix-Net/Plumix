@@ -293,6 +293,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
     public bool IsActive => _lifecycleState == ElementLifecycleState.Active;
     internal bool IsInactive => _lifecycleState == ElementLifecycleState.Inactive;
+    internal ElementLifecycleState LifecycleState => _lifecycleState;
     public bool Mounted =>
         _lifecycleState is ElementLifecycleState.Active or ElementLifecycleState.Inactive;
 
@@ -455,49 +456,48 @@ public abstract class Element : DiagnosticableTree, BuildContext
         Slot = null;
     }
 
-    internal void DeactivateRecursively(bool isRoot = true)
+    /// <summary>
+    /// Dart's <c>Element.deactivate</c>: runs the subclass hook and then drops the inherited
+    /// dependencies. The subtree walk lives in <see cref="InactiveElements.DeactivateRecursively"/>,
+    /// exactly as it does in Dart's <c>_InactiveElements</c>.
+    /// </summary>
+    internal void Deactivate()
     {
-        if (_lifecycleState != ElementLifecycleState.Active)
+        if (Constants.KDebugMode && _lifecycleState != ElementLifecycleState.Active)
         {
-            return;
+            throw new AssertionError($"{ToStringShort()} must be active to be deactivated.");
         }
 
-        try
-        {
-            OnDeactivate();
-        }
-        catch (Exception)
-        {
-            // Dart's _InactiveElements._deactivateRecursively forces the whole subtree into the
-            // failed state and rethrows, so a throwing deactivate() leaves the element neither
-            // active nor defunct, and it never reaches the inactive list.
-            DeactivateFailedSubtreeRecursively(this);
-            throw;
-        }
-
-        VisitChildren(child => child.DeactivateRecursively(isRoot: false));
-        RemoveDependencies();
-
-        if (isRoot)
-        {
-            Parent = null;
-        }
-
-        InheritedElements = null;
-        _lifecycleState = ElementLifecycleState.Inactive;
-
-        if (Constants.KDebugMode)
-        {
-            DebugDeactivated();
-            if (WidgetsDebug.DebugPrintGlobalKeyedWidgetLifecycle && Widget.Key is GlobalKey)
-            {
-                Print.DebugPrint($"Deactivated {this}");
-            }
-        }
-
-        Owner?.TrackInactive(this);
+        OnDeactivate();
+        EnsureDeactivated();
     }
 
+    /// <summary>
+    /// Plumix-only: tears down a parentless root element and everything below it, deepest-first,
+    /// exactly the way <see cref="InactiveElements"/> tears down a subtree the tree dropped.
+    /// </summary>
+    /// <remarks>
+    /// Dart has no counterpart because its root element lives for the process; a Plumix host clears
+    /// its root widget (and a test its harness), and nothing above the root can call
+    /// <see cref="DeactivateChild"/> for it. <see cref="Unmount"/> itself is not that entry point:
+    /// like Dart's, it only takes this one element from inactive to defunct.
+    /// </remarks>
+    public void UnmountRoot()
+    {
+        if (Parent is not null)
+        {
+            throw new AssertionError(
+                $"{ToStringShort()} has a parent; only a root element can be unmounted directly.");
+        }
+
+        DetachRenderObject();
+        InactiveElements.DeactivateAndUnmount(this);
+    }
+
+    /// <summary>
+    /// Dart's <c>Element.unmount</c>: the transition from inactive to defunct. Descendants are
+    /// unmounted first by <see cref="InactiveElements"/>; an override must not walk children itself.
+    /// </summary>
     public virtual void Unmount()
     {
         if (_lifecycleState == ElementLifecycleState.Defunct)
@@ -761,27 +761,14 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
         if (Owner == null)
         {
-            child.Unmount();
+            // Dart asserts an owner here. Plumix keeps a fallback for the ownerless elements tests
+            // and hosts build directly: there is no inactive list to park the child in, so the
+            // subtree is torn down inline in the order _InactiveElements would use.
+            InactiveElements.DeactivateAndUnmount(child);
             return;
         }
 
         Owner.Deactivate(child);
-    }
-
-    public virtual void UnmountChild(Element child)
-    {
-        ForgetChild(child);
-        if (child.IsActive)
-        {
-            child.Parent = null;
-            child.DetachRenderObject();
-            if (child.RenderObject?.Attached != true)
-            {
-                child.DeactivateRecursively();
-            }
-        }
-
-        child.Unmount();
     }
 
     public Element InflateWidget(Widget newWidget, object? newSlot)
@@ -1488,7 +1475,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
     /// activation or rebuild into <see cref="ElementLifecycleState.Failed"/>, best effort, never
     /// surfacing an additional error.
     /// </summary>
-    private static void DeactivateFailedSubtreeRecursively(Element element)
+    internal static void DeactivateFailedSubtreeRecursively(Element element)
     {
         try
         {
@@ -1708,17 +1695,6 @@ public abstract class ComponentElement : Element
         {
             _child = null;
         }
-    }
-
-    public override void Unmount()
-    {
-        if (_child != null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
-        base.Unmount();
     }
 }
 

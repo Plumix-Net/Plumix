@@ -1322,7 +1322,7 @@ public sealed class MaterialBottomNavigationBarTests
 
         internal RenderObject RenderRoot => RequireRenderObject<RenderObject>(Root.ChildElement);
 
-        public void Dispose() => Root.Unmount();
+        public void Dispose() => Root.UnmountRoot();
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject
@@ -1531,16 +1531,6 @@ public sealed class MaterialBottomNavigationBarTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {
@@ -1614,7 +1604,7 @@ public sealed class MaterialBottomNavigationBarTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
@@ -1701,16 +1691,6 @@ public sealed class MaterialBottomNavigationBarTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child != null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 

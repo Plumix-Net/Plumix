@@ -401,7 +401,7 @@ public sealed class MaterialScaffoldTests
 
             manager.DoSerialization();
             snapshot = RestorationSerialization.CopyRestorationData(rawData);
-            root.Unmount();
+            root.UnmountRoot();
         }
 
         Dictionary<object, object?> values = RawRestorationData.Values(
@@ -422,7 +422,7 @@ public sealed class MaterialScaffoldTests
         Assert.False(restored.IsDrawerOpen);
         Assert.True(restored.IsEndDrawerOpen);
         Assert.NotNull(FindParagraphByText(restarted.ChildElement?.RenderObject, "End drawer panel"));
-        restarted.Unmount();
+        restarted.UnmountRoot();
     }
 
     [Fact]
@@ -450,7 +450,7 @@ public sealed class MaterialScaffoldTests
 
             manager.DoSerialization();
             snapshot = RestorationSerialization.CopyRestorationData(rawData);
-            root.Unmount();
+            root.UnmountRoot();
         }
 
         Assert.Null(RawRestorationData.Child(snapshot!, "scaffold"));
@@ -466,7 +466,7 @@ public sealed class MaterialScaffoldTests
 
         Assert.False(Scaffold.Of(restoredContext!).IsDrawerOpen);
         Assert.Null(FindParagraphByText(restarted.ChildElement?.RenderObject, "Drawer panel"));
-        restarted.Unmount();
+        restarted.UnmountRoot();
     }
 
     private static Widget RestorableScaffold(Action<BuildContext> capture, string? restorationId) => new Theme(
@@ -4550,7 +4550,7 @@ public sealed class MaterialScaffoldTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
@@ -4637,16 +4637,6 @@ public sealed class MaterialScaffoldTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child != null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 
@@ -4748,16 +4738,6 @@ public sealed class MaterialScaffoldTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

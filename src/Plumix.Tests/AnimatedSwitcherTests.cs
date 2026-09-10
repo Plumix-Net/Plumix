@@ -110,7 +110,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         owner.FlushBuild();
         Assert.Equal(0, previousCount);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -161,7 +161,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         owner.FlushBuild();
 
         Assert.Equal(3, secondBuilderCalls);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         Assert.Equal(direction, animatedSize.TextDirection);
         Assert.Equal(new Alignment(expectedX, 1.0), animatedSize.Alignment.Resolve(animatedSize.TextDirection));
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -286,7 +286,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         Assert.Equal(60.0, clip.Size.Height);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -341,7 +341,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         owner.FlushBuild();
         Assert.False(bottomTickerEnabled);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static AnimatedSwitcher BuildSwitcher(
@@ -377,7 +377,7 @@ public sealed class AnimatedSwitcherTests : IDisposable
         var root = new TestRootElement(widget);
         Mount(root, owner);
         RenderObject renderObject = root.ChildElement!.RenderObject!;
-        root.Unmount();
+        root.UnmountRoot();
         return renderObject;
     }
 
@@ -492,16 +492,6 @@ public sealed class AnimatedSwitcherTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

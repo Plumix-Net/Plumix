@@ -1075,18 +1075,6 @@ public sealed class ListWheelElement : RenderObjectElement, IListWheelChildManag
 
         base.ForgetChild(child);
     }
-
-    public override void Unmount()
-    {
-        foreach (Element child in _childElements.Values.ToArray())
-        {
-            UnmountChild(child);
-        }
-
-        _childElements.Clear();
-        _childWidgets.Clear();
-        base.Unmount();
-    }
 }
 
 /// <summary>

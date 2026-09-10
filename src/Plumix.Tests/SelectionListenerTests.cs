@@ -313,7 +313,7 @@ public sealed class SelectionListenerTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
             FocusManager.Instance.ResetForTests();
             GestureBinding.Instance.ResetForTests();
         }
@@ -375,16 +375,6 @@ public sealed class SelectionListenerTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

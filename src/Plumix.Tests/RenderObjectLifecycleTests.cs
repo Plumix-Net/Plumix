@@ -176,7 +176,7 @@ public sealed class RenderObjectLifecycleTests
         TestRenderBox renderObject = Assert.IsType<TestRenderBox>(widget.CreatedRenderObject);
         Assert.False(renderObject.DebugDisposed);
 
-        root.Unmount();
+        root.UnmountRoot();
 
         Assert.True(renderObject.DebugDisposed);
         Assert.True(widget.DidUnmountCalled);
@@ -341,15 +341,5 @@ public sealed class RenderObjectLifecycleTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

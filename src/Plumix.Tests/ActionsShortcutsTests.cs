@@ -157,7 +157,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         Assert.Null(Actions.MaybeFind<DismissIntent>(capturedContext));
         Assert.Null(Actions.MaybeInvoke(capturedContext, new DismissIntent()));
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -204,7 +204,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         Assert.Equal(4, Actions.MaybeInvoke(capturedContext, new IncrementIntent(4)));
         Assert.Equal(4, action.Total);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -232,7 +232,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         second.SetEnabled(false);
         Assert.Equal(2, notifications);
 
-        root.Unmount();
+        root.UnmountRoot();
         second.SetEnabled(true);
         Assert.Equal(2, notifications);
     }
@@ -284,7 +284,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         override1.Consumes = false;
         Assert.False(overridable.ConsumesKey(new OverridableIntent()));
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -310,7 +310,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         defaultAction.Enabled = false;
         Assert.False(overridable.IsActionEnabled);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -347,7 +347,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         Assert.True(action.LastContext is not null);
         Assert.Same(focusNode.AttachmentElement, action.LastContext);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -391,7 +391,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         Assert.Equal(1, propagatedInvocations);
         Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Up(LogicalKeyboardKey.KeyA)));
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -444,7 +444,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.Tab)));
         Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -469,7 +469,7 @@ public sealed class ActionsShortcutsTests : IDisposable
             KeySim.Down(LogicalKeyboardKey.Equal, character: "+")));
         Assert.Equal(1, invocationCount);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -522,7 +522,7 @@ public sealed class ActionsShortcutsTests : IDisposable
         entry.Dispose();
         Scheduler.PumpFrameForTests();
         Assert.False(FocusManager.Instance.HandleKeyEvent(KeySim.Down(LogicalKeyboardKey.F3)));
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)
@@ -707,16 +707,6 @@ public sealed class ActionsShortcutsTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

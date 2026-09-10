@@ -310,7 +310,7 @@ public sealed class StateStorageWidgetsTests
 
         public void Dispose()
         {
-            _root.Unmount();
+            _root.UnmountRoot();
             Scheduler.PumpFrameForTests();
         }
 
@@ -363,16 +363,6 @@ public sealed class StateStorageWidgetsTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child != null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
 
             public void InsertRenderObjectChild(RenderObject child, object? slot)
             {

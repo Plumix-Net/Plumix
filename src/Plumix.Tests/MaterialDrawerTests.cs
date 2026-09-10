@@ -280,7 +280,7 @@ public sealed class MaterialDrawerTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private static void CollectWidgets<T>(Element element, ICollection<T> widgets) where T : Widget
@@ -372,16 +372,6 @@ public sealed class MaterialDrawerTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

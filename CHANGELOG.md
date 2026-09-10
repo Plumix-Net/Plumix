@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `_InactiveElements` lands; a dropped subtree unmounts deepest-first and `Element.UnmountChild` is gone.
+- Breaking: `Element.UnmountRoot` replaces `Unmount` as the way a host or harness tears down a parentless root.
+- Breaking: `CupertinoActionSheet` no longer tells its slide targets they were left when it is disposed (dialog.dart).
 - Breaking: `Scheduler.AddPostFrameCallback` no longer requests a frame and takes a `debugLabel` (binding.dart).
 - Breaking: `Scheduler.FramesEnabled` is read-only, driven by `HandleAppLifecycleStateChanged` (binding.dart).
 - Breaking: `Scheduler.CurrentFrameTimeStamp` is only readable inside a frame; `CurrentSystemFrameTimeStamp` lands.

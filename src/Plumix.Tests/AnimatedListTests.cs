@@ -623,7 +623,7 @@ public sealed class AnimatedListTests : IDisposable
             _pipeline.FlushPaint();
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private sealed class RootElement : Element, IRenderObjectHost
         {

@@ -121,7 +121,7 @@ public sealed class VisibilityTests
 
         Assert.NotNull(key.CurrentState);
         Assert.NotSame(initialState, key.CurrentState);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public sealed class VisibilityTests
         Assert.False(tickerMode.Enabled);
         Assert.True(excludeFocus.Excluding);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(1, disposals);
     }
 
@@ -193,7 +193,7 @@ public sealed class VisibilityTests
         Assert.True(visibility.HitTest(new BoxHitTestResult(), new Point(10, 10)));
         visibility.VisitChildrenForSemantics(_ => semanticsVisits++);
         Assert.Equal(1, semanticsVisits);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -222,7 +222,7 @@ public sealed class VisibilityTests
         owner.FlushBuild();
 
         Assert.True(probe.LastVisibility);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -264,7 +264,7 @@ public sealed class VisibilityTests
         Mount(root, owner);
 
         Assert.False(probe.DescendantsAreFocusable);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -547,16 +547,6 @@ public sealed class VisibilityTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

@@ -55,7 +55,7 @@ public sealed class ClipWidgetsTests
         Assert.Same(pathClipper, renderPath.Clipper);
         Assert.Equal(Clip.HardEdge, renderPath.ClipBehavior);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -88,7 +88,7 @@ public sealed class ClipWidgetsTests
         Assert.True(rounded.ShouldReclip(new ShapeBorderClipper(new RoundedRectangleBorder(borderRadius:
             Plumix.Rendering.BorderRadius.Circular(8)))));
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -296,7 +296,7 @@ public sealed class ClipWidgetsTests
         Assert.Equal(Colors.Blue, updatedRenderObject.Color);
         Assert.Equal(Colors.Purple, updatedRenderObject.ShadowColor);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -442,7 +442,7 @@ public sealed class ClipWidgetsTests
         Assert.Equal(TextDirection.Rtl, render.TextDirection);
         Assert.Equal(Clip.HardEdge, render.ClipBehavior);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static RenderClipRRect FindRenderClipRRect(Element? element)
@@ -732,16 +732,6 @@ public sealed class ClipWidgetsTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

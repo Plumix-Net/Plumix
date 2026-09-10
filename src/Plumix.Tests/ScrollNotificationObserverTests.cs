@@ -329,7 +329,7 @@ public sealed class ScrollNotificationObserverTests
 
         public void Dispose()
         {
-            _root.Unmount();
+            _root.UnmountRoot();
             Scheduler.PumpFrameForTests();
         }
 
@@ -382,16 +382,6 @@ public sealed class ScrollNotificationObserverTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
 
             public void InsertRenderObjectChild(RenderObject child, object? slot)
             {

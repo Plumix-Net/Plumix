@@ -712,7 +712,7 @@ public sealed class MaterialCircularProgressIndicatorTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

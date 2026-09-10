@@ -1120,7 +1120,7 @@ public sealed class MaterialSliderTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
@@ -1207,16 +1207,6 @@ public sealed class MaterialSliderTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 
@@ -1264,16 +1254,6 @@ public sealed class MaterialSliderTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

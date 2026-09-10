@@ -574,7 +574,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
 
         public void Replace(Widget sliver) => _root.Replace(Wrap(sliver));
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private Widget Wrap(Widget sliver) => new Directionality(
             TextDirection.Ltr,
@@ -668,16 +668,6 @@ public sealed class SliverPersistentHeaderTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

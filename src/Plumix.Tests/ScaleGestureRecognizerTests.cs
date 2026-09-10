@@ -1301,7 +1301,7 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
 
         public void Dispose()
         {
-            _root.Unmount();
+            _root.UnmountRoot();
             GestureBinding.Instance.ResetForTests();
         }
     }
@@ -1344,16 +1344,6 @@ public sealed class ScaleGestureRecognizerTests : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

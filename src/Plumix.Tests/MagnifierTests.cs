@@ -382,7 +382,7 @@ public sealed class MagnifierTests : IDisposable
                    ?? throw new InvalidOperationException($"State {typeof(T).Name} was not found.");
         }
 
-        public void Dispose() => _rootElement.Unmount();
+        public void Dispose() => _rootElement.UnmountRoot();
 
         private static T? FindState<T>(Element element) where T : State
         {
@@ -429,11 +429,6 @@ public sealed class MagnifierTests : IDisposable
             public void RemoveRenderObjectChild(RenderObject child, object? slot)
             {
                 if (ReferenceEquals(_renderView.Child, child)) _renderView.Child = null;
-            }
-            public override void Unmount()
-            {
-                if (_child is not null) { UnmountChild(_child); _child = null; }
-                base.Unmount();
             }
         }
     }

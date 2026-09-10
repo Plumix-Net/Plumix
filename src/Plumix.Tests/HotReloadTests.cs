@@ -35,7 +35,7 @@ public sealed class HotReloadTests
         Assert.Equal(2, ReassembleTracker.StatelessBuildCount);
         Assert.Equal(1, ReassembleTracker.StateReassembleCount);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public sealed class HotReloadTests
 
         Assert.Equal(["state-reassemble", "stateful-build", "stateless-build"], ReassembleTracker.Events);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -271,15 +271,5 @@ public sealed class HotReloadTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

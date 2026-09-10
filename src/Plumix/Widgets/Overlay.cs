@@ -1390,12 +1390,6 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
     public override void Unmount()
     {
         LayoutRenderObject.ClearCallback();
-        if (_child is not null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
         base.Unmount();
     }
 
@@ -1576,24 +1570,6 @@ internal sealed class OverlayPortalElement : RenderObjectElement
             PortalRenderObject.MarkNeedsSemanticsUpdate();
         }
     }
-
-    public override void Unmount()
-    {
-        if (_child is not null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
-        if (_overlayChild is not null)
-        {
-            UnmountChild(_overlayChild);
-            _overlayChild = null;
-        }
-
-        base.Unmount();
-    }
-
 }
 
 /// <summary>
@@ -1720,7 +1696,6 @@ internal sealed class RenderOverlayPortalSurrogate : RenderProxyBox
             : theater.Size;
         deferredChild.DoLayoutFrom(this, BoxConstraints.Tight(boxSize));
     }
-
 }
 
 /// <summary>

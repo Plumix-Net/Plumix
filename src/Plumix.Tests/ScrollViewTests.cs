@@ -303,7 +303,7 @@ public sealed class ScrollViewTests
 
         public Widget BuildChildLayout(BoxScrollView view) => view.BuildChildLayout(Context);
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private sealed class Probe : StatelessWidget
         {
@@ -369,16 +369,6 @@ public sealed class ScrollViewTests
             {
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

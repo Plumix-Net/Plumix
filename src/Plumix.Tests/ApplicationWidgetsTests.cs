@@ -86,7 +86,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
 
         Assert.Equal("first", value);
         Assert.Equal(TextDirection.Ltr, direction);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -122,7 +122,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         root.Update(BuildLocalizations("reloaded", shouldReload: true));
         owner.FlushBuild();
         Assert.Equal("reloaded", value);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     /// <remarks>
@@ -314,7 +314,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.Equal(
             new ApplicationSwitcherDescription("localized", 0xFF112233),
             SystemChrome.CurrentApplicationSwitcherDescription);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -353,7 +353,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         navigatorKey.CurrentState.PushNamed("/missing");
         owner.FlushBuild();
         Assert.Equal("unknown:/missing", navigatorKey.CurrentState.CurrentRoute!.Settings.Name);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -382,7 +382,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         MountAndFlush(customRoot, customOwner);
 
         Assert.Equal(["first", "second"], customObserver.PushedNames);
-        customRoot.Unmount();
+        customRoot.UnmountRoot();
 
         int unknownCalls = 0;
         var fallbackObserver = new RecordingNavigatorObserver();
@@ -405,7 +405,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
 
         Assert.Equal(["/"], fallbackObserver.PushedNames);
         Assert.Equal(0, unknownCalls);
-        fallbackRoot.Unmount();
+        fallbackRoot.UnmountRoot();
     }
 
     [Fact]
@@ -431,7 +431,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         MountAndFlush(root, owner);
 
         Assert.IsType<MaterialPageRoute>(navigatorKey.CurrentState!.CurrentRoute);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -484,7 +484,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.Equal(
             SystemUiIconBrightness.Light,
             SystemChrome.CurrentSystemUiOverlayStyle.StatusBarIconBrightness);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -522,7 +522,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         Assert.Equal(
             ThemeData.Localize(highContrastDarkTheme, highContrastDarkTheme.Typography.EnglishLike),
             resolvedTheme);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -561,7 +561,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
             MethodCall call = Assert.Single(
                 platform.Log.Where(entry => entry.Method == "SystemNavigator.setFrameworkHandlesBack"));
             Assert.Equal(true, call.Arguments);
-            root.Unmount();
+            root.UnmountRoot();
         }
         finally
         {
@@ -605,7 +605,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
         // The root route bubbles, so no observer handles the pop and the platform is asked to pop the app.
         Assert.False(WidgetsBinding.Instance.HandlePopRoute());
         Assert.Contains("SystemNavigator.pop", platform.Methods);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     /// <summary>
@@ -657,7 +657,7 @@ public sealed class ApplicationWidgetsTests : IDisposable
 
         // With the inner stack back at its root the outer route bubbles again.
         Assert.False(WidgetsBinding.Instance.HandlePopRoute());
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     /// <summary>
@@ -834,15 +834,5 @@ public sealed class ApplicationWidgetsTests : IDisposable
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

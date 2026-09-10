@@ -860,7 +860,7 @@ public sealed class ViewTests
 
         public void Dispose()
         {
-            Root.Unmount();
+            Root.UnmountRoot();
             Scheduler.FlushMicrotasks();
         }
     }

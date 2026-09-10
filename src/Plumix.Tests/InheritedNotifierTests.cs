@@ -126,7 +126,7 @@ public sealed class InheritedNotifierTests
         Assert.Contains(1, InheritedNotifierTracker.CountingSeenValues);
         Assert.Equal(1, notifier.ListenerCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, notifier.ListenerCount);
     }
 
@@ -172,16 +172,6 @@ public sealed class InheritedNotifierTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

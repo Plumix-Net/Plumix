@@ -579,7 +579,7 @@ public sealed class MaterialLinearProgressIndicatorTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost

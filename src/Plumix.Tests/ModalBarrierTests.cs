@@ -94,7 +94,7 @@ public sealed class ModalBarrierTests
             gesture.OnTap!();
             gesture.OnSecondaryTap!();
             Assert.Equal(2, dismissCount);
-            root.Unmount();
+            root.UnmountRoot();
         }
         finally
         {
@@ -116,7 +116,7 @@ public sealed class ModalBarrierTests
         MethodCall call = Assert.Single(platform.Log);
         Assert.Equal("SystemSound.play", call.Method);
         Assert.Equal("SystemSoundType.alert", call.Arguments);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -133,7 +133,7 @@ public sealed class ModalBarrierTests
         owner.FlushBuild();
 
         Assert.Equal(Colors.Blue, FindWidget<ModalBarrier>(root).Color);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -329,16 +329,6 @@ public sealed class ModalBarrierTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

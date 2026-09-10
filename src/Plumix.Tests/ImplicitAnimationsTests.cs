@@ -169,7 +169,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(0.8, RequireRenderObject<RenderOpacity>(root.ChildElement).Opacity, precision: 6);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -221,7 +221,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(0.75, finished.Y, precision: 6);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -323,7 +323,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(0.5, finished.Transform[5], precision: 6);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -366,7 +366,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(0, finished[5], precision: 6);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -489,7 +489,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(new Thickness(30), RequireRenderObject<RenderPadding>(root.ChildElement).Padding);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -535,7 +535,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(4, finished.HeightFactor);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -574,7 +574,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(withoutFactors.HeightFactor);
         Assert.Equal(0, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -717,7 +717,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(12, finished.Height);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -748,7 +748,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(18, data.Height);
         Assert.Equal(0, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -794,7 +794,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Null(finished.Right);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -889,7 +889,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(Colors.Green, Assert.IsType<SolidColorBrush>(finished.Foreground).Color);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -934,7 +934,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
             color: Colors.Red,
             elevation: -1));
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -1035,7 +1035,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(6, finished.Elevation, precision: 4);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -1122,7 +1122,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(0.6, finished.HeightFactor!.Value, precision: 6);
         Assert.Equal(1, completed);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -1146,7 +1146,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         Assert.Equal(0.5, updated.WidthFactor);
         Assert.Equal(0.4, updated.HeightFactor);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -1164,7 +1164,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         renderObject.Layout(BoxConstraints.TightFor(width: 0, height: 0));
 
         Assert.Equal(new Size(0, 0), renderObject.Size);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -1177,7 +1177,7 @@ public sealed class ImplicitAnimationsTests : IDisposable
         root.Update(new SizedBox(width: 1, height: 1));
         owner.FlushBuild();
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static Widget BuildAnimatedPositioned(
@@ -1281,16 +1281,6 @@ public sealed class ImplicitAnimationsTests : IDisposable
             if (ReferenceEquals(_child, child)) _child = null;
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

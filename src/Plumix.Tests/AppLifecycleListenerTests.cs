@@ -145,7 +145,7 @@ public sealed class AppLifecycleListenerTests
         Assert.True(state.Mounted);
         Assert.NotNull(state.Handle!.Context);
 
-        root.Unmount();
+        root.UnmountRoot();
 
         Assert.False(state.Mounted);
         Assert.Null(state.Handle.Context);
@@ -159,7 +159,7 @@ public sealed class AppLifecycleListenerTests
         var root = Mount(widget);
         var state = Assert.IsType<ContextOwnerState>(widget.CreatedState);
 
-        root.Unmount();
+        root.UnmountRoot();
 
         Assert.Throws<InvalidOperationException>(() => _ = state.Handle!.Context);
         state.Handle!.Dispose();
@@ -205,7 +205,7 @@ public sealed class AppLifecycleListenerTests
         root.OwnerForTest.FlushBuild();
         Assert.Equal(4, buildCount);
 
-        root.Unmount();
+        root.UnmountRoot();
         Assert.Equal(0, secondAnimation.StatusListenerCount);
     }
 
@@ -366,15 +366,5 @@ public sealed class AppLifecycleListenerTests
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

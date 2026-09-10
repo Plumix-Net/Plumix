@@ -970,7 +970,7 @@ public sealed class MaterialScaffoldGeometryTests
             return states.First();
         }
 
-        public void Dispose() => _rootElement.Unmount();
+        public void Dispose() => _rootElement.UnmountRoot();
 
         private static void Collect<T>(RenderObject? root, List<T> found) where T : RenderObject
         {
@@ -1068,16 +1068,6 @@ public sealed class MaterialScaffoldGeometryTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

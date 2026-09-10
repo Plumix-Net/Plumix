@@ -1041,7 +1041,7 @@ public sealed class MaterialReorderableListTests
             }
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private sealed class RootElement : Element, IRenderObjectHost
         {

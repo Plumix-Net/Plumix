@@ -372,7 +372,7 @@ public sealed class MaterialExpandIconTests : IDisposable
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private static void Visit<T>(Element element, List<T> result) where T : Widget
@@ -454,16 +454,6 @@ public sealed class MaterialExpandIconTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

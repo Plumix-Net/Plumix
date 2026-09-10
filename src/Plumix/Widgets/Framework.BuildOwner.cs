@@ -10,7 +10,7 @@ namespace Plumix.Widgets;
 public sealed class BuildOwner
 {
     private readonly HashSet<Element> _tracked = [];
-    private readonly HashSet<Element> _inactive = [];
+    private readonly InactiveElements _inactiveElements = new();
     private readonly Dictionary<GlobalKey, Element> _globalKeyRegistry = [];
 
     private bool _scheduledFlushDirtyElements;
@@ -156,7 +156,6 @@ public sealed class BuildOwner
     public void UnregisterElement(Element element)
     {
         _tracked.Remove(element);
-        _inactive.Remove(element);
     }
 
     /// <summary>
@@ -238,18 +237,13 @@ public sealed class BuildOwner
             return null;
         }
 
-        _inactive.Remove(element);
+        _inactiveElements.Remove(element);
         return element;
-    }
-
-    internal void TrackInactive(Element element)
-    {
-        _inactive.Add(element);
     }
 
     internal void Deactivate(Element element)
     {
-        element.DeactivateRecursively();
+        _inactiveElements.Add(element);
     }
 
     /// <summary>
@@ -779,31 +773,17 @@ public sealed class BuildOwner
         ];
     }
 
+    /// <summary>
+    /// Dart's <c>lockState(_inactiveElements._unmountAll)</c> half of <c>finalizeTree</c>: this is
+    /// what unregisters the global keys of everything that stayed inactive through the frame.
+    /// </summary>
     private void FinalizeInactiveElements()
     {
-        if (_inactive.Count == 0)
+        if (_inactiveElements.IsEmpty)
         {
             return;
         }
 
-        var toUnmount = _inactive.ToArray();
-        _inactive.Clear();
-
-        foreach (var element in toUnmount)
-        {
-            if (!element.IsInactive || element.Parent is not null)
-            {
-                continue;
-            }
-
-            if (Constants.KDebugMode
-                && WidgetsDebug.DebugPrintGlobalKeyedWidgetLifecycle
-                && element.Widget.Key is GlobalKey)
-            {
-                Print.DebugPrint($"Discarding {element} from inactive elements list.");
-            }
-
-            element.Unmount();
-        }
+        LockState(_inactiveElements.UnmountAll);
     }
 }

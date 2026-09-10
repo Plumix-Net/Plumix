@@ -117,7 +117,7 @@ public sealed class CupertinoSheetTests : IDisposable
         }
         finally
         {
-            harness.Root.Unmount();
+            harness.Root.UnmountRoot();
         }
     }
 
@@ -149,7 +149,7 @@ public sealed class CupertinoSheetTests : IDisposable
         }
         finally
         {
-            root.Unmount();
+            root.UnmountRoot();
         }
     }
 
@@ -170,7 +170,7 @@ public sealed class CupertinoSheetTests : IDisposable
         }
         finally
         {
-            partial.Root.Unmount();
+            partial.Root.UnmountRoot();
         }
 
         SheetHarness longDrag = MountSheet(new CupertinoSheetRoute<object?>(builder: _ => new SizedBox()));
@@ -187,7 +187,7 @@ public sealed class CupertinoSheetTests : IDisposable
         }
         finally
         {
-            longDrag.Root.Unmount();
+            longDrag.Root.UnmountRoot();
         }
     }
 
@@ -203,7 +203,7 @@ public sealed class CupertinoSheetTests : IDisposable
         }
         finally
         {
-            harness.Root.Unmount();
+            harness.Root.UnmountRoot();
         }
     }
 
@@ -238,7 +238,7 @@ public sealed class CupertinoSheetTests : IDisposable
         }
         finally
         {
-            root.Unmount();
+            root.UnmountRoot();
         }
     }
 
@@ -384,15 +384,5 @@ public sealed class CupertinoSheetTests : IDisposable
         {
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

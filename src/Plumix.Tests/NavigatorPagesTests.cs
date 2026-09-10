@@ -605,7 +605,7 @@ public sealed class NavigatorPagesTests : IDisposable
         public RenderParagraph? FindText(string text) =>
             OverlayVisibility.FindOnstage<RenderParagraph>(RenderView, node => node.PlainText == text);
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private void MarkHostDirty()
         {
@@ -698,16 +698,6 @@ public sealed class NavigatorPagesTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

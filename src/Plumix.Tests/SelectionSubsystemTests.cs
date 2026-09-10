@@ -434,7 +434,7 @@ public sealed class SelectionSubsystemTests
             _pipeline.FlushPaint();
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {

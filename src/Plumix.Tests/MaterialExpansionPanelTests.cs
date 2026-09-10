@@ -466,7 +466,7 @@ public sealed class MaterialExpansionPanelTests : IDisposable
             }
         }
 
-        public void Dispose() => _rootElement.Unmount();
+        public void Dispose() => _rootElement.UnmountRoot();
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {

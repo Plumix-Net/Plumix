@@ -1741,7 +1741,7 @@ public sealed class ScrollPipelineTests
             _owner.FinalizeTree();
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
     }
 
     private sealed class WidgetRenderHarness
@@ -1857,16 +1857,6 @@ public sealed class ScrollPipelineTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child != null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 

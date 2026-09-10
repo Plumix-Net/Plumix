@@ -384,7 +384,7 @@ public sealed class NavigatorOverlayTests : IDisposable
             return result;
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private NavigatorState? FindNavigatorState()
         {
@@ -462,16 +462,6 @@ public sealed class NavigatorOverlayTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

@@ -804,7 +804,7 @@ public sealed class PageViewTests
             _owner.FlushBuild();
         }
 
-        public void Dispose() => _rootElement.Unmount();
+        public void Dispose() => _rootElement.UnmountRoot();
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {
@@ -871,16 +871,6 @@ public sealed class PageViewTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child != null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

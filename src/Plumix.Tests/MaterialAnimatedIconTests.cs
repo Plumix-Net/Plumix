@@ -204,7 +204,7 @@ public sealed class MaterialAnimatedIconTests
             _pipeline.FlushPaint();
         }
 
-        public void Dispose() => _rootElement.Unmount();
+        public void Dispose() => _rootElement.UnmountRoot();
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {
@@ -237,11 +237,6 @@ public sealed class MaterialAnimatedIconTests
             public void RemoveRenderObjectChild(RenderObject child, object? slot)
             {
                 if (ReferenceEquals(_renderView.Child, child)) _renderView.Child = null;
-            }
-            public override void Unmount()
-            {
-                if (_child is not null) { UnmountChild(_child); _child = null; }
-                base.Unmount();
             }
         }
     }

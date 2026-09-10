@@ -79,7 +79,7 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         return result ?? throw new InvalidOperationException($"State {typeof(T).Name} was not found.");
     }
 
-    public void Dispose() => _root.Unmount();
+    public void Dispose() => _root.UnmountRoot();
 
     private static void Visit<T>(Element element, List<T> result) where T : Widget
     {

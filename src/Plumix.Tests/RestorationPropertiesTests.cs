@@ -85,17 +85,19 @@ public sealed class RestorationPropertiesTests : IDisposable
     {
         var rawData = RawRestorationData.Build();
         var first = new PropertyBag();
+        Dictionary<object, object?> serialized;
         using (var harness = new RestorationHarness(new UnmanagedRestorationScope(
             bucket: RestorationBucket.Root(_manager, rawData),
             child: first.Widget(restorationId: "widget"))))
         {
             first.Mutate();
             _manager.DoSerialization();
+            serialized = RawRestorationData.Copy(rawData);
         }
 
         var second = new PropertyBag();
         using var restarted = new RestorationHarness(new UnmanagedRestorationScope(
-            bucket: RestorationBucket.Root(_manager, rawData),
+            bucket: RestorationBucket.Root(_manager, serialized),
             child: second.Widget(restorationId: "widget")));
 
         AssertMutatedValues(second);

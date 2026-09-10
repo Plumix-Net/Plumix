@@ -159,14 +159,6 @@ internal sealed class SliverResizingHeaderElement : RenderObjectElement
         SetRenderObjectChild(slot, null);
     }
 
-    public override void Unmount()
-    {
-        UnmountSlotChild(ref _minExtentPrototype);
-        UnmountSlotChild(ref _maxExtentPrototype);
-        UnmountSlotChild(ref _child);
-        base.Unmount();
-    }
-
     private void UpdateSlotChildren()
     {
         _minExtentPrototype = UpdateChild(
@@ -196,18 +188,6 @@ internal sealed class SliverResizingHeaderElement : RenderObjectElement
             default:
                 throw new InvalidOperationException("Unknown SliverResizingHeader child slot.");
         }
-    }
-
-    private void UnmountSlotChild(ref Element? child)
-    {
-        if (child == null)
-        {
-            return;
-        }
-
-        Element mountedChild = child;
-        child = null;
-        UnmountChild(mountedChild);
     }
 }
 

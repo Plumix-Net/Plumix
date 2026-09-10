@@ -740,7 +740,7 @@ public sealed class MaterialDialogTests : IDisposable
             return _pipeline.SemanticsOwner!.RootNode;
         }
 
-        public void Dispose() => _rootElement.Unmount();
+        public void Dispose() => _rootElement.UnmountRoot();
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {
@@ -765,16 +765,6 @@ public sealed class MaterialDialogTests : IDisposable
             public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;
             public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot) { }
             public void RemoveRenderObjectChild(RenderObject child, object? slot) { if (ReferenceEquals(_renderView.Child, child)) _renderView.Child = null; }
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 

@@ -554,9 +554,8 @@ internal sealed class RawViewElement : RenderTreeRootElement
 
     /// <inheritdoc />
     /// <remarks>
-    /// Dart's <c>_RawViewElement.unmount</c>. Plumix can unmount an element that was never
-    /// deactivated (see <c>Element.UnmountChild</c>), so the deactivation half runs here when it
-    /// has not run yet.
+    /// Dart's <c>_RawViewElement.unmount</c>. Plumix additionally detaches the view and clears the
+    /// pipeline root here, because the host may still be holding the owner this element created.
     /// </remarks>
     public override void Unmount()
     {
@@ -568,12 +567,6 @@ internal sealed class RawViewElement : RenderTreeRootElement
         if (ReferenceEquals(EffectivePipelineOwner.RootNode, RenderViewObject))
         {
             EffectivePipelineOwner.RootNode = null;
-        }
-
-        if (_child is not null)
-        {
-            UnmountChild(_child);
-            _child = null;
         }
 
         if (!ReferenceEquals(EffectivePipelineOwner, TypedWidget.DeprecatedPipelineOwner))
@@ -886,27 +879,6 @@ internal sealed class MultiChildComponentElement : Element
     public override Element? RenderObjectAttachingChild => _childElement;
 
     /// <inheritdoc />
-    public override void Unmount()
-    {
-        if (_childElement is not null)
-        {
-            UnmountChild(_childElement);
-            _childElement = null;
-        }
-
-        foreach (Element view in _viewElements.ToArray())
-        {
-            if (!_forgottenViewElements.Contains(view))
-            {
-                UnmountChild(view);
-            }
-        }
-
-        _viewElements = [];
-        _forgottenViewElements.Clear();
-        base.Unmount();
-    }
-
     /// <inheritdoc />
     public override List<DiagnosticsNode> DebugDescribeChildren()
     {

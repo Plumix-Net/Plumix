@@ -348,7 +348,7 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
             _pipeline.FlushPaint();
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private sealed class RootElement : Element, IRenderObjectHost
         {
@@ -403,16 +403,6 @@ public sealed class MaterialTextSelectionThemeTests : IDisposable
                 if (ReferenceEquals(_view.Child, child)) _view.Child = null;
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

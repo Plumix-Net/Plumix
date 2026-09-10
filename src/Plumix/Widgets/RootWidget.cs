@@ -190,17 +190,6 @@ public class RootElement : Element
     }
 
     /// <inheritdoc />
-    public override void Unmount()
-    {
-        if (_child is not null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
-        base.Unmount();
-    }
-
     /// <inheritdoc />
     /// <remarks>Dart's <c>RootElement.debugExpectsRenderObjectForSlot</c>.</remarks>
     public override bool DebugExpectsRenderObjectForSlot(object? slot) => false;

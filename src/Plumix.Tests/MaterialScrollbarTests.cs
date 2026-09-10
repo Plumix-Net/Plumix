@@ -980,7 +980,7 @@ public sealed class MaterialScrollbarTests
             _owner.FlushBuild();
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
     }
 
     private sealed class WidgetTree : IDisposable
@@ -998,7 +998,7 @@ public sealed class MaterialScrollbarTests
 
         public T? FindWidget<T>() where T : Widget => FindWidget<T>(_root.Child);
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private static T? FindWidget<T>(Element? element) where T : Widget
         {
@@ -1027,16 +1027,6 @@ public sealed class MaterialScrollbarTests
         }
         public override void VisitChildren(Action<Element> visitor) { if (_child is not null) visitor(_child); }
         public override void ForgetChild(Element child) { if (ReferenceEquals(_child, child)) _child = null; }
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
         public void InsertRenderObjectChild(RenderObject child, object? slot) => _renderView.Child = (RenderBox)child;
         public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot) { }
         public void RemoveRenderObjectChild(RenderObject child, object? slot) { if (ReferenceEquals(_renderView.Child, child)) _renderView.Child = null; }
@@ -1057,7 +1047,6 @@ public sealed class MaterialScrollbarTests
         }
         public override void VisitChildren(Action<Element> visitor) { if (Child is not null) visitor(Child); }
         public override void ForgetChild(Element child) { if (ReferenceEquals(Child, child)) Child = null; }
-        public override void Unmount() { if (Child is not null) { UnmountChild(Child); Child = null; } base.Unmount(); }
         public void InsertRenderObjectChild(RenderObject child, object? slot) { }
         public void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot) { }
         public void RemoveRenderObjectChild(RenderObject child, object? slot) { }

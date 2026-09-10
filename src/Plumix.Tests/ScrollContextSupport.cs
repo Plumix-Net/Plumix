@@ -286,7 +286,7 @@ internal sealed class ScrollNotificationRecorder : IScrollContext, ITickerProvid
             ticker.Dispose();
         }
 
-        _root.Unmount();
+        _root.UnmountRoot();
     }
 
     private sealed class RecorderRootElement(Widget widget) : Element(widget), IRenderObjectHost

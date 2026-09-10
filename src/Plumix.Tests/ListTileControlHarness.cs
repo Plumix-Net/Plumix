@@ -99,7 +99,7 @@ internal sealed class ListTileControlHarness : IDisposable
         }
     }
 
-    public void Dispose() => _root.Unmount();
+    public void Dispose() => _root.UnmountRoot();
 
     public static RenderParagraph? FindText(RenderObject? root, string text) =>
         FindAll<RenderParagraph>(root)
@@ -264,15 +264,5 @@ internal sealed class ListTileControlHarness : IDisposable
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
     }
 }

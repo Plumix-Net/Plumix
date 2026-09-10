@@ -30,7 +30,7 @@ public sealed class InheritedElementScopeTests
         Assert.NotNull(probe.DerivedScope);
         Assert.Equal(7, probe.DerivedScope!.Value);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class InheritedElementScopeTests
         Assert.NotNull(probe.BaseScope);
         Assert.Equal(3, probe.BaseScope!.Value);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public sealed class InheritedElementScopeTests
 
         Assert.Equal(1, buildCount);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -100,7 +100,7 @@ public sealed class InheritedElementScopeTests
         Assert.NotNull(derivedElement);
         Assert.IsType<DerivedScope>(derivedElement!.Widget);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -121,7 +121,7 @@ public sealed class InheritedElementScopeTests
         Assert.Null(seenBase);
         Assert.NotNull(seenDerived);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public sealed class InheritedElementScopeTests
         Assert.Equal(1, outer);
         Assert.Equal(2, inner);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -175,7 +175,7 @@ public sealed class InheritedElementScopeTests
         Assert.Null(aboveScope);
         Assert.Equal(5, belowScope!.Value);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -210,7 +210,7 @@ public sealed class InheritedElementScopeTests
         Assert.Equal(1, ((BaseScope)outerMap[typeof(BaseScope)].Widget).Value);
         Assert.Equal(2, ((BaseScope)innerMap[typeof(BaseScope)].Widget).Value);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [DebugOnlyFact]
@@ -236,7 +236,7 @@ public sealed class InheritedElementScopeTests
         Assert.Throws<FlutterError>(
             () => reader.GetElementForInheritedWidgetOfExactType<BaseScope>());
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -263,7 +263,7 @@ public sealed class InheritedElementScopeTests
 
         Assert.Equal(3, probe.BaseScope!.Value);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -283,7 +283,7 @@ public sealed class InheritedElementScopeTests
 
         Assert.Equal(9, probe.BaseScope!.Value);
 
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     private static void Mount(TestRootElement root, BuildOwner owner)
@@ -403,16 +403,6 @@ public sealed class InheritedElementScopeTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

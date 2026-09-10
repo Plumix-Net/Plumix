@@ -237,12 +237,6 @@ internal sealed class ElementLifecycleProbeElement : Element
 
     public override void Unmount()
     {
-        if (_child != null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
         Probe.Log.RecordUnmount();
         base.Unmount();
     }

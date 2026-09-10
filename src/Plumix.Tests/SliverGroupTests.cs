@@ -50,7 +50,7 @@ public sealed class SliverGroupTests
         Assert.Equal(1, ((SliverPhysicalParentData)first.parentData!).CrossAxisFlex);
         Assert.Equal(0, ((SliverPhysicalParentData)second.parentData!).CrossAxisFlex);
         Assert.Equal(2, ((SliverPhysicalParentData)third.parentData!).CrossAxisFlex);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -360,16 +360,6 @@ public sealed class SliverGroupTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

@@ -388,7 +388,7 @@ public sealed class TapRegionTests
         public void Dispose()
         {
             GestureBinding.Instance.ResetForTests();
-            _root.Unmount();
+            _root.UnmountRoot();
         }
     }
 
@@ -430,16 +430,6 @@ public sealed class TapRegionTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child is not null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

@@ -362,7 +362,7 @@ public sealed class ModalRouteBarrierTests : IDisposable
             return _pipeline.SemanticsOwner!.RootNode;
         }
 
-        public void Dispose() => _root.Unmount();
+        public void Dispose() => _root.UnmountRoot();
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {
@@ -414,16 +414,6 @@ public sealed class ModalRouteBarrierTests : IDisposable
                 if (ReferenceEquals(_view.Child, child)) _view.Child = null;
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

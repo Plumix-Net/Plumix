@@ -474,7 +474,7 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
             _pipeline.FlushPaint();
         }
 
-        public void Dispose() => _rootElement.Unmount();
+        public void Dispose() => _rootElement.UnmountRoot();
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
         {
@@ -535,16 +535,6 @@ public sealed class DismissibleSizeChangedLayoutTests : IDisposable
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child is not null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 }

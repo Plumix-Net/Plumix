@@ -1137,7 +1137,7 @@ public sealed class MaterialSwitchTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private static void Visit<T>(Element element, List<T> result) where T : Widget
@@ -1233,16 +1233,6 @@ public sealed class MaterialSwitchTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child != null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 
@@ -1290,16 +1280,6 @@ public sealed class MaterialSwitchTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

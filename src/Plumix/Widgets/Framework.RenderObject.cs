@@ -381,9 +381,36 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
             _ancestorRenderObjectHost.RemoveRenderObjectChild(RequireRenderObject(), Slot);
         }
 
+        if (_renderObject is { Attached: true } rootRenderObject)
+        {
+            // Plumix-only: Dart's render root is always owned by an element, so `detachRenderObject`
+            // always has an ancestor element to remove it from. A Plumix host (and every test
+            // harness) can attach the render root to its `RenderView` directly, outside
+            // `IRenderObjectHost`, and that attachment has to come off here or the element is
+            // deactivated with a live render object.
+            DetachRootRenderObject(rootRenderObject);
+        }
+
         _ancestorRenderObjectHost = null;
         _ancestorRenderObjectHostElement = null;
         base.UpdateSlot(null);
+    }
+
+    private static void DetachRootRenderObject(RenderObject renderObject)
+    {
+        if (renderObject.Parent is IRenderObjectSingleChildContainer singleChildContainer
+            && ReferenceEquals(singleChildContainer.Child, renderObject))
+        {
+            singleChildContainer.Child = null;
+        }
+        else if (renderObject.Parent is IRenderObjectContainer container)
+        {
+            container.Remove(renderObject);
+        }
+        else
+        {
+            renderObject.Detach();
+        }
     }
 
     public override void Unmount()
@@ -399,21 +426,8 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         base.Unmount();
         if (renderObject.Attached)
         {
-            // Root adapters must normally detach from their PipelineOwner in DetachRenderObject. Keep
-            // direct test/host adapters safe when they attach the render root outside IRenderObjectHost.
-            if (renderObject.Parent is IRenderObjectSingleChildContainer singleChildContainer
-                && ReferenceEquals(singleChildContainer.Child, renderObject))
-            {
-                singleChildContainer.Child = null;
-            }
-            else if (renderObject.Parent is IRenderObjectContainer container)
-            {
-                container.Remove(renderObject);
-            }
-            else
-            {
-                renderObject.Detach();
-            }
+            // Last-resort net for a render root that never went through DetachRenderObject.
+            DetachRootRenderObject(renderObject);
         }
 
         if (renderObject.Attached)
@@ -537,17 +551,6 @@ public class SingleChildRenderObjectElement : RenderObjectElement
             container.Child = null;
         }
     }
-
-    public override void Unmount()
-    {
-        if (_child != null)
-        {
-            UnmountChild(_child);
-            _child = null;
-        }
-
-        base.Unmount();
-    }
 }
 
 public class MultiChildRenderObjectElement : RenderObjectElement
@@ -666,21 +669,6 @@ public class MultiChildRenderObjectElement : RenderObjectElement
             }
         }
     }
-
-    public override void Unmount()
-    {
-        foreach (var child in _children)
-        {
-            if (!_forgottenChildren.Contains(child))
-            {
-                UnmountChild(child);
-            }
-        }
-
-        _children.Clear();
-        _forgottenChildren.Clear();
-        base.Unmount();
-    }
 }
 
 public sealed class SlottedRenderObjectElement<TSlot> : RenderObjectElement
@@ -765,17 +753,6 @@ public sealed class SlottedRenderObjectElement<TSlot> : RenderObjectElement
     public override void RemoveRenderObjectChild(RenderObject child, object? slot)
     {
         RequireContainer().SetChild(null, RequireSlot(slot));
-    }
-
-    public override void Unmount()
-    {
-        foreach (Element child in _children.Values.ToList())
-        {
-            UnmountChild(child);
-        }
-
-        _children.Clear();
-        base.Unmount();
     }
 
     private void UpdateSlotChildren()

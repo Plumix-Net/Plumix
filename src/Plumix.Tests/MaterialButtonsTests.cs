@@ -828,7 +828,7 @@ public sealed class MaterialButtonsTests
         paragraph = FindDescendant<RenderParagraph>(RequireRenderObject<RenderObject>(root.ChildElement));
         Assert.Equal(Colors.White, Assert.IsType<SolidColorBrush>(paragraph!.Foreground).Color);
         Assert.Equal(Colors.White, capturedIconTheme!.Color);
-        root.Unmount();
+        root.UnmountRoot();
     }
 
     [Fact]
@@ -2754,7 +2754,7 @@ public sealed class MaterialButtonsTests
         Assert.Equal(Plumix.Rendering.Border.FromBorderSide(
             new BorderSide(theme.ColorScheme.Primary, 1)), decorated!.Decoration.Border);
 
-        root.Unmount();
+        root.UnmountRoot();
         FocusManager.Instance.ResetForTests();
     }
 
@@ -4914,7 +4914,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(focusedDecorated);
         Assert.Equal(ApplyOpacity(theme.ColorScheme.Primary, 0.10), focusedDecorated!.HighlightColor);
 
-        root.Unmount();
+        root.UnmountRoot();
         FocusManager.Instance.ResetForTests();
     }
 
@@ -5157,7 +5157,7 @@ public sealed class MaterialButtonsTests
         Assert.NotNull(focusedDecorated);
         Assert.Equal(focusedOverlay, focusedDecorated!.HighlightColor);
 
-        root.Unmount();
+        root.UnmountRoot();
         FocusManager.Instance.ResetForTests();
     }
 
@@ -5185,7 +5185,7 @@ public sealed class MaterialButtonsTests
         Assert.True(focusNode.HasFocus);
         Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
 
-        root.Unmount();
+        root.UnmountRoot();
         FocusManager.Instance.ResetForTests();
     }
 
@@ -5225,7 +5225,7 @@ public sealed class MaterialButtonsTests
         Assert.True(focusNode.HasFocus);
         Assert.Same(focusNode, FocusManager.Instance.PrimaryFocus);
 
-        root.Unmount();
+        root.UnmountRoot();
         FocusManager.Instance.ResetForTests();
     }
 
@@ -5359,7 +5359,7 @@ public sealed class MaterialButtonsTests
             Assert.Equal(
                 expectedBorder is { } expectedSide ? Plumix.Rendering.Border.FromBorderSide(expectedSide) : null,
                 decorated.Decoration.Border);
-            root.Unmount();
+            root.UnmountRoot();
         }
     }
 
@@ -6159,7 +6159,7 @@ public sealed class MaterialButtonsTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
         }
 
         private sealed class HarnessRootElement : Element, IRenderObjectHost
@@ -6246,16 +6246,6 @@ public sealed class MaterialButtonsTests
                 }
             }
 
-            public override void Unmount()
-            {
-                if (_child != null)
-                {
-                    UnmountChild(_child);
-                    _child = null;
-                }
-
-                base.Unmount();
-            }
         }
     }
 
@@ -6355,16 +6345,6 @@ public sealed class MaterialButtonsTests
             }
         }
 
-        public override void Unmount()
-        {
-            if (_child != null)
-            {
-                UnmountChild(_child);
-                _child = null;
-            }
-
-            base.Unmount();
-        }
 
         public void InsertRenderObjectChild(RenderObject child, object? slot)
         {

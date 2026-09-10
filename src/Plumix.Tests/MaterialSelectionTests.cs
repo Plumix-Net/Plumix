@@ -560,7 +560,7 @@ public sealed class MaterialSelectionTests
 
         public void Dispose()
         {
-            _rootElement.Unmount();
+            _rootElement.UnmountRoot();
             FocusManager.Instance.ResetForTests();
             GestureBinding.Instance.ResetForTests();
         }
@@ -596,11 +596,6 @@ public sealed class MaterialSelectionTests
             public void RemoveRenderObjectChild(RenderObject child, object? slot)
             {
                 if (ReferenceEquals(_renderView.Child, child)) _renderView.Child = null;
-            }
-            public override void Unmount()
-            {
-                if (_child is not null) { UnmountChild(_child); _child = null; }
-                base.Unmount();
             }
         }
     }
