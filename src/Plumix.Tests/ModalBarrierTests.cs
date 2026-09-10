@@ -142,7 +142,8 @@ public sealed class ModalBarrierTests
         var notifier = new ValueNotifier<Thickness>(new Thickness(10, 5, 20, 15));
         var label = new RenderSemanticsAnnotations(
             new SemanticsProperties(label: "Barrier"),
-            child: new RenderConstrainedBox(BoxConstraints.Expand()));
+            child: new RenderConstrainedBox(BoxConstraints.Expand()),
+            textDirection: TextDirection.Ltr);
         var clipper = new RenderSemanticsClipper(notifier, label);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = clipper };
         var pipeline = new PipelineOwner(renderView);
@@ -173,10 +174,12 @@ public sealed class ModalBarrierTests
     {
         var behind = new RenderSemanticsAnnotations(
             new SemanticsProperties(label: "Behind"),
-            child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 30, height: 20)));
+            child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 30, height: 20)),
+            textDirection: TextDirection.Ltr);
         var foreground = new RenderSemanticsAnnotations(
             new SemanticsProperties(label: "Foreground"),
-            child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 30, height: 20)));
+            child: new RenderConstrainedBox(BoxConstraints.TightFor(width: 30, height: 20)),
+            textDirection: TextDirection.Ltr);
         var block = new RenderBlockSemantics(child: foreground);
         var stack = new RenderStack(children: [behind, block], textDirection: TextDirection.Ltr);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = stack };

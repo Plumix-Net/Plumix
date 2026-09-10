@@ -179,6 +179,7 @@ public sealed class RenderButton : RenderBox
     {
         configuration.IsSemanticBoundary = true;
         configuration.Label = Label;
+        configuration.TextDirection = TextDirection.Ltr;
         configuration.Flags |= SemanticsFlags.IsButton;
 
         if (OnPressed != null)

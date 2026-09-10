@@ -720,6 +720,7 @@ public sealed partial class RenderParagraph : RenderBox,
         }
 
         configuration.Label = buffer.ToString();
+        configuration.TextDirection = TextDirection;
     }
 
     protected override void AssembleSemanticsNode(

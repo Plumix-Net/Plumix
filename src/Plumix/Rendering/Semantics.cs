@@ -660,6 +660,31 @@ public sealed class SemanticsConfiguration
     /// <remarks>Flutter's <c>SemanticsConfiguration.textDirection</c>.</remarks>
     public TextDirection? TextDirection { get; set; }
 
+    /// <summary>The locale every widget in this subtree is annotated with.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsConfiguration.localeForSubtree</c>. Setting it annotates the
+    /// configuration, and two configurations that name different subtree locales never merge.
+    /// </remarks>
+    public Locale? LocaleForSubtree
+    {
+        get => _localeForSubtree;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _localeForSubtree = value;
+        }
+    }
+
+    private Locale? _localeForSubtree;
+
+    /// <summary>The locale of the semantics node this configuration forms.</summary>
+    /// <remarks>
+    /// Flutter's <c>SemanticsConfiguration.locale</c>: the compiler writes the inherited locale here
+    /// on the way down, so it does not annotate the configuration. Use
+    /// <see cref="LocaleForSubtree"/> to give a render object a locale.
+    /// </remarks>
+    public Locale? Locale { get; set; }
+
     /// <summary>
     /// Whether the node is currently not visible on screen but still part of the semantics tree.
     /// </summary>
@@ -1582,7 +1607,12 @@ public sealed class SemanticsConfiguration
             _onSetSelection = _onSetSelection,
             _onSetText = _onSetText,
             _traversalParentIdentifier = _traversalParentIdentifier,
-            _traversalChildIdentifier = _traversalChildIdentifier
+            _traversalChildIdentifier = _traversalChildIdentifier,
+
+            // Dart's `copy()` drops both locales; nothing reads them off a copy there, and Plumix's
+            // `Clone` is the writable copy `UpdateConfig` hands out, so it keeps them.
+            _localeForSubtree = _localeForSubtree,
+            Locale = Locale
         };
 
         if (_tagsForChildren is { Count: > 0 })
@@ -1672,7 +1702,8 @@ public sealed class SemanticsConfiguration
         || ValidationResult != SemanticsValidationResult.None
         || TextSelection.HasValue
         || PlatformViewId.HasValue
-        || _hintOverrides is not null;
+        || _hintOverrides is not null
+        || _localeForSubtree is not null;
 
     internal bool IsCompatibleWith(SemanticsConfiguration? other)
     {
@@ -1751,6 +1782,12 @@ public sealed class SemanticsConfiguration
             return false;
         }
 
+        // Two subtrees that name different locales stay separate nodes, so each keeps its own.
+        if (!Equals(_localeForSubtree, other._localeForSubtree))
+        {
+            return false;
+        }
+
         if (MinValue is not null && other.MinValue is not null)
         {
             return false;
@@ -1769,7 +1806,7 @@ public sealed class SemanticsConfiguration
     /// wrapping the child in an explicit bidi run when the two disagree on reading direction, then
     /// separating them with a newline.
     /// </summary>
-    private static AttributedString? ConcatAttributedString(
+    internal static AttributedString? ConcatAttributedString(
         AttributedString? thisString,
         TextDirection? thisDirection,
         AttributedString? otherString,
@@ -2337,6 +2374,7 @@ public sealed partial class SemanticsNode
         ScrollChildCount = config.ScrollChildCount;
         ScrollIndex = config.ScrollIndex;
         TextDirection = config.TextDirection;
+        Locale = config.Locale;
         IsSemanticBoundary = config.IsSemanticBoundary;
         MergeAllDescendantsIntoThisNode = config.IsMergingSemanticsOfDescendants;
         TraversalParentIdentifierValue = config.TraversalParentIdentifier;
@@ -2433,6 +2471,13 @@ public sealed partial class SemanticsNode
 
     /// <summary>The reading direction for this node's text, and the direction siblings are sorted in.</summary>
     public TextDirection? TextDirection { get; internal set; }
+
+    /// <summary>The locale assistive technologies interpret this node's content in.</summary>
+    /// <remarks>
+    /// Flutter's private <c>SemanticsNode._locale</c>: it reaches consumers through
+    /// <see cref="SemanticsData.Locale"/> only, never off the node itself.
+    /// </remarks>
+    internal Locale? Locale { get; set; }
 
     /// <summary>Whether an ancestor asked this node to stop exposing its user actions.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.areUserActionsBlocked</c>.</remarks>

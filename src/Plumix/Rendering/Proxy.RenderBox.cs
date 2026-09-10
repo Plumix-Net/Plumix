@@ -2968,6 +2968,7 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
         bool excludeSemantics = false,
         bool blockUserActions = false,
         TextDirection? textDirection = null,
+        Locale? localeForSubtree = null,
         RenderBox? child = null)
     {
         _annotations = new SemanticsAnnotations(
@@ -2977,7 +2978,8 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
             explicitChildNodes: explicitChildNodes,
             excludeSemantics: excludeSemantics,
             blockUserActions: blockUserActions,
-            textDirection: textDirection);
+            textDirection: textDirection,
+            localeForSubtree: localeForSubtree);
         Child = child;
     }
 
@@ -3025,6 +3027,13 @@ public sealed class RenderSemanticsAnnotations : RenderProxyBox
     {
         get => _annotations.TextDirection;
         set => _annotations.TextDirection = value;
+    }
+
+    /// <summary>The locale annotated onto this subtree's semantics nodes.</summary>
+    public Locale? LocaleForSubtree
+    {
+        get => _annotations.LocaleForSubtree;
+        set => _annotations.LocaleForSubtree = value;
     }
 
     /// <inheritdoc />

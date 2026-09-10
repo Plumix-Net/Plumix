@@ -3,6 +3,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Plumix.Foundation;
 using Plumix.Rendering;
+using Plumix.UI;
 using Plumix.Widgets;
 using Xunit;
 
@@ -510,6 +511,10 @@ public sealed class ImageWidgetTests : IDisposable
 
         public WidgetRenderHarness(Widget widget)
         {
+            // Flutter's own widget tests always run under a Directionality; a semantic
+            // string without a reading direction is not a legal annotation.
+            widget = new Directionality(TextDirection.Ltr, widget);
+
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             Pipeline = new PipelineOwner(RenderView);
             Pipeline.Attach(RenderView);
@@ -529,6 +534,7 @@ public sealed class ImageWidgetTests : IDisposable
 
         public void Update(Widget widget)
         {
+            widget = new Directionality(TextDirection.Ltr, widget);
             _root.UpdateWidget(widget);
             _owner.FlushBuild();
         }

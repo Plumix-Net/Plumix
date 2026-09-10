@@ -1044,6 +1044,10 @@ public sealed class MaterialChipTests : IDisposable
 
         public WidgetRenderHarness(Widget rootWidget)
         {
+            // Flutter's own widget tests always run under a Directionality; a semantic
+            // string without a reading direction is not a legal annotation.
+            rootWidget = new Directionality(TextDirection.Ltr, rootWidget);
+
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
@@ -1057,6 +1061,7 @@ public sealed class MaterialChipTests : IDisposable
 
         public void Update(Widget widget)
         {
+            widget = new Directionality(TextDirection.Ltr, widget);
             _rootElement.UpdateRoot(widget);
             _owner.FlushBuild();
         }

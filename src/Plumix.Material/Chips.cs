@@ -1034,6 +1034,7 @@ public sealed class RawChip : StatefulWidget
                 label: tooltip,
                 enabled: delete is not null,
                 onTap: delete,
+                textDirection: Directionality.Of(context),
                 child: icon);
         }
 

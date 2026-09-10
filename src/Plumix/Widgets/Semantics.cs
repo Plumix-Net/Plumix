@@ -43,6 +43,7 @@ public abstract class SemanticsBase : SingleChildRenderObjectWidget
         bool explicitChildNodes = false,
         bool excludeSemantics = false,
         bool blockUserActions = false,
+        Locale? localeForSubtree = null,
         Key? key = null) : base(child, key)
     {
         ArgumentNullException.ThrowIfNull(properties);
@@ -51,6 +52,7 @@ public abstract class SemanticsBase : SingleChildRenderObjectWidget
         ExplicitChildNodes = explicitChildNodes;
         ExcludeSemantics = excludeSemantics;
         BlockUserActions = blockUserActions;
+        LocaleForSubtree = localeForSubtree;
     }
 
     /// <summary>All the annotations this widget contributes to the semantics tree.</summary>
@@ -67,6 +69,13 @@ public abstract class SemanticsBase : SingleChildRenderObjectWidget
 
     /// <summary>Whether to block user interactions for the descendant semantics nodes.</summary>
     public bool BlockUserActions { get; }
+
+    /// <summary>The locale for the widgets in this subtree.</summary>
+    /// <remarks>
+    /// Flutter's <c>_SemanticsBase.localeForSubtree</c>. When <c>null</c> the subtree inherits the
+    /// locale of the nearest ancestor that names one.
+    /// </remarks>
+    public Locale? LocaleForSubtree { get; }
 
     /// <remarks>Flutter's private <c>_SemanticsBase._getTextDirection</c>.</remarks>
     private protected TextDirection? GetTextDirection(BuildContext context)
@@ -186,6 +195,7 @@ public sealed class Semantics : SemanticsBase
         SemanticsInputType? inputType = null,
         string? minValue = null,
         string? maxValue = null,
+        Locale? localeForSubtree = null,
         Key? key = null)
         : this(
             properties: new SemanticsProperties(
@@ -272,6 +282,7 @@ public sealed class Semantics : SemanticsBase
             explicitChildNodes: explicitChildNodes,
             excludeSemantics: excludeSemantics,
             blockUserActions: blockUserActions,
+            localeForSubtree: localeForSubtree,
             key: key)
     {
     }
@@ -285,6 +296,7 @@ public sealed class Semantics : SemanticsBase
         bool explicitChildNodes = false,
         bool excludeSemantics = false,
         bool blockUserActions = false,
+        Locale? localeForSubtree = null,
         Key? key = null)
         : base(
             properties,
@@ -293,6 +305,7 @@ public sealed class Semantics : SemanticsBase
             explicitChildNodes: explicitChildNodes,
             excludeSemantics: excludeSemantics,
             blockUserActions: blockUserActions,
+            localeForSubtree: localeForSubtree,
             key: key)
     {
     }
@@ -306,7 +319,8 @@ public sealed class Semantics : SemanticsBase
             explicitChildNodes: ExplicitChildNodes,
             excludeSemantics: ExcludeSemantics,
             blockUserActions: BlockUserActions,
-            textDirection: GetTextDirection(context));
+            textDirection: GetTextDirection(context),
+            localeForSubtree: LocaleForSubtree);
     }
 
     /// <inheritdoc />
@@ -319,6 +333,7 @@ public sealed class Semantics : SemanticsBase
         semantics.BlockUserActions = BlockUserActions;
         semantics.Properties = Properties;
         semantics.TextDirection = GetTextDirection(context);
+        semantics.LocaleForSubtree = LocaleForSubtree;
     }
 
     /// <inheritdoc />
@@ -344,6 +359,7 @@ public sealed class SliverSemantics : SemanticsBase
         bool explicitChildNodes = false,
         bool excludeSemantics = false,
         bool blockUserActions = false,
+        Locale? localeForSubtree = null,
         Key? key = null)
         : base(
             properties,
@@ -352,6 +368,7 @@ public sealed class SliverSemantics : SemanticsBase
             explicitChildNodes: explicitChildNodes,
             excludeSemantics: excludeSemantics,
             blockUserActions: blockUserActions,
+            localeForSubtree: localeForSubtree,
             key: key)
     {
     }
@@ -365,7 +382,8 @@ public sealed class SliverSemantics : SemanticsBase
             explicitChildNodes: ExplicitChildNodes,
             excludeSemantics: ExcludeSemantics,
             blockUserActions: BlockUserActions,
-            textDirection: GetTextDirection(context));
+            textDirection: GetTextDirection(context),
+            localeForSubtree: LocaleForSubtree);
     }
 
     /// <inheritdoc />
@@ -378,6 +396,7 @@ public sealed class SliverSemantics : SemanticsBase
         semantics.BlockUserActions = BlockUserActions;
         semantics.Properties = Properties;
         semantics.TextDirection = GetTextDirection(context);
+        semantics.LocaleForSubtree = LocaleForSubtree;
     }
 }
 

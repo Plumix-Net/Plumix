@@ -1,6 +1,7 @@
 using Avalonia;
 using Plumix.Foundation;
 using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart
 
@@ -15,7 +16,8 @@ internal sealed record SemanticsParentData(
     bool BlocksUserActions,
     bool ExplicitChildNodes,
     IReadOnlySet<SemanticsTag>? TagsForChildren,
-    AccessibilityFocusBlockType? AccessibilityFocusBlockType = null)
+    AccessibilityFocusBlockType? AccessibilityFocusBlockType = null,
+    Locale? LocaleForChildren = null)
 {
     public bool Equals(SemanticsParentData? other)
     {
@@ -28,6 +30,7 @@ internal sealed record SemanticsParentData(
                && BlocksUserActions == other.BlocksUserActions
                && ExplicitChildNodes == other.ExplicitChildNodes
                && AccessibilityFocusBlockType == other.AccessibilityFocusBlockType
+               && Equals(LocaleForChildren, other.LocaleForChildren)
                && TagSetsEqual(TagsForChildren, other.TagsForChildren);
     }
 
@@ -38,6 +41,7 @@ internal sealed record SemanticsParentData(
             BlocksUserActions,
             ExplicitChildNodes,
             AccessibilityFocusBlockType,
+            LocaleForChildren,
             TagsForChildren?.Count ?? 0);
     }
 
@@ -491,6 +495,10 @@ internal sealed class RenderObjectSemantics : DiagnosticableTree, ISemanticsFrag
                 ? Rendering.AccessibilityFocusBlockType.BlockSubtree
                 : ConfigProvider.Effective.AccessibilityFocusBlockType;
 
+        // A render object's own `localeForSubtree` overrides the locale it inherited.
+        Locale? localeForChildren =
+            ConfigProvider.Effective.LocaleForSubtree ?? ParentData?.LocaleForChildren;
+
         _siblingMergeGroups.Clear();
         _mergeUp.Clear();
         var childParentData = new SemanticsParentData(
@@ -499,7 +507,8 @@ internal sealed class RenderObjectSemantics : DiagnosticableTree, ISemanticsFrag
             BlocksUserActions: blocksUserAction,
             ExplicitChildNodes: explicitChildNodesForChildren,
             TagsForChildren: tagsForChildren,
-            AccessibilityFocusBlockType: accessibilityFocusBlockType);
+            AccessibilityFocusBlockType: accessibilityFocusBlockType,
+            LocaleForChildren: localeForChildren);
 
         (List<ISemanticsFragment> mergeUp, List<List<ISemanticsFragment>> siblingMergeGroups) result =
             CollectChildMergeUpAndSiblingGroup(childParentData);
@@ -601,6 +610,11 @@ internal sealed class RenderObjectSemantics : DiagnosticableTree, ISemanticsFrag
         if (accessibilityFocusBlockType != Rendering.AccessibilityFocusBlockType.None)
         {
             ConfigProvider.UpdateConfig(configuration => configuration.IsFocused = null);
+        }
+
+        if (!Equals(localeForChildren, ConfigProvider.Effective.Locale))
+        {
+            ConfigProvider.UpdateConfig(configuration => configuration.Locale = localeForChildren);
         }
     }
 

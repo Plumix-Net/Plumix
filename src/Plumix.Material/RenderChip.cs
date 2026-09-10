@@ -22,12 +22,14 @@ internal sealed class EnsureMinSemanticsSize : SingleChildRenderObjectWidget
         string label,
         bool enabled,
         Action? onTap,
+        TextDirection textDirection,
         Widget child) : base(child)
     {
         MinSemanticSize = minSemanticSize;
         Label = label;
         Enabled = enabled;
         OnTap = onTap;
+        TextDirection = textDirection;
     }
 
     public Size MinSemanticSize { get; }
@@ -35,9 +37,12 @@ internal sealed class EnsureMinSemanticsSize : SingleChildRenderObjectWidget
     public bool Enabled { get; }
     public Action? OnTap { get; }
 
+    /// <summary>The reading direction of <see cref="Label"/>.</summary>
+    public TextDirection TextDirection { get; }
+
     public override RenderObject CreateRenderObject(BuildContext context)
     {
-        return new RenderEnsureMinSemanticsSize(MinSemanticSize, Label, Enabled, OnTap);
+        return new RenderEnsureMinSemanticsSize(MinSemanticSize, Label, Enabled, OnTap, TextDirection);
     }
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
@@ -47,6 +52,7 @@ internal sealed class EnsureMinSemanticsSize : SingleChildRenderObjectWidget
         semantics.Label = Label;
         semantics.Enabled = Enabled;
         semantics.OnTap = OnTap;
+        semantics.TextDirection = TextDirection;
     }
 }
 
@@ -56,17 +62,20 @@ internal sealed class RenderEnsureMinSemanticsSize : RenderProxyBox
     private string _label;
     private bool _enabled;
     private Action? _onTap;
+    private TextDirection _textDirection;
 
     public RenderEnsureMinSemanticsSize(
         Size minSemanticSize,
         string label,
         bool enabled,
-        Action? onTap)
+        Action? onTap,
+        TextDirection textDirection)
     {
         _minSemanticSize = minSemanticSize;
         _label = label;
         _enabled = enabled;
         _onTap = onTap;
+        _textDirection = textDirection;
     }
 
     public Size MinSemanticSize
@@ -93,6 +102,12 @@ internal sealed class RenderEnsureMinSemanticsSize : RenderProxyBox
         set => SetSemanticsValue(ref _onTap, value);
     }
 
+    public TextDirection TextDirection
+    {
+        get => _textDirection;
+        set => SetSemanticsValue(ref _textDirection, value);
+    }
+
     protected override Rect SemanticBounds
     {
         get
@@ -112,6 +127,7 @@ internal sealed class RenderEnsureMinSemanticsSize : RenderProxyBox
         configuration.IsSemanticBoundary = true;
         configuration.IsMergingSemanticsOfDescendants = true;
         configuration.Label = _label;
+        configuration.TextDirection = _textDirection;
         configuration.Flags = SemanticsFlags.IsButton
                               | (_enabled ? SemanticsFlags.IsEnabled : SemanticsFlags.None);
         if (_onTap is not null)

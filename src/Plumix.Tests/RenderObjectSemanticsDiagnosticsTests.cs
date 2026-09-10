@@ -17,7 +17,8 @@ public sealed class RenderObjectSemanticsDiagnosticsTests
         var leaf = new RenderSemanticsAnnotations(
             new SemanticsProperties(label: "diagnostics leaf"),
             container: true,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+            textDirection: TextDirection.Ltr);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = leaf };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
@@ -50,11 +51,13 @@ public sealed class RenderObjectSemanticsDiagnosticsTests
                           child: new RenderBlockSemantics(blocking: true)
             {
                 Child = new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
-            });
+            },
+            textDirection: TextDirection.Ltr);
         var behind = new RenderSemanticsAnnotations(
             new SemanticsProperties(label: "diagnostics behind"),
             container: true,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+            textDirection: TextDirection.Ltr);
         var row = new RenderFlex(
             children: [behind, wrapper],
             direction: Axis.Horizontal,

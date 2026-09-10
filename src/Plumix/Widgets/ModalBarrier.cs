@@ -171,6 +171,9 @@ public sealed class ModalBarrier : StatelessWidget
             onTap: semanticsDismissible && SemanticsLabel != null ? HandleDismiss : null,
             onDismiss: semanticsDismissible && SemanticsLabel != null ? HandleDismiss : null,
             label: semanticsDismissible ? SemanticsLabel : null,
+            textDirection: semanticsDismissible && SemanticsLabel != null
+                ? Directionality.Of(context)
+                : null,
             child: new MouseRegion(
                 cursor: SystemMouseCursors.Basic,
                 child: new ConstrainedBox(

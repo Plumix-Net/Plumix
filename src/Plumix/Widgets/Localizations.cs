@@ -325,13 +325,20 @@ public sealed class Localizations : StatefulWidget
         {
             WidgetsLocalizations widgetsLocalizations =
                 (WidgetsLocalizations)_resources[typeof(WidgetsLocalizations)];
-            return new LocalizationsScope(
-                locale: _locale,
-                delegates: CurrentWidget.Delegates,
-                resources: _resources,
-                child: new Directionality(
-                    textDirection: widgetsLocalizations.TextDirection,
-                    child: CurrentWidget.Child));
+
+            // A non-application-level `Localizations` marks its semantics subtree with the locale,
+            // so assistive technologies read that subtree in it.
+            return new Semantics(
+                localeForSubtree: CurrentWidget.IsApplicationLevel ? null : CurrentWidget.Locale,
+                container: !CurrentWidget.IsApplicationLevel,
+                textDirection: widgetsLocalizations.TextDirection,
+                child: new LocalizationsScope(
+                    locale: _locale,
+                    delegates: CurrentWidget.Delegates,
+                    resources: _resources,
+                    child: new Directionality(
+                        textDirection: widgetsLocalizations.TextDirection,
+                        child: CurrentWidget.Child)));
         }
 
         private bool AnyDelegatesShouldReload(Localizations oldWidget)

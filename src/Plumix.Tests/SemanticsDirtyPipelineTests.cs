@@ -25,7 +25,8 @@ public sealed class SemanticsDirtyPipelineTests
                 traversalParentIdentifier: traversalParentIdentifier,
                 traversalChildIdentifier: traversalChildIdentifier),
             container: true,
-            child: child ?? new RenderConstrainedBox(BoxConstraints.Tight(size)));
+            child: child ?? new RenderConstrainedBox(BoxConstraints.Tight(size)),
+            textDirection: TextDirection.Ltr);
     }
 
     private static (PipelineOwner Pipeline, List<SemanticsUpdate> Updates) Pump(
@@ -104,13 +105,13 @@ public sealed class SemanticsDirtyPipelineTests
         var owner = new SemanticsOwner();
         SemanticsNode root = SemanticsNode.Root(owner);
         root.Rect = new Rect(0, 0, 100, 100);
-        var config = new SemanticsConfiguration { Label = "same" };
+        var config = new SemanticsConfiguration { Label = "same", TextDirection = TextDirection.Ltr };
         root.UpdateWith(config);
         owner.SendSemanticsUpdate();
         Assert.False(root.DebugIsDirty);
 
         // Only the action handler identity changes, and Flutter compares the action bits, not the map.
-        var again = new SemanticsConfiguration { Label = "same" };
+        var again = new SemanticsConfiguration { Label = "same", TextDirection = TextDirection.Ltr };
         again.AddActionHandler(SemanticsActions.Tap, () => { });
         again.Actions = SemanticsActions.None;
         again.ReplaceActionHandlers([]);
@@ -151,9 +152,14 @@ public sealed class SemanticsDirtyPipelineTests
         root.Rect = new Rect(0, 0, 100, 100);
         child.Rect = new Rect(0, 0, 50, 50);
         root.UpdateWith(
-            new SemanticsConfiguration { Label = "root", IsMergingSemanticsOfDescendants = true },
+            new SemanticsConfiguration
+            {
+                Label = "root",
+                IsMergingSemanticsOfDescendants = true,
+                TextDirection = TextDirection.Ltr,
+            },
             [child]);
-        child.UpdateWith(new SemanticsConfiguration { Label = "child" });
+        child.UpdateWith(new SemanticsConfiguration { Label = "child", TextDirection = TextDirection.Ltr });
 
         owner.SendSemanticsUpdate();
 
@@ -175,12 +181,17 @@ public sealed class SemanticsDirtyPipelineTests
         root.Rect = new Rect(0, 0, 100, 100);
         child.Rect = new Rect(0, 0, 50, 50);
         root.UpdateWith(
-            new SemanticsConfiguration { Label = "root", IsMergingSemanticsOfDescendants = true },
+            new SemanticsConfiguration
+            {
+                Label = "root",
+                IsMergingSemanticsOfDescendants = true,
+                TextDirection = TextDirection.Ltr,
+            },
             [child]);
-        child.UpdateWith(new SemanticsConfiguration { Label = "child" });
+        child.UpdateWith(new SemanticsConfiguration { Label = "child", TextDirection = TextDirection.Ltr });
         owner.SendSemanticsUpdate();
 
-        child.UpdateWith(new SemanticsConfiguration { Label = "changed" });
+        child.UpdateWith(new SemanticsConfiguration { Label = "changed", TextDirection = TextDirection.Ltr });
         owner.SendSemanticsUpdate();
 
         SemanticsNodeUpdate resent = Assert.Single(updates[1].Nodes);
@@ -288,7 +299,7 @@ public sealed class SemanticsDirtyPipelineTests
     {
         var owner = new SemanticsOwner();
         SemanticsNode root = SemanticsNode.Root(owner);
-        root.UpdateWith(new SemanticsConfiguration { Label = "empty" });
+        root.UpdateWith(new SemanticsConfiguration { Label = "empty", TextDirection = TextDirection.Ltr });
 
         owner.SendSemanticsUpdate();
 
@@ -403,7 +414,7 @@ public sealed class SemanticsDirtyPipelineTests
         owner.AddListener(() => order.Add("listener"));
         SemanticsNode root = SemanticsNode.Root(owner);
         root.Rect = new Rect(0, 0, 100, 100);
-        root.UpdateWith(new SemanticsConfiguration { Label = "root" });
+        root.UpdateWith(new SemanticsConfiguration { Label = "root", TextDirection = TextDirection.Ltr });
 
         owner.SendSemanticsUpdate();
 
@@ -416,7 +427,7 @@ public sealed class SemanticsDirtyPipelineTests
         var owner = new SemanticsOwner();
         SemanticsNode root = SemanticsNode.Root(owner);
         root.Rect = new Rect(0, 0, 100, 100);
-        root.UpdateWith(new SemanticsConfiguration { Label = "root" });
+        root.UpdateWith(new SemanticsConfiguration { Label = "root", TextDirection = TextDirection.Ltr });
 
         owner.Dispose();
 

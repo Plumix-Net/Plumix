@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.UI;
 using Plumix.Foundation;
 using Plumix.Rendering;
 using Plumix.Widgets;
@@ -212,6 +213,7 @@ public sealed class MetaDataIndexedSemanticsTests
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
             configuration.Label = _label;
+            configuration.TextDirection = TextDirection.Ltr;
         }
     }
 

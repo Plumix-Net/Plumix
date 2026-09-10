@@ -757,7 +757,8 @@ public sealed class TableTests
                 label: label,
                 role: role),
             container: true,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(size ?? new Size(20, 10))));
+            child: new RenderConstrainedBox(BoxConstraints.Tight(size ?? new Size(20, 10))),
+            textDirection: TextDirection.Ltr);
     }
 
     private static (PipelineOwner Pipeline, SemanticsNode TableNode) FlushTableSemantics(

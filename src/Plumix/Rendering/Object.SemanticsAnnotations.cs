@@ -1,4 +1,5 @@
 using Plumix.UI;
+using Plumix.Widgets;
 
 // Dart parity source: flutter/packages/flutter/lib/src/rendering/object.dart (SemanticsAnnotationsMixin)
 
@@ -26,6 +27,7 @@ internal sealed class SemanticsAnnotations
     private bool _excludeSemantics;
     private bool _blockUserActions;
     private TextDirection? _textDirection;
+    private Locale? _localeForSubtree;
     private AttributedString? _attributedLabel;
     private AttributedString? _attributedValue;
     private AttributedString? _attributedIncreasedValue;
@@ -40,7 +42,8 @@ internal sealed class SemanticsAnnotations
         bool explicitChildNodes,
         bool excludeSemantics,
         bool blockUserActions,
-        TextDirection? textDirection)
+        TextDirection? textDirection,
+        Locale? localeForSubtree)
     {
         ArgumentNullException.ThrowIfNull(markNeedsSemanticsUpdate);
         ArgumentNullException.ThrowIfNull(properties);
@@ -51,6 +54,7 @@ internal sealed class SemanticsAnnotations
         _excludeSemantics = excludeSemantics;
         _blockUserActions = blockUserActions;
         _textDirection = textDirection;
+        _localeForSubtree = localeForSubtree;
         UpdateAttributedFields(properties);
     }
 
@@ -118,6 +122,22 @@ internal sealed class SemanticsAnnotations
         }
     }
 
+    /// <remarks>Flutter's <c>SemanticsAnnotationsMixin.localeForSubtree</c>.</remarks>
+    internal Locale? LocaleForSubtree
+    {
+        get => _localeForSubtree;
+        set
+        {
+            if (Equals(_localeForSubtree, value))
+            {
+                return;
+            }
+
+            _localeForSubtree = value;
+            _markNeedsSemanticsUpdate();
+        }
+    }
+
     private void Assign(ref bool field, bool value)
     {
         if (field == value)
@@ -148,6 +168,10 @@ internal sealed class SemanticsAnnotations
         config.IsSemanticBoundary = _container || _properties.Identifier is not null;
         config.ExplicitChildNodes = _explicitChildNodes;
         config.IsBlockingUserActions = _blockUserActions;
+        if (_localeForSubtree is not null)
+        {
+            config.LocaleForSubtree = _localeForSubtree;
+        }
 
         if (_properties.ScopesRoute == true && !_explicitChildNodes)
         {

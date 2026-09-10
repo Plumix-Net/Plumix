@@ -144,6 +144,7 @@ public sealed class SemanticsTraversalTests
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
             configuration.Label = label;
+            configuration.TextDirection = TextDirection.Ltr;
         }
     }
 
@@ -159,6 +160,7 @@ public sealed class SemanticsTraversalTests
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
             configuration.Label = label;
+            configuration.TextDirection = TextDirection.Ltr;
             configuration.AddActionHandler(SemanticsActions.Tap, onTap);
         }
     }
@@ -175,6 +177,7 @@ public sealed class SemanticsTraversalTests
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
             configuration.Label = label;
+            configuration.TextDirection = TextDirection.Ltr;
             configuration.SortKey = sortKey;
         }
     }

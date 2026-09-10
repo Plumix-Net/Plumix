@@ -96,7 +96,7 @@ public sealed class SemanticsPropertiesTests
     [Fact]
     public void Configuration_PlainStringSettersReplaceTheAttributedValue()
     {
-        var config = new SemanticsConfiguration { Label = "label1" };
+        var config = new SemanticsConfiguration { Label = "label1", TextDirection = TextDirection.Ltr };
         Assert.Equal("label1", config.AttributedLabel!.String);
         Assert.Empty(config.AttributedLabel.Attributes);
 
@@ -167,8 +167,18 @@ public sealed class SemanticsPropertiesTests
     [InlineData(1, 5, 1)]
     public void Configuration_AbsorbTakesTheParentHeadingLevel(int parentLevel, int childLevel, int expected)
     {
-        var parent = new SemanticsConfiguration { Label = "parent", HeadingLevel = parentLevel };
-        var child = new SemanticsConfiguration { Label = "child", HeadingLevel = childLevel };
+        var parent = new SemanticsConfiguration
+        {
+            Label = "parent",
+            HeadingLevel = parentLevel,
+            TextDirection = TextDirection.Ltr,
+        };
+        var child = new SemanticsConfiguration
+        {
+            Label = "child",
+            HeadingLevel = childLevel,
+            TextDirection = TextDirection.Ltr,
+        };
 
         parent.Absorb(child);
 
@@ -178,8 +188,20 @@ public sealed class SemanticsPropertiesTests
     [Fact]
     public void Configuration_AbsorbConcatenatesLabelsAndHintsButNotValues()
     {
-        var parent = new SemanticsConfiguration { Label = "label1", Hint = "hint1", Value = "value1" };
-        var child = new SemanticsConfiguration { Label = "label2", Hint = "hint2", Value = "value2" };
+        var parent = new SemanticsConfiguration
+        {
+            Label = "label1",
+            Hint = "hint1",
+            Value = "value1",
+            TextDirection = TextDirection.Ltr,
+        };
+        var child = new SemanticsConfiguration
+        {
+            Label = "label2",
+            Hint = "hint2",
+            Value = "value2",
+            TextDirection = TextDirection.Ltr,
+        };
 
         parent.Absorb(child);
 
@@ -231,6 +253,7 @@ public sealed class SemanticsPropertiesTests
         var child = new SemanticsConfiguration
         {
             Label = "child",
+            TextDirection = TextDirection.Ltr,
             Identifier = "child-id",
             ControlsNodes = new HashSet<string> { "def", "ghi" },
         };
@@ -262,8 +285,18 @@ public sealed class SemanticsPropertiesTests
         SemanticsValidationResult childResult,
         SemanticsValidationResult expected)
     {
-        var parent = new SemanticsConfiguration { Label = "parent", ValidationResult = parentResult };
-        var child = new SemanticsConfiguration { Label = "child", ValidationResult = childResult };
+        var parent = new SemanticsConfiguration
+        {
+            Label = "parent",
+            ValidationResult = parentResult,
+            TextDirection = TextDirection.Ltr,
+        };
+        var child = new SemanticsConfiguration
+        {
+            Label = "child",
+            ValidationResult = childResult,
+            TextDirection = TextDirection.Ltr,
+        };
 
         parent.Absorb(child);
 
@@ -275,8 +308,18 @@ public sealed class SemanticsPropertiesTests
     {
         int parentTaps = 0;
         int childTaps = 0;
-        var parent = new SemanticsConfiguration { Label = "parent", OnTap = () => parentTaps++ };
-        var child = new SemanticsConfiguration { Label = "child", OnTap = () => childTaps++ };
+        var parent = new SemanticsConfiguration
+        {
+            Label = "parent",
+            OnTap = () => parentTaps++,
+            TextDirection = TextDirection.Ltr,
+        };
+        var child = new SemanticsConfiguration
+        {
+            Label = "child",
+            OnTap = () => childTaps++,
+            TextDirection = TextDirection.Ltr,
+        };
 
         parent.Absorb(child);
         parent.ActionHandlers[SemanticsActions.Tap](null);
@@ -289,10 +332,11 @@ public sealed class SemanticsPropertiesTests
     [Fact]
     public void Configuration_AbsorbTakesTheChildLinkUrlAndLengthCounters()
     {
-        var parent = new SemanticsConfiguration { Label = "parent" };
+        var parent = new SemanticsConfiguration { Label = "parent", TextDirection = TextDirection.Ltr };
         var child = new SemanticsConfiguration
         {
             Label = "child",
+            TextDirection = TextDirection.Ltr,
             LinkUrl = new Uri("https://example.com/"),
             MaxValueLength = 10,
             CurrentValueLength = 3,
@@ -626,7 +670,8 @@ public sealed class SemanticsPropertiesTests
         var render = new RenderSemanticsAnnotations(
             new SemanticsProperties(label: "tappable", onTap: () => { }),
             container: true,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+            textDirection: TextDirection.Ltr);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = render };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);
@@ -793,7 +838,8 @@ public sealed class SemanticsPropertiesTests
             new SemanticsProperties(label: "outer"),
             excludeSemantics: true,
             child: new RenderSliverToBoxAdapter(
-                new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))));
+                new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))),
+                textDirection: TextDirection.Ltr);
 
         int visits = 0;
         render.VisitChildrenForSemantics(_ => visits++);

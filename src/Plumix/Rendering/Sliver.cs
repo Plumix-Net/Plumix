@@ -1516,6 +1516,7 @@ public sealed class RenderSliverSemanticsAnnotations : RenderProxySliver
         bool excludeSemantics = false,
         bool blockUserActions = false,
         TextDirection? textDirection = null,
+        Locale? localeForSubtree = null,
         RenderSliver? child = null) : base(child)
     {
         _annotations = new SemanticsAnnotations(
@@ -1525,7 +1526,8 @@ public sealed class RenderSliverSemanticsAnnotations : RenderProxySliver
             explicitChildNodes: explicitChildNodes,
             excludeSemantics: excludeSemantics,
             blockUserActions: blockUserActions,
-            textDirection: textDirection);
+            textDirection: textDirection,
+            localeForSubtree: localeForSubtree);
     }
 
     /// <summary>All the annotations this render object contributes.</summary>
@@ -1568,6 +1570,13 @@ public sealed class RenderSliverSemanticsAnnotations : RenderProxySliver
     {
         get => _annotations.TextDirection;
         set => _annotations.TextDirection = value;
+    }
+
+    /// <summary>The locale annotated onto this subtree's semantics nodes.</summary>
+    public Locale? LocaleForSubtree
+    {
+        get => _annotations.LocaleForSubtree;
+        set => _annotations.LocaleForSubtree = value;
     }
 
     /// <inheritdoc />

@@ -17,11 +17,15 @@ namespace Plumix.Rendering;
 /// <param name="ChildrenInTraversalOrder">Child ids in reading order, after grafting.</param>
 /// <param name="ChildrenInHitTestOrder">Child ids in inverse paint order, orphans dropped.</param>
 /// <param name="AdditionalActions">Ids of the custom actions this node handles, ascending.</param>
+/// <param name="Data">
+/// The node's flattened annotations, with every merged descendant folded in.
+/// </param>
 /// <remarks>
-/// Flutter passes these as the ~40 named arguments of `SemanticsUpdateBuilder.updateNode`, whose
-/// remaining arguments are the flattened `SemanticsData` of the node. Plumix's hosts read the
-/// annotations off <paramref name="Node"/> instead, so this record carries only what the drain loop
-/// computes and the node itself cannot answer (see `docs/ai/DIVERGENCES.md`).
+/// Flutter passes these as the ~40 named arguments of `SemanticsUpdateBuilder.updateNode`, which
+/// spell out the fields of <paramref name="Data"/> one by one because the update crosses into the
+/// engine. Plumix's consumers are in-process, so the record carries the
+/// <see cref="SemanticsData"/> itself plus what only the drain loop can compute: the id, the two
+/// transforms, the traversal parent and both child-id lists.
 /// </remarks>
 public sealed record SemanticsNodeUpdate(
     SemanticsNode Node,
@@ -31,7 +35,8 @@ public sealed record SemanticsNodeUpdate(
     int TraversalParentId,
     IReadOnlyList<int> ChildrenInTraversalOrder,
     IReadOnlyList<int> ChildrenInHitTestOrder,
-    IReadOnlyList<int> AdditionalActions);
+    IReadOnlyList<int> AdditionalActions,
+    SemanticsData Data);
 
 /// <summary>A custom action referenced by at least one node in a <see cref="SemanticsUpdate"/>.</summary>
 /// <remarks>Flutter's <c>SemanticsUpdateBuilder.updateCustomAction</c> arguments.</remarks>
@@ -114,13 +119,11 @@ public sealed partial class SemanticsNode
             childrenInHitTestOrder = [.. ChildrenInHitTestOrder.Reverse().Select(static child => child.Id)];
         }
 
-        var additionalActions = new List<int>(_customActionHandlers.Count);
-        foreach (CustomSemanticsAction action in _customActionHandlers.Keys)
-        {
-            additionalActions.Add(CustomSemanticsAction.GetIdentifier(action));
-        }
+        SemanticsData data = GetSemanticsData();
 
-        additionalActions.Sort();
+        // Dart reads the ids off the flattened data, so a merge root also reports the custom actions
+        // and the hint overrides of every descendant it absorbed.
+        IReadOnlyList<int> additionalActions = data.CustomSemanticsActionIds ?? [];
         customSemanticsActionIdsUpdate.UnionWith(additionalActions);
 
         int traversalParentId = -1;
@@ -140,7 +143,8 @@ public sealed partial class SemanticsNode
             traversalParentId,
             childrenInTraversalOrder,
             childrenInHitTestOrder,
-            additionalActions));
+            additionalActions,
+            data));
         _dirty = false;
     }
 }

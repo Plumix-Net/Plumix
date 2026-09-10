@@ -19,13 +19,15 @@ public sealed class SemanticsTreeTests
                 label: "Later",
                 sortKey: new OrdinalSortKey(1.0)),
             container: true,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+            textDirection: TextDirection.Ltr);
         var earlier = new RenderSemanticsAnnotations(
             new SemanticsProperties(
                 label: "Earlier",
                 sortKey: new OrdinalSortKey(0.0)),
             container: true,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+            textDirection: TextDirection.Ltr);
         var row = new RenderFlex(
             children: [later, earlier],
             direction: Axis.Horizontal,
@@ -79,10 +81,11 @@ public sealed class SemanticsTreeTests
     [Fact]
     public void HitTestBehavior_IsAbsorbedFromAChildButNeverMergesWithAnotherAnnotatedConfiguration()
     {
-        var parent = new SemanticsConfiguration { Label = "Parent" };
+        var parent = new SemanticsConfiguration { Label = "Parent", TextDirection = TextDirection.Ltr };
         var child = new SemanticsConfiguration
         {
             Label = "Child",
+            TextDirection = TextDirection.Ltr,
             HitTestBehavior = SemanticsHitTestBehavior.Opaque,
         };
 
@@ -99,7 +102,7 @@ public sealed class SemanticsTreeTests
         {
             HitTestBehavior = SemanticsHitTestBehavior.Transparent,
         };
-        transparent.Absorb(new SemanticsConfiguration { Label = "Plain" });
+        transparent.Absorb(new SemanticsConfiguration { Label = "Plain", TextDirection = TextDirection.Ltr });
         Assert.Equal(SemanticsHitTestBehavior.Transparent, transparent.HitTestBehavior);
     }
 
@@ -1037,7 +1040,8 @@ public sealed class SemanticsTreeTests
         {
             var synthetic = new SemanticsConfiguration
             {
-                Label = "Synthetic"
+                Label = "Synthetic",
+                TextDirection = TextDirection.Ltr
             };
 
             return new ChildSemanticsConfigurationsResult(
@@ -1071,7 +1075,8 @@ public sealed class SemanticsTreeTests
         {
             var synthetic = new SemanticsConfiguration
             {
-                Label = "Synthetic Action"
+                Label = "Synthetic Action",
+                TextDirection = TextDirection.Ltr
             };
             synthetic.AddActionHandler(SemanticsActions.Tap, () => tapCount += 1);
 
@@ -1111,7 +1116,8 @@ public sealed class SemanticsTreeTests
         {
             var synthetic = new SemanticsConfiguration
             {
-                Label = "Stable"
+                Label = "Stable",
+                TextDirection = TextDirection.Ltr
             };
 
             var group = new List<SemanticsConfiguration>(childConfigurations) { synthetic };
@@ -1423,6 +1429,7 @@ public sealed class SemanticsTreeTests
         {
             configuration.IsSemanticBoundary = true;
             configuration.Label = _label;
+            configuration.TextDirection = TextDirection.Ltr;
         }
     }
 
@@ -1455,17 +1462,20 @@ public sealed class SemanticsTreeTests
         {
             configuration.IsSemanticBoundary = true;
             configuration.Label = "Parent";
+            configuration.TextDirection = TextDirection.Ltr;
             configuration.ChildConfigurationsDelegate = childConfigurations =>
             {
                 var first = new SemanticsConfiguration
                 {
-                    Label = "Synthetic A"
+                    Label = "Synthetic A",
+                    TextDirection = TextDirection.Ltr
                 };
                 first.AddActionHandler(SemanticsActions.Tap, static () => { });
 
                 var second = new SemanticsConfiguration
                 {
-                    Label = "Synthetic B"
+                    Label = "Synthetic B",
+                    TextDirection = TextDirection.Ltr
                 };
                 if (_conflictingActions)
                 {
@@ -1511,6 +1521,7 @@ public sealed class SemanticsTreeTests
         {
             configuration.IsSemanticBoundary = true;
             configuration.Label = "Parent";
+            configuration.TextDirection = TextDirection.Ltr;
 
             if (_parentTapConflict)
             {
@@ -1521,7 +1532,8 @@ public sealed class SemanticsTreeTests
             {
                 var synthetic = new SemanticsConfiguration
                 {
-                    Label = "Synthetic MergeUp"
+                    Label = "Synthetic MergeUp",
+                    TextDirection = TextDirection.Ltr
                 };
                 synthetic.AddActionHandler(SemanticsActions.Tap, static () => { });
 
@@ -1543,6 +1555,7 @@ public sealed class SemanticsTreeTests
         {
             configuration.IsSemanticBoundary = true;
             configuration.Label = "Parent";
+            configuration.TextDirection = TextDirection.Ltr;
             configuration.ChildConfigurationsDelegate = childConfigurations =>
             {
                 var builder = new ChildSemanticsConfigurationsResultBuilder();
@@ -1576,6 +1589,7 @@ public sealed class SemanticsTreeTests
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
             configuration.Label = _label;
+            configuration.TextDirection = TextDirection.Ltr;
         }
     }
 
@@ -1594,7 +1608,7 @@ public sealed class SemanticsTreeTests
 
         // Tags belong to the render object that declared them, so absorbing a child never adopts the
         // child's tags.
-        var child = new SemanticsConfiguration { Label = "Child" };
+        var child = new SemanticsConfiguration { Label = "Child", TextDirection = TextDirection.Ltr };
         var otherTag = new SemanticsTag("other");
         child.AddTagForChildren(otherTag);
         configuration.Absorb(child);
@@ -1710,6 +1724,7 @@ public sealed class SemanticsTreeTests
         {
             configuration.IsSemanticBoundary = true;
             configuration.Label = _label;
+            configuration.TextDirection = TextDirection.Ltr;
             if (_hasChildConfigurationsDelegate)
             {
                 configuration.ChildConfigurationsDelegate = MergeAllDelegate;
@@ -1739,6 +1754,7 @@ public sealed class SemanticsTreeTests
         {
             configuration.IsSemanticBoundary = true;
             configuration.Label = _label;
+            configuration.TextDirection = TextDirection.Ltr;
             configuration.ExplicitChildNodes = _explicitChildNodes;
             configuration.ChildConfigurationsDelegate = _childDelegate;
         }
@@ -1756,6 +1772,7 @@ public sealed class SemanticsTreeTests
             configuration.IsSemanticBoundary = true;
             configuration.IsMergingSemanticsOfDescendants = true;
             configuration.Label = "Group";
+            configuration.TextDirection = TextDirection.Ltr;
         }
     }
 
@@ -1801,6 +1818,7 @@ public sealed class SemanticsTreeTests
             SemanticsUpdateCount += 1;
             configuration.IsSemanticBoundary = true;
             configuration.Label = "Boundary";
+            configuration.TextDirection = TextDirection.Ltr;
         }
     }
 
@@ -1848,6 +1866,7 @@ public sealed class SemanticsTreeTests
         {
             SemanticsUpdateCount += 1;
             configuration.Label = Label;
+            configuration.TextDirection = TextDirection.Ltr;
         }
     }
 
@@ -1877,6 +1896,7 @@ public sealed class SemanticsTreeTests
         {
             configuration.IsBlockingSemanticsOfPreviouslyPaintedNodes = _blocksPreviousNodes;
             configuration.Label = _label;
+            configuration.TextDirection = TextDirection.Ltr;
         }
     }
 
@@ -1905,6 +1925,7 @@ public sealed class SemanticsTreeTests
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
             configuration.Label = _label;
+            configuration.TextDirection = TextDirection.Ltr;
             configuration.AddActionHandler(SemanticsActions.Tap, _onTap);
         }
     }
@@ -1940,6 +1961,7 @@ public sealed class SemanticsTreeTests
         protected override void DescribeSemanticsConfiguration(SemanticsConfiguration configuration)
         {
             configuration.Label = _label;
+            configuration.TextDirection = TextDirection.Ltr;
             configuration.AddActionHandler(_action, _handler);
         }
     }
@@ -1985,6 +2007,7 @@ public sealed class SemanticsTreeTests
         {
             configuration.IsBlockingSemanticsOfPreviouslyPaintedNodes = _blocksPreviousNodes;
             configuration.Label = _label;
+            configuration.TextDirection = TextDirection.Ltr;
         }
     }
 

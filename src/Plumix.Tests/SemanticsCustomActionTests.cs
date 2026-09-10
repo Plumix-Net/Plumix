@@ -155,10 +155,12 @@ public sealed class SemanticsCustomActionTests
         (SemanticsOwner owner, SemanticsNode _) = BuildMerged(
             new RenderSemanticsAnnotations(
                 new SemanticsProperties(label: "unknown node"),
-                child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))),
+                child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+                textDirection: TextDirection.Ltr),
             new RenderSemanticsAnnotations(
                 new SemanticsProperties(label: "unknown node sibling"),
-                child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))));
+                child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+                textDirection: TextDirection.Ltr));
 
         Assert.False(owner.PerformAction(-1, SemanticsActions.Tap));
         Assert.False(owner.PerformAction(-1, SemanticsActions.ShowOnScreen));
@@ -210,10 +212,12 @@ public sealed class SemanticsCustomActionTests
         (SemanticsOwner owner, SemanticsNode mergedNode) = BuildMerged(
             new RenderSemanticsAnnotations(
                 new SemanticsProperties(label: "lookup first"),
-                child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))),
+                child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+                textDirection: TextDirection.Ltr),
             new RenderSemanticsAnnotations(
                 new SemanticsProperties(label: "lookup second"),
-                child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10)))));
+                child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+                textDirection: TextDirection.Ltr));
 
         Assert.Same(mergedNode, owner.GetSemanticsNode(mergedNode.Id));
         Assert.Null(owner.GetSemanticsNode(-1));
@@ -225,11 +229,13 @@ public sealed class SemanticsCustomActionTests
         var first = new RenderSemanticsAnnotations(
             new SemanticsProperties(label: "rect first"),
             container: true,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+            textDirection: TextDirection.Ltr);
         var second = new RenderSemanticsAnnotations(
             new SemanticsProperties(label: "rect second"),
             container: true,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(30, 10))));
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(30, 10))),
+            textDirection: TextDirection.Ltr);
         var row = new RenderFlex(
             children: [first, second],
             direction: Axis.Horizontal,
@@ -259,7 +265,8 @@ public sealed class SemanticsCustomActionTests
                 label: "listener",
                 onTap: () => tapCount += 1),
             container: true,
-            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))));
+            child: new RenderConstrainedBox(BoxConstraints.Tight(new Size(20, 10))),
+            textDirection: TextDirection.Ltr);
         var renderView = new RenderView(new FlutterView(new Size(800, 600))) { Child = annotations };
         var pipeline = new PipelineOwner(renderView);
         pipeline.Attach(renderView);

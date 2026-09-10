@@ -349,6 +349,7 @@ public sealed class RenderEditable : RenderBox
     {
         configuration.IsSemanticBoundary = true;
         configuration.Label = _text;
+        configuration.TextDirection = _textDirection;
     }
 
     private void UpdateViewportVisibility()
