@@ -121,6 +121,25 @@ public sealed class MouseTrackerTests : IDisposable
     }
 
     [Fact]
+    public void FrameRecheck_UsesEachDevicesOwnRegisteredView()
+    {
+        using MouseTrackingHarness first = Build(
+            Padding(0, Region("A", cursor: SystemMouseCursors.Text)),
+            viewId: 1101);
+        using MouseTrackingHarness second = Build(
+            Region("B", cursor: SystemMouseCursors.Click),
+            viewId: 1102);
+        first.SendPointer(MouseTrackingHarness.Added(new Point(10, 10), device: 1, viewId: 1101));
+        second.SendPointer(MouseTrackingHarness.Added(new Point(10, 10), device: 2, viewId: 1102));
+        Assert.Equal(["enter:A", "enter:B"], _log);
+
+        _log.Clear();
+        first.Update(Padding(100, Region("A", cursor: SystemMouseCursors.Text)));
+
+        Assert.Equal(["exit:A"], _log);
+    }
+
+    [Fact]
     public void DownMoveAndUp_ProduceNoEnterOrExitWhileThePositionIsUnchanged()
     {
         using MouseTrackingHarness harness = Build(Region("a"));
@@ -405,7 +424,7 @@ public sealed class MouseTrackerTests : IDisposable
         ["kind"] = kind,
     };
 
-    private MouseTrackingHarness Build(Widget widget) => new(widget);
+    private MouseTrackingHarness Build(Widget widget, int viewId = 0) => new(widget, viewId: viewId);
 
     private Widget Region(string name, double size = 50, MouseCursor? cursor = null) => new MouseRegion(
         onEnter: _ => _log.Add($"enter:{name}"),

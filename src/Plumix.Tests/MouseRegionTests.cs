@@ -261,10 +261,12 @@ public sealed class MouseRegionTests : IDisposable
     [Fact]
     public void RenderMouseRegion_NeverForcesCompositingAndMirrorsItsChild()
     {
-        using var plain = new MouseTrackingHarness(new MouseRegion(child: new SizedBox(width: 20, height: 20)));
-        RenderMouseRegion plainRegion = Assert.IsType<RenderMouseRegion>(
-            FindDescendant<RenderMouseRegion>(plain.RenderView));
-        Assert.False(plainRegion.NeedsCompositing);
+        using (var plain = new MouseTrackingHarness(new MouseRegion(child: new SizedBox(width: 20, height: 20))))
+        {
+            RenderMouseRegion plainRegion = Assert.IsType<RenderMouseRegion>(
+                FindDescendant<RenderMouseRegion>(plain.RenderView));
+            Assert.False(plainRegion.NeedsCompositing);
+        }
 
         using var boundary = new MouseTrackingHarness(
             new MouseRegion(child: new RepaintBoundary(child: new SizedBox(width: 20, height: 20))));

@@ -1,4 +1,6 @@
+using Avalonia;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.Widgets;
 
@@ -9,14 +11,16 @@ namespace Plumix;
 
 /// <summary>
 /// The glue between the render tree and the platform: the root of the <see cref="PipelineOwner"/>
-/// tree and the registry of <see cref="RenderView"/>s that are currently on screen.
+/// tree, the registry of <see cref="RenderView"/>s that are currently on screen, and mouse tracking
+/// across those views.
 /// </summary>
 /// <remarks>
 /// <para>
 /// Flutter's <c>RendererBinding</c>, limited to what the widget layer's <c>View</c> machinery
 /// talks to: <see cref="RootPipelineOwner"/>, <see cref="RenderViews"/>, <see cref="AddRenderView"/>
-/// / <see cref="RemoveRenderView"/>, <see cref="CreateViewConfigurationFor"/> and
-/// <see cref="HandleMetricsChanged"/>. Flutter's binding also drives the frame
+/// / <see cref="RemoveRenderView"/>, <see cref="MouseTracker"/>, <see cref="HitTestInView"/>,
+/// <see cref="CreateViewConfigurationFor"/> and <see cref="HandleMetricsChanged"/>. Flutter's binding also
+/// drives the frame
 /// (<c>drawFrame</c> flushes the root owner and composites every view); Plumix's hosts do that per
 /// host, because each host renders through its own Avalonia control — see
 /// <c>docs/ai/DIVERGENCES.md</c>.
@@ -29,6 +33,8 @@ public sealed class RendererBinding
 {
     private readonly Dictionary<int, RenderView> _viewIdToRenderView = [];
     private readonly HostPipelineManifold _manifold;
+    private MouseTracker _mouseTracker = null!;
+    private bool _debugMouseTrackerUpdateScheduled;
 
     private RendererBinding()
     {
@@ -39,6 +45,7 @@ public sealed class RendererBinding
         _manifold = new HostPipelineManifold(onNeedVisualUpdate: Scheduler.EnsureVisualUpdate);
         RootPipelineOwner = CreateRootPipelineOwner();
         RootPipelineOwner.Attach(_manifold);
+        InitMouseTracker();
     }
 
     /// <summary>The ambient renderer binding.</summary>
@@ -58,6 +65,17 @@ public sealed class RendererBinding
     /// <remarks>Flutter's <c>RendererBinding.renderViews</c>.</remarks>
     public IEnumerable<RenderView> RenderViews => _viewIdToRenderView.Values;
 
+    /// <summary>Tracks the mouse annotations and cursors in every registered view.</summary>
+    /// <remarks>Flutter's <c>RendererBinding.mouseTracker</c>.</remarks>
+    public MouseTracker MouseTracker
+    {
+        get
+        {
+            EnsureMouseTrackerFrameCallback();
+            return _mouseTracker;
+        }
+    }
+
     /// <summary>
     /// Whether the pipeline owners attached to <see cref="RootPipelineOwner"/> produce semantics.
     /// </summary>
@@ -66,6 +84,15 @@ public sealed class RendererBinding
     /// platform's accessibility state or an open <c>SemanticsHandle</c> turns on.
     /// </remarks>
     public bool SemanticsEnabled => _manifold.SemanticsEnabled;
+
+    /// <summary>Replaces the mouse tracker, primarily for test bindings.</summary>
+    /// <remarks>Flutter's <c>RendererBinding.initMouseTracker</c>.</remarks>
+    public void InitMouseTracker(MouseTracker? tracker = null)
+    {
+        _mouseTracker?.Dispose();
+        _mouseTracker = tracker ?? new MouseTracker(HitTestInView);
+        EnsureMouseTrackerFrameCallback();
+    }
 
     /// <summary>Turns semantics on or off for every owner under <see cref="RootPipelineOwner"/>.</summary>
     /// <remarks>Plumix-only; see <see cref="SemanticsEnabled"/>.</remarks>
@@ -112,6 +139,22 @@ public sealed class RendererBinding
         _viewIdToRenderView.Remove(viewId);
     }
 
+    /// <summary>Hit-tests the registered view identified by <paramref name="viewId"/>.</summary>
+    /// <remarks>
+    /// Flutter's <c>RendererBinding.hitTestInView</c>. Plumix dispatches binding-level pointer work
+    /// after the render-object path instead of appending the binding as the final hit-test entry.
+    /// </remarks>
+    public HitTestResult HitTestInView(Point position, int viewId)
+    {
+        var result = new BoxHitTestResult();
+        if (_viewIdToRenderView.TryGetValue(viewId, out RenderView? renderView))
+        {
+            renderView.HitTest(result, position);
+        }
+
+        return result;
+    }
+
     /// <summary>Returns a <see cref="ViewConfiguration"/> configured for <paramref name="renderView"/>.</summary>
     /// <remarks>Flutter's <c>RendererBinding.createViewConfigurationFor</c>.</remarks>
     public ViewConfiguration CreateViewConfigurationFor(RenderView renderView)
@@ -138,6 +181,56 @@ public sealed class RendererBinding
         {
             Scheduler.EnsureVisualUpdate();
         }
+    }
+
+    /// <summary>
+    /// Queues Flutter's post-frame mouse recheck after the render trees have produced a frame.
+    /// </summary>
+    internal void ScheduleMouseTrackerUpdate()
+    {
+        if (Constants.KDebugMode && _debugMouseTrackerUpdateScheduled)
+        {
+            throw new AssertionError("A mouse tracker update is already scheduled for this frame.");
+        }
+
+        if (Constants.KDebugMode)
+        {
+            _debugMouseTrackerUpdateScheduled = true;
+        }
+
+        Scheduler.AddPostFrameCallback(
+            _ =>
+            {
+                if (Constants.KDebugMode && !_debugMouseTrackerUpdateScheduled)
+                {
+                    throw new AssertionError("The scheduled mouse tracker update was not pending.");
+                }
+
+                if (Constants.KDebugMode)
+                {
+                    _debugMouseTrackerUpdateScheduled = false;
+                }
+
+                _mouseTracker.UpdateAllDevices();
+            },
+            debugLabel: "RendererBinding.mouseTrackerUpdate");
+    }
+
+    /// <summary>Restores the tracker and its persistent frame callback after a scheduler reset.</summary>
+    internal void ResetMouseTrackerForTests()
+    {
+        _debugMouseTrackerUpdateScheduled = false;
+        InitMouseTracker();
+    }
+
+    private void EnsureMouseTrackerFrameCallback()
+    {
+        Scheduler.AddPersistentFrameCallback(HandlePersistentFrame);
+    }
+
+    private void HandlePersistentFrame(TimeSpan timestamp)
+    {
+        ScheduleMouseTrackerUpdate();
     }
 
     /// <summary>Flutter's <c>_DefaultRootPipelineOwner</c>: a root owner that refuses a root node.</summary>

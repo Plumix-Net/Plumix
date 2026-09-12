@@ -20,12 +20,13 @@ internal sealed class MouseTrackingHarness : IDisposable
     private readonly HarnessRootElement _rootElement;
     private Size _size;
 
-    public MouseTrackingHarness(Widget widget, Size? size = null)
+    public MouseTrackingHarness(Widget widget, Size? size = null, int viewId = 0)
     {
         _size = size ?? new Size(200, 200);
-        RenderView = new RenderView(new FlutterView(new Size(800, 600)));
+        RenderView = new RenderView(new FlutterView(new Size(800, 600), viewId: viewId));
         _pipeline = new PipelineOwner(RenderView);
         _pipeline.Attach(RenderView);
+        RendererBinding.Instance.AddRenderView(RenderView);
         _rootElement = new HarnessRootElement(RenderView, new Directionality(TextDirection.Ltr, child: widget));
         _rootElement.Attach(_owner);
         _owner.BuildScope(_rootElement, () => _rootElement.Mount(parent: null, newSlot: null));
@@ -73,22 +74,38 @@ internal sealed class MouseTrackingHarness : IDisposable
         _owner.FlushBuild();
     }
 
-    public void Dispose() => _rootElement.UnmountRoot();
+    public void Dispose()
+    {
+        try
+        {
+            _rootElement.UnmountRoot();
+        }
+        finally
+        {
+            RendererBinding.Instance.RemoveRenderView(RenderView);
+        }
+    }
 
-    public static PointerAddedEvent Added(Point position, int device = 1, PointerDeviceKind kind = PointerDeviceKind.Mouse)
-        => new(device, kind, position, timestampUtc: DateTime.UtcNow);
+    public static PointerAddedEvent Added(
+        Point position,
+        int device = 1,
+        PointerDeviceKind kind = PointerDeviceKind.Mouse,
+        int viewId = 0)
+        => new(device, kind, position, timestampUtc: DateTime.UtcNow) { ViewId = viewId };
 
     public static PointerRemovedEvent Removed(
         Point position,
         int device = 1,
-        PointerDeviceKind kind = PointerDeviceKind.Mouse)
-        => new(device, kind, position, timestampUtc: DateTime.UtcNow);
+        PointerDeviceKind kind = PointerDeviceKind.Mouse,
+        int viewId = 0)
+        => new(device, kind, position, timestampUtc: DateTime.UtcNow) { ViewId = viewId };
 
     public static PointerHoverEvent Hover(
         Point position,
         int device = 1,
-        PointerDeviceKind kind = PointerDeviceKind.Mouse)
-        => new(device, kind, position, PointerButtons.None, DateTime.UtcNow);
+        PointerDeviceKind kind = PointerDeviceKind.Mouse,
+        int viewId = 0)
+        => new(device, kind, position, PointerButtons.None, DateTime.UtcNow) { ViewId = viewId };
 
     private sealed class HarnessRootElement : Element, IRenderObjectHost
     {

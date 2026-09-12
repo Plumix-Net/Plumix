@@ -871,8 +871,11 @@ public sealed class MaterialScrollbarTests
         Assert.Null(RequirePainter(harness).Geometry);
     }
 
-    private static void Dispatch(WidgetRenderHarness harness, PointerEvent @event) =>
+    private static void Dispatch(WidgetRenderHarness harness, PointerEvent @event)
+    {
+        harness.RegisterForPointerEvents();
         GestureBinding.Instance.HandlePointerEvent(harness.RenderView, @event);
+    }
 
     /// <summary>
     /// Lays out and paints, delivers the queued <c>ScrollMetricsNotification</c> (which is what gives
@@ -950,6 +953,7 @@ public sealed class MaterialScrollbarTests
         private readonly BuildOwner _owner = new();
         private readonly HarnessRootElement _root;
         private readonly PipelineOwner _pipeline;
+        private bool _registeredForPointerEvents;
 
         public WidgetRenderHarness(Widget widget)
         {
@@ -964,6 +968,17 @@ public sealed class MaterialScrollbarTests
 
         public RenderView RenderView { get; }
         public Element RootElement => _root;
+
+        public void RegisterForPointerEvents()
+        {
+            if (_registeredForPointerEvents)
+            {
+                return;
+            }
+
+            RendererBinding.Instance.AddRenderView(RenderView);
+            _registeredForPointerEvents = true;
+        }
 
         public void Pump(Size size)
         {
@@ -980,7 +995,20 @@ public sealed class MaterialScrollbarTests
             _owner.FlushBuild();
         }
 
-        public void Dispose() => _root.UnmountRoot();
+        public void Dispose()
+        {
+            try
+            {
+                _root.UnmountRoot();
+            }
+            finally
+            {
+                if (_registeredForPointerEvents)
+                {
+                    RendererBinding.Instance.RemoveRenderView(RenderView);
+                }
+            }
+        }
     }
 
     private sealed class WidgetTree : IDisposable

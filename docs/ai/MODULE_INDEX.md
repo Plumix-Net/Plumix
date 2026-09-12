@@ -425,6 +425,7 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
 - Read First:
   - `src/Plumix/UI/PointerEvents.cs`
   - `src/Plumix/Gestures/GestureBinding.cs`
+  - `src/Plumix/RendererBinding.cs` (view-aware mouse hit testing and post-frame rechecks)
   - `src/Plumix/Rendering/MouseTracker.cs` (enter/exit diffing and cursor selection)
   - `src/Plumix/UI/MouseCursor.cs`
   - `src/Plumix/Widgets/MouseRegion.cs`

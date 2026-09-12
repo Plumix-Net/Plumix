@@ -668,10 +668,6 @@ public class PlumixHost : Control
             FlushSemanticsAndNotify();
         }
 
-        // Dart's `RendererBinding._handlePersistentFrameCallback` schedules exactly one device
-        // update after every produced frame, so a region that moved, appeared or disappeared during
-        // it still produces its enter and exit events.
-        _gestureBinding.ScheduleMouseTrackerUpdate();
     }
 
     public bool PerformSemanticsAction(int nodeId, SemanticsActions action)

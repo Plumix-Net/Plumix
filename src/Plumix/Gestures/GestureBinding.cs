@@ -15,22 +15,18 @@ public sealed class GestureBinding
 
     private readonly Dictionary<int, HitTestResult> _hitTests = [];
     private readonly Dictionary<int, Point> _lastPositions = [];
-    private RenderView? _hitTestRoot;
-    private bool _mouseTrackerUpdateScheduled;
 
     private GestureBinding()
     {
-        InitMouseTracker();
     }
 
     /// <summary>
-    /// Creates the mouse tracker over this binding's hit-test entry point. Dart's
-    /// `RendererBinding.initMouseTracker`; a test may pass its own tracker.
+    /// Compatibility forward to Dart's <c>RendererBinding.initMouseTracker</c>; a test may pass its
+    /// own tracker.
     /// </summary>
     public void InitMouseTracker(MouseTracker? tracker = null)
     {
-        MouseTracker?.Dispose();
-        MouseTracker = tracker ?? new MouseTracker(HitTestInView);
+        RendererBinding.Instance.InitMouseTracker(tracker);
     }
 
     public PointerRouter PointerRouter { get; } = new();
@@ -44,18 +40,14 @@ public sealed class GestureBinding
     public PointerSignalResolver PointerSignalResolver { get; } = new();
 
     /// <summary>
-    /// Tracks which annotated regions each mouse is over. Dart's `RendererBinding.mouseTracker`;
-    /// Plumix has no renderer binding, so the single hit-testing entry point owns it.
+    /// Compatibility forward to Dart's <c>RendererBinding.mouseTracker</c>.
     /// </summary>
-    public MouseTracker MouseTracker { get; private set; } = null!;
+    public MouseTracker MouseTracker => RendererBinding.Instance.MouseTracker;
 
     public void HandlePointerEvent(RenderView root, PointerEvent @event)
     {
         using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
         ArgumentNullException.ThrowIfNull(root);
-        // Dart resolves the view from `PointerEvent.viewId`; Plumix's hosts pass the root they own,
-        // so the tracker's own hit tests (which run outside an event) reuse the last one seen.
-        _hitTestRoot = root;
         PointerEventReceived?.Invoke(@event);
         var eventWithDelta = AttachDelta(@event);
         HitTestResult? hitTestResult = null;
@@ -144,43 +136,24 @@ public sealed class GestureBinding
     /// </summary>
     public void ScheduleMouseTrackerUpdate()
     {
-        // Dart asserts that no update is pending, because one `RendererBinding` produces one frame.
-        // Plumix's hosts share this binding, so several of them may report the same frame; the first
-        // one schedules the single update and the rest are no-ops.
-        if (_mouseTrackerUpdateScheduled)
-        {
-            return;
-        }
-
-        _mouseTrackerUpdateScheduled = true;
-        Scheduler.AddPostFrameCallback(
-            _ =>
-            {
-                _mouseTrackerUpdateScheduled = false;
-                MouseTracker.UpdateAllDevices();
-            });
+        RendererBinding.Instance.ScheduleMouseTrackerUpdate();
     }
 
     /// <summary>
-    /// Hit-tests at <paramref name="position"/> for the view the last pointer event came from.
-    /// Dart's `RendererBinding.hitTestInView`.
+    /// Compatibility forward to Dart's <c>RendererBinding.hitTestInView</c>.
     /// </summary>
     public HitTestResult HitTestInView(Point position, int viewId)
     {
-        var result = new BoxHitTestResult();
-        _hitTestRoot?.HitTest(result, position);
-        return result;
+        return RendererBinding.Instance.HitTestInView(position, viewId);
     }
 
     internal void ResetForTests()
     {
         _hitTests.Clear();
         _lastPositions.Clear();
-        _hitTestRoot = null;
-        _mouseTrackerUpdateScheduled = false;
         PointerRouter.Reset();
         GestureArena.Reset();
-        InitMouseTracker();
+        RendererBinding.Instance.ResetMouseTrackerForTests();
     }
 
     private PointerEvent AttachDelta(PointerEvent @event)

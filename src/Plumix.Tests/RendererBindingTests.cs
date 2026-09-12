@@ -1,5 +1,6 @@
 using Avalonia;
 using Plumix.Foundation;
+using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.Widgets;
 using Xunit;
@@ -80,6 +81,66 @@ public sealed class RendererBindingTests
         finally
         {
             binding.RemoveRenderView(renderView);
+        }
+    }
+
+    [Fact]
+    public void HitTestInView_ReachesOnlyTheRegisteredViewWithTheMatchingId()
+    {
+        var firstTarget = new RenderPointerListener(behavior: HitTestBehavior.Opaque);
+        var secondTarget = new RenderPointerListener(behavior: HitTestBehavior.Opaque);
+        var firstView = new RenderView(
+            new FlutterView(new Size(40, 40), viewId: 1011),
+            child: firstTarget);
+        var secondView = new RenderView(
+            new FlutterView(new Size(40, 40), viewId: 1012),
+            child: secondTarget);
+        var firstOwner = new PipelineOwner(firstView);
+        var secondOwner = new PipelineOwner(secondView);
+        RendererBinding binding = RendererBinding.Instance;
+        firstOwner.Attach(firstView);
+        secondOwner.Attach(secondView);
+        binding.AddRenderView(firstView);
+        binding.AddRenderView(secondView);
+        try
+        {
+            firstOwner.FlushLayout(new Size(40, 40));
+            secondOwner.FlushLayout(new Size(40, 40));
+
+            HitTestResult firstResult = binding.HitTestInView(new Point(10, 10), 1011);
+            HitTestResult secondResult = binding.HitTestInView(new Point(10, 10), 1012);
+            HitTestResult unknownResult = binding.HitTestInView(new Point(10, 10), 1013);
+
+            Assert.Contains(firstResult.Path, entry => ReferenceEquals(entry.Target, firstTarget));
+            Assert.DoesNotContain(firstResult.Path, entry => ReferenceEquals(entry.Target, secondTarget));
+            Assert.Contains(secondResult.Path, entry => ReferenceEquals(entry.Target, secondTarget));
+            Assert.DoesNotContain(secondResult.Path, entry => ReferenceEquals(entry.Target, firstTarget));
+            Assert.Empty(unknownResult.Path);
+        }
+        finally
+        {
+            binding.RemoveRenderView(firstView);
+            binding.RemoveRenderView(secondView);
+            firstOwner.RootNode = null;
+            secondOwner.RootNode = null;
+        }
+    }
+
+    [DebugOnlyFact]
+    public void ScheduleMouseTrackerUpdate_RejectsASecondUpdateInTheSameFrame()
+    {
+        Scheduler.ResetForTests();
+        GestureBinding.Instance.ResetForTests();
+        try
+        {
+            GestureBinding.Instance.ScheduleMouseTrackerUpdate();
+
+            Assert.Throws<AssertionError>(() => GestureBinding.Instance.ScheduleMouseTrackerUpdate());
+        }
+        finally
+        {
+            Scheduler.ResetForTests();
+            GestureBinding.Instance.ResetForTests();
         }
     }
 
