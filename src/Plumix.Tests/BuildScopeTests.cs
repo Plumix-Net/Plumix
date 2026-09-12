@@ -148,6 +148,54 @@ public sealed class BuildScopeTests
     }
 
     [Fact]
+    public void BuildScope_ReportsAThrowingDirtyElementAndContinuesTheFlush()
+    {
+        var owner = new BuildOwner();
+        ThrowAfterBuildElement? failing = null;
+        ProbeState? later = null;
+        var root = new TestRootElement(new ThrowAfterBuild(
+            element => failing = element,
+            new Probe("later", state => later = state)));
+        Mount(root, owner);
+
+        var failure = new InvalidOperationException("dirty rebuild failed");
+        failing!.Failure = failure;
+        failing.MarkNeedsBuild();
+        later!.Bump();
+
+        var reported = new List<FlutterErrorDetails>();
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = reported.Add;
+        try
+        {
+            owner.FlushBuild();
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
+
+        FlutterErrorDetails details = Assert.Single(reported);
+        Assert.Same(failure, details.Exception);
+        Assert.Equal("widgets library", details.Library);
+        Assert.Equal("while rebuilding dirty elements", details.Context!.ToString());
+
+        List<DiagnosticsNode> information = [.. details.InformationCollector!()];
+        if (Constants.KDebugMode)
+        {
+            var creator = Assert.IsType<DiagnosticsDebugCreator>(information[0]);
+            Assert.Same(failing, Assert.IsType<DebugCreator>(creator.Value).Element);
+        }
+
+        Assert.Contains(
+            information,
+            node => node.ToString().Contains("The element being rebuilt at the time was", StringComparison.Ordinal));
+        Assert.Equal(2, later.Builds);
+        Assert.False(later.Element.Dirty);
+        Assert.Empty(owner.RootBuildScope.DirtyElements);
+    }
+
+    [Fact]
     public void BuildScope_WithNoCallbackAndAnEmptyDirtyList_ReturnsWithoutBuilding()
     {
         var owner = new BuildOwner();
@@ -683,6 +731,39 @@ public sealed class BuildScopeTests
         public override BuildScope BuildScope => ((Scoped)Widget).Scope;
 
         protected override Widget Build() => ((Scoped)Widget).Child;
+    }
+
+    private sealed class ThrowAfterBuild(
+        Action<ThrowAfterBuildElement> report,
+        Widget child,
+        Key? key = null) : Widget(key)
+    {
+        public Widget Child { get; } = child;
+
+        public override Element CreateElement()
+        {
+            var element = new ThrowAfterBuildElement(this);
+            report(element);
+            return element;
+        }
+    }
+
+    private sealed class ThrowAfterBuildElement(ThrowAfterBuild widget) : ComponentElement(widget)
+    {
+        public Exception? Failure { get; set; }
+
+        protected override Widget Build() => ((ThrowAfterBuild)Widget).Child;
+
+        protected override void PerformRebuild()
+        {
+            base.PerformRebuild();
+            if (Failure is not null)
+            {
+                Exception failure = Failure;
+                Failure = null;
+                throw failure;
+            }
+        }
     }
 
     private sealed class Pair(Widget first, Widget second, Key? key = null) : StatelessWidget(key)

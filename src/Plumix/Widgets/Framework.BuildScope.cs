@@ -1,4 +1,5 @@
 using Plumix.Foundation;
+using Plumix.Rendering;
 
 // Dart parity source: flutter/packages/flutter/lib/src/widgets/framework.dart
 
@@ -109,11 +110,6 @@ public sealed class BuildScope
     }
 
     /// <summary>Dart's <c>BuildScope._tryRebuild</c>.</summary>
-    /// <remarks>
-    /// Dart wraps the rebuild in a try/catch that funnels the failure through <c>_reportException</c>.
-    /// Plumix lets it propagate: <see cref="FlutterError.ReportError"/> is a no-op when nothing
-    /// installed a handler, so catching here would swallow build failures instead of surfacing them.
-    /// </remarks>
     private void TryRebuild(Element element)
     {
         if (!ReferenceEquals(element.BuildScope, this))
@@ -121,7 +117,27 @@ public sealed class BuildScope
             throw new AssertionError("An element can only be rebuilt by its own build scope.");
         }
 
-        element.Rebuild();
+        try
+        {
+            element.Rebuild();
+        }
+        catch (Exception exception)
+        {
+            FrameworkErrors.ReportException(
+                new ErrorDescription("while rebuilding dirty elements"),
+                exception,
+                informationCollector: () =>
+                {
+                    var information = new List<DiagnosticsNode>();
+                    if (Constants.KDebugMode)
+                    {
+                        information.Add(new DiagnosticsDebugCreator(new DebugCreator(element)));
+                    }
+
+                    information.Add(element.DescribeElement("The element being rebuilt at the time was"));
+                    return information;
+                });
+        }
     }
 
     /// <summary>Dart's <c>BuildScope._debugAssertElementInScope</c>.</summary>

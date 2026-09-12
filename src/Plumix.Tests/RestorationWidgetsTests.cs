@@ -632,6 +632,7 @@ public sealed class RestorationWidgetsTests : IDisposable
 
         manager.RespondWith(enabled: true, data: RawRestorationData.Build());
 
+        using RenderErrorRethrowScope renderErrors = RenderErrorRethrowScope.Enter();
         Assert.Throws<InvalidOperationException>(harness.FlushBuild);
     }
 }
