@@ -248,10 +248,13 @@ public sealed class ScrollInfrastructureTests
             slivers: [],
             controller: controller,
             primary: true));
-        Assert.Throws<ArgumentException>(() => new SingleChildScrollView(
-            child: new SizedBox(),
-            controller: controller,
-            primary: true));
+        if (Plumix.Foundation.Constants.KDebugMode)
+        {
+            Assert.Throws<ArgumentException>(() => new SingleChildScrollView(
+                child: new SizedBox(),
+                controller: controller,
+                primary: true));
+        }
         Assert.Throws<ArgumentException>(() => new ListView(
             controller: controller,
             primary: true));

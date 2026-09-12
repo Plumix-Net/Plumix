@@ -1,3 +1,4 @@
+using System.Linq;
 using Avalonia;
 using Avalonia.Media;
 using Plumix.Rendering;
@@ -22,6 +23,21 @@ public sealed class ScrollPhysicsDemoPage : StatelessWidget
                     + "clamping physics stop at the edge, never-scrollable ignores the drag.",
                     fontSize: 14,
                     color: Colors.DimGray),
+                new Text("Single child: horizontal strip with directional padding", fontSize: 14),
+                new SizedBox(
+                    height: 64,
+                    child: new SingleChildScrollView(
+                        scrollDirection: Axis.Horizontal,
+                        padding: EdgeInsetsGeometry.DirectionalOnly(start: 24, end: 8),
+                        clipBehavior: Plumix.UI.Clip.AntiAlias,
+                        child: new Row(
+                            spacing: 8,
+                            children: Enumerable.Range(1, 12).Select(index => (Widget)new Container(
+                                width: 100,
+                                height: 56,
+                                color: Color.Parse("#FFE3F2FD"),
+                                alignment: Alignment.Center,
+                                child: new Text($"item #{index}", fontSize: 14))).ToArray()))),
                 new Expanded(
                     child: new Row(
                         crossAxisAlignment: CrossAxisAlignment.Stretch,

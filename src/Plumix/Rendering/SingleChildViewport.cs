@@ -1,4 +1,5 @@
 using Avalonia;
+using Plumix.Foundation;
 using Plumix.UI;
 
 namespace Plumix.Rendering;
@@ -8,15 +9,18 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
 {
     private AxisDirection _axisDirection;
     private ViewportOffset _offset;
+    private Clip _clipBehavior;
 
     public RenderSingleChildViewport(
         AxisDirection axisDirection,
         ViewportOffset offset,
-        RenderBox? child = null)
+        RenderBox? child = null,
+        Clip clipBehavior = Clip.HardEdge)
     {
         ArgumentNullException.ThrowIfNull(offset);
         _axisDirection = axisDirection;
         _offset = offset;
+        _clipBehavior = clipBehavior;
         Child = child;
     }
 
@@ -41,17 +45,37 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
             if (ReferenceEquals(_offset, value)) return;
             if (Owner != null)
             {
-                _offset.RemoveListener(MarkNeedsLayout);
+                _offset.RemoveListener(HasScrolled);
             }
 
             _offset = value;
             if (Owner != null)
             {
-                _offset.AddListener(MarkNeedsLayout);
+                _offset.AddListener(HasScrolled);
             }
 
             MarkNeedsLayout();
         }
+    }
+
+    public Clip ClipBehavior
+    {
+        get => _clipBehavior;
+        set
+        {
+            if (_clipBehavior == value) return;
+            _clipBehavior = value;
+            MarkNeedsPaint();
+            MarkNeedsSemanticsUpdate();
+        }
+    }
+
+    public override bool IsRepaintBoundary => true;
+
+    private void HasScrolled()
+    {
+        MarkNeedsPaint();
+        MarkNeedsSemanticsUpdate();
     }
 
     /// <summary>The current scroll offset, in pixels.</summary>
@@ -63,12 +87,12 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
     protected override void OnAttach()
     {
         base.OnAttach();
-        _offset.AddListener(MarkNeedsLayout);
+        _offset.AddListener(HasScrolled);
     }
 
     protected override void OnDetach()
     {
-        _offset.RemoveListener(MarkNeedsLayout);
+        _offset.RemoveListener(HasScrolled);
         base.OnDetach();
     }
 
@@ -170,27 +194,43 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         base.ShowOnScreen(rect: revealed, duration: duration, curve: curve);
     }
 
+    private BoxConstraints GetInnerConstraints(BoxConstraints constraints) => Axis == Axis.Horizontal
+        ? new BoxConstraints(MinHeight: constraints.MinHeight, MaxHeight: constraints.MaxHeight)
+        : new BoxConstraints(MinWidth: constraints.MinWidth, MaxWidth: constraints.MaxWidth);
+
+    protected override Size ComputeDryLayout(BoxConstraints constraints) => Child is null
+        ? constraints.Smallest
+        : constraints.Constrain(Child.GetDryLayout(GetInnerConstraints(constraints)));
+
+    protected override double? ComputeDryBaseline(BoxConstraints constraints, TextBaseline baseline) => null;
+
     protected override void PerformLayout()
     {
         if (Child is null)
         {
-            Size = Constraints.Constrain(new Size());
+            Size = Constraints.Smallest;
             MaxScrollExtent = 0;
-            Offset.ApplyViewportDimension(MainExtent(Size));
-            Offset.ApplyContentDimensions(0, 0);
-            return;
+        }
+        else
+        {
+            Child.Layout(GetInnerConstraints(Constraints), parentUsesSize: true);
+            Size = Constraints.Constrain(Child.Size);
+            MaxScrollExtent = Math.Max(0, MainExtent(Child.Size) - MainExtent(Size));
         }
 
-        var childConstraints = Axis == Axis.Horizontal
-            ? new BoxConstraints(MinHeight: Constraints.MinHeight, MaxHeight: Constraints.MaxHeight)
-            : new BoxConstraints(MinWidth: Constraints.MinWidth, MaxWidth: Constraints.MaxWidth);
-        Child.Layout(childConstraints, parentUsesSize: true);
-        Size = Constraints.Constrain(Child.Size);
+        if (Offset.HasPixels)
+        {
+            if (Offset.Pixels > MaxScrollExtent)
+            {
+                Offset.CorrectBy(MaxScrollExtent - Offset.Pixels);
+            }
+            else if (Offset.Pixels < 0)
+            {
+                Offset.CorrectBy(-Offset.Pixels);
+            }
+        }
 
-        double viewportExtent = MainExtent(Size);
-        double childExtent = MainExtent(Child.Size);
-        MaxScrollExtent = Math.Max(0, childExtent - viewportExtent);
-        Offset.ApplyViewportDimension(viewportExtent);
+        Offset.ApplyViewportDimension(MainExtent(Size));
         Offset.ApplyContentDimensions(0, MaxScrollExtent);
     }
 
@@ -203,17 +243,41 @@ public sealed class RenderSingleChildViewport : RenderProxyBox, IRenderAbstractV
         base.Dispose();
     }
 
+    private bool ShouldClipAtPaintOffset(Point paintOffset) => ClipBehavior != Clip.None
+        && Child is { } child
+        && (paintOffset.X < 0 || paintOffset.Y < 0
+            || paintOffset.X + child.Size.Width > Size.Width
+            || paintOffset.Y + child.Size.Height > Size.Height);
+
+    protected override Rect? DescribeApproximatePaintClip(RenderObject? child) =>
+        child != null && ShouldClipAtPaintOffset(PaintOffset) ? new Rect(Size) : null;
+
     public override void Paint(PaintingContext context, Point offset)
     {
-        RenderBox? child = Child;
-        if (child is null || Size.Width <= 0 || Size.Height <= 0) return;
-        _clipRectLayer.Layer = context.PushClipRect(
-            NeedsCompositing,
-            offset,
-            new Rect(new Point(0, 0), Size),
-            (clippedContext, clippedOffset) =>
-                clippedContext.PaintChild(child, clippedOffset + PaintOffset),
-            oldLayer: _clipRectLayer.Layer);
+        if (Child is not { } child) return;
+        Point paintOffset = PaintOffset;
+        void PaintContents(PaintingContext ctx, Point point) => ctx.PaintChild(child, point + paintOffset);
+        if (ShouldClipAtPaintOffset(paintOffset))
+        {
+            _clipRectLayer.Layer = context.PushClipRect(
+                NeedsCompositing,
+                offset,
+                new Rect(Size),
+                PaintContents,
+                clipBehavior: ClipBehavior,
+                oldLayer: _clipRectLayer.Layer);
+        }
+        else
+        {
+            _clipRectLayer.Layer = null;
+            PaintContents(context, offset);
+        }
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<Point>("offset", PaintOffset));
     }
 
     /// <summary>Dart's <c>_RenderSingleChildViewport._paintOffset</c>: the child is shifted by the

@@ -35,6 +35,12 @@ Rules:
 
 | There is no `BindingBase` service-extension registry (`registerServiceExtension`/`registerNumericServiceExtension`) and no `postEvent`, so `SchedulerBinding.initServiceExtensions`' `ext.flutter.timeDilation` and its `Flutter.Frame` timing event have no counterpart even though `Scheduler.TimeDilation` and the timings callbacks now exist. | `src/Plumix/Scheduler.cs`, `src/Plumix/Foundation` (no `Binding.cs`) vs `foundation/binding.dart`, `scheduler/binding.dart` (372, 1378), `scheduler/service_extensions.dart` | Add a VM-service-shaped extension registry and a `PostEvent` sink, then register `timeDilation` and post `Flutter.Frame` from a `!kReleaseMode` timings callback the way `initInstances` does. |
 
+## Pending runtime verification
+
+| Item | Where | Next step |
+| --- | --- | --- |
+| `SingleChildScrollView` desktop visual verification remains open: the sample enters the native event loop, but the UI tool cannot attach to its window. | `src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`, `dart_sample/lib/demos/general/scroll_physics_demo_page.dart` | Open Scroll physics in an interactive desktop session and verify the horizontal strip, clipping and directional padding; framework tests and Dart analysis pass. |
+
 ## Host-level gaps (platform adapters, `src/Plumix/FlutterHost.cs` and per-host projects)
 
 | Item | Where | Next step |

@@ -1,33 +1,25 @@
-using Avalonia;
 using Plumix.Foundation;
 using Plumix.Gestures;
 using Plumix.Rendering;
 using Plumix.UI;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/single_child_scroll_view.dart (adapted)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/single_child_scroll_view.dart
 
 namespace Plumix.Widgets;
 
 /// <summary>
 /// A box in which a single widget can be scrolled.
 /// </summary>
-/// <remarks>
-/// Adapted: the widget composes the <see cref="Scrollable"/>/<see cref="SingleChildViewport"/> pair
-/// the way Flutter does, but resolves its primary controller through
-/// <see cref="PrimaryScrollController.ShouldInherit"/> at build time rather than fixing
-/// <c>primary</c> in the constructor. See `docs/ai/DIVERGENCES.md`.
-/// </remarks>
 public sealed class SingleChildScrollView : StatelessWidget
 {
     public SingleChildScrollView(
-        Widget child,
+        Widget? child = null,
         Axis scrollDirection = Axis.Vertical,
         bool reverse = false,
         ScrollController? controller = null,
         bool? primary = null,
         ScrollPhysics? physics = null,
-        ScrollBehavior? scrollBehavior = null,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         ScrollViewKeyboardDismissBehavior? keyboardDismissBehavior = null,
         DragStartBehavior dragStartBehavior = DragStartBehavior.Start,
         string? restorationId = null,
@@ -35,7 +27,7 @@ public sealed class SingleChildScrollView : StatelessWidget
         HitTestBehavior hitTestBehavior = HitTestBehavior.Opaque,
         Key? key = null) : base(key)
     {
-        if (primary == true && controller != null)
+        if (Constants.KDebugMode && primary == true && controller != null)
         {
             throw new ArgumentException("Primary scroll views cannot be given an explicit controller.");
         }
@@ -46,7 +38,6 @@ public sealed class SingleChildScrollView : StatelessWidget
         Controller = controller;
         Primary = primary;
         Physics = physics;
-        ScrollBehavior = scrollBehavior;
         Padding = padding;
         KeyboardDismissBehavior = keyboardDismissBehavior;
         DragStartBehavior = dragStartBehavior;
@@ -55,7 +46,7 @@ public sealed class SingleChildScrollView : StatelessWidget
         HitTestBehavior = hitTestBehavior;
     }
 
-    public Widget Child { get; }
+    public Widget? Child { get; }
 
     public Axis ScrollDirection { get; }
 
@@ -67,9 +58,7 @@ public sealed class SingleChildScrollView : StatelessWidget
 
     public ScrollPhysics? Physics { get; }
 
-    public ScrollBehavior? ScrollBehavior { get; }
-
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     public ScrollViewKeyboardDismissBehavior? KeyboardDismissBehavior { get; }
 
@@ -87,7 +76,7 @@ public sealed class SingleChildScrollView : StatelessWidget
             context,
             ScrollDirection,
             Reverse);
-        Widget contents = Child;
+        Widget? contents = Child;
         if (Padding is { } padding)
         {
             contents = new Padding(padding, contents);
@@ -105,18 +94,17 @@ public sealed class SingleChildScrollView : StatelessWidget
             axisDirection: axisDirection,
             controller: scrollController,
             physics: Physics,
-            scrollBehavior: ScrollBehavior,
             restorationId: RestorationId,
             clipBehavior: ClipBehavior,
             hitTestBehavior: HitTestBehavior,
             viewportBuilder: (viewportContext, offset) => new SingleChildViewport(
                 child: contents,
                 axisDirection: axisDirection,
-                offset: offset));
+                offset: offset,
+                clipBehavior: ClipBehavior));
 
         ScrollViewKeyboardDismissBehavior effectiveKeyboardDismissBehavior =
             KeyboardDismissBehavior
-            ?? ScrollBehavior?.GetKeyboardDismissBehavior(context)
             ?? ScrollConfiguration.Of(context).GetKeyboardDismissBehavior(context);
         if (effectiveKeyboardDismissBehavior == ScrollViewKeyboardDismissBehavior.OnDrag)
         {
@@ -146,27 +134,48 @@ public sealed class SingleChildScrollView : StatelessWidget
 internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
 {
     public SingleChildViewport(
-        Widget child,
+        Widget? child,
         AxisDirection axisDirection,
-        ViewportOffset offset) : base(child)
+        ViewportOffset offset,
+        Clip clipBehavior) : base(child)
     {
         AxisDirection = axisDirection;
         Offset = offset;
+        ClipBehavior = clipBehavior;
     }
 
     public AxisDirection AxisDirection { get; }
 
     public ViewportOffset Offset { get; }
 
+    public Clip ClipBehavior { get; }
+
+    public override Element CreateElement() => new SingleChildViewportElement(this);
+
     public override RenderObject CreateRenderObject(BuildContext context) => new RenderSingleChildViewport(
         axisDirection: AxisDirection,
-        offset: Offset);
+        offset: Offset,
+        clipBehavior: ClipBehavior);
 
     public override void UpdateRenderObject(BuildContext context, RenderObject renderObject)
     {
         var viewport = (RenderSingleChildViewport)renderObject;
         viewport.AxisDirection = AxisDirection;
         viewport.Offset = Offset;
+        viewport.ClipBehavior = ClipBehavior;
     }
 }
 
+internal sealed class SingleChildViewportElement(SingleChildViewport widget)
+    : SingleChildRenderObjectElement(widget), INotificationListener
+{
+    bool INotificationListener.OnNotification(Notification notification)
+    {
+        if (notification is IViewportNotification viewportNotification)
+        {
+            viewportNotification.IncrementDepth();
+        }
+
+        return false;
+    }
+}
