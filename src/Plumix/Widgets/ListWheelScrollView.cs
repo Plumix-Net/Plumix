@@ -896,7 +896,7 @@ internal sealed class FixedExtentScrollable : Scrollable
 internal sealed class FixedExtentScrollableState : Scrollable.ScrollableState
 {
     /// <summary>The item extent of the <see cref="FixedExtentScrollable"/> this state belongs to.</summary>
-    public double ItemExtent => ((FixedExtentScrollable)Element.Widget).ItemExtent;
+    public double ItemExtent => ((FixedExtentScrollable)StateWidget).ItemExtent;
 }
 
 /// <summary>

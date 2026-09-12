@@ -328,7 +328,7 @@ public class Scrollable : StatefulWidget
         private IScrollHoldController? _hold;
         private IDrag? _drag;
 
-        private protected Scrollable CurrentWidget => (Scrollable)Element.Widget;
+        private protected Scrollable CurrentWidget => (Scrollable)StateWidget;
 
         /// <summary>The ambient scroll behavior this scrollable resolved.</summary>
         private protected ScrollBehavior Configuration => _configuration;

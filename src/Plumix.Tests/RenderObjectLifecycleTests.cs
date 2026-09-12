@@ -238,18 +238,22 @@ public sealed class RenderObjectLifecycleTests
 
     private sealed class TrackingRenderObjectWidget : LeafRenderObjectWidget
     {
+        private BuildContext _context = null!;
         public RenderObject? CreatedRenderObject { get; private set; }
         public bool DidUnmountCalled { get; private set; }
         public bool WasDisposedDuringDidUnmount { get; private set; }
 
         public override RenderObject CreateRenderObject(BuildContext context)
         {
+            _context = context;
             CreatedRenderObject = new TestRenderBox();
             return CreatedRenderObject;
         }
 
         public override void DidUnmountRenderObject(RenderObject renderObject)
         {
+            Assert.False(_context.Mounted);
+            Assert.Throws<InvalidOperationException>(() => _context.Widget);
             DidUnmountCalled = true;
             WasDisposedDuringDidUnmount = renderObject.DebugDisposed;
         }

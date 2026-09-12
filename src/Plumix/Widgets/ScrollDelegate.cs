@@ -459,7 +459,7 @@ internal sealed class SelectionKeepAlive : StatefulWidget
         private ISelectionRegistrar? _registrar;
         private bool _wantKeepAlive;
 
-        private SelectionKeepAlive CurrentWidget => (SelectionKeepAlive)Element.Widget;
+        private SelectionKeepAlive CurrentWidget => (SelectionKeepAlive)StateWidget;
 
         protected override bool WantKeepAlive => _wantKeepAlive;
 

@@ -685,7 +685,7 @@ public sealed class RawGestureDetectorState : State
     internal IReadOnlyDictionary<Type, GestureRecognizer> Recognizers =>
         _recognizers ?? throw new InvalidOperationException("The RawGestureDetectorState is disposed.");
 
-    private RawGestureDetector CurrentWidget => (RawGestureDetector)Element.Widget;
+    private RawGestureDetector CurrentWidget => (RawGestureDetector)StateWidget;
 
     /// <summary>Dart's `RawGestureDetectorState._defaultBehavior`.</summary>
     public HitTestBehavior DefaultBehavior =>

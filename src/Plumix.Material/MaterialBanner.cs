@@ -142,7 +142,7 @@ public sealed class MaterialBanner : StatefulWidget
         private CurvedAnimation? _heightAnimation;
         private CurvedAnimation? _slideOutCurvedAnimation;
 
-        private MaterialBanner CurrentWidget => (MaterialBanner)Element.Widget;
+        private MaterialBanner CurrentWidget => (MaterialBanner)StateWidget;
 
         public override void InitState()
         {

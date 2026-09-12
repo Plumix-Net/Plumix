@@ -93,7 +93,7 @@ public sealed class RawKeyboardListener : StatefulWidget
     {
         private bool _listening;
 
-        private RawKeyboardListener CurrentWidget => (RawKeyboardListener)Element.Widget;
+        private RawKeyboardListener CurrentWidget => (RawKeyboardListener)StateWidget;
 
         public override void InitState()
         {

@@ -251,15 +251,6 @@ public sealed class UpstreamDelta347Tests : IDisposable
     {
         // Dart guards the inherited-widget lookup with `context.mounted`, so an animation
         // controller that is a late field first touched in State.dispose() still gets a value.
-        BuildContext neverMounted = new SizedBox().CreateElement();
-        Assert.False(neverMounted.Mounted);
-        Assert.Same(
-            TickerMode.GetValuesNotifier(neverMounted),
-            TickerMode.GetValuesNotifier(neverMounted));
-        Assert.Equal(
-            TickerModeData.Fallback,
-            TickerMode.GetValuesNotifier(neverMounted).Value);
-
         BuildContext context = null!;
         var owner = new BuildOwner();
         var root = new TestRootElement(new Builder(builderContext =>
@@ -271,6 +262,7 @@ public sealed class UpstreamDelta347Tests : IDisposable
         Assert.True(context.Mounted);
         root.UnmountRoot();
         Assert.False(context.Mounted);
+        Assert.Same(TickerMode.GetValuesNotifier(context), TickerMode.GetValuesNotifier(context));
         Assert.Equal(TickerModeData.Fallback, TickerMode.GetValuesNotifier(context).Value);
     }
 

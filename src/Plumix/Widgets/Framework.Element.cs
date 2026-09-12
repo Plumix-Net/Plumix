@@ -180,6 +180,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
     private static int _nextElementId;
 
     private ElementLifecycleState _lifecycleState = ElementLifecycleState.Initial;
+    private Widget? _widget;
     private HashSet<InheritedElement>? _dependencies;
     private HashSet<Element>? _debugForgottenChildrenWithGlobalKey;
     private bool _hadUnsatisfiedDependencies;
@@ -194,7 +195,14 @@ public abstract class Element : DiagnosticableTree, BuildContext
     /// </summary>
     internal ImmutableDictionary<Type, InheritedElement>? InheritedElements { get; private protected set; }
 
-    public Widget Widget { get; private set; }
+    /// <summary>The current configuration; reading it after unmount throws.</summary>
+    /// <remarks>Flutter's <c>Element.widget</c>.</remarks>
+    public Widget Widget
+    {
+        get => _widget ?? throw new InvalidOperationException(
+            "This element has been unmounted and no longer has a widget.");
+        private set => _widget = value;
+    }
     public Element? Parent { get; private set; }
     private int _depth;
 
@@ -294,8 +302,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
     public bool IsActive => _lifecycleState == ElementLifecycleState.Active;
     internal bool IsInactive => _lifecycleState == ElementLifecycleState.Inactive;
     internal ElementLifecycleState LifecycleState => _lifecycleState;
-    public bool Mounted =>
-        _lifecycleState is ElementLifecycleState.Active or ElementLifecycleState.Inactive;
+    public bool Mounted => _widget is not null;
 
     /// <summary>Whether this element is currently running <see cref="PerformRebuild"/>.</summary>
     /// <remarks>Flutter's <c>Element.debugDoingBuild</c>.</remarks>
@@ -515,6 +522,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
         Owner?.UnregisterElement(this);
 
+        _widget = null;
         _dependencies = null;
         _hadUnsatisfiedDependencies = false;
 
@@ -1387,7 +1395,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
 
     /// <inheritdoc />
     public override string ToStringShort() =>
-        DebugIsDefunct ? $"{Diagnostics.DescribeIdentity(this)}(DEFUNCT)" : Widget.ToStringShort();
+        _widget?.ToStringShort() ?? $"{Diagnostics.DescribeIdentity(this)}(DEFUNCT)";
 
     /// <inheritdoc />
     public override DiagnosticsNode ToDiagnosticsNode(string? name = null, DiagnosticsTreeStyle? style = null)
@@ -1403,9 +1411,7 @@ public abstract class Element : DiagnosticableTree, BuildContext
             properties.Add(new ObjectFlagProperty<int>("depth", Depth, ifNull: "no depth"));
         }
 
-        // Dart nulls out `Element._widget` in unmount(); Plumix keeps the field, so the defunct
-        // state is what stands in for "no widget" here and in ToStringShort.
-        Widget? widget = DebugIsDefunct ? null : Widget;
+        Widget? widget = _widget;
         properties.Add(new ObjectFlagProperty<Widget>("widget", widget, ifNull: "no widget"));
         properties.Add(new DiagnosticsProperty<Key>(
             "key",

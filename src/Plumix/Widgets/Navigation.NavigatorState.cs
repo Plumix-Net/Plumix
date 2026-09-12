@@ -35,7 +35,7 @@ public sealed partial class NavigatorState : RestorationState
     /// <summary>The focus node the navigator installs above its overlay; routes focus its enclosing scope.</summary>
     public FocusNode FocusNode { get; } = new();
 
-    internal Navigator NavigatorWidget => (Navigator)Element.Widget;
+    internal Navigator NavigatorWidget => (Navigator)StateWidget;
 
     private Navigator CurrentWidget => NavigatorWidget;
 

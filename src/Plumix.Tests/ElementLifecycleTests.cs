@@ -472,7 +472,7 @@ public sealed class ElementLifecycleTests
     private sealed class KeyedNestedBranchState : State
     {
         private readonly string _stateId = Guid.NewGuid().ToString("N");
-        private KeyedNestedBranchWidget BranchWidget => (KeyedNestedBranchWidget)Element.Widget;
+        private KeyedNestedBranchWidget BranchWidget => (KeyedNestedBranchWidget)StateWidget;
 
         public override void InitState()
         {
@@ -537,7 +537,7 @@ public sealed class ElementLifecycleTests
     private sealed class UnkeyedNestedBranchState : State
     {
         private readonly string _stateId = Guid.NewGuid().ToString("N");
-        private UnkeyedNestedBranchWidget BranchWidget => (UnkeyedNestedBranchWidget)Element.Widget;
+        private UnkeyedNestedBranchWidget BranchWidget => (UnkeyedNestedBranchWidget)StateWidget;
 
         public override void InitState()
         {

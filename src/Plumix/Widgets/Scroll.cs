@@ -281,7 +281,7 @@ public sealed class AutomaticKeepAlive : StatefulWidget
         private Widget _child = null!;
         private bool _keepingAlive;
 
-        private AutomaticKeepAlive CurrentWidget => (AutomaticKeepAlive)Element.Widget;
+        private AutomaticKeepAlive CurrentWidget => (AutomaticKeepAlive)StateWidget;
 
         public override void InitState()
         {

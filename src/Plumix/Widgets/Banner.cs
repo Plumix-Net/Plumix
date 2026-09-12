@@ -202,7 +202,7 @@ public sealed class Banner : StatefulWidget
     {
         private BannerPainter? _painter;
 
-        private Banner CurrentWidget => (Banner)Element.Widget;
+        private Banner CurrentWidget => (Banner)StateWidget;
 
         public override Widget Build(BuildContext context)
         {

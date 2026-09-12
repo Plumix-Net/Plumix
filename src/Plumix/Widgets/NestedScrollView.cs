@@ -134,7 +134,7 @@ public class NestedScrollViewState : State
 
     internal SliverOverlapAbsorberHandle AbsorberHandle { get; } = new();
 
-    private NestedScrollView CurrentWidget => (NestedScrollView)Element.Widget;
+    private NestedScrollView CurrentWidget => (NestedScrollView)StateWidget;
 
     /// <summary>The <see cref="ScrollController"/> provided to the body's scroll views.</summary>
     public ScrollController InnerController => _coordinator!.InnerController;

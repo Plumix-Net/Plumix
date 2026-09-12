@@ -1340,7 +1340,7 @@ public sealed class EditableText : StatefulWidget
             _cursorTicker = new Ticker(HandleCursorTick, "EditableText cursor");
         }
 
-        private EditableText Widget => (EditableText)Element.Widget;
+        private EditableText Widget => (EditableText)StateWidget;
 
         public IReadOnlyList<ContextMenuButtonItem> ContextMenuButtonItems
         {

@@ -1375,7 +1375,7 @@ public sealed class FocusTraversalGroup : StatefulWidget
     {
         private FocusTraversalGroupNode? _focusNode;
 
-        private FocusTraversalGroup CurrentWidget => (FocusTraversalGroup)Element.Widget;
+        private FocusTraversalGroup CurrentWidget => (FocusTraversalGroup)StateWidget;
 
         public override void InitState()
         {

@@ -238,7 +238,7 @@ internal class FocusState : State
 
     private protected FocusAttachment? FocusAttachment;
 
-    private protected Focus Widget => (Focus)Element.Widget;
+    private protected Focus Widget => (Focus)StateWidget;
 
     private protected FocusNode FocusNode => Widget.FocusNode ?? (_internalNode ??= CreateNode());
 
