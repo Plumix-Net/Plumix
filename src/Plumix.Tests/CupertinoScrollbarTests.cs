@@ -38,7 +38,7 @@ public sealed class CupertinoScrollbarTests
 
         Assert.Equal(CupertinoScrollbar.DefaultThickness, scrollbar.Thickness);
         Assert.Equal(CupertinoScrollbar.DefaultThicknessWhileDragging, scrollbar.ThicknessWhileDragging);
-        Assert.Equal(CupertinoScrollbar.DefaultRadius, scrollbar.Radius);
+        Assert.Equal(CupertinoScrollbar.DefaultRadius, scrollbar.Radius!.Value.X);
         Assert.Equal(CupertinoScrollbar.DefaultRadiusWhileDragging, scrollbar.RadiusWhileDragging);
         Assert.False(scrollbar.ThumbVisibility);
         Assert.Null(scrollbar.Controller);
@@ -207,17 +207,17 @@ public sealed class CupertinoScrollbarTests
 
         // t = 0 of the resize animation: still the idle thickness and radius, and no haptic yet.
         Assert.Equal(3, RequirePainter(harness).Thickness, precision: 3);
-        Assert.Equal(1.5, RequirePainter(harness).Radius!.Value, precision: 3);
+        Assert.Equal(1.5, RequirePainter(harness).Radius!.Value.X, precision: 3);
         Assert.Empty(platform.Log);
 
         AdvanceAndPump(harness, 0.05);
         Assert.Equal(5.5, RequirePainter(harness).Thickness, precision: 3);
-        Assert.Equal(2.75, RequirePainter(harness).Radius!.Value, precision: 3);
+        Assert.Equal(2.75, RequirePainter(harness).Radius!.Value.X, precision: 3);
         Assert.Empty(platform.Log);
 
         AdvanceAndPump(harness, 0.06);
         Assert.Equal(8, RequirePainter(harness).Thickness, precision: 3);
-        Assert.Equal(4, RequirePainter(harness).Radius!.Value, precision: 3);
+        Assert.Equal(4, RequirePainter(harness).Radius!.Value.X, precision: 3);
 
         MethodCall call = Assert.Single(platform.Log);
         Assert.Equal("HapticFeedback.vibrate", call.Method);
@@ -258,7 +258,7 @@ public sealed class CupertinoScrollbarTests
 
         AdvanceAndPump(harness, 0.11);
         Assert.Equal(3, RequirePainter(harness).Thickness, precision: 3);
-        Assert.Equal(1.5, RequirePainter(harness).Radius!.Value, precision: 3);
+        Assert.Equal(1.5, RequirePainter(harness).Radius!.Value.X, precision: 3);
     }
 
     // Flutter: "Scrollbar thumb can be dragged with long press - horizontal axis".

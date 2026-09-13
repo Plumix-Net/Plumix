@@ -64,6 +64,11 @@ public sealed class CupertinoScrollbar : RawScrollbar
         mainAxisMargin: mainAxisMargin,
         key: key)
     {
+        if (!double.IsFinite(thickness))
+        {
+            throw new ArgumentOutOfRangeException(nameof(thickness));
+        }
+
         if (!double.IsFinite(thicknessWhileDragging) || thicknessWhileDragging <= 0)
         {
             throw new ArgumentOutOfRangeException(nameof(thicknessWhileDragging));
@@ -109,9 +114,9 @@ public sealed class CupertinoScrollbar : RawScrollbar
              (CurrentWidget.ThicknessWhileDragging - CurrentWidget.Thickness!.Value));
 
         private double Radius =>
-            CurrentWidget.Radius!.Value +
+            CurrentWidget.Radius!.Value.X +
             (_thicknessAnimationController.Value *
-             (CurrentWidget.RadiusWhileDragging - CurrentWidget.Radius!.Value));
+             (CurrentWidget.RadiusWhileDragging - CurrentWidget.Radius!.Value.X));
 
         public override void InitState()
         {

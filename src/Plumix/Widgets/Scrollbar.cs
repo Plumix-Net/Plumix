@@ -32,7 +32,7 @@ public readonly record struct ScrollbarGeometry(
     public double MaxThumbTravel => Math.Max(0, TrackMainAxisExtent - ThumbMainAxisExtent);
 }
 
-public sealed class ScrollbarPainter : CustomPainter
+public sealed class ScrollbarPainter : CustomPainter, IListenable
 {
     /// <summary>`scrollbar.dart`'s `_kMinInteractiveSize`: the minimum touch target of a thumb.</summary>
     private const double KMinInteractiveSize = 48.0;
@@ -41,22 +41,22 @@ public sealed class ScrollbarPainter : CustomPainter
     private readonly Animation<double> _fadeoutOpacityAnimation;
     private IScrollMetrics? _metrics;
     private AxisDirection? _axisDirection;
-    private double? _lastPixels;
-    private double? _lastMinScrollExtent;
-    private double? _lastMaxScrollExtent;
-    private double? _lastViewportDimension;
-    private Size _size;
+    private double? _lastExtentBefore;
+    private double? _lastExtentInside;
+    private double? _lastExtentAfter;
+    private bool _lastMetricsNeededPaint;
     private Color _color;
     private Color _trackColor;
     private Color _trackBorderColor;
     private TextDirection? _textDirection;
     private double _thickness;
-    private Thickness _padding;
+    private EdgeInsetsGeometry _padding;
+    private Thickness _resolvedPadding;
     private double _mainAxisMargin;
     private double _crossAxisMargin;
-    private double? _radius;
-    private double? _trackRadius;
-    private ShapeBorder? _shape;
+    private Radius? _radius;
+    private Radius? _trackRadius;
+    private OutlinedBorder? _shape;
     private double _minLength;
     private double _minOverscrollLength;
     private ScrollbarOrientation? _scrollbarOrientation;
@@ -69,12 +69,12 @@ public sealed class ScrollbarPainter : CustomPainter
         Color? trackBorderColor = null,
         TextDirection? textDirection = null,
         double thickness = 6,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         double mainAxisMargin = 0,
         double crossAxisMargin = 0,
-        double? radius = null,
-        double? trackRadius = null,
-        ShapeBorder? shape = null,
+        Radius? radius = null,
+        Radius? trackRadius = null,
+        OutlinedBorder? shape = null,
         double minLength = 18,
         double? minOverscrollLength = null,
         ScrollbarOrientation? scrollbarOrientation = null,
@@ -107,31 +107,26 @@ public sealed class ScrollbarPainter : CustomPainter
         Color? trackBorderColor,
         TextDirection? textDirection,
         double thickness,
-        Thickness? padding,
+        EdgeInsetsGeometry? padding,
         double mainAxisMargin,
         double crossAxisMargin,
-        double? radius,
-        double? trackRadius,
-        ShapeBorder? shape,
+        Radius? radius,
+        Radius? trackRadius,
+        OutlinedBorder? shape,
         double minLength,
         double? minOverscrollLength,
         ScrollbarOrientation? scrollbarOrientation,
         bool ignorePointer) : base(repaint)
     {
         ArgumentNullException.ThrowIfNull(fadeoutOpacityAnimation);
-        if (shape is not null && radius.HasValue)
+        if (Constants.KDebugMode && shape is not null && radius.HasValue)
         {
             throw new ArgumentException("Only one of shape and radius may be provided.");
         }
 
-        ValidateNonNegative(nameof(thickness), thickness);
-        ValidateNonNegative(nameof(mainAxisMargin), mainAxisMargin);
-        ValidateNonNegative(nameof(crossAxisMargin), crossAxisMargin);
-        ValidateNonNegative(nameof(radius), radius);
-        ValidateNonNegative(nameof(trackRadius), trackRadius);
         ValidateNonNegative(nameof(minLength), minLength);
         ValidateNonNegative(nameof(minOverscrollLength), minOverscrollLength);
-        if (minOverscrollLength > minLength)
+        if (Constants.KDebugMode && minOverscrollLength > minLength)
         {
             throw new ArgumentOutOfRangeException(nameof(minOverscrollLength));
         }
@@ -144,6 +139,11 @@ public sealed class ScrollbarPainter : CustomPainter
         _textDirection = textDirection;
         _thickness = thickness;
         _padding = padding ?? default;
+        if (Constants.KDebugMode && !_padding.IsNonNegative)
+        {
+            throw new ArgumentOutOfRangeException(nameof(padding));
+        }
+        _resolvedPadding = _padding.Resolve(textDirection);
         _mainAxisMargin = mainAxisMargin;
         _crossAxisMargin = crossAxisMargin;
         _radius = radius;
@@ -179,52 +179,51 @@ public sealed class ScrollbarPainter : CustomPainter
     public TextDirection? TextDirection
     {
         get => _textDirection;
-        set => SetField(ref _textDirection, value);
+        set
+        {
+            if (Constants.KDebugMode && value is null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+            _resolvedPadding = _padding.Resolve(value);
+            SetField(ref _textDirection, value);
+        }
     }
 
     public double Thickness
     {
         get => _thickness;
-        set
-        {
-            ValidateNonNegative(nameof(value), value);
-            SetField(ref _thickness, value);
-        }
+        set => SetField(ref _thickness, value);
     }
 
-    public Thickness Padding
+    public EdgeInsetsGeometry Padding
     {
         get => _padding;
-        set => SetField(ref _padding, value);
+        set
+        {
+            _resolvedPadding = value.Resolve(_textDirection);
+            SetField(ref _padding, value);
+        }
     }
 
     public double MainAxisMargin
     {
         get => _mainAxisMargin;
-        set
-        {
-            ValidateNonNegative(nameof(value), value);
-            SetField(ref _mainAxisMargin, value);
-        }
+        set => SetField(ref _mainAxisMargin, value);
     }
 
     public double CrossAxisMargin
     {
         get => _crossAxisMargin;
-        set
-        {
-            ValidateNonNegative(nameof(value), value);
-            SetField(ref _crossAxisMargin, value);
-        }
+        set => SetField(ref _crossAxisMargin, value);
     }
 
-    public double? Radius
+    public Radius? Radius
     {
         get => _radius;
         set
         {
-            ValidateNonNegative(nameof(value), value);
-            if (value.HasValue && Shape is not null)
+            if (Constants.KDebugMode && Shape is not null && value is not null)
             {
                 throw new ArgumentException("Only one of shape and radius may be provided.");
             }
@@ -232,22 +231,18 @@ public sealed class ScrollbarPainter : CustomPainter
         }
     }
 
-    public double? TrackRadius
+    public Radius? TrackRadius
     {
         get => _trackRadius;
-        set
-        {
-            ValidateNonNegative(nameof(value), value);
-            SetField(ref _trackRadius, value);
-        }
+        set => SetField(ref _trackRadius, value);
     }
 
-    public ShapeBorder? Shape
+    public OutlinedBorder? Shape
     {
         get => _shape;
         set
         {
-            if (value is not null && Radius.HasValue)
+            if (Constants.KDebugMode && value is not null && Radius.HasValue)
             {
                 throw new ArgumentException("Only one of shape and radius may be provided.");
             }
@@ -258,29 +253,13 @@ public sealed class ScrollbarPainter : CustomPainter
     public double MinLength
     {
         get => _minLength;
-        set
-        {
-            ValidateNonNegative(nameof(value), value);
-            if (value < MinOverscrollLength)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value));
-            }
-            SetField(ref _minLength, value);
-        }
+        set => SetField(ref _minLength, value);
     }
 
     public double MinOverscrollLength
     {
         get => _minOverscrollLength;
-        set
-        {
-            ValidateNonNegative(nameof(value), value);
-            if (value > MinLength)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value));
-            }
-            SetField(ref _minOverscrollLength, value);
-        }
+        set => SetField(ref _minOverscrollLength, value);
     }
 
     public ScrollbarOrientation? ScrollbarOrientation
@@ -295,43 +274,53 @@ public sealed class ScrollbarPainter : CustomPainter
         set => SetField(ref _ignorePointer, value);
     }
 
-    public ScrollbarGeometry? Geometry => ComputeGeometry(_size);
+    public ScrollbarGeometry? Geometry { get; private set; }
 
     public void Update(IScrollMetrics metrics, AxisDirection axisDirection)
     {
         ArgumentNullException.ThrowIfNull(metrics);
-        if (_lastPixels == metrics.Pixels &&
-            _lastMinScrollExtent == metrics.MinScrollExtent &&
-            _lastMaxScrollExtent == metrics.MaxScrollExtent &&
-            _lastViewportDimension == metrics.ViewportDimension &&
+        if (_lastExtentBefore == metrics.ExtentBefore &&
+            _lastExtentInside == metrics.ExtentInside &&
+            _lastExtentAfter == metrics.ExtentAfter &&
             _axisDirection == axisDirection)
         {
             return;
         }
 
+        bool oldMetricsNeededPaint = _lastMetricsNeededPaint;
         _metrics = metrics;
         _axisDirection = axisDirection;
-        _lastPixels = metrics.Pixels;
-        _lastMinScrollExtent = metrics.MinScrollExtent;
-        _lastMaxScrollExtent = metrics.MaxScrollExtent;
-        _lastViewportDimension = metrics.ViewportDimension;
-        NotifyListeners();
+        _lastExtentBefore = metrics.ExtentBefore;
+        _lastExtentInside = metrics.ExtentInside;
+        _lastExtentAfter = metrics.ExtentAfter;
+        _lastMetricsNeededPaint = metrics.MaxScrollExtent - metrics.MinScrollExtent > Constants.PrecisionErrorTolerance;
+        if (oldMetricsNeededPaint || _lastMetricsNeededPaint)
+        {
+            NotifyListeners();
+        }
     }
 
-    public void UpdateThickness(double nextThickness, double? nextRadius)
+    public void UpdateThickness(double nextThickness, Radius? nextRadius)
     {
-        ValidateNonNegative(nameof(nextThickness), nextThickness);
-        ValidateNonNegative(nameof(nextRadius), nextRadius);
-        _thickness = nextThickness;
-        _radius = nextRadius;
-        NotifyListeners();
+        Thickness = nextThickness;
+        Radius = nextRadius;
     }
 
     public override void Paint(PaintingContext context, Size size)
     {
-        _size = size;
         ScrollbarGeometry? geometry = ComputeGeometry(size);
-        if (!geometry.HasValue || _fadeoutOpacityAnimation.Value <= 0)
+        Geometry = geometry;
+        if (!geometry.HasValue)
+        {
+            return;
+        }
+
+        if (Constants.KDebugMode && TextDirection is null)
+        {
+            throw new InvalidOperationException("A TextDirection must be provided before a Scrollbar can be painted.");
+        }
+
+        if (_fadeoutOpacityAnimation.Value == 0)
         {
             return;
         }
@@ -339,28 +328,34 @@ public sealed class ScrollbarPainter : CustomPainter
         ScrollbarGeometry value = geometry.Value;
         double opacity = Math.Clamp(_fadeoutOpacityAnimation.Value, 0, 1);
         var trackBrush = new SolidColorBrush(ApplyOpacity(TrackColor, opacity));
-        context.Canvas.DrawRectangle(trackBrush, null, value.TrackRect, TrackRadius ?? 0, TrackRadius ?? 0);
+        context.Canvas.DrawRectangle(trackBrush, null, value.TrackRect, TrackRadius?.X ?? 0, TrackRadius?.Y ?? 0);
 
         Color borderColor = ApplyOpacity(TrackBorderColor, opacity);
-        if (borderColor.A != 0)
-        {
-            var pen = new Pen(new SolidColorBrush(borderColor), 1);
-            (Point start, Point end) = TrackBorderLine(value);
-            context.Canvas.DrawLine(pen, start, end);
-        }
+        var pen = new Pen(new SolidColorBrush(borderColor), 1);
+        (Point start, Point end) = TrackBorderLine(value);
+        context.Canvas.DrawLine(pen, start, end);
 
-        BorderSide? side = (Shape as OutlinedBorder)?.Side;
-        IPen? thumbPen = side is null
-            ? null
-            : new Pen(
-                new SolidColorBrush(ApplyOpacity(side.Value.Color, opacity)),
-                side.Value.Width);
-        context.Canvas.DrawRectangle(
-            new SolidColorBrush(ApplyOpacity(Color, opacity)),
-            thumbPen,
-            value.ThumbRect,
-            ScrollbarShapeGeometry.Radius(Shape) ?? Radius ?? 0,
-            ScrollbarShapeGeometry.Radius(Shape) ?? Radius ?? 0);
+        var thumbBrush = new SolidColorBrush(ApplyOpacity(Color, opacity));
+        if (Radius is { } radius)
+        {
+            context.Canvas.DrawRectangle(thumbBrush, null, value.ThumbRect, radius.X, radius.Y);
+        }
+        else if (Shape is null)
+        {
+            context.Canvas.DrawRectangle(thumbBrush, null, value.ThumbRect);
+        }
+        else
+        {
+            if (Shape.PreferPaintInterior)
+            {
+                Shape.PaintInterior(context, value.ThumbRect, thumbBrush);
+            }
+            else
+            {
+                context.Canvas.DrawPath(Shape.GetOuterPath(value.ThumbRect), thumbBrush, null);
+            }
+            Shape.Paint(context, value.ThumbRect);
+        }
     }
 
     /// <summary>
@@ -454,12 +449,7 @@ public sealed class ScrollbarPainter : CustomPainter
     {
         ScrollbarGeometry geometry = Geometry
             ?? throw new InvalidOperationException("Scrollbar geometry is not available before update and paint.");
-        if (_metrics is null || geometry.MaxThumbTravel <= 0)
-        {
-            return 0;
-        }
-
-        double scrollableExtent = _metrics.MaxScrollExtent - _metrics.MinScrollExtent;
+        double scrollableExtent = _metrics!.MaxScrollExtent - _metrics.MinScrollExtent;
         return scrollableExtent * thumbOffsetLocal / geometry.MaxThumbTravel;
     }
 
@@ -535,7 +525,11 @@ public sealed class ScrollbarPainter : CustomPainter
         base.Dispose();
     }
 
-    private void NotifyListeners() => _repaint.NotifyListeners();
+    public void AddListener(Action listener) => _repaint.AddListener(listener);
+
+    public void RemoveListener(Action listener) => _repaint.RemoveListener(listener);
+
+    public void NotifyListeners() => _repaint.NotifyListeners();
 
     private ScrollbarGeometry? ComputeGeometry(Size size)
     {
@@ -556,16 +550,16 @@ public sealed class ScrollbarPainter : CustomPainter
             : global::Plumix.Widgets.ScrollbarOrientation.Bottom);
         bool verticalOrientation = orientation is global::Plumix.Widgets.ScrollbarOrientation.Left
             or global::Plumix.Widgets.ScrollbarOrientation.Right;
-        if (verticalOrientation != (axis == Axis.Vertical))
+        if (Constants.KDebugMode && verticalOrientation != (axis == Axis.Vertical))
         {
             throw new InvalidOperationException(
                 $"Scrollbar orientation {orientation} is incompatible with axis direction {axisDirection}.");
         }
 
         bool reversed = axisDirection is AxisDirection.Up or AxisDirection.Left;
-        double leadingPadding = axis == Axis.Vertical ? Padding.Top : Padding.Left;
-        double trailingPadding = axis == Axis.Vertical ? Padding.Bottom : Padding.Right;
-        double mainExtent = axis == Axis.Vertical ? size.Height : size.Width;
+        double leadingPadding = axis == Axis.Vertical ? _resolvedPadding.Top : _resolvedPadding.Left;
+        double trailingPadding = axis == Axis.Vertical ? _resolvedPadding.Bottom : _resolvedPadding.Right;
+        double mainExtent = _metrics.ViewportDimension;
         double trackStart = leadingPadding + MainAxisMargin;
         double trackExtent = mainExtent - leadingPadding - trailingPadding - (2 * MainAxisMargin);
         if (trackExtent <= 0)
@@ -582,11 +576,11 @@ public sealed class ScrollbarPainter : CustomPainter
         double extentInside = Math.Max(0, _metrics.ViewportDimension - leadingOverscroll - trailingOverscroll);
         double extentBefore = Math.Max(_metrics.Pixels - _metrics.MinScrollExtent, 0);
         double extentAfter = Math.Max(_metrics.MaxScrollExtent - _metrics.Pixels, 0);
-        double totalContentExtent = extentBefore + extentInside + extentAfter;
+        double totalContentExtent = _metrics.MaxScrollExtent - _metrics.MinScrollExtent + _metrics.ViewportDimension;
         double totalPadding = leadingPadding + trailingPadding;
         double fractionVisible = Math.Clamp(
             (extentInside - totalPadding) /
-            Math.Max(Constants.PrecisionErrorTolerance, totalContentExtent - totalPadding),
+            (totalContentExtent - totalPadding),
             0,
             1);
         double candidateExtent = Math.Max(Math.Min(trackExtent, MinOverscrollLength), trackExtent * fractionVisible);
@@ -612,10 +606,10 @@ public sealed class ScrollbarPainter : CustomPainter
         if (axis == Axis.Vertical)
         {
             double thumbX = orientation == global::Plumix.Widgets.ScrollbarOrientation.Left
-                ? Padding.Left + CrossAxisMargin
-                : size.Width - Padding.Right - CrossAxisMargin - Thickness;
+                ? _resolvedPadding.Left + CrossAxisMargin
+                : size.Width - _resolvedPadding.Right - CrossAxisMargin - Thickness;
             double trackX = orientation == global::Plumix.Widgets.ScrollbarOrientation.Left
-                ? Padding.Left
+                ? _resolvedPadding.Left
                 : thumbX - CrossAxisMargin;
             trackRect = new Rect(trackX, trackRectStart, Thickness + (2 * CrossAxisMargin), trackRectExtent);
             thumbRect = new Rect(thumbX, trackStart + thumbOffset, Thickness, thumbExtent);
@@ -623,10 +617,10 @@ public sealed class ScrollbarPainter : CustomPainter
         else
         {
             double thumbY = orientation == global::Plumix.Widgets.ScrollbarOrientation.Top
-                ? Padding.Top + CrossAxisMargin
-                : size.Height - Padding.Bottom - CrossAxisMargin - Thickness;
+                ? _resolvedPadding.Top + CrossAxisMargin
+                : size.Height - _resolvedPadding.Bottom - CrossAxisMargin - Thickness;
             double trackY = orientation == global::Plumix.Widgets.ScrollbarOrientation.Top
-                ? Padding.Top
+                ? _resolvedPadding.Top
                 : thumbY - CrossAxisMargin;
             trackRect = new Rect(trackRectStart, trackY, trackRectExtent, Thickness + (2 * CrossAxisMargin));
             thumbRect = new Rect(trackStart + thumbOffset, thumbY, thumbExtent, Thickness);
@@ -693,7 +687,7 @@ public sealed class ScrollbarPainter : CustomPainter
 
     private static void ValidateNonNegative(string name, double value)
     {
-        if (!double.IsFinite(value) || value < 0)
+        if (Constants.KDebugMode && !(value >= 0))
         {
             throw new ArgumentOutOfRangeException(name);
         }
@@ -708,7 +702,7 @@ public sealed class ScrollbarPainter : CustomPainter
     }
 
     private static Color ApplyOpacity(Color color, double opacity) => Color.FromArgb(
-        (byte)Math.Clamp((int)(color.A * opacity), 0, 255),
+        (byte)Math.Clamp((int)Math.Floor(color.A * opacity + 0.5), 0, 255),
         color.R,
         color.G,
         color.B);
@@ -740,14 +734,14 @@ public class RawScrollbar : StatefulWidget
         Widget child,
         ScrollController? controller = null,
         bool? thumbVisibility = null,
-        ShapeBorder? shape = null,
-        double? radius = null,
+        OutlinedBorder? shape = null,
+        Radius? radius = null,
         double? thickness = null,
         Color? thumbColor = null,
         double minThumbLength = KMinThumbExtent,
         double? minOverscrollLength = null,
         bool? trackVisibility = null,
-        double? trackRadius = null,
+        Radius? trackRadius = null,
         Color? trackColor = null,
         Color? trackBorderColor = null,
         TimeSpan? fadeDuration = null,
@@ -758,17 +752,17 @@ public class RawScrollbar : StatefulWidget
         ScrollbarOrientation? scrollbarOrientation = null,
         double mainAxisMargin = 0.0,
         double crossAxisMargin = 0.0,
-        Thickness? padding = null,
+        EdgeInsetsGeometry? padding = null,
         Key? key = null) : base(key)
     {
         ArgumentNullException.ThrowIfNull(child);
-        if (thumbVisibility == false && (trackVisibility ?? false))
+        if (Constants.KDebugMode && thumbVisibility == false && (trackVisibility ?? false))
         {
             throw new ArgumentException("A scrollbar track cannot be drawn without a scrollbar thumb.");
         }
 
         ValidateNonNegative(nameof(minThumbLength), minThumbLength);
-        if (minOverscrollLength is { } overscroll && overscroll > minThumbLength)
+        if (Constants.KDebugMode && minOverscrollLength is { } overscroll && overscroll > minThumbLength)
         {
             throw new ArgumentOutOfRangeException(
                 nameof(minOverscrollLength),
@@ -776,19 +770,11 @@ public class RawScrollbar : StatefulWidget
         }
 
         ValidateNonNegative(nameof(minOverscrollLength), minOverscrollLength);
-        if (radius is not null && shape is not null)
+        if (Constants.KDebugMode && radius is not null && shape is not null)
         {
             throw new ArgumentException("A scrollbar cannot carry both a radius and a shape.");
         }
 
-        ValidateNonNegative(nameof(mainAxisMargin), mainAxisMargin);
-        ValidateNonNegative(nameof(crossAxisMargin), crossAxisMargin);
-        ValidatePositive(nameof(thickness), thickness);
-        ValidateNonNegative(nameof(radius), radius);
-        ValidateNonNegative(nameof(trackRadius), trackRadius);
-        ValidateDuration(nameof(fadeDuration), fadeDuration);
-        ValidateDuration(nameof(timeToFade), timeToFade);
-        ValidateDuration(nameof(pressDuration), pressDuration);
 
         Child = child;
         Controller = controller;
@@ -824,10 +810,10 @@ public class RawScrollbar : StatefulWidget
     public bool? ThumbVisibility { get; }
 
     /// <summary>The <see cref="ShapeBorder"/> of the scrollbar's thumb.</summary>
-    public ShapeBorder? Shape { get; }
+    public OutlinedBorder? Shape { get; }
 
     /// <summary>The radius of the scrollbar thumb's rounded rectangle corners.</summary>
-    public double? Radius { get; }
+    public Radius? Radius { get; }
 
     /// <summary>The thickness of the scrollbar in the cross axis of the scrollable.</summary>
     public double? Thickness { get; }
@@ -848,7 +834,7 @@ public class RawScrollbar : StatefulWidget
     public bool? TrackVisibility { get; }
 
     /// <summary>The radius of the scrollbar track's rounded rectangle corners.</summary>
-    public double? TrackRadius { get; }
+    public Radius? TrackRadius { get; }
 
     /// <summary>The color of the scrollbar track.</summary>
     public Color? TrackColor { get; }
@@ -894,7 +880,7 @@ public class RawScrollbar : StatefulWidget
     public double CrossAxisMargin { get; }
 
     /// <summary>The insets by which the scrollbar thumb and track should be padded.</summary>
-    public Thickness? Padding { get; }
+    public EdgeInsetsGeometry? Padding { get; }
 
     /// <summary>A <see cref="ScrollNotificationPredicate"/> that checks whether `notification.depth == 0`.</summary>
     public static bool DefaultScrollNotificationPredicate(ScrollNotification notification) =>
@@ -904,7 +890,7 @@ public class RawScrollbar : StatefulWidget
 
     private static void ValidateNonNegative(string name, double value)
     {
-        if (!double.IsFinite(value) || value < 0) throw new ArgumentOutOfRangeException(name);
+        if (Constants.KDebugMode && !(value >= 0)) throw new ArgumentOutOfRangeException(name);
     }
 
     private static void ValidateNonNegative(string name, double? value)
@@ -912,19 +898,7 @@ public class RawScrollbar : StatefulWidget
         if (value.HasValue) ValidateNonNegative(name, value.Value);
     }
 
-    private static void ValidatePositive(string name, double? value)
-    {
-        if (!value.HasValue) return;
-        if (!double.IsFinite(value.Value) || value.Value <= 0)
-        {
-            throw new ArgumentOutOfRangeException(name);
-        }
-    }
 
-    private static void ValidateDuration(string name, TimeSpan? value)
-    {
-        if (value.HasValue && value.Value < TimeSpan.Zero) throw new ArgumentOutOfRangeException(name);
-    }
 }
 
 /// <summary>
@@ -1050,7 +1024,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
 
     private void CheckHasValidScrollPosition()
     {
-        if (!Mounted)
+        if (!Constants.KDebugMode || !Mounted)
         {
             return;
         }
@@ -1066,22 +1040,66 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
 
         if (scrollController is null)
         {
-            throw new InvalidOperationException($"A ScrollController is required when {when}.");
+            throw new InvalidOperationException(
+                $"A ScrollController is required when {when}. " +
+                (tryPrimary
+                    ? "The Scrollbar was not provided a ScrollController, and attempted to use the " +
+                      "PrimaryScrollController, but none was found."
+                    : ""));
         }
 
         if (!scrollController.HasClients)
         {
-            throw new InvalidOperationException(
-                "The Scrollbar's ScrollController has no ScrollPosition attached. " +
-                $"The Scrollbar attempted to use the {controllerForError}. This ScrollController " +
-                "should be associated with the ScrollView that the Scrollbar is being applied to.");
+            List<DiagnosticsNode> diagnostics =
+            [
+                new ErrorSummary("The Scrollbar's ScrollController has no ScrollPosition attached."),
+                new ErrorDescription("A Scrollbar cannot be painted without a ScrollPosition. "),
+                new ErrorHint(
+                    $"The Scrollbar attempted to use the {controllerForError}. This ScrollController " +
+                    "should be associated with the ScrollView that the Scrollbar is being applied to."),
+            ];
+            if (tryPrimary)
+            {
+                diagnostics.Add(new ErrorHint(
+                    "If a ScrollController has not been provided, the PrimaryScrollController is used " +
+                    "by default on mobile platforms for ScrollViews with an Axis.vertical scroll direction."));
+                diagnostics.Add(new ErrorHint(
+                    "To use the PrimaryScrollController explicitly, set ScrollView.primary to true " +
+                    "on the Scrollable widget."));
+            }
+            else
+            {
+                diagnostics.Add(new ErrorHint(
+                    "When providing your own ScrollController, ensure both the Scrollbar and the " +
+                    "Scrollable widget use the same one."));
+            }
+            throw new FlutterError(diagnostics);
         }
 
         if (scrollController.Positions.Count > 1)
         {
-            throw new InvalidOperationException(
-                $"The {controllerForError} is attached to more than one ScrollPosition. " +
-                "The Scrollbar requires a single ScrollPosition in order to be painted.");
+            List<DiagnosticsNode> diagnostics =
+            [
+                new ErrorSummary($"The {controllerForError} is attached to more than one ScrollPosition."),
+                new ErrorDescription("The Scrollbar requires a single ScrollPosition in order to be painted."),
+                new ErrorHint(
+                    $"When {when}, the associated ScrollController must only have one ScrollPosition attached."),
+            ];
+            if (tryPrimary)
+            {
+                diagnostics.Add(new ErrorHint(
+                    "If a ScrollController has not been provided, the PrimaryScrollController is used " +
+                    "by default on mobile platforms for ScrollViews with an Axis.vertical scroll direction."));
+                diagnostics.Add(new ErrorHint(
+                    "More than one ScrollView may have tried to use the PrimaryScrollController of the " +
+                    "current context. ScrollView.primary can override this behavior."));
+            }
+            else
+            {
+                diagnostics.Add(new ErrorHint(
+                    "The provided ScrollController cannot be shared by multiple ScrollView widgets."));
+            }
+            throw new FlutterError(diagnostics);
         }
     }
 
@@ -1104,10 +1122,7 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
         ScrollbarPainter.TextDirection = textDirection;
         ScrollbarPainter.Thickness = CurrentWidget.Thickness ?? RawScrollbar.KScrollbarThickness;
         ScrollbarPainter.Radius = CurrentWidget.Radius;
-        // Flutter reads `MediaQuery.paddingOf` unconditionally because every Flutter tree carries a
-        // `View`-provided `MediaQuery`; Plumix trees need not, and `ScrollBehavior.BuildScrollbar`
-        // may wrap any scrollable, so a missing one resolves to zero padding.
-        ScrollbarPainter.Padding = CurrentWidget.Padding ?? MediaQuery.MaybePaddingOf(Context) ?? default;
+        ScrollbarPainter.Padding = (CurrentWidget.Padding ?? MediaQuery.PaddingOf(Context)).Resolve(textDirection);
         ScrollbarPainter.ScrollbarOrientation = CurrentWidget.ScrollbarOrientation;
         ScrollbarPainter.MainAxisMargin = CurrentWidget.MainAxisMargin;
         ScrollbarPainter.Shape = CurrentWidget.Shape;
@@ -1814,19 +1829,6 @@ public class RawScrollbarState<T> : State where T : RawScrollbar
     private static Color TransparentColor => Color.FromArgb(0x00, 0x00, 0x00, 0x00);
 }
 
-/// <summary>Maps a <see cref="ShapeBorder"/> onto the corner radius the thumb is painted with.</summary>
-internal static class ScrollbarShapeGeometry
-{
-    public static double? Radius(ShapeBorder? shape)
-    {
-        return shape switch
-        {
-            RoundedRectangleBorder rounded => rounded.BorderRadius.Resolve(TextDirection.Ltr).Radius,
-            _ => null,
-        };
-    }
-}
-
 /// <summary>
 /// Reads the <see cref="ScrollbarPainter"/> off the <see cref="CustomPaint"/> the scrollbar's global
 /// key is attached to, so a recognizer can hit-test against exactly what was painted.
@@ -1880,6 +1882,8 @@ internal sealed class VerticalThumbDragGestureRecognizer(GlobalKey customPaintKe
 {
     private readonly GlobalKey _customPaintKey = customPaintKey;
 
+    protected override bool IsPointerPanZoomAllowed(PointerPanZoomStartEvent @event) => false;
+
     protected override bool IsPointerAllowed(PointerDownEvent @event) =>
         ScrollbarHitTest.IsThumbEvent(_customPaintKey, @event) && base.IsPointerAllowed(@event);
 }
@@ -1889,6 +1893,8 @@ internal sealed class HorizontalThumbDragGestureRecognizer(GlobalKey customPaint
     : HorizontalDragGestureRecognizer
 {
     private readonly GlobalKey _customPaintKey = customPaintKey;
+
+    protected override bool IsPointerPanZoomAllowed(PointerPanZoomStartEvent @event) => false;
 
     protected override bool IsPointerAllowed(PointerDownEvent @event) =>
         ScrollbarHitTest.IsThumbEvent(_customPaintKey, @event) && base.IsPointerAllowed(@event);

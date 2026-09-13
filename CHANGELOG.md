@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: `RawScrollbar` uses directional insets, elliptical radii and `OutlinedBorder` shapes (scrollbar.dart).
+- Breaking: raw scrollbar padding, shape paint, geometry and debug-only guards follow Dart (scrollbar.dart).
+- Raw scrollbar thumb recognizers leave trackpad pan/zoom gestures to the content (scrollbar.dart).
 - Binding-wide render, layer and semantics-fragment dumps print through `DebugPrint` (binding.dart, object.dart).
 - Breaking: re-registering a render view moves it to the end of the binding's view order (binding.dart).
 - Breaking: semantics text defaults to empty strings; assignment and absorption follow Dart (semantics.dart).

@@ -146,6 +146,8 @@ public readonly record struct Radius
 
     public static Radius Zero => new(0.0, 0.0);
 
+    public static implicit operator Radius(double value) => Circular(value);
+
     public static Radius Circular(double radius)
     {
         double effectiveRadius = Math.Max(0.0, radius);

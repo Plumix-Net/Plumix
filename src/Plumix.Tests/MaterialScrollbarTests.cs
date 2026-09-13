@@ -49,7 +49,7 @@ public sealed class MaterialScrollbarTests
         Assert.Null(scrollbar.Padding);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RawScrollbar_ValidatesFlutterContracts()
     {
         Assert.Throws<ArgumentException>(() => new RawScrollbar(
@@ -67,9 +67,7 @@ public sealed class MaterialScrollbarTests
             child: new SizedBox(),
             shape: new RoundedRectangleBorder(borderRadius: Plumix.Rendering.BorderRadius.Circular(4)),
             radius: 4));
-        Assert.Throws<ArgumentOutOfRangeException>(() => new RawScrollbar(
-            child: new SizedBox(),
-            thickness: 0));
+        Assert.Equal(0, new RawScrollbar(child: new SizedBox(), thickness: 0).Thickness);
     }
 
     [Fact]
@@ -511,7 +509,7 @@ public sealed class MaterialScrollbarTests
         Settle(harness);
 
         ScrollbarPainter painter = RequirePainter(harness);
-        Assert.Equal(6, painter.Radius);
+        Assert.Equal(Radius.Circular(6), painter.Radius);
         Assert.Equal(4, painter.CrossAxisMargin);
         Assert.Equal(3, painter.MainAxisMargin);
         Assert.Equal(52, painter.MinLength);
@@ -599,7 +597,7 @@ public sealed class MaterialScrollbarTests
         Settle(desktopHarness);
 
         ScrollbarPainter desktop = RequirePainter(desktopHarness);
-        Assert.Equal(8, desktop.Radius);
+        Assert.Equal(Radius.Circular(8), desktop.Radius);
         Assert.Equal(2, desktop.CrossAxisMargin);
         Assert.Equal(8, desktop.Thickness);
         Assert.False(desktop.IgnorePointer);
@@ -620,7 +618,7 @@ public sealed class MaterialScrollbarTests
         var raw = Assert.IsAssignableFrom<RawScrollbar>(tree.FindWidget<RawScrollbar>());
         Assert.Equal(CupertinoScrollbar.DefaultThickness, cupertino.Thickness);
         Assert.Equal(CupertinoScrollbar.DefaultThicknessWhileDragging, cupertino.ThicknessWhileDragging);
-        Assert.Equal(CupertinoScrollbar.DefaultRadius, cupertino.Radius);
+        Assert.Equal(Radius.Circular(CupertinoScrollbar.DefaultRadius), cupertino.Radius);
         Assert.Equal(TimeSpan.FromMilliseconds(250), raw.FadeDuration);
         Assert.Equal(TimeSpan.FromMilliseconds(1200), raw.TimeToFade);
         Assert.Equal(TimeSpan.FromMilliseconds(100), raw.PressDuration);
@@ -709,7 +707,7 @@ public sealed class MaterialScrollbarTests
         Assert.Equal(WithOpacity(Colors.Magenta, 0.10), RequirePainter(harness).Color);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void RawScrollbar_ForcedVisibilityRequiresExactlyOneAttachedPosition()
     {
         using var timers = new FakeGestureTimers();
@@ -739,7 +737,7 @@ public sealed class MaterialScrollbarTests
                 ])));
         multipleHarness.Pump(ViewportSize);
         schedulerNow = Scheduler.CurrentSeconds;
-        InvalidOperationException multiple = Assert.IsType<InvalidOperationException>(
+        FlutterError multiple = Assert.IsType<FlutterError>(
             PumpAndCaptureReportedError(TimeSpan.FromSeconds(schedulerNow + 0.01)));
         Assert.Contains("more than one ScrollPosition", multiple.Message);
         Scheduler.ResetForTests();
@@ -871,6 +869,448 @@ public sealed class MaterialScrollbarTests
         Assert.Null(RequirePainter(harness).Geometry);
     }
 
+    // Flutter: "Track offset respects MediaQuery padding" / "RawScrollbar.padding replaces MediaQueryData.padding".
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RawScrollbar_InheritedPaddingAndExplicitReplacementMatchFlutter(bool explicitPadding)
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new MediaQuery(
+            data: new MediaQueryData(Padding: new Thickness(50)),
+            child: new RawScrollbar(
+                controller: controller,
+                thumbVisibility: true,
+                padding: explicitPadding ? new Thickness(100) : null,
+                minThumbLength: 21,
+                minOverscrollLength: 8,
+                child: new SingleChildScrollView(
+                    controller: controller,
+                    child: new SizedBox(width: 1000, height: 50000)))));
+        Settle(harness, new Size(800, 600));
+
+        ScrollbarGeometry geometry = RequirePainter(harness).Geometry!.Value;
+        Assert.Equal(explicitPadding ? new Rect(694, 100, 6, 400) : new Rect(744, 50, 6, 500), geometry.TrackRect);
+        Assert.Equal(explicitPadding ? new Rect(694, 100, 6, 21) : new Rect(744, 50, 6, 21), geometry.ThumbRect);
+    }
+
+    [Fact]
+    public void RawScrollbar_PaddingChangesRepaintTheSameWidgetWithoutMovingItsChild()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        var scrollbar = new RawScrollbar(
+            controller: controller,
+            thumbVisibility: true,
+            child: BuildVerticalList(controller, 20));
+        using var harness = new WidgetRenderHarness(new MediaQuery(data: new MediaQueryData(), child: scrollbar));
+        Settle(harness);
+        ScrollbarPainter painter = RequirePainter(harness);
+        controller.JumpTo(80);
+        harness.UpdateWidget(new MediaQuery(
+            data: new MediaQueryData(Padding: new Thickness(7, 11, 13, 17)),
+            child: scrollbar));
+        Settle(harness);
+
+        Assert.Same(painter, RequirePainter(harness));
+        Assert.Equal(new Rect(181, 11, 6, 212), painter.Geometry!.Value.TrackRect);
+        Assert.Equal(80, controller.Offset);
+        Assert.Equal(240, controller.Position.ViewportDimension);
+    }
+
+    [Fact]
+    public void RawScrollbar_ExplicitZeroPaddingWorksWithoutMediaQuery()
+    {
+        using var harness = new WidgetRenderHarness(
+            new RawScrollbar(padding: new Thickness(), child: new SizedBox()), provideMediaQuery: false);
+        Assert.Equal(EdgeInsetsGeometry.Zero, RequirePainter(harness).Padding);
+    }
+
+    [DebugOnlyFact]
+    public void RawScrollbar_MissingMediaQueryReportsAnErrorInsteadOfAssumingZeroPadding()
+    {
+        List<FlutterErrorDetails> reported = [];
+        FlutterExceptionHandler? previous = FlutterError.OnError;
+        FlutterError.OnError = reported.Add;
+        try
+        {
+            using var harness = new WidgetRenderHarness(
+                new RawScrollbar(child: new SizedBox()), provideMediaQuery: false);
+            Assert.Contains(reported, error => error.Exception is FlutterError flutterError &&
+                flutterError.Message.Contains("No MediaQuery widget ancestor found.", StringComparison.Ordinal));
+        }
+        finally
+        {
+            FlutterError.OnError = previous;
+        }
+    }
+
+    // Flutter: "with EdgeInsetsDirectional".
+    [Fact]
+    public void ScrollbarPainter_DirectionalPaddingResolvesAgainWhenDirectionChanges()
+    {
+        using var painter = new ScrollbarPainter(
+            color: Colors.Crimson,
+            fadeoutOpacityAnimation: new ConstantAnimation<double>(1),
+            textDirection: TextDirection.Ltr,
+            padding: EdgeInsetsGeometry.DirectionalOnly(start: 1, top: 2, end: 3, bottom: 4));
+        painter.Update(TestScrollMetrics(0, 0, 340, 80), AxisDirection.Down);
+        painter.Paint(new PaintingContext(new OffsetLayer()), new Size(60, 80));
+        Assert.Equal(new Rect(51, 2, 6, 74), painter.Geometry!.Value.TrackRect);
+        painter.TextDirection = TextDirection.Rtl;
+        painter.Paint(new PaintingContext(new OffsetLayer()), new Size(60, 80));
+        Assert.Equal(new Rect(3, 2, 6, 74), painter.Geometry!.Value.TrackRect);
+        painter.Padding = EdgeInsetsGeometry.DirectionalOnly(start: 5, end: 9);
+        painter.Paint(new PaintingContext(new OffsetLayer()), new Size(60, 80));
+        Assert.Equal(9, painter.Geometry!.Value.TrackRect.Left);
+    }
+
+    [DebugOnlyFact]
+    public void ScrollbarPainter_ValidatesPaddingDirectionAndShapeContracts()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(() => new ScrollbarPainter(
+            Colors.Crimson, new ConstantAnimation<double>(1), padding: new Thickness(-1)));
+        Assert.Throws<ArgumentNullException>(() => new ScrollbarPainter(
+            Colors.Crimson, new ConstantAnimation<double>(1), padding: EdgeInsetsGeometry.DirectionalOnly(start: 1)));
+        using var painter = new ScrollbarPainter(
+            Colors.Crimson, new ConstantAnimation<double>(1), shape: new CircleBorder());
+        painter.Update(TestScrollMetrics(0, 0, 560, 240), AxisDirection.Down);
+        Assert.Throws<InvalidOperationException>(() => painter.Paint(
+            new PaintingContext(new OffsetLayer()), ViewportSize));
+        Assert.Throws<ArgumentException>(() => painter.UpdateThickness(8, Radius.Circular(4)));
+        painter.TextDirection = TextDirection.Ltr;
+        painter.ScrollbarOrientation = ScrollbarOrientation.Top;
+        Assert.Throws<InvalidOperationException>(() => painter.Paint(
+            new PaintingContext(new OffsetLayer()), ViewportSize));
+    }
+
+    [Theory]
+    [InlineData(AxisDirection.Down)]
+    [InlineData(AxisDirection.Up)]
+    [InlineData(AxisDirection.Left)]
+    [InlineData(AxisDirection.Right)]
+    public void ScrollbarPainter_UsesMetricsViewportAndAcceptsNegativeMargins(AxisDirection direction)
+    {
+        using var painter = new ScrollbarPainter(
+            Colors.Crimson, new ConstantAnimation<double>(1), textDirection: TextDirection.Ltr,
+            mainAxisMargin: -10, padding: new Thickness(1, 2, 3, 4));
+        painter.Update(TestScrollMetrics(0, 0, 560, 80), direction);
+        painter.Paint(new PaintingContext(new OffsetLayer()), new Size(200, 240));
+        ScrollbarGeometry geometry = painter.Geometry!.Value;
+        bool vertical = direction is AxisDirection.Down or AxisDirection.Up;
+        Assert.Equal(vertical ? 74 : 76, vertical ? geometry.TrackRect.Height : geometry.TrackRect.Width);
+        Assert.Equal(vertical ? -8 : -9, geometry.TrackMainAxisStart);
+        Assert.Equal(vertical ? 94 : 96, geometry.TrackMainAxisExtent);
+    }
+
+    [Fact]
+    public void ScrollbarPainter_InfiniteMinimumLengthsFitTrackAndDeepOverscrollUsesFixedContentExtent()
+    {
+        using var painter = new ScrollbarPainter(
+            Colors.Crimson, new ConstantAnimation<double>(1), textDirection: TextDirection.Ltr,
+            minLength: double.PositiveInfinity, minOverscrollLength: double.PositiveInfinity);
+        painter.Update(TestScrollMetrics(0, 0, 560, 240), AxisDirection.Down);
+        painter.Paint(new PaintingContext(new OffsetLayer()), ViewportSize);
+        Assert.Equal(240, painter.Geometry!.Value.ThumbRect.Height);
+        painter.MinOverscrollLength = 8;
+        painter.MinLength = 36;
+        painter.Update(TestScrollMetrics(-24, 0, 560, 240), AxisDirection.Down);
+        painter.Paint(new PaintingContext(new OffsetLayer()), ViewportSize);
+        Assert.Equal(64.8, painter.Geometry!.Value.ThumbRect.Height, precision: 3);
+        painter.Update(TestScrollMetrics(-300, 0, 560, 240), AxisDirection.Down);
+        painter.Paint(new PaintingContext(new OffsetLayer()), ViewportSize);
+        Assert.Equal(8, painter.Geometry!.Value.ThumbRect.Height);
+        Assert.Equal(0, painter.Geometry!.Value.ThumbRect.Top);
+        Assert.Equal(double.PositiveInfinity,
+            new RawScrollbar(child: new SizedBox(), minThumbLength: double.PositiveInfinity).MinThumbLength);
+    }
+
+    [Fact]
+    public void ScrollbarPainter_NotifiesOnlyChangedExtentsThatMayNeedPainting()
+    {
+        using var painter = new ScrollbarPainter(Colors.Crimson, new ConstantAnimation<double>(1));
+        int notifications = 0;
+        Action listener = () => notifications++;
+        painter.AddListener(listener);
+        painter.Update(TestScrollMetrics(0, 0, 0, 240), AxisDirection.Down);
+        Assert.Equal(0, notifications);
+        painter.Update(TestScrollMetrics(0, 0, 560, 240), AxisDirection.Down);
+        Assert.Equal(1, notifications);
+        painter.Update(TestScrollMetrics(0, 0, 560, 240), AxisDirection.Down);
+        Assert.Equal(1, notifications);
+        // Shifting pixels and both bounds preserves all three extents.
+        painter.Update(TestScrollMetrics(10, 10, 570, 240), AxisDirection.Down);
+        Assert.Equal(1, notifications);
+        painter.Update(TestScrollMetrics(0, 0, 0, 240), AxisDirection.Down);
+        Assert.Equal(2, notifications);
+        painter.RemoveListener(listener);
+        painter.Thickness = 8;
+        Assert.Equal(2, notifications);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ScrollbarPainter_CustomShapeUsesItsInteriorOrPathThenPaintsItsBorder(bool preferInterior)
+    {
+        var shape = new RecordingScrollbarBorder(preferInterior);
+        using var painter = new ScrollbarPainter(
+            Colors.Crimson, new ConstantAnimation<double>(0.5), textDirection: TextDirection.Ltr, shape: shape);
+        painter.Update(TestScrollMetrics(0, 0, 560, 240), AxisDirection.Down);
+        painter.Paint(new PaintingContext(new OffsetLayer()), ViewportSize);
+        Assert.Equal(preferInterior ? new[] { "interior", "border" } : new[] { "path", "border" }, shape.Calls);
+        Assert.Equal(new Rect(194, 0, 6, 72), shape.PaintedRect);
+        if (preferInterior)
+        {
+            Assert.Equal(128, shape.InteriorColor.A);
+        }
+        Assert.Equal(Colors.Blue, shape.Side.Color);
+    }
+
+    private sealed record RecordingScrollbarBorder(bool PreferInterior) : OutlinedBorder(new BorderSide(Colors.Blue, 2))
+    {
+        public List<string> Calls { get; } = [];
+        public Rect PaintedRect { get; private set; }
+        public Color InteriorColor { get; private set; }
+        public override bool PreferPaintInterior => PreferInterior;
+        public override OutlinedBorder CopyWith(BorderSide? side = null) => this with { Side = side ?? Side };
+        public override ShapeBorder Scale(double t) => this;
+        public override Plumix.UI.Path GetInnerPath(Rect rect, TextDirection? textDirection = null) =>
+            GetOuterPath(rect);
+        public override Plumix.UI.Path GetOuterPath(Rect rect, TextDirection? textDirection = null)
+        {
+            Calls.Add("path");
+            PaintedRect = rect;
+            return new CircleBorder().GetOuterPath(rect);
+        }
+        public override void PaintInterior(
+            PaintingContext context, Rect rect, IBrush brush, TextDirection? textDirection = null)
+        {
+            Calls.Add("interior");
+            PaintedRect = rect;
+            InteriorColor = ((SolidColorBrush)brush).Color;
+            new CircleBorder().PaintInterior(context, rect, brush);
+        }
+        public override void Paint(PaintingContext context, Rect rect, TextDirection? textDirection = null)
+        {
+            Calls.Add("border");
+            new CircleBorder(Side).Paint(context, rect);
+        }
+    }
+
+    // Flutter trackpad regressions 149999 / 150236: content pans bypass the thumb recognizers.
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RawScrollbar_TrackpadPanScrollsContentWithoutStartingThumbDrag(bool horizontal)
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller, thumbVisibility: true,
+            child: new SingleChildScrollView(
+                controller: controller, scrollDirection: horizontal ? Axis.Horizontal : Axis.Vertical,
+                child: new SizedBox(width: 1000, height: 1000))));
+        Settle(harness);
+        var position = new Point(100, 100);
+        Point delta = horizontal ? new Point(-30, 0) : new Point(0, -30);
+        Dispatch(harness, new PointerPanZoomStartEvent(91, position, PressTime));
+        Dispatch(harness, new PointerPanZoomUpdateEvent(91, position, PressTime.AddMilliseconds(20),
+            pan: delta, panDelta: delta));
+        Dispatch(harness, new PointerPanZoomUpdateEvent(91, position, PressTime.AddMilliseconds(40),
+            pan: delta * 2, panDelta: delta));
+        Assert.InRange(controller.Offset, 30, 60);
+        Dispatch(harness, new PointerPanZoomEndEvent(91, position, PressTime.AddMilliseconds(60)));
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void RawScrollbar_ReversedThumbDragMovesWithThePointer(bool horizontal)
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller, thumbVisibility: true,
+            child: new SingleChildScrollView(
+                controller: controller, reverse: true,
+                scrollDirection: horizontal ? Axis.Horizontal : Axis.Vertical,
+                child: new SizedBox(width: 1000, height: 1000))));
+        Settle(harness);
+        Rect before = RequirePainter(harness).Geometry!.Value.ThumbRect;
+        Point start = before.Center;
+        Point end = start + (horizontal ? new Point(-10, 0) : new Point(0, -10));
+        Dispatch(harness, new PointerDownEvent(92, PointerDeviceKind.Mouse, start, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerMoveEvent(
+            92, PointerDeviceKind.Mouse, end, PointerButtons.Primary,
+            down: true, timestampUtc: PressTime.AddMilliseconds(20)));
+        harness.Pump(ViewportSize);
+        Rect after = RequirePainter(harness).Geometry!.Value.ThumbRect;
+        Assert.Equal(horizontal ? before.X - 10 : before.Y - 10, horizontal ? after.X : after.Y, precision: 3);
+        Assert.True(controller.Offset > 10);
+        Dispatch(harness, new PointerUpEvent(
+            92, PointerDeviceKind.Mouse, end, PointerButtons.None, PressTime.AddMilliseconds(40)));
+    }
+
+    [Fact]
+    public void RawScrollbar_NegativeMinimumExtentEnablesGesturesAndDraggingWhenMaximumIsZero()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        var center = new UniqueKey();
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller, thumbVisibility: true,
+            child: new CustomScrollView(controller: controller, center: center, slivers:
+            [
+                new SliverToBoxAdapter(child: new SizedBox(height: 100)),
+                new SliverToBoxAdapter(key: center, child: new SizedBox(height: 100)),
+                new SliverToBoxAdapter(child: new SizedBox(height: 100)),
+            ])));
+        Settle(harness);
+        Assert.True(controller.Position.MinScrollExtent < 0);
+        Assert.True(controller.Position.MaxScrollExtent <= 0);
+        var detector = Assert.IsType<RawGestureDetector>(FindWidgetObject<RawGestureDetector>(harness.RootElement));
+        Assert.Equal(2, detector.Gestures.Count);
+        Point start = RequirePainter(harness).Geometry!.Value.ThumbRect.Center;
+        Point end = start - new Point(0, 10);
+        Dispatch(harness, new PointerDownEvent(93, PointerDeviceKind.Mouse, start, PointerButtons.Primary, PressTime));
+        Dispatch(harness, new PointerMoveEvent(
+            93, PointerDeviceKind.Mouse, end, PointerButtons.Primary,
+            down: true, timestampUtc: PressTime.AddMilliseconds(20)));
+        Assert.True(controller.Offset < 0);
+        Dispatch(harness, new PointerUpEvent(
+            93, PointerDeviceKind.Mouse, end, PointerButtons.None, PressTime.AddMilliseconds(40)));
+    }
+
+    [Fact]
+    public void RawScrollbar_ControllerAxisWinsConflictingScrollNotifications()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        BuildContext? source = null;
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            controller: controller, thumbVisibility: true, notificationPredicate: _ => true,
+            child: new Builder(context =>
+            {
+                source = context;
+                return BuildVerticalList(controller, 20);
+            })));
+        Settle(harness);
+        ScrollbarGeometry before = RequirePainter(harness).Geometry!.Value;
+        var metrics = new FixedScrollMetrics(
+            minScrollExtent: 0, maxScrollExtent: 700, pixels: 80,
+            viewportDimension: 200, axisDirection: AxisDirection.Right, devicePixelRatio: 1);
+        new ScrollUpdateNotification(metrics, scrollDelta: 80).Dispatch(source);
+        harness.Pump(ViewportSize);
+        Assert.Equal(before, RequirePainter(harness).Geometry!.Value);
+    }
+
+    [Fact]
+    public void RawScrollbar_GrowingAndShrinkingContentUpdatesThumbAndRecognizers()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        Widget Build(int count) => new RawScrollbar(
+            controller: controller, thumbVisibility: true, child: BuildVerticalList(controller, count));
+        using var harness = new WidgetRenderHarness(Build(2));
+        Settle(harness);
+        Assert.Null(RequirePainter(harness).Geometry);
+        var detector = Assert.IsType<RawGestureDetector>(FindWidgetObject<RawGestureDetector>(harness.RootElement));
+        Assert.Empty(detector.Gestures);
+        harness.UpdateWidget(Build(20));
+        Settle(harness);
+        Assert.NotNull(RequirePainter(harness).Geometry);
+        detector = Assert.IsType<RawGestureDetector>(FindWidgetObject<RawGestureDetector>(harness.RootElement));
+        Assert.Equal(2, detector.Gestures.Count);
+        harness.UpdateWidget(Build(2));
+        Settle(harness);
+        Assert.Null(RequirePainter(harness).Geometry);
+        detector = Assert.IsType<RawGestureDetector>(FindWidgetObject<RawGestureDetector>(harness.RootElement));
+        Assert.Empty(detector.Gestures);
+    }
+
+    [Fact]
+    public void RawScrollbar_ControllerVisibilityAndInteractivityCanChangeInTheSameFrame()
+    {
+        using var timers = new FakeGestureTimers();
+        using var controller = new ScrollController();
+        var child = BuildVerticalList(controller, 20);
+        using var harness = new WidgetRenderHarness(new RawScrollbar(
+            thumbVisibility: false, interactive: false, child: child));
+        Settle(harness);
+        harness.UpdateWidget(new RawScrollbar(
+            controller: controller, thumbVisibility: true, interactive: true, child: child));
+        Settle(harness);
+        Assert.Equal(1, RequirePainter(harness).FadeoutOpacityAnimation.Value);
+        Assert.NotNull(RequirePainter(harness).Geometry);
+    }
+
+    [Fact]
+    public void ScrollbarPainter_HitTestsAreEmptyUntilItsFirstPaint()
+    {
+        using var painter = new ScrollbarPainter(
+            Colors.Crimson, new ConstantAnimation<double>(1), textDirection: TextDirection.Ltr);
+        painter.Update(TestScrollMetrics(0, 0, 560, 240), AxisDirection.Down);
+        Assert.Null(painter.HitTest(new Point(197, 30)));
+        Assert.False(painter.HitTestInteractive(new Point(197, 30), PointerDeviceKind.Mouse));
+        painter.Paint(new PaintingContext(new OffsetLayer()), ViewportSize);
+        Assert.True(painter.HitTest(new Point(197, 30)));
+    }
+
+    [Theory]
+    [InlineData(0, 36)]
+    [InlineData(30, 27)]
+    [InlineData(60, 18)]
+    [InlineData(90, 9)]
+    [InlineData(120, 8)]
+    [InlineData(180, 8)]
+    public void ScrollbarPainter_OverscrollShrinksThumbGradually(double overscroll, double expectedLength)
+    {
+        using var painter = new ScrollbarPainter(
+            Colors.Crimson, new ConstantAnimation<double>(1), textDirection: TextDirection.Ltr,
+            minLength: 36, minOverscrollLength: 8);
+        painter.Update(TestScrollMetrics(-overscroll, 0, 49400, 600), AxisDirection.Down);
+        painter.Paint(new PaintingContext(new OffsetLayer()), new Size(800, 600));
+        Assert.Equal(expectedLength, painter.Geometry!.Value.ThumbRect.Height, precision: 3);
+        Assert.Equal(0, painter.Geometry!.Value.ThumbRect.Y);
+    }
+
+    [Fact]
+    public void ScrollbarPainter_EveryMutablePropertyParticipatesInShouldRepaint()
+    {
+        var animation = new ConstantAnimation<double>(1);
+        Action<ScrollbarPainter>[] changes =
+        [
+            painter => painter.Color = Colors.Blue,
+            painter => painter.TrackColor = Colors.Blue,
+            painter => painter.TrackBorderColor = Colors.Blue,
+            painter => painter.TextDirection = TextDirection.Rtl,
+            painter => painter.Thickness = 9,
+            painter => painter.MainAxisMargin = -10,
+            painter => painter.CrossAxisMargin = 2,
+            painter => painter.Radius = Radius.Elliptical(4, 8),
+            painter => painter.TrackRadius = Radius.Elliptical(8, 4),
+            painter => painter.Shape = new CircleBorder(),
+            painter => painter.Padding = EdgeInsetsGeometry.DirectionalOnly(start: 9),
+            painter => painter.MinLength = 24,
+            painter => painter.MinOverscrollLength = 8,
+            painter => painter.ScrollbarOrientation = ScrollbarOrientation.Left,
+            painter => painter.IgnorePointer = true,
+        ];
+        using var original = new ScrollbarPainter(Colors.Crimson, animation, textDirection: TextDirection.Ltr);
+        foreach (Action<ScrollbarPainter> change in changes)
+        {
+            using var changed = new ScrollbarPainter(Colors.Crimson, animation, textDirection: TextDirection.Ltr);
+            Assert.False(changed.ShouldRepaint(original));
+            change(changed);
+            Assert.True(changed.ShouldRepaint(original));
+        }
+        using var differentAnimation = new ScrollbarPainter(
+            Colors.Crimson, new ConstantAnimation<double>(1), textDirection: TextDirection.Ltr);
+        Assert.True(differentAnimation.ShouldRepaint(original));
+    }
+
     private static void Dispatch(WidgetRenderHarness harness, PointerEvent @event)
     {
         harness.RegisterForPointerEvents();
@@ -948,19 +1388,23 @@ public sealed class MaterialScrollbarTests
     private static Color WithOpacity(Color color, double opacity) => Color.FromArgb(
         (byte)Math.Round(Math.Clamp(opacity, 0, 1) * 255), color.R, color.G, color.B);
 
+    private static Widget Wrap(Widget widget) => new MediaQuery(data: new MediaQueryData(), child: widget);
+
     private sealed class WidgetRenderHarness : IDisposable
     {
         private readonly BuildOwner _owner = new();
         private readonly HarnessRootElement _root;
         private readonly PipelineOwner _pipeline;
         private bool _registeredForPointerEvents;
+        private readonly bool _provideMediaQuery;
 
-        public WidgetRenderHarness(Widget widget)
+        public WidgetRenderHarness(Widget widget, bool provideMediaQuery = true)
         {
+            _provideMediaQuery = provideMediaQuery;
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView);
             _pipeline.Attach(RenderView);
-            _root = new HarnessRootElement(RenderView, widget);
+            _root = new HarnessRootElement(RenderView, provideMediaQuery ? Wrap(widget) : widget);
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
@@ -991,7 +1435,7 @@ public sealed class MaterialScrollbarTests
 
         public void UpdateWidget(Widget widget)
         {
-            _root.Update(widget);
+            _root.Update(_provideMediaQuery ? Wrap(widget) : widget);
             _owner.FlushBuild();
         }
 
@@ -1018,7 +1462,7 @@ public sealed class MaterialScrollbarTests
 
         public WidgetTree(Widget widget)
         {
-            _root = new TreeRootElement(widget);
+            _root = new TreeRootElement(Wrap(widget));
             _root.Attach(_owner);
             _owner.BuildScope(_root, () => _root.Mount(parent: null, newSlot: null));
             _owner.FlushBuild();
