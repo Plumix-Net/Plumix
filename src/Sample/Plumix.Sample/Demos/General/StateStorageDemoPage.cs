@@ -46,7 +46,8 @@ internal sealed class StateStorageDemoPageState : State
                     "through PrimaryScrollController and its desktop chrome through ScrollConfiguration. " +
                     "Drag past an edge to compare Flutter glow and stretch indicators; the observer readout " +
                     "receives scroll and dimension notifications across sibling subtrees. The readout is also " +
-                    "wrapped in translucent MetaData and IndexedSemantics(index: 0) without changing layout.",
+                    "wrapped in translucent MetaData and IndexedSemantics(index: 0) without changing layout; " +
+                    "its identified semantics node merges the readout label while optional text stays empty.",
                     fontSize: 14,
                     color: Colors.DimGray),
                 new Row(
@@ -138,9 +139,15 @@ internal sealed class RestorableStorageListState : State
                     new MetaData(
                         metaData: "scroll-observer-readout",
                         behavior: HitTestBehavior.Translucent,
-                        child: new IndexedSemantics(
-                            index: 0,
-                            child: new ScrollObserverReadout())),
+                        child: new Semantics(
+                            identifier: "scroll-observer-readout",
+                            label: string.Empty,
+                            value: string.Empty,
+                            hint: string.Empty,
+                            tooltip: string.Empty,
+                            child: new IndexedSemantics(
+                                index: 0,
+                                child: new ScrollObserverReadout()))),
                     new Expanded(
                         child: new ScrollConfiguration(
                             behavior: new DesktopDemoScrollBehavior().CopyWith(

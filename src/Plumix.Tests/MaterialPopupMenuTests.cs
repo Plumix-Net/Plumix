@@ -561,7 +561,7 @@ public sealed class MaterialPopupMenuTests : IDisposable
             SemanticsNode? semantics = appleHarness.PumpAndGetSemantics(new Size(500, 360));
             SemanticsNode? menu = FindSemantics(semantics, node => node.Role == SemanticsRole.Menu);
             Assert.NotNull(menu);
-            Assert.Null(menu!.Label);
+            Assert.Empty(menu!.Label);
         }
 
         PlatformDefaults.DebugTargetPlatformOverride = TargetPlatform.Android;
@@ -964,4 +964,3 @@ public sealed class MaterialPopupMenuTests : IDisposable
     private static bool HasLabelPart(SemanticsNode node, string part) =>
         node.Label?.Split('\n').Contains(part) == true;
 }
-

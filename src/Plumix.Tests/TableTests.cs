@@ -650,7 +650,7 @@ public sealed class TableTests
         SemanticsNode row = Assert.Single(tableNode.Children);
         SemanticsNode wrapper = row.Children[0];
         Assert.Equal(SemanticsRole.Cell, wrapper.Role);
-        Assert.Null(wrapper.Label);
+        Assert.Empty(wrapper.Label);
         Assert.Equal(0, wrapper.IndexInParent);
         // The wrapper is clipped to its column, not to the whole row.
         Assert.Equal(new Rect(0, 0, 50, 10), wrapper.GlobalRect);

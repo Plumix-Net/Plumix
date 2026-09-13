@@ -459,30 +459,48 @@ public sealed class SemanticsConfiguration
     /// The node's label, as plain text. Assigning it replaces <see cref="AttributedLabel"/> and
     /// therefore drops any string attributes, exactly as Dart's <c>label</c> setter does.
     /// </summary>
-    /// <remarks>
-    /// Dart backs the unset state with <c>AttributedString('')</c>; Plumix keeps its own <c>null</c>
-    /// convention for "this configuration says nothing about the label".
-    /// </remarks>
-    public string? Label
+    public string Label
     {
-        get => AttributedLabel?.String;
-        set => AttributedLabel = value is null ? null : new AttributedString(value);
+        get => AttributedLabel.String;
+        set => AttributedLabel = new AttributedString(value);
     }
 
     /// <summary>The node's label with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.attributedLabel</c>.</remarks>
-    public AttributedString? AttributedLabel { get; set; }
+    public AttributedString AttributedLabel
+    {
+        get => _attributedLabel;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _attributedLabel = value;
+            _hasBeenTextAnnotated = true;
+        }
+    }
+
+    private AttributedString _attributedLabel = AttributedString.Empty;
 
     /// <summary>The node's hint, as plain text.</summary>
-    public string? Hint
+    public string Hint
     {
-        get => AttributedHint?.String;
-        set => AttributedHint = value is null ? null : new AttributedString(value);
+        get => AttributedHint.String;
+        set => AttributedHint = new AttributedString(value);
     }
 
     /// <summary>The node's hint with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.attributedHint</c>.</remarks>
-    public AttributedString? AttributedHint { get; set; }
+    public AttributedString AttributedHint
+    {
+        get => _attributedHint;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _attributedHint = value;
+            _hasBeenTextAnnotated = true;
+        }
+    }
+
+    private AttributedString _attributedHint = AttributedString.Empty;
 
     /// <summary>
     /// Replacement wording an assistive technology announces for the tap and long-press actions.
@@ -513,40 +531,84 @@ public sealed class SemanticsConfiguration
     /// <summary>The long-press hint from <see cref="HintOverrides"/>, if any.</summary>
     public string? OnLongPressHint => _hintOverrides?.OnLongPressHint;
 
-    public string? Tooltip { get; set; }
+    public string Tooltip
+    {
+        get => _tooltip;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _tooltip = value;
+            _hasBeenTextAnnotated = true;
+        }
+    }
+
+    private string _tooltip = string.Empty;
 
     /// <summary>The node's value, as plain text.</summary>
-    public string? Value
+    public string Value
     {
-        get => AttributedValue?.String;
-        set => AttributedValue = value is null ? null : new AttributedString(value);
+        get => AttributedValue.String;
+        set => AttributedValue = new AttributedString(value);
     }
 
     /// <summary>The node's value with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.attributedValue</c>.</remarks>
-    public AttributedString? AttributedValue { get; set; }
+    public AttributedString AttributedValue
+    {
+        get => _attributedValue;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _attributedValue = value;
+            _hasBeenTextAnnotated = true;
+        }
+    }
+
+    private AttributedString _attributedValue = AttributedString.Empty;
 
     /// <summary>The value the node will read after <see cref="OnIncrease"/> runs.</summary>
-    public string? IncreasedValue
+    public string IncreasedValue
     {
-        get => AttributedIncreasedValue?.String;
-        set => AttributedIncreasedValue = value is null ? null : new AttributedString(value);
+        get => AttributedIncreasedValue.String;
+        set => AttributedIncreasedValue = new AttributedString(value);
     }
 
     /// <summary>The increased value with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.attributedIncreasedValue</c>.</remarks>
-    public AttributedString? AttributedIncreasedValue { get; set; }
+    public AttributedString AttributedIncreasedValue
+    {
+        get => _attributedIncreasedValue;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _attributedIncreasedValue = value;
+            _hasBeenTextAnnotated = true;
+        }
+    }
+
+    private AttributedString _attributedIncreasedValue = AttributedString.Empty;
 
     /// <summary>The value the node will read after <see cref="OnDecrease"/> runs.</summary>
-    public string? DecreasedValue
+    public string DecreasedValue
     {
-        get => AttributedDecreasedValue?.String;
-        set => AttributedDecreasedValue = value is null ? null : new AttributedString(value);
+        get => AttributedDecreasedValue.String;
+        set => AttributedDecreasedValue = new AttributedString(value);
     }
 
     /// <summary>The decreased value with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.attributedDecreasedValue</c>.</remarks>
-    public AttributedString? AttributedDecreasedValue { get; set; }
+    public AttributedString AttributedDecreasedValue
+    {
+        get => _attributedDecreasedValue;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _attributedDecreasedValue = value;
+            _hasBeenTextAnnotated = true;
+        }
+    }
+
+    private AttributedString _attributedDecreasedValue = AttributedString.Empty;
 
     public string? MinValue { get; set; }
     public string? MaxValue { get; set; }
@@ -556,7 +618,19 @@ public sealed class SemanticsConfiguration
     /// user, and setting it makes the annotating render object introduce its own semantics node.
     /// </summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.identifier</c>.</remarks>
-    public string? Identifier { get; set; }
+    public string Identifier
+    {
+        get => _identifier;
+        set
+        {
+            ArgumentNullException.ThrowIfNull(value);
+            _identifier = value;
+            _hasBeenTextAnnotated = true;
+        }
+    }
+
+    private string _identifier = string.Empty;
+    private bool _hasBeenTextAnnotated;
 
     /// <summary>The heading level, 1 to 6, or <c>0</c> when the node is not a heading.</summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.headingLevel</c>.</remarks>
@@ -658,7 +732,17 @@ public sealed class SemanticsConfiguration
     /// <see cref="Hint"/> and friends, and the direction the default traversal sort walks siblings in.
     /// </summary>
     /// <remarks>Flutter's <c>SemanticsConfiguration.textDirection</c>.</remarks>
-    public TextDirection? TextDirection { get; set; }
+    public TextDirection? TextDirection
+    {
+        get => _textDirection;
+        set
+        {
+            _textDirection = value;
+            _hasBeenTextAnnotated = true;
+        }
+    }
+
+    private TextDirection? _textDirection;
 
     /// <summary>The locale every widget in this subtree is annotated with.</summary>
     /// <remarks>
@@ -1552,16 +1636,16 @@ public sealed class SemanticsConfiguration
             IsBlockingUserActions = IsBlockingUserActions,
             _accessibilityFocusBlockType = _accessibilityFocusBlockType,
             ChildConfigurationsDelegate = ChildConfigurationsDelegate,
-            AttributedLabel = AttributedLabel,
-            AttributedHint = AttributedHint,
+            _attributedLabel = _attributedLabel,
+            _attributedHint = _attributedHint,
             _hintOverrides = _hintOverrides,
-            Tooltip = Tooltip,
-            AttributedValue = AttributedValue,
-            AttributedIncreasedValue = AttributedIncreasedValue,
-            AttributedDecreasedValue = AttributedDecreasedValue,
+            _tooltip = _tooltip,
+            _attributedValue = _attributedValue,
+            _attributedIncreasedValue = _attributedIncreasedValue,
+            _attributedDecreasedValue = _attributedDecreasedValue,
             MinValue = MinValue,
             MaxValue = MaxValue,
-            Identifier = Identifier,
+            _identifier = _identifier,
             _headingLevel = _headingLevel,
             LinkUrl = LinkUrl,
             MaxValueLength = MaxValueLength,
@@ -1577,7 +1661,8 @@ public sealed class SemanticsConfiguration
             Actions = Actions,
             IndexInParent = IndexInParent,
             SortKey = SortKey,
-            TextDirection = TextDirection,
+            _textDirection = _textDirection,
+            _hasBeenTextAnnotated = _hasBeenTextAnnotated,
             ScrollPosition = ScrollPosition,
             ScrollExtentMax = ScrollExtentMax,
             ScrollExtentMin = ScrollExtentMin,
@@ -1667,7 +1752,8 @@ public sealed class SemanticsConfiguration
     internal static SemanticsConfiguration Empty { get; } = new();
 
     internal bool HasBeenAnnotated =>
-        !string.IsNullOrWhiteSpace(Label)
+        _hasBeenTextAnnotated
+        || !string.IsNullOrWhiteSpace(Label)
         || !string.IsNullOrWhiteSpace(Hint)
         || !string.IsNullOrWhiteSpace(OnTapHint)
         || !string.IsNullOrWhiteSpace(Tooltip)
@@ -1806,13 +1892,13 @@ public sealed class SemanticsConfiguration
     /// wrapping the child in an explicit bidi run when the two disagree on reading direction, then
     /// separating them with a newline.
     /// </summary>
-    internal static AttributedString? ConcatAttributedString(
-        AttributedString? thisString,
+    internal static AttributedString ConcatAttributedString(
+        AttributedString thisString,
         TextDirection? thisDirection,
-        AttributedString? otherString,
+        AttributedString otherString,
         TextDirection? otherDirection)
     {
-        if (otherString is null || otherString.String.Length == 0)
+        if (otherString.String.Length == 0)
         {
             return thisString;
         }
@@ -1827,7 +1913,7 @@ public sealed class SemanticsConfiguration
                 .Concat(new AttributedString(UnicodeMarks.PopDirectionalFormatting));
         }
 
-        if (thisString is null || thisString.String.Length == 0)
+        if (thisString.String.Length == 0)
         {
             return otherString;
         }
@@ -1915,9 +2001,20 @@ public sealed class SemanticsConfiguration
 
         // Values are taken, never concatenated: two annotated values make the configurations
         // incompatible in the first place.
-        AttributedValue ??= child.AttributedValue;
-        AttributedIncreasedValue ??= child.AttributedIncreasedValue;
-        AttributedDecreasedValue ??= child.AttributedDecreasedValue;
+        if (Value.Length == 0)
+        {
+            _attributedValue = child.AttributedValue;
+        }
+
+        if (IncreasedValue.Length == 0)
+        {
+            _attributedIncreasedValue = child.AttributedIncreasedValue;
+        }
+
+        if (DecreasedValue.Length == 0)
+        {
+            _attributedDecreasedValue = child.AttributedDecreasedValue;
+        }
         MinValue ??= child.MinValue;
         MaxValue ??= child.MaxValue;
 
@@ -1942,11 +2039,9 @@ public sealed class SemanticsConfiguration
             ValidationResult = child.ValidationResult;
         }
 
-        if (!string.IsNullOrWhiteSpace(child.Tooltip))
+        if (Tooltip.Length == 0)
         {
-            Tooltip = string.IsNullOrWhiteSpace(Tooltip)
-                ? child.Tooltip
-                : $"{Tooltip}\n{child.Tooltip}";
+            _tooltip = child.Tooltip;
         }
 
         if (child.HasActionHandlers)
@@ -2181,18 +2276,18 @@ public sealed partial class SemanticsNode
     private static bool IsZeroTransform(Matrix4? transform) => transform is { } value && value.IsZero();
 
     /// <summary>The node's label, as plain text.</summary>
-    public string? Label => AttributedLabel?.String;
+    public string Label => AttributedLabel.String;
 
     /// <summary>The node's label with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.attributedLabel</c>.</remarks>
-    public AttributedString? AttributedLabel { get; internal set; }
+    public AttributedString AttributedLabel { get; internal set; } = AttributedString.Empty;
 
     /// <summary>The node's hint, as plain text.</summary>
-    public string? Hint => AttributedHint?.String;
+    public string Hint => AttributedHint.String;
 
     /// <summary>The node's hint with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.attributedHint</c>.</remarks>
-    public AttributedString? AttributedHint { get; internal set; }
+    public AttributedString AttributedHint { get; internal set; } = AttributedString.Empty;
 
     /// <summary>Replacement wording for the standard tap and long-press hints.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.hintOverrides</c>.</remarks>
@@ -2204,35 +2299,35 @@ public sealed partial class SemanticsNode
     /// <summary>The long-press hint from <see cref="HintOverrides"/>, if any.</summary>
     public string? OnLongPressHint => HintOverrides?.OnLongPressHint;
 
-    public string? Tooltip { get; internal set; }
+    public string Tooltip { get; internal set; } = string.Empty;
 
     /// <summary>The node's value, as plain text.</summary>
-    public string? Value => AttributedValue?.String;
+    public string Value => AttributedValue.String;
 
     /// <summary>The node's value with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.attributedValue</c>.</remarks>
-    public AttributedString? AttributedValue { get; internal set; }
+    public AttributedString AttributedValue { get; internal set; } = AttributedString.Empty;
 
     /// <summary>The value the node will read after its increase action runs.</summary>
-    public string? IncreasedValue => AttributedIncreasedValue?.String;
+    public string IncreasedValue => AttributedIncreasedValue.String;
 
     /// <summary>The increased value with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.attributedIncreasedValue</c>.</remarks>
-    public AttributedString? AttributedIncreasedValue { get; internal set; }
+    public AttributedString AttributedIncreasedValue { get; internal set; } = AttributedString.Empty;
 
     /// <summary>The value the node will read after its decrease action runs.</summary>
-    public string? DecreasedValue => AttributedDecreasedValue?.String;
+    public string DecreasedValue => AttributedDecreasedValue.String;
 
     /// <summary>The decreased value with its string attributes.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.attributedDecreasedValue</c>.</remarks>
-    public AttributedString? AttributedDecreasedValue { get; internal set; }
+    public AttributedString AttributedDecreasedValue { get; internal set; } = AttributedString.Empty;
 
     public string? MinValue { get; internal set; }
     public string? MaxValue { get; internal set; }
 
     /// <summary>A stable identifier UI testing frameworks address the node by.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.identifier</c>.</remarks>
-    public string? Identifier { get; internal set; }
+    public string Identifier { get; internal set; } = string.Empty;
 
     /// <summary>The heading level, 1 to 6, or <c>0</c> when the node is not a heading.</summary>
     /// <remarks>Flutter's <c>SemanticsNode.headingLevel</c>.</remarks>

@@ -180,14 +180,14 @@ public sealed class CupertinoExpansionTileTests : IDisposable
         SemanticsNode collapsedRoot = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize));
         SemanticsNode collapsed = Assert.IsType<SemanticsNode>(FindSemantics(collapsedRoot, "Semantic tile"));
         Assert.Equal("Expand for more details", collapsed.OnTapHint);
-        Assert.Equal(expectsStateHint ? "Collapsed\n double tap to expand" : null, collapsed.Hint);
+        Assert.Equal(expectsStateHint ? "Collapsed\n double tap to expand" : string.Empty, collapsed.Hint);
 
         controller.Expand();
         SettleAnimation(harness);
         SemanticsNode expandedRoot = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize));
         SemanticsNode expanded = Assert.IsType<SemanticsNode>(FindSemantics(expandedRoot, "Semantic tile"));
         Assert.Equal("Collapse", expanded.OnTapHint);
-        Assert.Equal(expectsStateHint ? "Expanded\n double tap to collapse" : null, expanded.Hint);
+        Assert.Equal(expectsStateHint ? "Expanded\n double tap to collapse" : string.Empty, expanded.Hint);
         Assert.True(expanded.Actions.HasFlag(SemanticsActions.Tap));
     }
 

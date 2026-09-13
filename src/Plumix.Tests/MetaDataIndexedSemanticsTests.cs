@@ -153,7 +153,7 @@ public sealed class MetaDataIndexedSemanticsTests
         // its own node under the root's explicit child nodes, even with nothing else to say.
         var indexNode = Assert.Single(root.Children);
         Assert.Equal(5, indexNode.IndexInParent);
-        Assert.Null(indexNode.Label);
+        Assert.Empty(indexNode.Label);
     }
 
     private static T RequireRenderObject<T>(Element? element) where T : RenderObject

@@ -251,7 +251,7 @@ public sealed class CupertinoSliderTests : IDisposable
         SemanticsNode disabledRoot = Assert.IsType<SemanticsNode>(harness.PumpAndGetSemantics(ViewSize));
         SemanticsNode disabled = Assert.IsType<SemanticsNode>(
             FindSemantics(disabledRoot, candidate => candidate.Flags.HasFlag(SemanticsFlags.IsSlider)));
-        Assert.Null(disabled.Value);
+        Assert.Empty(disabled.Value);
         Assert.False(disabled.Actions.HasFlag(SemanticsActions.Increase));
         Assert.False(disabled.Actions.HasFlag(SemanticsActions.Decrease));
     }

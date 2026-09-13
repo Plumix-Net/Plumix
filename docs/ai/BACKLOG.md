@@ -40,6 +40,7 @@ Rules:
 
 | Item | Where | Next step |
 | --- | --- | --- |
+| Semantics empty-string sample verification is open: desktop launch stays running, but the UI tool cannot resolve the unbundled executable. | `src/Sample/Plumix.Sample/Demos/General/StateStorageDemoPage.cs`, `dart_sample/lib/demos/general/state_storage_demo_page.dart` | Open PageStorage + SharedAppData interactively and verify the readout still renders and updates under its identified semantics wrapper; non-null text and merge geometry are covered by framework tests. |
 | `SingleChildScrollView` desktop visual verification remains open: the sample enters the native event loop, but the UI tool cannot attach to its window. | `src/Sample/Plumix.Sample/Demos/General/ScrollPhysicsDemoPage.cs`, `dart_sample/lib/demos/general/scroll_physics_demo_page.dart` | Open Scroll physics in an interactive desktop session and verify the horizontal strip, clipping and directional padding; framework tests and Dart analysis pass. |
 
 ## Host-level gaps (platform adapters, `src/Plumix/FlutterHost.cs` and per-host projects)

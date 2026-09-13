@@ -15,9 +15,8 @@ namespace Plumix.Rendering;
 /// <remarks>
 /// Flutter's <c>SemanticsData</c>. Dart splits the tri-state flags into a <c>SemanticsFlags</c>
 /// value object; Plumix keeps the framework's <see cref="SemanticsFlags"/> bit set, so
-/// <c>flagsCollection</c>/<c>flags</c> collapse into <see cref="Flags"/>. The unset semantic strings
-/// stay <c>null</c> rather than Dart's <c>AttributedString('')</c>, per the pre-existing convention
-/// recorded in `docs/ai/DIVERGENCES.md`.
+/// <c>flagsCollection</c>/<c>flags</c> collapse into <see cref="Flags"/>. Semantic text is non-null,
+/// with unset strings represented by <c>AttributedString('')</c> just as in Dart.
 /// </remarks>
 public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
 {
@@ -25,15 +24,15 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
     public SemanticsData(
         SemanticsFlags flags,
         SemanticsActions actions,
-        string? identifier,
+        string identifier,
         object? traversalParentIdentifier,
         object? traversalChildIdentifier,
-        AttributedString? attributedLabel,
-        AttributedString? attributedValue,
-        AttributedString? attributedIncreasedValue,
-        AttributedString? attributedDecreasedValue,
-        AttributedString? attributedHint,
-        string? tooltip,
+        AttributedString attributedLabel,
+        AttributedString attributedValue,
+        AttributedString attributedIncreasedValue,
+        AttributedString attributedDecreasedValue,
+        AttributedString attributedHint,
+        string tooltip,
         TextDirection? textDirection,
         Rect rect,
         TextSelection? textSelection,
@@ -59,26 +58,33 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
         Matrix4? transform = null,
         IReadOnlyList<int>? customSemanticsActionIds = null)
     {
+        ArgumentNullException.ThrowIfNull(identifier);
+        ArgumentNullException.ThrowIfNull(attributedLabel);
+        ArgumentNullException.ThrowIfNull(attributedValue);
+        ArgumentNullException.ThrowIfNull(attributedIncreasedValue);
+        ArgumentNullException.ThrowIfNull(attributedDecreasedValue);
+        ArgumentNullException.ThrowIfNull(attributedHint);
+        ArgumentNullException.ThrowIfNull(tooltip);
         Debug.Assert(
             string.IsNullOrEmpty(tooltip) || textDirection is not null,
             $"A SemanticsData object with tooltip \"{tooltip}\" had a null textDirection.");
         Debug.Assert(
             IsEmptyString(attributedLabel) || textDirection is not null,
-            $"A SemanticsData object with label \"{attributedLabel?.String}\" had a null textDirection.");
+            $"A SemanticsData object with label \"{attributedLabel.String}\" had a null textDirection.");
         Debug.Assert(
             IsEmptyString(attributedValue) || textDirection is not null,
-            $"A SemanticsData object with value \"{attributedValue?.String}\" had a null textDirection.");
+            $"A SemanticsData object with value \"{attributedValue.String}\" had a null textDirection.");
         Debug.Assert(
             IsEmptyString(attributedDecreasedValue) || textDirection is not null,
-            $"A SemanticsData object with decreasedValue \"{attributedDecreasedValue?.String}\" "
+            $"A SemanticsData object with decreasedValue \"{attributedDecreasedValue.String}\" "
             + "had a null textDirection.");
         Debug.Assert(
             IsEmptyString(attributedIncreasedValue) || textDirection is not null,
-            $"A SemanticsData object with increasedValue \"{attributedIncreasedValue?.String}\" "
+            $"A SemanticsData object with increasedValue \"{attributedIncreasedValue.String}\" "
             + "had a null textDirection.");
         Debug.Assert(
             IsEmptyString(attributedHint) || textDirection is not null,
-            $"A SemanticsData object with hint \"{attributedHint?.String}\" had a null textDirection.");
+            $"A SemanticsData object with hint \"{attributedHint.String}\" had a null textDirection.");
         Debug.Assert(headingLevel is >= 0 and <= 6, "Heading level must be between 0 and 6");
         Debug.Assert(
             linkUrl is null || flags.HasFlag(SemanticsFlags.IsLink),
@@ -121,7 +127,7 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
         CustomSemanticsActionIds = customSemanticsActionIds;
     }
 
-    private static bool IsEmptyString(AttributedString? value) => (value?.String.Length ?? 0) == 0;
+    private static bool IsEmptyString(AttributedString value) => value.String.Length == 0;
 
     /// <summary>The semantic flags that apply to this node.</summary>
     public SemanticsFlags Flags { get; }
@@ -130,7 +136,7 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
     public SemanticsActions Actions { get; }
 
     /// <summary>The node's stable string identifier.</summary>
-    public string? Identifier { get; }
+    public string Identifier { get; }
 
     /// <summary>The key naming this node as a traversal-graft parent.</summary>
     public object? TraversalParentIdentifier { get; }
@@ -139,22 +145,22 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
     public object? TraversalChildIdentifier { get; }
 
     /// <summary>The label, with its string attributes.</summary>
-    public AttributedString? AttributedLabel { get; }
+    public AttributedString AttributedLabel { get; }
 
     /// <summary>The current value, with its string attributes.</summary>
-    public AttributedString? AttributedValue { get; }
+    public AttributedString AttributedValue { get; }
 
     /// <summary>The value after <see cref="SemanticsActions.Increase"/>.</summary>
-    public AttributedString? AttributedIncreasedValue { get; }
+    public AttributedString AttributedIncreasedValue { get; }
 
     /// <summary>The value after <see cref="SemanticsActions.Decrease"/>.</summary>
-    public AttributedString? AttributedDecreasedValue { get; }
+    public AttributedString AttributedDecreasedValue { get; }
 
     /// <summary>The hint about what acting on this node does.</summary>
-    public AttributedString? AttributedHint { get; }
+    public AttributedString AttributedHint { get; }
 
     /// <summary>The node's tooltip.</summary>
-    public string? Tooltip { get; }
+    public string Tooltip { get; }
 
     /// <summary>The reading direction of every string above.</summary>
     public TextDirection? TextDirection { get; }
@@ -229,19 +235,19 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
     public IReadOnlyList<int>? CustomSemanticsActionIds { get; }
 
     /// <summary>The plain text of <see cref="AttributedLabel"/>.</summary>
-    public string? Label => AttributedLabel?.String;
+    public string Label => AttributedLabel.String;
 
     /// <summary>The plain text of <see cref="AttributedValue"/>.</summary>
-    public string? Value => AttributedValue?.String;
+    public string Value => AttributedValue.String;
 
     /// <summary>The plain text of <see cref="AttributedIncreasedValue"/>.</summary>
-    public string? IncreasedValue => AttributedIncreasedValue?.String;
+    public string IncreasedValue => AttributedIncreasedValue.String;
 
     /// <summary>The plain text of <see cref="AttributedDecreasedValue"/>.</summary>
-    public string? DecreasedValue => AttributedDecreasedValue?.String;
+    public string DecreasedValue => AttributedDecreasedValue.String;
 
     /// <summary>The plain text of <see cref="AttributedHint"/>.</summary>
-    public string? Hint => AttributedHint?.String;
+    public string Hint => AttributedHint.String;
 
     /// <remarks>Flutter's <c>SemanticsData.hasFlag</c>.</remarks>
     public bool HasFlag(SemanticsFlags flag) => (Flags & flag) != SemanticsFlags.None;
@@ -270,7 +276,7 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
             new IterableProperty<string?>("customActions", customSemanticsActionSummary, ifEmpty: null));
         List<string> flagSummary = [.. DescribeEnumFlags(Flags)];
         properties.Add(new IterableProperty<string>("flags", flagSummary, ifEmpty: null));
-        properties.Add(new StringProperty("identifier", Identifier, defaultValue: null));
+        properties.Add(new StringProperty("identifier", Identifier, defaultValue: string.Empty));
         properties.Add(new DiagnosticsProperty<object>(
             "traversalParentIdentifier",
             TraversalParentIdentifier,
@@ -284,7 +290,7 @@ public sealed class SemanticsData : Diagnosticable, IEquatable<SemanticsData>
         properties.Add(new AttributedStringProperty("increasedValue", AttributedIncreasedValue));
         properties.Add(new AttributedStringProperty("decreasedValue", AttributedDecreasedValue));
         properties.Add(new AttributedStringProperty("hint", AttributedHint));
-        properties.Add(new StringProperty("tooltip", Tooltip, defaultValue: null));
+        properties.Add(new StringProperty("tooltip", Tooltip, defaultValue: string.Empty));
         properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
         if (TextSelection is { IsValid: true } selection)
         {
@@ -504,15 +510,15 @@ public sealed partial class SemanticsNode
         // The action bits are filtered for this node at the very end, because the filtering has to
         // happen after its descendants have been merged in.
         SemanticsActions actions = Actions;
-        string? identifier = Identifier;
+        string identifier = Identifier;
         object? traversalParentIdentifier = TraversalParentIdentifier;
         object? traversalChildIdentifier = TraversalChildIdentifier;
-        AttributedString? attributedLabel = AttributedLabel;
-        AttributedString? attributedValue = AttributedValue;
-        AttributedString? attributedIncreasedValue = AttributedIncreasedValue;
-        AttributedString? attributedDecreasedValue = AttributedDecreasedValue;
-        AttributedString? attributedHint = AttributedHint;
-        string? tooltip = Tooltip;
+        AttributedString attributedLabel = AttributedLabel;
+        AttributedString attributedValue = AttributedValue;
+        AttributedString attributedIncreasedValue = AttributedIncreasedValue;
+        AttributedString attributedDecreasedValue = AttributedDecreasedValue;
+        AttributedString attributedHint = AttributedHint;
+        string tooltip = Tooltip;
         TextDirection? textDirection = TextDirection;
         HashSet<SemanticsTag>? mergedTags = _tags is null ? null : [.. _tags];
         TextSelection? textSelection = TextSelection;
@@ -694,8 +700,7 @@ public sealed partial class SemanticsNode
             customSemanticsActionIds: sortedActionIds);
     }
 
-    private static bool IsEmptyAttributedString(AttributedString? value) =>
-        (value?.String.Length ?? 0) == 0;
+    private static bool IsEmptyAttributedString(AttributedString value) => value.String.Length == 0;
 
     /// <summary>
     /// Adds the ids of <paramref name="customActions"/> and of the two hint overrides to
