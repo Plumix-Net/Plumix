@@ -1266,9 +1266,8 @@ public class PipelineOwner : DiagnosticableTree
 
     /// <summary>A textual representation of the render tree rooted at <see cref="RootNode"/>.</summary>
     /// <remarks>
-    /// Flutter's <c>debugDumpRenderTree()</c> prints through <c>debugPrint</c> from
-    /// <c>rendering/binding.dart</c>; Plumix has neither the binding globals nor <c>debugPrint</c>, so
-    /// the dump is returned instead of printed (see <c>docs/ai/DIVERGENCES.md</c>).
+    /// A single-root convenience helper. For Flutter's binding-wide printing function, use
+    /// <see cref="RenderingDebug.DebugDumpRenderTree"/>.
     /// </remarks>
     public string DebugDumpRenderTree() => _rootNode?.ToStringDeep() ?? string.Empty;
 
@@ -1277,8 +1276,8 @@ public class PipelineOwner : DiagnosticableTree
     /// entry per render object that contributes to semantics.
     /// </summary>
     /// <remarks>
-    /// Flutter's top-level <c>debugDumpRenderObjectSemanticsTree()</c>, which joins the dump of
-    /// every render view's <c>_semantics</c>. Plumix owns exactly one root per pipeline.
+    /// A single-root convenience helper. For Flutter's binding-wide printing function, use
+    /// <see cref="RenderingDebug.DebugDumpRenderObjectSemanticsTree"/>.
     /// </remarks>
     public string DebugDumpRenderObjectSemanticsTree() => _rootNode?.Semantics.ToStringDeep() ?? string.Empty;
 }

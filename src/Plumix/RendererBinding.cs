@@ -31,7 +31,7 @@ namespace Plumix;
 /// </remarks>
 public sealed class RendererBinding
 {
-    private readonly Dictionary<int, RenderView> _viewIdToRenderView = [];
+    private readonly OrderedDictionary<int, RenderView> _viewIdToRenderView = [];
     private readonly HostPipelineManifold _manifold;
     private MouseTracker _mouseTracker = null!;
     private bool _debugMouseTrackerUpdateScheduled;

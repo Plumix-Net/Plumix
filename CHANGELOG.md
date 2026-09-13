@@ -8,6 +8,8 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Binding-wide render, layer and semantics-fragment dumps print through `DebugPrint` (binding.dart, object.dart).
+- Breaking: re-registering a render view moves it to the end of the binding's view order (binding.dart).
 - Breaking: semantics text defaults to empty strings; assignment and absorption follow Dart (semantics.dart).
 - Breaking: `Element.Widget` is cleared on unmount; `Mounted` follows configuration lifetime (framework.dart).
 - A failing dirty-element rebuild is reported without aborting the remaining build scope (framework.dart).

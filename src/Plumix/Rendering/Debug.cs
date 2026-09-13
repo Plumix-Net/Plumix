@@ -21,7 +21,7 @@ public delegate void ProfilePaintCallback(RenderObject renderObject);
 /// prefix that the namespace already supplies. Any change here must be reflected in
 /// <see cref="AssertAllRenderVarsUnset"/>.
 /// </remarks>
-public static class RenderingDebug
+public static partial class RenderingDebug
 {
     /// <remarks>Flutter's <c>_kDebugDefaultRepaintColor</c>.</remarks>
     private static readonly HSVColor KDebugDefaultRepaintColor = new(0.4, 60.0, 1.0, 1.0);
