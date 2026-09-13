@@ -19,7 +19,7 @@ public sealed class TooltipVisibility : StatelessWidget
 
     public static bool Of(BuildContext context)
     {
-        return context.DependOnInherited<TooltipVisibilityScope>()?.Visible ?? true;
+        return context.DependOnInheritedWidgetOfExactType<TooltipVisibilityScope>()?.Visible ?? true;
     }
 
     public override Widget Build(BuildContext context) => new TooltipVisibilityScope(Visible, Child);
@@ -33,7 +33,7 @@ public sealed class TooltipVisibility : StatelessWidget
 
         public bool Visible { get; }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
             ((TooltipVisibilityScope)oldWidget).Visible != Visible;
     }
 }

@@ -152,7 +152,7 @@ public sealed class NavigationRail : StatefulWidget
 
     public static double ExtendedAnimationValueOf(BuildContext context)
     {
-        return context.DependOnInherited<NavigationRailExtendedAnimationScope>()?.Value
+        return context.DependOnInheritedWidgetOfExactType<NavigationRailExtendedAnimationScope>()?.Value
                ?? throw new InvalidOperationException("No NavigationRail ancestor was found.");
     }
 
@@ -748,7 +748,7 @@ internal sealed class NavigationRailExtendedAnimationScope : InheritedWidget
     }
 
     public double Value { get; }
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return Math.Abs(((NavigationRailExtendedAnimationScope)oldWidget).Value - Value) > double.Epsilon;
     }

@@ -217,7 +217,7 @@ public sealed class RootWidgetTests
         var owner = new BuildOwner();
         RootElement root = new RootWidget(child: new Probe("a")).Attach(owner);
 
-        FlutterError error = Assert.Throws<FlutterError>(() => owner.ScheduleBuild(root.ChildElement!));
+        FlutterError error = Assert.Throws<FlutterError>(() => owner.ScheduleBuildFor(root.ChildElement!));
         Assert.StartsWith(
             "scheduleBuildFor() called for a widget that is not marked as dirty.",
             error.Message);
@@ -234,7 +234,7 @@ public sealed class RootWidgetTests
         state!.Bump();
         Assert.True(state.Element.Dirty);
 
-        FlutterError error = Assert.Throws<FlutterError>(() => owner.ScheduleBuild(state.Element));
+        FlutterError error = Assert.Throws<FlutterError>(() => owner.ScheduleBuildFor(state.Element));
         Assert.StartsWith("BuildOwner.scheduleBuildFor() called inappropriately.", error.Message);
         Assert.Contains(
             "already in the dirty list",
@@ -250,7 +250,7 @@ public sealed class RootWidgetTests
         RootElement root = new RootWidget(child: new Probe("a", report: s => state = s)).Attach(owner);
 
         state!.Bump();
-        owner.BuildScope(root, () => owner.ScheduleBuild(state.Element));
+        owner.BuildScope(root, () => owner.ScheduleBuildFor(state.Element));
 
         Assert.False(state.Element.Dirty);
     }

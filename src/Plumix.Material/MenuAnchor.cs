@@ -485,16 +485,16 @@ internal sealed class MenuAnchorScope : InheritedWidget
 
     public AnimationStatus AnimationStatus { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         ((MenuAnchorScope)oldWidget).AnimationStatus != AnimationStatus;
 
     /// <summary>Returns the nearest anchor scope without creating a dependency.</summary>
     public static MenuAnchorScope? MaybeOf(BuildContext context) =>
-        context.GetInherited<MenuAnchorScope>();
+        context.GetInheritedWidgetOfExactType<MenuAnchorScope>();
 
     /// <summary>Returns the nearest anchor's animation status, creating a dependency on it.</summary>
     public static AnimationStatus? MaybeAnimationStatusOf(BuildContext context) =>
-        context.DependOnInherited<MenuAnchorScope>()?.AnimationStatus;
+        context.DependOnInheritedWidgetOfExactType<MenuAnchorScope>()?.AnimationStatus;
 }
 
 /// <summary>The overlay content of an open <see cref="MenuAnchor"/>.</summary>

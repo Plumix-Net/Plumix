@@ -725,6 +725,6 @@ public sealed class AutocompleteHighlightedOption : InheritedNotifier<ValueNotif
 
     public static int Of(BuildContext context)
     {
-        return context.DependOnInherited<AutocompleteHighlightedOption>()?.Notifier?.Value ?? 0;
+        return context.DependOnInheritedWidgetOfExactType<AutocompleteHighlightedOption>()?.Notifier?.Value ?? 0;
     }
 }

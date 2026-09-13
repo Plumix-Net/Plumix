@@ -92,11 +92,11 @@ public class MenuBarTheme : InheritedTheme
 
     public override Widget Wrap(BuildContext context, Widget child) => new MenuBarTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(Data, ((MenuBarTheme)oldWidget).Data);
 
     public static MenuBarThemeData Of(BuildContext context) =>
-        context.DependOnInherited<MenuBarTheme>()?.Data ?? Theme.Of(context).MenuBarTheme;
+        context.DependOnInheritedWidgetOfExactType<MenuBarTheme>()?.Data ?? Theme.Of(context).MenuBarTheme;
 }
 
 /// <summary>
@@ -115,9 +115,9 @@ public class MenuButtonTheme : InheritedTheme
     public override Widget Wrap(BuildContext context, Widget child) =>
         new MenuButtonTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(Data, ((MenuButtonTheme)oldWidget).Data);
 
     public static MenuButtonThemeData Of(BuildContext context) =>
-        context.DependOnInherited<MenuButtonTheme>()?.Data ?? Theme.Of(context).MenuButtonTheme;
+        context.DependOnInheritedWidgetOfExactType<MenuButtonTheme>()?.Data ?? Theme.Of(context).MenuButtonTheme;
 }

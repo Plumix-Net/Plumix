@@ -68,11 +68,11 @@ public sealed class TimePickerTheme : InheritedTheme
 
     public override Widget Wrap(BuildContext context, Widget child) => new TimePickerTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(Data, ((TimePickerTheme)oldWidget).Data);
 
     public static TimePickerThemeData Of(BuildContext context) =>
-        context.DependOnInherited<TimePickerTheme>()?.Data ?? Theme.Of(context).TimePickerTheme;
+        context.DependOnInheritedWidgetOfExactType<TimePickerTheme>()?.Data ?? Theme.Of(context).TimePickerTheme;
 }
 
 /// The non-nullable default surface Flutter models as `_TimePickerDefaults`. It also carries the

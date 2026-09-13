@@ -35,9 +35,9 @@ internal sealed class SliverZeroFlexParentDataWidget : ParentDataWidget<SliverPh
     {
     }
 
-    public override Type DebugTypicalAncestorWidgetType => typeof(SliverCrossAxisGroup);
+    public override Type DebugTypicalAncestorWidgetClass => typeof(SliverCrossAxisGroup);
 
-    protected override void ApplyParentData(RenderObject renderObject)
+    public override void ApplyParentData(RenderObject renderObject)
     {
         var parentData = (SliverPhysicalParentData)renderObject.parentData!;
         if (parentData.CrossAxisFlex == 0)
@@ -86,9 +86,9 @@ public sealed class SliverCrossAxisExpanded : ParentDataWidget<SliverPhysicalPar
 
     public Widget Sliver => Child;
 
-    public override Type DebugTypicalAncestorWidgetType => typeof(SliverCrossAxisGroup);
+    public override Type DebugTypicalAncestorWidgetClass => typeof(SliverCrossAxisGroup);
 
-    protected override void ApplyParentData(RenderObject renderObject)
+    public override void ApplyParentData(RenderObject renderObject)
     {
         var parentData = (SliverPhysicalParentData)renderObject.parentData!;
         if (parentData.CrossAxisFlex == Flex)

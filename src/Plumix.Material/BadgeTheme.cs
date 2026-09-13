@@ -149,13 +149,13 @@ public sealed class BadgeTheme : InheritedTheme
         return new BadgeTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((BadgeTheme)oldWidget).Data, Data);
     }
 
     public static BadgeThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<BadgeTheme>()?.Data ?? Theme.Of(context).BadgeTheme;
+        return context.DependOnInheritedWidgetOfExactType<BadgeTheme>()?.Data ?? Theme.Of(context).BadgeTheme;
     }
 }

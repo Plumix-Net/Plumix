@@ -151,14 +151,14 @@ public sealed class DatePickerTheme : InheritedTheme
 
     public override Widget Wrap(BuildContext context, Widget child) => new DatePickerTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(Data, ((DatePickerTheme)oldWidget).Data);
 
     public static DatePickerThemeData Of(BuildContext context) =>
         MaybeOf(context) ?? Theme.Of(context).DatePickerTheme;
 
     public static DatePickerThemeData? MaybeOf(BuildContext context) =>
-        context.DependOnInherited<DatePickerTheme>()?.Data;
+        context.DependOnInheritedWidgetOfExactType<DatePickerTheme>()?.Data;
 
     public static DatePickerThemeData Defaults(BuildContext context) => Theme.Of(context).UseMaterial3
         ? new DatePickerDefaultsM3(context)

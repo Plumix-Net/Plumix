@@ -894,7 +894,7 @@ public sealed class CupertinoNavigationBarTests : IDisposable
             _pipeline.Attach(RenderView);
             _root = new RootElement(RenderView, widget);
             _root.Attach(_owner);
-            _root.Mount(null, null);
+            _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
             _owner.FlushBuild();
         }
 

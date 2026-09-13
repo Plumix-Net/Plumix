@@ -834,10 +834,10 @@ public sealed class DropdownButtonHideUnderline : InheritedWidget
     {
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 
     public static bool At(BuildContext context) =>
-        context.DependOnInherited<DropdownButtonHideUnderline>() is not null;
+        context.DependOnInheritedWidgetOfExactType<DropdownButtonHideUnderline>() is not null;
 }
 
 public sealed class DropdownButton<T> : StatefulWidget

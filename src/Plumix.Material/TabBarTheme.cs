@@ -278,7 +278,7 @@ public sealed class TabBarTheme : InheritedTheme
 
     public override Widget Wrap(BuildContext context, Widget child) => new TabBarTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((TabBarTheme)oldWidget).Data, Data);
 
     /// <summary>
@@ -286,7 +286,7 @@ public sealed class TabBarTheme : InheritedTheme
     /// <see cref="ThemeData.TabBarTheme"/>.
     /// </summary>
     public static TabBarThemeData Of(BuildContext context) =>
-        context.DependOnInherited<TabBarTheme>()?.Data ?? Theme.Of(context).TabBarTheme;
+        context.DependOnInheritedWidgetOfExactType<TabBarTheme>()?.Data ?? Theme.Of(context).TabBarTheme;
 
     /// <summary>Dart parity: <c>TabBarTheme.copyWith</c>, which drops the key, child and data.</summary>
     public TabBarTheme CopyWith(

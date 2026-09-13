@@ -149,13 +149,13 @@ public sealed class TooltipTheme : InheritedTheme
 
     public override Widget Wrap(BuildContext context, Widget child) => new TooltipTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((TooltipTheme)oldWidget).Data, Data);
     }
 
     public static TooltipThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<TooltipTheme>()?.Data ?? Theme.Of(context).TooltipTheme;
+        return context.DependOnInheritedWidgetOfExactType<TooltipTheme>()?.Data ?? Theme.Of(context).TooltipTheme;
     }
 }

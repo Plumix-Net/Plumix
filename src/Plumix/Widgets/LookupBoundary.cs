@@ -14,7 +14,7 @@ public sealed class LookupBoundary : InheritedWidget
     public static T? DependOnInheritedWidgetOfExactType<T>(BuildContext context, object? aspect = null)
         where T : InheritedWidget
     {
-        _ = context.DependOnInherited<LookupBoundary>();
+        _ = context.DependOnInheritedWidgetOfExactType<LookupBoundary>();
         InheritedElement? candidate = GetElementForInheritedWidgetOfExactType<T>(context);
         if (candidate == null)
         {
@@ -179,5 +179,5 @@ public sealed class LookupBoundary : InheritedWidget
         return ancestorFound && hiddenByBoundary;
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 }

@@ -34,14 +34,14 @@ public sealed class SearchBarTheme : InheritedWidget
 
     public SearchBarThemeData Data { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((SearchBarTheme)oldWidget).Data, Data);
     }
 
     public static SearchBarThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<SearchBarTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<SearchBarTheme>();
         if (localTheme is not null)
         {
             return localTheme.Data;

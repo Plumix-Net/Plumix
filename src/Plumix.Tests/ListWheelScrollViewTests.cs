@@ -1583,13 +1583,13 @@ public sealed class ListWheelScrollViewTests
     {
         public override Widget Build(BuildContext context)
         {
-            builtInScope.Add(context.Owner!.IsBuilding);
+            builtInScope.Add(context.Owner!.DebugBuilding);
             return new SizedBox();
         }
 
         public override void Deactivate()
         {
-            deactivatedInScope.Add(Element.Owner!.IsBuilding);
+            deactivatedInScope.Add(Element.Owner!.DebugBuilding);
             base.Deactivate();
         }
     }

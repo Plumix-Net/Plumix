@@ -171,14 +171,14 @@ public sealed class BottomNavigationBarTheme : InheritedWidget
 
     public BottomNavigationBarThemeData Data { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((BottomNavigationBarTheme)oldWidget).Data, Data);
     }
 
     public static BottomNavigationBarThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<BottomNavigationBarTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<BottomNavigationBarTheme>();
         if (localTheme is not null)
         {
             return localTheme.Data;

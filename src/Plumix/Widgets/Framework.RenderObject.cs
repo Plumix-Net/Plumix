@@ -1,10 +1,15 @@
 using Plumix.Foundation;
 using Plumix.Rendering;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/framework.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/framework.dart
 
 namespace Plumix.Widgets;
 
+/// <summary>
+/// C#-only: the element-side contract of a render-object parent. <see cref="RenderObjectElement"/> is
+/// the framework's only implementer; test harness roots implement it to host a render tree without
+/// a <see cref="View"/>.
+/// </summary>
 internal interface IRenderObjectHost
 {
     void InsertRenderObjectChild(RenderObject child, object? slot);
@@ -22,6 +27,10 @@ public interface ISlottedRenderObjectContainer
     void SetChild(RenderObject? child, object slot);
 }
 
+/// <summary>
+/// RenderObjectWidgets provide the configuration for <see cref="RenderObjectElement"/>s, which wrap
+/// <see cref="Rendering.RenderObject"/>s. Dart's <c>RenderObjectWidget</c>.
+/// </summary>
 public abstract class RenderObjectWidget(Key? key = null) : Widget(key)
 {
     public abstract RenderObject CreateRenderObject(BuildContext context);
@@ -35,11 +44,17 @@ public abstract class RenderObjectWidget(Key? key = null) : Widget(key)
     }
 }
 
+/// <summary>
+/// A superclass for <see cref="RenderObjectWidget"/>s that configure render objects with no children.
+/// </summary>
 public abstract class LeafRenderObjectWidget(Key? key = null) : RenderObjectWidget(key)
 {
     public override Element CreateElement() => new LeafRenderObjectElement(this);
 }
 
+/// <summary>
+/// A superclass for <see cref="RenderObjectWidget"/>s that configure render objects with a single child.
+/// </summary>
 public abstract class SingleChildRenderObjectWidget : RenderObjectWidget
 {
     protected SingleChildRenderObjectWidget(Widget? child = null, Key? key = null) : base(key)
@@ -52,6 +67,9 @@ public abstract class SingleChildRenderObjectWidget : RenderObjectWidget
     public override Element CreateElement() => new SingleChildRenderObjectElement(this);
 }
 
+/// <summary>
+/// A superclass for <see cref="RenderObjectWidget"/>s that configure render objects with a list of children.
+/// </summary>
 public abstract class MultiChildRenderObjectWidget : RenderObjectWidget
 {
     protected MultiChildRenderObjectWidget(IReadOnlyList<Widget>? children = null, Key? key = null) : base(key)
@@ -78,178 +96,43 @@ public abstract class SlottedMultiChildRenderObjectWidget<TSlot> : RenderObjectW
     public override Element CreateElement() => new SlottedRenderObjectElement<TSlot>(this);
 }
 
+/// <summary>An <see cref="Element"/> that uses a <see cref="RenderObjectWidget"/> as its configuration.</summary>
 public abstract class RenderObjectElement : Element, IRenderObjectHost
 {
     private RenderObject? _renderObject;
-    private IRenderObjectHost? _ancestorRenderObjectHost;
+    private bool _debugDoingBuild;
+    private IRenderObjectHost? _ancestorRenderObjectElement;
     private Element? _ancestorRenderObjectHostElement;
 
     protected RenderObjectElement(RenderObjectWidget widget) : base(widget)
     {
     }
 
-    public sealed override RenderObject? RenderObject => _renderObject;
+    /// <summary>
+    /// The underlying render object for this element. Dart's <c>RenderObjectElement.renderObject</c>.
+    /// </summary>
+    public sealed override RenderObject RenderObject
+    {
+        get
+        {
+            if (Constants.KDebugMode && _renderObject == null)
+            {
+                throw new AssertionError($"{Diagnostics.DescribeType(GetType())} unmounted");
+            }
+
+            return _renderObject!;
+        }
+    }
+
+    /// <summary>Kept for existing callers; identical to <see cref="RenderObject"/>.</summary>
+    protected RenderObject RequireRenderObject() => RenderObject;
+
+    public override Element? RenderObjectAttachingChild => null;
+
+    /// <inheritdoc />
+    public override bool DebugDoingBuild => _debugDoingBuild;
 
     protected RenderObjectWidget RenderObjectWidget => (RenderObjectWidget)Widget;
-
-    protected override void OnMount()
-    {
-        base.OnMount();
-        DebugDoingBuild = true;
-        try
-        {
-            _renderObject = RenderObjectWidget.CreateRenderObject(this);
-        }
-        finally
-        {
-            DebugDoingBuild = false;
-        }
-
-        DebugUpdateRenderObjectOwner();
-        AttachRenderObject(Slot);
-
-        // Dart's RenderObjectElement.mount clears the dirty flag itself rather than building.
-        base.PerformRebuild();
-    }
-
-    /// <summary>
-    /// Stamps this element onto the render object as its <see cref="RenderObject.DebugCreator"/>, so
-    /// an error reported from the render tree can name the widget that produced it. Debug only.
-    /// </summary>
-    /// <remarks>Flutter's <c>RenderObjectElement._debugUpdateRenderObjectOwner</c>.</remarks>
-    private void DebugUpdateRenderObjectOwner()
-    {
-        if (Constants.KDebugMode && _renderObject is not null)
-        {
-            _renderObject.DebugCreator = new DebugCreator(this);
-        }
-    }
-
-    protected override void OnDeactivate()
-    {
-        base.OnDeactivate();
-        if (RequireRenderObject().Attached)
-        {
-            throw new AssertionError(
-                $"{GetType().Name} must be detached before it is deactivated; "
-                + $"{RequireRenderObject().GetType().Name} is still attached to "
-                + $"{RequireRenderObject().Parent?.GetType().Name ?? "no render parent"} via "
-                + $"{_ancestorRenderObjectHost?.GetType().Name ?? "no element host"}.");
-        }
-    }
-
-    public override void Update(Widget newWidget)
-    {
-        base.Update(newWidget);
-        DebugUpdateRenderObjectOwner();
-        PerformRenderObjectRebuild();
-    }
-
-    protected override void PerformRebuild() => PerformRenderObjectRebuild();
-
-    /// <summary>
-    /// Pushes the widget's configuration into the render object and clears <see cref="Element.Dirty"/>.
-    /// </summary>
-    /// <remarks>
-    /// Dart's private <c>RenderObjectElement._performRebuild</c>. <c>update</c> goes through this
-    /// rather than through the virtual <c>performRebuild</c>, so a subclass that rebuilds children
-    /// there (a sliver or list-wheel adaptor) is not asked to rebuild them twice.
-    /// </remarks>
-    private void PerformRenderObjectRebuild()
-    {
-        DebugDoingBuild = true;
-        try
-        {
-            RenderObjectWidget.UpdateRenderObject(this, RequireRenderObject());
-        }
-        finally
-        {
-            DebugDoingBuild = false;
-        }
-
-        base.PerformRebuild();
-    }
-
-    public override void UpdateSlot(object? newSlot)
-    {
-        object? oldSlot = Slot;
-        base.UpdateSlot(newSlot);
-
-        if (_ancestorRenderObjectHost != null && !Equals(oldSlot, newSlot))
-        {
-            _ancestorRenderObjectHost.MoveRenderObjectChild(RequireRenderObject(), oldSlot, newSlot);
-        }
-    }
-
-    /// <summary>
-    /// Dart's <c>RenderObjectElement._updateParentData</c>. When the widget cannot write to this
-    /// render object's parent data, the mismatch is <em>reported</em> rather than thrown — the tree is
-    /// already broken, and activating an <c>ErrorWidget</c> here would only pile on further failures —
-    /// and the parent data is left untouched.
-    /// </summary>
-    internal void UpdateParentData(IParentDataWidget parentDataWidget)
-    {
-        var renderObject = RequireRenderObject();
-        bool applyParentData = true;
-        if (Constants.KDebugMode && !parentDataWidget.DebugIsValidRenderObject(renderObject))
-        {
-            applyParentData = false;
-            var error = new FlutterError(
-            [
-                new ErrorSummary("Incorrect use of ParentDataWidget."),
-                .. parentDataWidget.DebugDescribeIncorrectParentDataType(
-                    parentData: renderObject.parentData,
-                    parentDataCreator: _ancestorRenderObjectHostElement is RenderObjectElement ancestorElement
-                        ? (RenderObjectWidget)ancestorElement.Widget
-                        : null,
-                    ownershipChain: new ErrorDescription(DebugGetCreatorChain(10))),
-            ]);
-            FrameworkErrors.ReportException(new ErrorSummary("while applying parent data."), error);
-        }
-
-        if (applyParentData)
-        {
-            parentDataWidget.ApplyParentData(renderObject);
-        }
-    }
-
-    protected RenderObject RequireRenderObject()
-    {
-        return _renderObject ?? throw new InvalidOperationException("RenderObjectElement is not mounted.");
-    }
-
-    public override void AttachRenderObject(object? newSlot)
-    {
-        if (_ancestorRenderObjectHost != null)
-        {
-            throw new AssertionError("A RenderObjectElement cannot attach its render object twice.");
-        }
-
-        base.UpdateSlot(newSlot);
-        (_ancestorRenderObjectHost, _ancestorRenderObjectHostElement) = FindAncestorRenderObjectHost();
-        if (_ancestorRenderObjectHost == null && Constants.KDebugMode)
-        {
-            // Dart reports this from an assert and carries on with no ancestor: the render object
-            // simply never joins a tree.
-            FlutterError.ReportError(new FlutterErrorDetails(
-                new FlutterError(
-                [
-                    new ErrorSummary(
-                        $"The render object for {ToStringShort()} cannot find ancestor render object "
-                        + "to attach to."),
-                    new ErrorDescription(
-                        "The ownership chain for the RenderObject in question was:\n  "
-                        + DebugGetCreatorChain(10)),
-                    new ErrorHint(
-                        "Try wrapping your widget in a View widget or any other widget that is backed "
-                        + "by a RenderTreeRootElement to serve as the root of the render tree."),
-                ]),
-                library: "widgets library"));
-        }
-
-        _ancestorRenderObjectHost?.InsertRenderObjectChild(RequireRenderObject(), newSlot);
-        ApplyParentDataFromAncestors();
-    }
 
     /// <summary>
     /// Dart's <c>RenderObjectElement._findAncestorRenderObjectElement</c>: the nearest ancestor
@@ -279,6 +162,61 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         return ancestor is IRenderObjectHost host ? (host, ancestor) : (null, null);
     }
 
+    /// <summary>Dart's <c>RenderObjectElement._debugCheckCompetingAncestors</c>.</summary>
+    private void DebugCheckCompetingAncestors(
+        List<ParentDataElementBase> result,
+        HashSet<Type> debugAncestorTypes,
+        HashSet<Type> debugParentDataTypes,
+        List<Type> debugAncestorCulprits)
+    {
+        if (debugAncestorTypes.Count == result.Count && debugParentDataTypes.Count == result.Count)
+        {
+            return;
+        }
+
+        DebugAssertions.Assert(
+            debugAncestorTypes.Count < result.Count || debugParentDataTypes.Count < result.Count);
+        try
+        {
+            var information = new List<DiagnosticsNode>
+            {
+                new ErrorSummary("Incorrect use of ParentDataWidget."),
+                new ErrorDescription(
+                    "Competing ParentDataWidgets are providing parent data to the same RenderObject:"),
+            };
+
+            foreach (ParentDataElementBase ancestor in result.Where(
+                         element => debugAncestorCulprits.Contains(element.GetType())))
+            {
+                IParentDataWidget widget = ancestor.ParentDataWidget;
+                information.Add(new ErrorDescription(
+                    $"- {ancestor.Widget}, which writes ParentData of type "
+                    + $"{Diagnostics.DescribeType(ancestor.DebugParentDataType)}, (typically placed directly "
+                    + $"inside a {Diagnostics.DescribeType(widget.DebugTypicalAncestorWidgetClass)} widget)"));
+            }
+
+            information.Add(new ErrorDescription(
+                "A RenderObject can receive parent data from multiple ParentDataWidgets, but the Type of "
+                + "ParentData must be unique to prevent one overwriting another."));
+            information.Add(new ErrorHint(
+                "Usually, this indicates that one or more of the offending ParentDataWidgets listed above "
+                + "isn't placed inside a dedicated compatible ancestor widget that it isn't sharing with "
+                + "another ParentDataWidget of the same type."));
+            information.Add(new ErrorHint(
+                "Otherwise, separating aspects of ParentData to prevent conflicts can be done using mixins, "
+                + "mixing them all in on the full ParentData Object, such as KeepAlive does with "
+                + "KeepAliveParentDataMixin."));
+            information.Add(new ErrorDescription(
+                "The ownership chain for the RenderObject that received the parent data was:\n  "
+                + DebugGetCreatorChain(10)));
+            throw new FlutterError(information);
+        }
+        catch (FlutterError error)
+        {
+            FrameworkErrors.ReportException(new ErrorSummary("while looking for parent data."), error);
+        }
+    }
+
     /// <summary>
     /// Dart's <c>RenderObjectElement._findAncestorParentDataElements</c>: collects every
     /// <see cref="ParentDataElementBase"/> between this element and its ancestor render object, in
@@ -287,12 +225,12 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
     /// </summary>
     private List<ParentDataElementBase> FindAncestorParentDataElements()
     {
+        Element? ancestor = Parent;
         var result = new List<ParentDataElementBase>();
         var debugAncestorTypes = new HashSet<Type>();
         var debugParentDataTypes = new HashSet<Type>();
         var debugAncestorCulprits = new List<Type>();
 
-        Element? ancestor = Parent;
         while (ancestor != null && ancestor is not RenderObjectElement)
         {
             if (ancestor is ParentDataElementBase parentDataElement)
@@ -318,56 +256,188 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         return result;
     }
 
-    /// <summary>Dart's <c>RenderObjectElement._debugCheckCompetingAncestors</c>.</summary>
-    private void DebugCheckCompetingAncestors(
-        List<ParentDataElementBase> result,
-        HashSet<Type> debugAncestorTypes,
-        HashSet<Type> debugParentDataTypes,
-        List<Type> debugAncestorCulprits)
+    protected override void OnMount()
     {
-        if (debugAncestorTypes.Count == result.Count && debugParentDataTypes.Count == result.Count)
+        base.OnMount();
+        if (Constants.KDebugMode)
         {
-            return;
+            _debugDoingBuild = true;
         }
 
-        var information = new List<DiagnosticsNode>
+        _renderObject = RenderObjectWidget.CreateRenderObject(this);
+        DebugAssertions.Assert(!_renderObject.DebugDisposed);
+        if (Constants.KDebugMode)
         {
-            new ErrorSummary("Incorrect use of ParentDataWidget."),
-            new ErrorDescription("Competing ParentDataWidgets are providing parent data to the same RenderObject:"),
-        };
-
-        foreach (ParentDataElementBase ancestor in result.Where(
-                     element => debugAncestorCulprits.Contains(element.GetType())))
-        {
-            IParentDataWidget widget = ancestor.ParentDataWidget;
-            information.Add(new ErrorDescription(
-                $"- {ancestor.Widget}, which writes ParentData of type "
-                + $"{Diagnostics.DescribeType(ancestor.DebugParentDataType)}, (typically placed directly "
-                + $"inside a {Diagnostics.DescribeType(widget.DebugTypicalAncestorWidgetType)} widget)"));
+            _debugDoingBuild = false;
         }
 
-        information.Add(new ErrorDescription(
-            "A RenderObject can receive parent data from multiple ParentDataWidgets, but the Type of "
-            + "ParentData must be unique to prevent one overwriting another."));
-        information.Add(new ErrorHint(
-            "Usually, this indicates that one or more of the offending ParentDataWidgets listed above isn't "
-            + "placed inside a dedicated compatible ancestor widget that it isn't sharing with another "
-            + "ParentDataWidget of the same type."));
-        information.Add(new ErrorHint(
-            "Otherwise, separating aspects of ParentData to prevent conflicts can be done using mixins, "
-            + "mixing them all in on the full ParentData Object, such as KeepAlive does with "
-            + "KeepAliveParentDataMixin."));
-        information.Add(new ErrorDescription(
-            "The ownership chain for the RenderObject that received the parent data was:\n  "
-            + DebugGetCreatorChain(10)));
+        DebugUpdateRenderObjectOwner();
+        AttachRenderObject(Slot);
 
-        FrameworkErrors.ReportException(
-            new ErrorSummary("while looking for parent data."),
-            new FlutterError(information));
+        // Clears the "dirty" flag.
+        base.PerformRebuild();
     }
 
-    private void ApplyParentDataFromAncestors()
+    public override void Update(Widget newWidget)
     {
+        base.Update(newWidget);
+        DebugAssertions.Assert(ReferenceEquals(Widget, newWidget));
+        DebugUpdateRenderObjectOwner();
+
+        // Calls widget.UpdateRenderObject().
+        PerformRenderObjectRebuild();
+    }
+
+    /// <summary>
+    /// Stamps this element onto the render object as its <see cref="RenderObject.DebugCreator"/>, so
+    /// an error reported from the render tree can name the widget that produced it. Debug only.
+    /// </summary>
+    /// <remarks>Flutter's <c>RenderObjectElement._debugUpdateRenderObjectOwner</c>.</remarks>
+    private void DebugUpdateRenderObjectOwner()
+    {
+        if (Constants.KDebugMode)
+        {
+            RenderObject.DebugCreator = new DebugCreator(this);
+        }
+    }
+
+    protected override void PerformRebuild() => PerformRenderObjectRebuild();
+
+    /// <summary>
+    /// Pushes the widget's configuration into the render object and clears <see cref="Element.Dirty"/>.
+    /// </summary>
+    /// <remarks>
+    /// Dart's private <c>RenderObjectElement._performRebuild</c>. <c>update</c> goes through this
+    /// rather than through the virtual <c>performRebuild</c>, so a subclass that rebuilds children
+    /// there (a sliver or list-wheel adaptor) is not asked to rebuild them twice.
+    /// </remarks>
+    private void PerformRenderObjectRebuild()
+    {
+        if (Constants.KDebugMode)
+        {
+            _debugDoingBuild = true;
+        }
+
+        RenderObjectWidget.UpdateRenderObject(this, RenderObject);
+        if (Constants.KDebugMode)
+        {
+            _debugDoingBuild = false;
+        }
+
+        // Clears the "dirty" flag.
+        base.PerformRebuild();
+    }
+
+    protected override void OnDeactivate()
+    {
+        base.OnDeactivate();
+        if (Constants.KDebugMode && RenderObject.Attached)
+        {
+            throw new AssertionError(
+                "A RenderObject was still attached when attempting to deactivate its RenderObjectElement: "
+                + RenderObject);
+        }
+    }
+
+    public override void Unmount()
+    {
+        if (Constants.KDebugMode && RenderObject.DebugDisposed)
+        {
+            throw new AssertionError(
+                "A RenderObject was disposed prior to its owning element being unmounted: " + RenderObject);
+        }
+
+        RenderObjectWidget oldWidget = RenderObjectWidget;
+        base.Unmount();
+        if (RenderObject.Attached)
+        {
+            // Plumix-only last-resort net for a render root that never went through DetachRenderObject.
+            DetachRootRenderObject(RenderObject);
+        }
+
+        if (Constants.KDebugMode && RenderObject.Attached)
+        {
+            throw new AssertionError(
+                "A RenderObject was still attached when attempting to unmount its RenderObjectElement: "
+                + RenderObject);
+        }
+
+        oldWidget.DidUnmountRenderObject(RenderObject);
+        _renderObject!.Dispose();
+        _renderObject = null;
+    }
+
+    /// <summary>
+    /// Dart's <c>RenderObjectElement._updateParentData</c>. When the widget cannot write to this
+    /// render object's parent data, the mismatch is <em>reported</em> rather than thrown — the tree is
+    /// already broken, and activating an <c>ErrorWidget</c> here would only pile on further failures —
+    /// and the parent data is left untouched.
+    /// </summary>
+    internal void UpdateParentData(IParentDataWidget parentDataWidget)
+    {
+        bool applyParentData = true;
+        if (Constants.KDebugMode)
+        {
+            try
+            {
+                if (!parentDataWidget.DebugIsValidRenderObject(RenderObject))
+                {
+                    applyParentData = false;
+                    throw new FlutterError(
+                    [
+                        new ErrorSummary("Incorrect use of ParentDataWidget."),
+                        .. parentDataWidget.DebugDescribeIncorrectParentDataType(
+                            parentData: RenderObject.parentData,
+                            parentDataCreator: _ancestorRenderObjectHostElement?.Widget as RenderObjectWidget,
+                            ownershipChain: new ErrorDescription(DebugGetCreatorChain(10))),
+                    ]);
+                }
+            }
+            catch (FlutterError error)
+            {
+                FrameworkErrors.ReportException(new ErrorSummary("while applying parent data."), error);
+            }
+        }
+
+        if (applyParentData)
+        {
+            parentDataWidget.ApplyParentData(RenderObject);
+        }
+    }
+
+    public override void UpdateSlot(object? newSlot)
+    {
+        object? oldSlot = Slot;
+        DebugAssertions.Assert(!Equals(oldSlot, newSlot));
+        base.UpdateSlot(newSlot);
+        DebugAssertions.Assert(Equals(Slot, newSlot));
+        DebugAssertions.Assert(ReferenceEquals(_ancestorRenderObjectElement, FindAncestorRenderObjectHost().host));
+        _ancestorRenderObjectElement?.MoveRenderObjectChild(RenderObject, oldSlot, Slot);
+    }
+
+    public override void AttachRenderObject(object? newSlot)
+    {
+        DebugAssertions.Assert(_ancestorRenderObjectElement == null);
+        Slot = newSlot;
+        (_ancestorRenderObjectElement, _ancestorRenderObjectHostElement) = FindAncestorRenderObjectHost();
+        if (Constants.KDebugMode && _ancestorRenderObjectElement == null)
+        {
+            // Reported, not thrown: the render object simply never joins a tree.
+            FlutterError.ReportError(new FlutterErrorDetails(
+                new FlutterError(
+                [
+                    new ErrorSummary(
+                        $"The render object for {ToStringShort()} cannot find ancestor render object to attach to."),
+                    new ErrorDescription(
+                        "The ownership chain for the RenderObject in question was:\n  "
+                        + DebugGetCreatorChain(10)),
+                    new ErrorHint(
+                        "Try wrapping your widget in a View widget or any other widget that is backed by a "
+                        + "RenderTreeRootElement to serve as the root of the render tree."),
+                ])));
+        }
+
+        _ancestorRenderObjectElement?.InsertRenderObjectChild(RenderObject, newSlot);
         foreach (ParentDataElementBase parentDataElement in FindAncestorParentDataElements())
         {
             UpdateParentData(parentDataElement.ParentDataWidget);
@@ -376,9 +446,11 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
 
     public override void DetachRenderObject()
     {
-        if (_ancestorRenderObjectHost != null)
+        if (_ancestorRenderObjectElement != null)
         {
-            _ancestorRenderObjectHost.RemoveRenderObjectChild(RequireRenderObject(), Slot);
+            _ancestorRenderObjectElement.RemoveRenderObjectChild(RenderObject, Slot);
+            _ancestorRenderObjectElement = null;
+            _ancestorRenderObjectHostElement = null;
         }
 
         if (_renderObject is { Attached: true } rootRenderObject)
@@ -391,9 +463,7 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
             DetachRootRenderObject(rootRenderObject);
         }
 
-        _ancestorRenderObjectHost = null;
-        _ancestorRenderObjectHostElement = null;
-        base.UpdateSlot(null);
+        Slot = null;
     }
 
     private static void DetachRootRenderObject(RenderObject renderObject)
@@ -413,92 +483,65 @@ public abstract class RenderObjectElement : Element, IRenderObjectHost
         }
     }
 
-    public override void Unmount()
-    {
-        if (_renderObject is null)
-        {
-            base.Unmount();
-            return;
-        }
-
-        RenderObject renderObject = _renderObject;
-        RenderObjectWidget oldWidget = RenderObjectWidget;
-        base.Unmount();
-        if (renderObject.Attached)
-        {
-            // Last-resort net for a render root that never went through DetachRenderObject.
-            DetachRootRenderObject(renderObject);
-        }
-
-        if (renderObject.Attached)
-        {
-            throw new AssertionError("A RenderObjectElement cannot dispose an attached render object.");
-        }
-
-        oldWidget.DidUnmountRenderObject(renderObject);
-        renderObject.Dispose();
-        _renderObject = null;
-    }
-
+    /// <summary>Insert the given child into <see cref="RenderObject"/> at the given slot.</summary>
     public abstract void InsertRenderObjectChild(RenderObject child, object? slot);
+
+    /// <summary>Move the given child from the given old slot to the given new slot.</summary>
     public abstract void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot);
+
+    /// <summary>Remove the given child from <see cref="RenderObject"/>.</summary>
     public abstract void RemoveRenderObjectChild(RenderObject child, object? slot);
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        properties.Add(new DiagnosticsProperty<RenderObject>(
+            "renderObject",
+            _renderObject,
+            defaultValue: DiagnosticsDefaults.NullValue));
+    }
 }
 
-public sealed class LeafRenderObjectElement : RenderObjectElement
+/// <summary>An <see cref="Element"/> that uses a <see cref="LeafRenderObjectWidget"/> as its configuration.</summary>
+public class LeafRenderObjectElement : RenderObjectElement
 {
     public LeafRenderObjectElement(LeafRenderObjectWidget widget) : base(widget)
     {
     }
 
+    public override void ForgetChild(Element child)
+    {
+        DebugAssertions.Assert(false);
+        base.ForgetChild(child);
+    }
+
     public override void InsertRenderObjectChild(RenderObject child, object? slot)
     {
-        throw new InvalidOperationException("LeafRenderObjectElement cannot host children.");
+        DebugAssertions.Assert(false);
     }
 
     public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
     {
-        throw new InvalidOperationException("LeafRenderObjectElement cannot host children.");
+        DebugAssertions.Assert(false);
     }
 
     public override void RemoveRenderObjectChild(RenderObject child, object? slot)
     {
-        throw new InvalidOperationException("LeafRenderObjectElement cannot host children.");
+        DebugAssertions.Assert(false);
     }
+
+    public override List<DiagnosticsNode> DebugDescribeChildren() => Widget.DebugDescribeChildren();
 }
 
+/// <summary>
+/// An <see cref="Element"/> that uses a <see cref="SingleChildRenderObjectWidget"/> as its configuration.
+/// </summary>
 public class SingleChildRenderObjectElement : RenderObjectElement
 {
     private Element? _child;
 
     public SingleChildRenderObjectElement(SingleChildRenderObjectWidget widget) : base(widget)
     {
-    }
-
-    protected override void OnMount()
-    {
-        base.OnMount();
-        _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
-    }
-
-    protected override void PerformRebuild()
-    {
-        base.PerformRebuild();
-        _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
-    }
-
-    public override void Update(Widget newWidget)
-    {
-        base.Update(newWidget);
-        _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
-    }
-
-    public override void ForgetChild(Element child)
-    {
-        if (ReferenceEquals(child, _child))
-        {
-            _child = null;
-        }
     }
 
     public override void VisitChildren(Action<Element> visitor)
@@ -509,50 +552,52 @@ public class SingleChildRenderObjectElement : RenderObjectElement
         }
     }
 
+    public override void ForgetChild(Element child)
+    {
+        DebugAssertions.Assert(ReferenceEquals(child, _child));
+        _child = null;
+        base.ForgetChild(child);
+    }
+
+    protected override void OnMount()
+    {
+        base.OnMount();
+        _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
+    }
+
+    public override void Update(Widget newWidget)
+    {
+        base.Update(newWidget);
+        DebugAssertions.Assert(ReferenceEquals(Widget, newWidget));
+        _child = UpdateChild(_child, ((SingleChildRenderObjectWidget)Widget).Child, null);
+    }
+
     public override void InsertRenderObjectChild(RenderObject child, object? slot)
     {
-        if (slot != null)
-        {
-            throw new InvalidOperationException("SingleChildRenderObjectElement expects null slot.");
-        }
-
-        if (RequireRenderObject() is not IRenderObjectSingleChildContainer container)
-        {
-            throw new InvalidOperationException(
-                "SingleChildRenderObjectElement requires render object implementing IRenderObjectSingleChildContainer.");
-        }
-
-        container.Child = child;
+        var renderObject = (IRenderObjectSingleChildContainer)RenderObject;
+        DebugAssertions.Assert(slot == null);
+        renderObject.Child = child;
+        DebugAssertions.Assert(ReferenceEquals(renderObject, RenderObject));
     }
 
     public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
     {
-        if (!Equals(oldSlot, newSlot))
-        {
-            throw new InvalidOperationException("SingleChildRenderObjectElement does not support moving children.");
-        }
+        DebugAssertions.Assert(false);
     }
 
     public override void RemoveRenderObjectChild(RenderObject child, object? slot)
     {
-        if (slot != null)
-        {
-            throw new InvalidOperationException("SingleChildRenderObjectElement expects null slot.");
-        }
-
-        if (RequireRenderObject() is not IRenderObjectSingleChildContainer container)
-        {
-            throw new InvalidOperationException(
-                "SingleChildRenderObjectElement requires render object implementing IRenderObjectSingleChildContainer.");
-        }
-
-        if (ReferenceEquals(container.Child, child))
-        {
-            container.Child = null;
-        }
+        var renderObject = (IRenderObjectSingleChildContainer)RenderObject;
+        DebugAssertions.Assert(slot == null);
+        DebugAssertions.Assert(ReferenceEquals(renderObject.Child, child));
+        renderObject.Child = null;
+        DebugAssertions.Assert(ReferenceEquals(renderObject, RenderObject));
     }
 }
 
+/// <summary>
+/// An <see cref="Element"/> that uses a <see cref="MultiChildRenderObjectWidget"/> as its configuration.
+/// </summary>
 public class MultiChildRenderObjectElement : RenderObjectElement
 {
     private List<Element> _children = [];
@@ -560,52 +605,43 @@ public class MultiChildRenderObjectElement : RenderObjectElement
 
     public MultiChildRenderObjectElement(MultiChildRenderObjectWidget widget) : base(widget)
     {
+        DebugAssertions.Assert(!WidgetsDebug.DebugChildrenHaveDuplicateKeys(widget, widget.Children));
     }
 
-    /// <summary>The child elements, in the order their widgets were supplied.</summary>
-    protected IReadOnlyList<Element> Children => _children;
+    /// <summary>
+    /// The current list of children of this element, without the ones that have been forgotten.
+    /// Dart's <c>MultiChildRenderObjectElement.children</c>.
+    /// </summary>
+    public IEnumerable<Element> Children => _children.Where(child => !_forgottenChildren.Contains(child));
 
-    protected override void OnMount()
+    private IRenderObjectContainer Container => (IRenderObjectContainer)RenderObject;
+
+    public override void InsertRenderObjectChild(RenderObject child, object? slot)
     {
-        base.OnMount();
-
-        var widgets = ((MultiChildRenderObjectWidget)Widget).Children;
-        _children = new List<Element>(widgets.Count);
-
-        Element? previousChild = null;
-        for (int index = 0; index < widgets.Count; index++)
-        {
-            var newChild = InflateWidget(widgets[index], new IndexedSlot<Element?>(index, previousChild));
-            EnsureChildHasAssociatedRenderObject(newChild);
-            _children.Add(newChild);
-            previousChild = newChild;
-        }
+        IRenderObjectContainer renderObject = Container;
+        renderObject.Insert(child, after: ((IndexedSlot<Element?>)slot!).Value?.RenderObject);
+        DebugAssertions.Assert(ReferenceEquals(renderObject, RenderObject));
     }
 
-    protected override void PerformRebuild()
+    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
     {
-        base.PerformRebuild();
-        _children = UpdateChildren(_children, ((MultiChildRenderObjectWidget)Widget).Children, _forgottenChildren);
-        _forgottenChildren.Clear();
-        EnsureChildrenHaveAssociatedRenderObjects();
+        IRenderObjectContainer renderObject = Container;
+        DebugAssertions.Assert(ReferenceEquals(child.Parent, renderObject));
+        renderObject.Move(child, after: ((IndexedSlot<Element?>)newSlot!).Value?.RenderObject);
+        DebugAssertions.Assert(ReferenceEquals(renderObject, RenderObject));
     }
 
-    public override void Update(Widget newWidget)
+    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
     {
-        base.Update(newWidget);
-        _children = UpdateChildren(_children, ((MultiChildRenderObjectWidget)Widget).Children, _forgottenChildren);
-        _forgottenChildren.Clear();
-        EnsureChildrenHaveAssociatedRenderObjects();
-    }
-
-    public override void ForgetChild(Element child)
-    {
-        _forgottenChildren.Add(child);
+        IRenderObjectContainer renderObject = Container;
+        DebugAssertions.Assert(ReferenceEquals(child.Parent, renderObject));
+        renderObject.Remove(child);
+        DebugAssertions.Assert(ReferenceEquals(renderObject, RenderObject));
     }
 
     public override void VisitChildren(Action<Element> visitor)
     {
-        foreach (var child in _children)
+        foreach (Element child in _children)
         {
             if (!_forgottenChildren.Contains(child))
             {
@@ -614,60 +650,69 @@ public class MultiChildRenderObjectElement : RenderObjectElement
         }
     }
 
-    public override void InsertRenderObjectChild(RenderObject child, object? slot)
+    public override void ForgetChild(Element child)
     {
-        if (slot is not IndexedSlot<Element?> indexedSlot)
-        {
-            throw new InvalidOperationException("MultiChildRenderObjectElement requires IndexedSlot.");
-        }
-
-        RequireContainer().Insert(child, indexedSlot.Value?.RenderObject);
+        DebugAssertions.Assert(_children.Contains(child));
+        DebugAssertions.Assert(!_forgottenChildren.Contains(child));
+        _forgottenChildren.Add(child);
+        base.ForgetChild(child);
     }
 
-    public override void MoveRenderObjectChild(RenderObject child, object? oldSlot, object? newSlot)
+    /// <summary>Dart's <c>MultiChildRenderObjectElement._debugCheckHasAssociatedRenderObject</c>.</summary>
+    private static void DebugCheckHasAssociatedRenderObject(Element newChild)
     {
-        if (newSlot is not IndexedSlot<Element?> indexedSlot)
+        if (!Constants.KDebugMode || newChild.RenderObject != null)
         {
-            throw new InvalidOperationException("MultiChildRenderObjectElement requires IndexedSlot.");
+            return;
         }
 
-        RequireContainer().Move(child, indexedSlot.Value?.RenderObject);
+        FlutterError.ReportError(new FlutterErrorDetails(
+            new FlutterError(
+            [
+                new ErrorSummary(
+                    "The children of `MultiChildRenderObjectElement` must each has an associated render object."),
+                new ErrorHint(
+                    $"This typically means that the `{newChild.Widget}` or its children\n"
+                    + "are not a subtype of `RenderObjectWidget`."),
+                newChild.DescribeElement("The following element does not have an associated render object"),
+                new DiagnosticsDebugCreator(new DebugCreator(newChild)),
+            ])));
     }
 
-    public override void RemoveRenderObjectChild(RenderObject child, object? slot)
+    public override Element InflateWidget(Widget newWidget, object? newSlot)
     {
-        RequireContainer().Remove(child);
+        Element newChild = base.InflateWidget(newWidget, newSlot);
+        DebugCheckHasAssociatedRenderObject(newChild);
+        return newChild;
     }
 
-    private IRenderObjectContainer RequireContainer()
+    protected override void OnMount()
     {
-        if (RequireRenderObject() is IRenderObjectContainer container)
+        base.OnMount();
+        IReadOnlyList<Widget> widgets = ((MultiChildRenderObjectWidget)Widget).Children;
+
+        // Dart fills a local list and assigns `_children` after the loop. Plumix records each child as
+        // it inflates, so a child that throws (a reported error rethrown by the host) leaves its
+        // already-inflated siblings reachable by the failed-subtree walk instead of orphaned.
+        _children = new List<Element>(widgets.Count);
+        Element? previousChild = null;
+        for (int i = 0; i < widgets.Count; i += 1)
         {
-            return container;
-        }
-
-        throw new InvalidOperationException(
-            $"{RequireRenderObject().GetType().Name} must implement {nameof(IRenderObjectContainer)} for MultiChildRenderObjectElement.");
-    }
-
-    private static void EnsureChildHasAssociatedRenderObject(Element child)
-    {
-        if (child.RenderObject == null)
-        {
-            throw new InvalidOperationException(
-                $"Child element {child.GetType().Name} does not expose an associated RenderObject.");
+            Element newChild = InflateWidget(widgets[i], new IndexedSlot<Element?>(i, previousChild));
+            _children.Add(newChild);
+            previousChild = newChild;
         }
     }
 
-    private void EnsureChildrenHaveAssociatedRenderObjects()
+    public override void Update(Widget newWidget)
     {
-        foreach (var child in _children)
-        {
-            if (!_forgottenChildren.Contains(child))
-            {
-                EnsureChildHasAssociatedRenderObject(child);
-            }
-        }
+        base.Update(newWidget);
+        var multiChildRenderObjectWidget = (MultiChildRenderObjectWidget)Widget;
+        DebugAssertions.Assert(ReferenceEquals(Widget, newWidget));
+        DebugAssertions.Assert(
+            !WidgetsDebug.DebugChildrenHaveDuplicateKeys(Widget, multiChildRenderObjectWidget.Children));
+        _children = UpdateChildren(_children, multiChildRenderObjectWidget.Children, _forgottenChildren);
+        _forgottenChildren.Clear();
     }
 }
 
@@ -782,13 +827,13 @@ public sealed class SlottedRenderObjectElement<TSlot> : RenderObjectElement
 
     private ISlottedRenderObjectContainer RequireContainer()
     {
-        if (RequireRenderObject() is ISlottedRenderObjectContainer container)
+        if (RenderObject is ISlottedRenderObjectContainer container)
         {
             return container;
         }
 
         throw new InvalidOperationException(
-            $"{RequireRenderObject().GetType().Name} must implement {nameof(ISlottedRenderObjectContainer)}.");
+            $"{RenderObject.GetType().Name} must implement {nameof(ISlottedRenderObjectContainer)}.");
     }
 
     private static object RequireSlot(object? slot)

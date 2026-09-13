@@ -95,7 +95,7 @@ public class NestedScrollView : StatefulWidget
     /// </summary>
     public static SliverOverlapAbsorberHandle SliverOverlapAbsorberHandleFor(BuildContext context)
     {
-        InheritedNestedScrollView? target = context.DependOnInherited<InheritedNestedScrollView>();
+        InheritedNestedScrollView? target = context.DependOnInheritedWidgetOfExactType<InheritedNestedScrollView>();
         if (target == null)
         {
             throw new InvalidOperationException(
@@ -284,7 +284,7 @@ internal sealed class InheritedNestedScrollView : InheritedWidget
 
     public NestedScrollViewState State { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((InheritedNestedScrollView)oldWidget).State, State);
     }

@@ -167,15 +167,4 @@ internal sealed class SingleChildViewport : SingleChildRenderObjectWidget
 }
 
 internal sealed class SingleChildViewportElement(SingleChildViewport widget)
-    : SingleChildRenderObjectElement(widget), INotificationListener
-{
-    bool INotificationListener.OnNotification(Notification notification)
-    {
-        if (notification is IViewportNotification viewportNotification)
-        {
-            viewportNotification.IncrementDepth();
-        }
-
-        return false;
-    }
-}
+    : SingleChildRenderObjectElement(widget), ViewportElementMixin;

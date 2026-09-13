@@ -177,14 +177,14 @@ public sealed class CardTheme : InheritedWidget
             shape: shape ?? Shape);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((CardTheme)oldWidget).Data, Data);
     }
 
     public static CardThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<CardTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<CardTheme>();
         if (localTheme is not null)
         {
             return localTheme.Data;

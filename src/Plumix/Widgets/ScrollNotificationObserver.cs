@@ -21,7 +21,7 @@ public sealed class ScrollNotificationObserver : StatefulWidget
     public static ScrollNotificationObserverState? MaybeOf(BuildContext context)
     {
         return context
-            .DependOnInherited<ScrollNotificationObserverScope>()
+            .DependOnInheritedWidgetOfExactType<ScrollNotificationObserverScope>()
             ?.ScrollNotificationObserverState;
     }
 
@@ -142,7 +142,7 @@ internal sealed class ScrollNotificationObserverScope : InheritedWidget
 
     public ScrollNotificationObserverState ScrollNotificationObserverState { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(
             ScrollNotificationObserverState,

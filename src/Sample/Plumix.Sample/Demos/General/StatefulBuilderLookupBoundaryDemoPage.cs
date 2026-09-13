@@ -47,7 +47,9 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
                             string bounded = LookupBoundary
                                 .GetInheritedWidgetOfExactType<DemoLookupScope>(builderContext)
                                 ?.Label ?? "hidden";
-                            string regular = builderContext.DependOnInherited<DemoLookupScope>()?.Label ?? "missing";
+                            string regular =
+                                builderContext.DependOnInheritedWidgetOfExactType<DemoLookupScope>()?.Label
+                                ?? "missing";
                             return new Container(
                                 color: Color.Parse("#FFE7EDF6"),
                                 padding: new Thickness(12),
@@ -72,7 +74,7 @@ public sealed class StatefulBuilderLookupBoundaryDemoPage : StatelessWidget
 
         public string Label { get; }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return Label != ((DemoLookupScope)oldWidget).Label;
         }

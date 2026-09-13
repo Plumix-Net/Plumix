@@ -50,14 +50,14 @@ public sealed class DividerTheme : InheritedTheme
         return new DividerTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((DividerTheme)oldWidget).Data, Data);
     }
 
     public static DividerThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<DividerTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<DividerTheme>();
         if (localTheme is not null)
         {
             return localTheme.Data;

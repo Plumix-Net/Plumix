@@ -78,7 +78,7 @@ public sealed class Form : StatefulWidget
     public AutovalidateMode AutovalidateMode { get; }
 
     public static FormState? MaybeOf(BuildContext context) =>
-        context.DependOnInherited<FormScope>()?.FormState;
+        context.DependOnInheritedWidgetOfExactType<FormScope>()?.FormState;
 
     public static FormState Of(BuildContext context) => MaybeOf(context)
         ?? throw new InvalidOperationException("Form.Of() was called with a context that does not contain a Form widget.");
@@ -221,7 +221,7 @@ internal sealed class FormScope : InheritedWidget
 
     public FormState FormState { get; }
     public int Generation { get; }
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         Generation != ((FormScope)oldWidget).Generation;
 }
 

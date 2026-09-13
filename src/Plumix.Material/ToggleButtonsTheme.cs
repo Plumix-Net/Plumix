@@ -73,14 +73,14 @@ public sealed class ToggleButtonsTheme : InheritedTheme
         return new ToggleButtonsTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ToggleButtonsTheme)oldWidget).Data, Data);
     }
 
     public static ToggleButtonsThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<ToggleButtonsTheme>()?.Data
+        return context.DependOnInheritedWidgetOfExactType<ToggleButtonsTheme>()?.Data
                ?? Theme.Of(context).ToggleButtonsTheme;
     }
 }

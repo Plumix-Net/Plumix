@@ -25,7 +25,7 @@ public sealed class RestorationScope : StatefulWidget
     /// <summary>Returns the <see cref="RestorationBucket"/> inserted by the closest ancestor scope.</summary>
     public static RestorationBucket? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<UnmanagedRestorationScope>()?.Bucket;
+        return context.DependOnInheritedWidgetOfExactType<UnmanagedRestorationScope>()?.Bucket;
     }
 
     /// <summary>Same as <see cref="MaybeOf"/>, but throws when no bucket is available.</summary>
@@ -73,7 +73,7 @@ public sealed class UnmanagedRestorationScope : InheritedWidget
     /// <summary>The bucket made available to descendants, or null to disable restoration below.</summary>
     public RestorationBucket? Bucket { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((UnmanagedRestorationScope)oldWidget).Bucket, Bucket);
     }

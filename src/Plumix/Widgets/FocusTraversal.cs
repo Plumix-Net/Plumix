@@ -914,7 +914,7 @@ internal sealed class ReadingOrderSortData
     internal TextDirection? Directionality { get; }
 
     private static TextDirection? FindDirectionality(BuildContext context) =>
-        context.GetInherited<Directionality>()?.TextDirection;
+        context.GetInheritedWidgetOfExactType<Directionality>()?.TextDirection;
 
     internal static TextDirection? CommonDirectionalityOf(List<ReadingOrderSortData> list)
     {
@@ -1250,7 +1250,7 @@ public sealed class FocusTraversalOrder : InheritedWidget
 
     public FocusOrder Order { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 
     public static FocusOrder Of(BuildContext context)
     {
@@ -1261,7 +1261,7 @@ public sealed class FocusTraversalOrder : InheritedWidget
     }
 
     public static FocusOrder? MaybeOf(BuildContext context) =>
-        context.GetInherited<FocusTraversalOrder>()?.Order;
+        context.GetInheritedWidgetOfExactType<FocusTraversalOrder>()?.Order;
 }
 
 /// <summary>Dart parity source: <c>_FocusTraversalGroupNode</c>.</summary>

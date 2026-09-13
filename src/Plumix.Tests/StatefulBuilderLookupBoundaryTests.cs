@@ -180,7 +180,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
 
         public int Value { get; }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return Value != ((IntScope)oldWidget).Value;
         }
@@ -192,7 +192,7 @@ public sealed class StatefulBuilderLookupBoundaryTests
         {
             IntScope bounded = LookupBoundary.DependOnInheritedWidgetOfExactType<IntScope>(context)
                 ?? throw new InvalidOperationException("Expected the inner IntScope.");
-            IntScope unbounded = context.DependOnInherited<IntScope>()
+            IntScope unbounded = context.DependOnInheritedWidgetOfExactType<IntScope>()
                 ?? throw new InvalidOperationException("Expected the nearest IntScope.");
             tracker.BoundedValues.Add(bounded.Value);
             tracker.UnboundedValues.Add(unbounded.Value);

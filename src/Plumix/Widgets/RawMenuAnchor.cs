@@ -68,14 +68,14 @@ public class MenuController
     public static MenuController? MaybeOf(BuildContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        return context.GetInherited<MenuControllerScope>()?.Controller;
+        return context.GetInheritedWidgetOfExactType<MenuControllerScope>()?.Controller;
     }
 
     /// <summary>Returns whether the nearest ancestor menu is open, creating a dependency on that state.</summary>
     public static bool? MaybeIsOpenOf(BuildContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        return context.DependOnInherited<MenuControllerScope>()?.IsOpen;
+        return context.DependOnInheritedWidgetOfExactType<MenuControllerScope>()?.IsOpen;
     }
 
     internal void Attach(RawMenuAnchorBaseState anchor)
@@ -123,7 +123,7 @@ internal sealed class MenuControllerScope : InheritedWidget
 
     public bool IsOpen { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         ((MenuControllerScope)oldWidget).IsOpen != IsOpen;
 }
 

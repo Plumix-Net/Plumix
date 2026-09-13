@@ -105,7 +105,7 @@ public static class Router
     /// <summary>Retrieves the immediate <see cref="Router{T}"/> ancestor, or null when there is none.</summary>
     public static Router<T>? MaybeOf<T>(BuildContext context)
     {
-        var scope = context.DependOnInherited<RouterScope>();
+        var scope = context.DependOnInheritedWidgetOfExactType<RouterScope>();
         return scope?.RouterState.RouterWidget as Router<T>;
     }
 
@@ -121,7 +121,7 @@ public static class Router
 
     internal static RouterScope RequireScope(BuildContext context)
     {
-        var scope = context.DependOnInherited<RouterScope>();
+        var scope = context.DependOnInheritedWidgetOfExactType<RouterScope>();
         if (scope is null)
         {
             throw new InvalidOperationException(
@@ -554,7 +554,7 @@ internal sealed class RouterScope : InheritedWidget
 
     public RouterStateBase RouterState { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var previous = (RouterScope)oldWidget;
         return !ReferenceEquals(RouteInformationProvider, previous.RouteInformationProvider)

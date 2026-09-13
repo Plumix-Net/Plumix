@@ -280,6 +280,8 @@ public sealed class RenderObjectLifecycleTests
 
     private sealed class TestRootElement : Element, IRenderObjectHost
     {
+        private Widget? _harnessChild;
+
         private Element? _child;
         private readonly RenderView _renderView = new(new FlutterView(new Size(800, 600)));
 
@@ -298,12 +300,12 @@ public sealed class RenderObjectLifecycleTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, null);
+            _child = UpdateChild(_child, _harnessChild ?? Widget, null);
         }
 
         public override void Update(Widget newWidget)
         {
-            base.Update(newWidget);
+            _harnessChild = newWidget;
             Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 

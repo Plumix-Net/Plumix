@@ -106,14 +106,14 @@ public sealed class NavigationBarTheme : InheritedTheme
         return new NavigationBarTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((NavigationBarTheme)oldWidget).Data, Data);
     }
 
     public static NavigationBarThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<NavigationBarTheme>()?.Data
+        return context.DependOnInheritedWidgetOfExactType<NavigationBarTheme>()?.Data
                ?? Theme.Of(context).NavigationBarTheme;
     }
 }

@@ -18,7 +18,7 @@ public delegate Widget ErrorWidgetBuilder(FlutterErrorDetails details);
 /// Dart's <c>ErrorWidget</c>. Used when a build method fails, to help with determining where the
 /// problem lies. Exceptions are also reported through <see cref="FlutterError.ReportError"/>.
 /// </remarks>
-public sealed class ErrorWidget : LeafRenderObjectWidget
+public class ErrorWidget : LeafRenderObjectWidget
 {
     /// <summary>
     /// Creates a widget that displays the given exception. The message is the stringification of the

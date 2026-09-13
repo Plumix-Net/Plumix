@@ -980,7 +980,7 @@ public sealed class MaterialSearchTests : IDisposable
             _pipeline.Attach(RenderView);
             _rootElement = new HarnessRootElement(RenderView, rootWidget);
             _rootElement.Attach(_owner);
-            _rootElement.Mount(null, null);
+            _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
             _owner.FlushBuild();
         }
 

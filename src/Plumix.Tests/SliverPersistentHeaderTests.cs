@@ -551,7 +551,7 @@ public sealed class SliverPersistentHeaderTests : IDisposable
             _pipeline.Attach(RenderView);
             _root = new RootElement(RenderView, Wrap(sliver));
             _root.Attach(_owner);
-            _root.Mount(null, null);
+            _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
             _owner.FlushBuild();
         }
 

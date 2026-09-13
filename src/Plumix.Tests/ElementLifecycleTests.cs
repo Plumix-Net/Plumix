@@ -247,6 +247,8 @@ public sealed class ElementLifecycleTests
 
     private sealed class TestRootElement : Element, IRenderObjectHost
     {
+        private Widget? _harnessChild;
+
         private Element? _child;
 
         public TestRootElement(Widget widget) : base(widget)
@@ -262,12 +264,12 @@ public sealed class ElementLifecycleTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, _harnessChild ?? Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
-            base.Update(newWidget);
+            _harnessChild = newWidget;
             Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 

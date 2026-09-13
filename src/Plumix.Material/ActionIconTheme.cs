@@ -37,14 +37,14 @@ public sealed class ActionIconTheme : InheritedWidget
 
     public ActionIconThemeData Data { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ActionIconTheme)oldWidget).Data, Data);
     }
 
     public static ActionIconThemeData? Of(BuildContext context)
     {
-        return context.DependOnInherited<ActionIconTheme>()?.Data
+        return context.DependOnInheritedWidgetOfExactType<ActionIconTheme>()?.Data
                ?? Theme.Of(context).ActionIconTheme;
     }
 }

@@ -252,11 +252,11 @@ public sealed class Container : StatelessWidget
             "alignment",
             Alignment,
             showName: false,
-            defaultValue: null));
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>(
             "padding",
             PaddingInsets,
-            defaultValue: null));
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new DiagnosticsProperty<Clip>("clipBehavior", ClipBehavior, defaultValue: Clip.None));
         if (Color is { } color)
         {
@@ -264,15 +264,24 @@ public sealed class Container : StatelessWidget
         }
         else
         {
-            properties.Add(new DiagnosticsProperty<Decoration?>("bg", Decoration, defaultValue: null));
+            properties.Add(new DiagnosticsProperty<Decoration?>(
+                "bg",
+                Decoration,
+                defaultValue: DiagnosticsDefaults.NullValue));
         }
 
-        properties.Add(new DiagnosticsProperty<Decoration?>("fg", ForegroundDecoration, defaultValue: null));
+        properties.Add(new DiagnosticsProperty<Decoration?>(
+            "fg",
+            ForegroundDecoration,
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new DiagnosticsProperty<BoxConstraints?>(
             "constraints",
             Constraints,
-            defaultValue: null));
-        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>("margin", Margin, defaultValue: null));
+            defaultValue: DiagnosticsDefaults.NullValue));
+        properties.Add(new DiagnosticsProperty<EdgeInsetsGeometry?>(
+            "margin",
+            Margin,
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(ObjectFlagProperty<Matrix4>.Has("transform", Transform));
     }
 }

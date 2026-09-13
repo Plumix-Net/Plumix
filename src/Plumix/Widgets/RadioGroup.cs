@@ -27,7 +27,7 @@ public sealed class RadioGroup<T> : StatefulWidget
 
     public static RadioGroupRegistry<T>? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<RadioGroupStateScope<T>>()?.Registry;
+        return context.DependOnInheritedWidgetOfExactType<RadioGroupStateScope<T>>()?.Registry;
     }
 
     public override State CreateState()
@@ -333,7 +333,7 @@ internal sealed class RadioGroupStateScope<T> : InheritedWidget
 
     public T? GroupValue { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (RadioGroupStateScope<T>)oldWidget;
         return !ReferenceEquals(oldScope.Registry, Registry)

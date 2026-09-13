@@ -101,7 +101,7 @@ public abstract class TwoDimensionalViewport : RenderObjectWidget
 /// </summary>
 /// <remarks>Flutter's private <c>_TwoDimensionalViewportElement</c>.</remarks>
 internal sealed class TwoDimensionalViewportElement
-    : RenderObjectElement, ITwoDimensionalChildManager, INotificationListener
+    : RenderObjectElement, ITwoDimensionalChildManager, ViewportElementMixin
 {
     private Dictionary<ChildVicinity, Element> _vicinityToChild = [];
     private Dictionary<Key, Element> _keyToChild = [];
@@ -120,20 +120,6 @@ internal sealed class TwoDimensionalViewportElement
 
     private bool DebugIsDoingLayout => _newKeyToChild != null && _newVicinityToChild != null;
 
-    /// <remarks>
-    /// Flutter's <c>ViewportElementMixin.onNotification</c>: a viewport never handles a scroll
-    /// notification, it only deepens it as it bubbles past.
-    /// </remarks>
-    bool INotificationListener.OnNotification(Notification notification)
-    {
-        if (notification is IViewportNotification viewportNotification)
-        {
-            viewportNotification.IncrementDepth();
-        }
-
-        return false;
-    }
-
     protected override void PerformRebuild()
     {
         base.PerformRebuild();
@@ -144,8 +130,8 @@ internal sealed class TwoDimensionalViewportElement
 
     /// <remarks>
     /// Flutter asserts <c>!_debugIsDoingLayout</c> here, because its <c>deactivateChild</c> never
-    /// calls <c>forgetChild</c>. Plumix's <c>Element.DeactivateChild</c> does, and the child manager
-    /// deactivates its leftovers from inside <see cref="EndLayout"/>, so the assert cannot hold.
+    /// calls <c>forgetChild</c>. Plumix's <c>Element.DeactivateChild</c> used to, so the assert was
+    /// dropped; restoring it is tracked in <c>docs/ai/BACKLOG.md</c>.
     /// </remarks>
     public override void ForgetChild(Element child)
     {

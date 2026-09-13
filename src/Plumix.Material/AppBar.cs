@@ -424,7 +424,7 @@ public sealed class AppBar : StatefulWidget, IPreferredSizeWidget
 
             // A SliverAppBar computes "scrolled under" from the persistent header's shrink offset and
             // publishes it through the settings; that wins over this bar's own notification tracking.
-            var settings = context.DependOnInherited<FlexibleSpaceBarSettings>();
+            var settings = context.DependOnInheritedWidgetOfExactType<FlexibleSpaceBarSettings>();
 
             bool hasDrawer = scaffold?.HasDrawer ?? false;
             bool hasEndDrawer = scaffold?.HasEndDrawer ?? false;

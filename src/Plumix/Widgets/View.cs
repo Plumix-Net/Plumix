@@ -130,7 +130,7 @@ public sealed class View : StatefulWidget
     public static PipelineOwner PipelineOwnerOf(BuildContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        return context.DependOnInherited<PipelineOwnerScope>()?.PipelineOwner
+        return context.DependOnInheritedWidgetOfExactType<PipelineOwnerScope>()?.PipelineOwner
                ?? RendererBinding.Instance.RootPipelineOwner;
     }
 
@@ -590,7 +590,7 @@ internal sealed class ViewScope : InheritedWidget
 
     public FlutterView View { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(View, ((ViewScope)oldWidget).View);
     }
@@ -608,7 +608,7 @@ internal sealed class PipelineOwnerScope : InheritedWidget
 
     public PipelineOwner PipelineOwner { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(PipelineOwner, ((PipelineOwnerScope)oldWidget).PipelineOwner);
     }

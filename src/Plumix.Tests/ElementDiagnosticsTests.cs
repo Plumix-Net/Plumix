@@ -21,7 +21,7 @@ public sealed class ElementDiagnosticsTests
     [DebugOnlyFact]
     public void DependOnInherited_CalledFromDispose_ThrowsError()
     {
-        AssertLookupFromDisposeThrows(context => context.DependOnInherited<TestInherited>());
+        AssertLookupFromDisposeThrows(context => context.DependOnInheritedWidgetOfExactType<TestInherited>());
     }
 
     [DebugOnlyFact]
@@ -82,7 +82,7 @@ public sealed class ElementDiagnosticsTests
 
         Assert.Contains("Looking up a deactivated widget's ancestor is unsafe.", error.Message);
         Assert.Contains("no longer stable", error.Message);
-        Assert.Contains("DidChangeDependencies()", error.Message);
+        Assert.Contains("didChangeDependencies()", error.Message);
     }
 
     // ---- describe* -----------------------------------------------------------------------
@@ -441,7 +441,7 @@ public sealed class ElementDiagnosticsTests
         {
         }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
     }
 
     private sealed class InheritedReader : StatelessWidget
@@ -457,7 +457,7 @@ public sealed class ElementDiagnosticsTests
 
         public override Widget Build(BuildContext context)
         {
-            _ = context.DependOnInherited<TestInherited>();
+            _ = context.DependOnInheritedWidgetOfExactType<TestInherited>();
             _capture(context);
             return new SizedBox(width: 1, height: 1);
         }
@@ -569,6 +569,8 @@ public sealed class ElementDiagnosticsTests
 
     private sealed class RootElement : Element, IRenderObjectHost
     {
+        private Widget? _harnessChild;
+
         private readonly RenderView _renderView;
         private Element? _child;
 
@@ -590,12 +592,12 @@ public sealed class ElementDiagnosticsTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, _harnessChild ?? Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
-            base.Update(newWidget);
+            _harnessChild = newWidget;
             Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 

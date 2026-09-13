@@ -273,9 +273,9 @@ public sealed class ButtonTheme : InheritedWidget
     }
 
     public ButtonThemeData Data { get; }
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((ButtonTheme)oldWidget).Data, Data);
 
     public static ButtonThemeData Of(BuildContext context) =>
-        context.DependOnInherited<ButtonTheme>()?.Data ?? Theme.Of(context).ButtonTheme;
+        context.DependOnInheritedWidgetOfExactType<ButtonTheme>()?.Data ?? Theme.Of(context).ButtonTheme;
 }

@@ -153,14 +153,14 @@ public sealed class FloatingActionButtonTheme : InheritedTheme
         return new FloatingActionButtonTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((FloatingActionButtonTheme)oldWidget).Data, Data);
     }
 
     public static FloatingActionButtonThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<FloatingActionButtonTheme>()?.Data
+        return context.DependOnInheritedWidgetOfExactType<FloatingActionButtonTheme>()?.Data
                ?? Theme.Of(context).FloatingActionButtonTheme;
     }
 }

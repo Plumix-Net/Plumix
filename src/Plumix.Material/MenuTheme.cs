@@ -90,9 +90,9 @@ public class MenuTheme : InheritedTheme
 
     public override Widget Wrap(BuildContext context, Widget child) => new MenuTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(Data, ((MenuTheme)oldWidget).Data);
 
     public static MenuThemeData Of(BuildContext context) =>
-        context.DependOnInherited<MenuTheme>()?.Data ?? Theme.Of(context).MenuTheme;
+        context.DependOnInheritedWidgetOfExactType<MenuTheme>()?.Data ?? Theme.Of(context).MenuTheme;
 }

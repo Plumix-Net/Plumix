@@ -244,18 +244,18 @@ public sealed class MaterialRefreshIndicatorTests : IDisposable
             devicePixelRatio: 1.0);
 
         var idleLeading = new OverscrollIndicatorNotification(leading: true);
-        Assert.False(idleLeading.Dispatch(emitterState.Context));
+        idleLeading.Dispatch(emitterState.Context);
         Assert.True(idleLeading.Accepted);
 
         emitterState.Dispatch(new ScrollStartNotification(metrics, hasDragDetails: true));
         Assert.Equal(RefreshIndicatorStatus.Drag, state.Status);
 
         var trailing = new OverscrollIndicatorNotification(leading: false);
-        Assert.False(trailing.Dispatch(emitterState.Context));
+        trailing.Dispatch(emitterState.Context);
         Assert.True(trailing.Accepted);
 
         var leading = new OverscrollIndicatorNotification(leading: true);
-        Assert.True(leading.Dispatch(emitterState.Context));
+        leading.Dispatch(emitterState.Context);
         Assert.False(leading.Accepted);
     }
 

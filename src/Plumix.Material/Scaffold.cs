@@ -189,7 +189,7 @@ public sealed class Scaffold : StatefulWidget
     /// </summary>
     public static IValueListenable<ScaffoldGeometry> GeometryOf(BuildContext context)
     {
-        ScaffoldScope? scope = context.DependOnInherited<ScaffoldScope>();
+        ScaffoldScope? scope = context.DependOnInheritedWidgetOfExactType<ScaffoldScope>();
         if (scope is null)
         {
             throw new InvalidOperationException(
@@ -210,7 +210,7 @@ public sealed class Scaffold : StatefulWidget
     {
         if (registerForUpdates)
         {
-            return context.DependOnInherited<ScaffoldScope>()?.HasDrawer ?? false;
+            return context.DependOnInheritedWidgetOfExactType<ScaffoldScope>()?.HasDrawer ?? false;
         }
 
         return context.FindAncestorStateOfType<ScaffoldState>()?.HasDrawer ?? false;
@@ -230,7 +230,7 @@ public sealed class Scaffold : StatefulWidget
 
     internal static ScaffoldGeometryNotifier? GeometryNotifierMaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<ScaffoldScope>()?.GeometryNotifier;
+        return context.DependOnInheritedWidgetOfExactType<ScaffoldScope>()?.GeometryNotifier;
     }
 
     internal const double BottomSheetDominatesPercentage = 0.3;
@@ -306,7 +306,7 @@ internal sealed class ScaffoldScope : InheritedWidget
 
     public ScaffoldGeometryNotifier GeometryNotifier { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (ScaffoldScope)oldWidget;
         return HasDrawer != oldScope.HasDrawer;
@@ -657,7 +657,7 @@ public sealed class ScaffoldState : RestorationState, WidgetsBindingObserver
     /// <summary>Ports Flutter's private <c>_updatePersistentBottomSheet</c>.</summary>
     private void UpdatePersistentBottomSheet()
     {
-        _currentBottomSheetKey.CurrentState!.InvokeSetState(() => { });
+        _currentBottomSheetKey.CurrentState!.SetState(() => { });
     }
 
     /// <summary>Ports Flutter's private <c>_buildBottomSheet</c>.</summary>
@@ -794,7 +794,7 @@ public sealed class ScaffoldState : RestorationState, WidgetsBindingObserver
         controller = new PersistentBottomSheetController(
             bottomSheet,
             entry is not null ? entry.Remove : RemoveCurrentBottomSheet,
-            fn => bottomSheetKey.CurrentState?.InvokeSetState(fn),
+            fn => bottomSheetKey.CurrentState?.SetState(fn),
             !isPersistent);
         return controller;
     }

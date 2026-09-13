@@ -174,8 +174,8 @@ public class Focus : StatefulWidget
     public static FocusNode? MaybeOf(BuildContext context, bool scopeOk = false, bool createDependency = true)
     {
         FocusInheritedScope? scope = createDependency
-            ? context.DependOnInherited<FocusInheritedScope>()
-            : context.GetInherited<FocusInheritedScope>();
+            ? context.DependOnInheritedWidgetOfExactType<FocusInheritedScope>()
+            : context.GetInheritedWidgetOfExactType<FocusInheritedScope>();
         return scope?.Notifier switch
         {
             null => null,

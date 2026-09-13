@@ -40,9 +40,9 @@ public sealed class Theme : StatelessWidget
 
     public static ThemeData Of(BuildContext context)
     {
-        InheritedMaterialTheme? inheritedTheme = context.DependOnInherited<InheritedMaterialTheme>();
+        InheritedMaterialTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedMaterialTheme>();
         InheritedCupertinoTheme? inheritedCupertinoTheme =
-            context.DependOnInherited<InheritedCupertinoTheme>();
+            context.DependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>();
         ThemeData data = inheritedTheme?.Theme.Data
                          ?? (inheritedCupertinoTheme is not null
                              ? new CupertinoBasedMaterialThemeData(
@@ -54,7 +54,7 @@ public sealed class Theme : StatelessWidget
     // Dart's `Theme._inheritedCupertinoThemeData`.
     private CupertinoThemeData InheritedCupertinoThemeData(BuildContext context)
     {
-        InheritedCupertinoTheme? inheritedTheme = context.DependOnInherited<InheritedCupertinoTheme>();
+        InheritedCupertinoTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>();
         return (inheritedTheme?.Theme.Data ?? new MaterialBasedCupertinoThemeData(Data))
             .ResolveFrom(context);
     }
@@ -66,7 +66,7 @@ public sealed class Theme : StatelessWidget
     /// </summary>
     public static Brightness BrightnessOf(BuildContext context)
     {
-        InheritedMaterialTheme? inheritedTheme = context.DependOnInherited<InheritedMaterialTheme>();
+        InheritedMaterialTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedMaterialTheme>();
         return inheritedTheme?.Theme.Data.Brightness ?? ToBrightness(MediaQuery.PlatformBrightnessOf(context));
     }
 
@@ -76,7 +76,7 @@ public sealed class Theme : StatelessWidget
     /// </summary>
     public static Brightness? MaybeBrightnessOf(BuildContext context)
     {
-        InheritedMaterialTheme? inheritedTheme = context.DependOnInherited<InheritedMaterialTheme>();
+        InheritedMaterialTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedMaterialTheme>();
         PlatformBrightness? platformBrightness = MediaQuery.MaybePlatformBrightnessOf(context);
         return inheritedTheme?.Theme.Data.Brightness
                ?? (platformBrightness is null ? null : ToBrightness(platformBrightness.Value));
@@ -141,7 +141,7 @@ public sealed class InheritedMaterialTheme : InheritedTheme
         return new Theme(Theme.Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((InheritedMaterialTheme)oldWidget).Theme.Data, Theme.Data);
     }

@@ -49,7 +49,7 @@ public sealed class AutofillGroup : StatefulWidget
     public static AutofillGroupState? MaybeOf(BuildContext context)
     {
         ArgumentNullException.ThrowIfNull(context);
-        return context.DependOnInherited<AutofillScopeInherited>()?.Scope;
+        return context.DependOnInheritedWidgetOfExactType<AutofillScopeInherited>()?.Scope;
     }
 
     /// <summary>Returns the closest <see cref="AutofillGroupState"/> ancestor.</summary>
@@ -164,6 +164,6 @@ internal sealed class AutofillScopeInherited : InheritedWidget
 
     internal AutofillGroupState? Scope { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !ReferenceEquals(((AutofillScopeInherited)oldWidget).Scope, Scope);
 }

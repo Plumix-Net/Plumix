@@ -55,14 +55,14 @@ public sealed class RadioTheme : InheritedWidget
 
     public RadioThemeData Data { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((RadioTheme)oldWidget).Data, Data);
     }
 
     public static RadioThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<RadioTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<RadioTheme>();
         if (localTheme is not null)
         {
             return localTheme.Data;

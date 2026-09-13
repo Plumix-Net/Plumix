@@ -22,7 +22,7 @@ public sealed class CustomMultiChildLayoutTests
         Assert.Same(child, layoutId.Child);
         Assert.Equal(new ValueKey<object>(id), layoutId.Key);
         Assert.Same(explicitKey, keyedLayoutId.Key);
-        Assert.Equal(typeof(CustomMultiChildLayout), layoutId.DebugTypicalAncestorWidgetType);
+        Assert.Equal(typeof(CustomMultiChildLayout), layoutId.DebugTypicalAncestorWidgetClass);
         Assert.Throws<ArgumentNullException>(() => new LayoutId(null!, child));
     }
 

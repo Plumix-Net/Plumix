@@ -30,18 +30,19 @@ public sealed class TickerMode : StatefulWidget
 
     public static bool Of(BuildContext context)
     {
-        return context.DependOnInherited<EffectiveTickerMode>()?.Enabled ?? TickerModeData.Fallback.Enabled;
+        return context.DependOnInheritedWidgetOfExactType<EffectiveTickerMode>()?.Enabled
+            ?? TickerModeData.Fallback.Enabled;
     }
 
     public static IValueListenable<bool> GetNotifier(BuildContext context)
     {
-        EffectiveTickerMode? mode = context.GetInherited<EffectiveTickerMode>();
+        EffectiveTickerMode? mode = context.GetInheritedWidgetOfExactType<EffectiveTickerMode>();
         return mode is null ? ConstantBoolListenable.True : mode.Notifier;
     }
 
     public static TickerModeData ValuesOf(BuildContext context)
     {
-        return context.DependOnInherited<EffectiveTickerMode>()?.Values ?? TickerModeData.Fallback;
+        return context.DependOnInheritedWidgetOfExactType<EffectiveTickerMode>()?.Values ?? TickerModeData.Fallback;
     }
 
     public static IValueListenable<TickerModeData> GetValuesNotifier(BuildContext context)
@@ -53,7 +54,7 @@ public sealed class TickerMode : StatefulWidget
             return ConstantTickerModeDataListenable.Instance;
         }
 
-        EffectiveTickerMode? mode = context.GetInherited<EffectiveTickerMode>();
+        EffectiveTickerMode? mode = context.GetInheritedWidgetOfExactType<EffectiveTickerMode>();
         return mode is null ? ConstantTickerModeDataListenable.Instance : mode.ValuesNotifier;
     }
 
@@ -66,7 +67,7 @@ public sealed class TickerMode : StatefulWidget
         ArgumentNullException.ThrowIfNull(child);
         return new Builder(context =>
         {
-            EffectiveTickerMode? parent = context.DependOnInherited<EffectiveTickerMode>();
+            EffectiveTickerMode? parent = context.DependOnInheritedWidgetOfExactType<EffectiveTickerMode>();
             bool parentEnabled = parent?.Enabled ?? TickerModeData.Fallback.Enabled;
             bool parentForceFrames = parent?.ForceFrames ?? TickerModeData.Fallback.ForceFrames;
             return new TickerMode(
@@ -91,7 +92,7 @@ public sealed class TickerMode : StatefulWidget
         public override void DidChangeDependencies()
         {
             base.DidChangeDependencies();
-            EffectiveTickerMode? parent = Context.DependOnInherited<EffectiveTickerMode>();
+            EffectiveTickerMode? parent = Context.DependOnInheritedWidgetOfExactType<EffectiveTickerMode>();
             _ancestorTickerMode = parent?.Enabled ?? TickerModeData.Fallback.Enabled;
             _ancestorForceFrames = parent?.ForceFrames ?? TickerModeData.Fallback.ForceFrames;
             UpdateEffectiveMode();
@@ -155,7 +156,7 @@ internal sealed class EffectiveTickerMode : InheritedWidget
 
     public TickerModeData Values => ValuesNotifier.Value;
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldMode = (EffectiveTickerMode)oldWidget;
         return Enabled != oldMode.Enabled || ForceFrames != oldMode.ForceFrames;

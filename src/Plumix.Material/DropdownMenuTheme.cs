@@ -31,11 +31,11 @@ public sealed class DropdownMenuTheme : InheritedTheme
     public DropdownMenuThemeData Data { get; }
     public override Widget Wrap(BuildContext context, Widget child) => new DropdownMenuTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(Data, ((DropdownMenuTheme)oldWidget).Data);
 
     public static DropdownMenuThemeData? MaybeOf(BuildContext context) =>
-        context.DependOnInherited<DropdownMenuTheme>()?.Data;
+        context.DependOnInheritedWidgetOfExactType<DropdownMenuTheme>()?.Data;
 
     public static DropdownMenuThemeData Of(BuildContext context) =>
         MaybeOf(context) ?? Theme.Of(context).DropdownMenuTheme;

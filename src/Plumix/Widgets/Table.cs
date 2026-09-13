@@ -418,9 +418,9 @@ public sealed class TableCell : StatelessWidget
 
         public TableCellVerticalAlignment? VerticalAlignment { get; }
 
-        public override Type DebugTypicalAncestorWidgetType => typeof(Table);
+        public override Type DebugTypicalAncestorWidgetClass => typeof(Table);
 
-        protected override void ApplyParentData(RenderObject renderObject)
+        public override void ApplyParentData(RenderObject renderObject)
         {
             var parentData = (TableCellParentData)renderObject.parentData!;
             if (parentData.VerticalAlignment == VerticalAlignment)

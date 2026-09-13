@@ -32,7 +32,7 @@ public sealed class SegmentedButtonTheme : InheritedTheme
         return new SegmentedButtonTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((SegmentedButtonTheme)oldWidget).Data, Data);
     }
@@ -43,5 +43,5 @@ public sealed class SegmentedButtonTheme : InheritedTheme
     }
 
     public static SegmentedButtonThemeData? MaybeOf(BuildContext context) =>
-        context.DependOnInherited<SegmentedButtonTheme>()?.Data;
+        context.DependOnInheritedWidgetOfExactType<SegmentedButtonTheme>()?.Data;
 }

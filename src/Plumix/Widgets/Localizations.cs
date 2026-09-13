@@ -255,7 +255,7 @@ public sealed class Localizations : StatefulWidget
         IReadOnlyList<LocalizationsDelegate>? delegates = null,
         Key? key = null)
     {
-        LocalizationsScope scope = context.DependOnInherited<LocalizationsScope>()
+        LocalizationsScope scope = context.DependOnInheritedWidgetOfExactType<LocalizationsScope>()
                                    ?? throw new InvalidOperationException(
                                        "Localizations.Override requires a Localizations ancestor.");
         var mergedDelegates = new List<LocalizationsDelegate>();
@@ -281,7 +281,7 @@ public sealed class Localizations : StatefulWidget
 
     public static T? MaybeOf<T>(BuildContext context) where T : class
     {
-        LocalizationsScope? scope = context.DependOnInherited<LocalizationsScope>();
+        LocalizationsScope? scope = context.DependOnInheritedWidgetOfExactType<LocalizationsScope>();
         return scope?.Resources.GetValueOrDefault(typeof(T)) as T;
     }
 
@@ -293,7 +293,7 @@ public sealed class Localizations : StatefulWidget
 
     public static Locale? MaybeLocaleOf(BuildContext context)
     {
-        return context.DependOnInherited<LocalizationsScope>()?.Locale;
+        return context.DependOnInheritedWidgetOfExactType<LocalizationsScope>()?.Locale;
     }
 
     public override State CreateState() => new LocalizationsState();
@@ -534,7 +534,7 @@ internal sealed class LocalizationsScope : InheritedWidget
 
     public IReadOnlyDictionary<Type, object> Resources { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (LocalizationsScope)oldWidget;
         return !Equals(oldScope.Locale, Locale)

@@ -211,9 +211,9 @@ public sealed class SnackBarTheme : InheritedTheme
 
     public override Widget Wrap(BuildContext context, Widget child) => new SnackBarTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((SnackBarTheme)oldWidget).Data, Data);
 
     public static SnackBarThemeData Of(BuildContext context) =>
-        context.DependOnInherited<SnackBarTheme>()?.Data ?? Theme.Of(context).SnackBarTheme;
+        context.DependOnInheritedWidgetOfExactType<SnackBarTheme>()?.Data ?? Theme.Of(context).SnackBarTheme;
 }

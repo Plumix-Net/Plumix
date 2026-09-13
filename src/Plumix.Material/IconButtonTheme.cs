@@ -55,7 +55,7 @@ public sealed class IconButtonTheme : InheritedTheme
 
     public static IconButtonThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<IconButtonTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<IconButtonTheme>();
         return localTheme is not null ? localTheme.Data : Theme.Of(context).IconButtonTheme;
     }
 
@@ -64,7 +64,7 @@ public sealed class IconButtonTheme : InheritedTheme
         return new IconButtonTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((IconButtonTheme)oldWidget).Data, Data);
     }

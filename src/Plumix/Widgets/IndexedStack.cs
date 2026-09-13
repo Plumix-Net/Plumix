@@ -150,9 +150,9 @@ internal sealed class IndexedStackElement : MultiChildRenderObjectElement
     public override void DebugVisitOnstageChildren(Action<Element> visitor)
     {
         int? index = ((RawIndexedStack)Widget).Index;
-        if (index.HasValue && Children.Count > 0)
+        if (index.HasValue && Children.Any())
         {
-            visitor(Children[index.Value]);
+            visitor(Children.ElementAt(index.Value));
         }
     }
 }

@@ -295,7 +295,7 @@ public sealed class IconTheme : InheritedTheme
         return new IconTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((IconTheme)oldWidget).Data, Data);
     }
@@ -330,7 +330,7 @@ public sealed class IconTheme : InheritedTheme
 
     private static IconThemeData GetInheritedIconThemeData(BuildContext context)
     {
-        return context.DependOnInherited<IconTheme>()?.Data ?? IconThemeData.Fallback;
+        return context.DependOnInheritedWidgetOfExactType<IconTheme>()?.Data ?? IconThemeData.Fallback;
     }
 }
 

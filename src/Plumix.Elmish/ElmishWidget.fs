@@ -45,7 +45,7 @@ and internal ElmishWidgetState<'arg, 'model, 'msg>() =
             // The initial setState arrives synchronously from runWithDispatch
             // below, before the first Build; only later changes need a rebuild.
             if started && not disposed then
-                this.InvokeSetState(fun () -> ())
+                this.SetState(fun () -> ())
 
         widget.Program
         |> Program.withSetState setState

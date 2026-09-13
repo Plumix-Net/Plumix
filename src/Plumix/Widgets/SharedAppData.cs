@@ -37,7 +37,7 @@ public sealed class SharedAppData : StatefulWidget
     public static void SetValue<TKey, TValue>(BuildContext context, TKey key, TValue value)
         where TKey : notnull
     {
-        var model = context.GetInherited<SharedAppModel>();
+        var model = context.GetInheritedWidgetOfExactType<SharedAppModel>();
         if (model == null)
         {
             throw MissingAncestor(nameof(SetValue));
@@ -108,7 +108,7 @@ public sealed class SharedAppData : StatefulWidget
 
         public SharedAppDataState State { get; }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return !ReferenceEquals(_data, ((SharedAppModel)oldWidget)._data);
         }

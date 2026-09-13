@@ -42,9 +42,8 @@ public sealed class ScrollNotificationObserverTests
     {
         var notification = new TestNotification(1);
 
-        bool handled = notification.Dispatch(null);
+        notification.Dispatch(null);
 
-        Assert.False(handled);
         Assert.Null(notification.Context);
     }
 

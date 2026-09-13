@@ -369,7 +369,10 @@ public sealed class MaterialTextFieldTests : IDisposable
         {
             RenderView = new RenderView(new FlutterView(new Size(800, 600)));
             _pipeline = new PipelineOwner(RenderView); _pipeline.Attach(RenderView);
-            _root = new RootElement(RenderView, widget); _root.Attach(_owner); _root.Mount(null, null); _owner.FlushBuild();
+            _root = new RootElement(RenderView, widget);
+            _root.Attach(_owner);
+            _owner.BuildScope(_root, () => _root.Mount(null, null));
+            _owner.FlushBuild();
         }
         public RenderView RenderView { get; }
         public void Pump(Size size) { _owner.FlushBuild(); _pipeline.RequestLayout(); _pipeline.FlushLayout(size); _pipeline.FlushCompositingBits(); _pipeline.FlushPaint(); }

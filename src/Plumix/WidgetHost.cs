@@ -89,6 +89,11 @@ public sealed class WidgetHost : PlumixHost
         _owner.BuildScope();
     }
 
+    protected override void OnFinalizeFrame()
+    {
+        _owner.FinalizeTree();
+    }
+
     protected override void PerformReassemble()
     {
         if (_rootElement != null)

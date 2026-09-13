@@ -334,7 +334,7 @@ public sealed class SliverReorderableList : StatefulWidget
 
     public static SliverReorderableListState? MaybeOf(BuildContext context)
     {
-        return context.GetInherited<ReorderableListScope>()?.ListState;
+        return context.GetInheritedWidgetOfExactType<ReorderableListScope>()?.ListState;
     }
 
     public static SliverReorderableListState Of(BuildContext context)
@@ -1007,7 +1007,7 @@ internal sealed class ReorderableListScope : InheritedWidget
 
     public SliverReorderableListState ListState { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((ReorderableListScope)oldWidget).ListState, ListState);
     }

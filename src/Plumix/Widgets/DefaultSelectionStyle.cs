@@ -59,7 +59,7 @@ public sealed class DefaultSelectionStyle : InheritedTheme
 
     public static DefaultSelectionStyle Of(BuildContext context)
     {
-        return context.DependOnInherited<DefaultSelectionStyle>() ?? Fallback();
+        return context.DependOnInheritedWidgetOfExactType<DefaultSelectionStyle>() ?? Fallback();
     }
 
     public override Widget Wrap(BuildContext context, Widget child)
@@ -71,7 +71,7 @@ public sealed class DefaultSelectionStyle : InheritedTheme
             mouseCursor: MouseCursor);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldStyle = (DefaultSelectionStyle)oldWidget;
         return oldStyle.CursorColor != CursorColor

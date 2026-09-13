@@ -527,7 +527,7 @@ public sealed class PrimaryScrollController : InheritedWidget
 
     public static ScrollController? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<PrimaryScrollController>()?.Controller;
+        return context.DependOnInheritedWidgetOfExactType<PrimaryScrollController>()?.Controller;
     }
 
     public static ScrollController Of(BuildContext context)
@@ -536,7 +536,7 @@ public sealed class PrimaryScrollController : InheritedWidget
                ?? throw new InvalidOperationException("PrimaryScrollController not found in context.");
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((PrimaryScrollController)oldWidget).Controller, Controller);
     }
@@ -921,7 +921,7 @@ public sealed class KeepAlive : ParentDataWidget<IKeepAliveParentData>
     /// valid; the name it reports comes from <see cref="DebugTypicalAncestorWidgetDescription"/>
     /// instead. C# keeps the type non-throwing and names the first of the two.
     /// </remarks>
-    public override Type DebugTypicalAncestorWidgetType => typeof(SliverWithKeepAliveWidget);
+    public override Type DebugTypicalAncestorWidgetClass => typeof(SliverWithKeepAliveWidget);
 
     /// <inheritdoc />
     public override string DebugTypicalAncestorWidgetDescription =>
@@ -935,7 +935,7 @@ public sealed class KeepAlive : ParentDataWidget<IKeepAliveParentData>
     /// <remarks>Flutter's <c>KeepAlive.debugCanApplyOutOfTurn</c>.</remarks>
     public override bool DebugCanApplyOutOfTurn() => Value;
 
-    protected override void ApplyParentData(RenderObject renderObject)
+    public override void ApplyParentData(RenderObject renderObject)
     {
         Debug.Assert(renderObject.parentData is IKeepAliveParentData);
         var parentData = (IKeepAliveParentData)renderObject.parentData!;
@@ -1389,8 +1389,8 @@ internal class SliverMultiBoxAdaptorElement : RenderObjectElement, IRenderSliver
     /// <remarks>
     /// Flutter's <c>SliverMultiBoxAdaptorElement.forgetChild</c> asserts the slot is still
     /// registered, because Dart only reaches it through the global-key retake path. Plumix's
-    /// <c>Element.DeactivateChild</c> also calls it, and a remapped child has already left the map
-    /// by then, so the entry is dropped only when it still points at this child.
+    /// <c>Element.DeactivateChild</c> used to call it too, so the entry is dropped only when it still
+    /// points at this child; restoring the assert is tracked in <c>docs/ai/BACKLOG.md</c>.
     /// </remarks>
     public override void ForgetChild(Element child)
     {

@@ -61,13 +61,14 @@ public sealed class TextSelectionTheme : InheritedTheme
         return new TextSelectionTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((TextSelectionTheme)oldWidget).Data, Data);
     }
 
     public static TextSelectionThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<TextSelectionTheme>()?.Data ?? Theme.Of(context).TextSelectionTheme;
+        return context.DependOnInheritedWidgetOfExactType<TextSelectionTheme>()?.Data
+            ?? Theme.Of(context).TextSelectionTheme;
     }
 }

@@ -52,11 +52,11 @@ public sealed class CarouselViewTheme : InheritedTheme
 
     public override Widget Wrap(BuildContext context, Widget child) => new CarouselViewTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(Data, ((CarouselViewTheme)oldWidget).Data);
 
     public static CarouselViewThemeData? MaybeOf(BuildContext context) =>
-        context.DependOnInherited<CarouselViewTheme>()?.Data;
+        context.DependOnInheritedWidgetOfExactType<CarouselViewTheme>()?.Data;
 
     public static CarouselViewThemeData Of(BuildContext context) =>
         MaybeOf(context) ?? Theme.Of(context).CarouselViewTheme;

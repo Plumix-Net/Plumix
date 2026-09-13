@@ -50,7 +50,7 @@ public sealed class OutlinedButtonTheme : InheritedTheme
 
     public static OutlinedButtonThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<OutlinedButtonTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<OutlinedButtonTheme>();
         return localTheme is not null ? localTheme.Data : Theme.Of(context).OutlinedButtonTheme;
     }
 
@@ -59,7 +59,7 @@ public sealed class OutlinedButtonTheme : InheritedTheme
         return new OutlinedButtonTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((OutlinedButtonTheme)oldWidget).Data, Data);
     }

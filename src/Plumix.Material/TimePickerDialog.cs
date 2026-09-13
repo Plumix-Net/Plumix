@@ -157,7 +157,7 @@ internal sealed class TimePickerModel : InheritedModel<TimePickerAspect>
     public static void SetHourMinuteMode(BuildContext context, HourMinuteMode value) =>
         Of(context, TimePickerAspect.OnHourMinuteModeChanged).OnHourMinuteModeChanged(value);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var old = (TimePickerModel)oldWidget;
         return Use24HourFormat != old.Use24HourFormat

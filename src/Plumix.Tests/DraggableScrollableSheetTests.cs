@@ -1240,7 +1240,7 @@ public sealed class DraggableScrollableSheetTests
             public void UpdateChildWidget(Widget widget)
             {
                 _childWidget = widget;
-                _child = UpdateChild(_child, _childWidget, Slot);
+                Owner!.BuildScope(this, () => _child = UpdateChild(_child, _childWidget, Slot));
             }
 
             protected override void OnMount()

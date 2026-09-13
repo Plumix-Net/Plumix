@@ -575,23 +575,62 @@ public sealed class LayerLink
 
     internal RenderLeaderLayer? RenderLeader => _renderLeader;
 
+    // Dart's `_debugPreviousLeaders`: while a link moves between leaders inside one frame (flutter#96959),
+    // the leader it left is parked here and must have detached by the end of the frame.
+    private HashSet<LeaderLayer>? _debugPreviousLeaders;
+    private bool _debugLeaderCheckScheduled;
+
+    /// <summary>Dart's <c>LayerLink._registerLeader</c>.</summary>
     internal void RegisterLeader(LeaderLayer leader)
     {
-        if (_leader != null && !ReferenceEquals(_leader, leader))
+        if (Constants.KDebugMode && ReferenceEquals(_leader, leader))
         {
-            throw new InvalidOperationException(
-                "A LayerLink cannot be attached to more than one LeaderLayer at the same time.");
+            throw new AssertionError();
+        }
+
+        if (Constants.KDebugMode && _leader != null)
+        {
+            _debugPreviousLeaders ??= [];
+            DebugScheduleLeadersCleanUpCheck();
+            _debugPreviousLeaders.Add(_leader);
         }
 
         _leader = leader;
     }
 
+    /// <summary>Dart's <c>LayerLink._unregisterLeader</c>.</summary>
     internal void UnregisterLeader(LeaderLayer leader)
     {
         if (ReferenceEquals(_leader, leader))
         {
             _leader = null;
         }
+        else if (Constants.KDebugMode && _debugPreviousLeaders?.Remove(leader) != true)
+        {
+            throw new AssertionError("A LeaderLayer unregistered from a LayerLink it was never registered with.");
+        }
+    }
+
+    /// <summary>Dart's <c>LayerLink._debugScheduleLeadersCleanUpCheck</c>.</summary>
+    private void DebugScheduleLeadersCleanUpCheck()
+    {
+        if (_debugLeaderCheckScheduled)
+        {
+            return;
+        }
+
+        _debugLeaderCheckScheduled = true;
+        Scheduler.AddPostFrameCallback(
+            _ =>
+            {
+                _debugLeaderCheckScheduled = false;
+                if (_debugPreviousLeaders is { Count: > 0 })
+                {
+                    throw new AssertionError(
+                        "A LayerLink still has previous LeaderLayers attached at the end of the frame.");
+                }
+            },
+            debugLabel: "LayerLink.leadersCleanUpCheck");
     }
 
     internal void RegisterRenderLeader(RenderLeaderLayer leader)

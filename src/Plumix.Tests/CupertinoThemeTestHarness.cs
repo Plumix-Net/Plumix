@@ -127,6 +127,8 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
 
     private sealed class RootElement : Element, IRenderObjectHost
     {
+        private Widget? _harnessChild;
+
         private readonly RenderView _renderView;
         private Element? _child;
 
@@ -148,12 +150,12 @@ internal sealed class CupertinoThemeTestHarness : IDisposable
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, _harnessChild ?? Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
-            base.Update(newWidget);
+            _harnessChild = newWidget;
             Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 

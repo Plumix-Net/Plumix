@@ -17,7 +17,7 @@ public sealed class Directionality : InheritedWidget
 
     public TextDirection TextDirection { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return ((Directionality)oldWidget).TextDirection != TextDirection;
     }
@@ -29,6 +29,6 @@ public sealed class Directionality : InheritedWidget
 
     public static TextDirection? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<Directionality>()?.TextDirection;
+        return context.DependOnInheritedWidgetOfExactType<Directionality>()?.TextDirection;
     }
 }

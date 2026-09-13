@@ -1408,7 +1408,7 @@ public abstract class ModalRoute : TransitionRoute
     private static ModalRoute? ResolveOf(BuildContext context, ModalRouteAspect? aspect)
     {
         RouteScope? scope = aspect is null
-            ? context.DependOnInherited<RouteScope>()
+            ? context.DependOnInheritedWidgetOfExactType<RouteScope>()
             : InheritedModel<ModalRouteAspect>.InheritFrom<RouteScope>(context, aspect.Value);
         return scope?.Route as ModalRoute;
     }
@@ -2045,7 +2045,7 @@ public sealed class Navigator : StatefulWidget
     {
         if (!rootNavigator)
         {
-            return context.DependOnInherited<NavigatorScope>()?.Navigator;
+            return context.DependOnInheritedWidgetOfExactType<NavigatorScope>()?.Navigator;
         }
 
         NavigatorState? result = null;
@@ -2175,7 +2175,7 @@ internal sealed class NavigatorScope : InheritedWidget
 
     public NavigatorState Navigator { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((NavigatorScope)oldWidget).Navigator, Navigator);
     }
@@ -2210,7 +2210,7 @@ internal sealed class RouteScope : InheritedModel<ModalRouteAspect>
 
     public bool Opaque { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (RouteScope)oldWidget;
         return !ReferenceEquals(oldScope.Route, Route)

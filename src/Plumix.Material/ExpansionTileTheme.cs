@@ -68,7 +68,7 @@ public sealed class ExpansionTileTheme : InheritedTheme
 
     public static ExpansionTileThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<ExpansionTileTheme>()?.Data
+        return context.DependOnInheritedWidgetOfExactType<ExpansionTileTheme>()?.Data
                ?? Theme.Of(context).ExpansionTileTheme;
     }
 
@@ -77,7 +77,7 @@ public sealed class ExpansionTileTheme : InheritedTheme
         return new ExpansionTileTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ExpansionTileTheme)oldWidget).Data, Data);
     }

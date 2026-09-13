@@ -1325,9 +1325,9 @@ public sealed class RouterTests : IDisposable
 
         public Widget Child { get; }
 
-        public static int Of(BuildContext context) => context.DependOnInherited<ProbeScope>()!.Value;
+        public static int Of(BuildContext context) => context.DependOnInheritedWidgetOfExactType<ProbeScope>()!.Value;
 
-        public static int Read(BuildContext context) => context.GetInherited<ProbeScope>()!.Value;
+        public static int Read(BuildContext context) => context.GetInheritedWidgetOfExactType<ProbeScope>()!.Value;
 
         public override State CreateState() => new ProbeState();
 
@@ -1340,7 +1340,7 @@ public sealed class RouterTests : IDisposable
 
             public int Value { get; }
 
-            protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+            public override bool UpdateShouldNotify(InheritedWidget oldWidget)
             {
                 return ((ProbeScope)oldWidget).Value != Value;
             }

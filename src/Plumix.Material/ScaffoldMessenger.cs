@@ -49,7 +49,7 @@ public sealed class ScaffoldMessenger : StatefulWidget
         MaybeOf(context) ?? throw new InvalidOperationException("ScaffoldMessenger not found in context.");
 
     public static ScaffoldMessengerState? MaybeOf(BuildContext context) =>
-        context.DependOnInherited<ScaffoldMessengerScope>()?.Messenger;
+        context.DependOnInheritedWidgetOfExactType<ScaffoldMessengerScope>()?.Messenger;
 }
 
 internal sealed class ScaffoldMessengerScope : InheritedWidget
@@ -69,7 +69,7 @@ internal sealed class ScaffoldMessengerScope : InheritedWidget
     public ScaffoldMessengerState Messenger { get; }
     public SnackBar? SnackBar { get; }
     public MaterialBanner? MaterialBanner { get; }
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (ScaffoldMessengerScope)oldWidget;
         return !ReferenceEquals(Messenger, oldScope.Messenger)

@@ -172,7 +172,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
 
         public static int Of(BuildContext context)
         {
-            return context.DependOnInherited<TestTheme>()?.Value ?? -1;
+            return context.DependOnInheritedWidgetOfExactType<TestTheme>()?.Value ?? -1;
         }
 
         public override Widget Wrap(BuildContext context, Widget child)
@@ -180,7 +180,7 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
             return new TestTheme(Value, child);
         }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return ((TestTheme)oldWidget).Value != Value;
         }
@@ -188,6 +188,8 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
 
     private sealed class TestRootElement : Element, IRenderObjectHost
     {
+        private Widget? _harnessChild;
+
         private Element? _child;
 
         public TestRootElement(Widget widget) : base(widget)
@@ -203,12 +205,12 @@ public sealed class TitleDefaultSelectionStyleTests : IDisposable
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, _harnessChild ?? Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
-            base.Update(newWidget);
+            _harnessChild = newWidget;
             Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 

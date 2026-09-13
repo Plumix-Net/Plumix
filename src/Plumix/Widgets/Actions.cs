@@ -597,7 +597,7 @@ internal sealed class ActionsScope : InheritedWidget
 
     public int Version { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldScope = (ActionsScope)oldWidget;
         return !ReferenceEquals(oldScope.ActionsMap, ActionsMap)

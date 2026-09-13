@@ -113,7 +113,7 @@ public class TwoDimensionalScrollable : StatefulWidget
     /// <summary>The state of the closest enclosing <see cref="TwoDimensionalScrollable"/>, or null.</summary>
     public static TwoDimensionalScrollableState? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<TwoDimensionalScrollableScope>()?.TwoDimensionalScrollable;
+        return context.DependOnInheritedWidgetOfExactType<TwoDimensionalScrollableScope>()?.TwoDimensionalScrollable;
     }
 
     /// <summary>The state of the closest enclosing <see cref="TwoDimensionalScrollable"/>.</summary>
@@ -147,7 +147,7 @@ internal sealed class TwoDimensionalScrollableScope : InheritedWidget
 
     public TwoDimensionalScrollableState TwoDimensionalScrollable { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 }
 
 /// <summary>State for a <see cref="TwoDimensionalScrollable"/>.</summary>

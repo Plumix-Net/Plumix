@@ -72,9 +72,9 @@ public sealed class BottomAppBarTheme : InheritedTheme
         return new BottomAppBarTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((BottomAppBarTheme)oldWidget).Data, Data);
 
     public static BottomAppBarThemeData Of(BuildContext context) =>
-        context.DependOnInherited<BottomAppBarTheme>()?.Data ?? Theme.Of(context).BottomAppBarTheme;
+        context.DependOnInheritedWidgetOfExactType<BottomAppBarTheme>()?.Data ?? Theme.Of(context).BottomAppBarTheme;
 }

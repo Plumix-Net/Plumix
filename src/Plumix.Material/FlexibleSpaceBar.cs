@@ -352,9 +352,10 @@ public sealed class FlexibleSpaceBarSettings : InheritedWidget
     public double CurrentExtent { get; }
     public bool? IsScrolledUnder { get; }
     public bool? HasLeading { get; }
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => !EqualsSettings((FlexibleSpaceBarSettings)oldWidget);
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+        !EqualsSettings((FlexibleSpaceBarSettings)oldWidget);
     public static FlexibleSpaceBarSettings Of(BuildContext context) =>
-        context.DependOnInherited<FlexibleSpaceBarSettings>()
+        context.DependOnInheritedWidgetOfExactType<FlexibleSpaceBarSettings>()
         ?? throw new InvalidOperationException("FlexibleSpaceBar requires FlexibleSpaceBarSettings.");
 
     private bool EqualsSettings(FlexibleSpaceBarSettings other) =>

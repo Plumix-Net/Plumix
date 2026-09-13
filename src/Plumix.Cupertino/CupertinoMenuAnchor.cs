@@ -238,7 +238,7 @@ internal sealed class CupertinoMenuAnchorScope : InheritedWidget
 
     public bool HasLeading { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         HasLeading != ((CupertinoMenuAnchorScope)oldWidget).HasLeading;
 }
 
@@ -473,7 +473,7 @@ public sealed class CupertinoMenuAnchor : StatefulWidget
     public FocusNode? ChildFocusNode { get; }
 
     public static bool? MaybeHasLeadingOf(BuildContext context) =>
-        context.DependOnInherited<CupertinoMenuAnchorScope>()?.HasLeading;
+        context.DependOnInheritedWidgetOfExactType<CupertinoMenuAnchorScope>()?.HasLeading;
 
     public override State CreateState() => new CupertinoMenuAnchorState();
 }

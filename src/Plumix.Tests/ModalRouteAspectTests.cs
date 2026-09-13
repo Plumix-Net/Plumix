@@ -292,7 +292,7 @@ public sealed class ModalRouteAspectTests : IDisposable
             _pipeline.Attach(RenderView);
             _root = new HarnessRootElement(RenderView, navigator);
             _root.Attach(_owner);
-            _root.Mount(null, null);
+            _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
             _owner.FlushBuild();
             Pump();
         }

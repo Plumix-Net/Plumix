@@ -14,7 +14,7 @@ public sealed class DefaultAssetBundle : InheritedWidget
     }
 
     public AssetBundle Bundle { get; }
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(Bundle, ((DefaultAssetBundle)oldWidget).Bundle);
     }
@@ -26,7 +26,7 @@ public sealed class DefaultAssetBundle : InheritedWidget
 
     public static AssetBundle? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<DefaultAssetBundle>()?.Bundle;
+        return context.DependOnInheritedWidgetOfExactType<DefaultAssetBundle>()?.Bundle;
     }
 }
 

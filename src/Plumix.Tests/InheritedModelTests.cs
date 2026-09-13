@@ -221,7 +221,7 @@ public sealed class InheritedModelTests
 
         public int B { get; }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             var oldModel = (ABModel)oldWidget;
             return A != oldModel.A || B != oldModel.B;
@@ -255,7 +255,7 @@ public sealed class InheritedModelTests
             return aspect is ABAspect typedAspect && _supportedAspects.Contains(typedAspect);
         }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             var oldModel = (ShadowingABModel)oldWidget;
             return A != oldModel.A || B != oldModel.B;

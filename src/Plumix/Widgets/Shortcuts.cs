@@ -798,7 +798,7 @@ public sealed class ShortcutRegistry : ChangeNotifier
 
     public static ShortcutRegistry? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<ShortcutRegistrarScope>()?.Registry;
+        return context.DependOnInheritedWidgetOfExactType<ShortcutRegistrarScope>()?.Registry;
     }
 
     public override void Dispose()
@@ -901,7 +901,7 @@ internal sealed class ShortcutRegistrarScope : InheritedWidget
 
     public ShortcutRegistry Registry { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((ShortcutRegistrarScope)oldWidget).Registry, Registry);
     }

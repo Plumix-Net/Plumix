@@ -1,7 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 using Plumix.Foundation;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/framework.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/framework.dart
 
 namespace Plumix.Widgets;
 
@@ -26,6 +26,21 @@ internal static class FrameworkErrors
             informationCollector: informationCollector);
         FlutterError.ReportError(details);
         return details;
+    }
+}
+
+/// <summary>
+/// C#-only: Dart's <c>assert(condition)</c> for the framework core. Checked in debug builds only, and
+/// failing with an <see cref="AssertionError"/> that carries the optional message.
+/// </summary>
+internal static class DebugAssertions
+{
+    public static void Assert(bool condition, string? message = null)
+    {
+        if (Constants.KDebugMode && !condition)
+        {
+            throw new AssertionError(message);
+        }
     }
 }
 
@@ -60,7 +75,8 @@ public record ObjectKey(object? Value) : LocalKey
         return HashCode.Combine(GetType(), RuntimeHelpers.GetHashCode(Value));
     }
 
-    public override string ToString()
+    // Sealed so a record subclass inherits Dart's printer instead of getting a synthesized one.
+    public sealed override string ToString()
     {
         string identity = Diagnostics.DescribeIdentity(Value);
         return GetType() == typeof(ObjectKey)
@@ -82,105 +98,41 @@ public record ObjectKey(object? Value) : LocalKey
 /// in the same animation frame in which it was removed from its old location in
 /// the tree.
 ///
-/// Reparenting an [Element] using a global key is relatively expensive, as
-/// this operation will trigger a call to [State.deactivate] on the associated
-/// [State] and all of its descendants; then force all widgets that depends
-/// on an [InheritedWidget] to rebuild.
-///
-/// If you don't need any of the features listed above, consider using a [Key],
-/// [ValueKey], [ObjectKey], or [UniqueKey] instead.
-///
 /// You cannot simultaneously include two widgets in the tree with the same
 /// global key. Attempting to do so will assert at runtime.
 ///
-/// ## Pitfalls
-///
 /// GlobalKeys should not be re-created on every build. They should usually be
 /// long-lived objects owned by a [State] object, for example.
-///
-/// Creating a new GlobalKey on every build will throw away the state of the
-/// subtree associated with the old key and create a new fresh subtree for the
-/// new key. Besides harming performance, this can also cause unexpected
-/// behavior in widgets in the subtree. For example, a [GestureDetector] in the
-/// subtree will be unable to track ongoing gestures since it will be recreated
-/// on each build.
-///
-/// Instead, a good practice is to let a State object own the GlobalKey, and
-/// instantiate it outside the build method, such as in [State.initState].
-///
-/// See also:
-///
-///  * The discussion at [Widget.key] for more information about how widgets use
-/// keys.
 /// </summary>
 public abstract record GlobalKey : Key
 {
-    private sealed class CurrentElementHolder(Element element)
-    {
-        public Element Element { get; } = element;
-    }
+    /// <summary>
+    /// Dart's <c>GlobalKey._currentElement</c>: the registry is keyed by <c>==</c>, so an equal key
+    /// instance finds the element too.
+    /// </summary>
+    internal Element? CurrentElement => BuildOwner.LookupGlobalKey(this);
 
-    private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<GlobalKey, CurrentElementHolder>
-        CurrentElements = new();
-
-    internal Element? CurrentElement => CurrentElements.TryGetValue(this, out var holder) ? holder.Element : null;
-
+    /// <summary>The build context in which the widget with this key builds.</summary>
     public BuildContext? CurrentContext => CurrentElement;
+
+    /// <summary>The widget in the tree that currently has this global key.</summary>
     public Widget? CurrentWidget => CurrentElement?.Widget;
 
-    internal void AttachElement(Element element)
-    {
-        CurrentElements.Remove(this);
-        CurrentElements.Add(this, new CurrentElementHolder(element));
-    }
-
-    internal void DetachElement(Element element)
-    {
-        if (CurrentElements.TryGetValue(this, out var current) && ReferenceEquals(current.Element, element))
-            CurrentElements.Remove(this);
-    }
+    /// <summary>
+    /// A key's identity is not its current element: the record printer must not walk
+    /// <see cref="CurrentContext"/>, whose description prints this key again.
+    /// </summary>
+    protected override bool PrintMembers(System.Text.StringBuilder builder) => false;
 }
 
+/// <summary>A <see cref="GlobalKey"/> whose <see cref="CurrentState"/> is typed.</summary>
 public abstract record GlobalKey<T> : GlobalKey where T : State
 {
-    public T? CurrentState => (CurrentElement as StatefulElement)?.State as T;
-
-    //   /// Creates a [LabeledGlobalKey], which is a [GlobalKey] with a label used for
-//   /// debugging.
-//   ///
-//   /// The label is purely for debugging and not used for comparing the identity
-//   /// of the key.
-//   factory GlobalKey({String? debugLabel}) => LabeledGlobalKey<T>(debugLabel);
-//
-//   /// Creates a global key without a label.
-//   ///
-//   /// Used by subclasses because the factory constructor shadows the implicit
-//   /// constructor.
-//   const GlobalKey.constructor() : super.empty();
-//
-//   Element? get _currentElement => WidgetsBinding.instance.buildOwner!._globalKeyRegistry[this];
-//
-//   /// The build context in which the widget with this key builds.
-//   ///
-//   /// The current context is null if there is no widget in the tree that matches
-//   /// this global key.
-//   BuildContext? get currentContext => _currentElement;
-//
-//   /// The widget in the tree that currently has this global key.
-//   ///
-//   /// The current widget is null if there is no widget in the tree that matches
-//   /// this global key.
-//   Widget? get currentWidget => _currentElement?.widget;
-//
-//   /// The [State] for the widget in the tree that currently has this global key.
-//   ///
-//   /// The current state is null if (1) there is no widget in the tree that
-//   /// matches this global key, (2) that widget is not a [StatefulWidget], or the
-//   /// associated [State] object is not a subtype of `T`.
-//   T? get currentState => switch (_currentElement) {
-//     StatefulElement(:final T state) => state,
-//     _ => null,
-//   };
+    /// <summary>
+    /// The <see cref="State"/> for the widget in the tree that currently has this global key, or null
+    /// when there is none or it is not a <typeparamref name="T"/>.
+    /// </summary>
+    public T? CurrentState => CurrentElement is StatefulElement { State: T state } ? state : null;
 }
 
 /// <summary>
@@ -202,14 +154,14 @@ public record LabeledGlobalKey<T>(string? DebugLabel) : GlobalKey<T> where T : S
     public override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
 
     /// <summary>
-    /// Ports Dart's <c>LabeledGlobalKey.toString</c>: <c>[GlobalKey#hash label]</c> for the class
-    /// itself, <c>[describeIdentity(this) label]</c> for a subclass. The record-generated printer
-    /// would render the debug label as a property bag instead.
+    /// Ports Dart's <c>LabeledGlobalKey.toString</c>: <c>[GlobalKey#hash label]</c> when the runtime
+    /// type is <c>LabeledGlobalKey&lt;State&lt;StatefulWidget&gt;&gt;</c> (what <c>GlobalKey()</c>
+    /// creates), <c>[describeIdentity(this) label]</c> for any other type argument or subclass.
     /// </summary>
-    public override string ToString()
+    public sealed override string ToString()
     {
         string label = DebugLabel is null ? string.Empty : $" {DebugLabel}";
-        return GetType() == typeof(LabeledGlobalKey<T>)
+        return GetType() == typeof(LabeledGlobalKey<State>)
             ? $"[GlobalKey#{Diagnostics.ShortHash(this)}{label}]"
             : $"[{Diagnostics.DescribeIdentity(this)}{label}]";
     }
@@ -222,22 +174,6 @@ public record LabeledGlobalKey<T>(string? DebugLabel) : GlobalKey<T> where T : S
 /// generate that widget.
 ///
 /// Any [GlobalObjectKey] created for the same object will match.
-///
-/// If the object is not private, then it is possible that collisions will occur
-/// where independent widgets will reuse the same object as their
-/// [GlobalObjectKey] value in a different part of the tree, leading to a global
-/// key conflict. To avoid this problem, create a private [GlobalObjectKey]
-/// subclass, as in:
-///
-/// ```dart
-/// class _MyKey extends GlobalObjectKey {
-///   const _MyKey(super.value);
-/// }
-/// ```
-///
-/// Since the [runtimeType] of the key is part of its identity, this will
-/// prevent clashes with other [GlobalObjectKey]s even if they have the same
-/// value.
 /// </summary>
 /// <param name="Value"></param>
 /// <typeparam name="T"></typeparam>
@@ -261,7 +197,7 @@ public record GlobalObjectKey<T>(object Value) : GlobalKey<T> where T : State
     /// which recurses without bound whenever the value is a <see cref="Foundation.IDiagnosticable"/>
     /// that dumps the widget tree the key is mounted in.
     /// </summary>
-    public override string ToString()
+    public sealed override string ToString()
     {
         string selfType = Foundation.Diagnostics.ObjectRuntimeType(this, "GlobalObjectKey");
         const string suffix = "<State>";

@@ -260,9 +260,11 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `foundation/binding.dart` | `src/Plumix/HotReload.cs` _(reference) (reassembleApplication; delta delivery adapted to .NET MetadataUpdateHandler)_ | `src/Plumix.Tests/HotReloadTests.cs` | — |
 | `foundation/change_notifier.dart` | `src/Plumix/Foundation/Listenable.cs` _(reference) (approximate)_ | — | — |
 | `foundation/constants.dart` | `src/Plumix/Foundation/Constants.cs` | — | — |
+| `foundation/debug.dart` | `src/Plumix/Foundation/Debug.cs` | `src/Plumix.Tests/DebugPaintingWidgetsTests.cs`<br>`src/Plumix.Tests/RendererBindingDebugTests.cs`<br>`src/Plumix.Tests/RenderingDebugTests.cs` | `dart_sample/lib/demos/general/debug_painting_demo_page.dart`<br>`dart_sample/lib/demos/general/rendering_debug_flags_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/DebugPaintingDemoPage.cs`<br>`src/Sample/Plumix.Sample/Demos/General/RenderingDebugFlagsDemoPage.cs` |
 | `foundation/diagnostics.dart` | `src/Plumix/Foundation/DiagnosticProperties.cs`<br>`src/Plumix/Foundation/Diagnosticable.cs`<br>`src/Plumix/Foundation/Diagnostics.Node.cs`<br>`src/Plumix/Foundation/Diagnostics.TextTree.cs`<br>`src/Plumix/Foundation/Diagnostics.cs` | `src/Plumix.Tests/DiagnosticsTests.cs`<br>`src/Plumix.Tests/ElementDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectDiagnosticsTests.cs`<br>`src/Plumix.Tests/RenderObjectSemanticsDiagnosticsTests.cs` | — |
 | `foundation/key.dart` | `src/Plumix/Foundation/Key.cs` _(reference) (approximate)_ | `src/Plumix.Tests/HardwareKeyboardTests.cs`<br>`src/Plumix.Tests/KeyboardListenerTests.cs` | `dart_sample/lib/demos/general/keyboard_listener_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/KeyboardListenerDemoPage.cs` |
 | `foundation/licenses.dart` | `src/Plumix/Foundation/Licenses.cs` | — | — |
+| `foundation/memory_allocations.dart` | `src/Plumix/Foundation/MemoryAllocations.cs` | — | — |
 | `foundation/platform.dart` | `src/Plumix/UI/TargetPlatform.cs` | — | — |
 | `foundation/print.dart` | `src/Plumix/Foundation/Print.cs` | `src/Plumix.Tests/PrintTests.cs` | — |
 | `foundation/serialization.dart` | `src/Plumix/Foundation/Serialization.cs` | — | — |
@@ -442,7 +444,7 @@ Flutter checkout used for validation: `/Users/egorozh/Plumix/Plumix/flutter-src`
 | `widgets/focus_scope.dart` | `src/Plumix/Widgets/FocusScope.cs` | `src/Plumix.Tests/FocusScopeTests.cs` | — |
 | `widgets/focus_traversal.dart` | `src/Plumix/Widgets/FocusTraversal.cs` | `src/Plumix.Tests/FocusTraversalTests.cs` | `dart_sample/lib/demos/general/focus_traversal_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/FocusTraversalDemoPage.cs` |
 | `widgets/form.dart` | `src/Plumix/Widgets/Form.cs` | `src/Plumix.Tests/CupertinoFormRowTests.cs`<br>`src/Plumix.Tests/CupertinoFormSectionTests.cs`<br>`src/Plumix.Tests/CupertinoTextFormFieldRowTests.cs`<br>`src/Plumix.Tests/FormTests.cs` | `dart_sample/lib/demos/general/composited_transform_demo_page.dart`<br>`dart_sample/lib/demos/general/transform_demo_page.dart` |
-| `widgets/framework.dart` | `src/Plumix/Widgets/ErrorWidget.cs`<br>`src/Plumix/Widgets/Framework.BuildOwner.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.BuildScope.cs`<br>`src/Plumix/Widgets/Framework.Element.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.InactiveElements.cs`<br>`src/Plumix/Widgets/Framework.RenderObject.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.RenderTreeRootElement.cs`<br>`src/Plumix/Widgets/Framework.Widget.cs` _(reference) (approximate)_<br>`src/Plumix/Widgets/Framework.cs` _(reference) (approximate)_ | `src/Plumix.Tests/ErrorWidgetTests.cs`<br>`src/Plumix.Tests/FrameworkElementApiTests.cs`<br>`src/Plumix.Tests/FrameworkParityTests.cs`<br>`src/Plumix.Tests/FrameworkThreadAffinityTests.cs` | — |
+| `widgets/framework.dart` | `src/Plumix/Widgets/ErrorWidget.cs`<br>`src/Plumix/Widgets/Framework.BuildOwner.cs`<br>`src/Plumix/Widgets/Framework.BuildScope.cs`<br>`src/Plumix/Widgets/Framework.Element.cs`<br>`src/Plumix/Widgets/Framework.InactiveElements.cs`<br>`src/Plumix/Widgets/Framework.RenderObject.cs`<br>`src/Plumix/Widgets/Framework.RenderTreeRootElement.cs`<br>`src/Plumix/Widgets/Framework.Widget.cs`<br>`src/Plumix/Widgets/Framework.cs` | `src/Plumix.Tests/ErrorWidgetTests.cs`<br>`src/Plumix.Tests/FrameworkDartParityTests.cs`<br>`src/Plumix.Tests/FrameworkElementApiTests.cs`<br>`src/Plumix.Tests/FrameworkParityTests.cs`<br>`src/Plumix.Tests/FrameworkThreadAffinityTests.cs` | — |
 | `widgets/gesture_detector.dart` | `src/Plumix/Widgets/GestureDetector.cs`<br>`src/Plumix/Widgets/GestureRecognizerFactory.cs` | `src/Plumix.Tests/GestureDetectorTests.cs` | — |
 | `widgets/grid_paper.dart` | `src/Plumix/Widgets/GridPaper.cs` | — | — |
 | `widgets/heroes.dart` | `src/Plumix/Widgets/Hero.cs` | `src/Plumix.Tests/HeroNavigatorTests.cs` | `dart_sample/lib/demos/general/hero_demo_page.dart`<br>`src/Sample/Plumix.Sample/Demos/General/HeroDemoPage.cs` |
@@ -629,11 +631,6 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 - `src/Plumix/WidgetHost.cs` — (reference) (host integration, adapted)
 - `src/Plumix/Widgets/DefaultTextStyle.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Directionality.cs` — (reference) (Directionality, approximate)
-- `src/Plumix/Widgets/Framework.BuildOwner.cs` — (reference) (approximate)
-- `src/Plumix/Widgets/Framework.Element.cs` — (reference) (approximate)
-- `src/Plumix/Widgets/Framework.RenderObject.cs` — (reference) (approximate)
-- `src/Plumix/Widgets/Framework.Widget.cs` — (reference) (approximate)
-- `src/Plumix/Widgets/Framework.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/Icon.cs` — (reference) (approximate)
 - `src/Plumix/Widgets/PageStorage.cs` — (reference)
 - `src/Plumix/Widgets/Scrollable.cs` — (adapted)
@@ -642,9 +639,9 @@ marker (or turn what cannot close into a `docs/ai/DIVERGENCES.md` row).
 
 ## Summary
 
-- Flutter files mapped: 526
-- C# files carrying a marker: 697
+- Flutter files mapped: 528
+- C# files carrying a marker: 699
 - C# files without a marker: 38
 - Markers not resolvable in the pinned checkout: 0
-- C# files with a qualified (non-strict) marker: 39
+- C# files with a qualified (non-strict) marker: 34
 

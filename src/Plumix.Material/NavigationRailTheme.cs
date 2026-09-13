@@ -119,14 +119,14 @@ public sealed class NavigationRailTheme : InheritedTheme
         return new NavigationRailTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((NavigationRailTheme)oldWidget).Data, Data);
     }
 
     public static NavigationRailThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<NavigationRailTheme>()?.Data
+        return context.DependOnInheritedWidgetOfExactType<NavigationRailTheme>()?.Data
                ?? Theme.Of(context).NavigationRailTheme;
     }
 }

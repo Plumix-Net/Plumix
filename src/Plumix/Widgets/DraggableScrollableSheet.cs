@@ -388,7 +388,7 @@ public sealed class DraggableScrollableActuator : StatefulWidget
     /// </returns>
     public static bool Reset(BuildContext context)
     {
-        var notifier = context.DependOnInherited<InheritedResetNotifier>();
+        var notifier = context.DependOnInheritedWidgetOfExactType<InheritedResetNotifier>();
         return notifier?.SendReset() ?? false;
     }
 
@@ -446,7 +446,7 @@ internal sealed class InheritedResetNotifier : InheritedNotifier<ResetNotifier>
     /// </summary>
     internal static bool ShouldReset(BuildContext context)
     {
-        var widget = context.DependOnInherited<InheritedResetNotifier>();
+        var widget = context.DependOnInheritedWidgetOfExactType<InheritedResetNotifier>();
         if (widget?.Notifier is not { } notifier)
         {
             return false;

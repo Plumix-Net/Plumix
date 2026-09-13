@@ -229,7 +229,7 @@ public class InkResponse : StatefulWidget
         {
             base.DidChangeDependencies();
             IParentInkResponseState? nextParent =
-                Context.DependOnInherited<ParentInkResponseProvider>()?.State;
+                Context.DependOnInheritedWidgetOfExactType<ParentInkResponseProvider>()?.State;
             if (ReferenceEquals(_parentState, nextParent))
             {
                 return;
@@ -970,7 +970,7 @@ internal sealed class ParentInkResponseProvider : InheritedWidget
 
     public IParentInkResponseState State { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 }
 
 public sealed class InkWell : InkResponse

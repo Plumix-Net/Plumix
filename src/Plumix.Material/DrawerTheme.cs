@@ -60,14 +60,14 @@ public sealed class DrawerTheme : InheritedTheme
         return new DrawerTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((DrawerTheme)oldWidget).Data, Data);
     }
 
     public static DrawerThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<DrawerTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<DrawerTheme>();
         if (localTheme is not null)
         {
             return localTheme.Data;

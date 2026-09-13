@@ -437,7 +437,7 @@ public sealed class MediaQuery : InheritedModel<object>
         return new MediaQueryFromView(view: view, child: child, key: key);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((MediaQuery)oldWidget).Data, Data);
     }
@@ -483,7 +483,7 @@ public sealed class MediaQuery : InheritedModel<object>
 
     public static MediaQueryData? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<MediaQuery>()?.Data;
+        return context.DependOnInheritedWidgetOfExactType<MediaQuery>()?.Data;
     }
 
     private static MediaQueryData? MaybeOf(BuildContext context, Aspect aspect)

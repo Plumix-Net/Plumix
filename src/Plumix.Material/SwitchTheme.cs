@@ -32,14 +32,14 @@ public sealed class SwitchTheme : InheritedWidget
 
     public SwitchThemeData Data { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((SwitchTheme)oldWidget).Data, Data);
     }
 
     public static SwitchThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<SwitchTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<SwitchTheme>();
         if (localTheme is not null)
         {
             return localTheme.Data;

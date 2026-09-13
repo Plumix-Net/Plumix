@@ -73,10 +73,11 @@ public sealed class SelectableRegionSelectionStatusScope : InheritedWidget
 
     public static IValueListenable<SelectableRegionSelectionStatus>? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<SelectableRegionSelectionStatusScope>()?.SelectionStatusNotifier;
+        return context.DependOnInheritedWidgetOfExactType<SelectableRegionSelectionStatusScope>()
+            ?.SelectionStatusNotifier;
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(
             ((SelectableRegionSelectionStatusScope)oldWidget).SelectionStatusNotifier,

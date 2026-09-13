@@ -296,7 +296,7 @@ internal sealed class VisibilityScope : InheritedWidget
 
     public bool IsVisible { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return ((VisibilityScope)oldWidget).IsVisible != IsVisible;
     }

@@ -74,9 +74,9 @@ public sealed class MaterialBannerTheme : InheritedTheme
     public MaterialBannerThemeData? Data { get; }
     public override Widget Wrap(BuildContext context, Widget child) => new MaterialBannerTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((MaterialBannerTheme)oldWidget).Data, Data);
 
     public static MaterialBannerThemeData Of(BuildContext context) =>
-        context.DependOnInherited<MaterialBannerTheme>()?.Data ?? Theme.Of(context).BannerTheme;
+        context.DependOnInheritedWidgetOfExactType<MaterialBannerTheme>()?.Data ?? Theme.Of(context).BannerTheme;
 }

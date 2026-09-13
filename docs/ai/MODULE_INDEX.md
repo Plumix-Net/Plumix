@@ -271,6 +271,10 @@ Current milestone/priority lives only in `docs/FRAMEWORK_PLAN.md` (see its `AI S
   - `src/Plumix/Widgets/Framework.Element.cs`
   - `src/Plumix/Widgets/Framework.BuildOwner.cs`
   - `src/Plumix/Widgets/Framework.RenderObject.cs`
+  - `src/Plumix/Widgets/Framework.cs` (keys, `DebugAssertions`), `Framework.BuildScope.cs`,
+    `Framework.InactiveElements.cs`
+  - `src/Plumix/Widgets/Notifications.cs` (notification tree, `NotifiableElementMixin`)
+  - `src/Plumix/Foundation/MemoryAllocations.cs` (`FlutterMemoryAllocations`, dispatched from `Debug.cs`)
   - `src/Plumix/Widgets/StatefulBuilder.cs`
   - `src/Plumix/Widgets/LookupBoundary.cs`
   - `src/Plumix/Widgets/InheritedTheme.cs`

@@ -2694,7 +2694,7 @@ public sealed class MaterialScaffoldTests
         Assert.Null(arrowBackBefore);
 
         rootRoute!.AddLocalHistoryEntry(new LocalHistoryEntry());
-        navigatorState!.InvokeSetState(() => { });
+        navigatorState!.SetState(() => { });
         owner.FlushBuild();
 
         var arrowBackAfter = FindParagraphByText(root.ChildElement?.RenderObject, arrowBackGlyph);

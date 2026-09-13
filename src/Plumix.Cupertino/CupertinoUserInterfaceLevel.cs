@@ -28,7 +28,7 @@ public sealed class CupertinoUserInterfaceLevel : InheritedWidget
 
     public CupertinoUserInterfaceLevelData Data { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return ((CupertinoUserInterfaceLevel)oldWidget).Data != Data;
     }
@@ -43,6 +43,6 @@ public sealed class CupertinoUserInterfaceLevel : InheritedWidget
 
     public static CupertinoUserInterfaceLevelData? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<CupertinoUserInterfaceLevel>()?.Data;
+        return context.DependOnInheritedWidgetOfExactType<CupertinoUserInterfaceLevel>()?.Data;
     }
 }

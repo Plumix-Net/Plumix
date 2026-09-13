@@ -8,6 +8,20 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Key records seal `ToString`, so a subclass of `ObjectKey`/`GlobalObjectKey`/`LabeledGlobalKey` prints like Dart's.
+- `Flex` and `Container` diagnostics omit null properties, matching Dart's `defaultValue: null` (basic.dart).
+- `LayerLink` may move between leader layers within a frame and checks the leftovers post-frame (layer.dart).
+- Breaking: framework.dart is a strict port: Dart's debug asserts, error texts and lifecycle checks (framework.dart).
+- Breaking: `DependOnInherited`/`GetInherited` take Dart's `...WidgetOfExactType` names (framework.dart).
+- Breaking: Dart-`@protected` framework hooks are public; `State.InvokeSetState` is gone for public `SetState`.
+- Breaking: the notification tree (`NotifiableElementMixin`) lands; `Notification.Dispatch` is void (framework.dart).
+- Breaking: `GlobalKey` lookups match by equality; `BuildOwner.ScheduleBuild`/`IsBuilding`/`RegisterElement` are gone.
+- Breaking: hosts and harness pumps finalize the element tree each frame; unmount failures are reported.
+- Breaking: `RenderObjectElement.RenderObject` is non-null; `Element.Size` checks Dart's preconditions (framework.dart).
+- Breaking: overlay-portal layout builders and persistent headers build inside a build scope (overlay.dart).
+- `State<T>`, `FlutterMemoryAllocations` and `DebugChildrenHaveDuplicateKeys` land (memory_allocations.dart).
+- `ErrorWidget`, `ParentDataElement<T>` and `LeafRenderObjectElement` are no longer sealed, as in Dart (framework.dart).
+- `TextField` no longer calls `SetState` while it is being disposed (text_field.dart).
 - Breaking: `RawScrollbar` uses directional insets, elliptical radii and `OutlinedBorder` shapes (scrollbar.dart).
 - Breaking: raw scrollbar padding, shape paint, geometry and debug-only guards follow Dart (scrollbar.dart).
 - Raw scrollbar thumb recognizers leave trackpad pan/zoom gestures to the content (scrollbar.dart).

@@ -177,9 +177,9 @@ internal sealed class WidgetSpanParentData : ParentDataWidget<TextParentData>
 
     public WidgetSpan Span { get; }
 
-    public override Type DebugTypicalAncestorWidgetType => typeof(RichText);
+    public override Type DebugTypicalAncestorWidgetClass => typeof(RichText);
 
-    protected override void ApplyParentData(RenderObject renderObject)
+    public override void ApplyParentData(RenderObject renderObject)
     {
         var parentData = (TextParentData)renderObject.parentData!;
         if (ReferenceEquals(parentData.Span, Span))

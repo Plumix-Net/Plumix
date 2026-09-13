@@ -50,7 +50,7 @@ public sealed class ElevatedButtonTheme : InheritedTheme
 
     public static ElevatedButtonThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<ElevatedButtonTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<ElevatedButtonTheme>();
         return localTheme is not null ? localTheme.Data : Theme.Of(context).ElevatedButtonTheme;
     }
 
@@ -59,7 +59,7 @@ public sealed class ElevatedButtonTheme : InheritedTheme
         return new ElevatedButtonTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ElevatedButtonTheme)oldWidget).Data, Data);
     }

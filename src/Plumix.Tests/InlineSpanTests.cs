@@ -371,7 +371,7 @@ public sealed class InlineSpanTests
             _pipeline.Attach(RenderView);
             _root = new HarnessRootElement(RenderView, widget);
             _root.Attach(_owner);
-            _root.Mount(null, null);
+            _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
             _owner.FlushBuild();
         }
 

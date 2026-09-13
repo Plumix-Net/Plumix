@@ -41,7 +41,7 @@ public sealed class FrameworkElementApiTests
     [InlineData(nameof(Element.InflateWidget))]
     [InlineData(nameof(Element.UpdateChild))]
     [InlineData(nameof(Element.UpdateChildren))]
-    [InlineData(nameof(Element.DependOnInherited))]
+    [InlineData(nameof(Element.DependOnInheritedWidgetOfExactType))]
     [InlineData(nameof(Element.DependOnInheritedElement))]
     public void ElementLifecycleMethod_IsPublic(string name)
     {
@@ -82,7 +82,7 @@ public sealed class FrameworkElementApiTests
     public void ElementPerformRebuild_IsProtectedAndVirtual()
     {
         // Dart's `@protected void performRebuild()` is the overridable half of the rebuild split;
-        // `rebuild({force})` itself is public and not virtual.
+        // `rebuild({force})` itself is public and, like Dart's, not @nonVirtual.
         MethodInfo performRebuild = typeof(Element).GetMethod("PerformRebuild", AnyInstance)!;
         Assert.NotNull(performRebuild);
         Assert.True(performRebuild.IsFamily, "Element.PerformRebuild must be protected.");
@@ -90,7 +90,7 @@ public sealed class FrameworkElementApiTests
 
         MethodInfo rebuild = typeof(Element).GetMethod(nameof(Element.Rebuild), AnyInstance)!;
         Assert.True(rebuild.IsPublic, "Element.Rebuild must be public.");
-        Assert.False(rebuild.IsVirtual, "Element.Rebuild must not be overridable; PerformRebuild is.");
+        Assert.True(rebuild.IsVirtual, "Element.Rebuild is not @nonVirtual in Dart.");
         Assert.True(
             rebuild.GetParameters() is [{ Name: "force", HasDefaultValue: true, DefaultValue: false }],
             "Element.Rebuild must take Dart's optional `force` flag.");
@@ -139,10 +139,8 @@ public sealed class FrameworkElementApiTests
     // `BuildScope(Element, Action?)` overload is public, the parameterless Plumix one stays internal.
     [Theory]
     [InlineData(nameof(BuildOwner.FinalizeTree))]
-    [InlineData(nameof(BuildOwner.ScheduleBuild))]
+    [InlineData(nameof(BuildOwner.ScheduleBuildFor))]
     [InlineData(nameof(BuildOwner.Reassemble))]
-    [InlineData(nameof(BuildOwner.RegisterElement))]
-    [InlineData(nameof(BuildOwner.UnregisterElement))]
     public void BuildOwnerMethod_IsPublic(string name)
     {
         AssertPublicMethod(typeof(BuildOwner), name);
@@ -150,7 +148,7 @@ public sealed class FrameworkElementApiTests
 
     [Theory]
     [InlineData(nameof(BuildOwner.GlobalKeyCount))]
-    [InlineData(nameof(BuildOwner.IsBuilding))]
+    [InlineData(nameof(BuildOwner.DebugBuilding))]
     [InlineData(nameof(BuildOwner.OnBuildScheduled))]
     public void BuildOwnerProperty_IsPublic(string name)
     {
@@ -269,15 +267,15 @@ public sealed class FrameworkElementApiTests
         Assert.False(probe.Dirty);
         int builds = log.ChildBuilds;
 
-        probe.Rebuild();
+        owner.LockState(() => probe.Rebuild());
         Assert.Equal(builds, log.ChildBuilds);
 
-        probe.Rebuild(force: true);
+        owner.LockState(() => probe.Rebuild(force: true));
         Assert.Equal(builds + 1, log.ChildBuilds);
 
         probe.MarkNeedsBuild();
         Assert.True(probe.Dirty);
-        probe.Rebuild();
+        owner.LockState(() => probe.Rebuild());
         Assert.Equal(builds + 2, log.ChildBuilds);
         Assert.False(probe.Dirty);
     }
@@ -553,6 +551,8 @@ public sealed class FrameworkElementApiTests
 
     private sealed class ProbeRootElement : Element, IRenderObjectHost
     {
+        private Widget? _harnessChild;
+
         private Element? _child;
 
         public ProbeRootElement(Widget widget) : base(widget)
@@ -572,12 +572,12 @@ public sealed class FrameworkElementApiTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, _harnessChild ?? Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
-            base.Update(newWidget);
+            _harnessChild = newWidget;
             Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 

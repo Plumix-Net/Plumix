@@ -210,14 +210,15 @@ public sealed class BuildScopeTests
         Assert.False(owner.DebugBuilding);
     }
 
-    [Fact]
+    [DebugOnlyFact]
     public void BuildScope_IsNotReentrant()
     {
         var owner = new BuildOwner();
         var root = new TestRootElement(new Probe("a"));
         Mount(root, owner);
 
-        Assert.Throws<InvalidOperationException>(
+        // Dart's `assert(!_debugBuilding)`.
+        Assert.Throws<AssertionError>(
             () => owner.BuildScope(root, () => owner.BuildScope(root, () => { })));
     }
 
@@ -231,7 +232,7 @@ public sealed class BuildScopeTests
         Element child = root.ChildElement!;
         Assert.False(child.Dirty);
 
-        FlutterError error = Assert.Throws<FlutterError>(() => owner.ScheduleBuild(child));
+        FlutterError error = Assert.Throws<FlutterError>(() => owner.ScheduleBuildFor(child));
         Assert.Contains("scheduleBuildFor() called for a widget that is not marked as dirty.", error.Message);
         Assert.Contains("Make sure to set the dirty flag before calling scheduleBuildFor().", error.Message);
     }
@@ -710,7 +711,7 @@ public sealed class BuildScopeTests
             probe.Report?.Invoke(this);
             if (probe.DependsOnInherited)
             {
-                _ = context.DependOnInherited<InheritedValue>();
+                _ = context.DependOnInheritedWidgetOfExactType<InheritedValue>();
             }
 
             OnBuild?.Invoke();
@@ -730,7 +731,7 @@ public sealed class BuildScopeTests
     {
         public override BuildScope BuildScope => ((Scoped)Widget).Scope;
 
-        protected override Widget Build() => ((Scoped)Widget).Child;
+        public override Widget Build() => ((Scoped)Widget).Child;
     }
 
     private sealed class ThrowAfterBuild(
@@ -752,7 +753,7 @@ public sealed class BuildScopeTests
     {
         public Exception? Failure { get; set; }
 
-        protected override Widget Build() => ((ThrowAfterBuild)Widget).Child;
+        public override Widget Build() => ((ThrowAfterBuild)Widget).Child;
 
         protected override void PerformRebuild()
         {
@@ -776,7 +777,7 @@ public sealed class BuildScopeTests
     {
         public int Value { get; } = value;
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
             Value != ((InheritedValue)oldWidget).Value;
     }
 

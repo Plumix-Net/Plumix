@@ -454,6 +454,15 @@ public class PlumixHost : Control
     }
 
     /// <summary>
+    /// Called after the frame's layout and compositing-bits passes. <see cref="WidgetHost"/> finalizes
+    /// its element tree here, the way Dart's <c>WidgetsBinding.drawFrame</c> calls
+    /// <c>buildOwner.finalizeTree()</c> after the render phase.
+    /// </summary>
+    protected virtual void OnFinalizeFrame()
+    {
+    }
+
+    /// <summary>
     /// Called when the host's size, scale or insets changed. Writes the new metrics to
     /// <see cref="RootFlutterView"/>, as the engine does, and runs Flutter's
     /// <c>handleMetricsChanged</c> chain: the renderer binding reconfigures the registered views and
@@ -668,6 +677,7 @@ public class PlumixHost : Control
             FlushSemanticsAndNotify();
         }
 
+        OnFinalizeFrame();
     }
 
     public bool PerformSemanticsAction(int nodeId, SemanticsActions action)

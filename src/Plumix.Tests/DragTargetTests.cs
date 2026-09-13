@@ -1049,11 +1049,11 @@ public sealed class DragTargetTests
 
         public static int Of(BuildContext context)
         {
-            return context.DependOnInherited<ProbeScope>()?.Value
+            return context.DependOnInheritedWidgetOfExactType<ProbeScope>()?.Value
                    ?? throw new InvalidOperationException("ProbeScope not found.");
         }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return ((ProbeScope)oldWidget).Value != Value;
         }

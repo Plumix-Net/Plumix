@@ -48,7 +48,7 @@ public sealed class SelectionContainer : StatefulWidget
     /// there is no [SelectionContainer] above the context.
     public static ISelectionRegistrar? MaybeOf(BuildContext context)
     {
-        SelectionRegistrarScope? scope = context.DependOnInherited<SelectionRegistrarScope>();
+        SelectionRegistrarScope? scope = context.DependOnInheritedWidgetOfExactType<SelectionRegistrarScope>();
         return scope?.Registrar;
     }
 
@@ -220,7 +220,7 @@ public sealed class SelectionRegistrarScope : InheritedWidget
     public ISelectionRegistrar? Registrar { get; }
 
     /// The subtree this registrar applies to.
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((SelectionRegistrarScope)oldWidget).Registrar, Registrar);
     }

@@ -334,7 +334,7 @@ internal sealed class OverlayPortalState : State
         Widget child)
     {
         MediaQueryData? portalData = MediaQuery.MaybeOf(portalContext);
-        MediaQueryData? overlayData = overlayContext.GetInherited<MediaQuery>()?.Data;
+        MediaQueryData? overlayData = overlayContext.GetInheritedWidgetOfExactType<MediaQuery>()?.Data;
         if (portalData is null || overlayData is null)
         {
             return child;
@@ -1400,9 +1400,13 @@ internal sealed class OverlayPortalLayoutBuilderElement : RenderObjectElement
             return;
         }
 
-        Widget built = LayoutWidget.Builder(this, info)
-            ?? throw new InvalidOperationException("OverlayPortal.WithLayoutBuilder must return a widget.");
-        _child = UpdateChild(_child, built, null);
+        // Dart's layout builder elements rebuild their child inside `owner.buildScope`.
+        Owner!.BuildScopeDuringLayout(this, () =>
+        {
+            Widget built = LayoutWidget.Builder(this, info)
+                ?? throw new InvalidOperationException("OverlayPortal.WithLayoutBuilder must return a widget.");
+            _child = UpdateChild(_child, built, null);
+        });
         _needsBuild = false;
         _previousLayoutInfo = info;
     }
@@ -1903,7 +1907,7 @@ internal sealed class RenderTheaterMarker : InheritedWidget
 
     public OverlayEntryWidgetState EntryState { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var old = (RenderTheaterMarker)oldWidget;
         return !ReferenceEquals(old.Theater, Theater) || !ReferenceEquals(old.EntryState, EntryState);

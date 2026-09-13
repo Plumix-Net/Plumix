@@ -184,10 +184,10 @@ public sealed class CupertinoPageScaffoldBackgroundColor : InheritedWidget
 
     public static Color? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<CupertinoPageScaffoldBackgroundColor>()?.Color;
+        return context.DependOnInheritedWidgetOfExactType<CupertinoPageScaffoldBackgroundColor>()?.Color;
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return Color != ((CupertinoPageScaffoldBackgroundColor)oldWidget).Color;
     }

@@ -24,16 +24,14 @@ public abstract class RenderTreeRootElement : RenderObjectElement
     /// <remarks>Records the slot and asserts that no ancestor expects to receive the render object.</remarks>
     public override void AttachRenderObject(object? newSlot)
     {
-        // RenderObjectElement.UpdateSlot only forwards to an ancestor host, and this element never
-        // registers one, so it reduces to Dart's `_slot = newSlot`.
-        base.UpdateSlot(newSlot);
+        Slot = newSlot;
         DebugCheckMustNotAttachRenderObjectToAncestor();
     }
 
     /// <inheritdoc />
     public override void DetachRenderObject()
     {
-        base.UpdateSlot(null);
+        Slot = null;
     }
 
     /// <inheritdoc />

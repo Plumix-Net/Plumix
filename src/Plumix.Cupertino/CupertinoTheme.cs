@@ -36,7 +36,7 @@ public sealed class CupertinoTheme : StatelessWidget
     /// <summary>The nearest ancestor theme, with every dynamic color resolved against the context.</summary>
     public static CupertinoThemeData Of(BuildContext context)
     {
-        InheritedCupertinoTheme? inheritedTheme = context.DependOnInherited<InheritedCupertinoTheme>();
+        InheritedCupertinoTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>();
         return (inheritedTheme?.Theme.Data ?? new CupertinoThemeData()).ResolveFrom(context);
     }
 
@@ -45,14 +45,14 @@ public sealed class CupertinoTheme : StatelessWidget
     /// </summary>
     public static PlatformBrightness BrightnessOf(BuildContext context)
     {
-        InheritedCupertinoTheme? inheritedTheme = context.DependOnInherited<InheritedCupertinoTheme>();
+        InheritedCupertinoTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>();
         return inheritedTheme?.Theme.Data.Brightness ?? MediaQuery.PlatformBrightnessOf(context);
     }
 
     /// <summary>The null-tolerant form of <see cref="BrightnessOf"/>.</summary>
     public static PlatformBrightness? MaybeBrightnessOf(BuildContext context)
     {
-        InheritedCupertinoTheme? inheritedTheme = context.DependOnInherited<InheritedCupertinoTheme>();
+        InheritedCupertinoTheme? inheritedTheme = context.DependOnInheritedWidgetOfExactType<InheritedCupertinoTheme>();
         return inheritedTheme?.Theme.Data.Brightness ?? MediaQuery.MaybePlatformBrightnessOf(context);
     }
 
@@ -81,7 +81,7 @@ public sealed class InheritedCupertinoTheme : InheritedTheme
         return new CupertinoTheme(Theme.Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((InheritedCupertinoTheme)oldWidget).Theme.Data, Theme.Data);
     }

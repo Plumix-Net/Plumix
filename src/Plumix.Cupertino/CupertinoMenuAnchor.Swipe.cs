@@ -53,9 +53,9 @@ internal sealed class CupertinoMenuSwipeScope : InheritedWidget
     public CupertinoMenuSwipeRegionState State { get; }
 
     public static CupertinoMenuSwipeRegionState? MaybeOf(BuildContext context) =>
-        context.DependOnInherited<CupertinoMenuSwipeScope>()?.State;
+        context.DependOnInheritedWidgetOfExactType<CupertinoMenuSwipeScope>()?.State;
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !ReferenceEquals(((CupertinoMenuSwipeScope)oldWidget).State, State);
 }
 

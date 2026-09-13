@@ -26,7 +26,7 @@ public sealed class MenuAcceleratorCallbackBinding : InheritedWidget
 
     public bool HasSubmenu { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldBinding = (MenuAcceleratorCallbackBinding)oldWidget;
         return !Equals(oldBinding.OnInvoke, OnInvoke) || oldBinding.HasSubmenu != HasSubmenu;
@@ -34,7 +34,7 @@ public sealed class MenuAcceleratorCallbackBinding : InheritedWidget
 
     public static MenuAcceleratorCallbackBinding? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<MenuAcceleratorCallbackBinding>();
+        return context.DependOnInheritedWidgetOfExactType<MenuAcceleratorCallbackBinding>();
     }
 
     public static MenuAcceleratorCallbackBinding Of(BuildContext context)

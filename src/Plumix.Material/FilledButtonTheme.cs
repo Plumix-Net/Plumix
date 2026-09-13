@@ -50,7 +50,7 @@ public sealed class FilledButtonTheme : InheritedTheme
 
     public static FilledButtonThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<FilledButtonTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<FilledButtonTheme>();
         return localTheme is not null ? localTheme.Data : Theme.Of(context).FilledButtonTheme;
     }
 
@@ -59,7 +59,7 @@ public sealed class FilledButtonTheme : InheritedTheme
         return new FilledButtonTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((FilledButtonTheme)oldWidget).Data, Data);
     }

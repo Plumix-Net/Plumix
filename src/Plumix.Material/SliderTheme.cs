@@ -224,14 +224,14 @@ public sealed class SliderTheme : InheritedTheme
         return new SliderTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((SliderTheme)oldWidget).Data, Data);
     }
 
     public static SliderThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<SliderTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<SliderTheme>();
         if (localTheme is not null)
         {
             return localTheme.Data;

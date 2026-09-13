@@ -228,7 +228,7 @@ internal sealed class TabControllerScope : InheritedWidget
 
     public bool Enabled { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var old = (TabControllerScope)oldWidget;
         return Enabled != old.Enabled || !ReferenceEquals(old.Controller, Controller);
@@ -272,7 +272,7 @@ public sealed class DefaultTabController : StatefulWidget
     public Widget Child { get; }
 
     public static TabController? MaybeOf(BuildContext context) =>
-        context.DependOnInherited<TabControllerScope>()?.Controller;
+        context.DependOnInheritedWidgetOfExactType<TabControllerScope>()?.Controller;
 
     public static TabController Of(BuildContext context) => MaybeOf(context)
         ?? throw new InvalidOperationException(

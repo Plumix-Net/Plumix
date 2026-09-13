@@ -257,7 +257,7 @@ internal sealed class CupertinoSheetStretchControllerProvider : InheritedWidget
 
     public AnimationController Controller { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 }
 
 /// <summary>A non-opaque page route that presents content as an iOS sheet.</summary>
@@ -325,12 +325,12 @@ public sealed class CupertinoSheetRoute<T> : PageRoute, ICupertinoSheetRoute
 
     public static bool HasParentSheet(BuildContext context)
     {
-        return context.DependOnInherited<CupertinoSheetScope>() is not null;
+        return context.DependOnInheritedWidgetOfExactType<CupertinoSheetScope>() is not null;
     }
 
     public static void PopSheet(BuildContext context)
     {
-        if (context.DependOnInherited<CupertinoSheetScope>() is not null)
+        if (context.DependOnInheritedWidgetOfExactType<CupertinoSheetScope>() is not null)
         {
             Plumix.Widgets.Navigator.Of(context, rootNavigator: true).Pop();
         }
@@ -381,7 +381,7 @@ public sealed class CupertinoSheetRoute<T> : PageRoute, ICupertinoSheetRoute
     internal SheetPopGestureController StartPopGesture(BuildContext context)
     {
         AnimationController stretchController = context
-            .DependOnInherited<CupertinoSheetStretchControllerProvider>()?.Controller
+            .DependOnInheritedWidgetOfExactType<CupertinoSheetStretchControllerProvider>()?.Controller
             ?? throw new InvalidOperationException("CupertinoSheetTransition was not found above sheet content.");
         NavigatorState navigator = Plumix.Widgets.Navigator.Of(context);
         navigator.StartUserGesture();
@@ -463,7 +463,7 @@ internal sealed class CupertinoSheetScope : InheritedWidget
     {
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) => false;
 }
 
 internal sealed class SheetPopGestureController

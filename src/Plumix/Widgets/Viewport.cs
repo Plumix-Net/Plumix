@@ -192,7 +192,7 @@ public class ShrinkWrappingViewport : MultiChildRenderObjectWidget
 /// in sync with the widget's center key.
 /// </summary>
 /// <remarks>Flutter's private <c>_ViewportElement</c>.</remarks>
-public sealed class ViewportElement : MultiChildRenderObjectElement
+public sealed class ViewportElement : MultiChildRenderObjectElement, ViewportElementMixin
 {
     private bool _doingMountOrUpdate;
     private int? _centerSlotIndex;
@@ -240,9 +240,9 @@ public sealed class ViewportElement : MultiChildRenderObjectElement
             return;
         }
 
-        if (Children.Count > 0)
+        if (Children.FirstOrDefault() is { } firstChild)
         {
-            RenderViewport.Center = Children[0].RenderObject as RenderSliver;
+            RenderViewport.Center = firstChild.RenderObject as RenderSliver;
             _centerSlotIndex = 0;
             return;
         }

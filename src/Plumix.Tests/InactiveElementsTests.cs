@@ -196,6 +196,8 @@ public sealed class InactiveElementsTests
 
     private sealed class TestRootElement : Element, IRenderObjectHost
     {
+        private Widget? _harnessChild;
+
         private Element? _child;
 
         public TestRootElement(Widget widget) : base(widget)
@@ -213,13 +215,20 @@ public sealed class InactiveElementsTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, _harnessChild ?? Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
-            base.Update(newWidget);
-            Rebuild(force: true);
+            _harnessChild = newWidget;
+            if (Owner!.DebugBuilding)
+            {
+                Rebuild(force: true);
+            }
+            else
+            {
+                Owner.BuildScope(this, () => Rebuild(force: true));
+            }
         }
 
         public override void VisitChildren(Action<Element> visitor)

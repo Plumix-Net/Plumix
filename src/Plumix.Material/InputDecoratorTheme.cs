@@ -674,11 +674,11 @@ public sealed class InputDecorationTheme : InheritedTheme
 
     public override Widget Wrap(BuildContext context, Widget child) => new InputDecorationTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         Data != ((InputDecorationTheme)oldWidget).Data;
 
     public static InputDecorationThemeData Of(BuildContext context) =>
-        context.DependOnInherited<InputDecorationTheme>()?.Data
+        context.DependOnInheritedWidgetOfExactType<InputDecorationTheme>()?.Data
         ?? Theme.Of(context).InputDecorationTheme;
 
     /// Obsolete field-based copy. Like Flutter's, the result is field-backed — it keeps neither the

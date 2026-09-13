@@ -17,8 +17,8 @@ and CounterPageState() =
 
     override this.Build(_context) =
         // F#: protected State.SetState is not callable from inside a lambda
-        // (FS0491), so callbacks go through the public InvokeSetState helper.
-        let update f = fun () -> this.InvokeSetState(fun () -> count <- f count)
+        // (FS0491), so callbacks go through the public SetState helper.
+        let update f = fun () -> this.SetState(fun () -> count <- f count)
 
         Ui.scaffold (
             appBar = Ui.appBar (title = Ui.text "Plumix + F#"),

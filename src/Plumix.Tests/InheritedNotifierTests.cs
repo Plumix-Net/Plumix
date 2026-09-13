@@ -274,7 +274,7 @@ public sealed class InheritedNotifierTests
     {
         public override Widget Build(BuildContext context)
         {
-            var inherited = context.DependOnInherited<CountingIntInheritedNotifier>()
+            var inherited = context.DependOnInheritedWidgetOfExactType<CountingIntInheritedNotifier>()
                             ?? throw new InvalidOperationException("CountingIntInheritedNotifier not found.");
             int value = inherited.Notifier?.Value ?? -1;
             InheritedNotifierTracker.CountingSeenValues.Add(value);
@@ -291,7 +291,7 @@ public sealed class InheritedNotifierTests
     {
         public override Widget Build(BuildContext context)
         {
-            var inherited = context.DependOnInherited<IntInheritedNotifier>()
+            var inherited = context.DependOnInheritedWidgetOfExactType<IntInheritedNotifier>()
                             ?? throw new InvalidOperationException("IntInheritedNotifier not found.");
             int value = inherited.Notifier?.Value ?? -1;
             InheritedNotifierTracker.SeenValues.Add(value);

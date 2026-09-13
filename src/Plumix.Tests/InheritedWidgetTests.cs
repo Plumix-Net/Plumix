@@ -158,7 +158,7 @@ public sealed class InheritedWidgetTests
 
         public override Widget Child => new Center(child: _child);
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return Value != ((WrappingScope)oldWidget).Value;
         }
@@ -241,7 +241,7 @@ public sealed class InheritedWidgetTests
 
         public int Value { get; }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return Value != ((IntScope)oldWidget).Value;
         }
@@ -259,7 +259,7 @@ public sealed class InheritedWidgetTests
 
         public bool ShouldNotify { get; }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return ShouldNotify;
         }
@@ -279,7 +279,8 @@ public sealed class InheritedWidgetTests
 
         public override Widget Build(BuildContext context)
         {
-            var scope = context.DependOnInherited<IntScope>() ?? throw new InvalidOperationException("Expected IntScope.");
+            var scope = context.DependOnInheritedWidgetOfExactType<IntScope>()
+                ?? throw new InvalidOperationException("Expected IntScope.");
             InheritedTracker.DependentBuildValues.Add(scope.Value);
             return new SizedBox(width: 1, height: 1);
         }
@@ -299,7 +300,8 @@ public sealed class InheritedWidgetTests
 
         public override Widget Build(BuildContext context)
         {
-            var scope = context.DependOnInherited<ConditionalScope>() ?? throw new InvalidOperationException("Expected ConditionalScope.");
+            var scope = context.DependOnInheritedWidgetOfExactType<ConditionalScope>()
+                ?? throw new InvalidOperationException("Expected ConditionalScope.");
             InheritedTracker.DependentBuildValues.Add(scope.Value);
             return new SizedBox(width: 1, height: 1);
         }

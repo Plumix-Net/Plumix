@@ -877,14 +877,14 @@ public sealed class MaterialLocalizationsScope : InheritedWidget
 
     public MaterialLocalizations Localizations { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((MaterialLocalizationsScope)oldWidget).Localizations, Localizations);
     }
 
     public static MaterialLocalizations Of(BuildContext context)
     {
-        return context.DependOnInherited<MaterialLocalizationsScope>()?.Localizations
+        return context.DependOnInheritedWidgetOfExactType<MaterialLocalizationsScope>()?.Localizations
                ?? DefaultMaterialLocalizations.Instance;
     }
 }

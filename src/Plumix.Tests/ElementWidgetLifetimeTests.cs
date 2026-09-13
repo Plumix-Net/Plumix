@@ -57,9 +57,9 @@ public sealed class ElementWidgetLifetimeTests
         Assert.True(element.Mounted);
         Assert.Same(widget, element.Widget);
 
-        element.Unmount();
-        Assert.False(element.Mounted);
-        Assert.Throws<InvalidOperationException>(() => element.Widget);
+        // Dart's unmount asserts the inactive state, so a failed element is never unmounted.
+        Assert.Throws<AssertionError>(element.Unmount);
+        Assert.True(element.Mounted);
     }
 
     [Theory]
@@ -94,7 +94,8 @@ public sealed class ElementWidgetLifetimeTests
         Assert.True(state.WasMountedDuringDispose);
         Assert.False(state.ContextWasMountedDuringDispose);
         Assert.True(state.WidgetReadThrewDuringDispose);
-        Assert.False(state.Mounted);
+        // Dart clears `state._element` only after a dispose that returned normally.
+        Assert.Equal(throws, state.Mounted);
         Assert.False(element.Mounted);
         Assert.Throws<InvalidOperationException>(() => element.Widget);
         Assert.Equal(0, owner.GlobalKeyCount);

@@ -13,7 +13,7 @@ public sealed class CounterScope : InheritedNotifier<CounterAppModel>
 
     public static CounterAppModel Of(BuildContext context)
     {
-        var scope = context.DependOnInherited<CounterScope>()
+        var scope = context.DependOnInheritedWidgetOfExactType<CounterScope>()
                     ?? throw new InvalidOperationException("CounterScope not found in widget tree.");
         return scope.Notifier ?? throw new InvalidOperationException("CounterScope notifier is null.");
     }

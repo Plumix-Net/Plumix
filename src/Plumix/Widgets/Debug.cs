@@ -54,6 +54,59 @@ public static class WidgetsDebug
     public static bool DebugHighlightDeprecatedWidgets { get; set; }
 
     /// <summary>
+    /// Asserts that the given <paramref name="children"/> have no two widgets with the same key, and
+    /// returns false so it can sit in a debug check. Dart's <c>debugChildrenHaveDuplicateKeys</c>.
+    /// </summary>
+    public static bool DebugChildrenHaveDuplicateKeys(
+        Widget parent,
+        IEnumerable<Widget> children,
+        string? message = null)
+    {
+        if (Constants.KDebugMode && FirstNonUniqueKey(children) is { } nonUniqueKey)
+        {
+            throw new FlutterError(
+                (message ?? "Duplicate keys found.\n"
+                    + "If multiple keyed widgets exist as children of another widget, they must have unique keys.")
+                + $"\n{parent} has multiple children with key {nonUniqueKey}.");
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Asserts that the given <paramref name="items"/> have no two widgets with the same key. Dart's
+    /// <c>debugItemsHaveDuplicateKeys</c>.
+    /// </summary>
+    public static bool DebugItemsHaveDuplicateKeys(IEnumerable<Widget> items)
+    {
+        if (Constants.KDebugMode && FirstNonUniqueKey(items) is { } nonUniqueKey)
+        {
+            throw new FlutterError($"Duplicate key found: {nonUniqueKey}.");
+        }
+
+        return false;
+    }
+
+    /// <summary>Dart's private <c>_firstNonUniqueKey</c>.</summary>
+    private static Key? FirstNonUniqueKey(IEnumerable<Widget> widgets)
+    {
+        var keySet = new HashSet<Key>();
+        foreach (Widget widget in widgets)
+        {
+            if (widget.Key == null)
+            {
+                continue;
+            }
+
+            if (!keySet.Add(widget.Key))
+            {
+                return widget.Key;
+            }
+        }
+
+        return null;
+    }
+    /// <summary>
     /// Dart's <c>debugWidgetBuilderValue</c>: asserts that a build function did not return
     /// <see langword="null"/> and did not return the widget it was building for.
     /// </summary>

@@ -17,14 +17,14 @@ public sealed class BackdropGroup : InheritedWidget
 
     public BackdropKey BackdropKey { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((BackdropGroup)oldWidget).BackdropKey, BackdropKey);
     }
 
     public static BackdropGroup? Of(BuildContext context)
     {
-        return context.DependOnInherited<BackdropGroup>();
+        return context.DependOnInheritedWidgetOfExactType<BackdropGroup>();
     }
 }
 

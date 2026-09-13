@@ -55,14 +55,14 @@ public sealed class CheckboxTheme : InheritedWidget
 
     public CheckboxThemeData Data { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((CheckboxTheme)oldWidget).Data, Data);
     }
 
     public static CheckboxThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<CheckboxTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<CheckboxTheme>();
         return localTheme?.Data ?? Theme.Of(context).CheckboxTheme;
     }
 }

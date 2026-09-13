@@ -246,14 +246,14 @@ public sealed class ListTileTheme : InheritedTheme
                 IsThreeLine: _data?.IsThreeLine));
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ListTileTheme)oldWidget).Data, Data);
     }
 
     public static ListTileThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<ListTileTheme>()?.Data ?? Theme.Of(context).ListTileTheme;
+        return context.DependOnInheritedWidgetOfExactType<ListTileTheme>()?.Data ?? Theme.Of(context).ListTileTheme;
     }
 
     public static Widget Merge(

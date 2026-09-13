@@ -8,28 +8,20 @@ public abstract class Notification
 {
     public BuildContext? Context { get; private set; }
 
-    public virtual bool Dispatch(BuildContext? target)
+    /// <summary>
+    /// Starts bubbling this notification at <paramref name="target"/>. Dart's
+    /// <c>Notification.dispatch</c>: the walk itself is <see cref="BuildContext.DispatchNotification"/>,
+    /// which follows the notification tree the <see cref="NotifiableElementMixin"/> elements built.
+    /// </summary>
+    public virtual void Dispatch(BuildContext? target)
     {
-        if (target is not Element resolvedTarget)
+        if (target is null)
         {
-            return false;
+            return;
         }
 
-        SetContext(resolvedTarget);
-        for (Element? ancestor = resolvedTarget.Parent; ancestor != null; ancestor = ancestor.Parent)
-        {
-            if (ancestor.Widget is Viewport && this is IViewportNotification viewportNotification)
-            {
-                viewportNotification.IncrementDepth();
-            }
-
-            if (ancestor is INotificationListener listener && listener.OnNotification(this))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        SetContext(target);
+        target.DispatchNotification(this);
     }
 
     protected void SetContext(BuildContext target)
@@ -42,14 +34,64 @@ public abstract class LayoutChangedNotification : Notification
 {
 }
 
-internal interface INotificationListener
-{
-    bool OnNotification(Notification notification);
-}
-
 internal interface IViewportNotification
 {
     void IncrementDepth();
+}
+
+/// <summary>
+/// An <see cref="Element"/> that receives the notifications dispatched from itself or from its
+/// descendants. Dart's <c>NotifiableElementMixin</c> from <c>widgets/framework.dart</c>; C# has no
+/// mixins, so <see cref="Element.AttachNotificationTree"/> checks for this interface instead of
+/// being overridden by it.
+/// </summary>
+public interface NotifiableElementMixin
+{
+    /// <summary>
+    /// Called when a notification of the appropriate type arrives at this location in the tree.
+    /// Return <see langword="true"/> to cancel the notification bubbling.
+    /// </summary>
+    bool OnNotification(Notification notification);
+}
+
+/// <summary>
+/// A <see cref="NotifiableElementMixin"/> for viewport elements: it never handles a notification,
+/// it only deepens a <c>ViewportNotificationMixin</c> as it bubbles past. Dart's
+/// <c>ViewportElementMixin</c> from <c>widgets/scroll_notification.dart</c>.
+/// </summary>
+public interface ViewportElementMixin : NotifiableElementMixin
+{
+    bool NotifiableElementMixin.OnNotification(Notification notification)
+    {
+        if (notification is IViewportNotification viewportNotification)
+        {
+            viewportNotification.IncrementDepth();
+        }
+
+        return false;
+    }
+}
+
+/// <summary>
+/// One link of the notification tree. Dart's private <c>_NotificationNode</c>: an element's node points
+/// at the nearest <see cref="NotifiableElementMixin"/> at or above it, so a dispatch visits only
+/// listeners and never re-walks the element chain.
+/// </summary>
+internal sealed class NotificationNode(NotificationNode? parent, NotifiableElementMixin? current)
+{
+    public NotifiableElementMixin? Current { get; } = current;
+
+    public NotificationNode? Parent { get; } = parent;
+
+    public void DispatchNotification(Notification notification)
+    {
+        if (Current?.OnNotification(notification) ?? true)
+        {
+            return;
+        }
+
+        Parent?.DispatchNotification(notification);
+    }
 }
 
 public class NotificationListener<TNotification> : ProxyWidget
@@ -72,7 +114,7 @@ public class NotificationListener<TNotification> : ProxyWidget
     }
 }
 
-internal sealed class NotificationListenerElement<TNotification> : ProxyElement, INotificationListener
+internal sealed class NotificationListenerElement<TNotification> : ProxyElement, NotifiableElementMixin
     where TNotification : Notification
 {
     public NotificationListenerElement(NotificationListener<TNotification> widget) : base(widget)
@@ -85,11 +127,11 @@ internal sealed class NotificationListenerElement<TNotification> : ProxyElement,
     /// Dart's <c>_NotificationElement.notifyClients</c> is intentionally empty: the notification tree
     /// does not need to notify clients when its configuration changes.
     /// </summary>
-    protected override void NotifyClients(ProxyWidget oldWidget)
+    public override void NotifyClients(ProxyWidget oldWidget)
     {
     }
 
-    bool INotificationListener.OnNotification(Notification notification)
+    public bool OnNotification(Notification notification)
     {
         if (notification is not TNotification typedNotification)
         {

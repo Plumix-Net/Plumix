@@ -212,13 +212,14 @@ public sealed class FrameworkParityTests
         owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         owner.FlushBuild();
 
-        var error = Assert.Throws<FlutterError>(() =>
+        // Dart's finalizeTree reports an unmount failure rather than throwing it.
+        Exception failure = BuildErrors.TakeException(() =>
         {
             root.Update(new SizedBox());
             owner.FlushBuild();
             owner.FinalizeTree();
         });
-        Assert.Contains("failed to call base.Dispose", error.Message);
+        Assert.Contains("dispose failed to call super.dispose.", failure.ToString());
     }
 
     [Fact]
@@ -256,13 +257,14 @@ public sealed class FrameworkParityTests
 
         Element probe = FindDescendant(root, element => element is StatefulElement)!;
 
-        Assert.ThrowsAny<Exception>(() =>
+        Exception failure = BuildErrors.TakeException(() =>
         {
             root.Update(new SizedBox());
             owner.FlushBuild();
             owner.FinalizeTree();
         });
 
+        Assert.NotNull(failure);
         Assert.True(probe.DebugIsDefunct);
     }
 
@@ -335,7 +337,10 @@ public sealed class FrameworkParityTests
             owner.FinalizeTree();
         });
 
-        Assert.Contains("A GlobalKey was used multiple times inside one widget's child list.", failure.ToString());
+        // Flutter's "GlobalKey duplication 11": MultiChildRenderObjectElement's duplicate-key assert
+        // reports the sibling duplication before the retake path can.
+        Assert.Contains("Duplicate keys found.", failure.ToString());
+        Assert.Contains("has multiple children with key [GlobalKey#", failure.ToString());
     }
 
     [Fact]
@@ -386,7 +391,8 @@ public sealed class FrameworkParityTests
         try
         {
             var owner = new BuildOwner();
-            var root = new TestRootElement(new ProbeWidget(key: new LabeledGlobalKey<State>("k")));
+            var root = new TestRootElement(
+                new RecordingFlex([new ProbeWidget(key: new LabeledGlobalKey<State>("k"))]));
             root.Attach(owner);
             owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
             owner.FlushBuild();
@@ -532,9 +538,9 @@ public sealed class FrameworkParityTests
 
     private sealed class TestParentDataWidget(double value, Widget child) : ParentDataWidget<TestParentData>(child)
     {
-        public override Type DebugTypicalAncestorWidgetType => typeof(SlotHost);
+        public override Type DebugTypicalAncestorWidgetClass => typeof(SlotHost);
 
-        protected override void ApplyParentData(RenderObject renderObject)
+        public override void ApplyParentData(RenderObject renderObject)
         {
             ((TestParentData)renderObject.parentData!).Value = value;
         }
@@ -629,6 +635,8 @@ public sealed class FrameworkParityTests
 
     private sealed class TestRootElement : Element, IRenderObjectHost
     {
+        private Widget? _harnessChild;
+
         private Element? _child;
 
         public TestRootElement(Widget widget) : base(widget)
@@ -646,13 +654,20 @@ public sealed class FrameworkParityTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, _harnessChild ?? Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
-            base.Update(newWidget);
-            Rebuild(force: true);
+            _harnessChild = newWidget;
+            if (Owner!.DebugBuilding)
+            {
+                Rebuild(force: true);
+            }
+            else
+            {
+                Owner.BuildScope(this, () => Rebuild(force: true));
+            }
         }
 
         public override void VisitChildren(Action<Element> visitor)

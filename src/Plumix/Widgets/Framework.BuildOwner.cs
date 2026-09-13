@@ -1,24 +1,45 @@
 using Plumix.Foundation;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/framework.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/framework.dart
 
 namespace Plumix.Widgets;
 
 /// <summary>
-/// Build owner and scheduler.
+/// Manager class for the widgets framework: tracks which widgets need rebuilding and handles the
+/// other tasks that apply to widget trees as a whole. Dart's <c>BuildOwner</c>.
 /// </summary>
 public sealed class BuildOwner
 {
-    private readonly HashSet<Element> _tracked = [];
-    private readonly InactiveElements _inactiveElements = new();
+    // Dart reads `GlobalKey.currentContext` through the one binding's build owner. Plumix has no
+    // binding singleton — every host and harness owns its BuildOwner — so the key asks the live owners.
+    private static readonly List<WeakReference<BuildOwner>> Owners = [];
+    private static readonly object OwnersLock = new();
+
     private readonly Dictionary<GlobalKey, Element> _globalKeyRegistry = [];
 
     private bool _scheduledFlushDirtyElements;
-    private bool _building;
-    public Action? OnBuildScheduled { get; set; }
+
+    /// <summary>Creates an object that manages widgets.</summary>
+    public BuildOwner(Action? onBuildScheduled = null)
+    {
+        OnBuildScheduled = onBuildScheduled;
+        lock (OwnersLock)
+        {
+            Owners.Add(new WeakReference<BuildOwner>(this));
+        }
+    }
 
     /// <summary>
-    /// The scope every element attached to this owner starts in. Dart creates it in
+    /// Called on each build pass when the first buildable element is marked dirty. Dart's
+    /// <c>BuildOwner.onBuildScheduled</c>.
+    /// </summary>
+    public Action? OnBuildScheduled { get; set; }
+
+    /// <summary>Dart's <c>BuildOwner._inactiveElements</c>.</summary>
+    internal InactiveElements InactiveElements { get; } = new();
+
+    /// <summary>
+    /// The scope every parentless element attached to this owner starts in. Dart creates one per root in
     /// <c>RootElementMixin.assignOwner</c>; Plumix keeps it on the owner, because an owner drives
     /// exactly one root element. It has no <see cref="Widgets.BuildScope.ScheduleRebuild"/>:
     /// <see cref="OnBuildScheduled"/> already asks the host for a frame.
@@ -33,224 +54,93 @@ public sealed class BuildOwner
 
     internal void RegisterRootElement(Element element) => _rootElement = element;
 
-    /// <summary>Whether this owner is currently executing a build-scope callback or flushing dirty elements.</summary>
-    /// <remarks>Flutter's <c>BuildOwner.debugBuilding</c>, which Plumix keeps outside the debug-only surface.</remarks>
-    public bool IsBuilding => _building;
-
-    /// <summary>The number of <see cref="GlobalKey"/> instances currently registered with this owner.</summary>
-    /// <remarks>Flutter's <c>BuildOwner.globalKeyCount</c>.</remarks>
-    public int GlobalKeyCount => _globalKeyRegistry.Count;
-
-    // Debug-only global-key bookkeeping. Dart keeps the same three structures on BuildOwner and reads
-    // them from finalizeTree, so a duplicated key produces a readable report instead of a silently
-    // truncated widget tree.
-    private readonly HashSet<Element> _debugIllFatedElements = [];
-    private readonly Dictionary<Element, Dictionary<Element, GlobalKey>> _debugGlobalKeyReservations = [];
-    private Dictionary<Element, HashSet<GlobalKey>>? _debugElementsThatWillNeedToBeRebuilt;
-    private int _debugStateLockLevel;
-
-    /// <summary>
-    /// Whether this owner is currently rebuilding dirty elements. Dart's
-    /// <c>BuildOwner.debugBuilding</c>.
-    /// </summary>
-    public bool DebugBuilding => _building;
-
-    /// <summary>Dart's <c>BuildOwner._debugStateLocked</c>.</summary>
-    internal bool DebugStateLocked => _debugStateLockLevel > 0;
-
-    /// <summary>Dart's <c>BuildOwner._debugCurrentBuildTarget</c>.</summary>
-    internal Element? DebugCurrentBuildTarget { get; set; }
-
-    /// <summary>
-    /// Dart's <c>BuildOwner.lockState</c>: runs <paramref name="callback"/> with the widget tree
-    /// locked, so a <see cref="Element.MarkNeedsBuild"/> during it reports the mistake instead of
-    /// quietly scheduling a build that would never run.
-    /// </summary>
-    public void LockState(Action callback)
+    /// <summary>The element registered under <paramref name="key"/> by any live owner.</summary>
+    internal static Element? LookupGlobalKey(GlobalKey key)
     {
-        ArgumentNullException.ThrowIfNull(callback);
-        _debugStateLockLevel += 1;
-        try
+        lock (OwnersLock)
         {
-            callback();
-        }
-        finally
-        {
-            _debugStateLockLevel -= 1;
-        }
-    }
-
-    /// <summary>Dart's <c>BuildOwner._debugReserveGlobalKeyFor</c>.</summary>
-    internal void DebugReserveGlobalKeyFor(Element parent, Element child, GlobalKey key)
-    {
-        if (!Constants.KDebugMode)
-        {
-            return;
-        }
-
-        if (!_debugGlobalKeyReservations.TryGetValue(parent, out Dictionary<Element, GlobalKey>? childToKey))
-        {
-            childToKey = [];
-            _debugGlobalKeyReservations[parent] = childToKey;
-        }
-
-        childToKey[child] = key;
-    }
-
-    /// <summary>Dart's <c>BuildOwner._debugRemoveGlobalKeyReservationFor</c>.</summary>
-    internal void DebugRemoveGlobalKeyReservationFor(Element parent, Element child)
-    {
-        if (Constants.KDebugMode && _debugGlobalKeyReservations.TryGetValue(parent, out var childToKey))
-        {
-            childToKey.Remove(child);
-        }
-    }
-
-    /// <summary>
-    /// Dart's <c>BuildOwner._debugTrackElementThatWillNeedToBeRebuiltDueToGlobalKeyShenanigans</c>:
-    /// remembers a parent that lost a global-keyed child to a different parent, so
-    /// <see cref="FinalizeTree"/> can report it if that parent never rebuilt in this frame.
-    /// </summary>
-    internal void DebugTrackElementThatWillNeedToBeRebuilt(Element node, GlobalKey key)
-    {
-        if (!Constants.KDebugMode)
-        {
-            return;
-        }
-
-        _debugElementsThatWillNeedToBeRebuilt ??= [];
-        if (!_debugElementsThatWillNeedToBeRebuilt.TryGetValue(node, out HashSet<GlobalKey>? keys))
-        {
-            keys = [];
-            _debugElementsThatWillNeedToBeRebuilt[node] = keys;
-        }
-
-        keys.Add(key);
-    }
-
-    /// <summary>
-    /// Dart's <c>BuildOwner._debugElementWasRebuilt</c>: a parent that did rebuild this frame is
-    /// exonerated of the reparenting complaint above.
-    /// </summary>
-    internal void DebugElementWasRebuilt(Element node)
-    {
-        _debugElementsThatWillNeedToBeRebuilt?.Remove(node);
-    }
-
-    public void RegisterElement(Element element)
-    {
-        _tracked.Add(element);
-    }
-
-    public void UnregisterElement(Element element)
-    {
-        _tracked.Remove(element);
-    }
-
-    /// <summary>
-    /// Dart's <c>BuildOwner._registerGlobalKey</c>: the registry is last-writer-wins, and a key that
-    /// is claimed twice records the previous occupant as "ill fated" so <see cref="FinalizeTree"/>
-    /// can report the duplication with both widgets named.
-    /// </summary>
-    internal void RegisterGlobalKey(GlobalKey key, Element element)
-    {
-        if (Constants.KDebugMode
-            && _globalKeyRegistry.TryGetValue(key, out var existing)
-            && !ReferenceEquals(existing, element))
-        {
-            _debugIllFatedElements.Add(existing);
-        }
-
-        _globalKeyRegistry[key] = element;
-        key.AttachElement(element);
-    }
-
-    internal void UnregisterGlobalKey(GlobalKey key, Element element)
-    {
-        if (_globalKeyRegistry.TryGetValue(key, out var existing) && ReferenceEquals(existing, element))
-        {
-            _globalKeyRegistry.Remove(key);
-            key.DetachElement(element);
-        }
-    }
-
-    internal Element? RetakeInactiveElement(Element newParent, Widget widget)
-    {
-        if (widget.Key is not GlobalKey key)
-        {
-            return null;
-        }
-
-        if (!_globalKeyRegistry.TryGetValue(key, out var element))
-        {
-            return null;
-        }
-
-        if (!Widget.CanUpdate(element.Widget, widget))
-        {
-            return null;
-        }
-
-        if (element.Parent != null)
-        {
-            if (ReferenceEquals(element.Parent, newParent))
+            for (int i = Owners.Count - 1; i >= 0; i--)
             {
-                throw new FlutterError(
-                [
-                    new ErrorSummary("A GlobalKey was used multiple times inside one widget's child list."),
-                    new DiagnosticsProperty<GlobalKey>("The offending GlobalKey was", key),
-                    element.Parent.DescribeElement("The parent of the widgets with that key was"),
-                    element.DescribeElement("The first child to get instantiated with that key became"),
-                    new DiagnosticsProperty<Widget>(
-                        "The second child that was to be instantiated with that key was",
-                        widget,
-                        style: DiagnosticsTreeStyle.ErrorProperty),
-                    new ErrorDescription(
-                        "A GlobalKey can only be specified on one widget at a time in the widget tree."),
-                ]);
+                if (!Owners[i].TryGetTarget(out BuildOwner? owner))
+                {
+                    Owners.RemoveAt(i);
+                    continue;
+                }
+
+                if (owner._globalKeyRegistry.TryGetValue(key, out Element? element))
+                {
+                    return element;
+                }
             }
-
-            element.Parent.Owner?.DebugTrackElementThatWillNeedToBeRebuilt(element.Parent, key);
-
-            if (Constants.KDebugMode && WidgetsDebug.DebugPrintGlobalKeyedWidgetLifecycle)
-            {
-                Print.DebugPrint($"Attempting to take {element} from {element.Parent} to put in {newParent}.");
-            }
-
-            element.Parent.ForgetChild(element);
-            element.Parent.DeactivateChild(element);
         }
 
-        if (!element.IsInactive)
-        {
-            return null;
-        }
-
-        _inactiveElements.Remove(element);
-        return element;
+        return null;
     }
 
-    internal void Deactivate(Element element)
-    {
-        _inactiveElements.Add(element);
-    }
+    /// <summary>The element this owner registered under <paramref name="key"/>.</summary>
+    internal Element? GlobalKeyElement(GlobalKey key) =>
+        _globalKeyRegistry.TryGetValue(key, out Element? element) ? element : null;
 
     /// <summary>
     /// Adds <paramref name="element"/> to its <see cref="Widgets.BuildScope"/>'s dirty list and asks
-    /// for a frame if none is pending.
+    /// for a frame if none is pending. Dart's <c>BuildOwner.scheduleBuildFor</c>.
     /// </summary>
-    /// <remarks>Dart's <c>BuildOwner.scheduleBuildFor</c>.</remarks>
-    public void ScheduleBuild(Element element)
+    public void ScheduleBuildFor(Element element)
     {
         ArgumentNullException.ThrowIfNull(element);
-        if (!element.IsActive)
+        DebugAssertions.Assert(ReferenceEquals(element.Owner, this));
+        DebugAssertions.Assert(element.HasParentBuildScope);
+        if (Constants.KDebugMode)
         {
-            return;
+            if (WidgetsDebug.DebugPrintScheduleBuildForStacks)
+            {
+                string suffix = element.BuildScope.DirtyElements.Contains(element)
+                    ? " (ALREADY IN LIST)"
+                    : string.Empty;
+                Assertions.DebugPrintStack(label: $"scheduleBuildFor() called for {element}{suffix}");
+            }
+
+            if (!element.Dirty)
+            {
+                throw new FlutterError(
+                [
+                    new ErrorSummary("scheduleBuildFor() called for a widget that is not marked as dirty."),
+                    element.DescribeElement("The method was called for the following element"),
+                    new ErrorDescription(
+                        "This element is not current marked as dirty. Make sure to set the dirty flag before "
+                        + "calling scheduleBuildFor()."),
+                    new ErrorHint(
+                        "If you did not attempt to call scheduleBuildFor() yourself, then this probably "
+                        + "indicates a bug in the widgets framework. Please report it:\n"
+                        + "  https://github.com/flutter/flutter/issues/new?template=02_bug.yml"),
+                ]);
+            }
         }
 
-        DebugCheckElementIsDirty(element);
         BuildScope buildScope = element.BuildScope;
-        DebugCheckElementIsNotAlreadyQueued(element, buildScope);
+        if (Constants.KDebugMode)
+        {
+            if (WidgetsDebug.DebugPrintScheduleBuildForStacks && element.InDirtyList)
+            {
+                Assertions.DebugPrintStack(
+                    label: "BuildOwner.scheduleBuildFor() called; _dirtyElementsNeedsResorting was "
+                    + $"{buildScope.DebugDirtyElementsNeedsResortingDescription} (now true); "
+                    + "The dirty list for the current build scope is: "
+                    + $"[{string.Join(", ", buildScope.DirtyElements)}]");
+            }
+
+            if (!DebugBuilding && element.InDirtyList)
+            {
+                throw new FlutterError(
+                [
+                    new ErrorSummary("BuildOwner.scheduleBuildFor() called inappropriately."),
+                    new ErrorHint(
+                        "The BuildOwner.scheduleBuildFor() method called on an Element "
+                        + "that is already in the dirty list."),
+                    element.DescribeElement("the dirty Element was"),
+                ]);
+            }
+        }
 
         if (!_scheduledFlushDirtyElements && OnBuildScheduled != null)
         {
@@ -259,7 +149,6 @@ public sealed class BuildOwner
         }
 
         buildScope.ScheduleBuildFor(element);
-
         if (Constants.KDebugMode && WidgetsDebug.DebugPrintScheduleBuildForStacks)
         {
             Print.DebugPrint(
@@ -267,105 +156,50 @@ public sealed class BuildOwner
         }
     }
 
-    /// <summary>Dart's first debug guard at the top of <c>BuildOwner.scheduleBuildFor</c>.</summary>
-    private static void DebugCheckElementIsDirty(Element element)
-    {
-        if (!Constants.KDebugMode)
-        {
-            return;
-        }
+    private int _debugStateLockLevel;
 
-        if (WidgetsDebug.DebugPrintScheduleBuildForStacks)
-        {
-            string suffix = element.InDirtyList ? " (ALREADY IN LIST)" : string.Empty;
-            Print.DebugPrint($"scheduleBuildFor() called for {element}{suffix}");
-        }
-
-        if (element.Dirty)
-        {
-            return;
-        }
-
-        throw new FlutterError(
-        [
-            new ErrorSummary("scheduleBuildFor() called for a widget that is not marked as dirty."),
-            element.DescribeElement("The method was called for the following element"),
-            new ErrorDescription(
-                "This element is not current marked as dirty. Make sure to set the dirty flag before "
-                + "calling scheduleBuildFor()."),
-            new ErrorHint(
-                "If you did not attempt to call scheduleBuildFor() yourself, then this probably "
-                + "indicates a bug in the widgets framework."),
-        ]);
-    }
+    /// <summary>Dart's <c>BuildOwner._debugStateLocked</c>.</summary>
+    internal bool DebugStateLocked => _debugStateLockLevel > 0;
 
     /// <summary>
-    /// Dart's second debug guard in <c>BuildOwner.scheduleBuildFor</c>: re-queueing an element that
-    /// is already in the dirty list is legal only during a flush, where it is the re-sort request.
+    /// Whether this widget tree is in the build phase. Only valid when asserts are enabled. Dart's
+    /// <c>BuildOwner.debugBuilding</c>.
     /// </summary>
-    private void DebugCheckElementIsNotAlreadyQueued(Element element, BuildScope buildScope)
+    public bool DebugBuilding { get; private set; }
+
+    /// <summary>Dart's <c>BuildOwner._debugCurrentBuildTarget</c>.</summary>
+    internal Element? DebugCurrentBuildTarget { get; set; }
+
+    /// <summary>
+    /// Establishes a scope in which calls to <see cref="State.SetState"/> are forbidden, and calls
+    /// <paramref name="callback"/> in that scope. Dart's <c>BuildOwner.lockState</c>.
+    /// </summary>
+    public void LockState(Action callback)
     {
-        if (!Constants.KDebugMode || !element.InDirtyList)
+        ArgumentNullException.ThrowIfNull(callback);
+        DebugAssertions.Assert(_debugStateLockLevel >= 0);
+        if (Constants.KDebugMode)
         {
-            return;
+            _debugStateLockLevel += 1;
         }
 
-        if (WidgetsDebug.DebugPrintScheduleBuildForStacks)
+        try
         {
-            Print.DebugPrint(
-                "BuildOwner.scheduleBuildFor() called; the dirty list for the current build scope is: "
-                + $"[{string.Join(", ", buildScope.DirtyElements)}]");
+            callback();
         }
-
-        if (_building)
+        finally
         {
-            return;
-        }
-
-        throw new FlutterError(
-        [
-            new ErrorSummary("BuildOwner.scheduleBuildFor() called inappropriately."),
-            new ErrorHint(
-                "The BuildOwner.scheduleBuildFor() method called on an Element "
-                + "that is already in the dirty list."),
-            element.DescribeElement("the dirty Element was"),
-        ]);
-    }
-
-    public void MarkSubtreeNeedsBuild(Element root)
-    {
-        foreach (var element in _tracked.Where(x => x.IsActive && IsDescendantOf(x, root)).ToArray())
-        {
-            element.MarkNeedsBuild();
-        }
-    }
-
-    private static bool IsDescendantOf(Element node, Element root)
-    {
-        for (var parent = node.Parent; parent != null; parent = parent.Parent)
-        {
-            if (ReferenceEquals(parent, root))
+            if (Constants.KDebugMode)
             {
-                return true;
+                _debugStateLockLevel -= 1;
             }
         }
 
-        return false;
-    }
-
-    /// Cause the entire subtree rooted at the given [Element] to be entirely
-    /// rebuilt. This is used by development tools when the application code has
-    /// changed and is being hot-reloaded, to cause the widget tree to pick up
-    /// any changed implementations.
-    ///
-    /// This is expensive and should not be called except during development.
-    public void Reassemble(Element root)
-    {
-        root.Reassemble();
+        DebugAssertions.Assert(_debugStateLockLevel >= 0);
     }
 
     /// <summary>
-    /// Flushes <see cref="RootBuildScope"/> and unmounts whatever the rebuilds left inactive.
+    /// Flushes <see cref="RootBuildScope"/>.
     /// </summary>
     /// <remarks>
     /// Plumix-only entry point: Dart's <c>buildScope</c> always takes a context, which the hosts
@@ -373,7 +207,12 @@ public sealed class BuildOwner
     /// </remarks>
     internal void BuildScope()
     {
-        RunBuildScope(RootBuildScope, _rootElement, callback: null, finalizeInactive: true);
+        if (RootBuildScope.DirtyElements.Count == 0)
+        {
+            return;
+        }
+
+        RunBuildScope(RootBuildScope, _rootElement, callback: null);
     }
 
     /// <summary>
@@ -384,84 +223,85 @@ public sealed class BuildOwner
     public void BuildScope(Element context, Action? callback = null)
     {
         ArgumentNullException.ThrowIfNull(context);
-        if (!ReferenceEquals(context.Owner, this))
-        {
-            throw new InvalidOperationException("The build-scope context belongs to a different BuildOwner.");
-        }
-
         BuildScope buildScope = context.BuildScope;
         if (callback == null && buildScope.DirtyElements.Count == 0)
         {
             return;
         }
 
-        RunBuildScope(buildScope, context, callback, finalizeInactive: false);
+        RunBuildScope(buildScope, context, callback);
     }
 
-    private void RunBuildScope(BuildScope buildScope, Element? context, Action? callback, bool finalizeInactive)
+    private void RunBuildScope(BuildScope buildScope, Element? context, Action? callback)
     {
         using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
-        if (_building)
+        DebugAssertions.Assert(_debugStateLockLevel >= 0);
+        DebugAssertions.Assert(!DebugBuilding);
+        if (Constants.KDebugMode)
         {
-            throw new InvalidOperationException("BuildOwner.buildScope must not be re-entered.");
-        }
+            if (WidgetsDebug.DebugPrintBuildScope)
+            {
+                Print.DebugPrint(
+                    $"buildScope called with context {context}; its build scope's dirty list is: "
+                    + $"[{string.Join(", ", buildScope.DirtyElements)}]");
+            }
 
-        if (Constants.KDebugMode && WidgetsDebug.DebugPrintBuildScope)
-        {
-            Print.DebugPrint(
-                $"buildScope called with context {context}; its build scope's dirty list is: "
-                + $"[{string.Join(", ", buildScope.DirtyElements)}]");
+            _debugStateLockLevel += 1;
+            DebugBuilding = true;
         }
 
         using IDisposable buildPhase = Scheduler.BuildScope();
-
-        _debugStateLockLevel += 1;
-        _building = true;
-
-        // Dart forces `_scheduledFlushDirtyElements` true for the duration so that a markNeedsBuild
-        // made during the build cannot ask the host for another frame, and false afterwards so the
-        // next one can.
-        _scheduledFlushDirtyElements = true;
-        buildScope.Building = true;
         try
         {
+            _scheduledFlushDirtyElements = true;
+            buildScope.Building = true;
             if (callback != null)
             {
-                Element? previousBuildTarget = DebugCurrentBuildTarget;
-                DebugCurrentBuildTarget = context;
+                DebugAssertions.Assert(DebugStateLocked);
+                Element? debugPreviousBuildTarget = null;
+                if (Constants.KDebugMode)
+                {
+                    debugPreviousBuildTarget = DebugCurrentBuildTarget;
+                    DebugCurrentBuildTarget = context;
+                }
+
                 try
                 {
                     callback();
                 }
                 finally
                 {
-                    DebugCurrentBuildTarget = previousBuildTarget;
-                    if (context != null)
+                    if (Constants.KDebugMode)
                     {
-                        DebugElementWasRebuilt(context);
+                        DebugAssertions.Assert(ReferenceEquals(DebugCurrentBuildTarget, context));
+                        DebugCurrentBuildTarget = debugPreviousBuildTarget;
+                        if (context != null)
+                        {
+                            DebugElementWasRebuilt(context);
+                        }
                     }
                 }
             }
 
             buildScope.FlushDirtyElements(context);
-
-            if (finalizeInactive)
-            {
-                FinalizeInactiveElements();
-            }
         }
         finally
         {
             buildScope.Building = false;
             _scheduledFlushDirtyElements = false;
-            _building = false;
-            _debugStateLockLevel -= 1;
-
-            if (Constants.KDebugMode && WidgetsDebug.DebugPrintBuildScope)
+            DebugAssertions.Assert(!Constants.KDebugMode || DebugBuilding);
+            if (Constants.KDebugMode)
             {
-                Print.DebugPrint("buildScope finished");
+                DebugBuilding = false;
+                _debugStateLockLevel -= 1;
+                if (WidgetsDebug.DebugPrintBuildScope)
+                {
+                    Print.DebugPrint("buildScope finished");
+                }
             }
         }
+
+        DebugAssertions.Assert(_debugStateLockLevel >= 0);
     }
 
     /// <summary>
@@ -503,6 +343,10 @@ public sealed class BuildOwner
         }
     }
 
+    /// <summary>
+    /// Plumix-only harness pump: runs the transient frame callbacks, flushes the root build scope and
+    /// finalizes the tree, the way a frame does between its build and post-frame phases.
+    /// </summary>
     internal void FlushBuild()
     {
         using Scheduler.FrameworkThreadScope scope = Scheduler.EnterFrameworkThread();
@@ -514,54 +358,119 @@ public sealed class BuildOwner
         Scheduler.RunScheduledFrameCallbacksOutsideFrame();
         BuildScope();
 
+        // A harness pump has no render phase of its own to finalize after, so it finalizes here.
+        FinalizeTree();
+
         // Test harnesses use FlushBuild as their pump boundary. Production frame flow calls
         // BuildScope directly and drains microtasks after the frame in Scheduler.HandleFrame.
         Scheduler.FlushMicrotasks();
     }
 
-    /// <summary>
-    /// Unmounts every element that was deactivated during the current build and never reactivated.
-    /// </summary>
-    /// <remarks>Flutter's <c>BuildOwner.finalizeTree</c>.</remarks>
-    /// <summary>
-    /// Dart's <c>BuildOwner.finalizeTree</c>: unmounts everything that stayed inactive through the
-    /// frame, then runs the three debug-only global-key checks. A failure is reported rather than
-    /// thrown, because the tree is already inconsistent and raising an <c>ErrorWidget</c> here would
-    /// only produce follow-on exceptions.
-    /// </summary>
-    public void FinalizeTree()
-    {
-        FinalizeInactiveElements();
+    // Debug-only global-key bookkeeping. Dart keeps the same structures on BuildOwner and reads them
+    // from finalizeTree, so a duplicated key produces a readable report instead of a silently
+    // truncated widget tree.
+    private Dictionary<Element, HashSet<GlobalKey>>? _debugElementsThatWillNeedToBeRebuilt;
+    private readonly HashSet<Element>? _debugIllFatedElements = Constants.KDebugMode ? [] : null;
+    private readonly Dictionary<Element, Dictionary<Element, GlobalKey>>? _debugGlobalKeyReservations =
+        Constants.KDebugMode ? [] : null;
 
+    /// <summary>
+    /// Dart's <c>BuildOwner._debugTrackElementThatWillNeedToBeRebuiltDueToGlobalKeyShenanigans</c>:
+    /// remembers a parent that lost a global-keyed child to a different parent, so
+    /// <see cref="FinalizeTree"/> can report it if that parent never rebuilt in this frame.
+    /// </summary>
+    internal void DebugTrackElementThatWillNeedToBeRebuilt(Element node, GlobalKey key)
+    {
+        _debugElementsThatWillNeedToBeRebuilt ??= [];
+        if (!_debugElementsThatWillNeedToBeRebuilt.TryGetValue(node, out HashSet<GlobalKey>? keys))
+        {
+            keys = [];
+            _debugElementsThatWillNeedToBeRebuilt[node] = keys;
+        }
+
+        keys.Add(key);
+    }
+
+    /// <summary>
+    /// Dart's <c>BuildOwner._debugElementWasRebuilt</c>: a parent that did rebuild this frame is
+    /// exonerated of the reparenting complaint above.
+    /// </summary>
+    internal void DebugElementWasRebuilt(Element node)
+    {
+        _debugElementsThatWillNeedToBeRebuilt?.Remove(node);
+    }
+
+    /// <summary>The number of <see cref="GlobalKey"/> instances currently registered with this owner.</summary>
+    /// <remarks>Flutter's <c>BuildOwner.globalKeyCount</c>.</remarks>
+    public int GlobalKeyCount => _globalKeyRegistry.Count;
+
+    /// <summary>Dart's <c>BuildOwner._debugRemoveGlobalKeyReservationFor</c>.</summary>
+    internal void DebugRemoveGlobalKeyReservationFor(Element parent, Element child)
+    {
+        if (Constants.KDebugMode
+            && _debugGlobalKeyReservations!.TryGetValue(parent, out Dictionary<Element, GlobalKey>? childToKey))
+        {
+            childToKey.Remove(child);
+        }
+    }
+
+    /// <summary>
+    /// Dart's <c>BuildOwner._registerGlobalKey</c>: the registry is last-writer-wins, and a key that
+    /// is claimed twice records the previous occupant as "ill fated" so <see cref="FinalizeTree"/>
+    /// can report the duplication with both widgets named.
+    /// </summary>
+    internal void RegisterGlobalKey(GlobalKey key, Element element)
+    {
+        if (Constants.KDebugMode && _globalKeyRegistry.TryGetValue(key, out Element? oldElement))
+        {
+            DebugAssertions.Assert(element.Widget.GetType() != oldElement.Widget.GetType());
+            _debugIllFatedElements!.Add(oldElement);
+        }
+
+        _globalKeyRegistry[key] = element;
+    }
+
+    /// <summary>Dart's <c>BuildOwner._unregisterGlobalKey</c>.</summary>
+    internal void UnregisterGlobalKey(GlobalKey key, Element element)
+    {
+        if (Constants.KDebugMode
+            && _globalKeyRegistry.TryGetValue(key, out Element? oldElement)
+            && !ReferenceEquals(oldElement, element))
+        {
+            DebugAssertions.Assert(element.Widget.GetType() != oldElement.Widget.GetType());
+        }
+
+        if (_globalKeyRegistry.TryGetValue(key, out Element? registered) && ReferenceEquals(registered, element))
+        {
+            _globalKeyRegistry.Remove(key);
+        }
+    }
+
+    /// <summary>Dart's <c>BuildOwner._debugReserveGlobalKeyFor</c>.</summary>
+    internal void DebugReserveGlobalKeyFor(Element parent, Element child, GlobalKey key)
+    {
         if (!Constants.KDebugMode)
         {
             return;
         }
 
-        try
+        if (!_debugGlobalKeyReservations!.TryGetValue(parent, out Dictionary<Element, GlobalKey>? childToKey))
         {
-            DebugVerifyGlobalKeyReservation();
-            DebugVerifyIllFatedPopulation();
-            DebugVerifyNoUnrebuiltReparentingVictims();
+            childToKey = [];
+            _debugGlobalKeyReservations[parent] = childToKey;
         }
-        catch (FlutterError error)
-        {
-            FrameworkErrors.ReportException(new ErrorSummary("while finalizing the widget tree"), error);
-        }
-        finally
-        {
-            _debugElementsThatWillNeedToBeRebuilt?.Clear();
-        }
+
+        childToKey[child] = key;
     }
 
     /// <summary>Dart's <c>BuildOwner._debugVerifyGlobalKeyReservation</c>.</summary>
     private void DebugVerifyGlobalKeyReservation()
     {
         var keyToParent = new Dictionary<GlobalKey, Element>();
-        foreach ((Element parent, Dictionary<Element, GlobalKey> childToKey) in _debugGlobalKeyReservations)
+        foreach ((Element parent, Dictionary<Element, GlobalKey> childToKey) in _debugGlobalKeyReservations!)
         {
             // Parents that are gone, or whose render object has been detached, are not evidence.
-            if (parent.DebugIsDefunct || parent.RenderObject?.Attached == false)
+            if (parent.LifecycleState == ElementLifecycleState.Defunct || parent.RenderObject?.Attached == false)
             {
                 continue;
             }
@@ -574,36 +483,35 @@ public sealed class BuildOwner
                     continue;
                 }
 
-                if (!keyToParent.TryGetValue(key, out Element? older) || ReferenceEquals(older, parent))
+                if (keyToParent.TryGetValue(key, out Element? older) && !ReferenceEquals(older, parent))
                 {
-                    keyToParent[key] = parent;
-                    continue;
+                    Element newer = parent;
+                    FlutterError error = older.ToString() != newer.ToString()
+                        ? new FlutterError(
+                        [
+                            new ErrorSummary("Multiple widgets used the same GlobalKey."),
+                            new ErrorDescription(
+                                $"The key {key} was used by multiple widgets. The parents of those widgets "
+                                + $"were:\n- {older}\n- {newer}\nA GlobalKey can only be specified on one "
+                                + "widget at a time in the widget tree."),
+                        ])
+                        : new FlutterError(
+                        [
+                            new ErrorSummary("Multiple widgets used the same GlobalKey."),
+                            new ErrorDescription(
+                                $"The key {key} was used by multiple widgets. The parents of those widgets "
+                                + "were different widgets that both had the following description:\n  "
+                                + $"{parent}\nA GlobalKey can only be specified on one widget at a time in the "
+                                + "widget tree."),
+                        ]);
+
+                    // Repair the tree before reporting, so tearing it down does not pile on more errors.
+                    DebugForgetDuplicate(older, child);
+                    DebugForgetDuplicate(newer, child);
+                    throw error;
                 }
 
-                Element newer = parent;
-                FlutterError error = older.ToString() != newer.ToString()
-                    ? new FlutterError(
-                    [
-                        new ErrorSummary("Multiple widgets used the same GlobalKey."),
-                        new ErrorDescription(
-                            $"The key {key} was used by multiple widgets. The parents of those widgets "
-                            + $"were:\n- {older}\n- {newer}\nA GlobalKey can only be specified on one "
-                            + "widget at a time in the widget tree."),
-                    ])
-                    : new FlutterError(
-                    [
-                        new ErrorSummary("Multiple widgets used the same GlobalKey."),
-                        new ErrorDescription(
-                            $"The key {key} was used by multiple widgets. The parents of those widgets were "
-                            + $"different widgets that both had the following description:\n  {newer}\n"
-                            + "A GlobalKey can only be specified on one widget at a time in the widget tree."),
-                    ]);
-
-                // Repair the tree before reporting, so tearing it down does not pile on more errors.
-                DebugForgetDuplicate(older, child);
-                DebugForgetDuplicate(newer, child);
-                _debugGlobalKeyReservations.Clear();
-                throw error;
+                keyToParent[key] = parent;
             }
         }
 
@@ -630,18 +538,16 @@ public sealed class BuildOwner
     private void DebugVerifyIllFatedPopulation()
     {
         Dictionary<GlobalKey, List<Element>>? duplicates = null;
-        foreach (Element element in _debugIllFatedElements)
+        foreach (Element element in _debugIllFatedElements!)
         {
-            if (element.DebugIsDefunct || element.Widget.Key is not GlobalKey key)
+            if (element.LifecycleState == ElementLifecycleState.Defunct)
             {
                 continue;
             }
 
-            if (!_globalKeyRegistry.TryGetValue(key, out Element? current))
-            {
-                continue;
-            }
-
+            DebugAssertions.Assert(element.Widget.Key != null);
+            var key = (GlobalKey)element.Widget.Key!;
+            DebugAssertions.Assert(_globalKeyRegistry.ContainsKey(key));
             duplicates ??= [];
             if (!duplicates.TryGetValue(key, out List<Element>? elements))
             {
@@ -649,12 +555,13 @@ public sealed class BuildOwner
                 duplicates[key] = elements;
             }
 
-            // Insertion-ordered, so the ill-fated element is reported before the current occupant.
+            // Insertion-ordered, like Dart's set literal, so the ill-fated element comes first.
             if (!elements.Contains(element))
             {
                 elements.Add(element);
             }
 
+            Element current = _globalKeyRegistry[key];
             if (!elements.Contains(current))
             {
                 elements.Add(current);
@@ -673,12 +580,50 @@ public sealed class BuildOwner
         };
         foreach ((GlobalKey key, List<Element> elements) in duplicates)
         {
-            information.Add(Element.DescribeElements($"The key {key} was used by {elements.Count} widgets", elements));
+            information.Add(Element.DescribeElements(
+                $"The key {key} was used by {elements.Count} widgets",
+                elements));
         }
 
         information.Add(new ErrorDescription(
             "A GlobalKey can only be specified on one widget at a time in the widget tree."));
         throw new FlutterError(information);
+    }
+
+    /// <summary>
+    /// Complete the element build pass by unmounting any elements that are no longer active, then run
+    /// the three debug-only global-key checks. Dart's <c>BuildOwner.finalizeTree</c>: a failure is
+    /// reported rather than thrown, because the tree is already inconsistent and raising an
+    /// <c>ErrorWidget</c> here would only produce follow-on exceptions.
+    /// </summary>
+    public void FinalizeTree()
+    {
+        try
+        {
+            // This unregisters the GlobalKeys.
+            if (!InactiveElements.IsEmpty)
+            {
+                LockState(InactiveElements.UnmountAll);
+            }
+
+            if (Constants.KDebugMode)
+            {
+                try
+                {
+                    DebugVerifyGlobalKeyReservation();
+                    DebugVerifyIllFatedPopulation();
+                    DebugVerifyNoUnrebuiltReparentingVictims();
+                }
+                finally
+                {
+                    _debugElementsThatWillNeedToBeRebuilt?.Clear();
+                }
+            }
+        }
+        catch (Exception exception)
+        {
+            FrameworkErrors.ReportException(new ErrorSummary("while finalizing the widget tree"), exception);
+        }
     }
 
     /// <summary>
@@ -695,7 +640,7 @@ public sealed class BuildOwner
         var keys = new HashSet<GlobalKey>();
         foreach ((Element element, HashSet<GlobalKey> elementKeys) in victims)
         {
-            if (!element.DebugIsDefunct)
+            if (element.LifecycleState != ElementLifecycleState.Defunct)
             {
                 keys.UnionWith(elementKeys);
             }
@@ -710,6 +655,7 @@ public sealed class BuildOwner
         List<string> elementLabels = DebugCountedLabels(
             victims.Keys.Select(element => element.ToString() ?? string.Empty),
             "elements");
+        DebugAssertions.Assert(keyLabels.Count > 0);
 
         bool oneKey = keys.Count == 1;
         bool oneElement = elementLabels.Count == 1;
@@ -763,16 +709,14 @@ public sealed class BuildOwner
     }
 
     /// <summary>
-    /// Dart's <c>lockState(_inactiveElements._unmountAll)</c> half of <c>finalizeTree</c>: this is
-    /// what unregisters the global keys of everything that stayed inactive through the frame.
+    /// Cause the entire subtree rooted at the given <see cref="Element"/> to be entirely rebuilt.
+    /// Used by development tools when the application code has changed and is being hot-reloaded.
+    /// Dart's <c>BuildOwner.reassemble</c>.
     /// </summary>
-    private void FinalizeInactiveElements()
+    public void Reassemble(Element root)
     {
-        if (_inactiveElements.IsEmpty)
-        {
-            return;
-        }
-
-        LockState(_inactiveElements.UnmountAll);
+        DebugAssertions.Assert(root.Parent == null);
+        DebugAssertions.Assert(ReferenceEquals(root.Owner, this));
+        root.Reassemble();
     }
 }

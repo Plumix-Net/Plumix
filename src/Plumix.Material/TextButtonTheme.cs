@@ -50,7 +50,7 @@ public sealed class TextButtonTheme : InheritedTheme
 
     public static TextButtonThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<TextButtonTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<TextButtonTheme>();
         return localTheme is not null ? localTheme.Data : Theme.Of(context).TextButtonTheme;
     }
 
@@ -59,7 +59,7 @@ public sealed class TextButtonTheme : InheritedTheme
         return new TextButtonTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((TextButtonTheme)oldWidget).Data, Data);
     }

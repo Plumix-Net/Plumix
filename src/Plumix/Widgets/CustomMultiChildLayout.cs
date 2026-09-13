@@ -19,9 +19,9 @@ public sealed class LayoutId : ParentDataWidget<MultiChildLayoutParentData>
 
     public object Id { get; }
 
-    public override Type DebugTypicalAncestorWidgetType => typeof(CustomMultiChildLayout);
+    public override Type DebugTypicalAncestorWidgetClass => typeof(CustomMultiChildLayout);
 
-    protected override void ApplyParentData(RenderObject renderObject)
+    public override void ApplyParentData(RenderObject renderObject)
     {
         var parentData = (MultiChildLayoutParentData)renderObject.parentData!;
         if (Equals(parentData.Id, Id))

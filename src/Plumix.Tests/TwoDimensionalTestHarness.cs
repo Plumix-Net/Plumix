@@ -93,9 +93,9 @@ internal sealed class TestParentDataWidget : ParentDataWidget<TestExtendedParent
 
     public int? TestValue { get; }
 
-    public override Type DebugTypicalAncestorWidgetType => typeof(SimpleBuilderTableViewport);
+    public override Type DebugTypicalAncestorWidgetClass => typeof(SimpleBuilderTableViewport);
 
-    protected override void ApplyParentData(RenderObject renderObject)
+    public override void ApplyParentData(RenderObject renderObject)
     {
         var parentData = (TestExtendedParentData)renderObject.parentData!;
         parentData.TestValue = TestValue;
@@ -576,7 +576,13 @@ internal sealed class TwoDimensionalRenderHarness : IDisposable
         _owner.FlushBuild();
     }
 
-    public void Dispose() => _rootElement.UnmountRoot();
+    public void Dispose()
+    {
+        if (_rootElement.Mounted)
+        {
+            _rootElement.UnmountRoot();
+        }
+    }
 
     private sealed class HarnessRootElement : Element, IRenderObjectHost
     {

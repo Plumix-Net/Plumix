@@ -182,14 +182,14 @@ public sealed class AppBarTheme : InheritedTheme
             child: child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((AppBarTheme)oldWidget).Data, Data);
     }
 
     public static AppBarThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<AppBarTheme>()?.Data ?? Theme.Of(context).AppBarTheme;
+        return context.DependOnInheritedWidgetOfExactType<AppBarTheme>()?.Data ?? Theme.Of(context).AppBarTheme;
     }
 
     public static AppBarTheme Lerp(AppBarTheme? a, AppBarTheme? b, double t)

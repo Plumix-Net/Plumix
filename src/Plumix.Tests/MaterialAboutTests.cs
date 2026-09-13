@@ -986,7 +986,7 @@ public sealed class MaterialAboutTests : IDisposable
                 RenderView,
                 new Directionality(TextDirection.Ltr, child: rootWidget));
             _rootElement.Attach(_owner);
-            _rootElement.Mount(null, null);
+            _rootElement.Owner!.BuildScope(_rootElement, () => _rootElement.Mount(null, null));
             _owner.FlushBuild();
         }
 

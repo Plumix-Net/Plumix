@@ -157,9 +157,9 @@ public sealed class BottomSheetTheme : InheritedTheme
         return new BottomSheetTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((BottomSheetTheme)oldWidget).Data, Data);
 
     public static BottomSheetThemeData Of(BuildContext context) =>
-        context.DependOnInherited<BottomSheetTheme>()?.Data ?? Theme.Of(context).BottomSheetTheme;
+        context.DependOnInheritedWidgetOfExactType<BottomSheetTheme>()?.Data ?? Theme.Of(context).BottomSheetTheme;
 }

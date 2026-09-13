@@ -309,10 +309,10 @@ public sealed class ScrollConfiguration : InheritedWidget
 
     public static ScrollBehavior Of(BuildContext context)
     {
-        return context.DependOnInherited<ScrollConfiguration>()?.Behavior ?? new ScrollBehavior();
+        return context.DependOnInheritedWidgetOfExactType<ScrollConfiguration>()?.Behavior ?? new ScrollBehavior();
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         ScrollBehavior oldBehavior = ((ScrollConfiguration)oldWidget).Behavior;
         return Behavior.GetType() != oldBehavior.GetType()

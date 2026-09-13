@@ -143,13 +143,13 @@ public sealed class ChipTheme : InheritedTheme
         return new ChipTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ChipTheme)oldWidget).Data, Data);
     }
 
     public static ChipThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<ChipTheme>()?.Data ?? Theme.Of(context).ChipTheme;
+        return context.DependOnInheritedWidgetOfExactType<ChipTheme>()?.Data ?? Theme.Of(context).ChipTheme;
     }
 }

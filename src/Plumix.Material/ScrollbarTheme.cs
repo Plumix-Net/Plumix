@@ -96,9 +96,9 @@ public sealed class ScrollbarTheme : InheritedTheme
     public ScrollbarThemeData Data { get; }
     public override Widget Wrap(BuildContext context, Widget child) => new ScrollbarTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((ScrollbarTheme)oldWidget).Data, Data);
 
     public static ScrollbarThemeData Of(BuildContext context) =>
-        context.DependOnInherited<ScrollbarTheme>()?.Data ?? Theme.Of(context).ScrollbarTheme;
+        context.DependOnInheritedWidgetOfExactType<ScrollbarTheme>()?.Data ?? Theme.Of(context).ScrollbarTheme;
 }

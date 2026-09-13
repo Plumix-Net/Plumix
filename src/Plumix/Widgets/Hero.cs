@@ -954,7 +954,7 @@ public sealed class HeroControllerScope : InheritedWidget
 
     public static HeroController? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<HeroControllerScope>()?.Controller;
+        return context.DependOnInheritedWidgetOfExactType<HeroControllerScope>()?.Controller;
     }
 
     public static HeroController Of(BuildContext context)
@@ -965,7 +965,7 @@ public sealed class HeroControllerScope : InheritedWidget
                    + "HeroControllerScope widget.");
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((HeroControllerScope)oldWidget).Controller, Controller);
     }

@@ -139,7 +139,7 @@ public sealed class LayoutBuilderTests
         var layoutBuilder = new SliverLayoutBuilder((context, _) =>
         {
             builderCalls++;
-            values.Add(context.DependOnInherited<TestInheritedValue>()!.Value);
+            values.Add(context.DependOnInheritedWidgetOfExactType<TestInheritedValue>()!.Value);
             return new SliverToBoxAdapter(new SizedBox(height: 20));
         });
         var owner = new BuildOwner();
@@ -297,7 +297,7 @@ public sealed class LayoutBuilderTests
         var layoutBuilder = new LayoutBuilder((context, _) =>
         {
             builderCalls++;
-            values.Add(context.DependOnInherited<TestInheritedValue>()!.Value);
+            values.Add(context.DependOnInheritedWidgetOfExactType<TestInheritedValue>()!.Value);
             return new SizedBox(width: 20, height: 10);
         });
         var owner = new BuildOwner();
@@ -570,7 +570,7 @@ public sealed class LayoutBuilderTests
 
         public int Value { get; }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
             Value != ((TestInheritedValue)oldWidget).Value;
     }
 

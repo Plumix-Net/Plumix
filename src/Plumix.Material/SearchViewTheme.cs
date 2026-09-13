@@ -39,14 +39,14 @@ public sealed class SearchViewTheme : InheritedTheme
         return new SearchViewTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((SearchViewTheme)oldWidget).Data, Data);
     }
 
     public static SearchViewThemeData Of(BuildContext context)
     {
-        var localTheme = context.DependOnInherited<SearchViewTheme>();
+        var localTheme = context.DependOnInheritedWidgetOfExactType<SearchViewTheme>();
         if (localTheme is not null)
         {
             return localTheme.Data;

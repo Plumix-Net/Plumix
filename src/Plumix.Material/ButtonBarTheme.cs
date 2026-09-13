@@ -154,13 +154,13 @@ public sealed class ButtonBarTheme : InheritedWidget
 
     public ButtonBarThemeData Data { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ButtonBarTheme)oldWidget).Data, Data);
     }
 
     public static ButtonBarThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<ButtonBarTheme>()?.Data ?? Theme.Of(context).ButtonBarTheme;
+        return context.DependOnInheritedWidgetOfExactType<ButtonBarTheme>()?.Data ?? Theme.Of(context).ButtonBarTheme;
     }
 }

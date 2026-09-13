@@ -79,7 +79,8 @@ public sealed class DirectionalPositionedTableCellTests
             ])));
 
         root.Attach(owner);
-        BuildErrors.Throws<ArgumentException>(() => root.Mount(parent: null, newSlot: null));
+        BuildErrors.Throws<ArgumentException>(
+            () => owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null)));
     }
 
     [Fact]

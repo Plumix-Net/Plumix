@@ -11,7 +11,7 @@ namespace Plumix.Widgets;
 /// <remarks>
 /// Owned by <see cref="BuildOwner"/> and never handed out: an element joins through
 /// <see cref="Element.DeactivateChild"/> and leaves either through
-/// <c>BuildOwner.RetakeInactiveElement</c> (reactivated) or through <see cref="UnmountAll"/> at the
+/// <c>Element.RetakeInactiveElement</c> (reactivated) or through <see cref="UnmountAll"/> at the
 /// end of the frame (unmounted).
 /// </remarks>
 internal sealed class InactiveElements
@@ -23,6 +23,54 @@ internal sealed class InactiveElements
     internal bool IsEmpty => _elements.Count == 0;
 
     /// <summary>
+    /// Dart's <c>_InactiveElements._unmount</c>: children before their parent, so an element is only
+    /// made defunct once everything below it already is.
+    /// </summary>
+    private static void Unmount(Element element)
+    {
+        DebugAssertions.Assert(element.LifecycleState == ElementLifecycleState.Inactive);
+        if (Constants.KDebugMode
+            && WidgetsDebug.DebugPrintGlobalKeyedWidgetLifecycle
+            && element.Widget.Key is GlobalKey)
+        {
+            Print.DebugPrint($"Discarding {element} from inactive elements list.");
+        }
+
+        element.VisitChildren(child =>
+        {
+            DebugAssertions.Assert(ReferenceEquals(child.Parent, element));
+            Unmount(child);
+        });
+        element.Unmount();
+        DebugAssertions.Assert(element.LifecycleState == ElementLifecycleState.Defunct);
+    }
+
+    /// <summary>
+    /// Dart's <c>_InactiveElements._unmountAll</c>: unmounts everything that stayed inactive through
+    /// the frame, deepest subtree first, so a sibling that was removed from further down the tree is
+    /// torn down before a shallower one.
+    /// </summary>
+    internal void UnmountAll()
+    {
+        _locked = true;
+        List<Element> elements = [.. _elements];
+        elements.Sort(Element.Sort);
+        _elements.Clear();
+        try
+        {
+            for (int index = elements.Count - 1; index >= 0; index--)
+            {
+                Unmount(elements[index]);
+            }
+        }
+        finally
+        {
+            DebugAssertions.Assert(_elements.Count == 0);
+            _locked = false;
+        }
+    }
+
+    /// <summary>
     /// Dart's <c>_InactiveElements._deactivateRecursively</c>: deactivates one element and then every
     /// descendant, deepest last. A throwing <c>deactivate()</c> forces the whole subtree into
     /// <see cref="ElementLifecycleState.Failed"/> and rethrows, so the element never reaches the
@@ -30,11 +78,7 @@ internal sealed class InactiveElements
     /// </summary>
     internal static void DeactivateRecursively(Element element)
     {
-        if (Constants.KDebugMode && !element.IsActive)
-        {
-            throw new AssertionError($"{element} must be active to be deactivated.");
-        }
-
+        DebugAssertions.Assert(element.LifecycleState == ElementLifecycleState.Active);
         try
         {
             element.Deactivate();
@@ -73,21 +117,9 @@ internal sealed class InactiveElements
     /// </summary>
     internal void Add(Element element)
     {
-        if (_locked)
-        {
-            throw new AssertionError("An element cannot be deactivated while the inactive list is unmounting.");
-        }
-
-        if (_elements.Contains(element))
-        {
-            throw new AssertionError($"{element} is already in the inactive elements list.");
-        }
-
-        if (element.Parent is not null)
-        {
-            throw new AssertionError($"{element} must be detached from its parent before being deactivated.");
-        }
-
+        DebugAssertions.Assert(!_locked);
+        DebugAssertions.Assert(!_elements.Contains(element));
+        DebugAssertions.Assert(element.Parent == null);
         switch (element.LifecycleState)
         {
             case ElementLifecycleState.Active:
@@ -98,70 +130,35 @@ internal sealed class InactiveElements
                 _elements.Add(element);
                 break;
             default:
-                throw new AssertionError(
-                    $"{element} must not be deactivated when in {element.LifecycleState} state.");
+                if (Constants.KDebugMode)
+                {
+                    throw new AssertionError(
+                        $"{element} must not be deactivated when in "
+                        + $"_ElementLifecycle.{Element.DebugLifecycleName(element.LifecycleState)} state.");
+                }
+
+                break;
         }
     }
 
     /// <summary>Dart's <c>_InactiveElements.remove</c>: the element is being reactivated.</summary>
     internal void Remove(Element element)
     {
-        if (_locked)
-        {
-            throw new AssertionError("An element cannot be reactivated while the inactive list is unmounting.");
-        }
-
+        DebugAssertions.Assert(!_locked);
+        DebugAssertions.Assert(_elements.Contains(element));
+        DebugAssertions.Assert(element.Parent == null);
         _elements.Remove(element);
+        DebugAssertions.Assert(element.LifecycleState == ElementLifecycleState.Inactive);
     }
 
-    /// <summary>
-    /// Dart's <c>_InactiveElements._unmountAll</c>: unmounts everything that stayed inactive through
-    /// the frame, deepest subtree first, so a sibling that was removed from further down the tree is
-    /// torn down before a shallower one.
-    /// </summary>
-    internal void UnmountAll()
+    /// <summary>Dart's <c>_InactiveElements.debugContains</c>.</summary>
+    internal bool DebugContains(Element element)
     {
-        _locked = true;
-        List<Element> elements = [.. _elements];
-        elements.Sort(Element.Sort);
-        _elements.Clear();
-        try
+        if (!Constants.KDebugMode)
         {
-            for (int index = elements.Count - 1; index >= 0; index--)
-            {
-                Unmount(elements[index]);
-            }
-        }
-        finally
-        {
-            _locked = false;
-        }
-    }
-
-    /// <summary>
-    /// Dart's <c>_InactiveElements._unmount</c>: children before their parent, so an element is only
-    /// made defunct once everything below it already is.
-    /// </summary>
-    private static void Unmount(Element element)
-    {
-        if (Constants.KDebugMode
-            && WidgetsDebug.DebugPrintGlobalKeyedWidgetLifecycle
-            && element.Widget.Key is GlobalKey)
-        {
-            Print.DebugPrint($"Discarding {element} from inactive elements list.");
+            throw new NotSupportedException("debugContains is only supported in debug builds");
         }
 
-        element.VisitChildren(child =>
-        {
-            if (Constants.KDebugMode
-                && child.LifecycleState != ElementLifecycleState.Defunct
-                && !ReferenceEquals(child.Parent, element))
-            {
-                throw new AssertionError($"{child} is visited by {element} but is not its child.");
-            }
-
-            Unmount(child);
-        });
-        element.Unmount();
+        return _elements.Contains(element);
     }
 }

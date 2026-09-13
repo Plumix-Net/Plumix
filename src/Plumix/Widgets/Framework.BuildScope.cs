@@ -1,7 +1,7 @@
 using Plumix.Foundation;
 using Plumix.Rendering;
 
-// Dart parity source: flutter/packages/flutter/lib/src/widgets/framework.dart
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/framework.dart (BuildScope)
 
 namespace Plumix.Widgets;
 
@@ -64,6 +64,10 @@ public sealed class BuildScope
     /// <summary>The elements queued for a rebuild in this scope, in the order they will be walked.</summary>
     internal IReadOnlyList<Element> DirtyElements => _dirtyElements;
 
+    /// <summary>Dart's <c>'${buildScope._dirtyElementsNeedsResorting}'</c>, for the scheduling debug print.</summary>
+    internal string DebugDirtyElementsNeedsResortingDescription =>
+        _dirtyElementsNeedsResorting is { } value ? (value ? "true" : "false") : "null";
+
     /// <summary>
     /// Empties the dirty list without rebuilding anything, so the caller can re-queue the entries it
     /// still wants. Plumix-only, used by <see cref="BuildOwner.BuildScopeDuringLayout"/>.
@@ -84,10 +88,7 @@ public sealed class BuildScope
     /// <summary>Dart's <c>BuildScope._scheduleBuildFor</c>.</summary>
     internal void ScheduleBuildFor(Element element)
     {
-        if (!ReferenceEquals(element.BuildScope, this))
-        {
-            throw new AssertionError("An element can only be scheduled to build in its own build scope.");
-        }
+        DebugAssertions.Assert(ReferenceEquals(element.BuildScope, this));
 
         if (!element.InDirtyList)
         {
@@ -112,10 +113,8 @@ public sealed class BuildScope
     /// <summary>Dart's <c>BuildScope._tryRebuild</c>.</summary>
     private void TryRebuild(Element element)
     {
-        if (!ReferenceEquals(element.BuildScope, this))
-        {
-            throw new AssertionError("An element can only be rebuilt by its own build scope.");
-        }
+        DebugAssertions.Assert(element.InDirtyList);
+        DebugAssertions.Assert(ReferenceEquals(element.BuildScope, this));
 
         try
         {
@@ -187,10 +186,7 @@ public sealed class BuildScope
     /// </remarks>
     internal void FlushDirtyElements(Element? debugBuildRoot)
     {
-        if (_dirtyElementsNeedsResorting != null)
-        {
-            throw new AssertionError("FlushDirtyElements must be non-reentrant.");
-        }
+        DebugAssertions.Assert(_dirtyElementsNeedsResorting == null, "_flushDirtyElements must be non-reentrant");
 
         _dirtyElements.Sort(Element.Sort);
         _dirtyElementsNeedsResorting = false;
@@ -275,6 +271,15 @@ public sealed class BuildScope
         while (index > 0 && _dirtyElements[index - 1].Dirty)
         {
             index -= 1;
+        }
+
+        if (Constants.KDebugMode)
+        {
+            for (int i = index - 1; i >= 0; i -= 1)
+            {
+                Element element = _dirtyElements[i];
+                DebugAssertions.Assert(!element.Dirty || element.LifecycleState != ElementLifecycleState.Active);
+            }
         }
 
         return index;

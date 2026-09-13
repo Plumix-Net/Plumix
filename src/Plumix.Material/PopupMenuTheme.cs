@@ -103,9 +103,9 @@ public sealed class PopupMenuTheme : InheritedTheme
     public PopupMenuThemeData Data { get; }
     public override Widget Wrap(BuildContext context, Widget child) => new PopupMenuTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((PopupMenuTheme)oldWidget).Data, Data);
 
     public static PopupMenuThemeData Of(BuildContext context) =>
-        context.DependOnInherited<PopupMenuTheme>()?.Data ?? Theme.Of(context).PopupMenuTheme;
+        context.DependOnInheritedWidgetOfExactType<PopupMenuTheme>()?.Data ?? Theme.Of(context).PopupMenuTheme;
 }

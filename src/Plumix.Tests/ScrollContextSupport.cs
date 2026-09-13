@@ -226,15 +226,18 @@ internal sealed class ScrollNotificationRecorder : IScrollContext, ITickerProvid
         _owner.BuildScope(root, () => root.Mount(parent: null, newSlot: null));
         _owner.FlushBuild();
         _root = root;
-        NotificationContext = captured!;
+        _notificationContext = captured!;
     }
 
     /// <summary>Every notification dispatched through <see cref="NotificationContext"/>, in order.</summary>
     public List<Notification> Notifications { get; } = [];
 
-    public BuildContext? NotificationContext { get; }
+    private readonly BuildContext _notificationContext;
 
-    public BuildContext StorageContext => NotificationContext!;
+    // Like Scrollable's gesture-detector key, the context stops resolving once its element is unmounted.
+    public BuildContext? NotificationContext => _notificationContext.Mounted ? _notificationContext : null;
+
+    public BuildContext StorageContext => _notificationContext;
 
     public ITickerProvider Vsync => this;
 

@@ -123,8 +123,9 @@ public sealed class DataTableTheme : InheritedWidget
     }
 
     public DataTableThemeData Data { get; }
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => !Equals(((DataTableTheme)oldWidget).Data, Data);
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+        !Equals(((DataTableTheme)oldWidget).Data, Data);
 
     public static DataTableThemeData Of(BuildContext context) =>
-        context.DependOnInherited<DataTableTheme>()?.Data ?? Theme.Of(context).DataTableTheme;
+        context.DependOnInheritedWidgetOfExactType<DataTableTheme>()?.Data ?? Theme.Of(context).DataTableTheme;
 }

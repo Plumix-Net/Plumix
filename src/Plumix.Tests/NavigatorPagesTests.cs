@@ -556,7 +556,7 @@ public sealed class NavigatorPagesTests : IDisposable
             _pipeline.Attach(RenderView);
             _root = new HarnessRootElement(RenderView, rootWidget);
             _root.Attach(_owner);
-            _root.Mount(null, null);
+            _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
             _owner.FlushBuild();
             Pump();
         }

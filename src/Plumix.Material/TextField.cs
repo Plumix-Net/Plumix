@@ -389,7 +389,6 @@ public sealed class TextField : StatefulWidget
 
         public override void Dispose()
         {
-            EndHover();
             DetachController();
             DetachFocusNode();
             base.Dispose();

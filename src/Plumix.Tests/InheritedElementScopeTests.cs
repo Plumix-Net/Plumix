@@ -59,8 +59,8 @@ public sealed class InheritedElementScopeTests
         Widget Body() => new Builder(context =>
         {
             buildCount++;
-            seenBase = context.GetInherited<BaseScope>();
-            seenDerived = context.GetInherited<DerivedScope>();
+            seenBase = context.GetInheritedWidgetOfExactType<BaseScope>();
+            seenDerived = context.GetInheritedWidgetOfExactType<DerivedScope>();
             return new SizedBox();
         });
 
@@ -135,12 +135,12 @@ public sealed class InheritedElementScopeTests
             value: 1,
             child: new Builder(context =>
             {
-                outer = context.DependOnInherited<BaseScope>()!.Value;
+                outer = context.DependOnInheritedWidgetOfExactType<BaseScope>()!.Value;
                 return new BaseScope(
                     value: 2,
                     child: new Builder(innerContext =>
                     {
-                        inner = innerContext.DependOnInherited<BaseScope>()!.Value;
+                        inner = innerContext.DependOnInheritedWidgetOfExactType<BaseScope>()!.Value;
                         return new SizedBox();
                     }));
             })));
@@ -161,12 +161,12 @@ public sealed class InheritedElementScopeTests
         var owner = new BuildOwner();
         var root = new TestRootElement(new Builder(above =>
         {
-            aboveScope = above.DependOnInherited<BaseScope>();
+            aboveScope = above.DependOnInheritedWidgetOfExactType<BaseScope>();
             return new BaseScope(
                 value: 5,
                 child: new Builder(below =>
                 {
-                    belowScope = below.DependOnInherited<BaseScope>();
+                    belowScope = below.DependOnInheritedWidgetOfExactType<BaseScope>();
                     return new SizedBox();
                 }));
         }));
@@ -232,7 +232,7 @@ public sealed class InheritedElementScopeTests
         owner.FlushBuild();
 
         Assert.Null(reader.InheritedElements);
-        Assert.Throws<FlutterError>(() => reader.DependOnInherited<BaseScope>());
+        Assert.Throws<FlutterError>(() => reader.DependOnInheritedWidgetOfExactType<BaseScope>());
         Assert.Throws<FlutterError>(
             () => reader.GetElementForInheritedWidgetOfExactType<BaseScope>());
 
@@ -302,7 +302,7 @@ public sealed class InheritedElementScopeTests
 
         public int Value { get; }
 
-        protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+        public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         {
             return Value != ((BaseScope)oldWidget).Value;
         }
@@ -355,14 +355,16 @@ public sealed class InheritedElementScopeTests
         {
             var probe = (ScopeProbe)StateWidget;
             probe.BuildCount++;
-            probe.BaseScope = context.DependOnInherited<BaseScope>();
-            probe.DerivedScope = context.DependOnInherited<DerivedScope>();
+            probe.BaseScope = context.DependOnInheritedWidgetOfExactType<BaseScope>();
+            probe.DerivedScope = context.DependOnInheritedWidgetOfExactType<DerivedScope>();
             return new SizedBox();
         }
     }
 
     private sealed class TestRootElement : Element, IRenderObjectHost
     {
+        private Widget? _harnessChild;
+
         private Element? _child;
 
         public TestRootElement(Widget widget) : base(widget)
@@ -378,12 +380,12 @@ public sealed class InheritedElementScopeTests
         protected override void PerformRebuild()
         {
             base.PerformRebuild();
-            _child = UpdateChild(_child, Widget, Slot);
+            _child = UpdateChild(_child, _harnessChild ?? Widget, Slot);
         }
 
         public override void Update(Widget newWidget)
         {
-            base.Update(newWidget);
+            _harnessChild = newWidget;
             Owner!.BuildScope(this, () => Rebuild(force: true));
         }
 

@@ -36,7 +36,7 @@ internal sealed class DecoratorHarness : IDisposable
                     new Align(alignment: Alignment.TopLeft, child: decorator))));
         _root = new RootElement(RenderView, wrapped);
         _root.Attach(_owner);
-        _root.Mount(null, null);
+        _root.Owner!.BuildScope(_root, () => _root.Mount(null, null));
         _owner.FlushBuild();
     }
 

@@ -971,7 +971,7 @@ internal sealed class ScrollableScope : InheritedWidget
     public ScrollPosition Position { get; }
 
     /// <summary>The subtree this scope wraps.</summary>
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(Position, ((ScrollableScope)oldWidget).Position);
     }

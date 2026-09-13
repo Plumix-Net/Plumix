@@ -69,7 +69,7 @@ public sealed class DrawerController : StatefulWidget
 
     public static DrawerController? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<DrawerControllerScope>()?.Controller;
+        return context.DependOnInheritedWidgetOfExactType<DrawerControllerScope>()?.Controller;
     }
 
     public static DrawerController Of(BuildContext context)
@@ -450,7 +450,7 @@ internal sealed class DrawerControllerScope : InheritedWidget
 
     public DrawerController Controller { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !ReferenceEquals(((DrawerControllerScope)oldWidget).Controller, Controller);
     }

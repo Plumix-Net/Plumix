@@ -316,7 +316,10 @@ internal sealed class SliverPersistentHeaderElement : RenderObjectElement
 
     private void BuildChildDuringLayout(double shrinkOffset, bool overlapsContent)
     {
-        UpdateHeaderChild(HeaderWidget.Delegate, shrinkOffset, overlapsContent);
+        // Dart's `_SliverPersistentHeaderElement._build` runs inside `owner.buildScope`.
+        Owner!.BuildScopeDuringLayout(
+            this,
+            () => UpdateHeaderChild(HeaderWidget.Delegate, shrinkOffset, overlapsContent));
     }
 
     private void UpdateHeaderChild(

@@ -87,9 +87,9 @@ public sealed class DialogTheme : InheritedTheme
     public DialogThemeData Data { get; }
     public override Widget Wrap(BuildContext context, Widget child) => new DialogTheme(Data, child);
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) =>
         !Equals(((DialogTheme)oldWidget).Data, Data);
 
     public static DialogThemeData Of(BuildContext context) =>
-        context.DependOnInherited<DialogTheme>()?.Data ?? Theme.Of(context).DialogTheme;
+        context.DependOnInheritedWidgetOfExactType<DialogTheme>()?.Data ?? Theme.Of(context).DialogTheme;
 }

@@ -303,7 +303,7 @@ public sealed class DefaultTextStyle : InheritedTheme
             textHeightBehavior: TextHeightBehavior);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         var oldStyle = (DefaultTextStyle)oldWidget;
         return !Equals(oldStyle.Style, Style)
@@ -317,7 +317,7 @@ public sealed class DefaultTextStyle : InheritedTheme
 
     public static TextStyle Of(BuildContext context)
     {
-        return context.DependOnInherited<DefaultTextStyle>()?.Style ?? TextStyle.Fallback;
+        return context.DependOnInheritedWidgetOfExactType<DefaultTextStyle>()?.Style ?? TextStyle.Fallback;
     }
 
     public static Widget Merge(
@@ -334,7 +334,7 @@ public sealed class DefaultTextStyle : InheritedTheme
         ArgumentNullException.ThrowIfNull(child);
         return new Builder(context =>
         {
-            DefaultTextStyle? inherited = context.DependOnInherited<DefaultTextStyle>();
+            DefaultTextStyle? inherited = context.DependOnInheritedWidgetOfExactType<DefaultTextStyle>();
             TextStyle parentStyle = inherited?.Style ?? TextStyle.Fallback;
             return new DefaultTextStyle(
                 style: parentStyle.Merge(style),
@@ -351,6 +351,6 @@ public sealed class DefaultTextStyle : InheritedTheme
 
     internal static DefaultTextStyle? MaybeOf(BuildContext context)
     {
-        return context.DependOnInherited<DefaultTextStyle>();
+        return context.DependOnInheritedWidgetOfExactType<DefaultTextStyle>();
     }
 }

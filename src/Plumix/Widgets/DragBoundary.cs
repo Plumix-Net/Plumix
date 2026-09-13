@@ -66,7 +66,7 @@ public sealed class DragBoundary : InheritedWidget
         return new RectDragBoundaryDelegate(boundary);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget) => true;
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget) => true;
 
     private sealed class RectDragBoundaryDelegate : DragBoundaryDelegate<Rect>
     {

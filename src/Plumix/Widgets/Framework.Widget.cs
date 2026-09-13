@@ -1,28 +1,22 @@
-﻿using System.Runtime.CompilerServices;
+using System.Collections.Concurrent;
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using Plumix.Foundation;
 using Plumix.Rendering;
 
-// Dart parity source (reference): flutter/packages/flutter/lib/src/widgets/framework.dart (approximate)
+// Dart parity source: flutter/packages/flutter/lib/src/widgets/framework.dart
 
 namespace Plumix.Widgets;
 
 /// <summary>
-/// Describes the configuration for an [Element].
-///
-/// Widgets are the central class hierarchy in the Plumix.Sample framework. A widget
-/// is an immutable description of part of a user interface. Widgets can be
-/// inflated into elements, which manage the underlying render tree.
-///
+/// Describes the configuration for an <see cref="Element"/>. Dart's <c>Widget</c>.
 /// </summary>
 public abstract class Widget(Key? key = null) : DiagnosticableTree
 {
+    /// <summary>Controls how one widget replaces another widget in the tree.</summary>
     public Key? Key { get; } = key;
 
-    public static bool CanUpdate(Widget oldWidget, Widget newWidget)
-    {
-        return oldWidget.GetType() == newWidget.GetType() && Equals(oldWidget.Key, newWidget.Key);
-    }
-
+    /// <summary>Inflates this configuration to a concrete instance.</summary>
     public abstract Element CreateElement();
 
     /// A short, textual description of this widget.
@@ -37,144 +31,62 @@ public abstract class Widget(Key? key = null) : DiagnosticableTree
         base.DebugFillProperties(properties);
         properties.DefaultDiagnosticsTreeStyle = DiagnosticsTreeStyle.Dense;
     }
+
+    /// <summary>Dart's <c>Widget.operator ==</c>, which is <c>@nonVirtual</c> identity.</summary>
+    public sealed override bool Equals(object? obj) => ReferenceEquals(this, obj);
+
+    /// <summary>Dart's <c>Widget.hashCode</c>, which is <c>@nonVirtual</c>.</summary>
+    public sealed override int GetHashCode() => RuntimeHelpers.GetHashCode(this);
+
+    /// <summary>
+    /// Whether the <paramref name="newWidget"/> can be used to update an <see cref="Element"/> that
+    /// currently has the <paramref name="oldWidget"/> as its configuration.
+    /// </summary>
+    public static bool CanUpdate(Widget oldWidget, Widget newWidget)
+    {
+        return oldWidget.GetType() == newWidget.GetType() && Equals(oldWidget.Key, newWidget.Key);
+    }
+
+    /// <summary>
+    /// Dart's <c>Widget._debugConcreteSubtype</c>: the numeric encoding of the concrete widget kind,
+    /// matched against <c>Element._debugConcreteSubtype</c> in <see cref="Element.UpdateChild"/>.
+    /// </summary>
+    internal static int DebugConcreteSubtype(Widget widget)
+    {
+        return widget is StatefulWidget
+            ? 1
+            : widget is StatelessWidget
+                ? 2
+                : 0;
+    }
 }
 
+/// <summary>A widget that does not require mutable state. Dart's <c>StatelessWidget</c>.</summary>
 public abstract class StatelessWidget : Widget
 {
     protected StatelessWidget(Key? key = null) : base(key)
     {
     }
 
-    public abstract Widget Build(BuildContext context);
+    /// <summary>Creates a <see cref="StatelessElement"/> to manage this widget's location in the tree.</summary>
     public override Element CreateElement() => new StatelessElement(this);
+
+    /// <summary>Describes the part of the user interface represented by this widget.</summary>
+    public abstract Widget Build(BuildContext context);
 }
 
+/// <summary>A widget that has mutable state. Dart's <c>StatefulWidget</c>.</summary>
 public abstract class StatefulWidget : Widget
 {
     protected StatefulWidget(Key? key = null) : base(key)
     {
     }
 
-    public abstract State CreateState();
+    /// <summary>Creates a <see cref="StatefulElement"/> to manage this widget's location in the tree.</summary>
     public override Element CreateElement() => new StatefulElement(this);
-}
 
-public abstract class ProxyWidget : Widget
-{
-    protected ProxyWidget(Widget child, Key? key = null) : base(key)
-    {
-        Child = child ?? throw new ArgumentNullException(nameof(child));
-    }
-
-    /// <summary>
-    /// The widget below this widget in the tree. Dart's <c>ProxyWidget.child</c>; virtual because
-    /// Dart declares it as a getter that subclasses such as <c>TextSelectionTheme</c> override to
-    /// insert a wrapper without changing their public API.
-    /// </summary>
-    public virtual Widget Child { get; }
-}
-
-internal interface IParentDataWidget
-{
-    bool DebugIsValidRenderObject(RenderObject renderObject);
-    void ApplyParentData(RenderObject renderObject);
-    Type DebugTypicalAncestorWidgetType { get; }
-    string DebugTypicalAncestorWidgetDescription { get; }
-    Type DebugParentDataType { get; }
-
-    IEnumerable<DiagnosticsNode> DebugDescribeIncorrectParentDataType(
-        IParentData? parentData,
-        RenderObjectWidget? parentDataCreator,
-        DiagnosticsNode? ownershipChain);
-}
-
-public abstract class ParentDataWidget<T> : ProxyWidget, IParentDataWidget where T : IParentData
-{
-    protected ParentDataWidget(Widget child, Key? key = null) : base(child, key)
-    {
-    }
-
-    public abstract Type DebugTypicalAncestorWidgetType { get; }
-
-    /// <summary>
-    /// How the ancestor this widget expects is named in error messages, when naming the single
-    /// <see cref="DebugTypicalAncestorWidgetType"/> is not enough.
-    /// </summary>
-    /// <remarks>Flutter's <c>ParentDataWidget.debugTypicalAncestorWidgetDescription</c>.</remarks>
-    public virtual string DebugTypicalAncestorWidgetDescription => DebugTypicalAncestorWidgetType.Name;
-
-    /// <summary>
-    /// Whether the parent data this widget writes may be applied outside of the build phase, because
-    /// the write cannot invalidate layout.
-    /// </summary>
-    /// <remarks>Flutter's <c>ParentDataWidget.debugCanApplyOutOfTurn</c>; false by default.</remarks>
-    public virtual bool DebugCanApplyOutOfTurn() => false;
-
-    public override Element CreateElement() => new ParentDataElement<T>(this);
-
-    protected virtual bool DebugIsValidRenderObject(RenderObject renderObject)
-    {
-        return renderObject.parentData is T;
-    }
-
-    protected abstract void ApplyParentData(RenderObject renderObject);
-
-    bool IParentDataWidget.DebugIsValidRenderObject(RenderObject renderObject)
-    {
-        return DebugIsValidRenderObject(renderObject);
-    }
-
-    void IParentDataWidget.ApplyParentData(RenderObject renderObject)
-    {
-        ApplyParentData(renderObject);
-    }
-
-    Type IParentDataWidget.DebugParentDataType => typeof(T);
-
-    /// <summary>
-    /// Dart's <c>ParentDataWidget._debugDescribeIncorrectParentDataType</c>: the body of the
-    /// "Incorrect use of ParentDataWidget" report, naming the parent data this widget wanted to
-    /// write, what the render object accepts instead, and the ancestor it was expected to sit under.
-    /// </summary>
-    IEnumerable<DiagnosticsNode> IParentDataWidget.DebugDescribeIncorrectParentDataType(
-        IParentData? parentData,
-        RenderObjectWidget? parentDataCreator,
-        DiagnosticsNode? ownershipChain)
-    {
-        string parentDataType = Diagnostics.DescribeType(typeof(T));
-        string description =
-            $"The ParentDataWidget {this} wants to apply ParentData of type {parentDataType} to a RenderObject";
-        string self = Diagnostics.ObjectRuntimeType(this, "ParentDataWidget");
-
-        var information = new List<DiagnosticsNode>
-        {
-            parentData is null
-                ? new ErrorDescription($"{description}, which has not been set up to receive any ParentData.")
-                : new ErrorDescription(
-                    $"{description}, which has been set up to accept ParentData of incompatible type "
-                    + $"{Diagnostics.DescribeType(parentData.GetType())}."),
-            new ErrorHint(
-                $"Usually, this means that the {self} widget has the wrong ancestor RenderObjectWidget. "
-                + $"Typically, {self} widgets are placed directly inside "
-                + $"{DebugTypicalAncestorWidgetDescription} widgets."),
-        };
-
-        if (parentDataCreator is not null)
-        {
-            information.Add(new ErrorHint(
-                $"The offending {self} is currently placed inside a "
-                + $"{Diagnostics.ObjectRuntimeType(parentDataCreator, "RenderObjectWidget")} widget."));
-        }
-
-        if (ownershipChain is not null)
-        {
-            information.Add(new ErrorDescription(
-                "The ownership chain for the RenderObject that received the incompatible parent data was:\n  "
-                + ownershipChain));
-        }
-
-        return information;
-    }
+    /// <summary>Creates the mutable state for this widget at a given location in the tree.</summary>
+    public abstract State CreateState();
 }
 
 /// <summary>
@@ -199,19 +111,31 @@ internal enum StateLifecycle
     Defunct
 }
 
+/// <summary>
+/// The logic and internal state for a <see cref="StatefulWidget"/>. Dart's <c>State</c>; see
+/// <see cref="State{T}"/> for the typed <c>widget</c> getter.
+/// </summary>
 public abstract class State : Diagnosticable, ITickerProvider
 {
+    private static readonly ConcurrentDictionary<(Type, string), bool> DebugAsyncOverrides = new();
+
     private HashSet<Ticker>? _tickers;
     private IValueListenable<TickerModeData>? _tickerModeNotifier;
     private StatefulWidget? _widget;
     private StateLifecycle _debugLifecycleState = StateLifecycle.Created;
 
+    /// <summary>Dart's <c>State._element</c>.</summary>
     internal StatefulElement Element = null!;
+
+    /// <summary>
+    /// The location in the tree where this widget builds. Dart's <c>State.context</c>, which only
+    /// checks for an unmounted state in debug builds.
+    /// </summary>
     public BuildContext Context
     {
         get
         {
-            if (!Mounted)
+            if (Constants.KDebugMode && Element is null)
             {
                 throw new FlutterError(
                     "This widget has been unmounted, so the State no longer has a context (and should be "
@@ -231,17 +155,19 @@ public abstract class State : Diagnosticable, ITickerProvider
     /// </summary>
     public bool Mounted => Element is not null;
 
-    protected StatefulWidget StateWidget => _widget ?? (StatefulWidget)Element.Widget;
+    /// <summary>The current configuration. Dart's <c>State.widget</c>, which is <c>_widget!</c>.</summary>
+    protected StatefulWidget StateWidget => _widget!;
 
+    /// <summary>Dart's <c>State._widget</c>, read by <see cref="StatefulElement.Update"/>.</summary>
+    internal StatefulWidget? WidgetOrNull => _widget;
+
+    /// <summary>Dart's <c>State._debugTypesAreRight</c>; <see cref="State{T}"/> narrows it.</summary>
+    internal virtual bool DebugTypesAreRight(Widget widget) => true;
+
+    /// <summary>The body of Dart's <c>StatefulElement</c> constructor after <c>createState</c>.</summary>
     internal void AttachElement(StatefulElement element, StatefulWidget widget)
     {
-        if (Constants.KDebugMode && Element is not null)
-        {
-            throw new AssertionError(
-                $"The createState function for {widget} returned an old or invalid state instance, "
-                + "which is already attached to an element, violating the contract for createState.");
-        }
-
+        DebugAssertions.Assert(Element is null);
         Element = element;
         if (Constants.KDebugMode && _widget is not null)
         {
@@ -251,29 +177,84 @@ public abstract class State : Diagnosticable, ITickerProvider
         }
 
         _widget = widget;
+        DebugAssertions.Assert(_debugLifecycleState == StateLifecycle.Created);
     }
 
     internal void SetWidget(StatefulWidget widget) => _widget = widget;
 
+    /// <summary>Dart's <c>state._element = null</c> in <c>StatefulElement.unmount</c>.</summary>
     internal void DetachElement()
     {
         Element = null!;
-        _widget = null;
     }
 
     /// <summary>Dart's <c>StatefulElement._firstBuild</c> calling <c>state.initState()</c>.</summary>
     internal void RunInitState()
     {
-        if (Constants.KDebugMode && _debugLifecycleState != StateLifecycle.Created)
+        DebugAssertions.Assert(_debugLifecycleState == StateLifecycle.Created);
+        InitState();
+        if (!Constants.KDebugMode)
         {
-            throw new AssertionError($"{GetType().Name}.InitState() was called more than once.");
+            return;
         }
 
-        InitState();
-        if (Constants.KDebugMode)
+        if (DebugOverrideIsAsync(nameof(InitState), Type.EmptyTypes))
         {
-            _debugLifecycleState = StateLifecycle.Initialized;
+            string stateType = Diagnostics.DescribeType(GetType());
+            throw new FlutterError(
+            [
+                new ErrorSummary($"{stateType}.initState() returned a Future."),
+                new ErrorDescription("State.initState() must be a void method without an `async` keyword."),
+                new ErrorHint(
+                    "Rather than awaiting on asynchronous work directly inside of initState, call a separate "
+                    + "method to do this work without awaiting it."),
+            ]);
         }
+
+        _debugLifecycleState = StateLifecycle.Initialized;
+    }
+
+    /// <summary>Dart's <c>StatefulElement.update</c> calling <c>state.didUpdateWidget(oldWidget)</c>.</summary>
+    internal void RunDidUpdateWidget(StatefulWidget oldWidget)
+    {
+        DidUpdateWidget(oldWidget);
+        if (!Constants.KDebugMode || !DebugDidUpdateWidgetIsAsync())
+        {
+            return;
+        }
+
+        string stateType = Diagnostics.DescribeType(GetType());
+        throw new FlutterError(
+        [
+            new ErrorSummary($"{stateType}.didUpdateWidget() returned a Future."),
+            new ErrorDescription("State.didUpdateWidget() must be a void method without an `async` keyword."),
+            new ErrorHint(
+                "Rather than awaiting on asynchronous work directly inside of didUpdateWidget, call a separate "
+                + "method to do this work without awaiting it."),
+        ]);
+    }
+
+    private protected virtual bool DebugDidUpdateWidgetIsAsync() =>
+        DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(StatefulWidget)]);
+
+    /// <summary>
+    /// Dart checks whether <c>initState()</c>/<c>didUpdateWidget()</c> returned a <c>Future</c>, which
+    /// catches an override accidentally marked <c>async</c>. A C# <c>void</c> override cannot return
+    /// one, so the same mistake is an <c>async void</c> override; this reads the compiler's
+    /// state-machine marker off the most-derived override.
+    /// </summary>
+    private protected bool DebugOverrideIsAsync(string name, Type[] parameterTypes)
+    {
+        return DebugAsyncOverrides.GetOrAdd(
+            (GetType(), name + ":" + string.Join(",", parameterTypes.Select(type => type.FullName))),
+            key =>
+            {
+                MethodInfo? method = key.Item1.GetMethod(
+                    name,
+                    BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic,
+                    parameterTypes);
+                return method?.IsDefined(typeof(AsyncStateMachineAttribute), inherit: false) == true;
+            });
     }
 
     internal void MarkReady()
@@ -290,10 +271,10 @@ public abstract class State : Diagnosticable, ITickerProvider
         {
             throw new FlutterError(
             [
-                new ErrorSummary($"{GetType().Name}.Dispose failed to call base.Dispose."),
+                new ErrorSummary($"{Diagnostics.DescribeType(GetType())}.dispose failed to call super.dispose."),
                 new ErrorDescription(
-                    "Dispose() implementations must always call their base class Dispose() method, to "
-                    + "ensure that all the resources used by the widget are fully released."),
+                    "dispose() implementations must always call their superclass dispose() method, to ensure "
+                    + "that all the resources used by the widget are fully released."),
             ]);
         }
     }
@@ -315,17 +296,17 @@ public abstract class State : Diagnosticable, ITickerProvider
             throw new FlutterError(
             [
                 new ErrorSummary(
-                    $"DependOnInherited<{targetType}>() or DependOnInheritedElement() was called before "
-                    + $"{GetType().Name}.InitState() completed."),
+                    $"dependOnInheritedWidgetOfExactType<{targetType}>() or dependOnInheritedElement() was "
+                    + $"called before {Diagnostics.DescribeType(GetType())}.initState() completed."),
                 new ErrorDescription(
-                    "When an inherited widget changes, for example if the value of Theme.Of() changes, its "
+                    "When an inherited widget changes, for example if the value of Theme.of() changes, its "
                     + "dependent widgets are rebuilt. If the dependent widget's reference to the inherited "
-                    + "widget is in a constructor or an InitState() method, then the rebuilt dependent "
-                    + "widget will not reflect the changes in the inherited widget."),
+                    + "widget is in a constructor or an initState() method, then the rebuilt dependent widget "
+                    + "will not reflect the changes in the inherited widget."),
                 new ErrorHint(
-                    "Typically references to inherited widgets should occur in widget Build() methods. "
+                    "Typically references to inherited widgets should occur in widget build() methods. "
                     + "Alternatively, initialization based on inherited widgets can be placed in the "
-                    + "DidChangeDependencies method, which is called after InitState and whenever the "
+                    + "didChangeDependencies method, which is called after initState and whenever the "
                     + "dependencies change thereafter."),
             ]);
         }
@@ -335,61 +316,187 @@ public abstract class State : Diagnosticable, ITickerProvider
             throw new FlutterError(
             [
                 new ErrorSummary(
-                    $"DependOnInherited<{targetType}>() or DependOnInheritedElement() was called after "
-                    + $"Dispose(): {dependent}"),
+                    $"dependOnInheritedWidgetOfExactType<{targetType}>() or dependOnInheritedElement() was "
+                    + $"called after dispose(): {dependent}"),
                 new ErrorDescription(
-                    "This error happens if you call DependOnInherited() on the BuildContext for a widget "
-                    + "that no longer appears in the widget tree (e.g., whose parent widget no longer "
-                    + "includes the widget in its build). This error can occur when code calls "
-                    + "DependOnInherited() from a timer or an animation callback."),
+                    "This error happens if you call dependOnInheritedWidgetOfExactType() on the BuildContext "
+                    + "for a widget that no longer appears in the widget tree (e.g., whose parent widget no "
+                    + "longer includes the widget in its build). This error can occur when code calls "
+                    + "dependOnInheritedWidgetOfExactType() from a timer or an animation callback."),
                 new ErrorHint(
-                    "The preferred solution is to cancel the timer or stop listening to the animation in "
-                    + "the Dispose() callback. Another solution is to check the \"Mounted\" property of "
-                    + "this object before calling DependOnInherited() to ensure the object is still in the "
-                    + "tree."),
+                    "The preferred solution is to cancel the timer or stop listening to the animation in the "
+                    + "dispose() callback. Another solution is to check the \"mounted\" property of this object "
+                    + "before calling dependOnInheritedWidgetOfExactType() to ensure the object is still in "
+                    + "the tree."),
                 new ErrorHint(
-                    "This error might indicate a memory leak if DependOnInherited() is being called "
-                    + "because another object is retaining a reference to this State object after it has "
-                    + "been removed from the tree. To avoid memory leaks, consider breaking the reference "
-                    + "to this object during Dispose()."),
+                    "This error might indicate a memory leak if dependOnInheritedWidgetOfExactType() is being "
+                    + "called because another object is retaining a reference to this State object after it "
+                    + "has been removed from the tree. To avoid memory leaks, consider breaking the reference "
+                    + "to this object during dispose()."),
             ]);
         }
     }
 
+    /// <summary>Called when this object is inserted into the tree. Dart's <c>State.initState</c>.</summary>
     public virtual void InitState()
     {
+        DebugAssertions.Assert(_debugLifecycleState == StateLifecycle.Created);
+        if (Constants.KDebugMode)
+        {
+            FoundationDebug.DebugMaybeDispatchCreated("widgets", "State", this);
+        }
     }
 
+    /// <summary>Called whenever the widget configuration changes. Dart's <c>State.didUpdateWidget</c>.</summary>
     public virtual void DidUpdateWidget(StatefulWidget oldWidget)
     {
     }
 
-    public virtual void DidChangeDependencies()
+    /// <summary>
+    /// Called whenever the application is reassembled during debugging, for example during hot
+    /// reload. Dart's <c>State.reassemble</c>.
+    /// </summary>
+    public virtual void Reassemble()
     {
     }
 
-    public virtual void Activate()
+    /// <summary>
+    /// Notify the framework that the internal state of this object has changed. Dart's
+    /// <c>State.setState</c>: the two debug guards run before the callback (defunct state, state
+    /// still in its constructor) and the third after it (an accidentally asynchronous callback).
+    /// </summary>
+    public void SetState(Action fn)
     {
+        ArgumentNullException.ThrowIfNull(fn);
+        DebugCheckCanSetState();
+        fn();
+        DebugCheckSetStateCallbackWasSynchronous(fn);
+        Element.MarkNeedsBuild();
     }
 
+    /// <summary>
+    /// Dart inspects the callback's return value and rejects a <c>Future</c>, which catches a closure
+    /// accidentally marked <c>async</c>. A C# <see cref="Action"/> cannot return a value, so the same
+    /// mistake shows up as an <c>async void</c> lambda; this reads the compiler's state-machine marker
+    /// to find it.
+    /// </summary>
+    private void DebugCheckSetStateCallbackWasSynchronous(Action fn)
+    {
+        if (!Constants.KDebugMode
+            || !fn.Method.IsDefined(typeof(AsyncStateMachineAttribute), inherit: false))
+        {
+            return;
+        }
+
+        throw new FlutterError(
+        [
+            new ErrorSummary("setState() callback argument returned a Future."),
+            new ErrorDescription(
+                $"The setState() method on {this} was called with a closure or method that returned a "
+                + "Future. Maybe it is marked as \"async\"."),
+            new ErrorHint(
+                "Instead of performing asynchronous work inside a call to setState(), first execute the "
+                + "work (without updating the widget state), and then synchronously update the state "
+                + "inside a call to setState()."),
+        ]);
+    }
+
+    private void DebugCheckCanSetState()
+    {
+        if (!Constants.KDebugMode)
+        {
+            return;
+        }
+
+        if (_debugLifecycleState == StateLifecycle.Defunct)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary($"setState() called after dispose(): {this}"),
+                new ErrorDescription(
+                    "This error happens if you call setState() on a State object for a widget that no "
+                    + "longer appears in the widget tree (e.g., whose parent widget no longer includes the "
+                    + "widget in its build). This error can occur when code calls setState() from a timer, "
+                    + "from an animation callback, or after an asynchronous operation (such as an awaited "
+                    + "network request or other Future) completes after the widget has been removed from "
+                    + "the tree."),
+                new ErrorHint(
+                    "The preferred solution is to cancel the timer or stop listening to the animation in "
+                    + "the dispose() callback. Another solution is to check the \"mounted\" property of "
+                    + "this object before calling setState() to ensure the object is still in the tree."),
+                new ErrorHint(
+                    "This error might indicate a memory leak if setState() is being called because another "
+                    + "object is retaining a reference to this State object after it has been removed from "
+                    + "the tree. To avoid memory leaks, consider breaking the reference to this object "
+                    + "during dispose()."),
+            ]);
+        }
+
+        if (_debugLifecycleState == StateLifecycle.Created && !Mounted)
+        {
+            throw new FlutterError(
+            [
+                new ErrorSummary($"setState() called in constructor: {this}"),
+                new ErrorHint(
+                    "This happens when you call setState() on a State object for a widget that hasn't been "
+                    + "inserted into the widget tree yet. It is not necessary to call setState() in the "
+                    + "constructor, since the state is already assumed to be dirty when it is initially "
+                    + "created."),
+            ]);
+        }
+    }
+
+    /// <summary>Called when this object is removed from the tree. Dart's <c>State.deactivate</c>.</summary>
     public virtual void Deactivate()
     {
     }
 
+    /// <summary>
+    /// Called when this object is reinserted into the tree after having been removed via
+    /// <see cref="Deactivate"/>. Dart's <c>State.activate</c>.
+    /// </summary>
+    public virtual void Activate()
+    {
+    }
+
+    /// <summary>Called when this object is removed from the tree permanently. Dart's <c>State.dispose</c>.</summary>
     public virtual void Dispose()
     {
+        DebugAssertions.Assert(_debugLifecycleState == StateLifecycle.Ready);
         if (Constants.KDebugMode)
         {
-            if (_debugLifecycleState != StateLifecycle.Ready)
-            {
-                throw new AssertionError(
-                    $"{GetType().Name}.Dispose() was called while the state was in the "
-                    + $"{_debugLifecycleState} phase.");
-            }
-
             _debugLifecycleState = StateLifecycle.Defunct;
+            FoundationDebug.DebugMaybeDispatchDisposed(this);
         }
     }
+
+    /// <summary>Describes the part of the user interface represented by this widget.</summary>
+    public abstract Widget Build(BuildContext context);
+
+    /// <summary>
+    /// Called when a dependency of this <see cref="State"/> object changes. Dart's
+    /// <c>State.didChangeDependencies</c>.
+    /// </summary>
+    public virtual void DidChangeDependencies()
+    {
+    }
+
+    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
+    {
+        base.DebugFillProperties(properties);
+        if (Constants.KDebugMode)
+        {
+            properties.Add(new EnumProperty<StateLifecycle>(
+                "lifecycle state",
+                _debugLifecycleState,
+                defaultValue: StateLifecycle.Ready));
+        }
+
+        properties.Add(new ObjectFlagProperty<StatefulWidget>("_widget", _widget, ifNull: "no widget"));
+        properties.Add(new ObjectFlagProperty<StatefulElement>("_element", Element, ifNull: "not mounted"));
+    }
+
+    // ITickerProvider: Dart's TickerProviderStateMixin, folded into every State (see DIVERGENCES.md).
 
     public Ticker CreateTicker(TickerCallback onTick)
     {
@@ -467,143 +574,179 @@ public abstract class State : Diagnosticable, ITickerProvider
     {
         _tickers?.Remove(ticker);
     }
-
-    /// Called whenever the application is reassembled during debugging, for
-    /// example during hot reload.
-    ///
-    /// This method should rerun any initialization logic that depends on
-    /// global state, for example, image loading from asset bundles (since the
-    /// asset bundle may have changed).
-    ///
-    /// In addition to this method being invoked, it is guaranteed that the
-    /// [Build] method will be invoked when a reassemble is signaled. Most
-    /// widgets therefore do not need to do anything in the [Reassemble] method.
-    ///
-    /// See also:
-    ///
-    ///  * [Element.Reassemble]
-    public virtual void Reassemble()
-    {
-    }
-
-    public abstract Widget Build(BuildContext context);
-
-    /// <summary>
-    /// Dart's <c>State.setState</c>. The two debug guards run before the callback (defunct state,
-    /// state still in its constructor) and the third after it (an accidentally asynchronous callback).
-    /// </summary>
-    protected void SetState(Action updater)
-    {
-        ArgumentNullException.ThrowIfNull(updater);
-        DebugCheckCanSetState();
-        updater();
-        DebugCheckSetStateCallbackWasSynchronous(updater);
-        Element.MarkNeedsBuild();
-    }
-
-    /// <summary>
-    /// Dart inspects the callback's return value and rejects a <c>Future</c>, which catches a closure
-    /// accidentally marked <c>async</c>. A C# <see cref="Action"/> cannot return a value, so the same
-    /// mistake shows up as an <c>async void</c> lambda; this reads the compiler's state-machine marker
-    /// to find it.
-    /// </summary>
-    private void DebugCheckSetStateCallbackWasSynchronous(Action updater)
-    {
-        if (!Constants.KDebugMode
-            || !updater.Method.IsDefined(typeof(AsyncStateMachineAttribute), inherit: false))
-        {
-            return;
-        }
-
-        throw new FlutterError(
-        [
-            new ErrorSummary("setState() callback argument returned a Future."),
-            new ErrorDescription(
-                $"The setState() method on {this} was called with a closure or method that returned a "
-                + "Future. Maybe it is marked as \"async\"."),
-            new ErrorHint(
-                "Instead of performing asynchronous work inside a call to setState(), first execute the "
-                + "work (without updating the widget state), and then synchronously update the state "
-                + "inside a call to setState()."),
-        ]);
-    }
-
-    private void DebugCheckCanSetState()
-    {
-        if (!Constants.KDebugMode)
-        {
-            return;
-        }
-
-        if (_debugLifecycleState == StateLifecycle.Defunct)
-        {
-            throw new FlutterError(
-            [
-                new ErrorSummary($"setState() called after dispose(): {this}"),
-                new ErrorDescription(
-                    "This error happens if you call setState() on a State object for a widget that no "
-                    + "longer appears in the widget tree (e.g., whose parent widget no longer includes the "
-                    + "widget in its build). This error can occur when code calls setState() from a timer, "
-                    + "from an animation callback, or after an asynchronous operation (such as an awaited "
-                    + "network request or other Future) completes after the widget has been removed from "
-                    + "the tree."),
-                new ErrorHint(
-                    "The preferred solution is to cancel the timer or stop listening to the animation in "
-                    + "the dispose() callback. Another solution is to check the \"mounted\" property of "
-                    + "this object before calling setState() to ensure the object is still in the tree."),
-                new ErrorHint(
-                    "This error might indicate a memory leak if setState() is being called because another "
-                    + "object is retaining a reference to this State object after it has been removed from "
-                    + "the tree. To avoid memory leaks, consider breaking the reference to this object "
-                    + "during dispose()."),
-            ]);
-        }
-
-        if (_debugLifecycleState == StateLifecycle.Created && !Mounted)
-        {
-            throw new FlutterError(
-            [
-                new ErrorSummary($"setState() called in constructor: {this}"),
-                new ErrorHint(
-                    "This happens when you call setState() on a State object for a widget that hasn't been "
-                    + "inserted into the widget tree yet. It is not necessary to call setState() in the "
-                    + "constructor, since the state is already assumed to be dirty when it is initially "
-                    + "created."),
-            ]);
-        }
-    }
-
-    public override void DebugFillProperties(DiagnosticPropertiesBuilder properties)
-    {
-        base.DebugFillProperties(properties);
-        if (Constants.KDebugMode)
-        {
-            properties.Add(new EnumProperty<StateLifecycle>(
-                "lifecycle state",
-                _debugLifecycleState,
-                defaultValue: StateLifecycle.Ready));
-        }
-
-        properties.Add(new ObjectFlagProperty<StatefulWidget>("_widget", _widget, ifNull: "no widget"));
-        properties.Add(new ObjectFlagProperty<StatefulElement>("_element", Element, ifNull: "not mounted"));
-    }
-
-    // helper for external callers
-    public void InvokeSetState(Action updater) => SetState(updater);
 }
 
-// Inherited widgets
+/// <summary>
+/// A <see cref="State"/> whose configuration is typed. Dart's <c>State&lt;T extends StatefulWidget&gt;</c>:
+/// <see cref="Widget"/> is the current <typeparamref name="T"/>, and <see cref="StatefulElement"/>
+/// rejects a state created for a different widget type.
+/// </summary>
+public abstract class State<T> : State where T : StatefulWidget
+{
+    /// <summary>The current configuration. Dart's <c>State.widget</c>.</summary>
+    public T Widget => (T)StateWidget;
+
+    internal override bool DebugTypesAreRight(Widget widget) => widget is T;
+
+    /// <summary>Forwards to the typed <see cref="DidUpdateWidget(T)"/>.</summary>
+    public sealed override void DidUpdateWidget(StatefulWidget oldWidget) => DidUpdateWidget((T)oldWidget);
+
+    /// <summary>Called whenever the widget configuration changes. Dart's <c>State.didUpdateWidget</c>.</summary>
+    public virtual void DidUpdateWidget(T oldWidget)
+    {
+    }
+
+    private protected override bool DebugDidUpdateWidgetIsAsync() =>
+        DebugOverrideIsAsync(nameof(DidUpdateWidget), [typeof(T)]);
+}
+
+/// <summary>
+/// A widget that has a child widget provided to it, instead of building a new widget. Dart's
+/// <c>ProxyWidget</c>.
+/// </summary>
+public abstract class ProxyWidget : Widget
+{
+    protected ProxyWidget(Widget child, Key? key = null) : base(key)
+    {
+        Child = child ?? throw new ArgumentNullException(nameof(child));
+    }
+
+    /// <summary>
+    /// The widget below this widget in the tree. Dart's <c>ProxyWidget.child</c>; virtual because
+    /// Dart declares it as a getter that subclasses such as <c>TextSelectionTheme</c> override to
+    /// insert a wrapper without changing their public API.
+    /// </summary>
+    public virtual Widget Child { get; }
+}
+
+internal interface IParentDataWidget
+{
+    bool DebugIsValidRenderObject(RenderObject renderObject);
+    void ApplyParentData(RenderObject renderObject);
+    Type DebugTypicalAncestorWidgetClass { get; }
+    string DebugTypicalAncestorWidgetDescription { get; }
+
+    IEnumerable<DiagnosticsNode> DebugDescribeIncorrectParentDataType(
+        IParentData? parentData,
+        RenderObjectWidget? parentDataCreator,
+        DiagnosticsNode? ownershipChain);
+}
+
+/// <summary>
+/// Base class for widgets that hook <see cref="ParentData"/> information to children of
+/// <see cref="RenderObjectWidget"/>s. Dart's <c>ParentDataWidget&lt;T extends ParentData&gt;</c>.
+/// </summary>
+public abstract class ParentDataWidget<T> : ProxyWidget, IParentDataWidget where T : IParentData
+{
+    protected ParentDataWidget(Widget child, Key? key = null) : base(child, key)
+    {
+    }
+
+    public override Element CreateElement() => new ParentDataElement<T>(this);
+
+    /// <summary>
+    /// Checks if this widget can apply its parent data to the provided <paramref name="renderObject"/>.
+    /// </summary>
+    public virtual bool DebugIsValidRenderObject(RenderObject renderObject)
+    {
+        DebugAssertParentDataTypeIsSpecific();
+        return renderObject.parentData is T;
+    }
+
+    /// <summary>Dart's <c>assert(T != dynamic); assert(T != ParentData);</c>.</summary>
+    private static void DebugAssertParentDataTypeIsSpecific()
+    {
+        DebugAssertions.Assert(typeof(T) != typeof(IParentData));
+        DebugAssertions.Assert(typeof(T) != typeof(ParentData));
+    }
+
+    /// <summary>
+    /// Describes the <see cref="RenderObjectWidget"/> that is typically used to set up the
+    /// <see cref="ParentData"/> that <see cref="ApplyParentData"/> will write to.
+    /// </summary>
+    public abstract Type DebugTypicalAncestorWidgetClass { get; }
+
+    /// <summary>
+    /// Describes the <see cref="RenderObjectWidget"/> that is typically used to set up the parent
+    /// data. Dart's <c>ParentDataWidget.debugTypicalAncestorWidgetDescription</c>.
+    /// </summary>
+    public virtual string DebugTypicalAncestorWidgetDescription =>
+        Diagnostics.DescribeType(DebugTypicalAncestorWidgetClass);
+
+    /// <summary>
+    /// Dart's <c>ParentDataWidget._debugDescribeIncorrectParentDataType</c>: the body of the
+    /// "Incorrect use of ParentDataWidget" report, naming the parent data this widget wanted to
+    /// write, what the render object accepts instead, and the ancestor it was expected to sit under.
+    /// </summary>
+    IEnumerable<DiagnosticsNode> IParentDataWidget.DebugDescribeIncorrectParentDataType(
+        IParentData? parentData,
+        RenderObjectWidget? parentDataCreator,
+        DiagnosticsNode? ownershipChain)
+    {
+        DebugAssertParentDataTypeIsSpecific();
+        string parentDataType = Diagnostics.DescribeType(typeof(T));
+        string description =
+            $"The ParentDataWidget {this} wants to apply ParentData of type {parentDataType} to a RenderObject";
+        string self = Diagnostics.ObjectRuntimeType(this, "ParentDataWidget");
+
+        var information = new List<DiagnosticsNode>
+        {
+            parentData is null
+                ? new ErrorDescription($"{description}, which has not been set up to receive any ParentData.")
+                : new ErrorDescription(
+                    $"{description}, which has been set up to accept ParentData of incompatible type "
+                    + $"{Diagnostics.DescribeType(parentData.GetType())}."),
+            new ErrorHint(
+                $"Usually, this means that the {self} widget has the wrong ancestor RenderObjectWidget. "
+                + $"Typically, {self} widgets are placed directly inside "
+                + $"{DebugTypicalAncestorWidgetDescription} widgets."),
+        };
+
+        if (parentDataCreator is not null)
+        {
+            information.Add(new ErrorHint(
+                $"The offending {self} is currently placed inside a "
+                + $"{Diagnostics.ObjectRuntimeType(parentDataCreator, "RenderObjectWidget")} widget."));
+        }
+
+        if (ownershipChain is not null)
+        {
+            information.Add(new ErrorDescription(
+                "The ownership chain for the RenderObject that received the incompatible parent data was:\n  "
+                + ownershipChain));
+        }
+
+        return information;
+    }
+
+    /// <summary>Write the data from this widget into the given render object's parent data.</summary>
+    public abstract void ApplyParentData(RenderObject renderObject);
+
+    /// <summary>
+    /// Whether the parent data this widget writes may be applied outside of the build phase, because
+    /// the write cannot invalidate layout.
+    /// </summary>
+    /// <remarks>Flutter's <c>ParentDataWidget.debugCanApplyOutOfTurn</c>; false by default.</remarks>
+    public virtual bool DebugCanApplyOutOfTurn() => false;
+}
+
+/// <summary>
+/// Base class for widgets that efficiently propagate information down the tree. Dart's
+/// <c>InheritedWidget</c>.
+/// </summary>
 public abstract class InheritedWidget : ProxyWidget
 {
     protected InheritedWidget(Widget child, Key? key = null) : base(child, key)
     {
     }
 
-    protected abstract bool UpdateShouldNotify(InheritedWidget oldWidget);
-
-    internal bool InvokeUpdateShouldNotify(InheritedWidget oldWidget) => UpdateShouldNotify(oldWidget);
-
     public override Element CreateElement() => new InheritedElement(this);
+
+    /// <summary>
+    /// Whether the framework should notify widgets that inherit from this widget. Dart's
+    /// <c>InheritedWidget.updateShouldNotify</c>.
+    /// </summary>
+    public abstract bool UpdateShouldNotify(InheritedWidget oldWidget);
 }
 
 public abstract class InheritedModel<TAspect> : InheritedWidget
@@ -616,7 +759,9 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
         InheritedModel<TAspect> oldWidget,
         IReadOnlySet<TAspect> dependencies);
 
-    internal bool InvokeUpdateShouldNotifyDependent(InheritedModel<TAspect> oldWidget, IReadOnlySet<TAspect> dependencies)
+    internal bool InvokeUpdateShouldNotifyDependent(
+        InheritedModel<TAspect> oldWidget,
+        IReadOnlySet<TAspect> dependencies)
         => UpdateShouldNotifyDependent(oldWidget, dependencies);
 
     protected virtual bool IsSupportedAspect(object aspect) => true;
@@ -628,7 +773,7 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
     {
         if (aspect == null)
         {
-            return context.DependOnInherited<TModel>();
+            return context.DependOnInheritedWidgetOfExactType<TModel>();
         }
 
         var models = new List<InheritedElement>();
@@ -682,7 +827,6 @@ public abstract class InheritedModel<TAspect> : InheritedWidget
 
         FindModels<TModel>(modelParent, aspect, results);
     }
-
 }
 
 public abstract class InheritedNotifier<TNotifier> : InheritedWidget where TNotifier : class, IListenable
@@ -694,7 +838,7 @@ public abstract class InheritedNotifier<TNotifier> : InheritedWidget where TNoti
 
     public TNotifier? Notifier { get; }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
         => !ReferenceEquals(((InheritedNotifier<TNotifier>)oldWidget).Notifier, Notifier);
 
     public override Element CreateElement() => new InheritedNotifierElement<TNotifier>(this);

@@ -87,14 +87,14 @@ public sealed class ProgressIndicatorTheme : InheritedTheme
         return new ProgressIndicatorTheme(data: Data, child: child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((ProgressIndicatorTheme)oldWidget).Data, Data);
     }
 
     public static ProgressIndicatorThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<ProgressIndicatorTheme>()?.Data
+        return context.DependOnInheritedWidgetOfExactType<ProgressIndicatorTheme>()?.Data
                ?? Theme.Of(context).ProgressIndicatorTheme;
     }
 }

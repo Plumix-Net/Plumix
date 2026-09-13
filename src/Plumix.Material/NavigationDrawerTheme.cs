@@ -107,14 +107,14 @@ public sealed class NavigationDrawerTheme : InheritedTheme
         return new NavigationDrawerTheme(Data, child);
     }
 
-    protected override bool UpdateShouldNotify(InheritedWidget oldWidget)
+    public override bool UpdateShouldNotify(InheritedWidget oldWidget)
     {
         return !Equals(((NavigationDrawerTheme)oldWidget).Data, Data);
     }
 
     public static NavigationDrawerThemeData Of(BuildContext context)
     {
-        return context.DependOnInherited<NavigationDrawerTheme>()?.Data
+        return context.DependOnInheritedWidgetOfExactType<NavigationDrawerTheme>()?.Data
                ?? Theme.Of(context).NavigationDrawerTheme;
     }
 }

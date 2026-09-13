@@ -1273,9 +1273,9 @@ public sealed class Positioned : ParentDataWidget<StackParentData>
     /// <summary>The child's height.</summary>
     public double? Height { get; }
 
-    public override Type DebugTypicalAncestorWidgetType => typeof(Stack);
+    public override Type DebugTypicalAncestorWidgetClass => typeof(Stack);
 
-    protected override void ApplyParentData(RenderObject renderObject)
+    public override void ApplyParentData(RenderObject renderObject)
     {
         ArgumentNullException.ThrowIfNull(renderObject);
         var parentData = (StackParentData)renderObject.parentData!;
@@ -1517,12 +1517,18 @@ public class Flex : MultiChildRenderObjectWidget
             MainAxisSize,
             defaultValue: MainAxisSize.Max));
         properties.Add(new EnumProperty<CrossAxisAlignment>("crossAxisAlignment", CrossAxisAlignment));
-        properties.Add(new EnumProperty<TextDirection>("textDirection", TextDirection, defaultValue: null));
+        properties.Add(new EnumProperty<TextDirection>(
+            "textDirection",
+            TextDirection,
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new EnumProperty<VerticalDirection>(
             "verticalDirection",
             VerticalDirection,
             defaultValue: VerticalDirection.Down));
-        properties.Add(new EnumProperty<TextBaseline>("textBaseline", TextBaseline, defaultValue: null));
+        properties.Add(new EnumProperty<TextBaseline>(
+            "textBaseline",
+            TextBaseline,
+            defaultValue: DiagnosticsDefaults.NullValue));
         properties.Add(new EnumProperty<Clip>("clipBehavior", ClipBehavior, defaultValue: Clip.None));
         properties.Add(new DoubleProperty("spacing", Spacing, defaultValue: 0.0));
     }
@@ -1601,9 +1607,9 @@ public class Flexible : ParentDataWidget<FlexParentData>
     /// <summary>How a flexible child is inscribed into the available space.</summary>
     public FlexFit Fit { get; }
 
-    public override Type DebugTypicalAncestorWidgetType => typeof(Flex);
+    public override Type DebugTypicalAncestorWidgetClass => typeof(Flex);
 
-    protected override void ApplyParentData(RenderObject renderObject)
+    public override void ApplyParentData(RenderObject renderObject)
     {
         ArgumentNullException.ThrowIfNull(renderObject);
         var parentData = (FlexParentData)renderObject.parentData!;
