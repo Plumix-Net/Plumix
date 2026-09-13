@@ -134,6 +134,11 @@ public class RenderSliverOverlapAbsorber : RenderSliver, IRenderObjectSingleChil
         }
     }
 
+    public override void ApplyPaintTransform(RenderObject child, Plumix.UI.Matrix4 transform)
+    {
+        // The overlap absorber always paints its child at its origin.
+    }
+
     protected override void OnAttach()
     {
         base.OnAttach();

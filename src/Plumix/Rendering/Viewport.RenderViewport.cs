@@ -27,10 +27,11 @@ public enum SliverPaintOrder
 /// and its <see cref="RenderSliver"/> is a <see cref="RenderBox"/>, so hit testing goes through the
 /// box protocol rather than <c>SliverHitTestResult</c>.
 /// </remarks>
-public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObjectContainer, IRenderAbstractViewport
-    where TParentData : ContainerBoxParentData<RenderSliver>, new()
+public abstract class RenderViewportBase<TParentData> : RenderBox,
+    IContainerRenderObjectMixin<RenderSliver, TParentData>, IRenderObjectContainer, IRenderAbstractViewport
+    where TParentData : IContainerParentDataMixin<RenderSliver>, new()
 {
-    private readonly RenderBoxContainerDefaultsMixin<RenderSliver, TParentData> _container;
+    private readonly ContainerRenderObjectMixin<RenderSliver, TParentData> _container;
     private AxisDirection _axisDirection;
     private AxisDirection _crossAxisDirection;
     private ViewportOffset _offset;
@@ -61,7 +62,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
                 nameof(crossAxisDirection));
         }
 
-        _container = new RenderBoxContainerDefaultsMixin<RenderSliver, TParentData>(this);
+        _container = new ContainerRenderObjectMixin<RenderSliver, TParentData>(this);
         _axisDirection = axisDirection;
         _crossAxisDirection = resolvedCrossAxisDirection;
         _offset = offset;
@@ -247,6 +248,21 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
     public RenderSliver? ChildAfter(RenderSliver child) => _container.ChildAfter(child);
 
     public RenderSliver? ChildBefore(RenderSliver child) => _container.ChildBefore(child);
+
+    public void Add(RenderSliver child) => Insert(child, after: LastChild);
+
+    public void AddAll(List<RenderSliver>? children)
+    {
+        if (children is not null)
+        {
+            foreach (RenderSliver child in children)
+            {
+                Add(child);
+            }
+        }
+    }
+
+    public virtual void RemoveAll() => _container.RemoveAll();
 
     public virtual void Insert(RenderSliver child, RenderSliver? after = null)
     {
@@ -773,7 +789,8 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
 
     protected override Rect? DescribeApproximatePaintClip(RenderObject? child)
     {
-        if (child is RenderSliver sliver && sliver.EnsureSemantics && !IsSemanticallyRelevant(sliver))
+        if (child is RenderSliver sliver && sliver.EnsureSemantics
+            && !(sliver.Geometry.Visible || sliver.Geometry.CacheExtent > 0.0))
         {
             return null;
         }
@@ -830,7 +847,8 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
     /// </summary>
     protected override Rect? DescribeSemanticsClip(RenderObject? child)
     {
-        if (child is RenderSliver sliver && sliver.EnsureSemantics && !IsSemanticallyRelevant(sliver))
+        if (child is RenderSliver sliver && sliver.EnsureSemantics
+            && !(sliver.Geometry.Visible || sliver.Geometry.CacheExtent > 0.0))
         {
             return null;
         }
@@ -911,7 +929,7 @@ public abstract class RenderViewportBase<TParentData> : RenderBox, IRenderObject
 /// A render object that is bigger on the inside, laying its slivers out in both growth directions
 /// from a <see cref="Center"/> child.
 /// </summary>
-public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
+public class RenderViewport : RenderViewportBase<SliverPhysicalContainerParentData>
 {
     /// <summary>The maximum number of layout passes each child may force through a correction.</summary>
     private const int MaxLayoutCyclesPerChild = 10;
@@ -1018,6 +1036,12 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
         }
 
         base.Remove(child);
+    }
+
+    public override void RemoveAll()
+    {
+        _center = null;
+        base.RemoveAll();
     }
 
     /// <inheritdoc />
@@ -1231,12 +1255,17 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
         GrowthDirection growthDirection)
     {
         var childParentData = (SliverPhysicalParentData)child.parentData!;
-        childParentData.offset = ComputeAbsolutePaintOffset(child, layoutOffset, growthDirection);
+        childParentData.PaintOffset = ComputeAbsolutePaintOffset(child, layoutOffset, growthDirection);
     }
 
     public override Point PaintOffsetOf(RenderSliver child)
     {
-        return ((SliverPhysicalParentData)child.parentData!).offset;
+        return ((SliverPhysicalParentData)child.parentData!).PaintOffset;
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
     public override double ScrollOffsetOf(RenderSliver child, double scrollOffsetWithinChild)
@@ -1304,7 +1333,7 @@ public class RenderViewport : RenderViewportBase<SliverPhysicalParentData>
 
     public override double ComputeChildMainAxisPosition(RenderSliver child, double parentMainAxisPosition)
     {
-        Point paintOffset = ((SliverPhysicalParentData)child.parentData!).offset;
+        Point paintOffset = ((SliverPhysicalParentData)child.parentData!).PaintOffset;
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
             child.ConstraintsForSliver.AxisDirection,
             child.ConstraintsForSliver.GrowthDirection) switch
@@ -1513,17 +1542,23 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalCont
         double layoutOffset,
         GrowthDirection growthDirection)
     {
-        var childParentData = (SliverLogicalContainerParentData)child.parentData!;
+        var childParentData = (SliverLogicalParentData)child.parentData!;
         childParentData.LayoutOffset = layoutOffset;
     }
 
     public override Point PaintOffsetOf(RenderSliver child)
     {
-        var childParentData = (SliverLogicalContainerParentData)child.parentData!;
+        var childParentData = (SliverLogicalParentData)child.parentData!;
         return ComputeAbsolutePaintOffset(
             child,
             childParentData.LayoutOffset ?? 0.0,
             GrowthDirection.Forward);
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        Point paintOffset = PaintOffsetOf((RenderSliver)child);
+        transform.TranslateByDouble(paintOffset.X, paintOffset.Y, 0, 1);
     }
 
     public override double ScrollOffsetOf(RenderSliver child, double scrollOffsetWithinChild)
@@ -1554,7 +1589,7 @@ public class RenderShrinkWrappingViewport : RenderViewportBase<SliverLogicalCont
 
     public override double ComputeChildMainAxisPosition(RenderSliver child, double parentMainAxisPosition)
     {
-        double layoutOffset = ((SliverLogicalContainerParentData)child.parentData!).LayoutOffset ?? 0.0;
+        double layoutOffset = ((SliverLogicalParentData)child.parentData!).LayoutOffset ?? 0.0;
         return ScrollDirectionUtils.ApplyGrowthDirectionToAxisDirection(
             child.ConstraintsForSliver.AxisDirection,
             child.ConstraintsForSliver.GrowthDirection) switch

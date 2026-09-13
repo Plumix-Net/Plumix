@@ -724,54 +724,6 @@ public interface IRenderSliverBoxChildManager
     bool DebugAssertChildListLocked() => true;
 }
 
-public sealed class SliverPhysicalParentData : ContainerBoxParentData<RenderSliver>
-{
-    public int? CrossAxisFlex { get; set; }
-
-    /// <inheritdoc />
-    public override string ToString() => $"paintOffset={offset}";
-}
-
-/// <summary>
-/// Parent data for a child positioned by a scroll offset rather than by a paint offset.
-/// </summary>
-/// <remarks>Flutter's <c>SliverLogicalParentData</c>.</remarks>
-public class SliverLogicalParentData : ParentData
-{
-    /// <summary>
-    /// The position of the child relative to the zero scroll offset, along the main axis, or null
-    /// before the child has been laid out.
-    /// </summary>
-    public double? LayoutOffset { get; set; }
-
-    /// <inheritdoc />
-    public override string ToString() =>
-        $"layoutOffset={(LayoutOffset is null
-            ? "None"
-            : LayoutOffset.Value.ToString("F1", CultureInfo.InvariantCulture))}";
-}
-
-/// <summary>
-/// Parent data for a sliver in a list of slivers positioned by scroll offset.
-/// </summary>
-/// <remarks>
-/// Flutter's <c>SliverLogicalContainerParentData</c>. It does not extend
-/// <see cref="SliverLogicalParentData"/> the way Dart's does: C# has no mixins, so the container
-/// half is <see cref="ContainerBoxParentData{TChild}"/>, which is what
-/// <c>RenderViewportBase</c> composes.
-/// </remarks>
-public sealed class SliverLogicalContainerParentData : ContainerBoxParentData<RenderSliver>
-{
-    /// <inheritdoc cref="SliverLogicalParentData.LayoutOffset" />
-    public double? LayoutOffset { get; set; }
-
-    /// <inheritdoc />
-    public override string ToString() =>
-        $"layoutOffset={(LayoutOffset is null
-            ? "None"
-            : LayoutOffset.Value.ToString("F1", CultureInfo.InvariantCulture))}";
-}
-
 /// <summary>
 /// Parent data that can keep its child alive after it scrolls out of view.
 /// </summary>
@@ -1441,6 +1393,11 @@ public abstract class RenderProxySliver : RenderSliver, IRenderObjectSingleChild
     public override double ChildMainAxisPosition(RenderObject child)
     {
         return 0.0;
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
     public override void Paint(PaintingContext ctx, Point offset)
@@ -2175,7 +2132,7 @@ public class RenderSliverToBoxAdapter : RenderSliverSingleBoxAdapter
             HitTestExtent: paintedExtent,
             CacheExtent: cacheExtent,
             HasVisualOverflow: remaining > constraints.RemainingPaintExtent);
-        SetChildParentData(Child, constraints with { ScrollOffset = effectiveScrollOffset }, Geometry);
+        SetChildParentData(Child, constraints, Geometry);
     }
 }
 
@@ -2244,6 +2201,12 @@ public class RenderSliverPadding : RenderSliver, IRenderObjectSingleChildContain
         {
             child.parentData = new SliverPhysicalParentData();
         }
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, Matrix4 transform)
+    {
+        DebugAssertions.Assert(ReferenceEquals(child, _child));
+        ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
     public override void VisitChildren(Action<RenderObject> visitor)

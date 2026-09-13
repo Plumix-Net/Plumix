@@ -400,6 +400,79 @@ public class ViewportPortTests
         Assert.IsType<SliverLogicalContainerParentData>(first.parentData);
     }
 
+    [Theory]
+    [InlineData(AxisDirection.Down, false)]
+    [InlineData(AxisDirection.Up, false)]
+    [InlineData(AxisDirection.Right, false)]
+    [InlineData(AxisDirection.Left, false)]
+    [InlineData(AxisDirection.Down, true)]
+    [InlineData(AxisDirection.Up, true)]
+    [InlineData(AxisDirection.Right, true)]
+    [InlineData(AxisDirection.Left, true)]
+    public void ViewportChildTransforms_MatchFlutterInEveryDirection(AxisDirection direction, bool shrinkWrap)
+    {
+        RenderBox viewport = shrinkWrap
+            ? new RenderShrinkWrappingViewport(ViewportOffset.Zero(), axisDirection: direction)
+            : new RenderViewport(ViewportOffset.Zero(), axisDirection: direction);
+        var container = (IRenderObjectContainer)viewport;
+        var boxes = new List<RenderBox>();
+        RenderSliver? previous = null;
+        for (int i = 0; i < 5; i += 1)
+        {
+            var box = new SizedRenderBox(new Size(400, 400));
+            var sliver = new RenderSliverToBoxAdapter { Child = box };
+            container.Insert(sliver, previous);
+            previous = sliver;
+            boxes.Add(box);
+        }
+
+        var root = new RenderView(new FlutterView(new Size(800, 600))) { Child = viewport };
+        var pipeline = new PipelineOwner(root);
+        pipeline.Attach(root);
+        foreach (double pixels in new double[] { 0, 200, 600, 900 })
+        {
+            if (viewport is RenderViewport regular)
+            {
+                regular.Offset = ViewportOffset.Fixed(pixels);
+            }
+            else
+            {
+                ((RenderShrinkWrappingViewport)viewport).Offset = ViewportOffset.Fixed(pixels);
+            }
+
+            pipeline.FlushLayout(new Size(800, 600));
+            for (int i = 0; i < boxes.Count; i += 1)
+            {
+                Point origin = MatrixUtils.TransformPoint(boxes[i].GetTransformTo(viewport), default);
+                double expected = direction switch
+                {
+                    AxisDirection.Up => 200 - i * 400 + pixels,
+                    AxisDirection.Left => 400 - i * 400 + pixels,
+                    _ => i * 400 - pixels,
+                };
+                Assert.Equal(direction is AxisDirection.Left or AxisDirection.Right
+                    ? new Point(expected, 0)
+                    : new Point(0, expected), origin);
+            }
+
+            if (pixels == 900)
+            {
+                Point position = direction switch
+                {
+                    AxisDirection.Up => new Point(150, 350),
+                    AxisDirection.Left => new Point(550, 150),
+                    AxisDirection.Right => new Point(150, 450),
+                    _ => new Point(130, 150),
+                };
+                var result = new BoxHitTestResult();
+                Assert.True(viewport.HitTest(result, position));
+                Assert.Contains(result.Path, entry => ReferenceEquals(entry.Target, boxes[2]));
+            }
+        }
+
+        root.Detach();
+    }
+
     private static RenderViewport BuildViewport(
         ViewportOffset offset,
         IReadOnlyList<RenderSliver> slivers,
@@ -434,6 +507,8 @@ public class ViewportPortTests
 
     private sealed class SizedRenderBox(Size size) : RenderBox
     {
+        protected override bool HitTestSelf(Point position) => true;
+
         protected override void PerformLayout()
         {
             Size = Constraints.Constrain(size);

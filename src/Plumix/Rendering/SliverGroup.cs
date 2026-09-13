@@ -55,13 +55,14 @@ public sealed class RenderSliverConstrainedCrossAxis : RenderProxySliver
     }
 }
 
-public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectContainer
+public sealed class RenderSliverCrossAxisGroup : RenderSliver,
+    IContainerRenderObjectMixin<RenderSliver, SliverPhysicalContainerParentData>, IRenderObjectContainer
 {
-    private readonly RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData> _container;
+    private readonly ContainerRenderObjectMixin<RenderSliver, SliverPhysicalContainerParentData> _container;
 
     public RenderSliverCrossAxisGroup()
     {
-        _container = new RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData>(this);
+        _container = new ContainerRenderObjectMixin<RenderSliver, SliverPhysicalContainerParentData>(this);
     }
 
     public int ChildCount => _container.ChildCount;
@@ -75,6 +76,12 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectCont
     public void Move(RenderSliver child, RenderSliver? after = null) => _container.Move(child, after);
 
     public void Remove(RenderSliver child) => _container.Remove(child);
+
+    public void Add(RenderSliver child) => _container.Add(child);
+
+    public void AddAll(List<RenderSliver>? children) => _container.AddAll(children);
+
+    public void RemoveAll() => _container.RemoveAll();
 
     public RenderSliver? ChildAfter(RenderSliver child) => _container.ChildAfter(child);
 
@@ -90,13 +97,15 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectCont
 
     public override void SetupParentData(RenderObject child)
     {
-        if (child.parentData is not SliverPhysicalParentData parentData)
+        if (child.parentData is not SliverPhysicalContainerParentData)
         {
-            parentData = new SliverPhysicalParentData();
-            child.parentData = parentData;
+            child.parentData = new SliverPhysicalContainerParentData { CrossAxisFlex = 1 };
         }
+    }
 
-        parentData.CrossAxisFlex ??= 1;
+    public override void ApplyPaintTransform(RenderObject child, Plumix.UI.Matrix4 transform)
+    {
+        ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
     public override double ChildMainAxisPosition(RenderObject child)
@@ -239,14 +248,15 @@ public sealed class RenderSliverCrossAxisGroup : RenderSliver, IRenderObjectCont
     public override List<DiagnosticsNode> DebugDescribeChildren() => _container.DebugDescribeChildren();
 }
 
-public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectContainer
+public sealed class RenderSliverMainAxisGroup : RenderSliver,
+    IContainerRenderObjectMixin<RenderSliver, SliverPhysicalContainerParentData>, IRenderObjectContainer
 {
     private const double PrecisionErrorTolerance = 0.0001;
-    private readonly RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData> _container;
+    private readonly ContainerRenderObjectMixin<RenderSliver, SliverPhysicalContainerParentData> _container;
 
     public RenderSliverMainAxisGroup()
     {
-        _container = new RenderBoxContainerDefaultsMixin<RenderSliver, SliverPhysicalParentData>(this);
+        _container = new ContainerRenderObjectMixin<RenderSliver, SliverPhysicalContainerParentData>(this);
     }
 
     public int ChildCount => _container.ChildCount;
@@ -260,6 +270,12 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
     public void Move(RenderSliver child, RenderSliver? after = null) => _container.Move(child, after);
 
     public void Remove(RenderSliver child) => _container.Remove(child);
+
+    public void Add(RenderSliver child) => _container.Add(child);
+
+    public void AddAll(List<RenderSliver>? children) => _container.AddAll(children);
+
+    public void RemoveAll() => _container.RemoveAll();
 
     public RenderSliver? ChildAfter(RenderSliver child) => _container.ChildAfter(child);
 
@@ -275,10 +291,15 @@ public sealed class RenderSliverMainAxisGroup : RenderSliver, IRenderObjectConta
 
     public override void SetupParentData(RenderObject child)
     {
-        if (child.parentData is not SliverPhysicalParentData)
+        if (child.parentData is not SliverPhysicalContainerParentData)
         {
-            child.parentData = new SliverPhysicalParentData();
+            child.parentData = new SliverPhysicalContainerParentData();
         }
+    }
+
+    public override void ApplyPaintTransform(RenderObject child, Plumix.UI.Matrix4 transform)
+    {
+        ((SliverPhysicalParentData)child.parentData!).ApplyPaintTransform(transform);
     }
 
     public override void VisitChildren(Action<RenderObject> visitor)

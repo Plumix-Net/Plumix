@@ -8,6 +8,9 @@ rationale — the commit message and `git log -p` carry the detail. When a relea
 Detailed per-change history before 2026-08-16 lives in git history (`git log`).
 
 ## [Unreleased] (after v0.2.0-alpha.1, 2026-08-13)
+- Breaking: sliver parent data separates plain/container types; viewport transforms match Dart (sliver.dart).
+- Breaking: fully-scrolled box slivers retain unclamped child transforms (sliver.dart).
+- Breaking: off-cache `SliverEnsureSemantics` bypasses viewport clips like Flutter (viewport.dart).
 - Keep-alive notification tests unmount their tree so post-frame callbacks do not leak into later tests.
 - Breaking: `RenderErrorBox` uses `UI.Paragraph` and shared engine style types (rendering/error.dart).
 - Breaking: proxy_box.dart is a strict port split across `Proxy.*.cs`; its render objects are no longer sealed.
